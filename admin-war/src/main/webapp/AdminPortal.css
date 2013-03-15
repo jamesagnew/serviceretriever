@@ -1,0 +1,180 @@
+
+.buttonImage {
+	cursor: pointer;
+}
+
+.contentInnerPanel {
+	padding: 5px;	
+}
+
+.dashboardActionButton {
+	cursor: pointer;	
+}
+
+.dashboardTable {
+		
+}
+
+TABLE.dashboardTable {
+	border-collapse: separate;
+	border-spacing: 2px;
+}
+
+TABLE.dashboardTable TBODY TR:first-child {
+	background: #D0EAFF !important;
+}
+
+.dashboardTableDomainCell {
+	background: #F0F0F0;
+}
+
+.dashboardTableServiceCell {
+	background: #F4F4F4;
+}
+
+.dashboardTableServiceVersionCell {
+	background: #F8F8F8;
+}
+
+.dashboardTableServiceMethodCell {
+	background: #FAFAFA;
+}
+
+.dashboardTableExpandoCell {
+	width: 20px;
+	margin: 0px;
+	padding: 0px;
+	vertical-align: middle;
+	text-align: center;
+	background: transparent !important;
+}
+
+.errorLabel {
+	display: block;
+	color: #FF0000;
+}
+
+LABEL.formLabel {
+	color: #606060;
+	text-align: right;
+}
+
+.hidden {
+	display: none;
+}
+
+.leftMenuButton A {
+	text-decoration: none;
+	color: #606060 !important;
+	padding-left: 10px;
+	cursor: pointer;	
+}
+
+.leftMenuButton A:hover {
+	color: #000000 !important;
+	background-image: url(images/left-button-bg.png) !important;
+	background-repeat: repeat-y;
+}
+
+.leftMenuButtonSelected A {
+	font-weight: bold;
+	background-image: url(images/left-button-bg-selected.png);
+	background-repeat: repeat-y;
+	color: #000000 !important;
+}
+
+.leftMenuComponent {
+	margin-top: 6px;
+	margin-left: 10px;
+	margin-right: 10px;
+	width: 280px;
+	background-color: #FFFFFF;
+	padding: 0px;
+	border: 1px solid #6194BC;
+	border-top-right-radius: 10px;
+}
+
+
+.leftMenuTitle {
+	/* background: #A5D1F3; */
+	background: #D0D0D0;
+	color: #6194BC;
+	font-size: 1.5em;
+	border-top-right-radius: 10px;
+}
+
+TABLE.listTable TBODY TR:first-child {
+	background: #D0EAFF !important;
+	border-collapse: separate;
+	border-spacing: 2px;
+}
+
+TABLE.listTable TBODY TR:nth-child(even) {
+	background: #C0C0C0;
+}
+
+TABLE.listTable TBODY TR:nth-child(odd) {
+	background: #E0E0E0;
+}
+
+.mainPanel {
+	margin-top: 6px;
+	margin-left: 10px;
+	margin-right: 10px;
+	background-color: #FFFFFF;
+	border: 1px solid #808080;
+	border-top-right-radius: 10px;
+}
+
+.mainPanelTitle {
+	background: #A5D1F3;
+	color: #6194BC;
+	font-size: 1.5em;
+	border-top-right-radius: 10px;
+	display: block;
+}
+
+.outerLayoutTopBar {
+	background-color: #6194BC;
+	border-bottom: 3px solid #ECECEC;
+}
+
+.outerLayoutLeftBar, .outerLayoutBody, .outerLayoutRightBar {
+	background-image:
+		url(images/noisy-texture-100x100-o25-d19-c-A5D1F3-t1.png);
+	background-color: #FFFFFF;
+	background-position: 50% 50%;
+	background-repeat: repeat repeat;
+}
+
+.outerLayoutLeftBar {
+	background-color: #E0E0E0;
+	border-right: 1px solid #FFFFFF;	
+}
+
+.outerLayoutMain {
+}
+
+.outerLayoutRightBar {
+}
+
+.spinnerElement {
+    display: inline-block;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.spinnerStatusMessageStyle {
+	white-space: nowrap;
+	font-size: 14px;
+	font-family: Arial;
+	color: #FF0000;
+}
+
+.urlStatusSummaryPanel {
+	white-space: pre;
+}
+
+DIV.urlStatusSummaryPanel DIV {
+	display: inline !important;
+}

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>ca.uhn.sail.service_proxy</groupId>
+	<artifactId>service_proxy</artifactId>
+	<version>1.0</version>
+	<packaging>pom</packaging>
+	<name>SAIL_Service_Proxy</name>
+
+	<dependencies>
+
+		<!-- Logging -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-jdk14</artifactId>
+			<version>1.7.2</version>
+		</dependency>
+
+		<!-- JavaEE / EJB / Servlet -->
+		<!--<dependency>
+			<groupId>javax</groupId>
+			<artifactId>javaee-api</artifactId>
+			<version>6.0</version>
+			<scope>provided</scope>
+		</dependency>-->
+		<dependency>
+		    <groupId>org.apache.openejb</groupId>
+			     <artifactId>javaee-api</artifactId>
+				      <version>6.0-4</version>
+			<scope>provided</scope>
+						</dependency>
+
+	</dependencies>
+
+	<modules>
+		<module>ejb-jar</module>
+		<module>proxy-war</module>
+		<module>ear</module>
+    <module>admin-war</module>
+  </modules>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+					<!-- <compilerArguments> <endorseddirs>${endorsed.dir}</endorseddirs> </compilerArguments> -->
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

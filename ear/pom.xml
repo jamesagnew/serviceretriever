@@ -1,0 +1,54 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>ca.uhn.sail.service_proxy</groupId>
+		<artifactId>service_proxy</artifactId>
+		<version>1.0</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<groupId>ca.uhn.sail.assessment</groupId>
+	<artifactId>service_proxy_ear</artifactId>
+	<packaging>ear</packaging>
+
+	<name>service_proxy_ear</name>
+
+	<dependencies>
+		<dependency>
+			<groupId>ca.uhn.sail.service_proxy</groupId>
+			<artifactId>service_proxy_ejb-jar</artifactId>
+			<version>1.0</version>
+			<type>ejb</type>
+		</dependency>
+		<dependency>
+			<groupId>ca.uhn.sail.service_proxy</groupId>
+			<artifactId>service_proxy_war</artifactId>
+			<version>1.0</version>
+			<type>war</type>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<finalName>SAIL_Service_Proxy</finalName>
+		<plugins>
+			<plugin>
+				<artifactId>maven-ear-plugin</artifactId>
+				<configuration>
+					<modules>
+						<ejbModule>
+							<groupId>ca.uhn.sail.service_proxy</groupId>
+							<artifactId>service_proxy_ejb-jar</artifactId>
+						</ejbModule>
+						<webModule>
+							<groupId>ca.uhn.sail.service_proxy</groupId>
+							<artifactId>service_proxy_war</artifactId>
+							<contextRoot>/</contextRoot>
+						</webModule>
+					</modules>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

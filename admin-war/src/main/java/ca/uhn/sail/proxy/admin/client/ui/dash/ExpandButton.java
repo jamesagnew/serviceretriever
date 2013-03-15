@@ -1,0 +1,44 @@
+package ca.uhn.sail.proxy.admin.client.ui.dash;
+
+import ca.uhn.sail.proxy.admin.client.ui.dash.model.IDashModel;
+import ca.uhn.sail.proxy.admin.shared.model.Model;
+
+import com.google.gwt.core.shared.GWT;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.ui.Image;
+
+public class ExpandButton extends Image implements ClickHandler {
+
+	private ServiceDashboardPanel myPanel;
+	private IDashModel myModel;
+
+	public ExpandButton(ServiceDashboardPanel theServiceDashboardPanel, IDashModel theModel) {
+		myPanel = theServiceDashboardPanel;
+		myModel = theModel;
+		
+		addStyleName("buttonImage");
+		addClickHandler(this);
+		
+		update();
+	}
+
+	private void update() {
+		if (myModel.getModel().isExpandedOnDashboard()) {
+			setUrl("images/table_minus_16.png");
+		} else {
+			setUrl("images/table_plus_16.png");
+		}
+	}
+
+	public void onClick(ClickEvent theEvent) {
+		boolean value = !(myModel.getModel().isExpandedOnDashboard() == Boolean.TRUE);
+		myModel.getModel().setExpandedOnDashboard(value);
+		GWT.log("Setting expansion to " + value);
+		update();
+		myPanel.updateView();
+		Model.getInstance().updateNow();
+	}
+
+	
+}

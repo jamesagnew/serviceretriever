@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:Services xmlns:ns2="urn:sail:proxy:registry">
+    <service>
+        <domain_id>CDR</domain_id>
+        <service_id>PatientService</service_id>
+        <service_name>CDR Patient Service</service_name>
+        <version>
+            <version_id>1.0</version_id>
+            <active>true</active>
+            <wsdl_url>http://uhnvesb01d.uhn.on.ca:18780/tst-uhn-ehr-ws/services/ehrPatientService?wsdl</wsdl_url>
+            <url id="dev1" environment="DEV">http://uhnvesb01d.uhn.on.ca:18780/tst-uhn-ehr-ws/services/ehrPatientService</url>
+            <url id="dev2" environment="DEV">http://uhnvesb02d.uhn.on.ca:18780/tst-uhn-ehr-ws/services/ehrPatientService</url>
+            <client_authentication>
+                <wssec>
+                    <username>theUsername</username>
+                    <password>thePassword</password>
+                </wssec>
+            </client_authentication>
+            <server_authentication>
+                <wssec>
+                    <module_id>ldap_auth</module_id>
+                </wssec>
+            </server_authentication>
+        </version>
+    </service>
+</ns2:Services>

@@ -1,0 +1,259 @@
+Public resources found in...
+Translatable source found in...
+Found 0 cached/archived units.  Used 0 / 2739 units from cache.
+Compiling...
+   0% complete (ETR: 72 seconds)
+   10% complete (ETR: 61 seconds)
+   20% complete (ETR: 40 seconds)
+   30% complete (ETR: 32 seconds)
+   40% complete (ETR: 23 seconds)
+   50% complete (ETR: 17 seconds)
+   60% complete (ETR: 13 seconds)
+   70% complete (ETR: 9 seconds)
+   80% complete (ETR: 5 seconds)
+   90% complete (ETR: 3 seconds)
+   100% complete (ETR: 0 seconds)
+   Compilation completed in 29.07 seconds
+Removing invalidated units
+Finding entry point classes
+Rebinding com.google.gwt.i18n.client.impl.LocaleInfoImpl
+   Invoking generator com.google.gwt.i18n.rebind.LocaleInfoGenerator
+      Processing interface com.google.gwt.i18n.client.constants.NumberConstantsImpl
+         Generating method body for notANumber()
+         Generating method body for currencyPattern()
+         Generating method body for decimalPattern()
+         Generating method body for decimalSeparator()
+         Generating method body for defCurrencyCode()
+         Generating method body for exponentialSymbol()
+         Generating method body for globalCurrencyPattern()
+         Generating method body for groupingSeparator()
+         Generating method body for infinity()
+         Generating method body for minusSign()
+         Generating method body for monetaryGroupingSeparator()
+         Generating method body for monetarySeparator()
+         Generating method body for percent()
+         Generating method body for percentPattern()
+         Generating method body for perMill()
+         Generating method body for plusSign()
+         Generating method body for scientificPattern()
+         Generating method body for simpleCurrencyPattern()
+         Generating method body for zeroDigit()
+   Adding '3' new generated units
+      Compiling...
+         Compilation completed in 0.14 seconds
+      Removing invalidated units
+Rebinding ca.uhn.sail.proxy.admin.client.TestUiBinder.TestUiBinderUiBinder
+   Adding '3' new generated units
+      Compiling...
+         Compilation completed in 0.08 seconds
+      Removing invalidated units
+Rebinding ca.uhn.sail.proxy.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351184057.Template
+   Invoking generator com.google.gwt.safehtml.rebind.SafeHtmlTemplatesGenerator
+      Constructing interface ca.uhn.sail.proxy.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351184057.Template
+         Generating method body for html1()
+   Adding '1' new generated units
+      Compiling...
+         Compilation completed in 0.10 seconds
+      Removing invalidated units
+Rebinding ca.uhn.sail.proxy.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351184057_GenBundle
+   Adding '1' new generated units
+      Compiling...
+         Compilation completed in 0.01 seconds
+      Removing invalidated units
+Rebinding ca.uhn.sail.proxy.admin.client.TestUiBinder.TestUiBinderUiBinder
+   Adding '3' new generated units
+      Compiling...
+         Compilation completed in 0.02 seconds
+      Removing invalidated units
+Rebinding ca.uhn.sail.proxy.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351187357.Template
+   Invoking generator com.google.gwt.safehtml.rebind.SafeHtmlTemplatesGenerator
+      Constructing interface ca.uhn.sail.proxy.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351187357.Template
+         Generating method body for html1()
+   Adding '1' new generated units
+      Compiling...
+         Compilation completed in 0.04 seconds
+      Removing invalidated units
+Rebinding ca.uhn.sail.proxy.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351187357_GenBundle
+   Adding '1' new generated units
+      Compiling...
+         Compilation completed in 0.01 seconds
+      Removing invalidated units
+Rebinding ca.uhn.sail.proxy.admin.client.TestUiBinder.TestUiBinderUiBinder
+   Adding '3' new generated units
+      Compiling...
+         Compilation completed in 0.02 seconds
+      Removing invalidated units
+Rebinding ca.uhn.sail.proxy.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351252065.Template
+   Invoking generator com.google.gwt.safehtml.rebind.SafeHtmlTemplatesGenerator
+      Constructing interface ca.uhn.sail.proxy.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351252065.Template
+         Generating method body for html1()
+   Adding '1' new generated units
+      Compiling...
+         Compilation completed in 0.11 seconds
+      Removing invalidated units
+Rebinding ca.uhn.sail.proxy.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351252065_GenBundle
+   Adding '1' new generated units
+      Compiling...
+         Compilation completed in 0.10 seconds
+      Removing invalidated units
+Public resources found in...
+Translatable source found in...
+Found 2738 cached/archived units.  Used 2738 / 2739 units from cache.
+Compiling...
+   Compilation completed in 0.01 seconds
+Removing invalidated units
+Finding entry point classes
+Rebinding com.google.gwt.i18n.client.impl.LocaleInfoImpl
+   Invoking generator com.google.gwt.i18n.rebind.LocaleInfoGenerator
+      Processing interface com.google.gwt.i18n.client.constants.NumberConstantsImpl
+         Generating method body for notANumber()
+         Generating method body for currencyPattern()
+         Generating method body for decimalPattern()
+         Generating method body for decimalSeparator()
+         Generating method body for defCurrencyCode()
+         Generating method body for exponentialSymbol()
+         Generating method body for globalCurrencyPattern()
+         Generating method body for groupingSeparator()
+         Generating method body for infinity()
+         Generating method body for minusSign()
+         Generating method body for monetaryGroupingSeparator()
+         Generating method body for monetarySeparator()
+         Generating method body for percent()
+         Generating method body for percentPattern()
+         Generating method body for perMill()
+         Generating method body for plusSign()
+         Generating method body for scientificPattern()
+         Generating method body for simpleCurrencyPattern()
+         Generating method body for zeroDigit()
+   Adding '3' new generated units
+      Compiling...
+         Compilation completed in 0.00 seconds
+      Removing invalidated units
+Public resources found in...
+Translatable source found in...
+Found 0 cached/archived units.  Used 0 / 2718 units from cache.
+Compiling...
+   0% complete (ETR: ?)
+   10% complete (ETR: 157 seconds)
+   20% complete (ETR: 133 seconds)
+   30% complete (ETR: 104 seconds)
+   40% complete (ETR: 77 seconds)
+   50% complete (ETR: 59 seconds)
+   60% complete (ETR: 44 seconds)
+   70% complete (ETR: 31 seconds)
+   80% complete (ETR: 18 seconds)
+   90% complete (ETR: 8 seconds)
+   100% complete (ETR: 0 seconds)
+   Compilation completed in 117.78 seconds
+Removing invalidated units
+Finding entry point classes
+Public resources found in...
+Translatable source found in...
+Found 2718 cached/archived units.  Used 2718 / 2718 units from cache.
+Compiling...
+   Compilation completed in 0.00 seconds
+Removing invalidated units
+Finding entry point classes
+Public resources found in...
+Translatable source found in...
+Found 2718 cached/archived units.  Used 2718 / 2718 units from cache.
+Compiling...
+   Compilation completed in 0.00 seconds
+Removing invalidated units
+Finding entry point classes
+Public resources found in...
+Translatable source found in...
+Found 0 cached/archived units.  Used 0 / 2718 units from cache.
+Compiling...
+   0% complete (ETR: ?)
+   10% complete (ETR: 94 seconds)
+   20% complete (ETR: 58 seconds)
+   30% complete (ETR: 39 seconds)
+   40% complete (ETR: 28 seconds)
+   50% complete (ETR: 21 seconds)
+   60% complete (ETR: 14 seconds)
+   70% complete (ETR: 10 seconds)
+   80% complete (ETR: 6 seconds)
+   90% complete (ETR: 3 seconds)
+   100% complete (ETR: 0 seconds)
+   Compilation completed in 36.83 seconds
+Removing invalidated units
+Finding entry point classes
+Public resources found in...
+Translatable source found in...
+Found 2718 cached/archived units.  Used 2718 / 2718 units from cache.
+Compiling...
+   Compilation completed in 0.00 seconds
+Removing invalidated units
+Finding entry point classes
+Public resources found in...
+Translatable source found in...
+Found 2718 cached/archived units.  Used 2718 / 2718 units from cache.
+Compiling...
+   Compilation completed in 0.00 seconds
+Removing invalidated units
+Finding entry point classes
+Public resources found in...
+Translatable source found in...
+Found 0 cached/archived units.  Used 0 / 2718 units from cache.
+Compiling...
+   0% complete (ETR: 73 seconds)
+   10% complete (ETR: 79 seconds)
+   20% complete (ETR: 56 seconds)
+   30% complete (ETR: 41 seconds)
+   40% complete (ETR: 30 seconds)
+   50% complete (ETR: 21 seconds)
+   60% complete (ETR: 15 seconds)
+   70% complete (ETR: 10 seconds)
+   80% complete (ETR: 6 seconds)
+   90% complete (ETR: 3 seconds)
+   100% complete (ETR: 0 seconds)
+   Compilation completed in 35.73 seconds
+Removing invalidated units
+Finding entry point classes
+Public resources found in...
+Translatable source found in...
+Found 2718 cached/archived units.  Used 2718 / 2718 units from cache.
+Compiling...
+   Compilation completed in 0.02 seconds
+Removing invalidated units
+Finding entry point classes
+Public resources found in...
+Translatable source found in...
+Found 2718 cached/archived units.  Used 2718 / 2718 units from cache.
+Compiling...
+   Compilation completed in 0.00 seconds
+Removing invalidated units
+Finding entry point classes
+Public resources found in...
+Translatable source found in...
+Found 0 cached/archived units.  Used 0 / 2718 units from cache.
+Compiling...
+   0% complete (ETR: ?)
+   10% complete (ETR: 152 seconds)
+   20% complete (ETR: 102 seconds)
+   30% complete (ETR: 83 seconds)
+   40% complete (ETR: 64 seconds)
+   50% complete (ETR: 50 seconds)
+   60% complete (ETR: 37 seconds)
+   70% complete (ETR: 27 seconds)
+   80% complete (ETR: 17 seconds)
+   90% complete (ETR: 8 seconds)
+   100% complete (ETR: 0 seconds)
+   Compilation completed in 100.36 seconds
+Removing invalidated units
+Finding entry point classes
+Public resources found in...
+Translatable source found in...
+Found 2718 cached/archived units.  Used 2718 / 2718 units from cache.
+Compiling...
+   Compilation completed in 0.00 seconds
+Removing invalidated units
+Finding entry point classes
+Public resources found in...
+Translatable source found in...
+Found 2718 cached/archived units.  Used 2718 / 2718 units from cache.
+Compiling...
+   Compilation completed in 0.01 seconds
+Removing invalidated units
+Finding entry point classes

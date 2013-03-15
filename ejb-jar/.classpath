@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry including="**/*.java" kind="src" output="target/test-classes" path="src/test/java"/>
+	<classpathentry excluding="**/*.java" kind="src" output="target/test-classes" path="src/test/resources"/>
+	<classpathentry including="**/*.java" kind="src" path="src/main/java"/>
+	<classpathentry excluding="**/*.java" kind="src" path="src/main/resources"/>
+	<classpathentry kind="src" path="target/generated-sources/jaxb"/>
+	<classpathentry kind="var" path="M2_REPO/javax/transaction/jta/1.1/jta-1.1.jar" sourcepath="M2_REPO/javax/transaction/jta/1.1/jta-1.1-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/javax/xml/stream/stax-api/1.0-2/stax-api-1.0-2.jar" sourcepath="M2_REPO/javax/xml/stream/stax-api/1.0-2/stax-api-1.0-2-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/javax/validation/validation-api/1.0.0.GA/validation-api-1.0.0.GA.jar" sourcepath="M2_REPO/javax/validation/validation-api/1.0.0.GA/validation-api-1.0.0.GA-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/Users/james/.m2/repository/javax/validation/validation-api/1.0.0.GA/validation-api-1.0.0.GA-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/antlr/antlr/2.7.7/antlr-2.7.7.jar"/>
+	<classpathentry kind="var" path="M2_REPO/commons-codec/commons-codec/1.6/commons-codec-1.6.jar" sourcepath="M2_REPO/commons-codec/commons-codec/1.6/commons-codec-1.6-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/Users/james/.m2/repository/commons-codec/commons-codec/1.6/commons-codec-1.6-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/org/apache/commons/commons-lang3/3.1/commons-lang3-3.1.jar" sourcepath="/M2_REPO/org/apache/commons/commons-lang3/3.1/commons-lang3-3.1-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1.jar" sourcepath="M2_REPO/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/Users/james/.m2/repository/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/dom4j/dom4j/1.6.1/dom4j-1.6.1.jar" sourcepath="M2_REPO/dom4j/dom4j/1.6.1/dom4j-1.6.1-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/net/sf/ehcache/ehcache-core/2.6.3/ehcache-core-2.6.3.jar" sourcepath="M2_REPO/net/sf/ehcache/ehcache-core/2.6.3/ehcache-core-2.6.3-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/Users/james/.m2/repository/net/sf/ehcache/ehcache-core/2.6.3/ehcache-core-2.6.3-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/com/google/guava/guava/13.0.1/guava-13.0.1.jar" sourcepath="M2_REPO/com/google/guava/guava/13.0.1/guava-13.0.1-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/Users/james/.m2/repository/com/google/guava/guava/13.0.1/guava-13.0.1-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/org/hamcrest/hamcrest-all/1.3/hamcrest-all-1.3.jar" sourcepath="M2_REPO/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/Users/james/.m2/repository/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/org/hibernate/common/hibernate-commons-annotations/4.0.1.Final/hibernate-commons-annotations-4.0.1.Final.jar" sourcepath="M2_REPO/org/hibernate/common/hibernate-commons-annotations/4.0.1.Final/hibernate-commons-annotations-4.0.1.Final-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/Users/james/.m2/repository/org/hibernate/common/hibernate-commons-annotations/4.0.1.Final/hibernate-commons-annotations-4.0.1.Final-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/org/hibernate/hibernate-core/4.2.0.CR1/hibernate-core-4.2.0.CR1.jar" sourcepath="M2_REPO/org/hibernate/hibernate-core/4.2.0.CR1/hibernate-core-4.2.0.CR1-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/hibernate/hibernate-entitymanager/4.2.0.CR1/hibernate-entitymanager-4.2.0.CR1.jar" sourcepath="M2_REPO/org/hibernate/hibernate-entitymanager/4.2.0.CR1/hibernate-entitymanager-4.2.0.CR1-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/hibernate/javax/persistence/hibernate-jpa-2.0-api/1.0.1.Final/hibernate-jpa-2.0-api-1.0.1.Final.jar" sourcepath="M2_REPO/org/hibernate/javax/persistence/hibernate-jpa-2.0-api/1.0.1.Final/hibernate-jpa-2.0-api-1.0.1.Final-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/hibernate/hibernate-validator/4.3.1.Final/hibernate-validator-4.3.1.Final.jar" sourcepath="M2_REPO/org/hibernate/hibernate-validator/4.3.1.Final/hibernate-validator-4.3.1.Final-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/Users/james/.m2/repository/org/hibernate/hibernate-validator/4.3.1.Final/hibernate-validator-4.3.1.Final-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/org/hsqldb/hsqldb/2.2.9/hsqldb-2.2.9.jar" sourcepath="M2_REPO/org/hsqldb/hsqldb/2.2.9/hsqldb-2.2.9-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/Users/james/.m2/repository/org/hsqldb/hsqldb/2.2.9/hsqldb-2.2.9-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/org/apache/httpcomponents/httpclient/4.2.3/httpclient-4.2.3.jar" sourcepath="/M2_REPO/org/apache/httpcomponents/httpclient/4.2.3/httpclient-4.2.3-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/openejb/javaee-api/6.0-4/javaee-api-6.0-4.jar" sourcepath="M2_REPO/org/apache/openejb/javaee-api/6.0-4/javaee-api-6.0-4-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/Users/james/.m2/repository/org/apache/openejb/javaee-api/6.0-4/javaee-api-6.0-4-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/org/javassist/javassist/3.15.0-GA/javassist-3.15.0-GA.jar" sourcepath="M2_REPO/org/javassist/javassist/3.15.0-GA/javassist-3.15.0-GA-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/Users/james/.m2/repository/org/javassist/javassist/3.15.0-GA/javassist-3.15.0-GA-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/org/jboss/logging/jboss-logging/3.1.0.GA/jboss-logging-3.1.0.GA.jar" sourcepath="M2_REPO/org/jboss/logging/jboss-logging/3.1.0.GA/jboss-logging-3.1.0.GA-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/jboss/spec/javax/transaction/jboss-transaction-api_1.1_spec/1.0.0.Final/jboss-transaction-api_1.1_spec-1.0.0.Final.jar" sourcepath="M2_REPO/org/jboss/spec/javax/transaction/jboss-transaction-api_1.1_spec/1.0.0.Final/jboss-transaction-api_1.1_spec-1.0.0.Final-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/junit/junit/4.11/junit-4.11.jar" sourcepath="M2_REPO/junit/junit/4.11/junit-4.11-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/Users/james/.m2/repository/junit/junit/4.11/junit-4.11-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5.jar" sourcepath="M2_REPO/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/Users/james/.m2/repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-api/1.7.2/slf4j-api-1.7.2.jar" sourcepath="M2_REPO/org/slf4j/slf4j-api/1.6.1/slf4j-api-1.6.1-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/Users/james/.m2/repository/org/slf4j/slf4j-api/1.6.1/slf4j-api-1.6.1-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-jdk14/1.7.2/slf4j-jdk14-1.7.2.jar" sourcepath="M2_REPO/org/slf4j/slf4j-jdk14/1.7.2/slf4j-jdk14-1.7.2-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/Users/james/.m2/repository/org/slf4j/slf4j-jdk14/1.7.2/slf4j-jdk14-1.7.2-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/org/codehaus/woodstox/stax2-api/3.1.1/stax2-api-3.1.1.jar" sourcepath="M2_REPO/org/codehaus/woodstox/stax2-api/3.1.1/stax2-api-3.1.1-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/codehaus/woodstox/woodstox-core-asl/4.1.4/woodstox-core-asl-4.1.4.jar" sourcepath="M2_REPO/org/codehaus/woodstox/woodstox-core-asl/4.1.4/woodstox-core-asl-4.1.4-sources.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/httpcomponents/httpcore/4.2.3/httpcore-4.2.3.jar" sourcepath="/M2_REPO/org/apache/httpcomponents/httpcore/4.2.3/httpcore-4.2.3-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/commons-io/commons-io/2.4/commons-io-2.4.jar" sourcepath="/M2_REPO/commons-io/commons-io/2.4/commons-io-2.4-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/server/apacheds-core/2.0.0-M11/apacheds-core-2.0.0-M11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/server/apacheds-core-api/2.0.0-M11/apacheds-core-api-2.0.0-M11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/server/apacheds-core-constants/2.0.0-M11/apacheds-core-constants-2.0.0-M11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/server/apacheds-core-shared/2.0.0-M11/apacheds-core-shared-2.0.0-M11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/server/apacheds-protocol-ldap/2.0.0-M11/apacheds-protocol-ldap-2.0.0-M11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/server/apacheds-protocol-shared/2.0.0-M11/apacheds-protocol-shared-2.0.0-M11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/server/apacheds-xdbm-partition/2.0.0-M11/apacheds-xdbm-partition-2.0.0-M11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/api/api-ldap-codec-core/1.0.0-M16/api-ldap-codec-core-1.0.0-M16.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/server/apacheds-interceptors-changelog/2.0.0-M11/apacheds-interceptors-changelog-2.0.0-M11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/server/apacheds-interceptors-journal/2.0.0-M11/apacheds-interceptors-journal-2.0.0-M11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/server/apacheds-interceptors-normalization/2.0.0-M11/apacheds-interceptors-normalization-2.0.0-M11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/server/apacheds-interceptors-authn/2.0.0-M11/apacheds-interceptors-authn-2.0.0-M11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/server/apacheds-interceptors-authz/2.0.0-M11/apacheds-interceptors-authz-2.0.0-M11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/server/apacheds-interceptors-collective/2.0.0-M11/apacheds-interceptors-collective-2.0.0-M11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/server/apacheds-interceptors-event/2.0.0-M11/apacheds-interceptors-event-2.0.0-M11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/server/apacheds-interceptors-exception/2.0.0-M11/apacheds-interceptors-exception-2.0.0-M11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/server/apacheds-interceptors-operational/2.0.0-M11/apacheds-interceptors-operational-2.0.0-M11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/server/apacheds-interceptors-referral/2.0.0-M11/apacheds-interceptors-referral-2.0.0-M11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/server/apacheds-interceptors-schema/2.0.0-M11/apacheds-interceptors-schema-2.0.0-M11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/server/apacheds-interceptors-subtree/2.0.0-M11/apacheds-interceptors-subtree-2.0.0-M11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/server/apacheds-interceptors-trigger/2.0.0-M11/apacheds-interceptors-trigger-2.0.0-M11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/server/apacheds-jdbm-partition/2.0.0-M11/apacheds-jdbm-partition-2.0.0-M11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/api/api-ldap-extras-aci/1.0.0-M16/api-ldap-extras-aci-1.0.0-M16.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/api/api-ldap-extras-codec/1.0.0-M16/api-ldap-extras-codec-1.0.0-M16.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/api/api-ldap-extras-codec-api/1.0.0-M16/api-ldap-extras-codec-api-1.0.0-M16.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/server/apacheds-interceptors-admin/2.0.0-M11/apacheds-interceptors-admin-2.0.0-M11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/commons-collections/commons-collections/3.2.1/commons-collections-3.2.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/api/api-ldap-extras-util/1.0.0-M16/api-ldap-extras-util-1.0.0-M16.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/api/api-ldap-extras-trigger/1.0.0-M16/api-ldap-extras-trigger-1.0.0-M16.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/mina/mina-core/2.0.7/mina-core-2.0.7.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/api/api-ldap-model/1.0.0-M16/api-ldap-model-1.0.0-M16.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/api/api-ldap-schema-data/1.0.0-M16/api-ldap-schema-data-1.0.0-M16.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/directory/api/api-util/1.0.0-M16/api-util-1.0.0-M16.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
