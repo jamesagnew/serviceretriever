@@ -47,6 +47,13 @@
 			<scope>test</scope>
 		</dependency>
 		
+		<!-- JSON -->
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.2.2</version>
+		</dependency>
+		
 		<!-- HTTP -->
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
@@ -168,6 +175,7 @@
 		</dependency>
 		
 		<!-- Directory (LDAP server for unit tests) -->
+		<!--
 		<dependency>
 			<groupId>org.apache.directory.server</groupId>
 			<artifactId>apacheds-core</artifactId>
@@ -180,7 +188,8 @@
 			<version>2.0.0-M11</version>
 			<scope>test</scope>
 		</dependency>
-            
+            	-->
+
 	</dependencies>
 
 	<build>

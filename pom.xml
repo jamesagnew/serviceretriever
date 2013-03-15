@@ -35,8 +35,8 @@
 	<modules>
 		<module>ejb-jar</module>
 		<module>proxy-war</module>
+		<module>admin-war</module>
 		<module>ear</module>
-    <module>admin-war</module>
   </modules>
 
 	<build>

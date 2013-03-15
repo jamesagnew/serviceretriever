@@ -16,11 +16,11 @@ public interface IServiceInvoker<T extends BasePersServiceVersion> {
 
 	/**
 	 * 
-	 * @param theServiceDefinition
-	 * @param theRequestType
-	 * @param thePath
-	 * @param theQuery
-	 * @param theReader
+	 * @param theServiceDefinition The service definition which this request corresponds to
+	 * @param theRequestType The HTTP request type
+	 * @param thePath The request URL portion which is the path
+	 * @param theQuery The request URL portion which comes after the path
+	 * @param theReader A reader which can be used to stream in any request content
 	 * @param theUrlPool The URL Pool to pass to the HTTP client which will process service requests as they are proxied
 	 * @return
 	 * @throws InternalErrorException
