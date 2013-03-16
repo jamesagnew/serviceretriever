@@ -8,19 +8,39 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObject<BaseGServ
 
 	private boolean myActive;
 	private Date myLastAccess;
+	private GServiceMethodList myServiceMethodList;
+	private GServiceVersionUrlList myServiceUrlList;
+	/**
+	 * ID which is local to the admin portal
+	 */
+	private Long myUncommittedSessionId;
 	private int myUrlsActive;
 	private int myUrlsFailed;
 	private int myUrlsUnknown;
-
-	private GServiceMethodList myServiceMethodList;
-
-	private GServiceVersionUrlList myServiceUrlList;
 
 	/**
 	 * @return the lastAccess
 	 */
 	public Date getLastAccess() {
 		return myLastAccess;
+	}
+
+	/**
+	 * @return the serviceUrlList
+	 */
+	public GServiceMethodList getMethodList() {
+		return myServiceMethodList;
+	}
+
+	/**
+	 * @return the uncommittedSessionId
+	 */
+	public Long getUncommittedSessionId() {
+		return myUncommittedSessionId;
+	}
+
+	public GServiceVersionUrlList getUrlList() {
+		return myServiceUrlList;
 	}
 
 	/**
@@ -44,23 +64,11 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObject<BaseGServ
 		return myUrlsUnknown;
 	}
 
-
 	@Override
 	public void initChildList() {
 		assert myServiceMethodList == null;
 		myServiceMethodList = new GServiceMethodList();
 		myServiceUrlList = new GServiceVersionUrlList();
-	}
-
-	/**
-	 * @return the serviceUrlList
-	 */
-	public GServiceMethodList getMethodList() {
-		return myServiceMethodList;
-	}
-	
-	public GServiceVersionUrlList getUrlList() {
-		return myServiceUrlList;
 	}
 
 	/**
@@ -78,15 +86,14 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObject<BaseGServ
 		myUrlsActive = theObject.getUrlsActive();
 		myUrlsFailed = theObject.getUrlsFailed();
 		myUrlsUnknown = theObject.getUrlsUnknown();
-		
+
 		if (theObject.getMethodList() != null) {
 			getMethodList().mergeResults(theObject.getMethodList());
 		}
-		
+
 		if (theObject.getUrlList() != null) {
 			getUrlList().mergeResults(theObject.getUrlList());
 		}
-		
 
 		markInitialized();
 	}
@@ -105,6 +112,14 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObject<BaseGServ
 	 */
 	public void setLastAccess(Date theLastAccess) {
 		myLastAccess = theLastAccess;
+	}
+
+	/**
+	 * @param theUncommittedSessionId
+	 *            the uncommittedSessionId to set
+	 */
+	public void setUncommittedSessionId(Long theUncommittedSessionId) {
+		myUncommittedSessionId = theUncommittedSessionId;
 	}
 
 	/**
@@ -130,6 +145,5 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObject<BaseGServ
 	public void setUrlsUnknown(int theUrlsUnknown) {
 		myUrlsUnknown = theUrlsUnknown;
 	}
-
 
 }

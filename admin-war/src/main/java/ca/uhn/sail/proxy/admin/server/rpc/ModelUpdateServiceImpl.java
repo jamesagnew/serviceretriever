@@ -6,6 +6,7 @@ import ca.uhn.sail.proxy.admin.shared.model.DomainListUpdateRequest;
 import ca.uhn.sail.proxy.admin.shared.model.GDomain;
 import ca.uhn.sail.proxy.admin.shared.model.GDomainList;
 import ca.uhn.sail.proxy.admin.shared.model.GServiceList;
+import ca.uhn.sail.proxy.admin.shared.model.GSoap11ServiceVersion;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
@@ -55,6 +56,14 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	public GServiceList addService(long theDomainPid, String theId, String theName, boolean theActive) {
 		if (isMockMode()) {
 			return myMock.addService(theDomainPid, theId, theName, theActive);
+		}
+		return null;
+	}
+
+
+	public GSoap11ServiceVersion loadWsdl(String theWsdlUrl) throws ServiceFailureException {
+		if (isMockMode()) {
+			return myMock.loadWsdl(theWsdlUrl);
 		}
 		return null;
 	}

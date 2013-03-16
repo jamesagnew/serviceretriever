@@ -1,9 +1,9 @@
 package ca.uhn.sail.proxy.admin.client.ui.layout;
 
-import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Panel;
+import com.google.gwt.user.client.ui.ScrollPanel;
 
-public class BodyPanel extends FlowPanel {
+public class BodyPanel extends ScrollPanel {
 
 	private static BodyPanel ourInstance;
 
@@ -11,7 +11,7 @@ public class BodyPanel extends FlowPanel {
 		assert ourInstance == null;
 
 		ourInstance = this;
-		setStylePrimaryName("outerLayoutBody");
+		addStyleName("outerLayoutBody");
 	}
 
 	/**

@@ -4,6 +4,7 @@ import ca.uhn.sail.proxy.admin.client.AdminPortal;
 import ca.uhn.sail.proxy.admin.client.ui.components.HtmlBr;
 import ca.uhn.sail.proxy.admin.client.ui.components.HtmlLabel;
 import ca.uhn.sail.proxy.admin.client.ui.components.LoadingSpinner;
+import ca.uhn.sail.proxy.admin.client.ui.components.PButton;
 import ca.uhn.sail.proxy.admin.shared.model.GServiceMethod;
 import ca.uhn.sail.proxy.admin.shared.model.GServiceVersionUrl;
 import ca.uhn.sail.proxy.admin.shared.model.GSoap11ServiceVersion;
@@ -13,7 +14,6 @@ import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
@@ -83,7 +83,7 @@ public class SoapDetailPanel extends FlowPanel {
 		contentPanel.addStyleName("contentInnerPanel");
 		thePanel.add(contentPanel);
 
-		Label urlLabel = new Label("Client Security modules provide credentials to ");
+		Label urlLabel = new Label("Client Security modules provide credentials to proxied service implementations");
 		contentPanel.add(urlLabel);
 	}
 
@@ -108,7 +108,7 @@ public class SoapDetailPanel extends FlowPanel {
 		
 		contentPanel.add(new HtmlBr());
 		
-		Button loadButton = new Button("Load WSDL");
+		PButton loadButton = new PButton("Load WSDL");
 		loadButton.getElement().getStyle().setFloat(Float.LEFT);
 		contentPanel.add(loadButton);
 		
@@ -121,6 +121,8 @@ public class SoapDetailPanel extends FlowPanel {
 				handleLoadWsdl();
 			}
 		});
+		
+		contentPanel.add(new HtmlBr());
 	}
 
 	private void handleLoadWsdl() {
@@ -188,14 +190,14 @@ public class SoapDetailPanel extends FlowPanel {
 	}
 
 	private void updateMethodPanel() {
-		myMethodGrid.resize(myServiceVersion.getMethodList().size(), 2);
+		myMethodGrid.resize(myServiceVersion.getMethodList().size()+1, 2);
 		
 		int row = 0;
 		for (GServiceMethod next : myServiceVersion.getMethodList()) {
 			row++;
 			
-			myUrlGrid.setWidget(row, 0, new UrlEditButtonPanel(row));
-			myUrlGrid.setWidget(row, 1, new Label(next.getName()));
+			myMethodGrid.setWidget(row, 0, new UrlEditButtonPanel(row));
+			myMethodGrid.setWidget(row, 1, new Label(next.getName()));
 			
 		}
 		
@@ -203,7 +205,7 @@ public class SoapDetailPanel extends FlowPanel {
 	}
 
 	private void updateProxyPanel() {
-		myUrlGrid.resize(myServiceVersion.getUrlList().size(), 3);
+		myUrlGrid.resize(myServiceVersion.getUrlList().size()+1, 3);
 		
 		int row = 0;
 		for (GServiceVersionUrl next : myServiceVersion.getUrlList()) {
@@ -220,46 +222,46 @@ public class SoapDetailPanel extends FlowPanel {
 	
 	private final class MethodEditButtonPanel extends FlowPanel implements ClickHandler {
 		private int myRow;
-		private Button myEditButton;
-		private Button myDeleteButton;
+		private PButton myEditButton;
+		private PButton myDeleteButton;
 
 		private MethodEditButtonPanel(int theRow) {
 			myRow = theRow;
 
-			myEditButton = new Button("Edit");
+			myEditButton = new PButton("Edit");
 			myEditButton.addClickHandler(this);
 			add(myEditButton);
 
-			myDeleteButton = new Button("Delete");
+			myDeleteButton = new PButton("Delete");
 			myDeleteButton.addClickHandler(this);
 			add(myDeleteButton);
 		}
 
 		public void onClick(ClickEvent theEvent) {
-			Button source = (Button) theEvent.getSource();
+			PButton source = (PButton) theEvent.getSource();
 			source.setEnabled(false);
 		}
 	}
 	
 	private final class UrlEditButtonPanel extends FlowPanel implements ClickHandler {
 		private int myRow;
-		private Button myEditButton;
-		private Button myDeleteButton;
+		private PButton myEditButton;
+		private PButton myDeleteButton;
 
 		private UrlEditButtonPanel(int theRow) {
 			myRow = theRow;
 
-			myEditButton = new Button("Edit");
+			myEditButton = new PButton("Edit");
 			myEditButton.addClickHandler(this);
 			add(myEditButton);
 
-			myDeleteButton = new Button("Delete");
+			myDeleteButton = new PButton("Delete");
 			myDeleteButton.addClickHandler(this);
 			add(myDeleteButton);
 		}
 
 		public void onClick(ClickEvent theEvent) {
-			Button source = (Button) theEvent.getSource();
+			PButton source = (PButton) theEvent.getSource();
 			source.setEnabled(false);
 		}
 	}

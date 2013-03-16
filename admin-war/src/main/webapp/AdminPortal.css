@@ -59,6 +59,9 @@ LABEL.formLabel {
 	text-align: right;
 }
 
+.pushButton {
+}
+
 .hidden {
 	display: none;
 }

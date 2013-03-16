@@ -12,7 +12,7 @@ public class OuterLayoutPanel extends DockLayoutPanel {
 		
 		addNorth(new TopBarPanel(), 75);
 		addWest(new LeftBarPanel(), 300);
-		addEast(new RightBarPanel(), 300);
+		//addEast(new RightBarPanel(), 300);
 		add(new BodyPanel());
 		
 		NavProcessor.navigate();

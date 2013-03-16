@@ -3,6 +3,8 @@ package ca.uhn.sail.proxy.admin.server.rpc;
 import java.util.ArrayList;
 import java.util.Date;
 
+import org.apache.commons.lang.StringUtils;
+
 import ca.uhn.sail.proxy.admin.client.rpc.ModelUpdateService;
 import ca.uhn.sail.proxy.admin.shared.ServiceFailureException;
 import ca.uhn.sail.proxy.admin.shared.model.BaseGServiceVersion;
@@ -12,6 +14,7 @@ import ca.uhn.sail.proxy.admin.shared.model.GDomainList;
 import ca.uhn.sail.proxy.admin.shared.model.GService;
 import ca.uhn.sail.proxy.admin.shared.model.GServiceList;
 import ca.uhn.sail.proxy.admin.shared.model.GServiceMethod;
+import ca.uhn.sail.proxy.admin.shared.model.GServiceVersionUrl;
 import ca.uhn.sail.proxy.admin.shared.model.GSoap11ServiceVersion;
 import ca.uhn.sail.proxy.admin.shared.model.StatusEnum;
 
@@ -146,6 +149,35 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		svc.setActive(theActive);
 		
 		retVal.add(svc);
+		
+		return retVal;
+	}
+
+	public GSoap11ServiceVersion loadWsdl(String theWsdlUrl) throws ServiceFailureException {
+		if (StringUtils.isBlank(theWsdlUrl)) {
+			throw new ServiceFailureException("Failed to load URL: \"" + theWsdlUrl + '"');
+		}
+		
+		GSoap11ServiceVersion retVal = new GSoap11ServiceVersion();
+		retVal.initChildList();
+		
+		retVal.setActive(true);
+		retVal.setUncommittedSessionId(ourNextPid++);
+
+		GServiceMethod method = new GServiceMethod();
+		method.setId("method1");
+		method.setName("method1");
+		retVal.getMethodList().add(method);
+
+		method = new GServiceMethod();
+		method.setId("method2");
+		method.setName("method2");
+		retVal.getMethodList().add(method);
+
+		GServiceVersionUrl url = new GServiceVersionUrl();
+		url.setId("url1");
+		url.setUrl("http://something/aaaa.html");
+		retVal.getUrlList().add(url);
 		
 		return retVal;
 	}
