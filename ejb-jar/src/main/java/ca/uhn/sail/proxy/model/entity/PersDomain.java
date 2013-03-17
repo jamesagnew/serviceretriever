@@ -14,13 +14,23 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.Version;
+
+import ca.uhn.sail.proxy.model.entity.PersServiceVersionUrlStatus.StatusEnum;
+import ca.uhn.sail.proxy.model.entity.soap.PersServiceVersionSoap11;
 
 import com.google.common.base.Objects;
 
 @Table(name = "PX_DOMAIN")
-@Entity
+@Entity()
 public class PersDomain {
+
+	@Transient
+	private transient boolean myAllAssociationsLoaded;
+
+	@Transient
+	private transient boolean myAllStatusLoaded;
 
 	@Column(name = "DOMAIN_ID", length = 100, nullable = false)
 	private String myDomainId;
@@ -43,6 +53,9 @@ public class PersDomain {
 	@JoinColumn(name = "DOMAIN_PID", referencedColumnName = "PID")
 	private Collection<PersService> myServices;
 
+	@Transient
+	private transient StatusEnum myStatus;
+
 	public PersDomain() {
 		super();
 	}
@@ -52,6 +65,13 @@ public class PersDomain {
 		myDomainId = theDomainId;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean equals(Object theObj) {
+		return theObj instanceof PersDomain && Objects.equal(myPid, ((PersDomain) theObj).myPid);
+	}
 
 	/**
 	 * @return the domainId
@@ -91,12 +111,8 @@ public class PersDomain {
 		return myServices;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public boolean equals(Object theObj) {
-		return theObj instanceof PersDomain && Objects.equal(myPid, ((PersDomain) theObj).myPid);
+	public StatusEnum getStatus() {
+		return myStatus;
 	}
 
 	/**
@@ -108,11 +124,32 @@ public class PersDomain {
 	}
 
 	public void loadAllAssociations() {
+		if (myAllAssociationsLoaded) {
+			return;
+		}
+		myAllAssociationsLoaded = true;
+
 		myIdToServices = new HashMap<String, PersService>();
 		for (PersService next : myServices) {
 			myIdToServices.put(next.getServiceId(), next);
 			next.loadAllAssociations();
 		}
+	}
+
+	public void loadAllStatus() {
+		if (myAllStatusLoaded) {
+			return;
+		}
+		
+		StatusEnum status = StatusEnum.UNKNOWN;
+		for (PersService nextService : getServices()) {
+			for (PersServiceVersionSoap11 nextVersion : nextService.getVersions()) {
+				PersServiceVersionStatus nextStatus = nextVersion.getStatus();
+				
+			}
+		}
+		
+		myAllStatusLoaded = true;
 	}
 
 	/**

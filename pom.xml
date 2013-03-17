@@ -39,6 +39,10 @@
 		<module>ear</module>
   </modules>
 
+	<properties>
+		<slf4j_version>1.7.2</slf4j_version>
+	</properties>
+
 	<build>
 		<plugins>
 			<plugin>
