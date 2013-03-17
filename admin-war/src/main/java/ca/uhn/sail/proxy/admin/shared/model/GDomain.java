@@ -24,6 +24,8 @@ public class GDomain extends BaseGDashboardObject<GDomain> {
 	@Override
 	public void initChildList() {
 //		assert myServiceList == null;
-		myServiceList = new GServiceList();
+		if (myServiceList == null) {
+			myServiceList = new GServiceList();
+		}
 	}
 }

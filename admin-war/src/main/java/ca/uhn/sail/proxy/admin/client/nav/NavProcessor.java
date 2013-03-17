@@ -1,5 +1,8 @@
 package ca.uhn.sail.proxy.admin.client.nav;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ca.uhn.sail.proxy.admin.client.ui.config.AddDomainPanel;
 import ca.uhn.sail.proxy.admin.client.ui.config.AddDomainStep2Panel;
 import ca.uhn.sail.proxy.admin.client.ui.config.AddServicePanel;
@@ -66,7 +69,7 @@ public class NavProcessor {
 		case ASV:
 			String[] argsSplit = args.split("_");
 			if (argsSplit.length < 2 || StringUtil.isBlank(argsSplit[0]) || StringUtil.isBlank(argsSplit[1])) {
-				panel = new AddServiceVersionPanel("","");
+				panel = new AddServiceVersionPanel("", "");
 			} else {
 				panel = new AddServiceVersionPanel(argsSplit[0], argsSplit[1]);
 			}
@@ -85,7 +88,7 @@ public class NavProcessor {
 	}
 
 	public static String currentTokenArgs() {
-		String token = currentToken();
+		String token = getCurrentToken();
 		token = token.replaceAll(".*__", "");
 		if (token.length() < 5) {
 			return "";
@@ -94,7 +97,7 @@ public class NavProcessor {
 	}
 
 	public static PagesEnum getCurrentPage() {
-		String token = currentToken();
+		String token = getCurrentToken();
 		token = token.replaceAll(".*__", "");
 
 		if (token.length() > 3) {
@@ -111,43 +114,110 @@ public class NavProcessor {
 		return page;
 	}
 
-	private static String currentToken() {
+	private static String getCurrentToken() {
 		String token = History.getToken();
 		token = StringUtil.defaultString(token);
 		return token;
 	}
 
 	public static String getTokenAddDomainStep2(long theId) {
-		String token = currentToken();
+		String token = getCurrentToken();
 		if (!token.isEmpty()) {
 			token = token + "__";
 		}
 		token = token + PagesEnum.AD2 + "_" + theId;
+		token = removeDuplicates(token);
 		return token;
 	}
 
 	public static String getTokenEditDomain(boolean theAddToHistory, long theDomainPid) {
 		String token = "";
 		if (theAddToHistory) {
-			token = currentToken();
+			token = getCurrentToken();
 			if (!token.isEmpty()) {
 				token = token + "__";
 			}
 		}
 		token = token + PagesEnum.EDO + "_" + theDomainPid;
+		token = removeDuplicates(token);
 		return token;
 	}
 
 	public static String getTokenAddService(boolean theAddToHistory, long theDomainPid) {
 		String token = "";
 		if (theAddToHistory) {
-			token = currentToken();
+			token = getCurrentToken();
 			if (!token.isEmpty()) {
 				token = token + "__";
 			}
 		}
 		token = token + PagesEnum.ASE + "_" + theDomainPid;
+		token = removeDuplicates(token);
 		return token;
+	}
+
+	public static String getTokenAddServiceVersion(boolean theAddToHistory, Long theUncommittedSessionId) {
+		String token = "";
+		if (theAddToHistory) {
+			token = getCurrentToken();
+			if (!token.isEmpty()) {
+				token = token + "__";
+			}
+		}
+
+		if (theUncommittedSessionId != null) {
+			token = token + PagesEnum.ASV + "_" + theUncommittedSessionId;
+		} else {
+			token = token + PagesEnum.ASV;
+		}
+
+		token = removeDuplicates(token);
+		return token;
+	}
+
+	private static String removeDuplicates(String theToken) {
+
+		String[] parts = theToken.split("__");
+		List<String> newParts = new ArrayList<String>();
+
+		String prevType = null;
+		for (String nextToken : parts) {
+			if (nextToken.length() < 3) {
+				continue;
+			}
+			String nextType = nextToken.substring(0, 3);
+			if (nextType.equals(prevType)) {
+				newParts.remove(newParts.size() - 1);
+			}
+
+			newParts.add(nextToken);
+			prevType = nextType;
+		}
+
+		StringBuilder retVal = new StringBuilder();
+		for (String next : newParts) {
+			if (retVal.length() > 0) {
+				retVal.append("__");
+			}
+			retVal.append(next);
+		}
+
+		return retVal.toString();
+
+	}
+
+	public static Long getParamAddServiceVersionUncommittedId() {
+		String current = getCurrentToken();
+		if (!current.startsWith(PagesEnum.ASV.name() + "_")) {
+			return null;
+		}
+		
+		String numStr = current.substring(4);
+		if (!numStr.matches("^[0-9]+$")) {
+			return null;
+		}
+		
+		return Long.parseLong(numStr);
 	}
 
 }

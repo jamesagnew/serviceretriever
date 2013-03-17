@@ -7,16 +7,42 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObject<BaseGServ
 	private static final long serialVersionUID = 7886801527330335503L;
 
 	private boolean myActive;
+	private BaseGClientSecurityList myClientSecurityList;
 	private Date myLastAccess;
+	private GServiceVersionResourcePointerList myResourcePointerList;
+	private BaseGServerSecurityList myServerSecurityList;
 	private GServiceMethodList myServiceMethodList;
 	private GServiceVersionUrlList myServiceUrlList;
-	/**
-	 * ID which is local to the admin portal
-	 */
-	private Long myUncommittedSessionId;
 	private int myUrlsActive;
 	private int myUrlsFailed;
 	private int myUrlsUnknown;
+
+	public boolean hasMethodWithName(String theName) {
+		for (GServiceMethod next : myServiceMethodList) {
+			if (next.getName().equals(theName)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public boolean hasUrlWithName(String theUrl) {
+		for (GServiceVersionUrl next : myServiceUrlList) {
+			if (next.getUrl().equals(theUrl)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+
+
+	/**
+	 * @return the clientSecurityList
+	 */
+	public BaseGClientSecurityList getClientSecurityList() {
+		return myClientSecurityList;
+	}
 
 	/**
 	 * @return the lastAccess
@@ -33,10 +59,17 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObject<BaseGServ
 	}
 
 	/**
-	 * @return the uncommittedSessionId
+	 * @return the resourcePointerList
 	 */
-	public Long getUncommittedSessionId() {
-		return myUncommittedSessionId;
+	public GServiceVersionResourcePointerList getResourcePointerList() {
+		return myResourcePointerList;
+	}
+
+	/**
+	 * @return the serverSecurityList
+	 */
+	public BaseGServerSecurityList getServerSecurityList() {
+		return myServerSecurityList;
 	}
 
 	public GServiceVersionUrlList getUrlList() {
@@ -69,6 +102,9 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObject<BaseGServ
 		assert myServiceMethodList == null;
 		myServiceMethodList = new GServiceMethodList();
 		myServiceUrlList = new GServiceVersionUrlList();
+		myServerSecurityList = new BaseGServerSecurityList();
+		myClientSecurityList = new BaseGClientSecurityList();
+		myResourcePointerList = new GServiceVersionResourcePointerList();
 	}
 
 	/**
@@ -95,6 +131,18 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObject<BaseGServ
 			getUrlList().mergeResults(theObject.getUrlList());
 		}
 
+		if (theObject.getServerSecurityList() != null) {
+			getServerSecurityList().mergeResults(theObject.getServerSecurityList());
+		}
+
+		if (theObject.getClientSecurityList() != null) {
+			getClientSecurityList().mergeResults(theObject.getClientSecurityList());
+		}
+
+		if (theObject.getResourcePointerList() != null) {
+			getResourcePointerList().mergeResults(theObject.getResourcePointerList());
+		}
+
 		markInitialized();
 	}
 
@@ -115,11 +163,11 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObject<BaseGServ
 	}
 
 	/**
-	 * @param theUncommittedSessionId
-	 *            the uncommittedSessionId to set
+	 * @param theResourcePointerList
+	 *            the resourcePointerList to set
 	 */
-	public void setUncommittedSessionId(Long theUncommittedSessionId) {
-		myUncommittedSessionId = theUncommittedSessionId;
+	public void setResourcePointerList(GServiceVersionResourcePointerList theResourcePointerList) {
+		myResourcePointerList = theResourcePointerList;
 	}
 
 	/**

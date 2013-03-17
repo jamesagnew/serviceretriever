@@ -16,6 +16,18 @@ public class StringUtil {
 		return false;
 	}
 
+	public static String obscure(String theString) {
+		StringBuilder b = new StringBuilder();
+		if (isBlank(theString)) {
+			b.append("<none>");
+		} else {
+			for (int i = 0; i < theString.length(); i++) {
+				b.append('*');
+			}
+		}
+		return b.toString();
+	}
+
 	
 	
 }

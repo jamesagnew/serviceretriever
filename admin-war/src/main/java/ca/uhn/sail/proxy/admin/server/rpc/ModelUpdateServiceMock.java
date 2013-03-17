@@ -27,6 +27,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		myAddedDomains = new ArrayList<GDomain>();
 	}
 	
+	@Override
 	public GDomainList loadDomainList(DomainListUpdateRequest theRequest) {
 		GDomainList retVal = new GDomainList();
 		
@@ -120,6 +121,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		return retVal;
 	}
 
+	@Override
 	public GDomain addDomain(String theId, String theName) throws ServiceFailureException {
 		GDomain retVal = new GDomain();
 		retVal.setId(theId);
@@ -129,6 +131,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		return retVal;
 	}
 
+	@Override
 	public GDomain saveDomain(long thePid, String theId, String theName) {
 		GDomain retVal = new GDomain();
 		retVal.setPid(thePid);
@@ -137,6 +140,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		return retVal;
 	}
 
+	@Override
 	public GServiceList addService(long theDomainPid, String theId, String theName, boolean theActive) {
 		GServiceList retVal = new GServiceList();
 		
@@ -153,16 +157,18 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		return retVal;
 	}
 
-	public GSoap11ServiceVersion loadWsdl(String theWsdlUrl) throws ServiceFailureException {
+	@Override
+	public GSoap11ServiceVersion loadWsdl(GSoap11ServiceVersion theService, String theWsdlUrl) throws ServiceFailureException {
 		if (StringUtils.isBlank(theWsdlUrl)) {
 			throw new ServiceFailureException("Failed to load URL: \"" + theWsdlUrl + '"');
 		}
 		
 		GSoap11ServiceVersion retVal = new GSoap11ServiceVersion();
+		retVal.setWsdlLocation(theWsdlUrl);
 		retVal.initChildList();
 		
 		retVal.setActive(true);
-		retVal.setUncommittedSessionId(ourNextPid++);
+		retVal.setUncommittedSessionId(theService.getUncommittedSessionId());
 
 		GServiceMethod method = new GServiceMethod();
 		method.setId("method1");
@@ -180,6 +186,21 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		retVal.getUrlList().add(url);
 		
 		return retVal;
+	}
+
+	@Override
+	public void saveServiceVersionToSession(GSoap11ServiceVersion theServiceVersion) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public GSoap11ServiceVersion createNewSoap11ServiceVersion(Long theUncomittedId) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void reportClientError(String theMessage, Throwable theException) {
+		throw new UnsupportedOperationException();
 	}
 
 }

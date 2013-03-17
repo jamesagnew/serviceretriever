@@ -6,18 +6,10 @@ public abstract class BaseGObject<T> extends BaseGListenable<T> {
 
 	private long myPid;
 
-	public long getPid() {
-		return myPid;
-	}
-
-	public void setPid(long thePid) {
-		myPid = thePid;
-	}
-
-	@Override
-	public int hashCode() {
-		return Long.valueOf(myPid).hashCode();
-	}
+	/**
+	 * ID which is local to the admin portal
+	 */
+	private Long myUncommittedSessionId;
 
 	@Override
 	public boolean equals(Object theObj) {
@@ -27,10 +19,55 @@ public abstract class BaseGObject<T> extends BaseGListenable<T> {
 		if (!theObj.getClass().equals(getClass())) {
 			return false;
 		}
-		return myPid == ((BaseGObject<?>) theObj).myPid;
+		
+		BaseGObject<?> obj = (BaseGObject<?>) theObj;
+		
+		if (myPid != 0 && obj.myPid != 0) {
+			return myPid == obj.myPid;
+		}
+		
+		if (myUncommittedSessionId != null && obj.myUncommittedSessionId != null) {
+			return myUncommittedSessionId.equals(obj.myUncommittedSessionId);
+		}
+		
+		return theObj == this;
+	}
+
+	public long getPid() {
+		return myPid;
+	}
+
+	/**
+	 * @return the uncommittedSessionId
+	 */
+	public Long getUncommittedSessionId() {
+		return myUncommittedSessionId;
+	}
+
+	@Override
+	public int hashCode() {
+		if (myPid != 0) {
+			return Long.valueOf(myPid).hashCode();
+		}
+		if (myUncommittedSessionId != null) {
+			return myUncommittedSessionId.hashCode();
+		}
+		return 0;
 	}
 
 	public abstract void initChildList();
-	
+
 	public abstract void merge(T theObject);
+
+	public void setPid(long thePid) {
+		myPid = thePid;
+	}
+
+	/**
+	 * @param theUncommittedSessionId
+	 *            the uncommittedSessionId to set
+	 */
+	public void setUncommittedSessionId(Long theUncommittedSessionId) {
+		myUncommittedSessionId = theUncommittedSessionId;
+	}
 }

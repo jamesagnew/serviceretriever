@@ -1,11 +1,10 @@
 package ca.uhn.sail.proxy.admin.shared.model;
 
-public class GServiceMethod extends BaseGDashboardObject<GServiceMethod> {
+public abstract class BaseGServerSecurity extends BaseGObject<BaseGServerSecurity> {
 
 	private static final long serialVersionUID = 1L;
 
 	private transient boolean myEditMode;
-	
 	
 	/**
 	 * @return the editMode
@@ -27,10 +26,10 @@ public class GServiceMethod extends BaseGDashboardObject<GServiceMethod> {
 	}
 
 	@Override
-	public void merge(GServiceMethod theObject) {
-		super.merge((BaseGDashboardObject<GServiceMethod>) theObject);
-		
-		markInitialized();
+	public void merge(BaseGServerSecurity theObject) {
+		setPid(theObject.getPid());
 	}
+	
+	public abstract ServerSecurityEnum getType();
 
 }

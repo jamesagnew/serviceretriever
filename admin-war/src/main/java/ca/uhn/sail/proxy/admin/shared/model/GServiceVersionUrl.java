@@ -6,6 +6,21 @@ public class GServiceVersionUrl extends BaseGObject<GServiceVersionUrl> {
 	
 	private String myId;
 	private String myUrl;
+	private transient boolean myEditMode;
+
+	/**
+	 * @return the editMode
+	 */
+	public boolean isEditMode() {
+		return myEditMode;
+	}
+
+	/**
+	 * @param theEditMode the editMode to set
+	 */
+	public void setEditMode(boolean theEditMode) {
+		myEditMode = theEditMode;
+	}
 
 	/**
 	 * @return the id

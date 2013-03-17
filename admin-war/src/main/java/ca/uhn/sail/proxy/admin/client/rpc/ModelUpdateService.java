@@ -24,6 +24,11 @@ public interface ModelUpdateService extends RemoteService {
 	
 	GServiceList addService(long theDomainPid, String theId, String theName, boolean theActive);
 	
-	GSoap11ServiceVersion loadWsdl(String theWsdlUrl) throws ServiceFailureException;
+	GSoap11ServiceVersion loadWsdl(GSoap11ServiceVersion theService, String theWsdlUrl) throws ServiceFailureException;
+
+	void saveServiceVersionToSession(GSoap11ServiceVersion theServiceVersion);
+
+	GSoap11ServiceVersion createNewSoap11ServiceVersion(Long theUncommittedId);
 	
+	void reportClientError(String theMessage, Throwable theException);
 }

@@ -1,17 +1,25 @@
 package ca.uhn.sail.proxy.admin.client.ui.config;
 
+import ca.uhn.sail.proxy.admin.client.AdminPortal;
+import ca.uhn.sail.proxy.admin.client.nav.NavProcessor;
 import ca.uhn.sail.proxy.admin.client.ui.components.HtmlLabel;
 import ca.uhn.sail.proxy.admin.client.ui.components.LoadingSpinner;
+import ca.uhn.sail.proxy.admin.client.ui.components.PButton;
 import ca.uhn.sail.proxy.admin.shared.model.GDomain;
 import ca.uhn.sail.proxy.admin.shared.model.GDomainList;
 import ca.uhn.sail.proxy.admin.shared.model.GService;
 import ca.uhn.sail.proxy.admin.shared.model.GSoap11ServiceVersion;
 import ca.uhn.sail.proxy.admin.shared.model.Model;
+import ca.uhn.sail.proxy.admin.shared.model.ProtocolEnum;
 import ca.uhn.sail.proxy.admin.shared.util.IAsyncLoadCallback;
 import ca.uhn.sail.proxy.admin.shared.util.StringUtil;
 
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
@@ -21,8 +29,13 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class AddServiceVersionPanel extends FlowPanel {
 
-	private static final String TYPE_VAL_SOAP11 = "soap11";
-	private static final String VERSION_DESC = "Each service can have one or more versions, which are " + "exposed using a separate URL.";
+	private static final String VERSION_DESC = "Each service can have one or more versions. " +
+			"A Service Version is the central unit in a service definition, as it defines the " +
+			"fundamental building block. A Service Version has a defined protocol, security model, " +
+			"and other configuration. A Service Version will also have one or more Methods it " +
+			"can provide, and will be backed by one or more Implementation URLs. Each Service will " +
+			"have one or more Service Versions, and Services are grouped into Domains.";
+
 	private Widget myBottomContents;
 	private FlowPanel myBottomPanel;
 	private ListBox myDomainListBox;
@@ -50,7 +63,7 @@ public class AddServiceVersionPanel extends FlowPanel {
 
 		myTopPanel.setStylePrimaryName("mainPanel");
 
-		Label titleLabel = new Label("Add Domain");
+		Label titleLabel = new Label("Add Service Version");
 		titleLabel.setStyleName("mainPanelTitle");
 		myTopPanel.add(titleLabel);
 
@@ -60,9 +73,6 @@ public class AddServiceVersionPanel extends FlowPanel {
 
 		Label intro = new Label(VERSION_DESC);
 		contentPanel.add(intro);
-
-		myLoadingSpinner = new LoadingSpinner();
-		contentPanel.add(myLoadingSpinner);
 
 		myParentsGrid = new Grid(4, 4);
 		contentPanel.add(myParentsGrid);
@@ -75,6 +85,7 @@ public class AddServiceVersionPanel extends FlowPanel {
 		myDomainListBox = new ListBox(false);
 		myDomainListBox.getElement().setId("cbDomain");
 		myDomainListBox.addChangeHandler(new ChangeHandler() {
+			@Override
 			public void onChange(ChangeEvent theEvent) {
 				handleDomainListChange();
 			}
@@ -85,6 +96,7 @@ public class AddServiceVersionPanel extends FlowPanel {
 		myParentsGrid.setWidget(0, 2, myNewDomainLabel);
 		myNewDomainNameTextBox = new TextBox();
 		myNewDomainNameTextBox.getElement().setId("cbNewDomainName");
+		myNewDomainNameTextBox.setValue("Untitled Domain");
 		myParentsGrid.setWidget(0, 3, myNewDomainNameTextBox);
 
 		HtmlLabel svcLbl = new HtmlLabel("Service", "cbSvc");
@@ -92,6 +104,7 @@ public class AddServiceVersionPanel extends FlowPanel {
 		myServiceListBox = new ListBox(false);
 		myServiceListBox.getElement().setId("cbSvc");
 		myServiceListBox.addChangeHandler(new ChangeHandler() {
+			@Override
 			public void onChange(ChangeEvent theEvent) {
 				handleServiceListChange();
 			}
@@ -102,6 +115,7 @@ public class AddServiceVersionPanel extends FlowPanel {
 		myParentsGrid.setWidget(1, 2, myNewServiceLabel);
 		myNewServiceNameTextBox = new TextBox();
 		myNewServiceNameTextBox.getElement().setId("cbNewServiceName");
+		myNewServiceNameTextBox.setValue("Untitled Service");
 		myParentsGrid.setWidget(1, 3, myNewServiceNameTextBox);
 
 		/*
@@ -119,23 +133,39 @@ public class AddServiceVersionPanel extends FlowPanel {
 		 * Type
 		 */
 
-		HtmlLabel typeLabel = new HtmlLabel("Version", "cbType");
+		HtmlLabel typeLabel = new HtmlLabel("Protocol", "cbType");
 		myParentsGrid.setWidget(3, 0, typeLabel);
 		myTypeComboBox = new ListBox(false);
 		myTypeComboBox.getElement().setId("cbType");
 		myParentsGrid.setWidget(3, 1, myTypeComboBox);
 
-		myTypeComboBox.addItem("SOAP 1.1", TYPE_VAL_SOAP11);
-		myTypeComboBox.addChangeHandler(new ChangeHandler() {
-			public void onChange(ChangeEvent theEvent) {
-				handleTypeChange();
-			}
-		});
+		for (ProtocolEnum next : ProtocolEnum.values()) {
+			myTypeComboBox.addItem(next.getNiceName(), next.name());
+			myTypeComboBox.addChangeHandler(new ChangeHandler() {
+				@Override
+				public void onChange(ChangeEvent theEvent) {
+					handleTypeChange();
+				}
+			});
+		}
+		
+		PButton saveButton = new PButton("Save");
+		contentPanel.add(saveButton);
+		saveButton.addClickHandler(new SaveClickHandler());
+
+		myLoadingSpinner = new LoadingSpinner();
+		contentPanel.add(myLoadingSpinner);
+
+		/*
+		 * The following panel contains the rest of the screen (i.e. no
+		 * background, so that it can have lots of contents
+		 */
 
 		myBottomPanel = new FlowPanel();
 		add(myBottomPanel);
 
 		Model.getInstance().loadAllDomainsAndServices(new IAsyncLoadCallback<GDomainList>() {
+			@Override
 			public void onSuccess(GDomainList theResult) {
 				initParents();
 				handleTypeChange();
@@ -183,19 +213,42 @@ public class AddServiceVersionPanel extends FlowPanel {
 	private void handleServiceListChange() {
 		boolean showEdit = myServiceListBox.getSelectedIndex() == 0;
 
-		myNewDomainLabel.setVisible(showEdit);
-		myNewDomainNameTextBox.setVisible(showEdit);
+		myNewServiceLabel.setVisible(showEdit);
+		myNewServiceNameTextBox.setVisible(showEdit);
 	}
 
 	private void handleTypeChange() {
-		if (!(myBottomContents instanceof SoapDetailPanel)) {
-
-			myVersion = new GSoap11ServiceVersion();
-			myVersion.initChildList();
-
-			myBottomContents = new SoapDetailPanel(myVersion);
-			myBottomPanel.clear();
-			myBottomPanel.add(myBottomContents);
+		switch (ProtocolEnum.valueOf(myTypeComboBox.getValue(myTypeComboBox.getSelectedIndex()))) {
+		case SOAP11:
+			if (!(myBottomContents instanceof SoapDetailPanel)) {
+	
+				myLoadingSpinner.show();
+				myBottomPanel.clear();
+	
+				AsyncCallback<GSoap11ServiceVersion> callback = new AsyncCallback<GSoap11ServiceVersion>() {
+					@Override
+					public void onFailure(Throwable theCaught) {
+						Model.handleFailure(theCaught);
+					}
+	
+					@Override
+					public void onSuccess(GSoap11ServiceVersion theResult) {
+						myLoadingSpinner.hide();
+	
+						myVersion = theResult;
+	
+						myBottomContents = new SoapDetailPanel(myVersion);
+						myBottomPanel.add(myBottomContents);
+	
+						String navToken = NavProcessor.getTokenAddServiceVersion(true, theResult.getUncommittedSessionId());
+						History.newItem(navToken, false);
+					}
+				};
+	
+				Long uncommittedId = NavProcessor.getParamAddServiceVersionUncommittedId();
+				AdminPortal.MODEL_SVC.createNewSoap11ServiceVersion(uncommittedId, callback);
+			}
+			break;
 		}
 	}
 
@@ -219,6 +272,25 @@ public class AddServiceVersionPanel extends FlowPanel {
 		myUpdating = false;
 
 		handleDomainListChange();
+
+	}
+
+	public class SaveClickHandler implements ClickHandler {
+
+		@Override
+		public void onClick(ClickEvent theEvent) {
+			if (myDomainListBox.getSelectedIndex() == 0) {
+				String newDomainName = myNewDomainNameTextBox.getValue();
+				if (StringUtil.isBlank(newDomainName)) {
+					myLoadingSpinner.showMessage("Please select an existing Domain, or enter a name for a new one to be created.", false);
+					myNewDomainNameTextBox.setFocus(true);
+					return;
+				}
+			}
+			
+			
+
+		}
 
 	}
 }

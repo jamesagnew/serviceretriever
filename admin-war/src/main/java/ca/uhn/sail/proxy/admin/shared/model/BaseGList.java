@@ -29,6 +29,11 @@ public class BaseGList<T extends BaseGObject<T>> extends BaseGListenable<T> impl
 		fireChanged();
 	}
 
+	public void remove(T theObject) {
+		myList.remove(theObject);
+		fireChanged();
+	}
+	
 	public void addAll(Collection<T> theList) {
 		myList.addAll(theList);
 	}

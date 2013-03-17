@@ -18,6 +18,12 @@ public interface ModelUpdateServiceAsync {
 
 	void addService(long theDomainPid, String theId, String theName, boolean theActive, AsyncCallback<GServiceList> theCallback);
 
-	void loadWsdl(String theWsdlUrl, AsyncCallback<GSoap11ServiceVersion> callback);
+	void loadWsdl(GSoap11ServiceVersion theService, String theWsdlUrl, AsyncCallback<GSoap11ServiceVersion> callback);
+
+	void saveServiceVersionToSession(GSoap11ServiceVersion theServiceVersion, AsyncCallback<Void> theCallback);
+
+	void createNewSoap11ServiceVersion(Long theUncommittedId, AsyncCallback<GSoap11ServiceVersion> theCallback);
+
+	void reportClientError(String theMessage, Throwable theException, AsyncCallback<Void> callback);
 
 }
