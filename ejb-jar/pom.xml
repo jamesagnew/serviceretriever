@@ -2,17 +2,17 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>ca.uhn.sail.service_proxy</groupId>
-		<artifactId>service_proxy</artifactId>
+		<groupId>net.svcret</groupId>
+		<artifactId>svcret</artifactId>
 		<version>1.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<groupId>ca.uhn.sail.service_proxy</groupId>
-	<artifactId>service_proxy_ejb-jar</artifactId>
+	<groupId>net.svcret</groupId>
+	<artifactId>svcret_ejb-jar</artifactId>
 	<packaging>ejb</packaging>
 
-	<name>service_proxy_ejb-jar</name>
+	<name>ServiceRetriever EJB (JAR)</name>
 
 	<dependencies>
 
@@ -96,7 +96,7 @@
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
-			<version>4.2.0.CR1</version>
+			<version>4.2.0.Final</version>
 		</dependency>
 		<!-- 
 		<dependency>
@@ -108,7 +108,7 @@
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-entitymanager</artifactId>
-			<version>4.2.0.CR1</version>
+			<version>4.2.0.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>net.sf.ehcache</groupId>

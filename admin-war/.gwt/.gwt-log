@@ -42,56 +42,56 @@ Rebinding com.google.gwt.i18n.client.impl.LocaleInfoImpl
       Compiling...
          Compilation completed in 0.14 seconds
       Removing invalidated units
-Rebinding ca.uhn.sail.proxy.admin.client.TestUiBinder.TestUiBinderUiBinder
+Rebinding net.svcret.admin.client.TestUiBinder.TestUiBinderUiBinder
    Adding '3' new generated units
       Compiling...
          Compilation completed in 0.08 seconds
       Removing invalidated units
-Rebinding ca.uhn.sail.proxy.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351184057.Template
+Rebinding net.svcret.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351184057.Template
    Invoking generator com.google.gwt.safehtml.rebind.SafeHtmlTemplatesGenerator
-      Constructing interface ca.uhn.sail.proxy.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351184057.Template
+      Constructing interface net.svcret.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351184057.Template
          Generating method body for html1()
    Adding '1' new generated units
       Compiling...
          Compilation completed in 0.10 seconds
       Removing invalidated units
-Rebinding ca.uhn.sail.proxy.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351184057_GenBundle
+Rebinding net.svcret.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351184057_GenBundle
    Adding '1' new generated units
       Compiling...
          Compilation completed in 0.01 seconds
       Removing invalidated units
-Rebinding ca.uhn.sail.proxy.admin.client.TestUiBinder.TestUiBinderUiBinder
+Rebinding net.svcret.admin.client.TestUiBinder.TestUiBinderUiBinder
    Adding '3' new generated units
       Compiling...
          Compilation completed in 0.02 seconds
       Removing invalidated units
-Rebinding ca.uhn.sail.proxy.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351187357.Template
+Rebinding net.svcret.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351187357.Template
    Invoking generator com.google.gwt.safehtml.rebind.SafeHtmlTemplatesGenerator
-      Constructing interface ca.uhn.sail.proxy.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351187357.Template
+      Constructing interface net.svcret.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351187357.Template
          Generating method body for html1()
    Adding '1' new generated units
       Compiling...
          Compilation completed in 0.04 seconds
       Removing invalidated units
-Rebinding ca.uhn.sail.proxy.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351187357_GenBundle
+Rebinding net.svcret.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351187357_GenBundle
    Adding '1' new generated units
       Compiling...
          Compilation completed in 0.01 seconds
       Removing invalidated units
-Rebinding ca.uhn.sail.proxy.admin.client.TestUiBinder.TestUiBinderUiBinder
+Rebinding net.svcret.admin.client.TestUiBinder.TestUiBinderUiBinder
    Adding '3' new generated units
       Compiling...
          Compilation completed in 0.02 seconds
       Removing invalidated units
-Rebinding ca.uhn.sail.proxy.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351252065.Template
+Rebinding net.svcret.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351252065.Template
    Invoking generator com.google.gwt.safehtml.rebind.SafeHtmlTemplatesGenerator
-      Constructing interface ca.uhn.sail.proxy.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351252065.Template
+      Constructing interface net.svcret.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351252065.Template
          Generating method body for html1()
    Adding '1' new generated units
       Compiling...
          Compilation completed in 0.11 seconds
       Removing invalidated units
-Rebinding ca.uhn.sail.proxy.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351252065_GenBundle
+Rebinding net.svcret.admin.client.TestUiBinder_TestUiBinderUiBinderImpl_designTime1362351252065_GenBundle
    Adding '1' new generated units
       Compiling...
          Compilation completed in 0.10 seconds
@@ -287,5 +287,37 @@ Translatable source found in...
 Found 2718 cached/archived units.  Used 2718 / 2718 units from cache.
 Compiling...
    Compilation completed in 0.00 seconds
+Removing invalidated units
+Finding entry point classes
+Public resources found in...
+Translatable source found in...
+Found 0 cached/archived units.  Used 0 / 2718 units from cache.
+Compiling...
+   0% complete (ETR: ?)
+   10% complete (ETR: 235 seconds)
+   20% complete (ETR: 161 seconds)
+   30% complete (ETR: 120 seconds)
+   40% complete (ETR: 86 seconds)
+   50% complete (ETR: 62 seconds)
+   60% complete (ETR: 44 seconds)
+   70% complete (ETR: 30 seconds)
+   80% complete (ETR: 18 seconds)
+   90% complete (ETR: 8 seconds)
+   100% complete (ETR: 0 seconds)
+   Compilation completed in 90.38 seconds
+Removing invalidated units
+Finding entry point classes
+Public resources found in...
+Translatable source found in...
+Found 2718 cached/archived units.  Used 2718 / 2718 units from cache.
+Compiling...
+   Compilation completed in 0.00 seconds
+Removing invalidated units
+Finding entry point classes
+Public resources found in...
+Translatable source found in...
+Found 2718 cached/archived units.  Used 2718 / 2718 units from cache.
+Compiling...
+   Compilation completed in 0.02 seconds
 Removing invalidated units
 Finding entry point classes

@@ -2,17 +2,17 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>ca.uhn.sail.service_proxy</groupId>
-		<artifactId>service_proxy</artifactId>
+		<groupId>net.svcret</groupId>
+		<artifactId>svcret</artifactId>
 		<version>1.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<groupId>ca.uhn.sail.service_proxy</groupId>
-	<artifactId>service_proxy_war</artifactId>
+	<groupId>net.svcret</groupId>
+	<artifactId>proxy-war</artifactId>
 	<packaging>war</packaging>
 
-	<name>service_proxy_war</name>
+	<name>ServiceRetriever Proxy (WAR)</name>
 
 	<properties>
 	</properties>

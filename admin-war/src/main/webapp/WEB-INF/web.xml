@@ -8,7 +8,7 @@
   <!-- Servlets -->
   <servlet>
     <servlet-name>modelUpdateServlet</servlet-name>
-    <servlet-class>ca.uhn.sail.proxy.admin.server.rpc.ModelUpdateServiceImpl</servlet-class>
+    <servlet-class>net.svcret.admin.server.rpc.ModelUpdateServiceImpl</servlet-class>
   </servlet>
 
   <servlet-mapping>

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="war/src/main/java"/>
 	<classpathentry kind="var" path="M2_REPO/javax/javaee-api/6.0/javaee-api-6.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-api/1.7.2/slf4j-api-1.7.2.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-jdk14/1.7.2/slf4j-jdk14-1.7.2.jar"/>

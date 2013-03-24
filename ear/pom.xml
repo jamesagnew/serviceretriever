@@ -2,27 +2,27 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>ca.uhn.sail.service_proxy</groupId>
-		<artifactId>service_proxy</artifactId>
+		<groupId>net.svcret</groupId>
+		<artifactId>svcret</artifactId>
 		<version>1.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<groupId>ca.uhn.sail.assessment</groupId>
-	<artifactId>service_proxy_ear</artifactId>
+	<groupId>net.svcret</groupId>
+	<artifactId>svcret_ear</artifactId>
 	<packaging>ear</packaging>
 
-	<name>service_proxy_ear</name>
+	<name>ServiceRetriever Deployment (EAR)</name>
 
 	<dependencies>
 		<dependency>
-			<groupId>ca.uhn.sail.service_proxy</groupId>
+			<groupId>net.svcret</groupId>
 			<artifactId>service_proxy_ejb-jar</artifactId>
 			<version>1.0</version>
 			<type>ejb</type>
 		</dependency>
 		<dependency>
-			<groupId>ca.uhn.sail.service_proxy</groupId>
+			<groupId>net.svcret</groupId>
 			<artifactId>service_proxy_war</artifactId>
 			<version>1.0</version>
 			<type>war</type>
@@ -37,11 +37,11 @@
 				<configuration>
 					<modules>
 						<ejbModule>
-							<groupId>ca.uhn.sail.service_proxy</groupId>
+							<groupId>net.svcret</groupId>
 							<artifactId>service_proxy_ejb-jar</artifactId>
 						</ejbModule>
 						<webModule>
-							<groupId>ca.uhn.sail.service_proxy</groupId>
+							<groupId>net.svcret</groupId>
 							<artifactId>service_proxy_war</artifactId>
 							<contextRoot>/</contextRoot>
 						</webModule>
