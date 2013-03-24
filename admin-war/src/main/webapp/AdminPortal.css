@@ -59,6 +59,11 @@ LABEL.formLabel {
 	text-align: right;
 }
 
+.gwt-PopupPanel {
+	border: 1px solid #8080FF !important;
+	padding: 2px !important;
+}
+
 .pushButton {
 }
 
@@ -124,6 +129,7 @@ TABLE.listTable TBODY TR:nth-child(odd) {
 	margin-top: 6px;
 	margin-left: 10px;
 	margin-right: 10px;
+	background: rgba(255,255,255,0.7);
 	background-color: #FFFFFF;
 	border: 1px solid #808080;
 	border-top-right-radius: 10px;

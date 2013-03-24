@@ -1,2 +1,0 @@
-serviceClass: ca.uhn.sail.proxy.admin.client.rpc.ModelUpdateService
-path: CE1B647100949576E2364F26EF13DB49.gwt.rpc
