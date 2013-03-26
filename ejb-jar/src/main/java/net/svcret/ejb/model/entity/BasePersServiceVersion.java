@@ -39,7 +39,7 @@ import net.svcret.ejb.util.Validate;
 @Entity
 @Table(name = "PX_SVC_VER", uniqueConstraints = { @UniqueConstraint(columnNames = { "SERVICE_PID", "VERSION_ID" }) })
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "AUTH_TYPE", length = 20, discriminatorType = DiscriminatorType.STRING)
+@DiscriminatorColumn(name = "SVC_TYPE", length = 20, discriminatorType = DiscriminatorType.STRING)
 public abstract class BasePersServiceVersion extends BasePersObject {
 	static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(BasePersServiceVersion.class);
 
