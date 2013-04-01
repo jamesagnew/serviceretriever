@@ -1,11 +1,15 @@
 package net.svcret.ejb.model.entity;
 
+import java.io.Serializable;
+
 import javax.persistence.Transient;
 
 import com.google.common.base.Objects;
 
-public abstract class BasePersObject {
+public abstract class BasePersObject implements Serializable {
 
+	private static final long serialVersionUID = 1L;
+	
 	@Transient
 	private boolean myNewlyCreated;
 
@@ -14,7 +18,21 @@ public abstract class BasePersObject {
 	 */
 	@Override
 	public boolean equals(Object theObj) {
-		return getClass().equals(theObj.getClass()) && Objects.equal(getPid(), ((BasePersObject) theObj).getPid());
+		if (theObj == null) {
+			return false;
+		}
+		
+		if (getClass().equals(theObj.getClass()) == false) {
+			return false;
+		}
+
+		BasePersObject obj = (BasePersObject) theObj;
+		
+		if (getPid() == null && obj.getPid() == null) {
+			return this == theObj;
+		}
+		
+		return Objects.equal(getPid(), obj.getPid());
 	}
 
 	public abstract Long getPid();

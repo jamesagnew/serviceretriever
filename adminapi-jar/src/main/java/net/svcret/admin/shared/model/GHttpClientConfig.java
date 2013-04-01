@@ -2,14 +2,25 @@ package net.svcret.admin.shared.model;
 
 public class GHttpClientConfig extends BaseGObject<GHttpClientConfig> {
 
+	public static final String DEFAULT_ID = "DEFAULT";
+
 	private static final long serialVersionUID = 1L;
 
+	private boolean myCircuitBreakerEnabled;
 	private int myCircuitBreakerTimeBetweenResetAttempts;
 	private int myConnectTimeoutMillis;
 	private int myFailureRetriesBeforeAborting;
 	private String myId;
+	private String myName;
 	private int myReadTimeoutMillis;
 	private UrlSelectionPolicy myUrlSelectionPolicy;
+
+	/**
+	 * @return the circuitBreakerEnabled
+	 */
+	public boolean isCircuitBreakerEnabled() {
+		return myCircuitBreakerEnabled;
+	}
 
 	/**
 	 * @return the circuitBreakerTimeBetweenResetAttempts
@@ -40,6 +51,13 @@ public class GHttpClientConfig extends BaseGObject<GHttpClientConfig> {
 	}
 
 	/**
+	 * @return the name
+	 */
+	public String getName() {
+		return myName;
+	}
+
+	/**
 	 * @return the readTimeoutMillis
 	 */
 	public int getReadTimeoutMillis() {
@@ -55,7 +73,22 @@ public class GHttpClientConfig extends BaseGObject<GHttpClientConfig> {
 
 	@Override
 	public void merge(GHttpClientConfig theObject) {
+		myCircuitBreakerEnabled = theObject.myCircuitBreakerEnabled;
+		myCircuitBreakerTimeBetweenResetAttempts = theObject.myCircuitBreakerTimeBetweenResetAttempts;
+		myConnectTimeoutMillis = theObject.myConnectTimeoutMillis;
+		myFailureRetriesBeforeAborting = theObject.myFailureRetriesBeforeAborting;
+		myId = theObject.myId;
+		myName = theObject.myName;
+		myReadTimeoutMillis = theObject.myReadTimeoutMillis;
+		myUrlSelectionPolicy = theObject.myUrlSelectionPolicy;
+	}
 
+	/**
+	 * @param theEnabled
+	 *            the circuitBreakerEnabled to set
+	 */
+	public void setCircuitBreakerEnabled(boolean theEnabled) {
+		myCircuitBreakerEnabled = theEnabled;
 	}
 
 	/**
@@ -91,6 +124,14 @@ public class GHttpClientConfig extends BaseGObject<GHttpClientConfig> {
 	}
 
 	/**
+	 * @param theName
+	 *            the name to set
+	 */
+	public void setName(String theName) {
+		myName = theName;
+	}
+
+	/**
 	 * @param theReadTimeoutMillis
 	 *            the readTimeoutMillis to set
 	 */
@@ -104,6 +145,10 @@ public class GHttpClientConfig extends BaseGObject<GHttpClientConfig> {
 	 */
 	public void setUrlSelectionPolicy(UrlSelectionPolicy theUrlSelectionPolicy) {
 		myUrlSelectionPolicy = theUrlSelectionPolicy;
+	}
+
+	public boolean isDefault() {
+		return DEFAULT_ID.equals(myId);
 	}
 
 }

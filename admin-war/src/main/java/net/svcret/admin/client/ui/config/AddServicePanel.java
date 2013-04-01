@@ -27,9 +27,6 @@ public class AddServicePanel extends FlowPanel {
 	private GDomainList myDomainList;
 	
 	public AddServicePanel(Long theDomainPid) {
-		if (theDomainPid == null) {
-			throw new IllegalArgumentException("Domain should not be null");
-		}
 		myDomainPid = theDomainPid;
 		
 		setStylePrimaryName("mainPanel");
@@ -88,7 +85,7 @@ public class AddServicePanel extends FlowPanel {
 		for (GDomain next : myDomainList) {
 			String nextValue = Long.toString(next.getPid());
 			myDomainListBox.addItem(next.getName(), nextValue);
-			if (nextValue.equals(myDomainPid.toString())) {
+			if (Long.valueOf(next.getPid()).equals(myDomainPid)) {
 				myDomainListBox.setSelectedIndex(myDomainListBox.getItemCount() - 1);
 			}
 		}

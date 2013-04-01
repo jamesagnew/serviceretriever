@@ -8,12 +8,12 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.ejb.EJB;
 import javax.servlet.http.HttpSession;
 
-import org.apache.commons.lang.StringUtils;
-
 import net.svcret.admin.client.rpc.ModelUpdateService;
 import net.svcret.admin.shared.ServiceFailureException;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
 import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.GHttpClientConfig;
+import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
@@ -23,6 +23,8 @@ import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.ejb.api.IAdminService;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.util.Validate;
+
+import org.apache.commons.lang.StringUtils;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
@@ -201,9 +203,9 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	@Override
 	public ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ServiceFailureException {
 		Validate.throwIllegalArgumentExceptionIfNull("ModelUpdateRequest", theRequest);
-		
+
 		ourLog.info("Requesting a model update from backend server for: " + theRequest.toString());
-		
+
 		if (isMockMode()) {
 			return myMock.loadModelUpdate(theRequest);
 		}
@@ -234,19 +236,19 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		if (isMockMode()) {
 			retVal = myMock.loadWsdl(theService, theWsdlUrl);
 		} else {
-			throw new IllegalStateException();
-		}
 
-		GSoap11ServiceVersionAndResources serviceAndResources;
-		try {
-			serviceAndResources = myAdminSvc.loadSoap11ServiceVersionFromWsdl(theService, theWsdlUrl);
-		} catch (ProcessingException e) {
-			ourLog.error("Failed to load service version from WSDL", e);
-			throw new ServiceFailureException(e.getMessage());
-		}
+			GSoap11ServiceVersionAndResources serviceAndResources;
+			try {
+				serviceAndResources = myAdminSvc.loadSoap11ServiceVersionFromWsdl(theService, theWsdlUrl);
+			} catch (ProcessingException e) {
+				ourLog.error("Failed to load service version from WSDL", e);
+				throw new ServiceFailureException(e.getMessage());
+			}
 
-		saveServiceVersionToSession(serviceAndResources.getServiceVersion());
-		saveServiceVersionResourcesToSession(serviceAndResources);
+			saveServiceVersionResourcesToSession(serviceAndResources);
+
+			retVal = serviceAndResources.getServiceVersion();
+		}
 
 		/*
 		 * Merge security
@@ -286,6 +288,50 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 
 		String key = SESSION_PREFIX_UNCOMITTED_SVC_VER + theServiceVersion.getUncommittedSessionId();
 		getThreadLocalRequest().getSession(true).setAttribute(key, theServiceVersion);
+	}
+
+	@Override
+	public GHttpClientConfig saveHttpClientConfig(boolean theCreate, GHttpClientConfig theConfig) throws ServiceFailureException {
+		Validate.throwIllegalArgumentExceptionIfNull("HttpClientConfig", theConfig);
+
+		if (theCreate) {
+			ourLog.info("Saving new HTTP client config");
+		} else {
+			ourLog.info("Saving HTTP client config ID[{}]", theConfig.getPid());
+		}
+
+		if (isMockMode()) {
+			return myMock.saveHttpClientConfig(theCreate, theConfig);
+		}
+
+		if (theCreate) {
+			theConfig.setPid(0);
+		}
+		
+		try {
+			return myAdminSvc.saveHttpClientConfig(theConfig);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to save config", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+	}
+
+	@Override
+	public GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ServiceFailureException {
+		if (thePid <= 0) {
+			throw new IllegalArgumentException("Invalid PID: " + thePid);
+		}
+		
+		if (isMockMode()) {
+			return myMock.deleteHttpClientConfig(thePid);
+		}
+		
+		try {
+			return myAdminSvc.deleteHttpClientConfig(thePid);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to save config", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
 	}
 
 }

@@ -19,6 +19,7 @@ import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.StatusEnum;
+import net.svcret.admin.shared.model.UrlSelectionPolicy;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -73,9 +74,13 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		GHttpClientConfig defCfg = new GHttpClientConfig();
 		defCfg.setPid(ourNextPid++);
 		defCfg.setId("DEFAULT");
-		defCfg.setCircuitBreakerTimeBetweenResetAttempts(2);
+		defCfg.setName("Default (Can't be edited)");
+		defCfg.setUrlSelectionPolicy(UrlSelectionPolicy.PREFER_LOCAL);
+		defCfg.setCircuitBreakerTimeBetweenResetAttempts(60000);
 		defCfg.setReadTimeoutMillis(1000);
 		defCfg.setConnectTimeoutMillis(2000);
+		defCfg.setCircuitBreakerEnabled(true);
+		defCfg.setFailureRetriesBeforeAborting(1);
 		myClientConfigList.add(defCfg);
 
 	}
@@ -105,7 +110,17 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 			}
 		}
 
+		if (theRequest.isLoadHttpClientConfigs()) {
+			retVal.setHttpClientConfigList(getHttpClientConfigList());
+		}
+		
 		return retVal;
+	}
+
+	private GHttpClientConfigList getHttpClientConfigList() {
+		GHttpClientConfigList clientConfigList = new GHttpClientConfigList();
+		clientConfigList.mergeResults(myClientConfigList);
+		return clientConfigList;
 	}
 
 	private void populateRandom(BaseGDashboardObjectWithUrls<?> obj) {
@@ -264,6 +279,27 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		retVal.setNewService(svc);
 		retVal.setNewServiceVersion(theVersion);
 		return retVal;
+	}
+
+	@Override
+	public GHttpClientConfig saveHttpClientConfig(boolean theCreate, GHttpClientConfig theConfig) {
+		if (theCreate) {
+			theConfig.setPid(ourNextPid++);
+			myClientConfigList.add(theConfig);
+			return theConfig;
+		} else {
+			GHttpClientConfig existing = myClientConfigList.getConfigByPid(theConfig.getPid());
+			existing.merge(theConfig);
+			return existing;
+		}
+	}
+
+	@Override
+	public GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ServiceFailureException {
+		GHttpClientConfig config = myClientConfigList.getConfigByPid(thePid);
+		myClientConfigList.remove(config);
+		
+		return getHttpClientConfigList();
 	}
 
 }

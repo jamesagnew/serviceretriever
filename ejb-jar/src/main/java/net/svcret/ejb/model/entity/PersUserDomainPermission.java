@@ -2,7 +2,7 @@ package net.svcret.ejb.model.entity;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.Collections;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -12,28 +12,20 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.OrderBy;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
-@Table(name = "PX_SVC_USER_PERM")
+@Table(name = "PX_USER_PERM_DOMAIN", uniqueConstraints = { // -
+@UniqueConstraint(columnNames = { "SVC_DOMAIN_PID", "USER_PID" }) } // -
+)
 @Entity
-public class PersServiceUserPermission extends BasePersObject {
+public class PersUserDomainPermission extends BasePersObject {
 
-	@Column(name = "ALL_ENVS", nullable = false)
-	private boolean myAllEnvironments;
-
-	@Column(name = "ALL_SVCS", nullable = false)
-	private boolean myAllServices;
-
-	@ManyToMany(cascade = {})
-	@JoinTable(name = "PX_SVC_USER_PERM_ENV", joinColumns = @JoinColumn(name = "SVC_USER_PERM2_PID", referencedColumnName = "PID"), inverseJoinColumns = @JoinColumn(name = "ENV_PID", referencedColumnName = "PID"))
-	@OrderBy("ENV")
-	private List<PersEnvironment> myEnvironments;
+	@Column(name = "ALLOW_ALL_SVCS")
+	private boolean myAllowAllServices;
 
 	@Version()
 	@Column(name = "OPTLOCK")
@@ -48,21 +40,28 @@ public class PersServiceUserPermission extends BasePersObject {
 	@JoinColumn(name = "SVC_DOMAIN_PID", referencedColumnName = "PID", nullable = false)
 	private PersDomain myServiceDomain;
 
-	@OneToMany(cascade = CascadeType.ALL)
-	private Collection<PersServiceUserServicePermission> myServicePermissions;
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+	private Collection<PersUserServicePermission> myServicePermissions;
 
 	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
-	@JoinColumn(name = "SVC_USER_PID", referencedColumnName = "PID", nullable = false)
-	private PersServiceUser myServiceUser;
+	@JoinColumn(name = "USER_PID", referencedColumnName = "PID", nullable = false)
+	private PersUser myServiceUser;
 
 	/**
-	 * @return the environments
+	 * @param theServicePermissions
+	 *            the servicePermissions to set
+	 * @return 
 	 */
-	public List<PersEnvironment> getEnvironments() {
-		if (myEnvironments == null) {
-			myEnvironments = new ArrayList<PersEnvironment>();
-		}
-		return myEnvironments;
+	public PersUserServicePermission addPermission(PersService theService) {
+		PersUserServicePermission permission = new PersUserServicePermission();
+		permission.setService(theService);
+		permission.setNewlyCreated(true);
+		permission.setDomainPermission(this);
+
+		getServicePermissions();
+		myServicePermissions.add(permission);
+		
+		return permission;
 	}
 
 	/**
@@ -89,64 +88,33 @@ public class PersServiceUserPermission extends BasePersObject {
 	/**
 	 * @return the servicePermissions
 	 */
-	public Collection<PersServiceUserServicePermission> getServicePermissions() {
+	public Collection<PersUserServicePermission> getServicePermissions() {
 		if (myServicePermissions == null) {
-			myServicePermissions = new ArrayList<PersServiceUserServicePermission>();
+			myServicePermissions = new ArrayList<PersUserServicePermission>();
 		}
-		return myServicePermissions;
+		return Collections.unmodifiableCollection(myServicePermissions);
 	}
 
 	/**
 	 * @return the serviceUser
 	 */
-	public PersServiceUser getServiceUser() {
+	public PersUser getServiceUser() {
 		return myServiceUser;
 	}
 
 	/**
-	 * @return the allEnvironments
+	 * @return the allowAllServices
 	 */
-	public boolean isAllEnvironments() {
-		return myAllEnvironments;
+	public boolean isAllowAllServices() {
+		return myAllowAllServices;
 	}
 
 	/**
-	 * @return the allServices
+	 * @param theAllowAllServices
+	 *            the allowAllServices to set
 	 */
-	public boolean isAllServices() {
-		return myAllServices;
-	}
-
-	/**
-	 * @param theAllEnvironments
-	 *            the allEnvironments to set
-	 */
-	public void setAllEnvironments(boolean theAllEnvironments) {
-		myAllEnvironments = theAllEnvironments;
-	}
-
-	/**
-	 * @param theAllServices
-	 *            the allServices to set
-	 */
-	public void setAllServices(boolean theAllServices) {
-		myAllServices = theAllServices;
-	}
-
-	/**
-	 * @param theOptLock
-	 *            the optLock to set
-	 */
-	public void setOptLock(int theOptLock) {
-		myOptLock = theOptLock;
-	}
-
-	/**
-	 * @param thePid
-	 *            the pid to set
-	 */
-	public void setPid(Long thePid) {
-		myPid = thePid;
+	public void setAllowAllServices(boolean theAllowAllServices) {
+		myAllowAllServices = theAllowAllServices;
 	}
 
 	/**
@@ -161,25 +129,22 @@ public class PersServiceUserPermission extends BasePersObject {
 	 * @param theServiceUser
 	 *            the serviceUser to set
 	 */
-	public void setServiceUser(PersServiceUser theServiceUser) {
+	public void setServiceUser(PersUser theServiceUser) {
 		myServiceUser = theServiceUser;
 	}
 
-	public void addEnvironment(PersEnvironment theEnv) {
-		getEnvironments().add(theEnv);
-	}
+	public Collection<PersServiceVersionMethod> getAllAllowedMethods() {
+		ArrayList<PersServiceVersionMethod> retVal = new ArrayList<PersServiceVersionMethod>();
 
-	public void removeEnvironment(PersEnvironment theEnv) {
-		getEnvironments().remove(theEnv);
-	}
-
-	public void loadAllAssociations() {
-		for (PersEnvironment next : myEnvironments) {
-			next.loadAllAssociations();
+		if (myAllowAllServices) {
+			retVal.addAll(getServiceDomain().getAllServiceVersionMethods());
 		}
-		for (PersServiceUserServicePermission next : myServicePermissions) {
-			next.loadAllAssociations();
+		
+		for (PersUserServicePermission nextService : getServicePermissions()) {
+			retVal.addAll(nextService.getAllAllowedMethods());
 		}
+		
+		return retVal;
 	}
 
 }

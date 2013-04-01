@@ -20,13 +20,13 @@ public class PersInvocationUserStatsPk extends BasePersInvocationStatsPk {
 	
 	@JoinColumn(name="USER_PID", nullable=false)
 	@ManyToOne(fetch=FetchType.LAZY, cascade= {})
-	private PersServiceUser myUser;
+	private PersUser myUser;
 	
 	public PersInvocationUserStatsPk() {
 		super();
 	}
 
-	public PersInvocationUserStatsPk(InvocationStatsIntervalEnum theInterval, Date theStartTime, PersServiceVersionMethod theMethod, PersServiceUser theUser) {
+	public PersInvocationUserStatsPk(InvocationStatsIntervalEnum theInterval, Date theStartTime, PersServiceVersionMethod theMethod, PersUser theUser) {
 		super(theInterval,theStartTime,theMethod);
 		myUser = theUser;
 	}
@@ -58,7 +58,7 @@ public class PersInvocationUserStatsPk extends BasePersInvocationStatsPk {
 	/**
 	 * @return the user
 	 */
-	public PersServiceUser getUser() {
+	public PersUser getUser() {
 		return myUser;
 	}
 
@@ -76,7 +76,7 @@ public class PersInvocationUserStatsPk extends BasePersInvocationStatsPk {
 	/**
 	 * @param theUser the user to set
 	 */
-	public void setUser(PersServiceUser theUser) {
+	public void setUser(PersUser theUser) {
 		myUser = theUser;
 	}
 

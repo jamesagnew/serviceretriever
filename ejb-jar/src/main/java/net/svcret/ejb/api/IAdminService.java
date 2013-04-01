@@ -5,6 +5,8 @@ import java.util.List;
 import javax.ejb.Local;
 
 import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.GHttpClientConfig;
+import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
@@ -34,5 +36,9 @@ public interface IAdminService {
 	GDomain getDomainByPid(long theDomain);
 
 	GService getServiceByPid(long theService);
+
+	GHttpClientConfig saveHttpClientConfig(GHttpClientConfig theConfig) throws ProcessingException;
+
+	GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ProcessingException;
 
 }

@@ -50,15 +50,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		assertEquals("domain_id", domain.getId());
 		assertEquals("domain_name", domain.getName());
-		assertEquals(StatusEnum.UNKNOWN, domain.getStatus());
-		assertEquals(0, domain.getUrlsActive());
-		assertEquals(0, domain.getUrlsUnknown());
-		assertEquals(0, domain.getUrlsDown());
-		
-		assertEquals(60, domain.getTransactions60mins().length);
-		for (int i = 0; i <= 59; i++) {
-			assertEquals(0, domain.getTransactions60mins()[i]);
-		}
+		assertFalse(domain.isStatsInitialized());
 	}
 
 	@After
@@ -96,15 +88,9 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		
 		assertEquals("svc_id", service.getId());
 		assertEquals("svc_name", service.getName());
-		assertEquals(StatusEnum.UNKNOWN, service.getStatus());
-		assertEquals(0, service.getUrlsActive());
-		assertEquals(0, service.getUrlsUnknown());
-		assertEquals(0, service.getUrlsDown());
 		
-		assertEquals(60, domain.getTransactions60mins().length);
-		for (int i = 0; i <= 59; i++) {
-			assertEquals(0, domain.getTransactions60mins()[i]);
-		}
+		assertFalse(service.isStatsInitialized());
+		
 	}
 
 	@Test

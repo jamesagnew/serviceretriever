@@ -380,10 +380,11 @@ public class SoapDetailPanel extends FlowPanel {
 		contentPanel.addStyleName("contentInnerPanel");
 		wsdlPanel.add(contentPanel);
 
-		wsdlPanel.add(new Label("Every SOAP based service must have a backing WSDL, which provides " +
+		contentPanel.add(new Label("Every SOAP based service must have a backing WSDL, which provides " +
 				"clients with the service contract being implemented. Enter a URL to a remote WSDL " +
 				"here, and click the \"Load\" button below, and ServiceRetriever will fetch the " +
 				"WSDL and initialize your service."));
+		
 		
 		HtmlLabel urlLabel = new HtmlLabel("URL:", "urlTb");
 		contentPanel.add(urlLabel);

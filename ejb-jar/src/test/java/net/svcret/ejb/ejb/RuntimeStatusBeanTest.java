@@ -7,31 +7,35 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
+import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
 import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.HttpResponseBean.Failure;
 import net.svcret.ejb.api.IServicePersistence;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.api.UrlPoolBean;
-import net.svcret.ejb.ejb.RuntimeStatusBean;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersMethodStats;
+import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersInvocationAnonStats;
 import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
+import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.ejb.model.entity.PersStaticResourceStats;
-import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus.StatusEnum;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -97,7 +101,7 @@ public class RuntimeStatusBeanTest {
 		InvocationResponseResultsBean orchResponse = mock(InvocationResponseResultsBean.class, DefaultAnswer.INSTANCE);
 		PersServiceVersionSoap11 svcVer = mock(PersServiceVersionSoap11.class, DefaultAnswer.INSTANCE);
 		PersServiceVersionUrl url = mock(PersServiceVersionUrl.class, DefaultAnswer.INSTANCE);
-		PersServiceVersionUrlStatus status = mock(PersServiceVersionUrlStatus.class);
+		PersServiceVersionUrlStatus status = mock(PersServiceVersionUrlStatus.class, DefaultAnswer.INSTANCE);
 
 		DefaultAnswer.setDesignTime();
 		when(status.getPid()).thenReturn(1122L);
@@ -109,6 +113,9 @@ public class RuntimeStatusBeanTest {
 		when(orchResponse.getResponseType()).thenReturn(ResponseTypeEnum.SUCCESS);
 		when(httpResponse.getSuccessfulUrl()).thenReturn("http://foo");
 		when(svcVer.getUrlWithUrl("http://foo")).thenReturn(url);
+		when(status.getUrl()).thenReturn(url);
+		when(status.getStatus()).thenReturn(StatusEnum.ACTIVE);
+		when(httpResponse.getFailedUrls()).thenReturn(new HashMap<String, HttpResponseBean.Failure>());
 		DefaultAnswer.setRunTime();
 		
 		Date ts1 = myFmt.parse("2013-01-01 10:00:03");
@@ -120,6 +127,7 @@ public class RuntimeStatusBeanTest {
 		DefaultAnswer.setDesignTime();
 		when(httpResponse.getResponseTime()).thenReturn(4000L);
 		when(httpResponse.getBody()).thenReturn(StringUtils.leftPad("", 8000));
+		when(status.isDirty()).thenReturn(false);
 		DefaultAnswer.setRunTime();
 
 		Date ts2 = myFmt.parse("2013-01-01 10:00:22");
@@ -343,13 +351,15 @@ public class RuntimeStatusBeanTest {
 		pool = bean.buildUrlPool(ver);
 		assertEquals("R2", pool.getPreferredUrl());
 		assertEquals(3, pool.getAlternateUrls().size());
-		assertEquals("L2", pool.getAlternateUrls().get(0));
-		assertEquals("R1", pool.getAlternateUrls().get(1));
-		assertEquals("L1", pool.getAlternateUrls().get(2));
+		assertEquals("L1", pool.getAlternateUrls().get(0));
+		assertEquals("L2", pool.getAlternateUrls().get(1));
+		assertEquals("R1", pool.getAlternateUrls().get(2));
 		DefaultAnswer.setDesignTime();
 		
 		
 	}
+	
+	
 	
 	private <T> List<T> toList(T... theObjects) {
 		ArrayList<T> retVal = new ArrayList<T>(theObjects.length);
@@ -358,7 +368,6 @@ public class RuntimeStatusBeanTest {
 		}
 		return retVal;
 	}
-
 
 	@Before
 	public void before() {

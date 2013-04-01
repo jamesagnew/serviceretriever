@@ -9,7 +9,9 @@ import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersMethodStats;
+import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
+import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersEnvironment;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
@@ -19,72 +21,88 @@ import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
 import net.svcret.ejb.model.entity.PersService;
-import net.svcret.ejb.model.entity.PersServiceUser;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
+import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 
 
 @Local
 public interface IServicePersistence {
 
-	PersDomain getOrCreateDomainWithId(String theId) throws ProcessingException;
+	void deleteHttpClientConfig(PersHttpClientConfig theConfig);
 	
 	Collection<PersDomain> getAllDomains();
 
-	PersService getOrCreateServiceWithId(PersDomain theDomain, String theServiceId) throws ProcessingException;
+	long incrementStateCounter(String theKey);
+	
+	long getStateCounter(String theKey);
 
 	Collection<PersService> getAllServices();
 
+	Collection<PersUser> getAllServiceUsers();
+
 	Collection<PersServiceVersionSoap11> getAllServiceVersions();
 
-	PersServiceVersionSoap11 getOrCreateServiceVersionWithId(PersService theService, String theVersionId) throws ProcessingException;
-
-	void removeServiceVersion(long thePid) throws ProcessingException;
-
-	void saveServiceVersion(PersServiceVersionSoap11 theVersion) throws ProcessingException;
-	
-	PersEnvironment getOrCreateEnvironment(String theEnv) throws ProcessingException;
-	
-	PersServiceUser getOrCreateServiceUser(String theUsername) throws ProcessingException;
-	
-	void saveServiceUser(PersServiceUser theUser);
-
-	Collection<PersServiceUser> getAllServiceUsers();
-
-	PersAuthenticationHostLdap getOrCreateAuthenticationHostLdap(String theModuleId) throws ProcessingException;
-	
 	BasePersAuthenticationHost getAuthenticationHost(String theModuleId) throws ProcessingException;
 
-	PersServiceVersionStatus getStatusForServiceVersionWithPid(long theServicePid);
+	PersDomain getDomainById(String theDomainId);
+
+	/**
+	 * Returns <code>null</code> if not found
+	 */
+	PersDomain getDomainByPid(long theDomainPid);
+	
+	PersHttpClientConfig getHttpClientConfig(long thePid);
+	
+	Collection<PersHttpClientConfig> getHttpClientConfigs();
+	
+	PersAuthenticationHostLdap getOrCreateAuthenticationHostLdap(String theModuleId) throws ProcessingException;
+
+	PersDomain getOrCreateDomainWithId(String theId) throws ProcessingException;
+
+	PersEnvironment getOrCreateEnvironment(String theEnv) throws ProcessingException;
+	
+	PersHttpClientConfig getOrCreateHttpClientConfig(String theId);
+
+	PersInvocationAnonStats getOrCreateInvocationAnonStats(PersInvocationAnonStatsPk thePk);
 	
 	BasePersInvocationStats getOrCreateInvocationStats(PersInvocationStatsPk thePk);
 
 	PersInvocationUserStats getOrCreateInvocationUserStats(PersInvocationUserStatsPk thePk);
 
-	void saveInvocationStats(Collection<BasePersMethodStats> theStats);
+	PersUser getOrCreateUser(BasePersAuthenticationHost theAuthHost, String theUsername) throws ProcessingException;
 
-	PersInvocationAnonStats getOrCreateInvocationAnonStats(PersInvocationAnonStatsPk thePk);
+	PersServiceVersionSoap11 getOrCreateServiceVersionWithId(PersService theService, String theVersionId) throws ProcessingException;
 
-	PersHttpClientConfig getOrCreateHttpClientConfig(String theId);
+	PersService getOrCreateServiceWithId(PersDomain theDomain, String theServiceId) throws ProcessingException;
 
-	void saveServiceVersionUrlStatus(ArrayList<PersServiceVersionUrlStatus> theUrlStatuses);
-
-	void saveDomain(PersDomain theDomain);
-
-	Collection<PersHttpClientConfig> getHttpClientConfigs();
-	
-	/**
-	 * Returns <code>null</code> if not found
-	 */
-	PersDomain getDomainByPid(long theDomainPid);
-
-	void saveService(PersService theService);
-
-	PersDomain getDomainById(String theDomainId);
+	PersService getServiceById(long theDomainPid, String theServiceId);
 
 	PersService getServiceByPid(long theServicePid);
 
-	PersService getServiceById(long theDomainPid, String theServiceId);
+	PersServiceVersionStatus getStatusForServiceVersionWithPid(long theServicePid);
+	
+	void removeServiceVersion(long thePid) throws ProcessingException;
+
+	void saveDomain(PersDomain theDomain);
+
+	PersHttpClientConfig saveHttpClientConfig(PersHttpClientConfig theConfig);
+
+	void saveInvocationStats(Collection<BasePersMethodStats> theStats);
+
+	void saveService(PersService theService);
+
+	void saveServiceUser(PersUser theUser);
+
+	void saveServiceVersion(BasePersServiceVersion theVersion) throws ProcessingException;
+
+	void saveServiceVersionUrlStatus(ArrayList<PersServiceVersionUrlStatus> theUrlStatuses);
+
+	PersAuthenticationHostLocalDatabase getOrCreateAuthenticationHostLocalDatabase(String theModuleIdAdminAuth) throws ProcessingException;
+
+	void saveAuthenticationHost(PersAuthenticationHostLocalDatabase theAuthHost);
+
+	Collection<BasePersAuthenticationHost> getAllAuthenticationHosts();
 	
 }

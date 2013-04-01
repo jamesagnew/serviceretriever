@@ -26,7 +26,10 @@ public class AdminPortal implements EntryPoint, UncaughtExceptionHandler {
 	 */
 	public static final ModelUpdateServiceAsync MODEL_SVC = GWT.create(ModelUpdateService.class);
 
-	// private final Messages messages = GWT.create(Messages.class);
+	/**
+	 * Messages
+	 */
+	public static final Messages MSGS = GWT.create(Messages.class);
 
 	/**
 	 * This is the entry point method.
@@ -52,6 +55,7 @@ public class AdminPortal implements EntryPoint, UncaughtExceptionHandler {
 			public void onSuccess(Void theResult) {
 				// nothing
 			}
+
 			@Override
 			public void onFailure(Throwable theCaught) {
 				// nothing

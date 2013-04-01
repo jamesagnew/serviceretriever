@@ -4,16 +4,19 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.config.AddDomainPanel;
 import net.svcret.admin.client.ui.config.AddDomainStep2Panel;
 import net.svcret.admin.client.ui.config.AddServicePanel;
 import net.svcret.admin.client.ui.config.AddServiceVersionPanel;
 import net.svcret.admin.client.ui.config.AddServiceVersionStep2Panel;
 import net.svcret.admin.client.ui.config.EditDomainPanel;
+import net.svcret.admin.client.ui.config.HttpClientConfigsPanel;
 import net.svcret.admin.client.ui.dash.ServiceDashboardPanel;
 import net.svcret.admin.client.ui.layout.BodyPanel;
 import net.svcret.admin.shared.util.StringUtil;
 
+import com.google.gwt.core.shared.GWT;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.History;
@@ -41,46 +44,60 @@ public class NavProcessor {
 		PagesEnum page = getCurrentPage();
 		String args = currentTokenArgs();
 
-		Panel panel = null;
-		switch (page) {
-		case DSH:
-			panel = new ServiceDashboardPanel();
-			break;
-		case ADD:
-			panel = new AddDomainPanel();
-			break;
-		case AD2:
-			panel = new AddDomainStep2Panel(Long.parseLong(args));
-			break;
-		case EDO:
-			panel = new EditDomainPanel(Long.parseLong(args));
-			break;
-		case ASE:
-			panel = new AddServicePanel(Long.parseLong(args));
-			break;
-		case ASV:
-			String[] argsSplit = args.split("_");
-			if (argsSplit.length < 2 || StringUtil.isBlank(argsSplit[0]) || StringUtil.isBlank(argsSplit[1])) {
-				panel = new AddServiceVersionPanel(null, null);
-			} else {
-				panel = new AddServiceVersionPanel(Long.parseLong(argsSplit[0]), Long.parseLong(argsSplit[1]));
+		try {
+			Panel panel = null;
+			switch (page) {
+			case DSH:
+				panel = new ServiceDashboardPanel();
+				break;
+			case ADD:
+				panel = new AddDomainPanel();
+				break;
+			case AD2:
+				panel = new AddDomainStep2Panel(Long.parseLong(args));
+				break;
+			case EDO:
+				panel = new EditDomainPanel(Long.parseLong(args));
+				break;
+			case ASE:
+				if (StringUtil.isBlank(args)) {
+					panel = new AddServicePanel(null);
+				} else {
+					panel = new AddServicePanel(Long.parseLong(args));
+				}
+				break;
+			case ASV:
+				String[] argsSplit = args.split("_");
+				if (argsSplit.length < 2 || StringUtil.isBlank(argsSplit[0]) || StringUtil.isBlank(argsSplit[1])) {
+					panel = new AddServiceVersionPanel(null, null);
+				} else {
+					panel = new AddServiceVersionPanel(Long.parseLong(argsSplit[0]), Long.parseLong(argsSplit[1]));
+				}
+				break;
+			case AV2:
+				argsSplit = args.split("_");
+				if (argsSplit.length < 3) {
+					navigateToDefault();
+				} else {
+					panel = new AddServiceVersionStep2Panel(Long.parseLong(argsSplit[0]), Long.parseLong(argsSplit[1]), Long.parseLong(argsSplit[2]));
+				}
+				break;
+			case HCC:
+				panel = new HttpClientConfigsPanel();
 			}
-			break;
-		case AV2:
-			argsSplit = args.split("_");
-			if (argsSplit.length < 3) {
-				navigateToDefault();
-			}else {
-				panel = new AddServiceVersionStep2Panel(Long.parseLong(argsSplit[0]), Long.parseLong(argsSplit[1]), Long.parseLong(argsSplit[2]));
+
+			if (panel == null) {
+				return;
 			}
-			break;
+
+			BodyPanel.getInstance().setContents(panel);
+			
+		} catch (Exception e) {
+			GWT.log("Failed to navigate!", e);
+			AdminPortal.reportError("Failed to navigate!", e);
+			navigateToDefault();
 		}
 
-		if (panel == null) {
-			return;
-		}
-
-		BodyPanel.getInstance().setContents(panel);
 	}
 
 	private static void navigateToDefault() {
@@ -238,13 +255,13 @@ public class NavProcessor {
 		for (PagesEnum pagesEnum : thePages) {
 			names.add(pagesEnum.name());
 		}
-		
+
 		String[] parts = getCurrentToken().split("__");
 		String prev = DEFAULT_PAGE.name();
 		for (String next : parts) {
 			if (next.length() >= 3 && names.contains(next.substring(0, 3))) {
 				break;
-			}else {
+			} else {
 				prev = next;
 			}
 		}

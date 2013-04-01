@@ -67,6 +67,11 @@ LABEL.formLabel {
 .pushButton {
 }
 
+H1 {
+	font-size: 1.2em;
+	margin-bottom: 0px;
+}
+
 .hidden {
 	display: none;
 }
@@ -109,6 +114,11 @@ LABEL.formLabel {
 	color: #808080;
 	font-size: 1.5em;
 	border-top-right-radius: 10px;
+}
+
+.listSelectionDesc {
+	font-size: 0.9em;
+	color: #444444;
 }
 
 TABLE.listTable TBODY TR:first-child {
@@ -178,6 +188,10 @@ TABLE.listTable TBODY TR:nth-child(odd) {
 	font-size: 14px;
 	font-family: Arial;
 	color: #FF0000;
+}
+
+.textBoxWithError {
+	background-color: #FFB0B0;
 }
 
 .urlStatusSummaryPanel {

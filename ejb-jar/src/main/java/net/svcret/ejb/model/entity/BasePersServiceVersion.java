@@ -24,6 +24,7 @@ import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKey;
+import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.OrderColumn;
@@ -35,11 +36,10 @@ import javax.persistence.Version;
 import net.svcret.ejb.api.ServiceProtocolEnum;
 import net.svcret.ejb.util.Validate;
 
-
-@Entity
 @Table(name = "PX_SVC_VER", uniqueConstraints = { @UniqueConstraint(columnNames = { "SERVICE_PID", "VERSION_ID" }) })
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "AUTH_TYPE", length = 20, discriminatorType = DiscriminatorType.STRING)
+@Entity
 public abstract class BasePersServiceVersion extends BasePersObject {
 	static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(BasePersServiceVersion.class);
 
@@ -55,7 +55,7 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 	private List<PersBaseClientAuth<?>> myClientAuths;
 
 	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
-	@JoinColumn(name = "HTTP_CONFIG_PID", referencedColumnName = "PID", nullable=false)
+	@JoinColumn(name = "HTTP_CONFIG_PID", referencedColumnName = "PID", nullable = false)
 	private PersHttpClientConfig myHttpClientConfig;
 
 	@Transient
@@ -83,7 +83,7 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 
 	@OneToMany(cascade = CascadeType.ALL)
 	@OrderColumn(name = "SAUTH_ORDER")
-	private List<PersBaseServerAuth<?,?>> myServerAuths;
+	private List<PersBaseServerAuth<?, ?>> myServerAuths;
 
 	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
 	@JoinColumn(name = "SERVICE_PID", referencedColumnName = "PID")
@@ -96,7 +96,7 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 	@MapKey(name = "myResourceUrl")
 	private Map<String, PersServiceVersionResource> myUriToResource;
 
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval=true)
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
 	@OrderColumn(name = "URL_ORDER")
 	private List<PersServiceVersionUrl> myUrls;
 
@@ -128,7 +128,7 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 		return res;
 	}
 
-	public void addServerAuth(PersBaseServerAuth<?,?> theAuth) {
+	public void addServerAuth(PersBaseServerAuth<?, ?> theAuth) {
 		theAuth.setServiceVersion(this);
 		getServerAuths();
 		myServerAuths.add(theAuth);
@@ -176,6 +176,13 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 		if (myMethods == null) {
 			myMethods = new ArrayList<PersServiceVersionMethod>();
 		}
+		
+		for (Iterator<PersServiceVersionMethod> iter = myMethods.iterator(); iter.hasNext(); ) {
+			if (iter.next() == null) {
+				iter.remove();
+			}
+		}
+		
 		return Collections.unmodifiableList(myMethods);
 	}
 
@@ -187,8 +194,10 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 	}
 
 	public PersServiceVersionMethod getOrCreateAndAddMethodWithName(String theName) {
-		for (PersServiceVersionMethod next : getMethods()) {
-			if (next.getName().equals(theName)) {
+		List<PersServiceVersionMethod> methods = getMethods();
+		for (PersServiceVersionMethod next : methods) {
+			String name = next.getName();
+			if (name.equals(theName)) {
 				return next;
 			}
 		}
@@ -197,12 +206,14 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 		method.setName(theName);
 		method.setServiceVersion(this);
 
+		return method;
+	}
+
+	public void addMethod(PersServiceVersionMethod method) {
 		getMethods();
 		myMethods.add(method);
-		
-		myNameToMethod = null;
 
-		return method;
+		myNameToMethod = null;
 	}
 
 	/**
@@ -236,6 +247,15 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 		return null;
 	}
 
+	public List<String> getMethodNames() {
+		ArrayList<String> retVal = new ArrayList<String>();
+		for (PersServiceVersionMethod nextMethod : getMethods()) {
+			retVal.add(nextMethod.getName());
+		}
+		Collections.sort(retVal);
+		return Collections.unmodifiableList(retVal);
+	}
+
 	public PersServiceVersionResource getResourceWithPid(long theXsdNum) {
 		for (PersServiceVersionResource next : getUriToResource().values()) {
 			if (next.getPid().equals(theXsdNum)) {
@@ -248,9 +268,9 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 	/**
 	 * @return the serverAuths
 	 */
-	public List<PersBaseServerAuth<?,?>> getServerAuths() {
+	public List<PersBaseServerAuth<?, ?>> getServerAuths() {
 		if (myServerAuths == null) {
-			myServerAuths = new ArrayList<PersBaseServerAuth<?,?>>();
+			myServerAuths = new ArrayList<PersBaseServerAuth<?, ?>>();
 		}
 		return Collections.unmodifiableList(myServerAuths);
 	}
@@ -348,19 +368,19 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 		}
 		myAssociationsLoaded = true;
 
-		for (PersBaseClientAuth<?> next : myClientAuths) {
+		for (PersBaseClientAuth<?> next : getClientAuths()) {
 			next.loadAllAssociations();
 		}
 
-		for (PersServiceVersionMethod next : myMethods) {
+		for (PersServiceVersionMethod next : getMethods()) {
 			next.loadAllAssociations();
 		}
 
-		for (PersServiceVersionResource next : myUriToResource.values()) {
+		for (PersServiceVersionResource next : getUriToResource().values()) {
 			next.loadAllAssociations();
 		}
 
-		for (PersServiceVersionUrl next : myUrls) {
+		for (PersServiceVersionUrl next : getUrls()) {
 			next.loadAllAssociations();
 		}
 	}
@@ -436,7 +456,8 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 	}
 
 	/**
-	 * @param theHttpClientConfig the httpClientConfig to set
+	 * @param theHttpClientConfig
+	 *            the httpClientConfig to set
 	 */
 	public void setHttpClientConfig(PersHttpClientConfig theHttpClientConfig) {
 		myHttpClientConfig = theHttpClientConfig;
@@ -463,6 +484,9 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 	 *            the service to set
 	 */
 	public void setService(PersService theService) {
+		if (myService != theService) {
+			theService.addVersion(this);
+		}
 		myService = theService;
 	}
 
@@ -483,6 +507,15 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 		myIdToUrl = null;
 		myPidToUrl = null;
 		myUrlToUrl = null;
+	}
+
+	public void addUrl(PersServiceVersionUrl theUrl) {
+		Validate.throwIllegalArgumentExceptionIfNull("URL", theUrl);
+		getUrls();
+		if (!myUrls.contains(theUrl)) {
+			myUrls.add(theUrl);
+			urlsChanged();
+		}
 	}
 
 }

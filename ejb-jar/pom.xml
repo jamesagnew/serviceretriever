@@ -98,6 +98,13 @@
 			<artifactId>hibernate-core</artifactId>
 			<version>4.2.0.Final</version>
 		</dependency>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>4.2.0.Final</version>
+			<classifier>sources</classifier>
+			<scope>provided</scope>
+		</dependency>
 		<!-- 
 		<dependency>
 			<groupId>org.hibernate</groupId>
@@ -175,6 +182,20 @@
 		</dependency>
 		
 		<!-- Directory (LDAP server for unit tests) -->
+		<dependency>
+			<groupId>org.apache.directory.api</groupId>
+			<artifactId>api-all</artifactId>
+			<version>1.0.0-M16</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.directory.api</groupId>
+			<artifactId>api-all</artifactId>
+			<version>1.0.0-M16</version>
+			<scope>provided</scope>
+			<classifier>sources</classifier>
+		</dependency>
+		
+		
 		<!--
 		<dependency>
 			<groupId>org.apache.directory.server</groupId>

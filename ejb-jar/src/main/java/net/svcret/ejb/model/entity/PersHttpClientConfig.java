@@ -10,6 +10,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
+import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
 
 import com.google.common.base.Objects;
@@ -18,30 +19,37 @@ import com.google.common.base.Objects;
 @Table(name = "PX_HTTP_CLIENT_CONFIG")
 public class PersHttpClientConfig extends BasePersObject {
 
-	public static final int DEFAULT_FAIL_RETRIES_BEFORE_ABORT = 1;
 	public static final int DEFAULT_CB_TIME_BETWEEN_ATTEMPTS = 60 * 10000;
 	public static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 10 * 1000;
-	
+	public static final int DEFAULT_FAIL_RETRIES_BEFORE_ABORT = 1;
 	/**
 	 * Default ID for config. At least this config will always exist.
 	 */
-	public static final String DEFAULT_ID = "DEFAULT";
+	public static final String DEFAULT_ID = GHttpClientConfig.DEFAULT_ID;
+
+	private static final String DEFAULT_NAME = "Default Configuration (Can not be removed)";
 
 	public static final int DEFAULT_READ_TIMEOUT_MILLIS = 20 * 1000;
 
 	public static final UrlSelectionPolicy DEFAULT_URL_SELECTION_POLICY = UrlSelectionPolicy.PREFER_LOCAL;
 
+	@Column(name = "CB_ENABLED")
+	private boolean myCircuitBreakerEnabled;
+
 	@Column(name = "CB_TIME_BET_ATT")
 	private int myCircuitBreakerTimeBetweenResetAttempts;
 
-	@Column(name="CONN_TIMEOUT", nullable=false)
+	@Column(name = "CONN_TIMEOUT", nullable = false)
 	private int myConnectTimeoutMillis;
 
-	@Column(name="FAIL_RET_BEF_ABORT")
+	@Column(name = "FAIL_RET_BEF_ABORT")
 	private int myFailureRetriesBeforeAborting;
 
-	@Column(name = "CONFIG_ID", unique = true, nullable = false)
+	@Column(name = "CONFIG_ID", unique = true, nullable = false, length = 100)
 	private String myId;
+
+	@Column(name = "CONFIG_NAME", unique = true, nullable = true, length = 200)
+	private String myName;
 
 	@Version()
 	@Column(name = "OPTLOCK")
@@ -52,10 +60,10 @@ public class PersHttpClientConfig extends BasePersObject {
 	@Column(name = "PID")
 	private Long myPid;
 
-	@Column(name="READ_TIMEOUT", nullable=false)
+	@Column(name = "READ_TIMEOUT", nullable = false)
 	private int myReadTimeoutMillis;
-	
-	@Column(name = "URL_SEL_POLICY", length = 20, nullable=false)
+
+	@Column(name = "URL_SEL_POLICY", length = 20, nullable = false)
 	@Enumerated(EnumType.STRING)
 	private UrlSelectionPolicy myUrlSelectionPolicy;
 
@@ -68,9 +76,16 @@ public class PersHttpClientConfig extends BasePersObject {
 	}
 
 	/**
+	 * @return the circuitBreakerEnabled
+	 */
+	public boolean isCircuitBreakerEnabled() {
+		return myCircuitBreakerEnabled;
+	}
+
+	/**
 	 * @return the circuitBreakerTimeBetweenResetAttempts
 	 */
-	public long getCircuitBreakerTimeBetweenResetAttempts() {
+	public int getCircuitBreakerTimeBetweenResetAttempts() {
 		return myCircuitBreakerTimeBetweenResetAttempts;
 	}
 
@@ -87,12 +102,19 @@ public class PersHttpClientConfig extends BasePersObject {
 	public int getFailureRetriesBeforeAborting() {
 		return myFailureRetriesBeforeAborting;
 	}
-	
+
 	/**
 	 * @return the id
 	 */
 	public String getId() {
 		return myId;
+	}
+
+	/**
+	 * @return the name
+	 */
+	public String getName() {
+		return myName;
 	}
 
 	/**
@@ -132,6 +154,13 @@ public class PersHttpClientConfig extends BasePersObject {
 	}
 
 	/**
+	 * @param theCircuitBreakerEnabled the circuitBreakerEnabled to set
+	 */
+	public void setCircuitBreakerEnabled(boolean theCircuitBreakerEnabled) {
+		myCircuitBreakerEnabled = theCircuitBreakerEnabled;
+	}
+
+	/**
 	 * @param theCircuitBreakerTimeBetweenResetAttempts
 	 *            the circuitBreakerTimeBetweenResetAttempts to set
 	 */
@@ -140,14 +169,18 @@ public class PersHttpClientConfig extends BasePersObject {
 	}
 
 	/**
-	 * @param theConnectTimeoutMillis the connectTimeoutMillis to set
+	 * @param theConnectTimeoutMillis
+	 *            the connectTimeoutMillis to set
 	 */
 	public void setConnectTimeoutMillis(int theConnectTimeoutMillis) {
-		
+
 		myConnectTimeoutMillis = theConnectTimeoutMillis;
 	}
 
 	public void setDefaults() {
+		myId = DEFAULT_ID;
+		myName = DEFAULT_NAME;
+		myCircuitBreakerEnabled = true;
 		myCircuitBreakerTimeBetweenResetAttempts = DEFAULT_CB_TIME_BETWEEN_ATTEMPTS;
 		myUrlSelectionPolicy = DEFAULT_URL_SELECTION_POLICY;
 		myConnectTimeoutMillis = DEFAULT_CONNECT_TIMEOUT_MILLIS;
@@ -156,7 +189,8 @@ public class PersHttpClientConfig extends BasePersObject {
 	}
 
 	/**
-	 * @param theFailureRetriesBeforeAborting the failureRetriesBeforeAborting to set
+	 * @param theFailureRetriesBeforeAborting
+	 *            the failureRetriesBeforeAborting to set
 	 */
 	public void setFailureRetriesBeforeAborting(int theFailureRetriesBeforeAborting) {
 		myFailureRetriesBeforeAborting = theFailureRetriesBeforeAborting;
@@ -168,6 +202,14 @@ public class PersHttpClientConfig extends BasePersObject {
 	 */
 	public void setId(String theId) {
 		myId = theId;
+	}
+
+	/**
+	 * @param theName
+	 *            the name to set
+	 */
+	public void setName(String theName) {
+		myName = theName;
 	}
 
 	/**
@@ -187,7 +229,8 @@ public class PersHttpClientConfig extends BasePersObject {
 	}
 
 	/**
-	 * @param theReadTimeoutMillis the readTimeoutMillis to set
+	 * @param theReadTimeoutMillis
+	 *            the readTimeoutMillis to set
 	 */
 	public void setReadTimeoutMillis(int theReadTimeoutMillis) {
 		myReadTimeoutMillis = theReadTimeoutMillis;

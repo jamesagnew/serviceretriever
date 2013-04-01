@@ -18,6 +18,7 @@ public class LeftBarPanel extends FlowPanel {
 	private Hyperlink myAddSvcBtn;
 	private ArrayList<Hyperlink> myAllButtons;
 	private Hyperlink myAddSvcVerBtn;
+	private Hyperlink myHttpClientConfigsBtn;
 
 	public LeftBarPanel() {
 		setStylePrimaryName("outerLayoutLeftBar");
@@ -38,17 +39,27 @@ public class LeftBarPanel extends FlowPanel {
 		 * Configure Subment
 		 */
 		
-		LeftMenuComponent configure = new LeftMenuComponent("Service Registry");
-		add(configure);
+		LeftMenuComponent serviceRegistry = new LeftMenuComponent("Service Registry");
+		add(serviceRegistry);
 
-		myAddDomainBtn = configure.addItem("Add Domain", PagesEnum.ADD);
+		myAddDomainBtn = serviceRegistry.addItem("Add Domain", PagesEnum.ADD);
 		myAllButtons.add(myAddDomainBtn);
 		
-		myAddSvcBtn = configure.addItem("Add Service", PagesEnum.ASE);
+		myAddSvcBtn = serviceRegistry.addItem("Add Service", PagesEnum.ASE);
 		myAllButtons.add(myAddSvcBtn);
 
-		myAddSvcVerBtn = configure.addItem("Add Service Version", PagesEnum.ASV);
+		myAddSvcVerBtn = serviceRegistry.addItem("Add Service Version", PagesEnum.ASV);
 		myAllButtons.add(myAddSvcVerBtn);
+
+		/*
+		 * Configuration
+		 */
+		
+		LeftMenuComponent configure = new LeftMenuComponent("Configuration");
+		add(configure);
+
+		myHttpClientConfigsBtn = configure.addItem("HTTP Client Config", PagesEnum.HCC);
+		myAllButtons.add(myHttpClientConfigsBtn);
 
 		updateStyles();
 		
@@ -84,6 +95,10 @@ public class LeftBarPanel extends FlowPanel {
 		case AV2:
 			myAddSvcVerBtn.addStyleName("leftMenuButtonSelected");
 			buttons.remove(myAddSvcVerBtn);
+			break;
+		case HCC:
+			myHttpClientConfigsBtn.addStyleName("leftMenuButtonSelected");
+			buttons.remove(myHttpClientConfigsBtn);
 			break;
 		case EDO:
 			break;

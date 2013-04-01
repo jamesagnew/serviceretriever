@@ -3,6 +3,7 @@ package net.svcret.ejb.model.entity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -17,9 +18,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 
-import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus.StatusEnum;
-
-import com.google.common.base.Objects;
+import net.svcret.admin.shared.model.StatusEnum;
 
 @Table(name = "PX_DOMAIN")
 @Entity()
@@ -34,8 +33,8 @@ public class PersDomain extends BasePersObject {
 	@Column(name = "DOMAIN_NAME", length = 200, nullable = true)
 	private String myDomainName;
 
-	private HashMap<String, PersService> myIdToServices;
-
+	@Transient
+	private volatile transient HashMap<String, PersService> myIdToServices;
 
 	@Version()
 	@Column(name = "OPTLOCK")
@@ -109,13 +108,20 @@ public class PersDomain extends BasePersObject {
 		if (myAllAssociationsLoaded) {
 			return;
 		}
-		myAllAssociationsLoaded = true;
 
-		myIdToServices = new HashMap<String, PersService>();
-		for (PersService next : myServices) {
-			myIdToServices.put(next.getServiceId(), next);
+		initIdToServices();
+
+		myAllAssociationsLoaded = true;
+	}
+
+	private HashMap<String, PersService> initIdToServices() {
+		HashMap<String, PersService> idToServices = new HashMap<String, PersService>();
+		for (PersService next : getServices()) {
+			idToServices.put(next.getServiceId(), next);
 			next.loadAllAssociations();
 		}
+		myIdToServices = idToServices;
+		return idToServices;
 	}
 
 	/**
@@ -149,6 +155,27 @@ public class PersDomain extends BasePersObject {
 	 */
 	public void setPid(Long thePid) {
 		myPid = thePid;
+	}
+
+	public Collection<PersServiceVersionMethod> getAllServiceVersionMethods() {
+		List<PersServiceVersionMethod> retVal = new ArrayList<PersServiceVersionMethod>();
+		for (PersService nextService : getServices()) {
+			retVal.addAll(nextService.getAllServiceVersionMethods());
+		}
+		return retVal;
+	}
+
+	public PersService getServiceWithId(String theId) {
+		if (myIdToServices == null) {
+			return initIdToServices().get(theId);
+		}
+		return myIdToServices.get(theId);
+	}
+
+	public void addService(PersService thePersService) {
+		getServices();
+		myServices.add(thePersService);
+		myIdToServices = null;
 	}
 
 }

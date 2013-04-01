@@ -53,6 +53,7 @@ public class UrlPoolBean {
 	 * @return the preferredUrl
 	 */
 	public String getPreferredUrl() {
+		assert myAlternateUrls == null || !myAlternateUrls.contains(myPreferredUrl);
 		return myPreferredUrl;
 	}
 

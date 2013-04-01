@@ -16,6 +16,8 @@ import net.svcret.admin.shared.model.BaseGServerSecurity;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.GHttpClientConfig;
+import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
@@ -27,6 +29,7 @@ import net.svcret.admin.shared.model.GWsSecClientSecurity;
 import net.svcret.admin.shared.model.GWsSecServerSecurity;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
+import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.api.IAdminService;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IServiceInvoker;
@@ -38,13 +41,13 @@ import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersDomain;
+import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
-import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus.StatusEnum;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.util.Validate;
 
@@ -149,7 +152,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setId(theService.getServiceId());
 		retVal.setName(theService.getServiceName());
 		retVal.setActive(theService.isActive());
-
+		
 		if (theLoadStats) {
 			retVal.setStatsInitialized(true);
 			StatusEnum status = StatusEnum.UNKNOWN;
@@ -402,12 +405,17 @@ public class AdminServiceBean implements IAdminService {
 		Set<Long> loadSvcStats = theRequest.getServicesToLoadStats();
 		Set<Long> loadVerStats = theRequest.getVersionsToLoadStats();
 
+		if (theRequest.isLoadHttpClientConfigs()) {
+			GHttpClientConfigList configList = loadHttpClientConfigList();
+			retVal.setHttpClientConfigList(configList);
+		}
+
 		for (PersDomain nextDomain : myPersSvc.getAllDomains()) {
 			GDomain gDomain = toUi(nextDomain, loadDomStats.contains(nextDomain.getPid()));
 			domainList.add(gDomain);
 
 			for (PersService nextService : nextDomain.getServices()) {
-				GService gService = toUi(nextService, loadDomStats.contains(nextService.getPid()));
+				GService gService = toUi(nextService, loadSvcStats.contains(nextService.getPid()));
 				gDomain.getServiceList().add(gService);
 
 				for (BasePersServiceVersion nextVersion : nextService.getVersions()) {
@@ -445,6 +453,34 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
+	private GHttpClientConfigList loadHttpClientConfigList() {
+		GHttpClientConfigList configList = new GHttpClientConfigList();
+		for (PersHttpClientConfig next : myPersSvc.getHttpClientConfigs()) {
+			configList.add(toUi(next));
+		}
+		return configList;
+	}
+
+	private GHttpClientConfig toUi(PersHttpClientConfig theConfig) {
+		GHttpClientConfig retVal = new GHttpClientConfig();
+		
+		retVal.setPid(theConfig.getPid());
+		retVal.setId(theConfig.getId());
+		retVal.setName(theConfig.getName());
+		
+		retVal.setCircuitBreakerEnabled(theConfig.isCircuitBreakerEnabled());
+		retVal.setCircuitBreakerTimeBetweenResetAttempts(theConfig.getCircuitBreakerTimeBetweenResetAttempts());
+		
+		retVal.setConnectTimeoutMillis(theConfig.getConnectTimeoutMillis());
+		retVal.setReadTimeoutMillis(theConfig.getReadTimeoutMillis());
+		
+		retVal.setFailureRetriesBeforeAborting(theConfig.getFailureRetriesBeforeAborting());
+		
+		retVal.setUrlSelectionPolicy(theConfig.getUrlSelectionPolicy());
+		
+		return retVal;
+	}
+
 	private BaseGServerSecurity toUi(PersBaseServerAuth<?, ?> theAuth) throws ProcessingException {
 		BaseGServerSecurity retVal = null;
 
@@ -458,9 +494,9 @@ public class AdminServiceBean implements IAdminService {
 		if (retVal == null) {
 			throw new ProcessingException("Unknown auth type; " + theAuth.getAuthType());
 		}
-		
+
 		retVal.setPid(theAuth.getPid());
-		
+
 		return retVal;
 	}
 
@@ -477,9 +513,9 @@ public class AdminServiceBean implements IAdminService {
 		if (retVal == null) {
 			throw new ProcessingException("Unknown auth type; " + theAuth.getAuthType());
 		}
-		
+
 		retVal.setPid(theAuth.getPid());
-		
+
 		return retVal;
 	}
 
@@ -576,5 +612,88 @@ public class AdminServiceBean implements IAdminService {
 		}
 		return null;
 	}
+
+	@Override
+	public GHttpClientConfig saveHttpClientConfig(GHttpClientConfig theConfig) throws ProcessingException {
+		Validate.throwIllegalArgumentExceptionIfNull("HttpClientConfig", theConfig);
+		
+		PersHttpClientConfig existing = null;
+		boolean isDefault = false;
+		
+		if (theConfig.getPid() <= 0) {
+			ourLog.info("Saving new HTTP client config");
+		} else {
+			ourLog.info("Saving HTTP client config ID[{}]", theConfig.getPid());
+			existing = myPersSvc.getHttpClientConfig(theConfig.getPid());
+			if (existing == null) {
+				throw new ProcessingException("Unknown client config PID: " + theConfig.getPid());
+			}
+			if (existing.getId().equals(GHttpClientConfig.DEFAULT_ID)) {
+				isDefault = true;
+			}
+		}
+		
+		PersHttpClientConfig config = fromUi(theConfig);
+		if (isDefault) {
+			config.setId(config.getId());
+			config.setName(config.getName());
+		}
+	
+		return toUi(myPersSvc.saveHttpClientConfig(config));
+	}
+
+
+	private PersHttpClientConfig fromUi(GHttpClientConfig theConfig) {
+		PersHttpClientConfig retVal = new PersHttpClientConfig();
+		
+		if (theConfig.getPid() > 0) {
+			retVal.setPid(theConfig.getPid());
+		}
+		
+		retVal.setId(theConfig.getId());
+		retVal.setName(theConfig.getName());
+		retVal.setCircuitBreakerEnabled(theConfig.isCircuitBreakerEnabled());
+		retVal.setCircuitBreakerTimeBetweenResetAttempts(theConfig.getCircuitBreakerTimeBetweenResetAttempts());
+		retVal.setConnectTimeoutMillis(theConfig.getConnectTimeoutMillis());
+		retVal.setFailureRetriesBeforeAborting(theConfig.getFailureRetriesBeforeAborting());
+		retVal.setReadTimeoutMillis(theConfig.getReadTimeoutMillis());
+		retVal.setUrlSelectionPolicy(theConfig.getUrlSelectionPolicy());
+		
+		return retVal;
+	}
+
+	@Override
+	public GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ProcessingException {
+		
+		PersHttpClientConfig config = myPersSvc.getHttpClientConfig(thePid);
+		if (config == null) {
+			throw new ProcessingException("Unknown HTTP Client Config PID: " + thePid);
+		}
+		
+		ourLog.info("Deleting HTTP Client Config {} / {}", thePid, config.getId());
+		
+		myPersSvc.deleteHttpClientConfig(config);
+		
+		return loadHttpClientConfigList();
+	}
+
+//	private GHttpClientConfig toUi(PersHttpClientConfig theConfig) {
+//		GHttpClientConfig retVal = new GHttpClientConfig();
+//		
+//		if (theConfig.getPid() > 0) {
+//			retVal.setPid(theConfig.getPid());
+//		}
+//		
+//		retVal.setId(theConfig.getId());
+//		retVal.setName(theConfig.getName());
+//		retVal.setCircuitBreakerEnabled(theConfig.isCircuitBreakerEnabled());
+//		retVal.setCircuitBreakerTimeBetweenResetAttempts(theConfig.getCircuitBreakerTimeBetweenResetAttempts());
+//		retVal.setConnectTimeoutMillis(theConfig.getConnectTimeoutMillis());
+//		retVal.setFailureRetriesBeforeAborting(theConfig.getFailureRetriesBeforeAborting());
+//		retVal.setReadTimeoutMillis(theConfig.getReadTimeoutMillis());
+//		retVal.setUrlSelectionPolicy(theConfig.getUrlSelectionPolicy());
+//		
+//		return retVal;
+//	}
 
 }

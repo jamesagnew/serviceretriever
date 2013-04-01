@@ -6,7 +6,7 @@ import javax.ejb.Local;
 
 import net.svcret.ejb.api.HttpResponseBean.Failure;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
-import net.svcret.ejb.model.entity.PersServiceUser;
+import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
@@ -17,7 +17,7 @@ public interface IRuntimeStatus {
 
 	UrlPoolBean buildUrlPool(BasePersServiceVersion theServiceVersion);
 
-	void recordInvocationMethod(Date theInvocationTime, int theRequestLength, PersServiceVersionMethod theMethod, PersServiceUser theUser, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean);
+	void recordInvocationMethod(Date theInvocationTime, int theRequestLength, PersServiceVersionMethod theMethod, PersUser theUser, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean);
 
 	/**
 	 * Records a single invocation requesting a static resource

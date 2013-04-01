@@ -20,7 +20,7 @@ import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersService;
-import net.svcret.ejb.model.entity.PersServiceUser;
+import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.model.registry.ServiceVersion;
 import net.svcret.ejb.model.registry.Services;
@@ -142,9 +142,9 @@ public class ServiceRegistryBean implements IServiceRegistry {
 
 		}
 
-		Map<String, PersServiceUser> serviceUserMap = new HashMap<String, PersServiceUser>();
-		Collection<PersServiceUser> users = mySvcPersistence.getAllServiceUsers();
-		for (PersServiceUser nextUser : users) {
+		Map<String, PersUser> serviceUserMap = new HashMap<String, PersUser>();
+		Collection<PersUser> users = mySvcPersistence.getAllServiceUsers();
+		for (PersUser nextUser : users) {
 			serviceUserMap.put(nextUser.getUsername(), nextUser);
 			nextUser.loadAllAssociations();
 		}

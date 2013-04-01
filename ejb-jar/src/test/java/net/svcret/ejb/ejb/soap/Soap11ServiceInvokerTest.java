@@ -372,7 +372,7 @@ public class Soap11ServiceInvokerTest {
 		PersServiceVersionSoap11 def;
 		def = svc.introspectServiceFromUrl(wsdlUrl);
 		
-		assertEquals(14, def.getMethods().size());
+		assertEquals(def.getMethodNames().toString(), 14, def.getMethods().size());
 		assertEquals("getPatientByMrn", def.getMethods().get(0).getName());
 		
 		Map<String, PersServiceVersionResource> uriToResource = def.getUriToResource();

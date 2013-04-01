@@ -2,6 +2,8 @@ package net.svcret.admin.client.rpc;
 
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
 import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.GHttpClientConfig;
+import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
@@ -28,5 +30,9 @@ public interface ModelUpdateServiceAsync {
 	void reportClientError(String theMessage, Throwable theException, AsyncCallback<Void> callback);
 
 	void addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, GSoap11ServiceVersion theVersion, AsyncCallback<AddServiceVersionResponse> theCallback);
+
+	void saveHttpClientConfig(boolean theCreate, GHttpClientConfig theConfig, AsyncCallback<GHttpClientConfig> theAsyncCallback);
+
+	void deleteHttpClientConfig(long thePid, AsyncCallback<GHttpClientConfigList> theCallback);
 
 }

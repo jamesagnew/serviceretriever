@@ -195,24 +195,34 @@ public class AddServiceVersionPanel extends FlowPanel {
 		IAsyncLoadCallback<GServiceList> callback = new IAsyncLoadCallback<GServiceList>() {
 			@Override
 			public void onSuccess(GServiceList theResult) {
-				myServiceListBox.clear();
-				myServiceListBox.addItem("New...", "");
-				for (GService nextService : theResult) {
-					Long value = nextService.getPid();
-					myServiceListBox.addItem(nextService.getName(), value.toString());
-					if (value.equals(myServicePid)) {
-						myServiceListBox.setSelectedIndex(myServiceListBox.getSelectedIndex() - 1);
-					}
-				}
-
-				if (myServicePid == null && myServiceListBox.getItemCount() > 1) {
-					myServiceListBox.setSelectedIndex(1);
-				}
-
-				handleServiceListChange();
+				processServiceList(theResult);
 			}
+
 		};
-		Model.getInstance().loadServiceList(myDomainPid, callback);
+
+		if (myDomainPid != null) {
+			Model.getInstance().loadServiceList(myDomainPid, callback);
+		} else {
+			processServiceList(new GServiceList());
+		}
+	}
+
+	private void processServiceList(GServiceList theResult) {
+		myServiceListBox.clear();
+		myServiceListBox.addItem("New...", "");
+		for (GService nextService : theResult) {
+			Long value = nextService.getPid();
+			myServiceListBox.addItem(nextService.getName(), value.toString());
+			if (value.equals(myServicePid)) {
+				myServiceListBox.setSelectedIndex(myServiceListBox.getSelectedIndex() - 1);
+			}
+		}
+
+		if (myServicePid == null && myServiceListBox.getItemCount() > 1) {
+			myServiceListBox.setSelectedIndex(1);
+		}
+
+		handleServiceListChange();
 	}
 
 	private void handleServiceListChange() {

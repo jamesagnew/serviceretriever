@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 
-import net.svcret.ejb.api.IServicePersistence;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
@@ -16,21 +15,20 @@ import net.svcret.ejb.model.entity.BasePersMethodStats;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
+import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersDomain;
-import net.svcret.ejb.model.entity.PersEnvironment;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
 import net.svcret.ejb.model.entity.PersService;
-import net.svcret.ejb.model.entity.PersServiceUser;
-import net.svcret.ejb.model.entity.PersServiceUserPermission;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
+import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
@@ -38,19 +36,18 @@ import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
 import org.junit.Before;
 import org.junit.Test;
 
-
 public class ServicePersistenceBeanTest extends BaseJpaTest {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServicePersistenceBeanTest.class);
-	private IServicePersistence mySvc;
+	private ServicePersistenceBean mySvc;
 
 	@Test
 	public void testHttpClientConfigCreateDefault() {
 		newEntityManager();
-		
+
 		Collection<PersHttpClientConfig> configs = mySvc.getHttpClientConfigs();
 		assertEquals(1, configs.size());
-		
+
 		PersHttpClientConfig config = configs.iterator().next();
 		assertEquals(PersHttpClientConfig.DEFAULT_ID, config.getId());
 		assertEquals(PersHttpClientConfig.DEFAULT_CB_TIME_BETWEEN_ATTEMPTS, config.getCircuitBreakerTimeBetweenResetAttempts());
@@ -58,8 +55,7 @@ public class ServicePersistenceBeanTest extends BaseJpaTest {
 		assertEquals(PersHttpClientConfig.DEFAULT_READ_TIMEOUT_MILLIS, config.getReadTimeoutMillis());
 		assertEquals(PersHttpClientConfig.DEFAULT_URL_SELECTION_POLICY, config.getUrlSelectionPolicy());
 	}
-	
-	
+
 	@Test
 	public void testStatus() throws ProcessingException {
 		Date now = new Date();
@@ -124,14 +120,17 @@ public class ServicePersistenceBeanTest extends BaseJpaTest {
 	@Test
 	public void testUserStatus() throws ProcessingException {
 		Date now = new Date();
+		newEntityManager();
 
+		mySvc.getOrCreateAuthenticationHostLocalDatabase("ah0");
+		
 		newEntityManager();
 
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
 		PersServiceVersionSoap11 ver = mySvc.getOrCreateServiceVersionWithId(service, "VersionId0");
 		PersServiceVersionMethod method = ver.getOrCreateAndAddMethodWithName("MethodName");
-		PersServiceUser user = mySvc.getOrCreateServiceUser("Username");
+		PersUser user = mySvc.getOrCreateUser(mySvc.getAuthenticationHost("ah0"), "Username");
 
 		mySvc.saveServiceVersion(ver);
 
@@ -226,6 +225,31 @@ public class ServicePersistenceBeanTest extends BaseJpaTest {
 	}
 
 	@Test
+	public void testGetOrCreateAuthenticationHostLocalDatabase() throws ProcessingException {
+		newEntityManager();
+
+		PersAuthenticationHostLocalDatabase ldap0 = mySvc.getOrCreateAuthenticationHostLocalDatabase("module0");
+
+		newEntityManager();
+
+		PersAuthenticationHostLocalDatabase ldap0b = mySvc.getOrCreateAuthenticationHostLocalDatabase("module0");
+		PersAuthenticationHostLocalDatabase ldap1 = mySvc.getOrCreateAuthenticationHostLocalDatabase("module1");
+
+		assertEquals(ldap0.getPid(), ldap0b.getPid());
+		assertNotEquals(ldap1.getPid(), ldap0.getPid());
+
+		newEntityManager();
+
+		BasePersAuthenticationHost ldap0c = mySvc.getAuthenticationHost("module0");
+		assertEquals(ldap0, ldap0c);
+
+		BasePersAuthenticationHost ldap1b = mySvc.getAuthenticationHost("module1");
+		assertEquals(ldap1, ldap1b);
+		assertNotEquals(ldap1, ldap0c);
+
+	}
+
+	@Test
 	public void testGetOrCreateDomain() throws ProcessingException {
 		newEntityManager();
 
@@ -253,7 +277,7 @@ public class ServicePersistenceBeanTest extends BaseJpaTest {
 
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
-		
+
 		newEntityManager();
 
 		assertTrue(service.getPid() > 0);
@@ -306,60 +330,6 @@ public class ServicePersistenceBeanTest extends BaseJpaTest {
 		assertNull(ver.getUriToResource().get("http://foo"));
 		assertEquals("bar contents", ver.getUriToResource().get("http://bar").getResourceText());
 		assertEquals("baz contents", ver.getUriToResource().get("http://baz").getResourceText());
-
-	}
-
-	@Test
-	public void testGetOrCreateServiceUser() throws ProcessingException {
-		newEntityManager();
-
-		PersEnvironment e0 = mySvc.getOrCreateEnvironment("E0");
-		PersEnvironment e1 = mySvc.getOrCreateEnvironment("E1");
-		PersDomain d0 = mySvc.getOrCreateDomainWithId("D0");
-		PersService d0s0 = mySvc.getOrCreateServiceWithId(d0, "D0S0");
-		PersService d0s1 = mySvc.getOrCreateServiceWithId(d0, "D0S1");
-		BasePersServiceVersion d0s0v0 = mySvc.getOrCreateServiceVersionWithId(d0s0, "D0S0V0");
-		BasePersServiceVersion d0s0v1 = mySvc.getOrCreateServiceVersionWithId(d0s0, "D0S0V1");
-		BasePersServiceVersion d0s1v0 = mySvc.getOrCreateServiceVersionWithId(d0s0, "D0S1V0");
-		BasePersServiceVersion d0s1v1 = mySvc.getOrCreateServiceVersionWithId(d0s0, "D0S1V1");
-
-		PersServiceUser user = mySvc.getOrCreateServiceUser("Username");
-
-		PersServiceUserPermission perm0 = user.addPermission(d0);
-		perm0.setAllEnvironments(true);
-		perm0.setAllServices(true);
-		mySvc.saveServiceUser(user);
-
-		newEntityManager();
-
-		/*
-		 * Environments
-		 */
-
-		user = mySvc.getOrCreateServiceUser("Username");
-		perm0 = user.getPermissions().iterator().next();
-		assertTrue(perm0.isAllEnvironments());
-		assertTrue(perm0.isAllServices());
-		perm0.addEnvironment(e0);
-		perm0.addEnvironment(e1);
-		mySvc.saveServiceUser(user);
-
-		newEntityManager();
-
-		user = mySvc.getOrCreateServiceUser("Username");
-		perm0 = user.getPermissions().iterator().next();
-		assertEquals(2, perm0.getEnvironments().size());
-		assertEquals(e0, perm0.getEnvironments().get(0));
-		assertEquals(e1, perm0.getEnvironments().get(1));
-		perm0.removeEnvironment(e0);
-		mySvc.saveServiceUser(user);
-
-		newEntityManager();
-
-		user = mySvc.getOrCreateServiceUser("Username");
-		perm0 = user.getPermissions().iterator().next();
-		assertEquals(1, perm0.getEnvironments().size());
-		assertEquals(e1, perm0.getEnvironments().get(0));
 
 	}
 
@@ -512,7 +482,7 @@ public class ServicePersistenceBeanTest extends BaseJpaTest {
 		ver = mySvc.getAllServiceVersions().iterator().next();
 		assertEquals(1, ver.getServerAuths().size());
 
-		PersBaseServerAuth<?,?> serverAuth = ver.getServerAuths().get(0);
+		PersBaseServerAuth<?, ?> serverAuth = ver.getServerAuths().get(0);
 		assertEquals(PersWsSecUsernameTokenServerAuth.class, serverAuth.getClass());
 		assertEquals(ldap, serverAuth.getAuthenticationHost());
 	}
@@ -533,7 +503,9 @@ public class ServicePersistenceBeanTest extends BaseJpaTest {
 		Collection<PersServiceVersionSoap11> allVersions = mySvc.getAllServiceVersions();
 		assertEquals(2, allVersions.size());
 		assertTrue(version0.equals(allVersions.iterator().next()));
-		assertEquals(2, service.getVersions().size());
+		
+		Collection<BasePersServiceVersion> versions = service.getVersions();
+		assertEquals(2, versions.size());
 
 		newEntityManager();
 
@@ -565,7 +537,7 @@ public class ServicePersistenceBeanTest extends BaseJpaTest {
 		assertEquals("http://bar", next.getWsdlUrl());
 
 		assertEquals(PersHttpClientConfig.DEFAULT_ID, service.getVersions().iterator().next().getHttpClientConfig().getId());
-		
+
 	}
 
 }

@@ -6,7 +6,6 @@ import net.svcret.ejb.ex.ProcessingException;
 
 import org.apache.commons.lang3.StringUtils;
 
-
 public class Validate {
 
 	public static boolean isNotBlankSimpleInteger(String theString) {
@@ -34,6 +33,19 @@ public class Validate {
 		if (theLong <= 0) {
 			throw new IllegalArgumentException(theName + " must be greater than zero");
 		}
+	}
+
+	private static void throwIllegalArgumentExceptionIfNotPositive(String theName, int theNumber) {
+		if (theNumber <= 0) {
+			throw new IllegalArgumentException(theName + " must be a positive integer");
+		}
+	}
+
+	public static void throwIllegalArgumentExceptionIfNotPositive(String theName, Integer theNumber) {
+		if (theNumber == null) {
+			throw new IllegalArgumentException(theName + " must not be null");
+		}
+		throwIllegalArgumentExceptionIfNotPositive(theName, theNumber.intValue());
 	}
 
 	public static void throwIllegalArgumentExceptionIfNull(String theName, Object theObject) {

@@ -35,6 +35,10 @@ public class StringUtil {
 		return b.toString();
 	}
 
+	public static boolean isNotBlank(String theString) {
+		return !isBlank(theString);
+	}
+
 	
 	
 }

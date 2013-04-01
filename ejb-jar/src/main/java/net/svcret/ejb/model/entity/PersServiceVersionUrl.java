@@ -29,8 +29,8 @@ import org.apache.commons.lang3.StringUtils;
 import com.google.common.base.Objects;
 
 @Table(name = "PX_SVC_VER_URL", uniqueConstraints = { 
-		@UniqueConstraint(columnNames = { "SVC_VERSION_PID", "SVC_VERSION_PID" }), //-
-		@UniqueConstraint(columnNames = { "SVC_VERSION_PID", "URL_ID" }) //-
+		@UniqueConstraint(name="PX_URL_CONS_URL", columnNames = { "SVC_VERSION_PID", "URL" }), //-
+		@UniqueConstraint(name="PX_URL_CONS_URLID", columnNames = { "SVC_VERSION_PID", "URL_ID" }) //-
 })
 @Entity
 public class PersServiceVersionUrl extends BasePersObject implements Comparable<PersServiceVersionUrl> {
@@ -184,6 +184,14 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 	 *            the serviceVersion to set
 	 */
 	public void setServiceVersion(BasePersServiceVersion theServiceVersion) {
+		Validate.throwIllegalArgumentExceptionIfNull("ServiceVersion", theServiceVersion);
+		
+		if (myServiceVersion != null && !myServiceVersion.equals(theServiceVersion)) {
+			throw new IllegalStateException("Can't reassign URL to another version");
+		} else if (myServiceVersion == null || !myServiceVersion.getUrls().contains(this)) {
+			theServiceVersion.addUrl(this);
+		}
+		
 		myServiceVersion = theServiceVersion;
 	}
 
@@ -192,7 +200,11 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 	 *            the stats to set
 	 */
 	public void setStatus(PersServiceVersionUrlStatus theStats) {
+		if (myStatus == theStats) {
+			return;
+		}
 		myStatus = theStats;
+		theStats.setUrl(this);
 	}
 
 	/**

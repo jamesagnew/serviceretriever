@@ -21,6 +21,9 @@ public enum PagesEnum {
 	ASV, 
 	
 	/** Add service version step 2 */
-	AV2
+	AV2, 
+	
+	/** Edit HTTP client configs */
+	HCC
 	
 }

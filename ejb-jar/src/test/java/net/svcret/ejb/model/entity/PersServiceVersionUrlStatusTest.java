@@ -6,11 +6,8 @@ import static org.mockito.Mockito.*;
 
 import java.util.Date;
 
+import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.ejb.DefaultAnswer;
-import net.svcret.ejb.model.entity.PersHttpClientConfig;
-import net.svcret.ejb.model.entity.PersServiceVersionUrl;
-import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
-import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus.StatusEnum;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 
 import org.junit.Before;
@@ -31,7 +28,8 @@ public class PersServiceVersionUrlStatusTest {
 		
 		
 		PersHttpClientConfig cfg = mock(PersHttpClientConfig.class, DefaultAnswer.INSTANCE);
-		when(cfg.getCircuitBreakerTimeBetweenResetAttempts()).thenReturn(500L);
+		when(cfg.getCircuitBreakerTimeBetweenResetAttempts()).thenReturn(500);
+		when(cfg.isCircuitBreakerEnabled()).thenReturn(true);
 		
 		PersServiceVersionSoap11 version = mock(PersServiceVersionSoap11.class, DefaultAnswer.INSTANCE);
 		when(version.getHttpClientConfig()).thenReturn(cfg);

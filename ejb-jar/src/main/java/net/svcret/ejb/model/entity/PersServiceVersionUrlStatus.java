@@ -20,11 +20,11 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 
+import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.util.LogUtil;
 import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.lang3.ObjectUtils;
-
 
 import com.google.common.base.Objects;
 
@@ -90,6 +90,21 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	private PersServiceVersionUrl myUrl;
 
 	/**
+	 * Constructor
+	 */
+	public PersServiceVersionUrlStatus() {
+		super();
+	}
+
+	/**
+	 * Unit test Constructor (sets sensible defaults)
+	 */
+	public PersServiceVersionUrlStatus(long thePid) {
+		myPid = thePid;
+		myStatus = StatusEnum.UNKNOWN;
+	}
+
+	/**
 	 * 
 	 * @return
 	 */
@@ -97,6 +112,11 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 		StatusEnum status = myStatus;
 		Date nextReset = myNextCircuitBreakerReset;
 		if (status != StatusEnum.DOWN) {
+			return true;
+		}
+
+		PersHttpClientConfig httpClientConfig = getUrl().getServiceVersion().getHttpClientConfig();
+		if (!httpClientConfig.isCircuitBreakerEnabled()) {
 			return true;
 		}
 
@@ -352,7 +372,10 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 			resetCurcuitBreaker();
 			break;
 		case DOWN:
-			tripCircuitBreaker();
+			PersHttpClientConfig httpClientConfig = getUrl().getServiceVersion().getHttpClientConfig();
+			if (httpClientConfig.isCircuitBreakerEnabled()) {
+				tripCircuitBreaker();
+			}
 			break;
 		}
 	}
@@ -362,6 +385,10 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	 *            the url to set
 	 */
 	public void setUrl(PersServiceVersionUrl theUrl) {
+		if (myUrl == theUrl) {
+			return;
+		}
+		theUrl.setStatus(this);
 		myUrl = theUrl;
 	}
 
@@ -387,25 +414,25 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 		return nextReset;
 	}
 
-	public static enum StatusEnum {
-		/*
-		 * NB: Column is 10 chars, don't exceed that
-		 */
-
-		/**
-		 * URL is up
-		 */
-		ACTIVE,
-
-		/**
-		 * URL is down
-		 */
-		DOWN,
-
-		/**
-		 * URL has not yet been tried
-		 */
-		UNKNOWN
-	}
+//	public static enum StatusEnum {
+//		/*
+//		 * NB: Column is 10 chars, don't exceed that
+//		 */
+//
+//		/**
+//		 * URL is up
+//		 */
+//		ACTIVE,
+//
+//		/**
+//		 * URL is down
+//		 */
+//		DOWN,
+//
+//		/**
+//		 * URL has not yet been tried
+//		 */
+//		UNKNOWN
+//	}
 
 }

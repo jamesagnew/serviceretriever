@@ -118,6 +118,9 @@ public abstract class BaseGDashboardObject<T> extends BaseGObject<T> {
 	 *            the status to set
 	 */
 	public void setStatus(StatusEnum theStatus) {
+		if (theStatus == null) {
+			throw new NullPointerException("Status can not be null");
+		}
 		myStatus = theStatus;
 	}
 

@@ -2,7 +2,6 @@ package net.svcret.ejb.ejb;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -13,7 +12,6 @@ import javax.persistence.Persistence;
 import org.hibernate.ejb.EntityManagerImpl;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 
 public abstract class BaseJpaTest {
@@ -22,7 +20,11 @@ public abstract class BaseJpaTest {
 	protected static EntityManagerFactory ourEntityManagerFactory;
 
 	@After
-	public final void after() throws SQLException {
+	public final void truncateDatabase() throws SQLException {
+		if (myEntityManager == null) {
+			return;
+		}
+		
 		try {
 			myEntityManager.getTransaction().rollback();
 		} catch (Exception e) {

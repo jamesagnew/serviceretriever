@@ -28,9 +28,6 @@ public class PersServiceVersionUrlTest extends BaseJpaTest {
 		newEntityManager();
 		
 		PersServiceVersionUrl urlObj = createPersUrl("http://localhost/");
-		urlObj = myEntityManager.merge(urlObj);
-		
-		newEntityManager();
 		
 		urlObj = myEntityManager.find(PersServiceVersionUrl.class, urlObj.getPid());
 		assertEquals(true, urlObj.isValid());
@@ -59,32 +56,37 @@ public class PersServiceVersionUrlTest extends BaseJpaTest {
 	}
 
 	private PersServiceVersionUrl createPersUrl(String url2) {
-		PersDomain dom = new PersDomain();
-		dom.setDomainId("did");
-		dom = myEntityManager.merge(dom);
-		
-		PersService svc = new PersService();
-		svc.setServiceId("id");
-		svc.setServiceName("name");
-		svc.setPersDomain(dom);
-		svc = myEntityManager.merge(svc);
-		
 		PersHttpClientConfig cfg = new PersHttpClientConfig();
 		cfg.setDefaults();
 		cfg.setId("cfgid");
 		cfg = myEntityManager.merge(cfg);
+		
+		newEntityManager();
+		
+		PersDomain dom = new PersDomain();
+		dom.setDomainId("did");
+		
+		PersService svc = new PersService();
+		svc.setServiceId("id");
+		svc.setServiceName("name");
+		svc.setDomain(dom);
+		
 
 		PersServiceVersionSoap11 ver = new PersServiceVersionSoap11();
 		ver.setHttpClientConfig(cfg);
 		ver.setService(svc);
 		ver.setVersionId("vid");
-		ver = myEntityManager.merge(ver);
 				
 		PersServiceVersionUrl urlObj = new PersServiceVersionUrl();
 		urlObj.setUrlId("id");
 		urlObj.setServiceVersion(ver);
 		urlObj.setUrl(url2);
-		return urlObj;
+		
+		dom = myEntityManager.merge(dom);
+		
+		newEntityManager();
+		
+		return dom.getServiceWithId("id").getVersionWithId("vid").getUrlWithId("id");
 	}
 	
 	

@@ -27,6 +27,7 @@ import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
+import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
@@ -72,11 +73,19 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			path = thePath;
 		}
 
+		/*
+		 * Figure out who should handle this request
+		 */
+		
 		BasePersServiceVersion serviceVersion = mySvcRegistry.getServiceVersionForPath(path);
 		if (serviceVersion == null) {
 			throw new UnknownRequestException(path);
 		}
 
+		/*
+		 * Process request
+		 */
+		
 		InvocationResultsBean results;
 		IServiceInvoker<?> serviceInvoker;
 		switch (serviceVersion.getProtocol()) {
@@ -89,6 +98,18 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			throw new InternalErrorException("Unknown service protocol: " + serviceVersion.getProtocol());
 		}
 
+		/*
+		 * Security
+		 */
+		
+		for (PersBaseServerAuth<?, ?> nextClientAuth : serviceVersion.getServerAuths()) {
+//			nextClientAuth.
+		}
+		
+		/*
+		 * Forward request to backend implementation
+		 */
+		
 		OrchestratorResponseBean retVal;
 		switch (results.getResultType()) {
 

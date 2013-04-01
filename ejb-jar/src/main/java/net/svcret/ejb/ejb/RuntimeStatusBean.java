@@ -1,11 +1,15 @@
 package net.svcret.ejb.ejb;
 
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -17,12 +21,13 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.PersistenceException;
 
+import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.HttpResponseBean.Failure;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IServicePersistence;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.UrlPoolBean;
-import net.svcret.ejb.api.HttpResponseBean.Failure;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStatsPk;
 import net.svcret.ejb.model.entity.BasePersMethodStats;
@@ -32,16 +37,14 @@ import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersInvocationAnonStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
-import net.svcret.ejb.model.entity.PersServiceUser;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.ejb.model.entity.PersStaticResourceStats;
 import net.svcret.ejb.model.entity.PersStaticResourceStatsPk;
-import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus.StatusEnum;
+import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.util.Validate;
-
 
 @Singleton
 @Stateless
@@ -54,7 +57,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	@EJB
 	private IServicePersistence myPersistence;
 
-	private DateFormat myTimeFormat = DateFormat.getTimeInstance(DateFormat.MEDIUM);
+	private DateFormat myTimeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
 
 	private ConcurrentHashMap<Long, PersServiceVersionUrlStatus> myUrlStatus = new ConcurrentHashMap<Long, PersServiceVersionUrlStatus>();
 
@@ -69,7 +72,29 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			List<String> urls = new ArrayList<String>(theServiceVersion.getUrls().size());
 			retVal.setAlternateUrls(urls);
 
-			for (PersServiceVersionUrl next : theServiceVersion.getUrls()) {
+			List<PersServiceVersionUrl> urlsWithDownFirstThenLocal = new ArrayList<PersServiceVersionUrl>();
+			LinkedList<PersServiceVersionUrl> allUrlsCopy = new LinkedList<PersServiceVersionUrl>(theServiceVersion.getUrls());
+
+			for (Iterator<PersServiceVersionUrl> iter = allUrlsCopy.iterator(); iter.hasNext();) {
+				PersServiceVersionUrl next = iter.next();
+				if (getUrlStatus(next).getStatus() == StatusEnum.DOWN) {
+					urlsWithDownFirstThenLocal.add(next);
+					iter.remove();
+				}
+			}
+			for (Iterator<PersServiceVersionUrl> iter = allUrlsCopy.iterator(); iter.hasNext();) {
+				PersServiceVersionUrl next = iter.next();
+				if (next.isLocal()) {
+					urlsWithDownFirstThenLocal.add(next);
+					iter.remove();
+				}
+			}
+			for (Iterator<PersServiceVersionUrl> iter = allUrlsCopy.iterator(); iter.hasNext();) {
+				PersServiceVersionUrl next = iter.next();
+				urlsWithDownFirstThenLocal.add(next);
+			}
+
+			for (PersServiceVersionUrl next : urlsWithDownFirstThenLocal) {
 				PersServiceVersionUrlStatus status = getUrlStatus(next);
 				String nextUrl = next.getUrl();
 
@@ -95,14 +120,21 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 						retVal.getAlternateUrls().add(nextUrl);
 						break;
 					case DOWN:
-						if (status.attemptToResetCircuitBreaker()) {
+						if (retVal.getPreferredUrl() != null) {
+							/*
+							 * We don't try to reset the circuit breaker on more
+							 * than one URL at a time
+							 */
+						} else if (status.attemptToResetCircuitBreaker()) {
 							if (retVal.getPreferredUrl() != null) {
 								urls.add(retVal.getPreferredUrl());
 							}
 							retVal.setPreferredUrl(nextUrl);
 						} else {
-							// we just won't try this one of it's down and it's not time to
-							// try resetting the CB
+							/*
+							 * we just won't try this one of it's down and it's
+							 * not time to try resetting the CB
+							 */
 						}
 					}
 				}
@@ -183,7 +215,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	}
 
-	private void doRecordInvocationMethod(int theRequestLength, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, BasePersInvocationStatsPk theStatsPk) {
+	private void doRecordInvocationMethod(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, BasePersInvocationStatsPk theStatsPk) {
 		BasePersInvocationStats stats = (BasePersInvocationStats) getStatsForPk(theStatsPk);
 
 		long responseTime = theHttpResponse.getResponseTime();
@@ -191,48 +223,47 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 		switch (theInvocationResponseResultsBean.getResponseType()) {
 		case FAIL:
-			stats.addFailInvocation(responseTime, theRequestLength, responseBytes);
+			stats.addFailInvocation(responseTime, theRequestLengthChars, responseBytes);
 			break;
 		case FAULT:
-			stats.addFaultInvocation(responseTime, theRequestLength, responseBytes);
+			stats.addFaultInvocation(responseTime, theRequestLengthChars, responseBytes);
 			break;
 		case SUCCESS:
-			stats.addSuccessInvocation(responseTime, theRequestLength, responseBytes);
+			stats.addSuccessInvocation(responseTime, theRequestLengthChars, responseBytes);
 			break;
 		default:
 			break;
 		}
 	}
 
-	private void doRecordUrlStatus(PersServiceVersionUrlStatus theStatus, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean) {
-
-		synchronized (theStatus) {
+	private void doRecordUrlStatus(boolean theWasSuccess, PersServiceVersionUrlStatus theUrlStatusBean) {
+		if (theUrlStatusBean.getUrl() == null) {
+			throw new IllegalArgumentException("Status has no URL associated with it");
+		}
+		
+		synchronized (theUrlStatusBean) {
 			Date now = new Date();
 
-			switch (theInvocationResponseResultsBean.getResponseType()) {
-			case FAIL:
-				theStatus.setStatus(StatusEnum.DOWN);
-				theStatus.setLastFail(now);
+			if (theWasSuccess) {
+				if (theUrlStatusBean.getStatus() != StatusEnum.ACTIVE) {
+					Long urlPid = theUrlStatusBean.getUrl().getPid();
+					StatusEnum urlStatus = theUrlStatusBean.getStatus();
+					String urlUrl = theUrlStatusBean.getUrl().getUrl();
+					ourLog.info("URL[{}] is now ACTIVE, was {} - {}", new Object[] { urlPid, urlStatus, urlUrl });
+				}
+				theUrlStatusBean.setStatus(StatusEnum.ACTIVE);
+				theUrlStatusBean.setLastSuccess(now);
+			} else {
+				theUrlStatusBean.setStatus(StatusEnum.DOWN);
+				theUrlStatusBean.setLastFail(now);
 
-				Date nextReset = theStatus.getNextCircuitBreakerReset();
+				Date nextReset = theUrlStatusBean.getNextCircuitBreakerReset();
 				if (nextReset != null) {
-					ourLog.info("URL[{}] is DOWN, Next circuit breaker reset attempt is {} - {}", new Object[] { theStatus.getUrl().getPid(), myTimeFormat.format(nextReset), theStatus.getUrl().getUrl() });
+					ourLog.info("URL[{}] is DOWN, Next circuit breaker reset attempt is {} - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), myTimeFormat.format(nextReset), theUrlStatusBean.getUrl().getUrl() });
 				} else {
-					ourLog.info("URL[{}] is DOWN - {}", new Object[] { theStatus.getUrl().getUrl(), theStatus.getUrl().getUrl() });
+					ourLog.info("URL[{}] is DOWN - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), theUrlStatusBean.getUrl().getUrl() });
 				}
 
-				break;
-			case FAULT:
-				// Faults are ok, the service is allowed to throw them
-				theStatus.setStatus(StatusEnum.ACTIVE);
-				theStatus.setLastFault(now);
-				break;
-			case SUCCESS:
-				theStatus.setStatus(StatusEnum.ACTIVE);
-				theStatus.setLastSuccess(now);
-				break;
-			default:
-				break;
 			}
 
 		}
@@ -284,7 +315,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public void recordInvocationMethod(Date theInvocationTime, int theRequestLength, PersServiceVersionMethod theMethod, PersServiceUser theUser, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean) {
+	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, PersServiceVersionMethod theMethod, PersUser theUser, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean) {
 		Validate.throwIllegalArgumentExceptionIfNull("InvocationTime", theInvocationTime);
 		Validate.throwIllegalArgumentExceptionIfNull("Method", theMethod);
 		Validate.throwIllegalArgumentExceptionIfNull("HttpResponse", theHttpResponse);
@@ -295,26 +326,39 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		 */
 		InvocationStatsIntervalEnum interval = InvocationStatsIntervalEnum.MINUTE;
 		BasePersInvocationStatsPk statsPk = new PersInvocationStatsPk(interval, theInvocationTime, theMethod);
-		doRecordInvocationMethod(theRequestLength, theHttpResponse, theInvocationResponseResultsBean, statsPk);
+		doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, statsPk);
 
 		/*
 		 * Record user/anon method statistics
 		 */
 		if (theUser == null) {
 			statsPk = new PersInvocationAnonStatsPk(interval, theInvocationTime, theMethod);
-			doRecordInvocationMethod(theRequestLength, theHttpResponse, theInvocationResponseResultsBean, statsPk);
+			doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, statsPk);
 		} else {
 			statsPk = new PersInvocationUserStatsPk(interval, theInvocationTime, theMethod, theUser);
-			doRecordInvocationMethod(theRequestLength, theHttpResponse, theInvocationResponseResultsBean, statsPk);
+			doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, statsPk);
 		}
 
 		/*
-		 * Record URL status
+		 * Record URL status for successful URLs
 		 */
-		PersServiceVersionUrl successfulUrl = theMethod.getServiceVersion().getUrlWithUrl(theHttpResponse.getSuccessfulUrl());
-		PersServiceVersionUrlStatus status = getUrlStatus(successfulUrl);
+		String successfulUrl = theHttpResponse.getSuccessfulUrl();
+		if (successfulUrl != null) {
+			PersServiceVersionUrl successfulUrlBean = theMethod.getServiceVersion().getUrlWithUrl(successfulUrl);
+			PersServiceVersionUrlStatus status = getUrlStatus(successfulUrlBean);
+			doRecordUrlStatus(true, status);
+		}
 
-		doRecordUrlStatus(status, theHttpResponse, theInvocationResponseResultsBean);
+		/*
+		 * Recurd URL status for any failed URLs
+		 */
+		Map<String, Failure> failedUrlsMap = theHttpResponse.getFailedUrls();
+		for (Entry<String, Failure> nextFailedUrlEntry : failedUrlsMap.entrySet()) {
+			String nextFailedUrl = nextFailedUrlEntry.getKey();
+			PersServiceVersionUrl failedUrl = theMethod.getServiceVersion().getUrlWithUrl(nextFailedUrl);
+			PersServiceVersionUrlStatus failedStatus = getUrlStatus(failedUrl);
+			doRecordUrlStatus(false, failedStatus);
+		}
 
 	}
 
@@ -343,14 +387,14 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	public void recordUrlFailure(PersServiceVersionUrl theUrl, Failure theFailure) {
 		Validate.throwIllegalArgumentExceptionIfNull("Url", theUrl);
 		Validate.throwIllegalArgumentExceptionIfNull("Failure", theFailure);
-		
+
 		PersServiceVersionUrlStatus status = getUrlStatus(theUrl);
 		status.setLastFail(new Date());
 		status.setLastFailBody(theFailure.getBody());
 		status.setLastFailContentType(theFailure.getContentType());
 		status.setLastFailMessage(theFailure.getExplanation());
 		status.setLastFailStatusCode(theFailure.getStatusCode());
-		
+
 		// Do this last since it triggers a state change
 		status.setStatus(StatusEnum.DOWN);
 		status.setDirty(true);

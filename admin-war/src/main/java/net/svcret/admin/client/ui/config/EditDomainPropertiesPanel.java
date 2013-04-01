@@ -1,9 +1,6 @@
 package net.svcret.admin.client.ui.config;
 
-import org.apache.xalan.xsltc.dom.LoadDocument;
-
 import net.svcret.admin.client.AdminPortal;
-import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.GDomain;
 
@@ -12,13 +9,11 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.Widget;
 
 public class EditDomainPropertiesPanel extends FlowPanel {
 
 	private GDomain myDomain;
 	private EditDomainBasicPropertiesPanel myEditDomainBasicPropertiesPanel;
-	private LoadingSpinner myLoadingSpinner;
 
 	public EditDomainPropertiesPanel(GDomain theDomain) {
 		myDomain = theDomain;
@@ -38,8 +33,6 @@ public class EditDomainPropertiesPanel extends FlowPanel {
 		myEditDomainBasicPropertiesPanel = new EditDomainBasicPropertiesPanel(myDomain.getId(), myDomain.getName(), "Save", new MySaveButtonHandler());
 		contentPanel.add(myEditDomainBasicPropertiesPanel);
 
-		myLoadingSpinner = new LoadingSpinner();
-		contentPanel.add(myLoadingSpinner);
 	}
 
 	

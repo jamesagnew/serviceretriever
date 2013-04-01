@@ -29,7 +29,7 @@ public class PersServiceVersionStatus extends BasePersObject {
 	private BasePersServiceVersion myServiceVersion;
 
 
-	public static PersInvocationUserStatsPk createEntryPk(InvocationStatsIntervalEnum theInterval, Date theTimestamp, PersServiceVersionMethod theMethod, PersServiceUser theUser) {
+	public static PersInvocationUserStatsPk createEntryPk(InvocationStatsIntervalEnum theInterval, Date theTimestamp, PersServiceVersionMethod theMethod, PersUser theUser) {
 		Validate.throwIllegalArgumentExceptionIfNull("Interval", theInterval);
 		Validate.throwIllegalArgumentExceptionIfNull("Timestamp", theTimestamp);
 

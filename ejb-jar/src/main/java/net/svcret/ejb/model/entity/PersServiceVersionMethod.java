@@ -16,6 +16,8 @@ import javax.persistence.Version;
 @Entity
 public class PersServiceVersionMethod extends BasePersObject {
 
+	private static final long serialVersionUID = 1L;
+
 	@Column(name = "NAME", length = 200, nullable=false)
 	private String myName;
 
@@ -32,10 +34,22 @@ public class PersServiceVersionMethod extends BasePersObject {
 	@JoinColumn(name = "SVC_VERSION_PID", referencedColumnName = "PID", nullable = false)
 	private BasePersServiceVersion myServiceVersion;
 
+	/**
+	 * Constructor
+	 */
 	public PersServiceVersionMethod() {
 		super();
 	}
 	
+	/**
+	 * Constructor
+	 */
+	public PersServiceVersionMethod(long thePid, BasePersServiceVersion theServiceVersion, String theMethodName) {
+		setPid(thePid);
+		setServiceVersion(theServiceVersion);
+		setName(theMethodName);
+	}
+
 	/**
 	 * @return the name
 	 */
@@ -97,7 +111,18 @@ public class PersServiceVersionMethod extends BasePersObject {
 	 *            the serviceVersion to set
 	 */
 	public void setServiceVersion(BasePersServiceVersion theServiceVersion) {
+		if (theServiceVersion != null) {
+			if (theServiceVersion.equals(myServiceVersion)) {
+				return;
+			} else if (myServiceVersion != null) {
+				throw new IllegalStateException("Can't move methods to a new version");
+			}
+		} else {
+			throw new NullPointerException("ServiceVersion can not be null");
+		}
+		
 		myServiceVersion = theServiceVersion;
+		theServiceVersion.addMethod(this);
 	}
 
 }

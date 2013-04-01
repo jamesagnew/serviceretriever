@@ -2,7 +2,9 @@ package net.svcret.ejb.model.entity;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -18,9 +20,11 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
+import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
+
 import com.google.common.base.Objects;
 
-@Table(name = "PX_SVC", uniqueConstraints = { @UniqueConstraint(columnNames = { "DOMAIN_PID", "SERVICE_ID" }) })
+@Table(name = "PX_SVC", uniqueConstraints = { @UniqueConstraint(name = "PX_SVC_CONS_DOMSVC", columnNames = { "DOMAIN_PID", "SERVICE_ID" }) })
 @Entity
 public class PersService extends BasePersObject {
 
@@ -57,10 +61,10 @@ public class PersService extends BasePersObject {
 	}
 
 	public PersService(long thePid, PersDomain theDomain, String theServiceId, String theServiceName) {
-		myPid = thePid;
-		myPersDomain = theDomain;
-		myServiceId = theServiceId;
-		myServiceName = theServiceName;
+		setPid(thePid);
+		setServiceId(theServiceId);
+		setServiceName(theServiceName);
+		setDomain(theDomain);
 	}
 
 	/**
@@ -68,7 +72,22 @@ public class PersService extends BasePersObject {
 	 */
 	@Override
 	public boolean equals(Object theObj) {
-		return theObj instanceof PersService && Objects.equal(myPid, ((PersService) theObj).myPid);
+		if (!(theObj instanceof PersService)) {
+			return false;
+		}
+
+		PersService obj = (PersService) theObj;
+		if (myPid == null && theObj != null) {
+			return false;
+		}
+		if (theObj == null && myPid != null) {
+			return false;
+		}
+		if (myPid == null) {
+			return Objects.equal(myServiceId, obj.myServiceId);
+		}
+
+		return Objects.equal(myPid, obj.myPid);
 	}
 
 	/**
@@ -113,7 +132,7 @@ public class PersService extends BasePersObject {
 		if (myVersions == null) {
 			myVersions = new ArrayList<BasePersServiceVersion>();
 		}
-		return myVersions;
+		return Collections.unmodifiableCollection(myVersions);
 	}
 
 	/**
@@ -121,6 +140,9 @@ public class PersService extends BasePersObject {
 	 */
 	@Override
 	public int hashCode() {
+		if (myPid == null) {
+			return 0;
+		}
 		return Objects.hashCode(myPid);
 	}
 
@@ -133,7 +155,7 @@ public class PersService extends BasePersObject {
 
 	public void loadAllAssociations() {
 		myIdToVersion = new HashMap<String, BasePersServiceVersion>();
-		for (BasePersServiceVersion next : myVersions) {
+		for (BasePersServiceVersion next : getVersions()) {
 			myIdToVersion.put(next.getVersionId(), next);
 			next.loadAllAssociations();
 		}
@@ -159,7 +181,10 @@ public class PersService extends BasePersObject {
 	 * @param thePersDomain
 	 *            the persDomain to set
 	 */
-	public void setPersDomain(PersDomain thePersDomain) {
+	public void setDomain(PersDomain thePersDomain) {
+		if (!thePersDomain.getServices().contains(this)) {
+			thePersDomain.addService(this);
+		}
 		myPersDomain = thePersDomain;
 	}
 
@@ -187,12 +212,33 @@ public class PersService extends BasePersObject {
 		myServiceName = theServiceName;
 	}
 
-	/**
-	 * @param theVersions
-	 *            the versions to set
-	 */
-	public void setVersions(Collection<BasePersServiceVersion> theVersions) {
-		myVersions = theVersions;
+	public Collection<PersServiceVersionMethod> getAllServiceVersionMethods() {
+		List<PersServiceVersionMethod> retVal = new ArrayList<PersServiceVersionMethod>();
+		for (BasePersServiceVersion nextServicVersion : getVersions()) {
+			retVal.addAll(nextServicVersion.getMethods());
+		}
+		return Collections.unmodifiableList(retVal);
+	}
+
+	public BasePersServiceVersion getVersionWithId(String theId) {
+		for (BasePersServiceVersion next : getVersions()) {
+			if (next.getVersionId().equals(theId)) {
+				return next;
+			}
+		}
+		return null;
+	}
+
+	public void addVersion(BasePersServiceVersion theVersion) {
+		getVersions();
+		if (!myVersions.contains(theVersion)) {
+			myVersions.add(theVersion);
+		}
+	}
+
+	public void removeVersion(BasePersServiceVersion theVersion) {
+		getVersions();
+		myVersions.remove(theVersion);
 	}
 
 }

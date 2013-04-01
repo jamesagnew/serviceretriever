@@ -14,7 +14,7 @@ import net.svcret.ejb.ejb.soap.Constants;
 import org.apache.commons.lang3.StringUtils;
 
 
-class WsSecUsernameTokenCredentialGrabber implements ICredentialGrabber {
+class WsSecUsernameTokenCredentialGrabber extends BaseCredentialGrabber implements ICredentialGrabber {
 
 	private String myPassword;
 	private String myUsername;
@@ -104,5 +104,6 @@ class WsSecUsernameTokenCredentialGrabber implements ICredentialGrabber {
 	public String getPassword() {
 		return StringUtils.defaultString(myPassword);
 	}
+
 
 }
