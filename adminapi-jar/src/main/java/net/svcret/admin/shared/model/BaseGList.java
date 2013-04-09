@@ -3,6 +3,8 @@ package net.svcret.admin.shared.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -12,8 +14,14 @@ public class BaseGList<T extends BaseGObject<T>> implements Iterable<T>, Seriali
 
 	private List<T> myList;
 
+	private Date myLastMerged;
+
 	public void clear() {
 		myList.clear();
+	}
+
+	public Collection<T> toCollection() {
+		return Collections.unmodifiableCollection(myList);
 	}
 
 	public BaseGList() {
@@ -50,6 +58,14 @@ public class BaseGList<T extends BaseGObject<T>> implements Iterable<T>, Seriali
 		while (myList.size() > theResult.size()) {
 			myList.remove(myList.size() - 1);
 		}
+		myLastMerged = new Date();
+	}
+
+	/**
+	 * @return the lastMerged
+	 */
+	public Date getLastMerged() {
+		return myLastMerged;
 	}
 
 	public T get(int theIndex) {

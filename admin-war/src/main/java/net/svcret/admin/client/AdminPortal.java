@@ -7,6 +7,7 @@ import net.svcret.admin.client.ui.layout.OuterLayoutPanel;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
+import com.google.gwt.event.shared.UmbrellaException;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
 
@@ -14,6 +15,7 @@ import com.google.gwt.user.client.ui.RootLayoutPanel;
  * Entry point classes define <code>onModuleLoad()</code>.
  */
 public class AdminPortal implements EntryPoint, UncaughtExceptionHandler {
+
 	/**
 	 * The message displayed to the user when the server cannot be reached or
 	 * returns an error.
@@ -50,7 +52,13 @@ public class AdminPortal implements EntryPoint, UncaughtExceptionHandler {
 	}
 
 	public static void reportError(String theMessage, Throwable theException) {
-		MODEL_SVC.reportClientError(theMessage, theException, new AsyncCallback<Void>() {
+		Throwable exception = theException;
+		if (exception instanceof UmbrellaException) {
+			UmbrellaException ue = (UmbrellaException)exception;
+			exception = ue.getCause();
+		}
+		
+		MODEL_SVC.reportClientError(theMessage, exception, new AsyncCallback<Void>() {
 			@Override
 			public void onSuccess(Void theResult) {
 				// nothing

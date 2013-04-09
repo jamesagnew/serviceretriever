@@ -3,12 +3,14 @@ package net.svcret.ejb.model.entity.jsonrpc;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
-import ca.uhn.sail.proxy.api.ServiceProtocolEnum;
-import ca.uhn.sail.proxy.model.entity.BasePersServiceVersion;
+import net.svcret.ejb.api.ServiceProtocolEnum;
+import net.svcret.ejb.model.entity.BasePersServiceVersion;
 
 @Entity
 @DiscriminatorValue("JSONRPC20")
 public class PersServiceVersionJsonRpc20 extends BasePersServiceVersion {
+
+	private static final long serialVersionUID = 1L;
 
 	@Override
 	public ServiceProtocolEnum getProtocol() {

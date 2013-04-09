@@ -6,8 +6,19 @@ public class ModelUpdateResponse implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
+	private GAuthenticationHostList myAuthenticationHostList;
 	private GDomainList myDomainList;
+
 	private GHttpClientConfigList myHttpClientConfigList;
+
+	private GUserList myUserList;
+
+	/**
+	 * @return the authenticationHostList
+	 */
+	public GAuthenticationHostList getAuthenticationHostList() {
+		return myAuthenticationHostList;
+	}
 
 	/**
 	 * @return the domainList
@@ -21,6 +32,17 @@ public class ModelUpdateResponse implements Serializable {
 	 */
 	public GHttpClientConfigList getHttpClientConfigList() {
 		return myHttpClientConfigList;
+	}
+
+	/**
+	 * @return the userList
+	 */
+	public GUserList getUserList() {
+		return myUserList;
+	}
+
+	public void setAuthenticationHostList(GAuthenticationHostList theAuthenticationHostList) {
+		myAuthenticationHostList = theAuthenticationHostList;
 	}
 
 	/**
@@ -38,5 +60,9 @@ public class ModelUpdateResponse implements Serializable {
 	public void setHttpClientConfigList(GHttpClientConfigList theHttpClientConfigList) {
 		myHttpClientConfigList = theHttpClientConfigList;
 	}
-	
+
+	public void setUserList(GUserList theUserList) {
+		myUserList = theUserList;
+	}
+
 }

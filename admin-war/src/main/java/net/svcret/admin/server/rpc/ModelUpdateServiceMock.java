@@ -6,20 +6,30 @@ import java.util.Set;
 import net.svcret.admin.client.rpc.ModelUpdateService;
 import net.svcret.admin.shared.ServiceFailureException;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
+import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.BaseGDashboardObjectWithUrls;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
+import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
+import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
+import net.svcret.admin.shared.model.GUser;
+import net.svcret.admin.shared.model.GUserDomainPermission;
+import net.svcret.admin.shared.model.GUserList;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
+import net.svcret.admin.shared.model.PartialUserListRequest;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
+import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
+import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -28,6 +38,8 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	private static long ourNextPid = 1000000L;
 	private GDomainList myDomainList;
 	private GHttpClientConfigList myClientConfigList;
+	private GAuthenticationHostList myAuthHostList;
+	private GUserList myUserList;
 
 	public ModelUpdateServiceMock() {
 		myDomainList = new GDomainList();
@@ -74,7 +86,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		GHttpClientConfig defCfg = new GHttpClientConfig();
 		defCfg.setPid(ourNextPid++);
 		defCfg.setId("DEFAULT");
-		defCfg.setName("Default (Can't be edited)");
+		defCfg.setName("Default (Can't be mopdified)");
 		defCfg.setUrlSelectionPolicy(UrlSelectionPolicy.PREFER_LOCAL);
 		defCfg.setCircuitBreakerTimeBetweenResetAttempts(60000);
 		defCfg.setReadTimeoutMillis(1000);
@@ -82,6 +94,33 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		defCfg.setCircuitBreakerEnabled(true);
 		defCfg.setFailureRetriesBeforeAborting(1);
 		myClientConfigList.add(defCfg);
+
+		myAuthHostList = new GAuthenticationHostList();
+		GLocalDatabaseAuthHost hostList = new GLocalDatabaseAuthHost();
+		hostList.setPid(ourNextPid++);
+		hostList.setModuleId(BasePersAuthenticationHost.MODULE_ID_ADMIN_AUTH);
+		hostList.setModuleName(BasePersAuthenticationHost.MODULE_DESC_ADMIN_AUTH);
+		hostList.setSupportsPasswordChange(true);
+		myAuthHostList.add(hostList);
+		
+		myUserList = new GUserList();
+		GUser user = new GUser();
+		user.setPid(ourNextPid++);
+		user.setUsername("admin");
+		user.setAuthHostPid(hostList.getPid());
+		user.addGlobalPermission(UserGlobalPermissionEnum.SUPERUSER);
+		myUserList.add(user);
+		
+		user = new GUser();
+		user.setPid(ourNextPid++);
+		user.setUsername("testuser");
+		GUserDomainPermission perm = new GUserDomainPermission();
+		perm.setPid(ourNextPid++);
+		perm.setAllowAllServices(true);
+		user.addDomainPermission(perm);
+		user.setAuthHostPid(hostList.getPid());
+		user.addGlobalPermission(UserGlobalPermissionEnum.SUPERUSER);
+		myUserList.add(user);
 
 	}
 
@@ -114,6 +153,16 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 			retVal.setHttpClientConfigList(getHttpClientConfigList());
 		}
 		
+		if (theRequest.isLoadAuthHosts()) {
+			retVal.setAuthenticationHostList(getAuthHostList());
+		}
+		
+		return retVal;
+	}
+
+	private GAuthenticationHostList getAuthHostList() {
+		GAuthenticationHostList retVal=new GAuthenticationHostList();
+		retVal.mergeResults(myAuthHostList);
 		return retVal;
 	}
 
@@ -300,6 +349,43 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		myClientConfigList.remove(config);
 		
 		return getHttpClientConfigList();
+	}
+
+	@Override
+	public GAuthenticationHostList saveAuthenticationHost(GLocalDatabaseAuthHost theAuthHost) {
+		if (theAuthHost.getPid() <= 0) {
+			theAuthHost.setPid(ourNextPid++);
+			myAuthHostList.add(theAuthHost);
+		} else {
+			myAuthHostList.getAuthHostByPid(theAuthHost.getPid()).merge(theAuthHost);
+		}
+		return myAuthHostList;
+	}
+
+	@Override
+	public GAuthenticationHostList removeAuthenticationHost(long thePid) {
+		myAuthHostList.remove(myAuthHostList.getAuthHostByPid(thePid));
+		return getAuthHostList();
+	}
+
+	@Override
+	public GPartialUserList loadUsers(PartialUserListRequest theRequest) {
+		GPartialUserList retVal=new GPartialUserList();
+		retVal.addAll(myUserList.toCollection());
+		return retVal;
+	}
+
+	@Override
+	public UserAndAuthHost loadUser(long thePid) {
+		GUser user = myUserList.getUserByPid(thePid);
+		BaseGAuthHost authHost = myAuthHostList.getAuthHostByPid(user.getAuthHostPid());
+		
+		return new UserAndAuthHost(user, authHost);
+	}
+
+	@Override
+	public void saveUser(GUser theUser) {
+		myUserList.getUserByPid(theUser.getPid()).merge(theUser);
 	}
 
 }

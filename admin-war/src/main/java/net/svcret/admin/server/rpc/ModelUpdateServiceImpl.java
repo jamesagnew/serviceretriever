@@ -11,15 +11,21 @@ import javax.servlet.http.HttpSession;
 import net.svcret.admin.client.rpc.ModelUpdateService;
 import net.svcret.admin.shared.ServiceFailureException;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
+import net.svcret.admin.shared.model.BaseGAuthHost;
+import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
+import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
+import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
+import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
+import net.svcret.admin.shared.model.PartialUserListRequest;
 import net.svcret.ejb.api.IAdminService;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.util.Validate;
@@ -206,15 +212,15 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 
 		ourLog.info("Requesting a model update from backend server for: " + theRequest.toString());
 
-		if (isMockMode()) {
-			return myMock.loadModelUpdate(theRequest);
-		}
-
 		long start = System.currentTimeMillis();
 
 		ModelUpdateResponse retVal;
 		try {
-			retVal = myAdminSvc.loadModelUpdate(theRequest);
+			if (isMockMode()) {
+				retVal = myMock.loadModelUpdate(theRequest);
+			} else {
+				retVal = myAdminSvc.loadModelUpdate(theRequest);
+			}
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to load model update", e);
 			throw new ServiceFailureException(e.getMessage());
@@ -222,6 +228,12 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 
 		long delay = System.currentTimeMillis() - start;
 		ourLog.info("Loaded model update in {}ms", delay);
+
+		if (theRequest.isLoadAuthHosts()) {
+			if (retVal.getAuthenticationHostList() == null || retVal.getAuthenticationHostList().size() == 0) {
+				throw new ServiceFailureException("Failed to return any authentication hosts!");
+			}
+		}
 
 		return retVal;
 	}
@@ -307,7 +319,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		if (theCreate) {
 			theConfig.setPid(0);
 		}
-		
+
 		try {
 			return myAdminSvc.saveHttpClientConfig(theConfig);
 		} catch (ProcessingException e) {
@@ -321,17 +333,93 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		if (thePid <= 0) {
 			throw new IllegalArgumentException("Invalid PID: " + thePid);
 		}
-		
+
 		if (isMockMode()) {
 			return myMock.deleteHttpClientConfig(thePid);
 		}
-		
+
 		try {
 			return myAdminSvc.deleteHttpClientConfig(thePid);
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to save config", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
+	}
+
+	@Override
+	public GAuthenticationHostList saveAuthenticationHost(GLocalDatabaseAuthHost theAuthHost) throws ServiceFailureException {
+		if (isMockMode()) {
+			return myMock.saveAuthenticationHost(theAuthHost);
+		}
+
+		if (theAuthHost.getPid() <= 0) {
+			theAuthHost.setPid(0);
+			ourLog.info("Saving new authentication host");
+		} else {
+			ourLog.info("Saving authentication host {} / {}", theAuthHost.getPid(), theAuthHost.getModuleId());
+		}
+
+		try {
+			return myAdminSvc.saveAuthenticationHost(theAuthHost);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to save authentication host", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+
+	}
+
+	@Override
+	public GAuthenticationHostList removeAuthenticationHost(long thePid) throws ServiceFailureException {
+		if (isMockMode()) {
+			return myMock.removeAuthenticationHost(thePid);
+		}
+		
+		try {
+			return myAdminSvc.deleteAuthenticationHost(thePid);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to delete authentication host", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+	}
+
+	@Override
+	public GPartialUserList loadUsers(PartialUserListRequest theRequest) {
+		if (isMockMode()) {
+			return myMock.loadUsers(theRequest);
+		}
+		
+		return myAdminSvc.loadUsers(theRequest);
+	}
+
+	@Override
+	public UserAndAuthHost loadUser(long thePid) throws ServiceFailureException {
+		if (isMockMode()) {
+			return myMock.loadUser(thePid);
+		}
+		
+		GUser user;
+		try {
+			user = myAdminSvc.loadUser(thePid);
+			BaseGAuthHost authHost = myAdminSvc.loadAuthenticationHost(user.getPid());
+			return new UserAndAuthHost(user, authHost);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to load user " + thePid, e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+	}
+
+	@Override
+	public void saveUser(GUser theUser) {
+		ourLog.info("Saving user {} / {}", theUser.getPid(), theUser.getUsername());
+		
+		if (isMockMode()) {
+			myMock.saveUser(theUser);
+			return;
+		}
+		
+		myAdminSvc.saveUser(theUser);
+
+		ourLog.info("Done saving user {} / {}", theUser.getPid(), theUser.getUsername());
 	}
 
 }

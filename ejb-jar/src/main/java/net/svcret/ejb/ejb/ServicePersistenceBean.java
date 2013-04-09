@@ -582,18 +582,19 @@ public class ServicePersistenceBean implements IServicePersistence {
 	}
 
 	@Override
-	public void saveServiceUser(PersUser theUser) {
+	public PersUser saveServiceUser(PersUser theUser) {
 		Validate.throwIllegalArgumentExceptionIfNull("User", theUser);
-		Validate.throwIllegalArgumentExceptionIfNull("User.myPid", theUser.getPid());
+		Validate.throwIllegalArgumentExceptionIfNull("User.AuthenticationHost", theUser.getAuthenticationHost());
 
-		myEntityManager.merge(theUser);
+		return myEntityManager.merge(theUser);
 	}
 
 	/**
 	 * {@inheritDoc}
+	 * @return 
 	 */
 	@Override
-	public void saveServiceVersion(BasePersServiceVersion theVersion) throws ProcessingException {
+	public BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theVersion) throws ProcessingException {
 		Validate.throwIllegalArgumentExceptionIfNull("ServiceVersion", theVersion);
 		Validate.throwIllegalArgumentExceptionIfNull("ServiceVersion.myId", theVersion.getPid());
 		Validate.throwProcessingExceptionIfBlank("ID may not be missing or null", theVersion.getVersionId());
@@ -629,6 +630,8 @@ public class ServicePersistenceBean implements IServicePersistence {
 			}
 
 		}
+		
+		return version;
 	}
 
 	@Override
@@ -686,9 +689,6 @@ public class ServicePersistenceBean implements IServicePersistence {
 	@Override
 	public void saveAuthenticationHost(PersAuthenticationHostLocalDatabase theAuthHost) {
 		Validate.throwIllegalArgumentExceptionIfNull("AuthHost", theAuthHost);
-		if (theAuthHost.getPid() == null) {
-			throw new IllegalArgumentException("Authhost has no PID");
-		}
 		
 		ourLog.info("Saving authentication host {} / {}", theAuthHost.getPid(), theAuthHost.getModuleId());
 		
@@ -699,6 +699,32 @@ public class ServicePersistenceBean implements IServicePersistence {
 	public Collection<BasePersAuthenticationHost> getAllAuthenticationHosts() {
 		TypedQuery<BasePersAuthenticationHost> q = myEntityManager.createNamedQuery(Queries.AUTHHOST_FINDALL, BasePersAuthenticationHost.class);
 		return q.getResultList();
+	}
+
+	@Override
+	public BasePersAuthenticationHost getAuthenticationHostByPid(long thePid) {
+		return myEntityManager.find(BasePersAuthenticationHost.class, thePid);
+	}
+
+	@Override
+	public void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost) {
+		Validate.throwIllegalArgumentExceptionIfNull("AuthenticationHost", theAuthHost);
+		myEntityManager.remove(theAuthHost);
+	}
+
+	@Override
+	public PersUser getUser(long thePid) {
+		return myEntityManager.find(PersUser.class, thePid);
+	}
+
+	@Override
+	public PersServiceVersionMethod getServiceVersionMethodByPid(long theServiceVersionMethodPid) {
+		return myEntityManager.find(PersServiceVersionMethod.class, theServiceVersionMethodPid);
+	}
+
+	@Override
+	public BasePersServiceVersion getServiceVersionByPid(long theServiceVersionPid) {
+		return myEntityManager.find(BasePersServiceVersion.class, theServiceVersionPid);
 	}
 
 }

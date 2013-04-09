@@ -10,7 +10,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
-import javax.persistence.Version;
 
 @Table(name = "PX_USER_PERM_SVCVER_METHOD", uniqueConstraints = { // -
 @UniqueConstraint(columnNames = { "SVCVER_METHOD_PID", "USER_PERM_SVCVER_PID" }) } // -
@@ -18,9 +17,10 @@ import javax.persistence.Version;
 @Entity
 public class PersUserServiceVersionMethodPermission extends BasePersObject {
 
-	@Version()
-	@Column(name = "OPTLOCK")
-	private int myOptLock;
+	private static final long serialVersionUID = 1L;
+
+	@Column(name = "ALLOW", nullable = false)
+	private boolean myAllow;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -34,13 +34,6 @@ public class PersUserServiceVersionMethodPermission extends BasePersObject {
 	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
 	@JoinColumn(name = "USER_PERM_SVCVER_PID", referencedColumnName = "PID", nullable = false)
 	private PersUserServiceVersionPermission myServiceVersionPermission;
-
-	/**
-	 * @return the optLock
-	 */
-	public int getOptLock() {
-		return myOptLock;
-	}
 
 	/**
 	 * @return the pid
@@ -64,6 +57,29 @@ public class PersUserServiceVersionMethodPermission extends BasePersObject {
 	}
 
 	/**
+	 * @return the allow
+	 */
+	public boolean isAllow() {
+		return myAllow;
+	}
+
+	/**
+	 * @param theAllow
+	 *            the allow to set
+	 */
+	public void setAllow(boolean theAllow) {
+		myAllow = theAllow;
+	}
+
+	/**
+	 * @param thePid
+	 *            the pid to set
+	 */
+	public void setPid(Long thePid) {
+		myPid = thePid;
+	}
+
+	/**
 	 * @param theServiceVersionMethod
 	 *            the serviceDomain to set
 	 */
@@ -72,11 +88,11 @@ public class PersUserServiceVersionMethodPermission extends BasePersObject {
 	}
 
 	/**
-	 * @param theServiceVersionPermission the domainPermission to set
+	 * @param theServiceVersionPermission
+	 *            the domainPermission to set
 	 */
 	public void setServiceVersionPermission(PersUserServiceVersionPermission theServiceVersionPermission) {
 		myServiceVersionPermission = theServiceVersionPermission;
 	}
 
-	
 }

@@ -1,9 +1,12 @@
 package net.svcret.admin.client.ui.layout;
 
+import static net.svcret.admin.client.AdminPortal.*;
+
 import java.util.ArrayList;
 
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.nav.PagesEnum;
+import net.svcret.admin.client.ui.components.CssConstants;
 
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
@@ -19,6 +22,8 @@ public class LeftBarPanel extends FlowPanel {
 	private ArrayList<Hyperlink> myAllButtons;
 	private Hyperlink myAddSvcVerBtn;
 	private Hyperlink myHttpClientConfigsBtn;
+	private Hyperlink myAuthenticationHostsBtn;
+	private Hyperlink myEditUsersBtn;
 
 	public LeftBarPanel() {
 		setStylePrimaryName("outerLayoutLeftBar");
@@ -58,9 +63,15 @@ public class LeftBarPanel extends FlowPanel {
 		LeftMenuComponent configure = new LeftMenuComponent("Configuration");
 		add(configure);
 
-		myHttpClientConfigsBtn = configure.addItem("HTTP Client Config", PagesEnum.HCC);
+		myHttpClientConfigsBtn = configure.addItem(MSGS.leftPanel_HttpClients(), PagesEnum.HCC);
 		myAllButtons.add(myHttpClientConfigsBtn);
-
+		
+		myAuthenticationHostsBtn = configure.addItem(MSGS.leftPanel_AuthenticationHosts(), PagesEnum.AHL);
+		myAllButtons.add(myAuthenticationHostsBtn);
+		
+		myEditUsersBtn = configure.addItem(MSGS.leftPanel_EditUsers(), PagesEnum.EUL);
+		myAllButtons.add(myEditUsersBtn);
+		
 		updateStyles();
 		
 		History.addValueChangeHandler(new ValueChangeHandler<String>() {
@@ -78,34 +89,42 @@ public class LeftBarPanel extends FlowPanel {
 		ArrayList<Hyperlink> buttons = new ArrayList<Hyperlink>(myAllButtons);
 		
 		switch (current) {
+		case AHL:
+			myAuthenticationHostsBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
+			buttons.remove(myAuthenticationHostsBtn);
+			break;
 		case DSH:
-			myDashboardBtn.addStyleName("leftMenuButtonSelected");
+			myDashboardBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
 			buttons.remove(myDashboardBtn);
 			break;
 		case ADD:
 		case AD2:
-			myAddDomainBtn.addStyleName("leftMenuButtonSelected");
+			myAddDomainBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
 			buttons.remove(myAddDomainBtn);
 			break;
 		case ASE:
-			myAddSvcBtn.addStyleName("leftMenuButtonSelected");
+			myAddSvcBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
 			buttons.remove(myAddSvcBtn);
 			break;
 		case ASV:
 		case AV2:
-			myAddSvcVerBtn.addStyleName("leftMenuButtonSelected");
+			myAddSvcVerBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
 			buttons.remove(myAddSvcVerBtn);
 			break;
 		case HCC:
-			myHttpClientConfigsBtn.addStyleName("leftMenuButtonSelected");
+			myHttpClientConfigsBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
 			buttons.remove(myHttpClientConfigsBtn);
 			break;
 		case EDO:
 			break;
+		case EUL:
+		case EDU:
+			myEditUsersBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
+			buttons.remove(myEditUsersBtn);
 		}
 		
 		for (Hyperlink next : buttons) {
-			next.removeStyleName("leftMenuButtonSelected");
+			next.removeStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
 		}
 		
 	}

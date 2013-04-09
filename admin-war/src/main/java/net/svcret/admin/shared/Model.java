@@ -4,10 +4,12 @@ import java.util.Date;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
+import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceList;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
@@ -22,6 +24,8 @@ public class Model {
 	private GDomainList myDomainList;
 	private boolean myDomainListInitialized = false;
 	private GHttpClientConfigList myHttpClientConfigList;
+	private GAuthenticationHostList myAuthHostList;
+
 	private Model() {
 		initLists();
 	}
@@ -70,6 +74,7 @@ public class Model {
 		if (myDomainList == null) {
 			myDomainList = new GDomainList();
 			myHttpClientConfigList = new GHttpClientConfigList();
+			myAuthHostList = new GAuthenticationHostList();
 		}
 	}
 
@@ -117,9 +122,13 @@ public class Model {
 	}
 
 	public void loadHttpClientConfigs(IAsyncLoadCallback<GHttpClientConfigList> theCallback) {
-		ModelUpdateRequest req = new ModelUpdateRequest();
-		req.setLoadHttpClientConfigs(true);
-		AdminPortal.MODEL_SVC.loadModelUpdate(req, getCalbackWithHttpClientConfigListCallback(theCallback));
+		if (myHttpClientConfigList.getLastMerged() != null) {
+			theCallback.onSuccess(myHttpClientConfigList);
+		} else {
+			ModelUpdateRequest req = new ModelUpdateRequest();
+			req.setLoadHttpClientConfigs(true);
+			AdminPortal.MODEL_SVC.loadModelUpdate(req, getCalbackWithHttpClientConfigListCallback(theCallback));
+		}
 	}
 
 	public void loadService(final long theDomainPid, final long theServicePid, final IAsyncLoadCallback<GService> theIAsyncLoadCallback) {
@@ -170,6 +179,7 @@ public class Model {
 	private final class MyModelUpdateCallbackHandler implements AsyncCallback<ModelUpdateResponse> {
 		private IAsyncLoadCallback<GDomainList> myDomainListCallback;
 		private IAsyncLoadCallback<GHttpClientConfigList> myHttpClientConfigListCallback;
+		public IAsyncLoadCallback<GAuthenticationHostList> myAuthHostListCallback;
 
 		@Override
 		public void onFailure(Throwable theCaught) {
@@ -185,26 +195,40 @@ public class Model {
 				myHttpClientConfigList.mergeResults(theResult.getHttpClientConfigList());
 			}
 
+			if (theResult.getAuthenticationHostList() != null) {
+				myAuthHostList.mergeResults(theResult.getAuthenticationHostList());
+			}
+
 			if (myDomainListCallback != null) {
 				myDomainListCallback.onSuccess(myDomainList);
 			}
-			
+
 			if (myHttpClientConfigListCallback != null) {
 				myHttpClientConfigListCallback.onSuccess(myHttpClientConfigList);
+			}
+			
+			if (myAuthHostListCallback != null) {
+				myAuthHostListCallback.onSuccess(myAuthHostList);
 			}
 		}
 
 	}
-	
+
 	private MyModelUpdateCallbackHandler getCallbackWithDomainListCallback(IAsyncLoadCallback<GDomainList> theCallback) {
 		MyModelUpdateCallbackHandler retVal = new MyModelUpdateCallbackHandler();
 		retVal.myDomainListCallback = theCallback;
 		return retVal;
 	}
-	
+
 	private MyModelUpdateCallbackHandler getCalbackWithHttpClientConfigListCallback(IAsyncLoadCallback<GHttpClientConfigList> theCallback) {
 		MyModelUpdateCallbackHandler retVal = new MyModelUpdateCallbackHandler();
 		retVal.myHttpClientConfigListCallback = theCallback;
+		return retVal;
+	}
+
+	private MyModelUpdateCallbackHandler getCallbackWithAuthHostListCallback(IAsyncLoadCallback<GAuthenticationHostList> theCallback) {
+		MyModelUpdateCallbackHandler retVal = new MyModelUpdateCallbackHandler();
+		retVal.myAuthHostListCallback = theCallback;
 		return retVal;
 	}
 
@@ -215,6 +239,33 @@ public class Model {
 		} else {
 			myHttpClientConfigList.add(theConfig);
 		}
+	}
+
+	public void loadAuthenticationHosts(IAsyncLoadCallback<GAuthenticationHostList> theCallback) {
+		if (myHttpClientConfigList.getLastMerged() != null) {
+			theCallback.onSuccess(myAuthHostList);
+		} else {
+			MyModelUpdateCallbackHandler callback = getCallbackWithAuthHostListCallback(theCallback);
+			ModelUpdateRequest req = new ModelUpdateRequest();
+			req.setLoadAuthHosts(true);
+			AdminPortal.MODEL_SVC.loadModelUpdate(req, callback);
+		}
+	}
+
+	public void saveAuthenticationHost(GLocalDatabaseAuthHost theAuthHost, final IAsyncLoadCallback<GAuthenticationHostList> theIAsyncLoadCallback) {
+		AsyncCallback<GAuthenticationHostList> callback = new AsyncCallback<GAuthenticationHostList>() {
+			@Override
+			public void onFailure(Throwable theCaught) {
+				Model.handleFailure(theCaught);
+			}
+
+			@Override
+			public void onSuccess(GAuthenticationHostList theResult) {
+				theIAsyncLoadCallback.onSuccess(theResult);
+			}
+		};
+		AdminPortal.MODEL_SVC.saveAuthenticationHost(theAuthHost, callback);
+		
 	}
 
 }

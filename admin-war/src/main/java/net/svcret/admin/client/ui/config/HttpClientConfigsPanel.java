@@ -1,9 +1,6 @@
 package net.svcret.admin.client.ui.config;
 
 import static net.svcret.admin.client.AdminPortal.*;
-
-import java.util.List;
-
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.HtmlBr;
@@ -11,7 +8,6 @@ import net.svcret.admin.client.ui.components.HtmlH1;
 import net.svcret.admin.client.ui.components.HtmlLabel;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
-import net.svcret.admin.client.ui.components.ValidatingTextBoxChangeHandlerPositiveInteger;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.GHttpClientConfig;
@@ -37,39 +33,28 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 
 public class HttpClientConfigsPanel extends FlowPanel {
 
-	private final class MyHttpClientConfigListHandler implements AsyncCallback<GHttpClientConfigList> {
-		@Override
-		public void onSuccess(GHttpClientConfigList theResult) {
-			setConfigList(theResult);
-		}
-
-		@Override
-		public void onFailure(Throwable theCaught) {
-			Model.handleFailure(theCaught);
-		}
-	}
-
 	private static final int LBL_WIDTH = 100;
 	private static final Integer LBL_WIDTH_X2 = 200;
+	
+	private PButton myAddButton;
+	private IntegerBox myCircuitBreakerDelayBox;
+	private CheckBox myCircuitBreakerEnabledCheck;
+	private LoadingSpinner myConfigListLoadingSpinner;
 	private GHttpClientConfigList myConfigs;
 	private ListBox myConfigsListBox;
 	private TextBox myIdTextBox;
-	private Long mySelectedPid;
-	private boolean myUpdatingConfigsListBox;
+	private LoadingSpinner myLoadingSpinner;
 	private TextBox myNameTextBox;
-	private ListBox myUrlSelectionPolicyListBox;
-	private HTML myUrlSelectionPolicyDescriptionLabel;
-	private CheckBox myCircuitBreakerEnabledCheck;
-	private IntegerBox myCircuitBreakerDelayBox;
+	private PButton myRemoveButton;
+	private IntegerBox myRetriesTextBox;
+	private Long mySelectedPid;
 	private IntegerBox myTcpConnectTimeoutTb;
 	private IntegerBox myTcpReadTimeoutTb;
-	private IntegerBox myRetriesTextBox;
-	private LoadingSpinner myLoadingSpinner;
-	private PButton myAddButton;
-	private PButton myRemoveButton;
-	private LoadingSpinner myConfigListLoadingSpinner;
+	private boolean myUpdatingConfigsListBox;
+	private HTML myUrlSelectionPolicyDescriptionLabel;
+	private ListBox myUrlSelectionPolicyListBox;
 	private int ourNextUnsavedPid = -1;
-
+	private FlowPanel myDetailsContentPanel;
 	public HttpClientConfigsPanel() {
 		initConfigListPanel();
 		initDetailsPanel();
@@ -277,6 +262,11 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		AdminPortal.MODEL_SVC.saveHttpClientConfig(create, config, new AsyncCallback<GHttpClientConfig>() {
 
 			@Override
+			public void onFailure(Throwable theCaught) {
+				Model.handleFailure(theCaught);
+			}
+
+			@Override
 			public void onSuccess(GHttpClientConfig theResult) {
 				myLoadingSpinner.showMessage("Saved", false);
 				Model.getInstance().addHttpClientConfig(theResult);
@@ -285,30 +275,12 @@ public class HttpClientConfigsPanel extends FlowPanel {
 				updateConfigList();
 				updateSelectedConfig();
 			}
-
-			@Override
-			public void onFailure(Throwable theCaught) {
-				Model.handleFailure(theCaught);
-			}
 		});
 	}
 
 	private void enableToolbar() {
 		myAddButton.setEnabled(true);
 		myRemoveButton.setEnabled(true);
-	}
-
-	private void updateSelectedUrlSelectionPolicy() {
-		int selectedIndex = myUrlSelectionPolicyListBox.getSelectedIndex();
-		if (selectedIndex == -1) {
-			return;
-		}
-		UrlSelectionPolicy policy = UrlSelectionPolicy.values()[selectedIndex];
-		switch (policy) {
-		case PREFER_LOCAL:
-			myUrlSelectionPolicyDescriptionLabel.setHTML(MSGS.urlSelectionPolicy_Desc_PreferLocal());
-			break;
-		}
 	}
 
 	private void initConfigListPanel() {
@@ -333,7 +305,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		contentPanel.add(hPanel);
 		
 		VerticalPanel toolbar = new VerticalPanel();
-		myAddButton = new PButton("Add");
+		myAddButton = new PButton(AdminPortal.MSGS.actions_Add());
 		myAddButton.setEnabled(false);
 		myAddButton.addClickHandler(new ClickHandler() {
 			@Override
@@ -342,7 +314,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 			}
 		});
 		toolbar.add(myAddButton);
-		myRemoveButton = new PButton("Remove");
+		myRemoveButton = new PButton(AdminPortal.MSGS.actions_Add());
 		myRemoveButton.setEnabled(false);
 		myRemoveButton.addClickHandler(new ClickHandler() {
 			@Override
@@ -381,14 +353,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 
 	}
 
-	private void setConfigList(GHttpClientConfigList theConfigList) {
-		assert theConfigList.size() > 0;
-		myConfigListLoadingSpinner.hideCompletely();
-		myConfigs = theConfigList;
-		updateConfigList();
-		enableToolbar();
-	}
-	
+
 	private void removeConfig() {
 		GHttpClientConfig config = myConfigs.get(myConfigsListBox.getSelectedIndex());
 		if (config.isDefault()) {
@@ -405,20 +370,48 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		
 	}
 
-	private void addConfig() {
-		GHttpClientConfig newConfig = new GHttpClientConfig();
-		newConfig.setId("NEW");
-		newConfig.setName("New");
-		newConfig.setPid(ourNextUnsavedPid--);
-		myConfigs.add(newConfig);
-		
-		mySelectedPid = newConfig.getPid();
+	private void setConfigList(GHttpClientConfigList theConfigList) {
+		assert theConfigList.size() > 0;
+		myConfigListLoadingSpinner.hideCompletely();
+		myConfigs = theConfigList;
 		updateConfigList();
-		updateSelectedConfig();
+		enableToolbar();
 	}
 
+//	private void updateConfigList() {
+//		myUpdatingConfigsListBox = true;
+//		myConfigsListBox.clear();
+//
+//		int selectedIndex = 0;
+//		for (GHttpClientConfig next : myConfigs) {
+//			String desc = next.getId();
+//			if (StringUtil.isNotBlank(next.getName())) {
+//				desc = desc + " - " + next.getName();
+//			}
+//			if (mySelectedPid != null && mySelectedPid.equals(next.getPid())) {
+//				selectedIndex = myConfigsListBox.getItemCount();
+//			}
+//			myConfigsListBox.addItem(desc, Long.toString(next.getPid()));
+//		}
+//
+//		myConfigsListBox.setSelectedIndex(selectedIndex);
+//
+//		myUpdatingConfigsListBox = false;
+//
+//		String value = myConfigsListBox.getValue(selectedIndex);
+//		Long newSelectedId = Long.parseLong(value);
+//		if (!newSelectedId.equals(mySelectedPid)) {
+//			mySelectedPid = newSelectedId;
+//			updateSelectedConfig();
+//		}
+//
+//	}
+	
 	private void updateSelectedConfig() {
 		GHttpClientConfig config = myConfigs.getConfigByPid(mySelectedPid);
+		if (config == null) {
+			throw new IllegalStateException("No config with PID " + mySelectedPid + " found. Valid are: " + myConfigs.listConfigIds());
+		}
 		myIdTextBox.setValue(config.getId());
 		myNameTextBox.setValue(config.getName());
 
@@ -437,6 +430,43 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		myTcpReadTimeoutTb.setValue((config.getReadTimeoutMillis()));
 
 		myRetriesTextBox.setValue((config.getFailureRetriesBeforeAborting()));
+	}
+
+	private void updateSelectedUrlSelectionPolicy() {
+		int selectedIndex = myUrlSelectionPolicyListBox.getSelectedIndex();
+		if (selectedIndex == -1) {
+			return;
+		}
+		UrlSelectionPolicy policy = UrlSelectionPolicy.values()[selectedIndex];
+		switch (policy) {
+		case PREFER_LOCAL:
+			myUrlSelectionPolicyDescriptionLabel.setHTML(MSGS.urlSelectionPolicy_Desc_PreferLocal());
+			break;
+		}
+	}
+
+	private final class MyHttpClientConfigListHandler implements AsyncCallback<GHttpClientConfigList> {
+		@Override
+		public void onFailure(Throwable theCaught) {
+			Model.handleFailure(theCaught);
+		}
+
+		@Override
+		public void onSuccess(GHttpClientConfigList theResult) {
+			setConfigList(theResult);
+		}
+	}
+
+	private void addConfig() {
+		GHttpClientConfig newConfig = new GHttpClientConfig();
+		newConfig.setId("NEW");
+		newConfig.setName("New");
+		newConfig.setPid(ourNextUnsavedPid--);
+		myConfigs.add(newConfig);
+		
+		mySelectedPid = newConfig.getPid();
+		updateConfigList();
+		updateSelectedConfig();
 	}
 
 }

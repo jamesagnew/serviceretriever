@@ -7,8 +7,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -22,6 +26,9 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 
+import org.hibernate.annotations.CollectionType;
+
+import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.util.Password;
 import net.svcret.ejb.util.Validate;
@@ -33,9 +40,11 @@ import com.google.common.base.Objects;
 @NamedQueries(value = { @NamedQuery(name = Queries.PERSUSER_FIND, query = Queries.PERSUSER_FIND_Q) })
 public class PersUser extends BasePersObject {
 
+	public static final String DEFAULT_ADMIN_PASSWORD = "admin";
+
 	public static final String DEFAULT_ADMIN_USERNAME = "admin";
 
-	public static final String DEFAULT_ADMIN_PASSWORD = "admin";
+	private static final long serialVersionUID = 1L;
 
 	@Column(name = "ALLOW_ALL_DOMAINS")
 	private boolean myAllowAllDomains;
@@ -51,13 +60,13 @@ public class PersUser extends BasePersObject {
 	@JoinColumn(name = "SVC_USER_PID", referencedColumnName = "PID")
 	private Collection<PersUserDomainPermission> myDomainPermissions;
 
-	@Version()
-	@Column(name = "OPTLOCK")
-	private int myOptLock;
-
 	// NB: Nullable because user can be backed by external authorization
 	@Column(name = "PASSWORD_HASH", nullable = true, length = 512)
 	private String myPasswordHash;
+
+	@ElementCollection(targetClass=UserGlobalPermissionEnum.class)
+	@CollectionTable(name = "PX_USER_GLOBALPERMS")
+	private Set<UserGlobalPermissionEnum> myPermissions;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -78,6 +87,14 @@ public class PersUser extends BasePersObject {
 		myDomainPermissions.add(perm);
 
 		return perm;
+	}
+
+	public boolean checkPassword(String thePassword) throws ProcessingException {
+		try {
+			return Password.checkStrongHash(thePassword, myPasswordHash);
+		} catch (Exception e) {
+			throw new ProcessingException(e);
+		}
 	}
 
 	/**
@@ -106,10 +123,13 @@ public class PersUser extends BasePersObject {
 	}
 
 	/**
-	 * @return the optLock
+	 * @return the permissions
 	 */
-	public int getOptLock() {
-		return myOptLock;
+	public Set<UserGlobalPermissionEnum> getPermissions() {
+		if (myPermissions == null) {
+			myPermissions = new HashSet<UserGlobalPermissionEnum>();
+		}
+		return myPermissions;
 	}
 
 	/**
@@ -141,7 +161,7 @@ public class PersUser extends BasePersObject {
 		if (myAllowedMethods == null) {
 			throw new IllegalStateException("Associations have not been loaded");
 		}
-		
+
 		if (myAllowAllDomains) {
 			return true;
 		}
@@ -175,6 +195,13 @@ public class PersUser extends BasePersObject {
 	}
 
 	/**
+	 * @param thePermissions the permissions to set
+	 */
+	public void setPermissions(Set<UserGlobalPermissionEnum> thePermissions) {
+		myPermissions = thePermissions;
+	}
+
+	/**
 	 * @param theAuthenticationHost
 	 *            the authenticationHost to set
 	 */
@@ -182,12 +209,24 @@ public class PersUser extends BasePersObject {
 		myAuthenticationHost = theAuthenticationHost;
 	}
 
+	public void setPassword(String thePassword) throws ProcessingException {
+		Validate.throwIllegalArgumentExceptionIfBlank("Password", thePassword);
+
+		try {
+			myPasswordHash = Password.getStrongHash(thePassword);
+		} catch (Exception e) {
+			throw new ProcessingException(e);
+		}
+	}
+
 	/**
-	 * @param theOptLock
-	 *            the optLock to set
+	 * @param theDomainPermissions the domainPermissions to set
 	 */
-	public void setOptLock(int theOptLock) {
-		myOptLock = theOptLock;
+	public void setDomainPermissions(Collection<PersUserDomainPermission> theDomainPermissions) {
+		myDomainPermissions = theDomainPermissions;
+		for (PersUserDomainPermission next : theDomainPermissions) {
+			next.setServiceUser(this);
+		}
 	}
 
 	/**
@@ -204,24 +243,6 @@ public class PersUser extends BasePersObject {
 	 */
 	public void setUsername(String theUsername) {
 		myUsername = theUsername;
-	}
-
-	public boolean checkPassword(String thePassword) throws ProcessingException {
-		try {
-			return Password.check(thePassword, myPasswordHash);
-		} catch (Exception e) {
-			throw new ProcessingException(e);
-		}
-	}
-	
-	public void setPassword(String thePassword) throws ProcessingException {
-		Validate.throwIllegalArgumentExceptionIfBlank("Password", thePassword);
-		
-		try {
-			myPasswordHash = Password.getSaltedHash(thePassword);
-		} catch (Exception e) {
-			throw new ProcessingException(e);
-		}
 	}
 
 }

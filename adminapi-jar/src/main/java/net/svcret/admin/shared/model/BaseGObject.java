@@ -37,6 +37,10 @@ public abstract class BaseGObject<T> extends BaseGListenable<T> {
 		return myPid;
 	}
 
+	public Long getPidOrNull() {
+		return myPid > 0 ? myPid : null;
+	}
+
 	/**
 	 * @return the uncommittedSessionId
 	 */

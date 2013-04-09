@@ -14,6 +14,8 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
+import net.svcret.admin.shared.model.AuthorizationHostTypeEnum;
+
 /**
  * Authentication host: This is a module which is used to take credentials of
  * clients who are calling our services and validate that they are correct
@@ -22,16 +24,19 @@ import javax.persistence.Version;
 @Entity()
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "AUTH_TYPE", length = 20, discriminatorType = DiscriminatorType.STRING)
-@NamedQueries(value= {@NamedQuery(name=Queries.AUTHHOST_FINDALL, query=Queries.AUTHHOST_FINDALL_Q)})
+@NamedQueries(value = { @NamedQuery(name = Queries.AUTHHOST_FINDALL, query = Queries.AUTHHOST_FINDALL_Q) })
 public abstract class BasePersAuthenticationHost extends BasePersObject {
 
-	public static final String MODULE_DESC_ADMIN_AUTH = "Authenticates administrators of ServiceRetriever itself";
-	public static final String MODULE_ID_ADMIN_AUTH = "ADMIN_AUTH";
+	public static final String MODULE_DESC_ADMIN_AUTH = "Default authentication host";
 
-	@Column(name="AUTOCREATE_AUTHD_USERS", nullable=false)
+	public static final String MODULE_ID_ADMIN_AUTH = "DEFAULT";
+
+	private static final long serialVersionUID = 1L;
+
+	@Column(name = "AUTOCREATE_AUTHD_USERS", nullable = false)
 	private boolean myAutoCreateAuthorizedUsers;
-
-	@Column(name="CACHE_SUCCESS_MILLIS", nullable=true)
+	
+	@Column(name = "CACHE_SUCCESS_MILLIS", nullable = true)
 	private Integer myCacheSuccessfulCredentialsForMillis;
 
 	@Column(name = "MODULE_ID", length = 100, nullable = false, unique = true)
@@ -39,16 +44,19 @@ public abstract class BasePersAuthenticationHost extends BasePersObject {
 
 	@Column(name = "MODULE_NAME", length = 200, nullable = false)
 	private String myModuleName;
-	
+
 	@Version()
 	@Column(name = "OPTLOCK")
 	private int myOptLock;
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "PID")
 	private Long myPid;
 
+	@Column(name="SUPTS_PW_CHG", nullable=false)
+	private boolean mySupportsPasswordChange;
+	
 	public BasePersAuthenticationHost() {
 		super();
 	}
@@ -91,11 +99,34 @@ public abstract class BasePersAuthenticationHost extends BasePersObject {
 	public Long getPid() {
 		return myPid;
 	}
-	
+
 	public abstract AuthorizationHostTypeEnum getType();
 
 	/**
-	 * @param theCacheSuccessfulCredentialsForMillis the cacheSuccessfulCredentialsForMillis to set
+	 * @return the autoCreateAuthorizedUsers
+	 */
+	public boolean isAutoCreateAuthorizedUsers() {
+		return myAutoCreateAuthorizedUsers;
+	}
+
+	/**
+	 * @return the supportsPasswordChange
+	 */
+	public boolean isSupportsPasswordChange() {
+		return mySupportsPasswordChange;
+	}
+
+	/**
+	 * @param theAutoCreateAuthorizedUsers
+	 *            the autoCreateAuthorizedUsers to set
+	 */
+	public void setAutoCreateAuthorizedUsers(boolean theAutoCreateAuthorizedUsers) {
+		myAutoCreateAuthorizedUsers = theAutoCreateAuthorizedUsers;
+	}
+
+	/**
+	 * @param theCacheSuccessfulCredentialsForMillis
+	 *            the cacheSuccessfulCredentialsForMillis to set
 	 */
 	public void setCacheSuccessfulCredentialsForMillis(Integer theCacheSuccessfulCredentialsForMillis) {
 		myCacheSuccessfulCredentialsForMillis = theCacheSuccessfulCredentialsForMillis;
@@ -131,6 +162,13 @@ public abstract class BasePersAuthenticationHost extends BasePersObject {
 	 */
 	public void setPid(Long thePid) {
 		myPid = thePid;
+	}
+
+	/**
+	 * @param theSupportsPasswordChange the supportsPasswordChange to set
+	 */
+	public void setSupportsPasswordChange(boolean theSupportsPasswordChange) {
+		mySupportsPasswordChange = theSupportsPasswordChange;
 	}
 
 }

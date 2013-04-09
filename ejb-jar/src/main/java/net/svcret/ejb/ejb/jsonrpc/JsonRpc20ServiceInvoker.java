@@ -7,22 +7,21 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.IResponseValidator;
+import net.svcret.ejb.api.IServiceInvoker;
+import net.svcret.ejb.api.InvocationResponseResultsBean;
+import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.RequestType;
+import net.svcret.ejb.api.ResponseTypeEnum;
+import net.svcret.ejb.ex.InternalErrorException;
+import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnknownRequestException;
+import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
+import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.io.IOUtils;
-
-import ca.uhn.sail.proxy.api.HttpResponseBean;
-import ca.uhn.sail.proxy.api.IResponseValidator;
-import ca.uhn.sail.proxy.api.IServiceInvoker;
-import ca.uhn.sail.proxy.api.InvocationResponseResultsBean;
-import ca.uhn.sail.proxy.api.InvocationResultsBean;
-import ca.uhn.sail.proxy.api.RequestType;
-import ca.uhn.sail.proxy.api.ResponseTypeEnum;
-import ca.uhn.sail.proxy.ex.InternalErrorException;
-import ca.uhn.sail.proxy.ex.ProcessingException;
-import ca.uhn.sail.proxy.ex.UnknownRequestException;
-import ca.uhn.sail.proxy.model.entity.PersServiceVersionMethod;
-import ca.uhn.sail.proxy.util.Validate;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -337,6 +336,12 @@ public class JsonRpc20ServiceInvoker implements IServiceInvoker<PersServiceVersi
 	@Override
 	public IResponseValidator provideInvocationResponseValidator() {
 		return new JsonRpc20ResponseValidator();
+	}
+
+
+	@Override
+	public PersServiceVersionJsonRpc20 introspectServiceFromUrl(String theUrl) throws ProcessingException {
+		throw new UnsupportedOperationException();
 	}
 
 }

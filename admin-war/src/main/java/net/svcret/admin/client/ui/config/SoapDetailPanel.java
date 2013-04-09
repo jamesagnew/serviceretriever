@@ -2,6 +2,7 @@ package net.svcret.admin.client.ui.config;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
+import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.HtmlLabel;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
@@ -316,7 +317,7 @@ public class SoapDetailPanel extends FlowPanel {
 				"implementation URL means that if one is unavailable, another can be tried (i.e. redundancy)."));
 		
 		myUrlGrid = new Grid(1, 3);
-		myUrlGrid.addStyleName("dashboardTable");
+		myUrlGrid.addStyleName(CssConstants.DASHBOARD_TABLE);
 		contentPanel.add(myUrlGrid);
 
 		myUrlGrid.setWidget(0, 0, new Label("Action"));

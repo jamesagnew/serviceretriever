@@ -13,4 +13,17 @@ public class GHttpClientConfigList extends BaseGList<GHttpClientConfig> {
 		return null;
 	}
 
+	public String listConfigIds() {
+		StringBuilder b = new StringBuilder();
+		b.append('[');
+		for (GHttpClientConfig next : this) {
+			if (b.length() > 1) {
+				b.append(", ");
+			}
+			b.append(next.getPid());
+		}
+		b.append(']');
+		return b.toString();
+	}
+
 }

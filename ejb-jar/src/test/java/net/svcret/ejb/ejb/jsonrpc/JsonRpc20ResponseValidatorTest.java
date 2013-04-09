@@ -1,13 +1,11 @@
 package net.svcret.ejb.ejb.jsonrpc;
 
-import net.svcret.ejb.ejb.jsonrpc.JsonRpc20ResponseValidator;
+import net.svcret.ejb.api.IResponseValidator.ValidationResponse;
 
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import ca.uhn.sail.proxy.api.IResponseValidator.ValidationResponse;
 
 public class JsonRpc20ResponseValidatorTest {
 

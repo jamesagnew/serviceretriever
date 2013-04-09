@@ -102,6 +102,7 @@ public class SecurityServiceBeanTest {
 		PersUserServicePermission servicePer = domainPer.addPermission(myD0S0);
 		PersUserServiceVersionPermission versionPer = servicePer.addPermission(myD0S0V0);
 		PersUserServiceVersionMethodPermission methodPerm = versionPer.addPermission(myD0S0V0M0);
+		methodPerm.setAllow(true);
 		
 		myUser.loadAllAssociations();
 		
@@ -111,6 +112,10 @@ public class SecurityServiceBeanTest {
 		assertTrue(mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M0));
 		assertFalse(mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M1));
 		
+		methodPerm.setAllow(false);
+		myUser.loadAllAssociations();
+		assertFalse(mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M0));
+		assertFalse(mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M1));
 	}
 
 	@Test

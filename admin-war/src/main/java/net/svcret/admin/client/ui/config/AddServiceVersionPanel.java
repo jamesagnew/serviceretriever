@@ -31,9 +31,6 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class AddServiceVersionPanel extends FlowPanel {
 
-	private static final String VERSION_DESC = "Each service can have one or more versions. " + "A Service Version is the central unit in a service definition, as it defines the " + "fundamental building block. A Service Version has a defined protocol, security model, "
-			+ "and other configuration. A Service Version will also have one or more Methods it " + "can provide, and will be backed by one or more Implementation URLs. Each Service will " + "have one or more Service Versions, and Services are grouped into Domains.";
-
 	private Widget myBottomContents;
 	private FlowPanel myBottomPanel;
 	private ListBox myDomainListBox;
@@ -69,7 +66,7 @@ public class AddServiceVersionPanel extends FlowPanel {
 		contentPanel.addStyleName("contentInnerPanel");
 		myTopPanel.add(contentPanel);
 
-		Label intro = new Label(VERSION_DESC);
+		Label intro = new Label(AdminPortal.MSGS.addServiceVersion_Description());
 		contentPanel.add(intro);
 
 		myParentsGrid = new Grid(4, 4);

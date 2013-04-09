@@ -3,13 +3,14 @@ package net.svcret.ejb.ejb.jsonrpc;
 import java.io.IOException;
 import java.io.StringReader;
 
+import net.svcret.ejb.Messages;
+import net.svcret.ejb.api.IResponseValidator;
+import net.svcret.ejb.api.IResponseValidator.ValidationResponse;
+import net.svcret.ejb.ex.ProcessingException;
+
 import org.apache.commons.io.IOUtils;
 
 import com.google.gson.stream.JsonReader;
-
-import ca.uhn.sail.proxy.Messages;
-import ca.uhn.sail.proxy.api.IResponseValidator;
-import ca.uhn.sail.proxy.ex.ProcessingException;
 
 public class JsonRpc20ResponseValidator implements IResponseValidator {
 

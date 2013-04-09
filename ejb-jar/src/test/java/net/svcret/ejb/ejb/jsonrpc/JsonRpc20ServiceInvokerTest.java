@@ -3,28 +3,25 @@ package net.svcret.ejb.ejb.jsonrpc;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.io.StringReader;
 
-import net.svcret.ejb.ejb.jsonrpc.JsonRpc20ServiceInvoker;
+import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.InvocationResponseResultsBean;
+import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.InvocationResultsBean.ResultTypeEnum;
+import net.svcret.ejb.api.RequestType;
+import net.svcret.ejb.api.ResponseTypeEnum;
+import net.svcret.ejb.ejb.DefaultAnswer;
+import net.svcret.ejb.ex.InternalErrorException;
+import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnknownRequestException;
+import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import ca.uhn.sail.proxy.api.HttpResponseBean;
-import ca.uhn.sail.proxy.api.InvocationResponseResultsBean;
-import ca.uhn.sail.proxy.api.InvocationResultsBean;
-import ca.uhn.sail.proxy.api.RequestType;
-import ca.uhn.sail.proxy.api.InvocationResultsBean.ResultTypeEnum;
-import ca.uhn.sail.proxy.api.ResponseTypeEnum;
-import ca.uhn.sail.proxy.ejb.DefaultAnswer;
-import ca.uhn.sail.proxy.ex.InternalErrorException;
-import ca.uhn.sail.proxy.ex.ProcessingException;
-import ca.uhn.sail.proxy.ex.UnknownRequestException;
-import ca.uhn.sail.proxy.model.entity.PersServiceVersionMethod;
 
 public class JsonRpc20ServiceInvokerTest {
 

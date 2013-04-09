@@ -16,7 +16,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
-import javax.persistence.Version;
 
 @Table(name = "PX_USER_PERM_DOMAIN", uniqueConstraints = { // -
 @UniqueConstraint(columnNames = { "SVC_DOMAIN_PID", "USER_PID" }) } // -
@@ -24,12 +23,10 @@ import javax.persistence.Version;
 @Entity
 public class PersUserDomainPermission extends BasePersObject {
 
+	private static final long serialVersionUID = 1L;
+
 	@Column(name = "ALLOW_ALL_SVCS")
 	private boolean myAllowAllServices;
-
-	@Version()
-	@Column(name = "OPTLOCK")
-	private int myOptLock;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -50,7 +47,7 @@ public class PersUserDomainPermission extends BasePersObject {
 	/**
 	 * @param theServicePermissions
 	 *            the servicePermissions to set
-	 * @return 
+	 * @return
 	 */
 	public PersUserServicePermission addPermission(PersService theService) {
 		PersUserServicePermission permission = new PersUserServicePermission();
@@ -60,15 +57,22 @@ public class PersUserDomainPermission extends BasePersObject {
 
 		getServicePermissions();
 		myServicePermissions.add(permission);
-		
+
 		return permission;
 	}
 
-	/**
-	 * @return the optLock
-	 */
-	public int getOptLock() {
-		return myOptLock;
+	public Collection<PersServiceVersionMethod> getAllAllowedMethods() {
+		ArrayList<PersServiceVersionMethod> retVal = new ArrayList<PersServiceVersionMethod>();
+
+		if (myAllowAllServices) {
+			retVal.addAll(getServiceDomain().getAllServiceVersionMethods());
+		}
+
+		for (PersUserServicePermission nextService : getServicePermissions()) {
+			retVal.addAll(nextService.getAllAllowedMethods());
+		}
+
+		return retVal;
 	}
 
 	/**
@@ -118,11 +122,30 @@ public class PersUserDomainPermission extends BasePersObject {
 	}
 
 	/**
+	 * @param thePid
+	 *            the pid to set
+	 */
+	public void setPid(Long thePid) {
+		myPid = thePid;
+	}
+
+	/**
 	 * @param theServiceDomain
 	 *            the serviceDomain to set
 	 */
 	public void setServiceDomain(PersDomain theServiceDomain) {
 		myServiceDomain = theServiceDomain;
+	}
+
+	/**
+	 * @param theServicePermissions
+	 *            the servicePermissions to set
+	 */
+	public void setServicePermissions(Collection<PersUserServicePermission> theServicePermissions) {
+		myServicePermissions = theServicePermissions;
+		for (PersUserServicePermission next : theServicePermissions) {
+			next.setDomainPermission(this);
+		}
 	}
 
 	/**
@@ -133,18 +156,10 @@ public class PersUserDomainPermission extends BasePersObject {
 		myServiceUser = theServiceUser;
 	}
 
-	public Collection<PersServiceVersionMethod> getAllAllowedMethods() {
-		ArrayList<PersServiceVersionMethod> retVal = new ArrayList<PersServiceVersionMethod>();
-
-		if (myAllowAllServices) {
-			retVal.addAll(getServiceDomain().getAllServiceVersionMethods());
-		}
-		
-		for (PersUserServicePermission nextService : getServicePermissions()) {
-			retVal.addAll(nextService.getAllAllowedMethods());
-		}
-		
-		return retVal;
+	public void addServicePermission(PersUserServicePermission thePerm) {
+		getServicePermissions();
+		myServicePermissions.add(thePerm);
+		thePerm.setDomainPermission(this);
 	}
 
 }

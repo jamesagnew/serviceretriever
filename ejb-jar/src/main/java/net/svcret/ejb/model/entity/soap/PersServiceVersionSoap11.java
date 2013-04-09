@@ -13,6 +13,8 @@ import net.svcret.ejb.model.entity.PersService;
 @DiscriminatorValue("SOAP11")
 public class PersServiceVersionSoap11 extends BasePersServiceVersion {
 
+	private static final long serialVersionUID = 1L;
+
 	static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(PersServiceVersionSoap11.class);
 
 	@Column(name = "WSDL_URL", length = 200)

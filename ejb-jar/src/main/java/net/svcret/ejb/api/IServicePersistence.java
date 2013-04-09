@@ -21,6 +21,7 @@ import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
 import net.svcret.ejb.model.entity.PersService;
+import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.ejb.model.entity.PersUser;
@@ -93,9 +94,9 @@ public interface IServicePersistence {
 
 	void saveService(PersService theService);
 
-	void saveServiceUser(PersUser theUser);
+	PersUser saveServiceUser(PersUser theUser);
 
-	void saveServiceVersion(BasePersServiceVersion theVersion) throws ProcessingException;
+	BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theVersion) throws ProcessingException;
 
 	void saveServiceVersionUrlStatus(ArrayList<PersServiceVersionUrlStatus> theUrlStatuses);
 
@@ -104,5 +105,15 @@ public interface IServicePersistence {
 	void saveAuthenticationHost(PersAuthenticationHostLocalDatabase theAuthHost);
 
 	Collection<BasePersAuthenticationHost> getAllAuthenticationHosts();
+
+	BasePersAuthenticationHost getAuthenticationHostByPid(long thePid);
+
+	void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost);
+
+	PersUser getUser(long thePid);
+
+	PersServiceVersionMethod getServiceVersionMethodByPid(long theServiceVersionMethodPid);
+
+	BasePersServiceVersion getServiceVersionByPid(long theServiceVersionPid);
 	
 }

@@ -24,12 +24,14 @@ import javax.persistence.Version;
 @Entity
 public class PersUserServicePermission extends BasePersObject {
 
+	private static final long serialVersionUID = 1L;
+
 	@Column(name = "ALLOW_ALL_SVCVERSIONS")
 	private boolean myAllowAllServiceVersions;
 
-	@Version()
-	@Column(name = "OPTLOCK")
-	private int myOptLock;
+	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
+	@JoinColumn(name = "USER_PERM_DOMAIN_PID", referencedColumnName = "PID", nullable = false)
+	private PersUserDomainPermission myDomainPermission;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -43,32 +45,41 @@ public class PersUserServicePermission extends BasePersObject {
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
 	private Collection<PersUserServiceVersionPermission> myServiceVersionPermissions;
 
-	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
-	@JoinColumn(name = "USER_PERM_DOMAIN_PID", referencedColumnName = "PID", nullable = false)
-	private PersUserDomainPermission myDomainPermission;
-
 	/**
 	 * @param theServicePermissions
 	 *            the servicePermissions to set
-	 * @return 
+	 * @return
 	 */
 	public PersUserServiceVersionPermission addPermission(BasePersServiceVersion theVersion) {
-		PersUserServiceVersionPermission permission=new PersUserServiceVersionPermission();
+		PersUserServiceVersionPermission permission = new PersUserServiceVersionPermission();
 		permission.setServicePermission(this);
 		permission.setNewlyCreated(true);
 		permission.setServiceVersion(theVersion);
 
 		getServiceVersionPermissions();
 		myServiceVersionPermissions.add(permission);
-		
+
 		return permission;
 	}
 
+	public Collection<PersServiceVersionMethod> getAllAllowedMethods() {
+		ArrayList<PersServiceVersionMethod> retVal = new ArrayList<PersServiceVersionMethod>();
+
+		if (myAllowAllServiceVersions) {
+			retVal.addAll(getService().getAllServiceVersionMethods());
+		}
+
+		for (PersUserServiceVersionPermission nextService : getServiceVersionPermissions()) {
+			retVal.addAll(nextService.getAllAllowedMethods());
+		}
+		return retVal;
+	}
+
 	/**
-	 * @return the optLock
+	 * @return the serviceUser
 	 */
-	public int getOptLock() {
-		return myOptLock;
+	public PersUserDomainPermission getDomainPermission() {
+		return myDomainPermission;
 	}
 
 	/**
@@ -96,13 +107,6 @@ public class PersUserServicePermission extends BasePersObject {
 	}
 
 	/**
-	 * @return the serviceUser
-	 */
-	public PersUserDomainPermission getDomainPermission() {
-		return myDomainPermission;
-	}
-
-	/**
 	 * @return the allowAllServices
 	 */
 	public boolean isAllowAllServiceVersions() {
@@ -118,6 +122,22 @@ public class PersUserServicePermission extends BasePersObject {
 	}
 
 	/**
+	 * @param theDomainPermission
+	 *            the domainPermission to set
+	 */
+	public void setDomainPermission(PersUserDomainPermission theDomainPermission) {
+		myDomainPermission = theDomainPermission;
+	}
+
+	/**
+	 * @param thePid
+	 *            the pid to set
+	 */
+	public void setPid(Long thePid) {
+		myPid = thePid;
+	}
+
+	/**
 	 * @param theService
 	 *            the serviceDomain to set
 	 */
@@ -126,24 +146,14 @@ public class PersUserServicePermission extends BasePersObject {
 	}
 
 	/**
-	 * @param theDomainPermission the domainPermission to set
+	 * @param theServiceVersionPermissions
+	 *            the serviceVersionPermissions to set
 	 */
-	public void setDomainPermission(PersUserDomainPermission theDomainPermission) {
-		myDomainPermission = theDomainPermission;
+	public void setServiceVersionPermissions(Collection<PersUserServiceVersionPermission> theServiceVersionPermissions) {
+		myServiceVersionPermissions = theServiceVersionPermissions;
+		for (PersUserServiceVersionPermission next : theServiceVersionPermissions) {
+			next.setServicePermission(this);
+		}
 	}
 
-	public Collection<PersServiceVersionMethod> getAllAllowedMethods() {
-		ArrayList<PersServiceVersionMethod> retVal = new ArrayList<PersServiceVersionMethod>();
-		
-		if (myAllowAllServiceVersions) {
-			retVal.addAll(getService().getAllServiceVersionMethods());
-		}
-		
-		for (PersUserServiceVersionPermission nextService : getServiceVersionPermissions()) {
-			retVal.addAll(nextService.getAllAllowedMethods());
-		}
-		return retVal;
-	}
-
-	
 }

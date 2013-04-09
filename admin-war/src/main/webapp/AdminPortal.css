@@ -1,4 +1,22 @@
 
+.breadcrumbPanel {
+	background-image: url(images/sidebar_shadow_top.png);
+	background-repeat: repeat-x;
+	background-position: left top;
+}
+
+.breadcrumbLink {
+	height: 22px;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+.breadcrumbLink A {
+	text-decoration: none;
+	color: #808080;
+	vertical-align: middle;	
+}
+
 .buttonImage {
 	cursor: pointer;
 }
@@ -103,7 +121,7 @@ H1 {
 	width: 280px;
 	background-color: #FFFFFF;
 	padding: 0px;
-	border: 1px solid #6194BC;
+	/* border: 1px solid #6194BC; */
 	border-top-right-radius: 10px;
 }
 
@@ -114,6 +132,7 @@ H1 {
 	color: #808080;
 	font-size: 1.5em;
 	border-top-right-radius: 10px;
+	padding-left: 5px;
 }
 
 .listSelectionDesc {
@@ -141,7 +160,7 @@ TABLE.listTable TBODY TR:nth-child(odd) {
 	margin-right: 10px;
 	background: rgba(255,255,255,0.7);
 	background-color: #FFFFFF;
-	border: 1px solid #808080;
+	/* border: 1px solid #808080; */
 	border-top-right-radius: 10px;
 }
 
@@ -151,30 +170,80 @@ TABLE.listTable TBODY TR:nth-child(odd) {
 	font-size: 1.5em;
 	border-top-right-radius: 10px;
 	display: block;
+	padding-left: 5px;
+}
+
+.outerLayoutBody {
+	background-color: #F0F0F0;
+	background-image: url(images/sidebar_shadow.png);
+	background-repeat: repeat-y;
+	background-position: left top;
+
+	/*
+	background-image: url(images/noisebg.png);
+	background-color: #FFFFFF;
+	background-position: 50% 50%;
+	background-repeat: repeat repeat;
+	*/
+	
 }
 
 .outerLayoutTopBar {
 	background-color: #6194BC;
+	/*
 	border-bottom: 3px solid #ECECEC;
+	*/
 }
 
-.outerLayoutLeftBar, .outerLayoutBody, .outerLayoutRightBar {
-	background-image:
-		url(images/noisy-texture-100x100-o25-d19-c-A5D1F3-t1.png);
-	background-color: #FFFFFF;
-	background-position: 50% 50%;
-	background-repeat: repeat repeat;
+.outerLayoutLeftBar {
 }
 
 .outerLayoutLeftBar {
 	background-color: #E0E0E0;
-	border-right: 1px solid #FFFFFF;	
+	/* border-right: 1px solid #FFFFFF; */	
 }
 
 .outerLayoutMain {
 }
 
 .outerLayoutRightBar {
+}
+
+.permissionTreeBlock {
+	display: block;
+	width: 100%;
+}
+
+.permissionTreeEntry {
+	display: inline-block;
+	margin-right: 10px;	
+}
+
+.permissionTreeEntryAllChildCheck, .permissionTreeEntryAllChildCheck LABEL {
+	color: #004040;
+}
+
+.propertyTable {
+		
+}
+
+TABLE.propertyTable {
+	border-collapse: separate;
+	border-spacing: 2px;
+	/*background: #F0F0F0;*/
+}
+
+TABLE.propertyTable TBODY TR:first-child {
+	background: #6194BC !important;
+	color: #FFFFFF;
+}
+
+TABLE.propertyTable TBODY TR:nth-child(odd) {
+	background: #D0D0D0;
+}
+
+TABLE.propertyTable TBODY TR:nth-child(even) {
+	background: #E0E0E0;
 }
 
 .spinnerElement {

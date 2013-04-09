@@ -12,8 +12,12 @@ import net.svcret.admin.client.ui.config.AddServiceVersionPanel;
 import net.svcret.admin.client.ui.config.AddServiceVersionStep2Panel;
 import net.svcret.admin.client.ui.config.EditDomainPanel;
 import net.svcret.admin.client.ui.config.HttpClientConfigsPanel;
+import net.svcret.admin.client.ui.config.auth.AuthenticationHostsPanel;
+import net.svcret.admin.client.ui.config.auth.EditUserPanel;
+import net.svcret.admin.client.ui.config.auth.EditUsersPanel;
 import net.svcret.admin.client.ui.dash.ServiceDashboardPanel;
 import net.svcret.admin.client.ui.layout.BodyPanel;
+import net.svcret.admin.client.ui.layout.BreadcrumbPanel;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.core.shared.GWT;
@@ -24,13 +28,15 @@ import com.google.gwt.user.client.ui.Panel;
 
 public class NavProcessor {
 
-	private static final PagesEnum DEFAULT_PAGE = PagesEnum.DSH;
+	public static final String SEPARATOR = "__";
+	public static final PagesEnum DEFAULT_PAGE = PagesEnum.DSH;
 
 	static {
 		History.addValueChangeHandler(new ValueChangeHandler<String>() {
 			@Override
 			public void onValueChange(ValueChangeEvent<String> theEvent) {
 				navigate();
+				BreadcrumbPanel.handleUpdate();
 			}
 		});
 	}
@@ -47,17 +53,14 @@ public class NavProcessor {
 		try {
 			Panel panel = null;
 			switch (page) {
-			case DSH:
-				panel = new ServiceDashboardPanel();
-				break;
 			case ADD:
 				panel = new AddDomainPanel();
 				break;
 			case AD2:
 				panel = new AddDomainStep2Panel(Long.parseLong(args));
 				break;
-			case EDO:
-				panel = new EditDomainPanel(Long.parseLong(args));
+			case AHL:
+				panel = new AuthenticationHostsPanel();
 				break;
 			case ASE:
 				if (StringUtil.isBlank(args)) {
@@ -82,12 +85,24 @@ public class NavProcessor {
 					panel = new AddServiceVersionStep2Panel(Long.parseLong(argsSplit[0]), Long.parseLong(argsSplit[1]), Long.parseLong(argsSplit[2]));
 				}
 				break;
+			case DSH:
+				panel = new ServiceDashboardPanel();
+				break;
+			case EDO:
+				panel = new EditDomainPanel(Long.parseLong(args));
+				break;
+			case EDU:
+				panel = new EditUserPanel(Long.parseLong(args));
+				break;
+			case EUL:
+				panel = new EditUsersPanel();
+				break;
 			case HCC:
 				panel = new HttpClientConfigsPanel();
 			}
 
 			if (panel == null) {
-				return;
+				navigateToDefault();
 			}
 
 			BodyPanel.getInstance().setContents(panel);
@@ -140,7 +155,7 @@ public class NavProcessor {
 	public static String getTokenAddDomainStep2(long theId) {
 		String token = getCurrentToken();
 		if (!token.isEmpty()) {
-			token = token + "__";
+			token = token + SEPARATOR;
 		}
 		token = token + PagesEnum.AD2 + "_" + theId;
 		token = removeDuplicates(token);
@@ -152,7 +167,7 @@ public class NavProcessor {
 		if (theAddToHistory) {
 			token = getCurrentToken();
 			if (!token.isEmpty()) {
-				token = token + "__";
+				token = token + SEPARATOR;
 			}
 		}
 		token = token + PagesEnum.EDO + "_" + theDomainPid;
@@ -165,7 +180,7 @@ public class NavProcessor {
 		if (theAddToHistory) {
 			token = getCurrentToken();
 			if (!token.isEmpty()) {
-				token = token + "__";
+				token = token + SEPARATOR;
 			}
 		}
 		token = token + PagesEnum.ASE + "_" + theDomainPid;
@@ -178,7 +193,7 @@ public class NavProcessor {
 		if (theAddToHistory) {
 			token = getCurrentToken();
 			if (!token.isEmpty()) {
-				token = token + "__";
+				token = token + SEPARATOR;
 			}
 		}
 
@@ -194,7 +209,7 @@ public class NavProcessor {
 
 	private static String removeDuplicates(String theToken) {
 
-		String[] parts = theToken.split("__");
+		String[] parts = theToken.split(SEPARATOR);
 		List<String> newParts = new ArrayList<String>();
 
 		String prevType = null;
@@ -214,7 +229,7 @@ public class NavProcessor {
 		StringBuilder retVal = new StringBuilder();
 		for (String next : newParts) {
 			if (retVal.length() > 0) {
-				retVal.append("__");
+				retVal.append(SEPARATOR);
 			}
 			retVal.append(next);
 		}
@@ -241,7 +256,7 @@ public class NavProcessor {
 		String token = "";
 		token = getCurrentToken();
 		if (!token.isEmpty()) {
-			token = token + "__";
+			token = token + SEPARATOR;
 		}
 
 		token = token + PagesEnum.AV2 + "_" + theDomainPid + "_" + theServicePid + "_" + theVersionPid;
@@ -256,7 +271,7 @@ public class NavProcessor {
 			names.add(pagesEnum.name());
 		}
 
-		String[] parts = getCurrentToken().split("__");
+		String[] parts = getCurrentToken().split(SEPARATOR);
 		String prev = DEFAULT_PAGE.name();
 		for (String next : parts) {
 			if (next.length() >= 3 && names.contains(next.substring(0, 3))) {
@@ -270,6 +285,19 @@ public class NavProcessor {
 
 	public static void goHome() {
 		navigateToDefault();
+	}
+
+	public static String getTokenEditUser(boolean theAddToHistory, long theUserPid) {
+		String token = "";
+		if (theAddToHistory) {
+			token = getCurrentToken();
+			if (!token.isEmpty()) {
+				token = token + SEPARATOR;
+			}
+		}
+		token = token + PagesEnum.EDU + "_" + theUserPid;
+		token = removeDuplicates(token);
+		return token;
 	}
 
 }

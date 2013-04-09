@@ -4,17 +4,22 @@ import java.util.List;
 
 import javax.ejb.Local;
 
+import net.svcret.admin.shared.model.BaseGAuthHost;
+import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
+import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
+import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
+import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
+import net.svcret.admin.shared.model.PartialUserListRequest;
 import net.svcret.ejb.ex.ProcessingException;
-
 
 @Local
 public interface IAdminService {
@@ -40,5 +45,17 @@ public interface IAdminService {
 	GHttpClientConfig saveHttpClientConfig(GHttpClientConfig theConfig) throws ProcessingException;
 
 	GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ProcessingException;
+
+	GAuthenticationHostList saveAuthenticationHost(GLocalDatabaseAuthHost theAuthHost) throws ProcessingException;
+
+	GAuthenticationHostList deleteAuthenticationHost(long thePid) throws ProcessingException;
+
+	GPartialUserList loadUsers(PartialUserListRequest theRequest);
+
+	GUser loadUser(long thePid) throws ProcessingException;
+
+	BaseGAuthHost loadAuthenticationHost(long thePid) throws ProcessingException;
+
+	GUser saveUser(GUser theUser);
 
 }

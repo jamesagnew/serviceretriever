@@ -12,6 +12,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.api.IAuthorizationService;
 import net.svcret.ejb.api.IAuthorizationService.ILdapAuthorizationService;
 import net.svcret.ejb.api.IAuthorizationService.ILocalDatabaseAuthorizationService;
@@ -111,6 +112,7 @@ public class SecurityServiceBean implements ISecurityService {
 		try {
 			adminUser = myPersSvc.getOrCreateUser(authHost, PersUser.DEFAULT_ADMIN_USERNAME);
 			adminUser.setPassword(PersUser.DEFAULT_ADMIN_PASSWORD);
+			adminUser.getPermissions().add(UserGlobalPermissionEnum.SUPERUSER);
 			myPersSvc.saveServiceUser(adminUser);
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to initialize admin user", e);
