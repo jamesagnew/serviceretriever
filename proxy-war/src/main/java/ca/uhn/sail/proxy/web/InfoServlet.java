@@ -11,11 +11,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@WebServlet(loadOnStartup=1, displayName="Service_Proxy_Servlet", urlPatterns= {"/"})
-public class ServiceProxyServlet extends HttpServlet {
+@WebServlet(loadOnStartup=1, displayName="Info_Servlet", urlPatterns= {"/"})
+public class InfoServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
-    private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceProxyServlet.class);
+    private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(InfoServlet.class);
 
 	/**
      * {@inheritDoc}

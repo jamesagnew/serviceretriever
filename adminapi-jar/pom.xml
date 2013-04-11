@@ -9,7 +9,7 @@
 	</parent>
 
 	<groupId>net.svcret</groupId>
-	<artifactId>svcret-adminapi</artifactId>
+	<artifactId>serviceretriever-adminapi-jar</artifactId>
 	<packaging>jar</packaging>
 
 	<name>ServiceRetriever Admin API (JAR)</name>

@@ -154,4 +154,8 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 		myGlobalPermissions.remove(thePermission);
 	}
 
+	public void removeDomainPermission(GUserDomainPermission theGUserDomainPermission) {
+		myDomainPermissions.remove(theGUserDomainPermission);
+	}
+
 }

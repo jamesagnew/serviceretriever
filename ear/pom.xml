@@ -9,7 +9,7 @@
 	</parent>
 
 	<groupId>net.svcret</groupId>
-	<artifactId>svcret_ear</artifactId>
+	<artifactId>serviceretriever-ear</artifactId>
 	<packaging>ear</packaging>
 
 	<name>ServiceRetriever Deployment (EAR)</name>
@@ -17,20 +17,26 @@
 	<dependencies>
 		<dependency>
 			<groupId>net.svcret</groupId>
-			<artifactId>service_proxy_ejb-jar</artifactId>
+			<artifactId>serviceretriever-ejb-jar</artifactId>
 			<version>1.0</version>
 			<type>ejb</type>
 		</dependency>
 		<dependency>
 			<groupId>net.svcret</groupId>
-			<artifactId>service_proxy_war</artifactId>
+			<artifactId>serviceretriever-proxy-war</artifactId>
+			<version>1.0</version>
+			<type>war</type>
+		</dependency>
+		<dependency>
+			<groupId>net.svcret</groupId>
+			<artifactId>serviceretriever-admin-war</artifactId>
 			<version>1.0</version>
 			<type>war</type>
 		</dependency>
 	</dependencies>
 
 	<build>
-		<finalName>SAIL_Service_Proxy</finalName>
+		<finalName>ServiceRetriever-${version}</finalName>
 		<plugins>
 			<plugin>
 				<artifactId>maven-ear-plugin</artifactId>
@@ -38,17 +44,25 @@
 					<modules>
 						<ejbModule>
 							<groupId>net.svcret</groupId>
-							<artifactId>service_proxy_ejb-jar</artifactId>
+							<artifactId>serviceretriever-ejb-jar</artifactId>
 						</ejbModule>
 						<webModule>
 							<groupId>net.svcret</groupId>
-							<artifactId>service_proxy_war</artifactId>
+							<artifactId>serviceretriever-proxy-war</artifactId>
 							<contextRoot>/</contextRoot>
 						</webModule>
+						<webModule>
+							<groupId>net.svcret</groupId>
+							<artifactId>serviceretriever-admin-war</artifactId>
+							<contextRoot>/admin</contextRoot>
+						</webModule>
 					</modules>
+                    <defaultLibBundleDir>lib</defaultLibBundleDir>
 				</configuration>
 			</plugin>
 		</plugins>
 	</build>
+
+
 
 </project>

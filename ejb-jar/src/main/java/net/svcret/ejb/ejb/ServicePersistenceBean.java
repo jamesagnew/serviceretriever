@@ -421,6 +421,7 @@ public class ServicePersistenceBean implements IServicePersistence {
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public long getStateCounter(String theKey) {
 		Validate.throwIllegalArgumentExceptionIfBlank("Key", theKey);
 		

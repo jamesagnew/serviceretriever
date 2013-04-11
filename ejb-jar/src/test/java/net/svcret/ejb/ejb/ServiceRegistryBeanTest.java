@@ -43,6 +43,7 @@ public class ServiceRegistryBeanTest {
 		myPersistence = mock(IServicePersistence.class, DefaultAnswer.INSTANCE);
 		mySvc.setSvcPersistence(myPersistence);
 
+		DefaultAnswer.setDesignTime();
 	}
 	
 	@Test

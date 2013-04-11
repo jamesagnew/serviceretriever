@@ -24,7 +24,7 @@ public class Messages {
 	}
 	
 	public static String getString(String key, Object... theArgs) {
-		return MessageFormat.format(key, theArgs);
+		return MessageFormat.format(getString(key), theArgs);
 	}
 	
 	

@@ -9,7 +9,7 @@
 <!-- 
 	<servlet>
 		<servlet-name>ServiceProxy</servlet-name>
-		<servlet-class>ca.uhn.sail.proxy.web.ServiceProxyServlet</servlet-class>
+		<servlet-class>ca.uhn.sail.proxy.web.InfoServlet</servlet-class>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
 	

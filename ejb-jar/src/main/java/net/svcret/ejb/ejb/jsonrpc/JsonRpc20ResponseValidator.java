@@ -5,7 +5,6 @@ import java.io.StringReader;
 
 import net.svcret.ejb.Messages;
 import net.svcret.ejb.api.IResponseValidator;
-import net.svcret.ejb.api.IResponseValidator.ValidationResponse;
 import net.svcret.ejb.ex.ProcessingException;
 
 import org.apache.commons.io.IOUtils;
@@ -13,6 +12,8 @@ import org.apache.commons.io.IOUtils;
 import com.google.gson.stream.JsonReader;
 
 public class JsonRpc20ResponseValidator implements IResponseValidator {
+
+	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(JsonRpc20ResponseValidator.class);
 
 	@Override
 	public ValidationResponse validate(String theBody, int theStatusCode, String theContentType) {
@@ -71,6 +72,4 @@ public class JsonRpc20ResponseValidator implements IResponseValidator {
 
 		return new ValidationResponse(false, Messages.getString("JsonRpc20ResponseValidator.nonJsonRpc20"));
 	}
-
-	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(JsonRpc20ResponseValidator.class);
 }

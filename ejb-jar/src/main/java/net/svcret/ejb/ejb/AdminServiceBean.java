@@ -758,6 +758,7 @@ public class AdminServiceBean implements IAdminService {
 
 	private GServiceMethod toUi(PersServiceVersionMethod theMethod) {
 		GServiceMethod retVal = new GServiceMethod();
+		retVal.setPid(theMethod.getPid());
 		retVal.setId(theMethod.getName());
 		retVal.setName(theMethod.getName());
 		return retVal;
@@ -964,7 +965,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setService(myPersSvc.getServiceByPid(theObj.getServicePid()));
 		retVal.setServiceVersionPermissions(new ArrayList<PersUserServiceVersionPermission>());
 		for (GUserServiceVersionPermission next : theObj.getServiceVersionPermissions()) {
-			retVal.getServiceVersionPermissions().add(fromUi(next));
+			retVal.addServiceVersionPermission(fromUi(next));
 		}
 		return retVal;
 	}
@@ -984,7 +985,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setServiceVersion(myPersSvc.getServiceVersionByPid(theObj.getServiceVersionPid()));
 		retVal.setServiceVersionMethodPermissions(new ArrayList<PersUserServiceVersionMethodPermission>());
 		for (GUserServiceVersionMethodPermission next : theObj.getServiceVersionMethodPermissions()) {
-			retVal.getServiceVersionMethodPermissions().add(fromUi(next));
+			retVal.addServiceVersionMethodPermissions(fromUi(next));
 		}
 		return retVal;
 	}

@@ -5,9 +5,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.google.gwt.user.client.rpc.IsSerializable;
-
-public class ModelUpdateRequest implements Serializable, IsSerializable {
+public class ModelUpdateRequest implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 

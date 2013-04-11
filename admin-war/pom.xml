@@ -9,7 +9,7 @@
 		<version>1.0</version>
 	</parent>
 	<groupId>net.svcret</groupId>
-	<artifactId>admin-war</artifactId>
+	<artifactId>serviceretriever-admin-war</artifactId>
 	<packaging>war</packaging>
 	<version>1.0</version>
 	<name>ServiceRetriever Admin (WAR)</name>
@@ -23,6 +23,20 @@
 	</properties>
 
 	<dependencies>
+	
+		<dependency>
+			<groupId>net.svcret</groupId>
+			<artifactId>serviceretriever-adminapi-jar</artifactId>
+			<version>1.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.svcret</groupId>
+			<artifactId>serviceretriever-ejb-jar</artifactId>
+			<version>1.0</version>
+			<scope>provided</scope>
+		</dependency>
+	
 		<dependency>
 			<groupId>com.google.gwt</groupId>
 			<artifactId>gwt-servlet</artifactId>
@@ -84,11 +98,10 @@
 				<configuration>
 					<runTarget>AdminPortal.html</runTarget>
 					<hostedWebapp>${webappDirectory}</hostedWebapp>
-					<i18nMessagesBundle>net.svcret.admin.client.Messages</i18nMessagesBundle>
+					<i18nMessagesBundle>net.svcret.admin.client.Messages123</i18nMessagesBundle>
 				</configuration>
 			</plugin>
 
-      <!-- Copy static web files before executing gwt:run -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
@@ -103,6 +116,8 @@
 				</executions>
 				<configuration>
 					<webappDirectory>${webappDirectory}</webappDirectory>
+	               <!-- The eclipse plugin for GWT insists on putting a few of its compiled artifacts in the source directory -->
+	               <warSourceExcludes>AdminPortal/**,WEB-INF/classes/**</warSourceExcludes>
 				</configuration>
 			</plugin>
 			<plugin>

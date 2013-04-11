@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- 
 <persistence version="1.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd">
+-->
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+             version="2.0">
+
 	<!-- 
 	<persistence-unit name="SAIL_Services_Base_EJBPU" transaction-type="JTA">
 		<provider>org.hibernate.ejb.HibernatePersistence</provider>
@@ -56,6 +63,51 @@
 
 
 
+	<persistence-unit name="ServiceProxy_EJBPU" transaction-type="JTA">
+		<provider>org.hibernate.ejb.HibernatePersistence</provider>
+		<jta-data-source>jdbc/svcret</jta-data-source>
+		<class>net.svcret.ejb.model.entity.BasePersServiceVersion</class>
+		<class>net.svcret.ejb.model.entity.PersBaseClientAuth</class>
+		<class>net.svcret.ejb.model.entity.PersAuthenticationHostLdap</class>
+		<class>net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase</class>
+		<class>net.svcret.ejb.model.entity.PersEnvironment</class>
+		<class>net.svcret.ejb.model.entity.PersDomain</class>
+		<class>net.svcret.ejb.model.entity.PersHttpClientConfig</class>
+		<class>net.svcret.ejb.model.entity.PersInvocationStats</class>
+		<class>net.svcret.ejb.model.entity.PersInvocationAnonStats</class>
+		<class>net.svcret.ejb.model.entity.PersInvocationUserStats</class>
+		<class>net.svcret.ejb.model.entity.PersLocks</class>
+		<class>net.svcret.ejb.model.entity.PersServiceVersionMethod</class>
+		<class>net.svcret.ejb.model.entity.PersService</class>
+		<class>net.svcret.ejb.model.entity.PersUser</class>
+		<class>net.svcret.ejb.model.entity.PersUserDomainPermission</class>
+		<class>net.svcret.ejb.model.entity.PersUserServicePermission</class>
+		<class>net.svcret.ejb.model.entity.PersUserServiceVersionPermission</class>
+		<class>net.svcret.ejb.model.entity.PersUserServiceVersionMethodPermission</class>
+		<class>net.svcret.ejb.model.entity.PersServiceVersionUrl</class>
+		<class>net.svcret.ejb.model.entity.PersServiceVersionUrlStatus</class>
+		<class>net.svcret.ejb.model.entity.PersServiceVersionStatus</class>
+		<class>net.svcret.ejb.model.entity.PersServiceVersionResource</class>
+		<class>net.svcret.ejb.model.entity.PersState</class>
+		<class>net.svcret.ejb.model.entity.PersStaticResourceStats</class>
+		<class>net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11</class>
+		<class>net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth</class>
+		<class>net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth</class>
+		<exclude-unlisted-classes>false</exclude-unlisted-classes>
+		<properties>
+  			<property name="hibernate.connection.driver_class" value="com.mysql.jdbc.Driver"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
+
+			<property name="hibernate.hbm2ddl.auto" value="update" />
+			<property name="hibernate.jdbc.batch_size" value="0" />
+			<property name="hibernate.cache.use_minimal_puts" value="false" />
+			<property name="hibernate.show_sql" value="false" />
+			<property name="hibernate.cache.use_query_cache" value="false" />
+			<property name="hibernate.cache.use_second_level_cache" value="false" />
+			<property name="hibernate.cache.use_structured_entries" value="false" />
+		</properties>
+	</persistence-unit>
+
 	<persistence-unit name="ServiceProxy_UNITTEST" transaction-type="RESOURCE_LOCAL">
 		<provider>org.hibernate.ejb.HibernatePersistence</provider>
 		<class>net.svcret.ejb.model.entity.BasePersServiceVersion</class>
@@ -101,6 +153,5 @@
 			<property name="hibernate.cache.use_structured_entries" value="false" />
 		</properties>
 	</persistence-unit>
-
 
 </persistence>

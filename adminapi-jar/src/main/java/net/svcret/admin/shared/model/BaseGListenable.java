@@ -2,9 +2,7 @@ package net.svcret.admin.shared.model;
 
 import java.io.Serializable;
 
-import com.google.gwt.user.client.rpc.IsSerializable;
-
-public class BaseGListenable<T> implements Serializable, IsSerializable {
+public class BaseGListenable<T> implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 

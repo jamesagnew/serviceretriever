@@ -156,4 +156,10 @@ public class PersUserServicePermission extends BasePersObject {
 		}
 	}
 
+	public void addServiceVersionPermission(PersUserServiceVersionPermission thePerm) {
+		getServiceVersionPermissions();
+		myServiceVersionPermissions.add(thePerm);
+		thePerm.setServicePermission(this);
+	}
+
 }
