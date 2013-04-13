@@ -26,7 +26,6 @@ import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersUser;
 
 @Stateless
-@Singleton
 public class SecurityServiceBean implements ISecurityService {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(SecurityServiceBean.class);
@@ -153,8 +152,6 @@ public class SecurityServiceBean implements ISecurityService {
 		ourLog.info("Done loading user catalog, found {} users", allUsers.size());
 	}
 
-	@PostConstruct
-	@Schedule(second = "0", minute = "*", hour = "*")
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public synchronized void loadUserCatalogIfNeeded() {
 		ourLog.debug("Checking for updated user catalog");

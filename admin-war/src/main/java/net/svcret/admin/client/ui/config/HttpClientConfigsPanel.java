@@ -55,6 +55,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 	private ListBox myUrlSelectionPolicyListBox;
 	private int ourNextUnsavedPid = -1;
 	private FlowPanel myDetailsContentPanel;
+	
 	public HttpClientConfigsPanel() {
 		initConfigListPanel();
 		initDetailsPanel();

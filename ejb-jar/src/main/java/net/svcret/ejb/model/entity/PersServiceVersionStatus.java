@@ -19,6 +19,8 @@ import net.svcret.ejb.util.Validate;
 @Entity
 public class PersServiceVersionStatus extends BasePersObject {
 
+	private static final long serialVersionUID = 1L;
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "PID")

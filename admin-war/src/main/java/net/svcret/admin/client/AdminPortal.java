@@ -38,7 +38,7 @@ public class AdminPortal implements EntryPoint, UncaughtExceptionHandler {
 	 */
 	@Override
 	public void onModuleLoad() {
-		GWT.setUncaughtExceptionHandler(this);
+//		GWT.setUncaughtExceptionHandler(this);
 
 		RootLayoutPanel rootPanel = RootLayoutPanel.get();
 		rootPanel.add(new OuterLayoutPanel());

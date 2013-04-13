@@ -1,8 +1,12 @@
 package net.svcret.ejb.model.entity;
 
+import java.io.Serializable;
+
 import javax.persistence.Transient;
 
-public abstract class BasePersMethodStats {
+public abstract class BasePersMethodStats implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	public abstract BasePersMethodStatsPk getPk();
 

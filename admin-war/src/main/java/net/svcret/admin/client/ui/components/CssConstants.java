@@ -14,4 +14,5 @@ public class CssConstants {
 	public static final String PERMISSION_TREE_ENTRY_ALL_CHILD_CHECK = "permissionTreeEntryAllChildCheck";
 	public static final String PERMISSION_TREE_ENTRY_BLOCK = "permissionTreeBlock";
 	public static final String BREADCRUMB_PANEL = "breadcrumbPanel";
+	public static final String DASHBOARD_NAME_SUFFIX = "dashboardNameSuffix";
 }

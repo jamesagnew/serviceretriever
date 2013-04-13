@@ -18,6 +18,7 @@ import net.svcret.admin.client.ui.config.auth.EditUsersPanel;
 import net.svcret.admin.client.ui.dash.ServiceDashboardPanel;
 import net.svcret.admin.client.ui.layout.BodyPanel;
 import net.svcret.admin.client.ui.layout.BreadcrumbPanel;
+import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.core.shared.GWT;
@@ -50,7 +51,7 @@ public class NavProcessor {
 		PagesEnum page = getCurrentPage();
 		String args = currentTokenArgs();
 
-		try {
+//		try {
 			Panel panel = null;
 			switch (page) {
 			case ADD:
@@ -99,6 +100,7 @@ public class NavProcessor {
 				break;
 			case HCC:
 				panel = new HttpClientConfigsPanel();
+				break;
 			}
 
 			if (panel == null) {
@@ -107,11 +109,10 @@ public class NavProcessor {
 
 			BodyPanel.getInstance().setContents(panel);
 			
-		} catch (Exception e) {
-			GWT.log("Failed to navigate!", e);
-			AdminPortal.reportError("Failed to navigate!", e);
-			navigateToDefault();
-		}
+//		} catch (Exception e) {
+//			Model.handleFailure(e);
+//			navigateToDefault();
+//		}
 
 	}
 

@@ -16,6 +16,7 @@ import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class Model {
@@ -174,6 +175,21 @@ public class Model {
 
 	public static void handleFailure(Throwable theCaught) {
 		GWT.log("Failed to load data!", theCaught);
+		StringBuilder b = new StringBuilder();
+		b.append("Failure: ");
+		b.append(theCaught.toString());
+		b.append("\n");
+		
+		int i = 0;
+		for (StackTraceElement next : theCaught.getStackTrace()) {
+			b.append(next.getMethodName());
+			b.append("\n");
+			if (i++ > 5) {
+				break;
+			}
+		}
+		
+		Window.alert(b.toString());
 	}
 
 	private final class MyModelUpdateCallbackHandler implements AsyncCallback<ModelUpdateResponse> {

@@ -14,6 +14,8 @@ import net.svcret.ejb.util.Validate;
 @DiscriminatorValue("LDAP")
 public class PersAuthenticationHostLdap extends BasePersAuthenticationHost {
 
+	private static final long serialVersionUID = 1L;
+	
 	private static final int DEFAULT_CONN_TIMEOUT = 30 * 1000;
 	private static final String DEFAULT_HOST = "localhost";
 	private static final int DEFAULT_PORT = 389;

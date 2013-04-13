@@ -6,6 +6,8 @@ import javax.persistence.MappedSuperclass;
 @MappedSuperclass
 public abstract class BasePersInvocationStats extends BasePersMethodStats {
 
+	private static final long serialVersionUID = 1L;
+	
 	@Column(name = "MAX_SUC_REQ_BYTES", nullable = false)
 	private long myMaxSuccessRequestMessageBytes;
 	@Column(name = "MAX_SUC_RES_BYTES", nullable = false)

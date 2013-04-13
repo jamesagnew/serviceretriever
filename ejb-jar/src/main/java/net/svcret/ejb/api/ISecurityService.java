@@ -11,5 +11,7 @@ public interface ISecurityService {
 
 	boolean authorizeMethodInvocation(BasePersAuthenticationHost theAuthHost, ICredentialGrabber theCredentialGrabber, PersServiceVersionMethod theMethod) throws ProcessingException;
 
+	void loadUserCatalogIfNeeded();
+
 	
 }

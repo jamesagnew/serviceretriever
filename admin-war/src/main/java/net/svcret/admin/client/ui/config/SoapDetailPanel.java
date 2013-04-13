@@ -115,7 +115,7 @@ public class SoapDetailPanel extends FlowPanel {
 	private void handleLoadWsdl() {
 		myLoadWsdlSpinner.show();
 		final long start = System.currentTimeMillis();
-		
+
 		AsyncCallback<GSoap11ServiceVersion> callback = new AsyncCallback<GSoap11ServiceVersion>() {
 			@Override
 			public void onFailure(Throwable theCaught) {
@@ -126,7 +126,7 @@ public class SoapDetailPanel extends FlowPanel {
 			public void onSuccess(GSoap11ServiceVersion theResult) {
 				long time = System.currentTimeMillis() - start;
 				myLoadWsdlSpinner.showMessage("Loaded WSDL in " + time + "ms", false);
-				
+
 				myServiceVersion = theResult;
 				updateMethodPanel();
 				updateUrlPanel();
@@ -239,6 +239,7 @@ public class SoapDetailPanel extends FlowPanel {
 				myServiceVersion.getMethodList().add(method);
 				updateMethodPanel();
 
+				addText.setValue("");
 			}
 		});
 
@@ -311,11 +312,9 @@ public class SoapDetailPanel extends FlowPanel {
 		contentPanel.addStyleName("contentInnerPanel");
 		theProxyPanel.add(contentPanel);
 
-		contentPanel.add(new Label("Each proxied service will have one or more implementation URLs. " +
-				"When a client attempts to invoke a service that has been proxied, the ServiceProxy will " +
-				"forward this request to one of these implementations. Specifying more than one " +
-				"implementation URL means that if one is unavailable, another can be tried (i.e. redundancy)."));
-		
+		contentPanel.add(new Label("Each proxied service will have one or more implementation URLs. " + "When a client attempts to invoke a service that has been proxied, the ServiceProxy will " + "forward this request to one of these implementations. Specifying more than one "
+				+ "implementation URL means that if one is unavailable, another can be tried (i.e. redundancy)."));
+
 		myUrlGrid = new Grid(1, 3);
 		myUrlGrid.addStyleName(CssConstants.DASHBOARD_TABLE);
 		contentPanel.add(myUrlGrid);
@@ -354,19 +353,27 @@ public class SoapDetailPanel extends FlowPanel {
 				url.setUncommittedSessionId(newUncommittedSessionId());
 				url.setEditMode(true);
 				url.setUrl(urlText);
-				myServiceVersion.getUrlList().add(url);
-				updateMethodPanel();
 
+				myServiceVersion.getUrlList().add(url);
+
+				for (int urlNum = myServiceVersion.getUrlList().size();; urlNum++) {
+					String name = "url" + urlNum;
+					if (myServiceVersion.getUrlList().getUrlWithId(name) == null) {
+						url.setId(name);
+						break;
+					}
+				}
+
+				updateUrlPanel();
+
+				addText.setValue("");
 			}
 		});
-		
+
 		contentPanel.add(new HtmlBr());
 		contentPanel.add(new Label(""));
-		contentPanel.add(new Label("The HTTP client configuration provides the connection details for " +
-				"how the proxy will attempt to invoke proxied service implementations. This includes " +
-				"settings for timeouts, round-robin policies, etc."));
-		
-		
+		contentPanel.add(new Label("The HTTP client configuration provides the connection details for " + "how the proxy will attempt to invoke proxied service implementations. This includes " + "settings for timeouts, round-robin policies, etc."));
+
 		updateUrlPanel();
 	}
 
@@ -381,12 +388,9 @@ public class SoapDetailPanel extends FlowPanel {
 		contentPanel.addStyleName("contentInnerPanel");
 		wsdlPanel.add(contentPanel);
 
-		contentPanel.add(new Label("Every SOAP based service must have a backing WSDL, which provides " +
-				"clients with the service contract being implemented. Enter a URL to a remote WSDL " +
-				"here, and click the \"Load\" button below, and ServiceRetriever will fetch the " +
-				"WSDL and initialize your service."));
-		
-		
+		contentPanel.add(new Label("Every SOAP based service must have a backing WSDL, which provides " + "clients with the service contract being implemented. Enter a URL to a remote WSDL " + "here, and click the \"Load\" button below, and ServiceRetriever will fetch the "
+				+ "WSDL and initialize your service."));
+
 		HtmlLabel urlLabel = new HtmlLabel("URL:", "urlTb");
 		contentPanel.add(urlLabel);
 
@@ -503,7 +507,7 @@ public class SoapDetailPanel extends FlowPanel {
 			row++;
 
 			myUrlGrid.setWidget(row, 0, new UrlEditButtonPanel(next));
-			
+
 			if (next.isEditMode()) {
 				final TextBox idTextBox = new TextBox();
 				idTextBox.setValue(next.getId());
@@ -526,7 +530,7 @@ public class SoapDetailPanel extends FlowPanel {
 					}
 				});
 				myUrlGrid.setWidget(row, COL_URL_URL, urlTextBox);
-			}else {
+			} else {
 				myUrlGrid.setWidget(row, COL_URL_ID, new Label(next.getId()));
 				myUrlGrid.setWidget(row, COL_URL_URL, new Label(next.getUrl()));
 			}
@@ -582,6 +586,7 @@ public class SoapDetailPanel extends FlowPanel {
 		private PButton myDeleteButton;
 		private PButton myEditButton;
 		private GServiceMethod myMethod;
+
 		private MethodEditButtonPanel(GServiceMethod theMethod) {
 			myMethod = theMethod;
 			myEditButton = new PButton("Edit");

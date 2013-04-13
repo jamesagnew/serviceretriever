@@ -1,5 +1,7 @@
 package net.svcret.admin.client;
 
+import net.svcret.admin.client.ui.components.CssConstants;
+
 import com.google.gwt.safehtml.shared.SafeHtml;
 
 
@@ -271,5 +273,12 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Saved User")
 	String editUser_DoneSaving();
+
+	@DefaultMessage(" <span class=\"" + CssConstants.DASHBOARD_NAME_SUFFIX + "\">(No Services Defined)</span>")
+	String dashboard_DomainNoServicesSuffix();
+
+	@DefaultMessage(" <span class=\"" + CssConstants.DASHBOARD_NAME_SUFFIX + "\">(No Service Versions Defined)</span>")
+	String dashboard_ServiceNoServiceVersionsSuffix();
+
 
 }

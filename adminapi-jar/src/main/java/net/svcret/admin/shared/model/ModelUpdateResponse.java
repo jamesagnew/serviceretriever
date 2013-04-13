@@ -8,9 +8,7 @@ public class ModelUpdateResponse implements Serializable {
 
 	private GAuthenticationHostList myAuthenticationHostList;
 	private GDomainList myDomainList;
-
 	private GHttpClientConfigList myHttpClientConfigList;
-
 	private GUserList myUserList;
 
 	/**

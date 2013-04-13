@@ -1,5 +1,6 @@
 package net.svcret.admin.client.ui.dash.model;
 
+import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.PButton;
@@ -116,18 +117,28 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 
 	@Override
 	public Widget renderName() {
-		SafeHtml safeHtml = new SafeHtmlBuilder().appendEscaped(myDomain.getName()).toSafeHtml();
+		SafeHtmlBuilder b = new SafeHtmlBuilder().appendEscaped(myDomain.getName());
+		if (myDomain.getServiceList().size()==0) {
+			b.appendHtmlConstant(AdminPortal.MSGS.dashboard_DomainNoServicesSuffix());
+		}
+		SafeHtml safeHtml = b.toSafeHtml();
 		return new HTML(safeHtml);
 	}
 
 	@Override
 	public Widget renderStatus() {
+		if (myDomain.getServiceList().size()==0) {
+			return null;
+		}
 		StatusEnum status = myDomain.getStatus();
 		return returnImageForStatus(status);
 	}
 
 	@Override
 	public Widget renderUrls() {
+		if (myDomain.getServiceList().size()==0) {
+			return null;
+		}
 		return DashModelServiceVersion.renderUrlCount(myDomain);
 	}
 

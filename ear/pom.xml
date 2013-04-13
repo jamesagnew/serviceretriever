@@ -49,7 +49,7 @@
 						<webModule>
 							<groupId>net.svcret</groupId>
 							<artifactId>serviceretriever-proxy-war</artifactId>
-							<contextRoot>/</contextRoot>
+							<contextRoot>/service</contextRoot>
 						</webModule>
 						<webModule>
 							<groupId>net.svcret</groupId>

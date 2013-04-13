@@ -20,6 +20,8 @@ import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -123,7 +125,7 @@ public class AddServiceVersionPanel extends FlowPanel {
 		myVersionTextBox.setValue("1.0");
 		myVersionTextBox.getElement().setId("tbVer");
 		myParentsGrid.setWidget(2, 1, myVersionTextBox);
-
+		
 		/*
 		 * Type
 		 */

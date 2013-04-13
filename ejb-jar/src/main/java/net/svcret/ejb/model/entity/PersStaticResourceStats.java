@@ -14,6 +14,8 @@ import org.hibernate.annotations.Index;
 @Entity()
 public class PersStaticResourceStats extends BasePersMethodStats {
 
+	private static final long serialVersionUID = 1L;
+
 	@EmbeddedId
 	private PersStaticResourceStatsPk myPk;
 

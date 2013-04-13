@@ -1,5 +1,6 @@
 package net.svcret.admin.client.ui.dash.model;
 
+import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.HierarchyEnum;
@@ -21,7 +22,11 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 
 	@Override
 	public Widget renderName() {
-		SafeHtml safeHtml = new SafeHtmlBuilder().appendEscaped(myService.getName()).toSafeHtml();
+		SafeHtmlBuilder b = new SafeHtmlBuilder().appendEscaped(myService.getName());
+		if (myService.getVersionList().size()==0) {
+			b.appendHtmlConstant(AdminPortal.MSGS.dashboard_ServiceNoServiceVersionsSuffix());
+		}
+		SafeHtml safeHtml = b.toSafeHtml();
 		return new HTML(safeHtml);
 	}
 
@@ -40,6 +45,9 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 
 	@Override
 	public Widget renderStatus() {
+		if (myService.getVersionList().size()==0) {
+			return null;
+		}
 		StatusEnum status = myService.getStatus();
 		return DashModelDomain.returnImageForStatus(status);
 	}
@@ -57,6 +65,9 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 
 	@Override
 	public Widget renderUrls() {
+		if (myService.getVersionList().size()==0) {
+			return null;
+		}
 		return DashModelServiceVersion.renderUrlCount(myService);
 	}
 

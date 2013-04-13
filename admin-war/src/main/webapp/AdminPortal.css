@@ -13,8 +13,14 @@
 
 .breadcrumbLink A {
 	text-decoration: none;
-	color: #808080;
-	vertical-align: middle;	
+	vertical-align: middle;
+	color: #606060 !important;
+	vertical-align: middle;
+	font-family: Trebuchet MS;	
+}
+
+.breadcrumbLink A:HOVER {
+	text-decoration: underline;
 }
 
 .buttonImage {
@@ -27,6 +33,12 @@
 
 .dashboardActionButton {
 	cursor: pointer;	
+}
+
+.dashboardNameSuffix {
+	color: #808080;
+	font-style: italic;
+	font-size: 0.9em;
 }
 
 .dashboardTable {

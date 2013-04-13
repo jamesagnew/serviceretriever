@@ -21,7 +21,7 @@ public abstract class BasePersMethodStatsPk implements Serializable {
 	@Transient
 	private volatile int myHashCode;
 
-	@Column(name = "INTERVAL", length = 10, nullable = false)
+	@Column(name = "INTRVL", length = 10, nullable = false)
 	@Enumerated(EnumType.STRING)
 	private InvocationStatsIntervalEnum myInterval;
 

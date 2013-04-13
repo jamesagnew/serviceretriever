@@ -99,6 +99,7 @@
 					<runTarget>AdminPortal.html</runTarget>
 					<hostedWebapp>${webappDirectory}</hostedWebapp>
 					<i18nMessagesBundle>net.svcret.admin.client.Messages123</i18nMessagesBundle>
+					<style>DETAILED</style>
 				</configuration>
 			</plugin>
 

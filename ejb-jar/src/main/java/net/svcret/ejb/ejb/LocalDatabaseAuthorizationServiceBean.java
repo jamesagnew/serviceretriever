@@ -1,7 +1,6 @@
 package net.svcret.ejb.ejb;
 
 import javax.ejb.EJB;
-import javax.ejb.Singleton;
 import javax.ejb.Stateless;
 
 import net.svcret.ejb.api.IAuthorizationService.ILocalDatabaseAuthorizationService;
@@ -11,8 +10,7 @@ import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersUser;
 
-@Stateless()
-@Singleton
+@Stateless
 public class LocalDatabaseAuthorizationServiceBean extends BaseAuthorizationServiceBean<PersAuthenticationHostLocalDatabase> implements ILocalDatabaseAuthorizationService {
 
 	@Override

@@ -1,5 +1,6 @@
 package net.svcret.ejb.model.entity;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 
 import javax.persistence.Column;
@@ -12,17 +13,19 @@ import net.svcret.ejb.util.Validate;
 
 @Entity
 @Table(name = "PX_STATE")
-public class PersState {
+public class PersState implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	@Id
-	@Column(name = "KEY", length = 200)
+	@Column(name = "ST_KEY", length = 200)
 	private String myKey;
 
 	@Version()
 	@Column(name = "OPTLOCK")
 	private Timestamp myOptLock;
 
-	@Column(name = "VERSION", nullable = false)
+	@Column(name = "ST_VERSION", nullable = false)
 	private long myVersion;
 
 	public PersState() {

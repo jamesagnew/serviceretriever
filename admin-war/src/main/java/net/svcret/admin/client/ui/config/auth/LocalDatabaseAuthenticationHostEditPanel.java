@@ -99,9 +99,9 @@ public class LocalDatabaseAuthenticationHostEditPanel extends BaseAuthentication
 			} else {
 				myCacheMillisTextBox.setValue(60000);
 			}
-			myCacheEnabledCheckBox.setEnabled(true);
+			myCacheMillisTextBox.setEnabled(true);
 		} else {
-			myCacheEnabledCheckBox.setEnabled(false);
+			myCacheMillisTextBox.setEnabled(false);
 		}
 	}
 

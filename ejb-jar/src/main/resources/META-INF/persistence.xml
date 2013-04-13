@@ -66,6 +66,7 @@
 	<persistence-unit name="ServiceProxy_EJBPU" transaction-type="JTA">
 		<provider>org.hibernate.ejb.HibernatePersistence</provider>
 		<jta-data-source>jdbc/svcret</jta-data-source>
+		
 		<class>net.svcret.ejb.model.entity.BasePersServiceVersion</class>
 		<class>net.svcret.ejb.model.entity.PersBaseClientAuth</class>
 		<class>net.svcret.ejb.model.entity.PersAuthenticationHostLdap</class>
@@ -95,17 +96,19 @@
 		<class>net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth</class>
 		<exclude-unlisted-classes>false</exclude-unlisted-classes>
 		<properties>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5Dialect"/>
   			<property name="hibernate.connection.driver_class" value="com.mysql.jdbc.Driver"/>
-            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
 
-			<property name="hibernate.hbm2ddl.auto" value="update" />
-			<property name="hibernate.jdbc.batch_size" value="0" />
+			<property name="hibernate.transaction.jta.platform" value="org.hibernate.service.jta.platform.internal.SunOneJtaPlatform" />
+
+			<property name="hibernate.jdbc.batch_size" value="30" />
 			<property name="hibernate.cache.use_minimal_puts" value="false" />
 			<property name="hibernate.show_sql" value="false" />
 			<property name="hibernate.cache.use_query_cache" value="false" />
 			<property name="hibernate.cache.use_second_level_cache" value="false" />
 			<property name="hibernate.cache.use_structured_entries" value="false" />
-		</properties>
+			<property name="hibernate.hbm2ddl.auto" value="create-drop" />
+ 		</properties>
 	</persistence-unit>
 
 	<persistence-unit name="ServiceProxy_UNITTEST" transaction-type="RESOURCE_LOCAL">

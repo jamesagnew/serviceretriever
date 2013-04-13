@@ -359,6 +359,8 @@ public class AdminServiceBean implements IAdminService {
 		ModelUpdateResponse retVal = new ModelUpdateResponse();
 
 		GDomainList domainList = new GDomainList();
+		retVal.setDomainList(domainList);
+		
 		Set<Long> loadDomStats = theRequest.getDomainsToLoadStats();
 		Set<Long> loadSvcStats = theRequest.getServicesToLoadStats();
 		Set<Long> loadVerStats = theRequest.getVersionsToLoadStats();
