@@ -29,6 +29,7 @@ import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
+import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersEnvironment;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
@@ -71,6 +72,12 @@ public class ServicePersistenceBean implements IServicePersistence {
 	}
 
 	@Override
+	public void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost) {
+		Validate.throwIllegalArgumentExceptionIfNull("AuthenticationHost", theAuthHost);
+		myEntityManager.remove(theAuthHost);
+	}
+
+	@Override
 	public void deleteHttpClientConfig(PersHttpClientConfig theConfig) {
 		Validate.throwIllegalArgumentExceptionIfNull("HttpClientConfig", theConfig);
 		Validate.throwIllegalArgumentExceptionIfNull("HttpClientConfig#PID", theConfig.getPid());
@@ -78,6 +85,12 @@ public class ServicePersistenceBean implements IServicePersistence {
 		ourLog.info("Deleting HTTP client config {} / {}", theConfig.getPid(), theConfig.getId());
 
 		myEntityManager.remove(theConfig);
+	}
+
+	@Override
+	public Collection<BasePersAuthenticationHost> getAllAuthenticationHosts() {
+		TypedQuery<BasePersAuthenticationHost> q = myEntityManager.createNamedQuery(Queries.AUTHHOST_FINDALL, BasePersAuthenticationHost.class);
+		return q.getResultList();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -123,6 +136,11 @@ public class ServicePersistenceBean implements IServicePersistence {
 		} catch (NoResultException e) {
 			return null;
 		}
+	}
+
+	@Override
+	public BasePersAuthenticationHost getAuthenticationHostByPid(long thePid) {
+		return myEntityManager.find(BasePersAuthenticationHost.class, thePid);
 	}
 
 	@Override
@@ -175,7 +193,7 @@ public class ServicePersistenceBean implements IServicePersistence {
 			PersAuthenticationHostLdap host = new PersAuthenticationHostLdap(theModuleId);
 			host.setModuleName(theModuleId);
 			host.setDefaults();
-			
+
 			retVal = host;
 			retVal = myEntityManager.merge(retVal);
 			retVal.setNewlyCreated(true);
@@ -272,6 +290,7 @@ public class ServicePersistenceBean implements IServicePersistence {
 
 		if (retVal == null) {
 			retVal = new PersInvocationAnonStats(thePk);
+			ourLog.info("Adding new invocation anon stats: {}", thePk);
 			retVal = myEntityManager.merge(retVal);
 			retVal.setNewlyCreated(true);
 		}
@@ -285,6 +304,7 @@ public class ServicePersistenceBean implements IServicePersistence {
 
 		if (retVal == null) {
 			retVal = new PersInvocationStats(thePk);
+			ourLog.info("Adding new invocation stats: {}", thePk);
 			retVal = myEntityManager.merge(retVal);
 			retVal.setNewlyCreated(true);
 		}
@@ -298,29 +318,9 @@ public class ServicePersistenceBean implements IServicePersistence {
 
 		if (retVal == null) {
 			retVal = new PersInvocationUserStats(thePk);
+			ourLog.info("Adding new invocation user stats: {}", thePk);
 			retVal = myEntityManager.merge(retVal);
 			retVal.setNewlyCreated(true);
-		}
-
-		return retVal;
-	}
-
-	@Override
-	public PersUser getOrCreateUser(BasePersAuthenticationHost theAuthHost, String theUsername) throws ProcessingException {
-		Validate.throwIllegalArgumentExceptionIfNull("AuthenticationHost", theAuthHost);
-		Validate.throwIllegalArgumentExceptionIfBlank("Username", theUsername);
-
-		Query q = myEntityManager.createNamedQuery(Queries.PERSUSER_FIND);
-		q.setParameter("USERNAME", theUsername);
-		q.setParameter("AUTH_HOST", theAuthHost);
-		PersUser retVal;
-		try {
-			retVal = (PersUser) q.getSingleResult();
-		} catch (NoResultException e) {
-			retVal = new PersUser();
-			retVal.setUsername(theUsername);
-			retVal.setAuthenticationHost(theAuthHost);
-			retVal = myEntityManager.merge(retVal);
 		}
 
 		return retVal;
@@ -350,21 +350,20 @@ public class ServicePersistenceBean implements IServicePersistence {
 			retVal.setVersionId(theId);
 			retVal.setHttpClientConfig(config);
 
-//			retVal = myEntityManager.merge(retVal);
+			// retVal = myEntityManager.merge(retVal);
 
 			theService.addVersion(retVal);
 			PersService service = myEntityManager.merge(theService);
-			
 
 			retVal = (PersServiceVersionSoap11) service.getVersionWithId(theId);
-			
+
 			// Create a status entry
-			
+
 			PersServiceVersionStatus status = retVal.getStatus();
 			status.setServiceVersion(retVal);
 			PersServiceVersionStatus newStatus = myEntityManager.merge(status);
 			retVal.setStatus(newStatus);
-			
+
 			retVal.setNewlyCreated(true);
 		}
 
@@ -386,7 +385,7 @@ public class ServicePersistenceBean implements IServicePersistence {
 		retVal.setServiceId(theId);
 		retVal.setDomain(theDomain);
 
-//		retVal = myEntityManager.merge(retVal);
+		// retVal = myEntityManager.merge(retVal);
 		PersDomain domain = myEntityManager.merge(retVal.getDomain());
 
 		retVal = domain.getServiceWithId(theId);
@@ -395,10 +394,31 @@ public class ServicePersistenceBean implements IServicePersistence {
 	}
 
 	@Override
+	public PersUser getOrCreateUser(BasePersAuthenticationHost theAuthHost, String theUsername) throws ProcessingException {
+		Validate.throwIllegalArgumentExceptionIfNull("AuthenticationHost", theAuthHost);
+		Validate.throwIllegalArgumentExceptionIfBlank("Username", theUsername);
+
+		Query q = myEntityManager.createNamedQuery(Queries.PERSUSER_FIND);
+		q.setParameter("USERNAME", theUsername);
+		q.setParameter("AUTH_HOST", theAuthHost);
+		PersUser retVal;
+		try {
+			retVal = (PersUser) q.getSingleResult();
+		} catch (NoResultException e) {
+			retVal = new PersUser();
+			retVal.setUsername(theUsername);
+			retVal.setAuthenticationHost(theAuthHost);
+			retVal = myEntityManager.merge(retVal);
+		}
+
+		return retVal;
+	}
+
+	@Override
 	public PersService getServiceById(long theDomainPid, String theServiceId) {
 		Validate.throwIllegalArgumentExceptionIfBlank("ServiceId", theServiceId);
 
-		Query q = myEntityManager.createQuery("SELECT s FROM PersService s WHERE s.myServiceId = :SERVICE_ID AND s.myPersDomain.myPid = :DOMAIN_PID");
+		Query q = myEntityManager.createNamedQuery(Queries.SERVICE_FIND);
 		q.setParameter("SERVICE_ID", theServiceId);
 		q.setParameter("DOMAIN_PID", theDomainPid);
 		PersService retVal;
@@ -419,16 +439,26 @@ public class ServicePersistenceBean implements IServicePersistence {
 	}
 
 	@Override
+	public BasePersServiceVersion getServiceVersionByPid(long theServiceVersionPid) {
+		return myEntityManager.find(BasePersServiceVersion.class, theServiceVersionPid);
+	}
+
+	@Override
+	public PersServiceVersionMethod getServiceVersionMethodByPid(long theServiceVersionMethodPid) {
+		return myEntityManager.find(PersServiceVersionMethod.class, theServiceVersionMethodPid);
+	}
+
+	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public long getStateCounter(String theKey) {
 		Validate.throwIllegalArgumentExceptionIfBlank("Key", theKey);
-		
+
 		PersState state = myEntityManager.find(PersState.class, theKey);
 		if (state == null) {
 			state = new PersState(theKey);
 			state = myEntityManager.merge(state);
 		}
-		
+
 		return state.getVersion();
 	}
 
@@ -451,6 +481,11 @@ public class ServicePersistenceBean implements IServicePersistence {
 		return retVal;
 	}
 
+	@Override
+	public PersUser getUser(long thePid) {
+		return myEntityManager.find(PersUser.class, thePid);
+	}
+
 	private void grabLock(String lockName) {
 		Map<String, Object> properties = new HashMap<String, Object>();
 		properties.put("javax.persistence.lock.timeout", 10 * 1000);
@@ -465,10 +500,32 @@ public class ServicePersistenceBean implements IServicePersistence {
 		}
 	}
 
+	@Override
+	public long incrementStateCounter(String theKey) {
+		Validate.throwIllegalArgumentExceptionIfBlank("Key", theKey);
+
+		PersState state = myEntityManager.find(PersState.class, theKey);
+		if (state == null) {
+			state = new PersState(theKey);
+			state.setVersion(1);
+			state = myEntityManager.merge(state);
+		} else {
+			state.incrementVersion();
+			state = myEntityManager.merge(state);
+		}
+
+		return state.getVersion();
+	}
+
 	@PostConstruct
 	public void postConstruct() {
 		// Create defaults
 		getOrCreateHttpClientConfig(PersHttpClientConfig.DEFAULT_ID);
+	}
+
+	@Override
+	public void removeDomain(PersDomain theDomain) {
+		myEntityManager.remove(theDomain);
 	}
 
 	@Override
@@ -489,6 +546,15 @@ public class ServicePersistenceBean implements IServicePersistence {
 		myEntityManager.remove(version);
 
 		myServiceVersionPidToStatusPid.remove(thePid);
+	}
+
+	@Override
+	public void saveAuthenticationHost(PersAuthenticationHostLocalDatabase theAuthHost) {
+		Validate.throwIllegalArgumentExceptionIfNull("AuthHost", theAuthHost);
+
+		ourLog.info("Saving authentication host {} / {}", theAuthHost.getPid(), theAuthHost.getModuleId());
+
+		myEntityManager.merge(theAuthHost);
 	}
 
 	@Override
@@ -525,7 +591,11 @@ public class ServicePersistenceBean implements IServicePersistence {
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	@Override
 	public void saveInvocationStats(Collection<BasePersMethodStats> theStats) {
+		ourLog.info("Going to save {} invocation stats entries", theStats.size());
+
 		grabLock("FLUSH_STATS");
+
+		ourLog.debug("Got lock on FLUSH_STATS");
 
 		int count = 0;
 		int ucount = 0;
@@ -590,7 +660,8 @@ public class ServicePersistenceBean implements IServicePersistence {
 
 	/**
 	 * {@inheritDoc}
-	 * @return 
+	 * 
+	 * @return
 	 */
 	@Override
 	public BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theVersion) throws ProcessingException {
@@ -600,17 +671,29 @@ public class ServicePersistenceBean implements IServicePersistence {
 
 		ourLog.info("Saving service version with PID {}", theVersion.getPid());
 
+		int i = 0;
 		for (PersServiceVersionUrl next : theVersion.getUrls()) {
 			Validate.throwProcessingExceptionIfBlank("URL is missing ID", next.getUrlId());
+			next.setOrder(i++);
 			next.setServiceVersion(theVersion);
 		}
 
+		i=0;
 		for (PersBaseClientAuth<?> next : theVersion.getClientAuths()) {
+			next.setOrder(i++);
 			next.setServiceVersion(theVersion);
 		}
 
+		i=0;
+		for (PersBaseServerAuth<?, ?> next : theVersion.getServerAuths()) {
+			next.setOrder(i++);
+			next.setServiceVersion(theVersion);
+		}
+
+		i=0;
 		for (PersServiceVersionMethod next : theVersion.getMethods()) {
 			Validate.throwProcessingExceptionIfBlank("Method is missing name", next.getName());
+			next.setOrder(i++);
 			next.setServiceVersion(theVersion);
 		}
 
@@ -629,7 +712,7 @@ public class ServicePersistenceBean implements IServicePersistence {
 			}
 
 		}
-		
+
 		return version;
 	}
 
@@ -666,64 +749,6 @@ public class ServicePersistenceBean implements IServicePersistence {
 	 */
 	public void setEntityManager(EntityManager theEntityManager) {
 		myEntityManager = theEntityManager;
-	}
-
-	@Override
-	public long incrementStateCounter(String theKey) {
-		Validate.throwIllegalArgumentExceptionIfBlank("Key", theKey);
-		
-		PersState state = myEntityManager.find(PersState.class, theKey);
-		if (state == null) {
-			state = new PersState(theKey);
-			state.setVersion(1);
-			state = myEntityManager.merge(state);
-		} else {
-			state.incrementVersion();
-			state = myEntityManager.merge(state);
-		}
-		
-		return state.getVersion();
-	}
-
-	@Override
-	public void saveAuthenticationHost(PersAuthenticationHostLocalDatabase theAuthHost) {
-		Validate.throwIllegalArgumentExceptionIfNull("AuthHost", theAuthHost);
-		
-		ourLog.info("Saving authentication host {} / {}", theAuthHost.getPid(), theAuthHost.getModuleId());
-		
-		myEntityManager.merge(theAuthHost);
-	}
-
-	@Override
-	public Collection<BasePersAuthenticationHost> getAllAuthenticationHosts() {
-		TypedQuery<BasePersAuthenticationHost> q = myEntityManager.createNamedQuery(Queries.AUTHHOST_FINDALL, BasePersAuthenticationHost.class);
-		return q.getResultList();
-	}
-
-	@Override
-	public BasePersAuthenticationHost getAuthenticationHostByPid(long thePid) {
-		return myEntityManager.find(BasePersAuthenticationHost.class, thePid);
-	}
-
-	@Override
-	public void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost) {
-		Validate.throwIllegalArgumentExceptionIfNull("AuthenticationHost", theAuthHost);
-		myEntityManager.remove(theAuthHost);
-	}
-
-	@Override
-	public PersUser getUser(long thePid) {
-		return myEntityManager.find(PersUser.class, thePid);
-	}
-
-	@Override
-	public PersServiceVersionMethod getServiceVersionMethodByPid(long theServiceVersionMethodPid) {
-		return myEntityManager.find(PersServiceVersionMethod.class, theServiceVersionMethodPid);
-	}
-
-	@Override
-	public BasePersServiceVersion getServiceVersionByPid(long theServiceVersionPid) {
-		return myEntityManager.find(BasePersServiceVersion.class, theServiceVersionPid);
 	}
 
 }

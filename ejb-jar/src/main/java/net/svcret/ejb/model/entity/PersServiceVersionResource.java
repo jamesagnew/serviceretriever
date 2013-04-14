@@ -17,20 +17,22 @@ import javax.persistence.UniqueConstraint;
 @Entity
 public class PersServiceVersionResource extends BasePersObject {
 
+	private static final long serialVersionUID = 1L;
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "PID")
 	private Long myPid;
 
 	@Lob()
-	@Basic(fetch = FetchType.EAGER)
-	@Column(name = "RES_TEXT")
+	@Basic(fetch = FetchType.LAZY)
+	@Column(name = "RES_TEXT", nullable=false)
 	private String myResourceText;
 
-	@Column(name = "RES_TYPE", length = 50)
+	@Column(name = "RES_TYPE", length = 50, nullable=false)
 	private String myResourceContentType;
 	
-	@Column(name = "RES_URL", length = 200)
+	@Column(name = "RES_URL", length = 200, nullable=false)
 	private String myResourceUrl;
 	
 	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)

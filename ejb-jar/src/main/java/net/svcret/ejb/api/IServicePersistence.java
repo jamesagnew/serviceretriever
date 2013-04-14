@@ -115,5 +115,7 @@ public interface IServicePersistence {
 	PersServiceVersionMethod getServiceVersionMethodByPid(long theServiceVersionMethodPid);
 
 	BasePersServiceVersion getServiceVersionByPid(long theServiceVersionPid);
+
+	void removeDomain(PersDomain theDomain);
 	
 }

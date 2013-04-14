@@ -7,6 +7,7 @@ import javax.ejb.Local;
 import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
@@ -57,5 +58,13 @@ public interface IAdminService {
 	BaseGAuthHost loadAuthenticationHost(long thePid) throws ProcessingException;
 
 	GUser saveUser(GUser theUser);
+
+	long getDefaultHttpClientConfigPid();
+
+	String suggestNewVersionNumber(Long theDomainPid, Long theServicePid);
+
+	void deleteDomain(long thePid);
+
+	GDomainList loadDomainList() throws ProcessingException;
 
 }

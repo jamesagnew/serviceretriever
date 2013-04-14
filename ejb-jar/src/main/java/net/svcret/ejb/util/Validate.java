@@ -72,4 +72,13 @@ public class Validate {
 		}
 	}
 
+	public static void throwIllegalArgumentExceptionIfNotPositive(String theName, Long theLong) {
+		if (theLong == null) {
+			throw new IllegalArgumentException(theName+" must not be null");
+		}
+		if (theLong <= 0) {
+			throw new IllegalArgumentException(theName+" must be a positive number");
+		}
+	}
+
 }

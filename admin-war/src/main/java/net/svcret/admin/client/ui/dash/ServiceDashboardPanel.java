@@ -82,12 +82,17 @@ public class ServiceDashboardPanel extends FlowPanel {
 			int offset = type.getOrdinal();
 
 			if ((myUiList.size() - 1) <= i || !myUiList.get(i).equals(model)) {
-				myGrid.insertRow(i + rowOffset);
+				int beforeRow = i + rowOffset + 1;
+				if (myGrid.getRowCount() <= beforeRow) {
+					// don't need it
+				} else {
+					myGrid.insertRow(beforeRow);
+				}
 			}
 
-			// for (int col = 0; col < offset + 1; col++) {
-			// myGrid.getFlexCellFormatter().setColSpan(i + rowOffset, col, 1);
-			// }
+			for (int col = 0; col < offset + 1; col++) {
+				myGrid.setWidget(i + rowOffset, col, null);
+			}
 
 			int colSpan = (HierarchyEnum.getHighestOrdinal() - offset + 1);
 			// boolean expanded = false;
@@ -95,10 +100,17 @@ public class ServiceDashboardPanel extends FlowPanel {
 				colSpan += NUM_STATUS_COLS;
 				// expanded = true;
 			}
+			for (int col = 0; col < (offset + 1); col++) {
+				myGrid.getFlexCellFormatter().setColSpan(i + rowOffset, col, 1);
+			}
 			myGrid.getFlexCellFormatter().setColSpan(i + rowOffset, offset + 1, colSpan);
 			for (int col = offset + 2; col < myGrid.getCellCount(i + rowOffset); col++) {
 				myGrid.getFlexCellFormatter().setColSpan(i + rowOffset, col, 1);
 			}
+
+			// for (int col = 0; col < offset;col++) {
+			// myGrid.setWidget(i+rowOffset, col, null);
+			// }
 
 			if (model.getModel() != null) {
 				myGrid.setWidget(i + rowOffset, offset, new ExpandButton(this, model));
@@ -128,26 +140,26 @@ public class ServiceDashboardPanel extends FlowPanel {
 
 			Widget status = EmptyCell.defaultWidget(model.renderStatus());
 			myGrid.setWidget(i + rowOffset, offset + COL_STATUS + 1, status);
-			myGrid.getCellFormatter().addStyleName(i + rowOffset, offset + COL_STATUS + 1, styleName);
+			myGrid.getCellFormatter().setStyleName(i + rowOffset, offset + COL_STATUS + 1, styleName);
 
 			Widget usage = EmptyCell.defaultWidget(model.renderUsage());
 			myGrid.setWidget(i + rowOffset, offset + COL_USAGE + 1, usage);
-			myGrid.getCellFormatter().addStyleName(i + rowOffset, offset + COL_USAGE + 1, styleName);
+			myGrid.getCellFormatter().setStyleName(i + rowOffset, offset + COL_USAGE + 1, styleName);
 
 			Widget urls = EmptyCell.defaultWidget(model.renderUrls());
 			myGrid.setWidget(i + rowOffset, offset + COL_BACKING_URLS + 1, urls);
-			myGrid.getCellFormatter().addStyleName(i + rowOffset, offset + COL_BACKING_URLS + 1, styleName);
+			myGrid.getCellFormatter().setStyleName(i + rowOffset, offset + COL_BACKING_URLS + 1, styleName);
 
 			Widget latency = EmptyCell.defaultWidget(model.renderLatency());
 			myGrid.setWidget(i + rowOffset, offset + COL_LATENCY + 1, latency);
-			myGrid.getCellFormatter().addStyleName(i + rowOffset, offset + COL_LATENCY + 1, styleName);
+			myGrid.getCellFormatter().setStyleName(i + rowOffset, offset + COL_LATENCY + 1, styleName);
 
 			Widget actions = EmptyCell.defaultWidget(model.renderActions());
 			myGrid.setWidget(i + rowOffset, offset + COL_ACTIONS + 1, actions);
-			myGrid.getCellFormatter().addStyleName(i + rowOffset, offset + COL_ACTIONS + 1, styleName);
-			
-			while (myGrid.getCellCount(i+rowOffset) > (offset + COL_ACTIONS + 2)) {
-				myGrid.removeCell(i+rowOffset, myGrid.getCellCount(i+rowOffset)-1);
+			myGrid.getCellFormatter().setStyleName(i + rowOffset, offset + COL_ACTIONS + 1, styleName);
+
+			while (myGrid.getCellCount(i + rowOffset) > (offset + COL_ACTIONS + 2)) {
+				myGrid.removeCell(i + rowOffset, myGrid.getCellCount(i + rowOffset) - 1);
 			}
 
 		}
@@ -197,7 +209,6 @@ public class ServiceDashboardPanel extends FlowPanel {
 				newUiList.add(nextUiObject);
 
 				if (nextDomain.isExpandedOnDashboard()) {
-
 					for (GService nextService : nextDomain.getServiceList()) {
 						if (!nextService.isStatsInitialized()) {
 							addSpinnerToList(newUiList);
@@ -206,7 +217,6 @@ public class ServiceDashboardPanel extends FlowPanel {
 							newUiList.add(new DashModelService(nextService));
 
 							if (nextService.isExpandedOnDashboard()) {
-
 								for (BaseGServiceVersion nextServiceVersion : nextService.getVersionList()) {
 									if (!nextServiceVersion.isStatsInitialized()) {
 										addSpinnerToList(newUiList);
@@ -215,11 +225,11 @@ public class ServiceDashboardPanel extends FlowPanel {
 										newUiList.add(new DashModelServiceVersion(nextServiceVersion));
 
 										if (nextServiceVersion.isExpandedOnDashboard()) {
-											if (!nextServiceVersion.isStatsInitialized()) {
-												addSpinnerToList(newUiList);
-												haveStatsToLoad = true;
-											} else {
-												for (GServiceMethod nextMethod : nextServiceVersion.getMethodList()) {
+											for (GServiceMethod nextMethod : nextServiceVersion.getMethodList()) {
+												if (!nextMethod.isStatsInitialized()) {
+													addSpinnerToList(newUiList);
+													haveStatsToLoad = true;
+												} else {
 													newUiList.add(new DashModelServiceMethod(nextMethod));
 												}
 											}

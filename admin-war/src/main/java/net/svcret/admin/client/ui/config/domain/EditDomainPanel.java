@@ -1,4 +1,4 @@
-package net.svcret.admin.client.ui.config;
+package net.svcret.admin.client.ui.config.domain;
 
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.LoadingSpinner;

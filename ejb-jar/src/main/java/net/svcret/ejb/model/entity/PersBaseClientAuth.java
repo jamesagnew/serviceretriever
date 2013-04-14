@@ -24,10 +24,15 @@ import com.google.common.base.Objects;
 @DiscriminatorColumn(name = "AUTH_TYPE", length = 20, discriminatorType = DiscriminatorType.STRING)
 public abstract class PersBaseClientAuth<T extends PersBaseClientAuth<?>> extends BasePersObject {
 
+	private static final long serialVersionUID = 1L;
+
 	@Version()
 	@Column(name = "OPTLOCK")
 	private int myOptLock;
 
+	@Column(name="CAUTH_ORDER", nullable=false)
+	private int myOrder;
+	
 	@Column(name = "PASSWORD", length = 100)
 	private String myPassword;
 
@@ -53,14 +58,8 @@ public abstract class PersBaseClientAuth<T extends PersBaseClientAuth<?>> extend
 				(Objects.equal(myPid, ((PersBaseClientAuth<?>) theObj).myPid) || (relevantPropertiesEqual((T)theObj)));
 	}
 
-	/**
-	 * Subclasses must provide an implementation which compares all
-	 * relevant properties to the subclass type
-	 */
-	protected abstract boolean relevantPropertiesEqual(T theT);
-
 	public abstract ClientAuthTypeEnum getAuthType();
-	
+
 	/**
 	 * @return the optLock
 	 */
@@ -69,12 +68,19 @@ public abstract class PersBaseClientAuth<T extends PersBaseClientAuth<?>> extend
 	}
 
 	/**
+	 * @return the order
+	 */
+	public int getOrder() {
+		return myOrder;
+	}
+
+	/**
 	 * @return the password
 	 */
 	public String getPassword() {
 		return myPassword;
 	}
-
+	
 	/**
 	 * @return the pid
 	 */
@@ -104,12 +110,29 @@ public abstract class PersBaseClientAuth<T extends PersBaseClientAuth<?>> extend
 		return Objects.hashCode(myPid);
 	}
 
+	public void loadAllAssociations() {
+		// nothing
+	}
+
+	/**
+	 * Subclasses must provide an implementation which compares all
+	 * relevant properties to the subclass type
+	 */
+	protected abstract boolean relevantPropertiesEqual(T theT);
+
 	/**
 	 * @param theOptLock
 	 *            the optLock to set
 	 */
 	public void setOptLock(int theOptLock) {
 		myOptLock = theOptLock;
+	}
+
+	/**
+	 * @param theOrder the order to set
+	 */
+	public void setOrder(int theOrder) {
+		myOrder = theOrder;
 	}
 
 	/**
@@ -142,10 +165,6 @@ public abstract class PersBaseClientAuth<T extends PersBaseClientAuth<?>> extend
 	 */
 	public void setUsername(String theUsername) {
 		myUsername = theUsername;
-	}
-
-	public void loadAllAssociations() {
-		// nothing
 	}
 
 }

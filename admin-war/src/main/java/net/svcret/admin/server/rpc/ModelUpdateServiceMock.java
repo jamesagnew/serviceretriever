@@ -7,6 +7,7 @@ import net.svcret.admin.client.rpc.ModelUpdateService;
 import net.svcret.admin.shared.ServiceFailureException;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
 import net.svcret.admin.shared.model.BaseGAuthHost;
+import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.BaseGDashboardObjectWithUrls;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
@@ -68,6 +69,12 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		met.setPid(1000L);
 		met.setId("Method 1");
 		met.setName("Method 1");
+		ver.getMethodList().add(met);
+
+		met = new GServiceMethod();
+		met.setPid(1001L);
+		met.setId("Method 2");
+		met.setName("Method 2");
 		ver.getMethodList().add(met);
 
 		svc = new GService();
@@ -144,6 +151,11 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 				for (BaseGServiceVersion nextVersion : nextService.getVersionList()) {
 					if (theRequest.getVersionsToLoadStats().contains(nextVersion.getPid())) {
 						populateRandom(nextVersion);
+						for (GServiceMethod nextMethod : nextVersion.getMethodList()) {
+							if (theRequest.getVersionMethodsToLoadStats().contains(nextMethod.getPid())) {
+								populateRandom(nextMethod);
+							}
+						}
 					}
 				}
 			}
@@ -180,6 +192,13 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		obj.setUrlsActive(randomUrlNumber());
 		obj.setUrlsDown(randomUrlNumber());
 		obj.setUrlsUnknown(randomUrlNumber());
+	}
+
+	private void populateRandom(BaseGDashboardObject<?> obj) {
+		obj.setStatsInitialized(true);
+		obj.setStatus(randomStatus());
+		obj.setTransactions60mins(random60mins());
+		obj.setLatency60mins(random60mins());
 	}
 
 	private int randomUrlNumber() {
@@ -279,7 +298,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	}
 
 	@Override
-	public GSoap11ServiceVersion createNewSoap11ServiceVersion(Long theUncomittedId) {
+	public GSoap11ServiceVersion createNewSoap11ServiceVersion(Long theDomainPid, Long theServicePid, Long theUncomittedId) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -309,7 +328,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		if (theExistingServicePid != null) {
 			svc = dom.getServiceList().getServiceByPid(theExistingServicePid);
 			if (svc == null) {
-				throw new NullPointerException("Unknown service " + theExistingDomainPid);
+				throw new NullPointerException("Unknown service " + theExistingServicePid);
 			}
 		} else {
 			svc = new GService();
@@ -386,6 +405,16 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	@Override
 	public void saveUser(GUser theUser) {
 		myUserList.getUserByPid(theUser.getPid()).merge(theUser);
+	}
+
+	public long getDefaultHttpClientConfigPid() {
+		return myClientConfigList.get(0).getPid();
+	}
+
+	@Override
+	public GDomainList removeDomain(long thePid) {
+		myDomainList.remove(myDomainList.getDomainByPid(thePid));
+		return myDomainList;
 	}
 
 }

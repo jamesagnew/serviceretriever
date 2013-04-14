@@ -14,6 +14,7 @@ public class ModelUpdateRequest implements Serializable {
 	private boolean myLoadHttpClientConfigs;
 	private boolean myLoadUsers;
 	private Set<Long> myServicesToLoadStats;
+	private Set<Long> myVersionMethodsToLoadStats;
 	private Set<Long> myVersionsToLoadStats;
 
 	public void addDomainToLoadStats(long theDomainToLoadStats) {
@@ -30,6 +31,13 @@ public class ModelUpdateRequest implements Serializable {
 		myServicesToLoadStats.add(theServiceToLoadStats);
 	}
 
+	public void addVersionMethodToLoadStats(long thePid) {
+		if (myVersionMethodsToLoadStats == null) {
+			myVersionMethodsToLoadStats = new HashSet<Long>();
+		}
+		myVersionMethodsToLoadStats.add(thePid);
+	}
+
 	public void addVersionToLoadStats(long thePid) {
 		if (myVersionsToLoadStats == null) {
 			myVersionsToLoadStats = new HashSet<Long>();
@@ -38,9 +46,13 @@ public class ModelUpdateRequest implements Serializable {
 	}
 
 	public Set<Long> getDomainsToLoadStats() {
+		return defaultSet(myDomainsToLoadStats);
+	}
+
+	private Set<Long> defaultSet(Set<Long> theSet) {
 		Set<Long> retVal;
-		if (myDomainsToLoadStats != null) {
-			retVal = myDomainsToLoadStats;
+		if (theSet != null) {
+			retVal = theSet;
 		} else {
 			retVal = Collections.emptySet();
 		}
@@ -48,13 +60,14 @@ public class ModelUpdateRequest implements Serializable {
 	}
 
 	public Set<Long> getServicesToLoadStats() {
-		Set<Long> retVal;
-		if (myServicesToLoadStats != null) {
-			retVal = myServicesToLoadStats;
-		} else {
-			retVal = Collections.emptySet();
-		}
-		return retVal;
+		return defaultSet(myServicesToLoadStats);
+	}
+
+	/**
+	 * @return the versionMethodsToLoadStats
+	 */
+	public Set<Long> getVersionMethodsToLoadStats() {
+		return defaultSet(myVersionMethodsToLoadStats);
 	}
 
 	public Set<Long> getVersionsToLoadStats() {

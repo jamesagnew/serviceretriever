@@ -29,6 +29,16 @@
 
 .contentInnerPanel {
 	padding: 5px;	
+	border-bottom: 2px #A5D1F3 solid;
+	border-right: 2px #A5D1F3 solid;
+	border-left: 2px #A5D1F3 solid;
+}
+
+.contentInnerSubPanel {
+	display: block;
+	margin-top: 10px;
+	padding-top: 6px;
+	border-top: 3px #A5D1F3 solid;
 }
 
 .dashboardActionButton {
@@ -245,10 +255,6 @@ TABLE.propertyTable {
 	/*background: #F0F0F0;*/
 }
 
-TABLE.propertyTable TBODY TR:first-child {
-	background: #6194BC !important;
-	color: #FFFFFF;
-}
 
 TABLE.propertyTable TBODY TR:nth-child(odd) {
 	background: #D0D0D0;
@@ -256,6 +262,15 @@ TABLE.propertyTable TBODY TR:nth-child(odd) {
 
 TABLE.propertyTable TBODY TR:nth-child(even) {
 	background: #E0E0E0;
+}
+
+TABLE.propertyTable TBODY TR:first-child {
+	background: #6194BC;
+	color: #FFFFFF;
+}
+
+.twoColumnPropertyGrid TR {
+	background: transparent !important;
 }
 
 .spinnerElement {

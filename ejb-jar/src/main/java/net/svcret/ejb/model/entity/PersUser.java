@@ -56,8 +56,7 @@ public class PersUser extends BasePersObject {
 	@JoinColumn(name = "AUTH_HOST_PID", referencedColumnName = "PID", nullable = false)
 	private BasePersAuthenticationHost myAuthenticationHost;
 
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-	@JoinColumn(name = "SVC_USER_PID", referencedColumnName = "PID")
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true, mappedBy="myUser")
 	private Collection<PersUserDomainPermission> myDomainPermissions;
 
 	// NB: Nullable because user can be backed by external authorization

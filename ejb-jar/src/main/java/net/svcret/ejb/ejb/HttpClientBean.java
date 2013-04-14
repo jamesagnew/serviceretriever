@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.ejb.PostActivate;
+import javax.annotation.PostConstruct;
 import javax.ejb.PrePassivate;
 import javax.ejb.Stateless;
 
@@ -14,8 +14,8 @@ import net.svcret.ejb.Messages;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IResponseValidator;
-import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.api.IResponseValidator.ValidationResponse;
+import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.io.IOUtils;
@@ -234,7 +234,7 @@ public class HttpClientBean implements IHttpClient {
 
 	}
 
-	@PostActivate
+	@PostConstruct
 	public void setUp() {
 		ourLog.info("Starting new HttpClient instance");
 		myConMgr = new PoolingClientConnectionManager();

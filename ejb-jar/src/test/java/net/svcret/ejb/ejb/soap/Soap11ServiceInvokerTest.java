@@ -380,6 +380,10 @@ public class Soap11ServiceInvokerTest {
 		assertEquals("text/xml", uriToResource.get(wsdlUrl).getResourceContentType());
 		
 		assertEquals(xsdBody, uriToResource.get("bar.xsd").getResourceText());
+		
+		assertEquals(1, def.getUrls().size());
+		assertEquals("http://uhnvesb01d.uhn.on.ca:18780/tst-uhn-ehr-ws/services/ehrPatientService", def.getUrls().get(0).getUrl());
+		
 	}
 	
 

@@ -24,6 +24,8 @@ import net.svcret.admin.shared.model.StatusEnum;
 @Entity()
 public class PersDomain extends BasePersObject {
 
+	private static final long serialVersionUID = 1L;
+
 	@Transient
 	private transient boolean myAllAssociationsLoaded;
 
@@ -45,8 +47,7 @@ public class PersDomain extends BasePersObject {
 	@Column(name = "PID")
 	private Long myPid;
 
-	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-	@JoinColumn(name = "DOMAIN_PID", referencedColumnName = "PID")
+	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy="myDomain")
 	private Collection<PersService> myServices;
 
 	@Transient
@@ -129,6 +130,7 @@ public class PersDomain extends BasePersObject {
 	 *            the domainId to set
 	 */
 	public void setDomainId(String theDomainId) {
+		// TODO: validate characters
 		myDomainId = theDomainId;
 	}
 

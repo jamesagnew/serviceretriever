@@ -1,12 +1,17 @@
 package net.svcret.ejb.ejb;
 
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.ejb.Stateless;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.xml.bind.JAXBContext;
@@ -28,7 +33,8 @@ import net.svcret.ejb.model.registry.Services.Service;
 import net.svcret.ejb.util.Validate;
 import net.svcret.ejb.util.WsdlDescriptionType;
 
-@Stateless
+@Startup
+@Singleton
 public class ServiceRegistryBean implements IServiceRegistry {
 	private static JAXBContext ourJaxbContext;
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceRegistryBean.class);
@@ -118,6 +124,12 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	@PostConstruct
+	public void postConstruct() {
+		reloadRegistryFromDatabase();
+	}
+	
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	@Override
 	public void reloadRegistryFromDatabase() {
 		ourLog.info("Reloading service registry from database");
@@ -171,6 +183,16 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	public void setSvcPersistence(IServicePersistence theSvcPersistence) {
 		Validate.throwIllegalStateExceptionIfNotNull("IServicePersistence", mySvcPersistence);
 		mySvcPersistence = theSvcPersistence;
+	}
+
+	@Override
+	public List<String> getValidPaths() {
+		List<String> retVal=new ArrayList<String>();
+		
+		retVal.addAll(ourProxyPathToServices.keySet());
+		Collections.sort(retVal);
+		
+		return retVal;
 	}
 
 	// public class MyWsdlLocator implements WSDLLocator {

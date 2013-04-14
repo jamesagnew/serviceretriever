@@ -2,6 +2,7 @@ package net.svcret.admin.client.ui.config;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
+import net.svcret.admin.client.ui.config.domain.EditDomainServicesPanel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGListenable;

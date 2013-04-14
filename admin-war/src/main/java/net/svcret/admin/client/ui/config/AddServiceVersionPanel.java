@@ -5,6 +5,7 @@ import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.HtmlLabel;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
+import net.svcret.admin.client.ui.config.svcver.SoapDetailPanel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
@@ -50,10 +51,12 @@ public class AddServiceVersionPanel extends FlowPanel {
 	private boolean myUpdating;
 	private GSoap11ServiceVersion myVersion;
 	private TextBox myVersionTextBox;
+	private Long myUncommittedSessionId;
 
-	public AddServiceVersionPanel(Long theDomainPid, Long theServicePid) {
+	public AddServiceVersionPanel(Long theDomainPid, Long theServicePid, Long theUncommittedSessionId) {
 		myDomainPid = theDomainPid;
 		myServicePid = theServicePid;
+		myUncommittedSessionId = theUncommittedSessionId;
 
 		myTopPanel = new FlowPanel();
 		add(myTopPanel);
@@ -124,8 +127,16 @@ public class AddServiceVersionPanel extends FlowPanel {
 		myVersionTextBox = new TextBox();
 		myVersionTextBox.setValue("1.0");
 		myVersionTextBox.getElement().setId("tbVer");
+		myVersionTextBox.addValueChangeHandler(new ValueChangeHandler<String>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<String> theEvent) {
+				if (myVersion != null) {
+					myVersion.setId(myVersionTextBox.getValue());
+				}
+			}
+		});
 		myParentsGrid.setWidget(2, 1, myVersionTextBox);
-		
+
 		/*
 		 * Type
 		 */
@@ -248,6 +259,7 @@ public class AddServiceVersionPanel extends FlowPanel {
 				myBottomPanel.clear();
 
 				AsyncCallback<GSoap11ServiceVersion> callback = new AsyncCallback<GSoap11ServiceVersion>() {
+
 					@Override
 					public void onFailure(Throwable theCaught) {
 						Model.handleFailure(theCaught);
@@ -258,17 +270,18 @@ public class AddServiceVersionPanel extends FlowPanel {
 						myLoadingSpinner.hide();
 
 						myVersion = theResult;
+						myVersionTextBox.setValue(myVersion.getId(), false);
 
-						myBottomContents = new SoapDetailPanel(myVersion);
+						myBottomContents = new SoapDetailPanel(AddServiceVersionPanel.this, myVersion);
 						myBottomPanel.add(myBottomContents);
 
-						String navToken = NavProcessor.getTokenAddServiceVersion(true, theResult.getUncommittedSessionId());
+						myUncommittedSessionId = theResult.getUncommittedSessionId();
+						String navToken = NavProcessor.getTokenAddServiceVersion(true, myDomainPid, myServicePid, myUncommittedSessionId);
 						History.newItem(navToken, false);
 					}
 				};
 
-				Long uncommittedId = NavProcessor.getParamAddServiceVersionUncommittedId();
-				AdminPortal.MODEL_SVC.createNewSoap11ServiceVersion(uncommittedId, callback);
+				AdminPortal.MODEL_SVC.createNewSoap11ServiceVersion(myDomainPid, myServicePid, myUncommittedSessionId, callback);
 			}
 			break;
 		}
@@ -346,8 +359,22 @@ public class AddServiceVersionPanel extends FlowPanel {
 					History.newItem(token);
 				}
 			};
+			
+			myLoadingSpinner.show();
+			
 			AdminPortal.MODEL_SVC.addServiceVersion(myDomainPid, domainId, myServicePid, serviceId, myVersion, callback);
 		}
 
+	}
+
+	public Long getDomainPid() {
+		return myDomainPid;
+	}
+
+	/**
+	 * @return the servicePid
+	 */
+	public Long getServicePid() {
+		return myServicePid;
 	}
 }

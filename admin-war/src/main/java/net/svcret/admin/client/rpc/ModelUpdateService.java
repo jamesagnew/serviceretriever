@@ -7,6 +7,7 @@ import net.svcret.admin.shared.model.AddServiceVersionResponse;
 import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
@@ -33,15 +34,21 @@ public interface ModelUpdateService extends RemoteService {
 
 	AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, GSoap11ServiceVersion theVersion) throws ServiceFailureException;
 
-	GSoap11ServiceVersion createNewSoap11ServiceVersion(Long theUncommittedId);
+	GSoap11ServiceVersion createNewSoap11ServiceVersion(Long theDomainPid, Long theServicePid, Long theUncommittedId);
 
 	GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ServiceFailureException;
 
 	ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ServiceFailureException;
 
+	UserAndAuthHost loadUser(long theUserPid) throws ServiceFailureException;
+
+	GPartialUserList loadUsers(PartialUserListRequest theRequest);
+
 	GSoap11ServiceVersion loadWsdl(GSoap11ServiceVersion theService, String theWsdlUrl) throws ServiceFailureException;
 
 	GAuthenticationHostList removeAuthenticationHost(long thePid) throws ServiceFailureException;
+
+	GDomainList removeDomain(long thePid) throws ServiceFailureException;
 
 	void reportClientError(String theMessage, Throwable theException);
 
@@ -53,15 +60,13 @@ public interface ModelUpdateService extends RemoteService {
 
 	void saveServiceVersionToSession(GSoap11ServiceVersion theServiceVersion);
 
-	GPartialUserList loadUsers(PartialUserListRequest theRequest);
-
-	UserAndAuthHost loadUser(long theUserPid) throws ServiceFailureException;
+	void saveUser(GUser theUser);
 
 	public static class UserAndAuthHost implements Serializable {
 		private static final long serialVersionUID = 1L;
-		
-		private GUser myUser;
+
 		private BaseGAuthHost myAuthHost;
+		private GUser myUser;
 
 		/**
 		 * Constructor
@@ -80,25 +85,17 @@ public interface ModelUpdateService extends RemoteService {
 		}
 
 		/**
-		 * @return the user
-		 */
-		public GUser getUser() {
-			return myUser;
-		}
-
-		/**
-		 * @param theUser
-		 *            the user to set
-		 */
-		public void setUser(GUser theUser) {
-			myUser = theUser;
-		}
-
-		/**
 		 * @return the authHost
 		 */
 		public BaseGAuthHost getAuthHost() {
 			return myAuthHost;
+		}
+
+		/**
+		 * @return the user
+		 */
+		public GUser getUser() {
+			return myUser;
 		}
 
 		/**
@@ -108,8 +105,14 @@ public interface ModelUpdateService extends RemoteService {
 		public void setAuthHost(BaseGAuthHost theAuthHost) {
 			myAuthHost = theAuthHost;
 		}
-	}
 
-	void saveUser(GUser theUser);
+		/**
+		 * @param theUser
+		 *            the user to set
+		 */
+		public void setUser(GUser theUser) {
+			myUser = theUser;
+		}
+	}
 
 }

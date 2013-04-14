@@ -15,4 +15,6 @@ public class CssConstants {
 	public static final String PERMISSION_TREE_ENTRY_BLOCK = "permissionTreeBlock";
 	public static final String BREADCRUMB_PANEL = "breadcrumbPanel";
 	public static final String DASHBOARD_NAME_SUFFIX = "dashboardNameSuffix";
+	public static final String TWO_COLUMN_PROPERTY_GRID = "twoColumnPropertyGrid";
+	public static final String CONTENT_INNER_SUBPANEL = "contentInnerSubPanel";
 }

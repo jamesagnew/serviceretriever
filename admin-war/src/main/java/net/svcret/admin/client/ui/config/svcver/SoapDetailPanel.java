@@ -1,4 +1,4 @@
-package net.svcret.admin.client.ui.config;
+package net.svcret.admin.client.ui.config.svcver;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
@@ -7,14 +7,18 @@ import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.HtmlLabel;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
+import net.svcret.admin.client.ui.config.AddServiceVersionPanel;
 import net.svcret.admin.client.ui.config.sec.IProvidesViewAndEdit;
 import net.svcret.admin.client.ui.config.sec.ViewAndEditFactory;
 import net.svcret.admin.client.ui.config.sec.IProvidesViewAndEdit.IValueChangeHandler;
+import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGClientSecurity;
 import net.svcret.admin.shared.model.BaseGServerSecurity;
 import net.svcret.admin.shared.model.BaseGServerSecurityList;
 import net.svcret.admin.shared.model.ClientSecurityEnum;
+import net.svcret.admin.shared.model.GHttpClientConfig;
+import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
@@ -24,6 +28,8 @@ import net.svcret.admin.shared.util.StringUtil;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Style.Float;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -60,9 +66,12 @@ public class SoapDetailPanel extends FlowPanel {
 	private GSoap11ServiceVersion myServiceVersion;
 	private Grid myUrlGrid;
 	private TextBox myUrlTextBox;
+	private AddServiceVersionPanel myParent;
+	private ListBox myHttpConfigList;
 
-	public SoapDetailPanel(GSoap11ServiceVersion theServiceVersion) {
+	public SoapDetailPanel(AddServiceVersionPanel theParent, GSoap11ServiceVersion theServiceVersion) {
 		myServiceVersion = theServiceVersion;
+		myParent = theParent;
 
 		FlowPanel wsdlPanel = new FlowPanel();
 		add(wsdlPanel);
@@ -127,11 +136,11 @@ public class SoapDetailPanel extends FlowPanel {
 				long time = System.currentTimeMillis() - start;
 				myLoadWsdlSpinner.showMessage("Loaded WSDL in " + time + "ms", false);
 
-				myServiceVersion = theResult;
+				myServiceVersion.merge(theResult);
 				updateMethodPanel();
 				updateUrlPanel();
 
-				String navToken = NavProcessor.getTokenAddServiceVersion(true, myServiceVersion.getUncommittedSessionId());
+				String navToken = NavProcessor.getTokenAddServiceVersion(true, myParent.getDomainPid(), myParent.getServicePid(), myServiceVersion.getUncommittedSessionId());
 				History.newItem(navToken, false);
 			}
 		};
@@ -154,7 +163,7 @@ public class SoapDetailPanel extends FlowPanel {
 		contentPanel.add(urlLabel);
 
 		myClientSecurityGrid = new Grid(1, 2);
-		myClientSecurityGrid.addStyleName("dashboardTable");
+		myClientSecurityGrid.addStyleName(CssConstants.PROPERTY_TABLE);
 		contentPanel.add(myClientSecurityGrid);
 
 		myClientSecurityGrid.setWidget(0, 0, new Label("Action"));
@@ -200,7 +209,7 @@ public class SoapDetailPanel extends FlowPanel {
 		theMethodPanel.add(contentPanel);
 
 		myMethodGrid = new Grid(1, 2);
-		myMethodGrid.addStyleName("dashboardTable");
+		myMethodGrid.addStyleName(CssConstants.PROPERTY_TABLE);
 		contentPanel.add(myMethodGrid);
 
 		myMethodGrid.setWidget(0, 0, new Label("Action"));
@@ -262,7 +271,7 @@ public class SoapDetailPanel extends FlowPanel {
 		contentPanel.add(urlLabel);
 
 		myServerSecurityGrid = new Grid(1, 2);
-		myServerSecurityGrid.addStyleName("dashboardTable");
+		myServerSecurityGrid.addStyleName(CssConstants.PROPERTY_TABLE);
 		contentPanel.add(myServerSecurityGrid);
 
 		myServerSecurityGrid.setWidget(0, 0, new Label("Action"));
@@ -316,7 +325,7 @@ public class SoapDetailPanel extends FlowPanel {
 				+ "implementation URL means that if one is unavailable, another can be tried (i.e. redundancy)."));
 
 		myUrlGrid = new Grid(1, 3);
-		myUrlGrid.addStyleName(CssConstants.DASHBOARD_TABLE);
+		myUrlGrid.addStyleName(CssConstants.PROPERTY_TABLE);
 		contentPanel.add(myUrlGrid);
 
 		myUrlGrid.setWidget(0, 0, new Label("Action"));
@@ -371,9 +380,39 @@ public class SoapDetailPanel extends FlowPanel {
 		});
 
 		contentPanel.add(new HtmlBr());
-		contentPanel.add(new Label(""));
-		contentPanel.add(new Label("The HTTP client configuration provides the connection details for " + "how the proxy will attempt to invoke proxied service implementations. This includes " + "settings for timeouts, round-robin policies, etc."));
 
+		FlowPanel clientConfigPanel = new FlowPanel();
+		contentPanel.add(clientConfigPanel);
+		
+		clientConfigPanel.addStyleName(CssConstants.CONTENT_INNER_SUBPANEL);
+		clientConfigPanel.add(new Label("The HTTP client configuration provides the connection details for " + "how the proxy will attempt to invoke proxied service implementations. This includes " + "settings for timeouts, round-robin policies, etc."));
+
+		myHttpConfigList = new ListBox();
+		clientConfigPanel.add(myHttpConfigList);
+		
+		Model.getInstance().loadHttpClientConfigs(new IAsyncLoadCallback<GHttpClientConfigList>() {
+			
+			@Override
+			public void onSuccess(final GHttpClientConfigList theResult) {
+				for (GHttpClientConfig next : theResult) {
+					myHttpConfigList.addItem(next.getId() + " (" + next.getName() + ")");
+					if (next.getPid() == myServiceVersion.getHttpClientConfigPid()) {
+						myHttpConfigList.setSelectedIndex(myHttpConfigList.getItemCount()-1);
+					}
+				}
+				if (myServiceVersion.getHttpClientConfigPid()==0) {
+					myHttpConfigList.setSelectedIndex(0);
+					myServiceVersion.setHttpClientConfigPid(theResult.get(0).getPid());
+				}
+				myHttpConfigList.addChangeHandler(new ChangeHandler() {
+					@Override
+					public void onChange(ChangeEvent theEvent) {
+						myServiceVersion.setHttpClientConfigPid(theResult.get(myHttpConfigList.getSelectedIndex()).getPid());
+					}
+				});
+			}
+		});
+		
 		updateUrlPanel();
 	}
 
@@ -398,6 +437,12 @@ public class SoapDetailPanel extends FlowPanel {
 		myUrlTextBox.setValue(myServiceVersion.getWsdlLocation());
 		myUrlTextBox.getElement().setId("urlTb");
 		myUrlTextBox.getElement().getStyle().setWidth(500, Unit.PX);
+		myUrlTextBox.addValueChangeHandler(new ValueChangeHandler<String>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<String> theEvent) {
+				myServiceVersion.setWsdlLocation(myUrlTextBox.getValue());
+			}
+		});
 		contentPanel.add(myUrlTextBox);
 
 		contentPanel.add(new HtmlBr());

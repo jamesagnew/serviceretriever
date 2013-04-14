@@ -1,9 +1,9 @@
 package net.svcret.ejb.api;
 
+import java.util.List;
+
 import javax.ejb.Local;
 
-import net.svcret.ejb.ex.InternalErrorException;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 
 
@@ -26,5 +26,10 @@ public interface IServiceRegistry {
 	 * null if none exists.
 	 */
 	BasePersServiceVersion getServiceVersionForPath(String thePath);
+
+	/**
+	 * Provide a set of valid paths which can be used to access services
+	 */
+	List<String> getValidPaths();
 	
 }

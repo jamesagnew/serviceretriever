@@ -5,6 +5,9 @@ import javax.ejb.Local;
 @Local
 public interface IScheduler {
 
-	public abstract void reloadUserRegistry();
-
+	void reloadUserRegistry();
+	
+	void flushStats();
+ 
+	
 }

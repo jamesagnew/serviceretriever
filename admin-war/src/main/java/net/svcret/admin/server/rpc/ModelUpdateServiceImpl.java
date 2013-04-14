@@ -14,6 +14,7 @@ import net.svcret.admin.shared.model.AddServiceVersionResponse;
 import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
@@ -108,12 +109,11 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		}
 
 		Long uncommittedSessionId = theVersion.getUncommittedSessionId();
-		GSoap11ServiceVersionAndResources verAndRes = getServiceVersionResourcesFromSession(uncommittedSessionId);
-		if (verAndRes == null) {
+		List<GResource> resList = getServiceVersionResourcesFromSession(uncommittedSessionId);
+		if (resList == null) {
 			ourLog.info("Unable to find a resource collection in the session with ID " + uncommittedSessionId);
 			throw new ServiceFailureException("An internal failure occurred, please reload the WSDL for this service and try again.");
 		}
-		List<GResource> resList = verAndRes.getResource();
 
 		long domain;
 		if (isNotBlank(theCreateDomainId)) {
@@ -124,11 +124,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 				throw new ServiceFailureException("Failed to create domain: " + theCreateDomainId + " - " + e.getMessage());
 			}
 		} else {
-			try {
-				domain = myAdminSvc.getDomainPid(theCreateDomainId);
-			} catch (ProcessingException e) {
-				throw new ServiceFailureException("Unknown domain: " + theCreateDomainId);
-			}
+			domain = theExistingDomainPid;
 		}
 
 		long service;
@@ -140,11 +136,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 				throw new ServiceFailureException("Failed to create service: " + theCreateDomainId + " - " + e.getMessage());
 			}
 		} else {
-			try {
-				service = myAdminSvc.getServicePid(domain, theCreateServiceId);
-			} catch (ProcessingException e) {
-				throw new ServiceFailureException("Unknown service: " + theCreateServiceId);
-			}
+			service = theExistingServicePid;
 		}
 
 		GSoap11ServiceVersion newVersion;
@@ -165,7 +157,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
-	public GSoap11ServiceVersion createNewSoap11ServiceVersion(Long theUncommittedId) {
+	public GSoap11ServiceVersion createNewSoap11ServiceVersion(Long theDomainPid, Long theServicePid, Long theUncommittedId) {
 		GSoap11ServiceVersion retVal;
 		HttpSession session = getThreadLocalRequest().getSession(true);
 
@@ -180,6 +172,18 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 
 		retVal = new GSoap11ServiceVersion();
 
+		if (isMockMode()) {
+			retVal.setHttpClientConfigPid(myMock.getDefaultHttpClientConfigPid());
+			retVal.setId("1.0");
+		} else {
+			retVal.setHttpClientConfigPid(myAdminSvc.getDefaultHttpClientConfigPid());
+			if (theDomainPid != null && theServicePid != null) {
+				retVal.setId(myAdminSvc.suggestNewVersionNumber(theDomainPid, theServicePid));
+			} else {
+				retVal.setId("1.0");
+			}
+		}
+
 		long sessionId = theUncommittedId != null ? theUncommittedId : ourNextId.getAndIncrement();
 		retVal.setUncommittedSessionId(sessionId);
 
@@ -191,9 +195,28 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		return retVal;
 	}
 
-	private GSoap11ServiceVersionAndResources getServiceVersionResourcesFromSession(long theServiceVersionUncommittedSessionId) {
+	@Override
+	public GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ServiceFailureException {
+		if (thePid <= 0) {
+			throw new IllegalArgumentException("Invalid PID: " + thePid);
+		}
+
+		if (isMockMode()) {
+			return myMock.deleteHttpClientConfig(thePid);
+		}
+
+		try {
+			return myAdminSvc.deleteHttpClientConfig(thePid);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to save config", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private List<GResource> getServiceVersionResourcesFromSession(long theServiceVersionUncommittedSessionId) {
 		String key = SESSION_PREFIX_UNCOMITTED_SVC_VER_RES + theServiceVersionUncommittedSessionId;
-		return (GSoap11ServiceVersionAndResources) getThreadLocalRequest().getSession(true).getAttribute(key);
+		return (List<GResource>) getThreadLocalRequest().getSession(true).getAttribute(key);
 	}
 
 	private boolean isMockMode() {
@@ -239,6 +262,32 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
+	public UserAndAuthHost loadUser(long thePid) throws ServiceFailureException {
+		if (isMockMode()) {
+			return myMock.loadUser(thePid);
+		}
+
+		GUser user;
+		try {
+			user = myAdminSvc.loadUser(thePid);
+			BaseGAuthHost authHost = myAdminSvc.loadAuthenticationHost(user.getPid());
+			return new UserAndAuthHost(user, authHost);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to load user " + thePid, e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+	}
+
+	@Override
+	public GPartialUserList loadUsers(PartialUserListRequest theRequest) {
+		if (isMockMode()) {
+			return myMock.loadUsers(theRequest);
+		}
+
+		return myAdminSvc.loadUsers(theRequest);
+	}
+
+	@Override
 	public GSoap11ServiceVersion loadWsdl(GSoap11ServiceVersion theService, String theWsdlUrl) throws ServiceFailureException {
 		Validate.throwIllegalArgumentExceptionIfNull("Service", theService);
 		Validate.throwIllegalArgumentExceptionIfNull("Service#UncommittedSessionId", theService.getUncommittedSessionId());
@@ -273,8 +322,62 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
+	public GAuthenticationHostList removeAuthenticationHost(long thePid) throws ServiceFailureException {
+		if (isMockMode()) {
+			return myMock.removeAuthenticationHost(thePid);
+		}
+
+		try {
+			return myAdminSvc.deleteAuthenticationHost(thePid);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to delete authentication host", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+	}
+
+	@Override
+	public GDomainList removeDomain(long thePid) throws ServiceFailureException {
+		ourLog.info("Removing domain: {}", thePid);
+
+		if (isMockMode()) {
+			return myMock.removeDomain(thePid);
+		}
+
+		myAdminSvc.deleteDomain(thePid);
+
+		try {
+			return myAdminSvc.loadDomainList();
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to load domain list", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+	}
+
+	@Override
 	public void reportClientError(String theMessage, Throwable theException) {
 		ourLog.warn("Client error - " + theMessage, theException);
+	}
+
+	@Override
+	public GAuthenticationHostList saveAuthenticationHost(GLocalDatabaseAuthHost theAuthHost) throws ServiceFailureException {
+		if (isMockMode()) {
+			return myMock.saveAuthenticationHost(theAuthHost);
+		}
+
+		if (theAuthHost.getPid() <= 0) {
+			theAuthHost.setPid(0);
+			ourLog.info("Saving new authentication host");
+		} else {
+			ourLog.info("Saving authentication host {} / {}", theAuthHost.getPid(), theAuthHost.getModuleId());
+		}
+
+		try {
+			return myAdminSvc.saveAuthenticationHost(theAuthHost);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to save authentication host", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+
 	}
 
 	@Override
@@ -283,23 +386,6 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 			return myMock.saveDomain(thePid, theId, theName);
 		}
 		return null;
-	}
-
-	private void saveServiceVersionResourcesToSession(GSoap11ServiceVersionAndResources theServiceAndResources) {
-		ourLog.info("Storing service resource collection to temporary session with id: " + theServiceAndResources.getServiceVersion().getUncommittedSessionId());
-		String key = SESSION_PREFIX_UNCOMITTED_SVC_VER_RES + theServiceAndResources.getServiceVersion().getUncommittedSessionId();
-		getThreadLocalRequest().getSession(true).setAttribute(key, theServiceAndResources.getResource());
-	}
-
-	@Override
-	public void saveServiceVersionToSession(GSoap11ServiceVersion theServiceVersion) {
-		Validate.throwIllegalArgumentExceptionIfNull("ServiceVersion", theServiceVersion);
-		Validate.throwIllegalArgumentExceptionIfNull("ServiceVersion#UncommittedSessionId", theServiceVersion.getUncommittedSessionId());
-
-		ourLog.info("Saving Service Version[{}] to Session", theServiceVersion.getUncommittedSessionId());
-
-		String key = SESSION_PREFIX_UNCOMITTED_SVC_VER + theServiceVersion.getUncommittedSessionId();
-		getThreadLocalRequest().getSession(true).setAttribute(key, theServiceVersion);
 	}
 
 	@Override
@@ -328,98 +414,43 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		}
 	}
 
-	@Override
-	public GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ServiceFailureException {
-		if (thePid <= 0) {
-			throw new IllegalArgumentException("Invalid PID: " + thePid);
-		}
-
-		if (isMockMode()) {
-			return myMock.deleteHttpClientConfig(thePid);
-		}
-
-		try {
-			return myAdminSvc.deleteHttpClientConfig(thePid);
-		} catch (ProcessingException e) {
-			ourLog.error("Failed to save config", e);
-			throw new ServiceFailureException(e.getMessage());
-		}
+	private void saveServiceVersionResourcesToSession(GSoap11ServiceVersionAndResources theServiceAndResources) {
+		GSoap11ServiceVersion serviceVersion = theServiceAndResources.getServiceVersion();
+		ourLog.info("Storing service resource collection to temporary session with id: " + serviceVersion.getUncommittedSessionId());
+		String key = SESSION_PREFIX_UNCOMITTED_SVC_VER_RES + theServiceAndResources.getServiceVersion().getUncommittedSessionId();
+		getThreadLocalRequest().getSession(true).setAttribute(key, theServiceAndResources.getResource());
 	}
 
 	@Override
-	public GAuthenticationHostList saveAuthenticationHost(GLocalDatabaseAuthHost theAuthHost) throws ServiceFailureException {
-		if (isMockMode()) {
-			return myMock.saveAuthenticationHost(theAuthHost);
-		}
+	public void saveServiceVersionToSession(GSoap11ServiceVersion theServiceVersion) {
+		Validate.throwIllegalArgumentExceptionIfNull("ServiceVersion", theServiceVersion);
+		Validate.throwIllegalArgumentExceptionIfNull("ServiceVersion#UncommittedSessionId", theServiceVersion.getUncommittedSessionId());
 
-		if (theAuthHost.getPid() <= 0) {
-			theAuthHost.setPid(0);
-			ourLog.info("Saving new authentication host");
-		} else {
-			ourLog.info("Saving authentication host {} / {}", theAuthHost.getPid(), theAuthHost.getModuleId());
-		}
+		ourLog.info("Saving Service Version[{}] to Session", theServiceVersion.getUncommittedSessionId());
 
-		try {
-			return myAdminSvc.saveAuthenticationHost(theAuthHost);
-		} catch (ProcessingException e) {
-			ourLog.error("Failed to save authentication host", e);
-			throw new ServiceFailureException(e.getMessage());
-		}
-
-	}
-
-	@Override
-	public GAuthenticationHostList removeAuthenticationHost(long thePid) throws ServiceFailureException {
-		if (isMockMode()) {
-			return myMock.removeAuthenticationHost(thePid);
-		}
-		
-		try {
-			return myAdminSvc.deleteAuthenticationHost(thePid);
-		} catch (ProcessingException e) {
-			ourLog.error("Failed to delete authentication host", e);
-			throw new ServiceFailureException(e.getMessage());
-		}
-	}
-
-	@Override
-	public GPartialUserList loadUsers(PartialUserListRequest theRequest) {
-		if (isMockMode()) {
-			return myMock.loadUsers(theRequest);
-		}
-		
-		return myAdminSvc.loadUsers(theRequest);
-	}
-
-	@Override
-	public UserAndAuthHost loadUser(long thePid) throws ServiceFailureException {
-		if (isMockMode()) {
-			return myMock.loadUser(thePid);
-		}
-		
-		GUser user;
-		try {
-			user = myAdminSvc.loadUser(thePid);
-			BaseGAuthHost authHost = myAdminSvc.loadAuthenticationHost(user.getPid());
-			return new UserAndAuthHost(user, authHost);
-		} catch (ProcessingException e) {
-			ourLog.error("Failed to load user " + thePid, e);
-			throw new ServiceFailureException(e.getMessage());
-		}
+		String key = SESSION_PREFIX_UNCOMITTED_SVC_VER + theServiceVersion.getUncommittedSessionId();
+		getThreadLocalRequest().getSession(true).setAttribute(key, theServiceVersion);
 	}
 
 	@Override
 	public void saveUser(GUser theUser) {
 		ourLog.info("Saving user {} / {}", theUser.getPid(), theUser.getUsername());
-		
+
 		if (isMockMode()) {
 			myMock.saveUser(theUser);
 			return;
 		}
-		
+
 		myAdminSvc.saveUser(theUser);
 
 		ourLog.info("Done saving user {} / {}", theUser.getPid(), theUser.getUsername());
+	}
+
+	/**
+	 * For unit test only
+	 */
+	void setAdminSvc(IAdminService theAdminSvc) {
+		myAdminSvc = theAdminSvc;
 	}
 
 }

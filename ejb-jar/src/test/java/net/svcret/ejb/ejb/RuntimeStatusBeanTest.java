@@ -13,6 +13,7 @@ import java.util.List;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
 import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IServicePersistence;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.ResponseTypeEnum;
@@ -273,7 +274,7 @@ public class RuntimeStatusBeanTest {
 		when(ver.getHttpClientConfig()).thenReturn(cfg);
 		when(cfg.getUrlSelectionPolicy()).thenReturn(UrlSelectionPolicy.PREFER_LOCAL);
 		
-		RuntimeStatusBean bean = new RuntimeStatusBean();
+		IRuntimeStatus bean = new RuntimeStatusBean();
 		
 		when(ver.getUrls()).thenReturn(toList(urlLocal1, urlLocal2, urlRemote1, urlRemote2));
 		

@@ -12,6 +12,7 @@ import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceList;
+import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 
@@ -111,6 +112,9 @@ public class Model {
 					for (BaseGServiceVersion nextVer : nextSvc.getVersionList()) {
 						if (nextSvc.isExpandedOnDashboard()) {
 							request.addVersionToLoadStats(nextVer.getPid());
+							for (GServiceMethod nextMethod : nextVer.getMethodList()) {
+								request.addVersionMethodToLoadStats(nextMethod.getPid());
+							}
 						}
 					}
 				}
@@ -258,7 +262,7 @@ public class Model {
 	}
 
 	public void loadAuthenticationHosts(IAsyncLoadCallback<GAuthenticationHostList> theCallback) {
-		if (myHttpClientConfigList.getLastMerged() != null) {
+		if (myAuthHostList.getLastMerged() != null) {
 			theCallback.onSuccess(myAuthHostList);
 		} else {
 			MyModelUpdateCallbackHandler callback = getCallbackWithAuthHostListCallback(theCallback);
@@ -282,6 +286,11 @@ public class Model {
 		};
 		AdminPortal.MODEL_SVC.saveAuthenticationHost(theAuthHost, callback);
 		
+	}
+
+	public void mergeDomainList(GDomainList theResult) {
+		myDomainListInitialized = true;
+		myDomainList.mergeResults(theResult);
 	}
 
 }

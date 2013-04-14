@@ -1,27 +1,29 @@
 package net.svcret.admin.client.nav;
 
+import static net.svcret.admin.shared.util.StringUtil.*;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import net.svcret.admin.client.AdminPortal;
-import net.svcret.admin.client.ui.config.AddDomainPanel;
-import net.svcret.admin.client.ui.config.AddDomainStep2Panel;
 import net.svcret.admin.client.ui.config.AddServicePanel;
 import net.svcret.admin.client.ui.config.AddServiceVersionPanel;
 import net.svcret.admin.client.ui.config.AddServiceVersionStep2Panel;
-import net.svcret.admin.client.ui.config.EditDomainPanel;
 import net.svcret.admin.client.ui.config.HttpClientConfigsPanel;
 import net.svcret.admin.client.ui.config.auth.AuthenticationHostsPanel;
 import net.svcret.admin.client.ui.config.auth.EditUserPanel;
 import net.svcret.admin.client.ui.config.auth.EditUsersPanel;
+import net.svcret.admin.client.ui.config.domain.AddDomainPanel;
+import net.svcret.admin.client.ui.config.domain.AddDomainStep2Panel;
+import net.svcret.admin.client.ui.config.domain.DeleteDomainPanel;
+import net.svcret.admin.client.ui.config.domain.EditDomainPanel;
 import net.svcret.admin.client.ui.dash.ServiceDashboardPanel;
 import net.svcret.admin.client.ui.layout.BodyPanel;
 import net.svcret.admin.client.ui.layout.BreadcrumbPanel;
-import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.util.StringUtil;
 
-import com.google.gwt.core.shared.GWT;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.History;
@@ -51,68 +53,73 @@ public class NavProcessor {
 		PagesEnum page = getCurrentPage();
 		String args = currentTokenArgs();
 
-//		try {
-			Panel panel = null;
-			switch (page) {
-			case ADD:
-				panel = new AddDomainPanel();
-				break;
-			case AD2:
-				panel = new AddDomainStep2Panel(Long.parseLong(args));
-				break;
-			case AHL:
-				panel = new AuthenticationHostsPanel();
-				break;
-			case ASE:
-				if (StringUtil.isBlank(args)) {
-					panel = new AddServicePanel(null);
-				} else {
-					panel = new AddServicePanel(Long.parseLong(args));
-				}
-				break;
-			case ASV:
-				String[] argsSplit = args.split("_");
-				if (argsSplit.length < 2 || StringUtil.isBlank(argsSplit[0]) || StringUtil.isBlank(argsSplit[1])) {
-					panel = new AddServiceVersionPanel(null, null);
-				} else {
-					panel = new AddServiceVersionPanel(Long.parseLong(argsSplit[0]), Long.parseLong(argsSplit[1]));
-				}
-				break;
-			case AV2:
-				argsSplit = args.split("_");
-				if (argsSplit.length < 3) {
-					navigateToDefault();
-				} else {
-					panel = new AddServiceVersionStep2Panel(Long.parseLong(argsSplit[0]), Long.parseLong(argsSplit[1]), Long.parseLong(argsSplit[2]));
-				}
-				break;
-			case DSH:
-				panel = new ServiceDashboardPanel();
-				break;
-			case EDO:
-				panel = new EditDomainPanel(Long.parseLong(args));
-				break;
-			case EDU:
-				panel = new EditUserPanel(Long.parseLong(args));
-				break;
-			case EUL:
-				panel = new EditUsersPanel();
-				break;
-			case HCC:
-				panel = new HttpClientConfigsPanel();
-				break;
+		// try {
+		Panel panel = null;
+		switch (page) {
+		case ADD:
+			panel = new AddDomainPanel();
+			break;
+		case AD2:
+			panel = new AddDomainStep2Panel(Long.parseLong(args));
+			break;
+		case AHL:
+			panel = new AuthenticationHostsPanel();
+			break;
+		case ASE:
+			if (StringUtil.isBlank(args)) {
+				panel = new AddServicePanel(null);
+			} else {
+				panel = new AddServicePanel(Long.parseLong(args));
 			}
-
-			if (panel == null) {
+			break;
+		case ASV:
+			String[] argsSplit = args.split("_");
+			if (argsSplit.length == 3 && StringUtil.positiveInt(argsSplit[0]) && StringUtil.positiveInt(argsSplit[1]) && positiveInt(argsSplit[2])) {
+				panel = new AddServiceVersionPanel(Long.parseLong(argsSplit[0]), Long.parseLong(argsSplit[1]), Long.parseLong(argsSplit[2]));
+			} else if (argsSplit.length == 2 && StringUtil.positiveInt(argsSplit[0]) && StringUtil.positiveInt(argsSplit[1])) {
+				panel = new AddServiceVersionPanel(Long.parseLong(argsSplit[0]), Long.parseLong(argsSplit[1]), null);
+			} else {
+				panel = new AddServiceVersionPanel(null, null, null);
+			}
+			break;
+		case AV2:
+			argsSplit = args.split("_");
+			if (argsSplit.length < 3) {
 				navigateToDefault();
+			} else {
+				panel = new AddServiceVersionStep2Panel(Long.parseLong(argsSplit[0]), Long.parseLong(argsSplit[1]), Long.parseLong(argsSplit[2]));
 			}
+			break;
+		case DDO:
+			panel = new DeleteDomainPanel(Long.parseLong(args));
+			break;
+		case DSH:
+			panel = new ServiceDashboardPanel();
+			break;
+		case EDO:
+			panel = new EditDomainPanel(Long.parseLong(args));
+			break;
+		case EDU:
+			panel = new EditUserPanel(Long.parseLong(args));
+			break;
+		case EUL:
+			panel = new EditUsersPanel();
+			break;
+		case HCC:
+			panel = new HttpClientConfigsPanel();
+			break;
+		}
 
-			BodyPanel.getInstance().setContents(panel);
-			
-//		} catch (Exception e) {
-//			Model.handleFailure(e);
-//			navigateToDefault();
-//		}
+		if (panel == null) {
+			navigateToDefault();
+		}
+
+		BodyPanel.getInstance().setContents(panel);
+
+		// } catch (Exception e) {
+		// Model.handleFailure(e);
+		// navigateToDefault();
+		// }
 
 	}
 
@@ -176,6 +183,19 @@ public class NavProcessor {
 		return token;
 	}
 
+	public static String getTokenDeleteDomain(boolean theAddToHistory, long theDomainPid) {
+		String token = "";
+		if (theAddToHistory) {
+			token = getCurrentToken();
+			if (!token.isEmpty()) {
+				token = token + SEPARATOR;
+			}
+		}
+		token = token + PagesEnum.DDO + "_" + theDomainPid;
+		token = removeDuplicates(token);
+		return token;
+	}
+
 	public static String getTokenAddService(boolean theAddToHistory, long theDomainPid) {
 		String token = "";
 		if (theAddToHistory) {
@@ -189,7 +209,7 @@ public class NavProcessor {
 		return token;
 	}
 
-	public static String getTokenAddServiceVersion(boolean theAddToHistory, Long theUncommittedSessionId) {
+	public static String getTokenAddServiceVersion(boolean theAddToHistory, Long theDomainId, Long theServiceId, Long theUncommittedSessionId) {
 		String token = "";
 		if (theAddToHistory) {
 			token = getCurrentToken();
@@ -199,7 +219,7 @@ public class NavProcessor {
 		}
 
 		if (theUncommittedSessionId != null) {
-			token = token + PagesEnum.ASV + "_" + theUncommittedSessionId;
+			token = token + PagesEnum.ASV + "_" + theDomainId + "_" + theServiceId + "_" + theUncommittedSessionId;
 		} else {
 			token = token + PagesEnum.ASV;
 		}
@@ -239,19 +259,19 @@ public class NavProcessor {
 
 	}
 
-	public static Long getParamAddServiceVersionUncommittedId() {
-		String current = getCurrentToken();
-		if (!current.startsWith(PagesEnum.ASV.name() + "_")) {
-			return null;
-		}
-
-		String numStr = current.substring(4);
-		if (!numStr.matches("^[0-9]+$")) {
-			return null;
-		}
-
-		return Long.parseLong(numStr);
-	}
+	// public static Long getParamAddServiceVersionUncommittedId() {
+	// String current = getCurrentToken();
+	// if (!current.startsWith(PagesEnum.ASV.name() + "_")) {
+	// return null;
+	// }
+	//
+	// String numStr = current.substring(4);
+	// if (!numStr.matches("^[0-9]+$")) {
+	// return null;
+	// }
+	//
+	// return Long.parseLong(numStr);
+	// }
 
 	public static String getTokenAddServiceVersionStep2(long theDomainPid, long theServicePid, long theVersionPid) {
 		String token = "";
@@ -299,6 +319,28 @@ public class NavProcessor {
 		token = token + PagesEnum.EDU + "_" + theUserPid;
 		token = removeDuplicates(token);
 		return token;
+	}
+
+	public static ClickHandler getBackHandler() {
+		return new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				String[] token = getCurrentToken().split(SEPARATOR);
+				if (token.length < 2) {
+					goHome();
+				} else {
+					StringBuilder b = new StringBuilder();
+					for (int i = 0; i < token.length - 1; i++) {
+						String string = token[i];
+						if (b.length() > 0) {
+							b.append(SEPARATOR);
+						}
+						b.append(string);
+					}
+					History.newItem(b.toString());
+				}
+			}
+		};
 	}
 
 }

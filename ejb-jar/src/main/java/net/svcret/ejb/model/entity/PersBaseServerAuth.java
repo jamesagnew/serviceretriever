@@ -25,6 +25,8 @@ import net.svcret.ejb.api.ServerAuthTypeEnum;
 @DiscriminatorColumn(name = "AUTH_TYPE", length = 20, discriminatorType = DiscriminatorType.STRING)
 public abstract class PersBaseServerAuth<T extends PersBaseServerAuth<?,?>, G extends ICredentialGrabber> extends BasePersObject {
 
+	private static final long serialVersionUID = 1L;
+
 	@ManyToOne(cascade = {})
 	@JoinColumn(name = "SERV_AUTH_PID", referencedColumnName = "PID")
 	private BasePersAuthenticationHost myAuthenticationHost;
@@ -33,17 +35,18 @@ public abstract class PersBaseServerAuth<T extends PersBaseServerAuth<?,?>, G ex
 	@Column(name = "OPTLOCK")
 	private int myOptLock;
 
+	@Column(name="SAUTH_ORDER", nullable=false)
+	private int myOrder;
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "PID")
 	private Long myPid;
 
-	@ManyToOne(cascade = {})
+	@ManyToOne()
 	@JoinColumn(name = "SVC_VERSION_PID", referencedColumnName = "PID")
 	private BasePersServiceVersion myServiceVersion;
 
-	public abstract Class<? extends G> getGrabberClass();
-	
 	/**
 	 * @return the authenticationHost
 	 */
@@ -51,6 +54,10 @@ public abstract class PersBaseServerAuth<T extends PersBaseServerAuth<?,?>, G ex
 		return myAuthenticationHost;
 	}
 
+	public abstract ServerAuthTypeEnum getAuthType();
+
+	public abstract Class<? extends G> getGrabberClass();
+	
 	/**
 	 * @return the optLock
 	 */
@@ -59,13 +66,18 @@ public abstract class PersBaseServerAuth<T extends PersBaseServerAuth<?,?>, G ex
 	}
 
 	/**
+	 * @return the order
+	 */
+	public int getOrder() {
+		return myOrder;
+	}
+
+	/**
 	 * @return the pid
 	 */
 	public Long getPid() {
 		return myPid;
 	}
-
-	public abstract ServerAuthTypeEnum getAuthType();
 
 	/**
 	 * @return the serviceVersion
@@ -91,13 +103,20 @@ public abstract class PersBaseServerAuth<T extends PersBaseServerAuth<?,?>, G ex
 		myAuthenticationHost = theAuthenticationHost;
 	}
 
-
 	/**
 	 * @param theOptLock
 	 *            the optLock to set
 	 */
 	public void setOptLock(int theOptLock) {
 		myOptLock = theOptLock;
+	}
+
+
+	/**
+	 * @param theOrder the order to set
+	 */
+	public void setOrder(int theOrder) {
+		myOrder = theOrder;
 	}
 
 	/**

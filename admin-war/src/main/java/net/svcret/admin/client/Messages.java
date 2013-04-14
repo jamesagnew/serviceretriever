@@ -280,5 +280,27 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage(" <span class=\"" + CssConstants.DASHBOARD_NAME_SUFFIX + "\">(No Service Versions Defined)</span>")
 	String dashboard_ServiceNoServiceVersionsSuffix();
 
+	@DefaultMessage("WS-Security")
+	String wsSecServerSecurity_Name();
+
+	@DefaultMessage("Using authentication host: {0}")
+	String wsSecServerSecurity_UsesAuthenticationHost(String theModuleId);
+
+	@DefaultMessage("Authentication Host")
+	String wsSecServerSecurity_AuthenticationHost();
+
+	@DefaultMessage("Delete Domain")
+	String deleteDomainPanel_Title();
+
+	@DefaultMessage("Are you sure you want to delete the domain \"{0}\"? This will " +
+			"delete all services associated with this domain as well!")
+	String deleteDomainPanel_Confirm(String theId);
+
+	@DefaultMessage("Back")
+	String actions_Back();
+
+	@DefaultMessage("Delete Domain")
+	String deleteDomainPanel_Breadcrumb();
+
 
 }

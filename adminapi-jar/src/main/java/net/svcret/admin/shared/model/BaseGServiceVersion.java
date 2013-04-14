@@ -8,12 +8,13 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 
 	private boolean myActive;
 	private BaseGClientSecurityList myClientSecurityList;
+	private long myHttpClientConfigPid;
 	private Date myLastAccess;
 	private GServiceVersionResourcePointerList myResourcePointerList;
 	private BaseGServerSecurityList myServerSecurityList;
 	private GServiceMethodList myServiceMethodList;
 	private GServiceVersionUrlList myServiceUrlList;
-
+	
 	public BaseGServiceVersion() {
 		myServiceMethodList = new GServiceMethodList();
 		myServiceUrlList = new GServiceVersionUrlList();
@@ -21,26 +22,6 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 		myClientSecurityList = new BaseGClientSecurityList();
 		myResourcePointerList = new GServiceVersionResourcePointerList();
 	}
-	
-	public boolean hasMethodWithName(String theName) {
-		for (GServiceMethod next : myServiceMethodList) {
-			if (next.getName().equals(theName)) {
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	public boolean hasUrlWithName(String theUrl) {
-		for (GServiceVersionUrl next : myServiceUrlList) {
-			if (next.getUrl().equals(theUrl)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-
 
 	/**
 	 * @return the clientSecurityList
@@ -50,18 +31,27 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	}
 
 	/**
+	 * @return the httpClientConfigPid
+	 */
+	public long getHttpClientConfigPid() {
+		return myHttpClientConfigPid;
+	}
+	
+	/**
 	 * @return the lastAccess
 	 */
 	public Date getLastAccess() {
 		return myLastAccess;
 	}
-
+	
 	/**
 	 * @return the serviceUrlList
 	 */
 	public GServiceMethodList getMethodList() {
 		return myServiceMethodList;
 	}
+
+
 
 	/**
 	 * @return the resourcePointerList
@@ -79,6 +69,24 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 
 	public GServiceVersionUrlList getUrlList() {
 		return myServiceUrlList;
+	}
+
+	public boolean hasMethodWithName(String theName) {
+		for (GServiceMethod next : myServiceMethodList) {
+			if (next.getName().equals(theName)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean hasUrlWithName(String theUrl) {
+		for (GServiceVersionUrl next : myServiceUrlList) {
+			if (next.getUrl().equals(theUrl)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -123,6 +131,13 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	 */
 	public void setActive(boolean theActive) {
 		myActive = theActive;
+	}
+
+	/**
+	 * @param theHttpClientConfigPid the httpClientConfigPid to set
+	 */
+	public void setHttpClientConfigPid(long theHttpClientConfigPid) {
+		myHttpClientConfigPid = theHttpClientConfigPid;
 	}
 
 	/**

@@ -39,6 +39,19 @@ public class StringUtil {
 		return !isBlank(theString);
 	}
 
+	public static boolean positiveInt(String theString) {
+		if (theString==null || theString.length()==0) {
+			return false;
+		}
+		for (int i = 0; i < theString.length(); i++) {
+			char next = theString.charAt(i);
+			if (next < '0' || next > '9') {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	
 	
 }

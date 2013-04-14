@@ -45,6 +45,8 @@ public class Constants {
 
 	public static final QName WSSU_ID_QNAME = new QName(NS_WSSEC_UTIL, "Id");
 
+	public static final String NS_WSDLSOAP = "http://schemas.xmlsoap.org/wsdl/soap/";
+
 	public static QName getSoapenvHeaderQname(String theXmlPrefix) {
 		return new QName(SOAPENV11_HEADER_QNAME.getNamespaceURI(), SOAPENV11_HEADER_QNAME.getLocalPart(), theXmlPrefix);
 	}

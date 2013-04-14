@@ -37,18 +37,18 @@ public class PersUserServiceVersionPermission extends BasePersObject {
 	/**
 	 * Parent
 	 */
-	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "USER_PERM_SERVICE_PID", referencedColumnName = "PID", nullable = false)
 	private PersUserServicePermission myServicePermission;
 
-	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "SVCVER_PID", referencedColumnName = "PID", nullable = false)
 	private BasePersServiceVersion myServiceVersion;
 
 	/**
 	 * Children
 	 */
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy="myServiceVersionPermission")
 	private Collection<PersUserServiceVersionMethodPermission> myServiceVersionMethodPermissions;
 
 	/**

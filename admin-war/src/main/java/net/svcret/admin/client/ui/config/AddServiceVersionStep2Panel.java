@@ -32,7 +32,7 @@ public class AddServiceVersionStep2Panel extends FlowPanel {
 
 		final LoadingSpinner spinner = new LoadingSpinner();
 		spinner.show();
-		add(spinner);
+		contentPanel.add(spinner);
 		
 		IAsyncLoadCallback<BaseGServiceVersion> callback = new IAsyncLoadCallback<BaseGServiceVersion>() {
 			@Override
@@ -45,13 +45,13 @@ public class AddServiceVersionStep2Panel extends FlowPanel {
 				Model.getInstance().loadService(theDomainPid, theServicePid, new IAsyncLoadCallback<GService>() {
 					@Override
 					public void onSuccess(GService theServiceResult) {
-						messageLabel.setText("Successfully added Version \"" + theResult.getName() + " to Service \"" + theServiceResult.getId() + "\"");
+						messageLabel.setText("Successfully added Version \"" + theResult.getName() + "\" to Service \"" + theServiceResult.getId() + "\"");
 					}
 				});
 				
-				add(new HtmlBr());
+				contentPanel.add(new HtmlBr());
 				
-				add(new PButton("Close", new ClickHandler() {
+				contentPanel.add(new PButton("Close", new ClickHandler() {
 					@Override
 					public void onClick(ClickEvent theEvent) {
 						History.newItem(NavProcessor.getLastTokenBefore(PagesEnum.ASV, PagesEnum.AV2));

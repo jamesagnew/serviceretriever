@@ -3,6 +3,7 @@ package net.svcret.ejb.ejb;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -163,9 +164,23 @@ public class AdminServiceBean implements IAdminService {
 			version.getUrls().add(fromUi(next, version));
 		}
 
+		for (GServiceMethod next : theVersion.getMethodList()) {
+			version.addMethod(fromUi(next, version.getPid()));
+		}
+
 		version = (PersServiceVersionSoap11) myPersSvc.saveServiceVersion(version);
 
 		return (GSoap11ServiceVersion) toUi(version, false);
+	}
+
+	public GServiceMethod addServiceVersionMethod(long theServiceVersionPid, GServiceMethod theMethod) throws ProcessingException {
+		ourLog.info("Adding method {} to service version {}", theMethod.getName(), theServiceVersionPid);
+
+		BasePersServiceVersion sv = myPersSvc.getServiceVersionByPid(theServiceVersionPid);
+		PersServiceVersionMethod ui = fromUi(theMethod, theServiceVersionPid);
+		sv.addMethod(ui);
+		sv = myPersSvc.saveServiceVersion(sv);
+		return toUi(sv.getMethod(theMethod.getName()), false);
 	}
 
 	private int addToInt(int theAddTo, long theNumberToAdd) {
@@ -174,6 +189,35 @@ public class AdminServiceBean implements IAdminService {
 			return Integer.MAX_VALUE;
 		}
 		return (int) newValue;
+	}
+
+	@Override
+	public GAuthenticationHostList deleteAuthenticationHost(long thePid) throws ProcessingException {
+
+		BasePersAuthenticationHost authHost = myPersSvc.getAuthenticationHostByPid(thePid);
+		if (authHost == null) {
+			ourLog.info("Invalid request to delete unknown authentication host with PID {}", thePid);
+			throw new ProcessingException("Unknown authentication host: " + thePid);
+		}
+
+		ourLog.info("Removing authentication host {} / {}", thePid, authHost.getModuleId());
+
+		myPersSvc.deleteAuthenticationHost(authHost);
+
+		return loadAuthHostList();
+	}
+
+	@Override
+	public void deleteDomain(long thePid) {
+		PersDomain domain = myPersSvc.getDomainByPid(thePid);
+		if (domain == null) {
+			throw new IllegalArgumentException("Unknown domain PID: " + thePid);
+		}
+
+		ourLog.info("DELETING domain with PID {} and ID {}", thePid, domain.getDomainId());
+
+		myPersSvc.removeDomain(domain);
+
 	}
 
 	@Override
@@ -197,40 +241,51 @@ public class AdminServiceBean implements IAdminService {
 		StatusEnum status = theInitialStatus;
 
 		for (BasePersServiceVersion nextVersion : theService.getVersions()) {
-			for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
-				PersServiceVersionUrlStatus nextUrlStatus = nextUrl.getStatus();
-				switch (nextUrlStatus.getStatus()) {
-				case ACTIVE:
-					status = StatusEnum.ACTIVE;
-					theDashboardObject.setUrlsActive(theDashboardObject.getUrlsActive() + 1);
-					break;
-				case DOWN:
-					if (status != StatusEnum.ACTIVE) {
-						status = StatusEnum.DOWN;
-					}
-					theDashboardObject.setUrlsDown(theDashboardObject.getUrlsDown() + 1);
-					break;
-				case UNKNOWN:
-					theDashboardObject.setUrlsUnknown(theDashboardObject.getUrlsUnknown() + 1);
-					break;
-				}
-
-			} // end URL
-
-			for (PersServiceVersionMethod nextMethod : nextVersion.getMethods()) {
-				Date date60MinsAgo = new Date(System.currentTimeMillis() - (60 * DateUtils.MILLIS_PER_MINUTE));
-				Date date = DateUtils.truncate(date60MinsAgo, Calendar.MINUTE);
-				for (int min = 0; min <= 59; min++, date = new Date(date.getTime() + DateUtils.MILLIS_PER_MINUTE)) {
-					PersInvocationStatsPk pk = new PersInvocationStatsPk(InvocationStatsIntervalEnum.MINUTE, date, nextMethod);
-					BasePersInvocationStats stats = myPersSvc.getOrCreateInvocationStats(pk);
-					the60MinInvCount[min] = addToInt(the60MinInvCount[min], stats.getSuccessInvocationCount());
-					the60minTime[min] = the60minTime[min] + stats.getSuccessInvocationTotalTime();
-				}
-
-			}
+			status = extractStatus(theDashboardObject, the60MinInvCount, the60minTime, status, nextVersion);
 
 		} // end VERSION
 		return status;
+	}
+
+	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, int[] the60MinInvCount, long[] the60minTime, StatusEnum theStatus, BasePersServiceVersion nextVersion) {
+		StatusEnum status = theStatus;
+		
+		for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
+			PersServiceVersionUrlStatus nextUrlStatus = nextUrl.getStatus();
+			switch (nextUrlStatus.getStatus()) {
+			case ACTIVE:
+				status = StatusEnum.ACTIVE;
+				theDashboardObject.setUrlsActive(theDashboardObject.getUrlsActive() + 1);
+				break;
+			case DOWN:
+				if (status != StatusEnum.ACTIVE) {
+					status = StatusEnum.DOWN;
+				}
+				theDashboardObject.setUrlsDown(theDashboardObject.getUrlsDown() + 1);
+				break;
+			case UNKNOWN:
+				theDashboardObject.setUrlsUnknown(theDashboardObject.getUrlsUnknown() + 1);
+				break;
+			}
+
+		} // end URL
+
+		for (PersServiceVersionMethod nextMethod : nextVersion.getMethods()) {
+			extractStatus(the60MinInvCount, the60minTime, nextMethod);
+
+		}
+		return status;
+	}
+
+	private void extractStatus(int[] the60MinInvCount, long[] the60minTime, PersServiceVersionMethod nextMethod) {
+		Date date60MinsAgo = new Date(System.currentTimeMillis() - (60 * DateUtils.MILLIS_PER_MINUTE));
+		Date date = DateUtils.truncate(date60MinsAgo, Calendar.MINUTE);
+		for (int min = 0; min <= 59; min++, date = new Date(date.getTime() + DateUtils.MILLIS_PER_MINUTE)) {
+			PersInvocationStatsPk pk = new PersInvocationStatsPk(InvocationStatsIntervalEnum.MINUTE, date, nextMethod);
+			BasePersInvocationStats stats = myPersSvc.getOrCreateInvocationStats(pk);
+			the60MinInvCount[min] = addToInt(the60MinInvCount[min], stats.getSuccessInvocationCount());
+			the60minTime[min] = the60minTime[min] + stats.getSuccessInvocationTotalTime();
+		}
 	}
 
 	private PersHttpClientConfig fromUi(GHttpClientConfig theConfig) {
@@ -261,11 +316,82 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
+	private PersServiceVersionMethod fromUi(GServiceMethod theMethod, long theServiceVersionPid) {
+		PersServiceVersionMethod retVal = new PersServiceVersionMethod();
+		retVal.setName(theMethod.getName());
+		retVal.setPid(theMethod.getPidOrNull());
+		retVal.setServiceVersion(myPersSvc.getServiceVersionByPid(theServiceVersionPid));
+		return retVal;
+	}
+
 	private PersServiceVersionUrl fromUi(GServiceVersionUrl theUrl, BasePersServiceVersion theServiceVersion) {
 		PersServiceVersionUrl retVal = new PersServiceVersionUrl();
 		retVal.setUrlId(theUrl.getId());
 		retVal.setUrl(theUrl.getUrl());
 		retVal.setServiceVersion(theServiceVersion);
+		return retVal;
+	}
+
+	private PersUser fromUi(GUser thePersUser) {
+		PersUser retVal = new PersUser();
+		retVal.setPid(thePersUser.getPidOrNull());
+		retVal.setAllowAllDomains(thePersUser.isAllowAllDomains());
+		retVal.setPermissions(thePersUser.getGlobalPermissions());
+		retVal.setUsername(thePersUser.getUsername());
+		retVal.setDomainPermissions(fromUi(thePersUser.getDomainPermissions()));
+		retVal.setAuthenticationHost(myPersSvc.getAuthenticationHostByPid(thePersUser.getAuthHostPid()));
+		return retVal;
+	}
+
+	private PersUserDomainPermission fromUi(GUserDomainPermission theObj) {
+		PersUserDomainPermission retVal = new PersUserDomainPermission();
+		retVal.setPid(theObj.getPidOrNull());
+		retVal.setAllowAllServices(theObj.isAllowAllServices());
+		retVal.setServiceDomain(myPersSvc.getDomainByPid(theObj.getDomainPid()));
+		retVal.setServicePermissions(new ArrayList<PersUserServicePermission>());
+		for (GUserServicePermission next : theObj.getServicePermissions()) {
+			retVal.addServicePermission(fromUi(next));
+		}
+		return retVal;
+	}
+
+	private PersUserServicePermission fromUi(GUserServicePermission theObj) {
+		PersUserServicePermission retVal = new PersUserServicePermission();
+		retVal.setPid(theObj.getPidOrNull());
+		retVal.setAllowAllServiceVersions(theObj.isAllowAllServiceVersions());
+		retVal.setService(myPersSvc.getServiceByPid(theObj.getServicePid()));
+		retVal.setServiceVersionPermissions(new ArrayList<PersUserServiceVersionPermission>());
+		for (GUserServiceVersionPermission next : theObj.getServiceVersionPermissions()) {
+			retVal.addServiceVersionPermission(fromUi(next));
+		}
+		return retVal;
+	}
+
+	private PersUserServiceVersionMethodPermission fromUi(GUserServiceVersionMethodPermission theObj) {
+		PersUserServiceVersionMethodPermission retVal = new PersUserServiceVersionMethodPermission();
+		retVal.setPid(theObj.getPidOrNull());
+		retVal.setServiceVersionMethod(myPersSvc.getServiceVersionMethodByPid(theObj.getServiceVersionMethodPid()));
+		retVal.setAllow(theObj.isAllow());
+		return retVal;
+	}
+
+	private PersUserServiceVersionPermission fromUi(GUserServiceVersionPermission theObj) {
+		PersUserServiceVersionPermission retVal = new PersUserServiceVersionPermission();
+		retVal.setPid(theObj.getPidOrNull());
+		retVal.setAllowAllServiceVersionMethods(theObj.isAllowAllServiceVersionMethods());
+		retVal.setServiceVersion(myPersSvc.getServiceVersionByPid(theObj.getServiceVersionPid()));
+		retVal.setServiceVersionMethodPermissions(new ArrayList<PersUserServiceVersionMethodPermission>());
+		for (GUserServiceVersionMethodPermission next : theObj.getServiceVersionMethodPermissions()) {
+			retVal.addServiceVersionMethodPermissions(fromUi(next));
+		}
+		return retVal;
+	}
+
+	private Collection<PersUserDomainPermission> fromUi(List<GUserDomainPermission> theDomainPermissions) {
+		Collection<PersUserDomainPermission> retVal = new ArrayList<PersUserDomainPermission>();
+		for (GUserDomainPermission next : theDomainPermissions) {
+			retVal.add(fromUi(next));
+		}
 		return retVal;
 	}
 
@@ -284,11 +410,22 @@ public class AdminServiceBean implements IAdminService {
 
 	}
 
-	private PersServiceVersionSoap11 fromUi(PersServiceVersionSoap11 thePersVersion, GSoap11ServiceVersion theVersion) {
+	private PersServiceVersionSoap11 fromUi(PersServiceVersionSoap11 thePersVersion, GSoap11ServiceVersion theVersion) throws ProcessingException {
 		thePersVersion.setActive(thePersVersion.isActive());
 		thePersVersion.setVersionId(theVersion.getId());
 		thePersVersion.setWsdlUrl(theVersion.getWsdlLocation());
+
+		PersHttpClientConfig httpClientConfig = myPersSvc.getHttpClientConfig(theVersion.getHttpClientConfigPid());
+		if (httpClientConfig == null) {
+			throw new ProcessingException("Unknown HTTP client config PID: " + theVersion.getHttpClientConfigPid());
+		}
+		thePersVersion.setHttpClientConfig(httpClientConfig);
 		return thePersVersion;
+	}
+
+	@Override
+	public long getDefaultHttpClientConfigPid() {
+		return myPersSvc.getHttpClientConfigs().iterator().next().getPid();
 	}
 
 	@Override
@@ -327,6 +464,18 @@ public class AdminServiceBean implements IAdminService {
 		return service.getPid();
 	}
 
+	@Override
+	public BaseGAuthHost loadAuthenticationHost(long thePid) throws ProcessingException {
+		ourLog.info("Loading authentication host with PID: {}", thePid);
+
+		BasePersAuthenticationHost authHost = myPersSvc.getAuthenticationHostByPid(thePid);
+		if (authHost == null) {
+			throw new ProcessingException("Unknown authentication host: " + thePid);
+		}
+
+		return toUi(authHost);
+	}
+
 	private GAuthenticationHostList loadAuthHostList() {
 		GAuthenticationHostList retVal = new GAuthenticationHostList();
 		for (BasePersAuthenticationHost next : myPersSvc.getAllAuthenticationHosts()) {
@@ -336,63 +485,29 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private GLocalDatabaseAuthHost toUi(BasePersAuthenticationHost next) {
-		GLocalDatabaseAuthHost uiObject=null;
-		switch (next.getType()) {
-		case LOCAL_DATABASE:
-			uiObject = toUi((PersAuthenticationHostLocalDatabase) next);
-			break;
-		}
-		return uiObject;
-	}
-
-	private GHttpClientConfigList loadHttpClientConfigList() {
-		GHttpClientConfigList configList = new GHttpClientConfigList();
-		for (PersHttpClientConfig next : myPersSvc.getHttpClientConfigs()) {
-			configList.add(toUi(next));
-		}
-		return configList;
-	}
-
 	@Override
-	public ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ProcessingException {
-		ModelUpdateResponse retVal = new ModelUpdateResponse();
+	public GDomainList loadDomainList() throws ProcessingException {
+		Set<Long> set = Collections.emptySet();
+		return loadDomainList(set, set, set, set);
+	}
 
+	private GDomainList loadDomainList(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats) throws ProcessingException {
 		GDomainList domainList = new GDomainList();
-		retVal.setDomainList(domainList);
-		
-		Set<Long> loadDomStats = theRequest.getDomainsToLoadStats();
-		Set<Long> loadSvcStats = theRequest.getServicesToLoadStats();
-		Set<Long> loadVerStats = theRequest.getVersionsToLoadStats();
-
-		if (theRequest.isLoadHttpClientConfigs()) {
-			GHttpClientConfigList configList = loadHttpClientConfigList();
-			retVal.setHttpClientConfigList(configList);
-		}
-
-		if (theRequest.isLoadUsers()) {
-			GUserList userList = loadUserList();
-			retVal.setUserList(userList);
-		}
-
-		if (theRequest.isLoadAuthHosts()) {
-			GAuthenticationHostList hostList = loadAuthHostList();
-			retVal.setAuthenticationHostList(hostList);
-		}
 
 		for (PersDomain nextDomain : myPersSvc.getAllDomains()) {
-			GDomain gDomain = toUi(nextDomain, loadDomStats.contains(nextDomain.getPid()));
+			GDomain gDomain = toUi(nextDomain, theLoadDomStats.contains(nextDomain.getPid()));
 			domainList.add(gDomain);
 
 			for (PersService nextService : nextDomain.getServices()) {
-				GService gService = toUi(nextService, loadSvcStats.contains(nextService.getPid()));
+				GService gService = toUi(nextService, theLoadSvcStats.contains(nextService.getPid()));
 				gDomain.getServiceList().add(gService);
 
 				for (BasePersServiceVersion nextVersion : nextService.getVersions()) {
-					BaseGServiceVersion gVersion = toUi(nextVersion, loadVerStats.contains(nextVersion.getPid()));
+					BaseGServiceVersion gVersion = toUi(nextVersion, theLoadVerStats.contains(nextVersion.getPid()));
+					gService.getVersionList().add(gVersion);
 
 					for (PersServiceVersionMethod nextMethod : nextVersion.getMethods()) {
-						GServiceMethod gMethod = toUi(nextMethod);
+						GServiceMethod gMethod = toUi(nextMethod, theLoadVerMethodStats.contains(nextMethod.getPid()));
 						gVersion.getMethodList().add(gMethod);
 					} // for methods
 
@@ -419,6 +534,44 @@ public class AdminServiceBean implements IAdminService {
 				} // for service versions
 			} // for services
 		} // for domains
+		return domainList;
+	}
+
+	private GHttpClientConfigList loadHttpClientConfigList() {
+		GHttpClientConfigList configList = new GHttpClientConfigList();
+		for (PersHttpClientConfig next : myPersSvc.getHttpClientConfigs()) {
+			configList.add(toUi(next));
+		}
+		return configList;
+	}
+
+	@Override
+	public ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ProcessingException {
+		ModelUpdateResponse retVal = new ModelUpdateResponse();
+
+
+		if (theRequest.isLoadHttpClientConfigs()) {
+			GHttpClientConfigList configList = loadHttpClientConfigList();
+			retVal.setHttpClientConfigList(configList);
+		}
+
+		if (theRequest.isLoadUsers()) {
+			GUserList userList = loadUserList();
+			retVal.setUserList(userList);
+		}
+
+		if (theRequest.isLoadAuthHosts()) {
+			GAuthenticationHostList hostList = loadAuthHostList();
+			retVal.setAuthenticationHostList(hostList);
+		}
+
+		Set<Long> loadDomStats = theRequest.getDomainsToLoadStats();
+		Set<Long> loadSvcStats = theRequest.getServicesToLoadStats();
+		Set<Long> loadVerStats = theRequest.getVersionsToLoadStats();
+		Set<Long> loadVerMethodStats = theRequest.getVersionMethodsToLoadStats();
+		GDomainList domainList = loadDomainList(loadDomStats, loadSvcStats, loadVerStats, loadVerMethodStats);
+		
+		retVal.setDomainList(domainList);
 
 		return retVal;
 	}
@@ -437,20 +590,40 @@ public class AdminServiceBean implements IAdminService {
 
 		theService.getMethodList().clear();
 		for (PersServiceVersionMethod next : def.getMethods()) {
-			retVal.getServiceVersion().getMethodList().add(toUi(next));
+			retVal.getServiceVersion().getMethodList().add(toUi(next, false));
 		}
 
 		theService.getResourcePointerList().clear();
 		for (PersServiceVersionResource next : def.getUriToResource().values()) {
 			GResource res = new GResource();
-			res.setPid(next.getPid());
+			if (next.getPid() != null) {
+				res.setPid(next.getPid());
+			}
 			res.setText(next.getResourceText());
 			res.setUrl(next.getResourceUrl());
+			res.setContentType(next.getResourceContentType());
 			retVal.getResource().add(res);
 			theService.getResourcePointerList().add(res.asPointer());
 		}
 
-		return null;
+		theService.getUrlList().clear();
+		for (PersServiceVersionUrl next : def.getUrls()) {
+			theService.getUrlList().add(toUi(next));
+		}
+
+		return retVal;
+	}
+
+	@Override
+	public GUser loadUser(long thePid) throws ProcessingException {
+		ourLog.info("Loading user {}", thePid);
+
+		PersUser persUser = myPersSvc.getUser(thePid);
+		if (persUser == null) {
+			throw new ProcessingException("Unknown user PID: " + thePid);
+		}
+
+		return toUi(persUser);
 	}
 
 	private GUserList loadUserList() {
@@ -459,6 +632,19 @@ public class AdminServiceBean implements IAdminService {
 		for (PersUser persUser : users) {
 			retVal.add(toUi(persUser));
 		}
+		return retVal;
+	}
+
+	@Override
+	public GPartialUserList loadUsers(PartialUserListRequest theRequest) {
+		GPartialUserList retVal = new GPartialUserList();
+
+		ourLog.info("Loading user list: " + theRequest.toString());
+
+		for (PersUser next : myPersSvc.getAllServiceUsers()) {
+			retVal.add(toUi(next));
+		}
+
 		return retVal;
 	}
 
@@ -473,10 +659,10 @@ public class AdminServiceBean implements IAdminService {
 		}
 		fromUi(host, theAuthHost);
 
-		ourLog.info("Saving authentication host of type {} with id {} / {}", new Object[] {host.getClass().getSimpleName(), theAuthHost.getPid(), theAuthHost.getModuleId()});
-		
+		ourLog.info("Saving authentication host of type {} with id {} / {}", new Object[] { host.getClass().getSimpleName(), theAuthHost.getPid(), theAuthHost.getModuleId() });
+
 		myPersSvc.saveAuthenticationHost(host);
-		
+
 		return loadAuthHostList();
 	}
 
@@ -509,9 +695,43 @@ public class AdminServiceBean implements IAdminService {
 		return toUi(myPersSvc.saveHttpClientConfig(config));
 	}
 
+	@Override
+	public GUser saveUser(GUser theUser) {
+		ourLog.info("Saving user with PID {}", theUser.getPid());
+
+		PersUser user = fromUi(theUser);
+
+		user = myPersSvc.saveServiceUser(user);
+
+		return toUi(user);
+	}
+
+	/**
+	 * Unit test only
+	 */
+	void setInvokerSoap11(IServiceInvoker<PersServiceVersionSoap11> theInvokerSoap11) {
+		myInvokerSoap11 = theInvokerSoap11;
+	}
+
 	void setPersSvc(ServicePersistenceBean thePersSvc) {
 		assert myPersSvc == null;
 		myPersSvc = thePersSvc;
+	}
+
+	@Override
+	public String suggestNewVersionNumber(Long theDomainPid, Long theServicePid) {
+		Validate.throwIllegalArgumentExceptionIfNotPositive("DomainPID", theDomainPid);
+		Validate.throwIllegalArgumentExceptionIfNotPositive("ServicePID", theServicePid);
+
+		PersService service = myPersSvc.getServiceByPid(theServicePid);
+
+		for (int i = 1;; i++) {
+			String name = i + ".0";
+			if (service.getVersionWithId(name) == null) {
+				return name;
+			}
+		}
+
 	}
 
 	private int[] toLatency(int[] theCounts, long[] theTimes) {
@@ -525,6 +745,16 @@ public class AdminServiceBean implements IAdminService {
 		}
 
 		return retVal;
+	}
+
+	private GLocalDatabaseAuthHost toUi(BasePersAuthenticationHost next) {
+		GLocalDatabaseAuthHost uiObject = null;
+		switch (next.getType()) {
+		case LOCAL_DATABASE:
+			uiObject = toUi((PersAuthenticationHostLocalDatabase) next);
+			break;
+		}
+		return uiObject;
 	}
 
 	private BaseGServiceVersion toUi(BasePersServiceVersion theVersion, boolean theLoadStats) throws ProcessingException {
@@ -546,11 +776,20 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setId(theVersion.getVersionId());
 		retVal.setName(theVersion.getVersionId());
 
+		PersHttpClientConfig httpClientConfig = theVersion.getHttpClientConfig();
+		if (httpClientConfig == null) {
+			throw new ProcessingException("Service version doesn't have an HTTP client config");
+		}
+		retVal.setHttpClientConfigPid(httpClientConfig.getPid());
+
 		if (theLoadStats) {
 			retVal.setStatsInitialized(true);
 			int[] t60minCount = new int[60];
 			long[] t60minTime = new long[60];
 
+			StatusEnum status = StatusEnum.UNKNOWN;
+			extractStatus(retVal, t60minCount, t60minTime, status, theVersion);
+			
 			retVal.setTransactions60mins(t60minCount);
 			retVal.setLatency60mins(toLatency(t60minCount, t60minTime));
 
@@ -622,6 +861,25 @@ public class AdminServiceBean implements IAdminService {
 
 		return retVal;
 	}
+
+	// private GHttpClientConfig toUi(PersHttpClientConfig theConfig) {
+	// GHttpClientConfig retVal = new GHttpClientConfig();
+	//
+	// if (theConfig.getPid() > 0) {
+	// retVal.setPid(theConfig.getPid());
+	// }
+	//
+	// retVal.setId(theConfig.getId());
+	// retVal.setName(theConfig.getName());
+	// retVal.setCircuitBreakerEnabled(theConfig.isCircuitBreakerEnabled());
+	// retVal.setCircuitBreakerTimeBetweenResetAttempts(theConfig.getCircuitBreakerTimeBetweenResetAttempts());
+	// retVal.setConnectTimeoutMillis(theConfig.getConnectTimeoutMillis());
+	// retVal.setFailureRetriesBeforeAborting(theConfig.getFailureRetriesBeforeAborting());
+	// retVal.setReadTimeoutMillis(theConfig.getReadTimeoutMillis());
+	// retVal.setUrlSelectionPolicy(theConfig.getUrlSelectionPolicy());
+	//
+	// return retVal;
+	// }
 
 	private BaseGServerSecurity toUi(PersBaseServerAuth<?, ?> theAuth) throws ProcessingException {
 		BaseGServerSecurity retVal = null;
@@ -758,11 +1016,30 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private GServiceMethod toUi(PersServiceVersionMethod theMethod) {
+	private GServiceMethod toUi(PersServiceVersionMethod theMethod, boolean theLoadStats) {
 		GServiceMethod retVal = new GServiceMethod();
-		retVal.setPid(theMethod.getPid());
+		if (theMethod.getPid() != null) {
+			retVal.setPid(theMethod.getPid());
+		}
 		retVal.setId(theMethod.getName());
 		retVal.setName(theMethod.getName());
+		
+		if (theLoadStats) {
+			retVal.setStatsInitialized(true);
+			StatusEnum status = StatusEnum.UNKNOWN;
+			int[] t60minCount = new int[60];
+			long[] t60minTime = new long[60];
+
+			extractStatus(t60minCount, t60minTime, theMethod);
+			
+			retVal.setTransactions60mins(t60minCount);
+			retVal.setLatency60mins(toLatency(t60minCount, t60minTime));
+			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
+
+		}
+
+		
+		
 		return retVal;
 	}
 
@@ -782,7 +1059,9 @@ public class AdminServiceBean implements IAdminService {
 
 	private GServiceVersionUrl toUi(PersServiceVersionUrl theUrl) {
 		GServiceVersionUrl retVal = new GServiceVersionUrl();
-		retVal.setPid(theUrl.getPid());
+		if (theUrl.getPid() != null) {
+			retVal.setPid(theUrl.getPid());
+		}
 		retVal.setId(theUrl.getUrlId());
 		retVal.setUrl(theUrl.getUrl());
 		return retVal;
@@ -840,174 +1119,6 @@ public class AdminServiceBean implements IAdminService {
 		for (PersUserServiceVersionMethodPermission next : theObj.getServiceVersionMethodPermissions()) {
 			retVal.getServiceVersionMethodPermissions().add(toUi(next));
 		}
-		return retVal;
-	}
-
-	@Override
-	public GAuthenticationHostList deleteAuthenticationHost(long thePid) throws ProcessingException {
-		
-		BasePersAuthenticationHost authHost = myPersSvc.getAuthenticationHostByPid(thePid);
-		if (authHost == null) {
-			ourLog.info("Invalid request to delete unknown authentication host with PID {}", thePid);
-			throw new ProcessingException("Unknown authentication host: " + thePid);
-		}
-		
-		ourLog.info("Removing authentication host {} / {}", thePid, authHost.getModuleId());
-		
-		myPersSvc.deleteAuthenticationHost(authHost);
-		
-		return loadAuthHostList();
-	}
-
-	@Override
-	public GPartialUserList loadUsers(PartialUserListRequest theRequest) {
-		GPartialUserList retVal = new GPartialUserList();
-		
-		ourLog.info("Loading user list: " + theRequest.toString());
-		
-		for (PersUser next : myPersSvc.getAllServiceUsers()) {
-			retVal.add(toUi(next));
-		}
-		
-		return retVal;
-	}
-
-	@Override
-	public GUser loadUser(long thePid) throws ProcessingException {
-		ourLog.info("Loading user {}", thePid);
-		
-		PersUser persUser = myPersSvc.getUser(thePid);
-		if (persUser==null) {
-			throw new ProcessingException("Unknown user PID: "+thePid);
-		}
-		
-		return toUi(persUser);
-	}
-
-	@Override
-	public BaseGAuthHost loadAuthenticationHost(long thePid) throws ProcessingException {
-		ourLog.info("Loading authentication host with PID: {}", thePid);
-		
-		BasePersAuthenticationHost authHost = myPersSvc.getAuthenticationHostByPid(thePid);
-		if (authHost==null) {
-			throw new ProcessingException("Unknown authentication host: "+thePid);
-		}
-		
-		return toUi(authHost);
-	}
-
-	@Override
-	public GUser saveUser(GUser theUser) {
-		ourLog.info("Saving user with PID {}", theUser.getPid());
-		
-		PersUser user = fromUi(theUser);
-		
-		user = myPersSvc.saveServiceUser(user);
-		
-		return toUi(user);
-	}
-
-	// private GHttpClientConfig toUi(PersHttpClientConfig theConfig) {
-	// GHttpClientConfig retVal = new GHttpClientConfig();
-	//
-	// if (theConfig.getPid() > 0) {
-	// retVal.setPid(theConfig.getPid());
-	// }
-	//
-	// retVal.setId(theConfig.getId());
-	// retVal.setName(theConfig.getName());
-	// retVal.setCircuitBreakerEnabled(theConfig.isCircuitBreakerEnabled());
-	// retVal.setCircuitBreakerTimeBetweenResetAttempts(theConfig.getCircuitBreakerTimeBetweenResetAttempts());
-	// retVal.setConnectTimeoutMillis(theConfig.getConnectTimeoutMillis());
-	// retVal.setFailureRetriesBeforeAborting(theConfig.getFailureRetriesBeforeAborting());
-	// retVal.setReadTimeoutMillis(theConfig.getReadTimeoutMillis());
-	// retVal.setUrlSelectionPolicy(theConfig.getUrlSelectionPolicy());
-	//
-	// return retVal;
-	// }
-
-	
-	
-	
-	private PersUser fromUi(GUser thePersUser) {
-		PersUser retVal = new PersUser();
-		retVal.setPid(thePersUser.getPidOrNull());
-		retVal.setAllowAllDomains(thePersUser.isAllowAllDomains());
-		retVal.setPermissions(thePersUser.getGlobalPermissions());
-		retVal.setUsername(thePersUser.getUsername());
-		retVal.setDomainPermissions(fromUi(thePersUser.getDomainPermissions()));
-		retVal.setAuthenticationHost(myPersSvc.getAuthenticationHostByPid(thePersUser.getAuthHostPid()));
-		return retVal;
-	}
-
-	private Collection<PersUserDomainPermission> fromUi(List<GUserDomainPermission> theDomainPermissions) {
-		Collection<PersUserDomainPermission> retVal = new ArrayList<PersUserDomainPermission>();
-		for (GUserDomainPermission next : theDomainPermissions) {
-			retVal.add(fromUi(next));
-		}
-		return retVal;
-	}
-
-	private PersUserDomainPermission fromUi(GUserDomainPermission theObj) {
-		PersUserDomainPermission retVal = new PersUserDomainPermission();
-		retVal.setPid(theObj.getPidOrNull());
-		retVal.setAllowAllServices(theObj.isAllowAllServices());
-		retVal.setServiceDomain(myPersSvc.getDomainByPid(theObj.getDomainPid()));
-		retVal.setServicePermissions(new ArrayList<PersUserServicePermission>());
-		for (GUserServicePermission next : theObj.getServicePermissions()) {
-			retVal.addServicePermission(fromUi(next));
-		}
-		return retVal;
-	}
-
-	private PersUserServicePermission fromUi(GUserServicePermission theObj) {
-		PersUserServicePermission retVal = new PersUserServicePermission();
-		retVal.setPid(theObj.getPidOrNull());
-		retVal.setAllowAllServiceVersions(theObj.isAllowAllServiceVersions());
-		retVal.setService(myPersSvc.getServiceByPid(theObj.getServicePid()));
-		retVal.setServiceVersionPermissions(new ArrayList<PersUserServiceVersionPermission>());
-		for (GUserServiceVersionPermission next : theObj.getServiceVersionPermissions()) {
-			retVal.addServiceVersionPermission(fromUi(next));
-		}
-		return retVal;
-	}
-
-	private PersUserServiceVersionMethodPermission fromUi(GUserServiceVersionMethodPermission theObj) {
-		PersUserServiceVersionMethodPermission retVal = new PersUserServiceVersionMethodPermission();
-		retVal.setPid(theObj.getPidOrNull());
-		retVal.setServiceVersionMethod(myPersSvc.getServiceVersionMethodByPid(theObj.getServiceVersionMethodPid()));
-		retVal.setAllow(theObj.isAllow());
-		return retVal;
-	}
-
-	private PersUserServiceVersionPermission fromUi(GUserServiceVersionPermission theObj) {
-		PersUserServiceVersionPermission retVal = new PersUserServiceVersionPermission();
-		retVal.setPid(theObj.getPidOrNull());
-		retVal.setAllowAllServiceVersionMethods(theObj.isAllowAllServiceVersionMethods());
-		retVal.setServiceVersion(myPersSvc.getServiceVersionByPid(theObj.getServiceVersionPid()));
-		retVal.setServiceVersionMethodPermissions(new ArrayList<PersUserServiceVersionMethodPermission>());
-		for (GUserServiceVersionMethodPermission next : theObj.getServiceVersionMethodPermissions()) {
-			retVal.addServiceVersionMethodPermissions(fromUi(next));
-		}
-		return retVal;
-	}
-
-	public GServiceMethod addServiceVersionMethod(long theServiceVersionPid, GServiceMethod theMethod) throws ProcessingException {
-		ourLog.info("Adding method {} to service version {}", theMethod.getName(), theServiceVersionPid);
-		
-		BasePersServiceVersion sv = myPersSvc.getServiceVersionByPid(theServiceVersionPid);
-		PersServiceVersionMethod ui = fromUi(theMethod, theServiceVersionPid);
-		sv.addMethod(ui);
-		sv = myPersSvc.saveServiceVersion(sv);
-		return toUi(sv.getMethod(theMethod.getName()));
-	}
-
-
-	private PersServiceVersionMethod fromUi(GServiceMethod theMethod, long theServiceVersionPid) {
-		PersServiceVersionMethod retVal=new PersServiceVersionMethod();
-		retVal.setName(theMethod.getName());
-		retVal.setPid(theMethod.getPidOrNull());
-		retVal.setServiceVersion(myPersSvc.getServiceVersionByPid(theServiceVersionPid));
 		return retVal;
 	}
 

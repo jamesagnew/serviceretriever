@@ -15,7 +15,7 @@ public class GServiceList extends BaseGList<GService> {
 
 	public GService getServiceByPid(long theServicePid) {
 		for (GService next : this) {
-			if (next.getId().equals(theServicePid)) {
+			if (next.getPid() == theServicePid) {
 				return next;
 			}
 		}

@@ -12,8 +12,7 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 @Table(name = "PX_USER_PERM_SVCVER_METHOD", uniqueConstraints = { // -
-@UniqueConstraint(columnNames = { "SVCVER_METHOD_PID", "USER_PERM_SVCVER_PID" }) } // -
-)
+@UniqueConstraint(columnNames = { "SVCVER_METHOD_PID", "USER_PERM_SVCVER_PID" }) })
 @Entity
 public class PersUserServiceVersionMethodPermission extends BasePersObject {
 

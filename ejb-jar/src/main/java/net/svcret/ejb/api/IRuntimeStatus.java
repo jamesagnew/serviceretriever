@@ -26,4 +26,6 @@ public interface IRuntimeStatus {
 
 	void recordUrlFailure(PersServiceVersionUrl theUrl, Failure theFailure);
 
+	public abstract void flushStatus();
+
 }

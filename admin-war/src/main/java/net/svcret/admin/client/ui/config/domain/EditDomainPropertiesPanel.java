@@ -1,4 +1,4 @@
-package net.svcret.admin.client.ui.config;
+package net.svcret.admin.client.ui.config.domain;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.shared.Model;

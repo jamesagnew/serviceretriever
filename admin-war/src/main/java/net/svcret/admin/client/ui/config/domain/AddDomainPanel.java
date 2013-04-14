@@ -1,7 +1,8 @@
-package net.svcret.admin.client.ui.config;
+package net.svcret.admin.client.ui.config.domain;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
+import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.GDomain;
 
@@ -22,14 +23,14 @@ public class AddDomainPanel extends FlowPanel implements ClickHandler, AsyncCall
 	
 
 	public AddDomainPanel() {
-		setStylePrimaryName("mainPanel");
+		setStylePrimaryName(CssConstants.MAIN_PANEL);
 
 		Label titleLabel = new Label("Add Domain");
-		titleLabel.setStyleName("mainPanelTitle");
+		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
 		add(titleLabel);
 
 		FlowPanel contentPanel = new FlowPanel();
-		contentPanel.addStyleName("contentInnerPanel");
+		contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
 		add(contentPanel);
 		
 		Label intro = new Label(DOMAIN_DESC);

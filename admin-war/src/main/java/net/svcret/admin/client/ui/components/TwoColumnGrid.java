@@ -5,6 +5,10 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class TwoColumnGrid extends FlexTable {
 
+	public TwoColumnGrid() {
+		setStyleName(CssConstants.TWO_COLUMN_PROPERTY_GRID);
+	}
+	
 	private static int ourNextId;
 
 	public void addRow(Widget theLabel, Widget theComponent) {

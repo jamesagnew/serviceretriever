@@ -34,7 +34,7 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 
 	private void actionMenu(Image theButton) {
 		if (myActionPopup == null) {
-			myActionPopup = new PopupPanel();
+			myActionPopup = new PopupPanel(true, true);
 			
 			FlowPanel content = new FlowPanel();
 			myActionPopup.add(content);
@@ -66,6 +66,18 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 				}
 			});
 			content.add(addService);
+			
+			Button delete = new PButton(AdminPortal.MSGS.actions_Remove());
+			delete.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent theEvent) {
+					myActionPopup.hide();
+					History.newItem(NavProcessor.getTokenDeleteDomain(true, myDomain.getPid()));
+				}
+			});
+			content.add(delete);
+
+			
 			
 			myActionPopup.showRelativeTo(theButton);
 		} else {

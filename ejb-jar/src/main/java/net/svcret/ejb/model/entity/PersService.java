@@ -15,31 +15,39 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
-import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
+import org.hibernate.annotations.ForeignKey;
 
 import com.google.common.base.Objects;
 
 @Table(name = "PX_SVC", uniqueConstraints = { @UniqueConstraint(name = "PX_SVC_CONS_DOMSVC", columnNames = { "DOMAIN_PID", "SERVICE_ID" }) })
 @Entity
+@NamedQueries(value = { @NamedQuery(name = Queries.SERVICE_FIND, query = Queries.SERVICE_FIND_Q) })
 public class PersService extends BasePersObject {
+
+	private static final long serialVersionUID = 1L;
 
 	@Column(name = "SVC_ACTIVE")
 	private boolean myActive;
 
-	private HashMap<String, BasePersServiceVersion> myIdToVersion;
+	@Transient
+	private transient HashMap<String, BasePersServiceVersion> myIdToVersion;
 
 	@Version()
 	@Column(name = "OPTLOCK")
 	private int myOptLock;
 
-	@ManyToOne(cascade = {}, fetch = FetchType.LAZY, optional = false)
-	@JoinColumn(name = "DOMAIN_PID", referencedColumnName = "PID")
-	private PersDomain myPersDomain;
+	@ManyToOne()
+	@JoinColumn(name = "DOMAIN_PID", referencedColumnName = "PID", nullable = false)
+	@ForeignKey(name = "PX_SVC_DOMAIN_PID")
+	private PersDomain myDomain;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -52,8 +60,7 @@ public class PersService extends BasePersObject {
 	@Column(name = "SERVICE_NAME", nullable = false, length = 200)
 	private String myServiceName = "";
 
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	@JoinColumn(name = "SERVICE_PID", referencedColumnName = "PID")
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true, mappedBy="myService")
 	private Collection<BasePersServiceVersion> myVersions;
 
 	public PersService() {
@@ -94,7 +101,7 @@ public class PersService extends BasePersObject {
 	 * @return the persDomain
 	 */
 	public PersDomain getDomain() {
-		return myPersDomain;
+		return myDomain;
 	}
 
 	/**
@@ -185,7 +192,7 @@ public class PersService extends BasePersObject {
 		if (!thePersDomain.getServices().contains(this)) {
 			thePersDomain.addService(this);
 		}
-		myPersDomain = thePersDomain;
+		myDomain = thePersDomain;
 	}
 
 	/**
@@ -201,6 +208,7 @@ public class PersService extends BasePersObject {
 	 *            the serviceId to set
 	 */
 	public void setServiceId(String theServiceId) {
+		// TODO: validate characters
 		myServiceId = theServiceId;
 	}
 

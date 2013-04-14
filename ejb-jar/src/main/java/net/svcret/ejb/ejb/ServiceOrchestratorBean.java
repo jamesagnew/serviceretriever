@@ -3,6 +3,7 @@ package net.svcret.ejb.ejb;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -73,15 +74,21 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			path = thePath;
 		}
 
+		ourLog.debug("New request of type {} for path: {}", theRequestType, thePath);
+		
 		/*
 		 * Figure out who should handle this request
 		 */
 		
 		BasePersServiceVersion serviceVersion = mySvcRegistry.getServiceVersionForPath(path);
 		if (serviceVersion == null) {
-			throw new UnknownRequestException(path);
+			ourLog.debug("Request did not match any known paths: {}", path);
+			List<String> validPaths = mySvcRegistry.getValidPaths();
+			throw new UnknownRequestException(path, validPaths);
 		}
 
+		ourLog.debug("Request corresponds to service version {}", serviceVersion.getPid());
+		
 		/*
 		 * Process request
 		 */
@@ -92,12 +99,14 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		case SOAP11:
 			PersServiceVersionSoap11 serviceVersionSoap = (PersServiceVersionSoap11) serviceVersion;
 			serviceInvoker = mySoap11ServiceInvoker;
+			ourLog.debug("Handling service with invoker {}", serviceInvoker);
 			results = mySoap11ServiceInvoker.processInvocation(serviceVersionSoap, theRequestType, path, theQuery, theReader);
 			break;
 		default:
 			throw new InternalErrorException("Unknown service protocol: " + serviceVersion.getProtocol());
 		}
 
+		
 		/*
 		 * Security
 		 */
@@ -109,6 +118,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		/*
 		 * Forward request to backend implementation
 		 */
+		ourLog.info("Request is of type: {}", results.getResultType());
 		
 		OrchestratorResponseBean retVal;
 		switch (results.getResultType()) {

@@ -12,6 +12,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.ForeignKey;
+
 import net.svcret.ejb.util.Validate;
 
 
@@ -27,6 +29,7 @@ public class PersServiceVersionStatus extends BasePersObject {
 	private Long myPid;
 
 	@OneToOne(cascade = {}, fetch = FetchType.LAZY)
+	@ForeignKey(name="PX_SVCVERSTATUS_SVCVER_PID")
 	@JoinColumn(name = "SVC_VERSION_PID", referencedColumnName = "PID", unique = true, nullable = false)
 	private BasePersServiceVersion myServiceVersion;
 

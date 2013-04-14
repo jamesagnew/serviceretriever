@@ -25,28 +25,30 @@ import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.lang3.StringUtils;
 
-
 import com.google.common.base.Objects;
 
-@Table(name = "PX_SVC_VER_URL", uniqueConstraints = { 
-		@UniqueConstraint(name="PX_URL_CONS_URL", columnNames = { "SVC_VERSION_PID", "URL" }), //-
-		@UniqueConstraint(name="PX_URL_CONS_URLID", columnNames = { "SVC_VERSION_PID", "URL_ID" }) //-
+@Table(name = "PX_SVC_VER_URL", uniqueConstraints = { @UniqueConstraint(name = "PX_URL_CONS_URL", columnNames = { "SVC_VERSION_PID", "URL" }), // -
+		@UniqueConstraint(name = "PX_URL_CONS_URLID", columnNames = { "SVC_VERSION_PID", "URL_ID" }) // -
 })
 @Entity
 public class PersServiceVersionUrl extends BasePersObject implements Comparable<PersServiceVersionUrl> {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(PersServiceVersionUrl.class);
+	private static final long serialVersionUID = 1L;
 
 	@Version()
 	@Column(name = "OPTLOCK")
 	private int myOptLock;
+
+	@Column(name = "URL_ORDER", nullable = false)
+	private int myOrder;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "PID")
 	private Long myPid;
 
-	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
+	@ManyToOne()
 	@JoinColumn(name = "SVC_VERSION_PID", referencedColumnName = "PID", nullable = false)
 	private BasePersServiceVersion myServiceVersion;
 
@@ -56,15 +58,15 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 	@Column(name = "URL", length = 200, nullable = false)
 	private String myUrl;
 
-//	@Column(name="ENV_ID", length=20)
-//	@Enumerated(EnumType.STRING)
-//	private PersEnvironment
-	
 	@Column(name = "URL_ID", length = 100, nullable = false)
 	private String myUrlId;
 
 	@Transient
 	private transient boolean myUrlIsLocal;
+
+	// @Column(name="ENV_ID", length=20)
+	// @Enumerated(EnumType.STRING)
+	// private PersEnvironment
 
 	@Transient
 	private transient boolean myUrlIsValid;
@@ -87,6 +89,13 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 	 */
 	public int getOptLock() {
 		return myOptLock;
+	}
+
+	/**
+	 * @return the order
+	 */
+	public int getOrder() {
+		return myOrder;
 	}
 
 	/**
@@ -172,6 +181,14 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 	}
 
 	/**
+	 * @param theOrder
+	 *            the order to set
+	 */
+	public void setOrder(int theOrder) {
+		myOrder = theOrder;
+	}
+
+	/**
 	 * @param thePid
 	 *            the id to set
 	 */
@@ -185,13 +202,13 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 	 */
 	public void setServiceVersion(BasePersServiceVersion theServiceVersion) {
 		Validate.throwIllegalArgumentExceptionIfNull("ServiceVersion", theServiceVersion);
-		
+
 		if (myServiceVersion != null && !myServiceVersion.equals(theServiceVersion)) {
 			throw new IllegalStateException("Can't reassign URL to another version");
 		} else if (myServiceVersion == null || !myServiceVersion.getUrls().contains(this)) {
 			theServiceVersion.addUrl(this);
 		}
-		
+
 		myServiceVersion = theServiceVersion;
 	}
 

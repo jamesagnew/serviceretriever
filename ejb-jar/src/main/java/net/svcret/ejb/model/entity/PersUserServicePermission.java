@@ -42,7 +42,7 @@ public class PersUserServicePermission extends BasePersObject {
 	@JoinColumn(name = "SERVICE_PID", referencedColumnName = "PID", nullable = false)
 	private PersService myService;
 
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy="myServicePermission")
 	private Collection<PersUserServiceVersionPermission> myServiceVersionPermissions;
 
 	/**

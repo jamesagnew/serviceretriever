@@ -8,6 +8,15 @@ public class GServiceVersionUrl extends BaseGObject<GServiceVersionUrl> {
 	private String myUrl;
 	private transient boolean myEditMode;
 
+	public GServiceVersionUrl() {
+		// nothing
+	}
+	
+	public GServiceVersionUrl(String theId, String theUrl) {
+		 myId = theId;
+		 myUrl = theUrl;
+	}
+
 	/**
 	 * @return the editMode
 	 */

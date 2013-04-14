@@ -19,6 +19,8 @@ import com.google.common.base.Objects;
 @Table(name = "PX_HTTP_CLIENT_CONFIG")
 public class PersHttpClientConfig extends BasePersObject {
 
+	private static final long serialVersionUID = 1L;
+	
 	public static final int DEFAULT_CB_TIME_BETWEEN_ATTEMPTS = 60 * 10000;
 	public static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 10 * 1000;
 	public static final int DEFAULT_FAIL_RETRIES_BEFORE_ABORT = 1;
@@ -27,7 +29,7 @@ public class PersHttpClientConfig extends BasePersObject {
 	 */
 	public static final String DEFAULT_ID = GHttpClientConfig.DEFAULT_ID;
 
-	private static final String DEFAULT_NAME = "Default Configuration (Can not be removed)";
+	private static final String DEFAULT_NAME = "Default Configuration";
 
 	public static final int DEFAULT_READ_TIMEOUT_MILLIS = 20 * 1000;
 

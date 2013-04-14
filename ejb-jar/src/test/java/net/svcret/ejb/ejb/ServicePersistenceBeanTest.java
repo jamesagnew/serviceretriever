@@ -308,9 +308,9 @@ public class ServicePersistenceBeanTest extends BaseJpaTest {
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
 		PersServiceVersionSoap11 ver = mySvc.getOrCreateServiceVersionWithId(service, "VersionId0");
 
-		ver.addResource("http://foo", "foo contents");
-		ver.addResource("http://bar", "bar contents");
-		ver.addResource("http://baz", "baz contents");
+		ver.addResource("http://foo", "text/plain", "foo contents");
+		ver.addResource("http://bar", "text/plain", "bar contents");
+		ver.addResource("http://baz", "text/plain", "baz contents");
 
 		mySvc.saveServiceVersion(ver);
 

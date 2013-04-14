@@ -150,10 +150,13 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	private void doFlushStatus() {
 
+		ourLog.debug("Going to flush status entries");
+		
 		List<BasePersMethodStats> stats = new ArrayList<BasePersMethodStats>();
 		HashSet<BasePersMethodStatsPk> keys = new HashSet<BasePersMethodStatsPk>(myInvocationStats.keySet());
 
 		if (keys.isEmpty()) {
+			ourLog.debug("No status entries to flush");
 			return;
 		}
 
@@ -267,8 +270,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 	}
 
-	@TransactionAttribute(TransactionAttributeType.NEVER)
-	@Schedule(second = "0", minute = "*", hour = "*", persistent = true)
+	@Override
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public void flushStatus() {
 
 		/*

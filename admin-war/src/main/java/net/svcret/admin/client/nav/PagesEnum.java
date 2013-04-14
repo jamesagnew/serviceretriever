@@ -34,7 +34,10 @@ public enum PagesEnum {
 	EUL(MSGS.editUsersPanel_Dashboard()),
 
 	/** Edit HTTP client configs */
-	HCC(MSGS.httpClientConfigsPanel_Dashboard())
+	HCC(MSGS.httpClientConfigsPanel_Dashboard()), 
+	
+	/** Delete domain */
+	DDO(MSGS.deleteDomainPanel_Breadcrumb())
 
 	;
 	

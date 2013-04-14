@@ -25,12 +25,15 @@ public class PersServiceVersionMethod extends BasePersObject {
 	@Column(name = "OPTLOCK")
 	protected int myOptLock;
 
+	@Column(name="METHOD_ORDER", nullable=false)
+	private int myOrder;
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "PID")
 	private Long myPid;
 
-	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@ManyToOne()
 	@JoinColumn(name = "SVC_VERSION_PID", referencedColumnName = "PID", nullable = false)
 	private BasePersServiceVersion myServiceVersion;
 
@@ -40,7 +43,7 @@ public class PersServiceVersionMethod extends BasePersObject {
 	public PersServiceVersionMethod() {
 		super();
 	}
-	
+
 	/**
 	 * Constructor
 	 */
@@ -56,12 +59,19 @@ public class PersServiceVersionMethod extends BasePersObject {
 	public String getName() {
 		return myName;
 	}
-
+	
 	/**
 	 * @return the optLock
 	 */
 	public int getOptLock() {
 		return myOptLock;
+	}
+
+	/**
+	 * @return the order
+	 */
+	public int getOrder() {
+		return myOrder;
 	}
 
 	/**
@@ -96,6 +106,13 @@ public class PersServiceVersionMethod extends BasePersObject {
 	 */
 	public void setOptLock(int theOptLock) {
 		myOptLock = theOptLock;
+	}
+
+	/**
+	 * @param theOrder the order to set
+	 */
+	public void setOrder(int theOrder) {
+		myOrder = theOrder;
 	}
 
 	/**

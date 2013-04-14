@@ -41,6 +41,7 @@ import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
+import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.util.UrlUtil;
 import net.svcret.ejb.util.Validate;
@@ -49,6 +50,7 @@ import net.svcret.ejb.util.XMLUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.google.common.collect.Lists;
@@ -89,10 +91,10 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 		String wsdlUrl = theServiceDefinition.getWsdlUrl();
 
 		PersServiceVersionResource resource = theServiceDefinition.getResourceForUri(wsdlUrl);
-		String wsdlResourceText = resource.getResourceText();
-		if (StringUtils.isBlank(wsdlResourceText)) {
+		if (resource == null || StringUtils.isBlank(resource.getResourceText())) {
 			throw new InternalErrorException("Service Version " + theServiceDefinition.getPid() + " does not have a resource for URL: " + wsdlUrl);
 		}
+		String wsdlResourceText = resource.getResourceText();
 
 		Document wsdlDocument = XMLUtils.parse(wsdlResourceText);
 
@@ -168,7 +170,7 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 		// TODO: should we check for SOAPAction header?
 
 		List<PersBaseClientAuth<?>> clientAuths = theServiceDefinition.getClientAuths();
-		List<PersBaseServerAuth<?,?>> serverAuths = theServiceDefinition.getServerAuths();
+		List<PersBaseServerAuth<?, ?>> serverAuths = theServiceDefinition.getServerAuths();
 		RequestPipeline pipeline = new RequestPipeline(serverAuths, clientAuths);
 
 		StringWriter requestBuffer = new StringWriter();
@@ -176,7 +178,7 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 
 		List<ICredentialGrabber> credentialGrabbers = pipeline.getCredentialGrabbers();
 		theResults.setCredentialsInRequest(credentialGrabbers);
-		
+
 		String methodName = pipeline.getMethodName();
 		if (methodName == null) {
 			throw new UnknownRequestException("No method found in request message for Service \"" + theServiceDefinition.getService().getServiceName() + "\"");
@@ -333,7 +335,7 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 	public Soap11ResponseValidator provideInvocationResponseValidator() {
 		return myInvocationResultsBean;
 	}
-	
+
 	public Soap11ServiceInvoker() {
 		myInvocationResultsBean = new Soap11ResponseValidator();
 	}
@@ -341,7 +343,11 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 	@Override
 	public PersServiceVersionSoap11 introspectServiceFromUrl(String theUrl) throws ProcessingException {
 		PersServiceVersionSoap11 retVal = new PersServiceVersionSoap11();
-		
+
+		// TODO: wrap all getElementsBy... calls to remove
+		// non elements in return list, since there can be
+		// text and we want to ignore it
+
 		ourLog.info("Loading WSDL URL: {}", theUrl);
 		HttpResponseBean wsdlHttpResponse = myHttpClient.get(theUrl);
 
@@ -367,9 +373,10 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 		}
 
 		retVal.setWsdlUrl(theUrl);
-		PersServiceVersionResource wsdlRes = retVal.addResource(theUrl, wsdlHttpResponse.getBody());
+		String contentType = wsdlHttpResponse.getContentType();
+		PersServiceVersionResource wsdlRes = retVal.addResource(theUrl, contentType, wsdlHttpResponse.getBody());
 		wsdlRes.setResourceContentType(wsdlHttpResponse.getContentType());
-		
+
 		/*
 		 * Process Schema Imports
 		 */
@@ -406,9 +413,10 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 						throw new ProcessingException(Messages.getString("Soap11ServiceInvoker.retrieveSchemaFailNon200", theUrl, wsdlHttpResponse.getCode()));
 					}
 
-					PersServiceVersionResource res = retVal.addResource(importLocation, schemaHttpResponse.getBody());
+					contentType = schemaHttpResponse.getContentType();
+					PersServiceVersionResource res = retVal.addResource(importLocation, contentType, schemaHttpResponse.getBody());
 					res.setResourceContentType(schemaHttpResponse.getContentType());
-					
+
 				}
 			}
 		}
@@ -440,7 +448,46 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 		}
 
 		retVal.retainOnlyMethodsWithNames(operationNames);
-		
+
+		/*
+		 * Process Ports (bound implementation URLs)
+		 */
+
+		int idx = 0;
+		NodeList servicesList = wsdlDocument.getElementsByTagNameNS(Constants.NS_WSDL, "service");
+		for (int svcIdx = 0; svcIdx < servicesList.getLength(); svcIdx++) {
+			Element serviceElem = (Element) servicesList.item(svcIdx);
+			NodeList portList = serviceElem.getElementsByTagNameNS(Constants.NS_WSDL, "port");
+			for (int portIdx = 0; portIdx < portList.getLength(); portIdx++) {
+				Element portElem = (Element) portList.item(portIdx);
+				String portName = portElem.getAttribute("name");
+				if (StringUtils.isBlank(portName)) {
+					portName = "port" + idx++;
+				}
+
+				NodeList portChildren = portElem.getChildNodes();
+				for (int portChildIdx = 0; portChildIdx < portChildren.getLength(); portChildIdx++) {
+					Node nextChildNode = portChildren.item(portChildIdx);
+					if (!(nextChildNode instanceof Element)) {
+						continue;
+					}
+					Element nextChild = (Element) nextChildNode;
+					if (nextChild.getLocalName().equals("address") && nextChild.getNamespaceURI().equals(Constants.NS_WSDLSOAP)) {
+						String locationAttr = nextChild.getAttribute("location");
+
+						PersServiceVersionUrl persUrl = new PersServiceVersionUrl();
+						persUrl.setUrlId(portName);
+						persUrl.setUrl(locationAttr);
+						persUrl.setNewlyCreated(true);
+
+						retVal.addUrl(persUrl);
+
+					}
+				}
+
+			}
+		}
+
 		return retVal;
 	}
 
@@ -448,9 +495,8 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 	 * UNIT TESTS ONLY
 	 */
 	void setHttpClient(IHttpClient theHttpClient) {
-		assert myHttpClient==null;
-		myHttpClient=theHttpClient;
+		assert myHttpClient == null;
+		myHttpClient = theHttpClient;
 	}
-	
 
 }
