@@ -10,6 +10,8 @@ public abstract class BaseGDashboardObject<T> extends BaseGObject<T> {
 	private boolean myStatsInitialized;
 	private StatusEnum myStatus;
 	private int[] myTransactions60mins;
+	private double myAverageTransactionsPerMin;
+	private int myAverageLatency;
 
 	/**
 	 * @return the id
@@ -95,6 +97,18 @@ public abstract class BaseGDashboardObject<T> extends BaseGObject<T> {
 	 */
 	public void setLatency60mins(int[] theLatency60mins) {
 		myLatency60mins = theLatency60mins;
+		
+		int count = 0;
+		int total = 0;
+		for (int i : theLatency60mins) {
+			if (i > 0) {
+				total++;
+				count += i;
+			}
+		}
+		if (total>0) {
+			myAverageLatency = count / total;
+		}
 	}
 
 	/**
@@ -114,6 +128,20 @@ public abstract class BaseGDashboardObject<T> extends BaseGObject<T> {
 	}
 
 	/**
+	 * @return the averageTransactionsPerMin
+	 */
+	public double getAverageTransactionsPerMin() {
+		return myAverageTransactionsPerMin;
+	}
+
+	/**
+	 * @return the averageLatency
+	 */
+	public int getAverageLatency() {
+		return myAverageLatency;
+	}
+
+	/**
 	 * @param theStatus
 	 *            the status to set
 	 */
@@ -130,6 +158,13 @@ public abstract class BaseGDashboardObject<T> extends BaseGObject<T> {
 	 */
 	public void setTransactions60mins(int[] theTransactions60mins) {
 		myTransactions60mins = theTransactions60mins;
+		long total = 0;
+		for (int i : theTransactions60mins) {
+			total += i;
+		}
+		if (myTransactions60mins.length > 0) {
+			myAverageTransactionsPerMin = total / myTransactions60mins.length;
+		}
 	}
 
 }

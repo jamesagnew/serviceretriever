@@ -18,7 +18,6 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
-import javax.persistence.Version;
 
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.util.LogUtil;
@@ -71,10 +70,6 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	@Column(name = "NEXT_CB_RESET", nullable = true)
 	@Temporal(TemporalType.TIMESTAMP)
 	private volatile Date myNextCircuitBreakerReset;
-
-	@Version()
-	@Column(name = "OPTLOCK")
-	private int myOptLock;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -207,13 +202,6 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	}
 
 	/**
-	 * @return the versionNum
-	 */
-	public int getOptLock() {
-		return myOptLock;
-	}
-
-	/**
 	 * @return the pid
 	 */
 	public Long getPid() {
@@ -337,14 +325,6 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 			myDirty = true;
 		}
 		myLastSuccess = theLastSuccess;
-	}
-
-	/**
-	 * @param theOptLock
-	 *            the optLock to set
-	 */
-	public void setOptLock(int theOptLock) {
-		myOptLock = theOptLock;
 	}
 
 	/**

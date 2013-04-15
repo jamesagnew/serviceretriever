@@ -201,7 +201,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvoker<PersServiceVersi
 
 
 	@Override
-	public InvocationResultsBean processInvocation(PersServiceVersionJsonRpc20 theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, Reader theReader) throws InternalErrorException, UnknownRequestException, IOException, ProcessingException {
+	public InvocationResultsBean processInvocation(PersServiceVersionJsonRpc20 theServiceDefinition, RequestType theRequestType, String theBase, String thePath, String theQuery, Reader theReader) throws InternalErrorException, UnknownRequestException, IOException, ProcessingException {
 		Validate.throwIllegalArgumentExceptionIfNull("Reader", theReader);
 		if (theRequestType != RequestType.POST) {
 			throw new UnknownRequestException("This service requires all requests to be of type HTTP POST");

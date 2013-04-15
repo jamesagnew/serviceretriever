@@ -738,9 +738,13 @@ public class AdminServiceBean implements IAdminService {
 		assert theCounts.length == theTimes.length;
 
 		int[] retVal = new int[theCounts.length];
+		int prevValue = -1;
 		for (int i = 0; i < theCounts.length; i++) {
 			if (theCounts[i] > 0) {
 				retVal[i] = (int) Math.min(theTimes[i] / theCounts[i], Integer.MAX_VALUE);
+				prevValue = retVal[i];
+			} else if (prevValue > -1) {
+				retVal[i] = prevValue;
 			}
 		}
 
@@ -917,7 +921,7 @@ public class AdminServiceBean implements IAdminService {
 			}
 
 			retVal.setTransactions60mins(t60minCount);
-			retVal.setTransactions60mins(toLatency(t60minCount, t60minTime));
+			retVal.setLatency60mins(toLatency(t60minCount, t60minTime));
 			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
 
 			int urlsActive = 0;

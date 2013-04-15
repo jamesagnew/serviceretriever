@@ -2,7 +2,8 @@ package ca.uhn.sail.proxy.web;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URLEncoder;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.ejb.EJB;
@@ -12,9 +13,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.net.URLCodec;
-
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.OrchestratorResponseBean;
 import net.svcret.ejb.api.RequestType;
@@ -22,12 +20,17 @@ import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnknownRequestException;
 
-@WebServlet(asyncSupported = true, loadOnStartup = 1, urlPatterns = { "/" })
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.net.URLCodec;
+
+@WebServlet(asyncSupported = false, loadOnStartup = 1, urlPatterns = { "/" })
 public class ServiceServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceServlet.class);
+
+	private static HashSet<String> ourFilterHeaders;
 
 	@EJB
 	private IServiceOrchestrator myOrch;
@@ -48,12 +51,15 @@ public class ServiceServlet extends HttpServlet {
 
 		String contextPath = theReq.getContextPath();
 		String query = "?" + theReq.getQueryString();
+		String requestURL = theReq.getRequestURL().toString();
 
-		ourLog.debug("New GET request at path[{}] and context path[{}]", path, contextPath);
+		String base = extractBase(contextPath, requestURL);
+
+		ourLog.debug("New GET request at path[{}] and base[{}] and context path[{}]", new Object[] { path, base, contextPath });
 
 		OrchestratorResponseBean response;
 		try {
-			response = myOrch.handle(get, path, query, theReq.getReader());
+			response = myOrch.handle(get, base, path, query, theReq.getReader());
 		} catch (InternalErrorException e) {
 			ourLog.info("Processing Failure", e);
 			sendFailure(theResp, e.getMessage());
@@ -70,8 +76,15 @@ public class ServiceServlet extends HttpServlet {
 
 		theResp.setStatus(200);
 
-		for (Entry<String, String> next : response.getResponseHeaders().entrySet()) {
-			theResp.addHeader(next.getKey(), next.getValue());
+		Map<String, String> responseHeaders = response.getResponseHeaders();
+		if (responseHeaders != null) {
+			ourLog.debug("Responding with headers: {}", response.getResponseHeaders());
+			for (Entry<String, String> next : responseHeaders.entrySet()) {
+				if (ourFilterHeaders.contains(next.getKey())) {
+					continue;
+				}
+				theResp.addHeader(next.getKey(), next.getValue());
+			}
 		}
 
 		theResp.setContentType(theResp.getContentType());
@@ -81,6 +94,19 @@ public class ServiceServlet extends HttpServlet {
 		w.close();
 
 		ourLog.debug("Done handling request");
+	}
+
+	static {
+		ourFilterHeaders = new HashSet<String>();
+		ourFilterHeaders.add("Transfer-Encoding");
+		ourFilterHeaders.add("Content-Length");
+		ourFilterHeaders.add("server");
+	}
+
+	private static String extractBase(String contextPath, String requestURL) {
+		int hostIndex = requestURL.indexOf("//") + 2;
+		int pathStart = requestURL.indexOf('/', hostIndex);
+		return requestURL.substring(0, pathStart) + contextPath;
 	}
 
 	private void sendUnknownLocation(HttpServletResponse theResp, UnknownRequestException theE) throws IOException {

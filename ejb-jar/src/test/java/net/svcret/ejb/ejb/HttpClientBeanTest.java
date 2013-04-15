@@ -16,6 +16,7 @@ import java.util.concurrent.CountDownLatch;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.UrlPoolBean;
+import net.svcret.ejb.ejb.soap.Soap11ResponseValidator;
 import net.svcret.ejb.util.RandomServerPortProvider;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -105,6 +106,30 @@ public class HttpClientBeanTest {
 	}
 
 	@Test
+	public void testGetShorterContentType() throws Exception {
+
+		int port = RandomServerPortProvider.findFreePort();
+		String headers = "Content-Type: text/xml;charset=utf-8\n" + // -
+				"SampleHeader: some value"; // -
+
+		String body = provideXmlResponse();
+
+		TcpResponder resp = new TcpResponder(port, headers, body);
+		resp.start();
+		resp.waitToStart();
+
+		HttpResponseBean respBean = mySvc.get("http://localhost:" + port + "/Uri");
+
+		assertEquals(body.trim(), respBean.getBody().trim());
+		assertEquals("text/xml", respBean.getContentType());
+		assertThat(respBean.getResponseTime(), greaterThan(1L));
+
+		if (resp.myFailed != null) {
+			throw new Exception(resp.myFailed);
+		}
+	}
+
+	@Test
 	public void testPost() throws InterruptedException {
 
 		int port = RandomServerPortProvider.findFreePort();
@@ -117,6 +142,37 @@ public class HttpClientBeanTest {
 		resp.waitToStart();
 
 		IResponseValidator validator = new NullResponseValidator();
+		UrlPoolBean urlPool = new UrlPoolBean();
+		urlPool.setPreferredUrl("http://localhost:" + port + "/Uri");
+		urlPool.setConnectTimeoutMillis(1000);
+		urlPool.setReadTimeoutMillis(1000);
+
+		Map<String, String> reqHeaders = new HashMap<String, String>();
+		String reqContentType = "text/xml";
+		HttpResponseBean respBean = mySvc.post(validator, urlPool, reqBody, reqHeaders, reqContentType);
+
+		assertEquals(urlPool.getPreferredUrl(), respBean.getSuccessfulUrl());
+		assertEquals(0, respBean.getFailedUrls().size());
+		assertEquals(respBody.trim(), respBean.getBody().trim());
+		assertEquals("text/xml", respBean.getContentType());
+		assertThat(respBean.getResponseTime(), greaterThan(1L));
+
+	}
+
+	@Test
+	public void testPostWithValidation() throws InterruptedException {
+
+		int port = RandomServerPortProvider.findFreePort();
+		String respHeaders = provideGoodHeaders();
+		String respBody = provideXmlResponse();
+		String reqBody = provideXmlRequest();
+
+		TcpResponder resp = new TcpResponder(port, respHeaders, respBody);
+		resp.start();
+		resp.waitToStart();
+
+		IResponseValidator validator = new Soap11ResponseValidator();
+		
 		UrlPoolBean urlPool = new UrlPoolBean();
 		urlPool.setPreferredUrl("http://localhost:" + port + "/Uri");
 		urlPool.setConnectTimeoutMillis(1000);

@@ -75,10 +75,10 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 		ourValidContentTypes.add("application/soap+xml");
 	}
 
-	private void doHandleGet(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, RequestType theRequestType, String thePath, String theQuery) throws InternalErrorException, UnknownRequestException, IOException {
+	private void doHandleGet(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, RequestType theRequestType, String theBase, String thePath, String theQuery) throws InternalErrorException, UnknownRequestException, IOException {
 
 		if (theQuery.toLowerCase().equals("?wsdl")) {
-			doHandleGetWsdl(theResults, theServiceDefinition, thePath);
+			doHandleGetWsdl(theResults, theServiceDefinition,theBase, thePath);
 		} else if (theQuery.startsWith("?xsd")) {
 			doHandleGetXsd(theResults, theServiceDefinition, thePath, theQuery);
 		} else {
@@ -87,7 +87,7 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 
 	}
 
-	private void doHandleGetWsdl(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, String thePath) {
+	private void doHandleGetWsdl(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition,String theBase,  String thePath) {
 		String wsdlUrl = theServiceDefinition.getWsdlUrl();
 
 		PersServiceVersionResource resource = theServiceDefinition.getResourceForUri(wsdlUrl);
@@ -114,12 +114,34 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 					String importLocation = importElem.getAttribute("schemaLocation");
 					if (StringUtils.isNotBlank(importLocation)) {
 						PersServiceVersionResource nResource = theServiceDefinition.getResourceForUri(importLocation);
-						importElem.setAttribute("schemaLocation", (thePath + "?xsd&xsdnum=" + nResource.getPid()));
+						importElem.setAttribute("schemaLocation", (theBase+thePath + "?xsd&xsdnum=" + nResource.getPid()));
 					}
 				}
 			}
 		}
 
+		/*
+		 * Process service addresses
+		 */
+		
+		NodeList serviceList = wsdlDocument.getElementsByTagNameNS(Constants.NS_WSDL, "service");
+		for (int serviceIdx = 0; serviceIdx < serviceList.getLength(); serviceIdx++) {
+			Element typesElem = (Element) serviceList.item(serviceIdx);
+			NodeList portList = typesElem.getElementsByTagNameNS(Constants.NS_WSDL, "port");
+			for (int portIdx = 0; portIdx < portList.getLength(); portIdx++) {
+				Element schemaElem = (Element) portList.item(portIdx);
+				NodeList addressList = schemaElem.getElementsByTagNameNS(Constants.NS_WSDLSOAP, "address");
+				for (int addressIdx = 0; addressIdx < addressList.getLength(); addressIdx++) {
+					Element importElem = (Element) addressList.item(addressIdx);
+					String location = importElem.getAttribute("location");
+					if (StringUtils.isNotBlank(location)) {
+						importElem.setAttribute("location", theBase+thePath);
+					}
+				}
+			}
+		}
+		
+		
 		ourLog.debug("Writing WSDL for ServiceVersion[{}]", theServiceDefinition.getPid());
 		StringWriter writer = new StringWriter();
 		XMLUtils.serialize(wsdlDocument, true, writer);
@@ -143,6 +165,8 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 			}
 		}
 
+		// TODO: handle xsd imports
+		
 		if (xsdNumString == null) {
 			throw new UnknownRequestException("Invalid XSD query, no 'xsdnum' parameter found");
 		}
@@ -203,12 +227,12 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 	 */
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public InvocationResultsBean processInvocation(PersServiceVersionSoap11 theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, Reader theReader) throws InternalErrorException, UnknownRequestException, IOException, ProcessingException {
+	public InvocationResultsBean processInvocation(PersServiceVersionSoap11 theServiceDefinition, RequestType theRequestType, String theBase, String thePath, String theQuery, Reader theReader) throws InternalErrorException, UnknownRequestException, IOException, ProcessingException {
 		InvocationResultsBean retVal = new InvocationResultsBean();
 
 		switch (theRequestType) {
 		case GET:
-			doHandleGet(retVal, theServiceDefinition, theRequestType, thePath, theQuery);
+			doHandleGet(retVal, theServiceDefinition, theRequestType,theBase, thePath, theQuery);
 			break;
 		case POST:
 			doHandlePost(retVal, theServiceDefinition, theRequestType, thePath, theQuery, theReader);
@@ -279,7 +303,7 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 							retVal.setResponseType(ResponseTypeEnum.SUCCESS);
 							retVal.setResponseBody(theResponse.getBody());
 							retVal.setResponseContentType(theResponse.getContentType());
-							retVal.setResponseHeaders(theResponse.getHeaders());
+							// Don't need any headers - retVal.setResponseHeaders(theResponse.getHeaders());
 							return retVal;
 						}
 						break;

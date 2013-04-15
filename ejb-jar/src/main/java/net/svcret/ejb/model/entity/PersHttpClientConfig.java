@@ -21,7 +21,7 @@ public class PersHttpClientConfig extends BasePersObject {
 
 	private static final long serialVersionUID = 1L;
 	
-	public static final int DEFAULT_CB_TIME_BETWEEN_ATTEMPTS = 60 * 10000;
+	public static final int DEFAULT_CB_TIME_BETWEEN_ATTEMPTS = 60 * 1000;
 	public static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 10 * 1000;
 	public static final int DEFAULT_FAIL_RETRIES_BEFORE_ABORT = 1;
 	/**
@@ -244,6 +244,10 @@ public class PersHttpClientConfig extends BasePersObject {
 	 */
 	public void setUrlSelectionPolicy(UrlSelectionPolicy theUrlSelectionPolicy) {
 		myUrlSelectionPolicy = theUrlSelectionPolicy;
+	}
+
+	public void loadAllAssociations() {
+		myUrlSelectionPolicy.name();
 	}
 
 }

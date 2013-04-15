@@ -177,6 +177,12 @@ public class HttpClientBean implements IHttpClient {
 				String body = IOUtils.toString(entity.getContent());
 				int statusCode = resp.getStatusLine().getStatusCode();
 				String contentType = resp.getEntity().getContentType().getValue();
+				
+				int sep = contentType.indexOf(';');
+				if (sep > -1) {
+					contentType = contentType.substring(0, sep);
+				}
+				
 				Map<String, String> headerMap = toHeaderMap(resp.getAllHeaders());
 
 				ValidationResponse validates = theResponseValidator.validate(body, statusCode, contentType);

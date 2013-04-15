@@ -56,7 +56,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public OrchestratorResponseBean handle(RequestType theRequestType, String thePath, String theQuery, Reader theReader) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException {
+	public OrchestratorResponseBean handle(RequestType theRequestType, String theBase, String thePath, String theQuery, Reader theReader) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException {
 		Validate.throwIllegalArgumentExceptionIfNull("RequestType", theRequestType);
 		Validate.throwIllegalArgumentExceptionIfNull("Path", thePath);
 		Validate.throwIllegalArgumentExceptionIfNull("Query", theQuery);
@@ -100,7 +100,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			PersServiceVersionSoap11 serviceVersionSoap = (PersServiceVersionSoap11) serviceVersion;
 			serviceInvoker = mySoap11ServiceInvoker;
 			ourLog.debug("Handling service with invoker {}", serviceInvoker);
-			results = mySoap11ServiceInvoker.processInvocation(serviceVersionSoap, theRequestType, path, theQuery, theReader);
+			results = mySoap11ServiceInvoker.processInvocation(serviceVersionSoap, theRequestType, theBase, path, theQuery, theReader);
 			break;
 		default:
 			throw new InternalErrorException("Unknown service protocol: " + serviceVersion.getProtocol());
@@ -124,7 +124,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		switch (results.getResultType()) {
 
 		case STATIC_RESOURCE: {
-			String responseBody = results.getStaticResourceDefinition().getResourceText();
+			String responseBody = results.getStaticResourceText();
 			String responseContentType = results.getStaticResourceContentTyoe();
 			Map<String, String> responseHeaders = results.getStaticResourceHeaders();
 			retVal = new OrchestratorResponseBean(responseBody, responseContentType, responseHeaders);
@@ -143,6 +143,12 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			IResponseValidator responseValidator = serviceInvoker.provideInvocationResponseValidator();
 
 			UrlPoolBean urlPool = myRuntimeStatus.buildUrlPool(method.getServiceVersion());
+			if (urlPool.getPreferredUrl() == null) {
+				/* TODO: record this failure? ALso should we allow throttled
+				 * CB reset attempts when all URLs are failing?
+				 */
+				throw new ProcessingException("No URLs available to service this request!");
+			}
 			
 			PersHttpClientConfig clientConfig = serviceVersion.getHttpClientConfig();
 			urlPool.setConnectTimeoutMillis(clientConfig.getConnectTimeoutMillis());
@@ -155,7 +161,8 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 			if (httpResponse.getSuccessfulUrl() == null) {
 				markUrlsFailed(method, httpResponse.getFailedUrls());
-				throw new ProcessingException("All service URLs appear to be failing, unable to successfully invoke method");
+				Failure exampleFailure = httpResponse.getFailedUrls().values().iterator().next();
+				throw new ProcessingException("All service URLs appear to be failing, unable to successfully invoke method. Example failure: " + exampleFailure.getExplanation());
 			}
 
 			InvocationResponseResultsBean invocationResponse = serviceInvoker.processInvocationResponse(httpResponse);

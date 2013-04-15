@@ -386,6 +386,9 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 		for (PersServiceVersionUrl next : getUrls()) {
 			next.loadAllAssociations();
 		}
+		
+		myHttpClientConfig.loadAllAssociations();
+		
 	}
 
 	public void putMethodAtIndex(PersServiceVersionMethod theMethod, int theIndex) {

@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@WebServlet(loadOnStartup=1, displayName="Info_Servlet", urlPatterns= {"/info"})
+@WebServlet(loadOnStartup=1, displayName="Info_Servlet", urlPatterns= {"/info/*"})
 public class InfoServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;

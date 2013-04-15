@@ -14,7 +14,7 @@ import net.svcret.ejb.ex.UnknownRequestException;
 @Local
 public interface IServiceOrchestrator {
 
-	OrchestratorResponseBean handle(RequestType theRequestType, String thePath, String theQuery, Reader theReader) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException;
+	OrchestratorResponseBean handle(RequestType theRequestType, String theBase, String thePath, String theQuery, Reader theReader) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException;
 
 	/**
 	 * Response type for {@link IServiceOrchestrator#handle(RequestType, String, String, Reader)}

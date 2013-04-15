@@ -46,6 +46,8 @@ import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.ejb.model.entity.PersState;
+import net.svcret.ejb.model.entity.PersStaticResourceStats;
+import net.svcret.ejb.model.entity.PersStaticResourceStatsPk;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.Queries;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
@@ -305,6 +307,19 @@ public class ServicePersistenceBean implements IServicePersistence {
 		if (retVal == null) {
 			retVal = new PersInvocationStats(thePk);
 			ourLog.info("Adding new invocation stats: {}", thePk);
+			retVal = myEntityManager.merge(retVal);
+			retVal.setNewlyCreated(true);
+		}
+
+		return retVal;
+	}
+
+	private BasePersMethodStats getOrCreateInvocationStats(PersStaticResourceStatsPk thePk) {
+		PersStaticResourceStats retVal = myEntityManager.find(PersStaticResourceStats.class, thePk);
+
+		if (retVal == null) {
+			retVal = new PersStaticResourceStats(thePk);
+			ourLog.info("Adding new static resource stats: {}", thePk);
 			retVal = myEntityManager.merge(retVal);
 			retVal.setNewlyCreated(true);
 		}
@@ -623,6 +638,14 @@ public class ServicePersistenceBean implements IServicePersistence {
 					acount++;
 				} else if (next instanceof PersInvocationStats) {
 					PersInvocationStats cNext = (PersInvocationStats) next;
+					persisted = getOrCreateInvocationStats(cNext.getPk());
+					if (!persisted.isNewlyCreated()) {
+						myEntityManager.refresh(persisted);
+					}
+					persisted.mergeUnsynchronizedEvents(next);
+					count++;
+				} else if (next instanceof PersStaticResourceStats) {
+					PersStaticResourceStats cNext = (PersStaticResourceStats) next;
 					persisted = getOrCreateInvocationStats(cNext.getPk());
 					if (!persisted.isNewlyCreated()) {
 						myEntityManager.refresh(persisted);

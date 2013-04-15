@@ -14,7 +14,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.ejb.EJB;
-import javax.ejb.Schedule;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -151,50 +150,53 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private void doFlushStatus() {
 
 		ourLog.debug("Going to flush status entries");
-		
+
 		List<BasePersMethodStats> stats = new ArrayList<BasePersMethodStats>();
 		HashSet<BasePersMethodStatsPk> keys = new HashSet<BasePersMethodStatsPk>(myInvocationStats.keySet());
 
 		if (keys.isEmpty()) {
+			
 			ourLog.debug("No status entries to flush");
-			return;
-		}
+			
+		} else {
 
-		Date earliest = null;
-		Date latest = null;
-		for (BasePersMethodStatsPk nextKey : keys) {
-			BasePersMethodStats nextStats = myInvocationStats.remove(nextKey);
-			if (nextStats == null) {
-				continue;
-			}
-			stats.add(nextStats);
+			Date earliest = null;
+			Date latest = null;
+			for (BasePersMethodStatsPk nextKey : keys) {
+				BasePersMethodStats nextStats = myInvocationStats.remove(nextKey);
+				if (nextStats == null) {
+					continue;
+				}
+				stats.add(nextStats);
 
-			if (earliest == null || earliest.after(nextStats.getPk().getStartTime())) {
-				earliest = nextStats.getPk().getStartTime();
-			}
-			if (latest == null || latest.before(nextStats.getPk().getStartTime())) {
-				latest = nextStats.getPk().getStartTime();
-			}
-
-		}
-
-		ourLog.info("Going to flush {} stats entries with time range {} - {}", new Object[] { stats.size(), myTimeFormat.format(earliest), myTimeFormat.format(latest) });
-
-		try {
-			myPersistence.saveInvocationStats(stats);
-			ourLog.info("Done flushing stats");
-		} catch (PersistenceException e) {
-			ourLog.error("Failed to flush stats to disk, going to re-queue them", e);
-			for (BasePersMethodStats next : stats) {
-
-				BasePersMethodStats savedStats = myInvocationStats.putIfAbsent(next.getPk(), next);
-				if (savedStats != next) {
-					savedStats.mergeUnsynchronizedEvents(next);
+				if (earliest == null || earliest.after(nextStats.getPk().getStartTime())) {
+					earliest = nextStats.getPk().getStartTime();
+				}
+				if (latest == null || latest.before(nextStats.getPk().getStartTime())) {
+					latest = nextStats.getPk().getStartTime();
 				}
 
 			}
-		}
 
+			ourLog.info("Going to flush {} stats entries with time range {} - {}", new Object[] { stats.size(), myTimeFormat.format(earliest), myTimeFormat.format(latest) });
+
+			try {
+				myPersistence.saveInvocationStats(stats);
+				ourLog.info("Done flushing stats");
+			} catch (PersistenceException e) {
+				ourLog.error("Failed to flush stats to disk, going to re-queue them", e);
+				for (BasePersMethodStats next : stats) {
+
+					BasePersMethodStats savedStats = myInvocationStats.putIfAbsent(next.getPk(), next);
+					if (savedStats != next) {
+						savedStats.mergeUnsynchronizedEvents(next);
+					}
+
+				}
+			}
+			
+		}
+		
 		ArrayList<PersServiceVersionUrlStatus> urlStatuses = new ArrayList<PersServiceVersionUrlStatus>(myUrlStatus.values());
 		for (Iterator<PersServiceVersionUrlStatus> iter = urlStatuses.iterator(); iter.hasNext();) {
 			PersServiceVersionUrlStatus next = iter.next();
@@ -210,6 +212,10 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			myPersistence.saveServiceVersionUrlStatus(urlStatuses);
 		}
 
+		/* 
+		 * TODO: Maybe use a "last saved" timestamp here instead of a flag
+		 * to prevent race conditions
+		 */
 		for (PersServiceVersionUrlStatus next : urlStatuses) {
 			next.setDirty(false);
 		}
@@ -241,7 +247,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		if (theUrlStatusBean.getUrl() == null) {
 			throw new IllegalArgumentException("Status has no URL associated with it");
 		}
-		
+
 		synchronized (theUrlStatusBean) {
 			Date now = new Date();
 

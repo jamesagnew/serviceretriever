@@ -52,7 +52,7 @@ public class JsonRpc20ServiceInvokerTest {
 		when(def.getMethod("getCanonicalMappings")).thenReturn(method);
 		
 		DefaultAnswer.setRunTime();
-		InvocationResultsBean resp = svc.processInvocation(def, reqType, path, query, reader);
+		InvocationResultsBean resp = svc.processInvocation(def, reqType, "", path, query, reader);
 	
 		String actualBody = resp.getMethodRequestBody();
 		Assert.assertEquals(request, actualBody);
@@ -71,7 +71,7 @@ public class JsonRpc20ServiceInvokerTest {
 				"}";
 		reader = new StringReader(request);
 
-		resp = svc.processInvocation(def, reqType, path, query, reader);
+		resp = svc.processInvocation(def, reqType, "",path, query, reader);
 		
 		actualBody = resp.getMethodRequestBody();
 		Assert.assertEquals(request, actualBody);
@@ -93,7 +93,7 @@ public class JsonRpc20ServiceInvokerTest {
 				"}";
 		reader = new StringReader(request);
 
-		resp = svc.processInvocation(def, reqType, path, query, reader);
+		resp = svc.processInvocation(def, reqType, "",path, query, reader);
 		
 		actualBody = resp.getMethodRequestBody();
 		Assert.assertEquals(request, actualBody);

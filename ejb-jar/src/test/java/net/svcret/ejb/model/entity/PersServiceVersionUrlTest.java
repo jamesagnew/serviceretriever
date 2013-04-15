@@ -83,6 +83,7 @@ public class PersServiceVersionUrlTest extends BaseJpaTest {
 		urlObj.setUrl(url2);
 		
 		dom = myEntityManager.merge(dom);
+		dom.loadAllAssociations();
 		
 		newEntityManager();
 		
