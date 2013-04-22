@@ -32,7 +32,7 @@ import net.svcret.admin.shared.model.UrlSelectionPolicy;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class ModelUpdateServiceMock implements ModelUpdateService {
 
@@ -371,7 +371,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	}
 
 	@Override
-	public GAuthenticationHostList saveAuthenticationHost(GLocalDatabaseAuthHost theAuthHost) {
+	public GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) {
 		if (theAuthHost.getPid() <= 0) {
 			theAuthHost.setPid(ourNextPid++);
 			myAuthHostList.add(theAuthHost);

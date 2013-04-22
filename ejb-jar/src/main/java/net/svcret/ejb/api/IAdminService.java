@@ -47,7 +47,7 @@ public interface IAdminService {
 
 	GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ProcessingException;
 
-	GAuthenticationHostList saveAuthenticationHost(GLocalDatabaseAuthHost theAuthHost) throws ProcessingException;
+	GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) throws ProcessingException;
 
 	GAuthenticationHostList deleteAuthenticationHost(long thePid) throws ProcessingException;
 

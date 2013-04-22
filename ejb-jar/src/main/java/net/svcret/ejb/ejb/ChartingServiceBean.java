@@ -43,7 +43,8 @@ public class ChartingServiceBean implements IChartingServiceBean {
 //		graphDef.area("fast", new Color(0x55, 0, 0), "Too fast");
 //		graphDef.stack("over", new Color(0xFF, 0, 0), "Over speed");
 		graphDef.hrule(100, new Color(0, 0, 0xFF), "Maximum allowed");
-		graphDef.setFilename("./speed4.gif");
+//		graphDef.setFilename("./speed4.gif");
+		
 		RrdGraph graph = new RrdGraph(graphDef);
 		BufferedImage bi = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
 		graph.render(bi.getGraphics());

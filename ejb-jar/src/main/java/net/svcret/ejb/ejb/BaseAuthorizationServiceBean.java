@@ -23,7 +23,7 @@ public abstract class BaseAuthorizationServiceBean<T extends BasePersAuthenticat
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public PersUser authorize(BasePersAuthenticationHost theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException {
+	public final PersUser authorize(BasePersAuthenticationHost theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException {
 		Validate.throwIllegalArgumentExceptionIfNull("Host", theHost);
 		Validate.throwIllegalArgumentExceptionIfNull("Catalog", theUserCatalog);
 		Validate.throwIllegalArgumentExceptionIfNull("Grabber", theCredentialGrabber);
@@ -101,7 +101,7 @@ public abstract class BaseAuthorizationServiceBean<T extends BasePersAuthenticat
 		Validate.throwIllegalArgumentExceptionIfNull("AuthHostPid", theAuthHostPid);
 		Validate.throwIllegalArgumentExceptionIfNull("UserPid", theUserPid);
 		Validate.throwIllegalArgumentExceptionIfNotPositive("CacheForMillis", theCacheForMillis);
-		
+
 		String hash = theCredentialGrabber.getCredentialHash();
 		long expiry = System.currentTimeMillis() + theCacheForMillis;
 		myCredentialHashToExpiry.put(hash, new CacheBean(expiry, theUserPid, theAuthHostPid));
