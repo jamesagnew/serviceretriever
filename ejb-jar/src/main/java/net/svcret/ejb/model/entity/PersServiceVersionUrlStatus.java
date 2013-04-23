@@ -340,7 +340,7 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	 *            the status to set
 	 */
 	public synchronized void setStatus(StatusEnum theStatus) {
-		Validate.throwIllegalArgumentExceptionIfNull("Status", theStatus);
+		Validate.notNull(theStatus, "Status");
 		if (theStatus.equals(myStatus)) {
 			return;
 		}

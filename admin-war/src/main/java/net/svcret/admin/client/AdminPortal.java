@@ -16,11 +16,6 @@ import com.google.gwt.user.client.ui.RootLayoutPanel;
  */
 public class AdminPortal implements EntryPoint, UncaughtExceptionHandler {
 
-	/**
-	 * The message displayed to the user when the server cannot be reached or
-	 * returns an error.
-	 */
-	private static final String SERVER_ERROR = "An error occurred while " + "attempting to contact the server. Please check your network " + "connection and try again.";
 
 	/**
 	 * Create a remote service proxy to talk to the server-side Greeting
@@ -32,6 +27,8 @@ public class AdminPortal implements EntryPoint, UncaughtExceptionHandler {
 	 * Messages
 	 */
 	public static final Messages MSGS = GWT.create(Messages.class);
+
+	public static final Images IMAGES = GWT.create(Images.class);
 
 	/**
 	 * This is the entry point method.

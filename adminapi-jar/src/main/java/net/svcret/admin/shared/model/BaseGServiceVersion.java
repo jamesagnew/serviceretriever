@@ -10,9 +10,11 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	private BaseGClientSecurityList myClientSecurityList;
 	private long myHttpClientConfigPid;
 	private Date myLastAccess;
+	private String myProxyPath;
 	private GServiceVersionResourcePointerList myResourcePointerList;
 	private BaseGServerSecurityList myServerSecurityList;
 	private GServiceMethodList myServiceMethodList;
+
 	private GServiceVersionUrlList myServiceUrlList;
 	
 	public BaseGServiceVersion() {
@@ -29,14 +31,14 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	public BaseGClientSecurityList getClientSecurityList() {
 		return myClientSecurityList;
 	}
-
+	
 	/**
 	 * @return the httpClientConfigPid
 	 */
 	public long getHttpClientConfigPid() {
 		return myHttpClientConfigPid;
 	}
-	
+
 	/**
 	 * @return the lastAccess
 	 */
@@ -50,8 +52,17 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	public GServiceMethodList getMethodList() {
 		return myServiceMethodList;
 	}
+	
+	public abstract ServiceProtocolEnum getProtocol();
 
 
+
+	/**
+	 * @return the proxyPath
+	 */
+	public String getProxyPath() {
+		return myProxyPath;
+	}
 
 	/**
 	 * @return the resourcePointerList
@@ -86,6 +97,11 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 				return true;
 			}
 		}
+		return false;
+	}
+
+	@Override
+	public boolean hideDashboardRowWhenExpanded() {
 		return false;
 	}
 
@@ -146,6 +162,10 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	 */
 	public void setLastAccess(Date theLastAccess) {
 		myLastAccess = theLastAccess;
+	}
+
+	public void setProxyPath(String theProxyPath) {
+		myProxyPath=theProxyPath;
 	}
 
 	/**

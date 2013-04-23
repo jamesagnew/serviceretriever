@@ -11,8 +11,6 @@ import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -24,9 +22,6 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-import javax.persistence.Version;
-
-import org.hibernate.annotations.CollectionType;
 
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.ex.ProcessingException;
@@ -56,14 +51,14 @@ public class PersUser extends BasePersObject {
 	@JoinColumn(name = "AUTH_HOST_PID", referencedColumnName = "PID", nullable = false)
 	private BasePersAuthenticationHost myAuthenticationHost;
 
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true, mappedBy="myUser")
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true, mappedBy = "myUser")
 	private Collection<PersUserDomainPermission> myDomainPermissions;
 
 	// NB: Nullable because user can be backed by external authorization
 	@Column(name = "PASSWORD_HASH", nullable = true, length = 512)
 	private String myPasswordHash;
 
-	@ElementCollection(targetClass=UserGlobalPermissionEnum.class)
+	@ElementCollection(targetClass = UserGlobalPermissionEnum.class)
 	@CollectionTable(name = "PX_USER_GLOBALPERMS")
 	private Set<UserGlobalPermissionEnum> myPermissions;
 
@@ -76,7 +71,7 @@ public class PersUser extends BasePersObject {
 	private String myUsername;
 
 	public PersUserDomainPermission addPermission(PersDomain theServiceDomain) {
-		Validate.throwIllegalArgumentExceptionIfNull("PersDomain", theServiceDomain);
+		Validate.notNull(theServiceDomain, "PersDomain");
 
 		PersUserDomainPermission perm = new PersUserDomainPermission();
 		perm.setServiceUser(this);
@@ -89,6 +84,9 @@ public class PersUser extends BasePersObject {
 	}
 
 	public boolean checkPassword(String thePassword) throws ProcessingException {
+		if (myPasswordHash == null) {
+			throw new IllegalStateException("No password stored in this user - PID " + getPid());
+		}
 		try {
 			return Password.checkStrongHash(thePassword, myPasswordHash);
 		} catch (Exception e) {
@@ -119,6 +117,10 @@ public class PersUser extends BasePersObject {
 			myDomainPermissions = new ArrayList<PersUserDomainPermission>();
 		}
 		return Collections.unmodifiableCollection(myDomainPermissions);
+	}
+
+	public String getPasswordHash() {
+		return myPasswordHash;
 	}
 
 	/**
@@ -194,13 +196,6 @@ public class PersUser extends BasePersObject {
 	}
 
 	/**
-	 * @param thePermissions the permissions to set
-	 */
-	public void setPermissions(Set<UserGlobalPermissionEnum> thePermissions) {
-		myPermissions = thePermissions;
-	}
-
-	/**
 	 * @param theAuthenticationHost
 	 *            the authenticationHost to set
 	 */
@@ -208,8 +203,19 @@ public class PersUser extends BasePersObject {
 		myAuthenticationHost = theAuthenticationHost;
 	}
 
+	/**
+	 * @param theDomainPermissions
+	 *            the domainPermissions to set
+	 */
+	public void setDomainPermissions(Collection<PersUserDomainPermission> theDomainPermissions) {
+		myDomainPermissions = theDomainPermissions;
+		for (PersUserDomainPermission next : theDomainPermissions) {
+			next.setServiceUser(this);
+		}
+	}
+
 	public void setPassword(String thePassword) throws ProcessingException {
-		Validate.throwIllegalArgumentExceptionIfBlank("Password", thePassword);
+		Validate.notBlank(thePassword, "Password");
 
 		try {
 			myPasswordHash = Password.getStrongHash(thePassword);
@@ -218,14 +224,19 @@ public class PersUser extends BasePersObject {
 		}
 	}
 
-	/**
-	 * @param theDomainPermissions the domainPermissions to set
-	 */
-	public void setDomainPermissions(Collection<PersUserDomainPermission> theDomainPermissions) {
-		myDomainPermissions = theDomainPermissions;
-		for (PersUserDomainPermission next : theDomainPermissions) {
-			next.setServiceUser(this);
+	public void setPasswordHash(String thePasswordHash) {
+		if (myAuthenticationHost instanceof PersAuthenticationHostLocalDatabase) {
+			Validate.notBlank(thePasswordHash);
 		}
+		myPasswordHash = thePasswordHash;
+	}
+
+	/**
+	 * @param thePermissions
+	 *            the permissions to set
+	 */
+	public void setPermissions(Set<UserGlobalPermissionEnum> thePermissions) {
+		myPermissions = thePermissions;
 	}
 
 	/**

@@ -54,6 +54,7 @@ public class DeleteDomainPanel extends FlowPanel {
 		if (domain == null) {
 			GWT.log("Unknown domain PID: " + thePid);
 			NavProcessor.goHome();
+			return;
 		}
 
 		Label intro = new Label(MSGS.deleteDomainPanel_Confirm(domain.getId()));

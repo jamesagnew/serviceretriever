@@ -5,7 +5,9 @@ import java.io.Serializable;
 import net.svcret.admin.shared.ServiceFailureException;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
 import net.svcret.admin.shared.model.BaseGAuthHost;
+import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
+import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
@@ -28,17 +30,19 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 @RemoteServiceRelativePath("modelupdate")
 public interface ModelUpdateService extends RemoteService {
 
-	GDomain addDomain(String theId, String theName) throws ServiceFailureException;
+	GDomain addDomain(GDomain theDomain) throws ServiceFailureException;
 
 	GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ServiceFailureException;
 
-	AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, GSoap11ServiceVersion theVersion) throws ServiceFailureException;
+	AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion) throws ServiceFailureException;
 
 	GSoap11ServiceVersion createNewSoap11ServiceVersion(Long theDomainPid, Long theServicePid, Long theUncommittedId);
 
 	GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ServiceFailureException;
 
 	ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ServiceFailureException;
+
+	BaseGServiceVersion loadServiceVersionIntoSession(long theServiceVersionPid) throws ServiceFailureException;
 
 	UserAndAuthHost loadUser(long theUserPid) throws ServiceFailureException;
 
@@ -50,17 +54,21 @@ public interface ModelUpdateService extends RemoteService {
 
 	GDomainList removeDomain(long thePid) throws ServiceFailureException;
 
+	GDomainList removeService(long theDomainPid, long theServicePid) throws ServiceFailureException;
+
 	void reportClientError(String theMessage, Throwable theException);
 
 	GAuthenticationHostList saveAuthenticationHost(GLocalDatabaseAuthHost theAuthHost) throws ServiceFailureException;
 
-	GDomain saveDomain(long thePid, String theId, String theName);
+	GDomain saveDomain(GDomain theDomain) throws ServiceFailureException;
 
 	GHttpClientConfig saveHttpClientConfig(boolean theCreate, GHttpClientConfig theConfig) throws ServiceFailureException;
 
-	void saveServiceVersionToSession(GSoap11ServiceVersion theServiceVersion);
+	GDomainList saveService(GService theService) throws ServiceFailureException;
 
-	void saveUser(GUser theUser);
+	void saveServiceVersionToSession(BaseGServiceVersion theServiceVersion);
+
+	void saveUser(GUser theUser) throws ServiceFailureException;
 
 	public static class UserAndAuthHost implements Serializable {
 		private static final long serialVersionUID = 1L;
@@ -114,5 +122,7 @@ public interface ModelUpdateService extends RemoteService {
 			myUser = theUser;
 		}
 	}
+
+	GConfig loadConfig();
 
 }

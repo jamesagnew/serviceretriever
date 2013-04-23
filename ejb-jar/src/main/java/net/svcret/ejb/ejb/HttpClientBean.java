@@ -55,7 +55,7 @@ public class HttpClientBean implements IHttpClient {
 
 	@Override
 	public HttpResponseBean get(String theUrl) {
-		Validate.throwIllegalArgumentExceptionIfBlank("URL", theUrl);
+		Validate.notBlank(theUrl, "URL");
 		ourLog.debug("Requesting URL: {}", theUrl);
 
 		HttpUriRequest httpReq = new HttpGet(theUrl);

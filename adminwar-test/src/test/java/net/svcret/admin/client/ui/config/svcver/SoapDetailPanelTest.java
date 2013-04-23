@@ -1,7 +1,6 @@
 package net.svcret.admin.client.ui.config.svcver;
 
 import static org.mockito.Mockito.*;
-import net.svcret.admin.client.ui.config.AddServiceVersionPanel;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 
 import org.junit.Test;

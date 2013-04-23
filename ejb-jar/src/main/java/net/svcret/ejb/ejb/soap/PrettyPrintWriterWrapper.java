@@ -28,7 +28,7 @@ public class PrettyPrintWriterWrapper implements XMLEventWriter {
 	}
 
 	private String repeat(int d, String s) {
-		return StringUtils.leftPad("", d * 3);
+		return StringUtils.repeat(s, d * 3);
 	}
 
 	@Override

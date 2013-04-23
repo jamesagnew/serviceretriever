@@ -3,10 +3,10 @@ package net.svcret.admin.shared.model;
 
 public enum ClientSecurityEnum {
 
-	WSSEC("WS-Security"){
+	WSSEC_UT("WS-Security"){
 		@Override
 		public BaseGClientSecurity newInstance() {
-			return new GWsSecClientSecurity();
+			return new GWsSecUsernameTokenClientSecurity();
 		}};
 	
 	private String myName;

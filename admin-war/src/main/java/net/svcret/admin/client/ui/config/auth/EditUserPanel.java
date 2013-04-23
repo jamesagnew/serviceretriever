@@ -11,7 +11,6 @@ import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.util.StringUtil;
-import net.svcret.ejb.model.entity.PersUser;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;

@@ -12,11 +12,12 @@ public class PersAuthenticationHostLocalDatabase extends BasePersAuthenticationH
 	private static final long serialVersionUID = 1L;
 
 	public PersAuthenticationHostLocalDatabase() {
-		// super
+		setSupportsPasswordChange(true);
 	}
 
 	public PersAuthenticationHostLocalDatabase(String theModuleId) {
 		super(theModuleId);
+		setSupportsPasswordChange(true);
 	}
 
 	@Override

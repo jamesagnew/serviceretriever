@@ -5,6 +5,7 @@ import java.util.Date;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
+import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
@@ -27,6 +28,7 @@ public class Model {
 	private boolean myDomainListInitialized = false;
 	private GHttpClientConfigList myHttpClientConfigList;
 	private GAuthenticationHostList myAuthHostList;
+	private GConfig myConfig;
 
 	private Model() {
 		initLists();
@@ -56,7 +58,7 @@ public class Model {
 		}
 	}
 
-	public void addServiceVersion(long theDomainPid, long theServicePid, BaseGServiceVersion theServiceVersion) {
+	public void addOrUpdateServiceVersion(long theDomainPid, long theServicePid, BaseGServiceVersion theServiceVersion) {
 		GDomain domain = myDomainList.getDomainByPid(theDomainPid);
 		if (domain == null) {
 			GWT.log("Unknown domain! " + theDomainPid);
@@ -69,7 +71,12 @@ public class Model {
 			return;
 		}
 
-		service.getVersionList().add(theServiceVersion);
+		BaseGServiceVersion existing = service.getVersionList().getVersionByPid(theServiceVersion.getPid());
+		if (existing != null) {
+			existing.merge(theServiceVersion);
+		} else {
+			service.getVersionList().add(theServiceVersion);
+		}
 	}
 
 	private void initLists() {
@@ -183,7 +190,7 @@ public class Model {
 		b.append("Failure: ");
 		b.append(theCaught.toString());
 		b.append("\n");
-		
+
 		int i = 0;
 		for (StackTraceElement next : theCaught.getStackTrace()) {
 			b.append(next.getMethodName());
@@ -192,7 +199,7 @@ public class Model {
 				break;
 			}
 		}
-		
+
 		Window.alert(b.toString());
 	}
 
@@ -226,7 +233,7 @@ public class Model {
 			if (myHttpClientConfigListCallback != null) {
 				myHttpClientConfigListCallback.onSuccess(myHttpClientConfigList);
 			}
-			
+
 			if (myAuthHostListCallback != null) {
 				myAuthHostListCallback.onSuccess(myAuthHostList);
 			}
@@ -285,12 +292,32 @@ public class Model {
 			}
 		};
 		AdminPortal.MODEL_SVC.saveAuthenticationHost(theAuthHost, callback);
-		
+
 	}
 
 	public void mergeDomainList(GDomainList theResult) {
 		myDomainListInitialized = true;
 		myDomainList.mergeResults(theResult);
+	}
+
+	public void loadConfig(final IAsyncLoadCallback<GConfig> theIAsyncLoadCallback) {
+		if (myConfig != null) {
+			theIAsyncLoadCallback.onSuccess(myConfig);
+			return;
+		}
+		
+		AdminPortal.MODEL_SVC.loadConfig(new AsyncCallback<GConfig>() {
+			@Override
+			public void onFailure(Throwable theCaught) {
+				handleFailure(theCaught);
+			}
+
+			@Override
+			public void onSuccess(GConfig theResult) {
+				myConfig=theResult;
+				theIAsyncLoadCallback.onSuccess(theResult);
+			}
+		});
 	}
 
 }

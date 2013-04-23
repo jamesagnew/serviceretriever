@@ -12,7 +12,7 @@ public class ViewAndEditFactory {
 	@SuppressWarnings("unchecked")
 	public static <T extends BaseGClientSecurity> IProvidesViewAndEdit<T> provideClientSecurity(T theClientSecurity) {
 		switch (theClientSecurity.getType()) {
-		case WSSEC:
+		case WSSEC_UT:
 			return (IProvidesViewAndEdit<T>) new WsSecClientSecurity();
 		}
 		
@@ -22,7 +22,7 @@ public class ViewAndEditFactory {
 	@SuppressWarnings("unchecked")
 	public static <T extends BaseGServerSecurity> IProvidesViewAndEdit<T> provideServerSecurity(T theServerSecurity) {
 		switch (theServerSecurity.getType()) {
-		case WSSEC:
+		case WSSEC_UT:
 			return (IProvidesViewAndEdit<T>) new WsSecServerSecurity();
 		}
 		

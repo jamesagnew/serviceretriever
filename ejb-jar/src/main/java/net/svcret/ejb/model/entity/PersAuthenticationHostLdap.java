@@ -83,7 +83,7 @@ public class PersAuthenticationHostLdap extends BasePersAuthenticationHost {
 	 *            the ldapConnTimeout to set
 	 */
 	public void setLdapConnTimeout(int theLdapConnTimeout) {
-		Validate.throwIllegalArgumentExceptionIfNotPositive("ConnectionTimeout", theLdapConnTimeout);
+		Validate.greaterThanZero(theLdapConnTimeout, "ConnectionTimeout");
 		myLdapConnTimeout = theLdapConnTimeout;
 	}
 
@@ -92,7 +92,7 @@ public class PersAuthenticationHostLdap extends BasePersAuthenticationHost {
 	 *            the ldapHost to set
 	 */
 	public void setLdapHost(String theLdapHost) {
-		Validate.throwIllegalArgumentExceptionIfBlank("Host", theLdapHost);
+		Validate.notBlank(theLdapHost, "Host");
 		myLdapHost = theLdapHost;
 	}
 
@@ -101,7 +101,7 @@ public class PersAuthenticationHostLdap extends BasePersAuthenticationHost {
 	 *            the ldapPort to set
 	 */
 	public void setLdapPort(int theLdapPort) {
-		Validate.throwIllegalArgumentExceptionIfNotPositive("Port", theLdapPort);
+		Validate.greaterThanZero(theLdapPort, "Port");
 		myLdapPort = theLdapPort;
 	}
 

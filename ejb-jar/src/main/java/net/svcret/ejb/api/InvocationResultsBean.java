@@ -1,15 +1,16 @@
 package net.svcret.ejb.api;
 
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 
+import org.apache.commons.lang3.Validate;
 
 public class InvocationResultsBean {
 
-	private List<ICredentialGrabber> myCredentialsInRequest;
+	private Map<Class<? extends ICredentialGrabber>, ICredentialGrabber> myCredentialsInRequest = new HashMap<Class<? extends ICredentialGrabber>, ICredentialGrabber>();
 	private String myMethodContentType;
 	private PersServiceVersionMethod myMethodDefinition;
 	private Map<String, String> myMethodHeaders;
@@ -24,8 +25,8 @@ public class InvocationResultsBean {
 	/**
 	 * @return the credentialsInRequest
 	 */
-	public List<ICredentialGrabber> getCredentialsInRequest() {
-		return myCredentialsInRequest;
+	public ICredentialGrabber getCredentialsInRequest(Class<? extends ICredentialGrabber> theType) {
+		return myCredentialsInRequest.get(theType);
 	}
 
 	/**
@@ -98,8 +99,14 @@ public class InvocationResultsBean {
 		return myStaticResourceUrl;
 	}
 
-	public void setCredentialsInRequest(List<ICredentialGrabber> theCredentialGrabbers) {
-		myCredentialsInRequest = theCredentialGrabbers;
+	public void addCredentials(ICredentialGrabber theCredentials) {
+		Validate.notNull(theCredentials);
+
+		if (myCredentialsInRequest.containsKey(theCredentials.getClass())) {
+			throw new IllegalArgumentException("Duplicate credential grabber type: " + theCredentials.getClass());
+		}
+
+		myCredentialsInRequest.put(theCredentials.getClass(), theCredentials);
 	}
 
 	public void setResultMethod(PersServiceVersionMethod theMethod, String theRequestBody, String theContentType, Map<String, String> theHeaders) {

@@ -1,6 +1,7 @@
 package net.svcret.admin.client.ui.components;
 
 import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Widget;
 
 public class TwoColumnGrid extends FlexTable {
@@ -26,5 +27,10 @@ public class TwoColumnGrid extends FlexTable {
 		int row = getRowCount();
 		setWidget(row, 0, lbl);
 		setWidget(row, 1, theComponent);
+	}
+	
+	public void addDescription(String theDescription) {
+		int row = getRowCount();
+		setWidget(row, 1, new HTML(theDescription));
 	}
 }

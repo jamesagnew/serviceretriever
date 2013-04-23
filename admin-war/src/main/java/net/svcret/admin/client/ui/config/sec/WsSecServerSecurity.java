@@ -63,6 +63,9 @@ public class WsSecServerSecurity implements IProvidesViewAndEdit<GWsSecServerSec
 					authHostList.setSelectedIndex(0);
 					theObject.setAuthHostPid(theResult.get(0).getPid());
 				}
+				if (theObject.getAuthHostPid() == 0) {
+					theObject.setAuthHostPid(theResult.get(authHostList.getSelectedIndex()).getPid());
+				}
 				authHostList.addChangeHandler(new ChangeHandler() {
 					@Override
 					public void onChange(ChangeEvent theEvent) {

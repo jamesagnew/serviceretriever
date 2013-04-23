@@ -1,60 +1,60 @@
 package net.svcret.admin.client.ui.config.domain;
 
-import net.svcret.admin.client.ui.components.HtmlLabel;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
+import net.svcret.admin.client.ui.components.TwoColumnGrid;
+import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.Grid;
-import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextBox;
 
 public class EditDomainBasicPropertiesPanel extends FlowPanel {
 
 	private TextBox myIdTextBox;
-	private HtmlLabel myIdLabel;
-	private HtmlLabel myNameLabel;
 	private TextBox myNameTextBox;
-	private Label myErrorLabel;
 	private LoadingSpinner mySpinner;
 
-	public EditDomainBasicPropertiesPanel(String theId, String theName, String theButtonText, ClickHandler theButtonHandler) {
-		Grid formGrid = new Grid(2, 2);
+	public EditDomainBasicPropertiesPanel(final GDomain theDomain, String theButtonText, ClickHandler theButtonHandler, ImageResource theButtonIcon) {
+		TwoColumnGrid formGrid = new TwoColumnGrid();
 		add(formGrid);
 
 		/*
 		 * Id
 		 */
-		myIdLabel = new HtmlLabel("ID", "elem_id");
-		formGrid.setWidget(0, 0, myIdLabel);
-
 		myIdTextBox = new TextBox();
-		myIdTextBox.setValue(theId);
-		myIdTextBox.getElement().setId("elem_id");
-		formGrid.setWidget(0, 1, myIdTextBox);
+		myIdTextBox.setValue(theDomain.getId());
+		myIdTextBox.addValueChangeHandler(new ValueChangeHandler<String>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<String> theEvent) {
+				theDomain.setId(myIdTextBox.getValue());
+			}
+		});
+		formGrid.addRow("ID", myIdTextBox);
 
 		/*
 		 * Name
 		 */
-		myNameLabel = new HtmlLabel("Name", "elem_name");
-		formGrid.setWidget(1, 0, myNameLabel);
 		myNameTextBox = new TextBox();
-		myNameTextBox.setValue(theName);
-		myNameTextBox.getElement().setId("elem_name");
-		formGrid.setWidget(1, 1, myNameTextBox);
-
-		myErrorLabel = new Label();
-		myErrorLabel.setStyleName("hidden");
-		add(myErrorLabel);
+		myNameTextBox.setValue(theDomain.getName());
+		myNameTextBox.addValueChangeHandler(new ValueChangeHandler<String>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<String> theEvent) {
+				theDomain.setName(myNameTextBox.getValue());
+			}
+		});
+		formGrid.addRow("Name",myNameTextBox);
 
 		mySpinner = new LoadingSpinner();
 		mySpinner.hideCompletely();
 		add(mySpinner);
 
-		Button addButton = new PButton(theButtonText);
+		Button addButton = new PButton(theButtonIcon, theButtonText);
 		addButton.addClickHandler(theButtonHandler);
 		add(addButton);
 	}
@@ -83,17 +83,8 @@ public class EditDomainBasicPropertiesPanel extends FlowPanel {
 		mySpinner.hideCompletely();
 	}
 
-	public String getId() {
-		return myIdTextBox.getValue();
-	}
-
-	public String getName() {
-		return myNameTextBox.getValue();
-	}
-
 	public void showError(String theMessage) {
-		myErrorLabel.setStyleName("errorLabel");
-		myErrorLabel.setText(theMessage);
+		mySpinner.showMessage(theMessage, false);
 	}
 
 	public void showMessage(String theMessage, boolean theShowSpinner) {

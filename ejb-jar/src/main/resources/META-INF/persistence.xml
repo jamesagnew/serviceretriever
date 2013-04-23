@@ -67,6 +67,8 @@
 		<provider>org.hibernate.ejb.HibernatePersistence</provider>
 		<jta-data-source>jdbc/svcret</jta-data-source>
 		
+		<class>net.svcret.ejb.model.entity.PersConfig</class>
+		<class>net.svcret.ejb.model.entity.PersConfigProxyUrlBase</class>
 		<class>net.svcret.ejb.model.entity.BasePersServiceVersion</class>
 		<class>net.svcret.ejb.model.entity.PersBaseClientAuth</class>
 		<class>net.svcret.ejb.model.entity.PersAuthenticationHostLdap</class>
@@ -114,6 +116,8 @@
 
 	<persistence-unit name="ServiceProxy_UNITTEST" transaction-type="RESOURCE_LOCAL">
 		<provider>org.hibernate.ejb.HibernatePersistence</provider>
+		<class>net.svcret.ejb.model.entity.PersConfig</class>
+		<class>net.svcret.ejb.model.entity.PersConfigProxyUrlBase</class>
 		<class>net.svcret.ejb.model.entity.BasePersServiceVersion</class>
 		<class>net.svcret.ejb.model.entity.PersBaseClientAuth</class>
 		<class>net.svcret.ejb.model.entity.PersAuthenticationHostLdap</class>

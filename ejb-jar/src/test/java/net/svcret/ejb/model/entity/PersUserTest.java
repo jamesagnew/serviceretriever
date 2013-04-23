@@ -5,7 +5,7 @@ import static org.junit.Assert.*;
 import java.sql.SQLException;
 
 import net.svcret.ejb.ejb.BaseJpaTest;
-import net.svcret.ejb.ejb.ServicePersistenceBean;
+import net.svcret.ejb.ejb.DaoBean;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 
@@ -15,7 +15,7 @@ import org.junit.Test;
 @SuppressWarnings("unused")
 public class PersUserTest extends BaseJpaTest {
 
-	private ServicePersistenceBean mySvc;
+	private DaoBean mySvc;
 	private PersEnvironment e0;
 	private PersEnvironment e1;
 	private PersDomain d0;
@@ -34,7 +34,7 @@ public class PersUserTest extends BaseJpaTest {
 
 	@Before
 	public void before2() throws SQLException, ProcessingException {
-		mySvc = new ServicePersistenceBean();
+		mySvc = new DaoBean();
 
 		newEntityManager();
 
@@ -63,7 +63,7 @@ public class PersUserTest extends BaseJpaTest {
 	@Override
 	protected void newEntityManager() {
 		super.newEntityManager();
-		((ServicePersistenceBean) mySvc).setEntityManager(myEntityManager);
+		((DaoBean) mySvc).setEntityManager(myEntityManager);
 	}
 
 	@Test

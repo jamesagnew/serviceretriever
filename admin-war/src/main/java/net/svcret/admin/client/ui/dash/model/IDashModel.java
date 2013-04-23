@@ -11,6 +11,8 @@ public interface IDashModel {
 	
 	Widget renderName();
 	
+	Widget renderLastInvocation();
+
 	Widget renderStatus();
 	
 	Widget renderUsage();
@@ -26,4 +28,6 @@ public interface IDashModel {
 	String getCellStyle();
 
 	Widget renderLatency();
+
+	Widget renderSecurity();
 }

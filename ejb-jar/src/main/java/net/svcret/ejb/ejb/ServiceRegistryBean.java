@@ -1,6 +1,5 @@
 package net.svcret.ejb.ejb;
 
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -17,36 +16,42 @@ import javax.ejb.TransactionAttributeType;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
+import net.svcret.ejb.api.IBroadcastSender;
+import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IHttpClient;
-import net.svcret.ejb.api.IServicePersistence;
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersDomain;
+import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
-import net.svcret.ejb.model.registry.ServiceVersion;
 import net.svcret.ejb.model.registry.Services;
-import net.svcret.ejb.model.registry.Services.Service;
 import net.svcret.ejb.util.Validate;
 import net.svcret.ejb.util.WsdlDescriptionType;
 
 @Startup
 @Singleton
 public class ServiceRegistryBean implements IServiceRegistry {
+
 	private static JAXBContext ourJaxbContext;
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceRegistryBean.class);
-
 	private static volatile Map<String, PersServiceVersionSoap11> ourProxyPathToServices;
 	private static Object ourRegistryLock = new Object();
-	
-	@EJB
-	private IHttpClient mySvcHttpClient;
+	private static final String STATE_KEY = ServiceRegistryBean.class.getName() + "_VERSION";
 
 	@EJB
-	private IServicePersistence mySvcPersistence;
+	private IBroadcastSender myBroadcastSender;
+
+	private long myCurrentVersion;
+
+	@EJB
+	private IDao myDao;
+
+	@EJB
+	private IHttpClient mySvcHttpClient;
 
 	/**
 	 * Constructor
@@ -59,6 +64,39 @@ public class ServiceRegistryBean implements IServiceRegistry {
 				throw new InternalErrorException(e);
 			}
 		}
+	}
+
+	@Override
+	public void deleteHttpClientConfig(PersHttpClientConfig theConfig) throws ProcessingException {
+		catalogHasChanged();
+		myDao.deleteHttpClientConfig(theConfig);
+	}
+
+	@Override
+	public PersDomain getOrCreateDomainWithId(String theId) throws ProcessingException {
+		PersDomain orCreateDomainWithId = myDao.getOrCreateDomainWithId(theId);
+		if (orCreateDomainWithId.isNewlyCreated()) {
+			catalogHasChanged();
+		}
+		return orCreateDomainWithId;
+	}
+
+	@Override
+	public PersServiceVersionSoap11 getOrCreateServiceVersionWithId(PersService theService, String theVersionId) throws ProcessingException {
+		PersServiceVersionSoap11 retVal = myDao.getOrCreateServiceVersionWithId(theService, theVersionId);
+		if (retVal.isNewlyCreated()) {
+			catalogHasChanged();
+		}
+		return retVal;
+	}
+
+	@Override
+	public PersService getOrCreateServiceWithId(PersDomain theDomain, String theId) throws ProcessingException {
+		PersService retVal = myDao.getOrCreateServiceWithId(theDomain, theId);
+		if (retVal.isNewlyCreated()) {
+			catalogHasChanged();
+		}
+		return retVal;
 	}
 
 	/**
@@ -74,53 +112,14 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		}
 	}
 
-	private void loadServiceDefinition__(Service theService) throws ProcessingException {
-		Validate.throwProcessingExceptionIfBlank("Service ID is blank/missing", theService.getServiceId());
-		Validate.throwProcessingExceptionIfBlank("PersDomain ID is blank/missing", theService.getDomainId());
-		Validate.throwProcessingExceptionIfBlank("Service Name is blank/missing", theService.getServiceName());
-		Validate.throwProcessingExceptionIfEmpty("No versions provided", theService.getVersions());
+	@Override
+	public List<String> getValidPaths() {
+		List<String> retVal = new ArrayList<String>();
 
-		PersDomain pDomain = mySvcPersistence.getOrCreateDomainWithId(theService.getDomainId());
-		PersService pService = mySvcPersistence.getOrCreateServiceWithId(pDomain, theService.getServiceId());
-		
-		pService.setServiceName(theService.getServiceName());
-		mySvcPersistence.saveService(pService);
-		
-		assert pDomain != null;
-		assert pService != null;
+		retVal.addAll(ourProxyPathToServices.keySet());
+		Collections.sort(retVal);
 
-		ourLog.info("Initializing Service with ID[{}]: {}", pService.getServiceId(), pService.getServiceName());
-
-		Collection<ServiceVersion> versions = theService.getVersions();
-		for (ServiceVersion nextVersion : versions) {
-
-			PersServiceVersionSoap11 pVersion = mySvcPersistence.getOrCreateServiceVersionWithId(pService, nextVersion.getVersionId());
-			pVersion.setActive(pVersion.isActive());
-			pVersion.setWsdlUrl(nextVersion.getWsdlUrl());
-
-
-			mySvcPersistence.saveServiceVersion(pVersion);
-		}
-	}
-
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void loadServiceDefinition__(String theXmlContents) throws ProcessingException {
-
-		Services service;
-		try {
-			service = (Services) ourJaxbContext.createUnmarshaller().unmarshal(new StringReader(theXmlContents));
-		} catch (JAXBException e) {
-			throw new ProcessingException("Failed to unmarshall XML for service definition", e);
-		}
-
-		if (service.getServices().size() == 0) {
-			throw new ProcessingException("No services defined in file");
-		}
-
-		for (Service nextService : service.getServices()) {
-			loadServiceDefinition__(nextService);
-		}
-
+		return retVal;
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -128,15 +127,80 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	public void postConstruct() {
 		reloadRegistryFromDatabase();
 	}
-	
+
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	@Override
 	public void reloadRegistryFromDatabase() {
+
+		long newVersion = myDao.getStateCounter(STATE_KEY);
+		
+		ourLog.debug("New service registry version is {} - Have version {} in memory", newVersion, myCurrentVersion);
+		
+		if (newVersion == 0 || newVersion > myCurrentVersion) {
+			doReloadRegistryFromDatabase();
+		}
+
+	}
+
+	@Override
+	public void removeDomain(PersDomain theDomain) throws ProcessingException {
+		catalogHasChanged();
+		myDao.removeDomain(theDomain);
+	}
+
+	@Override
+	public PersDomain saveDomain(PersDomain theDomain) throws ProcessingException {
+		catalogHasChanged();
+		return myDao.saveDomain(theDomain);
+	}
+
+	@Override
+	public PersHttpClientConfig saveHttpClientConfig(PersHttpClientConfig theConfig) throws ProcessingException {
+		catalogHasChanged();
+		return myDao.saveHttpClientConfig(theConfig);
+	}
+
+	@Override
+	public void saveService(PersService theService) throws ProcessingException {
+		catalogHasChanged();
+		myDao.saveService(theService);
+	}
+
+	@Override
+	public BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theSv) throws ProcessingException {
+		catalogHasChanged();
+		return myDao.saveServiceVersion(theSv);
+	}
+
+	/**
+	 * FOR UNIT TESTS ONLY
+	 */
+	public void setDao(IDao theSvcPersistence) {
+		Validate.isNull(myDao, "IDao");
+		myDao = theSvcPersistence;
+	}
+
+	/**
+	 * FOR UNIT TESTS ONLY
+	 */
+	public void setSvcHttpClient(IHttpClient theSvcHttpClient) {
+		Validate.isNull(mySvcHttpClient, "IServicHttpClient");
+		mySvcHttpClient = theSvcHttpClient;
+	}
+
+	private void catalogHasChanged() throws ProcessingException {
+		incrementStateVersion();
+		myBroadcastSender.notifyServiceCatalogChanged();
+	}
+
+	private void doReloadRegistryFromDatabase() {
 		ourLog.info("Reloading service registry from database");
 
+		long newVersion = myDao.getStateCounter(STATE_KEY);
+		
 		Map<String, PersDomain> domainMap = new HashMap<String, PersDomain>();
 		Map<String, PersServiceVersionSoap11> pathToServiceVersions = new HashMap<String, PersServiceVersionSoap11>();
-		Collection<PersDomain> domains = mySvcPersistence.getAllDomains();
+		Collection<PersDomain> domains = myDao.getAllDomains();
 		for (PersDomain nextDomain : domains) {
 			domainMap.put(nextDomain.getDomainId(), nextDomain);
 			nextDomain.loadAllAssociations();
@@ -155,7 +219,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		}
 
 		Map<String, PersUser> serviceUserMap = new HashMap<String, PersUser>();
-		Collection<PersUser> users = mySvcPersistence.getAllServiceUsers();
+		Collection<PersUser> users = myDao.getAllServiceUsers();
 		for (PersUser nextUser : users) {
 			serviceUserMap.put(nextUser.getUsername(), nextUser);
 			nextUser.loadAllAssociations();
@@ -165,115 +229,20 @@ public class ServiceRegistryBean implements IServiceRegistry {
 
 		synchronized (ourRegistryLock) {
 			ourProxyPathToServices = pathToServiceVersions;
+			myCurrentVersion = newVersion;
 		}
+	}
 
+	private void incrementStateVersion() {
+		long newVersion = myDao.incrementStateCounter(STATE_KEY);
+		ourLog.debug("State counter is now {}", newVersion);
 	}
 
 	/**
 	 * FOR UNIT TESTS ONLY
 	 */
-	public void setSvcHttpClient(IHttpClient theSvcHttpClient) {
-		Validate.throwIllegalStateExceptionIfNotNull("IServicHttpClient", mySvcHttpClient);
-		mySvcHttpClient = theSvcHttpClient;
+	void setBroadcastSender(IBroadcastSender theBroadcastSender) {
+		myBroadcastSender = theBroadcastSender;
 	}
-
-	/**
-	 * FOR UNIT TESTS ONLY
-	 */
-	public void setSvcPersistence(IServicePersistence theSvcPersistence) {
-		Validate.throwIllegalStateExceptionIfNotNull("IServicePersistence", mySvcPersistence);
-		mySvcPersistence = theSvcPersistence;
-	}
-
-	@Override
-	public List<String> getValidPaths() {
-		List<String> retVal=new ArrayList<String>();
-		
-		retVal.addAll(ourProxyPathToServices.keySet());
-		Collections.sort(retVal);
-		
-		return retVal;
-	}
-
-	// public class MyWsdlLocator implements WSDLLocator {
-	//
-	// private PersServiceVersionSoap11 myVersion;
-	// private String myWsdlText;
-	//
-	// public MyWsdlLocator(PersServiceVersionSoap11 theVersion) {
-	// myVersion = theVersion;
-	// }
-	//
-	// @Override
-	// public void close() {
-	// // nothing
-	// }
-	//
-	// @Override
-	// public InputSource getBaseInputSource() {
-	// ourLog.info("Retrieving WSDL: {}", myVersion.getWsdlUrl());
-	// HttpResponseBean wsdlText;
-	// try {
-	// wsdlText = mySvcHttpClient.get(myVersion.getWsdlUrl());
-	// } catch (HttpFailureException e) {
-	// throw new ProcessingRuntimeException("Failed to load WSDL \"" +
-	// myVersion.getWsdlUrl() + "\". Problem was: " + e.getMessage(), e);
-	// }
-	//
-	// myWsdlText = wsdlText.getBody();
-	//
-	// myVersion.addResource(myVersion.getWsdlUrl(), wsdlText.getBody());
-	// InputSource wsdlIs = new InputSource(new
-	// StringReader(wsdlText.getBody()));
-	// return wsdlIs;
-	// }
-	//
-	// @Override
-	// public String getBaseURI() {
-	// return myVersion.getWsdlUrl();
-	// }
-	//
-	// @Override
-	// public InputSource getImportInputSource(String theParentLocation, String
-	// theImportLocation) {
-	//
-	// String norm;
-	// try {
-	// norm = UrlUtil.calculateRelativeUrl(theParentLocation,
-	// theImportLocation);
-	// } catch (URISyntaxException e) {
-	// throw new ProcessingRuntimeException("Invalid URL found within WSDL: " +
-	// e.getMessage(), e);
-	// }
-	// ourLog.info("Retrieving Import - Parent: {} - Location: {} - Normalized: {}",
-	// new Object[] { theParentLocation, theImportLocation });
-	//
-	// HttpResponseBean wsdlText;
-	// try {
-	// wsdlText = mySvcHttpClient.get(norm);
-	// } catch (HttpFailureException e) {
-	// throw new ProcessingRuntimeException("Failed to load schema import \"" +
-	// norm + "\". Problem was: " + e.getMessage(), e);
-	// }
-	//
-	// myVersion.addResource(theImportLocation, wsdlText.getBody());
-	// InputSource wsdlIs = new InputSource(new
-	// StringReader(wsdlText.getBody()));
-	// return wsdlIs;
-	//
-	// // return null;
-	// }
-	//
-	// @Override
-	// public String getLatestImportURI() {
-	// // TODO Auto-generated method stub
-	// return null;
-	// }
-	//
-	// public String getWsdlBody() {
-	// return myWsdlText;
-	// }
-	//
-	// }
 
 }

@@ -4,10 +4,9 @@ import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
-import net.svcret.ejb.api.ServiceProtocolEnum;
+import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersService;
-
 
 @Entity
 @DiscriminatorValue("SOAP11")
@@ -49,7 +48,6 @@ public class PersServiceVersionSoap11 extends BasePersServiceVersion {
 	public ServiceProtocolEnum getProtocol() {
 		return ServiceProtocolEnum.SOAP11;
 	}
-
 
 
 

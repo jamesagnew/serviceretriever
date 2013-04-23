@@ -3,7 +3,7 @@ package net.svcret.admin.shared.model;
 public enum ServerSecurityEnum {
 
 
-	WSSEC("WS-Security"){
+	WSSEC_UT("WS-Security"){
 		@Override
 		public BaseGServerSecurity newInstance() {
 			return new GWsSecServerSecurity();

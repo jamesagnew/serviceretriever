@@ -13,6 +13,8 @@ import org.hibernate.annotations.Index;
 @Entity()
 public class PersInvocationAnonStats extends BasePersInvocationStats {
 
+	private static final long serialVersionUID = 1L;
+	
 	@EmbeddedId
 	private PersInvocationAnonStatsPk myPk;
 

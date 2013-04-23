@@ -43,7 +43,14 @@ public abstract class BasePersInvocationStats extends BasePersMethodStats {
 	private long myTotalSuccessRequestMessageBytes;
 	@Column(name = "TOT_SUC_RES_BYTES", nullable = false)
 	private long myTotalSuccessResponseMessageBytes;
+	
+	@Column(name = "TOT_SRV_SECURITY_FAILS", nullable = false)
+	private long myTotalServerSecurityFailures;
 
+	public synchronized void addServerSecurityFailInvocation() {
+		myTotalServerSecurityFailures++;
+	}
+	
 	public synchronized void addFailInvocation(long theTime, long theRequestBytes, long theResponseBytes) {
 		myTotalFailInvocationCount++;
 		myTotalFailInvocationTime += theTime;

@@ -32,7 +32,8 @@ import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
-import net.svcret.ejb.api.ServiceProtocolEnum;
+import net.svcret.admin.shared.model.ServerSecuredEnum;
+import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.util.Validate;
 
 import org.hibernate.annotations.ForeignKey;
@@ -53,19 +54,19 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 	@Transient
 	private transient boolean myAssociationsLoaded;
 
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval=true, mappedBy="myServiceVersion")
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("CAUTH_ORDER")
 	private List<PersBaseClientAuth<?>> myClientAuths;
 
 	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
-	@ForeignKey(name="PX_SVCVER_HTTP_CONFIG_PID")
+	@ForeignKey(name = "PX_SVCVER_HTTP_CONFIG_PID")
 	@JoinColumn(name = "HTTP_CONFIG_PID", referencedColumnName = "PID", nullable = false)
 	private PersHttpClientConfig myHttpClientConfig;
 
 	@Transient
 	private transient Map<String, PersServiceVersionUrl> myIdToUrl;
 
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval=true, mappedBy="myServiceVersion")
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("METHOD_ORDER")
 	private List<PersServiceVersionMethod> myMethods;
 
@@ -84,23 +85,23 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 	@Transient
 	private transient Map<Long, PersServiceVersionUrl> myPidToUrl;
 
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval=true, mappedBy="myServiceVersion")
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("SAUTH_ORDER")
 	private List<PersBaseServerAuth<?, ?>> myServerAuths;
 
 	@ManyToOne()
-	@ForeignKey(name="PX_SVCVER_SERVICE_PID")
+	@ForeignKey(name = "PX_SVCVER_SERVICE_PID")
 	@JoinColumn(name = "SERVICE_PID", referencedColumnName = "PID")
 	private PersService myService;
 
 	@OneToOne(cascade = {}, fetch = FetchType.LAZY, mappedBy = "myServiceVersion", orphanRemoval = true)
 	private PersServiceVersionStatus myStatus;
 
-	@OneToMany(cascade = CascadeType.ALL, mappedBy="myServiceVersion")
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "myServiceVersion", orphanRemoval = true)
 	@MapKey(name = "myResourceUrl")
 	private Map<String, PersServiceVersionResource> myUriToResource;
 
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy="myServiceVersion")
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("URL_ORDER")
 	private List<PersServiceVersionUrl> myUrls;
 
@@ -164,7 +165,7 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 
 		if (myNameToMethod == null) {
 			HashMap<String, PersServiceVersionMethod> nameToMethod = new HashMap<String, PersServiceVersionMethod>();
-			for (PersServiceVersionMethod next : myMethods) {
+			for (PersServiceVersionMethod next : getMethods()) {
 				nameToMethod.put(next.getName(), next);
 			}
 			myNameToMethod = nameToMethod;
@@ -204,6 +205,9 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 		PersServiceVersionMethod method = new PersServiceVersionMethod();
 		method.setName(theName);
 		method.setServiceVersion(this);
+
+		getMethods();
+		myMethods.add(method);
 
 		return method;
 	}
@@ -339,7 +343,7 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 		Map<String, PersServiceVersionUrl> map = myUrlToUrl;
 		if (map == null) {
 			map = new HashMap<String, PersServiceVersionUrl>();
-			for (PersServiceVersionUrl next : myUrls) {
+			for (PersServiceVersionUrl next : getUrls()) {
 				map.put(next.getUrl(), next);
 			}
 			myUrlToUrl = map;
@@ -386,9 +390,9 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 		for (PersServiceVersionUrl next : getUrls()) {
 			next.loadAllAssociations();
 		}
-		
+
 		myHttpClientConfig.loadAllAssociations();
-		
+
 	}
 
 	public void putMethodAtIndex(PersServiceVersionMethod theMethod, int theIndex) {
@@ -410,12 +414,18 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 		myClientAuths.remove(theClientAuth);
 	}
 
+	public void removeServerAuth(PersBaseServerAuth<?, ?> theServerAuth) {
+		theServerAuth.setServiceVersion(null);
+		getServerAuths();
+		myServerAuths.remove(theServerAuth);
+	}
+
 	/**
 	 * Remove any URLs whose ID doesn't appear in the given IDs
 	 */
 	public void retainOnlyMethodsWithNames(Collection<String> theIds) {
 		HashSet<String> ids = new HashSet<String>(theIds);
-		for (Iterator<PersServiceVersionMethod> iter = myMethods.iterator(); iter.hasNext();) {
+		for (Iterator<PersServiceVersionMethod> iter = getMethods().iterator(); iter.hasNext();) {
 			PersServiceVersionMethod next = iter.next();
 			if (!ids.contains(next.getName())) {
 				ourLog.info("Removing Method with ID[{}] and NAME[{}] from Service Version with ID[{}/{}]", new Object[] { next.getPid(), next.getName(), getPid(), getVersionId() });
@@ -436,12 +446,14 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 	 */
 	public void retainOnlyUrlsWithIds(Collection<String> theIds) {
 		HashSet<String> ids = new HashSet<String>(theIds);
+		int index = 0;
 		for (Iterator<PersServiceVersionUrl> iter = myUrls.iterator(); iter.hasNext();) {
 			PersServiceVersionUrl next = iter.next();
 			if (!ids.contains(next.getUrlId())) {
 				ourLog.info("Removing URL with ID[{}/{}] from Service Version with ID[{}/{}]", new Object[] { next.getPid(), next.getUrlId(), getPid(), getVersionId() });
 				iter.remove();
 			}
+			next.setOrder(index++);
 		}
 		urlsChanged();
 	}
@@ -497,7 +509,7 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 	}
 
 	public void setStatus(PersServiceVersionStatus theStatus) {
-		Validate.throwIllegalArgumentExceptionIfNull("Status", theStatus);
+		Validate.notNull(theStatus, "Status");
 		myStatus = theStatus;
 	}
 
@@ -517,11 +529,37 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 	}
 
 	public void addUrl(PersServiceVersionUrl theUrl) {
-		Validate.throwIllegalArgumentExceptionIfNull("URL", theUrl);
+		Validate.notNull(theUrl, "URL");
 		getUrls();
 		if (!myUrls.contains(theUrl)) {
 			myUrls.add(theUrl);
 			urlsChanged();
+		}
+	}
+
+	public PersBaseClientAuth<?> getClientAuthWithPid(Long thePid) {
+		for (PersBaseClientAuth<?> next : getClientAuths()) {
+			if (next.getPid() != null && next.getPid().equals(thePid)) {
+				return next;
+			}
+		}
+		return null;
+	}
+
+	public PersBaseServerAuth<?, ?> getServerAuthWithPid(Long thePid) {
+		for (PersBaseServerAuth<?, ?> next : getServerAuths()) {
+			if (next.getPid() != null && next.getPid().equals(thePid)) {
+				return next;
+			}
+		}
+		return null;
+	}
+
+	public ServerSecuredEnum getServerSecured() {
+		if (getServerAuths().size() > 0) {
+			return ServerSecuredEnum.FULLY;
+		} else {
+			return ServerSecuredEnum.NONE;
 		}
 	}
 

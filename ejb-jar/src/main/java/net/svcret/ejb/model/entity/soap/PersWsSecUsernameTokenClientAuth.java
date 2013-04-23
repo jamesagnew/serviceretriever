@@ -13,6 +13,8 @@ import org.apache.commons.lang3.ObjectUtils;
 @DiscriminatorValue("WSSEC_UT")
 public class PersWsSecUsernameTokenClientAuth extends PersBaseClientAuth<PersWsSecUsernameTokenClientAuth> {
 
+	private static final long serialVersionUID = 1L;
+
 	public PersWsSecUsernameTokenClientAuth(String theUsername, String thePassword) {
 		super();
 		setUsername(theUsername);
@@ -31,6 +33,16 @@ public class PersWsSecUsernameTokenClientAuth extends PersBaseClientAuth<PersWsS
 	@Override
 	public ClientAuthTypeEnum getAuthType() {
 		return ClientAuthTypeEnum.WS_SECURITY_USERNAME_TOKEN;
+	}
+
+	@Override
+	public void merge(PersBaseClientAuth<?> theObj) {
+		PersWsSecUsernameTokenClientAuth obj = (PersWsSecUsernameTokenClientAuth) theObj;
+		
+		obj.setUsername(obj.getUsername());
+		obj.setPassword(obj.getPassword());
+		obj.setServiceVersion(obj.getServiceVersion());
+		
 	}
 
 }

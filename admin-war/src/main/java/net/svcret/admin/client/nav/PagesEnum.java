@@ -37,8 +37,19 @@ public enum PagesEnum {
 	HCC(MSGS.httpClientConfigsPanel_Dashboard()), 
 	
 	/** Delete domain */
-	DDO(MSGS.deleteDomainPanel_Breadcrumb())
+	DDO(MSGS.deleteDomainPanel_Breadcrumb()), 
+	
+	/** Edit service version */
+	ESV(MSGS.editServiceVersion_Breadcrumb()), 
+	
+	/** Delete Service*/
+	DSE(MSGS.deleteServicePanel_Breadcrumb()),
 
+	/** Edit Service*/
+	ESE(MSGS.editServicePanel_Breadcrumb()), 
+	
+	/** Service Catalog */
+	SEC(MSGS.serviceCatalog_Breadcrumb())
 	;
 	
 	private String myBreadcrumb;

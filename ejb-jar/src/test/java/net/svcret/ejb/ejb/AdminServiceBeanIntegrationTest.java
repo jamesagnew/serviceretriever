@@ -10,6 +10,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import javax.persistence.EntityManager;
+
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
 import net.svcret.admin.shared.model.GResource;
@@ -20,99 +22,374 @@ import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.GUserDomainPermission;
+import net.svcret.admin.shared.model.GWsSecServerSecurity;
+import net.svcret.admin.shared.model.GWsSecUsernameTokenClientSecurity;
+import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IServiceInvoker;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
+import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
+import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 
 import org.hamcrest.Matchers;
+import org.hibernate.ejb.EntityManagerImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
-	private ServicePersistenceBean myPersSvc;
-	private AdminServiceBean mySvc;
-	private RuntimeStatusBean myStatsSvc;
+	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(AdminServiceBeanIntegrationTest.class);
 
+	private DaoBean myDao;
 	@SuppressWarnings("rawtypes")
 	private IServiceInvoker mySoapInvoker;
+	private RuntimeStatusBean myStatsSvc;
+	private AdminServiceBean mySvc;
+
+	private SecurityServiceBean mySecSvc;
+
+	private IBroadcastSender myBroadcastSender;
+
+	private ServiceRegistryBean mySvcReg;
+
+	@After
+	public void after2() {
+
+		// newEntityManager();
+		//
+		// Query q = myEntityManager.createQuery("DELETE FROM PersDomain p");
+		// q.executeUpdate();
+		//
+		// newEntityManager();
+	}
 
 	@SuppressWarnings("unchecked")
 	@Before
 	public void before2() throws SQLException {
-		myPersSvc = new ServicePersistenceBean();
+		myDao = new DaoBean();
 
 		mySvc = new AdminServiceBean();
-		mySvc.setPersSvc(myPersSvc);
+		mySvc.setPersSvc(myDao);
 
 		myStatsSvc = new RuntimeStatusBean();
-		myStatsSvc.setPersistence(myPersSvc);
+		myStatsSvc.setDao(myDao);
 
 		mySoapInvoker = mock(IServiceInvoker.class, new DefaultAnswer());
 		mySvc.setInvokerSoap11(mySoapInvoker);
+		
+		myBroadcastSender = mock(IBroadcastSender.class);
 
+		mySecSvc = new SecurityServiceBean();
+		mySecSvc.setPersSvc(myDao);
+		mySecSvc.setBroadcastSender(myBroadcastSender);
+		mySvc.setSecuritySvc(mySecSvc);
+		
+		mySvcReg = new ServiceRegistryBean();
+		mySvcReg.setBroadcastSender(myBroadcastSender);
+		mySvcReg.setDao(myDao);
+		mySvc.setServiceRegistry(mySvcReg);
+		
 		DefaultAnswer.setDesignTime();
 	}
+	
+	@Test
+	public void testLoadAndSaveSvcVerMethods() throws ProcessingException {
+		
+		newEntityManager();
 
+		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
+
+		newEntityManager();
+
+		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setHttpClientConfigPid(hcc.getPid());
+		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+		
+		newEntityManager();
+		
+		d1s1v1 = mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		GServiceMethod method = new GServiceMethod();
+		method.setName("123");
+		d1s1v1.getMethodList().add(method);
+		
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+		
+		newEntityManager();
+
+		d1s1v1 = mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+	}
+	
+	@Test
+	public void testLoadAndSaveSvcVerClientSecurity() throws ProcessingException {
+		
+		newEntityManager();
+
+		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
+		PersAuthenticationHostLocalDatabase auth = myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
+
+		newEntityManager();
+
+		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setHttpClientConfigPid(hcc.getPid());
+		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+		
+		newEntityManager();
+		
+		// Add one
+		
+		d1s1v1 = mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		GWsSecUsernameTokenClientSecurity cli = new GWsSecUsernameTokenClientSecurity();
+		cli.setUsername("un0");
+		cli.setPassword("pw0");
+		d1s1v1.getClientSecurityList().add(cli);
+		
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+		
+		newEntityManager();
+
+		d1s1v1 = mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+		
+		// Add a second
+		
+		d1s1v1 = mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		cli = new GWsSecUsernameTokenClientSecurity();
+		cli.setUsername("un1");
+		cli.setPassword("pw1");
+		d1s1v1.getClientSecurityList().add(cli);
+		
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+		
+		newEntityManager();
+		
+		d1s1v1 = mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertEquals(2, d1s1v1.getClientSecurityList().size());
+		assertEquals("un0", ((GWsSecUsernameTokenClientSecurity)d1s1v1.getClientSecurityList().get(0)).getUsername());
+		assertEquals("pw0", ((GWsSecUsernameTokenClientSecurity)d1s1v1.getClientSecurityList().get(0)).getPassword());
+		assertEquals("un1", ((GWsSecUsernameTokenClientSecurity)d1s1v1.getClientSecurityList().get(1)).getUsername());
+		assertEquals("pw1", ((GWsSecUsernameTokenClientSecurity)d1s1v1.getClientSecurityList().get(1)).getPassword());
+
+		// Remove one
+		
+		d1s1v1.getClientSecurityList().remove(d1s1v1.getClientSecurityList().get(0));
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+		
+		d1s1v1 = mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertEquals(1, d1s1v1.getClientSecurityList().size());
+		assertEquals("un1", ((GWsSecUsernameTokenClientSecurity)d1s1v1.getClientSecurityList().get(0)).getUsername());
+		assertEquals("pw1", ((GWsSecUsernameTokenClientSecurity)d1s1v1.getClientSecurityList().get(0)).getPassword());
+
+	}
+	
+	@Test(expected=IllegalArgumentException.class)
+	public void testLoadAndSaveSvcVerServerSecurityNoAuthHost() throws ProcessingException {
+		
+		newEntityManager();
+
+		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpServer");
+		PersAuthenticationHostLocalDatabase auth = myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
+
+		newEntityManager();
+
+		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setHttpClientConfigPid(hcc.getPid());
+		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+		
+		newEntityManager();
+		
+		// Add one
+		
+		d1s1v1 = mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		GWsSecServerSecurity cli = new GWsSecServerSecurity();
+
+		// Don't set the auth host, this should mean an exception is thrown
+		
+		d1s1v1.getServerSecurityList().add(cli);
+		
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+	}
+	
+	@Test
+	public void testLoadAndSaveSvcVerServerSecurity() throws ProcessingException {
+		
+		newEntityManager();
+
+		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpServer");
+		PersAuthenticationHostLocalDatabase auth = myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
+		PersAuthenticationHostLocalDatabase auth2 = myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST2");
+
+		newEntityManager();
+
+		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setHttpClientConfigPid(hcc.getPid());
+		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+		
+		newEntityManager();
+		
+		// Add one
+		
+		d1s1v1 = mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		GWsSecServerSecurity cli = new GWsSecServerSecurity();
+		cli.setAuthHostPid(auth.getPid());
+		d1s1v1.getServerSecurityList().add(cli);
+		
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+		
+		newEntityManager();
+
+		d1s1v1 = mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+		
+		// Add a second
+		
+		d1s1v1 = mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		cli = new GWsSecServerSecurity();
+		cli.setAuthHostPid(auth2.getPid());
+		d1s1v1.getServerSecurityList().add(cli);
+		
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+		
+		newEntityManager();
+		
+		d1s1v1 = mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertEquals(2, d1s1v1.getServerSecurityList().size());
+		assertEquals(auth.getPid().longValue(), d1s1v1.getServerSecurityList().get(0).getAuthHostPid());
+		assertEquals(auth2.getPid().longValue(), d1s1v1.getServerSecurityList().get(1).getAuthHostPid());
+
+		// Remove one
+		
+		ourLog.info("Removing sec with PID {} but keeping {}", d1s1v1.getServerSecurityList().get(0).getPid(), d1s1v1.getServerSecurityList().get(1).getPid());
+		
+		d1s1v1.getServerSecurityList().remove(d1s1v1.getServerSecurityList().get(0));
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+		
+		d1s1v1 = mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertEquals(1, d1s1v1.getServerSecurityList().size());
+		assertEquals(auth2.getPid().longValue(), d1s1v1.getServerSecurityList().get(0).getAuthHostPid());
+
+	}
+
+	@Test
+	public void testLoadAndSaveSvcVer() throws ProcessingException {
+		
+		newEntityManager();
+
+		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
+
+		newEntityManager();
+
+		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setHttpClientConfigPid(hcc.getPid());
+
+		List<GResource> resources = new ArrayList<GResource>();
+		resources.add(new GResource("http://foo", "text/xml", "contents1"));
+		resources.add(new GResource("http://bar", "text/xml", "contents2"));
+
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", "http://url1"));
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", "http://url2"));
+
+		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
+
+		newEntityManager();
+		
+		/*
+		 * Putting in the same old resources, but they look new because they don't have IDs
+		 */
+		
+		d1s1v1.setWsdlLocation("http://bar");
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
+		
+		newEntityManager();
+		
+		GSoap11ServiceVersionAndResources copy = mySvc.loadServiceVersion(d1s1v1.getPid());
+		assertEquals("http://bar", copy.getServiceVersion().getWsdlLocation());
+		assertEquals(2, copy.getResource().size());
+
+		/*
+		 * Now try saving with the existing resources back in
+		 */
+
+		d1s1v1.setWsdlLocation("http://baz");
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, copy.getResource());
+
+		newEntityManager();
+
+		/*
+		 * Now remove a resource
+		 */
+		
+		d1s1v1.setWsdlLocation("http://baz");
+		List<GResource> resource = copy.getResource();
+		resource.remove(0);
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resource);
+		
+		newEntityManager();
+		
+		copy = mySvc.loadServiceVersion(d1s1v1.getPid());
+		assertEquals("http://baz", copy.getServiceVersion().getWsdlLocation());
+		assertEquals(1, copy.getResource().size());
+
+		
+	}
+	
 	@Override
 	protected void newEntityManager() {
 		super.newEntityManager();
 
-		myPersSvc.setEntityManager(myEntityManager);
-	}
-
-	@Test
-	public void testLoadWsdl() throws ProcessingException {
-
-		GSoap11ServiceVersion ver = new GSoap11ServiceVersion();
-		
-		PersServiceVersionSoap11 persSvcVer = new PersServiceVersionSoap11();
-		persSvcVer.setWsdlUrl("http://wsdlurl");
-		
-		PersServiceVersionMethod m1 = new PersServiceVersionMethod();
-		m1.setName("m1");
-		persSvcVer.addMethod(m1);
-
-		PersServiceVersionMethod m2 = new PersServiceVersionMethod();
-		m2.setName("m2");
-		persSvcVer.addMethod(m2);
-
-		persSvcVer.addResource("http://wsdlurl", "application/xml", "wsdlcontents");
-		persSvcVer.addResource("http://xsdurl", "application/xml", "xsdcontents");
-		
-		PersServiceVersionUrl url = new PersServiceVersionUrl();
-		url.setUrlId("url1");
-		url.setUrl("http://svcurl");
-		persSvcVer.addUrl(url);
-		
-		when(mySoapInvoker.introspectServiceFromUrl("http://wsdlurl")).thenReturn(persSvcVer);
-		
-		DefaultAnswer.setRunTime();
-		GSoap11ServiceVersionAndResources verAndRes = mySvc.loadSoap11ServiceVersionFromWsdl(ver, "http://wsdlurl");
-
-		assertEquals(2, verAndRes.getResource().size());
-		assertEquals("http://wsdlurl", verAndRes.getResource().get(0).getUrl());
-		assertEquals("wsdlcontents", verAndRes.getResource().get(0).getText());
-		assertEquals("http://xsdurl", verAndRes.getResource().get(1).getUrl());
-		assertEquals("xsdcontents", verAndRes.getResource().get(1).getText());
-		assertEquals("http://wsdlurl", verAndRes.getServiceVersion().getResourcePointerList().get(0).getUrl());
-		assertEquals("application/xml", verAndRes.getServiceVersion().getResourcePointerList().get(0).getType());
-		assertEquals("wsdlcontents".length(), verAndRes.getServiceVersion().getResourcePointerList().get(0).getSize());
-		assertEquals("m1", verAndRes.getServiceVersion().getMethodList().get(0).getName());
-		assertEquals("m2", verAndRes.getServiceVersion().getMethodList().get(1).getName());
-		
-		
+		myDao.setEntityManager(myEntityManager);
 	}
 
 	@Test
@@ -125,17 +402,6 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		assertEquals("domain_id", domain.getId());
 		assertEquals("domain_name", domain.getName());
 		assertFalse(domain.isStatsInitialized());
-	}
-
-	@After
-	public void after2() {
-
-		// newEntityManager();
-		//
-		// Query q = myEntityManager.createQuery("DELETE FROM PersDomain p");
-		// q.executeUpdate();
-		//
-		// newEntityManager();
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -167,69 +433,12 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testDeleteDomain() throws ProcessingException {
-
-		newEntityManager();
-
-		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
-		PersHttpClientConfig hcc = myPersSvc.getOrCreateHttpClientConfig("httpclient");
-
-		newEntityManager();
-
-		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
-		d1s1v1.setActive(true);
-		d1s1v1.setId("ASV_SV1");
-		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
-		d1s1v1.setHttpClientConfigPid(hcc.getPid());
-
-		GServiceMethod d1s1v1m1 = new GServiceMethod();
-		d1s1v1m1.setName("d1s1v1m1");
-		d1s1v1.getMethodList().add(d1s1v1m1);
-
-		List<GResource> resources = new ArrayList<GResource>();
-		resources.add(new GResource("http://foo", "text/xml", "contents1"));
-		resources.add(new GResource("http://bar", "text/xml", "contents2"));
-
-		GSoap11ServiceVersion ver = mySvc.addServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
-
-		newEntityManager();
-
-		// Add stats
-		BasePersServiceVersion persVer = myPersSvc.getServiceVersionByPid(ver.getPid());
-		PersServiceVersionStatus status = persVer.getStatus();
-		assertNotNull(status);
-
-		PersServiceVersionMethod m1 = persVer.getMethods().iterator().next();
-
-		newEntityManager();
-
-		HttpResponseBean httpResponse = new HttpResponseBean();
-		httpResponse.setBody("1234");
-		httpResponse.setResponseTime(123);
-		InvocationResponseResultsBean bean = new InvocationResponseResultsBean();
-		bean.setResponseType(ResponseTypeEnum.SUCCESS);
-		myStatsSvc.recordInvocationMethod(new Date(), 100, m1, null, httpResponse, bean);
-
-		newEntityManager();
-
-		mySvc.deleteDomain(d1.getPid());
-
-		newEntityManager();
-
-		GDomain domain = mySvc.getDomainByPid(d1.getPid());
-		assertNull(domain);
-
-	}
-
-	@Test
 	public void testAddServiceVersion() throws ProcessingException {
 		newEntityManager();
 
 		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
 		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
-		PersHttpClientConfig hcc = myPersSvc.getOrCreateHttpClientConfig("httpclient");
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 
 		newEntityManager();
 
@@ -247,11 +456,11 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", "http://url1"));
 		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", "http://url2"));
 
-		mySvc.addServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
 
 		newEntityManager();
 
-		PersDomain pDomain = myPersSvc.getDomainByPid(d1.getPid());
+		PersDomain pDomain = myDao.getDomainByPid(d1.getPid());
 		Collection<BasePersServiceVersion> versions = pDomain.getServices().iterator().next().getVersions();
 
 		assertEquals(1, versions.size());
@@ -284,6 +493,161 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
+	public void testDeleteDomain() throws ProcessingException {
+
+		newEntityManager();
+
+		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
+
+		newEntityManager();
+
+		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setHttpClientConfigPid(hcc.getPid());
+
+		GServiceMethod d1s1v1m1 = new GServiceMethod();
+		d1s1v1m1.setName("d1s1v1m1");
+		d1s1v1.getMethodList().add(d1s1v1m1);
+
+		List<GResource> resources = new ArrayList<GResource>();
+		resources.add(new GResource("http://foo", "text/xml", "contents1"));
+		resources.add(new GResource("http://bar", "text/xml", "contents2"));
+
+		GSoap11ServiceVersion ver = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
+
+		newEntityManager();
+
+		// Add stats
+		BasePersServiceVersion persVer = myDao.getServiceVersionByPid(ver.getPid());
+		PersServiceVersionStatus status = persVer.getStatus();
+		assertNotNull(status);
+
+		PersServiceVersionMethod m1 = persVer.getMethods().iterator().next();
+
+		newEntityManager();
+
+		HttpResponseBean httpResponse = new HttpResponseBean();
+		httpResponse.setBody("1234");
+		httpResponse.setResponseTime(123);
+		InvocationResponseResultsBean bean = new InvocationResponseResultsBean();
+		bean.setResponseType(ResponseTypeEnum.SUCCESS);
+		myStatsSvc.recordInvocationMethod(new Date(), 100, m1, null, httpResponse, bean);
+
+		newEntityManager();
+
+		mySvc.deleteDomain(d1.getPid());
+
+		newEntityManager();
+
+		GDomain domain = mySvc.getDomainByPid(d1.getPid());
+		assertNull(domain);
+
+	}
+
+	@Test
+	public void testSaveDomain() throws ProcessingException {
+
+		newEntityManager();
+
+		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+
+		newEntityManager();
+		
+		GDomain domain = mySvc.getDomainByPid(d1.getPid());
+		assertEquals("asv_did", domain.getId());
+
+		newEntityManager();
+
+		d1.setId("b");
+		mySvc.saveDomain(d1);
+		
+		newEntityManager();
+
+		domain = mySvc.getDomainByPid(d1.getPid());
+		assertEquals("b", domain.getId());
+
+	}
+
+	@Test
+	public void testLoadWsdl() throws ProcessingException {
+
+		GSoap11ServiceVersion ver = new GSoap11ServiceVersion();
+
+		PersServiceVersionSoap11 persSvcVer = new PersServiceVersionSoap11();
+		persSvcVer.setWsdlUrl("http://wsdlurl");
+
+		PersServiceVersionMethod m1 = new PersServiceVersionMethod();
+		m1.setName("m1");
+		persSvcVer.addMethod(m1);
+
+		PersServiceVersionMethod m2 = new PersServiceVersionMethod();
+		m2.setName("m2");
+		persSvcVer.addMethod(m2);
+
+		persSvcVer.addResource("http://wsdlurl", "application/xml", "wsdlcontents");
+		persSvcVer.addResource("http://xsdurl", "application/xml", "xsdcontents");
+
+		PersServiceVersionUrl url = new PersServiceVersionUrl();
+		url.setUrlId("url1");
+		url.setUrl("http://svcurl");
+		persSvcVer.addUrl(url);
+
+		when(mySoapInvoker.introspectServiceFromUrl("http://wsdlurl")).thenReturn(persSvcVer);
+
+		DefaultAnswer.setRunTime();
+		GSoap11ServiceVersionAndResources verAndRes = mySvc.loadSoap11ServiceVersionFromWsdl(ver, "http://wsdlurl");
+
+		assertEquals(2, verAndRes.getResource().size());
+		assertEquals("http://wsdlurl", verAndRes.getResource().get(0).getUrl());
+		assertEquals("wsdlcontents", verAndRes.getResource().get(0).getText());
+		assertEquals("http://xsdurl", verAndRes.getResource().get(1).getUrl());
+		assertEquals("xsdcontents", verAndRes.getResource().get(1).getText());
+		assertEquals("http://wsdlurl", verAndRes.getServiceVersion().getResourcePointerList().get(0).getUrl());
+		assertEquals("application/xml", verAndRes.getServiceVersion().getResourcePointerList().get(0).getType());
+		assertEquals("wsdlcontents".length(), verAndRes.getServiceVersion().getResourcePointerList().get(0).getSize());
+		assertEquals("m1", verAndRes.getServiceVersion().getMethodList().get(0).getName());
+		assertEquals("m2", verAndRes.getServiceVersion().getMethodList().get(1).getName());
+
+	}
+
+	@Test
+	public void testMultipleStatsLoadsInParallel() throws ProcessingException, InterruptedException {
+		newEntityManager();
+
+		PersDomain d0 = myDao.getOrCreateDomainWithId("d0");
+		PersService d0s0 = myDao.getOrCreateServiceWithId(d0, "d0s0");
+		PersServiceVersionSoap11 d0s0v0 = myDao.getOrCreateServiceVersionWithId(d0s0, "d0s0v0");
+		PersServiceVersionMethod d0s0v0m0 = d0s0v0.getOrCreateAndAddMethodWithName("d0s0v0m0");
+		myDao.saveServiceVersion(d0s0v0);
+
+		newEntityManager();
+
+		final ModelUpdateRequest req = new ModelUpdateRequest();
+		req.addServiceToLoadStats(d0s0.getPid());
+
+		List<RetrieverThread> ts = new ArrayList<RetrieverThread>();
+		for (int i = 0; i < 3; i++) {
+			RetrieverThread t = new RetrieverThread(req);
+			t.start();
+			ts.add(t);
+		}
+
+		ourLog.info("Waiting for threads to die");
+		for (RetrieverThread thread : ts) {
+			thread.join();
+			if (thread.myFailed != null) {
+				fail(thread.myFailed.getMessage());
+			}
+		}
+		ourLog.info("Done");
+	}
+
+	@Test
 	public void testSaveUser() throws ProcessingException {
 		newEntityManager();
 
@@ -292,7 +656,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
 		GService d2s1 = mySvc.addService(d2.getPid(), "d2s1", "d2s1", true);
-		PersHttpClientConfig hcc = myPersSvc.getOrCreateHttpClientConfig("httpclient");
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 
 		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
 		d1s1v1.setActive(true);
@@ -303,7 +667,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		List<GResource> resources = new ArrayList<GResource>();
 		resources.add(new GResource("http://foo", "text/xml", "contents1"));
 		resources.add(new GResource("http://bar", "text/xml", "contents2"));
-		d1s1v1 = mySvc.addServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
+		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
 
 		GSoap11ServiceVersion d2s1v1 = new GSoap11ServiceVersion();
 		d2s1v1.setActive(true);
@@ -311,7 +675,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		d2s1v1.setName("D2S1V1");
 		d2s1v1.setWsdlLocation("http://foo");
 		d2s1v1.setHttpClientConfigPid(hcc.getPid());
-		d2s1v1 = mySvc.addServiceVersion(d2.getPid(), d2s1.getPid(), d2s1v1, resources);
+		d2s1v1 = mySvc.saveServiceVersion(d2.getPid(), d2s1.getPid(), d2s1v1, resources);
 
 		GServiceMethod d1s1v1m1 = new GServiceMethod();
 		d1s1v1m1.setName("d1s1v1m1");
@@ -441,6 +805,44 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		assertEquals(1, user.getDomainPermissions().get(0).getServicePermissions().get(0).getServiceVersionPermissions().get(0).getServiceVersionMethodPermissions().size());
 		assertEquals(d2s1v1m1.getPid(), user.getDomainPermissions().get(0).getServicePermissions().get(0).getServiceVersionPermissions().get(0).getServiceVersionMethodPermissions().get(0).getServiceVersionMethodPid());
 
+	}
+
+	private final class RetrieverThread extends Thread {
+		private Exception myFailed;
+		private final ModelUpdateRequest myReq;
+
+		private RetrieverThread(ModelUpdateRequest theReq) {
+			myReq = theReq;
+		}
+
+		@Override
+		public void run() {
+			try {
+
+				EntityManager entityManager = (EntityManagerImpl) ourEntityManagerFactory.createEntityManager();
+				entityManager.getTransaction().begin();
+				DaoBean persSvc = new DaoBean();
+				persSvc.setEntityManager(entityManager);
+
+				RuntimeStatusBean rs = new RuntimeStatusBean();
+				rs.setDao(persSvc);
+
+				AdminServiceBean sSvc = new AdminServiceBean();
+				sSvc.setPersSvc(persSvc);
+				sSvc.setRuntimeStatusBean(rs);
+
+				RuntimeStatusBean statsSvc = new RuntimeStatusBean();
+				statsSvc.setDao(persSvc);
+				sSvc.loadModelUpdate(myReq);
+
+				entityManager.getTransaction().commit();
+
+			} catch (Exception e) {
+				myFailed = e;
+				e.printStackTrace();
+				fail("" + e.getMessage());
+			}
+		}
 	}
 
 }

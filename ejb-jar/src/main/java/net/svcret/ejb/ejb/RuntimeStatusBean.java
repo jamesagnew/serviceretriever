@@ -23,7 +23,7 @@ import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.HttpResponseBean.Failure;
 import net.svcret.ejb.api.IRuntimeStatus;
-import net.svcret.ejb.api.IServicePersistence;
+import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
@@ -37,6 +37,7 @@ import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
+import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.ejb.model.entity.PersStaticResourceStats;
@@ -50,9 +51,10 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(RuntimeStatusBean.class);
 	private ReentrantLock myFlushLock = new ReentrantLock();
 	private ConcurrentHashMap<BasePersMethodStatsPk, BasePersMethodStats> myInvocationStats = new ConcurrentHashMap<BasePersMethodStatsPk, BasePersMethodStats>();
+	private ConcurrentHashMap<Long, PersServiceVersionStatus> myServiceVersionStatus = new ConcurrentHashMap<Long, PersServiceVersionStatus>();
 
 	@EJB
-	private IServicePersistence myPersistence;
+	private IDao myPersistence;
 
 	private DateFormat myTimeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
 
@@ -147,135 +149,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		return retVal;
 	}
 
-	private void doFlushStatus() {
-
-		ourLog.debug("Going to flush status entries");
-
-		List<BasePersMethodStats> stats = new ArrayList<BasePersMethodStats>();
-		HashSet<BasePersMethodStatsPk> keys = new HashSet<BasePersMethodStatsPk>(myInvocationStats.keySet());
-
-		if (keys.isEmpty()) {
-			
-			ourLog.debug("No status entries to flush");
-			
-		} else {
-
-			Date earliest = null;
-			Date latest = null;
-			for (BasePersMethodStatsPk nextKey : keys) {
-				BasePersMethodStats nextStats = myInvocationStats.remove(nextKey);
-				if (nextStats == null) {
-					continue;
-				}
-				stats.add(nextStats);
-
-				if (earliest == null || earliest.after(nextStats.getPk().getStartTime())) {
-					earliest = nextStats.getPk().getStartTime();
-				}
-				if (latest == null || latest.before(nextStats.getPk().getStartTime())) {
-					latest = nextStats.getPk().getStartTime();
-				}
-
-			}
-
-			ourLog.info("Going to flush {} stats entries with time range {} - {}", new Object[] { stats.size(), myTimeFormat.format(earliest), myTimeFormat.format(latest) });
-
-			try {
-				myPersistence.saveInvocationStats(stats);
-				ourLog.info("Done flushing stats");
-			} catch (PersistenceException e) {
-				ourLog.error("Failed to flush stats to disk, going to re-queue them", e);
-				for (BasePersMethodStats next : stats) {
-
-					BasePersMethodStats savedStats = myInvocationStats.putIfAbsent(next.getPk(), next);
-					if (savedStats != next) {
-						savedStats.mergeUnsynchronizedEvents(next);
-					}
-
-				}
-			}
-			
-		}
-		
-		ArrayList<PersServiceVersionUrlStatus> urlStatuses = new ArrayList<PersServiceVersionUrlStatus>(myUrlStatus.values());
-		for (Iterator<PersServiceVersionUrlStatus> iter = urlStatuses.iterator(); iter.hasNext();) {
-			PersServiceVersionUrlStatus next = iter.next();
-			if (!next.isDirty()) {
-				iter.remove();
-			} else {
-				next.setLastStatusSave(new Date());
-			}
-		}
-
-		if (!urlStatuses.isEmpty()) {
-			ourLog.info("Going to persist {} URL statuses", urlStatuses.size());
-			myPersistence.saveServiceVersionUrlStatus(urlStatuses);
-		}
-
-		/* 
-		 * TODO: Maybe use a "last saved" timestamp here instead of a flag
-		 * to prevent race conditions
-		 */
-		for (PersServiceVersionUrlStatus next : urlStatuses) {
-			next.setDirty(false);
-		}
-
-	}
-
-	private void doRecordInvocationMethod(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, BasePersInvocationStatsPk theStatsPk) {
-		BasePersInvocationStats stats = (BasePersInvocationStats) getStatsForPk(theStatsPk);
-
-		long responseTime = theHttpResponse.getResponseTime();
-		long responseBytes = theHttpResponse.getBody().length();
-
-		switch (theInvocationResponseResultsBean.getResponseType()) {
-		case FAIL:
-			stats.addFailInvocation(responseTime, theRequestLengthChars, responseBytes);
-			break;
-		case FAULT:
-			stats.addFaultInvocation(responseTime, theRequestLengthChars, responseBytes);
-			break;
-		case SUCCESS:
-			stats.addSuccessInvocation(responseTime, theRequestLengthChars, responseBytes);
-			break;
-		default:
-			break;
-		}
-	}
-
-	private void doRecordUrlStatus(boolean theWasSuccess, PersServiceVersionUrlStatus theUrlStatusBean) {
-		if (theUrlStatusBean.getUrl() == null) {
-			throw new IllegalArgumentException("Status has no URL associated with it");
-		}
-
-		synchronized (theUrlStatusBean) {
-			Date now = new Date();
-
-			if (theWasSuccess) {
-				if (theUrlStatusBean.getStatus() != StatusEnum.ACTIVE) {
-					Long urlPid = theUrlStatusBean.getUrl().getPid();
-					StatusEnum urlStatus = theUrlStatusBean.getStatus();
-					String urlUrl = theUrlStatusBean.getUrl().getUrl();
-					ourLog.info("URL[{}] is now ACTIVE, was {} - {}", new Object[] { urlPid, urlStatus, urlUrl });
-				}
-				theUrlStatusBean.setStatus(StatusEnum.ACTIVE);
-				theUrlStatusBean.setLastSuccess(now);
-			} else {
-				theUrlStatusBean.setStatus(StatusEnum.DOWN);
-				theUrlStatusBean.setLastFail(now);
-
-				Date nextReset = theUrlStatusBean.getNextCircuitBreakerReset();
-				if (nextReset != null) {
-					ourLog.info("URL[{}] is DOWN, Next circuit breaker reset attempt is {} - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), myTimeFormat.format(nextReset), theUrlStatusBean.getUrl().getUrl() });
-				} else {
-					ourLog.info("URL[{}] is DOWN - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), theUrlStatusBean.getUrl().getUrl() });
-				}
-
-			}
-
-		}
-	}
-
 	@Override
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	public void flushStatus() {
@@ -294,39 +167,25 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	}
 
-	private BasePersMethodStats getStatsForPk(BasePersMethodStatsPk statsPk) {
-		BasePersMethodStats tryNew = statsPk.newObjectInstance();
-		BasePersMethodStats stats = myInvocationStats.putIfAbsent(statsPk, tryNew);
-		if (stats == null) {
-			stats = tryNew;
-		}
-
-		if (ourLog.isTraceEnabled()) {
-			ourLog.trace("Now have the following {} stats: {}", myInvocationStats.size(), new ArrayList<BasePersMethodStatsPk>(myInvocationStats.keySet()));
-		}
-
-		return stats;
-	}
-
-	private PersServiceVersionUrlStatus getUrlStatus(PersServiceVersionUrl theSuccessfulUrl) {
-		PersServiceVersionUrlStatus savedStatus = theSuccessfulUrl.getStatus();
-		assert savedStatus != null;
-
-		PersServiceVersionUrlStatus existing = myUrlStatus.putIfAbsent(savedStatus.getPid(), savedStatus);
-		if (existing == null) {
-			return savedStatus;
-		} else {
-			return existing;
+	@Override
+	public BasePersInvocationStats getOrCreateInvocationStatsSynchronously(PersInvocationStatsPk thePk) {
+		synchronized (myInvocationStats) {
+			BasePersInvocationStats retVal = myPersistence.getInvocationStats(thePk);
+			if (retVal != null) {
+				return retVal;
+			} else {
+				return (BasePersInvocationStats) getStatsForPk(thePk);
+			}
 		}
 	}
-
+	
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
 	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, PersServiceVersionMethod theMethod, PersUser theUser, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean) {
-		Validate.throwIllegalArgumentExceptionIfNull("InvocationTime", theInvocationTime);
-		Validate.throwIllegalArgumentExceptionIfNull("Method", theMethod);
-		Validate.throwIllegalArgumentExceptionIfNull("HttpResponse", theHttpResponse);
-		Validate.throwIllegalArgumentExceptionIfNull("InvocationResponseResults", theInvocationResponseResultsBean);
+		Validate.notNull(theInvocationTime, "InvocationTime");
+		Validate.notNull(theMethod, "Method");
+		Validate.notNull(theHttpResponse, "HttpResponse");
+		Validate.notNull(theInvocationResponseResultsBean, "InvocationResponseResults");
 
 		/*
 		 * Record method statictics
@@ -366,14 +225,21 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			PersServiceVersionUrlStatus failedStatus = getUrlStatus(failedUrl);
 			doRecordUrlStatus(false, failedStatus);
 		}
+		
+		/*
+		 * Record Service Version status
+		 */
+		PersServiceVersionStatus serviceVersionStatus = theMethod.getServiceVersion().getStatus();
+		serviceVersionStatus = getStatusForPk(serviceVersionStatus, serviceVersionStatus.getPid());
+		serviceVersionStatus.setLastSuccessfulInvocation(theInvocationTime);
 
 	}
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
 	public void recordInvocationStaticResource(Date theInvocationTime, PersServiceVersionResource theResource) {
-		Validate.throwIllegalArgumentExceptionIfNull("InvocationTime", theInvocationTime);
-		Validate.throwIllegalArgumentExceptionIfNull("ServiceVersionResource", theResource);
+		Validate.notNull(theInvocationTime, "InvocationTime");
+		Validate.notNull(theResource, "ServiceVersionResource");
 
 		InvocationStatsIntervalEnum interval = InvocationStatsIntervalEnum.MINUTE;
 
@@ -383,17 +249,30 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		stats.addAccess();
 	}
 
-	/**
-	 * FOR UNIT TESTS ONLY
-	 */
-	void setPersistence(IServicePersistence thePersistence) {
-		myPersistence = thePersistence;
+	@Override
+	public void recordServerSecurityFailure(PersServiceVersionMethod theMethod, PersUser theUser, Date theInvocationTime) {
+		Validate.notNull(theInvocationTime, "InvocationTime");
+		Validate.notNull(theMethod, "Method");
+
+		/*
+		 * Record method statictics
+		 */
+		InvocationStatsIntervalEnum interval = InvocationStatsIntervalEnum.MINUTE;
+		BasePersInvocationStatsPk statsPk = new PersInvocationStatsPk(interval, theInvocationTime, theMethod);
+		doRecordServerSecurityFail(statsPk);
+		
+		/*
+		 * Update service version status
+		 */
+		PersServiceVersionStatus serviceVersionStatus = theMethod.getServiceVersion().getStatus();
+		serviceVersionStatus = getStatusForPk(serviceVersionStatus, serviceVersionStatus.getPid());
+		serviceVersionStatus.setLastServerSecurityFailure(theInvocationTime);
 	}
 
 	@Override
 	public void recordUrlFailure(PersServiceVersionUrl theUrl, Failure theFailure) {
-		Validate.throwIllegalArgumentExceptionIfNull("Url", theUrl);
-		Validate.throwIllegalArgumentExceptionIfNull("Failure", theFailure);
+		Validate.notNull(theUrl, "Url");
+		Validate.notNull(theFailure, "Failure");
 
 		PersServiceVersionUrlStatus status = getUrlStatus(theUrl);
 		status.setLastFail(new Date());
@@ -405,6 +284,220 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		// Do this last since it triggers a state change
 		status.setStatus(StatusEnum.DOWN);
 		status.setDirty(true);
+	}
+
+	private void doFlushStatus() {
+
+		ourLog.debug("Going to flush status entries");
+
+		/*
+		 * Flush method stats
+		 */
+		
+		List<BasePersMethodStats> stats = new ArrayList<BasePersMethodStats>();
+		HashSet<BasePersMethodStatsPk> keys = new HashSet<BasePersMethodStatsPk>(myInvocationStats.keySet());
+
+		if (keys.isEmpty()) {
+
+			ourLog.debug("No status entries to flush");
+
+		} else {
+
+			Date earliest = null;
+			Date latest = null;
+			for (BasePersMethodStatsPk nextKey : keys) {
+				BasePersMethodStats nextStats = myInvocationStats.remove(nextKey);
+				if (nextStats == null) {
+					continue;
+				}
+				stats.add(nextStats);
+
+				if (earliest == null || earliest.after(nextStats.getPk().getStartTime())) {
+					earliest = nextStats.getPk().getStartTime();
+				}
+				if (latest == null || latest.before(nextStats.getPk().getStartTime())) {
+					latest = nextStats.getPk().getStartTime();
+				}
+
+			}
+
+			ourLog.info("Going to flush {} stats entries with time range {} - {}", new Object[] { stats.size(), myTimeFormat.format(earliest), myTimeFormat.format(latest) });
+
+			try {
+				myPersistence.saveInvocationStats(stats);
+				ourLog.info("Done flushing stats");
+			} catch (PersistenceException e) {
+				ourLog.error("Failed to flush stats to disk, going to re-queue them", e);
+				for (BasePersMethodStats next : stats) {
+
+					BasePersMethodStats savedStats = myInvocationStats.putIfAbsent(next.getPk(), next);
+					if (savedStats != next) {
+						savedStats.mergeUnsynchronizedEvents(next);
+					}
+
+				}
+			}
+
+		}
+
+		/*
+		 * Flush URL statuses
+		 */
+		
+		ArrayList<PersServiceVersionUrlStatus> urlStatuses = new ArrayList<PersServiceVersionUrlStatus>(myUrlStatus.values());
+		for (Iterator<PersServiceVersionUrlStatus> iter = urlStatuses.iterator(); iter.hasNext();) {
+			PersServiceVersionUrlStatus next = iter.next();
+			if (!next.isDirty()) {
+				iter.remove();
+			} else {
+				next.setLastStatusSave(new Date());
+			}
+		}
+
+		if (!urlStatuses.isEmpty()) {
+			ourLog.info("Going to persist {} URL statuses", urlStatuses.size());
+			myPersistence.saveServiceVersionUrlStatus(urlStatuses);
+		}
+
+		/*
+		 * TODO: Maybe use a "last saved" timestamp here instead of a flag to
+		 * prevent race conditions
+		 */
+		for (PersServiceVersionUrlStatus next : urlStatuses) {
+			next.setDirty(false);
+		}
+
+		/*
+		 * Flush Service Version Status
+		 */
+		
+		ArrayList<PersServiceVersionStatus> serviceVersionStatuses = new ArrayList<PersServiceVersionStatus>(myServiceVersionStatus.values());
+		for (Iterator<PersServiceVersionStatus> iter = serviceVersionStatuses.iterator(); iter.hasNext();) {
+			PersServiceVersionStatus next = iter.next();
+			if (!next.isDirty()) {
+				iter.remove();
+			} else {
+				next.setLastSave(new Date());
+			}
+		}
+
+		if (!serviceVersionStatuses.isEmpty()) {
+			ourLog.info("Going to persist {} URL statuses", serviceVersionStatuses.size());
+			myPersistence.saveServiceVersionStatuses(serviceVersionStatuses);
+		}
+		
+		/*
+		 * TODO: Maybe use a "last saved" timestamp here instead of a flag to
+		 * prevent race conditions
+		 */
+		for (PersServiceVersionStatus next : serviceVersionStatuses) {
+			next.setDirty(false);
+		}
+
+	}
+
+	private void doRecordInvocationMethod(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, BasePersInvocationStatsPk theStatsPk) {
+		BasePersInvocationStats stats = (BasePersInvocationStats) getStatsForPk(theStatsPk);
+
+		long responseTime = theHttpResponse.getResponseTime();
+		long responseBytes = theHttpResponse.getBody().length();
+
+		switch (theInvocationResponseResultsBean.getResponseType()) {
+		case FAIL:
+			stats.addFailInvocation(responseTime, theRequestLengthChars, responseBytes);
+			break;
+		case FAULT:
+			stats.addFaultInvocation(responseTime, theRequestLengthChars, responseBytes);
+			break;
+		case SUCCESS:
+			stats.addSuccessInvocation(responseTime, theRequestLengthChars, responseBytes);
+			break;
+		default:
+			break;
+		}
+	}
+
+	private void doRecordServerSecurityFail(BasePersInvocationStatsPk theStatsPk) {
+		BasePersInvocationStats stats = (BasePersInvocationStats) getStatsForPk(theStatsPk);
+		stats.addServerSecurityFailInvocation();
+	}
+
+	private void doRecordUrlStatus(boolean theWasSuccess, PersServiceVersionUrlStatus theUrlStatusBean) {
+		if (theUrlStatusBean.getUrl() == null) {
+			throw new IllegalArgumentException("Status has no URL associated with it");
+		}
+
+		synchronized (theUrlStatusBean) {
+			Date now = new Date();
+
+			if (theWasSuccess) {
+				if (theUrlStatusBean.getStatus() != StatusEnum.ACTIVE) {
+					Long urlPid = theUrlStatusBean.getUrl().getPid();
+					StatusEnum urlStatus = theUrlStatusBean.getStatus();
+					String urlUrl = theUrlStatusBean.getUrl().getUrl();
+					ourLog.info("URL[{}] is now ACTIVE, was {} - {}", new Object[] { urlPid, urlStatus, urlUrl });
+				}
+				theUrlStatusBean.setStatus(StatusEnum.ACTIVE);
+				theUrlStatusBean.setLastSuccess(now);
+			} else {
+				theUrlStatusBean.setStatus(StatusEnum.DOWN);
+				theUrlStatusBean.setLastFail(now);
+
+				Date nextReset = theUrlStatusBean.getNextCircuitBreakerReset();
+				if (nextReset != null) {
+					ourLog.info("URL[{}] is DOWN, Next circuit breaker reset attempt is {} - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), myTimeFormat.format(nextReset), theUrlStatusBean.getUrl().getUrl() });
+				} else {
+					ourLog.info("URL[{}] is DOWN - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), theUrlStatusBean.getUrl().getUrl() });
+				}
+
+			}
+
+		}
+	}
+
+	private BasePersMethodStats getStatsForPk(BasePersMethodStatsPk statsPk) {
+		BasePersMethodStats tryNew = statsPk.newObjectInstance();
+		BasePersMethodStats stats = myInvocationStats.putIfAbsent(statsPk, tryNew);
+		if (stats == null) {
+			stats = tryNew;
+		}
+
+		if (ourLog.isTraceEnabled()) {
+			ourLog.trace("Now have the following {} stats: {}", myInvocationStats.size(), new ArrayList<BasePersMethodStatsPk>(myInvocationStats.keySet()));
+		}
+
+		return stats;
+	}
+
+	private PersServiceVersionStatus getStatusForPk(PersServiceVersionStatus theServiceVersionStatus, Long thePid) {
+		Validate.notNull(theServiceVersionStatus, "Status");
+		Validate.notNull(thePid, "PID");
+		
+		PersServiceVersionStatus status = myServiceVersionStatus.putIfAbsent(thePid, theServiceVersionStatus);
+		if (status == null) {
+			status = theServiceVersionStatus;
+		}
+
+		return status;
+	}
+
+	private PersServiceVersionUrlStatus getUrlStatus(PersServiceVersionUrl theSuccessfulUrl) {
+		PersServiceVersionUrlStatus savedStatus = theSuccessfulUrl.getStatus();
+		assert savedStatus != null;
+
+		PersServiceVersionUrlStatus existing = myUrlStatus.putIfAbsent(savedStatus.getPid(), savedStatus);
+		if (existing == null) {
+			return savedStatus;
+		} else {
+			return existing;
+		}
+	}
+
+	/**
+	 * FOR UNIT TESTS ONLY
+	 */
+	void setDao(IDao thePersistence) {
+		myPersistence = thePersistence;
 	}
 
 }

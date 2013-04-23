@@ -23,6 +23,8 @@ import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
+import net.svcret.admin.shared.model.ServerSecuredEnum;
+
 import org.hibernate.annotations.ForeignKey;
 
 import com.google.common.base.Objects;
@@ -63,6 +65,9 @@ public class PersService extends BasePersObject {
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true, mappedBy="myService")
 	private Collection<BasePersServiceVersion> myVersions;
 
+	@Transient
+	private transient ServerSecuredEnum myServerSecured;
+
 	public PersService() {
 		super();
 	}
@@ -84,10 +89,10 @@ public class PersService extends BasePersObject {
 		}
 
 		PersService obj = (PersService) theObj;
-		if (myPid == null && theObj != null) {
+		if (myPid == null && obj.getPid() != null) {
 			return false;
 		}
-		if (theObj == null && myPid != null) {
+		if (obj.getPid() == null && myPid != null) {
 			return false;
 		}
 		if (myPid == null) {
@@ -247,6 +252,21 @@ public class PersService extends BasePersObject {
 	public void removeVersion(BasePersServiceVersion theVersion) {
 		getVersions();
 		myVersions.remove(theVersion);
+	}
+
+	public ServerSecuredEnum getServerSecured() {
+		if (myServerSecured == null) {
+			for (BasePersServiceVersion next : getVersions()) {
+				myServerSecured = ServerSecuredEnum.merge(myServerSecured, next.getServerSecured());
+			}
+		}
+		return myServerSecured;
+	}
+
+	public void merge(PersService theService) {
+		setServiceId(theService.getServiceId());
+		setServiceName(theService.getServiceName());
+		setActive(theService.isActive());
 	}
 
 }

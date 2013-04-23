@@ -3,7 +3,7 @@ package net.svcret.ejb.model.entity.jsonrpc;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
-import net.svcret.ejb.api.ServiceProtocolEnum;
+import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 
 @Entity

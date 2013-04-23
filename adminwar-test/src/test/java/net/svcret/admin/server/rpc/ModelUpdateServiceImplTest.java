@@ -9,6 +9,7 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import net.svcret.admin.shared.ServiceFailureException;
+import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
@@ -39,6 +40,48 @@ public class ModelUpdateServiceImplTest {
 		DefaultAnswer.setDesignTime();
 	}
 
+	@Test
+	public void testUpdateExistingServiceVersion() throws ServiceFailureException, ProcessingException {
+		
+		GSoap11ServiceVersionAndResources verAndRes = new GSoap11ServiceVersionAndResources();
+		
+		GSoap11ServiceVersion ver = new GSoap11ServiceVersion();
+		ver.setPid(111L);
+		verAndRes.setServiceVersion(ver);
+		ver.setWsdlLocation("http://wsdlurl");
+		ver.getUrlList().add(new GServiceVersionUrl("url1", "http://url1"));
+
+		verAndRes.setResource(new ArrayList<GResource>());
+		verAndRes.getResource().add(new GResource("http://wsdlurl", "text/xml", "wsdlcontents"));
+		verAndRes.getResource().add(new GResource("http://xsdurl", "text/xml", "xsdcontents"));
+
+		ver.getResourcePointerList().add(verAndRes.getResource().get(0).asPointer());
+		ver.getResourcePointerList().add(verAndRes.getResource().get(1).asPointer());
+		
+		when(myAdminSvc.loadServiceVersion(111L)).thenReturn(verAndRes);
+		
+		/*
+		 * Load for the first time
+		 */
+
+		DefaultAnswer.setDesignTime();
+		when(myAdminSvc.saveServiceVersion(1L, 2L, ver, verAndRes.getResource())).thenReturn(ver);
+		when(myAdminSvc.getDomainByPid(1L)).thenReturn(null);
+		when(myAdminSvc.getServiceByPid(2L)).thenReturn(null);
+		DefaultAnswer.setRunTime();
+		
+		BaseGServiceVersion svcVer = (GSoap11ServiceVersion)mySvc.loadServiceVersionIntoSession(111L);
+		assertEquals(111L, svcVer.getPid());
+		
+		/*
+		 * Now save
+		 */
+		
+		DefaultAnswer.setRunTime();
+		mySvc.addServiceVersion(1L, null, 2L, null, svcVer);
+		
+	}
+	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testCreateNewSoap11Service() throws ServiceFailureException, ProcessingException {
@@ -91,7 +134,7 @@ public class ModelUpdateServiceImplTest {
 		ArgumentCaptor<GSoap11ServiceVersion> versionCaptor = ArgumentCaptor.forClass(GSoap11ServiceVersion.class);
 		ArgumentCaptor<List> resourceCaptor = ArgumentCaptor.forClass(List.class);
 
-		when(myAdminSvc.addServiceVersion(domainCaptor.capture(), serviceCaptor.capture(), versionCaptor.capture(), resourceCaptor.capture())).thenReturn(addSvcVal);
+		when(myAdminSvc.saveServiceVersion(domainCaptor.capture(), serviceCaptor.capture(), versionCaptor.capture(), resourceCaptor.capture())).thenReturn(addSvcVal);
 
 		DefaultAnswer.setRunTime();
 		ver2.setId("2.0");

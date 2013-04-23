@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 
 import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.IConfigService;
+import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
@@ -22,12 +24,14 @@ import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
+import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
+import net.svcret.ejb.model.entity.soap.WsSecUsernameTokenCredentialGrabber;
 import net.svcret.ejb.util.IOUtils;
 
 import org.junit.After;
@@ -65,10 +69,18 @@ public class Soap11ServiceInvokerTest {
 		when(wsdlResource.getResourceText()).thenReturn(IOUtils.readClasspathIntoString("/test_simple.wsdl"));
 		when(svcVersion.getResourceForUri("http://the_wsdl_url")).thenReturn(wsdlResource);
 
-		DefaultAnswer.setRunTime();
-
+		IConfigService configService = mock(IConfigService.class);
 		Soap11ServiceInvoker svc = new Soap11ServiceInvoker();
-		InvocationResultsBean result = svc.processInvocation(svcVersion, RequestType.GET, "http://foo", "/Some/Path", "?wsdl", new StringReader(""));
+		svc.setConfigService(configService);
+
+		PersConfig config=new PersConfig();
+		config.setDefaults();
+		config.getProxyUrlBases().iterator().next().setUrlBase("http://foo");
+		when(configService.getConfig()).thenReturn(config);
+		
+		DefaultAnswer.setRunTime();
+		
+		InvocationResultsBean result = svc.processInvocation(svcVersion, RequestType.GET, "/Some/Path", "?wsdl", new StringReader(""));
 
 		assertEquals(InvocationResultsBean.ResultTypeEnum.STATIC_RESOURCE, result.getResultType());
 		assertEquals(Constants.CONTENT_TYPE_XML, result.getStaticResourceContentTyoe());
@@ -102,7 +114,7 @@ public class Soap11ServiceInvokerTest {
 		when(svcVersion.getResourceForUri("http://the_wsdl_url")).thenReturn(wsdlResource);
 
 		Soap11ServiceInvoker svc = new Soap11ServiceInvoker();
-		InvocationResultsBean result = svc.processInvocation(svcVersion, RequestType.GET, "http://foo", "/Some/Path", "?xsd&xsdnum=100", new StringReader(""));
+		InvocationResultsBean result = svc.processInvocation(svcVersion, RequestType.GET, "/Some/Path", "?xsd&xsdnum=100", new StringReader(""));
 
 		assertEquals(InvocationResultsBean.ResultTypeEnum.STATIC_RESOURCE, result.getResultType());
 		assertEquals(Constants.CONTENT_TYPE_XML, result.getStaticResourceContentTyoe());
@@ -143,7 +155,7 @@ public class Soap11ServiceInvokerTest {
 
 		Soap11ServiceInvoker svc = new Soap11ServiceInvoker();
 		try {
-			svc.processInvocation(serviceVer, RequestType.POST,"http://foo", "/Some/Path", "", reader);
+			svc.processInvocation(serviceVer, RequestType.POST, "/Some/Path", "", reader);
 			fail();
 		} catch (UnknownRequestException e) {
 			// good!
@@ -179,11 +191,11 @@ public class Soap11ServiceInvokerTest {
 		when(serviceVer.getServerAuths()).thenReturn(serverAuths);
 
 		Soap11ServiceInvoker svc = new Soap11ServiceInvoker();
-		InvocationResultsBean result = svc.processInvocation(serviceVer, RequestType.POST, "http://foo", "/Some/Path", "", reader);
+		InvocationResultsBean result = svc.processInvocation(serviceVer, RequestType.POST, "/Some/Path", "", reader);
 		
-		assertEquals(1, result.getCredentialsInRequest().size());
-		assertEquals("user", result.getCredentialsInRequest().get(0).getUsername());
-		assertEquals("pass", result.getCredentialsInRequest().get(0).getPassword());
+		Class<? extends ICredentialGrabber> type = WsSecUsernameTokenCredentialGrabber.class;
+		assertEquals("user", result.getCredentialsInRequest(type).getUsername());
+		assertEquals("pass", result.getCredentialsInRequest(type).getPassword());
 		
 		assertEquals(InvocationResultsBean.ResultTypeEnum.METHOD, result.getResultType());
 		

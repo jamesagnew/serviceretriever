@@ -33,7 +33,7 @@ public class PersState implements Serializable {
 	}
 
 	public PersState(String theKey) {
-		Validate.throwIllegalArgumentExceptionIfBlank("Key", theKey);
+		Validate.notBlank(theKey, "Key");
 		myKey = theKey;
 	}
 
@@ -77,7 +77,7 @@ public class PersState implements Serializable {
 	 *            the key to set
 	 */
 	public void setKey(String theKey) {
-		Validate.throwIllegalArgumentExceptionIfBlank("Key", theKey);
+		Validate.notBlank(theKey, "Key");
 		myKey = theKey;
 	}
 

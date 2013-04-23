@@ -17,4 +17,10 @@ public class CssConstants {
 	public static final String DASHBOARD_NAME_SUFFIX = "dashboardNameSuffix";
 	public static final String TWO_COLUMN_PROPERTY_GRID = "twoColumnPropertyGrid";
 	public static final String CONTENT_INNER_SUBPANEL = "contentInnerSubPanel";
+	public static final String PUSHBUTTON_TEXT = "pushButtonText";
+	public static final String PUSHBUTTON = "pushButton";
+	public static final String DASHBOARD_ACTION_HEADER = "dashboardActionHeader";
+	public static final String DASHBOARD_SECURITY_PANEL = "dashboardSecurityPanel";
+	public static final String DASHBOARD_NAME_PREFIX = "dashboardNamePrefix";
+	
 }

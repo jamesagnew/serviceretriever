@@ -24,9 +24,9 @@ public abstract class BaseAuthorizationServiceBean<T extends BasePersAuthenticat
 	@SuppressWarnings("unchecked")
 	@Override
 	public PersUser authorize(BasePersAuthenticationHost theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException {
-		Validate.throwIllegalArgumentExceptionIfNull("Host", theHost);
-		Validate.throwIllegalArgumentExceptionIfNull("Catalog", theUserCatalog);
-		Validate.throwIllegalArgumentExceptionIfNull("Grabber", theCredentialGrabber);
+		Validate.notNull(theHost, "Host");
+		Validate.notNull(theUserCatalog, "Catalog");
+		Validate.notNull(theCredentialGrabber, "Grabber");
 
 		Integer cacheForMillis = theHost.getCacheSuccessfulCredentialsForMillis();
 		if (cacheForMillis != null) {
@@ -98,9 +98,9 @@ public abstract class BaseAuthorizationServiceBean<T extends BasePersAuthenticat
 	}
 
 	private void storeAuthorization(ICredentialGrabber theCredentialGrabber, Integer theCacheForMillis, Long theUserPid, Long theAuthHostPid) throws ProcessingException {
-		Validate.throwIllegalArgumentExceptionIfNull("AuthHostPid", theAuthHostPid);
-		Validate.throwIllegalArgumentExceptionIfNull("UserPid", theUserPid);
-		Validate.throwIllegalArgumentExceptionIfNotPositive("CacheForMillis", theCacheForMillis);
+		Validate.notNull(theAuthHostPid, "AuthHostPid");
+		Validate.notNull(theUserPid, "UserPid");
+		Validate.greaterThanZero(theCacheForMillis, "CacheForMillis");
 		
 		String hash = theCredentialGrabber.getCredentialHash();
 		long expiry = System.currentTimeMillis() + theCacheForMillis;

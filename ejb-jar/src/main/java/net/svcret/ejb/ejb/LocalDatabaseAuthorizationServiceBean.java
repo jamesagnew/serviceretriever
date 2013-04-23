@@ -5,7 +5,7 @@ import javax.ejb.Stateless;
 
 import net.svcret.ejb.api.IAuthorizationService.ILocalDatabaseAuthorizationService;
 import net.svcret.ejb.api.ICredentialGrabber;
-import net.svcret.ejb.api.IServicePersistence;
+import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersUser;
@@ -37,5 +37,5 @@ public class LocalDatabaseAuthorizationServiceBean extends BaseAuthorizationServ
 	}
 
 	@EJB
-	private IServicePersistence myPersSvc;
+	private IDao myPersSvc;
 }

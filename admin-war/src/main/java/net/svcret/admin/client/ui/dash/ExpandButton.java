@@ -1,9 +1,6 @@
 package net.svcret.admin.client.ui.dash;
 
 import net.svcret.admin.client.ui.dash.model.IDashModel;
-import net.svcret.admin.shared.IAsyncLoadCallback;
-import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.GDomainList;
 
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -44,14 +41,6 @@ public class ExpandButton extends Image implements ClickHandler {
 		GWT.log("Setting expansion to " + value);
 		update();
 		myPanel.updateView();
-		if (value) {
-			Model.getInstance().loadDomainListAndStats(new IAsyncLoadCallback<GDomainList>() {
-				@Override
-				public void onSuccess(GDomainList theResult) {
-					myPanel.updateView(theResult);
-				}
-			});
-		}
 	}
 
 }

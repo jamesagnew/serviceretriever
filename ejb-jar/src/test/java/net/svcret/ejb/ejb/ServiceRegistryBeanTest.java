@@ -8,7 +8,7 @@ import javax.xml.bind.JAXBException;
 
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IHttpClient;
-import net.svcret.ejb.api.IServicePersistence;
+import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.ejb.ServiceRegistryBean;
 import net.svcret.ejb.ex.HttpFailureException;
 import net.svcret.ejb.ex.InternalErrorException;
@@ -30,7 +30,7 @@ public class ServiceRegistryBeanTest {
 
 	private ServiceRegistryBean mySvc;
 	private IHttpClient myHttpClient;
-	private IServicePersistence myPersistence;
+	private IDao myPersistence;
 
 	@Before
 	public void before() throws InternalErrorException {
@@ -40,8 +40,8 @@ public class ServiceRegistryBeanTest {
 		myHttpClient = mock(IHttpClient.class, DefaultAnswer.INSTANCE);
 		mySvc.setSvcHttpClient(myHttpClient);
 
-		myPersistence = mock(IServicePersistence.class, DefaultAnswer.INSTANCE);
-		mySvc.setSvcPersistence(myPersistence);
+		myPersistence = mock(IDao.class, DefaultAnswer.INSTANCE);
+		mySvc.setDao(myPersistence);
 
 		DefaultAnswer.setDesignTime();
 	}

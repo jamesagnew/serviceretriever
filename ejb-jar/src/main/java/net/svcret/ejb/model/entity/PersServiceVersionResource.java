@@ -35,7 +35,7 @@ public class PersServiceVersionResource extends BasePersObject {
 	@Column(name = "RES_URL", length = 200, nullable=false)
 	private String myResourceUrl;
 	
-	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
+	@ManyToOne()
 	@JoinColumn(name = "SVC_VERSION_PID", referencedColumnName = "PID")
 	private BasePersServiceVersion myServiceVersion;
 
@@ -115,6 +115,12 @@ public class PersServiceVersionResource extends BasePersObject {
 	 */
 	public void setServiceVersion(BasePersServiceVersion theServiceVersion) {
 		myServiceVersion = theServiceVersion;
+	}
+
+	public void merge(PersServiceVersionResource theObj) {
+		setResourceContentType(theObj.getResourceContentType());
+		setResourceText(theObj.getResourceText());
+		setResourceUrl(theObj.getResourceUrl());
 	}
 
 }

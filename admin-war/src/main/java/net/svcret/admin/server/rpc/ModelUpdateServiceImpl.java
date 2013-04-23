@@ -12,7 +12,9 @@ import net.svcret.admin.client.rpc.ModelUpdateService;
 import net.svcret.admin.shared.ServiceFailureException;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
 import net.svcret.admin.shared.model.BaseGAuthHost;
+import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
+import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
@@ -52,15 +54,15 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	private ModelUpdateServiceMock myMock;
 
 	@Override
-	public GDomain addDomain(String theId, String theName) throws ServiceFailureException {
-		ourLog.info("Adding domain {}/{}", theId, theName);
+	public GDomain addDomain(GDomain theDomain) throws ServiceFailureException {
+		ourLog.info("Adding domain {}/{}", theDomain.getId(), theDomain.getName());
 
 		if (isMockMode()) {
-			return myMock.addDomain(theId, theName);
+			return myMock.addDomain(theDomain);
 		}
 
 		try {
-			return myAdminSvc.addDomain(theId, theName);
+			return myAdminSvc.addDomain(theDomain);
 		} catch (ProcessingException e) {
 			ourLog.warn("Failed to add domain", e);
 			throw new ServiceFailureException("Failed to add domain: " + e.getMessage());
@@ -84,7 +86,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
-	public AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, GSoap11ServiceVersion theVersion) throws ServiceFailureException {
+	public AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion) throws ServiceFailureException {
 		if (theExistingDomainPid == null && StringUtils.isBlank(theCreateDomainId)) {
 			throw new IllegalArgumentException("Domain PID and new domain ID are both missing");
 		}
@@ -97,12 +99,11 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		if (theExistingServicePid != null && StringUtils.isNotBlank(theCreateServiceId)) {
 			throw new IllegalArgumentException("Service PID and new domain ID can not both be provided");
 		}
-		Validate.throwIllegalArgumentExceptionIfBlank("Service Version ID", theVersion.getId());
 		if (theVersion.getPid() != 0) {
-			throw new IllegalArgumentException("ServiceVersion already has a PID");
+			ourLog.info("Saving service version for Domain[{}/create {}] and Service[{}/create {}] with id: {}", new Object[] { theExistingDomainPid, theCreateDomainId, theExistingServicePid, theCreateServiceId, theVersion.getId() });
+		} else {
+			ourLog.info("Adding service version for Domain[{}/create {}] and Service[{}/create {}] with id: {}", new Object[] { theExistingDomainPid, theCreateDomainId, theExistingServicePid, theCreateServiceId, theVersion.getId() });
 		}
-
-		ourLog.info("Adding service version for Domain[{}/create {}] and Service[{}/create {}] with id: {}", new Object[] { theExistingDomainPid, theCreateDomainId, theExistingServicePid, theCreateServiceId, theVersion.getId() });
 
 		if (isMockMode()) {
 			return myMock.addServiceVersion(theExistingDomainPid, theCreateDomainId, theExistingServicePid, theCreateServiceId, theVersion);
@@ -118,7 +119,10 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		long domain;
 		if (isNotBlank(theCreateDomainId)) {
 			try {
-				domain = myAdminSvc.addDomain(theCreateDomainId, theCreateDomainId).getPid();
+				GDomain newDomain=new GDomain();
+				newDomain.setId(theCreateDomainId);
+				newDomain.setName(theCreateDomainId);
+				domain = myAdminSvc.addDomain(newDomain).getPid();
 			} catch (ProcessingException e) {
 				ourLog.error("Failed to create domain " + theCreateDomainId, e);
 				throw new ServiceFailureException("Failed to create domain: " + theCreateDomainId + " - " + e.getMessage());
@@ -139,9 +143,9 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 			service = theExistingServicePid;
 		}
 
-		GSoap11ServiceVersion newVersion;
+		BaseGServiceVersion newVersion;
 		try {
-			newVersion = myAdminSvc.addServiceVersion(domain, service, theVersion, resList);
+			newVersion = myAdminSvc.saveServiceVersion(domain, service, theVersion, resList);
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to add service version", e);
 			throw new ServiceFailureException(e.getMessage());
@@ -150,7 +154,12 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		AddServiceVersionResponse retVal = new AddServiceVersionResponse();
 
 		retVal.setNewServiceVersion(newVersion);
-		retVal.setNewDomain(myAdminSvc.getDomainByPid(domain));
+		try {
+			retVal.setNewDomain(myAdminSvc.getDomainByPid(domain));
+		} catch (ProcessingException e) {
+			ourLog.error("Failure when adding a service version", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
 		retVal.setNewService(myAdminSvc.getServiceByPid(service));
 
 		return retVal;
@@ -231,7 +240,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 
 	@Override
 	public ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ServiceFailureException {
-		Validate.throwIllegalArgumentExceptionIfNull("ModelUpdateRequest", theRequest);
+		Validate.notNull(theRequest, "ModelUpdateRequest");
 
 		ourLog.info("Requesting a model update from backend server for: " + theRequest.toString());
 
@@ -289,9 +298,9 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 
 	@Override
 	public GSoap11ServiceVersion loadWsdl(GSoap11ServiceVersion theService, String theWsdlUrl) throws ServiceFailureException {
-		Validate.throwIllegalArgumentExceptionIfNull("Service", theService);
-		Validate.throwIllegalArgumentExceptionIfNull("Service#UncommittedSessionId", theService.getUncommittedSessionId());
-		Validate.throwIllegalArgumentExceptionIfBlank("Service", theWsdlUrl);
+		Validate.notNull(theService, "Service");
+		Validate.notNull(theService.getUncommittedSessionId(), "Service#UncommittedSessionId");
+		Validate.notBlank(theWsdlUrl, "Service");
 
 		GSoap11ServiceVersion retVal;
 		if (isMockMode()) {
@@ -343,7 +352,12 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 			return myMock.removeDomain(thePid);
 		}
 
-		myAdminSvc.deleteDomain(thePid);
+		try {
+			myAdminSvc.deleteDomain(thePid);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to delete domain", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
 
 		try {
 			return myAdminSvc.loadDomainList();
@@ -381,16 +395,24 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
-	public GDomain saveDomain(long thePid, String theId, String theName) {
+	public GDomain saveDomain(GDomain theDomain) throws ServiceFailureException {
 		if (isMockMode()) {
-			return myMock.saveDomain(thePid, theId, theName);
+			return myMock.saveDomain(theDomain);
 		}
-		return null;
+		
+		ourLog.info("Saving domain with PID {}", theDomain.getPid());
+		
+		try {
+			return myAdminSvc.saveDomain(theDomain);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to save domain", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
 	}
 
 	@Override
 	public GHttpClientConfig saveHttpClientConfig(boolean theCreate, GHttpClientConfig theConfig) throws ServiceFailureException {
-		Validate.throwIllegalArgumentExceptionIfNull("HttpClientConfig", theConfig);
+		Validate.notNull(theConfig, "HttpClientConfig");
 
 		if (theCreate) {
 			ourLog.info("Saving new HTTP client config");
@@ -422,9 +444,9 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
-	public void saveServiceVersionToSession(GSoap11ServiceVersion theServiceVersion) {
-		Validate.throwIllegalArgumentExceptionIfNull("ServiceVersion", theServiceVersion);
-		Validate.throwIllegalArgumentExceptionIfNull("ServiceVersion#UncommittedSessionId", theServiceVersion.getUncommittedSessionId());
+	public void saveServiceVersionToSession(BaseGServiceVersion theServiceVersion) {
+		Validate.notNull(theServiceVersion, "ServiceVersion");
+		Validate.notNull(theServiceVersion.getUncommittedSessionId(), "ServiceVersion#UncommittedSessionId");
 
 		ourLog.info("Saving Service Version[{}] to Session", theServiceVersion.getUncommittedSessionId());
 
@@ -433,7 +455,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
-	public void saveUser(GUser theUser) {
+	public void saveUser(GUser theUser) throws ServiceFailureException {
 		ourLog.info("Saving user {} / {}", theUser.getPid(), theUser.getUsername());
 
 		if (isMockMode()) {
@@ -441,7 +463,12 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 			return;
 		}
 
-		myAdminSvc.saveUser(theUser);
+		try {
+			myAdminSvc.saveUser(theUser);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to save user", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
 
 		ourLog.info("Done saving user {} / {}", theUser.getPid(), theUser.getUsername());
 	}
@@ -451,6 +478,76 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	 */
 	void setAdminSvc(IAdminService theAdminSvc) {
 		myAdminSvc = theAdminSvc;
+	}
+
+	@Override
+	public BaseGServiceVersion loadServiceVersionIntoSession(long theServiceVersionPid) throws ServiceFailureException {
+		BaseGServiceVersion retVal;
+
+		GSoap11ServiceVersionAndResources serviceAndResources;
+		if (isMockMode()) {
+			
+			retVal = myMock.loadServiceVersionIntoSession(theServiceVersionPid);
+			
+			serviceAndResources = new GSoap11ServiceVersionAndResources();
+			serviceAndResources.setServiceVersion((GSoap11ServiceVersion) retVal);
+			
+		} else {
+
+			try {
+				serviceAndResources = myAdminSvc.loadServiceVersion(theServiceVersionPid);
+			} catch (ProcessingException e) {
+				ourLog.error("Failed to load service version", e);
+				throw new ServiceFailureException(e.getMessage());
+			}
+			
+		}
+
+		retVal = serviceAndResources.getServiceVersion();
+		retVal.setUncommittedSessionId(ourNextId.incrementAndGet());
+		saveServiceVersionToSession(retVal);
+		saveServiceVersionResourcesToSession(serviceAndResources);
+		
+		return retVal;
+	}
+
+	@Override
+	public GDomainList removeService(long theDomainPid, long theServicePid) throws ServiceFailureException {
+		if (isMockMode()) {
+			return myMock.removeService(theDomainPid, theServicePid);
+		}
+		
+		ourLog.info("Removing service for DOMAIN {} SERVICE {}", theDomainPid,theServicePid);
+		
+		try {
+			return myAdminSvc.deleteService(theServicePid);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to delete service", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+	}
+
+	@Override
+	public GDomainList saveService(GService theService) throws ServiceFailureException {
+		if (isMockMode()) {
+			return myMock.saveService(theService);
+		}
+
+		try {
+			return myAdminSvc.saveService(theService);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to save service", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+	}
+
+	@Override
+	public GConfig loadConfig() {
+		if (isMockMode()) {
+			return myMock.loadConfig();
+		}
+		
+		return myAdminSvc.loadConfig();
 	}
 
 }

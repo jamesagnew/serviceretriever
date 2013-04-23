@@ -12,12 +12,12 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 
+import net.svcret.admin.shared.model.ServerSecuredEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 
 @Table(name = "PX_DOMAIN")
@@ -52,6 +52,9 @@ public class PersDomain extends BasePersObject {
 
 	@Transient
 	private transient StatusEnum myStatus;
+
+	@Transient
+	private transient ServerSecuredEnum myServerSecured;
 
 	public PersDomain() {
 		super();
@@ -178,6 +181,20 @@ public class PersDomain extends BasePersObject {
 		getServices();
 		myServices.add(thePersService);
 		myIdToServices = null;
+	}
+
+	public void merge(PersDomain theDomain) {
+		setDomainId(theDomain.getDomainId());
+		setDomainName(theDomain.getDomainName());
+	}
+
+	public ServerSecuredEnum getServerSecured() {
+		if (myServerSecured == null) {
+			for (PersService next : getServices()) {
+				myServerSecured = ServerSecuredEnum.merge(myServerSecured, next.getServerSecured());
+			}
+		}
+		return myServerSecured;
 	}
 
 }

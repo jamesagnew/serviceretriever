@@ -29,7 +29,7 @@ public interface IServiceInvoker<T extends BasePersServiceVersion> {
 	 * @throws IOException
 	 * @throws ProcessingException
 	 */
-	InvocationResultsBean processInvocation(T theServiceDefinition, RequestType theRequestType, String theBase, String thePath, String theQuery, Reader theReader) throws InternalErrorException, UnknownRequestException, IOException, ProcessingException; 
+	InvocationResultsBean processInvocation(T theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, Reader theReader) throws InternalErrorException, UnknownRequestException, IOException, ProcessingException; 
 	
 	InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws ProcessingException;
 

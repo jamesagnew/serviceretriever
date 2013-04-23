@@ -1,18 +1,21 @@
 package net.svcret.admin.client.ui.dash.model;
 
+import net.svcret.admin.client.AdminPortal;
+import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.model.IProvidesUrlCount;
 import net.svcret.admin.shared.model.StatusEnum;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
+import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.Hyperlink;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.PopupPanel;
@@ -22,16 +25,20 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 
 	private BaseGServiceVersion myObj;
 	private PopupPanel myActionPopup;
+	private GService mySvc;
 
-	public DashModelServiceVersion(BaseGServiceVersion theServiceVersion) {
+	public DashModelServiceVersion(GService theService, BaseGServiceVersion theServiceVersion) {
 		super(theServiceVersion);
+		mySvc = theService;
 		myObj = theServiceVersion;
 	}
 
 	@Override
 	public Widget renderName() {
-		SafeHtml safeHtml = new SafeHtmlBuilder().appendEscaped(myObj.getId()).toSafeHtml();
-		return new HTML(safeHtml);
+		SafeHtmlBuilder b = new SafeHtmlBuilder();
+		b.appendHtmlConstant(AdminPortal.MSGS.dashboard_ServiceVersionPrefix());
+		b.appendEscaped(myObj.getId()).toSafeHtml();
+		return new HTML(b.toSafeHtml());
 	}
 
 	@Override
@@ -52,7 +59,6 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		StatusEnum status = myObj.getStatus();
 		return DashModelDomain.returnImageForStatus(status);
 	}
-
 
 	@Override
 	public HierarchyEnum getType() {
@@ -114,9 +120,29 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 	}
 
 	private void actionMenu(Image theButton) {
-		if (myActionPopup == null) {
-			myActionPopup = new PopupPanel();
-			myActionPopup.add(new Hyperlink("Edit Version", ""));
+		if (myActionPopup == null || myActionPopup.isShowing() == false) {
+
+			myActionPopup = new PopupPanel(true, true);
+			FlowPanel content = new FlowPanel();
+			myActionPopup.add(content);
+
+			SafeHtmlBuilder titleB = new SafeHtmlBuilder();
+			titleB.appendEscaped(mySvc.getName());
+			titleB.appendHtmlConstant("<br/>");
+			titleB.appendEscaped(myObj.getId());
+			content.add(new HeaderLabel(titleB.toSafeHtml()));
+
+			Button editDomain = new ActionPButton(AdminPortal.IMAGES.iconEdit(), "Edit");
+			editDomain.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent theEvent) {
+					myActionPopup.hide();
+					myActionPopup = null;
+					History.newItem(NavProcessor.getTokenEditServiceVersion(myObj.getPid()));
+				}
+			});
+			content.add(editDomain);
+
 			myActionPopup.showRelativeTo(theButton);
 		} else {
 			myActionPopup.hide();
@@ -133,6 +159,5 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 	public boolean hasChildren() {
 		return myObj.getMethodList().size() > 0;
 	}
-
 
 }

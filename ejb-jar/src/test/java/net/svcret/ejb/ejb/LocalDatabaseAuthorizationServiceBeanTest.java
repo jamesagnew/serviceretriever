@@ -15,7 +15,7 @@ import org.junit.Test;
 
 public class LocalDatabaseAuthorizationServiceBeanTest {
 
-//	private IServicePersistence myPersSvc;
+//	private IDao myPersSvc;
 	private LocalDatabaseAuthorizationServiceBean mySvc;
 private MyCredentialGrabber goodCredentialGrabber;
 private InMemoryUserCatalog userCatalog;

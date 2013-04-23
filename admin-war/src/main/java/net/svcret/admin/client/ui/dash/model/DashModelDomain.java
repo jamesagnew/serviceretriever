@@ -1,9 +1,8 @@
 package net.svcret.admin.client.ui.dash.model;
 
+import static net.svcret.admin.client.AdminPortal.*;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
-import net.svcret.admin.client.ui.components.HtmlBr;
-import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.HierarchyEnum;
@@ -18,7 +17,6 @@ import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Image;
-import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -33,16 +31,17 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 	}
 
 	private void actionMenu(Image theButton) {
-		if (myActionPopup == null) {
+		if (myActionPopup == null || myActionPopup.isShowing() == false) {
 			myActionPopup = new PopupPanel(true, true);
-			
+
 			FlowPanel content = new FlowPanel();
 			myActionPopup.add(content);
-			
-			content.add(new Label(myDomain.getName()));
-			content.add(new HtmlBr());
-			
-			Button editDomain = new PButton("Edit Domain");
+
+			content.add(new HeaderLabel(myDomain.getName()));
+
+			// Edit domain
+
+			Button editDomain = new ActionPButton(IMAGES.iconEdit(), "Edit Domain");
 			editDomain.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent theEvent) {
@@ -53,21 +52,9 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 			});
 			content.add(editDomain);
 
-			content.add(new HtmlBr());
-			
-			Button addService = new PButton("Add Service");
-			addService.addClickHandler(new ClickHandler() {
-				@Override
-				public void onClick(ClickEvent theEvent) {
-					myActionPopup.hide();
-					myActionPopup=null;
-					String newToken = NavProcessor.getTokenAddService(true, myDomain.getPid());
-					History.newItem(newToken);
-				}
-			});
-			content.add(addService);
-			
-			Button delete = new PButton(AdminPortal.MSGS.actions_Remove());
+			// Remove Domain
+
+			Button delete = new ActionPButton(IMAGES.iconRemove(), MSGS.actions_RemoveDomain());
 			delete.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent theEvent) {
@@ -77,8 +64,20 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 			});
 			content.add(delete);
 
-			
-			
+			// Add service
+
+			Button addService = new ActionPButton(IMAGES.iconAdd(), "Add Service to Domain");
+			addService.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent theEvent) {
+					myActionPopup.hide();
+					myActionPopup = null;
+					String newToken = NavProcessor.getTokenAddService(true, myDomain.getPid());
+					History.newItem(newToken);
+				}
+			});
+			content.add(addService);
+
 			myActionPopup.showRelativeTo(theButton);
 		} else {
 			myActionPopup.hide();
@@ -129,8 +128,12 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 
 	@Override
 	public Widget renderName() {
-		SafeHtmlBuilder b = new SafeHtmlBuilder().appendEscaped(myDomain.getName());
-		if (myDomain.getServiceList().size()==0) {
+		SafeHtmlBuilder b = new SafeHtmlBuilder();
+		
+		b.appendHtmlConstant(AdminPortal.MSGS.dashboard_DomainPrefix());
+		b.appendEscaped(myDomain.getName());
+		
+		if (myDomain.getServiceList().size() == 0) {
 			b.appendHtmlConstant(AdminPortal.MSGS.dashboard_DomainNoServicesSuffix());
 		}
 		SafeHtml safeHtml = b.toSafeHtml();
@@ -139,7 +142,7 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 
 	@Override
 	public Widget renderStatus() {
-		if (myDomain.getServiceList().size()==0) {
+		if (myDomain.getServiceList().size() == 0) {
 			return null;
 		}
 		StatusEnum status = myDomain.getStatus();
@@ -148,7 +151,7 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 
 	@Override
 	public Widget renderUrls() {
-		if (myDomain.getServiceList().size()==0) {
+		if (myDomain.getServiceList().size() == 0) {
 			return null;
 		}
 		return DashModelServiceVersion.renderUrlCount(myDomain);
@@ -158,7 +161,6 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 	public boolean hasChildren() {
 		return myDomain.getServiceList().size() > 0;
 	}
-
 
 
 }

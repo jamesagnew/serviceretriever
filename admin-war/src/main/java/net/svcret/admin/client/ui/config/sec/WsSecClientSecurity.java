@@ -2,7 +2,7 @@ package net.svcret.admin.client.ui.config.sec;
 
 import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.HtmlLabel;
-import net.svcret.admin.shared.model.GWsSecClientSecurity;
+import net.svcret.admin.shared.model.GWsSecUsernameTokenClientSecurity;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -12,10 +12,10 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
-public class WsSecClientSecurity implements IProvidesViewAndEdit<GWsSecClientSecurity> {
+public class WsSecClientSecurity implements IProvidesViewAndEdit<GWsSecUsernameTokenClientSecurity> {
 
 	@Override
-	public Widget provideView(int theRow, GWsSecClientSecurity theObject) {
+	public Widget provideView(int theRow, GWsSecUsernameTokenClientSecurity theObject) {
 		FlowPanel retVal = new FlowPanel();
 		
 		retVal.add(new Label("WS-Security"));
@@ -28,7 +28,7 @@ public class WsSecClientSecurity implements IProvidesViewAndEdit<GWsSecClientSec
 	}
 
 	@Override
-	public Widget provideEdit(int theRow, final GWsSecClientSecurity theObject, final IValueChangeHandler theValueChangeHandler) {
+	public Widget provideEdit(int theRow, final GWsSecUsernameTokenClientSecurity theObject, final IValueChangeHandler theValueChangeHandler) {
 		FlowPanel retVal = new FlowPanel();
 		
 		retVal.add(new Label("WS-Security"));

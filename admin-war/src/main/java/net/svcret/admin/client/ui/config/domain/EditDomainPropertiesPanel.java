@@ -16,7 +16,8 @@ public class EditDomainPropertiesPanel extends FlowPanel {
 	private EditDomainBasicPropertiesPanel myEditDomainBasicPropertiesPanel;
 
 	public EditDomainPropertiesPanel(GDomain theDomain) {
-		myDomain = theDomain;
+		myDomain = new GDomain();
+		myDomain.mergeSimple(theDomain);
 
 		setStylePrimaryName("mainPanel");
 
@@ -30,7 +31,7 @@ public class EditDomainPropertiesPanel extends FlowPanel {
 
 		contentPanel.add(new Label(AddDomainPanel.DOMAIN_DESC));
 
-		myEditDomainBasicPropertiesPanel = new EditDomainBasicPropertiesPanel(myDomain.getId(), myDomain.getName(), "Save", new MySaveButtonHandler());
+		myEditDomainBasicPropertiesPanel = new EditDomainBasicPropertiesPanel(myDomain, "Save", new MySaveButtonHandler(), AdminPortal.IMAGES.iconSave());
 		contentPanel.add(myEditDomainBasicPropertiesPanel);
 
 	}
@@ -43,9 +44,7 @@ public class EditDomainPropertiesPanel extends FlowPanel {
 		public void onClick(ClickEvent theEvent) {
 			if (myEditDomainBasicPropertiesPanel.validateValues()) {
 				myEditDomainBasicPropertiesPanel.showMessage("Saving Domain...", true);
-				String id = myEditDomainBasicPropertiesPanel.getId();
-				String name = myEditDomainBasicPropertiesPanel.getName();
-				AdminPortal.MODEL_SVC.saveDomain(myDomain.getPid(), id, name, this);
+				AdminPortal.MODEL_SVC.saveDomain(myDomain, this);
 			}
 		}
 

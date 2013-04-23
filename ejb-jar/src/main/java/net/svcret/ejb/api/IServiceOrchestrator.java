@@ -8,13 +8,14 @@ import javax.ejb.Local;
 
 import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.ex.UnknownRequestException;
 
 
 @Local
 public interface IServiceOrchestrator {
 
-	OrchestratorResponseBean handle(RequestType theRequestType, String theBase, String thePath, String theQuery, Reader theReader) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException;
+	OrchestratorResponseBean handle(RequestType theRequestType, String thePath, String theQuery, Reader theReader) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException;
 
 	/**
 	 * Response type for {@link IServiceOrchestrator#handle(RequestType, String, String, Reader)}

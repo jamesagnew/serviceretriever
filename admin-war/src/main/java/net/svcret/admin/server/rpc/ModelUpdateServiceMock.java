@@ -3,6 +3,8 @@ package net.svcret.admin.server.rpc;
 import java.util.Date;
 import java.util.Set;
 
+import org.apache.commons.lang3.time.DateUtils;
+
 import net.svcret.admin.client.rpc.ModelUpdateService;
 import net.svcret.admin.shared.ServiceFailureException;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
@@ -11,6 +13,7 @@ import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.BaseGDashboardObjectWithUrls;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
+import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
@@ -18,6 +21,7 @@ import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
 import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GService;
+import net.svcret.admin.shared.model.GServiceList;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
@@ -27,12 +31,12 @@ import net.svcret.admin.shared.model.GUserList;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.PartialUserListRequest;
+import net.svcret.admin.shared.model.ServerSecuredEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
+import net.svcret.admin.shared.util.StringUtil;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
-
-import org.apache.commons.lang.StringUtils;
 
 public class ModelUpdateServiceMock implements ModelUpdateService {
 
@@ -41,8 +45,12 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	private GHttpClientConfigList myClientConfigList;
 	private GAuthenticationHostList myAuthHostList;
 	private GUserList myUserList;
+	private GConfig myConfig;
 
 	public ModelUpdateServiceMock() {
+		myConfig = new GConfig();
+		myConfig.getProxyUrlBases().add("http://base/proxy");
+
 		myDomainList = new GDomainList();
 
 		GDomain dom = new GDomain();
@@ -57,8 +65,9 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		svc.setPid(10L);
 		dom.getServiceList().add(svc);
 
-		BaseGServiceVersion ver = new GSoap11ServiceVersion();
+		GSoap11ServiceVersion ver = new GSoap11ServiceVersion();
 		ver.setActive(true);
+		ver.setWsdlLocation("http://foo");
 		ver.setId("Version 1-A-1");
 		ver.setPid(100L);
 		ver.setName("Version 1-A-1");
@@ -109,7 +118,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		hostList.setModuleName(BasePersAuthenticationHost.MODULE_DESC_ADMIN_AUTH);
 		hostList.setSupportsPasswordChange(true);
 		myAuthHostList.add(hostList);
-		
+
 		myUserList = new GUserList();
 		GUser user = new GUser();
 		user.setPid(ourNextPid++);
@@ -117,7 +126,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		user.setAuthHostPid(hostList.getPid());
 		user.addGlobalPermission(UserGlobalPermissionEnum.SUPERUSER);
 		myUserList.add(user);
-		
+
 		user = new GUser();
 		user.setPid(ourNextPid++);
 		user.setUsername("testuser");
@@ -164,16 +173,16 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		if (theRequest.isLoadHttpClientConfigs()) {
 			retVal.setHttpClientConfigList(getHttpClientConfigList());
 		}
-		
+
 		if (theRequest.isLoadAuthHosts()) {
 			retVal.setAuthenticationHostList(getAuthHostList());
 		}
-		
+
 		return retVal;
 	}
 
 	private GAuthenticationHostList getAuthHostList() {
-		GAuthenticationHostList retVal=new GAuthenticationHostList();
+		GAuthenticationHostList retVal = new GAuthenticationHostList();
 		retVal.mergeResults(myAuthHostList);
 		return retVal;
 	}
@@ -192,6 +201,13 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		obj.setUrlsActive(randomUrlNumber());
 		obj.setUrlsDown(randomUrlNumber());
 		obj.setUrlsUnknown(randomUrlNumber());
+		obj.setLastSuccessfulInvocation(randomRecentDate());
+		obj.setLastServerSecurityFailure(randomRecentDate());
+		obj.setServerSecured(ServerSecuredEnum.FULLY);
+	}
+
+	private Date randomRecentDate() {
+		return new Date(System.currentTimeMillis() - (long) (DateUtils.MILLIS_PER_DAY * Math.random()));
 	}
 
 	private void populateRandom(BaseGDashboardObject<?> obj) {
@@ -225,21 +241,17 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	}
 
 	@Override
-	public GDomain addDomain(String theId, String theName) throws ServiceFailureException {
-		GDomain retVal = new GDomain();
-		retVal.setId(theId);
-		retVal.setName(theName);
-		retVal.setPid(ourNextPid++);
-		myDomainList.add(retVal);
-		return retVal;
+	public GDomain addDomain(GDomain theDomain) throws ServiceFailureException {
+		theDomain.setPid(ourNextPid++);
+		myDomainList.add(theDomain);
+		return theDomain;
 	}
 
 	@Override
-	public GDomain saveDomain(long thePid, String theId, String theName) {
-		GDomain retVal = myDomainList.getDomainByPid(thePid);
-		retVal.setPid(thePid);
-		retVal.setId(theId);
-		retVal.setName(theName);
+	public GDomain saveDomain(GDomain theDomain) {
+		GDomain retVal = myDomainList.getDomainByPid(theDomain.getPid());
+		retVal.setId(theDomain.getId());
+		retVal.setName(theDomain.getName());
 		return retVal;
 	}
 
@@ -264,7 +276,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 
 	@Override
 	public GSoap11ServiceVersion loadWsdl(GSoap11ServiceVersion theService, String theWsdlUrl) throws ServiceFailureException {
-		if (StringUtils.isBlank(theWsdlUrl)) {
+		if (StringUtil.isBlank(theWsdlUrl)) {
 			throw new ServiceFailureException("Failed to load URL: \"" + theWsdlUrl + '"');
 		}
 
@@ -293,7 +305,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	}
 
 	@Override
-	public void saveServiceVersionToSession(GSoap11ServiceVersion theServiceVersion) {
+	public void saveServiceVersionToSession(BaseGServiceVersion theServiceVersion) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -307,9 +319,8 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		throw new UnsupportedOperationException();
 	}
 
-
 	@Override
-	public AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, GSoap11ServiceVersion theVersion) throws ServiceFailureException {
+	public AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion) {
 		GDomain dom;
 		if (theExistingDomainPid != null) {
 			dom = myDomainList.getDomainByPid(theExistingDomainPid);
@@ -338,15 +349,23 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 			dom.getServiceList().add(svc);
 		}
 
-		theVersion.setPid(ourNextPid++);
-		
-		svc.getVersionList().add(theVersion);
-		
-		AddServiceVersionResponse retVal= new AddServiceVersionResponse();
+		if (theVersion.getPidOrNull() != null) {
+			BaseGServiceVersion ver = myDomainList.getServiceVersionByPid(theVersion.getPid());
+			ver.merge(theVersion);
+			theVersion = ver;
+
+		} else {
+			theVersion.setPid(ourNextPid++);
+			svc.getVersionList().add(theVersion);
+		}
+
+		AddServiceVersionResponse retVal = null;
+		retVal = new AddServiceVersionResponse();
 		retVal.setNewDomain(dom);
 		retVal.setNewService(svc);
 		retVal.setNewServiceVersion(theVersion);
 		return retVal;
+
 	}
 
 	@Override
@@ -366,7 +385,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	public GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ServiceFailureException {
 		GHttpClientConfig config = myClientConfigList.getConfigByPid(thePid);
 		myClientConfigList.remove(config);
-		
+
 		return getHttpClientConfigList();
 	}
 
@@ -389,7 +408,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 
 	@Override
 	public GPartialUserList loadUsers(PartialUserListRequest theRequest) {
-		GPartialUserList retVal=new GPartialUserList();
+		GPartialUserList retVal = new GPartialUserList();
 		retVal.addAll(myUserList.toCollection());
 		return retVal;
 	}
@@ -398,7 +417,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	public UserAndAuthHost loadUser(long thePid) {
 		GUser user = myUserList.getUserByPid(thePid);
 		BaseGAuthHost authHost = myAuthHostList.getAuthHostByPid(user.getAuthHostPid());
-		
+
 		return new UserAndAuthHost(user, authHost);
 	}
 
@@ -415,6 +434,36 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	public GDomainList removeDomain(long thePid) {
 		myDomainList.remove(myDomainList.getDomainByPid(thePid));
 		return myDomainList;
+	}
+
+	@Override
+	public BaseGServiceVersion loadServiceVersionIntoSession(long theServiceVersionPid) throws ServiceFailureException {
+		BaseGServiceVersion ver = myDomainList.getServiceVersionByPid(theServiceVersionPid);
+		return ver;
+	}
+
+	@Override
+	public GDomainList removeService(long theDomainPid, long theServicePid) {
+		GServiceList serviceList = myDomainList.getDomainByPid(theDomainPid).getServiceList();
+		serviceList.remove(serviceList.getServiceByPid(theServicePid));
+		return myDomainList;
+	}
+
+	@Override
+	public GDomainList saveService(GService theService) {
+		for (GDomain nextDomain : myDomainList) {
+			for (GService nextService : nextDomain.getServiceList()) {
+				if (nextService.getPid() == theService.getPid()) {
+					nextService.mergeSimple(theService);
+				}
+			}
+		}
+		return myDomainList;
+	}
+
+	@Override
+	public GConfig loadConfig() {
+		return myConfig;
 	}
 
 }

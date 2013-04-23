@@ -14,7 +14,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
-import net.svcret.ejb.api.ClientAuthTypeEnum;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.ServerAuthTypeEnum;
 
@@ -134,5 +133,7 @@ public abstract class PersBaseServerAuth<T extends PersBaseServerAuth<?,?>, G ex
 	public void setServiceVersion(BasePersServiceVersion theServiceVersion) {
 		myServiceVersion = theServiceVersion;
 	}
+
+	public abstract void merge(PersBaseServerAuth<?, ?> theObj);
 
 }

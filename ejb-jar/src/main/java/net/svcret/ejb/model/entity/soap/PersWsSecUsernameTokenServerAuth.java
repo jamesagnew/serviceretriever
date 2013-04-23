@@ -17,6 +17,8 @@ import org.apache.commons.lang3.ObjectUtils;
 @DiscriminatorValue("WSSEC_UT")
 public class PersWsSecUsernameTokenServerAuth extends PersBaseServerAuth<PersWsSecUsernameTokenServerAuth, WsSecUsernameTokenCredentialGrabber> {
 
+	private static final long serialVersionUID = 1L;
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -42,6 +44,13 @@ public class PersWsSecUsernameTokenServerAuth extends PersBaseServerAuth<PersWsS
 	@Override
 	public ServerAuthTypeEnum getAuthType() {
 		return ServerAuthTypeEnum.WS_SECURITY_USERNAME_TOKEN;
+	}
+
+	@Override
+	public void merge(PersBaseServerAuth<?, ?> theObj) {
+		PersWsSecUsernameTokenServerAuth obj = (PersWsSecUsernameTokenServerAuth)theObj;
+		setAuthenticationHost(obj.getAuthenticationHost());
+		setServiceVersion(obj.getServiceVersion());
 	}
 
 }

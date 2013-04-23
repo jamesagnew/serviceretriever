@@ -1,29 +1,44 @@
 package net.svcret.admin.client.ui.dash.model;
 
+import static net.svcret.admin.client.AdminPortal.*;
 import net.svcret.admin.client.AdminPortal;
+import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
+import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
+import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.Image;
+import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 public class DashModelService extends BaseDashModel implements IDashModel {
 
 	private GService myService;
+	private PopupPanel myActionPopup;
+	private GDomain myDomain;
 
-	public DashModelService(GService theService) {
+	public DashModelService(GDomain theDomain, GService theService) {
 		super(theService);
+		myDomain = theDomain;
 		myService = theService;
 	}
 
 	@Override
 	public Widget renderName() {
-		SafeHtmlBuilder b = new SafeHtmlBuilder().appendEscaped(myService.getName());
-		if (myService.getVersionList().size()==0) {
+		SafeHtmlBuilder b = new SafeHtmlBuilder();
+		b.appendHtmlConstant(AdminPortal.MSGS.dashboard_ServicePrefix());
+		b.appendEscaped(myService.getName());
+		if (myService.getVersionList().size() == 0) {
 			b.appendHtmlConstant(AdminPortal.MSGS.dashboard_ServiceNoServiceVersionsSuffix());
 		}
 		SafeHtml safeHtml = b.toSafeHtml();
@@ -40,19 +55,18 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 		if (!(theObj instanceof DashModelService)) {
 			return false;
 		}
-		return ((DashModelService)theObj).myService.equals(myService);
+		return ((DashModelService) theObj).myService.equals(myService);
 	}
 
 	@Override
 	public Widget renderStatus() {
-		if (myService.getVersionList().size()==0) {
+		if (myService.getVersionList().size() == 0) {
 			return null;
 		}
 		StatusEnum status = myService.getStatus();
 		return DashModelDomain.returnImageForStatus(status);
 	}
 
-	
 	@Override
 	public HierarchyEnum getType() {
 		return HierarchyEnum.SERVICE;
@@ -65,7 +79,7 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 
 	@Override
 	public Widget renderUrls() {
-		if (myService.getVersionList().size()==0) {
+		if (myService.getVersionList().size() == 0) {
 			return null;
 		}
 		return DashModelServiceVersion.renderUrlCount(myService);
@@ -73,9 +87,70 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 
 	@Override
 	public Widget renderActions() {
-		return null;
+		final Image retVal = (new Image("images/tools_16.png"));
+		retVal.addStyleName("dashboardActionButton");
+		retVal.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theClickEvent) {
+
+				if (myActionPopup == null || myActionPopup.isShowing() == false) {
+					myActionPopup = new PopupPanel(true, true);
+
+					FlowPanel content = new FlowPanel();
+					myActionPopup.add(content);
+
+					content.add(new HeaderLabel(myService.getName()));
+
+					// Edit domain
+
+					Button editDomain = new ActionPButton(IMAGES.iconEdit(), "Edit Service");
+					editDomain.addClickHandler(new ClickHandler() {
+						@Override
+						public void onClick(ClickEvent theEvent) {
+							myActionPopup.hide();
+							myActionPopup = null;
+							History.newItem(NavProcessor.getTokenEditService(true, myDomain.getPid(), myService.getPid()));
+						}
+					});
+					content.add(editDomain);
+
+					// Remove Domain
+
+					Button delete = new ActionPButton(IMAGES.iconRemove(), MSGS.actions_RemoveService());
+					delete.addClickHandler(new ClickHandler() {
+						@Override
+						public void onClick(ClickEvent theEvent) {
+							myActionPopup.hide();
+							History.newItem(NavProcessor.getTokenDeleteService(true, myDomain.getPid(), myService.getPid()));
+						}
+					});
+					content.add(delete);
+
+					// Add service
+
+					Button addService = new ActionPButton(IMAGES.iconAdd(), "Add New Version to Service");
+					addService.addClickHandler(new ClickHandler() {
+						@Override
+						public void onClick(ClickEvent theEvent) {
+							myActionPopup.hide();
+							myActionPopup = null;
+							String newToken = NavProcessor.getTokenAddServiceVersion(true, myDomain.getPid(), myService.getPid(), null);
+							History.newItem(newToken);
+						}
+					});
+					content.add(addService);
+
+					myActionPopup.showRelativeTo(retVal);
+
+				} else {
+					myActionPopup.hide();
+					myActionPopup = null;
+				}
+			}
+		});
+		return retVal;
 	}
-	
+
 	@Override
 	public String getCellStyle() {
 		return "dashboardTableServiceCell";
@@ -86,6 +161,4 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 		return myService.getVersionList().size() > 0;
 	}
 
-	
-	
 }

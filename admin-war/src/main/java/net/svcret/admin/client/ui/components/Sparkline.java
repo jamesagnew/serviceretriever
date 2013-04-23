@@ -30,6 +30,7 @@ public class Sparkline extends Widget {
 	/**
 	 * @param theHeight the height to set
 	 */
+	@Override
 	public void setHeight(String theHeight) {
 		myHeight = theHeight;
 	}
@@ -48,6 +49,7 @@ public class Sparkline extends Widget {
 	/**
 	 * @param theWidth the width to set
 	 */
+	@Override
 	public void setWidth(String theWidth) {
 		myWidth = theWidth;
 	}

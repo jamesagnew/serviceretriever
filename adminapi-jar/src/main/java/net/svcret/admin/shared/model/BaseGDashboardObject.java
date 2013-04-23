@@ -1,23 +1,55 @@
 package net.svcret.admin.shared.model;
 
+import java.util.Date;
+
 public abstract class BaseGDashboardObject<T> extends BaseGObject<T> {
 
 	private static final long serialVersionUID = 1L;
+	private int myAverageLatency;
+	private double myAverageTransactionsPerMin;
 	private boolean myExpandedOnDashboard;
 	private String myId;
+	private Date myLastServerSecurityFailure;
+	private Date myLastSuccessfulInvocation;
 	private int[] myLatency60mins;
 	private String myName;
 	private boolean myStatsInitialized;
 	private StatusEnum myStatus;
 	private int[] myTransactions60mins;
-	private double myAverageTransactionsPerMin;
-	private int myAverageLatency;
+
+	/**
+	 * @return the averageLatency
+	 */
+	public int getAverageLatency() {
+		return myAverageLatency;
+	}
+
+	/**
+	 * @return the averageTransactionsPerMin
+	 */
+	public double getAverageTransactionsPerMin() {
+		return myAverageTransactionsPerMin;
+	}
 
 	/**
 	 * @return the id
 	 */
 	public String getId() {
 		return myId;
+	}
+
+	/**
+	 * @return the lastServerSecurityFailure
+	 */
+	public Date getLastServerSecurityFailure() {
+		return myLastServerSecurityFailure;
+	}
+
+	/**
+	 * @return the lastSuccessfulInvocation
+	 */
+	public Date getLastSuccessfulInvocation() {
+		return myLastSuccessfulInvocation;
 	}
 
 	/**
@@ -62,19 +94,6 @@ public abstract class BaseGDashboardObject<T> extends BaseGObject<T> {
 		return myStatsInitialized;
 	}
 
-	protected void merge(BaseGDashboardObject<T> theObject) {
-		setPid(theObject.getPid());
-		setId(theObject.getId());
-		setName(theObject.getName());
-
-		if (theObject.isStatsInitialized()) {
-			setStatsInitialized(true);
-			setStatus(theObject.getStatus());
-			setTransactions60mins(theObject.getTransactions60mins());
-			setLatency60mins(theObject.getLatency60mins());
-		}
-	}
-
 	/**
 	 * @param theExpandedOnDashboard
 	 *            the expandedOnDashboard to set
@@ -84,6 +103,14 @@ public abstract class BaseGDashboardObject<T> extends BaseGObject<T> {
 	}
 
 	/**
+	 * Do we need this? Maybe make it configurable
+	 */
+	public boolean hideDashboardRowWhenExpanded() {
+		return false;
+	}
+	
+	
+	/**
 	 * @param theId
 	 *            the id to set
 	 */
@@ -92,12 +119,28 @@ public abstract class BaseGDashboardObject<T> extends BaseGObject<T> {
 	}
 
 	/**
+	 * @param theLastServerSecurityFailure
+	 *            the lastServerSecurityFailure to set
+	 */
+	public void setLastServerSecurityFailure(Date theLastServerSecurityFailure) {
+		myLastServerSecurityFailure = theLastServerSecurityFailure;
+	}
+
+	/**
+	 * @param theLastSuccessfulInvocation
+	 *            the lastSuccessfulInvocation to set
+	 */
+	public void setLastSuccessfulInvocation(Date theLastSuccessfulInvocation) {
+		myLastSuccessfulInvocation = theLastSuccessfulInvocation;
+	}
+
+	/**
 	 * @param theLatency60mins
 	 *            the latency60mins to set
 	 */
 	public void setLatency60mins(int[] theLatency60mins) {
 		myLatency60mins = theLatency60mins;
-		
+
 		int count = 0;
 		int total = 0;
 		for (int i : theLatency60mins) {
@@ -106,7 +149,7 @@ public abstract class BaseGDashboardObject<T> extends BaseGObject<T> {
 				count += i;
 			}
 		}
-		if (total>0) {
+		if (total > 0) {
 			myAverageLatency = count / total;
 		}
 	}
@@ -125,20 +168,6 @@ public abstract class BaseGDashboardObject<T> extends BaseGObject<T> {
 	 */
 	public void setStatsInitialized(boolean theStatsInitialized) {
 		myStatsInitialized = theStatsInitialized;
-	}
-
-	/**
-	 * @return the averageTransactionsPerMin
-	 */
-	public double getAverageTransactionsPerMin() {
-		return myAverageTransactionsPerMin;
-	}
-
-	/**
-	 * @return the averageLatency
-	 */
-	public int getAverageLatency() {
-		return myAverageLatency;
 	}
 
 	/**
@@ -164,6 +193,21 @@ public abstract class BaseGDashboardObject<T> extends BaseGObject<T> {
 		}
 		if (myTransactions60mins.length > 0) {
 			myAverageTransactionsPerMin = total / myTransactions60mins.length;
+		}
+	}
+
+	protected void merge(BaseGDashboardObject<T> theObject) {
+		setPid(theObject.getPid());
+		setId(theObject.getId());
+		setName(theObject.getName());
+
+		if (theObject.isStatsInitialized()) {
+			setStatsInitialized(true);
+			setStatus(theObject.getStatus());
+			setTransactions60mins(theObject.getTransactions60mins());
+			setLatency60mins(theObject.getLatency60mins());
+			setLastServerSecurityFailure(theObject.getLastServerSecurityFailure());
+			setLastSuccessfulInvocation(theObject.getLastSuccessfulInvocation());
 		}
 	}
 

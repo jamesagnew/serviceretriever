@@ -6,7 +6,7 @@ import net.svcret.ejb.ex.ProcessingException;
 
 import org.apache.commons.lang3.StringUtils;
 
-public class Validate {
+public class Validate extends org.apache.commons.lang3.Validate {
 
 	public static boolean isNotBlankSimpleInteger(String theString) {
 		if (theString == null || theString.length() == 0) {
@@ -23,61 +23,49 @@ public class Validate {
 		return true;
 	}
 
-	public static void throwIllegalArgumentExceptionIfBlank(String theName, String theString) {
-		if (StringUtils.isBlank(theString)) {
-			throw new IllegalArgumentException(theName + " can not be blank");
-		}
-	}
-
-	public static void throwIllegalArgumentExceptionIfNotGreaterThanZero(String theName, long theLong) {
+	public static void greaterThanZero(long theLong, String theName) {
 		if (theLong <= 0) {
 			throw new IllegalArgumentException(theName + " must be greater than zero");
 		}
 	}
 
-	private static void throwIllegalArgumentExceptionIfNotPositive(String theName, int theNumber) {
+	private static void greaterThanZero(int theNumber, String theName) {
 		if (theNumber <= 0) {
 			throw new IllegalArgumentException(theName + " must be a positive integer");
 		}
 	}
 
-	public static void throwIllegalArgumentExceptionIfNotPositive(String theName, Integer theNumber) {
+	public static void greaterThanZero(Integer theNumber, String theName) {
 		if (theNumber == null) {
 			throw new IllegalArgumentException(theName + " must not be null");
 		}
-		throwIllegalArgumentExceptionIfNotPositive(theName, theNumber.intValue());
+		greaterThanZero(theNumber.intValue(), theName);
 	}
 
-	public static void throwIllegalArgumentExceptionIfNull(String theName, Object theObject) {
-		if (theObject == null) {
-			throw new IllegalArgumentException(theName + " must not be null");
-		}
-	}
-
-	public static void throwIllegalStateExceptionIfNotNull(String theName, Object theObject) {
-		if (theObject != null) {
-			throw new IllegalStateException("State problem - " + theName + " must be null");
-		}
-	}
-
-	public static void throwProcessingExceptionIfBlank(String theMessage, String theString) throws ProcessingException {
+	public static void throwProcessingExceptionIfBlank(String theString, String theMessage) throws ProcessingException {
 		if (StringUtils.isBlank(theString)) {
 			throw new ProcessingException(theMessage);
 		}
 	}
 
-	public static void throwProcessingExceptionIfEmpty(String theMessage, Collection<?> theCollection) throws ProcessingException {
+	public static void throwProcessingExceptionIfEmpty(Collection<?> theCollection, String theMessage) throws ProcessingException {
 		if (theCollection == null || theCollection.isEmpty()) {
 			throw new ProcessingException(theMessage);
 		}
 	}
 
-	public static void throwIllegalArgumentExceptionIfNotPositive(String theName, Long theLong) {
+	public static void throwIllegalArgumentExceptionIfNotPositive(Long theLong, String theName) {
 		if (theLong == null) {
-			throw new IllegalArgumentException(theName+" must not be null");
+			throw new IllegalArgumentException(theName + " must not be null");
 		}
 		if (theLong <= 0) {
-			throw new IllegalArgumentException(theName+" must be a positive number");
+			throw new IllegalArgumentException(theName + " must be a positive number");
+		}
+	}
+
+	public static void isNull(Object theObject, String theMessage) {
+		if (theObject != null) {
+			throw new IllegalArgumentException(theMessage + " must be null");
 		}
 	}
 

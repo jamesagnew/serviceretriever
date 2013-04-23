@@ -4,8 +4,6 @@ import java.util.Map;
 
 import javax.ejb.Local;
 
-import net.svcret.ejb.ex.HttpFailureException;
-
 
 @Local
 public interface IHttpClient {

@@ -5,7 +5,9 @@ import java.util.List;
 import javax.ejb.Local;
 
 import net.svcret.admin.shared.model.BaseGAuthHost;
+import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
+import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
@@ -25,46 +27,56 @@ import net.svcret.ejb.ex.ProcessingException;
 @Local
 public interface IAdminService {
 
-	GDomain addDomain(String theId, String theName) throws ProcessingException;
+	GDomain addDomain(GDomain theDomain) throws ProcessingException;
 
 	GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ProcessingException;
 
-	GSoap11ServiceVersion addServiceVersion(long theDomain, long theService, GSoap11ServiceVersion theVersion, List<GResource> theResources) throws ProcessingException;
+	GAuthenticationHostList deleteAuthenticationHost(long thePid) throws ProcessingException;
 
-	long getDomainPid(String theDomainId) throws ProcessingException;
-
-	long getServicePid(long theDomainPid, String theServiceId) throws ProcessingException;
-
-	ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ProcessingException;
-
-	GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(GSoap11ServiceVersion theService, String theWsdlUrl) throws ProcessingException;
-
-	GDomain getDomainByPid(long theDomain);
-
-	GService getServiceByPid(long theService);
-
-	GHttpClientConfig saveHttpClientConfig(GHttpClientConfig theConfig) throws ProcessingException;
+	void deleteDomain(long thePid) throws ProcessingException;
 
 	GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ProcessingException;
 
-	GAuthenticationHostList saveAuthenticationHost(GLocalDatabaseAuthHost theAuthHost) throws ProcessingException;
+	long getDefaultHttpClientConfigPid();
 
-	GAuthenticationHostList deleteAuthenticationHost(long thePid) throws ProcessingException;
+	GDomain getDomainByPid(long theDomain) throws ProcessingException;
 
-	GPartialUserList loadUsers(PartialUserListRequest theRequest);
+	long getDomainPid(String theDomainId) throws ProcessingException;
 
-	GUser loadUser(long thePid) throws ProcessingException;
+	GService getServiceByPid(long theService);
+
+	long getServicePid(long theDomainPid, String theServiceId) throws ProcessingException;
 
 	BaseGAuthHost loadAuthenticationHost(long thePid) throws ProcessingException;
 
-	GUser saveUser(GUser theUser);
+	GDomainList loadDomainList() throws ProcessingException;
 
-	long getDefaultHttpClientConfigPid();
+	ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ProcessingException;
+
+	GSoap11ServiceVersionAndResources loadServiceVersion(long theServiceVersionPid) throws ProcessingException;
+
+	GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(GSoap11ServiceVersion theService, String theWsdlUrl) throws ProcessingException;
+
+	GUser loadUser(long thePid) throws ProcessingException;
+
+	GPartialUserList loadUsers(PartialUserListRequest theRequest);
+
+	GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) throws ProcessingException;
+
+	GDomain saveDomain(GDomain theDomain)throws ProcessingException;
+
+	GHttpClientConfig saveHttpClientConfig(GHttpClientConfig theConfig) throws ProcessingException;
+
+	<T extends BaseGServiceVersion> T saveServiceVersion(long theDomain, long theService, T theVersion, List<GResource> theResources) throws ProcessingException;
+
+	GUser saveUser(GUser theUser) throws ProcessingException;
 
 	String suggestNewVersionNumber(Long theDomainPid, Long theServicePid);
 
-	void deleteDomain(long thePid);
+	GDomainList deleteService(long theServicePid) throws ProcessingException;
 
-	GDomainList loadDomainList() throws ProcessingException;
+	GDomainList saveService(GService theService) throws ProcessingException;
+
+	GConfig loadConfig() throws ProcessingException;
 
 }

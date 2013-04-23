@@ -63,4 +63,14 @@ public class DashModelLoading implements IDashModel {
 		return false;
 	}
 
+	@Override
+	public Widget renderSecurity() {
+		return null;
+	}
+
+	@Override
+	public Widget renderLastInvocation() {
+		return null;
+	}
+
 }

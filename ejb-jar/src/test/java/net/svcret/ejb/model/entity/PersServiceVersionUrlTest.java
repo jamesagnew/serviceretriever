@@ -17,7 +17,7 @@ import org.junit.Test;
 
 public class PersServiceVersionUrlTest extends BaseJpaTest {
 
-	@Test(expected=IllegalArgumentException.class)
+	@Test(expected=NullPointerException.class)
 	public void testSetNull() {
 		PersServiceVersionUrl url = new PersServiceVersionUrl();
 		url.setUrl(null);
@@ -81,13 +81,18 @@ public class PersServiceVersionUrlTest extends BaseJpaTest {
 		urlObj.setUrlId("id");
 		urlObj.setServiceVersion(ver);
 		urlObj.setUrl(url2);
+		ver.addUrl(urlObj);
 		
 		dom = myEntityManager.merge(dom);
+		newEntityManager();
+
+		dom = myEntityManager.find(PersDomain.class, dom.getPid());
 		dom.loadAllAssociations();
 		
-		newEntityManager();
-		
-		return dom.getServiceWithId("id").getVersionWithId("vid").getUrlWithId("id");
+		PersService serviceWithId = dom.getServiceWithId("id");
+		BasePersServiceVersion versionWithId = serviceWithId.getVersionWithId("vid");
+		PersServiceVersionUrl urlWithId = versionWithId.getUrlWithId("id");
+		return urlWithId;
 	}
 	
 	

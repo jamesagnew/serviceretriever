@@ -7,7 +7,6 @@ import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.HtmlLabel;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
-import net.svcret.admin.client.ui.config.AddServiceVersionPanel;
 import net.svcret.admin.client.ui.config.sec.IProvidesViewAndEdit;
 import net.svcret.admin.client.ui.config.sec.ViewAndEditFactory;
 import net.svcret.admin.client.ui.config.sec.IProvidesViewAndEdit.IValueChangeHandler;
@@ -66,10 +65,10 @@ public class SoapDetailPanel extends FlowPanel {
 	private GSoap11ServiceVersion myServiceVersion;
 	private Grid myUrlGrid;
 	private TextBox myUrlTextBox;
-	private AddServiceVersionPanel myParent;
+	private AbstractServiceVersionPanel myParent;
 	private ListBox myHttpConfigList;
 
-	public SoapDetailPanel(AddServiceVersionPanel theParent, GSoap11ServiceVersion theServiceVersion) {
+	public SoapDetailPanel(AbstractServiceVersionPanel theParent, GSoap11ServiceVersion theServiceVersion) {
 		myServiceVersion = theServiceVersion;
 		myParent = theParent;
 

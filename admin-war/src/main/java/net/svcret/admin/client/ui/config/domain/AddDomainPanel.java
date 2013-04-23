@@ -20,9 +20,12 @@ public class AddDomainPanel extends FlowPanel implements ClickHandler, AsyncCall
 			"right way to group services, and if you want you can always move services from " +
 			"one domain to another.";
 	private EditDomainBasicPropertiesPanel myEditDomainBasicPropertiesPanel;
+	private GDomain myDomain;
 	
 
 	public AddDomainPanel() {
+		myDomain = new GDomain();
+		
 		setStylePrimaryName(CssConstants.MAIN_PANEL);
 
 		Label titleLabel = new Label("Add Domain");
@@ -36,7 +39,7 @@ public class AddDomainPanel extends FlowPanel implements ClickHandler, AsyncCall
 		Label intro = new Label(DOMAIN_DESC);
 		contentPanel.add(intro);
 		
-		myEditDomainBasicPropertiesPanel = new EditDomainBasicPropertiesPanel("", "", "Add", this);
+		myEditDomainBasicPropertiesPanel = new EditDomainBasicPropertiesPanel(myDomain, "Add", this, AdminPortal.IMAGES.iconAdd());
 		contentPanel.add(myEditDomainBasicPropertiesPanel);
 	}
 
@@ -44,9 +47,7 @@ public class AddDomainPanel extends FlowPanel implements ClickHandler, AsyncCall
 	public void onClick(ClickEvent theEvent) {
 		if (myEditDomainBasicPropertiesPanel.validateValues()) {
 			myEditDomainBasicPropertiesPanel.showSpinner();
-			String id = myEditDomainBasicPropertiesPanel.getId();
-			String name = myEditDomainBasicPropertiesPanel.getName();
-			AdminPortal.MODEL_SVC.addDomain(id, name, this);
+			AdminPortal.MODEL_SVC.addDomain(myDomain, this);
 		}
 		
 	}

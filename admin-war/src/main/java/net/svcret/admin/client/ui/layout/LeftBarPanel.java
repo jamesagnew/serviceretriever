@@ -24,6 +24,7 @@ public class LeftBarPanel extends FlowPanel {
 	private Hyperlink myHttpClientConfigsBtn;
 	private Hyperlink myAuthenticationHostsBtn;
 	private Hyperlink myEditUsersBtn;
+	private Hyperlink mySvcCatalogBtn;
 
 	public LeftBarPanel() {
 		setStylePrimaryName("outerLayoutLeftBar");
@@ -39,7 +40,10 @@ public class LeftBarPanel extends FlowPanel {
 		
 		myDashboardBtn = dashboard.addItem("Service Dashboard", PagesEnum.DSH);
 		myAllButtons.add(myDashboardBtn);
-		
+
+		mySvcCatalogBtn = dashboard.addItem("Service Catalog", PagesEnum.SEC);
+		myAllButtons.add(mySvcCatalogBtn);
+
 		/*
 		 * Configure Subment
 		 */
@@ -121,6 +125,10 @@ public class LeftBarPanel extends FlowPanel {
 		case EDU:
 			myEditUsersBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
 			buttons.remove(myEditUsersBtn);
+			break;
+		case SEC:
+			mySvcCatalogBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
+			buttons.remove(mySvcCatalogBtn);
 		}
 		
 		for (Hyperlink next : buttons) {

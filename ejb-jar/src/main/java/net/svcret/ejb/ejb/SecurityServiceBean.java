@@ -4,10 +4,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.ejb.Schedule;
-import javax.ejb.Singleton;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -16,9 +13,10 @@ import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.api.IAuthorizationService;
 import net.svcret.ejb.api.IAuthorizationService.ILdapAuthorizationService;
 import net.svcret.ejb.api.IAuthorizationService.ILocalDatabaseAuthorizationService;
+import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.ISecurityService;
-import net.svcret.ejb.api.IServicePersistence;
+import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
@@ -32,7 +30,13 @@ public class SecurityServiceBean implements ISecurityService {
 
 	private static final String STATE_KEY = SecurityServiceBean.class.getName() + "_VERSION";
 
+	@EJB
+	private IBroadcastSender myBroadcastSender;
+
 	private long myCurrentVersion;
+
+	@EJB
+	private IDao myDao;
 
 	private volatile InMemoryUserCatalog myInMemoryUserCatalog;
 
@@ -42,14 +46,14 @@ public class SecurityServiceBean implements ISecurityService {
 	@EJB
 	private ILocalDatabaseAuthorizationService myLocalDbAuthService;
 
-	@EJB
-	private IServicePersistence myPersSvc;
-
-	public boolean authorizeMethodInvocation(BasePersAuthenticationHost theAuthHost, ICredentialGrabber theCredentialGrabber, PersServiceVersionMethod theMethod) throws ProcessingException {
+	public AuthorizationResultsBean authorizeMethodInvocation(BasePersAuthenticationHost theAuthHost, ICredentialGrabber theCredentialGrabber, PersServiceVersionMethod theMethod) throws ProcessingException {
 		BasePersAuthenticationHost authHost = myInMemoryUserCatalog.getAuthHostByPid(theAuthHost.getPid());
+
+		AuthorizationResultsBean retVal = new AuthorizationResultsBean();
 		if (authHost == null) {
 			ourLog.debug("Authorization host not in user roster (possibly because it has been deleted?)");
-			return false;
+			retVal.setAuthorized(false);
+			return retVal;
 		}
 
 		IAuthorizationService authService = getAuthService(authHost);
@@ -59,15 +63,48 @@ public class SecurityServiceBean implements ISecurityService {
 		PersUser authorizedUser = authService.authorize(authHost, myInMemoryUserCatalog, theCredentialGrabber);
 		if (authorizedUser == null) {
 			ourLog.debug("Auth service did not find authorized user in request");
-			return false;
+			retVal.setAuthorized(false);
+			// TODO: return the failed user so we can add it to runtimestats
+			return retVal;
 		}
-		
+
+		retVal.setUser(authorizedUser);
+
 		boolean authorized = authorizedUser.hasPermission(theMethod);
-		
+
 		ourLog.debug("Authorization results: {}", authorized);
+		retVal.setAuthorized(authorized);
 
-		return authorized;
+		return retVal;
 
+	}
+
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public synchronized void loadUserCatalogIfNeeded() {
+		ourLog.debug("Checking for updated user catalog");
+
+		/*
+		 * If the state in the DB hasn't ever been incremented, assume we're in
+		 * a completely new installation, and create a default user database
+		 * with an admin user who can begin configuring things
+		 */
+
+		long newVersion = myDao.getStateCounter(STATE_KEY);
+		if (newVersion == 0) {
+			initUserCatalog();
+		}
+
+		if (newVersion == 0 || newVersion > myCurrentVersion) {
+			loadUserCatalog();
+		}
+
+	}
+
+	@Override
+	public PersUser saveServiceUser(PersUser theUser) throws ProcessingException {
+		incrementStateVersion();
+		myBroadcastSender.notifyUserCatalogChanged();
+		return myDao.saveServiceUser(theUser);
 	}
 
 	private IAuthorizationService getAuthService(BasePersAuthenticationHost authHost) {
@@ -84,8 +121,8 @@ public class SecurityServiceBean implements ISecurityService {
 	}
 
 	private void incrementStateVersion() {
-		myCurrentVersion = myPersSvc.incrementStateCounter(STATE_KEY);
-		ourLog.debug("State counter is now {}", myCurrentVersion);
+		long newVersion = myDao.incrementStateCounter(STATE_KEY);
+		ourLog.debug("State counter is now {}", newVersion);
 	}
 
 	private void initUserCatalog() {
@@ -93,15 +130,15 @@ public class SecurityServiceBean implements ISecurityService {
 
 		PersAuthenticationHostLocalDatabase authHost;
 		try {
-			authHost = myPersSvc.getOrCreateAuthenticationHostLocalDatabase(PersAuthenticationHostLocalDatabase.MODULE_ID_ADMIN_AUTH);
+			authHost = myDao.getOrCreateAuthenticationHostLocalDatabase(BasePersAuthenticationHost.MODULE_ID_ADMIN_AUTH);
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to initialize authentication host", e);
 			incrementStateVersion();
 			return;
 		}
 
-		authHost.setModuleName(PersAuthenticationHostLocalDatabase.MODULE_DESC_ADMIN_AUTH);
-		myPersSvc.saveAuthenticationHost(authHost);
+		authHost.setModuleName(BasePersAuthenticationHost.MODULE_DESC_ADMIN_AUTH);
+		myDao.saveAuthenticationHost(authHost);
 
 		/*
 		 * Create admin user
@@ -109,10 +146,10 @@ public class SecurityServiceBean implements ISecurityService {
 
 		PersUser adminUser;
 		try {
-			adminUser = myPersSvc.getOrCreateUser(authHost, PersUser.DEFAULT_ADMIN_USERNAME);
+			adminUser = myDao.getOrCreateUser(authHost, PersUser.DEFAULT_ADMIN_USERNAME);
 			adminUser.setPassword(PersUser.DEFAULT_ADMIN_PASSWORD);
 			adminUser.getPermissions().add(UserGlobalPermissionEnum.SUPERUSER);
-			myPersSvc.saveServiceUser(adminUser);
+			myDao.saveServiceUser(adminUser);
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to initialize admin user", e);
 			incrementStateVersion();
@@ -123,54 +160,51 @@ public class SecurityServiceBean implements ISecurityService {
 	}
 
 	/**
+	 * @return the inMemoryUserCatalog
+	 */
+	InMemoryUserCatalog getInMemoryUserCatalog() {
+		return myInMemoryUserCatalog;
+	}
+
+	/**
 	 * NB: Call this from synchronized context!
 	 */
 	void loadUserCatalog() {
 		ourLog.info("Loading entire user catalog from databse");
+		long newVersion = myDao.getStateCounter(STATE_KEY);
 
 		Map<Long, Map<String, PersUser>> hostPidToUsernameToUser = new HashMap<Long, Map<String, PersUser>>();
 		Map<Long, BasePersAuthenticationHost> pidToAuthHost = new HashMap<Long, BasePersAuthenticationHost>();
 
-		Collection<BasePersAuthenticationHost> allAuthHosts = myPersSvc.getAllAuthenticationHosts();
+		Collection<BasePersAuthenticationHost> allAuthHosts = myDao.getAllAuthenticationHosts();
 		for (BasePersAuthenticationHost nextHost : allAuthHosts) {
 			hostPidToUsernameToUser.put(nextHost.getPid(), new HashMap<String, PersUser>());
 			pidToAuthHost.put(nextHost.getPid(), nextHost);
 		}
 
-		Collection<PersUser> allUsers = myPersSvc.getAllServiceUsers();
+		Collection<PersUser> allUsers = myDao.getAllServiceUsers();
 		for (PersUser nextUser : allUsers) {
+			nextUser.loadAllAssociations();
+
 			Long authHostPid = nextUser.getAuthenticationHost().getPid();
 			Map<String, PersUser> map = hostPidToUsernameToUser.get(authHostPid);
-			
+
 			assert map != null : "getAllAuthenticationHosts() didn't return host PID " + authHostPid;
-			
+
 			map.put(nextUser.getUsername(), nextUser);
 		}
 
 		myInMemoryUserCatalog = new InMemoryUserCatalog(hostPidToUsernameToUser, pidToAuthHost);
+		myCurrentVersion = newVersion;
 
 		ourLog.info("Done loading user catalog, found {} users", allUsers.size());
 	}
 
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public synchronized void loadUserCatalogIfNeeded() {
-		ourLog.debug("Checking for updated user catalog");
-
-		/*
-		 * If the state in the DB hasn't ever been incremented, assume we're in
-		 * a completely new installation, and create a default user database
-		 * with an admin user who can begin configuring things
-		 */
-
-		long newVersion = myPersSvc.getStateCounter(STATE_KEY);
-		if (newVersion == 0) {
-			initUserCatalog();
-		}
-
-		if (newVersion == 0 || newVersion > myCurrentVersion) {
-			loadUserCatalog();
-		}
-
+	/**
+	 * UNIT TESTS ONLY
+	 */
+	void setBroadcastSender(IBroadcastSender theBroadcastSender) {
+		myBroadcastSender = theBroadcastSender;
 	}
 
 	/**
@@ -183,8 +217,8 @@ public class SecurityServiceBean implements ISecurityService {
 	/**
 	 * UNIT TESTS ONLY
 	 */
-	void setPersSvc(IServicePersistence thePersSvc) {
-		myPersSvc = thePersSvc;
+	void setPersSvc(IDao thePersSvc) {
+		myDao = thePersSvc;
 	}
 
 }

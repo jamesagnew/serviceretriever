@@ -19,7 +19,7 @@ public class GService extends BaseGDashboardObjectWithUrls<GService> {
 
 	@Override
 	public void merge(GService theObject) {
-		super.merge((BaseGDashboardObject<GService>) theObject);
+		mergeSimple(theObject);
 
 		if (theObject.getVersionList() != null) {
 			getVersionList().mergeResults(theObject.getVersionList());
@@ -33,6 +33,10 @@ public class GService extends BaseGDashboardObjectWithUrls<GService> {
 	 */
 	public void setActive(boolean theActive) {
 		myActive = theActive;
+	}
+
+	public void mergeSimple(GService theService) {
+		super.merge((BaseGDashboardObject<GService>) theService);
 	}
 
 }

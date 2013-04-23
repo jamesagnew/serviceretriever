@@ -11,17 +11,17 @@ import java.util.List;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
 import net.svcret.ejb.api.HttpResponseBean;
-import net.svcret.ejb.api.IServicePersistence;
+import net.svcret.ejb.api.HttpResponseBean.Failure;
+import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.api.UrlPoolBean;
-import net.svcret.ejb.api.HttpResponseBean.Failure;
-import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
-import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
+import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 
 import org.hamcrest.Matchers;
@@ -31,7 +31,7 @@ import org.junit.Test;
 public class RuntimeStatusBeanCircuitBreakerTest {
 
 	private RuntimeStatusBean myBean;
-	private IServicePersistence myServicePersistence;
+	private IDao myDao;
 	private PersServiceVersionMethod myMethod;
 	private HttpResponseBean httpResponse;
 	private InvocationResponseResultsBean invocationResponse;
@@ -51,8 +51,8 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 
 		myBean = new RuntimeStatusBean();
 		
-		myServicePersistence = mock(IServicePersistence.class, new DefaultAnswer());
-		myBean.setPersistence(myServicePersistence);
+		myDao = mock(IDao.class, new DefaultAnswer());
+		myBean.setDao(myDao);
 		
 		myMethod = mock(PersServiceVersionMethod.class, new DefaultAnswer());
 		
@@ -106,6 +106,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		when(persUrl2.getStatus()).thenReturn(url2status);
 
 		when(svcVersion.getUrls()).thenReturn(persUrls);
+		when(svcVersion.getStatus()).thenReturn(new PersServiceVersionStatus(1L, svcVersion));
 
 	}
 	

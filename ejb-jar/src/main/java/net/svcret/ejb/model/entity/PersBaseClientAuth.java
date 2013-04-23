@@ -41,7 +41,7 @@ public abstract class PersBaseClientAuth<T extends PersBaseClientAuth<?>> extend
 	@Column(name = "PID")
 	private Long myPid;
 
-	@ManyToOne(cascade = {})
+	@ManyToOne()
 	@JoinColumn(name = "SVC_VERSION_PID", referencedColumnName = "PID")
 	private BasePersServiceVersion myServiceVersion;
 
@@ -166,5 +166,7 @@ public abstract class PersBaseClientAuth<T extends PersBaseClientAuth<?>> extend
 	public void setUsername(String theUsername) {
 		myUsername = theUsername;
 	}
+
+	public abstract void merge(PersBaseClientAuth<?> theObj);
 
 }

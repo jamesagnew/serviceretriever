@@ -6,6 +6,11 @@ public class GSoap11ServiceVersion extends BaseGServiceVersion {
 
 	private String myWsdlLocation;
 
+	@Override
+	public ServiceProtocolEnum getProtocol() {
+		return ServiceProtocolEnum.SOAP11;
+	}
+
 	/**
 	 * @return the wsdlLocation
 	 */

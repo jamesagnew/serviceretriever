@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.ejb.EJB;
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -18,6 +19,7 @@ import net.svcret.ejb.api.IServiceOrchestrator.OrchestratorResponseBean;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.ex.UnknownRequestException;
 
 import org.apache.commons.codec.DecoderException;
@@ -31,6 +33,12 @@ public class ServiceServlet extends HttpServlet {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceServlet.class);
 
 	private static HashSet<String> ourFilterHeaders;
+
+	@Override
+	public void init(ServletConfig theConfig) throws ServletException {
+		ourLog.info("Starting servlet with path: " + theConfig.getServletContext().getContextPath());
+		ourLog.info("Real path: " +theConfig.getServletContext().getRealPath("/"));
+	}
 
 	@EJB
 	private IServiceOrchestrator myOrch;
@@ -72,6 +80,10 @@ public class ServiceServlet extends HttpServlet {
 			ourLog.info("Processing Failure", e);
 			sendFailure(theResp, e.getMessage());
 			return;
+		} catch (SecurityFailureException e) {
+			ourLog.info("Security Failure accessing URL: {}", theReq.getRequestURL());
+			sendSecurityFailure(theResp);
+			return;
 		}
 
 		theResp.setStatus(200);
@@ -94,6 +106,16 @@ public class ServiceServlet extends HttpServlet {
 		w.close();
 
 		ourLog.debug("Done handling request");
+	}
+
+	private void sendSecurityFailure(HttpServletResponse theResp) throws IOException {
+		theResp.setStatus(403);
+		theResp.setContentType("text/plain");
+
+		PrintWriter w = theResp.getWriter();
+		w.append("HTTP 403 - Forbidden (Invalid or unknown credentials, or user does not have access to this service)");
+
+		w.close();
 	}
 
 	static {

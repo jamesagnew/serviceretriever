@@ -1,5 +1,6 @@
 package net.svcret.admin.client.ui.config.domain;
 
+import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.PButton;
@@ -50,7 +51,7 @@ public class EditDomainServicesPanel extends FlowPanel {
 		myServicesGrid.setWidget(0, 2, new Label("Name"));
 
 		contentPanel.add(new HtmlBr());
-		
+
 		myAddServiceButton = new PButton("Add Service");
 		myAddServiceButton.addClickHandler(new AddServiceClickHandler());
 		contentPanel.add(myAddServiceButton);
@@ -76,7 +77,7 @@ public class EditDomainServicesPanel extends FlowPanel {
 				myServicesGrid.setWidget(i + 1, 2, new Label(next.getName(), true));
 			}
 		}
-				
+
 	}
 
 	public class ActionPanel extends FlowPanel {
@@ -86,9 +87,17 @@ public class EditDomainServicesPanel extends FlowPanel {
 		public ActionPanel(GService theSvc) {
 			mySvc = theSvc;
 
-			Button editBtn = new PButton("Edit");
+			Button editBtn = new PButton(AdminPortal.IMAGES.iconEdit(), AdminPortal.MSGS.actions_Edit());
 			add(editBtn);
-			// TODO: implement
+			
+			editBtn.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent theEvent) {
+					String token = NavProcessor.getTokenEditService(true, myDomain.getPid(), mySvc.getPid());
+					History.newItem(token);
+				}
+			});
+			
 		}
 
 	}

@@ -54,7 +54,6 @@ public class HttpClientConfigsPanel extends FlowPanel {
 	private HTML myUrlSelectionPolicyDescriptionLabel;
 	private ListBox myUrlSelectionPolicyListBox;
 	private int ourNextUnsavedPid = -1;
-	private FlowPanel myDetailsContentPanel;
 	
 	public HttpClientConfigsPanel() {
 		initConfigListPanel();
@@ -91,17 +90,17 @@ public class HttpClientConfigsPanel extends FlowPanel {
 	}
 
 	private void initDetailsPanel() {
-		FlowPanel detailsPanel = new FlowPanel();
-		detailsPanel.setStylePrimaryName("mainPanel");
-		add(detailsPanel);
+		FlowPanel detailsOuterPanel = new FlowPanel();
+		detailsOuterPanel.setStylePrimaryName("mainPanel");
+		add(detailsOuterPanel);
 
 		Label titleLabel = new Label(MSGS.httpClientConfigsPanel_EditDetailsTitle());
 		titleLabel.setStyleName("mainPanelTitle");
-		detailsPanel.add(titleLabel);
+		detailsOuterPanel.add(titleLabel);
 
 		FlowPanel contentPanel = new FlowPanel();
 		contentPanel.addStyleName("contentInnerPanel");
-		detailsPanel.add(contentPanel);
+		detailsOuterPanel.add(contentPanel);
 
 		/*
 		 * Details
@@ -114,61 +113,61 @@ public class HttpClientConfigsPanel extends FlowPanel {
 				doSave();
 			}
 		});
-		detailsPanel.add(saveButton);
+		contentPanel.add(saveButton);
 		myLoadingSpinner = new LoadingSpinner();
 		myLoadingSpinner.hideCompletely();
-		detailsPanel.add(myLoadingSpinner);
-		detailsPanel.add(new HtmlBr());
+		contentPanel.add(myLoadingSpinner);
+		contentPanel.add(new HtmlBr());
 
 		// ID
 		HtmlLabel idLabel = new HtmlLabel(LBL_WIDTH, MSGS.propertyNameId(), "hcc_id");
-		detailsPanel.add(idLabel);
+		contentPanel.add(idLabel);
 		myIdTextBox = new TextBox();
-		detailsPanel.add(myIdTextBox);
-		detailsPanel.add(new HtmlBr());
+		contentPanel.add(myIdTextBox);
+		contentPanel.add(new HtmlBr());
 
 		// Name
 		HtmlLabel nameLabel = new HtmlLabel(LBL_WIDTH, MSGS.propertyNameName(), "hcc_name");
-		detailsPanel.add(nameLabel);
+		contentPanel.add(nameLabel);
 		myNameTextBox = new TextBox();
-		detailsPanel.add(myNameTextBox);
-		detailsPanel.add(new HtmlBr());
+		contentPanel.add(myNameTextBox);
+		contentPanel.add(new HtmlBr());
 
 		/*
 		 * TCP Properties
 		 */
 
-		detailsPanel.add(new HtmlH1(MSGS.httpClientConfigsPanel_TcpProperties()));
-		detailsPanel.add(new HTML(MSGS.httpClientConfigsPanel_TcpPropertiesDesc()));
-		detailsPanel.add(new HtmlLabel(LBL_WIDTH_X2, MSGS.httpClientConfigsPanel_TcpConnectMillis(), "tbTcpCon"));
+		contentPanel.add(new HtmlH1(MSGS.httpClientConfigsPanel_TcpProperties()));
+		contentPanel.add(new HTML(MSGS.httpClientConfigsPanel_TcpPropertiesDesc()));
+		contentPanel.add(new HtmlLabel(LBL_WIDTH_X2, MSGS.httpClientConfigsPanel_TcpConnectMillis(), "tbTcpCon"));
 		myTcpConnectTimeoutTb = new IntegerBox();
 		myTcpConnectTimeoutTb.getElement().setId("tbTcbCon");
 		// myTcpConnectTimeoutTb.addKeyPressHandler(ValidatingTextBoxChangeHandlerPositiveInteger.INSTANCE);
 		// myTcpConnectTimeoutTb.addValueChangeHandler(ValidatingTextBoxChangeHandlerPositiveInteger.INSTANCE);
-		detailsPanel.add(myTcpConnectTimeoutTb);
-		detailsPanel.add(new HtmlBr());
-		detailsPanel.add(new HtmlLabel(LBL_WIDTH_X2, MSGS.httpClientConfigsPanel_TcpReadMillis(), "tbTcpRead"));
+		contentPanel.add(myTcpConnectTimeoutTb);
+		contentPanel.add(new HtmlBr());
+		contentPanel.add(new HtmlLabel(LBL_WIDTH_X2, MSGS.httpClientConfigsPanel_TcpReadMillis(), "tbTcpRead"));
 		myTcpReadTimeoutTb = new IntegerBox();
 		myTcpReadTimeoutTb.getElement().setId("tbTcbRead");
 		// myTcpReadTimeoutTb.addKeyPressHandler(ValidatingTextBoxChangeHandlerPositiveInteger.INSTANCE);
 		// myTcpReadTimeoutTb.addValueChangeHandler(ValidatingTextBoxChangeHandlerPositiveInteger.INSTANCE);
-		detailsPanel.add(myTcpReadTimeoutTb);
+		contentPanel.add(myTcpReadTimeoutTb);
 
 		/*
 		 * URL Selection policy
 		 */
 
-		detailsPanel.add(new HtmlH1(MSGS.httpClientConfigsPanel_UrlSelectionTitle()));
-		detailsPanel.add(new Label(MSGS.httpClientConfigsPanel_UrlSelectionDescription()));
-		detailsPanel.add(new HtmlBr());
-		detailsPanel.add(new HtmlLabel(LBL_WIDTH, MSGS.httpClientConfigsPanel_UrlSelectionPolicyShortName(), "lbUSP"));
+		contentPanel.add(new HtmlH1(MSGS.httpClientConfigsPanel_UrlSelectionTitle()));
+		contentPanel.add(new Label(MSGS.httpClientConfigsPanel_UrlSelectionDescription()));
+		contentPanel.add(new HtmlBr());
+		contentPanel.add(new HtmlLabel(LBL_WIDTH, MSGS.httpClientConfigsPanel_UrlSelectionPolicyShortName(), "lbUSP"));
 		myUrlSelectionPolicyListBox = new ListBox(false);
 		myUrlSelectionPolicyListBox.getElement().setId("lbUSP");
-		detailsPanel.add(myUrlSelectionPolicyListBox);
+		contentPanel.add(myUrlSelectionPolicyListBox);
 		myUrlSelectionPolicyDescriptionLabel = new HTML();
 		myUrlSelectionPolicyDescriptionLabel.addStyleName("listSelectionDesc");
-		detailsPanel.add(new HtmlBr());
-		detailsPanel.add(myUrlSelectionPolicyDescriptionLabel);
+		contentPanel.add(new HtmlBr());
+		contentPanel.add(myUrlSelectionPolicyDescriptionLabel);
 		for (UrlSelectionPolicy next : UrlSelectionPolicy.values()) {
 			myUrlSelectionPolicyListBox.addItem(next.name());
 		}
@@ -183,28 +182,28 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		 * Circuit Breaker
 		 */
 
-		detailsPanel.add(new HtmlH1(MSGS.httpClientConfigsPanel_CircuitBreakerTitle()));
-		detailsPanel.add(new HTML(MSGS.httpClientConfigsPanel_CircuitBreakerDescription()));
-		detailsPanel.add(new HtmlLabel(LBL_WIDTH, MSGS.httpClientConfigsPanel_CircuitBreakerEnabled(), "cbCbEnabled"));
+		contentPanel.add(new HtmlH1(MSGS.httpClientConfigsPanel_CircuitBreakerTitle()));
+		contentPanel.add(new HTML(MSGS.httpClientConfigsPanel_CircuitBreakerDescription()));
+		contentPanel.add(new HtmlLabel(LBL_WIDTH, MSGS.httpClientConfigsPanel_CircuitBreakerEnabled(), "cbCbEnabled"));
 		myCircuitBreakerEnabledCheck = new CheckBox();
 		myCircuitBreakerEnabledCheck.getElement().setId("cbCbEnabled");
-		detailsPanel.add(myCircuitBreakerEnabledCheck);
-		detailsPanel.add(new HtmlBr());
+		contentPanel.add(myCircuitBreakerEnabledCheck);
+		contentPanel.add(new HtmlBr());
 
-		detailsPanel.add(new HtmlLabel(LBL_WIDTH, MSGS.httpClientConfigsPanel_CircuitBreakerDelayBetweenReset(), "cbTbDelay"));
+		contentPanel.add(new HtmlLabel(LBL_WIDTH, MSGS.httpClientConfigsPanel_CircuitBreakerDelayBetweenReset(), "cbTbDelay"));
 		myCircuitBreakerDelayBox = new IntegerBox();
 		myCircuitBreakerDelayBox.getElement().setId("cbTbDelay");
-		detailsPanel.add(myCircuitBreakerDelayBox);
+		contentPanel.add(myCircuitBreakerDelayBox);
 		// myCircuitBreakerDelayBox.addKeyPressHandler(ValidatingTextBoxChangeHandlerPositiveInteger.INSTANCE);
 		// myCircuitBreakerDelayBox.addValueChangeHandler(ValidatingTextBoxChangeHandlerPositiveInteger.INSTANCE);
 
-		detailsPanel.add(new HtmlH1(MSGS.httpClientConfigsPanel_RetriesTitle()));
-		detailsPanel.add(new HTML(MSGS.httpClientConfigsPanel_RetriesDesc()));
-		detailsPanel.add(new HtmlLabel(LBL_WIDTH, MSGS.httpClientConfigsPanel_RetriesLabel(), "tbRetries"));
+		contentPanel.add(new HtmlH1(MSGS.httpClientConfigsPanel_RetriesTitle()));
+		contentPanel.add(new HTML(MSGS.httpClientConfigsPanel_RetriesDesc()));
+		contentPanel.add(new HtmlLabel(LBL_WIDTH, MSGS.httpClientConfigsPanel_RetriesLabel(), "tbRetries"));
 		myRetriesTextBox = new IntegerBox();
 		// myRetriesTextBox.addValueChangeHandler(ValidatingTextBoxChangeHandlerPositiveInteger.INSTANCE_0_OR_ABOVE);
 		// myRetriesTextBox.addKeyPressHandler(ValidatingTextBoxChangeHandlerPositiveInteger.INSTANCE_0_OR_ABOVE);
-		detailsPanel.add(myRetriesTextBox);
+		contentPanel.add(myRetriesTextBox);
 	}
 
 	private void doSave() {

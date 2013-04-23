@@ -16,7 +16,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
-import javax.persistence.Version;
 
 @Table(name = "PX_USER_PERM_SERVICE", uniqueConstraints = { // -
 @UniqueConstraint(columnNames = { "SERVICE_PID", "USER_PERM_DOMAIN_PID" }) } // -

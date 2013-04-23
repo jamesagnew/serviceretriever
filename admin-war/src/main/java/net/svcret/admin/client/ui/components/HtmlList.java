@@ -26,12 +26,14 @@ public class HtmlList extends Widget {
 
     public static enum ListType {
         ORDERED {
-            public Element createElement() {
+            @Override
+			public Element createElement() {
                 return Document.get().createOLElement();
             }
         },
         UNORDERED {
-            public Element createElement() {
+            @Override
+			public Element createElement() {
                 return Document.get().createULElement();
             }
         };

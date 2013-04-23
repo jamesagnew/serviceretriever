@@ -3,7 +3,6 @@ package net.svcret.ejb.ejb;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.ejb.Singleton;
 import javax.ejb.Stateless;
 
 import net.svcret.ejb.api.IAuthorizationService.ILdapAuthorizationService;

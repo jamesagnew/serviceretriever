@@ -1,9 +1,7 @@
 package net.svcret.ejb.model.entity;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -139,7 +137,11 @@ public class PersServiceVersionMethod extends BasePersObject {
 		}
 		
 		myServiceVersion = theServiceVersion;
-		theServiceVersion.addMethod(this);
+//		theServiceVersion.addMethod(this);
+	}
+
+	public void merge(PersServiceVersionMethod theObj) {
+		setName(theObj.getName());
 	}
 
 }

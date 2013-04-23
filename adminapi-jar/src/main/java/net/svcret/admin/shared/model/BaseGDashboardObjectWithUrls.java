@@ -7,7 +7,15 @@ public abstract class BaseGDashboardObjectWithUrls<T> extends BaseGDashboardObje
 	private int myUrlsActive;
 	private int myUrlsDown;
 	private int myUrlsUnknown;
+	private ServerSecuredEnum myServerSecured;
 	
+	/**
+	 * @return the serverSecured
+	 */
+	public ServerSecuredEnum getServerSecured() {
+		return myServerSecured;
+	}
+
 	/**
 	 * @return the urlsActive
 	 */
@@ -29,11 +37,21 @@ public abstract class BaseGDashboardObjectWithUrls<T> extends BaseGDashboardObje
 		return myUrlsUnknown;
 	}
 
+	/**
+	 * @param theServerSecured
+	 *            the serverSecured to set
+	 */
+	public void setServerSecured(ServerSecuredEnum theServerSecured) {
+		myServerSecured = theServerSecured;
+	}
+
 	@Override
 	public void merge(BaseGDashboardObject<T> theObject) {
 		super.merge((BaseGDashboardObject<T>)theObject);
-		
+
 		BaseGDashboardObjectWithUrls<T> obj = (BaseGDashboardObjectWithUrls<T>)theObject;
+		myServerSecured = obj.getServerSecured();
+
 		if (theObject.isStatsInitialized()) {
 			setUrlsActive(obj.getUrlsActive());
 			setUrlsDown(obj.getUrlsDown());

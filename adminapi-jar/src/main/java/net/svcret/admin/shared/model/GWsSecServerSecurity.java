@@ -6,7 +6,7 @@ public class GWsSecServerSecurity extends BaseGServerSecurity {
 
 	@Override
 	public ServerSecurityEnum getType() {
-		return ServerSecurityEnum.WSSEC;
+		return ServerSecurityEnum.WSSEC_UT;
 	}
 
 }

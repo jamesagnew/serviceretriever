@@ -13,9 +13,13 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
 import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.IRuntimeStatus;
+import net.svcret.ejb.api.ISecurityService;
+import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
+import net.svcret.ejb.api.InvocationResultsBean.ResultTypeEnum;
 import net.svcret.ejb.api.IServiceInvoker;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceRegistry;
@@ -26,7 +30,9 @@ import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.api.HttpResponseBean.Failure;
 import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.ex.UnknownRequestException;
+import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
@@ -35,7 +41,6 @@ import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.util.Validate;
-
 
 @Stateless
 public class ServiceOrchestratorBean implements IServiceOrchestrator {
@@ -54,13 +59,16 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	@EJB
 	private IHttpClient myHttpClient;
 
+	@EJB
+	private ISecurityService mySecuritySvc;
+
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public OrchestratorResponseBean handle(RequestType theRequestType, String theBase, String thePath, String theQuery, Reader theReader) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException {
-		Validate.throwIllegalArgumentExceptionIfNull("RequestType", theRequestType);
-		Validate.throwIllegalArgumentExceptionIfNull("Path", thePath);
-		Validate.throwIllegalArgumentExceptionIfNull("Query", theQuery);
-		Validate.throwIllegalArgumentExceptionIfNull("Reader", theReader);
+	public OrchestratorResponseBean handle(RequestType theRequestType, String thePath, String theQuery, Reader theReader) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException {
+		Validate.notNull(theRequestType, "RequestType");
+		Validate.notNull(thePath, "Path");
+		Validate.notNull(theQuery, "Query");
+		Validate.notNull(theReader, "Reader");
 
 		Date startTime = new Date();
 
@@ -75,11 +83,11 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		}
 
 		ourLog.debug("New request of type {} for path: {}", theRequestType, thePath);
-		
+
 		/*
 		 * Figure out who should handle this request
 		 */
-		
+
 		BasePersServiceVersion serviceVersion = mySvcRegistry.getServiceVersionForPath(path);
 		if (serviceVersion == null) {
 			ourLog.debug("Request did not match any known paths: {}", path);
@@ -88,11 +96,11 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		}
 
 		ourLog.debug("Request corresponds to service version {}", serviceVersion.getPid());
-		
+
 		/*
 		 * Process request
 		 */
-		
+
 		InvocationResultsBean results;
 		IServiceInvoker<?> serviceInvoker;
 		switch (serviceVersion.getProtocol()) {
@@ -100,26 +108,53 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			PersServiceVersionSoap11 serviceVersionSoap = (PersServiceVersionSoap11) serviceVersion;
 			serviceInvoker = mySoap11ServiceInvoker;
 			ourLog.debug("Handling service with invoker {}", serviceInvoker);
-			results = mySoap11ServiceInvoker.processInvocation(serviceVersionSoap, theRequestType, theBase, path, theQuery, theReader);
+			results = mySoap11ServiceInvoker.processInvocation(serviceVersionSoap, theRequestType, path, theQuery, theReader);
 			break;
 		default:
 			throw new InternalErrorException("Unknown service protocol: " + serviceVersion.getProtocol());
 		}
 
-		
 		/*
 		 * Security
+		 * 
+		 * Currently only active for method invocations
 		 */
-		
-		for (PersBaseServerAuth<?, ?> nextClientAuth : serviceVersion.getServerAuths()) {
-//			nextClientAuth.
+
+		if (results.getResultType() == ResultTypeEnum.METHOD) {
+			if (ourLog.isDebugEnabled()) {
+				if (serviceVersion.getServerAuths().isEmpty()) {
+					ourLog.debug("Service has no server auths");
+				} else {
+					ourLog.debug("Service has the following server auths: {}", serviceVersion.getServerAuths());
+				}
+			}
+
+			for (PersBaseServerAuth<?, ?> nextServerAuth : serviceVersion.getServerAuths()) {
+				Class<? extends ICredentialGrabber> grabber = nextServerAuth.getGrabberClass();
+				ICredentialGrabber credentials = results.getCredentialsInRequest(grabber);
+				BasePersAuthenticationHost authHost = nextServerAuth.getAuthenticationHost();
+				PersServiceVersionMethod method = results.getMethodDefinition();
+
+				if (credentials == null) {
+					ourLog.debug("No credential grabber in request (Should invoker have provided one)");
+					myRuntimeStatus.recordServerSecurityFailure(method, null, startTime);
+					throw new SecurityFailureException();
+				}
+
+				ourLog.debug("Checking credentials: {}", grabber);
+				AuthorizationResultsBean authorized = mySecuritySvc.authorizeMethodInvocation(authHost, credentials, method);
+				if (!authorized.isAuthorized()) {
+					myRuntimeStatus.recordServerSecurityFailure(method, authorized.getUser(), startTime);
+					throw new SecurityFailureException();
+				}
+			}
 		}
-		
+
 		/*
 		 * Forward request to backend implementation
 		 */
 		ourLog.info("Request is of type: {}", results.getResultType());
-		
+
 		OrchestratorResponseBean retVal;
 		switch (results.getResultType()) {
 
@@ -144,17 +179,18 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 			UrlPoolBean urlPool = myRuntimeStatus.buildUrlPool(method.getServiceVersion());
 			if (urlPool.getPreferredUrl() == null) {
-				/* TODO: record this failure? ALso should we allow throttled
-				 * CB reset attempts when all URLs are failing?
+				/*
+				 * TODO: record this failure? ALso should we allow throttled CB
+				 * reset attempts when all URLs are failing?
 				 */
 				throw new ProcessingException("No URLs available to service this request!");
 			}
-			
+
 			PersHttpClientConfig clientConfig = serviceVersion.getHttpClientConfig();
 			urlPool.setConnectTimeoutMillis(clientConfig.getConnectTimeoutMillis());
 			urlPool.setReadTimeoutMillis(clientConfig.getReadTimeoutMillis());
 			urlPool.setFailureRetriesBeforeAborting(clientConfig.getFailureRetriesBeforeAborting());
-			
+
 			HttpResponseBean httpResponse;
 			httpResponse = myHttpClient.post(responseValidator, urlPool, contentBody, headers, contentType);
 			markUrlsFailed(method, httpResponse.getFailedUrls());
