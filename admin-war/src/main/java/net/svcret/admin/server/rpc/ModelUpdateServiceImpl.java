@@ -1,6 +1,6 @@
 package net.svcret.admin.server.rpc;
 
-import static org.apache.commons.lang.StringUtils.*;
+import static org.apache.commons.lang3.StringUtils.*;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -32,8 +32,6 @@ import net.svcret.admin.shared.model.PartialUserListRequest;
 import net.svcret.ejb.api.IAdminService;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.util.Validate;
-
-import org.apache.commons.lang.StringUtils;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
@@ -86,17 +84,17 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
-	public AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion) throws ServiceFailureException {
-		if (theExistingDomainPid == null && StringUtils.isBlank(theCreateDomainId)) {
+	public AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, GSoap11ServiceVersion theVersion) throws ServiceFailureException {
+		if (theExistingDomainPid == null && isBlank(theCreateDomainId)) {
 			throw new IllegalArgumentException("Domain PID and new domain ID are both missing");
 		}
-		if (theExistingDomainPid != null && StringUtils.isNotBlank(theCreateDomainId)) {
+		if (theExistingDomainPid != null && isNotBlank(theCreateDomainId)) {
 			throw new IllegalArgumentException("Domain PID and new domain ID can not both be provided");
 		}
-		if (theExistingServicePid == null && StringUtils.isBlank(theCreateServiceId)) {
+		if (theExistingServicePid == null && isBlank(theCreateServiceId)) {
 			throw new IllegalArgumentException("Service PID and new domain ID are both missing");
 		}
-		if (theExistingServicePid != null && StringUtils.isNotBlank(theCreateServiceId)) {
+		if (theExistingServicePid != null && isNotBlank(theCreateServiceId)) {
 			throw new IllegalArgumentException("Service PID and new domain ID can not both be provided");
 		}
 		if (theVersion.getPid() != 0) {
@@ -373,7 +371,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
-	public GAuthenticationHostList saveAuthenticationHost(GLocalDatabaseAuthHost theAuthHost) throws ServiceFailureException {
+	public GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) throws ServiceFailureException {
 		if (isMockMode()) {
 			return myMock.saveAuthenticationHost(theAuthHost);
 		}

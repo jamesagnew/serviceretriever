@@ -3,6 +3,7 @@ package net.svcret.admin.shared;
 import java.util.Date;
 
 import net.svcret.admin.client.AdminPortal;
+import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
@@ -10,7 +11,6 @@ import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
-import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceList;
 import net.svcret.admin.shared.model.GServiceMethod;
@@ -279,7 +279,7 @@ public class Model {
 		}
 	}
 
-	public void saveAuthenticationHost(GLocalDatabaseAuthHost theAuthHost, final IAsyncLoadCallback<GAuthenticationHostList> theIAsyncLoadCallback) {
+	public void saveAuthenticationHost(BaseGAuthHost theAuthHost, final IAsyncLoadCallback<GAuthenticationHostList> theIAsyncLoadCallback) {
 		AsyncCallback<GAuthenticationHostList> callback = new AsyncCallback<GAuthenticationHostList>() {
 			@Override
 			public void onFailure(Throwable theCaught) {

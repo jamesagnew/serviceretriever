@@ -38,6 +38,7 @@ public interface IAdminService {
 	GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ProcessingException;
 
 	long getDefaultHttpClientConfigPid();
+	GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) throws ProcessingException;
 
 	GDomain getDomainByPid(long theDomain) throws ProcessingException;
 

@@ -232,9 +232,18 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("A <b>Local Database</b> Authentication host stores users and their " + "passwords in the ServiceRetriever database. Use this option if you do not have " + "an external database or LDAP against which users can be authenticated.")
 	String localDatabaseAuthenticationHostEditPanel_description();
 
+	@DefaultMessage("An <b>LDAP</b> Authentication host stores users and their " +
+			"passwords in an external LDAP database, such as an Active Directory server. Use this option if " +
+			"you have external LDAP database against which users can be authenticated. Note that for each " +
+			"record in the LDAP database which is used to actually authorize service invocations, a parallel entry " +
+			"is created in the ServiceRetriever database. This entry is used to link to usage statistics and may " +
+			"also be used to store permission rules.")
+	String ldapAuthenticationHostEditPanel_description();
+
 	@DefaultMessage("Local Database")
 	String localDatabaseAuthenticationHostEditPanel_title();
 
+<<<<<<< HEAD
 	@DefaultMessage("Administration Permissions")
 	String permissionsPanel_AdministrationPermissions();
 
@@ -261,6 +270,10 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Full access")
 	SafeHtml permissionsPanel_TreeAllServiceVersionsCheckbox();
+=======
+	@DefaultMessage("LDAP")
+	String ldapAuthenticationHostEditPanel_title();
+>>>>>>> branch 'master' of ssh://jamesagnew@git.code.sf.net/p/svcret/code
 
 	@DefaultMessage("ID")
 	String propertyNameId();
@@ -379,6 +392,38 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("LDAP")
 	String ldapAuthenticationHostEditPanel_title();
 
+	@DefaultMessage("LDAP Properties")
+	String ldapAuthenticationHostEditPanel_LdapPropertiesTitle();
+
+	@DefaultMessage("URL")
+	String ldapAuthenticationHostEditPanel_UrlName();
+
+	@DefaultMessage("This is the URL to use to connect to the LDAP server, in the form: \"ldap://server.com:389\"")
+	String ldapAuthenticationHostEditPanel_UrlDescription();
+
+	@DefaultMessage("Bind User DN")
+	String ldapAuthenticationHostEditPanel_BindUserDnName();
+
+	@DefaultMessage("This is the complete DN name of the user to use to bind to the LDAP directory in order to authenticate users")
+	String ldapAuthenticationHostEditPanel_BindUserDnDescription();
+
+	@DefaultMessage("Bind User Password")
+	String ldapAuthenticationHostEditPanel_BindUserPasswordName();
+
+	@DefaultMessage("The password to use with the \"Bind User DN\" to bind initially to the LDAP")
+	String ldapAuthenticationHostEditPanel_BindUserPasswordDescription();
+
+	@DefaultMessage("Base DN")
+	String ldapAuthenticationHostEditPanel_AuthenticateBaseDnName();
+
+	@DefaultMessage("The base DN to search for the user being authenticated")
+	String ldapAuthenticationHostEditPanel_AuthenticateBaseDnDescription();
+
+	@DefaultMessage("Filter")
+	String ldapAuthenticationHostEditPanel_AuthenticateFilterName();
+
+	@DefaultMessage("This is the LDAP filter to search for. This should contain a parameter as \"{0}\" which will then be substited with the username in the service request.")
+	String ldapAuthenticationHostEditPanel_AuthenticateFilterDescription(String theParam0);
 
 	@DefaultMessage("LDAP Properties")
 	String ldapAuthenticationHostEditPanel_LdapPropertiesTitle();
