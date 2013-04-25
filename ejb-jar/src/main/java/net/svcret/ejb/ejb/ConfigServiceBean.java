@@ -37,6 +37,7 @@ public class ConfigServiceBean implements IConfigService {
 			retVal.setDefaults();
 			retVal=saveConfig(retVal);
 		}
+
 		return retVal;
 	}
 

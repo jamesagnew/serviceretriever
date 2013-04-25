@@ -17,6 +17,7 @@ public class PersAuthenticationHostLdap extends BasePersAuthenticationHost {
 
 	private static final long serialVersionUID = 1L;
 
+
 	@Column(name = "LDAP_AUTHENTICATE_BASE_DN", length=200, nullable = true)
 	private String myAuthenticateBaseDn;
 
@@ -25,13 +26,13 @@ public class PersAuthenticationHostLdap extends BasePersAuthenticationHost {
 
 	@Column(name = "LDAP_BIND_PASSWORD", length=200, nullable = true)
 	private String myBindPassword;
-	
+
 	@Column(name = "LDAP_BIND_USER_DN", length=200, nullable = true)
 	private String myBindUserDn;
 	
 	@Column(name = "LDAP_URL", length = 200, nullable = true)
 	private String myUrl;
-
+	
 	public PersAuthenticationHostLdap() {
 		super();
 	}
@@ -40,10 +41,10 @@ public class PersAuthenticationHostLdap extends BasePersAuthenticationHost {
 		super(theModuleId);
 	}
 
-
 	public String getAuthenticateBaseDn() {
 		return myAuthenticateBaseDn;
 	}
+
 
 	public String getAuthenticateFilter() {
 		return myAuthenticateFilter;
@@ -64,6 +65,19 @@ public class PersAuthenticationHostLdap extends BasePersAuthenticationHost {
 
 	public String getUrl() {
 		return myUrl;
+	}
+
+	@Override
+	public void merge(BasePersAuthenticationHost theHost) {
+		super.merge(theHost);
+		
+		PersAuthenticationHostLdap ldap = (PersAuthenticationHostLdap)theHost;
+		this.setAuthenticateBaseDn(ldap.getAuthenticateBaseDn());
+		this.setAuthenticateFilter(ldap.getAuthenticateFilter());
+		this.setBindPassword(ldap.getBindPassword());
+		this.setBindUserDn(ldap.getBindUserDn()  );
+		this.setUrl (ldap.getUrl()  );
+
 	}
 
 	public void setAuthenticateBaseDn(String theAuthenticateBaseDn) {
@@ -90,35 +104,9 @@ public class PersAuthenticationHostLdap extends BasePersAuthenticationHost {
 		myAuthenticateFilter=DEFAULT_AUTH_FILTER;
 	}
 
-	/**
-	 * @param theLdapConnTimeout
-	 *            the ldapConnTimeout to set
-	 */
-	public void setLdapConnTimeout(int theLdapConnTimeout) {
-		Validate.greaterThanZero(theLdapConnTimeout, "ConnectionTimeout");
-		myLdapConnTimeout = theLdapConnTimeout;
-	}
 
 	public void setUrl(String theUrl) {
 		myUrl = theUrl;
-	}
-
-	/**
-	 * @param theLdapHost
-	 *            the ldapHost to set
-	 */
-	public void setLdapHost(String theLdapHost) {
-		Validate.notBlank(theLdapHost, "Host");
-		myLdapHost = theLdapHost;
-	}
-
-	/**
-	 * @param theLdapPort
-	 *            the ldapPort to set
-	 */
-	public void setLdapPort(int theLdapPort) {
-		Validate.greaterThanZero(theLdapPort, "Port");
-		myLdapPort = theLdapPort;
 	}
 
 }

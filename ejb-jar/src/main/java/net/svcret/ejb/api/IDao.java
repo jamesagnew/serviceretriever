@@ -105,7 +105,7 @@ public interface IDao {
 
 	PersAuthenticationHostLocalDatabase getOrCreateAuthenticationHostLocalDatabase(String theModuleIdAdminAuth) throws ProcessingException;
 
-	void saveAuthenticationHost(PersAuthenticationHostLocalDatabase theAuthHost);
+	void saveAuthenticationHost(BasePersAuthenticationHost theHost);
 
 	Collection<BasePersAuthenticationHost> getAllAuthenticationHosts();
 

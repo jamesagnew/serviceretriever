@@ -25,6 +25,7 @@ public class LeftBarPanel extends FlowPanel {
 	private Hyperlink myAuthenticationHostsBtn;
 	private Hyperlink myEditUsersBtn;
 	private Hyperlink mySvcCatalogBtn;
+	private Hyperlink myProxyConfigBtn;
 
 	public LeftBarPanel() {
 		setStylePrimaryName("outerLayoutLeftBar");
@@ -66,6 +67,9 @@ public class LeftBarPanel extends FlowPanel {
 		
 		LeftMenuComponent configure = new LeftMenuComponent("Configuration");
 		add(configure);
+
+		myProxyConfigBtn = configure.addItem(MSGS.leftPanel_Configuration(), PagesEnum.CFG);
+		myAllButtons.add(myProxyConfigBtn);
 
 		myHttpClientConfigsBtn = configure.addItem(MSGS.leftPanel_HttpClients(), PagesEnum.HCC);
 		myAllButtons.add(myHttpClientConfigsBtn);
@@ -114,6 +118,10 @@ public class LeftBarPanel extends FlowPanel {
 		case AV2:
 			myAddSvcVerBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
 			buttons.remove(myAddSvcVerBtn);
+			break;
+		case CFG:
+			myProxyConfigBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
+			buttons.remove(myProxyConfigBtn);
 			break;
 		case HCC:
 			myHttpClientConfigsBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);

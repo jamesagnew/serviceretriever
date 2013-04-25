@@ -13,8 +13,6 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
 
 import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IDao;
@@ -28,15 +26,12 @@ import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
-import net.svcret.ejb.model.registry.Services;
 import net.svcret.ejb.util.Validate;
-import net.svcret.ejb.util.WsdlDescriptionType;
 
 @Startup
 @Singleton
 public class ServiceRegistryBean implements IServiceRegistry {
 
-	private static JAXBContext ourJaxbContext;
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceRegistryBean.class);
 	private static volatile Map<String, PersServiceVersionSoap11> ourProxyPathToServices;
 	private static Object ourRegistryLock = new Object();
@@ -57,13 +52,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	 * Constructor
 	 */
 	public ServiceRegistryBean() throws InternalErrorException {
-		if (ourJaxbContext == null) {
-			try {
-				ourJaxbContext = JAXBContext.newInstance(Services.class, WsdlDescriptionType.class);
-			} catch (JAXBException e) {
-				throw new InternalErrorException(e);
-			}
-		}
+		super();
 	}
 
 	@Override

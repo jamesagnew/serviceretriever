@@ -60,32 +60,162 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		initDetailsPanel();
 	}
 
-	private void updateConfigList() {
-		myUpdatingConfigsListBox = true;
-		myConfigsListBox.clear();
+	private void addConfig() {
+		GHttpClientConfig newConfig = new GHttpClientConfig();
+		newConfig.setId("NEW");
+		newConfig.setName("New");
+		newConfig.setPid(ourNextUnsavedPid--);
+		myConfigs.add(newConfig);
+		
+		mySelectedPid = newConfig.getPid();
+		updateConfigList();
+		updateSelectedConfig();
+	}
 
-		int selectedIndex = 0;
-		for (GHttpClientConfig next : myConfigs) {
-			String desc = next.getId();
-			if (StringUtil.isNotBlank(next.getName())) {
-				desc = desc + " - " + next.getName();
-			}
-			if (mySelectedPid != null && mySelectedPid.equals(next.getPid())) {
-				selectedIndex = myConfigsListBox.getItemCount();
-			}
-			myConfigsListBox.addItem(desc, Long.toString(next.getPid()));
+	private void doSave() {
+		GHttpClientConfig config = myConfigs.getConfigByPid(mySelectedPid);
+		config.setId(myIdTextBox.getValue());
+		config.setName(myNameTextBox.getValue());
+
+		Integer connectTimeout = myTcpConnectTimeoutTb.getValue();
+		myTcpConnectTimeoutTb.removeStyleName(CssConstants.TEXTBOX_WITH_ERR);
+		if (connectTimeout == null || connectTimeout <= 0) {
+			myTcpConnectTimeoutTb.addStyleName(CssConstants.TEXTBOX_WITH_ERR);
+			myLoadingSpinner.showMessage(MSGS.httpClientConfigsPanel_validateFailed_ConnectTimeout(), false);
+			return;
+		} else {
+			config.setConnectTimeoutMillis(connectTimeout);
 		}
 
-		myConfigsListBox.setSelectedIndex(selectedIndex);
-
-		myUpdatingConfigsListBox = false;
-
-		String value = myConfigsListBox.getValue(selectedIndex);
-		Long newSelectedId = Long.parseLong(value);
-		if (!newSelectedId.equals(mySelectedPid)) {
-			mySelectedPid = newSelectedId;
-			updateSelectedConfig();
+		Integer readTimeout = myTcpReadTimeoutTb.getValue();
+		myTcpReadTimeoutTb.removeStyleName(CssConstants.TEXTBOX_WITH_ERR);
+		if (readTimeout == null || readTimeout <= 0) {
+			myTcpReadTimeoutTb.addStyleName(CssConstants.TEXTBOX_WITH_ERR);
+			myLoadingSpinner.showMessage(MSGS.httpClientConfigsPanel_validateFailed_ReadTimeout(), false);
+			return;
+		} else {
+			config.setReadTimeoutMillis(readTimeout);
 		}
+
+		config.setCircuitBreakerEnabled(myCircuitBreakerEnabledCheck.getValue());
+
+		Integer cbRetryTimeout = myCircuitBreakerDelayBox.getValue();
+		myCircuitBreakerDelayBox.removeStyleName(CssConstants.TEXTBOX_WITH_ERR);
+		if (cbRetryTimeout == null || cbRetryTimeout <= 0) {
+			myCircuitBreakerDelayBox.addStyleName(CssConstants.TEXTBOX_WITH_ERR);
+			myLoadingSpinner.showMessage(MSGS.httpClientConfigsPanel_validateFailed_CircuitBreakerDelay(), false);
+			return;
+		} else {
+			config.setCircuitBreakerTimeBetweenResetAttempts(cbRetryTimeout);
+		}
+
+		Integer retries = myCircuitBreakerDelayBox.getValue();
+		myRetriesTextBox.removeStyleName(CssConstants.TEXTBOX_WITH_ERR);
+		if (retries == null || retries < 0) {
+			myRetriesTextBox.addStyleName(CssConstants.TEXTBOX_WITH_ERR);
+			myLoadingSpinner.showMessage(MSGS.httpClientConfigsPanel_validateFailed_Retries(), false);
+			return;
+		} else {
+			config.setFailureRetriesBeforeAborting(retries);
+		}
+		
+		UrlSelectionPolicy policy = UrlSelectionPolicy.values()[myUrlSelectionPolicyListBox.getSelectedIndex()];
+		config.setUrlSelectionPolicy(policy);
+		
+		boolean create = config.getPid() < 0;
+
+		myLoadingSpinner.show();
+		AdminPortal.MODEL_SVC.saveHttpClientConfig(create, config, new AsyncCallback<GHttpClientConfig>() {
+
+			@Override
+			public void onFailure(Throwable theCaught) {
+				Model.handleFailure(theCaught);
+			}
+
+			@Override
+			public void onSuccess(GHttpClientConfig theResult) {
+				myLoadingSpinner.showMessage("Saved", false);
+				Model.getInstance().addHttpClientConfig(theResult);
+				mySelectedPid = theResult.getPid();
+				
+				updateConfigList();
+				updateSelectedConfig();
+			}
+		});
+	}
+
+	private void enableToolbar() {
+		myAddButton.setEnabled(true);
+		myRemoveButton.setEnabled(true);
+	}
+
+	private void initConfigListPanel() {
+		FlowPanel listPanel = new FlowPanel();
+		listPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
+		add(listPanel);
+
+		Label titleLabel = new Label(MSGS.httpClientConfigsPanel_ListTitle());
+		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
+		listPanel.add(titleLabel);
+
+		FlowPanel contentPanel = new FlowPanel();
+		contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
+		listPanel.add(contentPanel);
+
+		contentPanel.add(new Label(AdminPortal.MSGS.httpClientConfigsPanel_IntroMessage()));
+
+		myConfigListLoadingSpinner = new LoadingSpinner();
+		contentPanel.add(myConfigListLoadingSpinner);
+
+		HorizontalPanel hPanel = new HorizontalPanel();
+		contentPanel.add(hPanel);
+		
+		VerticalPanel toolbar = new VerticalPanel();
+		myAddButton = new PButton(AdminPortal.MSGS.actions_Add());
+		myAddButton.setEnabled(false);
+		myAddButton.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				addConfig();
+			}
+		});
+		toolbar.add(myAddButton);
+		myRemoveButton = new PButton(AdminPortal.MSGS.actions_Add());
+		myRemoveButton.setEnabled(false);
+		myRemoveButton.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				removeConfig();
+			}
+		});
+		toolbar.add(myRemoveButton);
+		hPanel.add(toolbar);
+		
+		myConfigsListBox = new ListBox(false);
+		myConfigsListBox.setVisibleItemCount(5);
+		myConfigsListBox.addChangeHandler(new ChangeHandler() {
+			@Override
+			public void onChange(ChangeEvent theEvent) {
+				if (myUpdatingConfigsListBox) {
+					return;
+				}
+				mySelectedPid = Long.parseLong(myConfigsListBox.getValue(myConfigsListBox.getSelectedIndex()));
+				updateSelectedConfig();
+			}
+
+		});
+		hPanel.add(myConfigsListBox);
+
+		HorizontalPanel buttonsBar = new HorizontalPanel();
+		contentPanel.add(buttonsBar);
+
+		Model.getInstance().loadHttpClientConfigs(new IAsyncLoadCallback<GHttpClientConfigList>() {
+			@Override
+			public void onSuccess(GHttpClientConfigList theResult) {
+				setConfigList(theResult);
+			}
+
+		});
 
 	}
 
@@ -206,153 +336,6 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		contentPanel.add(myRetriesTextBox);
 	}
 
-	private void doSave() {
-		GHttpClientConfig config = myConfigs.getConfigByPid(mySelectedPid);
-		config.setId(myIdTextBox.getValue());
-		config.setName(myNameTextBox.getValue());
-
-		Integer connectTimeout = myTcpConnectTimeoutTb.getValue();
-		myTcpConnectTimeoutTb.removeStyleName(CssConstants.TEXTBOX_WITH_ERR);
-		if (connectTimeout == null || connectTimeout <= 0) {
-			myTcpConnectTimeoutTb.addStyleName(CssConstants.TEXTBOX_WITH_ERR);
-			myLoadingSpinner.showMessage(MSGS.httpClientConfigsPanel_validateFailed_ConnectTimeout(), false);
-			return;
-		} else {
-			config.setConnectTimeoutMillis(connectTimeout);
-		}
-
-		Integer readTimeout = myTcpReadTimeoutTb.getValue();
-		myTcpReadTimeoutTb.removeStyleName(CssConstants.TEXTBOX_WITH_ERR);
-		if (readTimeout == null || readTimeout <= 0) {
-			myTcpReadTimeoutTb.addStyleName(CssConstants.TEXTBOX_WITH_ERR);
-			myLoadingSpinner.showMessage(MSGS.httpClientConfigsPanel_validateFailed_ReadTimeout(), false);
-			return;
-		} else {
-			config.setReadTimeoutMillis(readTimeout);
-		}
-
-		config.setCircuitBreakerEnabled(myCircuitBreakerEnabledCheck.getValue());
-
-		Integer cbRetryTimeout = myCircuitBreakerDelayBox.getValue();
-		myCircuitBreakerDelayBox.removeStyleName(CssConstants.TEXTBOX_WITH_ERR);
-		if (cbRetryTimeout == null || cbRetryTimeout <= 0) {
-			myCircuitBreakerDelayBox.addStyleName(CssConstants.TEXTBOX_WITH_ERR);
-			myLoadingSpinner.showMessage(MSGS.httpClientConfigsPanel_validateFailed_CircuitBreakerDelay(), false);
-			return;
-		} else {
-			config.setCircuitBreakerTimeBetweenResetAttempts(cbRetryTimeout);
-		}
-
-		Integer retries = myCircuitBreakerDelayBox.getValue();
-		myRetriesTextBox.removeStyleName(CssConstants.TEXTBOX_WITH_ERR);
-		if (retries == null || retries < 0) {
-			myRetriesTextBox.addStyleName(CssConstants.TEXTBOX_WITH_ERR);
-			myLoadingSpinner.showMessage(MSGS.httpClientConfigsPanel_validateFailed_Retries(), false);
-			return;
-		} else {
-			config.setFailureRetriesBeforeAborting(retries);
-		}
-		
-		UrlSelectionPolicy policy = UrlSelectionPolicy.values()[myUrlSelectionPolicyListBox.getSelectedIndex()];
-		config.setUrlSelectionPolicy(policy);
-		
-		boolean create = config.getPid() < 0;
-
-		myLoadingSpinner.show();
-		AdminPortal.MODEL_SVC.saveHttpClientConfig(create, config, new AsyncCallback<GHttpClientConfig>() {
-
-			@Override
-			public void onFailure(Throwable theCaught) {
-				Model.handleFailure(theCaught);
-			}
-
-			@Override
-			public void onSuccess(GHttpClientConfig theResult) {
-				myLoadingSpinner.showMessage("Saved", false);
-				Model.getInstance().addHttpClientConfig(theResult);
-				mySelectedPid = theResult.getPid();
-				
-				updateConfigList();
-				updateSelectedConfig();
-			}
-		});
-	}
-
-	private void enableToolbar() {
-		myAddButton.setEnabled(true);
-		myRemoveButton.setEnabled(true);
-	}
-
-	private void initConfigListPanel() {
-		FlowPanel listPanel = new FlowPanel();
-		listPanel.setStylePrimaryName("mainPanel");
-		add(listPanel);
-
-		Label titleLabel = new Label(MSGS.httpClientConfigsPanel_ListTitle());
-		titleLabel.setStyleName("mainPanelTitle");
-		listPanel.add(titleLabel);
-
-		FlowPanel contentPanel = new FlowPanel();
-		contentPanel.addStyleName("contentInnerPanel");
-		listPanel.add(contentPanel);
-
-		contentPanel.add(new Label(AdminPortal.MSGS.httpClientConfigsPanel_IntroMessage()));
-
-		myConfigListLoadingSpinner = new LoadingSpinner();
-		contentPanel.add(myConfigListLoadingSpinner);
-
-		HorizontalPanel hPanel = new HorizontalPanel();
-		contentPanel.add(hPanel);
-		
-		VerticalPanel toolbar = new VerticalPanel();
-		myAddButton = new PButton(AdminPortal.MSGS.actions_Add());
-		myAddButton.setEnabled(false);
-		myAddButton.addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent theEvent) {
-				addConfig();
-			}
-		});
-		toolbar.add(myAddButton);
-		myRemoveButton = new PButton(AdminPortal.MSGS.actions_Add());
-		myRemoveButton.setEnabled(false);
-		myRemoveButton.addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent theEvent) {
-				removeConfig();
-			}
-		});
-		toolbar.add(myRemoveButton);
-		hPanel.add(toolbar);
-		
-		myConfigsListBox = new ListBox(false);
-		myConfigsListBox.setVisibleItemCount(5);
-		myConfigsListBox.addChangeHandler(new ChangeHandler() {
-			@Override
-			public void onChange(ChangeEvent theEvent) {
-				if (myUpdatingConfigsListBox) {
-					return;
-				}
-				mySelectedPid = Long.parseLong(myConfigsListBox.getValue(myConfigsListBox.getSelectedIndex()));
-				updateSelectedConfig();
-			}
-
-		});
-		hPanel.add(myConfigsListBox);
-
-		HorizontalPanel buttonsBar = new HorizontalPanel();
-		contentPanel.add(buttonsBar);
-
-		Model.getInstance().loadHttpClientConfigs(new IAsyncLoadCallback<GHttpClientConfigList>() {
-			@Override
-			public void onSuccess(GHttpClientConfigList theResult) {
-				setConfigList(theResult);
-			}
-
-		});
-
-	}
-
 
 	private void removeConfig() {
 		GHttpClientConfig config = myConfigs.get(myConfigsListBox.getSelectedIndex());
@@ -407,6 +390,35 @@ public class HttpClientConfigsPanel extends FlowPanel {
 //
 //	}
 	
+	private void updateConfigList() {
+		myUpdatingConfigsListBox = true;
+		myConfigsListBox.clear();
+
+		int selectedIndex = 0;
+		for (GHttpClientConfig next : myConfigs) {
+			String desc = next.getId();
+			if (StringUtil.isNotBlank(next.getName())) {
+				desc = desc + " - " + next.getName();
+			}
+			if (mySelectedPid != null && mySelectedPid.equals(next.getPid())) {
+				selectedIndex = myConfigsListBox.getItemCount();
+			}
+			myConfigsListBox.addItem(desc, Long.toString(next.getPid()));
+		}
+
+		myConfigsListBox.setSelectedIndex(selectedIndex);
+
+		myUpdatingConfigsListBox = false;
+
+		String value = myConfigsListBox.getValue(selectedIndex);
+		Long newSelectedId = Long.parseLong(value);
+		if (!newSelectedId.equals(mySelectedPid)) {
+			mySelectedPid = newSelectedId;
+			updateSelectedConfig();
+		}
+
+	}
+
 	private void updateSelectedConfig() {
 		GHttpClientConfig config = myConfigs.getConfigByPid(mySelectedPid);
 		if (config == null) {
@@ -455,18 +467,6 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		public void onSuccess(GHttpClientConfigList theResult) {
 			setConfigList(theResult);
 		}
-	}
-
-	private void addConfig() {
-		GHttpClientConfig newConfig = new GHttpClientConfig();
-		newConfig.setId("NEW");
-		newConfig.setName("New");
-		newConfig.setPid(ourNextUnsavedPid--);
-		myConfigs.add(newConfig);
-		
-		mySelectedPid = newConfig.getPid();
-		updateConfigList();
-		updateSelectedConfig();
 	}
 
 }

@@ -39,6 +39,8 @@ public interface ModelUpdateService extends RemoteService {
 
 	GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ServiceFailureException;
 
+	GConfig loadConfig() throws ServiceFailureException;
+
 	ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ServiceFailureException;
 
 	BaseGServiceVersion loadServiceVersionIntoSession(long theServiceVersionPid) throws ServiceFailureException;
@@ -122,6 +124,6 @@ public interface ModelUpdateService extends RemoteService {
 		}
 	}
 
-	GConfig loadConfig();
+	void saveConfig(GConfig theConfig);
 
 }

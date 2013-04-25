@@ -171,4 +171,13 @@ public abstract class BasePersAuthenticationHost extends BasePersObject {
 		mySupportsPasswordChange = theSupportsPasswordChange;
 	}
 
+	public void merge(BasePersAuthenticationHost theHost) {
+		setAutoCreateAuthorizedUsers(theHost.isAutoCreateAuthorizedUsers());
+		setAutoCreateAuthorizedUsers(theHost.isAutoCreateAuthorizedUsers());
+		setCacheSuccessfulCredentialsForMillis(theHost.getCacheSuccessfulCredentialsForMillis());
+		setModuleId(theHost.getModuleId());
+		setModuleName(theHost.getModuleName());
+		setSupportsPasswordChange(theHost.isSupportsPasswordChange());
+	}
+
 }

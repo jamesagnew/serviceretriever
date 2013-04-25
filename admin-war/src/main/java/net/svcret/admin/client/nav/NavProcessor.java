@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import net.svcret.admin.client.ui.catalog.ServiceCatalogPanel;
+import net.svcret.admin.client.ui.config.ConfigPanel;
 import net.svcret.admin.client.ui.config.HttpClientConfigsPanel;
 import net.svcret.admin.client.ui.config.auth.AuthenticationHostsPanel;
 import net.svcret.admin.client.ui.config.auth.EditUserPanel;
@@ -268,6 +269,7 @@ public class NavProcessor {
 		return token;
 	}
 
+
 	public static void goHome() {
 		navigateToDefault();
 	}
@@ -313,6 +315,9 @@ public class NavProcessor {
 			} else {
 				panel = new AddServiceVersionStep2Panel(Long.parseLong(argsSplit[0]), Long.parseLong(argsSplit[1]), Long.parseLong(argsSplit[2]));
 			}
+			break;
+		case CFG:
+			panel=new ConfigPanel();
 			break;
 		case DDO:
 			panel = new DeleteDomainPanel(Long.parseLong(args));

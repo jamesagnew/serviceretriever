@@ -27,6 +27,7 @@ import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
+import net.svcret.admin.shared.model.GLdapAuthHost;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
 import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GResource;
@@ -60,6 +61,7 @@ import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
+import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
@@ -93,6 +95,9 @@ public class AdminServiceBean implements IAdminService {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(AdminServiceBean.class);
 
+	@EJB
+	private IConfigService myConfigSvc;
+
 	@EJB(name = "SOAP11Invoker")
 	private IServiceInvoker<PersServiceVersionSoap11> myInvokerSoap11;
 
@@ -100,10 +105,10 @@ public class AdminServiceBean implements IAdminService {
 	private IDao myPersSvc;
 
 	@EJB
-	private IServiceRegistry myServiceRegistry;
+	private ISecurityService mySecurityService;
 
 	@EJB
-	private ISecurityService mySecurityService;
+	private IServiceRegistry myServiceRegistry;
 
 	@EJB
 	private IRuntimeStatus myStatusSvc;
@@ -207,6 +212,20 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	@Override
+	public GDomainList deleteService(long theServicePid) throws ProcessingException {
+		ourLog.info("Deleting service {}", theServicePid);
+
+		PersService service = myPersSvc.getServiceByPid(theServicePid);
+		if (service == null) {
+			throw new ProcessingException("Unknown service PID " + theServicePid);
+		}
+
+		myPersSvc.deleteService(service);
+
+		return loadDomainList();
+	}
+
+	@Override
 	public long getDefaultHttpClientConfigPid() {
 		return myPersSvc.getHttpClientConfigs().iterator().next().getPid();
 	}
@@ -258,6 +277,11 @@ public class AdminServiceBean implements IAdminService {
 		}
 
 		return toUi(authHost);
+	}
+
+	@Override
+	public GConfig loadConfig() throws ProcessingException {
+		return toUi(myConfigSvc.getConfig());
 	}
 
 	@Override
@@ -342,21 +366,42 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	@Override
-	public GAuthenticationHostList saveAuthenticationHost(GLocalDatabaseAuthHost theAuthHost) throws ProcessingException {
+	public GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) throws ProcessingException {
+		Validate.notNull(theAuthHost);
 
-		PersAuthenticationHostLocalDatabase host;
+		BasePersAuthenticationHost host = fromUi(theAuthHost);
+
 		if (theAuthHost.getPid() > 0) {
-			host = (PersAuthenticationHostLocalDatabase) myPersSvc.getAuthenticationHostByPid(theAuthHost.getPid());
-		} else {
-			host = new PersAuthenticationHostLocalDatabase();
+			BasePersAuthenticationHost existingHost = myPersSvc.getAuthenticationHostByPid(theAuthHost.getPid());
+			existingHost.merge(host);
 		}
-		fromUi(host, theAuthHost);
 
 		ourLog.info("Saving authentication host of type {} with id {} / {}", new Object[] { host.getClass().getSimpleName(), theAuthHost.getPid(), theAuthHost.getModuleId() });
 
 		myPersSvc.saveAuthenticationHost(host);
 
 		return loadAuthHostList();
+	}
+
+	@Override
+	public void saveConfig(GConfig theConfig) {
+		ourLog.info("Saving config");
+
+		myPersSvc.saveConfig(fromUi(theConfig));
+
+	}
+
+	@Override
+	public GDomain saveDomain(GDomain theDomain) throws ProcessingException {
+		ourLog.info("Saving domain with PID {}", theDomain.getPid());
+
+		PersDomain domain = myPersSvc.getDomainByPid(theDomain.getPid());
+		PersDomain newDomain = fromUi(theDomain);
+		domain.merge(newDomain);
+
+		domain = myServiceRegistry.saveDomain(domain);
+
+		return getDomainByPid(domain.getPid());
 	}
 
 	@Override
@@ -386,6 +431,22 @@ public class AdminServiceBean implements IAdminService {
 		}
 
 		return toUi(myServiceRegistry.saveHttpClientConfig(config));
+	}
+
+	@Override
+	public GDomainList saveService(GService theService) throws ProcessingException {
+		ourLog.info("Saving service {}", theService.getPid());
+
+		PersService service = myPersSvc.getServiceByPid(theService.getPid());
+		if (service == null) {
+			throw new ProcessingException("Unknown service PID " + theService.getPid());
+		}
+
+		PersService newService = fromUi(theService);
+		service.merge(newService);
+		myPersSvc.saveService(newService);
+
+		return loadDomainList();
 	}
 
 	@Override
@@ -643,6 +704,39 @@ public class AdminServiceBean implements IAdminService {
 		}
 	}
 
+	private BasePersAuthenticationHost fromUi(BaseGAuthHost theAuthHost) {
+		BasePersAuthenticationHost retVal = null;
+
+		switch (theAuthHost.getType()) {
+		case LDAP:
+			PersAuthenticationHostLdap pLdap = new PersAuthenticationHostLdap();
+			GLdapAuthHost uiLdap = (GLdapAuthHost) theAuthHost;
+			pLdap.setAuthenticateBaseDn(uiLdap.getAuthenticateBaseDn());
+			pLdap.setAuthenticateFilter(uiLdap.getAuthenticateFilter());
+			pLdap.setBindPassword(uiLdap.getBindUserPassword());
+			pLdap.setBindUserDn(uiLdap.getBindUserDn());
+			pLdap.setUrl(uiLdap.getUrl());
+			retVal = pLdap;
+			break;
+		case LOCAL_DATABASE:
+			retVal = new PersAuthenticationHostLocalDatabase();
+			break;
+		}
+
+		if (retVal == null) {
+			throw new IllegalStateException("Unknown type:" + theAuthHost.getType());
+		}
+
+		retVal.setAutoCreateAuthorizedUsers(theAuthHost.isAutoCreateAuthorizedUsers());
+		retVal.setCacheSuccessfulCredentialsForMillis(theAuthHost.getCacheSuccessesForMillis());
+		retVal.setModuleId(theAuthHost.getModuleId());
+		retVal.setModuleName(theAuthHost.getModuleName());
+		retVal.setPid(theAuthHost.getPidOrNull());
+		retVal.setSupportsPasswordChange(theAuthHost.isSupportsPasswordChange());
+
+		return retVal;
+	}
+
 	private PersBaseClientAuth<?> fromUi(BaseGClientSecurity theObj, BasePersServiceVersion theServiceVersion) {
 		switch (theObj.getType()) {
 		case WSSEC_UT:
@@ -666,6 +760,24 @@ public class AdminServiceBean implements IAdminService {
 			return retVal;
 		}
 		return null;
+	}
+
+	private PersConfig fromUi(GConfig theConfig) {
+		PersConfig retVal = new PersConfig();
+
+		for (String next : theConfig.getProxyUrlBases()) {
+			retVal.addProxyUrlBase(new PersConfigProxyUrlBase(next));
+		}
+
+		return retVal;
+	}
+
+	private PersDomain fromUi(GDomain theDomain) {
+		PersDomain retVal = new PersDomain();
+		retVal.setPid(theDomain.getPidOrNull());
+		retVal.setDomainId(theDomain.getId());
+		retVal.setDomainName(theDomain.getName());
+		return retVal;
 	}
 
 	private PersHttpClientConfig fromUi(GHttpClientConfig theConfig) {
@@ -693,6 +805,14 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setResourceText(theRes.getText());
 		retVal.setResourceUrl(theRes.getUrl());
 		retVal.setServiceVersion(theServiceVersion);
+		return retVal;
+	}
+
+	private PersService fromUi(GService theService) {
+		PersService retVal = new PersService();
+		retVal.setActive(theService.isActive());
+		retVal.setServiceId(theService.getId());
+		retVal.setServiceName(theService.getName());
 		return retVal;
 	}
 
@@ -823,17 +943,6 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private GDomainList loadDomainList(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats) throws ProcessingException {
-		GDomainList domainList = new GDomainList();
-
-		for (PersDomain nextDomain : myPersSvc.getAllDomains()) {
-			GDomain gDomain = loadDomain(nextDomain, theLoadDomStats, theLoadSvcStats, theLoadVerStats, theLoadVerMethodStats);
-
-			domainList.add(gDomain);
-		} // for domains
-		return domainList;
-	}
-
 	private GDomain loadDomain(PersDomain nextDomain, Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats) throws ProcessingException {
 		GDomain gDomain = toUi(nextDomain, theLoadDomStats.contains(nextDomain.getPid()));
 
@@ -874,6 +983,36 @@ public class AdminServiceBean implements IAdminService {
 		} // for services
 		return gDomain;
 	}
+
+	private GDomainList loadDomainList(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats) throws ProcessingException {
+		GDomainList domainList = new GDomainList();
+
+		for (PersDomain nextDomain : myPersSvc.getAllDomains()) {
+			GDomain gDomain = loadDomain(nextDomain, theLoadDomStats, theLoadSvcStats, theLoadVerStats, theLoadVerMethodStats);
+
+			domainList.add(gDomain);
+		} // for domains
+		return domainList;
+	}
+
+	// private GHttpClientConfig toUi(PersHttpClientConfig theConfig) {
+	// GHttpClientConfig retVal = new GHttpClientConfig();
+	//
+	// if (theConfig.getPid() > 0) {
+	// retVal.setPid(theConfig.getPid());
+	// }
+	//
+	// retVal.setId(theConfig.getId());
+	// retVal.setName(theConfig.getName());
+	// retVal.setCircuitBreakerEnabled(theConfig.isCircuitBreakerEnabled());
+	// retVal.setCircuitBreakerTimeBetweenResetAttempts(theConfig.getCircuitBreakerTimeBetweenResetAttempts());
+	// retVal.setConnectTimeoutMillis(theConfig.getConnectTimeoutMillis());
+	// retVal.setFailureRetriesBeforeAborting(theConfig.getFailureRetriesBeforeAborting());
+	// retVal.setReadTimeoutMillis(theConfig.getReadTimeoutMillis());
+	// retVal.setUrlSelectionPolicy(theConfig.getUrlSelectionPolicy());
+	//
+	// return retVal;
+	// }
 
 	private GHttpClientConfigList loadHttpClientConfigList() {
 		GHttpClientConfigList configList = new GHttpClientConfigList();
@@ -1074,25 +1213,6 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	// private GHttpClientConfig toUi(PersHttpClientConfig theConfig) {
-	// GHttpClientConfig retVal = new GHttpClientConfig();
-	//
-	// if (theConfig.getPid() > 0) {
-	// retVal.setPid(theConfig.getPid());
-	// }
-	//
-	// retVal.setId(theConfig.getId());
-	// retVal.setName(theConfig.getName());
-	// retVal.setCircuitBreakerEnabled(theConfig.isCircuitBreakerEnabled());
-	// retVal.setCircuitBreakerTimeBetweenResetAttempts(theConfig.getCircuitBreakerTimeBetweenResetAttempts());
-	// retVal.setConnectTimeoutMillis(theConfig.getConnectTimeoutMillis());
-	// retVal.setFailureRetriesBeforeAborting(theConfig.getFailureRetriesBeforeAborting());
-	// retVal.setReadTimeoutMillis(theConfig.getReadTimeoutMillis());
-	// retVal.setUrlSelectionPolicy(theConfig.getUrlSelectionPolicy());
-	//
-	// return retVal;
-	// }
-
 	private BaseGServerSecurity toUi(PersBaseServerAuth<?, ?> theAuth) throws ProcessingException {
 		BaseGServerSecurity retVal = null;
 
@@ -1109,6 +1229,16 @@ public class AdminServiceBean implements IAdminService {
 
 		retVal.setPid(theAuth.getPid());
 		retVal.setAuthHostPid(theAuth.getAuthenticationHost().getPid());
+
+		return retVal;
+	}
+
+	private GConfig toUi(PersConfig theConfig) {
+		GConfig retVal = new GConfig();
+
+		for (PersConfigProxyUrlBase next : theConfig.getProxyUrlBases()) {
+			retVal.getProxyUrlBases().add(next.getUrlBase());
+		}
 
 		return retVal;
 	}
@@ -1349,6 +1479,17 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	/**
+	 * Convenience for Unit Tests
+	 */
+	GDomain addDomain(String theId, String theName) throws ProcessingException {
+		GDomain domain = new GDomain();
+		domain.setId(theId);
+		domain.setName(theName);
+		GDomain retVal = addDomain(domain);
+		return retVal;
+	}
+
+	/**
 	 * Unit test only
 	 */
 	void setInvokerSoap11(IServiceInvoker<PersServiceVersionSoap11> theInvokerSoap11) {
@@ -1372,94 +1513,6 @@ public class AdminServiceBean implements IAdminService {
 	 */
 	void setServiceRegistry(ServiceRegistryBean theSvcReg) {
 		myServiceRegistry = theSvcReg;
-	}
-
-	@Override
-	public GDomain saveDomain(GDomain theDomain) throws ProcessingException {
-		ourLog.info("Saving domain with PID {}", theDomain.getPid());
-
-		PersDomain domain = myPersSvc.getDomainByPid(theDomain.getPid());
-		PersDomain newDomain = fromUi(theDomain);
-		domain.merge(newDomain);
-
-		domain = myServiceRegistry.saveDomain(domain);
-
-		return getDomainByPid(domain.getPid());
-	}
-
-	private PersDomain fromUi(GDomain theDomain) {
-		PersDomain retVal = new PersDomain();
-		retVal.setPid(theDomain.getPidOrNull());
-		retVal.setDomainId(theDomain.getId());
-		retVal.setDomainName(theDomain.getName());
-		return retVal;
-	}
-
-	/**
-	 * Convenience for Unit Tests
-	 */
-	GDomain addDomain(String theId, String theName) throws ProcessingException {
-		GDomain domain = new GDomain();
-		domain.setId(theId);
-		domain.setName(theName);
-		GDomain retVal = addDomain(domain);
-		return retVal;
-	}
-
-	@Override
-	public GDomainList deleteService(long theServicePid) throws ProcessingException {
-		ourLog.info("Deleting service {}", theServicePid);
-		
-		PersService service = myPersSvc.getServiceByPid(theServicePid);
-		if (service==null) {
-			throw new ProcessingException("Unknown service PID "+theServicePid);
-		}
-		
-		myPersSvc.deleteService(service);
-		
-		return loadDomainList();
-	}
-
-	@Override
-	public GDomainList saveService(GService theService) throws ProcessingException {
-		ourLog.info("Saving service {}", theService.getPid());
-		
-		PersService service = myPersSvc.getServiceByPid(theService.getPid());
-		if (service==null) {
-			throw new ProcessingException("Unknown service PID "+theService.getPid());
-		}
-		
-		PersService newService = fromUi(theService);
-		service.merge(newService);
-		myPersSvc.saveService(newService);
-		
-		return loadDomainList();
-	}
-
-	private PersService fromUi(GService theService) {
-		PersService retVal = new PersService();
-		retVal.setActive(theService.isActive());
-		retVal.setServiceId(theService.getId());
-		retVal.setServiceName(theService.getName());
-		return retVal;
-	}
-
-	@EJB
-	private IConfigService myConfigSvc;
-	
-	@Override
-	public GConfig loadConfig() throws ProcessingException {
-		return toUi(myConfigSvc.getConfig());
-	}
-
-	private GConfig toUi(PersConfig theConfig) {
-		GConfig retVal = new GConfig();
-		
-		for (PersConfigProxyUrlBase next : theConfig.getProxyUrlBases()) {
-			retVal.getProxyUrlBases().add(next.getUrlBase());
-		}
-		
-		return retVal;
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {

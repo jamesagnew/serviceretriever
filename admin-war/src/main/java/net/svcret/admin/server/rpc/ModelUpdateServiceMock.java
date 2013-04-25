@@ -3,8 +3,6 @@ package net.svcret.admin.server.rpc;
 import java.util.Date;
 import java.util.Set;
 
-import org.apache.commons.lang3.time.DateUtils;
-
 import net.svcret.admin.client.rpc.ModelUpdateService;
 import net.svcret.admin.shared.ServiceFailureException;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
@@ -38,7 +36,7 @@ import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.admin.shared.util.StringUtil;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 
 public class ModelUpdateServiceMock implements ModelUpdateService {
 
@@ -73,6 +71,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		ver.setId("Version 1-A-1");
 		ver.setPid(100L);
 		ver.setName("Version 1-A-1");
+		ver.setProxyPath("/some/service");
 		ver.setLastAccess(new Date());
 		svc.getVersionList().add(ver);
 
@@ -466,6 +465,11 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	@Override
 	public GConfig loadConfig() {
 		return myConfig;
+	}
+
+	@Override
+	public void saveConfig(GConfig theConfig) {
+		myConfig=theConfig;
 	}
 
 }

@@ -16,8 +16,8 @@ public abstract class BaseEndpointRenderer<T extends BaseGServiceVersion> {
 	/**
 	 * @return the urlBase
 	 */
-	public GConfig getUrlBase() {
-		return myConfig;
+	public String getUrlBase() {
+		return myConfig.getProxyUrlBases().iterator().next();
 	}
 
 	public abstract Widget render(T theObject);

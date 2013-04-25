@@ -19,7 +19,6 @@ import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
-import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
 import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
@@ -84,7 +83,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
-	public AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, GSoap11ServiceVersion theVersion) throws ServiceFailureException {
+	public AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion) throws ServiceFailureException {
 		if (theExistingDomainPid == null && isBlank(theCreateDomainId)) {
 			throw new IllegalArgumentException("Domain PID and new domain ID are both missing");
 		}
@@ -220,20 +219,18 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	private List<GResource> getServiceVersionResourcesFromSession(long theServiceVersionUncommittedSessionId) {
-		String key = SESSION_PREFIX_UNCOMITTED_SVC_VER_RES + theServiceVersionUncommittedSessionId;
-		return (List<GResource>) getThreadLocalRequest().getSession(true).getAttribute(key);
-	}
-
-	private boolean isMockMode() {
-		if ("true".equals(System.getProperty("sail.mock"))) {
-			if (myMock == null) {
-				myMock = new ModelUpdateServiceMock();
-			}
-			return true;
+	@Override
+	public GConfig loadConfig() throws ServiceFailureException {
+		if (isMockMode()) {
+			return myMock.loadConfig();
 		}
-		return false;
+		
+		try {
+			return myAdminSvc.loadConfig();
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to load config", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
 	}
 
 	@Override
@@ -265,6 +262,37 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 			}
 		}
 
+		return retVal;
+	}
+
+	@Override
+	public BaseGServiceVersion loadServiceVersionIntoSession(long theServiceVersionPid) throws ServiceFailureException {
+		BaseGServiceVersion retVal;
+
+		GSoap11ServiceVersionAndResources serviceAndResources;
+		if (isMockMode()) {
+			
+			retVal = myMock.loadServiceVersionIntoSession(theServiceVersionPid);
+			
+			serviceAndResources = new GSoap11ServiceVersionAndResources();
+			serviceAndResources.setServiceVersion((GSoap11ServiceVersion) retVal);
+			
+		} else {
+
+			try {
+				serviceAndResources = myAdminSvc.loadServiceVersion(theServiceVersionPid);
+			} catch (ProcessingException e) {
+				ourLog.error("Failed to load service version", e);
+				throw new ServiceFailureException(e.getMessage());
+			}
+			
+		}
+
+		retVal = serviceAndResources.getServiceVersion();
+		retVal.setUncommittedSessionId(ourNextId.incrementAndGet());
+		saveServiceVersionToSession(retVal);
+		saveServiceVersionResourcesToSession(serviceAndResources);
+		
 		return retVal;
 	}
 
@@ -366,6 +394,22 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
+	public GDomainList removeService(long theDomainPid, long theServicePid) throws ServiceFailureException {
+		if (isMockMode()) {
+			return myMock.removeService(theDomainPid, theServicePid);
+		}
+		
+		ourLog.info("Removing service for DOMAIN {} SERVICE {}", theDomainPid,theServicePid);
+		
+		try {
+			return myAdminSvc.deleteService(theServicePid);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to delete service", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+	}
+
+	@Override
 	public void reportClientError(String theMessage, Throwable theException) {
 		ourLog.warn("Client error - " + theMessage, theException);
 	}
@@ -434,11 +478,18 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		}
 	}
 
-	private void saveServiceVersionResourcesToSession(GSoap11ServiceVersionAndResources theServiceAndResources) {
-		GSoap11ServiceVersion serviceVersion = theServiceAndResources.getServiceVersion();
-		ourLog.info("Storing service resource collection to temporary session with id: " + serviceVersion.getUncommittedSessionId());
-		String key = SESSION_PREFIX_UNCOMITTED_SVC_VER_RES + theServiceAndResources.getServiceVersion().getUncommittedSessionId();
-		getThreadLocalRequest().getSession(true).setAttribute(key, theServiceAndResources.getResource());
+	@Override
+	public GDomainList saveService(GService theService) throws ServiceFailureException {
+		if (isMockMode()) {
+			return myMock.saveService(theService);
+		}
+
+		try {
+			return myAdminSvc.saveService(theService);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to save service", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
 	}
 
 	@Override
@@ -471,6 +522,29 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		ourLog.info("Done saving user {} / {}", theUser.getPid(), theUser.getUsername());
 	}
 
+	@SuppressWarnings("unchecked")
+	private List<GResource> getServiceVersionResourcesFromSession(long theServiceVersionUncommittedSessionId) {
+		String key = SESSION_PREFIX_UNCOMITTED_SVC_VER_RES + theServiceVersionUncommittedSessionId;
+		return (List<GResource>) getThreadLocalRequest().getSession(true).getAttribute(key);
+	}
+
+	private boolean isMockMode() {
+		if ("true".equals(System.getProperty("sail.mock"))) {
+			if (myMock == null) {
+				myMock = new ModelUpdateServiceMock();
+			}
+			return true;
+		}
+		return false;
+	}
+
+	private void saveServiceVersionResourcesToSession(GSoap11ServiceVersionAndResources theServiceAndResources) {
+		GSoap11ServiceVersion serviceVersion = theServiceAndResources.getServiceVersion();
+		ourLog.info("Storing service resource collection to temporary session with id: " + serviceVersion.getUncommittedSessionId());
+		String key = SESSION_PREFIX_UNCOMITTED_SVC_VER_RES + theServiceAndResources.getServiceVersion().getUncommittedSessionId();
+		getThreadLocalRequest().getSession(true).setAttribute(key, theServiceAndResources.getResource());
+	}
+
 	/**
 	 * For unit test only
 	 */
@@ -479,73 +553,10 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
-	public BaseGServiceVersion loadServiceVersionIntoSession(long theServiceVersionPid) throws ServiceFailureException {
-		BaseGServiceVersion retVal;
-
-		GSoap11ServiceVersionAndResources serviceAndResources;
-		if (isMockMode()) {
-			
-			retVal = myMock.loadServiceVersionIntoSession(theServiceVersionPid);
-			
-			serviceAndResources = new GSoap11ServiceVersionAndResources();
-			serviceAndResources.setServiceVersion((GSoap11ServiceVersion) retVal);
-			
-		} else {
-
-			try {
-				serviceAndResources = myAdminSvc.loadServiceVersion(theServiceVersionPid);
-			} catch (ProcessingException e) {
-				ourLog.error("Failed to load service version", e);
-				throw new ServiceFailureException(e.getMessage());
-			}
-			
-		}
-
-		retVal = serviceAndResources.getServiceVersion();
-		retVal.setUncommittedSessionId(ourNextId.incrementAndGet());
-		saveServiceVersionToSession(retVal);
-		saveServiceVersionResourcesToSession(serviceAndResources);
+	public void saveConfig(GConfig theConfig) {
+		ourLog.info("Saving config");
 		
-		return retVal;
-	}
-
-	@Override
-	public GDomainList removeService(long theDomainPid, long theServicePid) throws ServiceFailureException {
-		if (isMockMode()) {
-			return myMock.removeService(theDomainPid, theServicePid);
-		}
-		
-		ourLog.info("Removing service for DOMAIN {} SERVICE {}", theDomainPid,theServicePid);
-		
-		try {
-			return myAdminSvc.deleteService(theServicePid);
-		} catch (ProcessingException e) {
-			ourLog.error("Failed to delete service", e);
-			throw new ServiceFailureException(e.getMessage());
-		}
-	}
-
-	@Override
-	public GDomainList saveService(GService theService) throws ServiceFailureException {
-		if (isMockMode()) {
-			return myMock.saveService(theService);
-		}
-
-		try {
-			return myAdminSvc.saveService(theService);
-		} catch (ProcessingException e) {
-			ourLog.error("Failed to save service", e);
-			throw new ServiceFailureException(e.getMessage());
-		}
-	}
-
-	@Override
-	public GConfig loadConfig() {
-		if (isMockMode()) {
-			return myMock.loadConfig();
-		}
-		
-		return myAdminSvc.loadConfig();
+		myAdminSvc.saveConfig(theConfig);
 	}
 
 }

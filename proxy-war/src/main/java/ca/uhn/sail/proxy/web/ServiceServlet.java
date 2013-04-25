@@ -67,7 +67,7 @@ public class ServiceServlet extends HttpServlet {
 
 		OrchestratorResponseBean response;
 		try {
-			response = myOrch.handle(get, base, path, query, theReq.getReader());
+			response = myOrch.handle(get, path, query, theReq.getReader());
 		} catch (InternalErrorException e) {
 			ourLog.info("Processing Failure", e);
 			sendFailure(theResp, e.getMessage());

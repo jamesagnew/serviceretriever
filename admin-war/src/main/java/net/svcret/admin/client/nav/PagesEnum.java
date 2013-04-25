@@ -49,7 +49,10 @@ public enum PagesEnum {
 	ESE(MSGS.editServicePanel_Breadcrumb()), 
 	
 	/** Service Catalog */
-	SEC(MSGS.serviceCatalog_Breadcrumb())
+	SEC(MSGS.serviceCatalog_Breadcrumb()), 
+	
+	/** Config */
+	CFG(MSGS.config_Breadcrumb());
 	;
 	
 	private String myBreadcrumb;

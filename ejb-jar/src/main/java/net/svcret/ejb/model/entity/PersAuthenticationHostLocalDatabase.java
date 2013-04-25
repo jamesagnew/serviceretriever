@@ -44,4 +44,5 @@ public class PersAuthenticationHostLocalDatabase extends BasePersAuthenticationH
 		super.setSupportsPasswordChange(theSupportsPasswordChange);
 	}
 
+
 }

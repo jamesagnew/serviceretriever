@@ -7,6 +7,7 @@ import java.util.Collections;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -26,7 +27,7 @@ public class PersConfig {
 	@Column(name = "OPTLOCK")
 	private int myOptLock;
 
-	@OneToMany(cascade=CascadeType.ALL, mappedBy="myConfig")
+	@OneToMany(cascade=CascadeType.ALL, mappedBy="myConfig", fetch=FetchType.EAGER)
 	private Collection<PersConfigProxyUrlBase> myProxyUrlBases;
 
 	/**
@@ -48,5 +49,5 @@ public class PersConfig {
 		getProxyUrlBases();
 		myProxyUrlBases.add(theBase);
 	}
-	
+
 }

@@ -548,7 +548,7 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	public void saveAuthenticationHost(PersAuthenticationHostLocalDatabase theAuthHost) {
+	public void saveAuthenticationHost(BasePersAuthenticationHost theAuthHost) {
 		Validate.notNull(theAuthHost, "AuthHost");
 
 		ourLog.info("Saving authentication host {} / {}", theAuthHost.getPid(), theAuthHost.getModuleId());

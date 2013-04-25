@@ -12,7 +12,6 @@ import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
-import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
 import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
@@ -38,7 +37,6 @@ public interface IAdminService {
 	GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ProcessingException;
 
 	long getDefaultHttpClientConfigPid();
-	GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) throws ProcessingException;
 
 	GDomain getDomainByPid(long theDomain) throws ProcessingException;
 
@@ -79,5 +77,7 @@ public interface IAdminService {
 	GDomainList saveService(GService theService) throws ProcessingException;
 
 	GConfig loadConfig() throws ProcessingException;
+
+	void saveConfig(GConfig theConfig);
 
 }

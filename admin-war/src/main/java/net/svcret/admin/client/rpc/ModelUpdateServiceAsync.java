@@ -2,6 +2,8 @@ package net.svcret.admin.client.rpc;
 
 import net.svcret.admin.client.rpc.ModelUpdateService.UserAndAuthHost;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
+import net.svcret.admin.shared.model.BaseGAuthHost;
+import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
@@ -61,5 +63,7 @@ public interface ModelUpdateServiceAsync {
 	void saveService(GService theService, AsyncCallback<GDomainList> theMySaveButtonHandler);
 
 	void loadConfig(AsyncCallback<GConfig> theAsyncCallback);
+
+	void saveConfig(GConfig theConfig, AsyncCallback<Void> theAsyncCallback);
 
 }
