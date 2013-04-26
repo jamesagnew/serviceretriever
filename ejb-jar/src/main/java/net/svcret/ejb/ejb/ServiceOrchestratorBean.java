@@ -26,6 +26,7 @@ import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.RequestType;
+import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.api.HttpResponseBean.Failure;
 import net.svcret.ejb.ex.InternalErrorException;
@@ -136,15 +137,22 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 				PersServiceVersionMethod method = results.getMethodDefinition();
 
 				if (credentials == null) {
+					// This probably shouldn't happen..
 					ourLog.debug("No credential grabber in request (Should invoker have provided one)");
-					myRuntimeStatus.recordServerSecurityFailure(method, null, startTime);
+					InvocationResponseResultsBean invocationResponse = new InvocationResponseResultsBean();
+					invocationResponse.setResponseType(ResponseTypeEnum.SECURITY_FAIL);
+					invocationResponse.setResponseStatusMessage("ServiceRetriever failed to extract credentials");
+					myRuntimeStatus.recordInvocationMethod(startTime, 0, method, null, null, invocationResponse);
 					throw new SecurityFailureException();
 				}
 
 				ourLog.debug("Checking credentials: {}", grabber);
 				AuthorizationResultsBean authorized = mySecuritySvc.authorizeMethodInvocation(authHost, credentials, method);
 				if (!authorized.isAuthorized()) {
-					myRuntimeStatus.recordServerSecurityFailure(method, authorized.getUser(), startTime);
+					InvocationResponseResultsBean invocationResponse = new InvocationResponseResultsBean();
+					invocationResponse.setResponseType(ResponseTypeEnum.SECURITY_FAIL);
+					invocationResponse.setResponseStatusMessage("ServiceRetriever failed to extract credentials");
+					myRuntimeStatus.recordInvocationMethod(startTime, 0, method, authorized.getUser(), null, invocationResponse);
 					throw new SecurityFailureException();
 				}
 			}

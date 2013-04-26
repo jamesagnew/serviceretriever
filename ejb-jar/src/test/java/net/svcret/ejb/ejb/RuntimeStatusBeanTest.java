@@ -96,8 +96,12 @@ public class RuntimeStatusBeanTest {
 		version.setStatus(status);
 		
 		PersUser user = null;
-		svc.recordServerSecurityFailure(method, user, ts1);
-		svc.recordServerSecurityFailure(method, user, ts2);
+		InvocationResponseResultsBean invocationResponse = new InvocationResponseResultsBean();
+		invocationResponse.setResponseType(ResponseTypeEnum.SECURITY_FAIL);
+		invocationResponse.setResponseStatusMessage("Security fail");
+		
+		svc.recordInvocationMethod(ts1, 0, method, user, null, invocationResponse);
+		svc.recordInvocationMethod(ts2, 0, method, user, null, invocationResponse);
 		
 		svc.flushStatus();
 		

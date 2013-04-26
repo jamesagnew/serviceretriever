@@ -4,5 +4,6 @@ public enum ResponseTypeEnum {
 
 	SUCCESS,
 	FAULT,
-	FAIL
+	FAIL, 
+	SECURITY_FAIL
 }

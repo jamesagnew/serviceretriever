@@ -25,6 +25,29 @@ public class PersServiceVersionStatus extends BasePersObject {
 
 	private static final long serialVersionUID = 1L;
 
+	@Transient
+	private transient boolean myDirty;
+
+	@Column(name = "LAST_FAIL")
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date myLastFailInvocation;
+
+	@Column(name = "LAST_FAULT")
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date myLastFaultInvocation;
+
+	@Column(name = "LAST_SAVE")
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date myLastSave;
+
+	@Column(name = "LAST_SEC_FAIL")
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date myLastServerSecurityFailure;
+
+	@Column(name = "LAST_SUCCESS")
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date myLastSuccessfulInvocation;
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "PID")
@@ -35,21 +58,6 @@ public class PersServiceVersionStatus extends BasePersObject {
 	@JoinColumn(name = "SVC_VERSION_PID", referencedColumnName = "PID", unique = true, nullable = false)
 	private BasePersServiceVersion myServiceVersion;
 
-	@Column(name = "LAST_SAVE")
-	@Temporal(TemporalType.TIMESTAMP)
-	private Date myLastSave;
-
-	@Column(name = "LAST_SRV_SEC_FAIL")
-	@Temporal(TemporalType.TIMESTAMP)
-	private Date myLastServerSecurityFailure;
-
-	@Column(name = "LAST_SUCCESS_INVOC")
-	@Temporal(TemporalType.TIMESTAMP)
-	private Date myLastSuccessfulInvocation;
-
-	@Transient
-	private transient boolean myDirty;
-
 	public PersServiceVersionStatus() {
 	}
 
@@ -58,23 +66,12 @@ public class PersServiceVersionStatus extends BasePersObject {
 		myServiceVersion = theVersion;
 	}
 
-	public void merge(PersServiceVersionStatus theStatus) {
-		myLastSave = newer(myLastSave, theStatus.getLastSave());
-		myLastServerSecurityFailure = newer(myLastServerSecurityFailure, theStatus.getLastServerSecurityFailure());
-		myLastSuccessfulInvocation = newer(myLastSuccessfulInvocation, theStatus.getLastSuccessfulInvocation());
+	public Date getLastFailInvocation() {
+		return myLastFailInvocation;
 	}
 
-	public static Date newer(Date theDate1, Date theDate2) {
-		if (theDate1 == null) {
-			return theDate2;
-		}
-		if (theDate2 == null) {
-			return theDate1;
-		}
-		if (theDate1.before(theDate2)) {
-			return theDate2;
-		}
-		return theDate1;
+	public Date getLastFaultInvocation() {
+		return myLastFaultInvocation;
 	}
 
 	/**
@@ -85,14 +82,6 @@ public class PersServiceVersionStatus extends BasePersObject {
 	}
 
 	/**
-	 * @param theLastSave
-	 *            the lastSave to set
-	 */
-	public void setLastSave(Date theLastSave) {
-		myLastSave = theLastSave;
-	}
-
-	/**
 	 * @return the lastServerSecurityFailure
 	 */
 	public Date getLastServerSecurityFailure() {
@@ -100,36 +89,10 @@ public class PersServiceVersionStatus extends BasePersObject {
 	}
 
 	/**
-	 * @param theLastServerSecurityFailure
-	 *            the lastServerSecurityFailure to set
-	 */
-	public void setLastServerSecurityFailure(Date theLastServerSecurityFailure) {
-		myDirty = true;
-		myLastServerSecurityFailure = theLastServerSecurityFailure;
-	}
-
-	/**
 	 * @return the lastSuccessfulInvocation
 	 */
 	public Date getLastSuccessfulInvocation() {
 		return myLastSuccessfulInvocation;
-	}
-
-	/**
-	 * @param theLastSuccessfulInvocation
-	 *            the lastSuccessfulInvocation to set
-	 */
-	public void setLastSuccessfulInvocation(Date theLastSuccessfulInvocation) {
-		myDirty = true;
-		myLastSuccessfulInvocation = theLastSuccessfulInvocation;
-	}
-
-	public static PersInvocationUserStatsPk createEntryPk(InvocationStatsIntervalEnum theInterval, Date theTimestamp, PersServiceVersionMethod theMethod, PersUser theUser) {
-		Validate.notNull(theInterval, "Interval");
-		Validate.notNull(theTimestamp, "Timestamp");
-
-		PersInvocationUserStatsPk pk = new PersInvocationUserStatsPk(theInterval, theTimestamp, theMethod, theUser);
-		return pk;
 	}
 
 	/**
@@ -144,6 +107,58 @@ public class PersServiceVersionStatus extends BasePersObject {
 	 */
 	public BasePersServiceVersion getServiceVersion() {
 		return myServiceVersion;
+	}
+
+	public boolean isDirty() {
+		return myDirty;
+	}
+
+	public void merge(PersServiceVersionStatus theStatus) {
+		myLastSave = newer(myLastSave, theStatus.getLastSave());
+		myLastServerSecurityFailure = newer(myLastServerSecurityFailure, theStatus.getLastServerSecurityFailure());
+		myLastSuccessfulInvocation = newer(myLastSuccessfulInvocation, theStatus.getLastSuccessfulInvocation());
+	}
+
+	/**
+	 * @param theDirty
+	 *            the dirty to set
+	 */
+	public void setDirty(boolean theDirty) {
+		myDirty = theDirty;
+	}
+
+	public void setLastFailInvocation(Date theLastFailInvocation) {
+		myLastFailInvocation = theLastFailInvocation;
+	}
+
+	public void setLastFaultInvocation(Date theLastFaultInvocation) {
+		myLastFaultInvocation = theLastFaultInvocation;
+	}
+
+	/**
+	 * @param theLastSave
+	 *            the lastSave to set
+	 */
+	public void setLastSave(Date theLastSave) {
+		myLastSave = theLastSave;
+	}
+
+	/**
+	 * @param theLastServerSecurityFailure
+	 *            the lastServerSecurityFailure to set
+	 */
+	public void setLastServerSecurityFailure(Date theLastServerSecurityFailure) {
+		myDirty = true;
+		myLastServerSecurityFailure = theLastServerSecurityFailure;
+	}
+
+	/**
+	 * @param theLastSuccessfulInvocation
+	 *            the lastSuccessfulInvocation to set
+	 */
+	public void setLastSuccessfulInvocation(Date theLastSuccessfulInvocation) {
+		myDirty = true;
+		myLastSuccessfulInvocation = theLastSuccessfulInvocation;
 	}
 
 	/**
@@ -162,16 +177,25 @@ public class PersServiceVersionStatus extends BasePersObject {
 		myServiceVersion = theServiceVersion;
 	}
 
-	public boolean isDirty() {
-		return myDirty;
+	public static PersInvocationUserStatsPk createEntryPk(InvocationStatsIntervalEnum theInterval, Date theTimestamp, PersServiceVersionMethod theMethod, PersUser theUser) {
+		Validate.notNull(theInterval, "Interval");
+		Validate.notNull(theTimestamp, "Timestamp");
+
+		PersInvocationUserStatsPk pk = new PersInvocationUserStatsPk(theInterval, theTimestamp, theMethod, theUser);
+		return pk;
 	}
 
-	/**
-	 * @param theDirty
-	 *            the dirty to set
-	 */
-	public void setDirty(boolean theDirty) {
-		myDirty = theDirty;
+	public static Date newer(Date theDate1, Date theDate2) {
+		if (theDate1 == null) {
+			return theDate2;
+		}
+		if (theDate2 == null) {
+			return theDate1;
+		}
+		if (theDate1.before(theDate2)) {
+			return theDate2;
+		}
+		return theDate1;
 	}
 
 	// public static PersInvocationStatsPk

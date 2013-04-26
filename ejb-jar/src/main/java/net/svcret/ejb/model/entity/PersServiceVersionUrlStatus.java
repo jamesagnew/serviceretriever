@@ -31,6 +31,8 @@ import com.google.common.base.Objects;
 @Entity
 public class PersServiceVersionUrlStatus extends BasePersObject {
 
+	private static final long serialVersionUID = 1L;
+	
 	public static final int MAX_LENGTH_BODY = 5000;
 	public static final int MAX_LENGTH_CONTENT_TYPE = 100;
 	public static final int MAX_LENGTH_MSG = 500;

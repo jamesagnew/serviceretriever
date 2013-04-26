@@ -178,13 +178,13 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			}
 		}
 	}
-	
+
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, PersServiceVersionMethod theMethod, PersUser theUser, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean) {
+	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, PersServiceVersionMethod theMethod, PersUser theUser, HttpResponseBean theHttpResponse,
+			InvocationResponseResultsBean theInvocationResponseResultsBean) {
 		Validate.notNull(theInvocationTime, "InvocationTime");
 		Validate.notNull(theMethod, "Method");
-		Validate.notNull(theHttpResponse, "HttpResponse");
 		Validate.notNull(theInvocationResponseResultsBean, "InvocationResponseResults");
 
 		/*
@@ -205,25 +205,27 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, statsPk);
 		}
 
-		/*
-		 * Record URL status for successful URLs
-		 */
-		String successfulUrl = theHttpResponse.getSuccessfulUrl();
-		if (successfulUrl != null) {
-			PersServiceVersionUrl successfulUrlBean = theMethod.getServiceVersion().getUrlWithUrl(successfulUrl);
-			PersServiceVersionUrlStatus status = getUrlStatus(successfulUrlBean);
-			doRecordUrlStatus(true, status);
-		}
-
-		/*
-		 * Recurd URL status for any failed URLs
-		 */
-		Map<String, Failure> failedUrlsMap = theHttpResponse.getFailedUrls();
-		for (Entry<String, Failure> nextFailedUrlEntry : failedUrlsMap.entrySet()) {
-			String nextFailedUrl = nextFailedUrlEntry.getKey();
-			PersServiceVersionUrl failedUrl = theMethod.getServiceVersion().getUrlWithUrl(nextFailedUrl);
-			PersServiceVersionUrlStatus failedStatus = getUrlStatus(failedUrl);
-			doRecordUrlStatus(false, failedStatus);
+		if (theHttpResponse != null) {
+			/*
+			 * Record URL status for successful URLs
+			 */
+			String successfulUrl = theHttpResponse.getSuccessfulUrl();
+			if (successfulUrl != null) {
+				PersServiceVersionUrl successfulUrlBean = theMethod.getServiceVersion().getUrlWithUrl(successfulUrl);
+				PersServiceVersionUrlStatus status = getUrlStatus(successfulUrlBean);
+				doRecordUrlStatus(true, status);
+			}
+	
+			/*
+			 * Recurd URL status for any failed URLs
+			 */
+			Map<String, Failure> failedUrlsMap = theHttpResponse.getFailedUrls();
+			for (Entry<String, Failure> nextFailedUrlEntry : failedUrlsMap.entrySet()) {
+				String nextFailedUrl = nextFailedUrlEntry.getKey();
+				PersServiceVersionUrl failedUrl = theMethod.getServiceVersion().getUrlWithUrl(nextFailedUrl);
+				PersServiceVersionUrlStatus failedStatus = getUrlStatus(failedUrl);
+				doRecordUrlStatus(false, failedStatus);
+			}
 		}
 		
 		/*
@@ -231,7 +233,21 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		 */
 		PersServiceVersionStatus serviceVersionStatus = theMethod.getServiceVersion().getStatus();
 		serviceVersionStatus = getStatusForPk(serviceVersionStatus, serviceVersionStatus.getPid());
-		serviceVersionStatus.setLastSuccessfulInvocation(theInvocationTime);
+		
+		switch (theInvocationResponseResultsBean.getResponseType()) {
+		case SUCCESS:
+			serviceVersionStatus.setLastSuccessfulInvocation(theInvocationTime);
+			break;
+		case SECURITY_FAIL:
+			serviceVersionStatus.setLastServerSecurityFailure(theInvocationTime);
+			break;
+		case FAIL:
+			serviceVersionStatus.setLastFailInvocation(theInvocationTime);
+			break;
+		case FAULT:
+			serviceVersionStatus.setLastFaultInvocation(theInvocationTime);
+			break;
+		}
 
 	}
 
@@ -247,26 +263,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		PersStaticResourceStats stats = (PersStaticResourceStats) getStatsForPk(statsPk);
 
 		stats.addAccess();
-	}
-
-	@Override
-	public void recordServerSecurityFailure(PersServiceVersionMethod theMethod, PersUser theUser, Date theInvocationTime) {
-		Validate.notNull(theInvocationTime, "InvocationTime");
-		Validate.notNull(theMethod, "Method");
-
-		/*
-		 * Record method statictics
-		 */
-		InvocationStatsIntervalEnum interval = InvocationStatsIntervalEnum.MINUTE;
-		BasePersInvocationStatsPk statsPk = new PersInvocationStatsPk(interval, theInvocationTime, theMethod);
-		doRecordServerSecurityFail(statsPk);
-		
-		/*
-		 * Update service version status
-		 */
-		PersServiceVersionStatus serviceVersionStatus = theMethod.getServiceVersion().getStatus();
-		serviceVersionStatus = getStatusForPk(serviceVersionStatus, serviceVersionStatus.getPid());
-		serviceVersionStatus.setLastServerSecurityFailure(theInvocationTime);
 	}
 
 	@Override
@@ -293,7 +289,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		/*
 		 * Flush method stats
 		 */
-		
+
 		List<BasePersMethodStats> stats = new ArrayList<BasePersMethodStats>();
 		HashSet<BasePersMethodStatsPk> keys = new HashSet<BasePersMethodStatsPk>(myInvocationStats.keySet());
 
@@ -343,7 +339,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		/*
 		 * Flush URL statuses
 		 */
-		
+
 		ArrayList<PersServiceVersionUrlStatus> urlStatuses = new ArrayList<PersServiceVersionUrlStatus>(myUrlStatus.values());
 		for (Iterator<PersServiceVersionUrlStatus> iter = urlStatuses.iterator(); iter.hasNext();) {
 			PersServiceVersionUrlStatus next = iter.next();
@@ -370,7 +366,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		/*
 		 * Flush Service Version Status
 		 */
-		
+
 		ArrayList<PersServiceVersionStatus> serviceVersionStatuses = new ArrayList<PersServiceVersionStatus>(myServiceVersionStatus.values());
 		for (Iterator<PersServiceVersionStatus> iter = serviceVersionStatuses.iterator(); iter.hasNext();) {
 			PersServiceVersionStatus next = iter.next();
@@ -385,7 +381,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			ourLog.info("Going to persist {} URL statuses", serviceVersionStatuses.size());
 			myPersistence.saveServiceVersionStatuses(serviceVersionStatuses);
 		}
-		
+
 		/*
 		 * TODO: Maybe use a "last saved" timestamp here instead of a flag to
 		 * prevent race conditions
@@ -396,12 +392,19 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	}
 
-	private void doRecordInvocationMethod(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, BasePersInvocationStatsPk theStatsPk) {
+	private void doRecordInvocationMethod(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean,
+			BasePersInvocationStatsPk theStatsPk) {
 		BasePersInvocationStats stats = (BasePersInvocationStats) getStatsForPk(theStatsPk);
 
-		long responseTime = theHttpResponse.getResponseTime();
-		long responseBytes = theHttpResponse.getBody().length();
-
+		long responseTime;
+		long responseBytes;
+		if (theHttpResponse != null) {
+			responseTime = theHttpResponse.getResponseTime();
+			responseBytes = theHttpResponse.getBody().length();
+		} else {
+			responseTime = 0;
+			responseBytes = 0;
+		}
 		switch (theInvocationResponseResultsBean.getResponseType()) {
 		case FAIL:
 			stats.addFailInvocation(responseTime, theRequestLengthChars, responseBytes);
@@ -412,14 +415,12 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		case SUCCESS:
 			stats.addSuccessInvocation(responseTime, theRequestLengthChars, responseBytes);
 			break;
+		case SECURITY_FAIL:
+			stats.addServerSecurityFailInvocation();
+			break;
 		default:
 			break;
 		}
-	}
-
-	private void doRecordServerSecurityFail(BasePersInvocationStatsPk theStatsPk) {
-		BasePersInvocationStats stats = (BasePersInvocationStats) getStatsForPk(theStatsPk);
-		stats.addServerSecurityFailInvocation();
 	}
 
 	private void doRecordUrlStatus(boolean theWasSuccess, PersServiceVersionUrlStatus theUrlStatusBean) {
@@ -445,7 +446,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 				Date nextReset = theUrlStatusBean.getNextCircuitBreakerReset();
 				if (nextReset != null) {
-					ourLog.info("URL[{}] is DOWN, Next circuit breaker reset attempt is {} - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), myTimeFormat.format(nextReset), theUrlStatusBean.getUrl().getUrl() });
+					ourLog.info("URL[{}] is DOWN, Next circuit breaker reset attempt is {} - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), myTimeFormat.format(nextReset),
+							theUrlStatusBean.getUrl().getUrl() });
 				} else {
 					ourLog.info("URL[{}] is DOWN - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), theUrlStatusBean.getUrl().getUrl() });
 				}
@@ -472,7 +474,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private PersServiceVersionStatus getStatusForPk(PersServiceVersionStatus theServiceVersionStatus, Long thePid) {
 		Validate.notNull(theServiceVersionStatus, "Status");
 		Validate.notNull(thePid, "PID");
-		
+
 		PersServiceVersionStatus status = myServiceVersionStatus.putIfAbsent(thePid, theServiceVersionStatus);
 		if (status == null) {
 			status = theServiceVersionStatus;

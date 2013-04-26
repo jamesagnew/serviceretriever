@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 
+import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
@@ -24,6 +25,7 @@ import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
+import net.svcret.ejb.model.entity.PersKeepRecentTransactions;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
@@ -398,7 +400,33 @@ public class DaoBeanTest extends BaseJpaTest {
 		assertEquals("http://url2", iter.next().getUrl());
 
 	}
+	
+	@Test
+	public void testGetOrCreateServiceVersionKeepRecent() throws ProcessingException {
+		newEntityManager();
 
+		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
+		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
+		PersServiceVersionSoap11 ver = mySvc.getOrCreateServiceVersionWithId(service, "VersionId0");
+
+		mySvc.saveServiceVersion(ver);
+		newEntityManager();
+
+//		mySvc.saveServiceVersion(ver);
+//		newEntityManager();
+
+		ver = (PersServiceVersionSoap11) mySvc.getServiceVersionByPid(ver.getPid());
+		ver.getKeepRecentTransactions().add(new PersKeepRecentTransactions(ResponseTypeEnum.FAIL, 5));
+		ver.getKeepRecentTransactions().add(new PersKeepRecentTransactions(ResponseTypeEnum.FAULT, 10));
+		
+		ver = (PersServiceVersionSoap11) mySvc.saveServiceVersion(ver);
+		newEntityManager();
+
+		ver = (PersServiceVersionSoap11) mySvc.getServiceVersionByPid(ver.getPid());
+		assertEquals(5, ver.getKeepRecentTransactions(ResponseTypeEnum.FAIL).getKeepNum());
+		assertEquals(10, ver.getKeepRecentTransactions(ResponseTypeEnum.FAULT).getKeepNum());
+		
+	}
 	@Test
 	public void testGetOrCreateServiceVersionClientAuth() throws ProcessingException {
 		newEntityManager();
