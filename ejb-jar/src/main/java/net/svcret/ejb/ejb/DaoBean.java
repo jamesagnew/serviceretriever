@@ -40,6 +40,7 @@ import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
+import net.svcret.ejb.model.entity.PersKeepRecentTransactions;
 import net.svcret.ejb.model.entity.PersLocks;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
@@ -715,6 +716,12 @@ public class DaoBean implements IDao {
 		i = 0;
 		for (PersServiceVersionMethod next : theVersion.getMethods()) {
 			Validate.throwProcessingExceptionIfBlank(next.getName(), "Method is missing name");
+			next.setOrder(i++);
+			next.setServiceVersion(theVersion);
+		}
+
+		i = 0;
+		for (PersKeepRecentTransactions next : theVersion.getKeepRecentTransactions()) {
 			next.setOrder(i++);
 			next.setServiceVersion(theVersion);
 		}

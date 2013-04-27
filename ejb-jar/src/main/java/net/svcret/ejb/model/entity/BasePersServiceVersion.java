@@ -34,6 +34,7 @@ import javax.persistence.Version;
 
 import net.svcret.admin.shared.model.ServerSecuredEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
+import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.util.Validate;
 
 import org.hibernate.annotations.ForeignKey;
@@ -69,7 +70,7 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("METHOD_ORDER")
 	private List<PersServiceVersionMethod> myMethods;
-
+	
 	@Transient
 	private transient Map<String, PersServiceVersionMethod> myNameToMethod;
 
@@ -77,6 +78,7 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 	@Column(name = "OPTLOCK")
 	private int myOptLock;
 
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "PID")
@@ -104,6 +106,17 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("URL_ORDER")
 	private List<PersServiceVersionUrl> myUrls;
+
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
+	@OrderBy("KEEP_ORDER")
+	private List<PersKeepRecentTransactions> myKeepRecentTransactions;
+
+	public List<PersKeepRecentTransactions> getKeepRecentTransactions() {
+		if (myKeepRecentTransactions == null) {
+			myKeepRecentTransactions = new ArrayList<PersKeepRecentTransactions>();
+		}
+		return myKeepRecentTransactions;
+	}
 
 	@Column(name = "VERSION_ID", length = 200, nullable = false)
 	private String myVersionId;
@@ -561,6 +574,15 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 		} else {
 			return ServerSecuredEnum.NONE;
 		}
+	}
+
+	public PersKeepRecentTransactions getKeepRecentTransactions(ResponseTypeEnum theType) {
+		for (PersKeepRecentTransactions next : getKeepRecentTransactions()) {
+			if (next.getInvocationOutcome()==theType) {
+				return next;
+			}
+		}
+		return null;
 	}
 
 }

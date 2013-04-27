@@ -19,6 +19,15 @@ public interface IRuntimeStatus {
 
 	UrlPoolBean buildUrlPool(BasePersServiceVersion theServiceVersion);
 
+	/**
+	 * 
+	 * @param theInvocationTime
+	 * @param theRequestLength
+	 * @param theMethod
+	 * @param theUser
+	 * @param theHttpResponse The response from the actual service implementation, if we got that far. Can be null if no request was ever made (e.g. because of security failure before that point)
+	 * @param theInvocationResponseResultsBean
+	 */
 	void recordInvocationMethod(Date theInvocationTime, int theRequestLength, PersServiceVersionMethod theMethod, PersUser theUser, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean);
 
 	/**
@@ -30,12 +39,6 @@ public interface IRuntimeStatus {
 	 * Records a single invocation which failed due to service failure
 	 */
 	void recordUrlFailure(PersServiceVersionUrl theUrl, Failure theFailure);
-
-	/**
-	 * Records a single invocation which failed due to service failure
-	 */
-	void recordServerSecurityFailure(PersServiceVersionMethod theMethod, PersUser theUser, Date theInvocationTime);
-
 
 	/**
 	 * Flush all outstanding transactions to the database - Call this from a background worker thread 
