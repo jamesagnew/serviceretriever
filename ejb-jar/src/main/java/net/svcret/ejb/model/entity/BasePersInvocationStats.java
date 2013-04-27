@@ -139,6 +139,91 @@ public abstract class BasePersInvocationStats extends BasePersMethodStats {
 		return myTotalSuccessInvocationTime;
 	}
 
+	/**
+	 * @return the totalFailInvocationCount
+	 */
+	public synchronized long getFailInvocationCount() {
+		return myTotalFailInvocationCount;
+	}
+
+	/**
+	 * @return the totalFailInvocationTime
+	 */
+	public synchronized long getFailInvocationTime() {
+		return myTotalFailInvocationTime;
+	}
+
+	/**
+	 * @return the totalFailRequestMessageBytes
+	 */
+	public synchronized long getFailRequestMessageBytes() {
+		return myTotalFailRequestMessageBytes;
+	}
+
+	/**
+	 * @return the totalFailResponseMessageBytes
+	 */
+	public synchronized long getFailResponseMessageBytes() {
+		return myTotalFailResponseMessageBytes;
+	}
+
+	/**
+	 * @return the totalFaultInvocationCount
+	 */
+	public synchronized long getFaultInvocationCount() {
+		return myTotalFaultInvocationCount;
+	}
+
+	/**
+	 * @return the totalFaultInvocationTime
+	 */
+	public synchronized long getFaultInvocationTime() {
+		return myTotalFaultInvocationTime;
+	}
+
+	/**
+	 * @return the totalFaultRequestMessageBytes
+	 */
+	public synchronized long getFaultRequestMessageBytes() {
+		return myTotalFaultRequestMessageBytes;
+	}
+
+	/**
+	 * @return the totalFaultResponseMessageBytes
+	 */
+	public synchronized long getFaultResponseMessageBytes() {
+		return myTotalFaultResponseMessageBytes;
+	}
+
+
+	/**
+	 * @return the totalSuccessInvocationTime
+	 */
+	public synchronized long getSuccessInvocationTime() {
+		return myTotalSuccessInvocationTime;
+	}
+
+	/**
+	 * @return the totalSuccessRequestMessageBytes
+	 */
+	public synchronized long getSuccessRequestMessageBytes() {
+		return myTotalSuccessRequestMessageBytes;
+	}
+
+	/**
+	 * @return the totalSuccessResponseMessageBytes
+	 */
+	public synchronized long getSuccessResponseMessageBytes() {
+		return myTotalSuccessResponseMessageBytes;
+	}
+
+	/**
+	 * @return the totalServerSecurityFailures
+	 */
+	public synchronized long getServerSecurityFailures() {
+		return myTotalServerSecurityFailures;
+	}
+
 	public synchronized long getSuccessInvocationCount() {
 		return myTotalSuccessInvocationCount;
 	}
@@ -162,6 +247,8 @@ public abstract class BasePersInvocationStats extends BasePersMethodStats {
 			myTotalFaultRequestMessageBytes += stats.myTotalFaultRequestMessageBytes;
 			myTotalFaultResponseMessageBytes += stats.myTotalFaultResponseMessageBytes;
 
+			myTotalServerSecurityFailures += stats.myTotalServerSecurityFailures;
+			
 			if (myMinSuccessRequestMessageBytes == -1) {
 				myMinSuccessRequestMessageBytes = stats.myMinSuccessRequestMessageBytes;
 				myMaxSuccessRequestMessageBytes = stats.myMaxSuccessRequestMessageBytes;

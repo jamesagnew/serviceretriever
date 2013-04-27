@@ -221,6 +221,41 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		return retVal;
 	}
 
+	/**
+	 * FOR UNIT TESTS ONLY
+	 */
+	void setRuntimeStatus(IRuntimeStatus theRuntimeStatus) {
+		myRuntimeStatus = theRuntimeStatus;
+	}
+
+	/**
+	 * FOR UNIT TESTS ONLY
+	 */
+	void setSoap11ServiceInvoker(IServiceInvoker<PersServiceVersionSoap11> theSoap11ServiceInvoker) {
+		mySoap11ServiceInvoker = theSoap11ServiceInvoker;
+	}
+
+	/**
+	 * FOR UNIT TESTS ONLY
+	 */
+	void setSvcRegistry(IServiceRegistry theSvcRegistry) {
+		mySvcRegistry = theSvcRegistry;
+	}
+
+	/**
+	 * FOR UNIT TESTS ONLY
+	 */
+	void setHttpClient(IHttpClient theHttpClient) {
+		myHttpClient = theHttpClient;
+	}
+
+	/**
+	 * FOR UNIT TESTS ONLY
+	 */
+	void setSecuritySvc(ISecurityService theSecuritySvc) {
+		mySecuritySvc = theSecuritySvc;
+	}
+
 	private void markUrlsFailed(PersServiceVersionMethod theMethod, Map<String, Failure> theFailures) {
 		for (Entry<String, Failure> nextEntry : theFailures.entrySet()) {
 			String nextUrlString = nextEntry.getKey();

@@ -54,7 +54,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private ConcurrentHashMap<Long, PersServiceVersionStatus> myServiceVersionStatus = new ConcurrentHashMap<Long, PersServiceVersionStatus>();
 
 	@EJB
-	private IDao myPersistence;
+	private IDao myDao;
 
 	private DateFormat myTimeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
 
@@ -170,7 +170,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	@Override
 	public BasePersInvocationStats getOrCreateInvocationStatsSynchronously(PersInvocationStatsPk thePk) {
 		synchronized (myInvocationStats) {
-			BasePersInvocationStats retVal = myPersistence.getInvocationStats(thePk);
+			BasePersInvocationStats retVal = myDao.getInvocationStats(thePk);
 			if (retVal != null) {
 				return retVal;
 			} else {
@@ -324,7 +324,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			ourLog.info("Going to flush {} stats entries with time range {} - {}", new Object[] { stats.size(), myTimeFormat.format(earliest), myTimeFormat.format(latest) });
 
 			try {
-				myPersistence.saveInvocationStats(stats);
+				myDao.saveInvocationStats(stats);
 				ourLog.info("Done flushing stats");
 			} catch (PersistenceException e) {
 				ourLog.error("Failed to flush stats to disk, going to re-queue them", e);
@@ -356,7 +356,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 		if (!urlStatuses.isEmpty()) {
 			ourLog.info("Going to persist {} URL statuses", urlStatuses.size());
-			myPersistence.saveServiceVersionUrlStatus(urlStatuses);
+			myDao.saveServiceVersionUrlStatus(urlStatuses);
 		}
 
 		/*
@@ -383,7 +383,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 		if (!serviceVersionStatuses.isEmpty()) {
 			ourLog.info("Going to persist {} URL statuses", serviceVersionStatuses.size());
-			myPersistence.saveServiceVersionStatuses(serviceVersionStatuses);
+			myDao.saveServiceVersionStatuses(serviceVersionStatuses);
 		}
 		
 		/*
@@ -497,7 +497,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	 * FOR UNIT TESTS ONLY
 	 */
 	void setDao(IDao thePersistence) {
-		myPersistence = thePersistence;
+		myDao = thePersistence;
 	}
 
 }

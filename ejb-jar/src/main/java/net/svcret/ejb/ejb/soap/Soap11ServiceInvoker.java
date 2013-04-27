@@ -307,6 +307,8 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 						if (Constants.SOAPENV11_FAULT_QNAME.equals(next.asStartElement().getName())) {
 							pos = ResponsePositionEnum.IN_FAULT;
 							retVal.setResponseType(ResponseTypeEnum.FAULT);
+							retVal.setResponseBody(theResponse.getBody());
+							retVal.setResponseContentType(theResponse.getContentType());
 						} else {
 							retVal.setResponseType(ResponseTypeEnum.SUCCESS);
 							retVal.setResponseBody(theResponse.getBody());
@@ -526,7 +528,7 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 	/**
 	 * UNIT TESTS ONLY
 	 */
-	void setHttpClient(IHttpClient theHttpClient) {
+	public void setHttpClient(IHttpClient theHttpClient) {
 		assert myHttpClient == null;
 		myHttpClient = theHttpClient;
 	}
@@ -535,7 +537,7 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 	/**
 	 * UNIT TESTS ONLY
 	 */
-	void setConfigService(IConfigService theMock) {
+	public void setConfigService(IConfigService theMock) {
 		myConfigService=theMock;
 	}
 

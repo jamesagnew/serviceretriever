@@ -13,7 +13,10 @@ public class StringConcatService {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(StringConcatService.class);
 
 	@WebMethod(action="addStrings")
-	public String addStrings(String theFirstString, String theSecondString) {
+	public String addStrings(String theFirstString, String theSecondString) throws Exception {
+		if (theFirstString.equals("FAULT")) {
+			throw new Exception("Bad input");
+		}
 		ourLog.info("Demo service invocation: " + theFirstString + " + " + theSecondString);
 		return theFirstString + theSecondString;
 	}

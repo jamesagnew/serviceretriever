@@ -643,7 +643,7 @@ public class AdminServiceBean implements IAdminService {
 
 	}
 
-	private int addToInt(int theAddTo, long theNumberToAdd) {
+	public static int addToInt(int theAddTo, long theNumberToAdd) {
 		long newValue = theAddTo + theNumberToAdd;
 		if (newValue > Integer.MAX_VALUE) {
 			return Integer.MAX_VALUE;
@@ -694,14 +694,43 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	private void extractStatus(int[] the60MinInvCount, long[] the60minTime, PersServiceVersionMethod nextMethod) {
+		IRuntimeStatus statusSvc = myStatusSvc;
+		extractSuccessfulInvocationInvocationTimes(the60MinInvCount, the60minTime, nextMethod, statusSvc);
+	}
+
+	/**
+	 * @return The start timestamp
+	 */
+	public static long extractSuccessfulInvocationInvocationTimes(final int[] the60MinInvCount, final long[] the60minTime, PersServiceVersionMethod nextMethod, IRuntimeStatus statusSvc) {
+		return doWithStats(statusSvc, nextMethod, new IWithStats() {
+			@Override
+			public void withStats(int theIndex, BasePersInvocationStats theStats) {
+				the60MinInvCount[theIndex] = addToInt(the60MinInvCount[theIndex], theStats.getSuccessInvocationCount());
+				the60minTime[theIndex] = the60minTime[theIndex] + theStats.getSuccessInvocationTotalTime();
+			}
+		}).getTime();
+	}
+
+	public static Date doWithStats(IRuntimeStatus statusSvc, PersServiceVersionMethod theMethod, IWithStats theOperator) {
+		Date date = getDate60MinsAgo();
+		for (int min = 0; min <= 59; min++, date = new Date(date.getTime() + DateUtils.MILLIS_PER_MINUTE)) {
+			PersInvocationStatsPk pk = new PersInvocationStatsPk(InvocationStatsIntervalEnum.MINUTE, date, theMethod);
+			BasePersInvocationStats stats = statusSvc.getOrCreateInvocationStatsSynchronously(pk);
+			theOperator.withStats(min, stats);
+		}
+		return date;
+	}
+	
+	public interface IWithStats{
+		
+		void withStats(int theIndex, BasePersInvocationStats theStats);
+		
+	}
+	
+	public static Date getDate60MinsAgo() {
 		Date date60MinsAgo = new Date(System.currentTimeMillis() - (60 * DateUtils.MILLIS_PER_MINUTE));
 		Date date = DateUtils.truncate(date60MinsAgo, Calendar.MINUTE);
-		for (int min = 0; min <= 59; min++, date = new Date(date.getTime() + DateUtils.MILLIS_PER_MINUTE)) {
-			PersInvocationStatsPk pk = new PersInvocationStatsPk(InvocationStatsIntervalEnum.MINUTE, date, nextMethod);
-			BasePersInvocationStats stats = myStatusSvc.getOrCreateInvocationStatsSynchronously(pk);
-			the60MinInvCount[min] = addToInt(the60MinInvCount[min], stats.getSuccessInvocationCount());
-			the60minTime[min] = the60minTime[min] + stats.getSuccessInvocationTotalTime();
-		}
+		return date;
 	}
 
 	private BasePersAuthenticationHost fromUi(BaseGAuthHost theAuthHost) {

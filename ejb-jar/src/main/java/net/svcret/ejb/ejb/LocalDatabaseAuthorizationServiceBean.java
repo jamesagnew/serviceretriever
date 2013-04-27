@@ -37,5 +37,12 @@ public class LocalDatabaseAuthorizationServiceBean extends BaseAuthorizationServ
 	}
 
 	@EJB
-	private IDao myPersSvc;
+	private IDao myDao;
+
+	/**
+	 * FOR UNIT TESTS ONLY
+	 */
+	void setDao(IDao theDao) {
+		myDao = theDao;
+	}
 }
