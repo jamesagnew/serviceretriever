@@ -40,4 +40,9 @@ public class PButton extends Button {
 		addClickHandler(theHandler);
 	}
 
+	public PButton(ImageResource theIcon, String theText, ClickHandler theClickHandler) {
+		this(theIcon, theText);
+		addClickHandler(theClickHandler);
+	}
+
 }

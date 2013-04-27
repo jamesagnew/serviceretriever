@@ -25,6 +25,7 @@ import net.svcret.admin.client.ui.config.svcver.EditServiceVersionPanel;
 import net.svcret.admin.client.ui.dash.ServiceDashboardPanel;
 import net.svcret.admin.client.ui.layout.BodyPanel;
 import net.svcret.admin.client.ui.layout.BreadcrumbPanel;
+import net.svcret.admin.client.ui.stats.ServiceVersionStatsPanel;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -269,7 +270,6 @@ public class NavProcessor {
 		return token;
 	}
 
-
 	public static void goHome() {
 		navigateToDefault();
 	}
@@ -317,7 +317,7 @@ public class NavProcessor {
 			}
 			break;
 		case CFG:
-			panel=new ConfigPanel();
+			panel = new ConfigPanel();
 			break;
 		case DDO:
 			panel = new DeleteDomainPanel(Long.parseLong(args));
@@ -357,7 +357,15 @@ public class NavProcessor {
 			panel = new HttpClientConfigsPanel();
 			break;
 		case SEC:
-			panel= new ServiceCatalogPanel();
+			panel = new ServiceCatalogPanel();
+			break;
+		case SVS:
+			argsSplit = args.split("_");
+			if (argsSplit.length < 3) {
+				navigateToDefault();
+			} else {
+				panel = new ServiceVersionStatsPanel(Long.parseLong(argsSplit[0]), Long.parseLong(argsSplit[1]), Long.parseLong(argsSplit[2]));
+			}
 			break;
 		}
 
@@ -411,6 +419,19 @@ public class NavProcessor {
 
 		return retVal.toString();
 
+	}
+
+	public static String getTokenServiceVersionStats(boolean theAddToHistory, long theDomainPid, long theServicePid, long theServiceVersionPid) {
+		String token = "";
+		if (theAddToHistory) {
+			token = getCurrentToken();
+			if (!token.isEmpty()) {
+				token = token + SEPARATOR;
+			}
+		}
+		token = token + PagesEnum.SVS + "_" + theDomainPid + "_" + theServicePid + "_" + theServiceVersionPid;
+		token = removeDuplicates(token);
+		return token;
 	}
 
 }

@@ -1,6 +1,7 @@
 package net.svcret.admin.shared.model;
 
 import java.util.Date;
+import java.util.List;
 
 public abstract class BaseGDashboardObject<T> extends BaseGObject<T> {
 
@@ -81,6 +82,13 @@ public abstract class BaseGDashboardObject<T> extends BaseGObject<T> {
 	}
 
 	/**
+	 * Do we need this? Maybe make it configurable
+	 */
+	public boolean hideDashboardRowWhenExpanded() {
+		return false;
+	}
+
+	/**
 	 * @return the expandedOnDashboard
 	 */
 	public boolean isExpandedOnDashboard() {
@@ -103,21 +111,14 @@ public abstract class BaseGDashboardObject<T> extends BaseGObject<T> {
 	}
 
 	/**
-	 * Do we need this? Maybe make it configurable
-	 */
-	public boolean hideDashboardRowWhenExpanded() {
-		return false;
-	}
-	
-	
-	/**
 	 * @param theId
 	 *            the id to set
 	 */
 	public void setId(String theId) {
 		myId = theId;
 	}
-
+	
+	
 	/**
 	 * @param theLastServerSecurityFailure
 	 *            the lastServerSecurityFailure to set
@@ -210,5 +211,6 @@ public abstract class BaseGDashboardObject<T> extends BaseGObject<T> {
 			setLastSuccessfulInvocation(theObject.getLastSuccessfulInvocation());
 		}
 	}
+
 
 }

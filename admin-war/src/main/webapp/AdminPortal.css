@@ -71,13 +71,17 @@
 	
 }
 
+TABLE.unstyledTable, TABLE.unstyledTable TBODY, TABLE.unstyledTable TBODY TR {
+	background: transparent !important;
+}
+
 TABLE.dashboardTable {
 	border-collapse: separate;
 	border-spacing: 2px;
 }
 
 TABLE.dashboardTable TBODY TR:first-child {
-	background: #D0EAFF !important;
+	background: #D0EAFF;
 }
 
 .dashboardTableDomainCell {
@@ -318,6 +322,11 @@ TABLE.propertyTable TBODY TR:first-child {
 	background: transparent !important;
 }
 
+.twoColumnPropertyGridDesc {
+	font-size: 0.8em;
+	color: #808080;
+}
+
 .spinnerElement {
 	display: inline-block;
 	margin-right: 5px;
@@ -329,6 +338,10 @@ TABLE.propertyTable TBODY TR:first-child {
 	font-size: 14px;
 	font-family: Arial;
 	color: #FF0000;
+}
+
+.statusRrdImage {
+	padding-left: 3px;	
 }
 
 .textBoxWithError {

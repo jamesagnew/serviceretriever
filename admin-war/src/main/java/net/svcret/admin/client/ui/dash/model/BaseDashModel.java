@@ -16,6 +16,8 @@ import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
@@ -102,6 +104,19 @@ public abstract class BaseDashModel implements IDashModel {
 		retVal.add(lbl);
 
 		return retVal;
+	}
+
+	protected Widget renderName(String thePrefix, String theName, String thePostFix) {
+		HorizontalPanel hp = new HorizontalPanel();
+		hp.setStyleName(CssConstants.UNSTYLED_TABLE);
+		if (thePrefix != null) {
+			hp.add(new HTML(thePrefix));
+		}
+		hp.add(new HTML(theName));
+		if (thePostFix != null) {
+			hp.add(new HTML(thePostFix));
+		}
+		return hp;
 	}
 
 	@Override

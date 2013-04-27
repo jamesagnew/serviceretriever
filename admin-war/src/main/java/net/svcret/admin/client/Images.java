@@ -19,5 +19,8 @@ public interface Images extends ClientBundle {
 
 	@Source("net/svcret/images/dash_secure_24.png")
 	ImageResource dashSecure();
+
+	@Source("net/svcret/images/icon_status_24.png")
+	ImageResource iconStatus();
 	
 }

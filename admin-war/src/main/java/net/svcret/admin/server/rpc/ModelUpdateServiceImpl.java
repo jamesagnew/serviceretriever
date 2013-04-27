@@ -24,6 +24,7 @@ import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
+import net.svcret.admin.shared.model.GUrlStatus;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
@@ -116,7 +117,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		long domain;
 		if (isNotBlank(theCreateDomainId)) {
 			try {
-				GDomain newDomain=new GDomain();
+				GDomain newDomain = new GDomain();
 				newDomain.setId(theCreateDomainId);
 				newDomain.setName(theCreateDomainId);
 				domain = myAdminSvc.addDomain(newDomain).getPid();
@@ -224,7 +225,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		if (isMockMode()) {
 			return myMock.loadConfig();
 		}
-		
+
 		try {
 			return myAdminSvc.loadConfig();
 		} catch (ProcessingException e) {
@@ -271,12 +272,12 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 
 		GSoap11ServiceVersionAndResources serviceAndResources;
 		if (isMockMode()) {
-			
+
 			retVal = myMock.loadServiceVersionIntoSession(theServiceVersionPid);
-			
+
 			serviceAndResources = new GSoap11ServiceVersionAndResources();
 			serviceAndResources.setServiceVersion((GSoap11ServiceVersion) retVal);
-			
+
 		} else {
 
 			try {
@@ -285,15 +286,26 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 				ourLog.error("Failed to load service version", e);
 				throw new ServiceFailureException(e.getMessage());
 			}
-			
+
 		}
 
 		retVal = serviceAndResources.getServiceVersion();
 		retVal.setUncommittedSessionId(ourNextId.incrementAndGet());
 		saveServiceVersionToSession(retVal);
 		saveServiceVersionResourcesToSession(serviceAndResources);
-		
+
 		return retVal;
+	}
+
+	@Override
+	public List<GUrlStatus> loadServiceVersionUrlStatuses(long theServiceVersionPid) {
+		if (isMockMode()) {
+			return myMock.loadServiceVersionUrlStatuses(theServiceVersionPid);
+		}
+
+		ourLog.info("Loading URL statuses for service version {}", theServiceVersionPid);
+
+		return myAdminSvc.loadServiceVersionUrlStatuses(theServiceVersionPid);
 	}
 
 	@Override
@@ -398,9 +410,9 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		if (isMockMode()) {
 			return myMock.removeService(theDomainPid, theServicePid);
 		}
-		
-		ourLog.info("Removing service for DOMAIN {} SERVICE {}", theDomainPid,theServicePid);
-		
+
+		ourLog.info("Removing service for DOMAIN {} SERVICE {}", theDomainPid, theServicePid);
+
 		try {
 			return myAdminSvc.deleteService(theServicePid);
 		} catch (ProcessingException e) {
@@ -437,13 +449,20 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
+	public void saveConfig(GConfig theConfig) {
+		ourLog.info("Saving config");
+
+		myAdminSvc.saveConfig(theConfig);
+	}
+
+	@Override
 	public GDomain saveDomain(GDomain theDomain) throws ServiceFailureException {
 		if (isMockMode()) {
 			return myMock.saveDomain(theDomain);
 		}
-		
+
 		ourLog.info("Saving domain with PID {}", theDomain.getPid());
-		
+
 		try {
 			return myAdminSvc.saveDomain(theDomain);
 		} catch (ProcessingException e) {
@@ -550,13 +569,6 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	 */
 	void setAdminSvc(IAdminService theAdminSvc) {
 		myAdminSvc = theAdminSvc;
-	}
-
-	@Override
-	public void saveConfig(GConfig theConfig) {
-		ourLog.info("Saving config");
-		
-		myAdminSvc.saveConfig(theConfig);
 	}
 
 }

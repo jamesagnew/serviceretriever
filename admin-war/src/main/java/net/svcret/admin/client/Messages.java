@@ -4,7 +4,6 @@ import net.svcret.admin.client.ui.components.CssConstants;
 
 import com.google.gwt.i18n.client.impl.plurals.DefaultRule_en;
 import com.google.gwt.safehtml.shared.SafeHtml;
-import com.google.gwt.user.client.ui.Widget;
 
 public interface Messages extends com.google.gwt.i18n.client.Messages {
 
@@ -61,8 +60,8 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Authentication Hosts")
 	String authenticationHostsPanel_ListTitle();
 
-	@DefaultMessage("Enabled - Cache for Millis:")
-	String baseAuthenticationHostEditPanel_CacheEnabledCacheForMillis();
+	@DefaultMessage("Cache")
+	String baseAuthenticationHostEditPanel_CacheResponses();
 
 	@DefaultMessage("If <b>cache responses</b> is enabled, the ServiceRetriever will keep a weak (SHA-512) hash of " + "any successful authentication credentials in memory for the given amount of time. This "
 			+ "means that performance will be improved as there will be fewer calls to the backing " + "credential store. Naturally, this does increase the chance that someone could " + "deduce your passwords if they have physical access to the server.")
@@ -433,5 +432,32 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Configuration")
 	String leftPanel_Configuration();
+
+	@DefaultMessage("Enabled - Cache for (ms):")
+	SafeHtml baseAuthenticationHostEditPanel_CacheResponsesEnabled();
+
+	@DefaultMessage("Add New...")
+	String actions_AddNewDotDotDot();
+
+	@DefaultMessage("Remove Selected...")
+	String actions_RemoveSelectedDotDotDot();
+
+	@DefaultMessage("Service Version Status: {0}")
+	String serviceVersionStats_Title(String theServiceVersion);
+
+	@DefaultMessage("Implementation URLs")
+	String serviceVersionStats_UrlsTitle();
+
+	@DefaultMessage("View Runtime Status")
+	String actions_ViewRuntimeStatus();
+
+	@DefaultMessage("Service Version Status")
+	String serviceVersionStats_Breadcrumb();
+
+	@DefaultMessage("Service Latency")
+	String serviceVersionStats_LatencyTitle();
+
+	@DefaultMessage("Service Usage")
+	String serviceVersionStats_UsageTitle();
 	
 }

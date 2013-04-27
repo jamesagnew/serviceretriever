@@ -69,7 +69,7 @@ abstract class BaseAuthenticationHostEditPanel<T extends BaseGAuthHost> extends 
 		HorizontalPanel savePanel = new HorizontalPanel();
 		myContentPanel.add(savePanel);
 
-		PButton saveButton = new PButton(AdminPortal.MSGS.actions_Save(), new ClickHandler() {
+		PButton saveButton = new PButton(AdminPortal.IMAGES.iconSave(),AdminPortal.MSGS.actions_Save(), new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
 				save();
@@ -95,7 +95,7 @@ abstract class BaseAuthenticationHostEditPanel<T extends BaseGAuthHost> extends 
 
 		TwoColumnGrid cacheGrid = new TwoColumnGrid();
 		myContentPanel.add(cacheGrid);
-		myCacheEnabledCheckBox = new CheckBox(AdminPortal.MSGS.baseAuthenticationHostEditPanel_CacheEnabledCacheForMillis());
+		myCacheEnabledCheckBox = new CheckBox(AdminPortal.MSGS.baseAuthenticationHostEditPanel_CacheResponsesEnabled());
 		myCacheEnabledCheckBox.setValue(theAuthHost.getCacheSuccessesForMillis() != null);
 		myCacheEnabledCheckBox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
 			@Override
@@ -106,7 +106,12 @@ abstract class BaseAuthenticationHostEditPanel<T extends BaseGAuthHost> extends 
 
 		myCacheMillisTextBox = new IntegerBox();
 		updateCacheBox();
-		cacheGrid.addRow(myCacheEnabledCheckBox, myCacheMillisTextBox);
+		
+		HorizontalPanel cacheHp =new HorizontalPanel();
+		cacheHp.add(myCacheEnabledCheckBox);
+		cacheHp.add(myCacheMillisTextBox);
+		
+		cacheGrid.addRow(AdminPortal.MSGS.baseAuthenticationHostEditPanel_CacheResponses(), cacheHp);
 		cacheGrid.addDescription(AdminPortal.MSGS.baseAuthenticationHostEditPanel_CacheResponsesDesc());
 	}
 

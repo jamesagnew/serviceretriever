@@ -82,7 +82,7 @@ public class AuthenticationHostsPanel extends FlowPanel {
 
 		HorizontalPanel addPanel = new HorizontalPanel();
 		toolbar.add(addPanel);
-		myAddButton = new PButton(AdminPortal.MSGS.actions_Add());
+		myAddButton = new PButton(AdminPortal.IMAGES.iconAdd(), AdminPortal.MSGS.actions_AddNewDotDotDot());
 		myAddButton.setEnabled(false);
 		myAddButton.addClickHandler(new ClickHandler() {
 			@Override
@@ -91,6 +91,7 @@ public class AuthenticationHostsPanel extends FlowPanel {
 			}
 		});
 		addPanel.add(myAddButton);
+		addPanel.add(new Label("Type:"));
 		myAddListBox = new ListBox();
 		for (AuthorizationHostTypeEnum next : AuthorizationHostTypeEnum.values()) {
 			myAddListBox.addItem(next.description(), next.name());
@@ -98,7 +99,7 @@ public class AuthenticationHostsPanel extends FlowPanel {
 		myAddListBox.setSelectedIndex(0);
 		addPanel.add(myAddListBox);
 
-		myRemoveButton = new PButton(AdminPortal.MSGS.actions_Remove());
+		myRemoveButton = new PButton(AdminPortal.IMAGES.iconRemove(),AdminPortal.MSGS.actions_RemoveSelectedDotDotDot());
 		myRemoveButton.setEnabled(false);
 		myRemoveButton.addClickHandler(new ClickHandler() {
 			@Override
@@ -107,7 +108,6 @@ public class AuthenticationHostsPanel extends FlowPanel {
 			}
 		});
 		toolbar.add(myRemoveButton);
-		hPanel.add(toolbar);
 
 		myHostsListBox = new ListBox(false);
 		myHostsListBox.setVisibleItemCount(5);
@@ -122,7 +122,9 @@ public class AuthenticationHostsPanel extends FlowPanel {
 			}
 
 		});
+
 		hPanel.add(myHostsListBox);
+		hPanel.add(toolbar);
 
 		HorizontalPanel buttonsBar = new HorizontalPanel();
 		contentPanel.add(buttonsBar);

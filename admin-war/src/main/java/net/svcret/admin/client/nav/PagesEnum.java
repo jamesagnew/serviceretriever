@@ -52,7 +52,10 @@ public enum PagesEnum {
 	SEC(MSGS.serviceCatalog_Breadcrumb()), 
 	
 	/** Config */
-	CFG(MSGS.config_Breadcrumb());
+	CFG(MSGS.config_Breadcrumb()), 
+	
+	/** Service Version Status */
+	SVS(MSGS.serviceVersionStats_Breadcrumb());
 	;
 	
 	private String myBreadcrumb;

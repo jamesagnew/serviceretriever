@@ -20,11 +20,13 @@ import javax.ejb.TransactionAttributeType;
 import javax.persistence.PersistenceException;
 
 import net.svcret.admin.shared.model.StatusEnum;
+import net.svcret.ejb.Messages;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.HttpResponseBean.Failure;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
+import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStatsPk;
@@ -181,8 +183,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, PersServiceVersionMethod theMethod, PersUser theUser, HttpResponseBean theHttpResponse,
-			InvocationResponseResultsBean theInvocationResponseResultsBean) {
+	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, PersServiceVersionMethod theMethod, PersUser theUser, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean) {
 		Validate.notNull(theInvocationTime, "InvocationTime");
 		Validate.notNull(theMethod, "Method");
 		Validate.notNull(theInvocationResponseResultsBean, "InvocationResponseResults");
@@ -213,27 +214,38 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			if (successfulUrl != null) {
 				PersServiceVersionUrl successfulUrlBean = theMethod.getServiceVersion().getUrlWithUrl(successfulUrl);
 				PersServiceVersionUrlStatus status = getUrlStatus(successfulUrlBean);
-				doRecordUrlStatus(true, status);
+				boolean wasFault = theInvocationResponseResultsBean.getResponseType() == ResponseTypeEnum.FAULT;
+				ourLog.debug("Recording successful invocation (fault {}) for URL {}", wasFault, successfulUrl);
+				
+				String message;
+				if (wasFault) {
+					message = Messages.getString("RuntimeStatusBean.faultUrl", theHttpResponse.getResponseTime(), theInvocationResponseResultsBean.getResponseFaultCode(), theInvocationResponseResultsBean.getResponseFaultDescription());
+				}else {
+					message = Messages.getString("RuntimeStatusBean.successfulUrl", theHttpResponse.getResponseTime());
+				}
+				doRecordUrlStatus(true, wasFault, status, message);
+				
 			}
-	
+
 			/*
 			 * Recurd URL status for any failed URLs
 			 */
 			Map<String, Failure> failedUrlsMap = theHttpResponse.getFailedUrls();
 			for (Entry<String, Failure> nextFailedUrlEntry : failedUrlsMap.entrySet()) {
 				String nextFailedUrl = nextFailedUrlEntry.getKey();
+				Failure failure = nextFailedUrlEntry.getValue();
 				PersServiceVersionUrl failedUrl = theMethod.getServiceVersion().getUrlWithUrl(nextFailedUrl);
 				PersServiceVersionUrlStatus failedStatus = getUrlStatus(failedUrl);
-				doRecordUrlStatus(false, failedStatus);
+				doRecordUrlStatus(false, false, failedStatus, failure.getExplanation());
 			}
 		}
-		
+
 		/*
 		 * Record Service Version status
 		 */
 		PersServiceVersionStatus serviceVersionStatus = theMethod.getServiceVersion().getStatus();
 		serviceVersionStatus = getStatusForPk(serviceVersionStatus, serviceVersionStatus.getPid());
-		
+
 		switch (theInvocationResponseResultsBean.getResponseType()) {
 		case SUCCESS:
 			serviceVersionStatus.setLastSuccessfulInvocation(theInvocationTime);
@@ -392,8 +404,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	}
 
-	private void doRecordInvocationMethod(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean,
-			BasePersInvocationStatsPk theStatsPk) {
+	private void doRecordInvocationMethod(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, BasePersInvocationStatsPk theStatsPk) {
 		BasePersInvocationStats stats = (BasePersInvocationStats) getStatsForPk(theStatsPk);
 
 		long responseTime;
@@ -423,7 +434,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 	}
 
-	private void doRecordUrlStatus(boolean theWasSuccess, PersServiceVersionUrlStatus theUrlStatusBean) {
+	private void doRecordUrlStatus(boolean theWasSuccess, boolean theWasFault, PersServiceVersionUrlStatus theUrlStatusBean, String theMessage) {
 		if (theUrlStatusBean.getUrl() == null) {
 			throw new IllegalArgumentException("Status has no URL associated with it");
 		}
@@ -432,6 +443,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			Date now = new Date();
 
 			if (theWasSuccess) {
+
 				if (theUrlStatusBean.getStatus() != StatusEnum.ACTIVE) {
 					Long urlPid = theUrlStatusBean.getUrl().getPid();
 					StatusEnum urlStatus = theUrlStatusBean.getStatus();
@@ -439,15 +451,24 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 					ourLog.info("URL[{}] is now ACTIVE, was {} - {}", new Object[] { urlPid, urlStatus, urlUrl });
 				}
 				theUrlStatusBean.setStatus(StatusEnum.ACTIVE);
-				theUrlStatusBean.setLastSuccess(now);
+
+				if (theWasFault) {
+					theUrlStatusBean.setLastFault(now);
+					theUrlStatusBean.setLastFaultMessage(theMessage);
+				} else {
+					theUrlStatusBean.setLastSuccess(now);
+					theUrlStatusBean.setLastSuccessMessage(theMessage);
+				}
+
 			} else {
+
 				theUrlStatusBean.setStatus(StatusEnum.DOWN);
 				theUrlStatusBean.setLastFail(now);
+				theUrlStatusBean.setLastFailMessage(theMessage);
 
 				Date nextReset = theUrlStatusBean.getNextCircuitBreakerReset();
 				if (nextReset != null) {
-					ourLog.info("URL[{}] is DOWN, Next circuit breaker reset attempt is {} - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), myTimeFormat.format(nextReset),
-							theUrlStatusBean.getUrl().getUrl() });
+					ourLog.info("URL[{}] is DOWN, Next circuit breaker reset attempt is {} - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), myTimeFormat.format(nextReset), theUrlStatusBean.getUrl().getUrl() });
 				} else {
 					ourLog.info("URL[{}] is DOWN - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), theUrlStatusBean.getUrl().getUrl() });
 				}

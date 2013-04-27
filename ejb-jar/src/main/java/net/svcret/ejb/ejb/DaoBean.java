@@ -724,6 +724,7 @@ public class DaoBean implements IDao {
 		for (PersKeepRecentTransactions next : theVersion.getKeepRecentTransactions()) {
 			next.setOrder(i++);
 			next.setServiceVersion(theVersion);
+//			myEntityManager.merge(theVersion);
 		}
 
 		ourLog.info("Merging servicde version {}", theVersion.getVersionId());

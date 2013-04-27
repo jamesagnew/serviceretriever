@@ -11,12 +11,9 @@ import net.svcret.admin.shared.model.StatusEnum;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.safehtml.shared.SafeHtml;
-import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -35,14 +32,13 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 
 	@Override
 	public Widget renderName() {
-		SafeHtmlBuilder b = new SafeHtmlBuilder();
-		b.appendHtmlConstant(AdminPortal.MSGS.dashboard_ServicePrefix());
-		b.appendEscaped(myService.getName());
+
+		String postFix=null;
 		if (myService.getVersionList().size() == 0) {
-			b.appendHtmlConstant(AdminPortal.MSGS.dashboard_ServiceNoServiceVersionsSuffix());
+			postFix=AdminPortal.MSGS.dashboard_ServiceNoServiceVersionsSuffix();
 		}
-		SafeHtml safeHtml = b.toSafeHtml();
-		return new HTML(safeHtml);
+
+		return renderName(AdminPortal.MSGS.dashboard_ServicePrefix(), myService.getName(), postFix);
 	}
 
 	@Override

@@ -37,6 +37,7 @@ import net.svcret.admin.shared.model.GServiceVersionResourcePointer;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
+import net.svcret.admin.shared.model.GUrlStatus;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.GUserDomainPermission;
 import net.svcret.admin.shared.model.GUserList;
@@ -720,13 +721,13 @@ public class AdminServiceBean implements IAdminService {
 		}
 		return date;
 	}
-	
-	public interface IWithStats{
-		
+
+	public interface IWithStats {
+
 		void withStats(int theIndex, BasePersInvocationStats theStats);
-		
+
 	}
-	
+
 	public static Date getDate60MinsAgo() {
 		Date date60MinsAgo = new Date(System.currentTimeMillis() - (60 * DateUtils.MILLIS_PER_MINUTE));
 		Date date = DateUtils.truncate(date60MinsAgo, Calendar.MINUTE);
@@ -1542,6 +1543,39 @@ public class AdminServiceBean implements IAdminService {
 	 */
 	void setServiceRegistry(ServiceRegistryBean theSvcReg) {
 		myServiceRegistry = theSvcReg;
+	}
+
+	@Override
+	public List<GUrlStatus> loadServiceVersionUrlStatuses(long theServiceVersionPid) {
+		ourLog.info("Loading Service Version URL statuses for ServiceVersion {}", theServiceVersionPid);
+
+		BasePersServiceVersion svcVer = myPersSvc.getServiceVersionByPid(theServiceVersionPid);
+		if (svcVer == null) {
+			throw new IllegalArgumentException("Unknown Service Version " + theServiceVersionPid);
+		}
+		
+		List<GUrlStatus> retVal=new ArrayList<GUrlStatus>();
+		
+		for (PersServiceVersionUrl nextUrl : svcVer.getUrls()) {
+			PersServiceVersionUrlStatus nextUrlStatus = nextUrl.getStatus();
+			retVal.add(toUi(nextUrlStatus, nextUrl));
+		}
+
+		return retVal;
+	}
+
+	private GUrlStatus toUi(PersServiceVersionUrlStatus theUrlStatus, PersServiceVersionUrl theUrl) {
+		GUrlStatus retVal=new GUrlStatus();
+		retVal.setUrlPid(theUrl.getPid());
+		retVal.setUrl(theUrl.getUrl());
+		retVal.setStatus(theUrlStatus.getStatus());
+		retVal.setLastFailure(theUrlStatus.getLastFail());
+		retVal.setLastFailureMessage(theUrlStatus.getLastFailMessage());
+		retVal.setLastSuccess(theUrlStatus.getLastSuccess());
+		retVal.setLastSuccessMessage(theUrlStatus.getLastSuccessMessage());
+		retVal.setLastFault(theUrlStatus.getLastFault());
+		retVal.setLastFaultMessage(theUrlStatus.getLastFaultMessage());
+		return retVal;
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {

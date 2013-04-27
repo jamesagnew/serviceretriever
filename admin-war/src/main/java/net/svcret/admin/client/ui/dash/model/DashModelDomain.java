@@ -16,6 +16,7 @@ import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -126,18 +127,15 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 		return retVal;
 	}
 
+
 	@Override
 	public Widget renderName() {
-		SafeHtmlBuilder b = new SafeHtmlBuilder();
-		
-		b.appendHtmlConstant(AdminPortal.MSGS.dashboard_DomainPrefix());
-		b.appendEscaped(myDomain.getName());
-		
+		String postfix = null;
 		if (myDomain.getServiceList().size() == 0) {
-			b.appendHtmlConstant(AdminPortal.MSGS.dashboard_DomainNoServicesSuffix());
+			postfix = AdminPortal.MSGS.dashboard_DomainNoServicesSuffix();
 		}
-		SafeHtml safeHtml = b.toSafeHtml();
-		return new HTML(safeHtml);
+
+		return renderName(AdminPortal.MSGS.dashboard_DomainPrefix(), myDomain.getName(), postfix);
 	}
 
 	@Override
@@ -161,6 +159,5 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 	public boolean hasChildren() {
 		return myDomain.getServiceList().size() > 0;
 	}
-
 
 }

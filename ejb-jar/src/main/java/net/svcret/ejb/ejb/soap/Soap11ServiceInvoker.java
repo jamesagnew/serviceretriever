@@ -320,15 +320,17 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 						break;
 					case IN_FAULT:
 						if (Constants.TAG_SOAPENV11_FAULTCODE.equals(next.asStartElement().getName().getLocalPart())) {
+							StringBuilder b = new StringBuilder();
 							while (true) {
 								if (next.isEndElement() && Constants.TAG_SOAPENV11_FAULTCODE.equals(next.asEndElement().getName().getLocalPart())) {
 									break;
 								}
 								if (next.isCharacters()) {
-									retVal.setResponseFaultCode(next.asCharacters().getData());
+									b.append(next.asCharacters().getData());
 								}
 								next = streamReader.nextEvent();
 							}
+							retVal.setResponseFaultCode(b.toString());
 						} else if (Constants.TAG_SOAPENV11_FAULTSTRING.equals(next.asStartElement().getName().getLocalPart())) {
 							while (true) {
 								if (next.isEndElement() && Constants.TAG_SOAPENV11_FAULTSTRING.equals(next.asEndElement().getName().getLocalPart())) {

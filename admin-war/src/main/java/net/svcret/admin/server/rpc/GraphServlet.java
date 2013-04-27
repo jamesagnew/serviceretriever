@@ -15,6 +15,7 @@ import net.svcret.ejb.api.IChartingServiceBean;
 
 @WebServlet(urlPatterns = { "/graph.png" })
 public class GraphServlet extends HttpServlet {
+	
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(GraphServlet.class);
 
 	private static final long serialVersionUID = 1L;

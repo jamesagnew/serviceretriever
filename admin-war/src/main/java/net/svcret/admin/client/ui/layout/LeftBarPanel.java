@@ -137,6 +137,15 @@ public class LeftBarPanel extends FlowPanel {
 		case SEC:
 			mySvcCatalogBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
 			buttons.remove(mySvcCatalogBtn);
+			break;
+		case DDO:
+			break;
+		case DSE:
+			break;
+		case ESE:
+			break;
+		case ESV:
+			break;
 		}
 		
 		for (Hyperlink next : buttons) {

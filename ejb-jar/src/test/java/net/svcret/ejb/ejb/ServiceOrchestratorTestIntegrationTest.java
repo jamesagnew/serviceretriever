@@ -31,6 +31,7 @@ import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
 
+import org.junit.Before;
 import org.junit.Test;
 
 public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
@@ -46,6 +47,11 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 	private ServiceRegistryBean myServiceRegistry;
 	private ServiceOrchestratorBean mySvc;
 
+	@Before
+	public void before() {
+		DefaultAnswer.setDesignTime();
+	}
+	
 	@Test
 	public void testSoap11GoodRequest() throws ProcessingException, InternalErrorException, UnknownRequestException, IOException, SecurityFailureException {
 
@@ -148,6 +154,8 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		respBean.setResponseTime(100);
 		respBean.setSuccessfulUrl("http://foo");
 		when(myHttpClient.post(theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
+
+		DefaultAnswer.setRunTime();
 
 		OrchestratorResponseBean resp = null;
 		int reps = 100;

@@ -1,6 +1,8 @@
 package net.svcret.admin.server.rpc;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 import net.svcret.admin.client.rpc.ModelUpdateService;
@@ -23,6 +25,7 @@ import net.svcret.admin.shared.model.GServiceList;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
+import net.svcret.admin.shared.model.GUrlStatus;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.GUserDomainPermission;
 import net.svcret.admin.shared.model.GUserList;
@@ -470,6 +473,33 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	@Override
 	public void saveConfig(GConfig theConfig) {
 		myConfig=theConfig;
+	}
+
+	@Override
+	public List<GUrlStatus> loadServiceVersionUrlStatuses(long theServiceVersionPid) {
+		ArrayList<GUrlStatus> retVal = new ArrayList<GUrlStatus>();
+		
+		GUrlStatus url = new GUrlStatus();
+		url.setUrl("http://foo");
+		url.setUrlPid(1);
+		url.setLastFailure(new Date());
+		url.setLastFailureMessage("This is a fail message");
+		url.setLastSuccess(new Date());
+		url.setLastSuccessMessage("This is a success message");
+		url.setStatus(StatusEnum.ACTIVE);
+		retVal.add(url);
+
+		url = new GUrlStatus();
+		url.setUrl("http://bar/werwe/werw");
+		url.setUrlPid(2);
+		url.setLastFailure(new Date());
+		url.setLastFailureMessage("This is a fail message");
+		url.setLastSuccess(new Date());
+		url.setLastSuccessMessage("This is a success message");
+		url.setStatus(StatusEnum.ACTIVE);
+		retVal.add(url);
+
+		return retVal;
 	}
 
 }

@@ -107,7 +107,7 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 	@OrderBy("URL_ORDER")
 	private List<PersServiceVersionUrl> myUrls;
 
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myPk.myServiceVersion")
 	@OrderBy("KEEP_ORDER")
 	private List<PersKeepRecentTransactions> myKeepRecentTransactions;
 

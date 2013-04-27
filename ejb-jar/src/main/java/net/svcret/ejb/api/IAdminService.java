@@ -17,6 +17,7 @@ import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
+import net.svcret.admin.shared.model.GUrlStatus;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
@@ -36,6 +37,8 @@ public interface IAdminService {
 
 	GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ProcessingException;
 
+	GDomainList deleteService(long theServicePid) throws ProcessingException;
+
 	long getDefaultHttpClientConfigPid();
 
 	GDomain getDomainByPid(long theDomain) throws ProcessingException;
@@ -48,11 +51,15 @@ public interface IAdminService {
 
 	BaseGAuthHost loadAuthenticationHost(long thePid) throws ProcessingException;
 
+	GConfig loadConfig() throws ProcessingException;
+
 	GDomainList loadDomainList() throws ProcessingException;
 
 	ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ProcessingException;
 
 	GSoap11ServiceVersionAndResources loadServiceVersion(long theServiceVersionPid) throws ProcessingException;
+
+	List<GUrlStatus> loadServiceVersionUrlStatuses(long theServiceVersionPid);
 
 	GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(GSoap11ServiceVersion theService, String theWsdlUrl) throws ProcessingException;
 
@@ -62,22 +69,18 @@ public interface IAdminService {
 
 	GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) throws ProcessingException;
 
-	GDomain saveDomain(GDomain theDomain)throws ProcessingException;
+	void saveConfig(GConfig theConfig);
+
+	GDomain saveDomain(GDomain theDomain) throws ProcessingException;
 
 	GHttpClientConfig saveHttpClientConfig(GHttpClientConfig theConfig) throws ProcessingException;
+
+	GDomainList saveService(GService theService) throws ProcessingException;
 
 	<T extends BaseGServiceVersion> T saveServiceVersion(long theDomain, long theService, T theVersion, List<GResource> theResources) throws ProcessingException;
 
 	GUser saveUser(GUser theUser) throws ProcessingException;
 
 	String suggestNewVersionNumber(Long theDomainPid, Long theServicePid);
-
-	GDomainList deleteService(long theServicePid) throws ProcessingException;
-
-	GDomainList saveService(GService theService) throws ProcessingException;
-
-	GConfig loadConfig() throws ProcessingException;
-
-	void saveConfig(GConfig theConfig);
 
 }

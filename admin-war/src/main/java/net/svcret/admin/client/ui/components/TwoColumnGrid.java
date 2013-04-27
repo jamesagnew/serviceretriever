@@ -31,6 +31,8 @@ public class TwoColumnGrid extends FlexTable {
 	
 	public void addDescription(String theDescription) {
 		int row = getRowCount();
-		setWidget(row, 1, new HTML(theDescription));
+		HTML widget = new HTML(theDescription);
+		widget.addStyleName(CssConstants.TWO_COLUMN_PROPERTY_GRID_DESC);
+		setWidget(row, 1, widget);
 	}
 }

@@ -14,7 +14,6 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	private GServiceVersionResourcePointerList myResourcePointerList;
 	private BaseGServerSecurityList myServerSecurityList;
 	private GServiceMethodList myServiceMethodList;
-
 	private GServiceVersionUrlList myServiceUrlList;
 	
 	public BaseGServiceVersion() {

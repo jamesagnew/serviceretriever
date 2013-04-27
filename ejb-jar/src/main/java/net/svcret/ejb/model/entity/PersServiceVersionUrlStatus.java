@@ -31,13 +31,13 @@ import com.google.common.base.Objects;
 @Entity
 public class PersServiceVersionUrlStatus extends BasePersObject {
 
-	private static final long serialVersionUID = 1L;
-	
-	public static final int MAX_LENGTH_BODY = 5000;
+	public static final int MAX_LENGTH_BODY = 2000;
+
 	public static final int MAX_LENGTH_CONTENT_TYPE = 100;
 	public static final int MAX_LENGTH_MSG = 500;
-
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(PersServiceVersionUrlStatus.class);
+
+	private static final long serialVersionUID = 1L;
 
 	@Transient
 	private transient volatile boolean myDirty = false;
@@ -62,12 +62,27 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	@Column(name = "LAST_FAULT")
 	private volatile Date myLastFault;
 
+	@Column(name = "LAST_FAULT_BODY", nullable = true, length = MAX_LENGTH_BODY)
+	private volatile String myLastFaultBody;
+
+	@Column(name = "LAST_FAULT_CTYPE", nullable = true, length = MAX_LENGTH_CONTENT_TYPE)
+	private volatile String myLastFaultContentType;
+
+	@Column(name = "LAST_FAULT_MSG", nullable = true, length = MAX_LENGTH_MSG)
+	private volatile String myLastFaultMessage;
+
+	@Column(name = "LAST_FAULT_STATUS", nullable = true)
+	private volatile Integer myLastFaultStatusCode;
+
 	@Transient
 	private transient Date myLastStatusSave;
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "LAST_SUCCESS")
 	private volatile Date myLastSuccess;
+
+	@Column(name = "LAST_SUCCESS_MSG", nullable = true, length = MAX_LENGTH_MSG)
+	private String myLastSuccessMessage;
 
 	@Column(name = "NEXT_CB_RESET", nullable = true)
 	@Temporal(TemporalType.TIMESTAMP)
@@ -183,6 +198,13 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	}
 
 	/**
+	 * @return the lastFaultMessage
+	 */
+	public String getLastFaultMessage() {
+		return myLastFaultMessage;
+	}
+
+	/**
 	 * @return the lastStatusSave
 	 */
 	public Date getLastStatusSave() {
@@ -194,6 +216,13 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	 */
 	public Date getLastSuccess() {
 		return myLastSuccess;
+	}
+
+	/**
+	 * @return the lastSuccessMessage
+	 */
+	public String getLastSuccessMessage() {
+		return myLastSuccessMessage;
 	}
 
 	/**
@@ -241,15 +270,6 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 
 	public void loadAllAssociations() {
 		// nothing
-	}
-
-	private void resetCurcuitBreaker() {
-		if (myNextCircuitBreakerReset == null) {
-			return;
-		}
-
-		myNextCircuitBreakerReset = null;
-		myDirty = true;
 	}
 
 	public void setDirty(boolean theB) {
@@ -311,6 +331,38 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	}
 
 	/**
+	 * @param theLastFaultBody
+	 *            the lastFaultBody to set
+	 */
+	public void setLastFaultBody(String theLastFaultBody) {
+		myLastFaultBody = left(theLastFaultBody, MAX_LENGTH_BODY);
+	}
+
+	/**
+	 * @param theLastFaultContentType
+	 *            the lastFaultContentType to set
+	 */
+	public void setLastFaultContentType(String theLastFaultContentType) {
+		myLastFaultContentType = left(theLastFaultContentType, MAX_LENGTH_CONTENT_TYPE);
+	}
+
+	/**
+	 * @param theLastFaultMessage
+	 *            the lastFaultMessage to set
+	 */
+	public void setLastFaultMessage(String theLastFaultMessage) {
+		myLastFaultMessage = left(theLastFaultMessage, MAX_LENGTH_MSG);
+	}
+
+	/**
+	 * @param theLastFaultStatusCode
+	 *            the lastFaultStatusCode to set
+	 */
+	public void setLastFaultStatusCode(Integer theLastFaultStatusCode) {
+		myLastFaultStatusCode = theLastFaultStatusCode;
+	}
+
+	/**
 	 * @param theLastStatusSave
 	 *            the lastStatusSave to set
 	 */
@@ -327,6 +379,10 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 			myDirty = true;
 		}
 		myLastSuccess = theLastSuccess;
+	}
+
+	public void setLastSuccessMessage(String theMessage) {
+		myLastSuccessMessage = left(theMessage, MAX_LENGTH_MSG);
 	}
 
 	/**
@@ -374,6 +430,15 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 		myUrl = theUrl;
 	}
 
+	private void resetCurcuitBreaker() {
+		if (myNextCircuitBreakerReset == null) {
+			return;
+		}
+
+		myNextCircuitBreakerReset = null;
+		myDirty = true;
+	}
+
 	/**
 	 * @param theNextCircuitBreakerReset
 	 *            the nextCircuitBreakerReset to set
@@ -395,26 +460,5 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 
 		return nextReset;
 	}
-
-//	public static enum StatusEnum {
-//		/*
-//		 * NB: Column is 10 chars, don't exceed that
-//		 */
-//
-//		/**
-//		 * URL is up
-//		 */
-//		ACTIVE,
-//
-//		/**
-//		 * URL is down
-//		 */
-//		DOWN,
-//
-//		/**
-//		 * URL has not yet been tried
-//		 */
-//		UNKNOWN
-//	}
 
 }

@@ -3,6 +3,7 @@ package net.svcret.admin.client.ui.dash;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.EmptyCell;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.dash.model.DashModelDomain;
@@ -28,10 +29,10 @@ import com.google.gwt.user.client.ui.Widget;
 public class ServiceDashboardPanel extends FlowPanel {
 
 	private static final int COL_ACTIONS = 7;
-	private static final int COL_LAST_INVOC = 5;
-	private static final int COL_SECURITY = 6;
 	private static final int COL_BACKING_URLS = 4;
+	private static final int COL_LAST_INVOC = 5;
 	private static final int COL_LATENCY = 3;
+	private static final int COL_SECURITY = 6;
 	private static final int COL_STATUS = 1;
 	private static final int COL_USAGE = 2;
 
@@ -42,10 +43,10 @@ public class ServiceDashboardPanel extends FlowPanel {
 	private List<IDashModel> myUiList = new ArrayList<IDashModel>();
 
 	public ServiceDashboardPanel() {
-		setStylePrimaryName("mainPanel");
+		setStylePrimaryName(CssConstants.MAIN_PANEL);
 
 		Label titleLabel = new Label("Service Dashboard");
-		titleLabel.setStyleName("mainPanelTitle");
+		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
 		add(titleLabel);
 
 		// TreeViewModel viewModel = new DashboardTreeViewModel();
@@ -73,6 +74,89 @@ public class ServiceDashboardPanel extends FlowPanel {
 		myGrid.setText(0, COL_ACTIONS, "Actions");
 
 		updateView();
+	}
+
+	public void updateView() {
+		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+			@Override
+			public void onSuccess(GDomainList theResult) {
+				updateView(theResult);
+			}
+		});
+	}
+
+	public void updateView(GDomainList theDomainList) {
+		myLoadingSpinner.hideCompletely();
+
+		ArrayList<IDashModel> newUiList = new ArrayList<IDashModel>();
+
+		boolean haveStatsToLoad = false;
+		for (GDomain nextDomain : theDomainList) {
+			if (!nextDomain.isStatsInitialized()) {
+				addSpinnerToList(newUiList);
+				haveStatsToLoad = true;
+			} else {
+				DashModelDomain nextUiObject = new DashModelDomain(nextDomain);
+				newUiList.add(nextUiObject);
+
+				if (nextDomain.isExpandedOnDashboard()) {
+					for (GService nextService : nextDomain.getServiceList()) {
+						if (!nextService.isStatsInitialized()) {
+							addSpinnerToList(newUiList);
+							haveStatsToLoad = true;
+						} else {
+							newUiList.add(new DashModelService(nextDomain, nextService));
+
+							if (nextService.isExpandedOnDashboard()) {
+								for (BaseGServiceVersion nextServiceVersion : nextService.getVersionList()) {
+									if (!nextServiceVersion.isStatsInitialized()) {
+										addSpinnerToList(newUiList);
+										haveStatsToLoad = true;
+									} else {
+										newUiList.add(new DashModelServiceVersion(nextDomain, nextService, nextServiceVersion));
+
+										if (nextServiceVersion.isExpandedOnDashboard()) {
+											for (GServiceMethod nextMethod : nextServiceVersion.getMethodList()) {
+												if (!nextMethod.isStatsInitialized()) {
+													addSpinnerToList(newUiList);
+													haveStatsToLoad = true;
+												} else {
+													newUiList.add(new DashModelServiceMethod(nextMethod));
+												}
+											}
+										}
+
+									}
+
+								}
+
+							}
+
+						}
+
+					}
+				}
+			}
+		}
+
+		updateRows(newUiList);
+
+		if (haveStatsToLoad) {
+			Model.getInstance().loadDomainListAndStats(new IAsyncLoadCallback<GDomainList>() {
+				@Override
+				public void onSuccess(GDomainList theResult) {
+					updateView(theResult);
+				}
+			});
+		}
+	}
+
+	private void addSpinnerToList(ArrayList<IDashModel> newUiList) {
+		if (newUiList.size() > 0 && newUiList.get(newUiList.size() - 1) instanceof DashModelLoading) {
+			// Don't add more than one in a row
+			return;
+		}
+		newUiList.add(new DashModelLoading());
 	}
 
 	private void updateRows(ArrayList<IDashModel> theNewUiList) {
@@ -181,89 +265,6 @@ public class ServiceDashboardPanel extends FlowPanel {
 		}
 
 		myUiList = theNewUiList;
-	}
-
-	public void updateView() {
-		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
-			@Override
-			public void onSuccess(GDomainList theResult) {
-				updateView(theResult);
-			}
-		});
-	}
-
-	public void updateView(GDomainList theDomainList) {
-		myLoadingSpinner.hideCompletely();
-
-		ArrayList<IDashModel> newUiList = new ArrayList<IDashModel>();
-
-		boolean haveStatsToLoad = false;
-		for (GDomain nextDomain : theDomainList) {
-			if (!nextDomain.isStatsInitialized()) {
-				addSpinnerToList(newUiList);
-				haveStatsToLoad = true;
-			} else {
-				DashModelDomain nextUiObject = new DashModelDomain(nextDomain);
-				newUiList.add(nextUiObject);
-
-				if (nextDomain.isExpandedOnDashboard()) {
-					for (GService nextService : nextDomain.getServiceList()) {
-						if (!nextService.isStatsInitialized()) {
-							addSpinnerToList(newUiList);
-							haveStatsToLoad = true;
-						} else {
-							newUiList.add(new DashModelService(nextDomain, nextService));
-
-							if (nextService.isExpandedOnDashboard()) {
-								for (BaseGServiceVersion nextServiceVersion : nextService.getVersionList()) {
-									if (!nextServiceVersion.isStatsInitialized()) {
-										addSpinnerToList(newUiList);
-										haveStatsToLoad = true;
-									} else {
-										newUiList.add(new DashModelServiceVersion(nextService, nextServiceVersion));
-
-										if (nextServiceVersion.isExpandedOnDashboard()) {
-											for (GServiceMethod nextMethod : nextServiceVersion.getMethodList()) {
-												if (!nextMethod.isStatsInitialized()) {
-													addSpinnerToList(newUiList);
-													haveStatsToLoad = true;
-												} else {
-													newUiList.add(new DashModelServiceMethod(nextMethod));
-												}
-											}
-										}
-
-									}
-
-								}
-
-							}
-
-						}
-
-					}
-				}
-			}
-		}
-
-		updateRows(newUiList);
-
-		if (haveStatsToLoad) {
-			Model.getInstance().loadDomainListAndStats(new IAsyncLoadCallback<GDomainList>() {
-				@Override
-				public void onSuccess(GDomainList theResult) {
-					updateView(theResult);
-				}
-			});
-		}
-	}
-
-	private void addSpinnerToList(ArrayList<IDashModel> newUiList) {
-		if (newUiList.size() > 0 && newUiList.get(newUiList.size() - 1) instanceof DashModelLoading) {
-			// Don't add more than one in a row
-			return;
-		}
-		newUiList.add(new DashModelLoading());
 	}
 
 }

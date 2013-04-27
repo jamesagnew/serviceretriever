@@ -1,6 +1,7 @@
 package net.svcret.admin.client.rpc;
 
 import java.io.Serializable;
+import java.util.List;
 
 import net.svcret.admin.shared.ServiceFailureException;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
@@ -15,6 +16,7 @@ import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
+import net.svcret.admin.shared.model.GUrlStatus;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
@@ -125,5 +127,7 @@ public interface ModelUpdateService extends RemoteService {
 	}
 
 	void saveConfig(GConfig theConfig);
+
+	List<GUrlStatus> loadServiceVersionUrlStatuses(long theServiceVersionPid);
 
 }

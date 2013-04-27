@@ -1,9 +1,11 @@
 package net.svcret.admin.client.ui.dash.model;
 
+import static net.svcret.admin.client.AdminPortal.*;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.model.IProvidesUrlCount;
@@ -15,7 +17,6 @@ import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.PopupPanel;
@@ -26,19 +27,18 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 	private BaseGServiceVersion myObj;
 	private PopupPanel myActionPopup;
 	private GService mySvc;
+	private GDomain myDomain;
 
-	public DashModelServiceVersion(GService theService, BaseGServiceVersion theServiceVersion) {
+	public DashModelServiceVersion(GDomain theDomain, GService theService, BaseGServiceVersion theServiceVersion) {
 		super(theServiceVersion);
+		myDomain = theDomain;
 		mySvc = theService;
 		myObj = theServiceVersion;
 	}
 
 	@Override
 	public Widget renderName() {
-		SafeHtmlBuilder b = new SafeHtmlBuilder();
-		b.appendHtmlConstant(AdminPortal.MSGS.dashboard_ServiceVersionPrefix());
-		b.appendEscaped(myObj.getId()).toSafeHtml();
-		return new HTML(b.toSafeHtml());
+		return renderName(AdminPortal.MSGS.dashboard_ServiceVersionPrefix(), myObj.getId(), null);
 	}
 
 	@Override
@@ -143,6 +143,15 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 			});
 			content.add(editDomain);
 
+			ActionPButton viewStatus = new ActionPButton(IMAGES.iconStatus(), MSGS.actions_ViewRuntimeStatus());
+			viewStatus.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent theEvent) {
+					History.newItem(NavProcessor.getTokenServiceVersionStats(true, myDomain.getPid(), mySvc.getPid(), myObj.getPid()));
+				}
+			});
+			content.add(viewStatus);
+			
 			myActionPopup.showRelativeTo(theButton);
 		} else {
 			myActionPopup.hide();
