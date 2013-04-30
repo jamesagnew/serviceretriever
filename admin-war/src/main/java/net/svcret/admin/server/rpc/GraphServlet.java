@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import net.svcret.admin.shared.util.ChartParams;
 import net.svcret.admin.shared.util.ChartTypeEnum;
 import net.svcret.ejb.api.IChartingServiceBean;
+import net.svcret.ejb.ex.ProcessingException;
 
 @WebServlet(urlPatterns = { "/graph.png" })
 public class GraphServlet extends HttpServlet {
@@ -23,12 +24,17 @@ public class GraphServlet extends HttpServlet {
 	@EJB
 	private IChartingServiceBean myChartSvc;
 
-	private byte[] renderLatency(HttpServletRequest theReq) throws IOException {
+	private byte[] renderLatency(HttpServletRequest theReq) throws IOException, ServletException {
 		long pid = getPid(theReq);
 		
 		ourLog.info("Rendering latency graph for service version {}", pid);
 
-		byte[] graph = myChartSvc.renderLatencyGraphForServiceVersion(pid);
+		byte[] graph;
+		try {
+			graph = myChartSvc.renderLatencyGraphForServiceVersion(pid);
+		} catch (ProcessingException e) {
+			throw new ServletException(e);
+		}
 
 		return graph;
 	}
@@ -52,6 +58,9 @@ public class GraphServlet extends HttpServlet {
 		case USAGE:
 			bytes = renderUsage(theReq);
 			break;
+		case PAYLOADSIZE:
+			bytes = renderPayloadSize(theReq);
+			break;
 		}
 
 		if (bytes == null) {
@@ -65,12 +74,32 @@ public class GraphServlet extends HttpServlet {
 
 	}
 
-	private byte[] renderUsage(HttpServletRequest theReq) throws IOException {
+	private byte[] renderPayloadSize(HttpServletRequest theReq) throws IOException, ServletException {
+		long pid = getPid(theReq);
+		
+		ourLog.info("Rendering payload size graph for service version {}", pid);
+
+		byte[] graph;
+		try {
+			graph = myChartSvc.renderPayloadSizeGraphForServiceVersion(pid);
+		} catch (ProcessingException e) {
+			throw new ServletException(e);
+		}
+
+		return graph;
+	}
+
+	private byte[] renderUsage(HttpServletRequest theReq) throws IOException, ServletException {
 		long pid = getPid(theReq);
 		
 		ourLog.info("Rendering usage graph for service version {}", pid);
 
-		byte[] graph = myChartSvc.renderUsageGraphForServiceVersion(pid);
+		byte[] graph;
+		try {
+			graph = myChartSvc.renderUsageGraphForServiceVersion(pid);
+		} catch (ProcessingException e) {
+			throw new ServletException(e);
+		}
 
 		return graph;
 	}

@@ -30,7 +30,6 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 	private LoadingSpinner myLoadingSpinner;
 	private long myServiceVersionPid;
 	private Label myTitleLabel;
-
 	private FlowPanel myTopPanel;
 
 	public ServiceVersionStatsPanel(long theDomainPid, long theServicePid, long theVersionPid) {
@@ -155,6 +154,11 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 		img.addStyleName(CssConstants.STATS_IMAGE);
 		myTopPanel.add(img);
 		
+		myTopPanel.add(new HtmlH1(MSGS.serviceVersionStats_MessageSizeTitle()));
+		img = new Image("graph.png?ct=PAYLOADSIZE&pid=" + myServiceVersionPid);
+		img.addStyleName(CssConstants.STATS_IMAGE);
+		myTopPanel.add(img);
+
 		myLoadingSpinner.hideCompletely();
 		
 	}

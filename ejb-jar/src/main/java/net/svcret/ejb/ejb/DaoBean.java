@@ -3,6 +3,7 @@ package net.svcret.ejb.ejb;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -18,6 +19,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceContextType;
 import javax.persistence.Query;
+import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 
 import net.svcret.admin.shared.model.StatusEnum;
@@ -26,6 +28,7 @@ import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersMethodStats;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
+import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
@@ -195,8 +198,32 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
+	public List<PersInvocationAnonStats> getInvocationAnonStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff) {
+		TypedQuery<PersInvocationAnonStats> q = myEntityManager.createNamedQuery(Queries.PERSINVOC_ANONSTATS, PersInvocationAnonStats.class);
+		q.setParameter("INTERVAL", theHour);
+		q.setParameter("BEFORE_DATE", theDaysCutoff, TemporalType.TIMESTAMP);
+		return q.getResultList();
+	}
+
+	@Override
 	public PersInvocationStats getInvocationStats(PersInvocationStatsPk thePk) {
 		return myEntityManager.find(PersInvocationStats.class, thePk);
+	}
+
+	@Override
+	public List<PersInvocationStats> getInvocationStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff) {
+		TypedQuery<PersInvocationStats> q = myEntityManager.createNamedQuery(Queries.PERSINVOC_STATS, PersInvocationStats.class);
+		q.setParameter("INTERVAL", theHour);
+		q.setParameter("BEFORE_DATE", theDaysCutoff, TemporalType.TIMESTAMP);
+		return q.getResultList();
+	}
+
+	@Override
+	public List<PersInvocationUserStats> getInvocationUserStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff) {
+		TypedQuery<PersInvocationUserStats> q = myEntityManager.createNamedQuery(Queries.PERSINVOC_USERSTATS, PersInvocationUserStats.class);
+		q.setParameter("INTERVAL", theHour);
+		q.setParameter("BEFORE_DATE", theDaysCutoff, TemporalType.TIMESTAMP);
+		return q.getResultList();
 	}
 
 	@Override
@@ -601,7 +628,14 @@ public class DaoBean implements IDao {
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	@Override
 	public void saveInvocationStats(Collection<BasePersMethodStats> theStats) {
+		List<BasePersMethodStats> emptyList = Collections.emptyList();
+		saveInvocationStats(theStats, emptyList);
+	}
+
+	@Override
+	public void saveInvocationStats(Collection<BasePersMethodStats> theStats, List<BasePersMethodStats> theStatsToDelete) {
 		Validate.notNull(theStats);
+		Validate.notNull(theStatsToDelete);
 
 		ourLog.info("Going to save {} invocation stats entries", theStats.size());
 
@@ -655,6 +689,10 @@ public class DaoBean implements IDao {
 			myEntityManager.merge(persisted);
 		}
 
+		for (BasePersMethodStats next:theStatsToDelete) {
+			myEntityManager.remove(next);
+		}
+		
 		ourLog.info("Persisted {} invocation status entries, {} user invocation status entries, and {} anonymous status entries", new Object[] { count, ucount, acount });
 	}
 

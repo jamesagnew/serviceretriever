@@ -231,6 +231,10 @@ public abstract class BasePersInvocationStats extends BasePersMethodStats {
 
 	public synchronized void mergeUnsynchronizedEvents(BasePersMethodStats theStats) {
 		BasePersInvocationStats stats = (BasePersInvocationStats)theStats;
+		mergeUnsynchronizedEvents(stats);
+	}
+
+	public synchronized void mergeUnsynchronizedEvents(BasePersInvocationStats stats) {
 		synchronized (stats) {
 			myTotalSuccessInvocationCount += stats.myTotalSuccessInvocationCount;
 			myTotalSuccessInvocationTime += stats.myTotalSuccessInvocationTime;

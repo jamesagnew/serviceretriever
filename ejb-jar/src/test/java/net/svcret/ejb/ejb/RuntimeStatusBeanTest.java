@@ -6,13 +6,16 @@ import static org.mockito.Mockito.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
 import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
@@ -22,10 +25,12 @@ import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersMethodStats;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
+import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersInvocationAnonStats;
 import net.svcret.ejb.model.entity.PersInvocationStats;
+import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
@@ -40,6 +45,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.internal.invocation.CapturesArgumensFromInvocation;
+import org.mockito.internal.matchers.CapturingMatcher;
 
 public class RuntimeStatusBeanTest {
 
@@ -77,6 +84,56 @@ public class RuntimeStatusBeanTest {
 
 	private static long ourNextPid = 1;
 
+	@SuppressWarnings("rawtypes")
+	@Test
+	public void testCollapseStats() throws Exception {
+		
+		
+		IDao dao = mock(IDao.class);
+		IConfigService configSvc=mock(IConfigService.class);
+
+		RuntimeStatusBean svc = new RuntimeStatusBean();
+		svc.setDao(dao);
+		svc.setConfigSvc(configSvc);
+
+		PersConfig config = new PersConfig();
+		config.setDefaults();
+		when(configSvc.getConfig()).thenReturn(config);
+		
+		PersDomain domain = new PersDomain(ourNextPid++, "domain_id");
+		PersService service = new PersService(ourNextPid++, domain, "service_id", "service_name");
+		BasePersServiceVersion version = new PersServiceVersionSoap11(ourNextPid++, service, "1.0");
+		PersServiceVersionMethod method = new PersServiceVersionMethod(ourNextPid++, version, "method1");
+
+		List<PersInvocationStats> minuteStats = new ArrayList<PersInvocationStats>();
+		PersInvocationStats stats = new PersInvocationStats(new PersInvocationStatsPk(InvocationStatsIntervalEnum.MINUTE, myFmt.parse("2013-01-01 00:03:00"), method));
+		stats.addSuccessInvocation(100, 200, 300);
+		minuteStats.add(stats);
+
+		PersInvocationStats stats2 = new PersInvocationStats(new PersInvocationStatsPk(InvocationStatsIntervalEnum.MINUTE, myFmt.parse("2013-01-01 00:03:00"), method));
+		stats2.addSuccessInvocation(100, 200, 300);
+		minuteStats.add(stats2);
+		
+		when(dao.getInvocationStatsBefore(InvocationStatsIntervalEnum.HOUR, myFmt.parse("2013-07-01 00:00:00"))).thenReturn(new ArrayList<PersInvocationStats>());
+		when(dao.getInvocationStatsBefore(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("2013-01-27 07:00:00"))).thenReturn(new ArrayList<PersInvocationStats>());
+		when(dao.getInvocationStatsBefore(InvocationStatsIntervalEnum.MINUTE, myFmt.parse("2013-04-29 05:00:00"))).thenReturn(minuteStats);
+		
+		PersInvocationStats existingStats= new PersInvocationStats(new PersInvocationStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("2013-01-01 00:00:00"), method));
+		when(dao.getOrCreateInvocationStats(new PersInvocationStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("2013-01-01 00:00:00"), method))).thenReturn(existingStats);
+		
+		svc.setNowForUnitTests(myFmt.parse("2013-04-29 07:00:00"));
+		svc.collapseStats();
+		
+		ArgumentCaptor<Collection> createCaptor = ArgumentCaptor.forClass(Collection.class);
+		ArgumentCaptor<List> deleteCaptor = ArgumentCaptor.forClass(List.class);
+		verify(dao).saveInvocationStats(createCaptor.capture(), deleteCaptor.capture());
+		
+		assertEquals(1, createCaptor.getAllValues().size());
+		PersInvocationStats obj = (PersInvocationStats) createCaptor.getValue().iterator().next();
+		assertEquals(2, obj.getSuccessInvocationCount());
+		assertEquals(1, deleteCaptor.getAllValues().size());
+	}
+	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Test
 	public void testRecordServerSecurityFailure() throws ParseException {

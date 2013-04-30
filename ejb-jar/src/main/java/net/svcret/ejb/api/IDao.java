@@ -2,6 +2,8 @@ package net.svcret.ejb.api;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 
 import javax.ejb.Local;
 
@@ -10,6 +12,7 @@ import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersMethodStats;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
+import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
@@ -20,6 +23,7 @@ import net.svcret.ejb.model.entity.PersEnvironment;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersInvocationAnonStats;
 import net.svcret.ejb.model.entity.PersInvocationAnonStatsPk;
+import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
@@ -34,13 +38,15 @@ import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 @Local
 public interface IDao {
 
+	void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost);
+	
 	void deleteHttpClientConfig(PersHttpClientConfig theConfig);
-	
-	Collection<PersDomain> getAllDomains();
 
-	long incrementStateCounter(String theKey);
+	void deleteService(PersService theService);
 	
-	long getStateCounter(String theKey);
+	Collection<BasePersAuthenticationHost> getAllAuthenticationHosts();
+
+	Collection<PersDomain> getAllDomains();
 
 	Collection<PersService> getAllServices();
 
@@ -50,44 +56,76 @@ public interface IDao {
 
 	BasePersAuthenticationHost getAuthenticationHost(String theModuleId) throws ProcessingException;
 
+	BasePersAuthenticationHost getAuthenticationHostByPid(long thePid);
+	
+	PersConfig getConfigByPid(long theDefaultId);
+	
 	PersDomain getDomainById(String theDomainId);
-
+	
 	/**
 	 * Returns <code>null</code> if not found
 	 */
 	PersDomain getDomainByPid(long theDomainPid);
-	
+
 	PersHttpClientConfig getHttpClientConfig(long thePid);
-	
+
 	Collection<PersHttpClientConfig> getHttpClientConfigs();
 	
+	List<PersInvocationAnonStats> getInvocationAnonStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff);
+
+	BasePersInvocationStats getInvocationStats(PersInvocationStatsPk thePk);
+	
+	List<PersInvocationStats> getInvocationStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff);
+
+	List<PersInvocationUserStats> getInvocationUserStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff);
+
 	PersAuthenticationHostLdap getOrCreateAuthenticationHostLdap(String theModuleId) throws ProcessingException;
+
+	PersAuthenticationHostLocalDatabase getOrCreateAuthenticationHostLocalDatabase(String theModuleIdAdminAuth) throws ProcessingException;
 
 	PersDomain getOrCreateDomainWithId(String theId) throws ProcessingException;
 
 	PersEnvironment getOrCreateEnvironment(String theEnv) throws ProcessingException;
-	
+
 	PersHttpClientConfig getOrCreateHttpClientConfig(String theId);
 
 	PersInvocationAnonStats getOrCreateInvocationAnonStats(PersInvocationAnonStatsPk thePk);
 	
-	BasePersInvocationStats getOrCreateInvocationStats(PersInvocationStatsPk thePk);
+	PersInvocationStats getOrCreateInvocationStats(PersInvocationStatsPk thePk);
 
 	PersInvocationUserStats getOrCreateInvocationUserStats(PersInvocationUserStatsPk thePk);
-
-	PersUser getOrCreateUser(BasePersAuthenticationHost theAuthHost, String theUsername) throws ProcessingException;
 
 	PersServiceVersionSoap11 getOrCreateServiceVersionWithId(PersService theService, String theVersionId) throws ProcessingException;
 
 	PersService getOrCreateServiceWithId(PersDomain theDomain, String theServiceId) throws ProcessingException;
 
+	PersUser getOrCreateUser(BasePersAuthenticationHost theAuthHost, String theUsername) throws ProcessingException;
+
 	PersService getServiceById(long theDomainPid, String theServiceId);
 
 	PersService getServiceByPid(long theServicePid);
 
+	BasePersServiceVersion getServiceVersionByPid(long theServiceVersionPid);
+
+	PersServiceVersionMethod getServiceVersionMethodByPid(long theServiceVersionMethodPid);
+
+	long getStateCounter(String theKey);
+
 	PersServiceVersionStatus getStatusForServiceVersionWithPid(long theServicePid);
-	
+
+	PersUser getUser(long thePid);
+
+	long incrementStateCounter(String theKey);
+
+	void removeDomain(PersDomain theDomain);
+
 	void removeServiceVersion(long thePid) throws ProcessingException;
+
+	void saveAuthenticationHost(BasePersAuthenticationHost theHost);
+
+	PersBaseClientAuth<?> saveClientAuth(PersBaseClientAuth<?> theNextPers);
+
+	PersConfig saveConfig(PersConfig theConfig);
 
 	PersDomain saveDomain(PersDomain theDomain);
 
@@ -95,44 +133,16 @@ public interface IDao {
 
 	void saveInvocationStats(Collection<BasePersMethodStats> theStats);
 
-	void saveService(PersService theService);
-
-	PersUser saveServiceUser(PersUser theUser);
-
-	BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theVersion) throws ProcessingException;
-
-	void saveServiceVersionUrlStatus(ArrayList<PersServiceVersionUrlStatus> theUrlStatuses);
-
-	PersAuthenticationHostLocalDatabase getOrCreateAuthenticationHostLocalDatabase(String theModuleIdAdminAuth) throws ProcessingException;
-
-	void saveAuthenticationHost(BasePersAuthenticationHost theHost);
-
-	Collection<BasePersAuthenticationHost> getAllAuthenticationHosts();
-
-	BasePersAuthenticationHost getAuthenticationHostByPid(long thePid);
-
-	void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost);
-
-	PersUser getUser(long thePid);
-
-	PersServiceVersionMethod getServiceVersionMethodByPid(long theServiceVersionMethodPid);
-
-	BasePersServiceVersion getServiceVersionByPid(long theServiceVersionPid);
-
-	void removeDomain(PersDomain theDomain);
-
-	BasePersInvocationStats getInvocationStats(PersInvocationStatsPk thePk);
-
-	PersBaseClientAuth<?> saveClientAuth(PersBaseClientAuth<?> theNextPers);
+	void saveInvocationStats(Collection<BasePersMethodStats> theStats, List<BasePersMethodStats> theStatsToDelete);
 
 	PersBaseServerAuth<?, ?> saveServerAuth(PersBaseServerAuth<?, ?> theNextPers);
 
+	void saveService(PersService theService);
+
+	PersUser saveServiceUser(PersUser theUser);
+	BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theVersion) throws ProcessingException;
 	void saveServiceVersionStatuses(ArrayList<PersServiceVersionStatus> theServiceVersionStatuses);
 
-	void deleteService(PersService theService);
-
-	PersConfig getConfigByPid(long theDefaultId);
-
-	PersConfig saveConfig(PersConfig theConfig);
+	void saveServiceVersionUrlStatus(ArrayList<PersServiceVersionUrlStatus> theUrlStatuses);
 	
 }

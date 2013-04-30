@@ -1,6 +1,8 @@
 package net.svcret.admin.shared.util;
 
 public enum ChartTypeEnum {
-	LATENCY, USAGE
+	LATENCY, 
+	USAGE, 
+	PAYLOADSIZE
 
 }

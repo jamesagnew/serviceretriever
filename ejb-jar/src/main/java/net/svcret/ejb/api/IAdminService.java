@@ -45,7 +45,7 @@ public interface IAdminService {
 
 	long getDomainPid(String theDomainId) throws ProcessingException;
 
-	GService getServiceByPid(long theService);
+	GService getServiceByPid(long theService) throws ProcessingException;
 
 	long getServicePid(long theDomainPid, String theServiceId) throws ProcessingException;
 

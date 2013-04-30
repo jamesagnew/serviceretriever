@@ -459,5 +459,8 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Service Usage")
 	String serviceVersionStats_UsageTitle();
+
+	@DefaultMessage("Message Sizes")
+	String serviceVersionStats_MessageSizeTitle();
 	
 }

@@ -1,12 +1,16 @@
 package net.svcret.ejb.ejb;
 
+import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.*;
 import static org.junit.Assert.*;
 
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 
 import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.ex.ProcessingException;
@@ -21,6 +25,8 @@ import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
+import net.svcret.ejb.model.entity.PersInvocationAnonStats;
+import net.svcret.ejb.model.entity.PersInvocationAnonStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
@@ -42,6 +48,134 @@ public class DaoBeanTest extends BaseJpaTest {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(DaoBeanTest.class);
 	private DaoBean mySvc;
+
+	private DateFormat myTimeFormat = new SimpleDateFormat("HH:mm");
+	
+	@Test
+	public void testGetInvocationStatsBeforeDate() throws Exception {
+		newEntityManager();
+		
+		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
+		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
+		PersServiceVersionSoap11 ver = mySvc.getOrCreateServiceVersionWithId(service, "VersionId0");
+		PersServiceVersionMethod method = new PersServiceVersionMethod();
+		method.setName("method0");
+		ver.addMethod(method);
+
+		mySvc.saveServiceVersion(ver);
+		
+		newEntityManager();
+		
+		method = mySvc.getServiceVersionByPid(ver.getPid()).getMethods().iterator().next();
+		
+		mySvc.getOrCreateInvocationStats(new PersInvocationStatsPk(HOUR, myTimeFormat.parse("01:10"), method));
+		mySvc.getOrCreateInvocationStats(new PersInvocationStatsPk(MINUTE, myTimeFormat.parse("01:10"), method));
+		mySvc.getOrCreateInvocationStats(new PersInvocationStatsPk(HOUR, myTimeFormat.parse("02:10"), method));
+		mySvc.getOrCreateInvocationStats(new PersInvocationStatsPk(MINUTE, myTimeFormat.parse("01:10"), method));
+		mySvc.getOrCreateInvocationStats(new PersInvocationStatsPk(HOUR, myTimeFormat.parse("03:10"), method));
+		mySvc.getOrCreateInvocationStats(new PersInvocationStatsPk(MINUTE, myTimeFormat.parse("01:10"), method));
+		
+		newEntityManager();
+		
+		List<PersInvocationStats> stats = mySvc.getInvocationStatsBefore(HOUR, myTimeFormat.parse("03:00"));
+		assertEquals(2, stats.size());
+		
+		stats = mySvc.getInvocationStatsBefore(HOUR, myTimeFormat.parse("03:10"));
+		assertEquals(3, stats.size());
+
+		stats = mySvc.getInvocationStatsBefore(HOUR, myTimeFormat.parse("01:30"));
+		assertEquals(1, stats.size());
+
+		stats = mySvc.getInvocationStatsBefore(DAY, myTimeFormat.parse("03:11"));
+		assertEquals(0, stats.size());
+
+	}
+	
+	@Test
+	public void testGetInvocationUserStatsBeforeDate() throws Exception {
+		newEntityManager();
+		
+		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
+		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
+		PersServiceVersionSoap11 ver = mySvc.getOrCreateServiceVersionWithId(service, "VersionId0");
+		PersServiceVersionMethod method = new PersServiceVersionMethod();
+		method.setName("method0");
+		ver.addMethod(method);
+
+		mySvc.saveServiceVersion(ver);
+		
+		newEntityManager();
+		
+		method = mySvc.getServiceVersionByPid(ver.getPid()).getMethods().iterator().next();
+		
+		PersAuthenticationHostLocalDatabase authHost = mySvc.getOrCreateAuthenticationHostLocalDatabase("AID");
+		PersUser user = mySvc.getOrCreateUser(authHost, "userid");
+		
+		newEntityManager();
+		
+		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(HOUR, myTimeFormat.parse("01:10"), method, user));
+		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(MINUTE, myTimeFormat.parse("01:10"), method,user));
+		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(HOUR, myTimeFormat.parse("02:10"), method,user));
+		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(MINUTE, myTimeFormat.parse("01:10"), method,user));
+		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(HOUR, myTimeFormat.parse("03:10"), method,user));
+		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(MINUTE, myTimeFormat.parse("01:10"), method, user));
+		
+		newEntityManager();
+		
+		Date cutoff = myTimeFormat.parse("03:00");
+		List<PersInvocationUserStats> stats = mySvc.getInvocationUserStatsBefore(HOUR, cutoff);
+		assertEquals(2, stats.size());
+		
+		stats = mySvc.getInvocationUserStatsBefore(HOUR, myTimeFormat.parse("03:11"));
+		assertEquals(3, stats.size());
+
+		stats = mySvc.getInvocationUserStatsBefore(HOUR, myTimeFormat.parse("01:30"));
+		assertEquals(1, stats.size());
+
+		stats = mySvc.getInvocationUserStatsBefore(DAY, myTimeFormat.parse("03:11"));
+		assertEquals(0, stats.size());
+
+	}
+
+	@Test
+	public void testGetInvocationAnonStatsBeforeDate() throws Exception {
+		newEntityManager();
+		
+		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
+		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
+		PersServiceVersionSoap11 ver = mySvc.getOrCreateServiceVersionWithId(service, "VersionId0");
+		PersServiceVersionMethod method = new PersServiceVersionMethod();
+		method.setName("method0");
+		ver.addMethod(method);
+
+		mySvc.saveServiceVersion(ver);
+		
+		newEntityManager();
+		
+		method = mySvc.getServiceVersionByPid(ver.getPid()).getMethods().iterator().next();
+		
+		mySvc.getOrCreateInvocationAnonStats(new PersInvocationAnonStatsPk(HOUR, myTimeFormat.parse("01:10"), method));
+		mySvc.getOrCreateInvocationAnonStats(new PersInvocationAnonStatsPk(MINUTE, myTimeFormat.parse("01:10"), method));
+		mySvc.getOrCreateInvocationAnonStats(new PersInvocationAnonStatsPk(HOUR, myTimeFormat.parse("02:10"), method));
+		mySvc.getOrCreateInvocationAnonStats(new PersInvocationAnonStatsPk(MINUTE, myTimeFormat.parse("01:10"), method));
+		mySvc.getOrCreateInvocationAnonStats(new PersInvocationAnonStatsPk(HOUR, myTimeFormat.parse("03:10"), method));
+		mySvc.getOrCreateInvocationAnonStats(new PersInvocationAnonStatsPk(MINUTE, myTimeFormat.parse("01:10"), method));
+		
+		newEntityManager();
+		
+		List<PersInvocationAnonStats> stats = mySvc.getInvocationAnonStatsBefore(HOUR, myTimeFormat.parse("03:10"));
+		assertEquals(3, stats.size());
+		
+		stats = mySvc.getInvocationAnonStatsBefore(HOUR, myTimeFormat.parse("03:00"));
+		assertEquals(2, stats.size());
+
+		stats = mySvc.getInvocationAnonStatsBefore(HOUR, myTimeFormat.parse("01:30"));
+		assertEquals(1, stats.size());
+
+		stats = mySvc.getInvocationAnonStatsBefore(DAY, myTimeFormat.parse("03:11"));
+		assertEquals(0, stats.size());
+
+	}
 
 	@Test
 	public void testHttpClientConfigCreateDefault() {

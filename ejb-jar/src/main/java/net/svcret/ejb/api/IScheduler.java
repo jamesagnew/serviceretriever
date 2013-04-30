@@ -8,6 +8,8 @@ public interface IScheduler {
 	void reloadUserRegistry();
 	
 	void flushStats();
+
+	void collapseStats();
  
 	
 }

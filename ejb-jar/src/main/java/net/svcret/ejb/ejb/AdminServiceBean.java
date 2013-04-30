@@ -251,7 +251,7 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	@Override
-	public GService getServiceByPid(long theService) {
+	public GService getServiceByPid(long theService) throws ProcessingException {
 		PersService service = myPersSvc.getServiceByPid(theService);
 		if (service != null) {
 			return toUi(service, false);
@@ -652,7 +652,7 @@ public class AdminServiceBean implements IAdminService {
 		return (int) newValue;
 	}
 
-	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, int[] the60MinInvCount, long[] the60minTime, StatusEnum theStatus, BasePersServiceVersion nextVersion) {
+	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, List<Integer> the60MinInvCount, List<Long> the60minTime, StatusEnum theStatus, BasePersServiceVersion nextVersion) throws ProcessingException {
 		StatusEnum status = theStatus;
 
 		for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
@@ -676,13 +676,13 @@ public class AdminServiceBean implements IAdminService {
 		} // end URL
 
 		for (PersServiceVersionMethod nextMethod : nextVersion.getMethods()) {
-			extractStatus(the60MinInvCount, the60minTime, nextMethod);
+			extractStatus(60, the60MinInvCount, the60minTime, nextMethod);
 
 		}
 		return status;
 	}
 
-	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusEnum theInitialStatus, int[] the60MinInvCount, long[] the60minTime, PersService theService) {
+	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Long> the60minTime, PersService theService) throws ProcessingException {
 
 		// Value will be changed below
 		StatusEnum status = theInitialStatus;
@@ -694,32 +694,63 @@ public class AdminServiceBean implements IAdminService {
 		return status;
 	}
 
-	private void extractStatus(int[] the60MinInvCount, long[] the60minTime, PersServiceVersionMethod nextMethod) {
+	private void extractStatus(int theNumMinsBack, List<Integer> the60MinInvCount, List<Long> the60minTime, PersServiceVersionMethod nextMethod) throws ProcessingException {
 		IRuntimeStatus statusSvc = myStatusSvc;
-		extractSuccessfulInvocationInvocationTimes(the60MinInvCount, the60minTime, nextMethod, statusSvc);
+		extractSuccessfulInvocationInvocationTimes(myConfigSvc.getConfig(), theNumMinsBack, the60MinInvCount, the60minTime, nextMethod, statusSvc);
 	}
 
 	/**
 	 * @return The start timestamp
 	 */
-	public static long extractSuccessfulInvocationInvocationTimes(final int[] the60MinInvCount, final long[] the60minTime, PersServiceVersionMethod nextMethod, IRuntimeStatus statusSvc) {
-		return doWithStats(statusSvc, nextMethod, new IWithStats() {
+	public static void extractSuccessfulInvocationInvocationTimes(PersConfig theConfig, int theNumMinsBack, final List<Integer> the60MinInvCount, final List<Long> the60minTime, PersServiceVersionMethod nextMethod, IRuntimeStatus statusSvc) {
+		doWithStatsByMinute(theConfig, theNumMinsBack, statusSvc, nextMethod, new IWithStats() {
 			@Override
 			public void withStats(int theIndex, BasePersInvocationStats theStats) {
-				the60MinInvCount[theIndex] = addToInt(the60MinInvCount[theIndex], theStats.getSuccessInvocationCount());
-				the60minTime[theIndex] = the60minTime[theIndex] + theStats.getSuccessInvocationTotalTime();
+				growToSizeInt(the60MinInvCount, theIndex);
+				growToSizeLong(the60minTime, theIndex);
+				the60MinInvCount.set(theIndex, addToInt(the60MinInvCount.get(theIndex), theStats.getSuccessInvocationCount()));
+				the60minTime.set(theIndex, the60minTime.get(theIndex) + theStats.getSuccessInvocationTotalTime());
 			}
-		}).getTime();
+		});
 	}
 
-	public static Date doWithStats(IRuntimeStatus statusSvc, PersServiceVersionMethod theMethod, IWithStats theOperator) {
-		Date date = getDate60MinsAgo();
-		for (int min = 0; min <= 59; min++, date = new Date(date.getTime() + DateUtils.MILLIS_PER_MINUTE)) {
-			PersInvocationStatsPk pk = new PersInvocationStatsPk(InvocationStatsIntervalEnum.MINUTE, date, theMethod);
+	public static void growToSizeInt(List<Integer> theCountArray, int theIndex) {
+		while (theCountArray.size() <= (theIndex)) {
+			theCountArray.add(0);
+		}
+	}
+
+	public static void growToSizeLong(List<Long> theCountArray, int theIndex) {
+		while (theCountArray.size() <= (theIndex)) {
+			theCountArray.add(0L);
+		}
+	}
+
+	public static void doWithStatsByMinute(PersConfig theConfig, int theNumberOfMinutes, IRuntimeStatus statusSvc, PersServiceVersionMethod theMethod, IWithStats theOperator) {
+		Date xMinsAgo = getDateXMinsAgo(theNumberOfMinutes);
+		Date date = xMinsAgo;
+
+		for (int min = 0; date.before(new Date()); min++) {
+
+			InvocationStatsIntervalEnum interval;
+			if (date.before(theConfig.getCollapseStatsToDaysCutoff())) {
+				interval = InvocationStatsIntervalEnum.DAY;
+			} else if (date.before(theConfig.getCollapseStatsToHoursCutoff())) {
+				interval = InvocationStatsIntervalEnum.HOUR;
+			} else if (date.before(theConfig.getCollapseStatsToTenMinutesCutoff())) {
+				interval = InvocationStatsIntervalEnum.TEN_MINUTE;
+			} else {
+				interval = InvocationStatsIntervalEnum.MINUTE;
+			}
+			date = interval.truncate(date);
+
+			PersInvocationStatsPk pk = new PersInvocationStatsPk(interval, date, theMethod);
 			BasePersInvocationStats stats = statusSvc.getOrCreateInvocationStatsSynchronously(pk);
 			theOperator.withStats(min, stats);
+
+			date = new Date(date.getTime() + interval.millis());
+
 		}
-		return date;
 	}
 
 	public interface IWithStats {
@@ -728,8 +759,8 @@ public class AdminServiceBean implements IAdminService {
 
 	}
 
-	public static Date getDate60MinsAgo() {
-		Date date60MinsAgo = new Date(System.currentTimeMillis() - (60 * DateUtils.MILLIS_PER_MINUTE));
+	public static Date getDateXMinsAgo(int theNumberOfMinutes) {
+		Date date60MinsAgo = new Date(System.currentTimeMillis() - (theNumberOfMinutes * DateUtils.MILLIS_PER_MINUTE));
 		Date date = DateUtils.truncate(date60MinsAgo, Calendar.MINUTE);
 		return date;
 	}
@@ -1061,14 +1092,14 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private int[] toLatency(int[] theCounts, long[] theTimes) {
-		assert theCounts.length == theTimes.length;
+	private int[] toLatency(List<Integer> theCounts, List<Long> theTimes) {
+		assert theCounts.size() == theTimes.size();
 
-		int[] retVal = new int[theCounts.length];
+		int[] retVal = new int[theCounts.size()];
 		int prevValue = -1;
-		for (int i = 0; i < theCounts.length; i++) {
-			if (theCounts[i] > 0) {
-				retVal[i] = (int) Math.min(theTimes[i] / theCounts[i], Integer.MAX_VALUE);
+		for (int i = 0; i < theCounts.size(); i++) {
+			if (theCounts.get(i) > 0) {
+				retVal[i] = (int) Math.min(theTimes.get(i) / theCounts.get(i), Integer.MAX_VALUE);
 				prevValue = retVal[i];
 			} else if (prevValue > -1) {
 				retVal[i] = prevValue;
@@ -1158,13 +1189,13 @@ public class AdminServiceBean implements IAdminService {
 
 		if (theLoadStats) {
 			retVal.setStatsInitialized(true);
-			int[] t60minCount = new int[60];
-			long[] t60minTime = new long[60];
+			ArrayList<Integer> t60minCount = new ArrayList<Integer>();
+			ArrayList<Long> t60minTime = new ArrayList<Long>();
 
 			StatusEnum status = StatusEnum.UNKNOWN;
 			extractStatus(retVal, t60minCount, t60minTime, status, theVersion);
 
-			retVal.setTransactions60mins(t60minCount);
+			retVal.setTransactions60mins(toArray(t60minCount));
 			retVal.setLatency60mins(toLatency(t60minCount, t60minTime));
 
 			int urlsActive = 0;
@@ -1199,6 +1230,15 @@ public class AdminServiceBean implements IAdminService {
 			}
 		}
 
+		return retVal;
+	}
+
+	private static int[] toArray(ArrayList<Integer> theT60minCount) {
+		int[] retVal = new int[theT60minCount.size()];
+		int index = 0;
+		for (Integer integer : theT60minCount) {
+			retVal[index++] = integer;
+		}
 		return retVal;
 	}
 
@@ -1273,7 +1313,7 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private GDomain toUi(PersDomain theDomain, boolean theLoadStats) {
+	private GDomain toUi(PersDomain theDomain, boolean theLoadStats) throws ProcessingException {
 		GDomain retVal = new GDomain();
 		retVal.setPid(theDomain.getPid());
 		retVal.setId(theDomain.getDomainId());
@@ -1283,14 +1323,14 @@ public class AdminServiceBean implements IAdminService {
 		if (theLoadStats) {
 			retVal.setStatsInitialized(true);
 			StatusEnum status = StatusEnum.UNKNOWN;
-			int[] t60minCount = new int[60];
-			long[] t60minTime = new long[60];
+			ArrayList<Integer> t60minCount = new ArrayList<Integer>();
+			ArrayList<Long> t60minTime = new ArrayList<Long>();
 
 			for (PersService nextService : theDomain.getServices()) {
 				status = extractStatus(retVal, status, t60minCount, t60minTime, nextService);
 			}
 
-			retVal.setTransactions60mins(t60minCount);
+			retVal.setTransactions60mins(toArray(t60minCount));
 			retVal.setLatency60mins(toLatency(t60minCount, t60minTime));
 			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
 
@@ -1352,7 +1392,7 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private GService toUi(PersService theService, boolean theLoadStats) {
+	private GService toUi(PersService theService, boolean theLoadStats) throws ProcessingException {
 		GService retVal = new GService();
 		retVal.setPid(theService.getPid());
 		retVal.setId(theService.getServiceId());
@@ -1363,12 +1403,12 @@ public class AdminServiceBean implements IAdminService {
 		if (theLoadStats) {
 			retVal.setStatsInitialized(true);
 			StatusEnum status = StatusEnum.UNKNOWN;
-			int[] t60minCount = new int[60];
-			long[] t60minTime = new long[60];
+			ArrayList<Integer> t60minCount = new ArrayList<Integer>();
+			ArrayList<Long> t60minTime = new ArrayList<Long>();
 
 			status = extractStatus(retVal, status, t60minCount, t60minTime, theService);
 
-			retVal.setTransactions60mins(t60minCount);
+			retVal.setTransactions60mins(toArray(t60minCount));
 			retVal.setLatency60mins(toLatency(t60minCount, t60minTime));
 			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
 
@@ -1409,7 +1449,7 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private GServiceMethod toUi(PersServiceVersionMethod theMethod, boolean theLoadStats) {
+	private GServiceMethod toUi(PersServiceVersionMethod theMethod, boolean theLoadStats) throws ProcessingException {
 		GServiceMethod retVal = new GServiceMethod();
 		if (theMethod.getPid() != null) {
 			retVal.setPid(theMethod.getPid());
@@ -1420,12 +1460,12 @@ public class AdminServiceBean implements IAdminService {
 		if (theLoadStats) {
 			retVal.setStatsInitialized(true);
 			StatusEnum status = StatusEnum.UNKNOWN;
-			int[] t60minCount = new int[60];
-			long[] t60minTime = new long[60];
+			ArrayList<Integer> t60minCount = new ArrayList<Integer>();
+			ArrayList<Long> t60minTime = new ArrayList<Long>();
 
-			extractStatus(t60minCount, t60minTime, theMethod);
+			extractStatus(60, t60minCount, t60minTime, theMethod);
 
-			retVal.setTransactions60mins(t60minCount);
+			retVal.setTransactions60mins(toArray(t60minCount));
 			retVal.setLatency60mins(toLatency(t60minCount, t60minTime));
 			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
 
@@ -1553,9 +1593,9 @@ public class AdminServiceBean implements IAdminService {
 		if (svcVer == null) {
 			throw new IllegalArgumentException("Unknown Service Version " + theServiceVersionPid);
 		}
-		
-		List<GUrlStatus> retVal=new ArrayList<GUrlStatus>();
-		
+
+		List<GUrlStatus> retVal = new ArrayList<GUrlStatus>();
+
 		for (PersServiceVersionUrl nextUrl : svcVer.getUrls()) {
 			PersServiceVersionUrlStatus nextUrlStatus = nextUrl.getStatus();
 			retVal.add(toUi(nextUrlStatus, nextUrl));
@@ -1565,7 +1605,7 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	private GUrlStatus toUi(PersServiceVersionUrlStatus theUrlStatus, PersServiceVersionUrl theUrl) {
-		GUrlStatus retVal=new GUrlStatus();
+		GUrlStatus retVal = new GUrlStatus();
 		retVal.setUrlPid(theUrl.getPid());
 		retVal.setUrl(theUrl.getUrl());
 		retVal.setStatus(theUrlStatus.getStatus());
@@ -1576,6 +1616,18 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setLastFault(theUrlStatus.getLastFault());
 		retVal.setLastFaultMessage(theUrlStatus.getLastFaultMessage());
 		return retVal;
+	}
+
+	public static long addToLong(long theAddTo, long theNumberToAdd) {
+		long newValue = theAddTo + theNumberToAdd;
+		return newValue;
+	}
+
+	/**
+	 * Unit test only
+	 */
+	void setConfigSvc(IConfigService theConfigSvc) {
+		myConfigSvc = theConfigSvc;
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {

@@ -5,6 +5,7 @@ import java.util.Date;
 import javax.ejb.Local;
 
 import net.svcret.ejb.api.HttpResponseBean.Failure;
+import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
@@ -46,6 +47,8 @@ public interface IRuntimeStatus {
 	void flushStatus();
 
 	BasePersInvocationStats getOrCreateInvocationStatsSynchronously(PersInvocationStatsPk thePk);
+
+	void collapseStats() throws ProcessingException;
 
 	
 }

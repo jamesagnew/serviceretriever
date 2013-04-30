@@ -13,4 +13,13 @@ public class Queries {
 	public static final String SERVICE_FIND = "PersService.find";
 	public static final String SERVICE_FIND_Q = "SELECT s FROM PersService s WHERE s.myServiceId = :SERVICE_ID AND s.myDomain.myPid = :DOMAIN_PID";
 	
+	public static final String PERSINVOC_STATS = "PersInvocationStats.findBeforeDate";
+	public static final String PERSINVOC_STATS_Q = "SELECT s FROM PersInvocationStats s WHERE s.myPk.myInterval = :INTERVAL AND s.myPk.myStartTime < :BEFORE_DATE";
+
+	public static final String PERSINVOC_USERSTATS = "PersInvocationUserStats.findBeforeDate";
+	public static final String PERSINVOC_USERSTATS_Q = "SELECT s FROM PersInvocationUserStats s WHERE s.myPk.myInterval = :INTERVAL AND s.myPk.myStartTime < :BEFORE_DATE";
+
+	public static final String PERSINVOC_ANONSTATS = "PersInvocationAnonStats.findBeforeDate";
+	public static final String PERSINVOC_ANONSTATS_Q = "SELECT s FROM PersInvocationAnonStats s WHERE s.myPk.myInterval = :INTERVAL AND s.myPk.myStartTime < :BEFORE_DATE";
+
 }

@@ -158,7 +158,12 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 			ourLog.error("Failure when adding a service version", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
-		retVal.setNewService(myAdminSvc.getServiceByPid(service));
+		try {
+			retVal.setNewService(myAdminSvc.getServiceByPid(service));
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to create service version", e);
+			throw new ServiceFailureException("Failed to create service version - " + e.getMessage());
+		}
 
 		return retVal;
 	}

@@ -347,7 +347,7 @@ public class Soap11ServiceInvokerTest {
 		InvocationResponseResultsBean response = svc.processInvocationResponse(httpResponse);
 		
 		assertEquals(ResponseTypeEnum.FAULT, response.getResponseType());
-		assertEquals(null, response.getResponseFaultCode());
+		assertEquals("", response.getResponseFaultCode());
 		assertEquals("Server Error", response.getResponseFaultDescription());
 		verify(httpResponse, atLeastOnce()).getBody();
 		verify(httpResponse, atLeastOnce()).getContentType();

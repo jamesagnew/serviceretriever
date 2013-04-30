@@ -17,30 +17,49 @@ import net.svcret.ejb.api.ISecurityService;
 public class SchedulerBean implements IScheduler {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(SchedulerBean.class);
-	
+
 	@EJB
 	private ISecurityService mySecuritySvc;
-	
+
 	@EJB
 	private IRuntimeStatus myStatsSvc;
-	
+
 	@PostConstruct
 	public void postConstruct() {
 		ourLog.info("Scheduler has started");
 		mySecuritySvc.loadUserCatalogIfNeeded();
 	}
-	
+
 	@Override
 	@Schedule(second = "0", minute = "*", hour = "*")
 	public void reloadUserRegistry() {
-		mySecuritySvc.loadUserCatalogIfNeeded();
+		try {
+			mySecuritySvc.loadUserCatalogIfNeeded();
+		} catch (Exception e) {
+			ourLog.error("Failed to load user catalog", e);
+		}
 	}
 
 	@Override
 	@Schedule(second = "0", minute = "*", hour = "*")
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	public void flushStats() {
-		myStatsSvc.flushStatus();
+		try {
+			myStatsSvc.flushStatus();
+		} catch (Exception e) {
+			ourLog.error("Failed to flush stats", e);
+		}
 	}
-	
+
+	@Override
+	@Schedule(second = "0", minute = "*", hour = "*")
+	@TransactionAttribute(TransactionAttributeType.NEVER)
+	public void collapseStats() {
+		try {
+			myStatsSvc.collapseStats();
+		} catch (Exception e) {
+			ourLog.error("Failed to collapse stats", e);
+		}
+	}
+
 }
