@@ -1,5 +1,6 @@
 package net.svcret.ejb.ejb;
 
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,6 +14,7 @@ import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.management.MBeanServer;
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 import javax.persistence.NoResultException;
@@ -22,6 +24,8 @@ import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.management.ManagementService;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.ex.ProcessingException;
@@ -68,6 +72,7 @@ public class DaoBean implements IDao {
 
 	private Map<Long, Long> myServiceVersionPidToStatusPid = new HashMap<Long, Long>();
 
+	
 	@Override
 	public void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost) {
 		Validate.notNull(theAuthHost, "AuthenticationHost");
