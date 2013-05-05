@@ -126,14 +126,19 @@
 		</dependency>
 		 -->
 		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-core</artifactId>
-			<version>4.2.0.Final</version>
+			<groupId>net.sf.ehcache</groupId>
+			<artifactId>ehcache</artifactId>
+			<version>2.7.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
-			<version>4.2.0.Final</version>
+			<version>4.2.1.Final</version>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>4.2.1.Final</version>
 			<classifier>sources</classifier>
 			<scope>provided</scope>
 		</dependency>
@@ -147,19 +152,12 @@
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-entitymanager</artifactId>
-			<version>4.2.0.Final</version>
+			<version>4.2.1.Final</version>
 		</dependency>
 		<dependency>
-			<groupId>net.sf.ehcache</groupId>
-			<artifactId>ehcache</artifactId>
-			<version>2.7.0</version>
-		</dependency>
-		<dependency>
-			<groupId>net.sf.ehcache</groupId>
-			<artifactId>ehcache</artifactId>
-			<version>2.7.0</version>
-			<classifier>sources</classifier>
-			<scope>provided</scope>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-ehcache</artifactId>
+			<version>4.2.1.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>javax.transaction</groupId>
@@ -265,9 +263,9 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-               				<classpathPrefix>lib/</classpathPrefix>
+							<classpathPrefix>lib/</classpathPrefix>
 							<useUniqueVersions>false</useUniqueVersions>
-               			</manifest>
+						</manifest>
 					</archive>
 				</configuration>
 			</plugin>

@@ -452,13 +452,6 @@ public class HttpClientBeanTest {
 
 		}
 
-		/**
-		 * @param theResponse
-		 *            the response to set
-		 */
-		public void setResponse(String theResponse) {
-			myResponse = theResponse;
-		}
 
 		public void waitToStart() throws InterruptedException {
 			ourLog.info("Waiting for responder to start");

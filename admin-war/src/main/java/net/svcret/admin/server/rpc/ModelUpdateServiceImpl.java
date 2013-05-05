@@ -454,10 +454,15 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
-	public void saveConfig(GConfig theConfig) {
+	public void saveConfig(GConfig theConfig) throws ServiceFailureException {
 		ourLog.info("Saving config");
 
-		myAdminSvc.saveConfig(theConfig);
+		try {
+			myAdminSvc.saveConfig(theConfig);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to save config", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
 	}
 
 	@Override

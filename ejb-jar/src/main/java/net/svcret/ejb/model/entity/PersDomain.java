@@ -22,7 +22,7 @@ import net.svcret.admin.shared.model.StatusEnum;
 
 @Table(name = "PX_DOMAIN")
 @Entity()
-public class PersDomain extends BasePersObject {
+public class PersDomain extends BasePersKeepsRecentTransactions {
 
 	private static final long serialVersionUID = 1L;
 

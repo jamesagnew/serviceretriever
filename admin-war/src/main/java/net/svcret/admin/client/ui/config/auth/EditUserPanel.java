@@ -74,7 +74,7 @@ public class EditUserPanel extends FlowPanel {
 		myUsernamePasswordGrid = new TwoColumnGrid();
 		myContentPanel.add(myUsernamePasswordGrid);
 
-		PButton saveButton = new PButton(AdminPortal.MSGS.actions_Save(), new ClickHandler() {
+		PButton saveButton = new PButton(AdminPortal.IMAGES.iconSave(),AdminPortal.MSGS.actions_Save(), new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
 				save();
@@ -122,6 +122,7 @@ public class EditUserPanel extends FlowPanel {
 
 		if (theAuthHost.isSupportsPasswordChange()) {
 			myPasswordCheckbox = new CheckBox(MSGS.editUser_Password());
+			myPasswordCheckbox.setStyleName(CssConstants.FORM_LABEL);
 			myPasswordCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
 				@Override
 				public void onValueChange(ValueChangeEvent<Boolean> theEvent) {

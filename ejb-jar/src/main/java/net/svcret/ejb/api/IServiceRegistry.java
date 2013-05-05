@@ -4,13 +4,12 @@ import java.util.List;
 
 import javax.ejb.Local;
 
+import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersService;
-import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 
 @Local
 public interface IServiceRegistry {
@@ -26,7 +25,7 @@ public interface IServiceRegistry {
 
 	PersDomain getOrCreateDomainWithId(String theId) throws ProcessingException;
 
-	PersServiceVersionSoap11 getOrCreateServiceVersionWithId(PersService theService, String theVersionId) throws ProcessingException;
+	BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, ServiceProtocolEnum theProtocol, String theVersionId) throws ProcessingException;
 
 	PersService getOrCreateServiceWithId(PersDomain theDomain, String theId) throws ProcessingException;
 

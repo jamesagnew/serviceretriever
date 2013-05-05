@@ -24,6 +24,7 @@ import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
 import net.svcret.admin.shared.model.ServerSecuredEnum;
+import net.svcret.ejb.api.ResponseTypeEnum;
 
 import org.hibernate.annotations.ForeignKey;
 
@@ -32,12 +33,17 @@ import com.google.common.base.Objects;
 @Table(name = "PX_SVC", uniqueConstraints = { @UniqueConstraint(name = "PX_SVC_CONS_DOMSVC", columnNames = { "DOMAIN_PID", "SERVICE_ID" }) })
 @Entity
 @NamedQueries(value = { @NamedQuery(name = Queries.SERVICE_FIND, query = Queries.SERVICE_FIND_Q) })
-public class PersService extends BasePersObject {
+public class PersService extends BasePersKeepsRecentTransactions {
 
 	private static final long serialVersionUID = 1L;
 
 	@Column(name = "SVC_ACTIVE")
 	private boolean myActive;
+
+	@ManyToOne()
+	@JoinColumn(name = "DOMAIN_PID", referencedColumnName = "PID", nullable = false)
+	@ForeignKey(name = "PX_SVC_DOMAIN_PID")
+	private PersDomain myDomain;
 
 	@Transient
 	private transient HashMap<String, BasePersServiceVersion> myIdToVersion;
@@ -46,15 +52,13 @@ public class PersService extends BasePersObject {
 	@Column(name = "OPTLOCK")
 	private int myOptLock;
 
-	@ManyToOne()
-	@JoinColumn(name = "DOMAIN_PID", referencedColumnName = "PID", nullable = false)
-	@ForeignKey(name = "PX_SVC_DOMAIN_PID")
-	private PersDomain myDomain;
-
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "PID")
 	private Long myPid;
+
+	@Transient
+	private transient ServerSecuredEnum myServerSecured;
 
 	@Column(name = "SERVICE_ID", nullable = false, length = 100)
 	private String myServiceId;
@@ -62,11 +66,8 @@ public class PersService extends BasePersObject {
 	@Column(name = "SERVICE_NAME", nullable = false, length = 200)
 	private String myServiceName = "";
 
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true, mappedBy="myService")
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true, mappedBy = "myService")
 	private Collection<BasePersServiceVersion> myVersions;
-
-	@Transient
-	private transient ServerSecuredEnum myServerSecured;
 
 	public PersService() {
 		super();
@@ -77,6 +78,22 @@ public class PersService extends BasePersObject {
 		setServiceId(theServiceId);
 		setServiceName(theServiceName);
 		setDomain(theDomain);
+	}
+
+	public void addVersion(BasePersServiceVersion theVersion) {
+		getVersions();
+		if (!myVersions.contains(theVersion)) {
+			myVersions.add(theVersion);
+		}
+	}
+
+	@Override
+	public Integer determineKeepNumRecentTransactions(ResponseTypeEnum theResultType) {
+		Integer retVal = super.determineKeepNumRecentTransactions(theResultType);
+		if (retVal == null) {
+			retVal = myDomain.determineKeepNumRecentTransactions(theResultType);
+		}
+		return retVal;
 	}
 
 	/**
@@ -102,6 +119,14 @@ public class PersService extends BasePersObject {
 		return Objects.equal(myPid, obj.myPid);
 	}
 
+	public Collection<PersServiceVersionMethod> getAllServiceVersionMethods() {
+		List<PersServiceVersionMethod> retVal = new ArrayList<PersServiceVersionMethod>();
+		for (BasePersServiceVersion nextServicVersion : getVersions()) {
+			retVal.addAll(nextServicVersion.getMethods());
+		}
+		return Collections.unmodifiableList(retVal);
+	}
+
 	/**
 	 * @return the persDomain
 	 */
@@ -121,6 +146,15 @@ public class PersService extends BasePersObject {
 	 */
 	public Long getPid() {
 		return myPid;
+	}
+
+	public ServerSecuredEnum getServerSecured() {
+		if (myServerSecured == null) {
+			for (BasePersServiceVersion next : getVersions()) {
+				myServerSecured = ServerSecuredEnum.merge(myServerSecured, next.getServerSecured());
+			}
+		}
+		return myServerSecured;
 	}
 
 	/**
@@ -145,6 +179,15 @@ public class PersService extends BasePersObject {
 			myVersions = new ArrayList<BasePersServiceVersion>();
 		}
 		return Collections.unmodifiableCollection(myVersions);
+	}
+
+	public BasePersServiceVersion getVersionWithId(String theId) {
+		for (BasePersServiceVersion next : getVersions()) {
+			if (next.getVersionId().equals(theId)) {
+				return next;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -173,20 +216,23 @@ public class PersService extends BasePersObject {
 		}
 	}
 
+	public void merge(PersService theService) {
+		setServiceId(theService.getServiceId());
+		setServiceName(theService.getServiceName());
+		setActive(theService.isActive());
+	}
+
+	public void removeVersion(BasePersServiceVersion theVersion) {
+		getVersions();
+		myVersions.remove(theVersion);
+	}
+
 	/**
 	 * @param theActive
 	 *            the active to set
 	 */
 	public void setActive(boolean theActive) {
 		myActive = theActive;
-	}
-
-	/**
-	 * @param theOptLock
-	 *            the versionNum to set
-	 */
-	public void setOptLock(int theOptLock) {
-		myOptLock = theOptLock;
 	}
 
 	/**
@@ -198,6 +244,14 @@ public class PersService extends BasePersObject {
 			thePersDomain.addService(this);
 		}
 		myDomain = thePersDomain;
+	}
+
+	/**
+	 * @param theOptLock
+	 *            the versionNum to set
+	 */
+	public void setOptLock(int theOptLock) {
+		myOptLock = theOptLock;
 	}
 
 	/**
@@ -223,50 +277,6 @@ public class PersService extends BasePersObject {
 	 */
 	public void setServiceName(String theServiceName) {
 		myServiceName = theServiceName;
-	}
-
-	public Collection<PersServiceVersionMethod> getAllServiceVersionMethods() {
-		List<PersServiceVersionMethod> retVal = new ArrayList<PersServiceVersionMethod>();
-		for (BasePersServiceVersion nextServicVersion : getVersions()) {
-			retVal.addAll(nextServicVersion.getMethods());
-		}
-		return Collections.unmodifiableList(retVal);
-	}
-
-	public BasePersServiceVersion getVersionWithId(String theId) {
-		for (BasePersServiceVersion next : getVersions()) {
-			if (next.getVersionId().equals(theId)) {
-				return next;
-			}
-		}
-		return null;
-	}
-
-	public void addVersion(BasePersServiceVersion theVersion) {
-		getVersions();
-		if (!myVersions.contains(theVersion)) {
-			myVersions.add(theVersion);
-		}
-	}
-
-	public void removeVersion(BasePersServiceVersion theVersion) {
-		getVersions();
-		myVersions.remove(theVersion);
-	}
-
-	public ServerSecuredEnum getServerSecured() {
-		if (myServerSecured == null) {
-			for (BasePersServiceVersion next : getVersions()) {
-				myServerSecured = ServerSecuredEnum.merge(myServerSecured, next.getServerSecured());
-			}
-		}
-		return myServerSecured;
-	}
-
-	public void merge(PersService theService) {
-		setServiceId(theService.getServiceId());
-		setServiceName(theService.getServiceName());
-		setActive(theService.isActive());
 	}
 
 }

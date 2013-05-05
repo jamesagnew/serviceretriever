@@ -10,6 +10,8 @@ public interface IScheduler {
 	void flushStats();
 
 	void collapseStats();
+
+	void flushTransactionLogs();
  
 	
 }

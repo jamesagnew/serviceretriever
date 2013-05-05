@@ -58,6 +58,15 @@ public class HttpClientConfigsPanel extends FlowPanel {
 	public HttpClientConfigsPanel() {
 		initConfigListPanel();
 		initDetailsPanel();
+		
+		Model.getInstance().loadHttpClientConfigs(new IAsyncLoadCallback<GHttpClientConfigList>() {
+			@Override
+			public void onSuccess(GHttpClientConfigList theResult) {
+				setConfigList(theResult);
+			}
+
+		});
+
 	}
 
 	private void addConfig() {
@@ -208,14 +217,6 @@ public class HttpClientConfigsPanel extends FlowPanel {
 
 		HorizontalPanel buttonsBar = new HorizontalPanel();
 		contentPanel.add(buttonsBar);
-
-		Model.getInstance().loadHttpClientConfigs(new IAsyncLoadCallback<GHttpClientConfigList>() {
-			@Override
-			public void onSuccess(GHttpClientConfigList theResult) {
-				setConfigList(theResult);
-			}
-
-		});
 
 	}
 

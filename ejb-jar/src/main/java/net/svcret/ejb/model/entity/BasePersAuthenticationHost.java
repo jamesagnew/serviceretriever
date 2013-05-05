@@ -25,7 +25,7 @@ import net.svcret.admin.shared.model.AuthorizationHostTypeEnum;
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "AUTH_TYPE", length = 20, discriminatorType = DiscriminatorType.STRING)
 @NamedQueries(value = { @NamedQuery(name = Queries.AUTHHOST_FINDALL, query = Queries.AUTHHOST_FINDALL_Q) })
-public abstract class BasePersAuthenticationHost extends BasePersObject {
+public abstract class BasePersAuthenticationHost extends BasePersKeepsRecentTransactions {
 
 	public static final String MODULE_DESC_ADMIN_AUTH = "Default authentication host";
 

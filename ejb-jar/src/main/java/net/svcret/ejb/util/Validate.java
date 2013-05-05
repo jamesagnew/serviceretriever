@@ -69,4 +69,10 @@ public class Validate extends org.apache.commons.lang3.Validate {
 		}
 	}
 
+	public static void notNegative(int theNumber) {
+		if (theNumber < 0) {
+			throw new IllegalArgumentException("Number must not be negative: " + theNumber);
+		}
+	}
+
 }

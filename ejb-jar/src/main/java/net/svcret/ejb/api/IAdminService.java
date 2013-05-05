@@ -69,7 +69,7 @@ public interface IAdminService {
 
 	GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) throws ProcessingException;
 
-	void saveConfig(GConfig theConfig);
+	GConfig saveConfig(GConfig theConfig) throws ProcessingException;
 
 	GDomain saveDomain(GDomain theDomain) throws ProcessingException;
 

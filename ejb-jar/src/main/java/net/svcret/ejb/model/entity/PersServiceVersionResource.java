@@ -13,6 +13,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import com.google.common.base.Objects;
+
 @Table(name = "PX_SVC_VER_RES", uniqueConstraints = { @UniqueConstraint(columnNames = { "SVC_VERSION_PID", "RES_URL" }) })
 @Entity
 public class PersServiceVersionResource extends BasePersObject {
@@ -24,20 +26,32 @@ public class PersServiceVersionResource extends BasePersObject {
 	@Column(name = "PID")
 	private Long myPid;
 
+	@Column(name = "RES_TYPE", length = 50, nullable = false)
+	private String myResourceContentType;
+
 	@Lob()
 	@Basic(fetch = FetchType.LAZY)
-	@Column(name = "RES_TEXT", nullable=false)
+	@Column(name = "RES_TEXT", nullable = false)
 	private String myResourceText;
 
-	@Column(name = "RES_TYPE", length = 50, nullable=false)
-	private String myResourceContentType;
-	
-	@Column(name = "RES_URL", length = 200, nullable=false)
+	@Column(name = "RES_URL", length = 200, nullable = false)
 	private String myResourceUrl;
-	
+
 	@ManyToOne()
 	@JoinColumn(name = "SVC_VERSION_PID", referencedColumnName = "PID")
 	private BasePersServiceVersion myServiceVersion;
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean equals(Object theObj) {
+		if (!(theObj instanceof PersServiceVersionResource)) {
+			return false;
+		}
+
+		return myPid.equals(((PersServiceVersionResource) theObj).getPid());
+	}
 
 	/**
 	 * @return the pid
@@ -47,17 +61,17 @@ public class PersServiceVersionResource extends BasePersObject {
 	}
 
 	/**
-	 * @return the wsdlText
-	 */
-	public String getResourceText() {
-		return myResourceText;
-	}
-
-	/**
 	 * @return the resourceType
 	 */
 	public String getResourceContentType() {
 		return myResourceContentType;
+	}
+
+	/**
+	 * @return the wsdlText
+	 */
+	public String getResourceText() {
+		return myResourceText;
 	}
 
 	/**
@@ -74,8 +88,22 @@ public class PersServiceVersionResource extends BasePersObject {
 		return myServiceVersion;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int hashCode() {
+		return Objects.hashCode(getPid());
+	}
+
 	public void loadAllAssociations() {
 		// nothing
+	}
+
+	public void merge(PersServiceVersionResource theObj) {
+		setResourceContentType(theObj.getResourceContentType());
+		setResourceText(theObj.getResourceText());
+		setResourceUrl(theObj.getResourceUrl());
 	}
 
 	/**
@@ -87,18 +115,19 @@ public class PersServiceVersionResource extends BasePersObject {
 	}
 
 	/**
+	 * @param theResourceType
+	 *            the resourceType to set
+	 */
+	public void setResourceContentType(String theResourceType) {
+		myResourceContentType = theResourceType;
+	}
+
+	/**
 	 * @param theResourceText
 	 *            the wsdlText to set
 	 */
 	public void setResourceText(String theResourceText) {
 		myResourceText = theResourceText;
-	}
-
-	/**
-	 * @param theResourceType the resourceType to set
-	 */
-	public void setResourceContentType(String theResourceType) {
-		myResourceContentType = theResourceType;
 	}
 
 	/**
@@ -115,12 +144,6 @@ public class PersServiceVersionResource extends BasePersObject {
 	 */
 	public void setServiceVersion(BasePersServiceVersion theServiceVersion) {
 		myServiceVersion = theServiceVersion;
-	}
-
-	public void merge(PersServiceVersionResource theObj) {
-		setResourceContentType(theObj.getResourceContentType());
-		setResourceText(theObj.getResourceText());
-		setResourceUrl(theObj.getResourceUrl());
 	}
 
 }

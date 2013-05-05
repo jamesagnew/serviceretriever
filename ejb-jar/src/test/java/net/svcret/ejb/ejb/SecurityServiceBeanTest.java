@@ -1,6 +1,7 @@
 package net.svcret.ejb.ejb;
 
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
@@ -24,7 +25,6 @@ import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.internal.matchers.CapturingMatcher;
 
 public class SecurityServiceBeanTest {
 

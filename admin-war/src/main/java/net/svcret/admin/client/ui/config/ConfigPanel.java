@@ -9,6 +9,7 @@ import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.GConfig;
 
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -38,7 +39,7 @@ public class ConfigPanel extends FlowPanel {
 
 		HorizontalPanel savePanel = new HorizontalPanel();
 		contentPanel.add(savePanel);
-		
+
 		PButton saveButton = new PButton(IMAGES.iconSave(), MSGS.actions_Save());
 		saveButton.addClickHandler(new ClickHandler() {
 			@Override
@@ -47,18 +48,19 @@ public class ConfigPanel extends FlowPanel {
 			}
 		});
 		savePanel.add(saveButton);
-		
-		mySpinner=new LoadingSpinner();
+
+		mySpinner = new LoadingSpinner();
 		mySpinner.show();
 		savePanel.add(mySpinner);
-		
+
 		Model.getInstance().loadConfig(new IAsyncLoadCallback<GConfig>() {
 			@Override
 			public void onSuccess(GConfig theResult) {
 				initConfig(theResult);
+				mySpinner.hide();
 			}
 		});
-		
+
 	}
 
 	private void initConfig(GConfig theResult) {
@@ -80,21 +82,22 @@ public class ConfigPanel extends FlowPanel {
 		listPanel.add(contentPanel);
 
 		TwoColumnGrid props = new TwoColumnGrid();
-		listPanel.add(props);
-		
+		contentPanel.add(props);
+
 		myUrlBaseTextBox = new TextBox();
+		myUrlBaseTextBox.getElement().getStyle().setWidth(200, Unit.PX);
 		myUrlBaseTextBox.setValue(myConfig.getProxyUrlBases().iterator().next());
 		props.addRow(MSGS.configPanel_UrlBase(), myUrlBaseTextBox);
 		props.addDescription(MSGS.configPanel_UrlBaseDesc());
 	}
 
 	protected void save() {
-		
+
 		myConfig.getProxyUrlBases().add(myUrlBaseTextBox.getValue());
 		while (myConfig.getProxyUrlBases().size() > 1) {
 			myConfig.getProxyUrlBases().remove(1);
 		}
-		
+
 		mySpinner.show();
 		MODEL_SVC.saveConfig(myConfig, new AsyncCallback<Void>() {
 
@@ -108,7 +111,7 @@ public class ConfigPanel extends FlowPanel {
 				mySpinner.showMessage("Saved", false);
 			}
 		});
-		
+
 	}
-	
+
 }

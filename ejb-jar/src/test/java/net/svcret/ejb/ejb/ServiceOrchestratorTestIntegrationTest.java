@@ -1,6 +1,7 @@
 package net.svcret.ejb.ejb;
 
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
@@ -8,13 +9,14 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.Map;
 
+import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IResponseValidator;
-import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IServiceOrchestrator.OrchestratorResponseBean;
+import net.svcret.ejb.api.ITransactionLogger;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ejb.soap.Soap11ServiceInvoker;
@@ -22,13 +24,13 @@ import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.ex.UnknownRequestException;
+import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
-import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
 
 import org.junit.Before;
@@ -52,6 +54,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		DefaultAnswer.setDesignTime();
 	}
 	
+	@SuppressWarnings("null")
 	@Test
 	public void testSoap11GoodRequest() throws ProcessingException, InternalErrorException, UnknownRequestException, IOException, SecurityFailureException {
 
@@ -106,7 +109,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 		PersDomain d0 = myServiceRegistry.getOrCreateDomainWithId("d0");
 		PersService d0s0 = myServiceRegistry.getOrCreateServiceWithId(d0, "d0s0");
-		PersServiceVersionSoap11 d0s0v0 = myServiceRegistry.getOrCreateServiceVersionWithId(d0s0, "d0s0v0");
+		BasePersServiceVersion d0s0v0 = myServiceRegistry.getOrCreateServiceVersionWithId(d0s0, ServiceProtocolEnum.SOAP11, "d0s0v0");
 		PersServiceVersionMethod d0s0v0m0 = new PersServiceVersionMethod();
 		d0s0v0m0.setName("d0s0v0m0");
 		d0s0v0.addMethod(d0s0v0m0);
@@ -155,6 +158,9 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		respBean.setSuccessfulUrl("http://foo");
 		when(myHttpClient.post(theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
 
+		ITransactionLogger transactionLogger = mock(ITransactionLogger.class);
+		mySvc.setTransactionLogger(transactionLogger);
+		
 		DefaultAnswer.setRunTime();
 
 		OrchestratorResponseBean resp = null;

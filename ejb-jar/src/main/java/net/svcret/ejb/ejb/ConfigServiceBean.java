@@ -3,6 +3,8 @@ package net.svcret.ejb.ejb;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
@@ -28,14 +30,14 @@ public class ConfigServiceBean implements IConfigService {
 
 	@Override
 	public PersConfig getConfig() throws ProcessingException {
-		if (myConfig!=null) {
+		if (myConfig != null) {
 			return myConfig;
 		}
 		PersConfig retVal = myDao.getConfigByPid(PersConfig.DEFAULT_ID);
 		if (retVal == null) {
 			retVal = new PersConfig();
 			retVal.setDefaults();
-			retVal=saveConfig(retVal);
+			retVal = saveConfig(retVal);
 		}
 
 		return retVal;
@@ -65,5 +67,21 @@ public class ConfigServiceBean implements IConfigService {
 	private void loadConfig() {
 		myConfig = myDao.getConfigByPid(PersConfig.DEFAULT_ID);
 		myCurrentVersion = myDao.getStateCounter(STATE_KEY);
+	}
+
+	/**
+	 * For unit tests only
+	 */
+	@VisibleForTesting
+	void setDao(DaoBean theDao) {
+		myDao = theDao;
+	}
+
+	/**
+	 * For unit tests only
+	 */
+	@VisibleForTesting
+	void setBroadcastSender(IBroadcastSender theBroadcastSender) {
+		myBroadcastSender = theBroadcastSender;
 	}
 }

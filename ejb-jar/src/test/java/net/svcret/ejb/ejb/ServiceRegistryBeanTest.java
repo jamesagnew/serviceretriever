@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import javax.xml.bind.JAXBException;
 
+import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IDao;
@@ -61,7 +62,7 @@ public class ServiceRegistryBeanTest {
 		verDef.setWsdlUrl("http://foo/wsdl.wsdl");
 		def.getVersions().add(verDef);
 
-		String defString = svcs.toXml();
+		svcs.toXml();
 
 		
 		String wsdlBody = IOUtils.readClasspathIntoString("/test_simple.wsdl");
@@ -74,7 +75,7 @@ public class ServiceRegistryBeanTest {
 		when(myPersistence.getOrCreateServiceWithId(domain, "SERVICE")).thenReturn(service);
 
 		PersServiceVersionSoap11 version = new PersServiceVersionSoap11(3L, service, "VER0");
-		when(myPersistence.getOrCreateServiceVersionWithId(service, "VER0")).thenReturn(version);
+		when(myPersistence.getOrCreateServiceVersionWithId(service, "VER0", ServiceProtocolEnum.SOAP11)).thenReturn(version);
 
 //		when(myPersistence.saveServiceVersion(version));
 		

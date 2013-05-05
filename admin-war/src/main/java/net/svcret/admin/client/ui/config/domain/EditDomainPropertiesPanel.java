@@ -42,7 +42,7 @@ public class EditDomainPropertiesPanel extends FlowPanel {
 
 		@Override
 		public void onClick(ClickEvent theEvent) {
-			if (myEditDomainBasicPropertiesPanel.validateValues()) {
+			if (myEditDomainBasicPropertiesPanel.validateValuesAndApplyValues()) {
 				myEditDomainBasicPropertiesPanel.showMessage("Saving Domain...", true);
 				AdminPortal.MODEL_SVC.saveDomain(myDomain, this);
 			}

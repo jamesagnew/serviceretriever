@@ -14,6 +14,7 @@ import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IHttpClient;
@@ -71,8 +72,8 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	}
 
 	@Override
-	public PersServiceVersionSoap11 getOrCreateServiceVersionWithId(PersService theService, String theVersionId) throws ProcessingException {
-		PersServiceVersionSoap11 retVal = myDao.getOrCreateServiceVersionWithId(theService, theVersionId);
+	public BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, ServiceProtocolEnum theProtocol, String theVersionId) throws ProcessingException {
+		BasePersServiceVersion retVal = myDao.getOrCreateServiceVersionWithId(theService, theVersionId, theProtocol);
 		if (retVal.isNewlyCreated()) {
 			catalogHasChanged();
 		}

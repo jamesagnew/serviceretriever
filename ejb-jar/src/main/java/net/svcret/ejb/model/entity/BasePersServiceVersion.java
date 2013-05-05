@@ -43,7 +43,7 @@ import org.hibernate.annotations.ForeignKey;
 @Table(name = "PX_SVC_VER", uniqueConstraints = { @UniqueConstraint(columnNames = { "SERVICE_PID", "VERSION_ID" }) })
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "SVCVER_TYPE", length = 20, discriminatorType = DiscriminatorType.STRING)
-public abstract class BasePersServiceVersion extends BasePersObject {
+public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransactions {
 
 	private static final long serialVersionUID = 1L;
 
@@ -70,7 +70,7 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("METHOD_ORDER")
 	private List<PersServiceVersionMethod> myMethods;
-	
+
 	@Transient
 	private transient Map<String, PersServiceVersionMethod> myNameToMethod;
 
@@ -78,7 +78,6 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 	@Column(name = "OPTLOCK")
 	private int myOptLock;
 
-	
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "PID")
@@ -107,22 +106,11 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 	@OrderBy("URL_ORDER")
 	private List<PersServiceVersionUrl> myUrls;
 
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myPk.myServiceVersion")
-	@OrderBy("KEEP_ORDER")
-	private List<PersKeepRecentTransactions> myKeepRecentTransactions;
-
-	public List<PersKeepRecentTransactions> getKeepRecentTransactions() {
-		if (myKeepRecentTransactions == null) {
-			myKeepRecentTransactions = new ArrayList<PersKeepRecentTransactions>();
-		}
-		return myKeepRecentTransactions;
-	}
+	@Transient
+	private transient Map<String, PersServiceVersionUrl> myUrlToUrl;
 
 	@Column(name = "VERSION_ID", length = 200, nullable = false)
 	private String myVersionId;
-
-	@Transient
-	private transient Map<String, PersServiceVersionUrl> myUrlToUrl;
 
 	public void addClientAuth(int theIndex, PersBaseClientAuth<?> theAuth) {
 		theAuth.setServiceVersion(this);
@@ -134,6 +122,13 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 		theAuth.setServiceVersion(this);
 		getClientAuths();
 		myClientAuths.add(theAuth);
+	}
+
+	public void addMethod(PersServiceVersionMethod method) {
+		getMethods();
+		myMethods.add(method);
+
+		myNameToMethod = null;
 	}
 
 	public PersServiceVersionResource addResource(String theUrl, String theContentType, String theText) {
@@ -153,6 +148,24 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 		myServerAuths.add(theAuth);
 	}
 
+	public void addUrl(PersServiceVersionUrl theUrl) {
+		Validate.notNull(theUrl, "URL");
+		getUrls();
+		if (!myUrls.contains(theUrl)) {
+			myUrls.add(theUrl);
+			urlsChanged();
+		}
+	}
+
+	@Override
+	public Integer determineKeepNumRecentTransactions(ResponseTypeEnum theResultType) {
+		Integer retVal = super.determineKeepNumRecentTransactions(theResultType);
+		if (retVal == null) {
+			retVal = myService.determineKeepNumRecentTransactions(theResultType);
+		}
+		return retVal;
+	}
+
 	/**
 	 * @return the clientAuths
 	 */
@@ -161,6 +174,15 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 			myClientAuths = new ArrayList<PersBaseClientAuth<?>>();
 		}
 		return Collections.unmodifiableList(myClientAuths);
+	}
+
+	public PersBaseClientAuth<?> getClientAuthWithPid(Long thePid) {
+		for (PersBaseClientAuth<?> next : getClientAuths()) {
+			if (next.getPid() != null && next.getPid().equals(thePid)) {
+				return next;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -186,6 +208,15 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 		}
 
 		return myNameToMethod.get(theName);
+	}
+
+	public List<String> getMethodNames() {
+		ArrayList<String> retVal = new ArrayList<String>();
+		for (PersServiceVersionMethod nextMethod : getMethods()) {
+			retVal.add(nextMethod.getName());
+		}
+		Collections.sort(retVal);
+		return Collections.unmodifiableList(retVal);
 	}
 
 	/**
@@ -225,13 +256,6 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 		return method;
 	}
 
-	public void addMethod(PersServiceVersionMethod method) {
-		getMethods();
-		myMethods.add(method);
-
-		myNameToMethod = null;
-	}
-
 	/**
 	 * @return the id
 	 */
@@ -263,15 +287,6 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 		return null;
 	}
 
-	public List<String> getMethodNames() {
-		ArrayList<String> retVal = new ArrayList<String>();
-		for (PersServiceVersionMethod nextMethod : getMethods()) {
-			retVal.add(nextMethod.getName());
-		}
-		Collections.sort(retVal);
-		return Collections.unmodifiableList(retVal);
-	}
-
 	public PersServiceVersionResource getResourceWithPid(long theXsdNum) {
 		for (PersServiceVersionResource next : getUriToResource().values()) {
 			if (next.getPid().equals(theXsdNum)) {
@@ -289,6 +304,23 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 			myServerAuths = new ArrayList<PersBaseServerAuth<?, ?>>();
 		}
 		return Collections.unmodifiableList(myServerAuths);
+	}
+
+	public PersBaseServerAuth<?, ?> getServerAuthWithPid(Long thePid) {
+		for (PersBaseServerAuth<?, ?> next : getServerAuths()) {
+			if (next.getPid() != null && next.getPid().equals(thePid)) {
+				return next;
+			}
+		}
+		return null;
+	}
+
+	public ServerSecuredEnum getServerSecured() {
+		if (getServerAuths().size() > 0) {
+			return ServerSecuredEnum.FULLY;
+		} else {
+			return ServerSecuredEnum.NONE;
+		}
 	}
 
 	/**
@@ -541,48 +573,5 @@ public abstract class BasePersServiceVersion extends BasePersObject {
 		myUrlToUrl = null;
 	}
 
-	public void addUrl(PersServiceVersionUrl theUrl) {
-		Validate.notNull(theUrl, "URL");
-		getUrls();
-		if (!myUrls.contains(theUrl)) {
-			myUrls.add(theUrl);
-			urlsChanged();
-		}
-	}
-
-	public PersBaseClientAuth<?> getClientAuthWithPid(Long thePid) {
-		for (PersBaseClientAuth<?> next : getClientAuths()) {
-			if (next.getPid() != null && next.getPid().equals(thePid)) {
-				return next;
-			}
-		}
-		return null;
-	}
-
-	public PersBaseServerAuth<?, ?> getServerAuthWithPid(Long thePid) {
-		for (PersBaseServerAuth<?, ?> next : getServerAuths()) {
-			if (next.getPid() != null && next.getPid().equals(thePid)) {
-				return next;
-			}
-		}
-		return null;
-	}
-
-	public ServerSecuredEnum getServerSecured() {
-		if (getServerAuths().size() > 0) {
-			return ServerSecuredEnum.FULLY;
-		} else {
-			return ServerSecuredEnum.NONE;
-		}
-	}
-
-	public PersKeepRecentTransactions getKeepRecentTransactions(ResponseTypeEnum theType) {
-		for (PersKeepRecentTransactions next : getKeepRecentTransactions()) {
-			if (next.getInvocationOutcome()==theType) {
-				return next;
-			}
-		}
-		return null;
-	}
 
 }

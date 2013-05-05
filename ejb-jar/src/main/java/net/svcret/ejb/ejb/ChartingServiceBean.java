@@ -6,7 +6,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import javax.ejb.EJB;
@@ -167,12 +166,6 @@ public class ChartingServiceBean implements IChartingServiceBean {
 			});
 						
 		}
-
-		List<Date> dates =new ArrayList<Date>();
-		for (int i = 0; i < timestamps.size(); i++) {
-			dates.add(new Date(timestamps.get(i)));
-		}
-		ourLog.info("Rendering usage graph for dates: " + dates);
 
 		return renderUsage(invCount, invCountFault, invCountFail, invCountSecurityFail, "Calls / Min", timestamps);
 	}

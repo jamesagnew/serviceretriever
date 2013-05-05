@@ -247,7 +247,7 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	String permissionsPanel_AdministrationPermissions();
 
 	@DefaultMessage("Full access")
-	SafeHtml permissionsPanel_AllDomainsCheckbox();
+	String permissionsPanel_AllDomainsCheckbox();
 
 	@DefaultMessage("This user has the following service permissions. Note that the permission " + "list here applies only to services which are configured to use ServiceProxy host security.")
 	String permissionsPanel_ServicePermissionsDesc();
@@ -462,5 +462,60 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Message Sizes")
 	String serviceVersionStats_MessageSizeTitle();
+
+	@DefaultMessage("When this checkbox is selected, the user has access to all services within all domains")
+	String permissionsPanel_AllDomainsDesc();
+
+	@DefaultMessage("Store Recent Transactions")
+	String keepRecentTransactionsPanel_Title();
 	
+	@DefaultMessage("If enabled, the given number of recent transactions will be kept in the Service Retriever database " +
+			"for troubleshooting, etc. As new transactions are performed, old transactions are removed from the database, " +
+			"so this feature is really only intended for troubleshooting and health checks. Responses are stored in " +
+			"different buckets according to transaction outcome, so it is possible to save (for example) " +
+			"more security failure transactions than successful ones. This also means that if most transactions " +
+			"have one outcome, transactions will still be saved for other outcomes. It is important to note " +
+			"that for performance, transactions to be written to the database are buffered in memory for " +
+			"up to a minute so it is important to not choose a very large number here.")
+	String keepRecentTransactionsPanel_Description();
+
+	@DefaultMessage("Success")
+	String keepRecentTransactionsPanel_OutcomeSuccess();
+
+	@DefaultMessage("Fail")
+	String keepRecentTransactionsPanel_OutcomeFail();
+
+	@DefaultMessage("Security Fail")
+	String keepRecentTransactionsPanel_OutcomeSecurityFail();
+
+	@DefaultMessage("Fault")
+	String keepRecentTransactionsPanel_OutcomeFault();
+
+	@DefaultMessage("Put the number of recent successful transactions to store here. If you do not " +
+			"wish to store transactions with this outcome, put zero or leave this field blank. Successful " +
+			"transactions are transactions where the underlying service implementation successfully returned " +
+			"a result.")
+	String keepRecentTransactionsPanel_OutcomeSuccessDesc();
+
+	@DefaultMessage("Put the number of recent security failure transactions to store here. If you do not " +
+			"wish to store transactions with this outcome, put zero or leave this field blank. Security failure " +
+			"transactions are transactions where Service Retriever could not successfully authenticate " +
+			"the requesting user, so the request was not allowed to proceed to the underlying service.")
+	String keepRecentTransactionsPanel_OutcomeSecurityFailDesc();
+
+	@DefaultMessage("Put the number of recent failed transactions to store here. If you do not " +
+			"wish to store transactions with this outcome, put zero or leave this field blank. Failed " +
+			"transactions are transactions where underlying service implementation failed to produce " +
+			"a valid response, or was unavailable.")
+	String keepRecentTransactionsPanel_OutcomeFailDesc();
+
+	@DefaultMessage("Put the number of recent fault transactions to store here. If you do not " +
+			"wish to store transactions with this outcome, put zero or leave this field blank. Fault " +
+			"transactions are transactions where the underlying service implementation produced a result " +
+			"which was valid, but which constituted a non-successful response.")
+	String keepRecentTransactionsPanel_OutcomeFaultDesc();
+
+	@DefaultMessage("Error: An invalid value {0} was found. Numbers must be 0 (meaning no messages will be stored) or positive (meaning this number will be stored before the oldest entries are deleted), and for performance reasons must be below {1}")
+	String keepRecentTransactionsPanel_AlertInvalidValue(String theValue, String theMax);
+
 }

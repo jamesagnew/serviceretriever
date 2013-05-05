@@ -12,6 +12,8 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IHttpClient;
@@ -23,6 +25,7 @@ import net.svcret.ejb.api.InvocationResultsBean.ResultTypeEnum;
 import net.svcret.ejb.api.IServiceInvoker;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceRegistry;
+import net.svcret.ejb.api.ITransactionLogger;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.RequestType;
@@ -40,6 +43,7 @@ import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
+import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.util.Validate;
 
@@ -49,8 +53,14 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceOrchestratorBean.class);
 
 	@EJB
+	private IHttpClient myHttpClient;
+
+	@EJB
 	private IRuntimeStatus myRuntimeStatus;
 
+	@EJB
+	private ISecurityService mySecuritySvc;
+	
 	@EJB(name = "SOAP11Invoker")
 	private IServiceInvoker<PersServiceVersionSoap11> mySoap11ServiceInvoker;
 
@@ -58,20 +68,28 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	private IServiceRegistry mySvcRegistry;
 
 	@EJB
-	private IHttpClient myHttpClient;
+	private ITransactionLogger myTransactionLogger;
 
-	@EJB
-	private ISecurityService mySecuritySvc;
-
+	
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public OrchestratorResponseBean handle(RequestType theRequestType, String thePath, String theQuery, Reader theReader) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException {
+	public OrchestratorResponseBean handle(RequestType theRequestType, String thePath, String theQuery, Reader theInputReader) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException {
 		Validate.notNull(theRequestType, "RequestType");
 		Validate.notNull(thePath, "Path");
 		Validate.notNull(theQuery, "Query");
-		Validate.notNull(theReader, "Reader");
+		Validate.notNull(theInputReader, "Reader");
 
+		try {
+		return doHandle(theRequestType, thePath, theQuery, theInputReader);
+		} finally {
+			theInputReader.close();
+		}
+	}
+
+	@SuppressWarnings("resource")
+	private OrchestratorResponseBean doHandle(RequestType theRequestType, String thePath, String theQuery, Reader theInputReader) throws UnknownRequestException, IOException, ProcessingException, SecurityFailureException {
 		Date startTime = new Date();
+		CapturingReader reader = new CapturingReader(theInputReader);
 
 		if (theQuery.length() > 0 && theQuery.charAt(0) != '?') {
 			throw new IllegalArgumentException("Path must be blank or start with '?'");
@@ -109,7 +127,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			PersServiceVersionSoap11 serviceVersionSoap = (PersServiceVersionSoap11) serviceVersion;
 			serviceInvoker = mySoap11ServiceInvoker;
 			ourLog.debug("Handling service with invoker {}", serviceInvoker);
-			results = mySoap11ServiceInvoker.processInvocation(serviceVersionSoap, theRequestType, path, theQuery, theReader);
+			results = mySoap11ServiceInvoker.processInvocation(serviceVersionSoap, theRequestType, path, theQuery, reader);
 			break;
 		default:
 			throw new InternalErrorException("Unknown service protocol: " + serviceVersion.getProtocol());
@@ -121,6 +139,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		 * Currently only active for method invocations
 		 */
 
+		AuthorizationResultsBean authorized=null;
 		if (results.getResultType() == ResultTypeEnum.METHOD) {
 			if (ourLog.isDebugEnabled()) {
 				if (serviceVersion.getServerAuths().isEmpty()) {
@@ -147,7 +166,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 				}
 
 				ourLog.debug("Checking credentials: {}", grabber);
-				AuthorizationResultsBean authorized = mySecuritySvc.authorizeMethodInvocation(authHost, credentials, method);
+				authorized = mySecuritySvc.authorizeMethodInvocation(authHost, credentials, method);
 				if (!authorized.isAuthorized()) {
 					InvocationResponseResultsBean invocationResponse = new InvocationResponseResultsBean();
 					invocationResponse.setResponseType(ResponseTypeEnum.SECURITY_FAIL);
@@ -218,6 +237,13 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			String responseContentType = invocationResponse.getResponseContentType();
 			Map<String, String> responseHeaders = invocationResponse.getResponseHeaders();
 
+			/*
+			 * Log transaction if needed
+			 */
+			PersUser user = authorized != null ? authorized.getUser() : null;
+			String requestBody = reader.getCapturedString();
+			myTransactionLogger.logTransaction(startTime, serviceVersion, user, requestBody, invocationResponse);
+			
 			retVal = new OrchestratorResponseBean(responseBody, responseContentType, responseHeaders);
 			break;
 		}
@@ -229,41 +255,6 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		return retVal;
 	}
 
-	/**
-	 * FOR UNIT TESTS ONLY
-	 */
-	void setRuntimeStatus(IRuntimeStatus theRuntimeStatus) {
-		myRuntimeStatus = theRuntimeStatus;
-	}
-
-	/**
-	 * FOR UNIT TESTS ONLY
-	 */
-	void setSoap11ServiceInvoker(IServiceInvoker<PersServiceVersionSoap11> theSoap11ServiceInvoker) {
-		mySoap11ServiceInvoker = theSoap11ServiceInvoker;
-	}
-
-	/**
-	 * FOR UNIT TESTS ONLY
-	 */
-	void setSvcRegistry(IServiceRegistry theSvcRegistry) {
-		mySvcRegistry = theSvcRegistry;
-	}
-
-	/**
-	 * FOR UNIT TESTS ONLY
-	 */
-	void setHttpClient(IHttpClient theHttpClient) {
-		myHttpClient = theHttpClient;
-	}
-
-	/**
-	 * FOR UNIT TESTS ONLY
-	 */
-	void setSecuritySvc(ISecurityService theSecuritySvc) {
-		mySecuritySvc = theSecuritySvc;
-	}
-
 	private void markUrlsFailed(PersServiceVersionMethod theMethod, Map<String, Failure> theFailures) {
 		for (Entry<String, Failure> nextEntry : theFailures.entrySet()) {
 			String nextUrlString = nextEntry.getKey();
@@ -271,5 +262,53 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			Failure nextFailure = nextEntry.getValue();
 			myRuntimeStatus.recordUrlFailure(nextUrl, nextFailure);
 		}
+	}
+
+	/**
+	 * FOR UNIT TESTS ONLY
+	 */
+	@VisibleForTesting
+	void setHttpClient(IHttpClient theHttpClient) {
+		myHttpClient = theHttpClient;
+	}
+
+	/**
+	 * FOR UNIT TESTS ONLY
+	 */
+	@VisibleForTesting
+	void setRuntimeStatus(IRuntimeStatus theRuntimeStatus) {
+		myRuntimeStatus = theRuntimeStatus;
+	}
+
+	/**
+	 * FOR UNIT TESTS ONLY
+	 */
+	@VisibleForTesting
+	void setSecuritySvc(ISecurityService theSecuritySvc) {
+		mySecuritySvc = theSecuritySvc;
+	}
+
+	/**
+	 * FOR UNIT TESTS ONLY
+	 */
+	@VisibleForTesting
+	void setSoap11ServiceInvoker(IServiceInvoker<PersServiceVersionSoap11> theSoap11ServiceInvoker) {
+		mySoap11ServiceInvoker = theSoap11ServiceInvoker;
+	}
+
+	/**
+	 * FOR UNIT TESTS ONLY
+	 */
+	@VisibleForTesting
+	void setSvcRegistry(IServiceRegistry theSvcRegistry) {
+		mySvcRegistry = theSvcRegistry;
+	}
+
+	/**
+	 * Unit tests only
+	 */
+	@VisibleForTesting
+	void setTransactionLogger(ITransactionLogger theTransactionLogger) {
+		myTransactionLogger=theTransactionLogger;
 	}
 }

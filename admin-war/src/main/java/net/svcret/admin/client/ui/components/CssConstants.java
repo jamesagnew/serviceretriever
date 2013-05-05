@@ -25,5 +25,6 @@ public class CssConstants {
 	public static final String TWO_COLUMN_PROPERTY_GRID_DESC = "twoColumnPropertyGridDesc";
 	public static final String UNSTYLED_TABLE = "unstyledTable";
 	public static final String STATS_IMAGE = "statusRrdImage";
+	public static final String FORM_LABEL = "formLabel";
 	
 }

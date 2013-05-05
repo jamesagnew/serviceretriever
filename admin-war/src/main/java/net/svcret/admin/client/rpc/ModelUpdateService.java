@@ -21,6 +21,7 @@ import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.PartialUserListRequest;
+import net.svcret.ejb.ex.ProcessingException;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
@@ -47,6 +48,8 @@ public interface ModelUpdateService extends RemoteService {
 
 	BaseGServiceVersion loadServiceVersionIntoSession(long theServiceVersionPid) throws ServiceFailureException;
 
+	List<GUrlStatus> loadServiceVersionUrlStatuses(long theServiceVersionPid);
+
 	UserAndAuthHost loadUser(long theUserPid) throws ServiceFailureException;
 
 	GPartialUserList loadUsers(PartialUserListRequest theRequest);
@@ -62,6 +65,8 @@ public interface ModelUpdateService extends RemoteService {
 	void reportClientError(String theMessage, Throwable theException);
 
 	GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) throws ServiceFailureException;
+
+	void saveConfig(GConfig theConfig) throws ServiceFailureException;
 
 	GDomain saveDomain(GDomain theDomain) throws ServiceFailureException;
 
@@ -125,9 +130,5 @@ public interface ModelUpdateService extends RemoteService {
 			myUser = theUser;
 		}
 	}
-
-	void saveConfig(GConfig theConfig);
-
-	List<GUrlStatus> loadServiceVersionUrlStatuses(long theServiceVersionPid);
 
 }

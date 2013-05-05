@@ -27,27 +27,26 @@ import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.TextBox;
-import com.google.gwt.user.client.ui.Widget;
 
 public abstract class AbstractServiceVersionPanel extends FlowPanel {
 
-	Widget myBottomContents;
-	protected FlowPanel myBottomPanel;
+	private SoapDetailPanel myBottomContents;
 	private FlowPanel myContentPanel;
 	private ListBox myDomainListBox;
-	Long myDomainPid;
-	protected LoadingSpinner myLoadingSpinner;
 	private HtmlLabel myNewDomainLabel;
 	private TextBox myNewDomainNameTextBox;
 	private HtmlLabel myNewServiceLabel;
 	private TextBox myNewServiceNameTextBox;
-	protected Grid myParentsGrid;
 	private ListBox myServiceListBox;
-	Long myServicePid;
 	private FlowPanel myTopPanel;
-	protected ListBox myTypeComboBox;
-	Long myUncommittedSessionId;
 	private boolean myUpdating;
+	protected FlowPanel myBottomPanel;
+	protected LoadingSpinner myLoadingSpinner;
+	protected Grid myParentsGrid;
+	protected ListBox myTypeComboBox;
+	Long myDomainPid;
+	Long myServicePid;
+	Long myUncommittedSessionId;
 	BaseGServiceVersion myVersion;
 	TextBox myVersionTextBox;
 
@@ -158,30 +157,6 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 
 	}
 
-	protected void setServiceVersion(BaseGServiceVersion theResult) {
-		myLoadingSpinner.hide();
-
-		myVersion = theResult;
-		myVersionTextBox.setValue(myVersion.getId(), false);
-
-		switch (theResult.getProtocol()) {
-		case SOAP11:
-			myBottomContents = new SoapDetailPanel(AbstractServiceVersionPanel.this, (GSoap11ServiceVersion) theResult);
-			break;
-		}
-
-		myBottomPanel.clear();
-		myBottomPanel.add(myBottomContents);
-	}
-
-	protected abstract void addTypeSelector();
-
-	protected abstract boolean allowTypeSelect();
-
-	protected abstract String getDialogDescription();
-
-	protected abstract String getDialogTitle();
-
 	public Long getDomainPid() {
 		return myDomainPid;
 	}
@@ -243,6 +218,54 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 
 	}
 
+	private void processServiceList(GServiceList theResult) {
+		myServiceListBox.clear();
+		myServiceListBox.addItem("New...", "");
+		for (GService nextService : theResult) {
+			Long value = nextService.getPid();
+			myServiceListBox.addItem(nextService.getName(), value.toString());
+			if (value.equals(myServicePid)) {
+				myServiceListBox.setSelectedIndex(myServiceListBox.getSelectedIndex() - 1);
+			}
+		}
+
+		if (myServicePid == null && myServiceListBox.getItemCount() > 1) {
+			myServiceListBox.setSelectedIndex(1);
+		}
+
+		handleServiceListChange();
+	}
+
+	protected abstract void addTypeSelector();
+
+	protected abstract boolean allowTypeSelect();
+
+	protected SoapDetailPanel getBottomContents() {
+		return myBottomContents;
+	}
+
+	protected abstract String getDialogDescription();
+
+	protected abstract String getDialogTitle();
+
+	protected abstract void handleDoneSaving(AddServiceVersionResponse theResult);
+
+	protected void setServiceVersion(BaseGServiceVersion theResult) {
+		myLoadingSpinner.hide();
+
+		myVersion = theResult;
+		myVersionTextBox.setValue(myVersion.getId(), false);
+
+		switch (theResult.getProtocol()) {
+		case SOAP11:
+			myBottomContents = new SoapDetailPanel(AbstractServiceVersionPanel.this, (GSoap11ServiceVersion) theResult);
+			break;
+		}
+
+		myBottomPanel.clear();
+		myBottomPanel.add(myBottomContents);
+	}
+
 	void initParents(GDomainList theDomainList) {
 		myUpdating = true;
 
@@ -264,24 +287,6 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 
 		handleDomainListChange();
 
-	}
-
-	private void processServiceList(GServiceList theResult) {
-		myServiceListBox.clear();
-		myServiceListBox.addItem("New...", "");
-		for (GService nextService : theResult) {
-			Long value = nextService.getPid();
-			myServiceListBox.addItem(nextService.getName(), value.toString());
-			if (value.equals(myServicePid)) {
-				myServiceListBox.setSelectedIndex(myServiceListBox.getSelectedIndex() - 1);
-			}
-		}
-
-		if (myServicePid == null && myServiceListBox.getItemCount() > 1) {
-			myServiceListBox.setSelectedIndex(1);
-		}
-
-		handleServiceListChange();
 	}
 
 	public class SaveClickHandler implements ClickHandler {
@@ -312,6 +317,10 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 				serviceId = null;
 			}
 
+			if (!myBottomContents.validateValuesAndApplyIfGood()) {
+				return;
+			}
+			
 			AsyncCallback<AddServiceVersionResponse> callback = new AsyncCallback<AddServiceVersionResponse>() {
 				@Override
 				public void onFailure(Throwable theCaught) {
@@ -340,6 +349,4 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 
 
 	}
-
-	protected abstract void handleDoneSaving(AddServiceVersionResponse theResult);
 }

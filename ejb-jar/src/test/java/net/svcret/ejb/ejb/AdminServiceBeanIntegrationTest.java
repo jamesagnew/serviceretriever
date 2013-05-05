@@ -12,6 +12,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
+import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
 import net.svcret.admin.shared.model.GResource;
@@ -25,10 +26,10 @@ import net.svcret.admin.shared.model.GUserDomainPermission;
 import net.svcret.admin.shared.model.GWsSecServerSecurity;
 import net.svcret.admin.shared.model.GWsSecUsernameTokenClientSecurity;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
+import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IBroadcastSender;
-import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IServiceInvoker;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
@@ -46,7 +47,6 @@ import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.hamcrest.Matchers;
 import org.hibernate.ejb.EntityManagerImpl;
 import org.junit.After;
@@ -69,7 +69,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 	private ServiceRegistryBean mySvcReg;
 
-	private IConfigService myConfigSvc;
+	private ConfigServiceBean myConfigSvc;
 
 	@After
 	public void after2() {
@@ -104,11 +104,11 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	@Before
 	public void before2() throws SQLException, ProcessingException {
 		myDao = new DaoBean();
+		myBroadcastSender = mock(IBroadcastSender.class);
 
-		myConfigSvc = mock(IConfigService.class);
-		PersConfig config = new PersConfig();
-		config.setDefaults();
-		when(myConfigSvc.getConfig()).thenReturn(config);
+		myConfigSvc = new ConfigServiceBean();
+		myConfigSvc.setDao(myDao);
+		myConfigSvc.setBroadcastSender(myBroadcastSender);
 
 		mySvc = new AdminServiceBean();
 		mySvc.setPersSvc(myDao);
@@ -121,7 +121,6 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		mySoapInvoker = mock(IServiceInvoker.class, new DefaultAnswer());
 		mySvc.setInvokerSoap11(mySoapInvoker);
 
-		myBroadcastSender = mock(IBroadcastSender.class);
 
 		mySecSvc = new SecurityServiceBean();
 		mySecSvc.setPersSvc(myDao);
@@ -133,6 +132,8 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		mySvcReg.setDao(myDao);
 		mySvc.setServiceRegistry(mySvcReg);
 
+		
+		
 		DefaultAnswer.setDesignTime();
 	}
 
@@ -180,7 +181,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
 		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
-		PersAuthenticationHostLocalDatabase auth = myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
+		myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
 
 		newEntityManager();
 
@@ -252,7 +253,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
 		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpServer");
-		PersAuthenticationHostLocalDatabase auth = myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
+		myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
 
 		newEntityManager();
 
@@ -434,6 +435,27 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		assertEquals("domain_id", domain.getId());
 		assertEquals("domain_name", domain.getName());
 		assertFalse(domain.isStatsInitialized());
+	}
+
+	@Test
+	public void testSaveConfigWithUrlBases() throws ProcessingException {
+		newEntityManager();
+
+		GConfig config = mySvc.loadConfig();
+		
+		newEntityManager();
+
+		config.getProxyUrlBases().clear();
+		config.getProxyUrlBases().add("http://foo");
+		
+		config = mySvc.saveConfig(config);
+		
+		newEntityManager();
+
+		config = mySvc.loadConfig();
+		assertEquals(1, config.getProxyUrlBases().size());
+		assertEquals("http://foo", config.getProxyUrlBases().get(0));
+		
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -650,11 +672,15 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	@Test
 	public void testMultipleStatsLoadsInParallel() throws Exception {
 		newEntityManager();
+		
+		myConfigSvc.getConfig();
+		
+		newEntityManager();
 
 		PersDomain d0 = myDao.getOrCreateDomainWithId("d0");
 		PersService d0s0 = myDao.getOrCreateServiceWithId(d0, "d0s0");
-		PersServiceVersionSoap11 d0s0v0 = myDao.getOrCreateServiceVersionWithId(d0s0, "d0s0v0");
-		PersServiceVersionMethod d0s0v0m0 = d0s0v0.getOrCreateAndAddMethodWithName("d0s0v0m0");
+		PersServiceVersionSoap11 d0s0v0 = myDao.getOrCreateServiceVersionWithId(d0s0, "d0s0v0", ServiceProtocolEnum.SOAP11);
+		d0s0v0.getOrCreateAndAddMethodWithName("d0s0v0m0");
 		myDao.saveServiceVersion(d0s0v0);
 
 		newEntityManager();

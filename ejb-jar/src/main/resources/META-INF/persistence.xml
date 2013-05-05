@@ -79,7 +79,6 @@
 		<class>net.svcret.ejb.model.entity.PersInvocationStats</class>
 		<class>net.svcret.ejb.model.entity.PersInvocationAnonStats</class>
 		<class>net.svcret.ejb.model.entity.PersInvocationUserStats</class>
-		<class>net.svcret.ejb.model.entity.PersKeepRecentTransactions</class>
 		<class>net.svcret.ejb.model.entity.PersLocks</class>
 		<class>net.svcret.ejb.model.entity.PersServiceVersionMethod</class>
 		<class>net.svcret.ejb.model.entity.PersService</class>
@@ -87,13 +86,15 @@
 		<class>net.svcret.ejb.model.entity.PersUserDomainPermission</class>
 		<class>net.svcret.ejb.model.entity.PersUserServicePermission</class>
 		<class>net.svcret.ejb.model.entity.PersUserServiceVersionPermission</class>
-		<class>net.svcret.ejb.model.entity.PersUserServiceVersionMethodPermission</class>
-		<class>net.svcret.ejb.model.entity.PersServiceVersionUrl</class>
-		<class>net.svcret.ejb.model.entity.PersServiceVersionUrlStatus</class>
+		<class>net.svcret.ejb.model.entity.PersUserServiceVersionRecentMessage</class>
+		<class>net.svcret.ejb.model.entity.PersServiceVersionMethodPermission</class>
 		<class>net.svcret.ejb.model.entity.PersServiceVersionStatus</class>
 		<class>net.svcret.ejb.model.entity.PersServiceVersionResource</class>
+		<class>net.svcret.ejb.model.entity.PersServiceVersionUrl</class>
+		<class>net.svcret.ejb.model.entity.PersServiceVersionUrlStatus</class>
 		<class>net.svcret.ejb.model.entity.PersState</class>
 		<class>net.svcret.ejb.model.entity.PersStaticResourceStats</class>
+		<class>net.svcret.ejb.model.entity.PersUserRecentMessage</class>
 		<class>net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11</class>
 		<class>net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth</class>
 		<class>net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth</class>
@@ -105,10 +106,12 @@
 			<property name="hibernate.jdbc.batch_size" value="30" />
 			<property name="hibernate.cache.use_minimal_puts" value="false" />
 			<property name="hibernate.show_sql" value="false" />
+			<property name="hibernate.generate_statistics" value="true"/>
 			<property name="hibernate.cache.use_query_cache" value="false" />
 			<property name="hibernate.cache.use_second_level_cache" value="true" />
 			<property name="hibernate.cache.use_structured_entries" value="true" />
-			<property name="hibernate.cache.region.factory_class" value="net.sf.ehcache.hibernate.EhCacheRegionFactory" />
+			<property name="hibernate.cache.region.factory_class" value="org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory" />
+			<!-- <property name="hibernate.cache.provider_configuration_file_resource_path" value="ehcache-hibernate.xml"/>  -->
 			<!-- <property name="hibernate.hbm2ddl.auto" value="create-drop" />-->
 			<property name="hibernate.hbm2ddl.auto" value="update" />
  		</properties>
@@ -128,7 +131,6 @@
 		<class>net.svcret.ejb.model.entity.PersInvocationStats</class>
 		<class>net.svcret.ejb.model.entity.PersInvocationAnonStats</class>
 		<class>net.svcret.ejb.model.entity.PersInvocationUserStats</class>
-		<class>net.svcret.ejb.model.entity.PersKeepRecentTransactions</class>
 		<class>net.svcret.ejb.model.entity.PersLocks</class>
 		<class>net.svcret.ejb.model.entity.PersServiceVersionMethod</class>
 		<class>net.svcret.ejb.model.entity.PersService</class>
@@ -137,12 +139,14 @@
 		<class>net.svcret.ejb.model.entity.PersUserServicePermission</class>
 		<class>net.svcret.ejb.model.entity.PersUserServiceVersionPermission</class>
 		<class>net.svcret.ejb.model.entity.PersUserServiceVersionMethodPermission</class>
+		<class>net.svcret.ejb.model.entity.PersServiceVersionRecentMessage</class>
+		<class>net.svcret.ejb.model.entity.PersServiceVersionResource</class>
+		<class>net.svcret.ejb.model.entity.PersServiceVersionStatus</class>
 		<class>net.svcret.ejb.model.entity.PersServiceVersionUrl</class>
 		<class>net.svcret.ejb.model.entity.PersServiceVersionUrlStatus</class>
-		<class>net.svcret.ejb.model.entity.PersServiceVersionStatus</class>
-		<class>net.svcret.ejb.model.entity.PersServiceVersionResource</class>
 		<class>net.svcret.ejb.model.entity.PersState</class>
 		<class>net.svcret.ejb.model.entity.PersStaticResourceStats</class>
+		<class>net.svcret.ejb.model.entity.PersUserRecentMessage</class>
 		<class>net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11</class>
 		<class>net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth</class>
 		<class>net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth</class>
@@ -160,8 +164,8 @@
 			<property name="hibernate.cache.use_query_cache" value="false" />
 			<property name="hibernate.cache.use_second_level_cache" value="true" />
 			<property name="hibernate.cache.use_structured_entries" value="true" />
-			<property name="hibernate.cache.region.factory_class" value="net.sf.ehcache.hibernate.EhCacheRegionFactory" />
-		</properties>
+			<property name="hibernate.cache.region.factory_class" value="org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory" />
+		</properties>                                                    
 	</persistence-unit>
 
 </persistence>

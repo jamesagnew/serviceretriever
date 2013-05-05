@@ -1,6 +1,5 @@
 package net.svcret.ejb.ejb;
 
-import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -14,7 +13,6 @@ import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.management.MBeanServer;
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 import javax.persistence.NoResultException;
@@ -24,10 +22,10 @@ import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.management.ManagementService;
+import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.api.IDao;
+import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersMethodStats;
@@ -47,10 +45,10 @@ import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
-import net.svcret.ejb.model.entity.PersKeepRecentTransactions;
 import net.svcret.ejb.model.entity.PersLocks;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
@@ -58,6 +56,7 @@ import net.svcret.ejb.model.entity.PersState;
 import net.svcret.ejb.model.entity.PersStaticResourceStats;
 import net.svcret.ejb.model.entity.PersStaticResourceStatsPk;
 import net.svcret.ejb.model.entity.PersUser;
+import net.svcret.ejb.model.entity.PersUserRecentMessage;
 import net.svcret.ejb.model.entity.Queries;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.util.Validate;
@@ -72,7 +71,6 @@ public class DaoBean implements IDao {
 
 	private Map<Long, Long> myServiceVersionPidToStatusPid = new HashMap<Long, Long>();
 
-	
 	@Override
 	public void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost) {
 		Validate.notNull(theAuthHost, "AuthenticationHost");
@@ -376,7 +374,7 @@ public class DaoBean implements IDao {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public PersServiceVersionSoap11 getOrCreateServiceVersionWithId(PersService theService, String theId) throws ProcessingException {
+	public PersServiceVersionSoap11 getOrCreateServiceVersionWithId(PersService theService, String theId, ServiceProtocolEnum theProtocol) throws ProcessingException {
 		Validate.notNull(theService, "PersService");
 		Validate.throwProcessingExceptionIfBlank(theId, "The ID may not be blank");
 
@@ -694,10 +692,10 @@ public class DaoBean implements IDao {
 			myEntityManager.merge(persisted);
 		}
 
-		for (BasePersMethodStats next:theStatsToDelete) {
+		for (BasePersMethodStats next : theStatsToDelete) {
 			myEntityManager.remove(next);
 		}
-		
+
 		ourLog.info("Persisted {} invocation status entries, {} user invocation status entries, and {} anonymous status entries", new Object[] { count, ucount, acount });
 	}
 
@@ -761,13 +759,6 @@ public class DaoBean implements IDao {
 			Validate.throwProcessingExceptionIfBlank(next.getName(), "Method is missing name");
 			next.setOrder(i++);
 			next.setServiceVersion(theVersion);
-		}
-
-		i = 0;
-		for (PersKeepRecentTransactions next : theVersion.getKeepRecentTransactions()) {
-			next.setOrder(i++);
-			next.setServiceVersion(theVersion);
-//			myEntityManager.merge(theVersion);
 		}
 
 		ourLog.info("Merging servicde version {}", theVersion.getVersionId());
@@ -885,6 +876,106 @@ public class DaoBean implements IDao {
 			lock = myEntityManager.find(PersLocks.class, lockName, LockModeType.PESSIMISTIC_WRITE, properties);
 			// myEntityManager.lock(lock, LockModeType.PESSIMISTIC_WRITE,
 			// properties);
+		}
+	}
+
+	@Override
+	public void saveServiceVersionRecentMessage(PersServiceVersionRecentMessage theMsg) {
+		Validate.notNull(theMsg);
+
+		myEntityManager.merge(theMsg);
+	}
+
+	@Override
+	public List<PersServiceVersionRecentMessage> getServiceVersionRecentMessages(BasePersServiceVersion theSvcVer, ResponseTypeEnum theResponseType) {
+		TypedQuery<PersServiceVersionRecentMessage> query = myEntityManager.createNamedQuery(Queries.SVCVER_RECENTMSGS, PersServiceVersionRecentMessage.class);
+		query.setParameter("SVC_VER", theSvcVer);
+		query.setParameter("RESP_TYPE", theResponseType);
+
+		return query.getResultList();
+	}
+
+	@Override
+	public void trimServiceVersionRecentMessages(BasePersServiceVersion theVersion, ResponseTypeEnum theType, int theNumberToTrimTo) {
+		Validate.notNull(theVersion);
+		Validate.notNull(theType);
+		Validate.notNegative(theNumberToTrimTo);
+
+		long start=0;
+		if (ourLog.isDebugEnabled()) {
+			start = System.currentTimeMillis();
+		}
+		
+		Query query = myEntityManager.createNamedQuery(Queries.SVCVER_RECENTMSGS_COUNT);
+		query.setParameter("SVC_VER", theVersion);
+		query.setParameter("RESP_TYPE", theType);
+
+		Number num = (Number) query.getSingleResult();
+		int toDelete = num.intValue() - theNumberToTrimTo;
+
+		if (ourLog.isDebugEnabled()) {
+			ourLog.debug("Counted recent messages of type {} in {}ms", theType, System.currentTimeMillis()-start);
+		}
+		
+		ourLog.debug("For recent messages of type {} for version {} we have {} entries and want {}", new Object[] { theType, theVersion.getPid(), num, toDelete });
+		if (toDelete <= 0) {
+			return;
+		}
+		
+		List<PersServiceVersionRecentMessage> messages = getServiceVersionRecentMessages(theVersion, theType);
+		int index = 0;
+		for (Iterator<PersServiceVersionRecentMessage> iter = messages.iterator(); iter.hasNext() && index < toDelete; index++) {
+			myEntityManager.remove(iter.next());
+		}
+	}
+
+	@Override
+	public void saveUserRecentMessage(PersUserRecentMessage theMsg) {
+		Validate.notNull(theMsg);
+
+		myEntityManager.merge(theMsg);
+	}
+
+	@Override
+	public List<PersUserRecentMessage> getUserRecentMessages(PersUser theUser, ResponseTypeEnum theResponseType) {
+		TypedQuery<PersUserRecentMessage> query = myEntityManager.createNamedQuery(Queries.USER_RECENTMSGS, PersUserRecentMessage.class);
+		query.setParameter("USER", theUser);
+		query.setParameter("RESP_TYPE", theResponseType);
+
+		return query.getResultList();
+	}
+
+	@Override
+	public void trimUserRecentMessages(PersUser theUser, ResponseTypeEnum theType, int theNumberToTrimTo) {
+		Validate.notNull(theUser);
+		Validate.notNull(theType);
+		Validate.notNegative(theNumberToTrimTo);
+
+		long start=0;
+		if (ourLog.isDebugEnabled()) {
+			start = System.currentTimeMillis();
+		}
+		
+		Query query = myEntityManager.createNamedQuery(Queries.USER_RECENTMSGS_COUNT);
+		query.setParameter("USER", theUser);
+		query.setParameter("RESP_TYPE", theType);
+
+		Number num = (Number) query.getSingleResult();
+		int toDelete = num.intValue() - theNumberToTrimTo;
+
+		if (ourLog.isDebugEnabled()) {
+			ourLog.debug("Counted recent messages of type {} in {}ms", theType, System.currentTimeMillis()-start);
+		}
+		
+		ourLog.debug("For recent messages of type {} for version {} we have {} entries and want {}", new Object[] { theType, theUser.getPid(), num, toDelete });
+		if (toDelete <= 0) {
+			return;
+		}
+		
+		List<PersUserRecentMessage> messages = getUserRecentMessages(theUser, theType);
+		int index = 0;
+		for (Iterator<PersUserRecentMessage> iter = messages.iterator(); iter.hasNext() && index < toDelete; index++) {
+			myEntityManager.remove(iter.next());
 		}
 	}
 

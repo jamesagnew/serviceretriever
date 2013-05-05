@@ -7,9 +7,10 @@ import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.HtmlLabel;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
+import net.svcret.admin.client.ui.config.KeepRecentTransactionsPanel;
 import net.svcret.admin.client.ui.config.sec.IProvidesViewAndEdit;
-import net.svcret.admin.client.ui.config.sec.ViewAndEditFactory;
 import net.svcret.admin.client.ui.config.sec.IProvidesViewAndEdit.IValueChangeHandler;
+import net.svcret.admin.client.ui.config.sec.ViewAndEditFactory;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGClientSecurity;
@@ -54,6 +55,7 @@ public class SoapDetailPanel extends FlowPanel {
 	private static final int COL_URL_URL = 2;
 
 	private Grid myClientSecurityGrid;
+	private ListBox myHttpConfigList;
 	private LoadingSpinner myLoadWsdlSpinner;
 	private Grid myMethodGrid;
 	private long myNextBackgroundSave;
@@ -61,12 +63,12 @@ public class SoapDetailPanel extends FlowPanel {
 	private Label myNoMethodsLabel;
 	private Label myNoServerSercuritysLabel;
 	private Label myNoUrlsLabel;
+	private AbstractServiceVersionPanel myParent;
 	private Grid myServerSecurityGrid;
 	private GSoap11ServiceVersion myServiceVersion;
 	private Grid myUrlGrid;
 	private TextBox myUrlTextBox;
-	private AbstractServiceVersionPanel myParent;
-	private ListBox myHttpConfigList;
+	private KeepRecentTransactionsPanel myKeepRecentTransactionsPanel;
 
 	public SoapDetailPanel(AbstractServiceVersionPanel theParent, GSoap11ServiceVersion theServiceVersion) {
 		myServiceVersion = theServiceVersion;
@@ -76,6 +78,10 @@ public class SoapDetailPanel extends FlowPanel {
 		add(wsdlPanel);
 		initWsdlPanel(wsdlPanel);
 
+		FlowPanel journalPanel = new FlowPanel();
+		add(journalPanel);
+		initJournalPanel(journalPanel);
+		
 		FlowPanel urlPanel = new FlowPanel();
 		add(urlPanel);
 		initUrlPanel(urlPanel);
@@ -147,14 +153,14 @@ public class SoapDetailPanel extends FlowPanel {
 	}
 
 	private void initClientSecurityPanel(FlowPanel thePanel) {
-		thePanel.setStylePrimaryName("mainPanel");
+		thePanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
 
 		Label titleLabel = new Label("Client Security");
-		titleLabel.setStyleName("mainPanelTitle");
+		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
 		thePanel.add(titleLabel);
 
 		FlowPanel contentPanel = new FlowPanel();
-		contentPanel.addStyleName("contentInnerPanel");
+		contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
 		thePanel.add(contentPanel);
 
 		Label urlLabel = new Label("Client Security modules provide credentials to proxied service implementations. In other words, " + "if the service which is being proxied requires credentials in order to be invoked, a client "
@@ -196,15 +202,30 @@ public class SoapDetailPanel extends FlowPanel {
 
 	}
 
+	private void initJournalPanel(FlowPanel thePanel) {
+		thePanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
+
+		Label titleLabel = new Label("Transaction Flow");
+		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
+		thePanel.add(titleLabel);
+
+		FlowPanel contentPanel = new FlowPanel();
+		contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
+		thePanel.add(contentPanel);
+		
+		myKeepRecentTransactionsPanel = new KeepRecentTransactionsPanel(myServiceVersion);
+		contentPanel.add(myKeepRecentTransactionsPanel);
+	}
+
 	private void initMethodPanel(FlowPanel theMethodPanel) {
-		theMethodPanel.setStylePrimaryName("mainPanel");
+		theMethodPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
 
 		Label titleLabel = new Label("Methods");
-		titleLabel.setStyleName("mainPanelTitle");
+		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
 		theMethodPanel.add(titleLabel);
 
 		FlowPanel contentPanel = new FlowPanel();
-		contentPanel.addStyleName("contentInnerPanel");
+		contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
 		theMethodPanel.add(contentPanel);
 
 		myMethodGrid = new Grid(1, 2);
@@ -255,14 +276,14 @@ public class SoapDetailPanel extends FlowPanel {
 	}
 
 	private void initServerSecurityPanel(FlowPanel thePanel) {
-		thePanel.setStylePrimaryName("mainPanel");
+		thePanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
 
 		Label titleLabel = new Label("Server Security");
-		titleLabel.setStyleName("mainPanelTitle");
+		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
 		thePanel.add(titleLabel);
 
 		FlowPanel contentPanel = new FlowPanel();
-		contentPanel.addStyleName("contentInnerPanel");
+		contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
 		thePanel.add(contentPanel);
 
 		Label urlLabel = new Label("Server Security modules verify that the client which is making requests coming " + "in to the proxy are authorized to invoke the particular service they are attempting to "
@@ -305,19 +326,15 @@ public class SoapDetailPanel extends FlowPanel {
 
 	}
 
-	private long newUncommittedSessionId() {
-		return (long) (Math.random() * Long.MAX_VALUE);
-	}
-
 	private void initUrlPanel(FlowPanel theProxyPanel) {
-		theProxyPanel.setStylePrimaryName("mainPanel");
+		theProxyPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
 
 		Label titleLabel = new Label("Implementation URLs");
-		titleLabel.setStyleName("mainPanelTitle");
+		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
 		theProxyPanel.add(titleLabel);
 
 		FlowPanel contentPanel = new FlowPanel();
-		contentPanel.addStyleName("contentInnerPanel");
+		contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
 		theProxyPanel.add(contentPanel);
 
 		contentPanel.add(new Label("Each proxied service will have one or more implementation URLs. " + "When a client attempts to invoke a service that has been proxied, the ServiceProxy will " + "forward this request to one of these implementations. Specifying more than one "
@@ -416,14 +433,14 @@ public class SoapDetailPanel extends FlowPanel {
 	}
 
 	private void initWsdlPanel(FlowPanel wsdlPanel) {
-		wsdlPanel.setStylePrimaryName("mainPanel");
+		wsdlPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
 
 		Label titleLabel = new Label("WSDL Location");
-		titleLabel.setStyleName("mainPanelTitle");
+		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
 		wsdlPanel.add(titleLabel);
 
 		FlowPanel contentPanel = new FlowPanel();
-		contentPanel.addStyleName("contentInnerPanel");
+		contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
 		wsdlPanel.add(contentPanel);
 
 		contentPanel.add(new Label("Every SOAP based service must have a backing WSDL, which provides " + "clients with the service contract being implemented. Enter a URL to a remote WSDL " + "here, and click the \"Load\" button below, and ServiceRetriever will fetch the "
@@ -462,6 +479,10 @@ public class SoapDetailPanel extends FlowPanel {
 		});
 
 		contentPanel.add(new HtmlBr());
+	}
+
+	private long newUncommittedSessionId() {
+		return (long) (Math.random() * Long.MAX_VALUE);
 	}
 
 	private void updateClientSercurityPanel() {
@@ -583,6 +604,13 @@ public class SoapDetailPanel extends FlowPanel {
 		myNoUrlsLabel.setVisible(myServiceVersion.getUrlList().size() == 0);
 	}
 
+	private final class AutosaveValueChangeHandler implements IValueChangeHandler {
+		@Override
+		public void onValueChange() {
+			doBackgroundSave();
+		}
+	}
+
 	private final class ClientSecurityEditButtonPanel extends FlowPanel implements ClickHandler {
 		private PButton myDeleteButton;
 		private PButton myEditButton;
@@ -660,13 +688,6 @@ public class SoapDetailPanel extends FlowPanel {
 		}
 	}
 
-	private final class AutosaveValueChangeHandler implements IValueChangeHandler {
-		@Override
-		public void onValueChange() {
-			doBackgroundSave();
-		}
-	}
-
 	private final class ServerSecurityEditButtonPanel extends FlowPanel implements ClickHandler {
 
 		private PButton myDeleteButton;
@@ -739,6 +760,14 @@ public class SoapDetailPanel extends FlowPanel {
 
 			source.setEnabled(false);
 		}
+	}
+
+	public boolean validateValuesAndApplyIfGood() {
+		boolean retVal = myKeepRecentTransactionsPanel.validateAndShowErrorIfNotValid();
+		if (retVal) {
+			myKeepRecentTransactionsPanel.populateDto(myServiceVersion);
+		}
+		return retVal;
 	}
 
 }

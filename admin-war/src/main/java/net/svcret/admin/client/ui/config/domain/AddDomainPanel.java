@@ -45,7 +45,7 @@ public class AddDomainPanel extends FlowPanel implements ClickHandler, AsyncCall
 
 	@Override
 	public void onClick(ClickEvent theEvent) {
-		if (myEditDomainBasicPropertiesPanel.validateValues()) {
+		if (myEditDomainBasicPropertiesPanel.validateValuesAndApplyValues()) {
 			myEditDomainBasicPropertiesPanel.showSpinner();
 			AdminPortal.MODEL_SVC.addDomain(myDomain, this);
 		}

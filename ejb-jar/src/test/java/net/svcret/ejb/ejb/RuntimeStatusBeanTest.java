@@ -9,15 +9,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IConfigService;
-import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IDao;
+import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.api.UrlPoolBean;
@@ -45,8 +44,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.internal.invocation.CapturesArgumensFromInvocation;
-import org.mockito.internal.matchers.CapturingMatcher;
 
 public class RuntimeStatusBeanTest {
 

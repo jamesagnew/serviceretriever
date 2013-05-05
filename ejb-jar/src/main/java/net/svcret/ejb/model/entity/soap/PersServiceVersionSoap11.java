@@ -5,9 +5,7 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
-import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
-import net.svcret.ejb.model.entity.PersKeepRecentTransactions;
 import net.svcret.ejb.model.entity.PersService;
 
 @Entity

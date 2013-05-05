@@ -7,6 +7,7 @@ import java.util.List;
 
 import javax.ejb.Local;
 
+import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
@@ -29,9 +30,11 @@ import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.ejb.model.entity.PersUser;
+import net.svcret.ejb.model.entity.PersUserRecentMessage;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 
 
@@ -95,7 +98,7 @@ public interface IDao {
 
 	PersInvocationUserStats getOrCreateInvocationUserStats(PersInvocationUserStatsPk thePk);
 
-	PersServiceVersionSoap11 getOrCreateServiceVersionWithId(PersService theService, String theVersionId) throws ProcessingException;
+	BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, String theVersionId, ServiceProtocolEnum theProtocol) throws ProcessingException;
 
 	PersService getOrCreateServiceWithId(PersDomain theDomain, String theServiceId) throws ProcessingException;
 
@@ -144,5 +147,18 @@ public interface IDao {
 	void saveServiceVersionStatuses(ArrayList<PersServiceVersionStatus> theServiceVersionStatuses);
 
 	void saveServiceVersionUrlStatus(ArrayList<PersServiceVersionUrlStatus> theUrlStatuses);
+
+	void saveServiceVersionRecentMessage(PersServiceVersionRecentMessage theMsg);
+
+	List<PersServiceVersionRecentMessage> getServiceVersionRecentMessages(BasePersServiceVersion theSvcVer, ResponseTypeEnum theResponseType);
+
+	void trimServiceVersionRecentMessages(BasePersServiceVersion theVersion, ResponseTypeEnum theType, int theNumberToTrimTo);
+
+	void saveUserRecentMessage(PersUserRecentMessage theMsg);
+
+	List<PersUserRecentMessage> getUserRecentMessages(PersUser theUser, ResponseTypeEnum theResponseType);
+
+	void trimUserRecentMessages(PersUser theUser, ResponseTypeEnum theType, int theNumberToTrimTo);
+
 	
 }

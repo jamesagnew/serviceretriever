@@ -1,9 +1,8 @@
 package net.svcret.admin.shared.model;
 
 import java.util.Date;
-import java.util.List;
 
-public abstract class BaseGDashboardObject<T> extends BaseGObject<T> {
+public abstract class BaseGDashboardObject<T> extends BaseGKeepsRecentMessages<T> {
 
 	private static final long serialVersionUID = 1L;
 	private int myAverageLatency;

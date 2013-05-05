@@ -171,8 +171,7 @@ public class AuthenticationHostsPanel extends FlowPanel {
 		case LOCAL_DATABASE: {
 			GLocalDatabaseAuthHost host = new GLocalDatabaseAuthHost();
 			host.setPid(ourNextTemporaryPid--);
-			host.setModuleId("Untitled");
-			host.setModuleName("Untitled");
+			populateNewNameAndId(host);
 			myConfigs.add(host);
 			mySelectedPid = host.getPid();
 			break;
@@ -181,13 +180,20 @@ public class AuthenticationHostsPanel extends FlowPanel {
 			GLdapAuthHost host = new GLdapAuthHost();
 			host.setPid(ourNextTemporaryPid--);
 			host.setDefaults();
+			populateNewNameAndId(host);
 			myConfigs.add(host);
 			mySelectedPid = host.getPid();
+			break;
 		}
 		}
 
 		updateHostList();
 		updateSelectedHost();
+	}
+
+	private void populateNewNameAndId(BaseGAuthHost host) {
+		host.setModuleId("Untitled");
+		host.setModuleName("Untitled");
 	}
 
 	public void setHostList(GAuthenticationHostList theHostList) {

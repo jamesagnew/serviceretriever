@@ -49,7 +49,7 @@ public class AddServiceVersionPanel extends AbstractServiceVersionPanel {
 	void handleTypeChange() {
 		switch (ProtocolEnum.valueOf(myTypeComboBox.getValue(myTypeComboBox.getSelectedIndex()))) {
 		case SOAP11:
-			if (!(myBottomContents instanceof SoapDetailPanel)) {
+			if (!(getBottomContents() instanceof SoapDetailPanel)) {
 
 				myLoadingSpinner.show();
 				myBottomPanel.clear();
@@ -75,6 +75,8 @@ public class AddServiceVersionPanel extends AbstractServiceVersionPanel {
 			break;
 		}
 	}
+
+
 
 	@Override
 	protected void addTypeSelector() {

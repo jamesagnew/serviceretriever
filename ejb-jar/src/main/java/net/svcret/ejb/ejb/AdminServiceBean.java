@@ -33,6 +33,7 @@ import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
+import net.svcret.admin.shared.model.GServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.GServiceVersionResourcePointer;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
@@ -82,6 +83,7 @@ import net.svcret.ejb.model.entity.PersUserDomainPermission;
 import net.svcret.ejb.model.entity.PersUserServicePermission;
 import net.svcret.ejb.model.entity.PersUserServiceVersionMethodPermission;
 import net.svcret.ejb.model.entity.PersUserServiceVersionPermission;
+import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
@@ -385,11 +387,21 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	@Override
-	public void saveConfig(GConfig theConfig) {
+	public GConfig saveConfig(GConfig theConfig) throws ProcessingException {
 		ourLog.info("Saving config");
-
-		myPersSvc.saveConfig(fromUi(theConfig));
-
+		
+		PersConfig existing = myConfigSvc.getConfig();
+		existing.merge(fromUi(theConfig));
+		
+		PersConfig newCfg = myConfigSvc.saveConfig(existing);
+		
+		return toUi(newCfg);
+		
+//
+//		PersConfig existing = myPersSvc.getConfigByPid(PersConfig.DEFAULT_ID);
+//		existing.merge(fromUi(theConfig));
+//		PersConfig retVal = myPersSvc.saveConfig(existing);
+//		return toUi(retVal);
 	}
 
 	@Override
@@ -472,12 +484,7 @@ public class AdminServiceBean implements IAdminService {
 
 		String versionId = theVersion.getId();
 
-		PersServiceVersionSoap11 version = null;
-		switch (theVersion.getProtocol()) {
-		case SOAP11:
-			version = myServiceRegistry.getOrCreateServiceVersionWithId(service, versionId);
-			fromUi(version, (GSoap11ServiceVersion) theVersion);
-		}
+		BasePersServiceVersion version = fromUi(theVersion, service, versionId);
 
 		Map<String, PersServiceVersionResource> uriToResource = version.getUriToResource();
 		Set<String> urls = new HashSet<String>();
@@ -608,6 +615,40 @@ public class AdminServiceBean implements IAdminService {
 		T retVal = (T) toUi(version, false);
 
 		return retVal;
+	}
+
+	private <T extends BaseGServiceVersion> BasePersServiceVersion fromUi(T theVersion, PersService theService, String theVersionId) throws ProcessingException {
+		Validate.notNull(theVersion);
+		Validate.notNull(theService);
+		Validate.notBlank(theVersionId);
+		
+		BasePersServiceVersion retVal = myServiceRegistry.getOrCreateServiceVersionWithId(theService, theVersion.getProtocol(), theVersionId);
+		switch (theVersion.getProtocol()) {
+		case SOAP11:
+			fromUi((PersServiceVersionSoap11)retVal, (GSoap11ServiceVersion) theVersion);
+			break;
+		case JSONRPC20:
+			fromUi((PersServiceVersionJsonRpc20)retVal, (GServiceVersionJsonRpc20)theVersion);
+			break;
+		}
+		
+		retVal.setActive(theVersion.isActive());
+		retVal.setVersionId(theVersion.getId());
+
+		PersHttpClientConfig httpClientConfig = myPersSvc.getHttpClientConfig(theVersion.getHttpClientConfigPid());
+		if (httpClientConfig == null) {
+			throw new ProcessingException("Unknown HTTP client config PID: " + theVersion.getHttpClientConfigPid());
+		}
+		retVal.setHttpClientConfig(httpClientConfig);
+
+		retVal.populateKeepRecentTransactionsFromDto(theVersion);
+
+		return retVal;
+	}
+
+	@SuppressWarnings("unused")
+	private void fromUi(PersServiceVersionJsonRpc20 theRetVal, GServiceVersionJsonRpc20 theVersion) {
+		// nothing in here yet
 	}
 
 	@Override
@@ -788,6 +829,7 @@ public class AdminServiceBean implements IAdminService {
 			throw new IllegalStateException("Unknown type:" + theAuthHost.getType());
 		}
 
+		retVal.populateKeepRecentTransactionsFromDto(theAuthHost);
 		retVal.setAutoCreateAuthorizedUsers(theAuthHost.isAutoCreateAuthorizedUsers());
 		retVal.setCacheSuccessfulCredentialsForMillis(theAuthHost.getCacheSuccessesForMillis());
 		retVal.setModuleId(theAuthHost.getModuleId());
@@ -812,7 +854,7 @@ public class AdminServiceBean implements IAdminService {
 		return null;
 	}
 
-	private PersBaseServerAuth<?, ?> fromUi(BaseGServerSecurity theObj, PersServiceVersionSoap11 theSvcVer) {
+	private PersBaseServerAuth<?, ?> fromUi(BaseGServerSecurity theObj, BasePersServiceVersion theSvcVer) {
 		switch (theObj.getType()) {
 		case WSSEC_UT:
 			PersWsSecUsernameTokenServerAuth retVal = new PersWsSecUsernameTokenServerAuth();
@@ -838,6 +880,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setPid(theDomain.getPidOrNull());
 		retVal.setDomainId(theDomain.getId());
 		retVal.setDomainName(theDomain.getName());
+		retVal.populateKeepRecentTransactionsFromDto(theDomain);
 		return retVal;
 	}
 
@@ -874,6 +917,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setActive(theService.isActive());
 		retVal.setServiceId(theService.getId());
 		retVal.setServiceName(theService.getName());
+		retVal.populateKeepRecentTransactionsFromDto(theService);
 		return retVal;
 	}
 
@@ -967,38 +1011,16 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private void fromUi(PersAuthenticationHostLocalDatabase theHost, GLocalDatabaseAuthHost theAuthHost) {
-
-		if (theAuthHost.getPid() <= 0) {
-			theHost.setPid(null);
-		} else {
-			theHost.setPid(theAuthHost.getPid());
-		}
-
-		theHost.setAutoCreateAuthorizedUsers(theAuthHost.isAutoCreateAuthorizedUsers());
-		theHost.setCacheSuccessfulCredentialsForMillis(theAuthHost.getCacheSuccessesForMillis());
-		theHost.setModuleId(theAuthHost.getModuleId());
-		theHost.setModuleName(theAuthHost.getModuleName());
-
-	}
 
 	private PersServiceVersionSoap11 fromUi(PersServiceVersionSoap11 thePersVersion, GSoap11ServiceVersion theVersion) throws ProcessingException {
-		thePersVersion.setActive(thePersVersion.isActive());
-		thePersVersion.setVersionId(theVersion.getId());
 		thePersVersion.setWsdlUrl(theVersion.getWsdlLocation());
-
-		PersHttpClientConfig httpClientConfig = myPersSvc.getHttpClientConfig(theVersion.getHttpClientConfigPid());
-		if (httpClientConfig == null) {
-			throw new ProcessingException("Unknown HTTP client config PID: " + theVersion.getHttpClientConfigPid());
-		}
-		thePersVersion.setHttpClientConfig(httpClientConfig);
 		return thePersVersion;
 	}
 
 	private GAuthenticationHostList loadAuthHostList() {
 		GAuthenticationHostList retVal = new GAuthenticationHostList();
 		for (BasePersAuthenticationHost next : myPersSvc.getAllAuthenticationHosts()) {
-			GLocalDatabaseAuthHost uiObject = toUi(next);
+			BaseGAuthHost uiObject = toUi(next);
 			retVal.add(uiObject);
 		}
 		return retVal;
@@ -1113,6 +1135,7 @@ public class AdminServiceBean implements IAdminService {
 		GSoap11ServiceVersionAndResources retVal = new GSoap11ServiceVersionAndResources();
 
 		retVal.setServiceVersion((GSoap11ServiceVersion) theUiService);
+		theSvcVer.populateKeepRecentTransactionsToDto(retVal.getServiceVersion());
 
 		theUiService.getMethodList().clear();
 		for (PersServiceVersionMethod next : theSvcVer.getMethods()) {
@@ -1150,14 +1173,31 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private GLocalDatabaseAuthHost toUi(BasePersAuthenticationHost next) {
-		GLocalDatabaseAuthHost uiObject = null;
-		switch (next.getType()) {
+	private BaseGAuthHost toUi(BasePersAuthenticationHost thePersObj) {
+		BaseGAuthHost retVal = null;
+		switch (thePersObj.getType()) {
 		case LOCAL_DATABASE:
-			uiObject = toUi((PersAuthenticationHostLocalDatabase) next);
+			retVal = new GLocalDatabaseAuthHost();
+			break;
+		case LDAP:
+			retVal = new GLdapAuthHost();
 			break;
 		}
-		return uiObject;
+		
+		if (retVal==null) {
+			throw new IllegalStateException("Unknown auth host type: " + thePersObj.getType());
+		}
+		
+		retVal.setPid(thePersObj.getPid());
+		retVal.setAutoCreateAuthorizedUsers(thePersObj.isAutoCreateAuthorizedUsers());
+		retVal.setCacheSuccessesForMillis(thePersObj.getCacheSuccessfulCredentialsForMillis());
+		retVal.setModuleId(thePersObj.getModuleId());
+		retVal.setModuleName(thePersObj.getModuleName());
+		retVal.setSupportsPasswordChange(thePersObj.isSupportsPasswordChange());
+
+		thePersObj.populateKeepRecentTransactionsToDto(retVal);
+
+		return retVal;
 	}
 
 	private BaseGServiceVersion toUi(BasePersServiceVersion theVersion, boolean theLoadStats) throws ProcessingException {
@@ -1168,6 +1208,9 @@ public class AdminServiceBean implements IAdminService {
 			GSoap11ServiceVersion soap11RetVal = new GSoap11ServiceVersion();
 			soap11RetVal.setWsdlLocation(persSoap11.getWsdlUrl());
 			retVal = soap11RetVal;
+			break;
+		case JSONRPC20:
+			retVal = new GServiceVersionJsonRpc20();
 			break;
 		}
 
@@ -1250,17 +1293,6 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private GLocalDatabaseAuthHost toUi(PersAuthenticationHostLocalDatabase theObj) {
-		GLocalDatabaseAuthHost retVal = new GLocalDatabaseAuthHost();
-		retVal.setPid(theObj.getPid());
-		retVal.setAutoCreateAuthorizedUsers(theObj.isAutoCreateAuthorizedUsers());
-		retVal.setCacheSuccessesForMillis(theObj.getCacheSuccessfulCredentialsForMillis());
-		retVal.setModuleId(theObj.getModuleId());
-		retVal.setModuleName(theObj.getModuleName());
-		retVal.setSupportsPasswordChange(theObj.isSupportsPasswordChange());
-		return retVal;
-	}
-
 	private BaseGClientSecurity toUi(PersBaseClientAuth<?> theAuth) throws ProcessingException {
 		BaseGClientSecurity retVal = null;
 
@@ -1319,6 +1351,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setId(theDomain.getDomainId());
 		retVal.setName(theDomain.getDomainName());
 		retVal.setServerSecured(theDomain.getServerSecured());
+		theDomain.populateKeepRecentTransactionsToDto(retVal);
 
 		if (theLoadStats) {
 			retVal.setStatsInitialized(true);
@@ -1399,6 +1432,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setName(theService.getServiceName());
 		retVal.setActive(theService.isActive());
 		retVal.setServerSecured(theService.getServerSecured());
+		theService.populateKeepRecentTransactionsToDto(retVal);
 
 		if (theLoadStats) {
 			retVal.setStatsInitialized(true);

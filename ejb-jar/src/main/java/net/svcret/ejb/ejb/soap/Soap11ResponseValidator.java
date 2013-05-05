@@ -17,7 +17,9 @@ import net.svcret.ejb.api.IResponseValidator;
 
 public class Soap11ResponseValidator implements IResponseValidator {
 
+	@SuppressWarnings("unused")
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(Soap11ResponseValidator.class);
+	
 	private Set<String> myAcceptableContentTypes;
 	private Set<Integer> myAcceptableHttpStatusCodes;
 	private Collection<String> myRequiredBodyFragments;

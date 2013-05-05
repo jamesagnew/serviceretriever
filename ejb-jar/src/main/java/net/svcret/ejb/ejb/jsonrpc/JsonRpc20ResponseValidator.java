@@ -30,7 +30,6 @@ public class JsonRpc20ResponseValidator implements IResponseValidator {
 			jsonReader.beginObject();
 
 			boolean isFault = false;
-			boolean isValid = false;
 			while (jsonReader.hasNext()) {
 
 				String nextName = jsonReader.nextName();

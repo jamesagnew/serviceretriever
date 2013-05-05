@@ -25,7 +25,7 @@ public class PersConfigProxyUrlBase extends BasePersObject {
 	@Column(name = "PID")
 	private Long myPid;
 
-	@Column(name = "URL_BASE", unique = true)
+	@Column(name = "URL_BASE")
 	private String myUrlBase;
 
 	@ManyToOne()

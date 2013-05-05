@@ -23,15 +23,13 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.PersistenceException;
 
-import org.apache.commons.lang3.time.DateUtils;
-
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.Messages;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.HttpResponseBean.Failure;
 import net.svcret.ejb.api.IConfigService;
-import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IDao;
+import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.api.UrlPoolBean;
@@ -59,6 +57,8 @@ import net.svcret.ejb.model.entity.PersStaticResourceStatsPk;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.util.Validate;
 
+import org.apache.commons.lang3.time.DateUtils;
+
 @Stateless
 public class RuntimeStatusBean implements IRuntimeStatus {
 
@@ -70,15 +70,11 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	@EJB
 	private IDao myDao;
 	private ReentrantLock myFlushLock = new ReentrantLock();
-
-	private ConcurrentHashMap<BasePersMethodStatsPk, BasePersMethodStats> myInvocationStats = new ConcurrentHashMap<BasePersMethodStatsPk, BasePersMethodStats>();
-
 	private Date myNowForUnitTests;
-
-	private ConcurrentHashMap<Long, PersServiceVersionStatus> myServiceVersionStatus = new ConcurrentHashMap<Long, PersServiceVersionStatus>();
-
 	private DateFormat myTimeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
 	private ConcurrentHashMap<Long, PersServiceVersionUrlStatus> myUrlStatus = new ConcurrentHashMap<Long, PersServiceVersionUrlStatus>();
+	private ConcurrentHashMap<BasePersMethodStatsPk, BasePersMethodStats> myUnflushedInvocationStats = new ConcurrentHashMap<BasePersMethodStatsPk, BasePersMethodStats>();
+	private ConcurrentHashMap<Long, PersServiceVersionStatus> myUnflushedServiceVersionStatus = new ConcurrentHashMap<Long, PersServiceVersionStatus>();
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
@@ -190,7 +186,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	public void flushStatus() {
 
 		/*
-		 * Make sure the flush only happens once per minute
+		 * Make sure the flush only happens once at a time
 		 */
 		if (!myFlushLock.tryLock()) {
 			return;
@@ -205,7 +201,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	@Override
 	public BasePersInvocationStats getOrCreateInvocationStatsSynchronously(PersInvocationStatsPk thePk) {
-		synchronized (myInvocationStats) {
+		synchronized (myUnflushedInvocationStats) {
 			BasePersInvocationStats retVal = myDao.getInvocationStats(thePk);
 			if (retVal != null) {
 				return retVal;
@@ -294,7 +290,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			serviceVersionStatus.setLastFaultInvocation(theInvocationTime);
 			break;
 		}
-
+		
 	}
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
@@ -423,7 +419,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		 */
 
 		List<BasePersMethodStats> stats = new ArrayList<BasePersMethodStats>();
-		HashSet<BasePersMethodStatsPk> keys = new HashSet<BasePersMethodStatsPk>(myInvocationStats.keySet());
+		HashSet<BasePersMethodStatsPk> keys = new HashSet<BasePersMethodStatsPk>(myUnflushedInvocationStats.keySet());
 
 		if (keys.isEmpty()) {
 
@@ -434,7 +430,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			Date earliest = null;
 			Date latest = null;
 			for (BasePersMethodStatsPk nextKey : keys) {
-				BasePersMethodStats nextStats = myInvocationStats.remove(nextKey);
+				BasePersMethodStats nextStats = myUnflushedInvocationStats.remove(nextKey);
 				if (nextStats == null) {
 					continue;
 				}
@@ -458,7 +454,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				ourLog.error("Failed to flush stats to disk, going to re-queue them", e);
 				for (BasePersMethodStats next : stats) {
 
-					BasePersMethodStats savedStats = myInvocationStats.putIfAbsent(next.getPk(), next);
+					BasePersMethodStats savedStats = myUnflushedInvocationStats.putIfAbsent(next.getPk(), next);
 					if (savedStats != next) {
 						savedStats.mergeUnsynchronizedEvents(next);
 					}
@@ -499,7 +495,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		 * Flush Service Version Status
 		 */
 
-		ArrayList<PersServiceVersionStatus> serviceVersionStatuses = new ArrayList<PersServiceVersionStatus>(myServiceVersionStatus.values());
+		ArrayList<PersServiceVersionStatus> serviceVersionStatuses = new ArrayList<PersServiceVersionStatus>(myUnflushedServiceVersionStatus.values());
 		for (Iterator<PersServiceVersionStatus> iter = serviceVersionStatuses.iterator(); iter.hasNext();) {
 			PersServiceVersionStatus next = iter.next();
 			if (!next.isDirty()) {
@@ -607,13 +603,13 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	private BasePersMethodStats getStatsForPk(BasePersMethodStatsPk statsPk) {
 		BasePersMethodStats tryNew = statsPk.newObjectInstance();
-		BasePersMethodStats stats = myInvocationStats.putIfAbsent(statsPk, tryNew);
+		BasePersMethodStats stats = myUnflushedInvocationStats.putIfAbsent(statsPk, tryNew);
 		if (stats == null) {
 			stats = tryNew;
 		}
 
 		if (ourLog.isTraceEnabled()) {
-			ourLog.trace("Now have the following {} stats: {}", myInvocationStats.size(), new ArrayList<BasePersMethodStatsPk>(myInvocationStats.keySet()));
+			ourLog.trace("Now have the following {} stats: {}", myUnflushedInvocationStats.size(), new ArrayList<BasePersMethodStatsPk>(myUnflushedInvocationStats.keySet()));
 		}
 
 		return stats;
@@ -623,7 +619,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		Validate.notNull(theServiceVersionStatus, "Status");
 		Validate.notNull(thePid, "PID");
 
-		PersServiceVersionStatus status = myServiceVersionStatus.putIfAbsent(thePid, theServiceVersionStatus);
+		PersServiceVersionStatus status = myUnflushedServiceVersionStatus.putIfAbsent(thePid, theServiceVersionStatus);
 		if (status == null) {
 			status = theServiceVersionStatus;
 		}
@@ -658,4 +654,5 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		myNowForUnitTests = theNow;
 	}
 
+	
 }

@@ -6,8 +6,10 @@ import java.util.Collections;
 import java.util.Set;
 
 import net.svcret.admin.client.ui.components.CssConstants;
+import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.HtmlH1;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
+import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
@@ -38,34 +40,47 @@ public class PermissionsPanel extends FlowPanel {
 	private CheckBox myAllDomainsCheckbox;
 	private IHasPermissions myPermissions;
 	private GDomainList myDomainList;
+	private FlowPanel myServicePermissionsTreePanel;
 
 	public PermissionsPanel() {
 		add(new HtmlH1(MSGS.permissionsPanel_AdministrationPermissions()));
 
-		add(new Label(MSGS.permissionsPanel_SuperUserDesc()));
+		TwoColumnGrid adminPermsGrid = new TwoColumnGrid();
+		add(adminPermsGrid);
+		
 		mySuperUserCheckbox = new CheckBox();
-		mySuperUserCheckbox.setText(MSGS.permissionsPanel_SuperUserCheckbox());
-		add(mySuperUserCheckbox);
-
+		adminPermsGrid.addRow(MSGS.permissionsPanel_SuperUserCheckbox(), mySuperUserCheckbox);
+		adminPermsGrid.addDescription(MSGS.permissionsPanel_SuperUserDesc());
+		
 		add(new HtmlH1(MSGS.permissionsPanel_ServicePermissionsTitle()));
 		add(new Label(MSGS.permissionsPanel_ServicePermissionsDesc()));
 
 		myServicePermissionsSpinner = new LoadingSpinner();
 		add(myServicePermissionsSpinner);
 
-		myAllDomainsCheckbox = new CheckBox(MSGS.permissionsPanel_AllDomainsCheckbox());
+		TwoColumnGrid srvPermGrid = new TwoColumnGrid();
+		add(srvPermGrid);
+		
+		myAllDomainsCheckbox = new CheckBox();
 		myAllDomainsCheckbox.setStyleName(CssConstants.PERMISSION_TREE_ENTRY_ALL_CHILD_CHECK);
 		myAllDomainsCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
 			@Override
 			public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
 				myPermissions.setAllowAllDomains(myAllDomainsCheckbox.getValue());
-				myServicePermissionsTree.setVisible(!myAllDomainsCheckbox.getValue());
+				myServicePermissionsTreePanel.setVisible(!myAllDomainsCheckbox.getValue());
 			}
 		});
-		add(myAllDomainsCheckbox);
+		srvPermGrid.addRow(MSGS.permissionsPanel_AllDomainsCheckbox(), myAllDomainsCheckbox);
+		srvPermGrid.addDescription(MSGS.permissionsPanel_AllDomainsDesc());
 
+		myServicePermissionsTreePanel = new FlowPanel();
+		add(myServicePermissionsTreePanel);
+		
+		myServicePermissionsTreePanel.add(new HtmlBr());
+		myServicePermissionsTreePanel.add(new Label("Select individual domains, services, etc. that this user is allowed to access in the tree below:"));
+		
 		myServicePermissionsTree = new Tree();
-		add(myServicePermissionsTree);
+		myServicePermissionsTreePanel.add(myServicePermissionsTree);
 		
 	}
 
@@ -80,7 +95,7 @@ public class PermissionsPanel extends FlowPanel {
 		mySuperUserCheckbox.setValue(globalPerms.contains(UserGlobalPermissionEnum.SUPERUSER));
 
 		myAllDomainsCheckbox.setValue(theResult.isAllowAllDomains());
-		myServicePermissionsTree.setVisible(!myAllDomainsCheckbox.getValue());
+		myServicePermissionsTreePanel.setVisible(!myAllDomainsCheckbox.getValue());
 
 		myServicePermissionsSpinner.show();
 		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
@@ -120,6 +135,7 @@ public class PermissionsPanel extends FlowPanel {
 				CheckBox allServicesCheckbox = new CheckBox(MSGS.permissionsPanel_TreeAllServicesCheckbox());
 				allServicesCheckbox.setStyleName(CssConstants.PERMISSION_TREE_ENTRY_ALL_CHILD_CHECK);
 				widget.add(allServicesCheckbox);
+				
 //				TreeItem allServices = new TreeItem(allServicesCheckbox);
 //				retVal.addItem(allServices);
 

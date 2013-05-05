@@ -6,6 +6,7 @@ import net.svcret.admin.client.ui.components.HtmlH1;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
+import net.svcret.admin.client.ui.config.KeepRecentTransactionsPanel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGAuthHost;
@@ -35,6 +36,7 @@ abstract class BaseAuthenticationHostEditPanel<T extends BaseGAuthHost> extends 
 	private T myAuthHost;
 	private AuthenticationHostsPanel myParent;
 	private FlowPanel myContentPanel;
+	private KeepRecentTransactionsPanel myKeepRecentTransactionsPanel;
 
 	/**
 	 * Constructor
@@ -113,6 +115,10 @@ abstract class BaseAuthenticationHostEditPanel<T extends BaseGAuthHost> extends 
 		
 		cacheGrid.addRow(AdminPortal.MSGS.baseAuthenticationHostEditPanel_CacheResponses(), cacheHp);
 		cacheGrid.addDescription(AdminPortal.MSGS.baseAuthenticationHostEditPanel_CacheResponsesDesc());
+		
+		myKeepRecentTransactionsPanel = new KeepRecentTransactionsPanel(theAuthHost);
+		myContentPanel.add(myKeepRecentTransactionsPanel);
+		
 	}
 
 	protected FlowPanel getContentPanel() {
@@ -153,7 +159,13 @@ abstract class BaseAuthenticationHostEditPanel<T extends BaseGAuthHost> extends 
 			myAuthHost.setCacheSuccessesForMillis(null);
 		}
 
+		if (!myKeepRecentTransactionsPanel.validateAndShowErrorIfNotValid()) {
+			return;
+		}
+		
 		applySettingsFromUi();
+		
+		myKeepRecentTransactionsPanel.populateDto(myAuthHost);
 		
 		myLoadingSpinner.show();
 		Model.getInstance().saveAuthenticationHost(myAuthHost, new IAsyncLoadCallback<GAuthenticationHostList>() {

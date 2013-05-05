@@ -18,7 +18,6 @@ public class Password {
 	// expensive computing the hash is for us
 	// and also for a brute force attack.
 	private static final int iterations = 10 * 1024;
-	private static final int weakIterations = 10 * 1024;
 	private static final int saltLen = 32;
 	private static final int desiredKeyLen = 256;
 

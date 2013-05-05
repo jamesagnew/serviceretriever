@@ -42,7 +42,7 @@ public class PersConfig {
 	@Column(name = "PID")
 	private long myPid = DEFAULT_ID;
 
-	@OneToMany(cascade = CascadeType.ALL, mappedBy = "myConfig", fetch = FetchType.EAGER)
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "myConfig", fetch = FetchType.EAGER, orphanRemoval=true)
 	private Collection<PersConfigProxyUrlBase> myProxyUrlBases;
 
 	public void addProxyUrlBase(PersConfigProxyUrlBase theBase) {
@@ -129,5 +129,17 @@ public class PersConfig {
 
 	public Date getCollapseStatsToTenMinutesCutoff() {
 		return new Date(System.currentTimeMillis() - (getCollapseStatsToTenMinutesAfterNumHours() * DateUtils.MILLIS_PER_HOUR));
+	}
+
+	public void merge(PersConfig theFromUi) {
+		myCollapseStatsToDaysAfterNumDays = theFromUi.getCollapseStatsToDaysAfterNumDays();
+		myCollapseStatsToHoursAfterNumHours = theFromUi.getCollapseStatsToDaysAfterNumDays();
+		myCollapseStatsToTenMinutesAfterNumHours = theFromUi.getCollapseStatsToTenMinutesAfterNumHours();
+		
+		// Merge base URLs
+		getProxyUrlBases();
+		myProxyUrlBases.clear();
+		myProxyUrlBases.addAll(theFromUi.getProxyUrlBases());
+		
 	}
 }

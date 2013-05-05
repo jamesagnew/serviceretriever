@@ -1,5 +1,6 @@
 package net.svcret.admin.shared.model;
 
+
 public class GSoap11ServiceVersion extends BaseGServiceVersion {
 
 	private static final long serialVersionUID = 1L;
@@ -25,6 +26,5 @@ public class GSoap11ServiceVersion extends BaseGServiceVersion {
 	public void setWsdlLocation(String theWsdlLocation) {
 		myWsdlLocation = theWsdlLocation;
 	}
-
 
 }

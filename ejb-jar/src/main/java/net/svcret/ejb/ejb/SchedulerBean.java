@@ -17,6 +17,7 @@ import net.sf.ehcache.management.ManagementService;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.api.ISecurityService;
+import net.svcret.ejb.api.ITransactionLogger;
 
 @Startup
 @Singleton()
@@ -26,47 +27,25 @@ public class SchedulerBean implements IScheduler {
 
 	private CacheManager myCacheManager;
 
-	private ManagementService registry;
-
-	@PostConstruct
-	public void registerMBeans() {
-		myCacheManager = new CacheManager();
-		MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-        registry = new ManagementService(myCacheManager,
-                mBeanServer,
-                true,
-                true,
-                true,
-                true,
-                true);
-
-        registry.init();
-	}
-
-	@PreDestroy
-	public void unregisterMBeans() {
-		registry.dispose();
-	}
-	
 	@EJB
 	private ISecurityService mySecuritySvc;
 
 	@EJB
 	private IRuntimeStatus myStatsSvc;
 
-	@PostConstruct
-	public void postConstruct() {
-		ourLog.info("Scheduler has started");
-		mySecuritySvc.loadUserCatalogIfNeeded();
-	}
+	@EJB
+	private ITransactionLogger myTransactionLogger;
+
+	private ManagementService registry;
 
 	@Override
 	@Schedule(second = "0", minute = "*", hour = "*")
-	public void reloadUserRegistry() {
+	@TransactionAttribute(TransactionAttributeType.NEVER)
+	public void collapseStats() {
 		try {
-			mySecuritySvc.loadUserCatalogIfNeeded();
+			myStatsSvc.collapseStats();
 		} catch (Exception e) {
-			ourLog.error("Failed to load user catalog", e);
+			ourLog.error("Failed to collapse stats", e);
 		}
 	}
 
@@ -83,13 +62,42 @@ public class SchedulerBean implements IScheduler {
 
 	@Override
 	@Schedule(second = "0", minute = "*", hour = "*")
-	@TransactionAttribute(TransactionAttributeType.NEVER)
-	public void collapseStats() {
+	public void flushTransactionLogs() {
 		try {
-			myStatsSvc.collapseStats();
+			myTransactionLogger.flush();
 		} catch (Exception e) {
-			ourLog.error("Failed to collapse stats", e);
+			ourLog.error("Failed to flush transaction logs", e);
 		}
+	}
+	
+	@PostConstruct
+	public void postConstruct() {
+		ourLog.info("Scheduler has started");
+		mySecuritySvc.loadUserCatalogIfNeeded();
+		
+		
+		ourLog.info("Registering MBeans");
+		myCacheManager = CacheManager.getInstance();
+		MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+		registry = new ManagementService(myCacheManager, mBeanServer, true, true, true, true, true);
+
+		registry.init();
+	}
+
+	@Override
+	@Schedule(second = "0", minute = "*", hour = "*")
+	public void reloadUserRegistry() {
+		try {
+			mySecuritySvc.loadUserCatalogIfNeeded();
+		} catch (Exception e) {
+			ourLog.error("Failed to load user catalog", e);
+		}
+	}
+
+	@PreDestroy
+	public void unregisterMBeans() {
+		ourLog.info("Unegistering MBeans");
+		registry.dispose();
 	}
 
 }
