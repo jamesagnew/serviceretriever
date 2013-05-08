@@ -20,6 +20,8 @@ import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GPartialUserList;
+import net.svcret.admin.shared.model.GRecentMessage;
+import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
@@ -314,14 +316,14 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
-	public UserAndAuthHost loadUser(long thePid) throws ServiceFailureException {
+	public UserAndAuthHost loadUser(long thePid, boolean theLoadStats) throws ServiceFailureException {
 		if (isMockMode()) {
-			return myMock.loadUser(thePid);
+			return myMock.loadUser(thePid, theLoadStats);
 		}
 
 		GUser user;
 		try {
-			user = myAdminSvc.loadUser(thePid);
+			user = myAdminSvc.loadUser(thePid, theLoadStats);
 			BaseGAuthHost authHost = myAdminSvc.loadAuthenticationHost(user.getPid());
 			return new UserAndAuthHost(user, authHost);
 		} catch (ProcessingException e) {
@@ -331,12 +333,17 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
-	public GPartialUserList loadUsers(PartialUserListRequest theRequest) {
+	public GPartialUserList loadUsers(PartialUserListRequest theRequest) throws ServiceFailureException {
 		if (isMockMode()) {
 			return myMock.loadUsers(theRequest);
 		}
 
-		return myAdminSvc.loadUsers(theRequest);
+		try {
+			return myAdminSvc.loadUsers(theRequest);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to load users", e);
+			throw new ServiceFailureException(e.getMessage());			
+		}
 	}
 
 	@Override
@@ -360,7 +367,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 
 			saveServiceVersionResourcesToSession(serviceAndResources);
 
-			retVal = serviceAndResources.getServiceVersion();
+			retVal = (GSoap11ServiceVersion) serviceAndResources.getServiceVersion();
 		}
 
 		/*
@@ -568,7 +575,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	private void saveServiceVersionResourcesToSession(GSoap11ServiceVersionAndResources theServiceAndResources) {
-		GSoap11ServiceVersion serviceVersion = theServiceAndResources.getServiceVersion();
+		BaseGServiceVersion serviceVersion = theServiceAndResources.getServiceVersion();
 		ourLog.info("Storing service resource collection to temporary session with id: " + serviceVersion.getUncommittedSessionId());
 		String key = SESSION_PREFIX_UNCOMITTED_SVC_VER_RES + theServiceAndResources.getServiceVersion().getUncommittedSessionId();
 		getThreadLocalRequest().getSession(true).setAttribute(key, theServiceAndResources.getResource());
@@ -579,6 +586,40 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	 */
 	void setAdminSvc(IAdminService theAdminSvc) {
 		myAdminSvc = theAdminSvc;
+	}
+
+	@Override
+	public GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid) {
+		if (isMockMode()) {
+			return myMock.loadRecentTransactionListForServiceVersion(theServiceVersionPid);
+		}
+		
+		return myAdminSvc.loadRecentTransactionListForServiceVersion(theServiceVersionPid);
+	}
+
+	@Override
+	public GRecentMessage loadRecentMessageForServiceVersion(long thePid) {
+		if (isMockMode()) {
+			return myMock.loadRecentMessageForServiceVersion(thePid);
+		}
+		return myAdminSvc.loadRecentMessageForServiceVersion(thePid);
+	}
+
+	@Override
+	public GRecentMessageLists loadRecentTransactionListForuser(long thePid) {
+		if (isMockMode()) {
+			return myMock.loadRecentTransactionListForuser(thePid);
+		}
+		
+		return myAdminSvc.loadRecentTransactionListForUser(thePid);
+	}
+
+	@Override
+	public GRecentMessage loadRecentMessageForUser(long thePid) {
+		if (isMockMode()) {
+			return myMock.loadRecentMessageForUser(thePid);
+		}
+		return myAdminSvc.loadRecentMessageForUser(thePid);
 	}
 
 }

@@ -16,6 +16,7 @@ import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
 import net.svcret.ejb.model.entity.PersUser;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
 import org.springframework.ldap.core.AuthenticatedLdapEntryContextCallback;
 import org.springframework.ldap.core.LdapEncoder;
 import org.springframework.ldap.core.LdapEntryIdentification;
@@ -34,11 +35,11 @@ public class LdapAuthorizationServiceBean extends BaseAuthorizationServiceBean<P
 
 	@Override
 	protected PersUser doAuthorize(PersAuthenticationHostLdap theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException {
-		if (!(theHost instanceof PersAuthenticationHostLdap)) {
-			throw new IllegalStateException("Auth host is not an LDAP host entry");
-		}
-
-		PersAuthenticationHostLdap ldapHost = (PersAuthenticationHostLdap) theHost;
+		Validate.notNull(theHost);
+		Validate.notNull(theUserCatalog);
+		Validate.notNull(theCredentialGrabber);
+		
+		PersAuthenticationHostLdap ldapHost = theHost;
 
 		MyLdapNetworkConnection newConnection = new MyLdapNetworkConnection(ldapHost);
 		MyLdapNetworkConnection connection = myHostToConnection.putIfAbsent(theHost, newConnection);

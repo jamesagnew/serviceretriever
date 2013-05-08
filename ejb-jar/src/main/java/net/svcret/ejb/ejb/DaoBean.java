@@ -28,7 +28,9 @@ import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
+import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersMethodStats;
+import net.svcret.ejb.model.entity.BasePersRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
@@ -39,8 +41,6 @@ import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersEnvironment;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
-import net.svcret.ejb.model.entity.PersInvocationAnonStats;
-import net.svcret.ejb.model.entity.PersInvocationAnonStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
@@ -57,7 +57,9 @@ import net.svcret.ejb.model.entity.PersStaticResourceStats;
 import net.svcret.ejb.model.entity.PersStaticResourceStatsPk;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserRecentMessage;
+import net.svcret.ejb.model.entity.PersUserStatus;
 import net.svcret.ejb.model.entity.Queries;
+import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.util.Validate;
 
@@ -121,7 +123,7 @@ public class DaoBean implements IDao {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Collection<PersUser> getAllServiceUsers() {
+	public Collection<PersUser> getAllUsers() {
 		Query q = myEntityManager.createQuery("SELECT u FROM PersUser u");
 		Collection<PersUser> resultList = q.getResultList();
 		return resultList;
@@ -198,14 +200,6 @@ public class DaoBean implements IDao {
 		}
 
 		return results;
-	}
-
-	@Override
-	public List<PersInvocationAnonStats> getInvocationAnonStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff) {
-		TypedQuery<PersInvocationAnonStats> q = myEntityManager.createNamedQuery(Queries.PERSINVOC_ANONSTATS, PersInvocationAnonStats.class);
-		q.setParameter("INTERVAL", theHour);
-		q.setParameter("BEFORE_DATE", theDaysCutoff, TemporalType.TIMESTAMP);
-		return q.getResultList();
 	}
 
 	@Override
@@ -328,19 +322,6 @@ public class DaoBean implements IDao {
 		}
 	}
 
-	@Override
-	public PersInvocationAnonStats getOrCreateInvocationAnonStats(PersInvocationAnonStatsPk thePk) {
-		PersInvocationAnonStats retVal = myEntityManager.find(PersInvocationAnonStats.class, thePk);
-
-		if (retVal == null) {
-			retVal = new PersInvocationAnonStats(thePk);
-			ourLog.info("Adding new invocation anon stats: {}", thePk);
-			retVal = myEntityManager.merge(retVal);
-			retVal.setNewlyCreated(true);
-		}
-
-		return retVal;
-	}
 
 	@Override
 	public PersInvocationStats getOrCreateInvocationStats(PersInvocationStatsPk thePk) {
@@ -374,22 +355,34 @@ public class DaoBean implements IDao {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public PersServiceVersionSoap11 getOrCreateServiceVersionWithId(PersService theService, String theId, ServiceProtocolEnum theProtocol) throws ProcessingException {
+	public BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, String theId, ServiceProtocolEnum theProtocol) throws ProcessingException {
 		Validate.notNull(theService, "PersService");
 		Validate.throwProcessingExceptionIfBlank(theId, "The ID may not be blank");
 
-		Query q = myEntityManager.createQuery("SELECT v FROM PersServiceVersionSoap11 v WHERE v.myService.myPid = :SERVICE_PID AND v.myVersionId = :VERSION_ID");
+		TypedQuery<BasePersServiceVersion> q = myEntityManager.createQuery("SELECT v FROM BasePersServiceVersion v WHERE v.myService.myPid = :SERVICE_PID AND v.myVersionId = :VERSION_ID", BasePersServiceVersion.class);
 		q.setParameter("SERVICE_PID", theService.getPid());
 		q.setParameter("VERSION_ID", theId);
-		PersServiceVersionSoap11 retVal;
+		BasePersServiceVersion retVal = null;
 		try {
-			retVal = (PersServiceVersionSoap11) q.getSingleResult();
+			retVal = q.getSingleResult();
 		} catch (NoResultException e) {
 			ourLog.info("Creating new service version {} for service {}", theId, theService.getServiceId());
 
 			PersHttpClientConfig config = getOrCreateHttpClientConfig(PersHttpClientConfig.DEFAULT_ID);
 
-			retVal = new PersServiceVersionSoap11();
+			switch (theProtocol) {
+			case SOAP11:
+				retVal = new PersServiceVersionSoap11();
+				break;
+			case JSONRPC20:
+				retVal = new PersServiceVersionJsonRpc20();
+				break;
+			}
+
+			if (retVal == null) {
+				throw new IllegalStateException("Unknown protocol: " + theProtocol);
+			}
+
 			retVal.setService(theService);
 			retVal.setVersionId(theId);
 			retVal.setHttpClientConfig(config);
@@ -399,7 +392,7 @@ public class DaoBean implements IDao {
 			theService.addVersion(retVal);
 			PersService service = myEntityManager.merge(theService);
 
-			retVal = (PersServiceVersionSoap11) service.getVersionWithId(theId);
+			retVal = service.getVersionWithId(theId);
 
 			// Create a status entry
 
@@ -453,6 +446,12 @@ public class DaoBean implements IDao {
 			retVal.setUsername(theUsername);
 			retVal.setAuthenticationHost(theAuthHost);
 			retVal = myEntityManager.merge(retVal);
+			
+			PersUserStatus status = new PersUserStatus();
+			status.setUser(retVal);
+			retVal.setStatus(status);
+//			status = myEntityManager.merge(status);
+
 		}
 
 		return retVal;
@@ -635,6 +634,25 @@ public class DaoBean implements IDao {
 		saveInvocationStats(theStats, emptyList);
 	}
 
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	@Override
+	public void saveUserStatus(Collection<PersUserStatus> theStatus) {
+		ourLog.info("Flushing {} user status entries", theStatus.size());
+		
+		grabLock("FLUSH_STATS");
+		
+		for (PersUserStatus persUserStatus : theStatus) {
+			
+			PersUserStatus existing = myEntityManager.find(PersUserStatus.class, persUserStatus.getPid());
+			if (existing == null) {
+				ourLog.info("No user status with PID {} so not going to save this one", persUserStatus.getPid());
+				continue;
+			}
+			existing.merge(persUserStatus);
+			myEntityManager.merge(existing);
+		}
+	}
+
 	@Override
 	public void saveInvocationStats(Collection<BasePersMethodStats> theStats, List<BasePersMethodStats> theStatsToDelete) {
 		Validate.notNull(theStats);
@@ -661,14 +679,6 @@ public class DaoBean implements IDao {
 				}
 				persisted.mergeUnsynchronizedEvents(next);
 				ucount++;
-			} else if (next instanceof PersInvocationAnonStats) {
-				PersInvocationAnonStats cNext = (PersInvocationAnonStats) next;
-				persisted = getOrCreateInvocationAnonStats(cNext.getPk());
-				if (!persisted.isNewlyCreated()) {
-					myEntityManager.refresh(persisted);
-				}
-				persisted.mergeUnsynchronizedEvents(next);
-				acount++;
 			} else if (next instanceof PersInvocationStats) {
 				PersInvocationStats cNext = (PersInvocationStats) next;
 				persisted = getOrCreateInvocationStats(cNext.getPk());
@@ -901,11 +911,11 @@ public class DaoBean implements IDao {
 		Validate.notNull(theType);
 		Validate.notNegative(theNumberToTrimTo);
 
-		long start=0;
+		long start = 0;
 		if (ourLog.isDebugEnabled()) {
 			start = System.currentTimeMillis();
 		}
-		
+
 		Query query = myEntityManager.createNamedQuery(Queries.SVCVER_RECENTMSGS_COUNT);
 		query.setParameter("SVC_VER", theVersion);
 		query.setParameter("RESP_TYPE", theType);
@@ -914,14 +924,14 @@ public class DaoBean implements IDao {
 		int toDelete = num.intValue() - theNumberToTrimTo;
 
 		if (ourLog.isDebugEnabled()) {
-			ourLog.debug("Counted recent messages of type {} in {}ms", theType, System.currentTimeMillis()-start);
+			ourLog.debug("Counted recent messages of type {} in {}ms", theType, System.currentTimeMillis() - start);
 		}
-		
+
 		ourLog.debug("For recent messages of type {} for version {} we have {} entries and want {}", new Object[] { theType, theVersion.getPid(), num, toDelete });
 		if (toDelete <= 0) {
 			return;
 		}
-		
+
 		List<PersServiceVersionRecentMessage> messages = getServiceVersionRecentMessages(theVersion, theType);
 		int index = 0;
 		for (Iterator<PersServiceVersionRecentMessage> iter = messages.iterator(); iter.hasNext() && index < toDelete; index++) {
@@ -951,11 +961,11 @@ public class DaoBean implements IDao {
 		Validate.notNull(theType);
 		Validate.notNegative(theNumberToTrimTo);
 
-		long start=0;
+		long start = 0;
 		if (ourLog.isDebugEnabled()) {
 			start = System.currentTimeMillis();
 		}
-		
+
 		Query query = myEntityManager.createNamedQuery(Queries.USER_RECENTMSGS_COUNT);
 		query.setParameter("USER", theUser);
 		query.setParameter("RESP_TYPE", theType);
@@ -964,19 +974,43 @@ public class DaoBean implements IDao {
 		int toDelete = num.intValue() - theNumberToTrimTo;
 
 		if (ourLog.isDebugEnabled()) {
-			ourLog.debug("Counted recent messages of type {} in {}ms", theType, System.currentTimeMillis()-start);
+			ourLog.debug("Counted recent messages of type {} in {}ms", theType, System.currentTimeMillis() - start);
 		}
-		
+
 		ourLog.debug("For recent messages of type {} for version {} we have {} entries and want {}", new Object[] { theType, theUser.getPid(), num, toDelete });
 		if (toDelete <= 0) {
 			return;
 		}
-		
+
 		List<PersUserRecentMessage> messages = getUserRecentMessages(theUser, theType);
 		int index = 0;
 		for (Iterator<PersUserRecentMessage> iter = messages.iterator(); iter.hasNext() && index < toDelete; index++) {
 			myEntityManager.remove(iter.next());
 		}
+	}
+
+	@Override
+	public BasePersRecentMessage loadRecentMessageForServiceVersion(long thePid) {
+		return myEntityManager.find(PersServiceVersionRecentMessage.class, thePid);
+	}
+
+	@Override
+	public BasePersRecentMessage loadRecentMessageForUser(long thePid) {
+		return myEntityManager.find(PersUserRecentMessage.class, thePid);
+	}
+
+	@Override
+	public void deleteUser(PersUser theUser) {
+		Validate.notNull(theUser);
+		
+		ourLog.info("Deleting user {}", theUser.getPid());
+		
+		myEntityManager.remove(theUser);
+	}
+
+	@Override
+	public BasePersInvocationStats getInvocationUserStats(PersInvocationUserStatsPk thePk) {
+		return myEntityManager.find(PersInvocationUserStats.class, thePk);
 	}
 
 }

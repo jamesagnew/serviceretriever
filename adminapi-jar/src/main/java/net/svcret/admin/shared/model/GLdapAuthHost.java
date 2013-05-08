@@ -1,10 +1,5 @@
 package net.svcret.admin.shared.model;
 
-import static net.svcret.admin.shared.model.GLdapAuthHost.DEFAULT_AUTH_BASE_DN;
-import static net.svcret.admin.shared.model.GLdapAuthHost.DEFAULT_AUTH_FILTER;
-import static net.svcret.admin.shared.model.GLdapAuthHost.DEFAULT_BIND_USER_DN;
-import static net.svcret.admin.shared.model.GLdapAuthHost.DEFAULT_BIND_USER_PASS;
-import static net.svcret.admin.shared.model.GLdapAuthHost.DEFAULT_HOST;
 
 public class GLdapAuthHost extends BaseGAuthHost {
 

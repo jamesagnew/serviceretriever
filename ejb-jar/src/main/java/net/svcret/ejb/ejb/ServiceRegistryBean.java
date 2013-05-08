@@ -209,7 +209,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		}
 
 		Map<String, PersUser> serviceUserMap = new HashMap<String, PersUser>();
-		Collection<PersUser> users = myDao.getAllServiceUsers();
+		Collection<PersUser> users = myDao.getAllUsers();
 		for (PersUser nextUser : users) {
 			serviceUserMap.put(nextUser.getUsername(), nextUser);
 			nextUser.loadAllAssociations();

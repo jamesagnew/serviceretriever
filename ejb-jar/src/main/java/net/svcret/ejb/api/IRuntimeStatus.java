@@ -9,6 +9,7 @@ import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
+import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
@@ -49,6 +50,8 @@ public interface IRuntimeStatus {
 	BasePersInvocationStats getOrCreateInvocationStatsSynchronously(PersInvocationStatsPk thePk);
 
 	void collapseStats() throws ProcessingException;
+
+	BasePersInvocationStats getOrCreateUserInvocationStatsSynchronously(PersInvocationUserStatsPk thePk);
 
 	
 }

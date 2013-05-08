@@ -10,7 +10,7 @@ import javax.persistence.Transient;
 import com.google.common.base.Objects;
 
 @Embeddable
-public class PersStaticResourceStatsPk extends BasePersMethodStatsPk {
+public class PersStaticResourceStatsPk extends BasePersInvocationStatsPk {
 
 	private static final long serialVersionUID = 1L;
 
@@ -45,7 +45,7 @@ public class PersStaticResourceStatsPk extends BasePersMethodStatsPk {
 	}
 
 	@Override
-	protected boolean doEquals(BasePersMethodStatsPk theObj) {
+	protected boolean doEquals(BasePersInvocationStatsPk theObj) {
 		PersStaticResourceStatsPk obj = (PersStaticResourceStatsPk) theObj;
 		return getInterval().equals(obj.getInterval()) // -
 				&& getResourcePid().equals(obj.getResourcePid()) // -

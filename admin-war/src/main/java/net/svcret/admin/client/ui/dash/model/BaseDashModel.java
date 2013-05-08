@@ -122,14 +122,19 @@ public abstract class BaseDashModel implements IDashModel {
 	@Override
 	public final Widget renderUsage() {
 		int[] list = myModel.getTransactions60mins();
-		if (myModel.getAverageTransactionsPerMin() < 0.1) {
-			return returnSparklineFor60mins(list, formatDouble(myModel.getAverageTransactionsPerMin() * 60), "/hr");
+		double averagePerMin = myModel.getAverageTransactionsPerMin();
+		return returnSparklineFor60Mins(list, averagePerMin);
+	}
+
+	public static Widget returnSparklineFor60Mins(int[] list, double averagePerMin) {
+		if (averagePerMin < 0.1) {
+			return returnSparklineFor60mins(list, formatDouble(averagePerMin * 60), "/hr");
 		} else {
-			return returnSparklineFor60mins(list, formatDouble(myModel.getAverageTransactionsPerMin()), "/min");
+			return returnSparklineFor60mins(list, formatDouble(averagePerMin), "/min");
 		}
 	}
 
-	private String formatDouble(double theNumber) {
+	private static String formatDouble(double theNumber) {
 		return ourDecimalFormat.format(theNumber);
 	}
 

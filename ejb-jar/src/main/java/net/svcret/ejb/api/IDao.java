@@ -12,6 +12,7 @@ import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersMethodStats;
+import net.svcret.ejb.model.entity.BasePersRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
@@ -22,8 +23,6 @@ import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersEnvironment;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
-import net.svcret.ejb.model.entity.PersInvocationAnonStats;
-import net.svcret.ejb.model.entity.PersInvocationAnonStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
@@ -35,6 +34,7 @@ import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserRecentMessage;
+import net.svcret.ejb.model.entity.PersUserStatus;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 
 
@@ -53,7 +53,7 @@ public interface IDao {
 
 	Collection<PersService> getAllServices();
 
-	Collection<PersUser> getAllServiceUsers();
+	Collection<PersUser> getAllUsers();
 
 	Collection<PersServiceVersionSoap11> getAllServiceVersions();
 
@@ -74,8 +74,6 @@ public interface IDao {
 
 	Collection<PersHttpClientConfig> getHttpClientConfigs();
 	
-	List<PersInvocationAnonStats> getInvocationAnonStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff);
-
 	BasePersInvocationStats getInvocationStats(PersInvocationStatsPk thePk);
 	
 	List<PersInvocationStats> getInvocationStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff);
@@ -92,8 +90,6 @@ public interface IDao {
 
 	PersHttpClientConfig getOrCreateHttpClientConfig(String theId);
 
-	PersInvocationAnonStats getOrCreateInvocationAnonStats(PersInvocationAnonStatsPk thePk);
-	
 	PersInvocationStats getOrCreateInvocationStats(PersInvocationStatsPk thePk);
 
 	PersInvocationUserStats getOrCreateInvocationUserStats(PersInvocationUserStatsPk thePk);
@@ -159,6 +155,16 @@ public interface IDao {
 	List<PersUserRecentMessage> getUserRecentMessages(PersUser theUser, ResponseTypeEnum theResponseType);
 
 	void trimUserRecentMessages(PersUser theUser, ResponseTypeEnum theType, int theNumberToTrimTo);
+
+	BasePersRecentMessage loadRecentMessageForServiceVersion(long thePid);
+
+	BasePersRecentMessage loadRecentMessageForUser(long thePid);
+
+	void deleteUser(PersUser theUser);
+
+	void saveUserStatus(Collection<PersUserStatus> theStatus);
+
+	BasePersInvocationStats getInvocationUserStats(PersInvocationUserStatsPk thePk);
 
 	
 }

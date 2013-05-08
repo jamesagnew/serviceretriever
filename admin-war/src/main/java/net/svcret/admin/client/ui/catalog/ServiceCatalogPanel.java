@@ -9,6 +9,7 @@ import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
+import net.svcret.admin.shared.model.GServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 
 import com.google.gwt.user.client.ui.FlexTable;
@@ -89,6 +90,10 @@ public class ServiceCatalogPanel extends FlowPanel {
 					switch (nextVersion.getProtocol()) {
 					case SOAP11:
 						endpoint = new Soap11EndpointRenderer(myConfig).render((GSoap11ServiceVersion) nextVersion);
+						break;
+					case JSONRPC20:
+						endpoint = new EndpointRendererJsonRpc20(myConfig).render((GServiceVersionJsonRpc20) nextVersion);
+						break;
 					}
 					
 					myGrid.setWidget(row, COL_ENDPOINT, endpoint);

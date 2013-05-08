@@ -6,20 +6,22 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import net.svcret.ejb.model.entity.PersServiceVersionUrl;
+
 public class UrlPoolBean {
 
-	private List<String> myAlternateUrls;
+	private List<PersServiceVersionUrl> myAlternateUrls;
 	private int myConnectTimeoutMillis;
 	private int myFailureRetriesBeforeAborting;
-	private String myPreferredUrl;
+	private PersServiceVersionUrl myPreferredUrl;
 	private int myReadTimeoutMillis;
 
 	public UrlPoolBean() {
 		
 	}
 	
-	public Collection<String> getAllUrls() {
-		ArrayList<String> retVal = new ArrayList<String>();
+	public Collection<PersServiceVersionUrl> getAllUrls() {
+		ArrayList<PersServiceVersionUrl> retVal = new ArrayList<PersServiceVersionUrl>();
 		retVal.add(getPreferredUrl());
 		retVal.addAll(getAlternateUrls());
 		return retVal;
@@ -28,7 +30,7 @@ public class UrlPoolBean {
 	/**
 	 * @return the alternateUrls
 	 */
-	public List<String> getAlternateUrls() {
+	public List<PersServiceVersionUrl> getAlternateUrls() {
 		if (myAlternateUrls == null) {
 			return Collections.emptyList();
 		}
@@ -52,7 +54,7 @@ public class UrlPoolBean {
 	/**
 	 * @return the preferredUrl
 	 */
-	public String getPreferredUrl() {
+	public PersServiceVersionUrl getPreferredUrl() {
 		assert myAlternateUrls == null || !myAlternateUrls.contains(myPreferredUrl);
 		return myPreferredUrl;
 	}
@@ -68,7 +70,7 @@ public class UrlPoolBean {
 	 * @param theAlternateUrls
 	 *            the alternateUrls to set
 	 */
-	public void setAlternateUrls(List<String> theAlternateUrls) {
+	public void setAlternateUrls(List<PersServiceVersionUrl> theAlternateUrls) {
 		myAlternateUrls = theAlternateUrls;
 	}
 
@@ -76,7 +78,7 @@ public class UrlPoolBean {
 	 * @param theAlternateUrls
 	 *            the alternateUrls to set
 	 */
-	public void setAlternateUrls(String... theAlternateUrls) {
+	public void setAlternateUrls(PersServiceVersionUrl... theAlternateUrls) {
 		myAlternateUrls = Arrays.asList(theAlternateUrls);
 	}
 
@@ -97,7 +99,7 @@ public class UrlPoolBean {
 	 * @param thePreferredUrl
 	 *            the preferredUrl to set
 	 */
-	public void setPreferredUrl(String thePreferredUrl) {
+	public void setPreferredUrl(PersServiceVersionUrl thePreferredUrl) {
 		myPreferredUrl = thePreferredUrl;
 	}
 

@@ -3,44 +3,71 @@ package net.svcret.ejb.model.entity;
 import java.io.Serializable;
 import java.util.Date;
 
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.Column;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import com.google.common.base.Objects;
 
 @MappedSuperclass
-public abstract class BasePersInvocationStatsPk extends BasePersMethodStatsPk implements Serializable {
+public abstract class BasePersInvocationStatsPk implements Serializable {
 
-	private static final long serialVersionUID = 417296078781529579L;
-
-	@JoinColumn(name = "METHOD_PID", nullable = false)
-	@ManyToOne(fetch = FetchType.LAZY, cascade = {})
-	private PersServiceVersionMethod myMethod;
+	private static final long serialVersionUID = 1L;
 
 	@Transient
 	private volatile int myHashCode;
+
+	@Column(name = "INTRVL", length = 10, nullable = false)
+	@Enumerated(EnumType.STRING)
+	private InvocationStatsIntervalEnum myInterval;
+
+	@Column(name = "START_TIME", nullable = false)
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date myStartTime;
 
 	public BasePersInvocationStatsPk() {
 		super();
 	}
 
-	public BasePersInvocationStatsPk(InvocationStatsIntervalEnum theInterval, Date theStartTime, PersServiceVersionMethod theMethod) {
-		super(theInterval, theStartTime);
-		myMethod = theMethod;
+	public BasePersInvocationStatsPk(InvocationStatsIntervalEnum theInterval, Date theStartTime) {
+		super();
+		myInterval = theInterval;
+		myStartTime = theInterval.truncate(theStartTime);
 	}
 
-	@Override
-	public abstract BasePersInvocationStats newObjectInstance();
+	protected abstract boolean doEquals(BasePersInvocationStatsPk theObj);
 
 	/**
-	 * @return the method
+	 * {@inheritDoc}
 	 */
-	public PersServiceVersionMethod getMethod() {
-		return myMethod;
+	@Override
+	public boolean equals(Object theObj) {
+		if (theObj == null || !theObj.getClass().equals(getClass())) {
+			return false;
+		}
+
+		return doEquals((BasePersInvocationStatsPk) theObj);
 	}
+
+	/**
+	 * @return the interval
+	 */
+	public InvocationStatsIntervalEnum getInterval() {
+		return myInterval;
+	}
+
+
+	/**
+	 * @return the startTime
+	 */
+	public Date getStartTime() {
+		return myStartTime;
+	}
+
 
 	/**
 	 * {@inheritDoc}
@@ -48,28 +75,36 @@ public abstract class BasePersInvocationStatsPk extends BasePersMethodStatsPk im
 	@Override
 	public int hashCode() {
 		if (myHashCode == 0) {
-			myHashCode = Objects.hashCode(super.hashCode(), myMethod);
+			myHashCode = Objects.hashCode(myInterval, myStartTime);
 		}
 		return myHashCode;
 	}
-	
+
+	/**
+	 * @param theInterval
+	 *            the interval to set
+	 */
+	public void setInterval(InvocationStatsIntervalEnum theInterval) {
+		myInterval = theInterval;
+	}
+
+
+	/**
+	 * @param theStartTime
+	 *            the startTime to set
+	 */
+	public void setStartTime(Date theStartTime) {
+		myStartTime = theStartTime;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this).add("Interval", getInterval().name()).add("StartTime", getStartTime()).add("Method", getMethod().getPid()).toString();
+		return Objects.toStringHelper(this).add("Interval", getInterval().name()).add("StartTime", myStartTime).toString();
 	}
 
-
-	
-	/**
-	 * @param theMethod
-	 *            the method to set
-	 */
-	public void setMethod(PersServiceVersionMethod theMethod) {
-		myMethod = theMethod;
-	}
-
+	public abstract BasePersMethodStats newObjectInstance();
 
 }

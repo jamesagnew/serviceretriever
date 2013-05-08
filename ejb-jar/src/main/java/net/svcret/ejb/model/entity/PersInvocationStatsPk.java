@@ -5,7 +5,7 @@ import java.util.Date;
 import javax.persistence.Embeddable;
 
 @Embeddable
-public class PersInvocationStatsPk extends BasePersInvocationStatsPk {
+public class PersInvocationStatsPk extends BasePersInvocationMethodStatsPk {
 
 	private static final long serialVersionUID = 1L;
 
@@ -26,7 +26,7 @@ public class PersInvocationStatsPk extends BasePersInvocationStatsPk {
 	}
 	
 	@Override
-	protected boolean doEquals(BasePersMethodStatsPk theObj2) {
+	protected boolean doEquals(BasePersInvocationStatsPk theObj2) {
 		PersInvocationStatsPk theObj = (PersInvocationStatsPk) theObj2;
 		return getInterval().equals(theObj.getInterval()) // -
 				&& getMethod().equals(theObj.getMethod()) // -

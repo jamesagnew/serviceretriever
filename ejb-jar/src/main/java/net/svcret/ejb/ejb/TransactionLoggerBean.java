@@ -9,11 +9,13 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 
+import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.ITransactionLogger;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
+import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserRecentMessage;
 import net.svcret.ejb.util.Validate;
@@ -48,9 +50,11 @@ public class TransactionLoggerBean implements ITransactionLogger {
 
 	/**
 	 * {@inheritDoc}
+	 * @param theImplementationUrl 
+	 * @param theHttpResponse 
 	 */
 	@Override
-	public void logTransaction(Date theTransactionDate, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse) {
+	public void logTransaction(Date theTransactionDate, String theRequestHostIp, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse) {
 		Validate.notNull(theServiceVersion);
 
 		{
@@ -60,7 +64,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 				newValue.init();
 				existing = newValue;
 			}
-			existing.recordTransaction(theTransactionDate, theServiceVersion, theUser, theRequestBody, theInvocationResponse);
+			existing.recordTransaction(theTransactionDate, theServiceVersion, theUser, theRequestBody, theInvocationResponse, theRequestHostIp, theImplementationUrl, theHttpResponse);
 		}
 
 		if (theUser != null) {
@@ -71,7 +75,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 				existing = newValue;
 			}
 
-			existing.recordTransaction(theTransactionDate, theServiceVersion, theUser, theRequestBody, theInvocationResponse);
+			existing.recordTransaction(theTransactionDate, theRequestHostIp, theServiceVersion, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse);
 		}
 	}
 
@@ -103,7 +107,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 			mySecurityFail = new LinkedList<PersServiceVersionRecentMessage>();
 		}
 
-		public void recordTransaction(Date theTransactionTime, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse) {
+		public void recordTransaction(Date theTransactionTime, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, String theRequestHostIp, PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse) {
 			Validate.notNull(theInvocationResponse);
 			Validate.notNull(theServiceVersion);
 			Validate.notNull(theTransactionTime);
@@ -112,9 +116,11 @@ public class TransactionLoggerBean implements ITransactionLogger {
 			if (keepRecent != null && keepRecent > 0) {
 
 				PersServiceVersionRecentMessage message = new PersServiceVersionRecentMessage();
-				message.populate(theTransactionTime, theRequestBody, theInvocationResponse);
+				message.populate(theTransactionTime, theRequestHostIp, theImplementationUrl, theRequestBody, theInvocationResponse);
 				message.setServiceVersion(theServiceVersion);
 				message.setUser(theUser);
+				message.setTransactionTime(theTransactionTime);
+				message.setTransactionMillis(theHttpResponse.getResponseTime());
 
 				switch (theInvocationResponse.getResponseType()) {
 				case FAIL:
@@ -160,16 +166,18 @@ public class TransactionLoggerBean implements ITransactionLogger {
 			myUserSecurityFail = new LinkedList<PersUserRecentMessage>();
 		}
 
-		public void recordTransaction(Date theTransactionTime, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse) {
+		public void recordTransaction(Date theTransactionTime, String theRequestHostIp, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse) {
 			Validate.notNull(theInvocationResponse);
 			
 			Integer keepNum = theUser.getAuthenticationHost().determineKeepNumRecentTransactions(theInvocationResponse.getResponseType());
 			if (keepNum != null && keepNum > 0) {
 
 				PersUserRecentMessage userMessage = new PersUserRecentMessage();
-				userMessage.populate(theTransactionTime, theRequestBody, theInvocationResponse);
+				userMessage.populate(theTransactionTime, theRequestHostIp, theImplementationUrl, theRequestBody, theInvocationResponse);
 				userMessage.setUser(theUser);
 				userMessage.setServiceVersion(theServiceVersion);
+				userMessage.setTransactionTime(theTransactionTime);
+				userMessage.setTransactionMillis(theHttpResponse.getResponseTime());
 
 				switch (theInvocationResponse.getResponseType()) {
 				case FAIL:

@@ -9,7 +9,7 @@ public class GSoap11ServiceVersionAndResources implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private List<GResource> myResource;
-	private GSoap11ServiceVersion myServiceVersion;
+	private BaseGServiceVersion myServiceVersion;
 
 	/**
 	 * @return the resource
@@ -24,7 +24,7 @@ public class GSoap11ServiceVersionAndResources implements Serializable {
 	/**
 	 * @return the serviceVersion
 	 */
-	public GSoap11ServiceVersion getServiceVersion() {
+	public BaseGServiceVersion getServiceVersion() {
 		return myServiceVersion;
 	}
 
@@ -40,7 +40,7 @@ public class GSoap11ServiceVersionAndResources implements Serializable {
 	 * @param theServiceVersion
 	 *            the serviceVersion to set
 	 */
-	public void setServiceVersion(GSoap11ServiceVersion theServiceVersion) {
+	public void setServiceVersion(BaseGServiceVersion theServiceVersion) {
 		myServiceVersion = theServiceVersion;
 	}
 }

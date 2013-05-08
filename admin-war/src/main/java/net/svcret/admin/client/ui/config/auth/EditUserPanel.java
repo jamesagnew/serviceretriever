@@ -7,8 +7,10 @@ import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
+import net.svcret.admin.client.ui.stats.RecentMessagesPanel;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGAuthHost;
+import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.util.StringUtil;
 
@@ -50,7 +52,7 @@ public class EditUserPanel extends FlowPanel {
 		myContentPanel.add(myLoadingSpinner);
 
 		myLoadingSpinner.show();
-		AdminPortal.MODEL_SVC.loadUser(thePid, new AsyncCallback<UserAndAuthHost>() {
+		AdminPortal.MODEL_SVC.loadUser(thePid, true, new AsyncCallback<UserAndAuthHost>() {
 			@Override
 			public void onFailure(Throwable theCaught) {
 				Model.handleFailure(theCaught);
@@ -60,17 +62,30 @@ public class EditUserPanel extends FlowPanel {
 			public void onSuccess(UserAndAuthHost theResult) {
 				initContents();
 				setUser(theResult.getUser(), theResult.getAuthHost());
+				loadRecentTransactions();
 			}
 		});
 
 	}
 
+	private void loadRecentTransactions() {
+		AdminPortal.MODEL_SVC.loadRecentTransactionListForuser(myUser.getPid(), new AsyncCallback<GRecentMessageLists>() {
+			@Override
+			public void onFailure(Throwable theCaught) {
+				Model.handleFailure(theCaught);
+			}
+
+			@Override
+			public void onSuccess(GRecentMessageLists theResult) {
+				myLoadingSpinner.hideCompletely();
+				
+				setRecentMessageList(theResult);
+				
+			}
+		});
+	}
+
 	private void initContents() {
-
-		// Move the spinner to after the save button
-		myLoadingSpinner.hideCompletely();
-		myContentPanel.remove(myLoadingSpinner);
-
 		myUsernamePasswordGrid = new TwoColumnGrid();
 		myContentPanel.add(myUsernamePasswordGrid);
 
@@ -83,8 +98,33 @@ public class EditUserPanel extends FlowPanel {
 		myContentPanel.add(saveButton);
 		myContentPanel.add(myLoadingSpinner);
 
+		/*
+		 * Permissions
+		 */
+		
+		FlowPanel permsPanel = new FlowPanel();
+		permsPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
+		add(permsPanel);
+
+		Label titleLabel = new Label(MSGS.editUser_PermissionsTitle());
+		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
+		permsPanel.add(titleLabel);
+		
 		myPermissionsPanel = new PermissionsPanel();
-		myContentPanel.add(myPermissionsPanel);
+		permsPanel.add(myPermissionsPanel);
+				
+	}
+
+	private void setRecentMessageList(GRecentMessageLists theResult) {
+		FlowPanel listPanel = new FlowPanel();
+		listPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
+		add(listPanel);
+
+		Label titleLabel = new Label(MSGS.editUser_RecentMessagesTitle());
+		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
+		listPanel.add(titleLabel);
+		
+		listPanel.add(new RecentMessagesPanel(theResult, true));
 	}
 
 	protected void save() {

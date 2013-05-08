@@ -17,6 +17,7 @@ import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ejb.soap.Soap11ResponseValidator;
+import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.util.RandomServerPortProvider;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -143,7 +144,7 @@ public class HttpClientBeanTest {
 
 		IResponseValidator validator = new NullResponseValidator();
 		UrlPoolBean urlPool = new UrlPoolBean();
-		urlPool.setPreferredUrl("http://localhost:" + port + "/Uri");
+		urlPool.setPreferredUrl(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port + "/Uri"));
 		urlPool.setConnectTimeoutMillis(1000);
 		urlPool.setReadTimeoutMillis(1000);
 
@@ -174,7 +175,7 @@ public class HttpClientBeanTest {
 		IResponseValidator validator = new Soap11ResponseValidator();
 		
 		UrlPoolBean urlPool = new UrlPoolBean();
-		urlPool.setPreferredUrl("http://localhost:" + port + "/Uri");
+		urlPool.setPreferredUrl(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port + "/Uri"));
 		urlPool.setConnectTimeoutMillis(1000);
 		urlPool.setReadTimeoutMillis(1000);
 
@@ -205,7 +206,7 @@ public class HttpClientBeanTest {
 
 		IResponseValidator validator = new ResponseContainsTextValidator("EnlightenResponse");
 		UrlPoolBean urlPool = new UrlPoolBean();
-		urlPool.setPreferredUrl("http://localhost:" + port + "/Uri");
+		urlPool.setPreferredUrl(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port + "/Uri"));
 		urlPool.setConnectTimeoutMillis(1000);
 		urlPool.setReadTimeoutMillis(1000);
 
@@ -236,7 +237,7 @@ public class HttpClientBeanTest {
 		IResponseValidator validator = new ResponseContainsTextValidator("EnlightenResponse");
 		UrlPoolBean urlPool = new UrlPoolBean();
 		urlPool.setFailureRetriesBeforeAborting(1);
-		urlPool.setPreferredUrl("http://localhost:" + port + "/Uri");
+		urlPool.setPreferredUrl(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port + "/Uri"));
 		urlPool.setConnectTimeoutMillis(1000);
 		urlPool.setReadTimeoutMillis(1000);
 
@@ -273,8 +274,8 @@ public class HttpClientBeanTest {
 		IResponseValidator validator = new ResponseContainsTextValidator("EnlightenResponse");
 		UrlPoolBean urlPool = new UrlPoolBean();
 		urlPool.setFailureRetriesBeforeAborting(1);
-		urlPool.setPreferredUrl("http://localhost:" + port1 + "/Uri");
-		urlPool.setAlternateUrls("http://localhost:" + port2 + "/Uri");
+		urlPool.setPreferredUrl(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port1 + "/Uri"));
+		urlPool.setAlternateUrls(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port2 + "/Uri"));
 		urlPool.setConnectTimeoutMillis(1000);
 		urlPool.setReadTimeoutMillis(1000);
 
@@ -288,6 +289,8 @@ public class HttpClientBeanTest {
 
 	}
 
+	private static long ourNextPid = 1;
+	
 	@Test
 	public void testPostTwoUrlsSecondPassing() throws InterruptedException {
 
@@ -309,8 +312,8 @@ public class HttpClientBeanTest {
 		IResponseValidator validator = new ResponseContainsTextValidator("EnlightenResponse");
 		UrlPoolBean urlPool = new UrlPoolBean();
 		urlPool.setFailureRetriesBeforeAborting(1);
-		urlPool.setPreferredUrl("http://localhost:" + port1 + "/Uri");
-		urlPool.setAlternateUrls("http://localhost:" + port2 + "/Uri");
+		urlPool.setPreferredUrl(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port1 + "/Uri"));
+		urlPool.setAlternateUrls(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port2 + "/Uri"));
 		urlPool.setConnectTimeoutMillis(1000);
 		urlPool.setReadTimeoutMillis(1000);
 
@@ -347,8 +350,8 @@ public class HttpClientBeanTest {
 		IResponseValidator validator = new ResponseContainsTextValidator("EnlightenResponse");
 		UrlPoolBean urlPool = new UrlPoolBean();
 		urlPool.setFailureRetriesBeforeAborting(1);
-		urlPool.setPreferredUrl("http://localhost:" + port1 + "/Uri");
-		urlPool.setAlternateUrls("http://localhost:" + port2 + "/Uri");
+		urlPool.setPreferredUrl(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port1 + "/Uri"));
+		urlPool.setAlternateUrls(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port2 + "/Uri"));
 		urlPool.setConnectTimeoutMillis(1000);
 		urlPool.setReadTimeoutMillis(1000);
 

@@ -66,7 +66,7 @@ public class ServiceRegistryBeanTest {
 
 		
 		String wsdlBody = IOUtils.readClasspathIntoString("/test_simple.wsdl");
-		when(myHttpClient.get("http://foo/wsdl.wsdl")).thenReturn(new HttpResponseBean("/test_simple.wsdl", "text/xml", 200, wsdlBody));
+		when(myHttpClient.get("http://foo/wsdl.wsdl")).thenReturn(new HttpResponseBean(null, "text/xml", 200, wsdlBody));
 
 		PersDomain domain = new PersDomain(1L, "DOMAIN");
 		when(myPersistence.getOrCreateDomainWithId("DOMAIN")).thenReturn(domain);

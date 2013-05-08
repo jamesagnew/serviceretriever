@@ -6,6 +6,8 @@ import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
+import net.svcret.admin.client.ui.dash.model.BaseDashModel;
+import net.svcret.admin.client.ui.stats.DateUtil;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GUser;
@@ -23,7 +25,10 @@ import com.google.gwt.user.client.ui.Panel;
 public class EditUsersPanel extends FlowPanel {
 
 	private static final int COL_USERNAME = 0;
-	private static final int COL_ACTIONS = 1;
+	private static final int COL_LAST_SVC_ACCESS = 1;
+	private static final int COL_SUCCESSFUL_XACTS = 2;
+	private static final int COL_SECURITU_FAILURE_XACTS = 3;
+	private static final int COL_ACTIONS = 4;
 	
 	private FlexTable myTable;
 	private GPartialUserList myUserList;
@@ -53,6 +58,9 @@ public class EditUsersPanel extends FlowPanel {
 		myTable.addStyleName(CssConstants.PROPERTY_TABLE);
 		myTable.setText(0, COL_USERNAME, MSGS.editUsersPanel_ColumnUsername());
 		myTable.setText(0, COL_ACTIONS, MSGS.editUsersPanel_ColumnActions());
+		myTable.setText(0, COL_LAST_SVC_ACCESS, MSGS.editUsersPanel_ColumnLastServiceAccess());
+		myTable.setText(0, COL_SECURITU_FAILURE_XACTS, MSGS.editUsersPanel_ColumnSecurityFailures());
+		myTable.setText(0, COL_SUCCESSFUL_XACTS, MSGS.editUsersPanel_ColumnSuccessfulTransactions());
 		
 		loadUserList();
 		
@@ -84,6 +92,9 @@ public class EditUsersPanel extends FlowPanel {
 			int row = i + 1;
 			
 			myTable.setText(row, COL_USERNAME, nextUser.getUsername());
+			myTable.setText(row, COL_LAST_SVC_ACCESS, DateUtil.formatTime(nextUser.getStatsLastAccess()));
+			myTable.setWidget(row, COL_SUCCESSFUL_XACTS, BaseDashModel.returnSparklineFor60Mins(nextUser.getStatsSuccessTransactions(), nextUser.getStatsSuccessTransactionsAvgPerMin()));
+			myTable.setWidget(row, COL_SECURITU_FAILURE_XACTS, BaseDashModel.returnSparklineFor60Mins(nextUser.getStatsSecurityFailTransactions(), nextUser.getStatsSecurityFailTransactionsAvgPerMin()));
 			
 			Panel actionPanel = new FlowPanel();
 			myTable.setWidget(row, COL_ACTIONS, actionPanel);

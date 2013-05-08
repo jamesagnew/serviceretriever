@@ -376,11 +376,11 @@ public class Soap11ServiceInvokerTest {
 
 		String wsdlBody = IOUtils.readClasspathIntoString("/test_simple.wsdl");
 		String wsdlUrl = "http://foo/wsdl.wsdl";
-		when(httpClient.get(wsdlUrl)).thenReturn(new HttpResponseBean(wsdlUrl, "text/xml", 200, wsdlBody));
+		when(httpClient.get(wsdlUrl)).thenReturn(new HttpResponseBean(null, "text/xml", 200, wsdlBody));
 
 		String xsdBody = IOUtils.readClasspathIntoString("/basic_schema.xsd");
 		String xsdUrl = "http://foo/bar.xsd";
-		when(httpClient.get(xsdUrl)).thenReturn(new HttpResponseBean(xsdUrl, "text/xml", 200, xsdBody));
+		when(httpClient.get(xsdUrl)).thenReturn(new HttpResponseBean(null, "text/xml", 200, xsdBody));
 		
 		DefaultAnswer.setRunTime();
 		

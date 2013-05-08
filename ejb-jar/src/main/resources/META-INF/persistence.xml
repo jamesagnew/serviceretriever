@@ -77,12 +77,12 @@
 		<class>net.svcret.ejb.model.entity.PersDomain</class>
 		<class>net.svcret.ejb.model.entity.PersHttpClientConfig</class>
 		<class>net.svcret.ejb.model.entity.PersInvocationStats</class>
-		<class>net.svcret.ejb.model.entity.PersInvocationAnonStats</class>
 		<class>net.svcret.ejb.model.entity.PersInvocationUserStats</class>
 		<class>net.svcret.ejb.model.entity.PersLocks</class>
 		<class>net.svcret.ejb.model.entity.PersServiceVersionMethod</class>
 		<class>net.svcret.ejb.model.entity.PersService</class>
 		<class>net.svcret.ejb.model.entity.PersUser</class>
+		<class>net.svcret.ejb.model.entity.PersUserStatus</class>
 		<class>net.svcret.ejb.model.entity.PersUserDomainPermission</class>
 		<class>net.svcret.ejb.model.entity.PersUserServicePermission</class>
 		<class>net.svcret.ejb.model.entity.PersUserServiceVersionPermission</class>
@@ -95,6 +95,7 @@
 		<class>net.svcret.ejb.model.entity.PersState</class>
 		<class>net.svcret.ejb.model.entity.PersStaticResourceStats</class>
 		<class>net.svcret.ejb.model.entity.PersUserRecentMessage</class>
+		<class>net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20</class>
 		<class>net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11</class>
 		<class>net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth</class>
 		<class>net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth</class>
@@ -129,12 +130,12 @@
 		<class>net.svcret.ejb.model.entity.PersDomain</class>
 		<class>net.svcret.ejb.model.entity.PersHttpClientConfig</class>
 		<class>net.svcret.ejb.model.entity.PersInvocationStats</class>
-		<class>net.svcret.ejb.model.entity.PersInvocationAnonStats</class>
 		<class>net.svcret.ejb.model.entity.PersInvocationUserStats</class>
 		<class>net.svcret.ejb.model.entity.PersLocks</class>
 		<class>net.svcret.ejb.model.entity.PersServiceVersionMethod</class>
 		<class>net.svcret.ejb.model.entity.PersService</class>
 		<class>net.svcret.ejb.model.entity.PersUser</class>
+		<class>net.svcret.ejb.model.entity.PersUserStatus</class>
 		<class>net.svcret.ejb.model.entity.PersUserDomainPermission</class>
 		<class>net.svcret.ejb.model.entity.PersUserServicePermission</class>
 		<class>net.svcret.ejb.model.entity.PersUserServiceVersionPermission</class>
@@ -147,6 +148,7 @@
 		<class>net.svcret.ejb.model.entity.PersState</class>
 		<class>net.svcret.ejb.model.entity.PersStaticResourceStats</class>
 		<class>net.svcret.ejb.model.entity.PersUserRecentMessage</class>
+		<class>net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20</class>
 		<class>net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11</class>
 		<class>net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth</class>
 		<class>net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth</class>

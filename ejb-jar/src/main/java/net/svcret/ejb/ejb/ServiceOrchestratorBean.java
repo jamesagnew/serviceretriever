@@ -73,21 +73,21 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public OrchestratorResponseBean handle(RequestType theRequestType, String thePath, String theQuery, Reader theInputReader) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException {
+	public OrchestratorResponseBean handle(RequestType theRequestType, String theRequestHostIp, String thePath, String theQuery, Reader theInputReader) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException {
 		Validate.notNull(theRequestType, "RequestType");
 		Validate.notNull(thePath, "Path");
 		Validate.notNull(theQuery, "Query");
 		Validate.notNull(theInputReader, "Reader");
 
 		try {
-		return doHandle(theRequestType, thePath, theQuery, theInputReader);
+		return doHandle(theRequestType, theRequestHostIp, thePath, theQuery, theInputReader);
 		} finally {
 			theInputReader.close();
 		}
 	}
 
 	@SuppressWarnings("resource")
-	private OrchestratorResponseBean doHandle(RequestType theRequestType, String thePath, String theQuery, Reader theInputReader) throws UnknownRequestException, IOException, ProcessingException, SecurityFailureException {
+	private OrchestratorResponseBean doHandle(RequestType theRequestType, String theRequestHostIp, String thePath, String theQuery, Reader theInputReader) throws UnknownRequestException, IOException, ProcessingException, SecurityFailureException {
 		Date startTime = new Date();
 		CapturingReader reader = new CapturingReader(theInputReader);
 
@@ -220,10 +220,10 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 			HttpResponseBean httpResponse;
 			httpResponse = myHttpClient.post(responseValidator, urlPool, contentBody, headers, contentType);
-			markUrlsFailed(method, httpResponse.getFailedUrls());
+			markUrlsFailed(httpResponse.getFailedUrls());
 
 			if (httpResponse.getSuccessfulUrl() == null) {
-				markUrlsFailed(method, httpResponse.getFailedUrls());
+				markUrlsFailed(httpResponse.getFailedUrls());
 				Failure exampleFailure = httpResponse.getFailedUrls().values().iterator().next();
 				throw new ProcessingException("All service URLs appear to be failing, unable to successfully invoke method. Example failure: " + exampleFailure.getExplanation());
 			}
@@ -242,7 +242,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			 */
 			PersUser user = authorized != null ? authorized.getUser() : null;
 			String requestBody = reader.getCapturedString();
-			myTransactionLogger.logTransaction(startTime, serviceVersion, user, requestBody, invocationResponse);
+			myTransactionLogger.logTransaction(startTime, theRequestHostIp, serviceVersion, user, requestBody, invocationResponse, httpResponse.getSuccessfulUrl(), httpResponse);
 			
 			retVal = new OrchestratorResponseBean(responseBody, responseContentType, responseHeaders);
 			break;
@@ -255,10 +255,9 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		return retVal;
 	}
 
-	private void markUrlsFailed(PersServiceVersionMethod theMethod, Map<String, Failure> theFailures) {
-		for (Entry<String, Failure> nextEntry : theFailures.entrySet()) {
-			String nextUrlString = nextEntry.getKey();
-			PersServiceVersionUrl nextUrl = theMethod.getServiceVersion().getUrlWithUrl(nextUrlString);
+	private void markUrlsFailed(Map<PersServiceVersionUrl, Failure> theMap) {
+		for (Entry<PersServiceVersionUrl, Failure> nextEntry : theMap.entrySet()) {
+			PersServiceVersionUrl nextUrl = nextEntry.getKey();
 			Failure nextFailure = nextEntry.getValue();
 			myRuntimeStatus.recordUrlFailure(nextUrl, nextFailure);
 		}

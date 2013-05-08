@@ -1,6 +1,7 @@
 package net.svcret.admin.shared.model;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -8,12 +9,18 @@ import java.util.Set;
 public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	private boolean myAllowAllDomains;
 	private long myAuthHostPid;
 	private String myChangePassword;
 	private ArrayList<GUserDomainPermission> myDomainPermissions;
 	private HashSet<UserGlobalPermissionEnum> myGlobalPermissions;
+	private Date myStatsLastAccess;
+	private boolean myStatsLoaded;
+	private int[] myStatsSecurityFailTransactions;
+	private double myStatsSecurityFailTransactionsAvgPerMin;
+	private int[] myStatsSuccessTransactions;
+	private double myStatsSuccessTransactionsAvgPerMin;
 	private String myUsername;
 
 	public void addDomainPermission(GUserDomainPermission thePermission) {
@@ -26,12 +33,6 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	public void addGlobalPermission(UserGlobalPermissionEnum thePermission) {
 		initGlobalPermissions();
 		myGlobalPermissions.add(thePermission);
-	}
-
-	private void initGlobalPermissions() {
-		if (myGlobalPermissions == null) {
-			setGlobalPermissions(new HashSet<UserGlobalPermissionEnum>());
-		}
 	}
 
 	/**
@@ -56,7 +57,9 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 		return myDomainPermissions;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see net.svcret.admin.shared.model.IHasPermissions#getGlobalPermissions()
 	 */
 	@Override
@@ -71,11 +74,46 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 				return next;
 			}
 		}
-		
+
 		GUserDomainPermission permission = new GUserDomainPermission();
 		myDomainPermissions.add(permission);
 		permission.setDomainPid(theDomainPid);
 		return permission;
+	}
+
+	/**
+	 * @return the statsLastAccess
+	 */
+	public Date getStatsLastAccess() {
+		return myStatsLastAccess;
+	}
+
+	/**
+	 * @return the statsSecurityFailTransactions
+	 */
+	public int[] getStatsSecurityFailTransactions() {
+		return myStatsSecurityFailTransactions;
+	}
+
+	/**
+	 * @return the statsSecurityFailTransactionsAvgPerMin
+	 */
+	public double getStatsSecurityFailTransactionsAvgPerMin() {
+		return myStatsSecurityFailTransactionsAvgPerMin;
+	}
+
+	/**
+	 * @return the statsTransactions
+	 */
+	public int[] getStatsSuccessTransactions() {
+		return myStatsSuccessTransactions;
+	}
+
+	/**
+	 * @return the statsSuccessTransactionsAvgPerMin
+	 */
+	public double getStatsSuccessTransactionsAvgPerMin() {
+		return myStatsSuccessTransactionsAvgPerMin;
 	}
 
 	/**
@@ -85,12 +123,21 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 		return myUsername;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see net.svcret.admin.shared.model.IHasPermissions#isAllowAllDomains()
 	 */
 	@Override
 	public boolean isAllowAllDomains() {
 		return myAllowAllDomains;
+	}
+
+	/**
+	 * @return the isStatsLoaded
+	 */
+	public boolean isStatsLoaded() {
+		return myStatsLoaded;
 	}
 
 	@Override
@@ -99,8 +146,20 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 		setUsername(theUser.getUsername());
 	}
 
-	/* (non-Javadoc)
-	 * @see net.svcret.admin.shared.model.IHasPermissions#setAllowAllDomains(boolean)
+	public void removeDomainPermission(GUserDomainPermission theGUserDomainPermission) {
+		myDomainPermissions.remove(theGUserDomainPermission);
+	}
+
+	public void removeGlobalPermission(UserGlobalPermissionEnum thePermission) {
+		initGlobalPermissions();
+		myGlobalPermissions.remove(thePermission);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * net.svcret.admin.shared.model.IHasPermissions#setAllowAllDomains(boolean)
 	 */
 	@Override
 	public void setAllowAllDomains(boolean theAllowAllDomains) {
@@ -108,37 +167,95 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	}
 
 	/**
-	 * @param theAuthHostPid the authHostPid to set
+	 * @param theAuthHostPid
+	 *            the authHostPid to set
 	 */
 	public void setAuthHostPid(long theAuthHostPid) {
 		myAuthHostPid = theAuthHostPid;
 	}
 
 	/**
-	 * @param theChangePassword the changePassword to set
+	 * @param theChangePassword
+	 *            the changePassword to set
 	 */
 	public void setChangePassword(String theChangePassword) {
 		myChangePassword = theChangePassword;
 	}
 
-	/* (non-Javadoc)
-	 * @see net.svcret.admin.shared.model.IHasPermissions#setDomainPermissions(java.util.List)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * net.svcret.admin.shared.model.IHasPermissions#setDomainPermissions(java
+	 * .util.List)
 	 */
 	@Override
 	public void setDomainPermissions(List<GUserDomainPermission> theDomainPermissions) {
 		myDomainPermissions = (ArrayList<GUserDomainPermission>) theDomainPermissions;
 	}
 
-	/* (non-Javadoc)
-	 * @see net.svcret.admin.shared.model.IHasPermissions#setGlobalPermissions(java.util.Set)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * net.svcret.admin.shared.model.IHasPermissions#setGlobalPermissions(java
+	 * .util.Set)
 	 */
 	@Override
 	public void setGlobalPermissions(Set<UserGlobalPermissionEnum> theGlobalPermissions) {
 		if (theGlobalPermissions.getClass() != HashSet.class) {
 			myGlobalPermissions = new HashSet<UserGlobalPermissionEnum>(theGlobalPermissions);
-		}else {
+		} else {
 			myGlobalPermissions = (HashSet<UserGlobalPermissionEnum>) theGlobalPermissions;
 		}
+	}
+
+	/**
+	 * @param theStatsLastAccess
+	 *            the statsLastAccess to set
+	 */
+	public void setStatsLastAccess(Date theStatsLastAccess) {
+		myStatsLastAccess = theStatsLastAccess;
+	}
+
+	/**
+	 * @param theStatsLoaded
+	 *            the isStatsLoaded to set
+	 */
+	public void setStatsLoaded(boolean theStatsLoaded) {
+		myStatsLoaded = theStatsLoaded;
+	}
+
+	/**
+	 * @param theStatsSecurityFailTransactions
+	 *            the statsSecurityFailTransactions to set
+	 */
+	public void setStatsSecurityFailTransactions(int[] theStatsSecurityFailTransactions) {
+		myStatsSecurityFailTransactions = theStatsSecurityFailTransactions;
+	}
+
+	/**
+	 * @param theStatsSecurityFailTransactionsAvgPerMin
+	 *            the statsSecurityFailTransactionsAvgPerMin to set
+	 */
+	public void setStatsSecurityFailTransactionsAvgPerMin(double theStatsSecurityFailTransactionsAvgPerMin) {
+		myStatsSecurityFailTransactionsAvgPerMin = theStatsSecurityFailTransactionsAvgPerMin;
+	}
+
+	/**
+	 * @param theStatsSuccessTransactions
+	 *            the statsTransactions to set
+	 */
+	public void setStatsSuccessTransactions(int[] theStatsSuccessTransactions) {
+		myStatsSuccessTransactions = theStatsSuccessTransactions;
+	}
+
+	/**
+	 * @param theStatsSuccessTransactionsAvgPerMin
+	 *            the statsSuccessTransactionsAvgPerMin to set
+	 */
+	public void setStatsSuccessTransactionsAvgPerMin(double theStatsSuccessTransactionsAvgPerMin) {
+		myStatsSuccessTransactionsAvgPerMin = theStatsSuccessTransactionsAvgPerMin;
 	}
 
 	/**
@@ -149,13 +266,10 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 		myUsername = theUsername;
 	}
 
-	public void removeGlobalPermission(UserGlobalPermissionEnum thePermission) {
-		initGlobalPermissions();
-		myGlobalPermissions.remove(thePermission);
-	}
-
-	public void removeDomainPermission(GUserDomainPermission theGUserDomainPermission) {
-		myDomainPermissions.remove(theGUserDomainPermission);
+	private void initGlobalPermissions() {
+		if (myGlobalPermissions == null) {
+			setGlobalPermissions(new HashSet<UserGlobalPermissionEnum>());
+		}
 	}
 
 }

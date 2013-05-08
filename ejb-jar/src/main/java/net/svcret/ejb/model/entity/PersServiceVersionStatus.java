@@ -177,11 +177,11 @@ public class PersServiceVersionStatus extends BasePersObject {
 		myServiceVersion = theServiceVersion;
 	}
 
-	public static PersInvocationUserStatsPk createEntryPk(InvocationStatsIntervalEnum theInterval, Date theTimestamp, PersServiceVersionMethod theMethod, PersUser theUser) {
+	public static PersInvocationUserStatsPk createEntryPk(InvocationStatsIntervalEnum theInterval, Date theTimestamp, PersUser theUser) {
 		Validate.notNull(theInterval, "Interval");
 		Validate.notNull(theTimestamp, "Timestamp");
 
-		PersInvocationUserStatsPk pk = new PersInvocationUserStatsPk(theInterval, theTimestamp, theMethod, theUser);
+		PersInvocationUserStatsPk pk = new PersInvocationUserStatsPk(theInterval, theTimestamp, theUser);
 		return pk;
 	}
 

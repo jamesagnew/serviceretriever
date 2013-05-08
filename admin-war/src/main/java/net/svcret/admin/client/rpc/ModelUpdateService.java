@@ -14,6 +14,8 @@ import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GPartialUserList;
+import net.svcret.admin.shared.model.GRecentMessage;
+import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GUrlStatus;
@@ -21,7 +23,6 @@ import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.PartialUserListRequest;
-import net.svcret.ejb.ex.ProcessingException;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
@@ -50,9 +51,9 @@ public interface ModelUpdateService extends RemoteService {
 
 	List<GUrlStatus> loadServiceVersionUrlStatuses(long theServiceVersionPid);
 
-	UserAndAuthHost loadUser(long theUserPid) throws ServiceFailureException;
+	UserAndAuthHost loadUser(long theUserPid, boolean theLoadStats) throws ServiceFailureException;
 
-	GPartialUserList loadUsers(PartialUserListRequest theRequest);
+	GPartialUserList loadUsers(PartialUserListRequest theRequest) throws ServiceFailureException;
 
 	GSoap11ServiceVersion loadWsdl(GSoap11ServiceVersion theService, String theWsdlUrl) throws ServiceFailureException;
 
@@ -130,5 +131,13 @@ public interface ModelUpdateService extends RemoteService {
 			myUser = theUser;
 		}
 	}
+
+	GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid);
+
+	GRecentMessage loadRecentMessageForServiceVersion(long thePid);
+
+	GRecentMessageLists loadRecentTransactionListForuser(long thePid);
+
+	GRecentMessage loadRecentMessageForUser(long thePid);
 
 }

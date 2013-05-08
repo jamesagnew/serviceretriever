@@ -12,6 +12,7 @@ import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceList;
+import net.svcret.admin.shared.model.GServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.util.StringUtil;
 
@@ -30,7 +31,7 @@ import com.google.gwt.user.client.ui.TextBox;
 
 public abstract class AbstractServiceVersionPanel extends FlowPanel {
 
-	private SoapDetailPanel myBottomContents;
+	private BaseDetailPanel<?> myBottomContents;
 	private FlowPanel myContentPanel;
 	private ListBox myDomainListBox;
 	private HtmlLabel myNewDomainLabel;
@@ -140,7 +141,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 
 		addTypeSelector();
 
-		PButton saveButton = new PButton("Save");
+		PButton saveButton = new PButton(AdminPortal.IMAGES.iconSave(), AdminPortal.MSGS.actions_Save());
 		myContentPanel.add(saveButton);
 		saveButton.addClickHandler(new SaveClickHandler());
 
@@ -240,7 +241,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 
 	protected abstract boolean allowTypeSelect();
 
-	protected SoapDetailPanel getBottomContents() {
+	protected BaseDetailPanel<?> getBottomContents() {
 		return myBottomContents;
 	}
 
@@ -260,6 +261,8 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 		case SOAP11:
 			myBottomContents = new SoapDetailPanel(AbstractServiceVersionPanel.this, (GSoap11ServiceVersion) theResult);
 			break;
+		case JSONRPC20:
+			myBottomContents = new DetailPanelJsonRpc20(this, (GServiceVersionJsonRpc20) theResult);
 		}
 
 		myBottomPanel.clear();

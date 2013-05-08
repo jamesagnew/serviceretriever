@@ -20,6 +20,7 @@ import net.svcret.ejb.model.entity.PersUserDomainPermission;
 import net.svcret.ejb.model.entity.PersUserServicePermission;
 import net.svcret.ejb.model.entity.PersUserServiceVersionMethodPermission;
 import net.svcret.ejb.model.entity.PersUserServiceVersionPermission;
+import net.svcret.ejb.model.entity.PersUserStatus;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 
 import org.junit.Before;
@@ -69,10 +70,11 @@ public class SecurityServiceBeanTest {
 		myUser.setUsername("username123");
 		myUser.setPassword("password123");
 		myUser.setAuthenticationHost(myHost);
+		myUser.setStatus(new PersUserStatus());
 		
 		myUsers = new ArrayList<PersUser>();
 		myUsers.add(myUser);
-		when(myPersSvc.getAllServiceUsers()).thenReturn(myUsers);
+		when(myPersSvc.getAllUsers()).thenReturn(myUsers);
 		
 		myGoodGrabber = new MyCredentialGrabber("username123", "password123");
 		

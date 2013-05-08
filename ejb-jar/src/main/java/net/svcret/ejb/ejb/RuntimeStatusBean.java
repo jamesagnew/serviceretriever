@@ -15,13 +15,13 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.persistence.PersistenceException;
 
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.Messages;
@@ -34,15 +34,13 @@ import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.model.entity.BasePersInvocationMethodStatsPk;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStatsPk;
 import net.svcret.ejb.model.entity.BasePersMethodStats;
-import net.svcret.ejb.model.entity.BasePersMethodStatsPk;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersConfig;
-import net.svcret.ejb.model.entity.PersInvocationAnonStats;
-import net.svcret.ejb.model.entity.PersInvocationAnonStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
@@ -55,6 +53,7 @@ import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.ejb.model.entity.PersStaticResourceStats;
 import net.svcret.ejb.model.entity.PersStaticResourceStatsPk;
 import net.svcret.ejb.model.entity.PersUser;
+import net.svcret.ejb.model.entity.PersUserStatus;
 import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.lang3.time.DateUtils;
@@ -73,7 +72,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private Date myNowForUnitTests;
 	private DateFormat myTimeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
 	private ConcurrentHashMap<Long, PersServiceVersionUrlStatus> myUrlStatus = new ConcurrentHashMap<Long, PersServiceVersionUrlStatus>();
-	private ConcurrentHashMap<BasePersMethodStatsPk, BasePersMethodStats> myUnflushedInvocationStats = new ConcurrentHashMap<BasePersMethodStatsPk, BasePersMethodStats>();
+	private ConcurrentHashMap<BasePersInvocationStatsPk, BasePersMethodStats> myUnflushedInvocationStats = new ConcurrentHashMap<BasePersInvocationStatsPk, BasePersMethodStats>();
 	private ConcurrentHashMap<Long, PersServiceVersionStatus> myUnflushedServiceVersionStatus = new ConcurrentHashMap<Long, PersServiceVersionStatus>();
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
@@ -83,86 +82,133 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 		switch (theServiceVersion.getHttpClientConfig().getUrlSelectionPolicy()) {
 		case PREFER_LOCAL:
-		default:
-			List<String> urls = new ArrayList<String>(theServiceVersion.getUrls().size());
-			retVal.setAlternateUrls(urls);
-
-			List<PersServiceVersionUrl> urlsWithDownFirstThenLocal = new ArrayList<PersServiceVersionUrl>();
-			LinkedList<PersServiceVersionUrl> allUrlsCopy = new LinkedList<PersServiceVersionUrl>(theServiceVersion.getUrls());
-
-			for (Iterator<PersServiceVersionUrl> iter = allUrlsCopy.iterator(); iter.hasNext();) {
-				PersServiceVersionUrl next = iter.next();
-				if (getUrlStatus(next).getStatus() == StatusEnum.DOWN) {
-					urlsWithDownFirstThenLocal.add(next);
-					iter.remove();
-				}
-			}
-			for (Iterator<PersServiceVersionUrl> iter = allUrlsCopy.iterator(); iter.hasNext();) {
-				PersServiceVersionUrl next = iter.next();
-				if (next.isLocal()) {
-					urlsWithDownFirstThenLocal.add(next);
-					iter.remove();
-				}
-			}
-			for (Iterator<PersServiceVersionUrl> iter = allUrlsCopy.iterator(); iter.hasNext();) {
-				PersServiceVersionUrl next = iter.next();
-				urlsWithDownFirstThenLocal.add(next);
-			}
-
-			for (PersServiceVersionUrl next : urlsWithDownFirstThenLocal) {
-				PersServiceVersionUrlStatus status = getUrlStatus(next);
-				String nextUrl = next.getUrl();
-
-				if (next.isLocal() && retVal.getPreferredUrl() == null) {
-					switch (status.getStatus()) {
-					case ACTIVE:
-					case UNKNOWN:
-						if (retVal.getPreferredUrl() != null) {
-							urls.add(nextUrl);
-						} else {
-							retVal.setPreferredUrl(nextUrl);
-						}
-						break;
-					case DOWN:
-						if (status.attemptToResetCircuitBreaker()) {
-							retVal.setPreferredUrl(nextUrl);
-						}
-					}
-				} else {
-					switch (status.getStatus()) {
-					case ACTIVE:
-					case UNKNOWN:
-						retVal.getAlternateUrls().add(nextUrl);
-						break;
-					case DOWN:
-						if (retVal.getPreferredUrl() != null) {
-							/*
-							 * We don't try to reset the circuit breaker on more
-							 * than one URL at a time
-							 */
-						} else if (status.attemptToResetCircuitBreaker()) {
-							if (retVal.getPreferredUrl() != null) {
-								urls.add(retVal.getPreferredUrl());
-							}
-							retVal.setPreferredUrl(nextUrl);
-						} else {
-							/*
-							 * we just won't try this one of it's down and it's
-							 * not time to try resetting the CB
-							 */
-						}
-					}
-				}
-			}
-
-			if (retVal.getPreferredUrl() == null && urls.size() > 0) {
-				retVal.setPreferredUrl(urls.remove(0));
-			}
+			choseUrlPreferLocal(theServiceVersion, retVal);
 			break;
-
+		case ROUND_ROBIN:
+			chooseUrlRoundRobin(theServiceVersion, retVal);
 		}
 
 		return retVal;
+	}
+
+	private void chooseUrlRoundRobin(BasePersServiceVersion theServiceVersion, UrlPoolBean theRetVal) {
+		AtomicInteger counter = theServiceVersion.getUrlCounter();
+
+		int startIndex = counter.getAndIncrement();
+		if (startIndex > 10000) {
+			counter.set(0);
+		}
+
+		startIndex = startIndex % theServiceVersion.getUrls().size();
+
+		List<PersServiceVersionUrl> urls = new LinkedList<PersServiceVersionUrl>();
+		urls.add(theServiceVersion.getUrls().get(startIndex));
+		for (int count = startIndex + 1; count < theServiceVersion.getUrls().size(); count++) {
+			urls.add(theServiceVersion.getUrls().get(count));
+		}
+		for (int count = 0; count < startIndex; count++) {
+			urls.add(theServiceVersion.getUrls().get(count));
+		}
+
+		for (Iterator<PersServiceVersionUrl> iter = urls.iterator(); iter.hasNext();) {
+			PersServiceVersionUrl next = iter.next();
+			PersServiceVersionUrlStatus status = getUrlStatus(next);
+			if (status.getStatus() == StatusEnum.DOWN) {
+				if (theRetVal.getPreferredUrl() == null) {
+					if (!status.attemptToResetCircuitBreaker()) {
+						iter.remove();
+						continue;
+					}
+				} else {
+					iter.remove();
+					continue;
+				}
+			}
+
+			if (theRetVal.getPreferredUrl() == null) {
+				theRetVal.setPreferredUrl(next);
+				iter.remove();
+				continue;
+			}
+		}
+		theRetVal.setAlternateUrls(urls);
+
+	}
+
+	private void choseUrlPreferLocal(BasePersServiceVersion theServiceVersion, UrlPoolBean retVal) {
+		List<PersServiceVersionUrl> urls = new ArrayList<PersServiceVersionUrl>(theServiceVersion.getUrls().size());
+		retVal.setAlternateUrls(urls);
+
+		List<PersServiceVersionUrl> urlsWithDownFirstThenLocal = new ArrayList<PersServiceVersionUrl>();
+		LinkedList<PersServiceVersionUrl> allUrlsCopy = new LinkedList<PersServiceVersionUrl>(theServiceVersion.getUrls());
+
+		for (Iterator<PersServiceVersionUrl> iter = allUrlsCopy.iterator(); iter.hasNext();) {
+			PersServiceVersionUrl next = iter.next();
+			if (getUrlStatus(next).getStatus() == StatusEnum.DOWN) {
+				urlsWithDownFirstThenLocal.add(next);
+				iter.remove();
+			}
+		}
+		for (Iterator<PersServiceVersionUrl> iter = allUrlsCopy.iterator(); iter.hasNext();) {
+			PersServiceVersionUrl next = iter.next();
+			if (next.isLocal()) {
+				urlsWithDownFirstThenLocal.add(next);
+				iter.remove();
+			}
+		}
+		for (Iterator<PersServiceVersionUrl> iter = allUrlsCopy.iterator(); iter.hasNext();) {
+			PersServiceVersionUrl next = iter.next();
+			urlsWithDownFirstThenLocal.add(next);
+		}
+
+		for (PersServiceVersionUrl next : urlsWithDownFirstThenLocal) {
+			PersServiceVersionUrlStatus status = getUrlStatus(next);
+
+			if (next.isLocal() && retVal.getPreferredUrl() == null) {
+				switch (status.getStatus()) {
+				case ACTIVE:
+				case UNKNOWN:
+					if (retVal.getPreferredUrl() != null) {
+						urls.add(next);
+					} else {
+						retVal.setPreferredUrl(next);
+					}
+					break;
+				case DOWN:
+					if (status.attemptToResetCircuitBreaker()) {
+						retVal.setPreferredUrl(next);
+					}
+				}
+			} else {
+				switch (status.getStatus()) {
+				case ACTIVE:
+				case UNKNOWN:
+					retVal.getAlternateUrls().add(next);
+					break;
+				case DOWN:
+					if (retVal.getPreferredUrl() != null) {
+						/*
+						 * We don't try to reset the circuit breaker on more
+						 * than one URL at a time
+						 */
+					} else if (status.attemptToResetCircuitBreaker()) {
+						if (retVal.getPreferredUrl() != null) {
+							urls.add(retVal.getPreferredUrl());
+						}
+						retVal.setPreferredUrl(next);
+					} else {
+						/*
+						 * we just won't try this one of it's down and it's not
+						 * time to try resetting the CB
+						 */
+					}
+				}
+			}
+		}
+
+		if (retVal.getPreferredUrl() == null && urls.size() > 0) {
+			retVal.setPreferredUrl(urls.remove(0));
+		}
 	}
 
 	@Override
@@ -222,28 +268,26 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		 * Record method statictics
 		 */
 		InvocationStatsIntervalEnum interval = MINUTE;
-		BasePersInvocationStatsPk statsPk = new PersInvocationStatsPk(interval, theInvocationTime, theMethod);
+		BasePersInvocationMethodStatsPk statsPk = new PersInvocationStatsPk(interval, theInvocationTime, theMethod);
 		doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, statsPk);
 
 		/*
 		 * Record user/anon method statistics
 		 */
-		if (theUser == null) {
-			statsPk = new PersInvocationAnonStatsPk(interval, theInvocationTime, theMethod);
-			doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, statsPk);
-		} else {
-			statsPk = new PersInvocationUserStatsPk(interval, theInvocationTime, theMethod, theUser);
-			doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, statsPk);
+		if (theUser != null) {
+			PersInvocationUserStatsPk uStatsPk = new PersInvocationUserStatsPk(interval, theInvocationTime, theUser);
+			doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, uStatsPk);
+
+			doUpdateUserStatus(theUser, theInvocationTime);
 		}
 
 		if (theHttpResponse != null) {
 			/*
 			 * Record URL status for successful URLs
 			 */
-			String successfulUrl = theHttpResponse.getSuccessfulUrl();
+			PersServiceVersionUrl successfulUrl = theHttpResponse.getSuccessfulUrl();
 			if (successfulUrl != null) {
-				PersServiceVersionUrl successfulUrlBean = theMethod.getServiceVersion().getUrlWithUrl(successfulUrl);
-				PersServiceVersionUrlStatus status = getUrlStatus(successfulUrlBean);
+				PersServiceVersionUrlStatus status = getUrlStatus(successfulUrl);
 				boolean wasFault = theInvocationResponseResultsBean.getResponseType() == ResponseTypeEnum.FAULT;
 				ourLog.debug("Recording successful invocation (fault {}) for URL {}", wasFault, successfulUrl);
 
@@ -260,12 +304,11 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			/*
 			 * Recurd URL status for any failed URLs
 			 */
-			Map<String, Failure> failedUrlsMap = theHttpResponse.getFailedUrls();
-			for (Entry<String, Failure> nextFailedUrlEntry : failedUrlsMap.entrySet()) {
-				String nextFailedUrl = nextFailedUrlEntry.getKey();
+			Map<PersServiceVersionUrl, Failure> failedUrlsMap = theHttpResponse.getFailedUrls();
+			for (Entry<PersServiceVersionUrl, Failure> nextFailedUrlEntry : failedUrlsMap.entrySet()) {
+				PersServiceVersionUrl nextFailedUrl = nextFailedUrlEntry.getKey();
 				Failure failure = nextFailedUrlEntry.getValue();
-				PersServiceVersionUrl failedUrl = theMethod.getServiceVersion().getUrlWithUrl(nextFailedUrl);
-				PersServiceVersionUrlStatus failedStatus = getUrlStatus(failedUrl);
+				PersServiceVersionUrlStatus failedStatus = getUrlStatus(nextFailedUrl);
 				doRecordUrlStatus(false, false, failedStatus, failure.getExplanation());
 			}
 		}
@@ -290,7 +333,16 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			serviceVersionStatus.setLastFaultInvocation(theInvocationTime);
 			break;
 		}
-		
+
+	}
+
+	private ConcurrentHashMap<PersUser, PersUserStatus> myUnflushedUserStatus = new ConcurrentHashMap<PersUser, PersUserStatus>();
+
+	private void doUpdateUserStatus(PersUser theUser, Date theTransactionTime) {
+
+		PersUserStatus status = getUserStatusForUser(theUser);
+		status.setLastAccessIfNewer(theTransactionTime);
+
 	}
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
@@ -330,7 +382,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		PersConfig config = myConfigSvc.getConfig();
 
 		// TODO: collapse static resource stats
-		
+
 		// Days
 		{
 			Date now = DAY.truncate(getNow());
@@ -340,7 +392,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 			doCollapseStats(myDao.getInvocationStatsBefore(HOUR, daysCutoff), DAY, PersInvocationStats.class);
 			doCollapseStats(myDao.getInvocationUserStatsBefore(HOUR, daysCutoff), DAY, PersInvocationUserStats.class);
-			doCollapseStats(myDao.getInvocationAnonStatsBefore(HOUR, daysCutoff), DAY, PersInvocationAnonStats.class);
 		}
 
 		// 10 Minutes -> Hours
@@ -352,7 +403,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 			doCollapseStats(myDao.getInvocationStatsBefore(TEN_MINUTE, hoursCutoff), HOUR, PersInvocationStats.class);
 			doCollapseStats(myDao.getInvocationUserStatsBefore(TEN_MINUTE, hoursCutoff), HOUR, PersInvocationUserStats.class);
-			doCollapseStats(myDao.getInvocationAnonStatsBefore(TEN_MINUTE, hoursCutoff), HOUR, PersInvocationAnonStats.class);
 		}
 
 		// Minutes -> 10 Minutes
@@ -364,32 +414,23 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 			doCollapseStats(myDao.getInvocationStatsBefore(MINUTE, hoursCutoff), TEN_MINUTE, PersInvocationStats.class);
 			doCollapseStats(myDao.getInvocationUserStatsBefore(MINUTE, hoursCutoff), TEN_MINUTE, PersInvocationUserStats.class);
-			doCollapseStats(myDao.getInvocationAnonStatsBefore(MINUTE, hoursCutoff), TEN_MINUTE, PersInvocationAnonStats.class);
 		}
 	}
 
 	private void doCollapseStats(List<? extends BasePersMethodStats> theList, InvocationStatsIntervalEnum toIntervalTyoe, Class<?> invocClass) {
-		Map<BasePersMethodStatsPk, BasePersMethodStats> statsToFlush = new HashMap<BasePersMethodStatsPk, BasePersMethodStats>();
+		Map<BasePersInvocationStatsPk, BasePersMethodStats> statsToFlush = new HashMap<BasePersInvocationStatsPk, BasePersMethodStats>();
 		List<BasePersMethodStats> statsToDelete = new ArrayList<BasePersMethodStats>();
 		for (ListIterator<? extends BasePersMethodStats> iter = theList.listIterator(); iter.hasNext();) {
 			BasePersMethodStats next = iter.next();
 
-			BasePersMethodStatsPk dayPk;
+			BasePersInvocationStatsPk dayPk;
 			if (invocClass == PersInvocationStats.class) {
-				dayPk = new PersInvocationStatsPk(toIntervalTyoe, next.getPk().getStartTime(), ((PersInvocationStatsPk)next.getPk()).getMethod());
+				dayPk = new PersInvocationStatsPk(toIntervalTyoe, next.getPk().getStartTime(), ((PersInvocationStatsPk) next.getPk()).getMethod());
 				if (!statsToFlush.containsKey(dayPk)) {
 					statsToFlush.put(dayPk, myDao.getOrCreateInvocationStats((PersInvocationStatsPk) dayPk));
 				}
-			} else if (invocClass == PersInvocationAnonStats.class) {
-				dayPk = new PersInvocationAnonStatsPk(toIntervalTyoe, next.getPk().getStartTime(), (((PersInvocationAnonStatsPk)next.getPk()).getMethod()));
-				if (!statsToFlush.containsKey(dayPk)) {
-					statsToFlush.put(dayPk, myDao.getOrCreateInvocationAnonStats((PersInvocationAnonStatsPk) dayPk));
-				}
 			} else {
-				dayPk = new PersInvocationAnonStatsPk(toIntervalTyoe, next.getPk().getStartTime(), (((PersInvocationUserStatsPk)next.getPk()).getMethod()));
-				if (!statsToFlush.containsKey(dayPk)) {
-					statsToFlush.put(dayPk, myDao.getOrCreateInvocationAnonStats((PersInvocationAnonStatsPk) dayPk));
-				}
+				throw new IllegalStateException("Unknown type: " + invocClass);
 			}
 
 			BasePersMethodStats target = statsToFlush.get(dayPk);
@@ -404,8 +445,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				statsToFlush.clear();
 			}
 		}
-		
-		if(statsToFlush.size() > 0 || statsToDelete.size() > 0) {
+
+		if (statsToFlush.size() > 0 || statsToDelete.size() > 0) {
 			myDao.saveInvocationStats(statsToFlush.values(), statsToDelete);
 		}
 	}
@@ -419,7 +460,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		 */
 
 		List<BasePersMethodStats> stats = new ArrayList<BasePersMethodStats>();
-		HashSet<BasePersMethodStatsPk> keys = new HashSet<BasePersMethodStatsPk>(myUnflushedInvocationStats.keySet());
+		HashSet<BasePersInvocationStatsPk> keys = new HashSet<BasePersInvocationStatsPk>(myUnflushedInvocationStats.keySet());
 
 		if (keys.isEmpty()) {
 
@@ -429,7 +470,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 			Date earliest = null;
 			Date latest = null;
-			for (BasePersMethodStatsPk nextKey : keys) {
+			for (BasePersInvocationStatsPk nextKey : keys) {
 				BasePersMethodStats nextStats = myUnflushedInvocationStats.remove(nextKey);
 				if (nextStats == null) {
 					continue;
@@ -447,20 +488,22 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 			ourLog.info("Going to flush {} stats entries with time range {} - {}", new Object[] { stats.size(), myTimeFormat.format(earliest), myTimeFormat.format(latest) });
 
-			try {
-				myDao.saveInvocationStats(stats);
-				ourLog.info("Done flushing stats");
-			} catch (PersistenceException e) {
-				ourLog.error("Failed to flush stats to disk, going to re-queue them", e);
-				for (BasePersMethodStats next : stats) {
-
-					BasePersMethodStats savedStats = myUnflushedInvocationStats.putIfAbsent(next.getPk(), next);
-					if (savedStats != next) {
-						savedStats.mergeUnsynchronizedEvents(next);
-					}
-
-				}
-			}
+			// try {
+			myDao.saveInvocationStats(stats);
+			ourLog.info("Done flushing stats");
+			// } catch (PersistenceException e) {
+			// ourLog.error("Failed to flush stats to disk, going to re-queue them",
+			// e);
+			// for (BasePersMethodStats next : stats) {
+			//
+			// BasePersMethodStats savedStats =
+			// myUnflushedInvocationStats.putIfAbsent(next.getPk(), next);
+			// if (savedStats != next) {
+			// savedStats.mergeUnsynchronizedEvents(next);
+			// }
+			//
+			// }
+			// }
 
 		}
 
@@ -518,6 +561,17 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			next.setDirty(false);
 		}
 
+		/*
+		 * Flush user status
+		 */
+		List<PersUserStatus> userStatuses = new ArrayList<PersUserStatus>();
+		for (PersUser next : new HashSet<PersUser>(myUnflushedUserStatus.keySet())) {
+			PersUserStatus nextStatus = myUnflushedUserStatus.remove(next);
+			userStatuses.add(nextStatus);
+		}
+		if (userStatuses.size() > 0) {
+			myDao.saveUserStatus(userStatuses);
+		}
 	}
 
 	private void doRecordInvocationMethod(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, BasePersInvocationStatsPk theStatsPk) {
@@ -601,7 +655,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		return new Date();
 	}
 
-	private BasePersMethodStats getStatsForPk(BasePersMethodStatsPk statsPk) {
+	private BasePersMethodStats getStatsForPk(BasePersInvocationStatsPk statsPk) {
 		BasePersMethodStats tryNew = statsPk.newObjectInstance();
 		BasePersMethodStats stats = myUnflushedInvocationStats.putIfAbsent(statsPk, tryNew);
 		if (stats == null) {
@@ -609,10 +663,20 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 
 		if (ourLog.isTraceEnabled()) {
-			ourLog.trace("Now have the following {} stats: {}", myUnflushedInvocationStats.size(), new ArrayList<BasePersMethodStatsPk>(myUnflushedInvocationStats.keySet()));
+			ourLog.trace("Now have the following {} stats: {}", myUnflushedInvocationStats.size(), new ArrayList<BasePersInvocationStatsPk>(myUnflushedInvocationStats.keySet()));
 		}
 
 		return stats;
+	}
+
+	private PersUserStatus getUserStatusForUser(PersUser theUser) {
+		PersUserStatus tryNew = theUser.getStatus();
+		PersUserStatus status = myUnflushedUserStatus.putIfAbsent(theUser, tryNew);
+		if (status == null) {
+			status = tryNew;
+		}
+
+		return status;
 	}
 
 	private PersServiceVersionStatus getStatusForPk(PersServiceVersionStatus theServiceVersionStatus, Long thePid) {
@@ -654,5 +718,16 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		myNowForUnitTests = theNow;
 	}
 
-	
+	@Override
+	public BasePersInvocationStats getOrCreateUserInvocationStatsSynchronously(PersInvocationUserStatsPk thePk) {
+		synchronized (myUnflushedInvocationStats) {
+			BasePersInvocationStats retVal = myDao.getInvocationUserStats(thePk);
+			if (retVal != null) {
+				return retVal;
+			} else {
+				return (BasePersInvocationStats) getStatsForPk(thePk);
+			}
+		}
+	}
+
 }

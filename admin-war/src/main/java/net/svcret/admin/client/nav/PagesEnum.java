@@ -55,7 +55,17 @@ public enum PagesEnum {
 	CFG(MSGS.config_Breadcrumb()), 
 	
 	/** Service Version Status */
-	SVS(MSGS.serviceVersionStats_Breadcrumb());
+	SVS(MSGS.serviceVersionStats_Breadcrumb()), 
+	
+	/**
+	 * View recent message for Service Version
+	 */
+	RSV(MSGS.viewRecentMessageServiceVersion_Breadcrumb()), 
+	
+	/**
+	 * View recent message for User
+	 */
+	RUS(MSGS.viewRecentMessagUser_Breadcrumb());
 	;
 	
 	private String myBreadcrumb;

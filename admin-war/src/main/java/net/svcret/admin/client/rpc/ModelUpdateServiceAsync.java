@@ -13,6 +13,8 @@ import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GPartialUserList;
+import net.svcret.admin.shared.model.GRecentMessage;
+import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GUrlStatus;
@@ -39,7 +41,7 @@ public interface ModelUpdateServiceAsync {
 
 	void loadServiceVersionIntoSession(long theServiceVersionPid, AsyncCallback<BaseGServiceVersion> theAsyncCallback);
 
-	void loadUser(long theUserPid, AsyncCallback<UserAndAuthHost> callback);
+	void loadUser(long theUserPid, boolean theLoadStats, AsyncCallback<UserAndAuthHost> callback);
 
 	void loadUsers(PartialUserListRequest theRequest, AsyncCallback<GPartialUserList> callback);
 
@@ -70,5 +72,13 @@ public interface ModelUpdateServiceAsync {
 	void saveConfig(GConfig theConfig, AsyncCallback<Void> theAsyncCallback);
 
 	void loadServiceVersionUrlStatuses(long theServiceVersionPid, AsyncCallback<List<GUrlStatus>> theAsyncCallback);
+
+	void loadRecentTransactionListForServiceVersion(long theServiceVersionPid, AsyncCallback<GRecentMessageLists> theAsyncCallback);
+
+	void loadRecentMessageForServiceVersion(long thePid, AsyncCallback<GRecentMessage> theAsyncCallback);
+
+	void loadRecentTransactionListForuser(long thePid, AsyncCallback<GRecentMessageLists> theAsyncCallback);
+
+	void loadRecentMessageForUser(long thePid, AsyncCallback<GRecentMessage> theAsyncCallback);
 
 }

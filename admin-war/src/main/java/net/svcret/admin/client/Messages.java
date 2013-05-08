@@ -13,6 +13,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Add")
 	String actions_Add();
 
+	@DefaultMessage("Add New...")
+	String actions_AddNewDotDotDot();
+
 	@DefaultMessage("Back")
 	String actions_Back();
 
@@ -22,8 +25,20 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Remove")
 	String actions_Remove();
 
+	@DefaultMessage("Delete Domain")
+	String actions_RemoveDomain();
+
+	@DefaultMessage("Remove Selected...")
+	String actions_RemoveSelectedDotDotDot();
+
+	@DefaultMessage("Delete Service")
+	String actions_RemoveService();
+
 	@DefaultMessage("Save")
 	String actions_Save();
+
+	@DefaultMessage("View Runtime Status")
+	String actions_ViewRuntimeStatus();
 
 	@DefaultMessage("Add Domain")
 	String addDomain_Breadcrumb();
@@ -67,6 +82,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 			+ "means that performance will be improved as there will be fewer calls to the backing " + "credential store. Naturally, this does increase the chance that someone could " + "deduce your passwords if they have physical access to the server.")
 	String baseAuthenticationHostEditPanel_CacheResponsesDesc();
 
+	@DefaultMessage("Enabled - Cache for (ms):")
+	SafeHtml baseAuthenticationHostEditPanel_CacheResponsesEnabled();
+
 	@DefaultMessage("Cache Responses")
 	String baseAuthenticationHostEditPanel_CacheResponsesTitle();
 
@@ -88,11 +106,64 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Saved Authentication Host")
 	String baseAuthenticationHostEditPanel_Saved();
 
+	@DefaultMessage("Configuration")
+	String config_Breadcrumb();
+
+	@DefaultMessage("ServiceRetriever Configuration")
+	String configPanel_Title();
+
+	@DefaultMessage("URL Base")
+	String configPanel_UrlBase();
+
+	@DefaultMessage("The URL Base is the URL where the service proxy is deployed, and forms the base for " +
+	"any service endpoints exposed by ServiceRetriever. Typically this is a simple URL expressing the " +
+	"hostname and port of the server that ServiceRetriever is deployed (e.g. \"http://somehost:8080\" but " +
+	"if ServiceRetriever is deployed behind a load balancer or other network infrastructure this might " +
+	"be something different. Note that URLs within WSDL and XSD links for exposed services will be translated " +
+	"to use this base as well.")
+	String configPanel_UrlBaseDesc();
+
 	@DefaultMessage(" <span class=\"" + CssConstants.DASHBOARD_NAME_SUFFIX + "\">(No Services Defined)</span>")
 	String dashboard_DomainNoServicesSuffix();
 
+	@DefaultMessage(" <span class=\"" + CssConstants.DASHBOARD_NAME_PREFIX + "\">Domain:</span>")
+	String dashboard_DomainPrefix();
+
+	@DefaultMessage("Never")
+	String dashboard_LastInvocNever();
+
+	@DefaultMessage("{0,number} days ago")
+	@AlternateMessage({ "one", "1 day ago" })
+	String dashboard_LastInvocOver1Day(@PluralCount(DefaultRule_en.class) int theDay);
+
+	@DefaultMessage("{0,number} hrs ago")
+	@AlternateMessage({ "one", "1 hr ago" })
+	String dashboard_LastInvocUnder1Day(@PluralCount(DefaultRule_en.class) int theHour);
+
+	@DefaultMessage("{0,number} mins ago")
+	@AlternateMessage({ "one", "1 min ago" })
+	String dashboard_LastInvocUnder1Hour(@PluralCount(DefaultRule_en.class) int theMins);
+
+	@DefaultMessage("< 1min")
+	String dashboard_LastInvocUnder60Secs();
+
+	@DefaultMessage("Not Secured")
+	String dashboard_NotSecured();
+
+	@DefaultMessage("Secured")
+	String dashboard_SecuredFully();
+
+	@DefaultMessage("Partial")
+	String dashboard_SecuredPartial();
+
 	@DefaultMessage(" <span class=\"" + CssConstants.DASHBOARD_NAME_SUFFIX + "\">(No Service Versions Defined)</span>")
 	String dashboard_ServiceNoServiceVersionsSuffix();
+
+	@DefaultMessage(" <span class=\"" + CssConstants.DASHBOARD_NAME_PREFIX + "\">Service:</span>")
+	String dashboard_ServicePrefix();
+
+	@DefaultMessage(" <span class=\"" + CssConstants.DASHBOARD_NAME_PREFIX + "\">Version:</span>")
+	String dashboard_ServiceVersionPrefix();
 
 	@DefaultMessage("Delete Domain")
 	String deleteDomainPanel_Breadcrumb();
@@ -104,8 +175,24 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Delete Domain")
 	String deleteDomainPanel_Title();
 
+	@DefaultMessage("Delete Service")
+	String deleteServicePanel_Breadcrumb();
+
+	@DefaultMessage("Are you sure you want to delete the service \"{1}\" from domain \"{0}\"? This will " + //-
+			"delete all service versions associated with this service as well!")
+	String deleteServicePanel_Confirm(String theDomainId, String theServiceId);
+
+	@DefaultMessage("Delete Service")
+	String deleteServicePanel_Title();
+
 	@DefaultMessage("Edit Domain")
 	String editDomain_Breadcrumb();
+
+	@DefaultMessage("Edit Service")
+	String editServicePanel_Breadcrumb();
+
+	@DefaultMessage("Edit Service Version")
+	String editServiceVersion_Breadcrumb();
 
 	@DefaultMessage(SVCVER_DESC)
 	String editServiceVersion_Description();
@@ -122,6 +209,12 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Change Password")
 	String editUser_Password();
 
+	@DefaultMessage("Permissions")
+	String editUser_PermissionsTitle();
+
+	@DefaultMessage("Recent Transactions")
+	String editUser_RecentMessagesTitle();
+
 	@DefaultMessage("Edit User")
 	String editUser_Title();
 
@@ -130,6 +223,15 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Actions")
 	String editUsersPanel_ColumnActions();
+
+	@DefaultMessage("Last Access")
+	String editUsersPanel_ColumnLastServiceAccess();
+
+	@DefaultMessage("Security Failures")
+	String editUsersPanel_ColumnSecurityFailures();
+
+	@DefaultMessage("Successful Transactions")
+	String editUsersPanel_ColumnSuccessfulTransactions();
 
 	@DefaultMessage("Username")
 	String editUsersPanel_ColumnUsername();
@@ -220,8 +322,129 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Retries must be 0 or a positive integer")
 	String httpClientConfigsPanel_validateFailed_Retries();
 
+	@DefaultMessage("Error: An invalid value {0} was found. Numbers must be 0 (meaning no messages will be stored) or positive (meaning this number will be stored before the oldest entries are deleted), and for performance reasons must be below {1}")
+	String keepRecentTransactionsPanel_AlertInvalidValue(String theValue, String theMax);
+
+	@DefaultMessage("If enabled, the given number of recent transactions will be kept in the Service Retriever database " +
+			"for troubleshooting, etc. As new transactions are performed, old transactions are removed from the database, " +
+			"so this feature is really only intended for troubleshooting and health checks. Responses are stored in " +
+			"different buckets according to transaction outcome, so it is possible to save (for example) " +
+			"more security failure transactions than successful ones. This also means that if most transactions " +
+			"have one outcome, transactions will still be saved for other outcomes. It is important to note " +
+			"that for performance, transactions to be written to the database are buffered in memory for " +
+			"up to a minute so it is important to not choose a very large number here.")
+	String keepRecentTransactionsPanel_Description();
+
+	@DefaultMessage("Fail")
+	String keepRecentTransactionsPanel_OutcomeFail();
+
+	@DefaultMessage("Put the number of recent failed transactions to store here. If you do not " +
+			"wish to store transactions with this outcome, put zero or leave this field blank. Failed " +
+			"transactions are transactions where underlying service implementation failed to produce " +
+			"a valid response, or was unavailable.")
+	String keepRecentTransactionsPanel_OutcomeFailDesc();
+
+	@DefaultMessage("Fault")
+	String keepRecentTransactionsPanel_OutcomeFault();
+
+	@DefaultMessage("Put the number of recent fault transactions to store here. If you do not " +
+			"wish to store transactions with this outcome, put zero or leave this field blank. Fault " +
+			"transactions are transactions where the underlying service implementation produced a result " +
+			"which was valid, but which constituted a non-successful response.")
+	String keepRecentTransactionsPanel_OutcomeFaultDesc();
+
+	@DefaultMessage("Security Fail")
+	String keepRecentTransactionsPanel_OutcomeSecurityFail();
+
+	@DefaultMessage("Put the number of recent security failure transactions to store here. If you do not " +
+			"wish to store transactions with this outcome, put zero or leave this field blank. Security failure " +
+			"transactions are transactions where Service Retriever could not successfully authenticate " +
+			"the requesting user, so the request was not allowed to proceed to the underlying service.")
+	String keepRecentTransactionsPanel_OutcomeSecurityFailDesc();
+
+	@DefaultMessage("Success")
+	String keepRecentTransactionsPanel_OutcomeSuccess();
+
+	@DefaultMessage("Put the number of recent successful transactions to store here. If you do not " +
+			"wish to store transactions with this outcome, put zero or leave this field blank. Successful " +
+			"transactions are transactions where the underlying service implementation successfully returned " +
+			"a result.")
+	String keepRecentTransactionsPanel_OutcomeSuccessDesc();
+
+	@DefaultMessage("Store Recent Transactions")
+	String keepRecentTransactionsPanel_Title();
+
+	@DefaultMessage("The base DN to search for the user being authenticated")
+	String ldapAuthenticationHostEditPanel_AuthenticateBaseDnDescription();
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+	@DefaultMessage("Base DN")
+	String ldapAuthenticationHostEditPanel_AuthenticateBaseDnName();
+
+	@DefaultMessage("This is the LDAP filter to search for. This should contain a parameter as \"{0}\" which will then be substited with the username in the service request.")
+	String ldapAuthenticationHostEditPanel_AuthenticateFilterDescription(String theParam0);
+
+	@DefaultMessage("Filter")
+	String ldapAuthenticationHostEditPanel_AuthenticateFilterName();
+
+	@DefaultMessage("This is the complete DN name of the user to use to bind to the LDAP directory in order to authenticate users")
+	String ldapAuthenticationHostEditPanel_BindUserDnDescription();
+
+	@DefaultMessage("Bind User DN")
+	String ldapAuthenticationHostEditPanel_BindUserDnName();
+
+	@DefaultMessage("The password to use with the \"Bind User DN\" to bind initially to the LDAP")
+	String ldapAuthenticationHostEditPanel_BindUserPasswordDescription();
+
+	@DefaultMessage("Bind User Password")
+	String ldapAuthenticationHostEditPanel_BindUserPasswordName();
+
+	@DefaultMessage("An <b>LDAP</b> Authentication host stores users and their " +
+			"passwords in an external LDAP database, such as an Active Directory server. Use this option if " +
+			"you have external LDAP database against which users can be authenticated. Note that for each " +
+			"record in the LDAP database which is used to actually authorize service invocations, a parallel entry " +
+			"is created in the ServiceRetriever database. This entry is used to link to usage statistics and may " +
+			"also be used to store permission rules.")
+	String ldapAuthenticationHostEditPanel_description();
+
+	@DefaultMessage("LDAP Properties")
+	String ldapAuthenticationHostEditPanel_LdapPropertiesTitle();
+
+	@DefaultMessage("LDAP")
+	String ldapAuthenticationHostEditPanel_title();
+
+	@DefaultMessage("This is the URL to use to connect to the LDAP server, in the form: \"ldap://server.com:389\"")
+	String ldapAuthenticationHostEditPanel_UrlDescription();
+
+	@DefaultMessage("URL")
+	String ldapAuthenticationHostEditPanel_UrlName();
+
 	@DefaultMessage("Authentication Hosts")
 	String leftPanel_AuthenticationHosts();
+
+	@DefaultMessage("Configuration")
+	String leftPanel_Configuration();
 
 	@DefaultMessage("Edit Users")
 	String leftPanel_EditUsers();
@@ -232,14 +455,6 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("A <b>Local Database</b> Authentication host stores users and their " + "passwords in the ServiceRetriever database. Use this option if you do not have " + "an external database or LDAP against which users can be authenticated.")
 	String localDatabaseAuthenticationHostEditPanel_description();
 
-	@DefaultMessage("An <b>LDAP</b> Authentication host stores users and their " +
-			"passwords in an external LDAP database, such as an Active Directory server. Use this option if " +
-			"you have external LDAP database against which users can be authenticated. Note that for each " +
-			"record in the LDAP database which is used to actually authorize service invocations, a parallel entry " +
-			"is created in the ServiceRetriever database. This entry is used to link to usage statistics and may " +
-			"also be used to store permission rules.")
-	String ldapAuthenticationHostEditPanel_description();
-
 	@DefaultMessage("Local Database")
 	String localDatabaseAuthenticationHostEditPanel_title();
 
@@ -248,6 +463,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Full access")
 	String permissionsPanel_AllDomainsCheckbox();
+
+	@DefaultMessage("When this checkbox is selected, the user has access to all services within all domains")
+	String permissionsPanel_AllDomainsDesc();
 
 	@DefaultMessage("This user has the following service permissions. Note that the permission " + "list here applies only to services which are configured to use ServiceProxy host security.")
 	String permissionsPanel_ServicePermissionsDesc();
@@ -269,21 +487,105 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Full access")
 	SafeHtml permissionsPanel_TreeAllServiceVersionsCheckbox();
-
-	@DefaultMessage("LDAP")
-	String ldapAuthenticationHostEditPanel_title();
-
+	
 	@DefaultMessage("ID")
 	String propertyNameId();
 
 	@DefaultMessage("Name")
 	String propertyNameName();
 
+	@DefaultMessage("Implementation URL")
+	String recentMessagesGrid_ColImplementationUrl();
+
+	@DefaultMessage("Requesting IP")
+	String recentMessagesGrid_ColIp();
+
+	@DefaultMessage("Millis")
+	String recentMessagesGrid_ColMillis();
+
+	@DefaultMessage("Time")
+	String recentMessagesGrid_ColTimestamp();
+
+	/**
+	 * Header value for column
+	 */
+	@DefaultMessage("View")
+	String recentMessagesGrid_ColView();
+
+	/**
+	 * Actual row value for column
+	 */
+	@DefaultMessage("View")
+	String recentMessagesGrid_View();
+
+	@DefaultMessage("Service Catalog")
+	String serviceCatalog_Breadcrumb();
+
+	@DefaultMessage("Service Catalog")
+	String serviceCatalog_Title();
+
 	@DefaultMessage("Dashboard")
 	String serviceDashboard_Breadcrumb();
 
-	@DefaultMessage("<b>Prefer Local</b> means that the proxy will favour any URLs which are on " + "the same host as the service retriever itself, and will only use remote " + "implementations if all local URLs are down")
+	@DefaultMessage("Service Version Status")
+	String serviceVersionStats_Breadcrumb();
+
+	@DefaultMessage("Service Latency")
+	String serviceVersionStats_LatencyTitle();
+
+	@DefaultMessage("Message Sizes")
+	String serviceVersionStats_MessageSizeTitle();
+
+	@DefaultMessage("This Service Version is not configured to retain recent transactions")
+	String serviceVersionStats_NoRecentMsgs();
+
+	@DefaultMessage("This Service Version is configured to retain the last {0} recent transactions")
+	String serviceVersionStats_RecentConfigNum(String theNumber);
+
+	@DefaultMessage("Failed (Non-Security) Transactions")
+	String serviceVersionStats_RecentFailTitle();
+
+	@DefaultMessage("Fault Transactions")
+	String serviceVersionStats_RecentFaultTitle();
+
+	@DefaultMessage("Failed (Security) Transactions")
+	String serviceVersionStats_RecentSecurityFailTitle();
+
+	@DefaultMessage("Successful Transactions")
+	String serviceVersionStats_RecentSuccessTitle();
+
+	@DefaultMessage("Service Version Status: {0}")
+	String serviceVersionStats_Title(String theServiceVersion);
+
+	@DefaultMessage("Implementation URLs")
+	String serviceVersionStats_UrlsTitle();
+
+	@DefaultMessage("Service Usage")
+	String serviceVersionStats_UsageTitle();
+
+	@DefaultMessage("<b>Prefer Local</b> means that the proxy will favour any URLs which are on " + 
+			"the same host as the service retriever itself, and will only use remote " + 
+			"implementations if all local URLs are down")
 	String urlSelectionPolicy_Desc_PreferLocal();
+
+	@DefaultMessage("<b>Round Robin</b> means that the proxy will attempt to distribute requests " +
+			"evenly across all URLs")
+	String urlSelectionPolicy_Desc_RoundRobin();
+
+	@DefaultMessage("View Transaction")
+	String viewRecentMessageServiceVersion_Breadcrumb();
+
+	@DefaultMessage("Request Message")
+	String viewRecentMessageServiceVersion_RequestMessage();
+
+	@DefaultMessage("Response Message")
+	String viewRecentMessageServiceVersion_ResponseMessage();
+
+	@DefaultMessage("View Transaction")
+	String viewRecentMessageServiceVersion_Title();
+
+	@DefaultMessage("Recent Transactions")
+	String viewRecentMessagUser_Breadcrumb();
 
 	@DefaultMessage("Authentication Host")
 	String wsSecServerSecurity_AuthenticationHost();
@@ -293,229 +595,5 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Using authentication host: {0}")
 	String wsSecServerSecurity_UsesAuthenticationHost(String theModuleId);
-
-	@DefaultMessage("Edit Service Version")
-	String editServiceVersion_Breadcrumb();
-
-	@DefaultMessage("Delete Domain")
-	String actions_RemoveDomain();
-
-	@DefaultMessage("Secured")
-	String dashboard_SecuredFully();
-
-	@DefaultMessage("Partial")
-	String dashboard_SecuredPartial();
-
-	@DefaultMessage("Not Secured")
-	String dashboard_NotSecured();
-
-	@DefaultMessage("Never")
-	String dashboard_LastInvocNever();
-
-	@DefaultMessage("< 1min")
-	String dashboard_LastInvocUnder60Secs();
-
-	@DefaultMessage("{0,number} mins ago")
-	@AlternateMessage({ "one", "1 min ago" })
-	String dashboard_LastInvocUnder1Hour(@PluralCount(DefaultRule_en.class) int theMins);
-
-	@DefaultMessage("{0,number} hrs ago")
-	@AlternateMessage({ "one", "1 hr ago" })
-	String dashboard_LastInvocUnder1Day(@PluralCount(DefaultRule_en.class) int theHour);
-
-	@DefaultMessage("{0,number} days ago")
-	@AlternateMessage({ "one", "1 day ago" })
-	String dashboard_LastInvocOver1Day(@PluralCount(DefaultRule_en.class) int theDay);
-
-	@DefaultMessage("Delete Service")
-	String deleteServicePanel_Title();
-
-	@DefaultMessage("Are you sure you want to delete the service \"{1}\" from domain \"{0}\"? This will " + //-
-			"delete all service versions associated with this service as well!")
-	String deleteServicePanel_Confirm(String theDomainId, String theServiceId);
-
-	@DefaultMessage("Delete Service")
-	String deleteServicePanel_Breadcrumb();
-
-	@DefaultMessage("Edit Service")
-	String editServicePanel_Breadcrumb();
-
-	@DefaultMessage("Delete Service")
-	String actions_RemoveService();
-
-	@DefaultMessage(" <span class=\"" + CssConstants.DASHBOARD_NAME_PREFIX + "\">Domain:</span>")
-	String dashboard_DomainPrefix();
-
-	@DefaultMessage(" <span class=\"" + CssConstants.DASHBOARD_NAME_PREFIX + "\">Service:</span>")
-	String dashboard_ServicePrefix();
-
-	@DefaultMessage(" <span class=\"" + CssConstants.DASHBOARD_NAME_PREFIX + "\">Version:</span>")
-	String dashboard_ServiceVersionPrefix();
-
-	@DefaultMessage("Service Catalog")
-	String serviceCatalog_Title();
-
-	@DefaultMessage("Service Catalog")
-	String serviceCatalog_Breadcrumb();
-
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-
-
-	@DefaultMessage("LDAP Properties")
-	String ldapAuthenticationHostEditPanel_LdapPropertiesTitle();
-
-	@DefaultMessage("URL")
-	String ldapAuthenticationHostEditPanel_UrlName();
-
-	@DefaultMessage("This is the URL to use to connect to the LDAP server, in the form: \"ldap://server.com:389\"")
-	String ldapAuthenticationHostEditPanel_UrlDescription();
-
-	@DefaultMessage("Bind User DN")
-	String ldapAuthenticationHostEditPanel_BindUserDnName();
-
-	@DefaultMessage("This is the complete DN name of the user to use to bind to the LDAP directory in order to authenticate users")
-	String ldapAuthenticationHostEditPanel_BindUserDnDescription();
-
-	@DefaultMessage("Bind User Password")
-	String ldapAuthenticationHostEditPanel_BindUserPasswordName();
-
-	@DefaultMessage("The password to use with the \"Bind User DN\" to bind initially to the LDAP")
-	String ldapAuthenticationHostEditPanel_BindUserPasswordDescription();
-
-	@DefaultMessage("Base DN")
-	String ldapAuthenticationHostEditPanel_AuthenticateBaseDnName();
-
-	@DefaultMessage("The base DN to search for the user being authenticated")
-	String ldapAuthenticationHostEditPanel_AuthenticateBaseDnDescription();
-
-	@DefaultMessage("Filter")
-	String ldapAuthenticationHostEditPanel_AuthenticateFilterName();
-
-	@DefaultMessage("This is the LDAP filter to search for. This should contain a parameter as \"{0}\" which will then be substited with the username in the service request.")
-	String ldapAuthenticationHostEditPanel_AuthenticateFilterDescription(String theParam0);
-
-	@DefaultMessage("ServiceRetriever Configuration")
-	String configPanel_Title();
-
-	@DefaultMessage("URL Base")
-	String configPanel_UrlBase();
-
-	@DefaultMessage("The URL Base is the URL where the service proxy is deployed, and forms the base for " +
-	"any service endpoints exposed by ServiceRetriever. Typically this is a simple URL expressing the " +
-	"hostname and port of the server that ServiceRetriever is deployed (e.g. \"http://somehost:8080\" but " +
-	"if ServiceRetriever is deployed behind a load balancer or other network infrastructure this might " +
-	"be something different. Note that URLs within WSDL and XSD links for exposed services will be translated " +
-	"to use this base as well.")
-	String configPanel_UrlBaseDesc();
-
-	@DefaultMessage("Configuration")
-	String config_Breadcrumb();
-
-	@DefaultMessage("Configuration")
-	String leftPanel_Configuration();
-
-	@DefaultMessage("Enabled - Cache for (ms):")
-	SafeHtml baseAuthenticationHostEditPanel_CacheResponsesEnabled();
-
-	@DefaultMessage("Add New...")
-	String actions_AddNewDotDotDot();
-
-	@DefaultMessage("Remove Selected...")
-	String actions_RemoveSelectedDotDotDot();
-
-	@DefaultMessage("Service Version Status: {0}")
-	String serviceVersionStats_Title(String theServiceVersion);
-
-	@DefaultMessage("Implementation URLs")
-	String serviceVersionStats_UrlsTitle();
-
-	@DefaultMessage("View Runtime Status")
-	String actions_ViewRuntimeStatus();
-
-	@DefaultMessage("Service Version Status")
-	String serviceVersionStats_Breadcrumb();
-
-	@DefaultMessage("Service Latency")
-	String serviceVersionStats_LatencyTitle();
-
-	@DefaultMessage("Service Usage")
-	String serviceVersionStats_UsageTitle();
-
-	@DefaultMessage("Message Sizes")
-	String serviceVersionStats_MessageSizeTitle();
-
-	@DefaultMessage("When this checkbox is selected, the user has access to all services within all domains")
-	String permissionsPanel_AllDomainsDesc();
-
-	@DefaultMessage("Store Recent Transactions")
-	String keepRecentTransactionsPanel_Title();
-	
-	@DefaultMessage("If enabled, the given number of recent transactions will be kept in the Service Retriever database " +
-			"for troubleshooting, etc. As new transactions are performed, old transactions are removed from the database, " +
-			"so this feature is really only intended for troubleshooting and health checks. Responses are stored in " +
-			"different buckets according to transaction outcome, so it is possible to save (for example) " +
-			"more security failure transactions than successful ones. This also means that if most transactions " +
-			"have one outcome, transactions will still be saved for other outcomes. It is important to note " +
-			"that for performance, transactions to be written to the database are buffered in memory for " +
-			"up to a minute so it is important to not choose a very large number here.")
-	String keepRecentTransactionsPanel_Description();
-
-	@DefaultMessage("Success")
-	String keepRecentTransactionsPanel_OutcomeSuccess();
-
-	@DefaultMessage("Fail")
-	String keepRecentTransactionsPanel_OutcomeFail();
-
-	@DefaultMessage("Security Fail")
-	String keepRecentTransactionsPanel_OutcomeSecurityFail();
-
-	@DefaultMessage("Fault")
-	String keepRecentTransactionsPanel_OutcomeFault();
-
-	@DefaultMessage("Put the number of recent successful transactions to store here. If you do not " +
-			"wish to store transactions with this outcome, put zero or leave this field blank. Successful " +
-			"transactions are transactions where the underlying service implementation successfully returned " +
-			"a result.")
-	String keepRecentTransactionsPanel_OutcomeSuccessDesc();
-
-	@DefaultMessage("Put the number of recent security failure transactions to store here. If you do not " +
-			"wish to store transactions with this outcome, put zero or leave this field blank. Security failure " +
-			"transactions are transactions where Service Retriever could not successfully authenticate " +
-			"the requesting user, so the request was not allowed to proceed to the underlying service.")
-	String keepRecentTransactionsPanel_OutcomeSecurityFailDesc();
-
-	@DefaultMessage("Put the number of recent failed transactions to store here. If you do not " +
-			"wish to store transactions with this outcome, put zero or leave this field blank. Failed " +
-			"transactions are transactions where underlying service implementation failed to produce " +
-			"a valid response, or was unavailable.")
-	String keepRecentTransactionsPanel_OutcomeFailDesc();
-
-	@DefaultMessage("Put the number of recent fault transactions to store here. If you do not " +
-			"wish to store transactions with this outcome, put zero or leave this field blank. Fault " +
-			"transactions are transactions where the underlying service implementation produced a result " +
-			"which was valid, but which constituted a non-successful response.")
-	String keepRecentTransactionsPanel_OutcomeFaultDesc();
-
-	@DefaultMessage("Error: An invalid value {0} was found. Numbers must be 0 (meaning no messages will be stored) or positive (meaning this number will be stored before the oldest entries are deleted), and for performance reasons must be below {1}")
-	String keepRecentTransactionsPanel_AlertInvalidValue(String theValue, String theMax);
 
 }

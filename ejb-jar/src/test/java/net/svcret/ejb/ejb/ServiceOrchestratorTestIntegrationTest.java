@@ -120,14 +120,19 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		url.setUrlId("url1");
 		url.setUrl("http://foo");
 		d0s0v0.addUrl(url);
-		myServiceRegistry.saveServiceVersion(d0s0v0);
+		d0s0v0 = myServiceRegistry.saveServiceVersion(d0s0v0);
 		newEntityManager();
 
 		myServiceRegistry.reloadRegistryFromDatabase();
 		mySecurityService.loadUserCatalogIfNeeded();
-
+		
+		d0s0v0 = myDao.getServiceVersionByPid(d0s0v0.getPid());
+		url = d0s0v0.getUrls().get(0);
+		
 		newEntityManager();
 
+		
+		
 		myDao.setEntityManager(null);
 
 		/*
@@ -155,7 +160,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		respBean.setBody(response);
 		respBean.setContentType("text/xml");
 		respBean.setResponseTime(100);
-		respBean.setSuccessfulUrl("http://foo");
+		respBean.setSuccessfulUrl(url);
 		when(myHttpClient.post(theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
 
 		ITransactionLogger transactionLogger = mock(ITransactionLogger.class);
@@ -169,7 +174,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		for (int i = 0; i < reps; i++) {
 			String query = "";
 			Reader reader = new StringReader(request);
-			resp = mySvc.handle(RequestType.POST, "/d0/d0s0/vd0s0v0", query, reader);
+			resp = mySvc.handle(RequestType.POST, "127.0.0.1", "/d0/d0s0/vd0s0v0", query, reader);
 		}
 		long delay = System.currentTimeMillis() - start;
 		assertEquals(response, resp.getResponseBody());

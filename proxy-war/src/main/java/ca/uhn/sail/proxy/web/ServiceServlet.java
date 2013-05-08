@@ -60,6 +60,7 @@ public class ServiceServlet extends HttpServlet {
 		String contextPath = theReq.getContextPath();
 		String query = "?" + theReq.getQueryString();
 		String requestURL = theReq.getRequestURL().toString();
+		String requestHostIp = theReq.getRemoteAddr();
 
 		String base = extractBase(contextPath, requestURL);
 
@@ -67,7 +68,7 @@ public class ServiceServlet extends HttpServlet {
 
 		OrchestratorResponseBean response;
 		try {
-			response = myOrch.handle(get, path, query, theReq.getReader());
+			response = myOrch.handle(get, requestHostIp, path, query, theReq.getReader());
 		} catch (InternalErrorException e) {
 			ourLog.info("Processing Failure", e);
 			sendFailure(theResp, e.getMessage());

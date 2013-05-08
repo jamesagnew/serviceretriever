@@ -44,17 +44,17 @@ public class PersUserTest extends BaseJpaTest {
 		d0 = mySvc.getOrCreateDomainWithId("D0");
 		d0s0 = mySvc.getOrCreateServiceWithId(d0, "D0S0");
 		d0s1 = mySvc.getOrCreateServiceWithId(d0, "D0S1");
-		d0s0v0 = mySvc.getOrCreateServiceVersionWithId(d0s0, "D0S0V0", ServiceProtocolEnum.SOAP11);
-		d0s0v1 = mySvc.getOrCreateServiceVersionWithId(d0s0, "D0S0V1", ServiceProtocolEnum.SOAP11);
-		d0s1v0 = mySvc.getOrCreateServiceVersionWithId(d0s0, "D0S1V0", ServiceProtocolEnum.SOAP11);
-		d0s1v1 = mySvc.getOrCreateServiceVersionWithId(d0s0, "D0S1V1", ServiceProtocolEnum.SOAP11);
+		d0s0v0 = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(d0s0, "D0S0V0", ServiceProtocolEnum.SOAP11);
+		d0s0v1 = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(d0s0, "D0S0V1", ServiceProtocolEnum.SOAP11);
+		d0s1v0 = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(d0s0, "D0S1V0", ServiceProtocolEnum.SOAP11);
+		d0s1v1 = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(d0s0, "D0S1V1", ServiceProtocolEnum.SOAP11);
 
 		d0s0v0m0 = d0s0v0.getOrCreateAndAddMethodWithName("D0S0V0M0");
 		mySvc.saveServiceVersion(d0s0v0);
 
 		d1 = mySvc.getOrCreateDomainWithId("D1");
 		d1s0 = mySvc.getOrCreateServiceWithId(d1, "D1S0");
-		d1s0v0 = mySvc.getOrCreateServiceVersionWithId(d1s0, "D1S0V0", ServiceProtocolEnum.SOAP11);
+		d1s0v0 = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(d1s0, "D1S0V0", ServiceProtocolEnum.SOAP11);
 		d1s0v0m0 = d1s0v0.getOrCreateAndAddMethodWithName("D0S0V0M0");
 
 		myAh = mySvc.getOrCreateAuthenticationHostLocalDatabase("ah0");
@@ -64,7 +64,7 @@ public class PersUserTest extends BaseJpaTest {
 	@Override
 	protected void newEntityManager() {
 		super.newEntityManager();
-		((DaoBean) mySvc).setEntityManager(myEntityManager);
+		mySvc.setEntityManager(myEntityManager);
 	}
 
 	@Test

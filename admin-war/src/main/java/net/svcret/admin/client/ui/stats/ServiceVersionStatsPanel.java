@@ -13,6 +13,7 @@ import net.svcret.admin.client.ui.dash.model.BaseDashModel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GUrlStatus;
 
 import com.google.gwt.i18n.client.DateTimeFormat;
@@ -27,10 +28,12 @@ import com.google.gwt.user.client.ui.Label;
 public class ServiceVersionStatsPanel extends FlowPanel {
 
 	private static DateTimeFormat ourDateTimeFormat = DateTimeFormat.getFormat(PredefinedFormat.DATE_TIME_MEDIUM);
-	private LoadingSpinner myLoadingSpinner;
+	private LoadingSpinner myTopLoadingSpinner;
 	private long myServiceVersionPid;
 	private Label myTitleLabel;
 	private FlowPanel myTopPanel;
+	private FlowPanel myRecentMessagesPanel;
+	private LoadingSpinner myRecentMessagesLoadingSpinner;
 
 	public ServiceVersionStatsPanel(long theDomainPid, long theServicePid, long theVersionPid) {
 		myServiceVersionPid = theVersionPid;
@@ -44,9 +47,9 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 		myTitleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
 		myTopPanel.add(myTitleLabel);
 
-		myLoadingSpinner = new LoadingSpinner();
-		myLoadingSpinner.show();
-		myTopPanel.add(myLoadingSpinner);
+		myTopLoadingSpinner = new LoadingSpinner();
+		myTopLoadingSpinner.show();
+		myTopPanel.add(myTopLoadingSpinner);
 
 		Model.getInstance().loadServiceVersion(theDomainPid, theServicePid, theVersionPid, new IAsyncLoadCallback<BaseGServiceVersion>() {
 			@Override
@@ -64,7 +67,7 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 		return ourDateTimeFormat.format(theDate);
 	}
 
-	private void set01ServiceVersion(BaseGServiceVersion theResult) {
+	private void set01ServiceVersion(final BaseGServiceVersion theResult) {
 		myTitleLabel.setText(MSGS.serviceVersionStats_Title(theResult.getName()));
 
 		HtmlH1 urlsLabel = new HtmlH1(MSGS.serviceVersionStats_UrlsTitle());
@@ -159,8 +162,48 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 		img.addStyleName(CssConstants.STATS_IMAGE);
 		myTopPanel.add(img);
 
-		myLoadingSpinner.hideCompletely();
+		myTopLoadingSpinner.hideCompletely();
 		
+		set04RecentMessages();
 	}
 
+	private void set04RecentMessages() {
+		myRecentMessagesPanel = new FlowPanel();
+		add(myRecentMessagesPanel);
+
+		myRecentMessagesPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
+
+		myTitleLabel = new Label("Recent Messages");
+		myTitleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
+		myRecentMessagesPanel.add(myTitleLabel);
+
+		myRecentMessagesLoadingSpinner = new LoadingSpinner();
+		myRecentMessagesLoadingSpinner.show();
+		myRecentMessagesPanel.add(myRecentMessagesLoadingSpinner);
+
+		
+		AdminPortal.MODEL_SVC.loadRecentTransactionListForServiceVersion(myServiceVersionPid, new AsyncCallback<GRecentMessageLists>() {
+
+			@Override
+			public void onFailure(Throwable theCaught) {
+				Model.handleFailure(theCaught);
+			}
+
+			@Override
+			public void onSuccess(GRecentMessageLists theResult) {
+				set04RecentMessages(theResult);
+			}
+
+		});
+
+	}
+
+	private void set04RecentMessages(GRecentMessageLists theLists) {
+		myRecentMessagesLoadingSpinner.hideCompletely();
+		
+		myRecentMessagesPanel.add(new RecentMessagesPanel(theLists,false));
+
+	}
+	
+	
 }

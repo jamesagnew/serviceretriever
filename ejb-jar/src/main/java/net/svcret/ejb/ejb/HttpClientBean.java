@@ -16,6 +16,7 @@ import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.IResponseValidator.ValidationResponse;
 import net.svcret.ejb.api.UrlPoolBean;
+import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.io.IOUtils;
@@ -54,7 +55,7 @@ public class HttpClientBean implements IHttpClient {
 	}
 
 	@Override
-	public HttpResponseBean get(String theUrl) {
+	public HttpResponseBean get(String theUrl) throws ClientProtocolException, IOException {
 		Validate.notBlank(theUrl, "URL");
 		ourLog.debug("Requesting URL: {}", theUrl);
 
@@ -71,24 +72,11 @@ public class HttpClientBean implements IHttpClient {
 			retVal.setCode(httpResp.getStatusLine().getStatusCode());
 			retVal.setContentType(httpResp.getEntity().getContentType().getValue());
 			retVal.setHeaders(toHeaderMap(httpResp.getAllHeaders()));
-			retVal.setSuccessfulUrl(theUrl);
 
 			long delay = System.currentTimeMillis() - start;
 			retVal.setResponseTime(delay);
 
 			ourLog.debug("Done requesting URL \"{}\" in {}ms", theUrl, delay);
-			return retVal;
-
-		} catch (ClientProtocolException e) {
-
-			ourLog.debug("Exception while invoking remote service", e);
-			retVal.addFailedUrl(theUrl, Messages.getString("HttpClientBean.postClientProtocolException", e.getMessage()), 0, null, null);
-			return retVal;
-
-		} catch (IOException e) {
-
-			ourLog.debug("Exception while invoking remote service", e);
-			retVal.addFailedUrl(theUrl, Messages.getString("HttpClientBean.postIoException", e.getMessage()), 0, null, null);
 			return retVal;
 
 		} finally {
@@ -139,13 +127,13 @@ public class HttpClientBean implements IHttpClient {
 		DefaultHttpClient client = new DefaultHttpClient(myConMgr, params);
 		HttpResponseBean retVal = new HttpResponseBean();
 
-		String url = theUrlPool.getPreferredUrl();
+		PersServiceVersionUrl url = theUrlPool.getPreferredUrl();
 		int failureRetries = theUrlPool.getFailureRetriesBeforeAborting();
 
 		doPost(retVal, theResponseValidator, theHeaders, postEntity, client, url, failureRetries);
 
 		if (retVal.getSuccessfulUrl() == null) {
-			for (String nextUrl : theUrlPool.getAlternateUrls()) {
+			for (PersServiceVersionUrl nextUrl : theUrlPool.getAlternateUrls()) {
 				doPost(retVal, theResponseValidator, theHeaders, postEntity, client, nextUrl, failureRetries);
 				if (retVal.getSuccessfulUrl() != null) {
 					break;
@@ -156,12 +144,12 @@ public class HttpClientBean implements IHttpClient {
 		return retVal;
 	}
 
-	private void doPost(HttpResponseBean theResponse, IResponseValidator theResponseValidator, Map<String, String> theHeaders, HttpEntity postEntity, DefaultHttpClient client, String url, int theFailureRetries) {
+	private void doPost(HttpResponseBean theResponse, IResponseValidator theResponseValidator, Map<String, String> theHeaders, HttpEntity postEntity, DefaultHttpClient client, PersServiceVersionUrl theNextUrl, int theFailureRetries) {
 		int failuresRemaining = theFailureRetries + 1;
 		for (;;) {
 			failuresRemaining--;
 			
-			HttpPost post = new HttpPost(url);
+			HttpPost post = new HttpPost(theNextUrl.getUrl());
 			post.setEntity(postEntity);
 			for (Entry<String, String> next : theHeaders.entrySet()) {
 				post.addHeader(next.getKey(), next.getValue());
@@ -189,11 +177,11 @@ public class HttpClientBean implements IHttpClient {
 				if (validates.isValidates() == false) {
 
 					if (failuresRemaining > 0) {
-						ourLog.debug("Failed to invoke service at URL[{}] with {} retries remaining: {}", new Object[] {url, failuresRemaining, validates.getFailureExplanation()});
+						ourLog.debug("Failed to invoke service at URL[{}] with {} retries remaining: {}", new Object[] {theNextUrl, failuresRemaining, validates.getFailureExplanation()});
 						continue;
 					}
-					ourLog.debug("Failed to invoke service at URL[{}]: {}", url, validates.getFailureExplanation());
-					theResponse.addFailedUrl(url, validates.getFailureExplanation(), statusCode, contentType, body);
+					ourLog.debug("Failed to invoke service at URL[{}]: {}", theNextUrl, validates.getFailureExplanation());
+					theResponse.addFailedUrl(theNextUrl, validates.getFailureExplanation(), statusCode, contentType, body);
 					theResponse.setResponseTime(delay);
 					return;
 
@@ -204,26 +192,26 @@ public class HttpClientBean implements IHttpClient {
 					theResponse.setContentType(contentType);
 					theResponse.setHeaders(headerMap);
 					theResponse.setResponseTime(delay);
-					theResponse.setSuccessfulUrl(url);
+					theResponse.setSuccessfulUrl(theNextUrl);
 					return;
 
 				}
 
 			} catch (ClientProtocolException e) {
 				if (failuresRemaining > 0) {
-					ourLog.info("Failed to invoke service at URL[{}] with {} retries remaining: {}", new Object[] {url, failuresRemaining, e.toString()});
+					ourLog.info("Failed to invoke service at URL[{}] with {} retries remaining: {}", new Object[] {theNextUrl, failuresRemaining, e.toString()});
 					continue;
 				}
 				ourLog.debug("Exception while invoking remote service", e);
-				theResponse.addFailedUrl(url, Messages.getString("HttpClientBean.postClientProtocolException", e.getMessage()), 0, null, null);
+				theResponse.addFailedUrl(theNextUrl, Messages.getString("HttpClientBean.postClientProtocolException", e.getMessage()), 0, null, null);
 				theResponse.setResponseTime(System.currentTimeMillis() - start);
 			} catch (IOException e) {
 				if (failuresRemaining > 0) {
-					ourLog.info("Failed to invoke service at URL[{}] with {} retries remaining: {}", new Object[] {url, failuresRemaining, e.toString()});
+					ourLog.info("Failed to invoke service at URL[{}] with {} retries remaining: {}", new Object[] {theNextUrl, failuresRemaining, e.toString()});
 					continue;
 				}
 				ourLog.debug("Exception while invoking remote service", e);
-				theResponse.addFailedUrl(url, Messages.getString("HttpClientBean.postIoException", e.getMessage()), 0, null, null);
+				theResponse.addFailedUrl(theNextUrl, Messages.getString("HttpClientBean.postIoException", e.getMessage()), 0, null, null);
 				theResponse.setResponseTime(System.currentTimeMillis() - start);
 			} finally {
 				if (entity != null) {

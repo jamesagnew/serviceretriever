@@ -4,27 +4,30 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.svcret.ejb.model.entity.PersServiceVersionUrl;
+
 public class HttpResponseBean {
 
 	private String myBody;
 	private int myCode;
 	private String myContentType;
-	private Map<String,Failure> myFailedUrls;
+	private Map<PersServiceVersionUrl, Failure> myFailedUrls;
 	private Map<String, String> myHeaders;
 	private long myResponseTime;
-	private String mySuccessfulUrl;
+	private PersServiceVersionUrl mySuccessfulUrl;
 
 	/**
 	 * @return the successfulUrl
 	 */
-	public String getSuccessfulUrl() {
+	public PersServiceVersionUrl getSuccessfulUrl() {
 		return mySuccessfulUrl;
 	}
 
 	/**
-	 * @param theSuccessfulUrl the successfulUrl to set
+	 * @param theSuccessfulUrl
+	 *            the successfulUrl to set
 	 */
-	public void setSuccessfulUrl(String theSuccessfulUrl) {
+	public void setSuccessfulUrl(PersServiceVersionUrl theSuccessfulUrl) {
 		mySuccessfulUrl = theSuccessfulUrl;
 	}
 
@@ -32,7 +35,7 @@ public class HttpResponseBean {
 		super();
 	}
 
-	public HttpResponseBean(String theSuccessfulUrl, String theContentType, int theCode, String theBody) {
+	public HttpResponseBean(PersServiceVersionUrl theSuccessfulUrl, String theContentType, int theCode, String theBody) {
 		super();
 		mySuccessfulUrl = theSuccessfulUrl;
 		myCode = theCode;
@@ -40,11 +43,11 @@ public class HttpResponseBean {
 		myContentType = theContentType;
 	}
 
-	public void addFailedUrl(String theUrl, String theFailureExplanation, int theStatusCode, String theContentType, String theBody) {
+	public void addFailedUrl(PersServiceVersionUrl theUrl, String theFailureExplanation, int theStatusCode, String theContentType, String theBody) {
 		if (myFailedUrls == null) {
-			myFailedUrls = new HashMap<String, Failure>();
+			myFailedUrls = new HashMap<PersServiceVersionUrl, Failure>();
 		}
-		
+
 		myFailedUrls.put(theUrl, new Failure(theBody, theContentType, theFailureExplanation, theStatusCode));
 	}
 
@@ -66,7 +69,7 @@ public class HttpResponseBean {
 	/**
 	 * @return the failedUrlPids
 	 */
-	public Map<String, Failure> getFailedUrls() {
+	public Map<PersServiceVersionUrl, Failure> getFailedUrls() {
 		if (myFailedUrls == null) {
 			return Collections.emptyMap();
 		}

@@ -8,7 +8,7 @@ public abstract class BasePersMethodStats implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	public abstract BasePersMethodStatsPk getPk();
+	public abstract BasePersInvocationStatsPk getPk();
 
 	public abstract void mergeUnsynchronizedEvents(BasePersMethodStats theNext);
 

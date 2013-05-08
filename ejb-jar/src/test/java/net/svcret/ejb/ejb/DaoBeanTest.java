@@ -26,8 +26,6 @@ import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
-import net.svcret.ejb.model.entity.PersInvocationAnonStats;
-import net.svcret.ejb.model.entity.PersInvocationAnonStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
@@ -64,12 +62,21 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
-		PersServiceVersionSoap11 ver = mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
+		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
 		PersServiceVersionMethod method = new PersServiceVersionMethod();
 		method.setName("method0");
 		ver.addMethod(method);
 
+		PersServiceVersionUrl url = new PersServiceVersionUrl();
+		url.setUrl("http://foo");
+		url.setUrlId("url");
+		ver.addUrl(url);
 		ver = (PersServiceVersionSoap11) mySvc.saveServiceVersion(ver);
+		
+		newEntityManager();
+
+		ver = (PersServiceVersionSoap11) mySvc.getServiceVersionByPid(ver.getPid());
+		url = ver.getUrls().get(0);
 
 		newEntityManager();
 
@@ -80,6 +87,8 @@ public class DaoBeanTest extends BaseJpaTest {
 			msg.setResponseType(ResponseTypeEnum.FAULT);
 			msg.setRequestBody("req" + i);
 			msg.setResponseBody("resp" + i);
+			msg.setRequestHostIp("127.0.0.1");
+			msg.setImplementationUrl(url);
 			msg.setTransactionTime(new Date(System.currentTimeMillis() + (1000 * i)));
 			mySvc.saveUserRecentMessage(msg);
 		}
@@ -102,6 +111,8 @@ public class DaoBeanTest extends BaseJpaTest {
 			msg.setResponseType(ResponseTypeEnum.FAULT);
 			msg.setRequestBody("req" + i);
 			msg.setResponseBody("resp" + i);
+			msg.setRequestHostIp("127.0.0.1");
+			msg.setImplementationUrl(url);
 			msg.setTransactionTime(new Date(System.currentTimeMillis() + (1000 * i)));
 			mySvc.saveUserRecentMessage(msg);
 		}
@@ -136,21 +147,30 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
-		PersServiceVersionSoap11 ver = mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
+		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
 		PersServiceVersionMethod method = new PersServiceVersionMethod();
 		method.setName("method0");
 		ver.addMethod(method);
 
-		mySvc.saveServiceVersion(ver);
-
+		PersServiceVersionUrl url = new PersServiceVersionUrl();
+		url.setUrl("http://foo");
+		url.setUrlId("url");
+		ver.addUrl(url);
+		ver = (PersServiceVersionSoap11) mySvc.saveServiceVersion(ver);
+		
 		newEntityManager();
 
+		ver = (PersServiceVersionSoap11) mySvc.getServiceVersionByPid(ver.getPid());
+		url = ver.getUrls().get(0);
+		
 		for (int i = 0; i < 10; i++) {
 			PersServiceVersionRecentMessage msg = new PersServiceVersionRecentMessage();
 			msg.setServiceVersion(ver);
 			msg.setResponseType(ResponseTypeEnum.FAULT);
 			msg.setRequestBody("req" + i);
 			msg.setResponseBody("resp" + i);
+			msg.setRequestHostIp("127.0.0.1");
+			msg.setImplementationUrl(url);
 			msg.setTransactionTime(new Date(System.currentTimeMillis() + (1000 * i)));
 			mySvc.saveServiceVersionRecentMessage(msg);
 		}
@@ -172,6 +192,8 @@ public class DaoBeanTest extends BaseJpaTest {
 			msg.setResponseType(ResponseTypeEnum.FAULT);
 			msg.setRequestBody("req" + i);
 			msg.setResponseBody("resp" + i);
+			msg.setRequestHostIp("127.0.0.1");
+			msg.setImplementationUrl(url);
 			msg.setTransactionTime(new Date(System.currentTimeMillis() + (1000 * i)));
 			mySvc.saveServiceVersionRecentMessage(msg);
 		}
@@ -206,7 +228,7 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
-		PersServiceVersionSoap11 ver = mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
+		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
 		PersServiceVersionMethod method = new PersServiceVersionMethod();
 		method.setName("method0");
 		ver.addMethod(method);
@@ -265,28 +287,28 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
-		PersServiceVersionSoap11 ver = mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
-		PersServiceVersionMethod method = new PersServiceVersionMethod();
-		method.setName("method0");
-		ver.addMethod(method);
+		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
+//		PersServiceVersionMethod method = new PersServiceVersionMethod();
+//		method.setName("method0");
+//		ver.addMethod(method);
 
 		mySvc.saveServiceVersion(ver);
 
 		newEntityManager();
 
-		method = mySvc.getServiceVersionByPid(ver.getPid()).getMethods().iterator().next();
+//		method = mySvc.getServiceVersionByPid(ver.getPid()).getMethods().iterator().next();
 
 		PersAuthenticationHostLocalDatabase authHost = mySvc.getOrCreateAuthenticationHostLocalDatabase("AID");
 		PersUser user = mySvc.getOrCreateUser(authHost, "userid");
 
 		newEntityManager();
 
-		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(HOUR, myTimeFormat.parse("01:10"), method, user));
-		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(MINUTE, myTimeFormat.parse("01:10"), method, user));
-		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(HOUR, myTimeFormat.parse("02:10"), method, user));
-		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(MINUTE, myTimeFormat.parse("01:10"), method, user));
-		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(HOUR, myTimeFormat.parse("03:10"), method, user));
-		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(MINUTE, myTimeFormat.parse("01:10"), method, user));
+		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(HOUR, myTimeFormat.parse("01:10"),  user));
+		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(MINUTE, myTimeFormat.parse("01:10"), user));
+		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(HOUR, myTimeFormat.parse("02:10"),  user));
+		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(MINUTE, myTimeFormat.parse("01:10"), user));
+		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(HOUR, myTimeFormat.parse("03:10"),  user));
+		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(MINUTE, myTimeFormat.parse("01:10"), user));
 
 		newEntityManager();
 
@@ -304,46 +326,34 @@ public class DaoBeanTest extends BaseJpaTest {
 		assertEquals(0, stats.size());
 
 	}
-
+	
 	@Test
-	public void testGetInvocationAnonStatsBeforeDate() throws Exception {
+	public void testCreateAndDeleteUser() throws ProcessingException {
+		newEntityManager();
+		
+		PersAuthenticationHostLocalDatabase authHost = mySvc.getOrCreateAuthenticationHostLocalDatabase("modid");
+		
+		newEntityManager();
+		
+		PersUser user = mySvc.getOrCreateUser(authHost, "username");
+		assertNotNull(user);
+		assertNotNull(user.getStatus());
+		
 		newEntityManager();
 
-		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
-		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
-		PersServiceVersionSoap11 ver = mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
-		PersServiceVersionMethod method = new PersServiceVersionMethod();
-		method.setName("method0");
-		ver.addMethod(method);
-
-		mySvc.saveServiceVersion(ver);
+		user = mySvc.getOrCreateUser(authHost, "username");
+		assertNotNull(user);
+		assertNotNull(user.getStatus());
 
 		newEntityManager();
-
-		method = mySvc.getServiceVersionByPid(ver.getPid()).getMethods().iterator().next();
-
-		mySvc.getOrCreateInvocationAnonStats(new PersInvocationAnonStatsPk(HOUR, myTimeFormat.parse("01:10"), method));
-		mySvc.getOrCreateInvocationAnonStats(new PersInvocationAnonStatsPk(MINUTE, myTimeFormat.parse("01:10"), method));
-		mySvc.getOrCreateInvocationAnonStats(new PersInvocationAnonStatsPk(HOUR, myTimeFormat.parse("02:10"), method));
-		mySvc.getOrCreateInvocationAnonStats(new PersInvocationAnonStatsPk(MINUTE, myTimeFormat.parse("01:10"), method));
-		mySvc.getOrCreateInvocationAnonStats(new PersInvocationAnonStatsPk(HOUR, myTimeFormat.parse("03:10"), method));
-		mySvc.getOrCreateInvocationAnonStats(new PersInvocationAnonStatsPk(MINUTE, myTimeFormat.parse("01:10"), method));
-
+		
+		user = mySvc.getOrCreateUser(authHost, "username");
+		mySvc.deleteUser(user);
+		
 		newEntityManager();
-
-		List<PersInvocationAnonStats> stats = mySvc.getInvocationAnonStatsBefore(HOUR, myTimeFormat.parse("03:10"));
-		assertEquals(3, stats.size());
-
-		stats = mySvc.getInvocationAnonStatsBefore(HOUR, myTimeFormat.parse("03:00"));
-		assertEquals(2, stats.size());
-
-		stats = mySvc.getInvocationAnonStatsBefore(HOUR, myTimeFormat.parse("01:30"));
-		assertEquals(1, stats.size());
-
-		stats = mySvc.getInvocationAnonStatsBefore(DAY, myTimeFormat.parse("03:11"));
-		assertEquals(0, stats.size());
-
 	}
+	
+
 
 	@Test
 	public void testHttpClientConfigCreateDefault() {
@@ -368,14 +378,14 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
-		PersServiceVersionSoap11 ver = mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
+		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
 		PersServiceVersionMethod method = ver.getOrCreateAndAddMethodWithName("MethodName");
 
 		mySvc.saveServiceVersion(ver);
 
 		newEntityManager();
 
-		ver = mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
+		ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
 		method = ver.getOrCreateAndAddMethodWithName("MethodName");
 
 		PersServiceVersionStatus status = ver.getStatus();
@@ -432,17 +442,14 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
-		PersServiceVersionSoap11 ver = mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
-		PersServiceVersionMethod method = ver.getOrCreateAndAddMethodWithName("MethodName");
+		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
 		PersUser user = mySvc.getOrCreateUser(mySvc.getAuthenticationHost("ah0"), "Username");
 
 		mySvc.saveServiceVersion(ver);
 
 		newEntityManager();
 
-		ver = mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
-		method = ver.getOrCreateAndAddMethodWithName("MethodName");
-
+		ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
 		PersServiceVersionStatus status = ver.getStatus();
 		assertNotNull(status.getPid());
 
@@ -451,7 +458,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		status = mySvc.getStatusForServiceVersionWithPid(ver.getPid());
 		assertNotNull(status);
 
-		PersInvocationUserStats stats = new PersInvocationUserStats(InvocationStatsIntervalEnum.MINUTE, now, method, user);
+		PersInvocationUserStats stats = new PersInvocationUserStats(InvocationStatsIntervalEnum.MINUTE, now, user);
 		stats.addSuccessInvocation(100, 0, 0);
 		stats.addSuccessInvocation(200, 0, 0);
 
@@ -461,7 +468,7 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		status = mySvc.getStatusForServiceVersionWithPid(ver.getPid());
 		assertNotNull(status);
-		PersInvocationUserStatsPk pk = PersServiceVersionStatus.createEntryPk(InvocationStatsIntervalEnum.MINUTE, now, method, user);
+		PersInvocationUserStatsPk pk = PersServiceVersionStatus.createEntryPk(InvocationStatsIntervalEnum.MINUTE, now, user);
 		BasePersInvocationStats loadedStats = mySvc.getOrCreateInvocationUserStats(pk);
 
 		assertEquals(2, loadedStats.getSuccessInvocationCount());
@@ -469,7 +476,7 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		stats = new PersInvocationUserStats(InvocationStatsIntervalEnum.MINUTE, now, method, user);
+		stats = new PersInvocationUserStats(InvocationStatsIntervalEnum.MINUTE, now, user);
 		stats.addSuccessInvocation(200, 0, 0);
 
 		mySvc.saveInvocationStats(sing(stats));
@@ -478,7 +485,7 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		status = mySvc.getStatusForServiceVersionWithPid(ver.getPid());
 		assertNotNull(status);
-		pk = PersServiceVersionStatus.createEntryPk(InvocationStatsIntervalEnum.MINUTE, now, method, user);
+		pk = PersServiceVersionStatus.createEntryPk(InvocationStatsIntervalEnum.MINUTE, now, user);
 		loadedStats = mySvc.getOrCreateInvocationUserStats(pk);
 
 		assertEquals(3, loadedStats.getSuccessInvocationCount());
@@ -500,7 +507,7 @@ public class DaoBeanTest extends BaseJpaTest {
 	@Override
 	protected void newEntityManager() {
 		super.newEntityManager();
-		((DaoBean) mySvc).setEntityManager(myEntityManager);
+		mySvc.setEntityManager(myEntityManager);
 	}
 
 	@Test
@@ -610,7 +617,7 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
-		PersServiceVersionSoap11 ver = mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
+		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
 
 		ver.addResource("http://foo", "text/plain", "foo contents");
 		ver.addResource("http://bar", "text/plain", "bar contents");
@@ -643,7 +650,7 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
-		PersServiceVersionSoap11 ver = mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
+		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
 
 		PersServiceVersionUrl url0 = new PersServiceVersionUrl();
 		url0.setUrlId("url0");
@@ -709,7 +716,7 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
-		PersServiceVersionSoap11 ver = mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
+		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
 
 		mySvc.saveServiceVersion(ver);
 		newEntityManager();
@@ -736,7 +743,7 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
-		PersServiceVersionSoap11 ver = mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
+		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
 		mySvc.getOrCreateAuthenticationHostLdap("Ldap0");
 
 		PersWsSecUsernameTokenClientAuth ca0 = new PersWsSecUsernameTokenClientAuth();
@@ -798,7 +805,7 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
-		PersServiceVersionSoap11 ver = mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
+		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
 		PersAuthenticationHostLdap ldap = mySvc.getOrCreateAuthenticationHostLdap("Ldap0");
 
 		PersWsSecUsernameTokenServerAuth auth = new PersWsSecUsernameTokenServerAuth();
@@ -824,8 +831,8 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
-		PersServiceVersionSoap11 version0 = mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
-		PersServiceVersionSoap11 version1 = mySvc.getOrCreateServiceVersionWithId(service, "VersionId1", ServiceProtocolEnum.SOAP11);
+		PersServiceVersionSoap11 version0 = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
+		PersServiceVersionSoap11 version1 = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId1", ServiceProtocolEnum.SOAP11);
 
 		assertTrue(version0.getPid() > 0);
 		assertNotNull(version0.getStatus());

@@ -9,7 +9,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
-import org.hibernate.ejb.EntityManagerImpl;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -71,7 +70,7 @@ public abstract class BaseJpaTest {
 			myEntityManager.getTransaction().commit();
 			myEntityManager.close();
 		}
-		myEntityManager = (EntityManagerImpl) ourEntityManagerFactory.createEntityManager();
+		myEntityManager = ourEntityManagerFactory.createEntityManager();
 		myEntityManager.getTransaction().begin();
 	}
 

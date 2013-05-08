@@ -17,17 +17,17 @@ public class PersInvocationUserStatsPk extends BasePersInvocationStatsPk {
 
 	@Transient
 	private volatile int myHashCode;
-	
-	@JoinColumn(name="USER_PID", nullable=false)
-	@ManyToOne(fetch=FetchType.LAZY, cascade= {})
+
+	@JoinColumn(name = "USER_PID", nullable = false)
+	@ManyToOne(fetch = FetchType.LAZY, cascade = {})
 	private PersUser myUser;
-	
+
 	public PersInvocationUserStatsPk() {
 		super();
 	}
 
-	public PersInvocationUserStatsPk(InvocationStatsIntervalEnum theInterval, Date theStartTime, PersServiceVersionMethod theMethod, PersUser theUser) {
-		super(theInterval,theStartTime,theMethod);
+	public PersInvocationUserStatsPk(InvocationStatsIntervalEnum theInterval, Date theStartTime, PersUser theUser) {
+		super(theInterval, theStartTime);
 		myUser = theUser;
 	}
 
@@ -39,22 +39,20 @@ public class PersInvocationUserStatsPk extends BasePersInvocationStatsPk {
 		if (!(theObj instanceof PersInvocationUserStatsPk)) {
 			return false;
 		}
-		
-		PersInvocationUserStatsPk pk = (PersInvocationUserStatsPk)theObj;
-		return super.equals(pk) ///-
-				&& myUser.equals(pk.getUser()); //-
+
+		PersInvocationUserStatsPk pk = (PersInvocationUserStatsPk) theObj;
+		return super.equals(pk) // /-
+				&& myUser.equals(pk.getUser()); // -
 	}
 
 	@Override
-	protected boolean doEquals(BasePersMethodStatsPk theObj) {
+	protected boolean doEquals(BasePersInvocationStatsPk theObj) {
 		PersInvocationUserStatsPk obj = (PersInvocationUserStatsPk) theObj;
 		return getInterval().equals(obj.getInterval()) // -
-				&& getMethod().equals(obj.getMethod()) // -
 				&& getStartTime().equals(obj.getStartTime()) // -
 				&& getUser().equals(obj.getUser()); // -
 	}
 
-	
 	/**
 	 * @return the user
 	 */
@@ -74,7 +72,8 @@ public class PersInvocationUserStatsPk extends BasePersInvocationStatsPk {
 	}
 
 	/**
-	 * @param theUser the user to set
+	 * @param theUser
+	 *            the user to set
 	 */
 	public void setUser(PersUser theUser) {
 		myUser = theUser;
@@ -85,9 +84,15 @@ public class PersInvocationUserStatsPk extends BasePersInvocationStatsPk {
 	 */
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this).add("Interval", getInterval().name()).add("StartTime", getStartTime()).add("Method", getMethod().getPid()).add("User", getUser().getPid()).toString();
+		//@formatter:off
+		return Objects.toStringHelper(this)
+				.add("Interval", getInterval().name())
+				.add("StartTime", getStartTime())
+				.add("User", getUser().getPid())
+				.toString();
+		//@formatter:on
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -96,6 +101,4 @@ public class PersInvocationUserStatsPk extends BasePersInvocationStatsPk {
 		return new PersInvocationUserStats(this);
 	}
 
-	
-	
 }

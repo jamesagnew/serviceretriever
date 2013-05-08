@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -58,7 +59,7 @@ public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransact
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("CAUTH_ORDER")
 	private List<PersBaseClientAuth<?>> myClientAuths;
-
+	
 	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
 	@ForeignKey(name = "PX_SVCVER_HTTP_CONFIG_PID")
 	@JoinColumn(name = "HTTP_CONFIG_PID", referencedColumnName = "PID", nullable = false)
@@ -101,6 +102,9 @@ public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransact
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "myServiceVersion", orphanRemoval = true)
 	@MapKey(name = "myResourceUrl")
 	private Map<String, PersServiceVersionResource> myUriToResource;
+
+	@Transient
+	private transient AtomicInteger myUrlCounter = new AtomicInteger();
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("URL_ORDER")
@@ -348,6 +352,13 @@ public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransact
 			myUriToResource = new HashMap<String, PersServiceVersionResource>();
 		}
 		return myUriToResource;
+	}
+
+	/**
+	 * @return the urlCounter
+	 */
+	public AtomicInteger getUrlCounter() {
+		return myUrlCounter;
 	}
 
 	/**

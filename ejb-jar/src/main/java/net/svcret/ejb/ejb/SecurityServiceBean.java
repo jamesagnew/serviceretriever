@@ -182,7 +182,7 @@ public class SecurityServiceBean implements ISecurityService {
 			pidToAuthHost.put(nextHost.getPid(), nextHost);
 		}
 
-		Collection<PersUser> allUsers = myDao.getAllServiceUsers();
+		Collection<PersUser> allUsers = myDao.getAllUsers();
 		for (PersUser nextUser : allUsers) {
 			nextUser.loadAllAssociations();
 

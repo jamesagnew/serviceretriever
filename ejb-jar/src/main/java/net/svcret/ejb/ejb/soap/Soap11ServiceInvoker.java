@@ -48,6 +48,7 @@ import net.svcret.ejb.util.Validate;
 import net.svcret.ejb.util.XMLUtils;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.ClientProtocolException;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -385,15 +386,15 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 		// text and we want to ignore it
 
 		ourLog.info("Loading WSDL URL: {}", theUrl);
-		HttpResponseBean wsdlHttpResponse = myHttpClient.get(theUrl);
-
-		if (wsdlHttpResponse.getSuccessfulUrl() == null) {
-			throw new ProcessingException(Messages.getString("Soap11ServiceInvoker.retrieveWsdlFail", theUrl, wsdlHttpResponse.getFailedUrls().get(theUrl).getExplanation()));
+		HttpResponseBean wsdlHttpResponse;
+		try {
+			wsdlHttpResponse = myHttpClient.get(theUrl);
+		} catch (ClientProtocolException e1) {
+			throw new ProcessingException(Messages.getString("Soap11ServiceInvoker.retrieveWsdlFail", theUrl, e1.getMessage()));
+		} catch (IOException e1) {
+			throw new ProcessingException(Messages.getString("Soap11ServiceInvoker.retrieveWsdlFail", theUrl, e1.getMessage()));
 		}
 
-		if (200 != wsdlHttpResponse.getCode()) {
-			throw new ProcessingException(Messages.getString("Soap11ServiceInvoker.retrieveWsdlFailNon200", theUrl, wsdlHttpResponse.getCode()));
-		}
 
 		ourLog.info("Loaded WSDL ({} bytes) in {}ms, going to parse", wsdlHttpResponse.getBody().length(), wsdlHttpResponse.getResponseTime());
 
@@ -439,14 +440,13 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 					}
 					ourLog.info("Retrieving Import - Parent: {} - Location: {} - Normalized: {}", new Object[] { theUrl, importLocation, norm });
 
-					HttpResponseBean schemaHttpResponse = myHttpClient.get(norm);
-
-					if (schemaHttpResponse.getSuccessfulUrl() == null) {
-						throw new ProcessingException(Messages.getString("Soap11ServiceInvoker.retrieveSchemaFail", theUrl, wsdlHttpResponse.getFailedUrls().get(theUrl).getExplanation()));
-					}
-
-					if (200 != schemaHttpResponse.getCode()) {
-						throw new ProcessingException(Messages.getString("Soap11ServiceInvoker.retrieveSchemaFailNon200", theUrl, wsdlHttpResponse.getCode()));
+					HttpResponseBean schemaHttpResponse;
+					try {
+						schemaHttpResponse = myHttpClient.get(norm);
+					} catch (ClientProtocolException e1) {
+						throw new ProcessingException(Messages.getString("Soap11ServiceInvoker.retrieveWsdlFail", theUrl, e1.getMessage()));
+					} catch (IOException e1) {
+						throw new ProcessingException(Messages.getString("Soap11ServiceInvoker.retrieveWsdlFail", theUrl, e1.getMessage()));
 					}
 
 					contentType = schemaHttpResponse.getContentType();

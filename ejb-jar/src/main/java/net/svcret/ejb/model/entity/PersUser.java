@@ -20,6 +20,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -36,9 +37,7 @@ import com.google.common.base.Objects;
 public class PersUser extends BasePersObject {
 
 	public static final String DEFAULT_ADMIN_PASSWORD = "admin";
-
 	public static final String DEFAULT_ADMIN_USERNAME = "admin";
-
 	private static final long serialVersionUID = 1L;
 
 	@Column(name = "ALLOW_ALL_DOMAINS")
@@ -50,6 +49,10 @@ public class PersUser extends BasePersObject {
 	@ManyToOne(cascade = {})
 	@JoinColumn(name = "AUTH_HOST_PID", referencedColumnName = "PID", nullable = false)
 	private BasePersAuthenticationHost myAuthenticationHost;
+
+	@ManyToOne(cascade = {})
+	@JoinColumn(name = "CONTACT_PID", referencedColumnName = "PID", nullable = true)
+	private PersContact myContact;
 
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true, mappedBy = "myUser")
 	private Collection<PersUserDomainPermission> myDomainPermissions;
@@ -67,8 +70,18 @@ public class PersUser extends BasePersObject {
 	@Column(name = "PID")
 	private Long myPid;
 
+	@OneToOne(cascade = { CascadeType.PERSIST }, orphanRemoval = true, mappedBy = "myUser")
+	private PersUserStatus myStatus;
+
 	@Column(unique = true, name = "USERNAME", nullable = false, length = 200)
 	private String myUsername;
+
+	public PersUser() {
+	}
+
+	public PersUser(long thePid) {
+		myPid = thePid;
+	}
 
 	public PersUserDomainPermission addPermission(PersDomain theServiceDomain) {
 		Validate.notNull(theServiceDomain, "PersDomain");
@@ -141,6 +154,13 @@ public class PersUser extends BasePersObject {
 	}
 
 	/**
+	 * @return the status
+	 */
+	public PersUserStatus getStatus() {
+		return myStatus;
+	}
+
+	/**
 	 * @return the username
 	 */
 	public String getUsername() {
@@ -185,6 +205,7 @@ public class PersUser extends BasePersObject {
 		}
 
 		myAllowedMethods = allowedMethods;
+		myStatus.toString();
 	}
 
 	/**
@@ -245,6 +266,10 @@ public class PersUser extends BasePersObject {
 	 */
 	public void setPid(Long thePid) {
 		myPid = thePid;
+	}
+
+	public void setStatus(PersUserStatus theStatus) {
+		myStatus = theStatus;
 	}
 
 	/**

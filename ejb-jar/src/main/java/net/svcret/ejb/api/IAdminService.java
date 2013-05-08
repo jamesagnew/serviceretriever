@@ -13,6 +13,8 @@ import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GPartialUserList;
+import net.svcret.admin.shared.model.GRecentMessage;
+import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
@@ -63,9 +65,7 @@ public interface IAdminService {
 
 	GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(GSoap11ServiceVersion theService, String theWsdlUrl) throws ProcessingException;
 
-	GUser loadUser(long thePid) throws ProcessingException;
-
-	GPartialUserList loadUsers(PartialUserListRequest theRequest);
+	GPartialUserList loadUsers(PartialUserListRequest theRequest) throws ProcessingException;
 
 	GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) throws ProcessingException;
 
@@ -82,5 +82,15 @@ public interface IAdminService {
 	GUser saveUser(GUser theUser) throws ProcessingException;
 
 	String suggestNewVersionNumber(Long theDomainPid, Long theServicePid);
+
+	GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid);
+
+	GRecentMessage loadRecentMessageForServiceVersion(long thePid);
+
+	GRecentMessageLists loadRecentTransactionListForUser(long thePid);
+
+	GRecentMessage loadRecentMessageForUser(long thePid);
+
+	GUser loadUser(long thePid, boolean theLoadStats) throws ProcessingException;
 
 }

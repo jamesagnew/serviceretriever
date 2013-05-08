@@ -9,8 +9,12 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
+import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.TemporalType;
+import javax.persistence.Temporal;
 
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.ResponseTypeEnum;
@@ -19,32 +23,65 @@ import net.svcret.ejb.api.ResponseTypeEnum;
 public class BasePersRecentMessage implements Serializable {
 
 	private static final long serialVersionUID = 1L;
+
+	@ManyToOne
+	@JoinColumn(name = "URL_PID", referencedColumnName = "PID", nullable = false)
+	private PersServiceVersionUrl myImplementationUrl;
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	@Column(name = "PID")
 	private Long myPid;
-	
+
 	@Column(name = "REQ_BODY")
 	@Lob()
 	@Basic(fetch = FetchType.LAZY)
 	private String myRequestBody;
-	
+
+	@Column(name = "REQ_HOST_IP", nullable = false, length = 200)
+	private String myRequestHostIp;
+
 	@Column(name = "RESP_BODY")
 	@Lob()
 	@Basic(fetch = FetchType.LAZY)
 	private String myResponseBody;
-	
+
 	@Column(name = "RESPONSE_TYPE", nullable = false)
 	private ResponseTypeEnum myResponseType;
-	
+
+	@Column(name = "XACT_MILLIS", nullable = false)
+	private long myTransactionMillis;
+
 	@Column(name = "XACT_TIME", nullable = false)
+	@Temporal(TemporalType.TIMESTAMP)
 	private Date myTransactionTime;
+
+	/**
+	 * @return the implementationUrl
+	 */
+	public PersServiceVersionUrl getImplementationUrl() {
+		return myImplementationUrl;
+	}
+
+	/**
+	 * @return the pid
+	 */
+	public Long getPid() {
+		return myPid;
+	}
 
 	/**
 	 * @return the requestBody
 	 */
 	public String getRequestBody() {
 		return myRequestBody;
+	}
+
+	/**
+	 * @return the requestHostIp
+	 */
+	public String getRequestHostIp() {
+		return myRequestHostIp;
 	}
 
 	/**
@@ -62,10 +99,34 @@ public class BasePersRecentMessage implements Serializable {
 	}
 
 	/**
+	 * @return the transactionMillis
+	 */
+	public long getTransactionMillis() {
+		return myTransactionMillis;
+	}
+
+	/**
 	 * @return the transactionTime
 	 */
 	public Date getTransactionTime() {
 		return myTransactionTime;
+	}
+
+	public void populate(Date theTransactionTime, String theRequestHostIp, PersServiceVersionUrl theImplementationUrl, String theRequestBody, InvocationResponseResultsBean theInvocationResult) {
+		myRequestBody = theRequestBody;
+		myImplementationUrl = theImplementationUrl;
+		myRequestHostIp = theRequestHostIp;
+		myResponseBody = theInvocationResult.getResponseBody();
+		myResponseType = theInvocationResult.getResponseType();
+		myTransactionTime = theTransactionTime;
+	}
+
+	/**
+	 * @param theImplementationUrl
+	 *            the implementationUrl to set
+	 */
+	public void setImplementationUrl(PersServiceVersionUrl theImplementationUrl) {
+		myImplementationUrl = theImplementationUrl;
 	}
 
 	/**
@@ -74,6 +135,14 @@ public class BasePersRecentMessage implements Serializable {
 	 */
 	public void setRequestBody(String theRequestBody) {
 		myRequestBody = theRequestBody;
+	}
+
+	/**
+	 * @param theRequestHostIp
+	 *            the requestHostIp to set
+	 */
+	public void setRequestHostIp(String theRequestHostIp) {
+		myRequestHostIp = theRequestHostIp;
 	}
 
 	/**
@@ -93,18 +162,17 @@ public class BasePersRecentMessage implements Serializable {
 	}
 
 	/**
+	 * @param theTransactionMillis the transactionMillis to set
+	 */
+	public void setTransactionMillis(long theTransactionMillis) {
+		myTransactionMillis = theTransactionMillis;
+	}
+
+	/**
 	 * @param theTransactionTime
 	 *            the transactionTime to set
 	 */
 	public void setTransactionTime(Date theTransactionTime) {
-		myTransactionTime = theTransactionTime;
-	}
-
-	
-	public void populate(Date theTransactionTime, String theRequestBody, InvocationResponseResultsBean theInvocationResult) {
-		myRequestBody = theRequestBody;
-		myResponseBody = theInvocationResult.getResponseBody();
-		myResponseType = theInvocationResult.getResponseType();
 		myTransactionTime = theTransactionTime;
 	}
 

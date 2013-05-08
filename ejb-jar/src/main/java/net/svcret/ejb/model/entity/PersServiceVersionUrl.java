@@ -27,14 +27,15 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.Objects;
 
-@Table(name = "PX_SVC_VER_URL", uniqueConstraints = { 
-		@UniqueConstraint(name = "PX_URL_CONS_URL", columnNames = { "SVC_VERSION_PID", "URL" }), // -
-		@UniqueConstraint(name = "PX_URL_CONS_URLID", columnNames = { "SVC_VERSION_PID", "URL_ID" }), //-
-		//@UniqueConstraint(name = "PX_URL_CONS_ORDER", columnNames = { "SVC_VERSION_PID", "URL_ORDER" }), // -
+@Table(name = "PX_SVC_VER_URL", uniqueConstraints = { @UniqueConstraint(name = "PX_URL_CONS_URL", columnNames = { "SVC_VERSION_PID", "URL" }), // -
+		@UniqueConstraint(name = "PX_URL_CONS_URLID", columnNames = { "SVC_VERSION_PID", "URL_ID" }), // -
+		// @UniqueConstraint(name = "PX_URL_CONS_ORDER", columnNames = {
+		// "SVC_VERSION_PID", "URL_ORDER" }), // -
 })
 @Entity
 public class PersServiceVersionUrl extends BasePersObject implements Comparable<PersServiceVersionUrl> {
 
+	public static final int MAX_URL_LENGTH = 300;
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(PersServiceVersionUrl.class);
 	private static final long serialVersionUID = 1L;
 
@@ -57,7 +58,7 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 	@OneToOne(cascade = {}, fetch = FetchType.LAZY, mappedBy = "myUrl", orphanRemoval = true)
 	private PersServiceVersionUrlStatus myStatus;
 
-	@Column(name = "URL", length = 200, nullable = false)
+	@Column(name = "URL", length = MAX_URL_LENGTH, nullable = false)
 	private String myUrl;
 
 	@Column(name = "URL_ID", length = 100, nullable = false)
@@ -72,6 +73,15 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 
 	@Transient
 	private transient boolean myUrlIsValid;
+
+	public PersServiceVersionUrl() {
+		super();
+	}
+
+	public PersServiceVersionUrl(long thePid, String theUrl) {
+		myPid = thePid;
+		myUrl = theUrl;
+	}
 
 	@Override
 	public int compareTo(PersServiceVersionUrl theUrl) {
@@ -207,10 +217,11 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 
 		if (myServiceVersion != null && !myServiceVersion.equals(theServiceVersion)) {
 			throw new IllegalStateException("Can't reassign URL to another version");
-		} 
-//		else if (myServiceVersion == null || !myServiceVersion.getUrls().contains(this)) {
-//			theServiceVersion.addUrl(this);
-//		}
+		}
+		// else if (myServiceVersion == null ||
+		// !myServiceVersion.getUrls().contains(this)) {
+		// theServiceVersion.addUrl(this);
+		// }
 
 		myServiceVersion = theServiceVersion;
 	}

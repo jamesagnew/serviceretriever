@@ -20,6 +20,8 @@ import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
 import net.svcret.admin.shared.model.GPartialUserList;
+import net.svcret.admin.shared.model.GRecentMessage;
+import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceList;
 import net.svcret.admin.shared.model.GServiceMethod;
@@ -129,6 +131,11 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		user.setUsername("admin");
 		user.setAuthHostPid(hostList.getPid());
 		user.addGlobalPermission(UserGlobalPermissionEnum.SUPERUSER);
+		user.setStatsLastAccess(new Date());
+		user.setStatsSecurityFailTransactions(random60mins());
+		user.setStatsSuccessTransactions(random60mins());
+		user.setStatsSecurityFailTransactionsAvgPerMin(2.0);
+		user.setStatsSuccessTransactionsAvgPerMin(0.01);
 		myUserList.add(user);
 
 		user = new GUser();
@@ -140,6 +147,10 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		user.addDomainPermission(perm);
 		user.setAuthHostPid(hostList.getPid());
 		user.addGlobalPermission(UserGlobalPermissionEnum.SUPERUSER);
+		user.setStatsSecurityFailTransactions(random60mins());
+		user.setStatsSuccessTransactions(random60mins());
+		user.setStatsSecurityFailTransactionsAvgPerMin(2.0);
+		user.setStatsSuccessTransactionsAvgPerMin(0.01);
 		myUserList.add(user);
 
 	}
@@ -418,7 +429,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	}
 
 	@Override
-	public UserAndAuthHost loadUser(long thePid) {
+	public UserAndAuthHost loadUser(long thePid, boolean theLoadStats) {
 		GUser user = myUserList.getUserByPid(thePid);
 		BaseGAuthHost authHost = myAuthHostList.getAuthHostByPid(user.getAuthHostPid());
 
@@ -472,13 +483,13 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 
 	@Override
 	public void saveConfig(GConfig theConfig) {
-		myConfig=theConfig;
+		myConfig = theConfig;
 	}
 
 	@Override
 	public List<GUrlStatus> loadServiceVersionUrlStatuses(long theServiceVersionPid) {
 		ArrayList<GUrlStatus> retVal = new ArrayList<GUrlStatus>();
-		
+
 		GUrlStatus url = new GUrlStatus();
 		url.setUrl("http://foo");
 		url.setUrlPid(1);
@@ -500,6 +511,70 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		retVal.add(url);
 
 		return retVal;
+	}
+
+	@Override
+	public GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid) {
+		GRecentMessageLists retVal = new GRecentMessageLists();
+
+		ArrayList<GRecentMessage> list = new ArrayList<GRecentMessage>();
+		list.add(createMessage(false));
+		list.add(createMessage(false));
+		list.add(createMessage(false));
+		list.add(createMessage(false));
+		retVal.setSuccessList(list);
+		retVal.setKeepSuccess(10);
+		
+		list = new ArrayList<GRecentMessage>();
+		list.add(createMessage(false));
+		list.add(createMessage(false));
+		list.add(createMessage(false));
+		list.add(createMessage(false));
+		retVal.setFailList(list);
+		retVal.setKeepFail(10);
+
+		list = new ArrayList<GRecentMessage>();
+		list.add(createMessage(false));
+		list.add(createMessage(false));
+		list.add(createMessage(false));
+		list.add(createMessage(false));
+		retVal.setSecurityFailList(list);
+		retVal.setKeepSecurityFail(10);
+
+		list = new ArrayList<GRecentMessage>();
+		list.add(createMessage(false));
+		list.add(createMessage(false));
+		list.add(createMessage(false));
+		list.add(createMessage(false));
+		retVal.setFaultList(list);
+		retVal.setKeepFault(10);
+
+		return retVal;
+	}
+
+	private GRecentMessage createMessage(boolean theIncludeContents) {
+		String responseMessage = "Response Message Contents";
+		String requestMessage = "Request Message Contents";
+		if (!theIncludeContents) {
+			responseMessage = null;
+			requestMessage = null;
+		}
+		return new GRecentMessage(ourNextPid++, new Date(), "http://foo", "127.0.0.1", requestMessage, responseMessage);
+	}
+
+	@Override
+	public GRecentMessage loadRecentMessageForServiceVersion(long thePid) {
+		return createMessage(true);
+	}
+
+	@Override
+	public GRecentMessageLists loadRecentTransactionListForuser(long thePid) {
+		return loadRecentTransactionListForServiceVersion(thePid);
+	}
+
+	@Override
+	public GRecentMessage loadRecentMessageForUser(long thePid) {
+		return loadRecentMessageForServiceVersion(thePid);
 	}
 
 }

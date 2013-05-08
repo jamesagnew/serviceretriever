@@ -2,6 +2,7 @@ package net.svcret.admin.client.ui.components;
 
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
 public class TwoColumnGrid extends FlexTable {
@@ -34,5 +35,11 @@ public class TwoColumnGrid extends FlexTable {
 		HTML widget = new HTML(theDescription);
 		widget.addStyleName(CssConstants.TWO_COLUMN_PROPERTY_GRID_DESC);
 		setWidget(row, 1, widget);
+	}
+
+	public void addDescription(Label theLabel) {
+		int row = getRowCount();
+		theLabel.addStyleName(CssConstants.TWO_COLUMN_PROPERTY_GRID_DESC);
+		setWidget(row, 1, theLabel);
 	}
 }

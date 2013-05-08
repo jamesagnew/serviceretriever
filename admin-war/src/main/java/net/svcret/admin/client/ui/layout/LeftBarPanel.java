@@ -139,12 +139,12 @@ public class LeftBarPanel extends FlowPanel {
 			buttons.remove(mySvcCatalogBtn);
 			break;
 		case DDO:
-			break;
 		case DSE:
-			break;
 		case ESE:
-			break;
 		case ESV:
+		case SVS:
+		case RSV:
+		case RUS:
 			break;
 		}
 		

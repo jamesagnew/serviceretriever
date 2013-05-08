@@ -30,6 +30,8 @@ import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GLdapAuthHost;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
 import net.svcret.admin.shared.model.GPartialUserList;
+import net.svcret.admin.shared.model.GRecentMessage;
+import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
@@ -58,9 +60,11 @@ import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.ISecurityService;
 import net.svcret.ejb.api.IServiceInvoker;
 import net.svcret.ejb.api.IServiceRegistry;
+import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
+import net.svcret.ejb.model.entity.BasePersRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
@@ -72,6 +76,7 @@ import net.svcret.ejb.model.entity.PersConfigProxyUrlBase;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
+import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
@@ -83,6 +88,7 @@ import net.svcret.ejb.model.entity.PersUserDomainPermission;
 import net.svcret.ejb.model.entity.PersUserServicePermission;
 import net.svcret.ejb.model.entity.PersUserServiceVersionMethodPermission;
 import net.svcret.ejb.model.entity.PersUserServiceVersionPermission;
+import net.svcret.ejb.model.entity.PersUserStatus;
 import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
@@ -303,7 +309,7 @@ public class AdminServiceBean implements IAdminService {
 		}
 
 		if (theRequest.isLoadUsers()) {
-			GUserList userList = loadUserList();
+			GUserList userList = loadUserList(false);
 			retVal.setUserList(userList);
 		}
 
@@ -344,7 +350,7 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	@Override
-	public GUser loadUser(long thePid) throws ProcessingException {
+	public GUser loadUser(long thePid, boolean theLoadStats) throws ProcessingException {
 		ourLog.info("Loading user {}", thePid);
 
 		PersUser persUser = myPersSvc.getUser(thePid);
@@ -352,17 +358,17 @@ public class AdminServiceBean implements IAdminService {
 			throw new ProcessingException("Unknown user PID: " + thePid);
 		}
 
-		return toUi(persUser);
+		return toUi(persUser, theLoadStats);
 	}
 
 	@Override
-	public GPartialUserList loadUsers(PartialUserListRequest theRequest) {
+	public GPartialUserList loadUsers(PartialUserListRequest theRequest) throws ProcessingException {
 		GPartialUserList retVal = new GPartialUserList();
 
 		ourLog.info("Loading user list: " + theRequest.toString());
 
-		for (PersUser next : myPersSvc.getAllServiceUsers()) {
-			retVal.add(toUi(next));
+		for (PersUser next : myPersSvc.getAllUsers()) {
+			retVal.add(toUi(next, theRequest.isLoadStats()));
 		}
 
 		return retVal;
@@ -389,19 +395,20 @@ public class AdminServiceBean implements IAdminService {
 	@Override
 	public GConfig saveConfig(GConfig theConfig) throws ProcessingException {
 		ourLog.info("Saving config");
-		
+
 		PersConfig existing = myConfigSvc.getConfig();
 		existing.merge(fromUi(theConfig));
-		
+
 		PersConfig newCfg = myConfigSvc.saveConfig(existing);
-		
+
 		return toUi(newCfg);
-		
-//
-//		PersConfig existing = myPersSvc.getConfigByPid(PersConfig.DEFAULT_ID);
-//		existing.merge(fromUi(theConfig));
-//		PersConfig retVal = myPersSvc.saveConfig(existing);
-//		return toUi(retVal);
+
+		//
+		// PersConfig existing =
+		// myPersSvc.getConfigByPid(PersConfig.DEFAULT_ID);
+		// existing.merge(fromUi(theConfig));
+		// PersConfig retVal = myPersSvc.saveConfig(existing);
+		// return toUi(retVal);
 	}
 
 	@Override
@@ -609,7 +616,7 @@ public class AdminServiceBean implements IAdminService {
 			}
 		}
 
-		version = (PersServiceVersionSoap11) myServiceRegistry.saveServiceVersion(version);
+		version = myServiceRegistry.saveServiceVersion(version);
 
 		@SuppressWarnings("unchecked")
 		T retVal = (T) toUi(version, false);
@@ -621,17 +628,17 @@ public class AdminServiceBean implements IAdminService {
 		Validate.notNull(theVersion);
 		Validate.notNull(theService);
 		Validate.notBlank(theVersionId);
-		
+
 		BasePersServiceVersion retVal = myServiceRegistry.getOrCreateServiceVersionWithId(theService, theVersion.getProtocol(), theVersionId);
 		switch (theVersion.getProtocol()) {
 		case SOAP11:
-			fromUi((PersServiceVersionSoap11)retVal, (GSoap11ServiceVersion) theVersion);
+			fromUi((PersServiceVersionSoap11) retVal, (GSoap11ServiceVersion) theVersion);
 			break;
 		case JSONRPC20:
-			fromUi((PersServiceVersionJsonRpc20)retVal, (GServiceVersionJsonRpc20)theVersion);
+			fromUi((PersServiceVersionJsonRpc20) retVal, (GServiceVersionJsonRpc20) theVersion);
 			break;
 		}
-		
+
 		retVal.setActive(theVersion.isActive());
 		retVal.setVersionId(theVersion.getId());
 
@@ -659,7 +666,7 @@ public class AdminServiceBean implements IAdminService {
 
 		user = mySecurityService.saveServiceUser(user);
 
-		return toUi(user);
+		return toUi(user, false);
 	}
 
 	/**
@@ -773,25 +780,58 @@ public class AdminServiceBean implements IAdminService {
 
 		for (int min = 0; date.before(new Date()); min++) {
 
-			InvocationStatsIntervalEnum interval;
-			if (date.before(theConfig.getCollapseStatsToDaysCutoff())) {
-				interval = InvocationStatsIntervalEnum.DAY;
-			} else if (date.before(theConfig.getCollapseStatsToHoursCutoff())) {
-				interval = InvocationStatsIntervalEnum.HOUR;
-			} else if (date.before(theConfig.getCollapseStatsToTenMinutesCutoff())) {
-				interval = InvocationStatsIntervalEnum.TEN_MINUTE;
-			} else {
-				interval = InvocationStatsIntervalEnum.MINUTE;
-			}
-			date = interval.truncate(date);
+			InvocationStatsIntervalEnum interval = doWithStatsSupportFindInterval(theConfig, date);
+			date = doWithStatsSupportFindDate(date, interval);
 
 			PersInvocationStatsPk pk = new PersInvocationStatsPk(interval, date, theMethod);
 			BasePersInvocationStats stats = statusSvc.getOrCreateInvocationStatsSynchronously(pk);
 			theOperator.withStats(min, stats);
 
-			date = new Date(date.getTime() + interval.millis());
+			date = doWithStatsSupportIncrement(date, interval);
 
 		}
+	}
+
+	private static Date doWithStatsSupportIncrement(Date date, InvocationStatsIntervalEnum interval) {
+		Date retVal = new Date(date.getTime() + interval.millis());
+		return retVal;
+	}
+
+	private static Date doWithStatsSupportFindDate(Date date, InvocationStatsIntervalEnum interval) {
+		Date retVal = interval.truncate(date);
+		return retVal;
+	}
+
+	public static void doWithUserStatsByMinute(PersConfig theConfig, PersUser theUser, int theNumberOfMinutes, IRuntimeStatus statusSvc, IWithStats theOperator) {
+		Date xMinsAgo = getDateXMinsAgo(theNumberOfMinutes);
+		Date date = xMinsAgo;
+
+		for (int min = 0; date.before(new Date()); min++) {
+
+			InvocationStatsIntervalEnum interval = doWithStatsSupportFindInterval(theConfig, date);
+			date = doWithStatsSupportFindDate(date, interval);
+
+			PersInvocationUserStatsPk pk = new PersInvocationUserStatsPk(interval, date, theUser);
+			BasePersInvocationStats stats = statusSvc.getOrCreateUserInvocationStatsSynchronously(pk);
+			theOperator.withStats(min, stats);
+
+			date = doWithStatsSupportIncrement(date, interval);
+
+		}
+	}
+
+	private static InvocationStatsIntervalEnum doWithStatsSupportFindInterval(PersConfig theConfig, Date date) {
+		InvocationStatsIntervalEnum interval;
+		if (date.before(theConfig.getCollapseStatsToDaysCutoff())) {
+			interval = InvocationStatsIntervalEnum.DAY;
+		} else if (date.before(theConfig.getCollapseStatsToHoursCutoff())) {
+			interval = InvocationStatsIntervalEnum.HOUR;
+		} else if (date.before(theConfig.getCollapseStatsToTenMinutesCutoff())) {
+			interval = InvocationStatsIntervalEnum.TEN_MINUTE;
+		} else {
+			interval = InvocationStatsIntervalEnum.MINUTE;
+		}
+		return interval;
 	}
 
 	public interface IWithStats {
@@ -1011,7 +1051,6 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-
 	private PersServiceVersionSoap11 fromUi(PersServiceVersionSoap11 thePersVersion, GSoap11ServiceVersion theVersion) throws ProcessingException {
 		thePersVersion.setWsdlUrl(theVersion.getWsdlLocation());
 		return thePersVersion;
@@ -1105,11 +1144,11 @@ public class AdminServiceBean implements IAdminService {
 		return configList;
 	}
 
-	private GUserList loadUserList() {
+	private GUserList loadUserList(boolean theLoadStats) throws ProcessingException {
 		GUserList retVal = new GUserList();
-		Collection<PersUser> users = myPersSvc.getAllServiceUsers();
+		Collection<PersUser> users = myPersSvc.getAllUsers();
 		for (PersUser persUser : users) {
-			retVal.add(toUi(persUser));
+			retVal.add(toUi(persUser, theLoadStats));
 		}
 		return retVal;
 	}
@@ -1134,7 +1173,7 @@ public class AdminServiceBean implements IAdminService {
 	private GSoap11ServiceVersionAndResources toUi(BaseGServiceVersion theUiService, BasePersServiceVersion theSvcVer) throws ProcessingException {
 		GSoap11ServiceVersionAndResources retVal = new GSoap11ServiceVersionAndResources();
 
-		retVal.setServiceVersion((GSoap11ServiceVersion) theUiService);
+		retVal.setServiceVersion(theUiService);
 		theSvcVer.populateKeepRecentTransactionsToDto(retVal.getServiceVersion());
 
 		theUiService.getMethodList().clear();
@@ -1183,11 +1222,11 @@ public class AdminServiceBean implements IAdminService {
 			retVal = new GLdapAuthHost();
 			break;
 		}
-		
-		if (retVal==null) {
+
+		if (retVal == null) {
 			throw new IllegalStateException("Unknown auth host type: " + thePersObj.getType());
 		}
-		
+
 		retVal.setPid(thePersObj.getPid());
 		retVal.setAutoCreateAuthorizedUsers(thePersObj.isAutoCreateAuthorizedUsers());
 		retVal.setCacheSuccessesForMillis(thePersObj.getCacheSuccessfulCredentialsForMillis());
@@ -1527,7 +1566,7 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private GUser toUi(PersUser thePersUser) {
+	private GUser toUi(PersUser thePersUser, boolean theLoadStats) throws ProcessingException {
 		GUser retVal = new GUser();
 		retVal.setPid(thePersUser.getPid());
 		retVal.setAllowAllDomains(thePersUser.isAllowAllDomains());
@@ -1535,7 +1574,40 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setUsername(thePersUser.getUsername());
 		retVal.setDomainPermissions(toUi(thePersUser.getDomainPermissions()));
 		retVal.setAuthHostPid(thePersUser.getAuthenticationHost().getPid());
+
+		if (theLoadStats) {
+			PersUserStatus status = thePersUser.getStatus();
+			retVal.setStatsLoaded(true);
+			retVal.setStatsLastAccess(status.getLastAccess());
+
+			final ArrayList<Integer> t60minSuccessCount = new ArrayList<Integer>();
+			final ArrayList<Integer> t60minSecurityFailCount = new ArrayList<Integer>();
+			IWithStats withStats = new IWithStats() {
+				@Override
+				public void withStats(int theIndex, BasePersInvocationStats theStats) {
+					growToSizeInt(t60minSuccessCount, theIndex);
+					growToSizeInt(t60minSecurityFailCount, theIndex);
+					t60minSecurityFailCount.set(theIndex, addToInt(t60minSecurityFailCount.get(theIndex), theStats.getServerSecurityFailures()));
+					t60minSuccessCount.set(theIndex, addToInt(t60minSuccessCount.get(theIndex), theStats.getSuccessInvocationCount()));
+				}
+			};
+			doWithUserStatsByMinute(myConfigSvc.getConfig(), thePersUser, 60, myStatusSvc, withStats);
+			retVal.setStatsSuccessTransactions(toArray(t60minSuccessCount));
+			retVal.setStatsSuccessTransactionsAvgPerMin(to60MinAveragePerMin(t60minSuccessCount));
+			retVal.setStatsSecurityFailTransactions(toArray(t60minSecurityFailCount));
+			retVal.setStatsSecurityFailTransactionsAvgPerMin(to60MinAveragePerMin(t60minSecurityFailCount));
+
+		}
+
 		return retVal;
+	}
+
+	private static double to60MinAveragePerMin(ArrayList<Integer> theT60minSecurityFailCount) {
+		double total = 0;
+		for (Integer integer : theT60minSecurityFailCount) {
+			total += integer;
+		}
+		return total / theT60minSecurityFailCount.size();
 	}
 
 	private GUserDomainPermission toUi(PersUserDomainPermission theObj) {
@@ -1662,6 +1734,105 @@ public class AdminServiceBean implements IAdminService {
 	 */
 	void setConfigSvc(IConfigService theConfigSvc) {
 		myConfigSvc = theConfigSvc;
+	}
+
+	@Override
+	public GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid) {
+		BasePersServiceVersion svcVer = myPersSvc.getServiceVersionByPid(theServiceVersionPid);
+		return toUi(svcVer);
+	}
+
+	private GRecentMessageLists toUi(BasePersServiceVersion svcVer) {
+		GRecentMessageLists retVal = new GRecentMessageLists();
+		retVal.setKeepSuccess(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.SUCCESS));
+		retVal.setKeepFail(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.FAIL));
+		retVal.setKeepFault(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.FAULT));
+		retVal.setKeepSecurityFail(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.SECURITY_FAIL));
+
+		if (retVal.getKeepSuccess() > 0) {
+			retVal.setSuccessList(toUi(myPersSvc.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.SUCCESS), true));
+		}
+
+		if (retVal.getKeepFail() > 0) {
+			retVal.setFailList(toUi(myPersSvc.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.FAIL), true));
+		}
+
+		if (retVal.getKeepSecurityFail() > 0) {
+			retVal.setSecurityFailList(toUi(myPersSvc.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.SECURITY_FAIL), true));
+		}
+
+		if (retVal.getKeepFault() > 0) {
+			retVal.setFaultList(toUi(myPersSvc.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.FAULT), true));
+		}
+		return retVal;
+	}
+
+	private List<GRecentMessage> toUi(List<? extends BasePersRecentMessage> theServiceVersionRecentMessages, boolean theLoadMessageContents) {
+		List<GRecentMessage> retVal = new ArrayList<GRecentMessage>();
+
+		for (BasePersRecentMessage next : theServiceVersionRecentMessages) {
+			retVal.add(toUi(next, theLoadMessageContents));
+		}
+
+		return retVal;
+	}
+
+	@Override
+	public GRecentMessage loadRecentMessageForServiceVersion(long thePid) {
+		BasePersRecentMessage msg = myPersSvc.loadRecentMessageForServiceVersion(thePid);
+		return toUi(msg, true);
+	}
+
+	private GRecentMessage toUi(BasePersRecentMessage theMsg, boolean theLoadMsgContents) {
+		GRecentMessage retVal = new GRecentMessage();
+
+		retVal.setPid(theMsg.getPid());
+		retVal.setImplementationUrl(theMsg.getImplementationUrl().getUrl());
+		retVal.setRequestHostIp(theMsg.getRequestHostIp());
+		retVal.setTransactionTime(theMsg.getTransactionTime());
+		retVal.setTransactionMillis(theMsg.getTransactionMillis());
+
+		if (theLoadMsgContents) {
+			retVal.setRequestMessage(theMsg.getRequestBody());
+			retVal.setResponseMessage(theMsg.getResponseBody());
+		}
+
+		return retVal;
+	}
+
+	@Override
+	public GRecentMessageLists loadRecentTransactionListForUser(long thePid) {
+		PersUser user = myPersSvc.getUser(thePid);
+		BasePersAuthenticationHost authHost = user.getAuthenticationHost();
+
+		GRecentMessageLists retVal = new GRecentMessageLists();
+		retVal.setKeepSuccess(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.SUCCESS));
+		retVal.setKeepFail(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.FAIL));
+		retVal.setKeepFault(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.FAULT));
+		retVal.setKeepSecurityFail(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.SECURITY_FAIL));
+
+		if (retVal.getKeepSuccess() > 0) {
+			retVal.setSuccessList(toUi(myPersSvc.getUserRecentMessages(user, ResponseTypeEnum.SUCCESS), true));
+		}
+
+		if (retVal.getKeepFail() > 0) {
+			retVal.setFailList(toUi(myPersSvc.getUserRecentMessages(user, ResponseTypeEnum.FAIL), true));
+		}
+
+		if (retVal.getKeepSecurityFail() > 0) {
+			retVal.setSecurityFailList(toUi(myPersSvc.getUserRecentMessages(user, ResponseTypeEnum.SECURITY_FAIL), true));
+		}
+
+		if (retVal.getKeepFault() > 0) {
+			retVal.setFaultList(toUi(myPersSvc.getUserRecentMessages(user, ResponseTypeEnum.FAULT), true));
+		}
+		return retVal;
+	}
+
+	@Override
+	public GRecentMessage loadRecentMessageForUser(long thePid) {
+		BasePersRecentMessage msg = myPersSvc.loadRecentMessageForUser(thePid);
+		return toUi(msg, true);
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {

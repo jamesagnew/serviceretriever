@@ -26,6 +26,8 @@ import net.svcret.admin.client.ui.dash.ServiceDashboardPanel;
 import net.svcret.admin.client.ui.layout.BodyPanel;
 import net.svcret.admin.client.ui.layout.BreadcrumbPanel;
 import net.svcret.admin.client.ui.stats.ServiceVersionStatsPanel;
+import net.svcret.admin.client.ui.stats.ViewRecentMessageForServiceVersionPanel;
+import net.svcret.admin.client.ui.stats.ViewRecentMessageForUserPanel;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -333,6 +335,12 @@ public class NavProcessor {
 				panel = new DeleteServicePanel(Long.parseLong(argsSplit[0]), Long.parseLong(argsSplit[1]));
 			}
 			break;
+		case RSV:
+			panel = new ViewRecentMessageForServiceVersionPanel(Long.parseLong(args));
+			break;
+		case RUS:
+			panel = new ViewRecentMessageForUserPanel(Long.parseLong(args));
+			break;
 		case EDO:
 			panel = new EditDomainPanel(Long.parseLong(args));
 			break;
@@ -430,6 +438,32 @@ public class NavProcessor {
 			}
 		}
 		token = token + PagesEnum.SVS + "_" + theDomainPid + "_" + theServicePid + "_" + theServiceVersionPid;
+		token = removeDuplicates(token);
+		return token;
+	}
+
+	public static String getTokenViewServiceVersionRecentMessage(boolean theAddToHistory, long thePid) {
+		String token = "";
+		if (theAddToHistory) {
+			token = getCurrentToken();
+			if (!token.isEmpty()) {
+				token = token + SEPARATOR;
+			}
+		}
+		token = token + PagesEnum.RSV + "_" + thePid;
+		token = removeDuplicates(token);
+		return token;
+	}
+
+	public static String getTokenViewUserRecentMessage(boolean theAddToHistory, long thePid) {
+		String token = "";
+		if (theAddToHistory) {
+			token = getCurrentToken();
+			if (!token.isEmpty()) {
+				token = token + SEPARATOR;
+			}
+		}
+		token = token + PagesEnum.RUS + "_" + thePid;
 		token = removeDuplicates(token);
 		return token;
 	}
