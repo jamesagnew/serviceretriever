@@ -8,6 +8,7 @@ import net.svcret.admin.client.ui.components.HtmlLabel;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
+import net.svcret.admin.shared.model.ServiceProtocolEnum;
 
 import com.google.gwt.dom.client.Style.Float;
 import com.google.gwt.dom.client.Style.Unit;
@@ -119,6 +120,12 @@ public class SoapDetailPanel extends BaseDetailPanel<GSoap11ServiceVersion> {
 		FlowPanel wsdlPanel = new FlowPanel();
 		add(wsdlPanel);
 		initWsdlPanel(wsdlPanel);
+	}
+
+
+	@Override
+	public ServiceProtocolEnum getProtocol() {
+		return ServiceProtocolEnum.SOAP11;
 	}
 
 }

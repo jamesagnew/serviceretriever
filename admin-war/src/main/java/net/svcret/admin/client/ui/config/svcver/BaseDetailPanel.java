@@ -21,6 +21,7 @@ import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.ServerSecurityEnum;
+import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.core.shared.GWT;
@@ -93,6 +94,8 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Flo
 
 	}
 
+	public abstract ServiceProtocolEnum getProtocol();
+	
 	protected abstract void addProtocolSpecificPanelsToTop();
 
 	/**

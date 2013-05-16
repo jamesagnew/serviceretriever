@@ -1,6 +1,7 @@
 package net.svcret.admin.client.ui.config.svcver;
 
 import net.svcret.admin.shared.model.GServiceVersionJsonRpc20;
+import net.svcret.admin.shared.model.ServiceProtocolEnum;
 
 public class DetailPanelJsonRpc20 extends BaseDetailPanel<GServiceVersionJsonRpc20> {
 
@@ -14,6 +15,11 @@ public class DetailPanelJsonRpc20 extends BaseDetailPanel<GServiceVersionJsonRpc
 	@Override
 	protected void addProtocolSpecificPanelsToTop() {
 		// none
+	}
+
+	@Override
+	public ServiceProtocolEnum getProtocol() {
+		return ServiceProtocolEnum.JSONRPC20;
 	}
 
 }

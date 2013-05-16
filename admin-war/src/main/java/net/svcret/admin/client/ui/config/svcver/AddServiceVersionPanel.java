@@ -6,9 +6,9 @@ import net.svcret.admin.client.ui.components.HtmlLabel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
+import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GDomainList;
-import net.svcret.admin.shared.model.GSoap11ServiceVersion;
-import net.svcret.admin.shared.model.ProtocolEnum;
+import net.svcret.admin.shared.model.ServiceProtocolEnum;
 
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
@@ -47,33 +47,32 @@ public class AddServiceVersionPanel extends AbstractServiceVersionPanel {
 	}
 
 	void handleTypeChange() {
-		switch (ProtocolEnum.valueOf(myTypeComboBox.getValue(myTypeComboBox.getSelectedIndex()))) {
-		case SOAP11:
-			if (!(getBottomContents() instanceof SoapDetailPanel)) {
+		ServiceProtocolEnum protocol = ServiceProtocolEnum.valueOf(myTypeComboBox.getValue(myTypeComboBox.getSelectedIndex()));
+		if (getBottomContents() == null || getBottomContents().getProtocol() != protocol) {
+			
+			myLoadingSpinner.show();
+			myBottomPanel.clear();
 
-				myLoadingSpinner.show();
-				myBottomPanel.clear();
+			AsyncCallback<BaseGServiceVersion> callback = new AsyncCallback<BaseGServiceVersion>() {
 
-				AsyncCallback<GSoap11ServiceVersion> callback = new AsyncCallback<GSoap11ServiceVersion>() {
+				@Override
+				public void onFailure(Throwable theCaught) {
+					Model.handleFailure(theCaught);
+				}
 
-					@Override
-					public void onFailure(Throwable theCaught) {
-						Model.handleFailure(theCaught);
-					}
+				@Override
+				public void onSuccess(BaseGServiceVersion theResult) {
+					setServiceVersion(theResult);
+					myUncommittedSessionId = theResult.getUncommittedSessionId();
+					String navToken = NavProcessor.getTokenAddServiceVersion(true, myDomainPid, myServicePid, myUncommittedSessionId);
+					History.newItem(navToken, false);
+				}
+			};
 
-					@Override
-					public void onSuccess(GSoap11ServiceVersion theResult) {
-						setServiceVersion(theResult);
-						myUncommittedSessionId = theResult.getUncommittedSessionId();
-						String navToken = NavProcessor.getTokenAddServiceVersion(true, myDomainPid, myServicePid, myUncommittedSessionId);
-						History.newItem(navToken, false);
-					}
-				};
-
-				AdminPortal.MODEL_SVC.createNewSoap11ServiceVersion(myDomainPid, myServicePid, myUncommittedSessionId, callback);
-			}
-			break;
+			AdminPortal.MODEL_SVC.createNewServiceVersion(protocol, myDomainPid, myServicePid, myUncommittedSessionId, callback);
+			
 		}
+		
 	}
 
 
@@ -86,7 +85,7 @@ public class AddServiceVersionPanel extends AbstractServiceVersionPanel {
 		myTypeComboBox.getElement().setId("cbType");
 		myParentsGrid.setWidget(3, 1, myTypeComboBox);
 
-		for (ProtocolEnum next : ProtocolEnum.values()) {
+		for (ServiceProtocolEnum next : ServiceProtocolEnum.getNaturalOrder()) {
 			myTypeComboBox.addItem(next.getNiceName(), next.name());
 			myTypeComboBox.addChangeHandler(new ChangeHandler() {
 				@Override

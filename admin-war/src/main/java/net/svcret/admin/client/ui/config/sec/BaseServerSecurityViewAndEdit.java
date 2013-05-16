@@ -31,16 +31,20 @@ public abstract class BaseServerSecurityViewAndEdit<T extends BaseGServerSecurit
 				if (authHost!=null) {
 					flowPanel.add(new Label(AdminPortal.MSGS.wsSecServerSecurity_UsesAuthenticationHost(authHost.getModuleId())));
 				}
-				initViewPanel(theRow, theObject, flowPanel, theResult);
+				
+				TwoColumnGrid grid = new TwoColumnGrid();
+				flowPanel.add(grid);
+				
+				initViewPanel(theRow, theObject, grid, theResult);
 			}
 		});
 		
 		return flowPanel;
 	}
 
-	protected abstract void initViewPanel(int theRow, T theObject, FlowPanel thePanelToPopulate, GAuthenticationHostList theAuthenticationHostList);
+	protected abstract void initViewPanel(int theRow, T theObject, TwoColumnGrid thePanelToPopulate, GAuthenticationHostList theAuthenticationHostList);
 
-	protected abstract void initEditPanel(int theRow, T theObject, FlowPanel thePanelToPopulate, GAuthenticationHostList theAuthenticationHostList);
+	protected abstract void initEditPanel(int theRow, T theObject, TwoColumnGrid thePanelToPopulate, GAuthenticationHostList theAuthenticationHostList);
 
 	protected abstract String provideName();
 
@@ -49,7 +53,7 @@ public abstract class BaseServerSecurityViewAndEdit<T extends BaseGServerSecurit
 		final FlowPanel flowPanel = new FlowPanel();
 		flowPanel.add(new Label(provideName()));
 		
-		TwoColumnGrid propertyGrid = new TwoColumnGrid();
+		final TwoColumnGrid propertyGrid = new TwoColumnGrid();
 		flowPanel.add(propertyGrid);
 		
 		final ListBox authHostList = new ListBox(false);
@@ -79,7 +83,7 @@ public abstract class BaseServerSecurityViewAndEdit<T extends BaseGServerSecurit
 						theObject.setAuthHostPid(theResult.get(authHostList.getSelectedIndex()).getPid());
 					}});
 				
-				initEditPanel(theRow, theObject, flowPanel, theResult);
+				initEditPanel(theRow, theObject, propertyGrid, theResult);
 
 			}
 		});

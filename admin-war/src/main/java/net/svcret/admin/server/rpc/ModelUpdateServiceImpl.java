@@ -1,6 +1,7 @@
 package net.svcret.admin.server.rpc;
 
-import static org.apache.commons.lang3.StringUtils.*;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -24,6 +25,7 @@ import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
+import net.svcret.admin.shared.model.GServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
 import net.svcret.admin.shared.model.GUrlStatus;
@@ -31,6 +33,7 @@ import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.PartialUserListRequest;
+import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.api.IAdminService;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.util.Validate;
@@ -171,21 +174,32 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
-	public GSoap11ServiceVersion createNewSoap11ServiceVersion(Long theDomainPid, Long theServicePid, Long theUncommittedId) {
-		GSoap11ServiceVersion retVal;
+	public BaseGServiceVersion createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncommittedId) {
+		BaseGServiceVersion retVal=null;
 		HttpSession session = getThreadLocalRequest().getSession(true);
 
 		if (theUncommittedId != null) {
 			String key = SESSION_PREFIX_UNCOMITTED_SVC_VER + theUncommittedId;
-			retVal = (GSoap11ServiceVersion) session.getAttribute(key);
-			if (retVal != null) {
+			retVal = (BaseGServiceVersion) session.getAttribute(key);
+			if (retVal != null && retVal.getProtocol() == theProtocol) {
 				ourLog.info("Retrieving SOAP 1.1 Service Version with uncommitted ID[{}]", theUncommittedId);
 				return retVal;
 			}
 		}
 
-		retVal = new GSoap11ServiceVersion();
+		switch (theProtocol) {
+		case JSONRPC20:
+			retVal = new GServiceVersionJsonRpc20();
+			break;
+		case SOAP11:
+			retVal = new GSoap11ServiceVersion();
+			break;
+		}
 
+		if (retVal == null) {
+			throw new java.lang.IllegalStateException("Unknown type: " + theProtocol);
+		}
+		
 		if (isMockMode()) {
 			retVal.setHttpClientConfigPid(myMock.getDefaultHttpClientConfigPid());
 			retVal.setId("1.0");
@@ -283,7 +297,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 			retVal = myMock.loadServiceVersionIntoSession(theServiceVersionPid);
 
 			serviceAndResources = new GSoap11ServiceVersionAndResources();
-			serviceAndResources.setServiceVersion((GSoap11ServiceVersion) retVal);
+			serviceAndResources.setServiceVersion(retVal);
 
 		} else {
 

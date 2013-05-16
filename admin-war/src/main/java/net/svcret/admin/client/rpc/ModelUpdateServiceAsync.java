@@ -22,6 +22,7 @@ import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.PartialUserListRequest;
+import net.svcret.admin.shared.model.ServiceProtocolEnum;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -33,7 +34,7 @@ public interface ModelUpdateServiceAsync {
 
 	void addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion, AsyncCallback<AddServiceVersionResponse> theCallback);
 
-	void createNewSoap11ServiceVersion(Long theDomainPid, Long theServicePid, Long theUncommittedId, AsyncCallback<GSoap11ServiceVersion> theCallback);
+	void createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncommittedId, AsyncCallback<BaseGServiceVersion> theCallback);
 
 	void deleteHttpClientConfig(long thePid, AsyncCallback<GHttpClientConfigList> theCallback);
 

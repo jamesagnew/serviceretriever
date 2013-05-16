@@ -23,6 +23,7 @@ import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.PartialUserListRequest;
+import net.svcret.admin.shared.model.ServiceProtocolEnum;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
@@ -38,8 +39,6 @@ public interface ModelUpdateService extends RemoteService {
 	GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ServiceFailureException;
 
 	AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion) throws ServiceFailureException;
-
-	GSoap11ServiceVersion createNewSoap11ServiceVersion(Long theDomainPid, Long theServicePid, Long theUncommittedId);
 
 	GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ServiceFailureException;
 
@@ -139,5 +138,7 @@ public interface ModelUpdateService extends RemoteService {
 	GRecentMessageLists loadRecentTransactionListForuser(long thePid);
 
 	GRecentMessage loadRecentMessageForUser(long thePid);
+
+	BaseGServiceVersion createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncommittedId);
 
 }
