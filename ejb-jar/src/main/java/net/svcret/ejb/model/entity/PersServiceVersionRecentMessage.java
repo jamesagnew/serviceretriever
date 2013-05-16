@@ -7,6 +7,8 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
+import net.svcret.ejb.api.IDao;
+
 import org.hibernate.annotations.Index;
 
 //@formatter:off
@@ -61,6 +63,16 @@ public class PersServiceVersionRecentMessage extends BasePersRecentMessage {
 	 */
 	public void setUser(PersUser theUser) {
 		myUser = theUser;
+	}
+
+	@Override
+	public void addUsingDao(IDao theDaoBean) {
+		theDaoBean.saveServiceVersionRecentMessage(this);
+	}
+
+	@Override
+	public void trimUsingDao(IDao theDaoBean) {
+		theDaoBean.trimServiceVersionRecentMessages(myServiceVersion, getResponseType(), myServiceVersion.determineKeepNumRecentTransactions(getResponseType()));
 	}
 
 }

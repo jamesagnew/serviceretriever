@@ -8,6 +8,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Objects.ToStringHelper;
 
 @Embeddable
 public class PersStaticResourceStatsPk extends BasePersInvocationStatsPk {
@@ -85,14 +86,16 @@ public class PersStaticResourceStatsPk extends BasePersInvocationStatsPk {
 		myResource = theResource;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this).add("Interval", getInterval().name()).add("StartTime", getStartTime()).add("Method", getResourcePid()).add("ResourceUri", getResource().getResourceUrl()).toString();
+		return getToStringHelper().toString();
 	}
-	
+
+	@Override
+	ToStringHelper getToStringHelper() {
+		return super.getToStringHelper().add("Resource", getResource().getResourceUrl());
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */

@@ -16,20 +16,21 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.TemporalType;
 import javax.persistence.Temporal;
 
+import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.ResponseTypeEnum;
 
 @MappedSuperclass()
-public class BasePersRecentMessage implements Serializable {
+public abstract class BasePersRecentMessage implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
 	@ManyToOne
-	@JoinColumn(name = "URL_PID", referencedColumnName = "PID", nullable = false)
+	@JoinColumn(name = "URL_PID", referencedColumnName = "PID", nullable = true)
 	private PersServiceVersionUrl myImplementationUrl;
 	
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE)
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "PID")
 	private Long myPid;
 
@@ -176,4 +177,7 @@ public class BasePersRecentMessage implements Serializable {
 		myTransactionTime = theTransactionTime;
 	}
 
+	public abstract void addUsingDao(IDao theDaoBean);
+
+	public abstract void trimUsingDao(IDao theDaoBean);
 }

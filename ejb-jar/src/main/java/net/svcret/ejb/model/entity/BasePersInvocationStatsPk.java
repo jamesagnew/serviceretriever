@@ -12,6 +12,7 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Objects.ToStringHelper;
 
 @MappedSuperclass
 public abstract class BasePersInvocationStatsPk implements Serializable {
@@ -102,7 +103,11 @@ public abstract class BasePersInvocationStatsPk implements Serializable {
 	 */
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this).add("Interval", getInterval().name()).add("StartTime", myStartTime).toString();
+		return getToStringHelper().toString();
+	}
+
+	ToStringHelper getToStringHelper() {
+		return Objects.toStringHelper(this).add("Interval", getInterval().name()).add("StartTime", myStartTime);
 	}
 
 	public abstract BasePersMethodStats newObjectInstance();

@@ -3,6 +3,8 @@ package net.svcret.ejb.model.entity;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 
+import com.google.common.base.Objects.ToStringHelper;
+
 @MappedSuperclass
 public abstract class BasePersInvocationStats extends BasePersMethodStats {
 
@@ -265,6 +267,32 @@ public abstract class BasePersInvocationStats extends BasePersMethodStats {
 				myMaxSuccessResponseMessageBytes = Math.max(myMaxSuccessResponseMessageBytes, stats.myMaxSuccessResponseMessageBytes);
 			}
 		}
+	}
+
+	public abstract StatsTypeEnum getStatsType();
+	
+	public static enum StatsTypeEnum{
+		INVOCATION,USER
+		
+	}
+
+	
+	@Override
+	public String toString() {
+		ToStringHelper tos = getPk().getToStringHelper();
+		if (getSuccessInvocationCount()>0) {
+			tos.add("Success", getSuccessInvocationCount());
+		}
+		if (getFaultInvocationCount()>0) {
+			tos.add("Fault", getFaultInvocationCount());
+		}
+		if (getFailInvocationCount()>0) {
+			tos.add("Fail", getFailInvocationCount());
+		}
+		if (getServerSecurityFailures()>0) {
+			tos.add("SecurityFail", getServerSecurityFailures());
+		}
+		return tos.toString();
 	}
 
 }

@@ -13,6 +13,7 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	private boolean myAllowAllDomains;
 	private long myAuthHostPid;
 	private String myChangePassword;
+	private String myContactNotes;
 	private ArrayList<GUserDomainPermission> myDomainPermissions;
 	private HashSet<UserGlobalPermissionEnum> myGlobalPermissions;
 	private Date myStatsLastAccess;
@@ -21,6 +22,7 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	private double myStatsSecurityFailTransactionsAvgPerMin;
 	private int[] myStatsSuccessTransactions;
 	private double myStatsSuccessTransactionsAvgPerMin;
+
 	private String myUsername;
 
 	public void addDomainPermission(GUserDomainPermission thePermission) {
@@ -47,6 +49,13 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	 */
 	public String getChangePassword() {
 		return myChangePassword;
+	}
+
+	/**
+	 * @return the contactNotes
+	 */
+	public String getContactNotes() {
+		return myContactNotes;
 	}
 
 	@Override
@@ -180,6 +189,10 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	 */
 	public void setChangePassword(String theChangePassword) {
 		myChangePassword = theChangePassword;
+	}
+
+	public void setContactNotes(String theNotes) {
+		myContactNotes = theNotes;
 	}
 
 	/*

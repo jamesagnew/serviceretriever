@@ -6,15 +6,13 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.xml.stream.events.XMLEvent;
 
+import net.svcret.admin.shared.model.ServerSecurityEnum;
 import net.svcret.ejb.api.ICredentialGrabber;
-import net.svcret.ejb.api.ServerAuthTypeEnum;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
-
-import org.apache.commons.lang3.ObjectUtils;
 
 
 @Entity
-@DiscriminatorValue("WSSEC_UT")
+@DiscriminatorValue("SOAP_WSSEC_UT")
 public class PersWsSecUsernameTokenServerAuth extends PersBaseServerAuth<PersWsSecUsernameTokenServerAuth, WsSecUsernameTokenCredentialGrabber> {
 
 	private static final long serialVersionUID = 1L;
@@ -27,11 +25,6 @@ public class PersWsSecUsernameTokenServerAuth extends PersBaseServerAuth<PersWsS
 		return super.equals(theObj);
 	}
 
-	@Override
-	protected boolean relevantPropertiesEqual(PersWsSecUsernameTokenServerAuth theT) {
-		return ObjectUtils.equals(getAuthenticationHost(), theT.getAuthenticationHost());
-	}
-
 	public ICredentialGrabber newCredentialGrabber(List<XMLEvent> theHeaderEvents) {
 		return new WsSecUsernameTokenCredentialGrabber(theHeaderEvents);
 	}
@@ -42,8 +35,8 @@ public class PersWsSecUsernameTokenServerAuth extends PersBaseServerAuth<PersWsS
 	}
 
 	@Override
-	public ServerAuthTypeEnum getAuthType() {
-		return ServerAuthTypeEnum.WS_SECURITY_USERNAME_TOKEN;
+	public ServerSecurityEnum getAuthType() {
+		return ServerSecurityEnum.WSSEC_UT;
 	}
 
 	@Override

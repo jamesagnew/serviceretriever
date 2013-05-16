@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +27,7 @@ import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.ResponseTypeEnum;
+import net.svcret.ejb.ejb.TransactionLoggerBean.BaseUnflushed;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
@@ -56,6 +58,7 @@ import net.svcret.ejb.model.entity.PersState;
 import net.svcret.ejb.model.entity.PersStaticResourceStats;
 import net.svcret.ejb.model.entity.PersStaticResourceStatsPk;
 import net.svcret.ejb.model.entity.PersUser;
+import net.svcret.ejb.model.entity.PersUserContact;
 import net.svcret.ejb.model.entity.PersUserRecentMessage;
 import net.svcret.ejb.model.entity.PersUserStatus;
 import net.svcret.ejb.model.entity.Queries;
@@ -123,9 +126,19 @@ public class DaoBean implements IDao {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Collection<PersUser> getAllUsers() {
+	public Collection<PersUser> getAllUsersAndInitializeThem() {
 		Query q = myEntityManager.createQuery("SELECT u FROM PersUser u");
 		Collection<PersUser> resultList = q.getResultList();
+		for (PersUser nextUser : resultList) {
+			nextUser.loadAllAssociations();
+			if (nextUser.getStatus() == null) {
+				PersUserStatus status = new PersUserStatus();
+				status.setUser(nextUser);
+				status = myEntityManager.merge(status);
+				nextUser.setStatus(status);
+				nextUser = myEntityManager.merge(nextUser);
+			}
+		}
 		return resultList;
 	}
 
@@ -443,6 +456,12 @@ public class DaoBean implements IDao {
 			retVal = (PersUser) q.getSingleResult();
 		} catch (NoResultException e) {
 			retVal = new PersUser();
+			
+			PersUserContact contact = new PersUserContact();
+			contact = myEntityManager.merge(contact);
+			retVal.setContact(contact);
+			contact.getUsers().add(retVal);
+			
 			retVal.setUsername(theUsername);
 			retVal.setAuthenticationHost(theAuthHost);
 			retVal = myEntityManager.merge(retVal);
@@ -450,8 +469,10 @@ public class DaoBean implements IDao {
 			PersUserStatus status = new PersUserStatus();
 			status.setUser(retVal);
 			retVal.setStatus(status);
-//			status = myEntityManager.merge(status);
-
+			
+			status = myEntityManager.merge(status);
+			retVal.setStatus(status);
+			retVal.setNewlyCreated(true);
 		}
 
 		return retVal;
@@ -1011,6 +1032,26 @@ public class DaoBean implements IDao {
 	@Override
 	public BasePersInvocationStats getInvocationUserStats(PersInvocationUserStatsPk thePk) {
 		return myEntityManager.find(PersInvocationUserStats.class, thePk);
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	public void saveRecentMessagesAndTrimInNewTransaction(BaseUnflushed<? extends BasePersRecentMessage> theNextTransactions) {
+		
+		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getSuccess());
+		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getFail());
+		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getSecurityFail());
+		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getFault());
+		
+	}
+
+	private void doSaveRecentMessagesAndTrimInNewTransaction(LinkedList<? extends BasePersRecentMessage> transactions) {
+		if (transactions.size() > 0) {
+			for (BasePersRecentMessage nextRecentMessage : transactions) {
+				nextRecentMessage.addUsingDao(this);
+			}
+			transactions.get(0).trimUsingDao(this);
+		}
 	}
 
 }

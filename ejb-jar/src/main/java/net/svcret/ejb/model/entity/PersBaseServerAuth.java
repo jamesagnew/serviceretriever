@@ -14,8 +14,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
+import net.svcret.admin.shared.model.ServerSecurityEnum;
 import net.svcret.ejb.api.ICredentialGrabber;
-import net.svcret.ejb.api.ServerAuthTypeEnum;
 
 
 @Table(name = "PX_SERVER_AUTH")
@@ -53,7 +53,7 @@ public abstract class PersBaseServerAuth<T extends PersBaseServerAuth<?,?>, G ex
 		return myAuthenticationHost;
 	}
 
-	public abstract ServerAuthTypeEnum getAuthType();
+	public abstract ServerSecurityEnum getAuthType();
 
 	public abstract Class<? extends G> getGrabberClass();
 	
@@ -89,11 +89,11 @@ public abstract class PersBaseServerAuth<T extends PersBaseServerAuth<?,?>, G ex
 		// nothing
 	}
 
-	/**
-	 * Subclasses must provide an implementation which compares all
-	 * relevant properties to the subclass type
-	 */
-	protected abstract boolean relevantPropertiesEqual(T theT);
+//	/**
+//	 * Subclasses must provide an implementation which compares all
+//	 * relevant properties to the subclass type
+//	 */
+//	protected abstract boolean relevantPropertiesEqual(T theT);
 
 	/**
 	 * @param theAuthenticationHost the authenticationHost to set

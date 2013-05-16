@@ -138,6 +138,7 @@ public class LeftBarPanel extends FlowPanel {
 			mySvcCatalogBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
 			buttons.remove(mySvcCatalogBtn);
 			break;
+		case ADU:
 		case DDO:
 		case DSE:
 		case ESE:
@@ -145,6 +146,7 @@ public class LeftBarPanel extends FlowPanel {
 		case SVS:
 		case RSV:
 		case RUS:
+		case VUS:
 			break;
 		}
 		

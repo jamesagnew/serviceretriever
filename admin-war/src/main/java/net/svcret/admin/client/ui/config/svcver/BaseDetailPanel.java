@@ -289,7 +289,9 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Flo
 		contentPanel.add(addServerButton);
 		final ListBox addServerList = new ListBox(false);
 		for (ServerSecurityEnum next : ServerSecurityEnum.values()) {
-			addServerList.addItem(next.getName(), next.name());
+			if (next.appliesTo(myServiceVersion.getClass())) {
+				addServerList.addItem(next.getName(), next.name());
+			}
 		}
 		contentPanel.add(addServerList);
 		addServerButton.addClickHandler(new ClickHandler() {

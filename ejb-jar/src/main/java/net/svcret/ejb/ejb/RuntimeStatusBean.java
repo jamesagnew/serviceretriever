@@ -264,6 +264,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		Validate.notNull(theMethod, "Method");
 		Validate.notNull(theInvocationResponseResultsBean, "InvocationResponseResults");
 
+		ourLog.trace("Going to record method invocation");
+
 		/*
 		 * Record method statictics
 		 */
@@ -388,7 +390,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			Date now = DAY.truncate(getNow());
 			Date daysCutoff = DateUtils.addDays(now, -config.getCollapseStatsToDaysAfterNumDays());
 
-			ourLog.info("Going to truncate any hourly stats before {}", daysCutoff);
+			ourLog.debug("Going to truncate any hourly stats before {}", daysCutoff);
 
 			doCollapseStats(myDao.getInvocationStatsBefore(HOUR, daysCutoff), DAY, PersInvocationStats.class);
 			doCollapseStats(myDao.getInvocationUserStatsBefore(HOUR, daysCutoff), DAY, PersInvocationUserStats.class);
@@ -399,7 +401,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			Date now = HOUR.truncate(getNow());
 			Date hoursCutoff = DateUtils.addHours(now, -config.getCollapseStatsToHoursAfterNumHours());
 
-			ourLog.info("Going to truncate any 10 minute stats before {}", hoursCutoff);
+			ourLog.debug("Going to truncate any 10 minute stats before {}", hoursCutoff);
 
 			doCollapseStats(myDao.getInvocationStatsBefore(TEN_MINUTE, hoursCutoff), HOUR, PersInvocationStats.class);
 			doCollapseStats(myDao.getInvocationUserStatsBefore(TEN_MINUTE, hoursCutoff), HOUR, PersInvocationUserStats.class);
@@ -410,7 +412,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			Date now = TEN_MINUTE.truncate(getNow());
 			Date hoursCutoff = DateUtils.addHours(now, -config.getCollapseStatsToTenMinutesAfterNumHours());
 
-			ourLog.info("Going to truncate any 1 minute stats before {}", hoursCutoff);
+			ourLog.debug("Going to truncate any 1 minute stats before {}", hoursCutoff);
 
 			doCollapseStats(myDao.getInvocationStatsBefore(MINUTE, hoursCutoff), TEN_MINUTE, PersInvocationStats.class);
 			doCollapseStats(myDao.getInvocationUserStatsBefore(MINUTE, hoursCutoff), TEN_MINUTE, PersInvocationUserStats.class);
@@ -429,6 +431,11 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				if (!statsToFlush.containsKey(dayPk)) {
 					statsToFlush.put(dayPk, myDao.getOrCreateInvocationStats((PersInvocationStatsPk) dayPk));
 				}
+			} else if (invocClass == PersInvocationUserStats.class) {
+				dayPk = new PersInvocationUserStatsPk(toIntervalTyoe, next.getPk().getStartTime(), ((PersInvocationUserStatsPk) next.getPk()).getUser());
+				if (!statsToFlush.containsKey(dayPk)) {
+					statsToFlush.put(dayPk, myDao.getOrCreateInvocationUserStats((PersInvocationUserStatsPk) dayPk));
+				}
 			} else {
 				throw new IllegalStateException("Unknown type: " + invocClass);
 			}
@@ -437,7 +444,10 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			target.mergeUnsynchronizedEvents(next);
 			statsToDelete.add(next);
 
-			ourLog.debug("Merging stats for {}/{} into {}/{}", new Object[] { next.getPk().getInterval(), next.getPk().getStartTime(), target.getPk().getInterval(), target.getPk().getStartTime() });
+			if (ourLog.isDebugEnabled()) {
+				ourLog.debug("Merging stats for {} into {}", next, target);
+				ourLog.debug("Deleting stats {}", statsToDelete);
+			}
 
 			if (statsToDelete.size() > MAX_STATS_TO_FLUSH_AT_ONCE) {
 				myDao.saveInvocationStats(statsToFlush.values(), statsToDelete);

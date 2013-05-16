@@ -14,6 +14,7 @@ import javax.ejb.TransactionAttributeType;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IHttpClient;
@@ -167,11 +168,16 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 				ourLog.debug("Checking credentials: {}", grabber);
 				authorized = mySecuritySvc.authorizeMethodInvocation(authHost, credentials, method);
-				if (!authorized.isAuthorized()) {
+				if (authorized.isAuthorized() != AuthorizationOutcomeEnum.AUTHORIZED) {
 					InvocationResponseResultsBean invocationResponse = new InvocationResponseResultsBean();
 					invocationResponse.setResponseType(ResponseTypeEnum.SECURITY_FAIL);
 					invocationResponse.setResponseStatusMessage("ServiceRetriever failed to extract credentials");
+					// TODO: also pass authorization outcome to save it
 					myRuntimeStatus.recordInvocationMethod(startTime, 0, method, authorized.getUser(), null, invocationResponse);
+
+					// Log transaction
+					logTransaction(theRequestHostIp, startTime, reader, serviceVersion, authorized, null, invocationResponse);
+
 					throw new SecurityFailureException();
 				}
 			}
@@ -240,9 +246,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			/*
 			 * Log transaction if needed
 			 */
-			PersUser user = authorized != null ? authorized.getUser() : null;
-			String requestBody = reader.getCapturedString();
-			myTransactionLogger.logTransaction(startTime, theRequestHostIp, serviceVersion, user, requestBody, invocationResponse, httpResponse.getSuccessfulUrl(), httpResponse);
+			logTransaction(theRequestHostIp, startTime, reader, serviceVersion, authorized, httpResponse, invocationResponse);
 			
 			retVal = new OrchestratorResponseBean(responseBody, responseContentType, responseHeaders);
 			break;
@@ -254,6 +258,14 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 		return retVal;
 	}
+
+	private void logTransaction(String theRequestHostIp, Date startTime, CapturingReader reader, BasePersServiceVersion serviceVersion, AuthorizationResultsBean authorized, HttpResponseBean httpResponse, InvocationResponseResultsBean invocationResponse) {
+		PersUser user = authorized != null ? authorized.getUser() : null;
+		String requestBody = reader.getCapturedString();
+		PersServiceVersionUrl successfulUrl = httpResponse != null ? httpResponse.getSuccessfulUrl() : null;
+		myTransactionLogger.logTransaction(startTime, theRequestHostIp, serviceVersion, user, requestBody, invocationResponse, successfulUrl, httpResponse);
+	}
+
 
 	private void markUrlsFailed(Map<PersServiceVersionUrl, Failure> theMap) {
 		for (Entry<PersServiceVersionUrl, Failure> nextEntry : theMap.entrySet()) {

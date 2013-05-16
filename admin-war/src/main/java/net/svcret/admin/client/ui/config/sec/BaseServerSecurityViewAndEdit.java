@@ -6,8 +6,8 @@ import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGAuthHost;
+import net.svcret.admin.shared.model.BaseGServerSecurity;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
-import net.svcret.admin.shared.model.GWsSecServerSecurity;
 
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
@@ -16,12 +16,12 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Widget;
 
-public class WsSecServerSecurity implements IProvidesViewAndEdit<GWsSecServerSecurity> {
+public abstract class BaseServerSecurityViewAndEdit<T extends BaseGServerSecurity> implements IProvidesViewAndEdit<T> {
 
 	@Override
-	public Widget provideView(int theRow, final GWsSecServerSecurity theObject) {
+	public Widget provideView(final int theRow, final T theObject) {
 		final FlowPanel flowPanel = new FlowPanel();
-		flowPanel.add(new Label(AdminPortal.MSGS.wsSecServerSecurity_Name()));
+		flowPanel.add(new Label(provideName()));
 		flowPanel.add(new HtmlBr());
 		
 		Model.getInstance().loadAuthenticationHosts(new IAsyncLoadCallback<GAuthenticationHostList>() {
@@ -31,16 +31,23 @@ public class WsSecServerSecurity implements IProvidesViewAndEdit<GWsSecServerSec
 				if (authHost!=null) {
 					flowPanel.add(new Label(AdminPortal.MSGS.wsSecServerSecurity_UsesAuthenticationHost(authHost.getModuleId())));
 				}
+				initViewPanel(theRow, theObject, flowPanel, theResult);
 			}
 		});
 		
 		return flowPanel;
 	}
 
+	protected abstract void initViewPanel(int theRow, T theObject, FlowPanel thePanelToPopulate, GAuthenticationHostList theAuthenticationHostList);
+
+	protected abstract void initEditPanel(int theRow, T theObject, FlowPanel thePanelToPopulate, GAuthenticationHostList theAuthenticationHostList);
+
+	protected abstract String provideName();
+
 	@Override
-	public Widget provideEdit(int theRow, final GWsSecServerSecurity theObject, IValueChangeHandler theValueChangeHandler) {
+	public Widget provideEdit(final int theRow, final T theObject, IValueChangeHandler theValueChangeHandler) {
 		final FlowPanel flowPanel = new FlowPanel();
-		flowPanel.add(new Label(AdminPortal.MSGS.wsSecServerSecurity_Name()));
+		flowPanel.add(new Label(provideName()));
 		
 		TwoColumnGrid propertyGrid = new TwoColumnGrid();
 		flowPanel.add(propertyGrid);
@@ -71,6 +78,9 @@ public class WsSecServerSecurity implements IProvidesViewAndEdit<GWsSecServerSec
 					public void onChange(ChangeEvent theEvent) {
 						theObject.setAuthHostPid(theResult.get(authHostList.getSelectedIndex()).getPid());
 					}});
+				
+				initEditPanel(theRow, theObject, flowPanel, theResult);
+
 			}
 		});
 		

@@ -93,10 +93,8 @@ public class ConfigPanel extends FlowPanel {
 
 	protected void save() {
 
+		myConfig.getProxyUrlBases().clear();
 		myConfig.getProxyUrlBases().add(myUrlBaseTextBox.getValue());
-		while (myConfig.getProxyUrlBases().size() > 1) {
-			myConfig.getProxyUrlBases().remove(1);
-		}
 
 		mySpinner.show();
 		MODEL_SVC.saveConfig(myConfig, new AsyncCallback<Void>() {

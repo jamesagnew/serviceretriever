@@ -24,18 +24,26 @@ public abstract class BasePersKeepsRecentTransactions extends BasePersObject {
 	private Integer myKeepNumRecentTransactionsSuccess;
 
 	public Integer determineKeepNumRecentTransactions(ResponseTypeEnum theResultType) {
+		Integer retVal;
 		switch (theResultType) {
 		case FAIL:
-			return myKeepNumRecentTransactionsFail;
+			retVal = myKeepNumRecentTransactionsFail;
+			break;
 		case FAULT:
-			return myKeepNumRecentTransactionsFault;
+			retVal = myKeepNumRecentTransactionsFault;
+			break;
 		case SECURITY_FAIL:
-			return myKeepNumRecentTransactionsSecurityFail;
+			retVal = myKeepNumRecentTransactionsSecurityFail;
+			break;
 		case SUCCESS:
-			return myKeepNumRecentTransactionsSuccess;
+			retVal = myKeepNumRecentTransactionsSuccess;
+			break;
+		default:
+			throw new IllegalStateException("Unknown type: " + theResultType);
 		}
 
-		throw new IllegalStateException("Unknown type: " + theResultType);
+		return retVal;
+
 	}
 
 	/**

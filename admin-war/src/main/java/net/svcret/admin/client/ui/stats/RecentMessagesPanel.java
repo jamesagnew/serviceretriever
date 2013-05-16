@@ -14,7 +14,7 @@ import com.google.gwt.user.client.ui.Label;
 public class RecentMessagesPanel extends FlowPanel {
 
 	public RecentMessagesPanel(GRecentMessageLists theLists, boolean theIsUser) {
-
+		
 		if (!theLists.hasAtLeastOneList()) {
 			this.add(new Label(MSGS.serviceVersionStats_NoRecentMsgs()));
 		}
@@ -34,6 +34,7 @@ public class RecentMessagesPanel extends FlowPanel {
 		if (theLists.getSecurityFailList() != null) {
 			addRecentTransactionTable(MSGS.serviceVersionStats_RecentSecurityFailTitle(), theLists.getKeepSecurityFail(), theLists.getSecurityFailList(), theIsUser);
 		}
+		
 	}
 
 	private void addRecentTransactionTable(String theTitle, int theNumToKeep, List<GRecentMessage> theList, boolean theIsUsers) {

@@ -9,6 +9,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Objects.ToStringHelper;
 
 @Embeddable
 public class PersInvocationUserStatsPk extends BasePersInvocationStatsPk {
@@ -79,18 +80,14 @@ public class PersInvocationUserStatsPk extends BasePersInvocationStatsPk {
 		myUser = theUser;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public String toString() {
-		//@formatter:off
-		return Objects.toStringHelper(this)
-				.add("Interval", getInterval().name())
-				.add("StartTime", getStartTime())
-				.add("User", getUser().getPid())
-				.toString();
-		//@formatter:on
+		return getToStringHelper().toString();
+	}
+
+	@Override
+	ToStringHelper getToStringHelper() {
+		return super.getToStringHelper().add("User", getUser().getUsername());
 	}
 
 	/**

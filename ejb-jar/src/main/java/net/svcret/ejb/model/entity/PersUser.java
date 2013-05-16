@@ -52,12 +52,14 @@ public class PersUser extends BasePersObject {
 
 	@ManyToOne(cascade = {})
 	@JoinColumn(name = "CONTACT_PID", referencedColumnName = "PID", nullable = true)
-	private PersContact myContact;
+	private PersUserContact myContact;
 
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true, mappedBy = "myUser")
 	private Collection<PersUserDomainPermission> myDomainPermissions;
 
-	// NB: Nullable because user can be backed by external authorization
+	/**
+	 * NB: Nullable because user can be backed by external authorization
+	 */
 	@Column(name = "PASSWORD_HASH", nullable = true, length = 512)
 	private String myPasswordHash;
 
@@ -123,13 +125,21 @@ public class PersUser extends BasePersObject {
 	}
 
 	/**
+	 * @return the contact
+	 */
+	public PersUserContact getContact() {
+		return myContact;
+	}
+
+	/**
 	 * @return the versions
 	 */
 	public Collection<PersUserDomainPermission> getDomainPermissions() {
 		if (myDomainPermissions == null) {
 			myDomainPermissions = new ArrayList<PersUserDomainPermission>();
 		}
-		return Collections.unmodifiableCollection(myDomainPermissions);
+		return (myDomainPermissions);
+//		return Collections.unmodifiableCollection(myDomainPermissions);
 	}
 
 	public String getPasswordHash() {
@@ -205,7 +215,6 @@ public class PersUser extends BasePersObject {
 		}
 
 		myAllowedMethods = allowedMethods;
-		myStatus.toString();
 	}
 
 	/**
@@ -222,6 +231,13 @@ public class PersUser extends BasePersObject {
 	 */
 	public void setAuthenticationHost(BasePersAuthenticationHost theAuthenticationHost) {
 		myAuthenticationHost = theAuthenticationHost;
+	}
+
+	/**
+	 * @param theContact the contact to set
+	 */
+	public void setContact(PersUserContact theContact) {
+		myContact = theContact;
 	}
 
 	/**

@@ -38,6 +38,8 @@ import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.util.Validate;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.hibernate.annotations.ForeignKey;
 
 @Entity
@@ -272,7 +274,7 @@ public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransact
 	public String getProxyPath() {
 		PersService service = getService();
 		PersDomain domain = service.getDomain();
-		return "/" + domain.getDomainId() + "/" + service.getServiceId() + "/v" + getVersionId();
+		return "/" + domain.getDomainId() + "/" + service.getServiceId() + "/" + getVersionId();
 	}
 
 	public PersServiceVersionResource getResourceForUri(String theUri) {

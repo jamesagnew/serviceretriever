@@ -1,4 +1,5 @@
 package net.svcret.ejb.ejb;
+import static net.svcret.admin.shared.model.AuthorizationOutcomeEnum.*;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -15,8 +16,8 @@ import net.svcret.ejb.api.IAuthorizationService.ILdapAuthorizationService;
 import net.svcret.ejb.api.IAuthorizationService.ILocalDatabaseAuthorizationService;
 import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.ICredentialGrabber;
-import net.svcret.ejb.api.ISecurityService;
 import net.svcret.ejb.api.IDao;
+import net.svcret.ejb.api.ISecurityService;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
@@ -29,6 +30,7 @@ public class SecurityServiceBean implements ISecurityService {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(SecurityServiceBean.class);
 
 	private static final String STATE_KEY = SecurityServiceBean.class.getName() + "_VERSION";
+
 
 	@EJB
 	private IBroadcastSender myBroadcastSender;
@@ -52,7 +54,7 @@ public class SecurityServiceBean implements ISecurityService {
 		AuthorizationResultsBean retVal = new AuthorizationResultsBean();
 		if (authHost == null) {
 			ourLog.debug("Authorization host not in user roster (possibly because it has been deleted?)");
-			retVal.setAuthorized(false);
+			retVal.setAuthorized(FAILED_INTERNAL_ERROR);
 			return retVal;
 		}
 
@@ -63,7 +65,7 @@ public class SecurityServiceBean implements ISecurityService {
 		PersUser authorizedUser = authService.authorize(authHost, myInMemoryUserCatalog, theCredentialGrabber);
 		if (authorizedUser == null) {
 			ourLog.debug("Auth service did not find authorized user in request");
-			retVal.setAuthorized(false);
+			retVal.setAuthorized(FAILED_BAD_CREDENTIALS_IN_REQUEST);
 			// TODO: return the failed user so we can add it to runtimestats
 			return retVal;
 		}
@@ -73,8 +75,12 @@ public class SecurityServiceBean implements ISecurityService {
 		boolean authorized = authorizedUser.hasPermission(theMethod);
 
 		ourLog.debug("Authorization results: {}", authorized);
-		retVal.setAuthorized(authorized);
-
+		if (authorized) {
+			retVal.setAuthorized(AUTHORIZED);
+		}else {
+			retVal.setAuthorized(FAILED_USER_NO_PERMISSIONS);
+		}
+		
 		return retVal;
 
 	}
@@ -182,10 +188,8 @@ public class SecurityServiceBean implements ISecurityService {
 			pidToAuthHost.put(nextHost.getPid(), nextHost);
 		}
 
-		Collection<PersUser> allUsers = myDao.getAllUsers();
+		Collection<PersUser> allUsers = myDao.getAllUsersAndInitializeThem();
 		for (PersUser nextUser : allUsers) {
-			nextUser.loadAllAssociations();
-
 			Long authHostPid = nextUser.getAuthenticationHost().getPid();
 			Map<String, PersUser> map = hostPidToUsernameToUser.get(authHostPid);
 

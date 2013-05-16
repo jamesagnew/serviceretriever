@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.IServiceInvoker;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
@@ -17,8 +18,12 @@ import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnknownRequestException;
+import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcCredentialGrabber;
+import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcServerAuth;
 import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
+import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
 import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.io.IOUtils;
@@ -27,7 +32,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import com.google.gson.stream.JsonWriter;
 
 public class JsonRpc20ServiceInvoker implements IServiceInvoker<PersServiceVersionJsonRpc20> {
 
@@ -42,7 +46,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvoker<PersServiceVersi
 	static final String TOKEN_ERROR = "error";
 
 
-	public static void consumeEqually(JsonReader theJsonReader, JsonWriter theJsonWriter) throws IOException, ProcessingException {
+	public static void consumeEqually(IJsonReader theJsonReader, IJsonWriter theJsonWriter) throws IOException, ProcessingException {
 		int objectDepth = 0;
 		int arrayDepth = 0;
 
@@ -207,14 +211,33 @@ public class JsonRpc20ServiceInvoker implements IServiceInvoker<PersServiceVersi
 			throw new UnknownRequestException("This service requires all requests to be of type HTTP POST");
 		}
 
+		InvocationResultsBean retVal = new InvocationResultsBean();
+
 		StringWriter stringWriter = new StringWriter();
-		JsonWriter jsonWriter = new JsonWriter(stringWriter);
+
+		IJsonWriter jsonWriter = new MyJsonWriter(stringWriter);
+		IJsonReader jsonReader = new MyJsonReader(theReader);
+
+		/*
+		 * Create security pipeline if needed
+		 */
+		for (PersBaseServerAuth<?,?> next : theServiceDefinition.getServerAuths()) {
+			if (next instanceof NamedParameterJsonRpcServerAuth) {
+				NamedParameterJsonRpcCredentialGrabber grabber = ((NamedParameterJsonRpcServerAuth) next).newCredentialGrabber(jsonReader, jsonWriter);
+				jsonWriter = grabber.getWrappedWriter();
+				jsonReader = grabber.getWrappedReader();
+				retVal.addCredentials(grabber);
+			} else {
+				jsonWriter.close();
+				jsonReader.close();
+				throw new InternalErrorException("Don't know how to handle server auth of type: " + next);
+			}
+		}
 
 		jsonWriter.setLenient(true);
 		jsonWriter.setSerializeNulls(true);
 		jsonWriter.setIndent("  ");
 
-		JsonReader jsonReader = new JsonReader(theReader);
 		jsonReader.setLenient(true);
 
 		String method = null;
@@ -241,7 +264,9 @@ public class JsonRpc20ServiceInvoker implements IServiceInvoker<PersServiceVersi
 
 			} else if (TOKEN_PARAMS.equals(nextName)) {
 
+				jsonReader.beginJsonRpcParams();
 				consumeEqually(jsonReader, jsonWriter);
+				jsonReader.endJsonRpcParams();
 
 			} else if (TOKEN_ID.equals(nextName)) {
 
@@ -258,8 +283,6 @@ public class JsonRpc20ServiceInvoker implements IServiceInvoker<PersServiceVersi
 
 		jsonReader.close();
 		jsonWriter.close();
-
-		InvocationResultsBean retVal = new InvocationResultsBean();
 
 		String requestBody = stringWriter.toString();
 		String contentType = "application/json";

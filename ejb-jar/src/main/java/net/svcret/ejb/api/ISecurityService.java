@@ -2,6 +2,7 @@ package net.svcret.ejb.api;
 
 import javax.ejb.Local;
 
+import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
@@ -18,7 +19,7 @@ public interface ISecurityService {
 
 	public class AuthorizationResultsBean {
 
-		private boolean myAuthorized;
+		private AuthorizationOutcomeEnum myAuthorized;
 		private PersUser myUser;
 
 		/**
@@ -31,7 +32,7 @@ public interface ISecurityService {
 		/**
 		 * @return the authorized
 		 */
-		public boolean isAuthorized() {
+		public AuthorizationOutcomeEnum isAuthorized() {
 			return myAuthorized;
 		}
 
@@ -39,7 +40,7 @@ public interface ISecurityService {
 		 * @param theAuthorized
 		 *            the authorized to set
 		 */
-		public void setAuthorized(boolean theAuthorized) {
+		public void setAuthorized(AuthorizationOutcomeEnum theAuthorized) {
 			myAuthorized = theAuthorized;
 		}
 

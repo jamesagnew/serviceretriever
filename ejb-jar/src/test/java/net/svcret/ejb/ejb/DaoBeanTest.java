@@ -277,8 +277,8 @@ public class DaoBeanTest extends BaseJpaTest {
 		newEntityManager();
 		
 		host = mySvc.getOrCreateAuthenticationHostLocalDatabase("mid");
-		assertEquals(5, host.determineKeepNumRecentTransactions(ResponseTypeEnum.FAULT).intValue());
-		assertEquals(6, host.determineKeepNumRecentTransactions(ResponseTypeEnum.FAIL).intValue());
+		assertEquals(Integer.valueOf(5), host.determineKeepNumRecentTransactions(ResponseTypeEnum.FAULT));
+		assertEquals(Integer.valueOf(6), host.determineKeepNumRecentTransactions(ResponseTypeEnum.FAIL));
 	}
 	
 	@Test
@@ -338,12 +338,17 @@ public class DaoBeanTest extends BaseJpaTest {
 		PersUser user = mySvc.getOrCreateUser(authHost, "username");
 		assertNotNull(user);
 		assertNotNull(user.getStatus());
+		assertNotNull(user.getContact());
+		assertNotNull(user.getStatus().getPid());
+		assertNotNull(user.getContact().getPid());
 		
 		newEntityManager();
 
 		user = mySvc.getOrCreateUser(authHost, "username");
 		assertNotNull(user);
 		assertNotNull(user.getStatus());
+		assertNotNull(user.getStatus().getPid());
+		assertNotNull(user.getContact().getPid());
 
 		newEntityManager();
 		

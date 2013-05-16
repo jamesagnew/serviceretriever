@@ -12,7 +12,7 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
-public class WsSecClientSecurity implements IProvidesViewAndEdit<GWsSecUsernameTokenClientSecurity> {
+public class WsSecUsernameTokenClientSecurityViewAndEdit implements IProvidesViewAndEdit<GWsSecUsernameTokenClientSecurity> {
 
 	@Override
 	public Widget provideView(int theRow, GWsSecUsernameTokenClientSecurity theObject) {

@@ -7,6 +7,36 @@ public class GRecentMessageLists implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
+	@Override
+	public String toString() {
+		StringBuilder b = new StringBuilder();
+		if (myKeepFail > 0) {
+			b.append("Success ").append(mySuccessList.size()).append('/').append(myKeepSuccess);
+		}
+		if (b.length() > 0) {
+			b.append(", ");
+		}
+		if (myKeepFail > 0) {
+			b.append("Fault ").append(myFaultList.size()).append('/').append(myKeepFault);
+		}
+		if (b.length() > 0) {
+			b.append(", ");
+		}
+		if (myKeepFail > 0) {
+			b.append("Fail ").append(myFailList.size()).append('/').append(myKeepFail);
+		}
+		if (b.length() > 0) {
+			b.append(", ");
+		}
+		if (myKeepFail > 0) {
+			b.append("SecurityFail ").append(mySecurityFailList.size()).append('/').append(myKeepSecurityFail);
+		}
+		if (b.length()==0) {
+			b.append("None");
+		}
+		return b.toString();
+	}
+
 	private List<GRecentMessage> myFailList;
 	private List<GRecentMessage> myFaultList;
 	private int myKeepFail;
@@ -29,12 +59,14 @@ public class GRecentMessageLists implements Serializable {
 	public List<GRecentMessage> getFaultList() {
 		return myFaultList;
 	}
+
 	/**
 	 * @return the keepFail
 	 */
 	public int getKeepFail() {
 		return myKeepFail;
 	}
+
 	/**
 	 * @return the keepFault
 	 */
@@ -48,18 +80,21 @@ public class GRecentMessageLists implements Serializable {
 	public int getKeepSecurityFail() {
 		return myKeepSecurityFail;
 	}
+
 	/**
 	 * @return the keepSuccess
 	 */
 	public int getKeepSuccess() {
 		return myKeepSuccess;
 	}
+
 	/**
 	 * @return the securityFailList
 	 */
 	public List<GRecentMessage> getSecurityFailList() {
 		return mySecurityFailList;
 	}
+
 	/**
 	 * @return the successList
 	 */

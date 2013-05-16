@@ -596,4 +596,22 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Using authentication host: {0}")
 	String wsSecServerSecurity_UsesAuthenticationHost(String theModuleId);
 
+	@DefaultMessage("User Statistics and Usage")
+	String viewUserStats_Breadcrumb();
+
+	@DefaultMessage("View Usage")
+	String actions_ViewStats();
+
+	@DefaultMessage("Add User")
+	String addUser_Breadcrumb();
+
+	@DefaultMessage("Contact Information")
+	String editUser_ContactTitle();
+
+	@DefaultMessage("Notes")
+	String editUser_ContactNotes();
+
+	@DefaultMessage("JSON-RPC Named Parameter Server Security")
+	String jsonRpcNamedParameterServerSecurity_Name();
+
 }

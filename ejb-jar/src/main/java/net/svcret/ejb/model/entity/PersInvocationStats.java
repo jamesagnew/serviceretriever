@@ -50,5 +50,10 @@ public class PersInvocationStats extends BasePersInvocationStats {
 		return myPk;
 	}
 
+	@Override
+	public StatsTypeEnum getStatsType() {
+		return StatsTypeEnum.INVOCATION;
+	}
+
 
 }

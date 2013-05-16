@@ -192,7 +192,7 @@ public class RuntimeStatusBeanTest {
 		when(urlLocal2.toString()).thenReturn("urlLocal2");
 		when(urlRemote1.toString()).thenReturn("urlRemote1");
 		when(urlRemote2.toString()).thenReturn("urlRemote2");
-		
+
 		PersServiceVersionUrlStatus statusL1 = mock(PersServiceVersionUrlStatus.class, DefaultAnswer.INSTANCE);
 		PersServiceVersionUrlStatus statusL2 = mock(PersServiceVersionUrlStatus.class, DefaultAnswer.INSTANCE);
 		PersServiceVersionUrlStatus statusR1 = mock(PersServiceVersionUrlStatus.class, DefaultAnswer.INSTANCE);
@@ -238,21 +238,21 @@ public class RuntimeStatusBeanTest {
 		when(statusR2.getStatus()).thenReturn(StatusEnum.DOWN);
 
 		DefaultAnswer.setRunTime();
-		
+
 		// Rotate through everybody
-		
+
 		UrlPoolBean pool = bean.buildUrlPool(ver);
 		assertEquals(urlLocal1, pool.getPreferredUrl());
 		assertEquals(2, pool.getAlternateUrls().size());
 		assertEquals(urlLocal2, pool.getAlternateUrls().get(0));
 		assertEquals(urlRemote1, pool.getAlternateUrls().get(1));
-		
+
 		pool = bean.buildUrlPool(ver);
 		assertEquals(urlLocal2, pool.getPreferredUrl());
 		assertEquals(2, pool.getAlternateUrls().size());
 		assertEquals(urlRemote1, pool.getAlternateUrls().get(0));
 		assertEquals(urlLocal1, pool.getAlternateUrls().get(1));
-		
+
 		pool = bean.buildUrlPool(ver);
 		assertEquals(urlRemote1, pool.getPreferredUrl());
 		assertEquals(2, pool.getAlternateUrls().size());
@@ -260,31 +260,32 @@ public class RuntimeStatusBeanTest {
 		assertEquals(urlLocal2, pool.getAlternateUrls().get(1));
 
 		// Three are active so we reset to the first one now.....
-		
+
 		pool = bean.buildUrlPool(ver);
 		assertEquals(urlLocal1, pool.getPreferredUrl());
 		assertEquals(2, pool.getAlternateUrls().size());
 		assertEquals(urlLocal2, pool.getAlternateUrls().get(0));
 		assertEquals(urlRemote1, pool.getAlternateUrls().get(1));
 
-		/* The first one actually get repeated once because we're at index
-		 * 3 in the previous invocation but index 3 doesn't get used because it's
-		 * down so we move on to 0, but then in the next invocation we move
-		 * on to 0. This isn't perfect but it doesn't matter... If we ever fix 
-		 * that, this unit test will break but it will be ok. 
+		/*
+		 * The first one actually get repeated once because we're at index 3 in
+		 * the previous invocation but index 3 doesn't get used because it's
+		 * down so we move on to 0, but then in the next invocation we move on
+		 * to 0. This isn't perfect but it doesn't matter... If we ever fix
+		 * that, this unit test will break but it will be ok.
 		 */
 		pool = bean.buildUrlPool(ver);
 		assertEquals(urlLocal1, pool.getPreferredUrl());
 		assertEquals(2, pool.getAlternateUrls().size());
 		assertEquals(urlLocal2, pool.getAlternateUrls().get(0));
 		assertEquals(urlRemote1, pool.getAlternateUrls().get(1));
-		
+
 		pool = bean.buildUrlPool(ver);
 		assertEquals(urlLocal2, pool.getPreferredUrl());
 		assertEquals(2, pool.getAlternateUrls().size());
 		assertEquals(urlRemote1, pool.getAlternateUrls().get(0));
 		assertEquals(urlLocal1, pool.getAlternateUrls().get(1));
-		
+
 		pool = bean.buildUrlPool(ver);
 		assertEquals(urlRemote1, pool.getPreferredUrl());
 		assertEquals(2, pool.getAlternateUrls().size());
@@ -292,12 +293,11 @@ public class RuntimeStatusBeanTest {
 		assertEquals(urlLocal2, pool.getAlternateUrls().get(1));
 
 		/*
-		 * Now we would normally loop back to the first one since
-		 * number 4 (AKA Remote2) is DOWN but make sure that we try 
-		 * downed links occasionally so that
-		 * we reset the circuit breaker if things are good now 
+		 * Now we would normally loop back to the first one since number 4 (AKA
+		 * Remote2) is DOWN but make sure that we try downed links occasionally
+		 * so that we reset the circuit breaker if things are good now
 		 */
-		
+
 		DefaultAnswer.setDesignTime();
 		when(statusR2.attemptToResetCircuitBreaker()).thenReturn(true);
 		DefaultAnswer.setRunTime();
@@ -314,13 +314,13 @@ public class RuntimeStatusBeanTest {
 		assertEquals(2, pool.getAlternateUrls().size());
 		assertEquals(urlLocal2, pool.getAlternateUrls().get(0));
 		assertEquals(urlRemote1, pool.getAlternateUrls().get(1));
-		
+
 		pool = bean.buildUrlPool(ver);
 		assertEquals(urlLocal2, pool.getPreferredUrl());
 		assertEquals(2, pool.getAlternateUrls().size());
 		assertEquals(urlRemote1, pool.getAlternateUrls().get(0));
 		assertEquals(urlLocal1, pool.getAlternateUrls().get(1));
-		
+
 		pool = bean.buildUrlPool(ver);
 		assertEquals(urlRemote1, pool.getPreferredUrl());
 		assertEquals(2, pool.getAlternateUrls().size());
@@ -376,7 +376,9 @@ public class RuntimeStatusBeanTest {
 		assertEquals(1, createCaptor.getAllValues().size());
 		PersInvocationStats obj = (PersInvocationStats) createCaptor.getValue().iterator().next();
 		assertEquals(2, obj.getSuccessInvocationCount());
-		assertEquals(1, deleteCaptor.getAllValues().size());
+		
+		List<List> allValues = deleteCaptor.getAllValues();
+		assertEquals(1, allValues.size());
 	}
 
 	@Test
@@ -411,7 +413,7 @@ public class RuntimeStatusBeanTest {
 
 		PersUser user = new PersUser(32L);
 		user.setStatus(new PersUserStatus(33L));
-		
+
 		InvocationResponseResultsBean invocationResponse = new InvocationResponseResultsBean();
 		invocationResponse.setResponseType(ResponseTypeEnum.SECURITY_FAIL);
 		invocationResponse.setResponseStatusMessage("Security fail");
@@ -432,11 +434,16 @@ public class RuntimeStatusBeanTest {
 
 		Iterator statsIter = forCollection.getValue().iterator();
 
-		PersInvocationStats verStats = (PersInvocationStats) statsIter.next();
-		assertEquals(2, verStats.getServerSecurityFailures());
-		
-		PersInvocationUserStats userStats = (PersInvocationUserStats) statsIter.next();
-		assertEquals(2, userStats.getServerSecurityFailures());
+		for (int i = 0; i < 2; i++) {
+			Object next = statsIter.next();
+			if (next instanceof PersInvocationUserStats) {
+				PersInvocationUserStats userStats = (PersInvocationUserStats) next;
+				assertEquals(2, userStats.getServerSecurityFailures());
+			} else {
+				PersInvocationStats verStats = (PersInvocationStats) next;
+				assertEquals(2, verStats.getServerSecurityFailures());
+			}
+		}
 
 	}
 

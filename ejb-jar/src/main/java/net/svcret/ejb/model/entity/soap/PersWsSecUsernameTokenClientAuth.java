@@ -10,7 +10,7 @@ import org.apache.commons.lang3.ObjectUtils;
 
 
 @Entity
-@DiscriminatorValue("WSSEC_UT")
+@DiscriminatorValue("SOAP_WSSEC_UT")
 public class PersWsSecUsernameTokenClientAuth extends PersBaseClientAuth<PersWsSecUsernameTokenClientAuth> {
 
 	private static final long serialVersionUID = 1L;

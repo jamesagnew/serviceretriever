@@ -26,7 +26,7 @@ public class RecentMessagesGrid extends FlowPanel {
 	private DateTimeFormat myDateFormat = DateTimeFormat.getFormat(PredefinedFormat.DATE_TIME_LONG);
 
 	public RecentMessagesGrid(List<GRecentMessage> theList, boolean theIsUserGrid) {
-		myGrid = new Grid(5, theList.size() + 1);
+		myGrid = new Grid(theList.size() + 1, 5);
 		myGrid.addStyleName(CssConstants.PROPERTY_TABLE);
 		add(myGrid);
 
@@ -36,10 +36,8 @@ public class RecentMessagesGrid extends FlowPanel {
 		myGrid.setText(0, COL_VIEW, MSGS.recentMessagesGrid_ColView());
 		myGrid.setText(0, COL_MILLIS, MSGS.recentMessagesGrid_ColMillis());
 
-		int row = 0;
-		for (GRecentMessage next : theList) {
-			row++;
-
+		for (int row = 1, index = theList.size() - 1; index >= 0; index--, row++) {
+			GRecentMessage next = theList.get(index);
 			myGrid.setText(row, COL_TIMESTAMP, myDateFormat.format(next.getTransactionTime()));
 			myGrid.setText(row, COL_IP, next.getRequestHostIp());
 			myGrid.setText(row, COL_URL, next.getImplementationUrl());

@@ -13,12 +13,16 @@ import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.ITransactionLogger;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
+import net.svcret.ejb.model.entity.BasePersRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserRecentMessage;
 import net.svcret.ejb.util.Validate;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 @Singleton
 public class TransactionLoggerBean implements ITransactionLogger {
@@ -27,6 +31,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 
 	@EJB
 	private IDao myDao;
+
 	private ReentrantLock myFlushLock = new ReentrantLock();
 	private ConcurrentHashMap<BasePersServiceVersion, UnflushedServiceVersionRecentMessages> myUnflushedMessages = new ConcurrentHashMap<BasePersServiceVersion, UnflushedServiceVersionRecentMessages>();
 	private ConcurrentHashMap<PersUser, UnflushedUserRecentMessages> myUnflushedUserMessages = new ConcurrentHashMap<PersUser, UnflushedUserRecentMessages>();
@@ -50,15 +55,17 @@ public class TransactionLoggerBean implements ITransactionLogger {
 
 	/**
 	 * {@inheritDoc}
-	 * @param theImplementationUrl 
-	 * @param theHttpResponse 
+	 * 
+	 * @param theImplementationUrl
+	 * @param theHttpResponse
 	 */
 	@Override
-	public void logTransaction(Date theTransactionDate, String theRequestHostIp, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse) {
+	public void logTransaction(Date theTransactionDate, String theRequestHostIp, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl,
+			HttpResponseBean theHttpResponse) {
 		Validate.notNull(theServiceVersion);
 
 		{
-			UnflushedServiceVersionRecentMessages newValue = new UnflushedServiceVersionRecentMessages();
+			UnflushedServiceVersionRecentMessages newValue = new UnflushedServiceVersionRecentMessages(theServiceVersion);
 			UnflushedServiceVersionRecentMessages existing = myUnflushedMessages.putIfAbsent(theServiceVersion, newValue);
 			if (existing == null) {
 				newValue.init();
@@ -68,7 +75,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 		}
 
 		if (theUser != null) {
-			UnflushedUserRecentMessages newValue = new UnflushedUserRecentMessages();
+			UnflushedUserRecentMessages newValue = new UnflushedUserRecentMessages(theUser);
 			UnflushedUserRecentMessages existing = myUnflushedUserMessages.putIfAbsent(theUser, newValue);
 			if (existing == null) {
 				newValue.init();
@@ -80,34 +87,92 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	}
 
 	private void doFlush() {
-		if (myUnflushedMessages.isEmpty()) {
+		doFlush(myUnflushedMessages);
+		doFlush(myUnflushedUserMessages);
+	}
+
+	private void doFlush(ConcurrentHashMap<?, ? extends BaseUnflushed<? extends BasePersRecentMessage>> unflushedMessages) {
+		if (unflushedMessages.isEmpty()) {
 			return;
 		}
 
-		ourLog.info("Going to flush recent transactions to database");
+		ourLog.debug("Going to flush recent transactions to database: {}", unflushedMessages.values());
+		long start = System.currentTimeMillis();
 
-		for (BasePersServiceVersion next : new HashSet<BasePersServiceVersion>(myUnflushedMessages.keySet())) {
-			UnflushedServiceVersionRecentMessages nextTransactions = myUnflushedMessages.remove(next);
+		int saveCount = 0;
+		for (Object next : new HashSet<Object>(unflushedMessages.keySet())) {
+			BaseUnflushed<? extends BasePersRecentMessage> nextTransactions = unflushedMessages.remove(next);
 			if (nextTransactions != null) {
-
+				myDao.saveRecentMessagesAndTrimInNewTransaction(nextTransactions);
+				saveCount += nextTransactions.getCount();
 			}
+		}
+		
+		long delay = System.currentTimeMillis() - start;
+		ourLog.info("Done saving {} recent transactions to database in {}ms", saveCount, delay);
+	}
+
+	private static void trimOldest(LinkedList<?> theList, int theSize) {
+		while (theList.size() > theSize) {
+			theList.pop();
 		}
 	}
 
-	private static class UnflushedServiceVersionRecentMessages {
-		private LinkedList<PersServiceVersionRecentMessage> myFail;
-		private LinkedList<PersServiceVersionRecentMessage> myFault;
-		private LinkedList<PersServiceVersionRecentMessage> mySecurityFail;
-		private LinkedList<PersServiceVersionRecentMessage> mySuccess;
+	public static abstract class BaseUnflushed<T extends BasePersRecentMessage> {
+		protected LinkedList<T> myFail;
+		protected LinkedList<T> myFault;
+		protected LinkedList<T> mySecurityFail;
+		protected LinkedList<T> mySuccess;
 
-		public void init() {
-			mySuccess = new LinkedList<PersServiceVersionRecentMessage>();
-			myFault = new LinkedList<PersServiceVersionRecentMessage>();
-			myFail = new LinkedList<PersServiceVersionRecentMessage>();
-			mySecurityFail = new LinkedList<PersServiceVersionRecentMessage>();
+		/**
+		 * @return the fail
+		 */
+		public LinkedList<T> getFail() {
+			return myFail;
 		}
 
-		public void recordTransaction(Date theTransactionTime, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, String theRequestHostIp, PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse) {
+		public int getCount() {
+			return myFail.size() + mySecurityFail.size()+mySuccess.size()+myFault.size();
+		}
+
+		/**
+		 * @return the fault
+		 */
+		public LinkedList<T> getFault() {
+			return myFault;
+		}
+
+		/**
+		 * @return the securityFail
+		 */
+		public LinkedList<T> getSecurityFail() {
+			return mySecurityFail;
+		}
+
+		/**
+		 * @return the success
+		 */
+		public LinkedList<T> getSuccess() {
+			return mySuccess;
+		}
+
+		public void init() {
+			mySuccess = new LinkedList<T>();
+			myFault = new LinkedList<T>();
+			myFail = new LinkedList<T>();
+			mySecurityFail = new LinkedList<T>();
+		}
+	}
+
+	private static class UnflushedServiceVersionRecentMessages extends BaseUnflushed<PersServiceVersionRecentMessage> {
+		private BasePersServiceVersion mySrvVer;
+
+		public UnflushedServiceVersionRecentMessages(BasePersServiceVersion theSrvVer) {
+			mySrvVer = theSrvVer;
+		}
+
+		public void recordTransaction(Date theTransactionTime, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, String theRequestHostIp, PersServiceVersionUrl theImplementationUrl,
+				HttpResponseBean theHttpResponse) {
 			Validate.notNull(theInvocationResponse);
 			Validate.notNull(theServiceVersion);
 			Validate.notNull(theTransactionTime);
@@ -120,7 +185,9 @@ public class TransactionLoggerBean implements ITransactionLogger {
 				message.setServiceVersion(theServiceVersion);
 				message.setUser(theUser);
 				message.setTransactionTime(theTransactionTime);
-				message.setTransactionMillis(theHttpResponse.getResponseTime());
+
+				long responseTime = theHttpResponse != null ? theHttpResponse.getResponseTime() : 0;
+				message.setTransactionMillis(responseTime);
 
 				switch (theInvocationResponse.getResponseType()) {
 				case FAIL:
@@ -145,30 +212,30 @@ public class TransactionLoggerBean implements ITransactionLogger {
 
 		}
 
+		@Override
+		public String toString() {
+			ToStringBuilder b = new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE);
+			b.append("svcVer", mySrvVer.getPid());
+			b.append("fail", myFail.size());
+			b.append("secfail", mySecurityFail.size());
+			b.append("fault", myFault.size());
+			b.append("success", mySuccess.size());
+			return b.build();
+		}
 
 	}
 
-	private static void trimOldest(LinkedList<?> theList, int theSize) {
-		while (theList.size() > theSize) {
-			theList.pop();
-		}
-	}
-	private static class UnflushedUserRecentMessages {
-		private LinkedList<PersUserRecentMessage> myUserFail;
-		private LinkedList<PersUserRecentMessage> myUserFault;
-		private LinkedList<PersUserRecentMessage> myUserSecurityFail;
-		private LinkedList<PersUserRecentMessage> myUserSuccess;
+	private static class UnflushedUserRecentMessages extends BaseUnflushed<PersUserRecentMessage> {
+		private PersUser myUser;
 
-		public void init() {
-			myUserSuccess = new LinkedList<PersUserRecentMessage>();
-			myUserFault = new LinkedList<PersUserRecentMessage>();
-			myUserFail = new LinkedList<PersUserRecentMessage>();
-			myUserSecurityFail = new LinkedList<PersUserRecentMessage>();
+		public UnflushedUserRecentMessages(PersUser theUser) {
+			myUser = theUser;
 		}
 
-		public void recordTransaction(Date theTransactionTime, String theRequestHostIp, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse) {
+		public void recordTransaction(Date theTransactionTime, String theRequestHostIp, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl,
+				HttpResponseBean theHttpResponse) {
 			Validate.notNull(theInvocationResponse);
-			
+
 			Integer keepNum = theUser.getAuthenticationHost().determineKeepNumRecentTransactions(theInvocationResponse.getResponseType());
 			if (keepNum != null && keepNum > 0) {
 
@@ -177,28 +244,40 @@ public class TransactionLoggerBean implements ITransactionLogger {
 				userMessage.setUser(theUser);
 				userMessage.setServiceVersion(theServiceVersion);
 				userMessage.setTransactionTime(theTransactionTime);
-				userMessage.setTransactionMillis(theHttpResponse.getResponseTime());
+				long responseTime = theHttpResponse != null ? theHttpResponse.getResponseTime() : 0;
+				userMessage.setTransactionMillis(responseTime);
 
 				switch (theInvocationResponse.getResponseType()) {
 				case FAIL:
-					myUserFail.add(userMessage);
-					trimOldest(myUserFail, keepNum);
+					myFail.add(userMessage);
+					trimOldest(myFail, keepNum);
 					break;
 				case FAULT:
-					myUserFault.add(userMessage);
-					trimOldest(myUserFault, keepNum);
+					myFault.add(userMessage);
+					trimOldest(myFault, keepNum);
 					break;
 				case SECURITY_FAIL:
-					myUserSecurityFail.add(userMessage);
-					trimOldest(myUserSecurityFail, keepNum);
+					mySecurityFail.add(userMessage);
+					trimOldest(mySecurityFail, keepNum);
 					break;
 				case SUCCESS:
-					myUserSuccess.add(userMessage);
-					trimOldest(myUserSuccess, keepNum);
+					mySuccess.add(userMessage);
+					trimOldest(mySuccess, keepNum);
 					break;
 				}
 
 			}
+		}
+
+		@Override
+		public String toString() {
+			ToStringBuilder b = new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE);
+			b.append("user", myUser.getPid());
+			b.append("fail", myFail.size());
+			b.append("secfail", mySecurityFail.size());
+			b.append("fault", myFault.size());
+			b.append("success", mySuccess.size());
+			return b.build();
 		}
 
 	}

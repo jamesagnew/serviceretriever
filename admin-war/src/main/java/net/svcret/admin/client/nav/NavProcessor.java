@@ -9,6 +9,7 @@ import java.util.List;
 import net.svcret.admin.client.ui.catalog.ServiceCatalogPanel;
 import net.svcret.admin.client.ui.config.ConfigPanel;
 import net.svcret.admin.client.ui.config.HttpClientConfigsPanel;
+import net.svcret.admin.client.ui.config.auth.AddUserPanel;
 import net.svcret.admin.client.ui.config.auth.AuthenticationHostsPanel;
 import net.svcret.admin.client.ui.config.auth.EditUserPanel;
 import net.svcret.admin.client.ui.config.auth.EditUsersPanel;
@@ -26,6 +27,7 @@ import net.svcret.admin.client.ui.dash.ServiceDashboardPanel;
 import net.svcret.admin.client.ui.layout.BodyPanel;
 import net.svcret.admin.client.ui.layout.BreadcrumbPanel;
 import net.svcret.admin.client.ui.stats.ServiceVersionStatsPanel;
+import net.svcret.admin.client.ui.stats.UserStatsPanel;
 import net.svcret.admin.client.ui.stats.ViewRecentMessageForServiceVersionPanel;
 import net.svcret.admin.client.ui.stats.ViewRecentMessageForUserPanel;
 import net.svcret.admin.shared.util.StringUtil;
@@ -272,6 +274,19 @@ public class NavProcessor {
 		return token;
 	}
 
+	public static String getTokenViewUserStats(boolean theAddToHistory, long theUserPid) {
+		String token = "";
+		if (theAddToHistory) {
+			token = getCurrentToken();
+			if (!token.isEmpty()) {
+				token = token + SEPARATOR;
+			}
+		}
+		token = token + PagesEnum.VUS + "_" + theUserPid;
+		token = removeDuplicates(token);
+		return token;
+	}
+
 	public static void goHome() {
 		navigateToDefault();
 	}
@@ -289,6 +304,9 @@ public class NavProcessor {
 			break;
 		case AD2:
 			panel = new AddDomainStep2Panel(Long.parseLong(args));
+			break;
+		case ADU:
+			panel = new AddUserPanel(Long.parseLong(args));
 			break;
 		case AHL:
 			panel = new AuthenticationHostsPanel();
@@ -374,6 +392,9 @@ public class NavProcessor {
 			} else {
 				panel = new ServiceVersionStatsPanel(Long.parseLong(argsSplit[0]), Long.parseLong(argsSplit[1]), Long.parseLong(argsSplit[2]));
 			}
+			break;
+		case VUS:
+			panel = new UserStatsPanel(Long.parseLong(args));
 			break;
 		}
 
@@ -464,6 +485,19 @@ public class NavProcessor {
 			}
 		}
 		token = token + PagesEnum.RUS + "_" + thePid;
+		token = removeDuplicates(token);
+		return token;
+	}
+
+	public static String getTokenAddUser(boolean theAddToHistory, long theAuthHostPid) {
+		String token = "";
+		if (theAddToHistory) {
+			token = getCurrentToken();
+			if (!token.isEmpty()) {
+				token = token + SEPARATOR;
+			}
+		}
+		token = token + PagesEnum.ADU + "_" + theAuthHostPid;
 		token = removeDuplicates(token);
 		return token;
 	}

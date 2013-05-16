@@ -75,7 +75,7 @@ public class Soap11ServiceInvokerTest {
 
 		PersConfig config=new PersConfig();
 		config.setDefaults();
-		config.getProxyUrlBases().iterator().next().setUrlBase("http://foo");
+		config.getProxyUrlBases().iterator().next().setUrlBase("http://foo bar");
 		when(configService.getConfig()).thenReturn(config);
 		
 		DefaultAnswer.setRunTime();
@@ -87,10 +87,10 @@ public class Soap11ServiceInvokerTest {
 
 		ourLog.info("Wsdl Outputted:\n{}", result.getStaticResourceText());
 
-		assertTrue(result.getStaticResourceText().contains("<xsd:import namespace=\"urn:2\" schemaLocation=\"http://foo/Some/Path?xsd&amp;xsdnum=100\"/>"));
+		assertTrue(result.getStaticResourceText().contains("<xsd:import namespace=\"urn:2\" schemaLocation=\"http://foo%20bar/Some/Path?xsd&amp;xsdnum=100\"/>"));
 		assertEquals("http://the_wsdl_url", result.getStaticResourceUrl());
 		
-		assertTrue(result.getStaticResourceText().contains("<wsdlsoap:address location=\"http://foo/Some/Path\"/>"));
+		assertTrue(result.getStaticResourceText().contains("<wsdlsoap:address location=\"http://foo%20bar/Some/Path\"/>"));
 		
 	}
 

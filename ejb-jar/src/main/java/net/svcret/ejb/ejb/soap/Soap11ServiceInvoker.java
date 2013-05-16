@@ -115,7 +115,8 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 					String importLocation = importElem.getAttribute("schemaLocation");
 					if (StringUtils.isNotBlank(importLocation)) {
 						PersServiceVersionResource nResource = theServiceDefinition.getResourceForUri(importLocation);
-						importElem.setAttribute("schemaLocation", (getUrlBase() + thePath + "?xsd&xsdnum=" + nResource.getPid()));
+						String pathBase = urlEncode(getUrlBase() + thePath);
+						importElem.setAttribute("schemaLocation", (pathBase + "?xsd&xsdnum=" + nResource.getPid()));
 					}
 				}
 			}
@@ -136,7 +137,8 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 					Element importElem = (Element) addressList.item(addressIdx);
 					String location = importElem.getAttribute("location");
 					if (StringUtils.isNotBlank(location)) {
-						importElem.setAttribute("location", getUrlBase() + thePath);
+						String pathBase = urlEncode(getUrlBase() + thePath);
+						importElem.setAttribute("location", pathBase);
 					}
 				}
 			}
@@ -154,9 +156,13 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 
 	}
 
+	private String urlEncode(String theString) {
+		return theString.replace(" ", "%20");
+	}
+
 	@EJB
 	private IConfigService myConfigService;
-	
+
 	private String getUrlBase() throws ProcessingException {
 		return myConfigService.getConfig().getProxyUrlBases().iterator().next().getUrlBase();
 	}
@@ -395,7 +401,6 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 			throw new ProcessingException(Messages.getString("Soap11ServiceInvoker.retrieveWsdlFail", theUrl, e1.getMessage()));
 		}
 
-
 		ourLog.info("Loaded WSDL ({} bytes) in {}ms, going to parse", wsdlHttpResponse.getBody().length(), wsdlHttpResponse.getResponseTime());
 
 		Document wsdlDocument = XMLUtils.parse(wsdlHttpResponse.getBody());
@@ -535,12 +540,11 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 		myHttpClient = theHttpClient;
 	}
 
-	
 	/**
 	 * UNIT TESTS ONLY
 	 */
 	public void setConfigService(IConfigService theMock) {
-		myConfigService=theMock;
+		myConfigService = theMock;
 	}
 
 }

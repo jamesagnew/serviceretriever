@@ -65,7 +65,17 @@ public enum PagesEnum {
 	/**
 	 * View recent message for User
 	 */
-	RUS(MSGS.viewRecentMessagUser_Breadcrumb());
+	RUS(MSGS.viewRecentMessagUser_Breadcrumb()), 
+	
+	/**
+	 * View usee stats
+	 */
+	VUS(MSGS.viewUserStats_Breadcrumb()), 
+	
+	/**
+	 * Add User
+	 */
+	ADU(MSGS.addUser_Breadcrumb());
 	;
 	
 	private String myBreadcrumb;

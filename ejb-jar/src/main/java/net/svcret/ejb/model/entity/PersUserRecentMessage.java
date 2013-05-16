@@ -7,6 +7,8 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
+import net.svcret.ejb.api.IDao;
+
 import org.hibernate.annotations.Index;
 
 @Table(name = "PX_USER_RCNT_MSG")
@@ -54,5 +56,16 @@ public class PersUserRecentMessage extends BasePersRecentMessage {
 	public void setUser(PersUser theUser) {
 		myUser = theUser;
 	}
+	
+	@Override
+	public void addUsingDao(IDao theDaoBean) {
+		theDaoBean.saveUserRecentMessage(this);
+	}
+
+	@Override
+	public void trimUsingDao(IDao theDaoBean) {
+		theDaoBean.trimUserRecentMessages(myUser, getResponseType(), myUser.getAuthenticationHost().determineKeepNumRecentTransactions(getResponseType()));
+	}
+
 
 }

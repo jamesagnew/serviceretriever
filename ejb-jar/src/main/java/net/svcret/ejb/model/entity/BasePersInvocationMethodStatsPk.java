@@ -10,6 +10,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Objects.ToStringHelper;
 
 @MappedSuperclass
 public abstract class BasePersInvocationMethodStatsPk extends BasePersInvocationStatsPk implements Serializable {
@@ -53,12 +54,14 @@ public abstract class BasePersInvocationMethodStatsPk extends BasePersInvocation
 		return myHashCode;
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public String toString() {
-		return Objects.toStringHelper(this).add("Interval", getInterval().name()).add("StartTime", getStartTime()).add("Method", getMethod().getPid()).toString();
+		return getToStringHelper().toString();
+	}
+
+	@Override
+	ToStringHelper getToStringHelper() {
+		return super.getToStringHelper().add("Method", getMethod().getName());
 	}
 
 

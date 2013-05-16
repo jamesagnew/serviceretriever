@@ -209,10 +209,9 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		}
 
 		Map<String, PersUser> serviceUserMap = new HashMap<String, PersUser>();
-		Collection<PersUser> users = myDao.getAllUsers();
+		Collection<PersUser> users = myDao.getAllUsersAndInitializeThem();
 		for (PersUser nextUser : users) {
 			serviceUserMap.put(nextUser.getUsername(), nextUser);
-			nextUser.loadAllAssociations();
 		}
 
 		ourLog.info("Done loading service registry from database");

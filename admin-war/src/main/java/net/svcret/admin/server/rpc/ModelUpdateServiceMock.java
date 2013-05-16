@@ -518,12 +518,12 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		GRecentMessageLists retVal = new GRecentMessageLists();
 
 		ArrayList<GRecentMessage> list = new ArrayList<GRecentMessage>();
-		list.add(createMessage(false));
-		list.add(createMessage(false));
-		list.add(createMessage(false));
-		list.add(createMessage(false));
-		retVal.setSuccessList(list);
-		retVal.setKeepSuccess(10);
+//		list.add(createMessage(false));
+//		list.add(createMessage(false));
+//		list.add(createMessage(false));
+//		list.add(createMessage(false));
+//		retVal.setSuccessList(list);
+//		retVal.setKeepSuccess(10);
 		
 		list = new ArrayList<GRecentMessage>();
 		list.add(createMessage(false));

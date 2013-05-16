@@ -29,6 +29,7 @@ import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GLdapAuthHost;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
+import net.svcret.admin.shared.model.GNamedParameterJsonRpcServerAuth;
 import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.admin.shared.model.GRecentMessageLists;
@@ -89,6 +90,7 @@ import net.svcret.ejb.model.entity.PersUserServicePermission;
 import net.svcret.ejb.model.entity.PersUserServiceVersionMethodPermission;
 import net.svcret.ejb.model.entity.PersUserServiceVersionPermission;
 import net.svcret.ejb.model.entity.PersUserStatus;
+import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcServerAuth;
 import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
@@ -111,7 +113,7 @@ public class AdminServiceBean implements IAdminService {
 	private IServiceInvoker<PersServiceVersionSoap11> myInvokerSoap11;
 
 	@EJB
-	private IDao myPersSvc;
+	private IDao myDao;
 
 	@EJB
 	private ISecurityService mySecurityService;
@@ -149,7 +151,7 @@ public class AdminServiceBean implements IAdminService {
 
 		ourLog.info("Adding service with ID[{}] to domain PID[{}]", theId, theDomainPid);
 
-		PersDomain domain = myPersSvc.getDomainByPid(theDomainPid);
+		PersDomain domain = myDao.getDomainByPid(theDomainPid);
 		if (domain == null) {
 			throw new IllegalArgumentException("Unknown Domain PID: " + theDomainPid);
 		}
@@ -169,7 +171,7 @@ public class AdminServiceBean implements IAdminService {
 	public GServiceMethod addServiceVersionMethod(long theServiceVersionPid, GServiceMethod theMethod) throws ProcessingException {
 		ourLog.info("Adding method {} to service version {}", theMethod.getName(), theServiceVersionPid);
 
-		BasePersServiceVersion sv = myPersSvc.getServiceVersionByPid(theServiceVersionPid);
+		BasePersServiceVersion sv = myDao.getServiceVersionByPid(theServiceVersionPid);
 		PersServiceVersionMethod ui = fromUi(theMethod, theServiceVersionPid);
 		sv.addMethod(ui);
 		sv = myServiceRegistry.saveServiceVersion(sv);
@@ -179,7 +181,7 @@ public class AdminServiceBean implements IAdminService {
 	@Override
 	public GAuthenticationHostList deleteAuthenticationHost(long thePid) throws ProcessingException {
 
-		BasePersAuthenticationHost authHost = myPersSvc.getAuthenticationHostByPid(thePid);
+		BasePersAuthenticationHost authHost = myDao.getAuthenticationHostByPid(thePid);
 		if (authHost == null) {
 			ourLog.info("Invalid request to delete unknown authentication host with PID {}", thePid);
 			throw new ProcessingException("Unknown authentication host: " + thePid);
@@ -187,14 +189,14 @@ public class AdminServiceBean implements IAdminService {
 
 		ourLog.info("Removing authentication host {} / {}", thePid, authHost.getModuleId());
 
-		myPersSvc.deleteAuthenticationHost(authHost);
+		myDao.deleteAuthenticationHost(authHost);
 
 		return loadAuthHostList();
 	}
 
 	@Override
 	public void deleteDomain(long thePid) throws ProcessingException {
-		PersDomain domain = myPersSvc.getDomainByPid(thePid);
+		PersDomain domain = myDao.getDomainByPid(thePid);
 		if (domain == null) {
 			throw new IllegalArgumentException("Unknown domain PID: " + thePid);
 		}
@@ -208,7 +210,7 @@ public class AdminServiceBean implements IAdminService {
 	@Override
 	public GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ProcessingException {
 
-		PersHttpClientConfig config = myPersSvc.getHttpClientConfig(thePid);
+		PersHttpClientConfig config = myDao.getHttpClientConfig(thePid);
 		if (config == null) {
 			throw new ProcessingException("Unknown HTTP Client Config PID: " + thePid);
 		}
@@ -224,24 +226,24 @@ public class AdminServiceBean implements IAdminService {
 	public GDomainList deleteService(long theServicePid) throws ProcessingException {
 		ourLog.info("Deleting service {}", theServicePid);
 
-		PersService service = myPersSvc.getServiceByPid(theServicePid);
+		PersService service = myDao.getServiceByPid(theServicePid);
 		if (service == null) {
 			throw new ProcessingException("Unknown service PID " + theServicePid);
 		}
 
-		myPersSvc.deleteService(service);
+		myDao.deleteService(service);
 
 		return loadDomainList();
 	}
 
 	@Override
 	public long getDefaultHttpClientConfigPid() {
-		return myPersSvc.getHttpClientConfigs().iterator().next().getPid();
+		return myDao.getHttpClientConfigs().iterator().next().getPid();
 	}
 
 	@Override
 	public GDomain getDomainByPid(long theDomain) throws ProcessingException {
-		PersDomain domain = myPersSvc.getDomainByPid(theDomain);
+		PersDomain domain = myDao.getDomainByPid(theDomain);
 		if (domain != null) {
 			Set<Long> empty = Collections.emptySet();
 			return loadDomain(domain, empty, empty, empty, empty);
@@ -251,7 +253,7 @@ public class AdminServiceBean implements IAdminService {
 
 	@Override
 	public long getDomainPid(String theDomainId) throws ProcessingException {
-		PersDomain domain = myPersSvc.getDomainById(theDomainId);
+		PersDomain domain = myDao.getDomainById(theDomainId);
 		if (domain == null) {
 			throw new ProcessingException("Unknown ID: " + theDomainId);
 		}
@@ -260,7 +262,7 @@ public class AdminServiceBean implements IAdminService {
 
 	@Override
 	public GService getServiceByPid(long theService) throws ProcessingException {
-		PersService service = myPersSvc.getServiceByPid(theService);
+		PersService service = myDao.getServiceByPid(theService);
 		if (service != null) {
 			return toUi(service, false);
 		}
@@ -269,7 +271,7 @@ public class AdminServiceBean implements IAdminService {
 
 	@Override
 	public long getServicePid(long theDomainPid, String theServiceId) throws ProcessingException {
-		PersService service = myPersSvc.getServiceById(theDomainPid, theServiceId);
+		PersService service = myDao.getServiceById(theDomainPid, theServiceId);
 		if (service == null) {
 			throw new ProcessingException("Unknown ID: " + theServiceId);
 		}
@@ -280,7 +282,7 @@ public class AdminServiceBean implements IAdminService {
 	public BaseGAuthHost loadAuthenticationHost(long thePid) throws ProcessingException {
 		ourLog.info("Loading authentication host with PID: {}", thePid);
 
-		BasePersAuthenticationHost authHost = myPersSvc.getAuthenticationHostByPid(thePid);
+		BasePersAuthenticationHost authHost = myDao.getAuthenticationHostByPid(thePid);
 		if (authHost == null) {
 			throw new ProcessingException("Unknown authentication host: " + thePid);
 		}
@@ -331,7 +333,7 @@ public class AdminServiceBean implements IAdminService {
 
 	@Override
 	public GSoap11ServiceVersionAndResources loadServiceVersion(long theServiceVersionPid) throws ProcessingException {
-		BasePersServiceVersion svcVer = myPersSvc.getServiceVersionByPid(theServiceVersionPid);
+		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
 		BaseGServiceVersion uiService = toUi(svcVer, false);
 		GSoap11ServiceVersionAndResources retVal = toUi(uiService, svcVer);
 		return retVal;
@@ -353,7 +355,7 @@ public class AdminServiceBean implements IAdminService {
 	public GUser loadUser(long thePid, boolean theLoadStats) throws ProcessingException {
 		ourLog.info("Loading user {}", thePid);
 
-		PersUser persUser = myPersSvc.getUser(thePid);
+		PersUser persUser = myDao.getUser(thePid);
 		if (persUser == null) {
 			throw new ProcessingException("Unknown user PID: " + thePid);
 		}
@@ -367,7 +369,7 @@ public class AdminServiceBean implements IAdminService {
 
 		ourLog.info("Loading user list: " + theRequest.toString());
 
-		for (PersUser next : myPersSvc.getAllUsers()) {
+		for (PersUser next : myDao.getAllUsersAndInitializeThem()) {
 			retVal.add(toUi(next, theRequest.isLoadStats()));
 		}
 
@@ -381,13 +383,14 @@ public class AdminServiceBean implements IAdminService {
 		BasePersAuthenticationHost host = fromUi(theAuthHost);
 
 		if (theAuthHost.getPid() > 0) {
-			BasePersAuthenticationHost existingHost = myPersSvc.getAuthenticationHostByPid(theAuthHost.getPid());
+			BasePersAuthenticationHost existingHost = myDao.getAuthenticationHostByPid(theAuthHost.getPid());
 			existingHost.merge(host);
+			ourLog.info("Saving existing authentication host of type {} with id {} / {}", new Object[] { host.getClass().getSimpleName(), theAuthHost.getPid(), theAuthHost.getModuleId() });
+			myDao.saveAuthenticationHost(existingHost);
+		} else {
+			ourLog.info("Saving new authentication host of type {} with id {} / {}", new Object[] { host.getClass().getSimpleName(), theAuthHost.getPid(), theAuthHost.getModuleId() });
+			myDao.saveAuthenticationHost(host);
 		}
-
-		ourLog.info("Saving authentication host of type {} with id {} / {}", new Object[] { host.getClass().getSimpleName(), theAuthHost.getPid(), theAuthHost.getModuleId() });
-
-		myPersSvc.saveAuthenticationHost(host);
 
 		return loadAuthHostList();
 	}
@@ -395,6 +398,8 @@ public class AdminServiceBean implements IAdminService {
 	@Override
 	public GConfig saveConfig(GConfig theConfig) throws ProcessingException {
 		ourLog.info("Saving config");
+
+		ourLog.info("Proxy config now contains the following URL Bases: {}", theConfig.getProxyUrlBases());
 
 		PersConfig existing = myConfigSvc.getConfig();
 		existing.merge(fromUi(theConfig));
@@ -415,7 +420,7 @@ public class AdminServiceBean implements IAdminService {
 	public GDomain saveDomain(GDomain theDomain) throws ProcessingException {
 		ourLog.info("Saving domain with PID {}", theDomain.getPid());
 
-		PersDomain domain = myPersSvc.getDomainByPid(theDomain.getPid());
+		PersDomain domain = myDao.getDomainByPid(theDomain.getPid());
 		PersDomain newDomain = fromUi(theDomain);
 		domain.merge(newDomain);
 
@@ -435,7 +440,7 @@ public class AdminServiceBean implements IAdminService {
 			ourLog.info("Saving new HTTP client config");
 		} else {
 			ourLog.info("Saving HTTP client config ID[{}]", theConfig.getPid());
-			existing = myPersSvc.getHttpClientConfig(theConfig.getPid());
+			existing = myDao.getHttpClientConfig(theConfig.getPid());
 			if (existing == null) {
 				throw new ProcessingException("Unknown client config PID: " + theConfig.getPid());
 			}
@@ -457,14 +462,14 @@ public class AdminServiceBean implements IAdminService {
 	public GDomainList saveService(GService theService) throws ProcessingException {
 		ourLog.info("Saving service {}", theService.getPid());
 
-		PersService service = myPersSvc.getServiceByPid(theService.getPid());
+		PersService service = myDao.getServiceByPid(theService.getPid());
 		if (service == null) {
 			throw new ProcessingException("Unknown service PID " + theService.getPid());
 		}
 
 		PersService newService = fromUi(theService);
 		service.merge(newService);
-		myPersSvc.saveService(newService);
+		myDao.saveService(newService);
 
 		return loadDomainList();
 	}
@@ -475,12 +480,12 @@ public class AdminServiceBean implements IAdminService {
 
 		ourLog.info("Adding service version {} to domain {} / service {}", new Object[] { theVersion.getPid(), theDomain, theService });
 
-		PersDomain domain = myPersSvc.getDomainByPid(theDomain);
+		PersDomain domain = myDao.getDomainByPid(theDomain);
 		if (domain == null) {
 			throw new ProcessingException("Unknown domain ID: " + theDomain);
 		}
 
-		PersService service = myPersSvc.getServiceByPid(theService);
+		PersService service = myDao.getServiceByPid(theService);
 		if (service == null) {
 			throw new ProcessingException("Unknown service ID: " + theService);
 		}
@@ -568,7 +573,7 @@ public class AdminServiceBean implements IAdminService {
 				}
 				pids.add(nextPers.getPid());
 			} else {
-				nextPers = myPersSvc.saveClientAuth(nextPers);
+				nextPers = myDao.saveClientAuth(nextPers);
 				pids.add(nextPers.getPid());
 				version.addClientAuth(nextPers);
 			}
@@ -601,7 +606,7 @@ public class AdminServiceBean implements IAdminService {
 				}
 				pids.add(nextPers.getPid());
 			} else {
-				nextPers = myPersSvc.saveServerAuth(nextPers);
+				nextPers = myDao.saveServerAuth(nextPers);
 				pids.add(nextPers.getPid());
 				version.addServerAuth(nextPers);
 			}
@@ -642,7 +647,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setActive(theVersion.isActive());
 		retVal.setVersionId(theVersion.getId());
 
-		PersHttpClientConfig httpClientConfig = myPersSvc.getHttpClientConfig(theVersion.getHttpClientConfigPid());
+		PersHttpClientConfig httpClientConfig = myDao.getHttpClientConfig(theVersion.getHttpClientConfigPid());
 		if (httpClientConfig == null) {
 			throw new ProcessingException("Unknown HTTP client config PID: " + theVersion.getHttpClientConfigPid());
 		}
@@ -681,7 +686,7 @@ public class AdminServiceBean implements IAdminService {
 		Validate.throwIllegalArgumentExceptionIfNotPositive(theDomainPid, "DomainPID");
 		Validate.throwIllegalArgumentExceptionIfNotPositive(theServicePid, "ServicePID");
 
-		PersService service = myPersSvc.getServiceByPid(theServicePid);
+		PersService service = myDao.getServiceByPid(theServicePid);
 
 		for (int i = 1;; i++) {
 			String name = i + ".0";
@@ -896,13 +901,23 @@ public class AdminServiceBean implements IAdminService {
 
 	private PersBaseServerAuth<?, ?> fromUi(BaseGServerSecurity theObj, BasePersServiceVersion theSvcVer) {
 		switch (theObj.getType()) {
-		case WSSEC_UT:
+		case WSSEC_UT: {
 			PersWsSecUsernameTokenServerAuth retVal = new PersWsSecUsernameTokenServerAuth();
-			retVal.setAuthenticationHost(myPersSvc.getAuthenticationHostByPid(theObj.getAuthHostPid()));
+			retVal.setAuthenticationHost(myDao.getAuthenticationHostByPid(theObj.getAuthHostPid()));
 			retVal.setServiceVersion(theSvcVer);
 			return retVal;
 		}
-		return null;
+		case JSONRPC_NAMED_PARAMETER: {
+			GNamedParameterJsonRpcServerAuth obj = (GNamedParameterJsonRpcServerAuth)theObj;
+			NamedParameterJsonRpcServerAuth retVal = new NamedParameterJsonRpcServerAuth();
+			retVal.setAuthenticationHost(myDao.getAuthenticationHostByPid(theObj.getAuthHostPid()));
+			retVal.setServiceVersion(theSvcVer);
+			retVal.setUsernameParameterName(obj.getUsernameParameterName());
+			retVal.setPasswordParameterName(obj.getPasswordParameterName());
+			return retVal;
+		}
+		}
+		throw new IllegalArgumentException("Unknown type: " + theObj.getType());
 	}
 
 	private PersConfig fromUi(GConfig theConfig) {
@@ -965,7 +980,7 @@ public class AdminServiceBean implements IAdminService {
 		PersServiceVersionMethod retVal = new PersServiceVersionMethod();
 		retVal.setName(theMethod.getName());
 		retVal.setPid(theMethod.getPidOrNull());
-		retVal.setServiceVersion(myPersSvc.getServiceVersionByPid(theServiceVersionPid));
+		retVal.setServiceVersion(myDao.getServiceVersionByPid(theServiceVersionPid));
 		return retVal;
 	}
 
@@ -977,23 +992,33 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private PersUser fromUi(GUser thePersUser) throws ProcessingException {
-		PersUser retVal = new PersUser();
-		retVal.setPid(thePersUser.getPidOrNull());
-		retVal.setAllowAllDomains(thePersUser.isAllowAllDomains());
-		retVal.setPermissions(thePersUser.getGlobalPermissions());
-		retVal.setUsername(thePersUser.getUsername());
-		retVal.setDomainPermissions(fromUi(thePersUser.getDomainPermissions()));
-		retVal.setAuthenticationHost(myPersSvc.getAuthenticationHostByPid(thePersUser.getAuthHostPid()));
+	private PersUser fromUi(GUser theUser) throws ProcessingException {
+		PersUser retVal;
 
-		if (thePersUser.getPidOrNull() != null && thePersUser.getChangePassword() == null) {
-			PersUser existing = myPersSvc.getUser(thePersUser.getPid());
+		if (theUser.getPidOrNull() == null) {
+			BasePersAuthenticationHost authHost = myDao.getAuthenticationHostByPid(theUser.getAuthHostPid());
+			retVal = myDao.getOrCreateUser(authHost, theUser.getUsername());
+			if (retVal.isNewlyCreated() == false) {
+				throw new ProcessingException("User '" + theUser.getUsername() + "' already exists!");
+			}
+		} else {
+			retVal = myDao.getUser(theUser.getPid());
+		}
+
+		retVal.setAllowAllDomains(theUser.isAllowAllDomains());
+		retVal.setPermissions(theUser.getGlobalPermissions());
+		retVal.setUsername(theUser.getUsername());
+		retVal.setDomainPermissions(fromUi(theUser.getDomainPermissions(), retVal.getDomainPermissions()));
+		retVal.setAuthenticationHost(myDao.getAuthenticationHostByPid(theUser.getAuthHostPid()));
+
+		if (theUser.getPidOrNull() != null && theUser.getChangePassword() == null) {
+			PersUser existing = myDao.getUser(theUser.getPid());
 			if (StringUtils.isNotBlank(existing.getPasswordHash())) {
 				retVal.setPasswordHash(existing.getPasswordHash());
 			}
-		} else if (thePersUser.getChangePassword() != null) {
-			ourLog.info("Changing password for user {}", thePersUser.getPidOrNull());
-			retVal.setPassword(thePersUser.getChangePassword());
+		} else if (theUser.getChangePassword() != null) {
+			ourLog.info("Changing password for user {}", theUser.getPidOrNull());
+			retVal.setPassword(theUser.getChangePassword());
 		}
 
 		return retVal;
@@ -1003,7 +1028,7 @@ public class AdminServiceBean implements IAdminService {
 		PersUserDomainPermission retVal = new PersUserDomainPermission();
 		retVal.setPid(theObj.getPidOrNull());
 		retVal.setAllowAllServices(theObj.isAllowAllServices());
-		retVal.setServiceDomain(myPersSvc.getDomainByPid(theObj.getDomainPid()));
+		retVal.setServiceDomain(myDao.getDomainByPid(theObj.getDomainPid()));
 		retVal.setServicePermissions(new ArrayList<PersUserServicePermission>());
 		for (GUserServicePermission next : theObj.getServicePermissions()) {
 			retVal.addServicePermission(fromUi(next));
@@ -1015,7 +1040,7 @@ public class AdminServiceBean implements IAdminService {
 		PersUserServicePermission retVal = new PersUserServicePermission();
 		retVal.setPid(theObj.getPidOrNull());
 		retVal.setAllowAllServiceVersions(theObj.isAllowAllServiceVersions());
-		retVal.setService(myPersSvc.getServiceByPid(theObj.getServicePid()));
+		retVal.setService(myDao.getServiceByPid(theObj.getServicePid()));
 		retVal.setServiceVersionPermissions(new ArrayList<PersUserServiceVersionPermission>());
 		for (GUserServiceVersionPermission next : theObj.getServiceVersionPermissions()) {
 			retVal.addServiceVersionPermission(fromUi(next));
@@ -1026,7 +1051,7 @@ public class AdminServiceBean implements IAdminService {
 	private PersUserServiceVersionMethodPermission fromUi(GUserServiceVersionMethodPermission theObj) {
 		PersUserServiceVersionMethodPermission retVal = new PersUserServiceVersionMethodPermission();
 		retVal.setPid(theObj.getPidOrNull());
-		retVal.setServiceVersionMethod(myPersSvc.getServiceVersionMethodByPid(theObj.getServiceVersionMethodPid()));
+		retVal.setServiceVersionMethod(myDao.getServiceVersionMethodByPid(theObj.getServiceVersionMethodPid()));
 		retVal.setAllow(theObj.isAllow());
 		return retVal;
 	}
@@ -1035,7 +1060,7 @@ public class AdminServiceBean implements IAdminService {
 		PersUserServiceVersionPermission retVal = new PersUserServiceVersionPermission();
 		retVal.setPid(theObj.getPidOrNull());
 		retVal.setAllowAllServiceVersionMethods(theObj.isAllowAllServiceVersionMethods());
-		retVal.setServiceVersion(myPersSvc.getServiceVersionByPid(theObj.getServiceVersionPid()));
+		retVal.setServiceVersion(myDao.getServiceVersionByPid(theObj.getServiceVersionPid()));
 		retVal.setServiceVersionMethodPermissions(new ArrayList<PersUserServiceVersionMethodPermission>());
 		for (GUserServiceVersionMethodPermission next : theObj.getServiceVersionMethodPermissions()) {
 			retVal.addServiceVersionMethodPermissions(fromUi(next));
@@ -1043,8 +1068,9 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private Collection<PersUserDomainPermission> fromUi(List<GUserDomainPermission> theDomainPermissions) {
-		Collection<PersUserDomainPermission> retVal = new ArrayList<PersUserDomainPermission>();
+	private Collection<PersUserDomainPermission> fromUi(List<GUserDomainPermission> theDomainPermissions, Collection<PersUserDomainPermission> theExisting) {
+		Collection<PersUserDomainPermission> retVal = theExisting;
+		retVal.clear();
 		for (GUserDomainPermission next : theDomainPermissions) {
 			retVal.add(fromUi(next));
 		}
@@ -1058,7 +1084,7 @@ public class AdminServiceBean implements IAdminService {
 
 	private GAuthenticationHostList loadAuthHostList() {
 		GAuthenticationHostList retVal = new GAuthenticationHostList();
-		for (BasePersAuthenticationHost next : myPersSvc.getAllAuthenticationHosts()) {
+		for (BasePersAuthenticationHost next : myDao.getAllAuthenticationHosts()) {
 			BaseGAuthHost uiObject = toUi(next);
 			retVal.add(uiObject);
 		}
@@ -1109,7 +1135,7 @@ public class AdminServiceBean implements IAdminService {
 	private GDomainList loadDomainList(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats) throws ProcessingException {
 		GDomainList domainList = new GDomainList();
 
-		for (PersDomain nextDomain : myPersSvc.getAllDomains()) {
+		for (PersDomain nextDomain : myDao.getAllDomains()) {
 			GDomain gDomain = loadDomain(nextDomain, theLoadDomStats, theLoadSvcStats, theLoadVerStats, theLoadVerMethodStats);
 
 			domainList.add(gDomain);
@@ -1138,7 +1164,7 @@ public class AdminServiceBean implements IAdminService {
 
 	private GHttpClientConfigList loadHttpClientConfigList() {
 		GHttpClientConfigList configList = new GHttpClientConfigList();
-		for (PersHttpClientConfig next : myPersSvc.getHttpClientConfigs()) {
+		for (PersHttpClientConfig next : myDao.getHttpClientConfigs()) {
 			configList.add(toUi(next));
 		}
 		return configList;
@@ -1146,7 +1172,7 @@ public class AdminServiceBean implements IAdminService {
 
 	private GUserList loadUserList(boolean theLoadStats) throws ProcessingException {
 		GUserList retVal = new GUserList();
-		Collection<PersUser> users = myPersSvc.getAllUsers();
+		Collection<PersUser> users = myDao.getAllUsersAndInitializeThem();
 		for (PersUser persUser : users) {
 			retVal.add(toUi(persUser, theLoadStats));
 		}
@@ -1358,10 +1384,19 @@ public class AdminServiceBean implements IAdminService {
 		BaseGServerSecurity retVal = null;
 
 		switch (theAuth.getAuthType()) {
-		case WS_SECURITY_USERNAME_TOKEN:
+		case WSSEC_UT: {
 			GWsSecServerSecurity auth = new GWsSecServerSecurity();
 			retVal = auth;
 			break;
+		}
+		case JSONRPC_NAMED_PARAMETER: {
+			NamedParameterJsonRpcServerAuth pers = (NamedParameterJsonRpcServerAuth)theAuth;
+			GNamedParameterJsonRpcServerAuth auth = new GNamedParameterJsonRpcServerAuth();
+			auth.setUsernameParameterName(pers.getUsernameParameterName());
+			auth.setPasswordParameterName(pers.getPasswordParameterName());
+			retVal = auth;
+			break;
+		}
 		}
 
 		if (retVal == null) {
@@ -1575,6 +1610,8 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setDomainPermissions(toUi(thePersUser.getDomainPermissions()));
 		retVal.setAuthHostPid(thePersUser.getAuthenticationHost().getPid());
 
+		retVal.setContactNotes(thePersUser.getContact().getNotes());
+
 		if (theLoadStats) {
 			PersUserStatus status = thePersUser.getStatus();
 			retVal.setStatsLoaded(true);
@@ -1673,8 +1710,8 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	void setPersSvc(DaoBean thePersSvc) {
-		assert myPersSvc == null;
-		myPersSvc = thePersSvc;
+		assert myDao == null;
+		myDao = thePersSvc;
 	}
 
 	/**
@@ -1695,7 +1732,7 @@ public class AdminServiceBean implements IAdminService {
 	public List<GUrlStatus> loadServiceVersionUrlStatuses(long theServiceVersionPid) {
 		ourLog.info("Loading Service Version URL statuses for ServiceVersion {}", theServiceVersionPid);
 
-		BasePersServiceVersion svcVer = myPersSvc.getServiceVersionByPid(theServiceVersionPid);
+		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
 		if (svcVer == null) {
 			throw new IllegalArgumentException("Unknown Service Version " + theServiceVersionPid);
 		}
@@ -1738,11 +1775,8 @@ public class AdminServiceBean implements IAdminService {
 
 	@Override
 	public GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid) {
-		BasePersServiceVersion svcVer = myPersSvc.getServiceVersionByPid(theServiceVersionPid);
-		return toUi(svcVer);
-	}
+		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
 
-	private GRecentMessageLists toUi(BasePersServiceVersion svcVer) {
 		GRecentMessageLists retVal = new GRecentMessageLists();
 		retVal.setKeepSuccess(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.SUCCESS));
 		retVal.setKeepFail(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.FAIL));
@@ -1750,20 +1784,23 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setKeepSecurityFail(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.SECURITY_FAIL));
 
 		if (retVal.getKeepSuccess() > 0) {
-			retVal.setSuccessList(toUi(myPersSvc.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.SUCCESS), true));
+			retVal.setSuccessList(toUi(myDao.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.SUCCESS), true));
 		}
 
 		if (retVal.getKeepFail() > 0) {
-			retVal.setFailList(toUi(myPersSvc.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.FAIL), true));
+			retVal.setFailList(toUi(myDao.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.FAIL), true));
 		}
 
 		if (retVal.getKeepSecurityFail() > 0) {
-			retVal.setSecurityFailList(toUi(myPersSvc.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.SECURITY_FAIL), true));
+			retVal.setSecurityFailList(toUi(myDao.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.SECURITY_FAIL), true));
 		}
 
 		if (retVal.getKeepFault() > 0) {
-			retVal.setFaultList(toUi(myPersSvc.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.FAULT), true));
+			retVal.setFaultList(toUi(myDao.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.FAULT), true));
 		}
+
+		ourLog.info("Returning recent message list for service version {} - {}", theServiceVersionPid, retVal);
+
 		return retVal;
 	}
 
@@ -1779,7 +1816,7 @@ public class AdminServiceBean implements IAdminService {
 
 	@Override
 	public GRecentMessage loadRecentMessageForServiceVersion(long thePid) {
-		BasePersRecentMessage msg = myPersSvc.loadRecentMessageForServiceVersion(thePid);
+		BasePersRecentMessage msg = myDao.loadRecentMessageForServiceVersion(thePid);
 		return toUi(msg, true);
 	}
 
@@ -1787,7 +1824,10 @@ public class AdminServiceBean implements IAdminService {
 		GRecentMessage retVal = new GRecentMessage();
 
 		retVal.setPid(theMsg.getPid());
-		retVal.setImplementationUrl(theMsg.getImplementationUrl().getUrl());
+		PersServiceVersionUrl implementationUrl = theMsg.getImplementationUrl();
+		if (implementationUrl != null) {
+			retVal.setImplementationUrl(implementationUrl.getUrl());
+		}
 		retVal.setRequestHostIp(theMsg.getRequestHostIp());
 		retVal.setTransactionTime(theMsg.getTransactionTime());
 		retVal.setTransactionMillis(theMsg.getTransactionMillis());
@@ -1802,36 +1842,43 @@ public class AdminServiceBean implements IAdminService {
 
 	@Override
 	public GRecentMessageLists loadRecentTransactionListForUser(long thePid) {
-		PersUser user = myPersSvc.getUser(thePid);
+		PersUser user = myDao.getUser(thePid);
 		BasePersAuthenticationHost authHost = user.getAuthenticationHost();
 
 		GRecentMessageLists retVal = new GRecentMessageLists();
-		retVal.setKeepSuccess(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.SUCCESS));
-		retVal.setKeepFail(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.FAIL));
-		retVal.setKeepFault(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.FAULT));
-		retVal.setKeepSecurityFail(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.SECURITY_FAIL));
+		retVal.setKeepSuccess(defaultInteger(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.SUCCESS)));
+		retVal.setKeepFail(defaultInteger(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.FAIL)));
+		retVal.setKeepFault(defaultInteger(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.FAULT)));
+		retVal.setKeepSecurityFail(defaultInteger(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.SECURITY_FAIL)));
 
 		if (retVal.getKeepSuccess() > 0) {
-			retVal.setSuccessList(toUi(myPersSvc.getUserRecentMessages(user, ResponseTypeEnum.SUCCESS), true));
+			retVal.setSuccessList(toUi(myDao.getUserRecentMessages(user, ResponseTypeEnum.SUCCESS), true));
 		}
 
 		if (retVal.getKeepFail() > 0) {
-			retVal.setFailList(toUi(myPersSvc.getUserRecentMessages(user, ResponseTypeEnum.FAIL), true));
+			retVal.setFailList(toUi(myDao.getUserRecentMessages(user, ResponseTypeEnum.FAIL), true));
 		}
 
 		if (retVal.getKeepSecurityFail() > 0) {
-			retVal.setSecurityFailList(toUi(myPersSvc.getUserRecentMessages(user, ResponseTypeEnum.SECURITY_FAIL), true));
+			retVal.setSecurityFailList(toUi(myDao.getUserRecentMessages(user, ResponseTypeEnum.SECURITY_FAIL), true));
 		}
 
 		if (retVal.getKeepFault() > 0) {
-			retVal.setFaultList(toUi(myPersSvc.getUserRecentMessages(user, ResponseTypeEnum.FAULT), true));
+			retVal.setFaultList(toUi(myDao.getUserRecentMessages(user, ResponseTypeEnum.FAULT), true));
 		}
+
+		ourLog.info("Returning recent message list for service version {} - {}", thePid, retVal);
+
 		return retVal;
+	}
+
+	private int defaultInteger(Integer theInt) {
+		return theInt != null ? theInt : 0;
 	}
 
 	@Override
 	public GRecentMessage loadRecentMessageForUser(long thePid) {
-		BasePersRecentMessage msg = myPersSvc.loadRecentMessageForUser(thePid);
+		BasePersRecentMessage msg = myDao.loadRecentMessageForUser(thePid);
 		return toUi(msg, true);
 	}
 

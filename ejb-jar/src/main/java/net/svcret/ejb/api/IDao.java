@@ -8,6 +8,7 @@ import java.util.List;
 import javax.ejb.Local;
 
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
+import net.svcret.ejb.ejb.TransactionLoggerBean.BaseUnflushed;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
@@ -37,34 +38,35 @@ import net.svcret.ejb.model.entity.PersUserRecentMessage;
 import net.svcret.ejb.model.entity.PersUserStatus;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 
-
 @Local
 public interface IDao {
 
 	void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost);
-	
+
 	void deleteHttpClientConfig(PersHttpClientConfig theConfig);
 
 	void deleteService(PersService theService);
-	
+
+	void deleteUser(PersUser theUser);
+
 	Collection<BasePersAuthenticationHost> getAllAuthenticationHosts();
 
 	Collection<PersDomain> getAllDomains();
 
 	Collection<PersService> getAllServices();
 
-	Collection<PersUser> getAllUsers();
-
 	Collection<PersServiceVersionSoap11> getAllServiceVersions();
+
+	Collection<PersUser> getAllUsersAndInitializeThem();
 
 	BasePersAuthenticationHost getAuthenticationHost(String theModuleId) throws ProcessingException;
 
 	BasePersAuthenticationHost getAuthenticationHostByPid(long thePid);
-	
+
 	PersConfig getConfigByPid(long theDefaultId);
-	
+
 	PersDomain getDomainById(String theDomainId);
-	
+
 	/**
 	 * Returns <code>null</code> if not found
 	 */
@@ -73,10 +75,12 @@ public interface IDao {
 	PersHttpClientConfig getHttpClientConfig(long thePid);
 
 	Collection<PersHttpClientConfig> getHttpClientConfigs();
-	
+
 	BasePersInvocationStats getInvocationStats(PersInvocationStatsPk thePk);
-	
+
 	List<PersInvocationStats> getInvocationStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff);
+
+	BasePersInvocationStats getInvocationUserStats(PersInvocationUserStatsPk thePk);
 
 	List<PersInvocationUserStats> getInvocationUserStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff);
 
@@ -108,13 +112,21 @@ public interface IDao {
 
 	PersServiceVersionMethod getServiceVersionMethodByPid(long theServiceVersionMethodPid);
 
+	List<PersServiceVersionRecentMessage> getServiceVersionRecentMessages(BasePersServiceVersion theSvcVer, ResponseTypeEnum theResponseType);
+
 	long getStateCounter(String theKey);
 
 	PersServiceVersionStatus getStatusForServiceVersionWithPid(long theServicePid);
 
 	PersUser getUser(long thePid);
 
+	List<PersUserRecentMessage> getUserRecentMessages(PersUser theUser, ResponseTypeEnum theResponseType);
+
 	long incrementStateCounter(String theKey);
+
+	BasePersRecentMessage loadRecentMessageForServiceVersion(long thePid);
+
+	BasePersRecentMessage loadRecentMessageForUser(long thePid);
 
 	void removeDomain(PersDomain theDomain);
 
@@ -134,37 +146,53 @@ public interface IDao {
 
 	void saveInvocationStats(Collection<BasePersMethodStats> theStats, List<BasePersMethodStats> theStatsToDelete);
 
+	void saveRecentMessagesAndTrimInNewTransaction(BaseUnflushed<? extends BasePersRecentMessage> theNextTransactions);
+
 	PersBaseServerAuth<?, ?> saveServerAuth(PersBaseServerAuth<?, ?> theNextPers);
 
 	void saveService(PersService theService);
 
 	PersUser saveServiceUser(PersUser theUser);
+
 	BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theVersion) throws ProcessingException;
+
+	void saveServiceVersionRecentMessage(PersServiceVersionRecentMessage theMsg);
+
 	void saveServiceVersionStatuses(ArrayList<PersServiceVersionStatus> theServiceVersionStatuses);
 
 	void saveServiceVersionUrlStatus(ArrayList<PersServiceVersionUrlStatus> theUrlStatuses);
 
-	void saveServiceVersionRecentMessage(PersServiceVersionRecentMessage theMsg);
-
-	List<PersServiceVersionRecentMessage> getServiceVersionRecentMessages(BasePersServiceVersion theSvcVer, ResponseTypeEnum theResponseType);
-
-	void trimServiceVersionRecentMessages(BasePersServiceVersion theVersion, ResponseTypeEnum theType, int theNumberToTrimTo);
-
 	void saveUserRecentMessage(PersUserRecentMessage theMsg);
-
-	List<PersUserRecentMessage> getUserRecentMessages(PersUser theUser, ResponseTypeEnum theResponseType);
-
-	void trimUserRecentMessages(PersUser theUser, ResponseTypeEnum theType, int theNumberToTrimTo);
-
-	BasePersRecentMessage loadRecentMessageForServiceVersion(long thePid);
-
-	BasePersRecentMessage loadRecentMessageForUser(long thePid);
-
-	void deleteUser(PersUser theUser);
 
 	void saveUserStatus(Collection<PersUserStatus> theStatus);
 
-	BasePersInvocationStats getInvocationUserStats(PersInvocationUserStatsPk thePk);
+	void trimServiceVersionRecentMessages(BasePersServiceVersion theVersion, ResponseTypeEnum theType, int theNumberToTrimTo);
 
-	
+	void trimUserRecentMessages(PersUser theUser, ResponseTypeEnum theType, int theNumberToTrimTo);
+
+	public static class RecentMessagesAndMaxToKeep {
+		private List<BasePersRecentMessage> myMessages = new ArrayList<BasePersRecentMessage>();
+		private int myNumToKeep;
+
+		public void addMessages(Collection<? extends BasePersRecentMessage> theMessages) {
+			myMessages.addAll(theMessages);
+		}
+
+		/**
+		 * @return the numToKeep
+		 */
+		public int getNumToKeep() {
+			return myNumToKeep;
+		}
+
+		/**
+		 * @param theNumToKeep
+		 *            the numToKeep to set
+		 */
+		public void setNumToKeep(int theNumToKeep) {
+			myNumToKeep = theNumToKeep;
+		}
+
+	}
+
 }
