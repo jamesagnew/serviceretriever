@@ -2,8 +2,9 @@ package net.svcret.ejb.model.entity;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -45,6 +46,9 @@ public class PersUser extends BasePersObject {
 
 	@Transient
 	private transient Set<PersServiceVersionMethod> myAllowedMethods;
+
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true, mappedBy = "myUser")
+	private Collection<PersUserAllowableSourceIps> myAllowSourceIps;
 
 	@ManyToOne(cascade = {})
 	@JoinColumn(name = "AUTH_HOST_PID", referencedColumnName = "PID", nullable = false)
@@ -117,6 +121,13 @@ public class PersUser extends BasePersObject {
 		return theObj instanceof PersUser && Objects.equal(myPid, ((PersUser) theObj).myPid);
 	}
 
+	public Collection<PersUserAllowableSourceIps> getAllowSourceIps() {
+		if (myAllowSourceIps == null) {
+			myAllowSourceIps = new ArrayList<PersUserAllowableSourceIps>();
+		}
+		return myAllowSourceIps;
+	}
+
 	/**
 	 * @return the authenticationHost
 	 */
@@ -139,7 +150,7 @@ public class PersUser extends BasePersObject {
 			myDomainPermissions = new ArrayList<PersUserDomainPermission>();
 		}
 		return (myDomainPermissions);
-//		return Collections.unmodifiableCollection(myDomainPermissions);
+		// return Collections.unmodifiableCollection(myDomainPermissions);
 	}
 
 	public String getPasswordHash() {
@@ -234,7 +245,8 @@ public class PersUser extends BasePersObject {
 	}
 
 	/**
-	 * @param theContact the contact to set
+	 * @param theContact
+	 *            the contact to set
 	 */
 	public void setContact(PersUserContact theContact) {
 		myContact = theContact;
@@ -294,6 +306,38 @@ public class PersUser extends BasePersObject {
 	 */
 	public void setUsername(String theUsername) {
 		myUsername = theUsername;
+	}
+
+	public Collection<String> getAllowSourceIpsAsStrings() {
+		ArrayList<String> retVal = new ArrayList<String>();
+		for (PersUserAllowableSourceIps next : getAllowSourceIps()) {
+			retVal.add(next.getIp());
+		}
+		return retVal;
+	}
+
+	public void setAllowSourceIpsAsStrings(List<String> theStrings) {
+		ArrayList<String> toAdd = new ArrayList<String>(theStrings);
+		for (PersUserAllowableSourceIps next : getAllowSourceIps()) {
+			toAdd.remove(next.getIp());
+		}
+		
+		ArrayList<PersUserAllowableSourceIps> toDelete = new ArrayList<PersUserAllowableSourceIps>(getAllowSourceIps());
+		for (Iterator<PersUserAllowableSourceIps> iterator = toDelete.iterator(); iterator.hasNext();) {
+			PersUserAllowableSourceIps next = iterator.next();
+			if (theStrings.contains(next.getIp())) {
+				iterator.remove();
+			}
+		}
+		
+		for (String next : toAdd) {
+			getAllowSourceIps().add(new PersUserAllowableSourceIps(this, next));
+		}
+
+		for (PersUserAllowableSourceIps next : toDelete) {
+			getAllowSourceIps().remove(next);
+		}
+
 	}
 
 }

@@ -23,6 +23,7 @@
 		<class>net.svcret.ejb.model.entity.PersServiceVersionMethod</class>
 		<class>net.svcret.ejb.model.entity.PersService</class>
 		<class>net.svcret.ejb.model.entity.PersUser</class>
+		<class>net.svcret.ejb.model.entity.PersUserAllowableSourceIps</class>
 		<class>net.svcret.ejb.model.entity.PersUserContact</class>
 		<class>net.svcret.ejb.model.entity.PersUserStatus</class>
 		<class>net.svcret.ejb.model.entity.PersUserDomainPermission</class>
@@ -77,6 +78,7 @@
 		<class>net.svcret.ejb.model.entity.PersServiceVersionMethod</class>
 		<class>net.svcret.ejb.model.entity.PersService</class>
 		<class>net.svcret.ejb.model.entity.PersUser</class>
+		<class>net.svcret.ejb.model.entity.PersUserAllowableSourceIps</class>
 		<class>net.svcret.ejb.model.entity.PersUserContact</class>
 		<class>net.svcret.ejb.model.entity.PersUserStatus</class>
 		<class>net.svcret.ejb.model.entity.PersUserDomainPermission</class>

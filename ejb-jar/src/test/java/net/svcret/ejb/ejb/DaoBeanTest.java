@@ -1,7 +1,15 @@
 package net.svcret.ejb.ejb;
 
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.*;
-import static org.junit.Assert.*;
+import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.DAY;
+import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.HOUR;
+import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.MINUTE;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import java.sql.SQLException;
 import java.text.DateFormat;
@@ -36,11 +44,13 @@ import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
+import net.svcret.ejb.model.entity.PersUserAllowableSourceIps;
 import net.svcret.ejb.model.entity.PersUserRecentMessage;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -358,6 +368,45 @@ public class DaoBeanTest extends BaseJpaTest {
 		newEntityManager();
 	}
 	
+	@Test
+	public void testSaveUserAllowableSourceIps() throws ProcessingException {
+		newEntityManager();
+		
+		PersAuthenticationHostLocalDatabase authHost = mySvc.getOrCreateAuthenticationHostLocalDatabase("modid");
+		
+		newEntityManager();
+		
+		PersUser user = mySvc.getOrCreateUser(authHost, "username");
+		assertThat(user.getAllowSourceIps(), Matchers.empty());
+		
+		newEntityManager();
+
+		user = mySvc.getOrCreateUser(authHost, "username");
+		user.getAllowSourceIps().add(new PersUserAllowableSourceIps(user, "1.1.1.1"));
+		user.getAllowSourceIps().add(new PersUserAllowableSourceIps(user, "1.1.1.2"));
+		mySvc.saveServiceUser(user);
+		
+		newEntityManager();
+		
+		user = mySvc.getOrCreateUser(authHost, "username");
+		ourLog.info("FOund: " + user.getAllowSourceIps());
+		ourLog.info("FOund: " + user.getAllowSourceIpsAsStrings());
+		assertEquals(2, user.getAllowSourceIpsAsStrings().size());
+		assertThat(user.getAllowSourceIpsAsStrings(), Matchers.contains("1.1.1.1", "1.1.1.2"));
+		
+		List<String> strings = new ArrayList<String>();
+		strings.add("1.1.1.1");
+		strings.add("1.1.1.3");
+		user.setAllowSourceIpsAsStrings(strings);
+		
+		mySvc.saveServiceUser(user);
+		
+		newEntityManager();
+		
+		user = mySvc.getOrCreateUser(authHost, "username");
+		assertEquals(2, user.getAllowSourceIpsAsStrings().size());
+		assertThat(user.getAllowSourceIpsAsStrings(), Matchers.contains("1.1.1.1", "1.1.1.3"));
+	}
 
 
 	@Test
