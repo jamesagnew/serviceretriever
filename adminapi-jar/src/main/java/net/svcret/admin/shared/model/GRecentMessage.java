@@ -14,6 +14,8 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 
 	private Date myTransactionTime;
 
+	private AuthorizationOutcomeEnum myAuthorizationOutcome;
+
 	public GRecentMessage() {
 		super();
 	}
@@ -113,6 +115,10 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 	 */
 	public void setTransactionTime(Date theTransactionTime) {
 		myTransactionTime = theTransactionTime;
+	}
+
+	public void setAuthorizationOutcome(AuthorizationOutcomeEnum theAuthorizationOutcome) {
+		myAuthorizationOutcome = theAuthorizationOutcome;
 	}
 
 }

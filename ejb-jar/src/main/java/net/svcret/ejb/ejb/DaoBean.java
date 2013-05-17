@@ -225,7 +225,10 @@ public class DaoBean implements IDao {
 		TypedQuery<PersInvocationStats> q = myEntityManager.createNamedQuery(Queries.PERSINVOC_STATS, PersInvocationStats.class);
 		q.setParameter("INTERVAL", theHour);
 		q.setParameter("BEFORE_DATE", theDaysCutoff, TemporalType.TIMESTAMP);
-		return q.getResultList();
+		
+		List<PersInvocationStats> resultList = q.getResultList();
+		ourLog.debug("Querying for invocation stats with interval {} before start date {} and found {}", new Object[]{theHour, theDaysCutoff, resultList.size()});
+		return resultList;
 	}
 
 	@Override
@@ -345,6 +348,8 @@ public class DaoBean implements IDao {
 			ourLog.info("Adding new invocation stats: {}", thePk);
 			retVal = myEntityManager.merge(retVal);
 			retVal.setNewlyCreated(true);
+		} else {
+			ourLog.debug("Returning existing invocation stats: {}", retVal);
 		}
 
 		return retVal;
@@ -706,6 +711,7 @@ public class DaoBean implements IDao {
 				if (!persisted.isNewlyCreated()) {
 					myEntityManager.refresh(persisted);
 				}
+				ourLog.debug("Merging {} into {}", next, persisted);
 				persisted.mergeUnsynchronizedEvents(next);
 				count++;
 			} else if (next instanceof PersStaticResourceStats) {
@@ -720,10 +726,12 @@ public class DaoBean implements IDao {
 				throw new IllegalArgumentException("Unknown stats type: " + next.getClass());
 			}
 
+			ourLog.debug("Merging stats entry: {}", persisted);
 			myEntityManager.merge(persisted);
 		}
 
 		for (BasePersMethodStats next : theStatsToDelete) {
+			ourLog.debug("Removing stats entry: {}", next);
 			myEntityManager.remove(next);
 		}
 

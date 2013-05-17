@@ -61,7 +61,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 	@EJB
 	private ISecurityService mySecuritySvc;
-	
+
 	@EJB(name = "SOAP11Invoker")
 	private IServiceInvoker<PersServiceVersionSoap11> mySoap11ServiceInvoker;
 
@@ -71,7 +71,6 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	@EJB
 	private ITransactionLogger myTransactionLogger;
 
-	
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
 	public OrchestratorResponseBean handle(RequestType theRequestType, String theRequestHostIp, String thePath, String theQuery, Reader theInputReader) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException {
@@ -81,7 +80,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		Validate.notNull(theInputReader, "Reader");
 
 		try {
-		return doHandle(theRequestType, theRequestHostIp, thePath, theQuery, theInputReader);
+			return doHandle(theRequestType, theRequestHostIp, thePath, theQuery, theInputReader);
 		} finally {
 			theInputReader.close();
 		}
@@ -140,7 +139,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		 * Currently only active for method invocations
 		 */
 
-		AuthorizationResultsBean authorized=null;
+		AuthorizationResultsBean authorized = null;
 		if (results.getResultType() == ResultTypeEnum.METHOD) {
 			if (ourLog.isDebugEnabled()) {
 				if (serviceVersion.getServerAuths().isEmpty()) {
@@ -247,7 +246,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			 * Log transaction if needed
 			 */
 			logTransaction(theRequestHostIp, startTime, reader, serviceVersion, authorized, httpResponse, invocationResponse);
-			
+
 			retVal = new OrchestratorResponseBean(responseBody, responseContentType, responseHeaders);
 			break;
 		}
@@ -263,9 +262,9 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		PersUser user = authorized != null ? authorized.getUser() : null;
 		String requestBody = reader.getCapturedString();
 		PersServiceVersionUrl successfulUrl = httpResponse != null ? httpResponse.getSuccessfulUrl() : null;
-		myTransactionLogger.logTransaction(startTime, theRequestHostIp, serviceVersion, user, requestBody, invocationResponse, successfulUrl, httpResponse);
+		AuthorizationOutcomeEnum authorizationOutcome = authorized != null ? authorized.isAuthorized() : AuthorizationOutcomeEnum.AUTHORIZED;
+		myTransactionLogger.logTransaction(startTime, theRequestHostIp, serviceVersion, user, requestBody, invocationResponse, successfulUrl, httpResponse, authorizationOutcome);
 	}
-
 
 	private void markUrlsFailed(Map<PersServiceVersionUrl, Failure> theMap) {
 		for (Entry<PersServiceVersionUrl, Failure> nextEntry : theMap.entrySet()) {
@@ -320,6 +319,6 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	 */
 	@VisibleForTesting
 	void setTransactionLogger(ITransactionLogger theTransactionLogger) {
-		myTransactionLogger=theTransactionLogger;
+		myTransactionLogger = theTransactionLogger;
 	}
 }

@@ -280,17 +280,25 @@ public abstract class BasePersInvocationStats extends BasePersMethodStats {
 	@Override
 	public String toString() {
 		ToStringHelper tos = getPk().getToStringHelper();
+		boolean haveStats = false;
 		if (getSuccessInvocationCount()>0) {
 			tos.add("Success", getSuccessInvocationCount());
+			haveStats=true;
 		}
 		if (getFaultInvocationCount()>0) {
 			tos.add("Fault", getFaultInvocationCount());
+			haveStats=true;
 		}
 		if (getFailInvocationCount()>0) {
 			tos.add("Fail", getFailInvocationCount());
+			haveStats=true;
 		}
 		if (getServerSecurityFailures()>0) {
 			tos.add("SecurityFail", getServerSecurityFailures());
+			haveStats=true;
+		}
+		if (!haveStats) {
+			tos.add("NoStats", true);
 		}
 		return tos.toString();
 	}

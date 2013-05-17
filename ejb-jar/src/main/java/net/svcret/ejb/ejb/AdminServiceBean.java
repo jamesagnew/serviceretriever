@@ -1831,6 +1831,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setRequestHostIp(theMsg.getRequestHostIp());
 		retVal.setTransactionTime(theMsg.getTransactionTime());
 		retVal.setTransactionMillis(theMsg.getTransactionMillis());
+		retVal.setAuthorizationOutcome(theMsg.getAuthorizationOutcome());
 
 		if (theLoadMsgContents) {
 			retVal.setRequestMessage(theMsg.getRequestBody());
