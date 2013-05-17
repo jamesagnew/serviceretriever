@@ -9,6 +9,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 
+import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.ITransactionLogger;
@@ -61,7 +62,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	 */
 	@Override
 	public void logTransaction(Date theTransactionDate, String theRequestHostIp, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl,
-			HttpResponseBean theHttpResponse) {
+			HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome) {
 		Validate.notNull(theServiceVersion);
 
 		{
@@ -71,7 +72,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 				newValue.init();
 				existing = newValue;
 			}
-			existing.recordTransaction(theTransactionDate, theServiceVersion, theUser, theRequestBody, theInvocationResponse, theRequestHostIp, theImplementationUrl, theHttpResponse);
+			existing.recordTransaction(theTransactionDate, theServiceVersion, theUser, theRequestBody, theInvocationResponse, theRequestHostIp, theImplementationUrl, theHttpResponse, theAuthorizationOutcome);
 		}
 
 		if (theUser != null) {
@@ -82,7 +83,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 				existing = newValue;
 			}
 
-			existing.recordTransaction(theTransactionDate, theRequestHostIp, theServiceVersion, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse);
+			existing.recordTransaction(theTransactionDate, theRequestHostIp, theServiceVersion, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome);
 		}
 	}
 
@@ -172,7 +173,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 		}
 
 		public void recordTransaction(Date theTransactionTime, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, String theRequestHostIp, PersServiceVersionUrl theImplementationUrl,
-				HttpResponseBean theHttpResponse) {
+				HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome) {
 			Validate.notNull(theInvocationResponse);
 			Validate.notNull(theServiceVersion);
 			Validate.notNull(theTransactionTime);
@@ -185,6 +186,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 				message.setServiceVersion(theServiceVersion);
 				message.setUser(theUser);
 				message.setTransactionTime(theTransactionTime);
+				message.setAuthorizationOutcome(theAuthorizationOutcome);
 
 				long responseTime = theHttpResponse != null ? theHttpResponse.getResponseTime() : 0;
 				message.setTransactionMillis(responseTime);
@@ -233,7 +235,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 		}
 
 		public void recordTransaction(Date theTransactionTime, String theRequestHostIp, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl,
-				HttpResponseBean theHttpResponse) {
+				HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome) {
 			Validate.notNull(theInvocationResponse);
 
 			Integer keepNum = theUser.getAuthenticationHost().determineKeepNumRecentTransactions(theInvocationResponse.getResponseType());
@@ -244,6 +246,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 				userMessage.setUser(theUser);
 				userMessage.setServiceVersion(theServiceVersion);
 				userMessage.setTransactionTime(theTransactionTime);
+				userMessage.setAuthorizationOutcome(theAuthorizationOutcome);
 				long responseTime = theHttpResponse != null ? theHttpResponse.getResponseTime() : 0;
 				userMessage.setTransactionMillis(responseTime);
 

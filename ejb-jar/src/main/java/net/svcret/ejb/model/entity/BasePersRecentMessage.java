@@ -5,6 +5,8 @@ import java.util.Date;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -16,6 +18,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.TemporalType;
 import javax.persistence.Temporal;
 
+import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.ResponseTypeEnum;
@@ -25,10 +28,14 @@ public abstract class BasePersRecentMessage implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
+	@Column(name="AUTHN_OUTCOME")
+	@Enumerated(EnumType.STRING)
+	private AuthorizationOutcomeEnum myAuthorizationOutcome;
+	
 	@ManyToOne
 	@JoinColumn(name = "URL_PID", referencedColumnName = "PID", nullable = true)
 	private PersServiceVersionUrl myImplementationUrl;
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "PID")
@@ -56,6 +63,15 @@ public abstract class BasePersRecentMessage implements Serializable {
 	@Column(name = "XACT_TIME", nullable = false)
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date myTransactionTime;
+	
+	public abstract void addUsingDao(IDao theDaoBean);
+
+	/**
+	 * @return the authorizationOutcome
+	 */
+	public AuthorizationOutcomeEnum getAuthorizationOutcome() {
+		return myAuthorizationOutcome;
+	}
 
 	/**
 	 * @return the implementationUrl
@@ -123,6 +139,13 @@ public abstract class BasePersRecentMessage implements Serializable {
 	}
 
 	/**
+	 * @param theAuthorizationOutcome the authorizationOutcome to set
+	 */
+	public void setAuthorizationOutcome(AuthorizationOutcomeEnum theAuthorizationOutcome) {
+		myAuthorizationOutcome = theAuthorizationOutcome;
+	}
+
+	/**
 	 * @param theImplementationUrl
 	 *            the implementationUrl to set
 	 */
@@ -176,8 +199,6 @@ public abstract class BasePersRecentMessage implements Serializable {
 	public void setTransactionTime(Date theTransactionTime) {
 		myTransactionTime = theTransactionTime;
 	}
-
-	public abstract void addUsingDao(IDao theDaoBean);
 
 	public abstract void trimUsingDao(IDao theDaoBean);
 }

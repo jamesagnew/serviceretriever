@@ -429,12 +429,14 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			if (invocClass == PersInvocationStats.class) {
 				dayPk = new PersInvocationStatsPk(toIntervalTyoe, next.getPk().getStartTime(), ((PersInvocationStatsPk) next.getPk()).getMethod());
 				if (!statsToFlush.containsKey(dayPk)) {
-					statsToFlush.put(dayPk, myDao.getOrCreateInvocationStats((PersInvocationStatsPk) dayPk));
+					statsToFlush.put(dayPk, new PersInvocationStats((PersInvocationStatsPk) dayPk));
+//					statsToFlush.put(dayPk, myDao.getOrCreateInvocationStats((PersInvocationStatsPk) dayPk));
 				}
 			} else if (invocClass == PersInvocationUserStats.class) {
 				dayPk = new PersInvocationUserStatsPk(toIntervalTyoe, next.getPk().getStartTime(), ((PersInvocationUserStatsPk) next.getPk()).getUser());
 				if (!statsToFlush.containsKey(dayPk)) {
-					statsToFlush.put(dayPk, myDao.getOrCreateInvocationUserStats((PersInvocationUserStatsPk) dayPk));
+					statsToFlush.put(dayPk, new PersInvocationUserStats((PersInvocationUserStatsPk) dayPk));
+//					statsToFlush.put(dayPk, myDao.getOrCreateInvocationUserStats((PersInvocationUserStatsPk) dayPk));
 				}
 			} else {
 				throw new IllegalStateException("Unknown type: " + invocClass);
@@ -499,8 +501,11 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			ourLog.info("Going to flush {} stats entries with time range {} - {}", new Object[] { stats.size(), myTimeFormat.format(earliest), myTimeFormat.format(latest) });
 
 			// try {
+			
+			ourLog.debug("Flushing stats: {}", stats);
 			myDao.saveInvocationStats(stats);
 			ourLog.info("Done flushing stats");
+			
 			// } catch (PersistenceException e) {
 			// ourLog.error("Failed to flush stats to disk, going to re-queue them",
 			// e);
