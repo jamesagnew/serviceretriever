@@ -55,6 +55,7 @@ public abstract class BasePersRecentMessage implements Serializable {
 	private String myResponseBody;
 
 	@Column(name = "RESPONSE_TYPE", nullable = false)
+	@Enumerated(EnumType.STRING)
 	private ResponseTypeEnum myResponseType;
 
 	@Column(name = "XACT_MILLIS", nullable = false)
