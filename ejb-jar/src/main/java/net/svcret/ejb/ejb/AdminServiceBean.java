@@ -1005,6 +1005,7 @@ public class AdminServiceBean implements IAdminService {
 			retVal = myDao.getUser(theUser.getPid());
 		}
 
+		retVal.setAllowSourceIpsAsStrings(theUser.getAllowableSourceIps());
 		retVal.setAllowAllDomains(theUser.isAllowAllDomains());
 		retVal.setPermissions(theUser.getGlobalPermissions());
 		retVal.setUsername(theUser.getUsername());
@@ -1609,9 +1610,9 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setUsername(thePersUser.getUsername());
 		retVal.setDomainPermissions(toUi(thePersUser.getDomainPermissions()));
 		retVal.setAuthHostPid(thePersUser.getAuthenticationHost().getPid());
-
 		retVal.setContactNotes(thePersUser.getContact().getNotes());
-
+		retVal.setAllowableSourceIps(thePersUser.getAllowSourceIpsAsStrings());
+		
 		if (theLoadStats) {
 			PersUserStatus status = thePersUser.getStatus();
 			retVal.setStatsLoaded(true);

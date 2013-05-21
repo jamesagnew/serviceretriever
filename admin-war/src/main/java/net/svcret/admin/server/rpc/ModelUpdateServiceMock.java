@@ -137,6 +137,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		user.setStatsSuccessTransactions(random60mins());
 		user.setStatsSecurityFailTransactionsAvgPerMin(2.0);
 		user.setStatsSuccessTransactionsAvgPerMin(0.01);
+		user.setAllowableSourceIps(new ArrayList<String>());
 		myUserList.add(user);
 
 		user = new GUser();
@@ -152,6 +153,9 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		user.setStatsSuccessTransactions(random60mins());
 		user.setStatsSecurityFailTransactionsAvgPerMin(2.0);
 		user.setStatsSuccessTransactionsAvgPerMin(0.01);
+		user.setAllowableSourceIps(new ArrayList<String>());
+		user.getAllowableSourceIps().add("127.0.0.1");
+		user.getAllowableSourceIps().add("192.168.1.1");
 		myUserList.add(user);
 
 	}

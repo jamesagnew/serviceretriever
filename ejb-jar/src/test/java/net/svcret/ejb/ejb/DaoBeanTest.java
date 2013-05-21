@@ -381,7 +381,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		
 		newEntityManager();
 
-		user = mySvc.getOrCreateUser(authHost, "username");
+		user = mySvc.getUser(user.getPid());
 		user.getAllowSourceIps().add(new PersUserAllowableSourceIps(user, "1.1.1.1"));
 		user.getAllowSourceIps().add(new PersUserAllowableSourceIps(user, "1.1.1.2"));
 		mySvc.saveServiceUser(user);

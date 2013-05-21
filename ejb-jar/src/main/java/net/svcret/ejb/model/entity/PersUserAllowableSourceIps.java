@@ -26,11 +26,29 @@ public class PersUserAllowableSourceIps implements Serializable {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
+	@Column(name = "PID", nullable = false)
 	private Long myPid;
 
 	@JoinColumn(name = "USER_PID", nullable = false)
 	@ManyToOne(fetch = FetchType.LAZY, cascade = {})
 	private PersUser myUser;
+
+	@Column(name="IP_ORDER", nullable=false)
+	private Integer myOrder;
+	
+	/**
+	 * @return the order
+	 */
+	public Integer getOrder() {
+		return myOrder;
+	}
+
+	/**
+	 * @param theOrder the order to set
+	 */
+	public void setOrder(Integer theOrder) {
+		myOrder = theOrder;
+	}
 
 	public PersUserAllowableSourceIps() {
 	}
@@ -54,7 +72,18 @@ public class PersUserAllowableSourceIps implements Serializable {
 
 	@Override
 	public int hashCode() {
-		return new HashCodeBuilder().append(myUser).append(myIp).toHashCode();
+		return new HashCodeBuilder().append(myIp).append(myUser).toHashCode();
+	}
+
+	@Override
+	public boolean equals(Object theObj) {
+		if (!(theObj instanceof PersUserAllowableSourceIps)) {
+			return false;
+		}
+
+		PersUserAllowableSourceIps obj = (PersUserAllowableSourceIps) theObj;
+
+		return myIp.equals(obj.getIp()) && myUser.equals(obj.getUser());
 	}
 
 	public void setIp(String theIp) {

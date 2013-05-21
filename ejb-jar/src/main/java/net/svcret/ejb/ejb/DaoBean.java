@@ -58,6 +58,7 @@ import net.svcret.ejb.model.entity.PersState;
 import net.svcret.ejb.model.entity.PersStaticResourceStats;
 import net.svcret.ejb.model.entity.PersStaticResourceStatsPk;
 import net.svcret.ejb.model.entity.PersUser;
+import net.svcret.ejb.model.entity.PersUserAllowableSourceIps;
 import net.svcret.ejb.model.entity.PersUserContact;
 import net.svcret.ejb.model.entity.PersUserRecentMessage;
 import net.svcret.ejb.model.entity.PersUserStatus;
@@ -461,6 +462,7 @@ public class DaoBean implements IDao {
 			retVal = (PersUser) q.getSingleResult();
 		} catch (NoResultException e) {
 			retVal = new PersUser();
+			retVal.getAllowSourceIps();
 			
 			PersUserContact contact = new PersUserContact();
 			contact = myEntityManager.merge(contact);
@@ -758,6 +760,22 @@ public class DaoBean implements IDao {
 		Validate.notNull(theUser, "User");
 		Validate.notNull(theUser.getAuthenticationHost(), "User.AuthenticationHost");
 
+		for (PersUserAllowableSourceIps next : theUser.getAllowableSourceIpsToDelete()) {
+			if (!theUser.getAllowSourceIpsAsStrings().contains(next.getIp())) {
+				myEntityManager.remove(next);
+			}
+		}
+		
+		for (int i = 0; i < theUser.getAllowSourceIps().size(); i++) {
+			PersUserAllowableSourceIps ip = theUser.getAllowSourceIps().get(i);
+			if (ip.getPid() == null) {
+				ip.setOrder(i);
+				ip = myEntityManager.merge(ip);
+				theUser.getAllowSourceIps().set(i, ip);
+			}
+			ip.setOrder(i);
+		}
+		
 		return myEntityManager.merge(theUser);
 	}
 

@@ -614,4 +614,12 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("JSON-RPC Named Parameter Server Security")
 	String jsonRpcNamedParameterServerSecurity_Name();
 
+	@DefaultMessage("Service Firewall")
+	String editUser_IpsTitle();
+
+	@DefaultMessage("A list of allowable IPs may optionally be specified. If specified, only " +
+			"requests originating from one of the allowable IPs will be permitted to access " +
+			"services using this user.")
+	String editUser_IpsDesc();
+
 }

@@ -10,6 +10,7 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 
 	private static final long serialVersionUID = 1L;
 
+	private List<String> myAllowableSourceIps;
 	private boolean myAllowAllDomains;
 	private long myAuthHostPid;
 	private String myChangePassword;
@@ -21,6 +22,7 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	private int[] myStatsSecurityFailTransactions;
 	private double myStatsSecurityFailTransactionsAvgPerMin;
 	private int[] myStatsSuccessTransactions;
+
 	private double myStatsSuccessTransactionsAvgPerMin;
 
 	private String myUsername;
@@ -35,6 +37,13 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	public void addGlobalPermission(UserGlobalPermissionEnum thePermission) {
 		initGlobalPermissions();
 		myGlobalPermissions.add(thePermission);
+	}
+
+	/**
+	 * @return the allowableSourceIps
+	 */
+	public List<String> getAllowableSourceIps() {
+		return myAllowableSourceIps;
 	}
 
 	/**
@@ -162,6 +171,11 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	public void removeGlobalPermission(UserGlobalPermissionEnum thePermission) {
 		initGlobalPermissions();
 		myGlobalPermissions.remove(thePermission);
+	}
+
+	public void setAllowableSourceIps(List<String> theAllowSourceIpsAsStrings) {
+		myAllowableSourceIps = theAllowSourceIpsAsStrings;
+
 	}
 
 	/*

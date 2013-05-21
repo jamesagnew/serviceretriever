@@ -2,6 +2,7 @@ package net.svcret.ejb.model.entity;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -22,6 +23,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -47,8 +49,9 @@ public class PersUser extends BasePersObject {
 	@Transient
 	private transient Set<PersServiceVersionMethod> myAllowedMethods;
 
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true, mappedBy = "myUser")
-	private Collection<PersUserAllowableSourceIps> myAllowSourceIps;
+	@OneToMany(cascade = { }, fetch = FetchType.LAZY, orphanRemoval = true, mappedBy = "myUser")
+	@OrderBy("IP_ORDER")
+	private List<PersUserAllowableSourceIps> myAllowSourceIps;
 
 	@ManyToOne(cascade = {})
 	@JoinColumn(name = "AUTH_HOST_PID", referencedColumnName = "PID", nullable = false)
@@ -81,6 +84,9 @@ public class PersUser extends BasePersObject {
 
 	@Column(unique = true, name = "USERNAME", nullable = false, length = 200)
 	private String myUsername;
+
+	@Transient
+	private transient List<PersUserAllowableSourceIps> myAllowableSourceIpsToDelete;
 
 	public PersUser() {
 	}
@@ -121,7 +127,7 @@ public class PersUser extends BasePersObject {
 		return theObj instanceof PersUser && Objects.equal(myPid, ((PersUser) theObj).myPid);
 	}
 
-	public Collection<PersUserAllowableSourceIps> getAllowSourceIps() {
+	public List<PersUserAllowableSourceIps> getAllowSourceIps() {
 		if (myAllowSourceIps == null) {
 			myAllowSourceIps = new ArrayList<PersUserAllowableSourceIps>();
 		}
@@ -308,7 +314,7 @@ public class PersUser extends BasePersObject {
 		myUsername = theUsername;
 	}
 
-	public Collection<String> getAllowSourceIpsAsStrings() {
+	public List<String> getAllowSourceIpsAsStrings() {
 		ArrayList<String> retVal = new ArrayList<String>();
 		for (PersUserAllowableSourceIps next : getAllowSourceIps()) {
 			retVal.add(next.getIp());
@@ -316,12 +322,12 @@ public class PersUser extends BasePersObject {
 		return retVal;
 	}
 
-	public void setAllowSourceIpsAsStrings(List<String> theStrings) {
+	public void setAllowSourceIpsAsStrings(Collection<String> theStrings) {
 		ArrayList<String> toAdd = new ArrayList<String>(theStrings);
 		for (PersUserAllowableSourceIps next : getAllowSourceIps()) {
 			toAdd.remove(next.getIp());
 		}
-		
+
 		ArrayList<PersUserAllowableSourceIps> toDelete = new ArrayList<PersUserAllowableSourceIps>(getAllowSourceIps());
 		for (Iterator<PersUserAllowableSourceIps> iterator = toDelete.iterator(); iterator.hasNext();) {
 			PersUserAllowableSourceIps next = iterator.next();
@@ -329,15 +335,30 @@ public class PersUser extends BasePersObject {
 				iterator.remove();
 			}
 		}
-		
+
 		for (String next : toAdd) {
 			getAllowSourceIps().add(new PersUserAllowableSourceIps(this, next));
 		}
 
+		if (myAllowableSourceIpsToDelete == null) {
+			myAllowableSourceIpsToDelete = new ArrayList<PersUserAllowableSourceIps>();
+		}
 		for (PersUserAllowableSourceIps next : toDelete) {
+			myAllowableSourceIpsToDelete.add(next);
 			getAllowSourceIps().remove(next);
 		}
 
+	}
+
+	/**
+	 * @return the allowableSourceIpsToDelete
+	 */
+	public List<PersUserAllowableSourceIps> getAllowableSourceIpsToDelete() {
+		if (myAllowableSourceIpsToDelete == null) {
+			return Collections.emptyList();
+		} else {
+			return myAllowableSourceIpsToDelete;
+		}
 	}
 
 }
