@@ -1779,10 +1779,10 @@ public class AdminServiceBean implements IAdminService {
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
 
 		GRecentMessageLists retVal = new GRecentMessageLists();
-		retVal.setKeepSuccess(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.SUCCESS));
-		retVal.setKeepFail(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.FAIL));
-		retVal.setKeepFault(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.FAULT));
-		retVal.setKeepSecurityFail(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.SECURITY_FAIL));
+		retVal.setKeepSuccess(defaultInteger(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.SUCCESS)));
+		retVal.setKeepFail(defaultInteger(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.FAIL)));
+		retVal.setKeepFault(defaultInteger(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.FAULT)));
+		retVal.setKeepSecurityFail(defaultInteger(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.SECURITY_FAIL)));
 
 		if (retVal.getKeepSuccess() > 0) {
 			retVal.setSuccessList(toUi(myDao.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.SUCCESS), true));

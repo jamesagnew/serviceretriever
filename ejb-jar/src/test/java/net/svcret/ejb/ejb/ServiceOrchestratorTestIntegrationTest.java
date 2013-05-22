@@ -7,6 +7,7 @@ import static org.mockito.Mockito.*;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Arrays;
 import java.util.Map;
 
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
@@ -104,6 +105,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		PersUser user = myDao.getOrCreateUser(authHost, "test");
 		user.setPassword("admin");
 		user.setAllowAllDomains(true);
+		user.setAllowSourceIpsAsStrings(Arrays.asList("127.0.0.1"));
 		myDao.saveServiceUser(user);
 
 		newEntityManager();

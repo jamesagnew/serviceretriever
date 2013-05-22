@@ -11,7 +11,7 @@ import net.svcret.ejb.model.entity.PersUser;
 @Local
 public interface ISecurityService {
 
-	AuthorizationResultsBean authorizeMethodInvocation(BasePersAuthenticationHost theAuthHost, ICredentialGrabber theCredentialGrabber, PersServiceVersionMethod theMethod) throws ProcessingException;
+	AuthorizationResultsBean authorizeMethodInvocation(BasePersAuthenticationHost theAuthHost, ICredentialGrabber theCredentialGrabber, PersServiceVersionMethod theMethod, String theRequestHostIp) throws ProcessingException;
 
 	void loadUserCatalogIfNeeded();
 

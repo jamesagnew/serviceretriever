@@ -231,6 +231,8 @@ public class PersUser extends BasePersObject {
 			allowedMethods.addAll(nextDomain.getAllAllowedMethods());
 		}
 
+		getAllowSourceIps().size();
+		
 		myAllowedMethods = allowedMethods;
 	}
 
@@ -323,7 +325,10 @@ public class PersUser extends BasePersObject {
 	}
 
 	public void setAllowSourceIpsAsStrings(Collection<String> theStrings) {
-		ArrayList<String> toAdd = new ArrayList<String>(theStrings);
+		ArrayList<String> toAdd = new ArrayList<String>();
+		if (theStrings!=null) {
+			toAdd.addAll(theStrings);
+		}
 		for (PersUserAllowableSourceIps next : getAllowSourceIps()) {
 			toAdd.remove(next.getIp());
 		}
@@ -359,6 +364,14 @@ public class PersUser extends BasePersObject {
 		} else {
 			return myAllowableSourceIpsToDelete;
 		}
+	}
+
+	public boolean determineIfIpIsAllowed(String theRequestHostIp) {
+		List<String> sourceIps = getAllowSourceIpsAsStrings();
+		if (sourceIps.isEmpty()) {
+			return true;
+		}
+		return sourceIps.contains(theRequestHostIp);
 	}
 
 }

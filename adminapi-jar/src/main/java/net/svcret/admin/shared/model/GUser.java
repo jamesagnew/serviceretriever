@@ -162,6 +162,7 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	public void merge(GUser theUser) {
 		setPid(theUser.getPid());
 		setUsername(theUser.getUsername());
+		setAllowableSourceIps(theUser.getAllowableSourceIps());
 	}
 
 	public void removeDomainPermission(GUserDomainPermission theGUserDomainPermission) {

@@ -1,4 +1,5 @@
 package net.svcret.ejb.ejb;
+
 import static net.svcret.admin.shared.model.AuthorizationOutcomeEnum.*;
 
 import java.util.Collection;
@@ -10,6 +11,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.api.IAuthorizationService;
 import net.svcret.ejb.api.IAuthorizationService.ILdapAuthorizationService;
@@ -31,7 +33,6 @@ public class SecurityServiceBean implements ISecurityService {
 
 	private static final String STATE_KEY = SecurityServiceBean.class.getName() + "_VERSION";
 
-
 	@EJB
 	private IBroadcastSender myBroadcastSender;
 
@@ -48,7 +49,7 @@ public class SecurityServiceBean implements ISecurityService {
 	@EJB
 	private ILocalDatabaseAuthorizationService myLocalDbAuthService;
 
-	public AuthorizationResultsBean authorizeMethodInvocation(BasePersAuthenticationHost theAuthHost, ICredentialGrabber theCredentialGrabber, PersServiceVersionMethod theMethod) throws ProcessingException {
+	public AuthorizationResultsBean authorizeMethodInvocation(BasePersAuthenticationHost theAuthHost, ICredentialGrabber theCredentialGrabber, PersServiceVersionMethod theMethod, String theRequestHostIp) throws ProcessingException {
 		BasePersAuthenticationHost authHost = myInMemoryUserCatalog.getAuthHostByPid(theAuthHost.getPid());
 
 		AuthorizationResultsBean retVal = new AuthorizationResultsBean();
@@ -72,15 +73,23 @@ public class SecurityServiceBean implements ISecurityService {
 
 		retVal.setUser(authorizedUser);
 
-		boolean authorized = authorizedUser.hasPermission(theMethod);
+		boolean ipAllowed = authorizedUser.determineIfIpIsAllowed(theRequestHostIp);
+		if (ipAllowed == false) {
+			if (ourLog.isDebugEnabled()) {
+				ourLog.debug("IP {} not allowed by user {} with whitelist {}", new Object[] { theRequestHostIp, authorizedUser, authorizedUser.getAllowSourceIpsAsStrings() });
+			}
+			retVal.setAuthorized(AuthorizationOutcomeEnum.FAILED_IP_NOT_IN_WHITELIST);
+		} else {
 
-		ourLog.debug("Authorization results: {}", authorized);
-		if (authorized) {
-			retVal.setAuthorized(AUTHORIZED);
-		}else {
-			retVal.setAuthorized(FAILED_USER_NO_PERMISSIONS);
+			boolean authorized = authorizedUser.hasPermission(theMethod);
+
+			ourLog.debug("Authorization results: {}", authorized);
+			if (authorized) {
+				retVal.setAuthorized(AUTHORIZED);
+			} else {
+				retVal.setAuthorized(FAILED_USER_NO_PERMISSIONS);
+			}
 		}
-		
 		return retVal;
 
 	}

@@ -126,7 +126,7 @@ public class SecurityServiceBeanTest {
 		DefaultAnswer.setRunTime();
 		mySvc.loadUserCatalog();
 
-		assertEquals(AuthorizationOutcomeEnum.FAILED_USER_NO_PERMISSIONS, mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M0).isAuthorized());
+		assertEquals(AuthorizationOutcomeEnum.FAILED_USER_NO_PERMISSIONS, mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M0,"").isAuthorized());
 	}
 
 	@Test
@@ -145,13 +145,13 @@ public class SecurityServiceBeanTest {
 		DefaultAnswer.setRunTime();
 		mySvc.loadUserCatalog();
 
-		assertEquals(AuthorizationOutcomeEnum.AUTHORIZED, mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M0).isAuthorized());
-		assertEquals(AuthorizationOutcomeEnum.FAILED_USER_NO_PERMISSIONS, mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M1).isAuthorized());
+		assertEquals(AuthorizationOutcomeEnum.AUTHORIZED, mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M0,"").isAuthorized());
+		assertEquals(AuthorizationOutcomeEnum.FAILED_USER_NO_PERMISSIONS, mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M1,"").isAuthorized());
 		
 		methodPerm.setAllow(false);
 		myUser.loadAllAssociations();
-		assertEquals(AuthorizationOutcomeEnum.FAILED_USER_NO_PERMISSIONS, mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M0).isAuthorized());
-		assertEquals(AuthorizationOutcomeEnum.FAILED_USER_NO_PERMISSIONS, mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M1).isAuthorized());
+		assertEquals(AuthorizationOutcomeEnum.FAILED_USER_NO_PERMISSIONS, mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M0,"").isAuthorized());
+		assertEquals(AuthorizationOutcomeEnum.FAILED_USER_NO_PERMISSIONS, mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M1,"").isAuthorized());
 	}
 
 	@Test
@@ -169,8 +169,8 @@ public class SecurityServiceBeanTest {
 		DefaultAnswer.setRunTime();
 		mySvc.loadUserCatalog();
 
-		assertEquals(AuthorizationOutcomeEnum.AUTHORIZED, mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M0).isAuthorized());
-		assertEquals(AuthorizationOutcomeEnum.AUTHORIZED, mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M1).isAuthorized());
+		assertEquals(AuthorizationOutcomeEnum.AUTHORIZED, mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M0,"").isAuthorized());
+		assertEquals(AuthorizationOutcomeEnum.AUTHORIZED, mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M1,"").isAuthorized());
 		
 	}
 
@@ -185,7 +185,7 @@ public class SecurityServiceBeanTest {
 		DefaultAnswer.setRunTime();
 		mySvc.loadUserCatalog();
 
-		assertEquals(AuthorizationOutcomeEnum.AUTHORIZED, mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M0).isAuthorized());
+		assertEquals(AuthorizationOutcomeEnum.AUTHORIZED, mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M0,"").isAuthorized());
 	}
 
 	private PersUser dbServiceAuthorizeMethod() throws ProcessingException {
