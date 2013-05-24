@@ -31,6 +31,11 @@
 			<artifactId>commons-codec</artifactId>
 			<version>1.7</version>
 		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>${guava_version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>javax.servlet</groupId>

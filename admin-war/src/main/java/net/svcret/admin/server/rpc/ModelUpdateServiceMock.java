@@ -2,7 +2,9 @@ package net.svcret.admin.server.rpc;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import net.svcret.admin.client.rpc.ModelUpdateService;
@@ -25,6 +27,7 @@ import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceList;
 import net.svcret.admin.shared.model.GServiceMethod;
+import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GUrlStatus;
@@ -580,6 +583,43 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	@Override
 	public GRecentMessage loadRecentMessageForUser(long thePid) {
 		return loadRecentMessageForServiceVersion(thePid);
+	}
+
+	@Override
+	public GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) {
+		for (GDomain nextDomain : myDomainList) {
+			for (GService nextService : nextDomain.getServiceList()) {
+				for (BaseGServiceVersion nextVersion : nextService.getVersionList()) {
+					if (nextVersion.getPid()==theVersionPid) {
+						GServiceVersionDetailedStats retVal = new GServiceVersionDetailedStats();
+						Map<Long, List<Integer>> fail=new HashMap<Long, List<Integer>>();
+						Map<Long, List<Integer>> fault=new HashMap<Long, List<Integer>>();
+						Map<Long, List<Integer>> securityFail=new HashMap<Long, List<Integer>>();
+						Map<Long, List<Integer>> success=new HashMap<Long, List<Integer>>();
+						for (GServiceMethod nextMethod : nextVersion.getMethodList()) {
+							success.put(nextMethod.getPid(), random60minsList());
+							fail.put(nextMethod.getPid(), random60minsList());
+							securityFail.put(nextMethod.getPid(), random60minsList());
+							fault.put(nextMethod.getPid(), random60minsList());
+						}
+						retVal.setMethodPidToSuccessCount(success);
+						retVal.setMethodPidToFailCount(fail);
+						retVal.setMethodPidToFaultCount(fault);
+						retVal.setMethodPidToSecurityFailCount(securityFail);
+						return retVal;
+					}
+				}
+			}
+		}
+		throw new IllegalArgumentException("Can't find "+theVersionPid);
+	}
+
+	private List<Integer> random60minsList() {
+		List<Integer> retVal=new ArrayList<Integer>();
+		for (int next : random60mins()) {
+			retVal.add(next);
+		}
+		return retVal;
 	}
 
 }

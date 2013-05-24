@@ -1,6 +1,7 @@
 package net.svcret.ejb.api;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
@@ -18,7 +19,7 @@ public class InvocationResultsBean {
 	private ResultTypeEnum myResultType;
 	private String myStaticResourceContentTyoe;
 	private PersServiceVersionResource myStaticResourceDefinition;
-	private Map<String, String> myStaticResourceHeaders;
+	private Map<String, List<String>> myStaticResourceHeaders;
 	private String myStaticResourceText;
 	private String myStaticResourceUrl;
 
@@ -81,7 +82,7 @@ public class InvocationResultsBean {
 	/**
 	 * @return the staticResourceHeaders
 	 */
-	public Map<String, String> getStaticResourceHeaders() {
+	public Map<String, List<String>> getStaticResourceHeaders() {
 		return myStaticResourceHeaders;
 	}
 
@@ -118,7 +119,7 @@ public class InvocationResultsBean {
 		myMethodHeaders = theHeaders;
 	}
 
-	public void setResultStaticResource(String theResourceUrl, PersServiceVersionResource theResource, String theResourceText, String theContentType, Map<String, String> theHeaders) {
+	public void setResultStaticResource(String theResourceUrl, PersServiceVersionResource theResource, String theResourceText, String theContentType, Map<String, List<String>> theHeaders) {
 		validateResultTypeNotSet();
 		myResultType = ResultTypeEnum.STATIC_RESOURCE;
 		myStaticResourceUrl = theResourceUrl;

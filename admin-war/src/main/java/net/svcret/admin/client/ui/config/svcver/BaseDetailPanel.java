@@ -72,10 +72,6 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Flo
 
 		addProtocolSpecificPanelsToTop();
 
-		FlowPanel journalPanel = new FlowPanel();
-		add(journalPanel);
-		initJournalPanel(journalPanel);
-
 		FlowPanel urlPanel = new FlowPanel();
 		add(urlPanel);
 		initUrlPanel(urlPanel);
@@ -92,6 +88,9 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Flo
 		add(serverSecurityPanel);
 		initServerSecurityPanel(serverSecurityPanel);
 
+		FlowPanel transactionFlowPanel = new FlowPanel();
+		add(transactionFlowPanel);
+		initJournalPanel(transactionFlowPanel);
 	}
 
 	public abstract ServiceProtocolEnum getProtocol();

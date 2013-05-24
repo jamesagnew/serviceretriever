@@ -5,6 +5,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -36,6 +37,7 @@ import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
+import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
 import net.svcret.admin.shared.model.GServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.GServiceVersionResourcePointer;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
@@ -80,12 +82,14 @@ import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserDomainPermission;
+import net.svcret.ejb.model.entity.PersUserRecentMessage;
 import net.svcret.ejb.model.entity.PersUserServicePermission;
 import net.svcret.ejb.model.entity.PersUserServiceVersionMethodPermission;
 import net.svcret.ejb.model.entity.PersUserServiceVersionPermission;
@@ -908,7 +912,7 @@ public class AdminServiceBean implements IAdminService {
 			return retVal;
 		}
 		case JSONRPC_NAMED_PARAMETER: {
-			GNamedParameterJsonRpcServerAuth obj = (GNamedParameterJsonRpcServerAuth)theObj;
+			GNamedParameterJsonRpcServerAuth obj = (GNamedParameterJsonRpcServerAuth) theObj;
 			NamedParameterJsonRpcServerAuth retVal = new NamedParameterJsonRpcServerAuth();
 			retVal.setAuthenticationHost(myDao.getAuthenticationHostByPid(theObj.getAuthHostPid()));
 			retVal.setServiceVersion(theSvcVer);
@@ -1391,7 +1395,7 @@ public class AdminServiceBean implements IAdminService {
 			break;
 		}
 		case JSONRPC_NAMED_PARAMETER: {
-			NamedParameterJsonRpcServerAuth pers = (NamedParameterJsonRpcServerAuth)theAuth;
+			NamedParameterJsonRpcServerAuth pers = (NamedParameterJsonRpcServerAuth) theAuth;
 			GNamedParameterJsonRpcServerAuth auth = new GNamedParameterJsonRpcServerAuth();
 			auth.setUsernameParameterName(pers.getUsernameParameterName());
 			auth.setPasswordParameterName(pers.getPasswordParameterName());
@@ -1612,7 +1616,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setAuthHostPid(thePersUser.getAuthenticationHost().getPid());
 		retVal.setContactNotes(thePersUser.getContact().getNotes());
 		retVal.setAllowableSourceIps(thePersUser.getAllowSourceIpsAsStrings());
-		
+
 		if (theLoadStats) {
 			PersUserStatus status = thePersUser.getStatus();
 			retVal.setStatsLoaded(true);
@@ -1839,6 +1843,20 @@ public class AdminServiceBean implements IAdminService {
 			retVal.setResponseMessage(theMsg.getResponseBody());
 		}
 
+		if (theMsg instanceof PersServiceVersionRecentMessage) {
+			PersServiceVersionRecentMessage msg = (PersServiceVersionRecentMessage) theMsg;
+			if (msg.getUser() != null) {
+				retVal.setRequestUserPid(msg.getUser().getPid());
+				retVal.setRequestUsername(msg.getUser().getUsername());
+			}
+		} else if (theMsg instanceof PersUserRecentMessage) {
+			PersUserRecentMessage msg = (PersUserRecentMessage) theMsg;
+			if (msg.getUser() != null) {
+				retVal.setRequestUserPid(msg.getUser().getPid());
+				retVal.setRequestUsername(msg.getUser().getUsername());
+			}
+		}
+
 		return retVal;
 	}
 
@@ -1882,6 +1900,52 @@ public class AdminServiceBean implements IAdminService {
 	public GRecentMessage loadRecentMessageForUser(long thePid) {
 		BasePersRecentMessage msg = myDao.loadRecentMessageForUser(thePid);
 		return toUi(msg, true);
+	}
+
+	@Override
+	public GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws ProcessingException {
+
+		BasePersServiceVersion ver = myDao.getServiceVersionByPid(theVersionPid);
+
+		final Map<Long, List<Integer>> methodPidToSuccessCount = new HashMap<Long, List<Integer>>();
+		final Map<Long, List<Integer>> methodPidToFailCount = new HashMap<Long, List<Integer>>();
+		final Map<Long, List<Integer>> methodPidToSecurityFailCount = new HashMap<Long, List<Integer>>();
+		final Map<Long, List<Integer>> methodPidToFaultCount = new HashMap<Long, List<Integer>>();
+
+		PersConfig config = myConfigSvc.getConfig();
+		for (final PersServiceVersionMethod nextMethod : ver.getMethods()) {
+			methodPidToSuccessCount.put(nextMethod.getPid(), new ArrayList<Integer>());
+			methodPidToFailCount.put(nextMethod.getPid(), new ArrayList<Integer>());
+			methodPidToSecurityFailCount.put(nextMethod.getPid(), new ArrayList<Integer>());
+			methodPidToFaultCount.put(nextMethod.getPid(), new ArrayList<Integer>());
+
+			doWithStatsByMinute(config, 60, myStatusSvc, nextMethod, new IWithStats() {
+				@Override
+				public void withStats(int theIndex, BasePersInvocationStats theStats) {
+					List<Integer> successCounts = methodPidToSuccessCount.get(nextMethod.getPid());
+					List<Integer> failCounts = methodPidToFailCount.get(nextMethod.getPid());
+					List<Integer> securityFailCounts = methodPidToSecurityFailCount.get(nextMethod.getPid());
+					List<Integer> faultCounts = methodPidToFaultCount.get(nextMethod.getPid());
+					growToSizeInt(successCounts, theIndex);
+					growToSizeInt(failCounts, theIndex);
+					growToSizeInt(securityFailCounts, theIndex);
+					growToSizeInt(faultCounts, theIndex);
+					successCounts.set(theIndex, addToInt(successCounts.get(theIndex), theStats.getSuccessInvocationCount()));
+					failCounts.set(theIndex, addToInt(failCounts.get(theIndex), theStats.getFailInvocationCount()));
+					securityFailCounts.set(theIndex, addToInt(securityFailCounts.get(theIndex), theStats.getServerSecurityFailures()));
+					faultCounts.set(theIndex, addToInt(faultCounts.get(theIndex), theStats.getFaultInvocationCount()));
+				}
+			});
+		}
+
+		GServiceVersionDetailedStats retVal = new GServiceVersionDetailedStats();
+
+		retVal.setMethodPidToSuccessCount(methodPidToSuccessCount);
+		retVal.setMethodPidToFailCount(methodPidToFailCount);
+		retVal.setMethodPidToSecurityFailCount(methodPidToSecurityFailCount);
+		retVal.setMethodPidToFaultCount(methodPidToFaultCount);
+
+		return retVal;
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {

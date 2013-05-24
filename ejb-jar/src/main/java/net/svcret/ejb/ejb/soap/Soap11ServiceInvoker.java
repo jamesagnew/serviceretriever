@@ -151,7 +151,7 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 		String resourceText = writer.toString();
 		String resourceUrl = wsdlUrl;
 		String contentType = Constants.CONTENT_TYPE_XML;
-		Map<String, String> headers = new HashMap<String, String>();
+		Map<String, List<String>> headers = new HashMap<String, List<String>>();
 		theResults.setResultStaticResource(resourceUrl, resource, resourceText, contentType, headers);
 
 	}
@@ -198,7 +198,7 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 		String resourceText = res.getResourceText();
 		String resourceUrl = res.getResourceUrl();
 		String contentType = "text/xml";
-		Map<String, String> headers = new HashMap<String, String>();
+		Map<String, List<String>> headers = new HashMap<String, List<String>>();
 		theResults.setResultStaticResource(resourceUrl, res, resourceText, contentType, headers);
 
 	}

@@ -34,22 +34,22 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 		mySuccessTextbox = new IntegerBox();
 		mySuccessTextbox.setValue(theKeepsRecentTransactions.getKeepNumRecentTransactionsSuccess());
 		grid.addRow(MSGS.keepRecentTransactionsPanel_OutcomeSuccess(), mySuccessTextbox);
-		grid.addDescription(MSGS.keepRecentTransactionsPanel_OutcomeSuccessDesc());
+		grid.addDescriptionToRight(MSGS.keepRecentTransactionsPanel_OutcomeSuccessDesc());
 		
 		myFaultTextbox = new IntegerBox();
 		myFaultTextbox.setValue(theKeepsRecentTransactions.getKeepNumRecentTransactionsFault());
 		grid.addRow(MSGS.keepRecentTransactionsPanel_OutcomeFault(), myFaultTextbox);
-		grid.addDescription(MSGS.keepRecentTransactionsPanel_OutcomeFaultDesc());
+		grid.addDescriptionToRight(MSGS.keepRecentTransactionsPanel_OutcomeFaultDesc());
 		
 		myFailTextbox = new IntegerBox();
 		myFailTextbox.setValue(theKeepsRecentTransactions.getKeepNumRecentTransactionsFail());
 		grid.addRow(MSGS.keepRecentTransactionsPanel_OutcomeFail(), myFailTextbox);
-		grid.addDescription(MSGS.keepRecentTransactionsPanel_OutcomeFailDesc());
+		grid.addDescriptionToRight(MSGS.keepRecentTransactionsPanel_OutcomeFailDesc());
 
 		mySecurityFailTextbox = new IntegerBox();
 		mySecurityFailTextbox.setValue(theKeepsRecentTransactions.getKeepNumRecentTransactionsSecurityFail());
 		grid.addRow(MSGS.keepRecentTransactionsPanel_OutcomeSecurityFail(), mySecurityFailTextbox);
-		grid.addDescription(MSGS.keepRecentTransactionsPanel_OutcomeSecurityFailDesc());
+		grid.addDescriptionToRight(MSGS.keepRecentTransactionsPanel_OutcomeSecurityFailDesc());
 
 	}
 

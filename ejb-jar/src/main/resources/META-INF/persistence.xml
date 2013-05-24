@@ -46,6 +46,7 @@
 		<properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5Dialect"/>
   			<property name="hibernate.connection.driver_class" value="com.mysql.jdbc.Driver"/>
+  			
 			<property name="hibernate.transaction.jta.platform" value="org.hibernate.service.jta.platform.internal.SunOneJtaPlatform" />
 			<property name="hibernate.jdbc.batch_size" value="30" />
 			<property name="hibernate.cache.use_minimal_puts" value="false" />

@@ -38,8 +38,6 @@ import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.util.Validate;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
 import org.hibernate.annotations.ForeignKey;
 
 @Entity
@@ -61,7 +59,7 @@ public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransact
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("CAUTH_ORDER")
 	private List<PersBaseClientAuth<?>> myClientAuths;
-	
+
 	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
 	@ForeignKey(name = "PX_SVCVER_HTTP_CONFIG_PID")
 	@JoinColumn(name = "HTTP_CONFIG_PID", referencedColumnName = "PID", nullable = false)
@@ -190,6 +188,7 @@ public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransact
 		}
 		return null;
 	}
+
 
 	/**
 	 * @return the httpClientConfig
@@ -531,6 +530,7 @@ public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransact
 		myActive = theActive;
 	}
 
+	
 	/**
 	 * @param theHttpClientConfig
 	 *            the httpClientConfig to set
@@ -566,6 +566,7 @@ public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransact
 		myService = theService;
 	}
 
+
 	public void setStatus(PersServiceVersionStatus theStatus) {
 		Validate.notNull(theStatus, "Status");
 		myStatus = theStatus;
@@ -585,6 +586,5 @@ public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransact
 		myPidToUrl = null;
 		myUrlToUrl = null;
 	}
-
 
 }

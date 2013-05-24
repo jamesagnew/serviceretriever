@@ -5,6 +5,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import net.svcret.ejb.api.HttpResponseBean;
@@ -347,7 +348,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvoker<PersServiceVersi
 
 		retVal.setResponseBody(body);
 		retVal.setResponseContentType("application/json");
-		retVal.setResponseHeaders(new HashMap<String, String>());
+		retVal.setResponseHeaders(new HashMap<String, List<String>>());
 		if (retVal.getResponseType() == null) {
 			retVal.setResponseType(ResponseTypeEnum.SUCCESS);
 		}

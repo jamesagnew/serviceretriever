@@ -622,4 +622,13 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 			"services using this user.")
 	String editUser_IpsDesc();
 
+	@DefaultMessage("Graphs")
+	String serviceVersionStats_GraphsTitle();
+
+	@DefaultMessage("User")
+	String recentMessagesGrid_ColUser();
+
+	@DefaultMessage("Authorization")
+	String recentMessagesGrid_ColAuthorization();
+
 }

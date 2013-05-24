@@ -1,5 +1,6 @@
 package net.svcret.ejb.api;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -11,7 +12,7 @@ public class InvocationResponseResultsBean {
 	private String myResponseContentType;
 	private String myResponseFaultCode;
 	private String myResponseFaultDescription;
-	private Map<String, String> myResponseHeaders;
+	private Map<String, List<String>> myResponseHeaders;
 	private String myResponseStatusMessage;
 	private ResponseTypeEnum myResponseType;
 
@@ -37,7 +38,7 @@ public class InvocationResponseResultsBean {
 		return myResponseFaultDescription;
 	}
 
-	public Map<String, String> getResponseHeaders() {
+	public Map<String, List<String>> getResponseHeaders() {
 		return myResponseHeaders;
 	}
 
@@ -83,7 +84,7 @@ public class InvocationResponseResultsBean {
 	 * @param theResponseHeaders
 	 *            the responseHeaders to set
 	 */
-	public void setResponseHeaders(Map<String, String> theResponseHeaders) {
+	public void setResponseHeaders(Map<String, List<String>> theResponseHeaders) {
 		myResponseHeaders = theResponseHeaders;
 	}
 

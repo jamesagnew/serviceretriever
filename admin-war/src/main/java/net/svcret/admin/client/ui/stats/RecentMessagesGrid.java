@@ -10,12 +10,15 @@ import net.svcret.admin.shared.model.GRecentMessage;
 
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
+import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Hyperlink;
 
 public class RecentMessagesGrid extends FlowPanel {
 
+	private static final int COL_USER = 6;
+	private static final int COL_AUTHORIZATION = 5;
 	private static final int COL_MILLIS = 4;
 	private static final int COL_VIEW = 3;
 	private static final int COL_URL = 2;
@@ -26,7 +29,7 @@ public class RecentMessagesGrid extends FlowPanel {
 	private DateTimeFormat myDateFormat = DateTimeFormat.getFormat(PredefinedFormat.DATE_TIME_LONG);
 
 	public RecentMessagesGrid(List<GRecentMessage> theList, boolean theIsUserGrid) {
-		myGrid = new Grid(theList.size() + 1, 5);
+		myGrid = new Grid(theList.size() + 1, 7);
 		myGrid.addStyleName(CssConstants.PROPERTY_TABLE);
 		add(myGrid);
 
@@ -35,6 +38,8 @@ public class RecentMessagesGrid extends FlowPanel {
 		myGrid.setText(0, COL_URL, MSGS.recentMessagesGrid_ColImplementationUrl());
 		myGrid.setText(0, COL_VIEW, MSGS.recentMessagesGrid_ColView());
 		myGrid.setText(0, COL_MILLIS, MSGS.recentMessagesGrid_ColMillis());
+		myGrid.setText(0, COL_AUTHORIZATION, MSGS.recentMessagesGrid_ColAuthorization());
+		myGrid.setText(0, COL_USER, MSGS.recentMessagesGrid_ColUser());
 
 		for (int row = 1, index = theList.size() - 1; index >= 0; index--, row++) {
 			GRecentMessage next = theList.get(index);
@@ -47,6 +52,18 @@ public class RecentMessagesGrid extends FlowPanel {
 			} else {
 				myGrid.setWidget(row, COL_VIEW, new Hyperlink(MSGS.recentMessagesGrid_View(), NavProcessor.getTokenViewServiceVersionRecentMessage(true, next.getPid())));
 			}
+			
+			if (next.getRequestUsername()!=null) {
+				Anchor user = new Anchor();
+				user.setText(next.getRequestUsername());
+				user.setHref("#"+NavProcessor.getTokenEditUser(true, next.getRequestUserPid()));
+				myGrid.setWidget(row, COL_USER, user);				
+			}
+			
+			if (next.getAuthorizationOutcome()!=null) {
+				myGrid.setText(row, COL_AUTHORIZATION, next.getAuthorizationOutcome().getDescription());				
+			}
+			
 		}
 
 	}

@@ -58,7 +58,7 @@ public class AddServiceVersionStep2Panel extends FlowPanel {
 				}));
 			}
 		};
-		Model.getInstance().loadServiceVersion(theDomainPid, theServicePid, theVersionPid, callback);
+		Model.getInstance().loadServiceVersion(theDomainPid, theServicePid, theVersionPid, false, callback);
 	}
 	
 }

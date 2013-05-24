@@ -2,6 +2,7 @@ package net.svcret.ejb.api;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.List;
 import java.util.Map;
 
 import javax.ejb.Local;
@@ -15,7 +16,7 @@ import net.svcret.ejb.ex.UnknownRequestException;
 @Local
 public interface IServiceOrchestrator {
 
-	OrchestratorResponseBean handle(RequestType theRequestType, String theRequestHostIp, String thePath, String theQuery, Reader theReader) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException;
+	OrchestratorResponseBean handle(HttpRequestBean theRequest) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException;
 
 	/**
 	 * Response type for {@link IServiceOrchestrator#handle(RequestType, String, String, Reader)}
@@ -23,9 +24,9 @@ public interface IServiceOrchestrator {
 	public static class OrchestratorResponseBean {
 		private String myResponseBody;
 		private String myResponseContentType;
-		private Map<String, String> myResponseHeaders;
+		private Map<String, List<String>> myResponseHeaders;
 
-		public OrchestratorResponseBean(String theResponseBody, String theResponseContentType, Map<String, String> theResponseHeaders) {
+		public OrchestratorResponseBean(String theResponseBody, String theResponseContentType, Map<String, List<String>> theResponseHeaders) {
 			super();
 			myResponseBody = theResponseBody;
 			myResponseContentType = theResponseContentType;
@@ -49,7 +50,7 @@ public interface IServiceOrchestrator {
 		/**
 		 * @return the responseHeaders
 		 */
-		public Map<String, String> getResponseHeaders() {
+		public Map<String, List<String>> getResponseHeaders() {
 			return myResponseHeaders;
 		}
 

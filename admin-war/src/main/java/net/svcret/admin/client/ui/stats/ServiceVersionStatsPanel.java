@@ -16,6 +16,8 @@ import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GUrlStatus;
 
+import com.google.gwt.event.dom.client.LoadEvent;
+import com.google.gwt.event.dom.client.LoadHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -35,7 +37,7 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 	private FlowPanel myRecentMessagesPanel;
 	private LoadingSpinner myRecentMessagesLoadingSpinner;
 
-	public ServiceVersionStatsPanel(long theDomainPid, long theServicePid, long theVersionPid) {
+	public ServiceVersionStatsPanel(final long theDomainPid, final long theServicePid, long theVersionPid) {
 		myServiceVersionPid = theVersionPid;
 
 		myTopPanel = new FlowPanel();
@@ -51,10 +53,10 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 		myTopLoadingSpinner.show();
 		myTopPanel.add(myTopLoadingSpinner);
 
-		Model.getInstance().loadServiceVersion(theDomainPid, theServicePid, theVersionPid, new IAsyncLoadCallback<BaseGServiceVersion>() {
+		Model.getInstance().loadServiceVersion(theDomainPid, theServicePid, theVersionPid, true, new IAsyncLoadCallback<BaseGServiceVersion>() {
 			@Override
 			public void onSuccess(BaseGServiceVersion theResult) {
-				set01ServiceVersion(theResult);
+				set01ServiceVersion(theDomainPid, theServicePid, theResult);
 			}
 		});
 
@@ -67,12 +69,11 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 		return ourDateTimeFormat.format(theDate);
 	}
 
-	private void set01ServiceVersion(final BaseGServiceVersion theResult) {
+	private void set01ServiceVersion(final long theDomainPid, final long theServicePid, final BaseGServiceVersion theResult) {
 		myTitleLabel.setText(MSGS.serviceVersionStats_Title(theResult.getName()));
 
-		HtmlH1 urlsLabel = new HtmlH1(MSGS.serviceVersionStats_UrlsTitle());
-		myTopPanel.add(urlsLabel);
-
+		myTopPanel.add(new ServiceVersionIndividualStatusPanel(theDomainPid, theServicePid, theResult.getPid()));
+		
 		AdminPortal.MODEL_SVC.loadServiceVersionUrlStatuses(myServiceVersionPid, new AsyncCallback<List<GUrlStatus>>() {
 
 			@Override
@@ -89,9 +90,16 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 	}
 
 	private void set02UrlStatuses(List<GUrlStatus> theUrlStatuses) {
+		FlowPanel urlsPanel = new FlowPanel();
+		urlsPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
+		add(urlsPanel);
+
+		Label urlsTitleLabel = new Label(MSGS.serviceVersionStats_UrlsTitle());
+		urlsTitleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
+		urlsPanel.add(urlsTitleLabel);
 
 		Grid urlGrid = new Grid(theUrlStatuses.size() + 1, 8);
-		myTopPanel.add(urlGrid);
+		urlsPanel.add(urlGrid);
 		urlGrid.addStyleName(CssConstants.PROPERTY_TABLE);
 
 		int URLTBL_COL_URL = 0;
@@ -146,25 +154,44 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 	}
 
 	private void set03Usage() {
-		
-		myTopPanel.add(new HtmlH1(MSGS.serviceVersionStats_UsageTitle()));
-		Image img = new Image("graph.png?ct=USAGE&pid=" + myServiceVersionPid);
-		img.addStyleName(CssConstants.STATS_IMAGE);
-		myTopPanel.add(img);
+		FlowPanel graphsPanel = new FlowPanel();
+		graphsPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
+		add(graphsPanel);
 
-		myTopPanel.add(new HtmlH1(MSGS.serviceVersionStats_LatencyTitle()));
-		img = new Image("graph.png?ct=LATENCY&pid=" + myServiceVersionPid);
-		img.addStyleName(CssConstants.STATS_IMAGE);
-		myTopPanel.add(img);
+		Label graphsTitleLabel = new Label(MSGS.serviceVersionStats_GraphsTitle());
+		graphsTitleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
+		graphsPanel.add(graphsTitleLabel);
 		
-		myTopPanel.add(new HtmlH1(MSGS.serviceVersionStats_MessageSizeTitle()));
+		graphsPanel.add(new HtmlH1(MSGS.serviceVersionStats_UsageTitle()));
+		Image img = new Image("graph.png?ct=USAGE&pid=" + myServiceVersionPid);
+		addStatsImage(graphsPanel, img);
+
+		graphsPanel.add(new HtmlH1(MSGS.serviceVersionStats_LatencyTitle()));
+		img = new Image("graph.png?ct=LATENCY&pid=" + myServiceVersionPid);
+		addStatsImage(graphsPanel, img);
+		
+		graphsPanel.add(new HtmlH1(MSGS.serviceVersionStats_MessageSizeTitle()));
 		img = new Image("graph.png?ct=PAYLOADSIZE&pid=" + myServiceVersionPid);
-		img.addStyleName(CssConstants.STATS_IMAGE);
-		myTopPanel.add(img);
+		addStatsImage(graphsPanel, img);
 
 		myTopLoadingSpinner.hideCompletely();
 		
 		set04RecentMessages();
+	}
+
+	private void addStatsImage(FlowPanel graphsPanel, Image img) {
+		final LoadingSpinner spinner = new LoadingSpinner();
+		spinner.showMessage("Generating Graph...", true);
+		graphsPanel.add(spinner);
+		
+		img.addStyleName(CssConstants.STATS_IMAGE);
+		img.addLoadHandler(new LoadHandler() {
+			@Override
+			public void onLoad(LoadEvent theEvent) {
+				spinner.hideCompletely();
+			}
+		});
+		graphsPanel.add(img);
 	}
 
 	private void set04RecentMessages() {

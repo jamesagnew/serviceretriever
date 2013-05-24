@@ -17,6 +17,7 @@ import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GService;
+import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GUrlStatus;
 import net.svcret.admin.shared.model.GUser;
@@ -140,5 +141,7 @@ public interface ModelUpdateService extends RemoteService {
 	GRecentMessage loadRecentMessageForUser(long thePid);
 
 	BaseGServiceVersion createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncommittedId);
+
+	GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws ServiceFailureException;
 
 }

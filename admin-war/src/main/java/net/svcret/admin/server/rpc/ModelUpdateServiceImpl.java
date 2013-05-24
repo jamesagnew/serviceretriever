@@ -25,6 +25,7 @@ import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
+import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
 import net.svcret.admin.shared.model.GServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
@@ -634,6 +635,20 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 			return myMock.loadRecentMessageForUser(thePid);
 		}
 		return myAdminSvc.loadRecentMessageForUser(thePid);
+	}
+
+	@Override
+	public GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws ServiceFailureException {
+		if (isMockMode()) {
+			return myMock.loadServiceVersionDetailedStats(theVersionPid);
+		}
+		
+		try {
+			return myAdminSvc.loadServiceVersionDetailedStats(theVersionPid);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to load detailed stats", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
 	}
 
 }

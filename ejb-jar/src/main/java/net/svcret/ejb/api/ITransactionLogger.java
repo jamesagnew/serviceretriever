@@ -14,7 +14,7 @@ public interface ITransactionLogger {
 
 	void flush();
 
-	void logTransaction(Date theTransactionDate, String theRequestHostIp, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl,
+	void logTransaction(Date theTransactionDate, HttpRequestBean theRequest, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl,
 			HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome);
 
 }

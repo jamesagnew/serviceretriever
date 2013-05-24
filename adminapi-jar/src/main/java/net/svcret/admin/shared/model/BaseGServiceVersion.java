@@ -15,6 +15,8 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	private BaseGServerSecurityList myServerSecurityList;
 	private GServiceMethodList myServiceMethodList;
 	private GServiceVersionUrlList myServiceUrlList;
+
+	private GServiceVersionDetailedStats myDetailedStats;
 	
 	public BaseGServiceVersion() {
 		myServiceMethodList = new GServiceMethodList();
@@ -173,6 +175,17 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	 */
 	public void setResourcePointerList(GServiceVersionResourcePointerList theResourcePointerList) {
 		myResourcePointerList = theResourcePointerList;
+	}
+
+	public void setDetailedStats(GServiceVersionDetailedStats theResult) {
+		myDetailedStats=theResult;
+	}
+
+	/**
+	 * @return the detailedStats
+	 */
+	public GServiceVersionDetailedStats getDetailedStats() {
+		return myDetailedStats;
 	}
 
 }

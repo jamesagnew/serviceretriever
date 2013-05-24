@@ -6,15 +6,19 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 
 	private static final long serialVersionUID = 1L;
 
+	private AuthorizationOutcomeEnum myAuthorizationOutcome;
 	private String myImplementationUrl;
 	private String myRequestHostIp;
 	private String myRequestMessage;
+	private String myRequestUsername;
+
+	private Long myRequestUserPid;
+
 	private String myResponseMessage;
+
 	private long myTransactionMillis;
 
 	private Date myTransactionTime;
-
-	private AuthorizationOutcomeEnum myAuthorizationOutcome;
 
 	public GRecentMessage() {
 		super();
@@ -48,6 +52,27 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 	}
 
 	/**
+	 * @return the requestUsername
+	 */
+	public String getRequestUsername() {
+		return myRequestUsername;
+	}
+
+	/**
+	 * @return the authorizationOutcome
+	 */
+	public AuthorizationOutcomeEnum getAuthorizationOutcome() {
+		return myAuthorizationOutcome;
+	}
+
+	/**
+	 * @return the requestUserPid
+	 */
+	public Long getRequestUserPid() {
+		return myRequestUserPid;
+	}
+
+	/**
 	 * @return the responseMessage
 	 */
 	public String getResponseMessage() {
@@ -71,6 +96,10 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 	@Override
 	public void merge(GRecentMessage theObject) {
 
+	}
+
+	public void setAuthorizationOutcome(AuthorizationOutcomeEnum theAuthorizationOutcome) {
+		myAuthorizationOutcome = theAuthorizationOutcome;
 	}
 
 	/**
@@ -97,6 +126,14 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 		myRequestMessage = theRequestMessage;
 	}
 
+	public void setRequestUsername(String theUsername) {
+		myRequestUsername = theUsername;
+	}
+
+	public void setRequestUserPid(Long thePid) {
+		myRequestUserPid = thePid;
+	}
+
 	/**
 	 * @param theResponseMessage
 	 *            the responseMessage to set
@@ -115,10 +152,6 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 	 */
 	public void setTransactionTime(Date theTransactionTime) {
 		myTransactionTime = theTransactionTime;
-	}
-
-	public void setAuthorizationOutcome(AuthorizationOutcomeEnum theAuthorizationOutcome) {
-		myAuthorizationOutcome = theAuthorizationOutcome;
 	}
 
 }

@@ -31,15 +31,24 @@ public class TwoColumnGrid extends FlexTable {
 	}
 	
 	public void addDescription(String theDescription) {
-		int row = getRowCount();
+		HTML widget = createDescriptionWidget(theDescription);
+		setWidget(getRowCount(), 1, widget);
+	}
+
+	private HTML createDescriptionWidget(String theDescription) {
 		HTML widget = new HTML(theDescription);
 		widget.addStyleName(CssConstants.TWO_COLUMN_PROPERTY_GRID_DESC);
-		setWidget(row, 1, widget);
+		return widget;
 	}
 
 	public void addDescription(Label theLabel) {
 		int row = getRowCount();
 		theLabel.addStyleName(CssConstants.TWO_COLUMN_PROPERTY_GRID_DESC);
 		setWidget(row, 1, theLabel);
+	}
+
+	public void addDescriptionToRight(String theDescription) {
+		HTML widget = createDescriptionWidget(theDescription);
+		setWidget(getRowCount()-1, 2, widget);
 	}
 }

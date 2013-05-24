@@ -1,7 +1,6 @@
 package net.svcret.ejb.ejb;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -12,27 +11,25 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
+import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.HttpResponseBean.Failure;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.ISecurityService;
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
-import net.svcret.ejb.api.InvocationResultsBean.ResultTypeEnum;
 import net.svcret.ejb.api.IServiceInvoker;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.ITransactionLogger;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
-import net.svcret.ejb.api.RequestType;
+import net.svcret.ejb.api.InvocationResultsBean.ResultTypeEnum;
 import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.api.UrlPoolBean;
-import net.svcret.ejb.api.HttpResponseBean.Failure;
 import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
@@ -47,6 +44,8 @@ import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.util.Validate;
+
+import com.google.common.annotations.VisibleForTesting;
 
 @Stateless
 public class ServiceOrchestratorBean implements IServiceOrchestrator {
@@ -73,35 +72,35 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public OrchestratorResponseBean handle(RequestType theRequestType, String theRequestHostIp, String thePath, String theQuery, Reader theInputReader) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException {
-		Validate.notNull(theRequestType, "RequestType");
-		Validate.notNull(thePath, "Path");
-		Validate.notNull(theQuery, "Query");
-		Validate.notNull(theInputReader, "Reader");
+	public OrchestratorResponseBean handle(HttpRequestBean theRequest) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException {
+		Validate.notNull(theRequest.getRequestType(), "RequestType");
+		Validate.notNull(theRequest.getPath(), "Path");
+		Validate.notNull(theRequest.getQuery(), "Query");
+		Validate.notNull(theRequest.getInputReader(), "Reader");
 
 		try {
-			return doHandle(theRequestType, theRequestHostIp, thePath, theQuery, theInputReader);
+			return doHandle(theRequest);
 		} finally {
-			theInputReader.close();
+			theRequest.getInputReader().close();
 		}
 	}
 
 	@SuppressWarnings("resource")
-	private OrchestratorResponseBean doHandle(RequestType theRequestType, String theRequestHostIp, String thePath, String theQuery, Reader theInputReader) throws UnknownRequestException, IOException, ProcessingException, SecurityFailureException {
+	private OrchestratorResponseBean doHandle(HttpRequestBean theRequest) throws UnknownRequestException, IOException, ProcessingException, SecurityFailureException {
 		Date startTime = new Date();
-		CapturingReader reader = new CapturingReader(theInputReader);
+		CapturingReader reader = new CapturingReader(theRequest.getInputReader());
 
-		if (theQuery.length() > 0 && theQuery.charAt(0) != '?') {
+		if (theRequest.getQuery().length() > 0 && theRequest.getQuery().charAt(0) != '?') {
 			throw new IllegalArgumentException("Path must be blank or start with '?'");
 		}
 		String path;
-		if (thePath.length() > 0 && thePath.charAt(thePath.length() - 1) == '/') {
-			path = thePath.substring(0, thePath.length() - 1);
+		if (theRequest.getPath().length() > 0 && theRequest.getPath().charAt(theRequest.getPath().length() - 1) == '/') {
+			path = theRequest.getPath().substring(0, theRequest.getPath().length() - 1);
 		} else {
-			path = thePath;
+			path = theRequest.getPath();
 		}
 
-		ourLog.debug("New request of type {} for path: {}", theRequestType, thePath);
+		ourLog.debug("New request of type {} for path: {}", theRequest.getRequestType(), theRequest.getPath());
 
 		/*
 		 * Figure out who should handle this request
@@ -127,7 +126,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			PersServiceVersionSoap11 serviceVersionSoap = (PersServiceVersionSoap11) serviceVersion;
 			serviceInvoker = mySoap11ServiceInvoker;
 			ourLog.debug("Handling service with invoker {}", serviceInvoker);
-			results = mySoap11ServiceInvoker.processInvocation(serviceVersionSoap, theRequestType, path, theQuery, reader);
+			results = mySoap11ServiceInvoker.processInvocation(serviceVersionSoap, theRequest.getRequestType(), path, theRequest.getQuery(), reader);
 			break;
 		default:
 			throw new InternalErrorException("Unknown service protocol: " + serviceVersion.getProtocol());
@@ -166,7 +165,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 				}
 
 				ourLog.debug("Checking credentials: {}", grabber);
-				authorized = mySecuritySvc.authorizeMethodInvocation(authHost, credentials, method, theRequestHostIp);
+				authorized = mySecuritySvc.authorizeMethodInvocation(authHost, credentials, method, theRequest.getRequestHostIp());
 				if (authorized.isAuthorized() != AuthorizationOutcomeEnum.AUTHORIZED) {
 					InvocationResponseResultsBean invocationResponse = new InvocationResponseResultsBean();
 					invocationResponse.setResponseType(ResponseTypeEnum.SECURITY_FAIL);
@@ -175,7 +174,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 					myRuntimeStatus.recordInvocationMethod(startTime, 0, method, authorized.getUser(), null, invocationResponse);
 
 					// Log transaction
-					logTransaction(theRequestHostIp, startTime, reader, serviceVersion, authorized, null, invocationResponse);
+					logTransaction(theRequest, startTime, reader, serviceVersion, authorized, null, invocationResponse);
 
 					throw new SecurityFailureException();
 				}
@@ -193,7 +192,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		case STATIC_RESOURCE: {
 			String responseBody = results.getStaticResourceText();
 			String responseContentType = results.getStaticResourceContentTyoe();
-			Map<String, String> responseHeaders = results.getStaticResourceHeaders();
+			Map<String, List<String>> responseHeaders = results.getStaticResourceHeaders();
 			retVal = new OrchestratorResponseBean(responseBody, responseContentType, responseHeaders);
 
 			PersServiceVersionResource resource = results.getStaticResourceDefinition();
@@ -240,12 +239,12 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 			String responseBody = invocationResponse.getResponseBody();
 			String responseContentType = invocationResponse.getResponseContentType();
-			Map<String, String> responseHeaders = invocationResponse.getResponseHeaders();
+			Map<String, List<String>> responseHeaders = invocationResponse.getResponseHeaders();
 
 			/*
 			 * Log transaction if needed
 			 */
-			logTransaction(theRequestHostIp, startTime, reader, serviceVersion, authorized, httpResponse, invocationResponse);
+			logTransaction(theRequest, startTime, reader, serviceVersion, authorized, httpResponse, invocationResponse);
 
 			retVal = new OrchestratorResponseBean(responseBody, responseContentType, responseHeaders);
 			break;
@@ -258,12 +257,12 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		return retVal;
 	}
 
-	private void logTransaction(String theRequestHostIp, Date startTime, CapturingReader reader, BasePersServiceVersion serviceVersion, AuthorizationResultsBean authorized, HttpResponseBean httpResponse, InvocationResponseResultsBean invocationResponse) {
+	private void logTransaction(HttpRequestBean theRequest, Date startTime, CapturingReader reader, BasePersServiceVersion serviceVersion, AuthorizationResultsBean authorized, HttpResponseBean httpResponse, InvocationResponseResultsBean invocationResponse) {
 		PersUser user = authorized != null ? authorized.getUser() : null;
 		String requestBody = reader.getCapturedString();
 		PersServiceVersionUrl successfulUrl = httpResponse != null ? httpResponse.getSuccessfulUrl() : null;
 		AuthorizationOutcomeEnum authorizationOutcome = authorized != null ? authorized.isAuthorized() : AuthorizationOutcomeEnum.AUTHORIZED;
-		myTransactionLogger.logTransaction(startTime, theRequestHostIp, serviceVersion, user, requestBody, invocationResponse, successfulUrl, httpResponse, authorizationOutcome);
+		myTransactionLogger.logTransaction(startTime, theRequest, serviceVersion, user, requestBody, invocationResponse, successfulUrl, httpResponse, authorizationOutcome);
 	}
 
 	private void markUrlsFailed(Map<PersServiceVersionUrl, Failure> theMap) {

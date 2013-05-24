@@ -16,6 +16,7 @@ import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GService;
+import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GUrlStatus;
 import net.svcret.admin.shared.model.GUser;
@@ -81,5 +82,7 @@ public interface ModelUpdateServiceAsync {
 	void loadRecentTransactionListForuser(long thePid, AsyncCallback<GRecentMessageLists> theAsyncCallback);
 
 	void loadRecentMessageForUser(long thePid, AsyncCallback<GRecentMessage> theAsyncCallback);
+
+	void loadServiceVersionDetailedStats(long theVersionPid, AsyncCallback<GServiceVersionDetailedStats> theAsyncCallback);
 
 }

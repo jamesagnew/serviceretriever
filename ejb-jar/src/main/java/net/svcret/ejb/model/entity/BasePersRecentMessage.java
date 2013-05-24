@@ -2,6 +2,8 @@ package net.svcret.ejb.model.entity;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -19,6 +21,7 @@ import javax.persistence.TemporalType;
 import javax.persistence.Temporal;
 
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
+import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.ResponseTypeEnum;
@@ -130,13 +133,24 @@ public abstract class BasePersRecentMessage implements Serializable {
 		return myTransactionTime;
 	}
 
-	public void populate(Date theTransactionTime, String theRequestHostIp, PersServiceVersionUrl theImplementationUrl, String theRequestBody, InvocationResponseResultsBean theInvocationResult) {
+	public void populate(Date theTransactionTime, HttpRequestBean theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, InvocationResponseResultsBean theInvocationResult) {
 		myRequestBody = theRequestBody;
 		myImplementationUrl = theImplementationUrl;
-		myRequestHostIp = theRequestHostIp;
-		myResponseBody = theInvocationResult.getResponseBody();
+		myRequestHostIp = extractHeadersForBody(theRequest.getRequestHeaders()) + theRequest.getRequestHostIp();
+		myResponseBody = extractHeadersForBody(theInvocationResult.getResponseHeaders()) + theInvocationResult.getResponseBody();
 		myResponseType = theInvocationResult.getResponseType();
 		myTransactionTime = theTransactionTime;
+	}
+
+	private String extractHeadersForBody(Map<String, List<String>> headers) {
+		StringBuilder b = new StringBuilder();
+		for (String nextHeader : headers.keySet()) {
+			for (String nextValue : headers.get(nextHeader)) {
+				b.append(nextHeader).append(": ").append(nextValue).append("\r\n");
+			}
+		}
+		b.append("\r\n");
+		return b.toString();
 	}
 
 	/**

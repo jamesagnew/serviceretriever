@@ -2,7 +2,12 @@ package ca.uhn.sail.proxy.web;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -14,6 +19,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.OrchestratorResponseBean;
 import net.svcret.ejb.api.RequestType;
@@ -24,6 +30,8 @@ import net.svcret.ejb.ex.UnknownRequestException;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.net.URLCodec;
+
+import com.google.common.collect.Iterators;
 
 @WebServlet(asyncSupported = false, loadOnStartup = 1, urlPatterns = { "/" })
 public class ServiceServlet extends HttpServlet {
@@ -68,7 +76,22 @@ public class ServiceServlet extends HttpServlet {
 
 		OrchestratorResponseBean response;
 		try {
-			response = myOrch.handle(get, requestHostIp, path, query, theReq.getReader());
+			HttpRequestBean request=new HttpRequestBean();
+			request.setRequestType(get);
+			request.setRequestHostIp(requestHostIp);
+			request.setPath(path);
+			request.setQuery(query);
+			request.setInputReader(theReq.getReader());
+
+			Map<String, List<String>> requestHeaders = new HashMap<String, List<String>>();
+			for (Iterator<String> nameIter = Iterators.forEnumeration(theReq.getHeaderNames()); nameIter.hasNext();) {
+				String nextName = nameIter.next();
+				ArrayList<String> values = Collections.list(theReq.getHeaders(nextName));
+				requestHeaders.put(nextName, values);
+			}
+			request.setRequestHeaders(requestHeaders);
+			
+			response = myOrch.handle(request);
 		} catch (InternalErrorException e) {
 			ourLog.info("Processing Failure", e);
 			sendFailure(theResp, e.getMessage());

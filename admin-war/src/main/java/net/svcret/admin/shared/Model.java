@@ -14,6 +14,7 @@ import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceList;
 import net.svcret.admin.shared.model.GServiceMethod;
+import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 
@@ -162,17 +163,34 @@ public class Model {
 		});
 	}
 
-	public void loadServiceVersion(long theDomainPid, long theServicePid, final long theVersionPid, final IAsyncLoadCallback<BaseGServiceVersion> theCallback) {
+	public void loadServiceVersion(long theDomainPid, long theServicePid, final long theVersionPid, final boolean theLoadDetailedStats, final IAsyncLoadCallback<BaseGServiceVersion> theCallback) {
 		loadService(theDomainPid, theServicePid, new IAsyncLoadCallback<GService>() {
 
 			@Override
 			public void onSuccess(GService theResult) {
-				BaseGServiceVersion version = theResult.getVersionList().getVersionByPid(theVersionPid);
+				final BaseGServiceVersion version = theResult.getVersionList().getVersionByPid(theVersionPid);
 				if (version == null) {
 					GWT.log("Unknown version! " + theVersionPid);
 					return;
 				}
-				theCallback.onSuccess(version);
+
+				if (theLoadDetailedStats) {
+					AdminPortal.MODEL_SVC.loadServiceVersionDetailedStats(theVersionPid, new AsyncCallback<GServiceVersionDetailedStats>() {
+						@Override
+						public void onFailure(Throwable theCaught) {
+							handleFailure(theCaught);
+						}
+
+						@Override
+						public void onSuccess(GServiceVersionDetailedStats theDetailedStats) {
+							version.setDetailedStats(theDetailedStats);
+							theCallback.onSuccess(version);
+						}
+					});
+				} else {
+					theCallback.onSuccess(version);
+				}
+
 			}
 		});
 	}
@@ -305,7 +323,7 @@ public class Model {
 			theIAsyncLoadCallback.onSuccess(myConfig);
 			return;
 		}
-		
+
 		AdminPortal.MODEL_SVC.loadConfig(new AsyncCallback<GConfig>() {
 			@Override
 			public void onFailure(Throwable theCaught) {
@@ -314,7 +332,7 @@ public class Model {
 
 			@Override
 			public void onSuccess(GConfig theResult) {
-				myConfig=theResult;
+				myConfig = theResult;
 				theIAsyncLoadCallback.onSuccess(theResult);
 			}
 		});
