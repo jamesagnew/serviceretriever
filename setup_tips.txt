@@ -1,0 +1,9 @@
+----
+
+Using HSQL:
+
+Add the following system property:
+-Dhsqldb.reconfig_logging=false
+
+
+----

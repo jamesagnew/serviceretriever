@@ -42,6 +42,8 @@ import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
+import net.svcret.ejb.model.entity.http.PersHttpBasicCredentialGrabber;
+import net.svcret.ejb.model.entity.http.PersHttpBasicServerAuth;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.util.Validate;
 
@@ -149,8 +151,13 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			}
 
 			for (PersBaseServerAuth<?, ?> nextServerAuth : serviceVersion.getServerAuths()) {
-				Class<? extends ICredentialGrabber> grabber = nextServerAuth.getGrabberClass();
-				ICredentialGrabber credentials = results.getCredentialsInRequest(grabber);
+				ICredentialGrabber credentials;
+				if (nextServerAuth instanceof PersHttpBasicServerAuth) {
+					credentials = new PersHttpBasicCredentialGrabber(theRequest.getRequestHeaders());
+				} else {
+					Class<? extends ICredentialGrabber> grabber = nextServerAuth.getGrabberClass();
+					credentials = results.getCredentialsInRequest(grabber);
+				}
 				BasePersAuthenticationHost authHost = nextServerAuth.getAuthenticationHost();
 				PersServiceVersionMethod method = results.getMethodDefinition();
 
@@ -233,6 +240,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			}
 
 			InvocationResponseResultsBean invocationResponse = serviceInvoker.processInvocationResponse(httpResponse);
+			invocationResponse.validate();
 
 			int requestLength = contentBody.length();
 			myRuntimeStatus.recordInvocationMethod(startTime, requestLength, method, null, httpResponse, invocationResponse);

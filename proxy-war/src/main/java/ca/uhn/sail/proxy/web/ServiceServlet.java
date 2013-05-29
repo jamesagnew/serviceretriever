@@ -45,7 +45,7 @@ public class ServiceServlet extends HttpServlet {
 	@Override
 	public void init(ServletConfig theConfig) throws ServletException {
 		ourLog.info("Starting servlet with path: " + theConfig.getServletContext().getContextPath());
-		ourLog.info("Real path: " +theConfig.getServletContext().getRealPath("/"));
+		ourLog.info("Real path: " + theConfig.getServletContext().getRealPath("/"));
 	}
 
 	@EJB
@@ -76,7 +76,7 @@ public class ServiceServlet extends HttpServlet {
 
 		OrchestratorResponseBean response;
 		try {
-			HttpRequestBean request=new HttpRequestBean();
+			HttpRequestBean request = new HttpRequestBean();
 			request.setRequestType(get);
 			request.setRequestHostIp(requestHostIp);
 			request.setPath(path);
@@ -90,7 +90,7 @@ public class ServiceServlet extends HttpServlet {
 				requestHeaders.put(nextName, values);
 			}
 			request.setRequestHeaders(requestHeaders);
-			
+
 			response = myOrch.handle(request);
 		} catch (InternalErrorException e) {
 			ourLog.info("Processing Failure", e);
@@ -112,14 +112,16 @@ public class ServiceServlet extends HttpServlet {
 
 		theResp.setStatus(200);
 
-		Map<String, String> responseHeaders = response.getResponseHeaders();
+		Map<String, List<String>> responseHeaders = response.getResponseHeaders();
 		if (responseHeaders != null) {
 			ourLog.debug("Responding with headers: {}", response.getResponseHeaders());
-			for (Entry<String, String> next : responseHeaders.entrySet()) {
+			for (Entry<String, List<String>> next : responseHeaders.entrySet()) {
 				if (ourFilterHeaders.contains(next.getKey())) {
 					continue;
 				}
-				theResp.addHeader(next.getKey(), next.getValue());
+				for (String nextValue : next.getValue()) {
+					theResp.addHeader(next.getKey(), nextValue);
+				}
 			}
 		}
 

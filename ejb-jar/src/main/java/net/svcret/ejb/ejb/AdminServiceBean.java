@@ -56,6 +56,7 @@ import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.PartialUserListRequest;
 import net.svcret.admin.shared.model.StatusEnum;
+import net.svcret.admin.shared.model.TimeRange;
 import net.svcret.ejb.api.IAdminService;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
@@ -784,10 +785,15 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	public static void doWithStatsByMinute(PersConfig theConfig, int theNumberOfMinutes, IRuntimeStatus statusSvc, PersServiceVersionMethod theMethod, IWithStats theOperator) {
-		Date xMinsAgo = getDateXMinsAgo(theNumberOfMinutes);
-		Date date = xMinsAgo;
+		Date start = getDateXMinsAgo(theNumberOfMinutes);
+		Date end = new Date();
 
-		for (int min = 0; date.before(new Date()); min++) {
+		doWithStatsByMinute(theConfig, statusSvc, theMethod, theOperator, start, end);
+	}
+
+	private static void doWithStatsByMinute(PersConfig theConfig, IRuntimeStatus statusSvc, PersServiceVersionMethod theMethod, IWithStats theOperator, Date start, Date end) {
+		Date date = start;
+		for (int min = 0; date.before(end); min++) {
 
 			InvocationStatsIntervalEnum interval = doWithStatsSupportFindInterval(theConfig, date);
 			date = doWithStatsSupportFindDate(date, interval);
@@ -1946,6 +1952,13 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setMethodPidToFaultCount(methodPidToFaultCount);
 
 		return retVal;
+	}
+
+	public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatus theStatus, PersServiceVersionMethod theNextMethod, IWithStats theOperator) {
+		
+		Date start = new Date(System.currentTimeMillis() - (theRange.getRange().getNumMins()*60*1000L));
+		Date end=new Date();
+		doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator, start, end);
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {

@@ -76,7 +76,7 @@ public class DaoBean implements IDao {
 	private EntityManager myEntityManager;
 
 	private Map<Long, Long> myServiceVersionPidToStatusPid = new HashMap<Long, Long>();
-
+	
 	@Override
 	public void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost) {
 		Validate.notNull(theAuthHost, "AuthenticationHost");

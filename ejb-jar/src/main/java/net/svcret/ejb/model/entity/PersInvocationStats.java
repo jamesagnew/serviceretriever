@@ -24,8 +24,9 @@ import org.hibernate.annotations.Index;
 	@NamedQuery(name=Queries.PERSINVOC_STATS, query=Queries.PERSINVOC_STATS_Q)
 })
 @Entity()
-@Cacheable
-@Cache(usage=CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+@Cacheable()
+//NB: Using nonstrict here is actually less performant..
+@Cache(usage=CacheConcurrencyStrategy.READ_WRITE)
 //@formatter:on
 public class PersInvocationStats extends BasePersInvocationStats {
 

@@ -14,51 +14,14 @@ import com.google.gwt.user.client.ui.Widget;
 public class Sparkline extends Widget {
 
 	private static int ourNextId = 0;
+	private boolean myBar;
+	private String myHeight = "20px";
 	private String myId;
 	private List<Integer> myValues;
-	private String myHeight = "20px";
 	private String myWidth = "35px";
 
-	/**
-	 * @return the height
-	 */
-	public String getHeight() {
-		return myHeight;
-	}
-
-	/**
-	 * @param theHeight
-	 *            the height to set
-	 */
-	@Override
-	public void setHeight(String theHeight) {
-		myHeight = theHeight;
-	}
-
-	/**
-	 * @return the width
-	 */
-	public String getWidth() {
-		return myWidth;
-	}
-
-	/**
-	 * @param theWidth
-	 *            the width to set
-	 */
-	@Override
-	public void setWidth(String theWidth) {
-		myWidth = theWidth;
-	}
-
-	/**
-	 * @param theWidth
-	 *            the width to set
-	 * @return 
-	 */
-	public Sparkline withWidth(String theWidth) {
-		myWidth = theWidth;
-		return this;
+	public Sparkline(int[] theList, String theText) {
+		this(toList(theList), theText);
 	}
 
 	/**
@@ -84,7 +47,7 @@ public class Sparkline extends Widget {
 		} else {
 			myValues = Collections.emptyList();
 		}
-		
+
 		myId = "sparkline" + (ourNextId++);
 
 		SpanElement rootElement = Document.get().createSpanElement();
@@ -100,17 +63,72 @@ public class Sparkline extends Widget {
 		}
 	}
 
-	public Sparkline(int[] theList, String theText) {
-		this(toList(theList), theText);
+	/**
+	 * @return the height
+	 */
+	public String getHeight() {
+		return myHeight;
 	}
 
-	private static List<Integer> toList(int[] theList) {
-		ArrayList<Integer> retVal = new ArrayList<Integer>();
-		for (int i : theList) {
-			retVal.add(i);
-		}
-		return retVal;
+	/**
+	 * @return the width
+	 */
+	public String getWidth() {
+		return myWidth;
 	}
+
+	public void setBar(boolean theBar) {
+		myBar = theBar;
+	}
+
+	/**
+	 * @param theHeight
+	 *            the height to set
+	 */
+	@Override
+	public void setHeight(String theHeight) {
+		myHeight = theHeight;
+	}
+
+	/**
+	 * @param theWidth
+	 *            the width to set
+	 */
+	@Override
+	public void setWidth(String theWidth) {
+		myWidth = theWidth;
+	}
+
+	/**
+	 * @param theWidth
+	 *            the width to set
+	 * @return
+	 */
+	public Sparkline withWidth(String theWidth) {
+		myWidth = theWidth;
+		return this;
+	}
+
+	private native void drawSparkline(final com.google.gwt.dom.client.Element theElement, String theValues, String theHeight, String theWidth, String theType) /*-{
+		var sparkOptions = new Array();
+		sparkOptions['chartRangeMin'] = 0;
+		sparkOptions['height'] = theHeight;
+		sparkOptions['width'] = theWidth;
+		sparkOptions['type'] = theType;
+		sparkOptions['tooltipFormat'] = '{{value:levels}} - {{value}}';
+		if (theType == 'bar') {
+			sparkOptions['barWidth'] = 1;
+		}
+
+		var splitValues = theValues.split(",");
+
+		var values = new Array();
+		for ( var i = 0; i < splitValues.length; i++) {
+			values[i] = parseInt(splitValues[i]);
+		}
+
+		$wnd.jQuery(theElement).sparkline(values, sparkOptions);
+	}-*/;
 
 	/**
 	 * {@inheritDoc}
@@ -127,23 +145,16 @@ public class Sparkline extends Widget {
 
 		Element firstChild = (Element) getElement().getFirstChild();
 		String valuesString = valuesBuilder.toString();
-		drawSparkline(firstChild, valuesString, myHeight, myWidth);
+		String type = myBar ? "bar" : "line";
+		drawSparkline(firstChild, valuesString, myHeight, myWidth, type);
 	}
 
-	private native void drawSparkline(final com.google.gwt.dom.client.Element theElement, String theValues, String theHeight, String theWidth) /*-{
-		var sparkOptions = new Array();
-		sparkOptions['chartRangeMin'] = 0;
-		sparkOptions['height'] = theHeight;
-		sparkOptions['width'] = theWidth;
-
-		var splitValues = theValues.split(",");
-
-		var values = new Array();
-		for ( var i = 0; i < splitValues.length; i++) {
-			values[i] = parseInt(splitValues[i]);
+	private static List<Integer> toList(int[] theList) {
+		ArrayList<Integer> retVal = new ArrayList<Integer>();
+		for (int i : theList) {
+			retVal.add(i);
 		}
-
-		$wnd.jQuery(theElement).sparkline(values, sparkOptions);
-	}-*/;
+		return retVal;
+	}
 
 }

@@ -257,7 +257,7 @@ public class Soap11ServiceInvokerTest {
 		when(httpResponse.getBody()).thenReturn(msg);
 		when(httpResponse.getContentType()).thenReturn("text/xml");
 		
-		Map<String, String> headers = new HashMap<String, String>();
+		Map<String, List<String>> headers = new HashMap<String, List<String>>();
 		when(httpResponse.getHeaders()).thenReturn(headers);
 		
 		Soap11ServiceInvoker svc = new Soap11ServiceInvoker();
@@ -268,6 +268,7 @@ public class Soap11ServiceInvokerTest {
 		assertEquals("Server Error", response.getResponseFaultDescription());
 		verify(httpResponse, atLeastOnce()).getBody();
 		verify(httpResponse, atLeastOnce()).getContentType();
+		verify(httpResponse, atLeastOnce()).getHeaders();
 		verifyNoMoreInteractions(httpResponse);
 	}
 	
@@ -299,7 +300,7 @@ public class Soap11ServiceInvokerTest {
 		when(httpResponse.getBody()).thenReturn(msg);
 		when(httpResponse.getContentType()).thenReturn("text/xml");
 		
-		Map<String, String> headers = new HashMap<String, String>();
+		Map<String, List<String>> headers = new HashMap<String, List<String>>();
 		when(httpResponse.getHeaders()).thenReturn(headers);
 		
 		Soap11ServiceInvoker svc = new Soap11ServiceInvoker();
@@ -310,6 +311,7 @@ public class Soap11ServiceInvokerTest {
 		assertEquals("Server Error", response.getResponseFaultDescription());
 		verify(httpResponse, atLeastOnce()).getBody();
 		verify(httpResponse, atLeastOnce()).getContentType();
+		verify(httpResponse, atLeastOnce()).getHeaders();
 		verifyNoMoreInteractions(httpResponse);
 	}
 
@@ -340,7 +342,7 @@ public class Soap11ServiceInvokerTest {
 		when(httpResponse.getBody()).thenReturn(msg);
 		when(httpResponse.getContentType()).thenReturn("text/xml");
 		
-		Map<String, String> headers = new HashMap<String, String>();
+		Map<String, List<String>> headers = new HashMap<String, List<String>>();
 		when(httpResponse.getHeaders()).thenReturn(headers);
 		
 		Soap11ServiceInvoker svc = new Soap11ServiceInvoker();
@@ -351,6 +353,7 @@ public class Soap11ServiceInvokerTest {
 		assertEquals("Server Error", response.getResponseFaultDescription());
 		verify(httpResponse, atLeastOnce()).getBody();
 		verify(httpResponse, atLeastOnce()).getContentType();
+		verify(httpResponse, atLeastOnce()).getHeaders();
 		verifyNoMoreInteractions(httpResponse);
 	}
 	

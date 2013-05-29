@@ -25,7 +25,8 @@ import org.hibernate.annotations.Index;
 	})
 @Entity()
 @Cacheable
-@Cache(usage=CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+//NB: Using nonstrict here is actually less performant..
+@Cache(usage=CacheConcurrencyStrategy.READ_WRITE)
 //@formatter:on
 public class PersInvocationUserStats extends BasePersInvocationStats {
 

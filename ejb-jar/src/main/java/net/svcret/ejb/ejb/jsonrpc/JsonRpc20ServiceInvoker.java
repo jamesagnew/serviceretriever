@@ -298,6 +298,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvoker<PersServiceVersi
 	@Override
 	public InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws ProcessingException {
 		InvocationResponseResultsBean retVal = new InvocationResponseResultsBean();
+		retVal.setResponseHeaders(theResponse.getHeaders());
 
 		String body = theResponse.getBody();
 		StringReader reader = new StringReader(body);

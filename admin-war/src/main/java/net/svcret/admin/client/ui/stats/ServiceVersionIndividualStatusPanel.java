@@ -1,5 +1,7 @@
 package net.svcret.admin.client.ui.stats;
 
+import java.util.List;
+
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.Sparkline;
 import net.svcret.admin.shared.IAsyncLoadCallback;
@@ -8,6 +10,7 @@ import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
 
+import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
 
@@ -52,14 +55,28 @@ public class ServiceVersionIndividualStatusPanel extends FlowPanel {
 			grid.setText(row, COL_METHOD, nextMethod.getName());
 			
 			GServiceVersionDetailedStats detailedStats = myServiceVersion.getDetailedStats();
-			grid.setWidget(row, COL_SUCCESS, new Sparkline(detailedStats.getMethodPidToSuccessCount().get(nextMethod.getPid())).withWidth("120px"));
-			grid.setWidget(row, COL_FAULT, new Sparkline(detailedStats.getMethodPidToFaultCount().get(nextMethod.getPid())).withWidth("120px"));
-			grid.setWidget(row, COL_FAIL, new Sparkline(detailedStats.getMethodPidToFailCount().get(nextMethod.getPid())).withWidth("120px"));
-			grid.setWidget(row, COL_SECFAIL, new Sparkline(detailedStats.getMethodPidToSecurityFailCount().get(nextMethod.getPid())).withWidth("120px"));
+			List<Integer> success = detailedStats.getMethodPidToSuccessCount().get(nextMethod.getPid());
+			grid.setWidget(row, COL_SUCCESS, new Sparkline(success, text(success)).withWidth("120px"));
+			List<Integer> fault = detailedStats.getMethodPidToFaultCount().get(nextMethod.getPid());
+			grid.setWidget(row, COL_FAULT, new Sparkline(fault,text(fault)).withWidth("120px"));
+			List<Integer> fail = detailedStats.getMethodPidToFailCount().get(nextMethod.getPid());
+			grid.setWidget(row, COL_FAIL, new Sparkline(fail,text(fail)).withWidth("120px"));
+			List<Integer> secFail = detailedStats.getMethodPidToSecurityFailCount().get(nextMethod.getPid());
+			grid.setWidget(row, COL_SECFAIL, new Sparkline(secFail, text(secFail)).withWidth("120px"));
 			
 			
 		}
 		
+	}
+
+	private String text(List<Integer> theSecFail) {
+		int total = 0;
+		for (int next : theSecFail) {
+			total+=next;
+		}
+		
+		double avg = ((double)total) / (double)theSecFail.size();
+		return "Avg: " +NumberFormat.getFormat("0.0#").format(avg) + "/min";
 	}
 
 }

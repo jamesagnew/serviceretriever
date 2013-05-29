@@ -2,7 +2,9 @@ package net.svcret.ejb.ejb;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -93,10 +95,15 @@ public class HttpClientBean implements IHttpClient {
 
 	}
 
-	private Map<String, String> toHeaderMap(Header[] theAllHeaders) {
-		HashMap<String, String> retVal = new HashMap<String, String>();
+	private Map<String, List<String>> toHeaderMap(Header[] theAllHeaders) {
+		HashMap<String, List<String>> retVal = new HashMap<String, List<String>>();
 		for (Header header : theAllHeaders) {
-			retVal.put(header.getName(), header.getValue());
+			List<String> list = retVal.get(header.getName());
+			if (list==null) {
+				list = new ArrayList<String>(2);
+				retVal.put(header.getName(), list);
+			}
+			list.add(header.getValue());
 		}
 		return retVal;
 	}
@@ -171,7 +178,7 @@ public class HttpClientBean implements IHttpClient {
 					contentType = contentType.substring(0, sep);
 				}
 				
-				Map<String, String> headerMap = toHeaderMap(resp.getAllHeaders());
+				Map<String, List<String>> headerMap = toHeaderMap(resp.getAllHeaders());
 
 				ValidationResponse validates = theResponseValidator.validate(body, statusCode, contentType);
 				if (validates.isValidates() == false) {

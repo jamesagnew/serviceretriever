@@ -8,9 +8,12 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
+import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IConfigService;
@@ -163,6 +166,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		respBean.setContentType("text/xml");
 		respBean.setResponseTime(100);
 		respBean.setSuccessfulUrl(url);
+		respBean.setHeaders(new HashMap<String, List<String>>());
 		when(myHttpClient.post(theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
 
 		ITransactionLogger transactionLogger = mock(ITransactionLogger.class);
@@ -176,7 +180,14 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		for (int i = 0; i < reps; i++) {
 			String query = "";
 			Reader reader = new StringReader(request);
-			resp = mySvc.handle(RequestType.POST, "127.0.0.1", "/d0/d0s0/d0s0v0", query, reader);
+			HttpRequestBean req=new HttpRequestBean();
+			req.setRequestType(RequestType.POST);
+			req.setRequestHostIp( "127.0.0.1");
+			req.setPath("/d0/d0s0/d0s0v0");
+			req.setQuery( query);
+			req.setInputReader( reader);
+			req.setRequestHeaders(new HashMap<String, List<String>>());
+			resp = mySvc.handle(req);
 		}
 		long delay = System.currentTimeMillis() - start;
 		assertEquals(response, resp.getResponseBody());

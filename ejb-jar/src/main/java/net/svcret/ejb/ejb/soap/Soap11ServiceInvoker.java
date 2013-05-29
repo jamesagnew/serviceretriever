@@ -262,7 +262,8 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 	@Override
 	public InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws ProcessingException {
 		InvocationResponseResultsBean retVal = new InvocationResponseResultsBean();
-
+		retVal.setResponseHeaders(theResponse.getHeaders());
+		
 		String contentType = theResponse.getContentType();
 		if (StringUtils.isBlank(contentType)) {
 			retVal.setResponseType(ResponseTypeEnum.FAIL);

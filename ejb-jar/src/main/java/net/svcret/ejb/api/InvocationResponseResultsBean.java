@@ -96,4 +96,10 @@ public class InvocationResponseResultsBean {
 		myResponseType = theResponseType;
 	}
 
+	public void validate() {
+		if (myResponseHeaders==null) {
+			throw new IllegalStateException("Invocation response contains no headers");
+		}
+	}
+
 }

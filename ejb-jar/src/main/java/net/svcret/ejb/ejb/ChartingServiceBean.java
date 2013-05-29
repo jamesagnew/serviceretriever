@@ -12,6 +12,8 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.imageio.ImageIO;
 
+import net.svcret.admin.shared.model.TimeRange;
+import net.svcret.admin.shared.model.TimeRangeEnum;
 import net.svcret.ejb.api.IChartingServiceBean;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
@@ -42,10 +44,8 @@ public class ChartingServiceBean implements IChartingServiceBean {
 	@EJB
 	private IConfigService myConfig;
 
-	private static final int MINS_12_HOUR = 60 * 12;
-
 	@Override
-	public byte[] renderLatencyGraphForServiceVersion(long theServiceVersionPid) throws IOException, ProcessingException {
+	public byte[] renderLatencyGraphForServiceVersion(long theServiceVersionPid, TimeRange theRange) throws IOException, ProcessingException {
 		ourLog.info("Rendering latency graph for service version {}", theServiceVersionPid);
 
 		final ArrayList<Integer> invCount60Min = new ArrayList<Integer>();
@@ -54,7 +54,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
 		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
-			 AdminServiceBean.doWithStatsByMinute(myConfig.getConfig(), MINS_12_HOUR, myStatus, nextMethod, new IWithStats() {
+			 AdminServiceBean.doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats() {
 				@Override
 				public void withStats(int theIndex, BasePersInvocationStats theStats) {
 					AdminServiceBean.growToSizeInt(invCount60Min, theIndex);
@@ -71,7 +71,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 	}
 
 	@Override
-	public byte[] renderPayloadSizeGraphForServiceVersion(long theServiceVersionPid) throws IOException, ProcessingException {
+	public byte[] renderPayloadSizeGraphForServiceVersion(long theServiceVersionPid, TimeRange theRange) throws IOException, ProcessingException {
 		ourLog.info("Rendering payload size graph for service version {}", theServiceVersionPid);
 
 		final List<Integer> invCount = new ArrayList<Integer>();
@@ -81,7 +81,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
 		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
-			AdminServiceBean.doWithStatsByMinute(myConfig.getConfig(), MINS_12_HOUR, myStatus, nextMethod, new IWithStats() {
+			AdminServiceBean.doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats() {
 				@Override
 				public void withStats(int theIndex, BasePersInvocationStats theStats) {
 					AdminServiceBean.growToSizeInt(invCount, theIndex);
@@ -137,7 +137,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 	}
 
 	@Override
-	public byte[] renderUsageGraphForServiceVersion(long theServiceVersionPid) throws IOException, ProcessingException {
+	public byte[] renderUsageGraphForServiceVersion(long theServiceVersionPid, TimeRange theRange) throws IOException, ProcessingException {
 		ourLog.info("Rendering latency graph for service version {}", theServiceVersionPid);
 
 		final List<Integer> invCount = new ArrayList<Integer>();
@@ -148,7 +148,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
 		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
-			AdminServiceBean.doWithStatsByMinute(myConfig.getConfig(), MINS_12_HOUR, myStatus, nextMethod, new IWithStats() {
+			AdminServiceBean.doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats() {
 				@Override
 				public void withStats(int theIndex, BasePersInvocationStats theStats) {
 					AdminServiceBean.growToSizeInt(invCount, theIndex);
@@ -258,7 +258,18 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		return retVal;
 	}
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, ProcessingException {
+		if (true) {
+			
+			ChartingServiceBean c = new ChartingServiceBean();
+			TimeRange range = new TimeRange();
+			range.setRange(TimeRangeEnum.ONE_MONTH);
+			c.renderLatencyGraphForServiceVersion(0, range);
+			
+			return;
+		}
+		
+		
 		System.setProperty("java.awt.headless", "true");
 		int num = 60 * 2;
 		long startTime = System.currentTimeMillis() - (num * 60 * 1000);

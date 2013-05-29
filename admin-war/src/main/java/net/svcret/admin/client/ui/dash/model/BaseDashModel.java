@@ -123,14 +123,14 @@ public abstract class BaseDashModel implements IDashModel {
 	public final Widget renderUsage() {
 		int[] list = myModel.getTransactions60mins();
 		double averagePerMin = myModel.getAverageTransactionsPerMin();
-		return returnSparklineFor60Mins(list, averagePerMin);
+		return returnSparklineFor60MinsUsage(list, averagePerMin);
 	}
 
-	public static Widget returnSparklineFor60Mins(int[] list, double averagePerMin) {
+	public static Widget returnSparklineFor60MinsUsage(int[] list, double averagePerMin) {
 		if (averagePerMin < 0.1) {
-			return returnSparklineFor60mins(list, formatDouble(averagePerMin * 60), "/hr");
+			return returnBarSparklineFor60mins(list, formatDouble(averagePerMin * 60), "/hr");
 		} else {
-			return returnSparklineFor60mins(list, formatDouble(averagePerMin), "/min");
+			return returnBarSparklineFor60mins(list, formatDouble(averagePerMin), "/min");
 		}
 	}
 
@@ -153,6 +153,18 @@ public abstract class BaseDashModel implements IDashModel {
 			return new Image("images/icon_unknown_16.png");
 		}
 		return null;
+	}
+
+	public static Widget returnBarSparklineFor60mins(int[] theList, String theCurrentValue, String theUnitDesc) {
+		if (theList == null) {
+			GWT.log(new Date() + " - No 60 minutes data");
+			return null;
+		}
+		String text = theCurrentValue + theUnitDesc;
+		Sparkline retVal = new Sparkline(theList, text);
+		retVal.setBar(true);
+		retVal.setWidth("100px");
+		return retVal;
 	}
 
 	public static Widget returnSparklineFor60mins(int[] theList, String theCurrentValue, String theUnitDesc) {

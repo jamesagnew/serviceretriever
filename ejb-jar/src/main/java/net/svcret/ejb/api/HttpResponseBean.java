@@ -2,6 +2,7 @@ package net.svcret.ejb.api;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
@@ -12,7 +13,7 @@ public class HttpResponseBean {
 	private int myCode;
 	private String myContentType;
 	private Map<PersServiceVersionUrl, Failure> myFailedUrls;
-	private Map<String, String> myHeaders;
+	private Map<String, List<String>> myHeaders;
 	private long myResponseTime;
 	private PersServiceVersionUrl mySuccessfulUrl;
 
@@ -76,7 +77,7 @@ public class HttpResponseBean {
 		return myFailedUrls;
 	}
 
-	public Map<String, String> getHeaders() {
+	public Map<String, List<String>> getHeaders() {
 		return myHeaders;
 	}
 
@@ -117,7 +118,7 @@ public class HttpResponseBean {
 	 * @param theHeaders
 	 *            the headers to set
 	 */
-	public void setHeaders(Map<String, String> theHeaders) {
+	public void setHeaders(Map<String, List<String>> theHeaders) {
 		myHeaders = theHeaders;
 	}
 

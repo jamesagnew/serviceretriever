@@ -17,6 +17,13 @@ public enum ServerSecurityEnum {
 		public BaseGServerSecurity newInstance() {
 			return new GWsSecServerSecurity();
 		}
+	},
+
+	HTTP_BASIC_AUTH("HTTP Basic") {
+		@Override
+		public BaseGServerSecurity newInstance() {
+			return new GHttpBasicAuthServerSecurity();
+		}
 	};
 
 	private String myName;
@@ -41,6 +48,9 @@ public enum ServerSecurityEnum {
 	public abstract BaseGServerSecurity newInstance();
 
 	public boolean appliesTo(Class<? extends BaseGServiceVersion> theClass) {
+		if (myAppliesTo.isEmpty()) {
+			return true;
+		}
 		return myAppliesTo.contains(theClass);
 	}
 

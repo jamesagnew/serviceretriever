@@ -50,6 +50,18 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
+			<groupId>com.github.gwtbootstrap</groupId>
+			<artifactId>gwt-bootstrap</artifactId>
+			<version>2.2.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.gwtbootstrap</groupId>
+			<artifactId>gwt-bootstrap</artifactId>
+			<version>2.2.1.0</version>
+			<classifier>sources</classifier>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.7</version>
