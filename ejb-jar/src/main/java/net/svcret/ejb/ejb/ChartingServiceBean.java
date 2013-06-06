@@ -13,7 +13,6 @@ import javax.ejb.Stateless;
 import javax.imageio.ImageIO;
 
 import net.svcret.admin.shared.model.TimeRange;
-import net.svcret.admin.shared.model.TimeRangeEnum;
 import net.svcret.ejb.api.IChartingServiceBean;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
@@ -259,15 +258,15 @@ public class ChartingServiceBean implements IChartingServiceBean {
 	}
 
 	public static void main(String[] args) throws IOException, ProcessingException {
-		if (true) {
-			
-			ChartingServiceBean c = new ChartingServiceBean();
-			TimeRange range = new TimeRange();
-			range.setRange(TimeRangeEnum.ONE_MONTH);
-			c.renderLatencyGraphForServiceVersion(0, range);
-			
-			return;
-		}
+//		if (true) {
+//			
+//			ChartingServiceBean c = new ChartingServiceBean();
+//			TimeRange range = new TimeRange();
+//			range.setRange(TimeRangeEnum.ONE_MONTH);
+//			c.renderLatencyGraphForServiceVersion(0, range);
+//			
+//			return;
+//		}
 		
 		
 		System.setProperty("java.awt.headless", "true");

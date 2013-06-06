@@ -14,4 +14,13 @@ public class GServiceVersionUrlList extends BaseGList<GServiceVersionUrl> {
 		return null;
 	}
 
+	public GServiceVersionUrl getUrlWithPid(long theUrlPid) {
+		for (GServiceVersionUrl next : this) {
+			if (next.getPid()==theUrlPid) {
+				return next;
+			}
+		}
+		return null;
+	}
+
 }

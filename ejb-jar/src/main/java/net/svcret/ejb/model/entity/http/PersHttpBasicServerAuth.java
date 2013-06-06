@@ -5,12 +5,12 @@ import javax.persistence.Entity;
 
 import net.svcret.admin.shared.model.ServerSecurityEnum;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
-import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcCredentialGrabber;
-import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcServerAuth;
 
 @Entity
 @DiscriminatorValue("HTTP_BASIC")
 public class PersHttpBasicServerAuth  extends PersBaseServerAuth<PersHttpBasicServerAuth, PersHttpBasicCredentialGrabber> {
+
+	private static final long serialVersionUID = 1L;
 
 	@Override
 	public ServerSecurityEnum getAuthType() {
@@ -19,14 +19,13 @@ public class PersHttpBasicServerAuth  extends PersBaseServerAuth<PersHttpBasicSe
 
 	@Override
 	public Class<? extends PersHttpBasicCredentialGrabber> getGrabberClass() {
-		// TODO Auto-generated method stub
-		return null;
+		return PersHttpBasicCredentialGrabber.class;
 	}
 
 	@Override
 	public void merge(PersBaseServerAuth<?, ?> theObj) {
-		// TODO Auto-generated method stub
-		
+		setAuthenticationHost(theObj.getAuthenticationHost());
+		setServiceVersion(theObj.getServiceVersion());
 	}
 
 }

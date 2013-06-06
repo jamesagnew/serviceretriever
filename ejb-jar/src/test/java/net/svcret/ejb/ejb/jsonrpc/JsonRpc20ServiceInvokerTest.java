@@ -24,7 +24,6 @@ import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcCredentialGrabbe
 import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcServerAuth;
 import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
 
-import org.hibernate.mapping.Array;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

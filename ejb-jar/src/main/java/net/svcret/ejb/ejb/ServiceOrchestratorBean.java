@@ -171,7 +171,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 					throw new SecurityFailureException();
 				}
 
-				ourLog.debug("Checking credentials: {}", grabber);
+				ourLog.debug("Checking credentials: {}", credentials);
 				authorized = mySecuritySvc.authorizeMethodInvocation(authHost, credentials, method, theRequest.getRequestHostIp());
 				if (authorized.isAuthorized() != AuthorizationOutcomeEnum.AUTHORIZED) {
 					InvocationResponseResultsBean invocationResponse = new InvocationResponseResultsBean();

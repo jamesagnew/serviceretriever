@@ -261,7 +261,7 @@ public class HttpClientBeanTest {
 		
 		String respHeaders = provideGoodHeaders();
 		String respBodyBad = provideTextResponse();
-		String respBodyGood = provideXmlResponse();
+//		String respBodyGood = provideXmlResponse();
 		String reqBody = provideXmlRequest();
 
 		TcpResponder resp1 = new TcpResponder(port1, respHeaders, respBodyBad, respBodyBad);

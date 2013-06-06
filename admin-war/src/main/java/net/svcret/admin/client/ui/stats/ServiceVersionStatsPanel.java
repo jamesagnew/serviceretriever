@@ -14,12 +14,13 @@ import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GRecentMessageLists;
+import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.GUrlStatus;
 import net.svcret.admin.shared.model.TimeRangeEnum;
 import net.svcret.admin.shared.util.ChartParams;
 import net.svcret.admin.shared.util.ChartTypeEnum;
+import net.svcret.admin.shared.util.StringUtil;
 
-import com.github.gwtbootstrap.client.ui.RadioButton;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.LoadEvent;
@@ -27,6 +28,7 @@ import com.google.gwt.event.dom.client.LoadHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HorizontalPanel;
@@ -36,7 +38,6 @@ import com.google.gwt.user.client.ui.ListBox;
 
 public class ServiceVersionStatsPanel extends FlowPanel {
 
-	private static final String SVSP_USAGE = "SVSP_USAGE";
 	private static DateTimeFormat ourDateTimeFormat = DateTimeFormat.getFormat(PredefinedFormat.DATE_TIME_MEDIUM);
 	private LoadingSpinner myTopLoadingSpinner;
 	private long myServiceVersionPid;
@@ -92,13 +93,13 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 
 			@Override
 			public void onSuccess(List<GUrlStatus> theUrlStatuses) {
-				set02UrlStatuses(theUrlStatuses);
+				set02UrlStatuses(theResult, theUrlStatuses);
 			}
 		});
 
 	}
 
-	private void set02UrlStatuses(List<GUrlStatus> theUrlStatuses) {
+	private void set02UrlStatuses(BaseGServiceVersion theServiceVersion, List<GUrlStatus> theUrlStatuses) {
 		FlowPanel urlsPanel = new FlowPanel();
 		urlsPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
 		add(urlsPanel);
@@ -132,7 +133,16 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 		for (int i = 0; i < theUrlStatuses.size(); i++) {
 			GUrlStatus status = theUrlStatuses.get(i);
 
-			urlGrid.setText(i + 1, URLTBL_COL_URL, status.getUrl());
+			GServiceVersionUrl url = theServiceVersion.getUrlList().getUrlWithPid(status.getUrlPid());
+
+			Anchor urlAnchor = new Anchor();
+			urlAnchor.setText(status.getUrl());
+			if (url != null && StringUtil.isNotBlank(url.getId())) {
+				urlAnchor.setHref(url.getId());
+			} else {
+				urlAnchor.setHref(status.getUrl());
+			}
+			urlGrid.setWidget(i + 1, URLTBL_COL_URL, urlAnchor);
 
 			HorizontalPanel statusPanel = new HorizontalPanel();
 			statusPanel.setStyleName(CssConstants.UNSTYLED_TABLE);
@@ -170,10 +180,10 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 		Label graphsTitleLabel = new Label(MSGS.serviceVersionStats_GraphsTitle());
 		graphsTitleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
 		graphsPanel.add(graphsTitleLabel);
-		
+
 		HorizontalPanel timePanel = new HorizontalPanel();
 		graphsPanel.add(timePanel);
-		
+
 		final ListBox timeListBox = new ListBox();
 		timePanel.add(timeListBox);
 		for (TimeRangeEnum next : TimeRangeEnum.values()) {
@@ -186,29 +196,29 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 				redrawCharts(TimeRangeEnum.valueOf(timeListBox.getValue(timeListBox.getSelectedIndex())));
 			}
 		});
-		
+
 		myChartsPanel = new FlowPanel();
 		graphsPanel.add(myChartsPanel);
-		
+
 		redrawCharts(TimeRangeEnum.valueOf(timeListBox.getValue(timeListBox.getSelectedIndex())));
 
 		myTopLoadingSpinner.hideCompletely();
-		
+
 		set04RecentMessages();
 	}
 
 	private void redrawCharts(TimeRangeEnum theTimeRange) {
 		myChartsPanel.clear();
 		myChartsPanel.add(new HtmlH1(MSGS.serviceVersionStats_UsageTitle()));
-		Image img = new Image("graph.png?ct="+ChartTypeEnum.USAGE.name()+"&pid=" + myServiceVersionPid+"&"+ChartParams.RANGE + "=" + theTimeRange.name());
+		Image img = new Image("graph.png?ct=" + ChartTypeEnum.USAGE.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.name());
 		addStatsImage(myChartsPanel, img);
 
 		myChartsPanel.add(new HtmlH1(MSGS.serviceVersionStats_LatencyTitle()));
-		img = new Image("graph.png?ct="+ChartTypeEnum.LATENCY.name()+"&pid=" + myServiceVersionPid+"&"+ChartParams.RANGE + "=" + theTimeRange.name());
+		img = new Image("graph.png?ct=" + ChartTypeEnum.LATENCY.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.name());
 		addStatsImage(myChartsPanel, img);
-		
+
 		myChartsPanel.add(new HtmlH1(MSGS.serviceVersionStats_MessageSizeTitle()));
-		img = new Image("graph.png?ct="+ChartTypeEnum.PAYLOADSIZE.name()+"&pid=" + myServiceVersionPid+"&"+ChartParams.RANGE + "=" + theTimeRange.name());
+		img = new Image("graph.png?ct=" + ChartTypeEnum.PAYLOADSIZE.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.name());
 		addStatsImage(myChartsPanel, img);
 	}
 

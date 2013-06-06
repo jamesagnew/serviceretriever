@@ -39,7 +39,7 @@ public class NamedParameterJsonRpcCredentialGrabber extends BaseCredentialGrabbe
 
 			private boolean myGrabPasswordNext;
 			private boolean myGrabUsernameNext;
-			private int myParamLevel;
+			private int myParamLevel; // TODO: should use this
 
 			@Override
 			public void beginArray() throws IOException {

@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 import net.svcret.ejb.api.HttpResponseBean;
-import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.IServiceInvoker;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
@@ -24,7 +23,6 @@ import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcCredentialGrabber;
 import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcServerAuth;
 import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
-import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
 import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.io.IOUtils;

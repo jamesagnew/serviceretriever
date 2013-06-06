@@ -631,4 +631,7 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Authorization")
 	String recentMessagesGrid_ColAuthorization();
 
+	@DefaultMessage("HTTP Basic Auth")
+	String httpBasicAuthServerSecurity_Name();
+
 }

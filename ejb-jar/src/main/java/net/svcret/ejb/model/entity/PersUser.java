@@ -49,7 +49,7 @@ public class PersUser extends BasePersObject {
 	@Transient
 	private transient Set<PersServiceVersionMethod> myAllowedMethods;
 
-	@OneToMany(cascade = { }, fetch = FetchType.LAZY, orphanRemoval = true, mappedBy = "myUser")
+	@OneToMany(cascade = {}, fetch = FetchType.LAZY, orphanRemoval = true, mappedBy = "myUser")
 	@OrderBy("IP_ORDER")
 	private List<PersUserAllowableSourceIps> myAllowSourceIps;
 
@@ -232,7 +232,7 @@ public class PersUser extends BasePersObject {
 		}
 
 		getAllowSourceIps().size();
-		
+
 		myAllowedMethods = allowedMethods;
 	}
 
@@ -326,7 +326,7 @@ public class PersUser extends BasePersObject {
 
 	public void setAllowSourceIpsAsStrings(Collection<String> theStrings) {
 		ArrayList<String> toAdd = new ArrayList<String>();
-		if (theStrings!=null) {
+		if (theStrings != null) {
 			toAdd.addAll(theStrings);
 		}
 		for (PersUserAllowableSourceIps next : getAllowSourceIps()) {
@@ -336,7 +336,7 @@ public class PersUser extends BasePersObject {
 		ArrayList<PersUserAllowableSourceIps> toDelete = new ArrayList<PersUserAllowableSourceIps>(getAllowSourceIps());
 		for (Iterator<PersUserAllowableSourceIps> iterator = toDelete.iterator(); iterator.hasNext();) {
 			PersUserAllowableSourceIps next = iterator.next();
-			if (theStrings.contains(next.getIp())) {
+			if (theStrings != null && theStrings.contains(next.getIp())) {
 				iterator.remove();
 			}
 		}

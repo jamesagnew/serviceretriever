@@ -26,6 +26,7 @@ import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.GHttpBasicAuthServerSecurity;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GLdapAuthHost;
@@ -95,6 +96,7 @@ import net.svcret.ejb.model.entity.PersUserServicePermission;
 import net.svcret.ejb.model.entity.PersUserServiceVersionMethodPermission;
 import net.svcret.ejb.model.entity.PersUserServiceVersionPermission;
 import net.svcret.ejb.model.entity.PersUserStatus;
+import net.svcret.ejb.model.entity.http.PersHttpBasicServerAuth;
 import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcServerAuth;
 import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
@@ -917,6 +919,12 @@ public class AdminServiceBean implements IAdminService {
 			retVal.setServiceVersion(theSvcVer);
 			return retVal;
 		}
+		case HTTP_BASIC_AUTH: {
+			PersHttpBasicServerAuth retVal = new PersHttpBasicServerAuth();
+			retVal.setAuthenticationHost(myDao.getAuthenticationHostByPid(theObj.getAuthHostPid()));
+			retVal.setServiceVersion(theSvcVer);
+			return retVal;
+		}
 		case JSONRPC_NAMED_PARAMETER: {
 			GNamedParameterJsonRpcServerAuth obj = (GNamedParameterJsonRpcServerAuth) theObj;
 			NamedParameterJsonRpcServerAuth retVal = new NamedParameterJsonRpcServerAuth();
@@ -1397,6 +1405,11 @@ public class AdminServiceBean implements IAdminService {
 		switch (theAuth.getAuthType()) {
 		case WSSEC_UT: {
 			GWsSecServerSecurity auth = new GWsSecServerSecurity();
+			retVal = auth;
+			break;
+		}
+		case HTTP_BASIC_AUTH: {
+			GHttpBasicAuthServerSecurity auth = new GHttpBasicAuthServerSecurity();
 			retVal = auth;
 			break;
 		}
