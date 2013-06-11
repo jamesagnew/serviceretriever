@@ -13,6 +13,7 @@ public class GServiceVersionDetailedStats implements Serializable {
 	private Map<Long, List<Integer>> myMethodPidToSecurityFailCount;
 	private Map<Long, List<Integer>> myMethodPidToSuccessCount;
 
+	private List<Long> myStatsTimestamps;
 
 	/**
 	 * @return the methodPidToFailCount
@@ -42,6 +43,12 @@ public class GServiceVersionDetailedStats implements Serializable {
 		return myMethodPidToSuccessCount;
 	}
 
+	/**
+	 * @return the statsTimestamps
+	 */
+	public List<Long> getStatsTimestamps() {
+		return myStatsTimestamps;
+	}
 
 	public void setMethodPidToFailCount(Map<Long, List<Integer>> theMethodPidToFailCount) {
 		myMethodPidToFailCount = theMethodPidToFailCount;
@@ -58,6 +65,10 @@ public class GServiceVersionDetailedStats implements Serializable {
 
 	public void setMethodPidToSuccessCount(Map<Long, List<Integer>> theMethodPidToSuccessCount) {
 		myMethodPidToSuccessCount = theMethodPidToSuccessCount;
+	}
+
+	public void setStatsTimestamps(List<Long> theStatsTimestamps) {
+		myStatsTimestamps = theStatsTimestamps;
 	}
 
 }

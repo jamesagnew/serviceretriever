@@ -35,48 +35,47 @@ public class ServiceVersionIndividualStatusPanel extends FlowPanel {
 	}
 
 	private void initTable() {
-		
+
 		Grid grid = new Grid();
 		add(grid);
 		grid.addStyleName(CssConstants.PROPERTY_TABLE);
-		
-		grid.resize(myServiceVersion.getMethodList().size()+1, 5);
-		
+
+		grid.resize(myServiceVersion.getMethodList().size() + 1, 5);
+
 		grid.setText(0, COL_METHOD, "Method");
 		grid.setText(0, COL_SUCCESS, "Success");
 		grid.setText(0, COL_FAULT, "Fault");
 		grid.setText(0, COL_FAIL, "Fail");
 		grid.setText(0, COL_SECFAIL, "Security Fails");
-		
-		int row=0;
+
+		int row = 0;
 		for (GServiceMethod nextMethod : myServiceVersion.getMethodList()) {
 			row++;
-			
+
 			grid.setText(row, COL_METHOD, nextMethod.getName());
-			
+
 			GServiceVersionDetailedStats detailedStats = myServiceVersion.getDetailedStats();
 			List<Integer> success = detailedStats.getMethodPidToSuccessCount().get(nextMethod.getPid());
-			grid.setWidget(row, COL_SUCCESS, new Sparkline(success, text(success)).withWidth("120px"));
+			grid.setWidget(row, COL_SUCCESS, new Sparkline(success, detailedStats.getStatsTimestamps(), text(success)).withWidth("120px"));
 			List<Integer> fault = detailedStats.getMethodPidToFaultCount().get(nextMethod.getPid());
-			grid.setWidget(row, COL_FAULT, new Sparkline(fault,text(fault)).withWidth("120px"));
+			grid.setWidget(row, COL_FAULT, new Sparkline(fault, detailedStats.getStatsTimestamps(), text(fault)).withWidth("120px"));
 			List<Integer> fail = detailedStats.getMethodPidToFailCount().get(nextMethod.getPid());
-			grid.setWidget(row, COL_FAIL, new Sparkline(fail,text(fail)).withWidth("120px"));
+			grid.setWidget(row, COL_FAIL, new Sparkline(fail, detailedStats.getStatsTimestamps(), text(fail)).withWidth("120px"));
 			List<Integer> secFail = detailedStats.getMethodPidToSecurityFailCount().get(nextMethod.getPid());
-			grid.setWidget(row, COL_SECFAIL, new Sparkline(secFail, text(secFail)).withWidth("120px"));
-			
-			
+			grid.setWidget(row, COL_SECFAIL, new Sparkline(secFail, detailedStats.getStatsTimestamps(), text(secFail)).withWidth("120px"));
+
 		}
-		
+
 	}
 
 	private String text(List<Integer> theSecFail) {
 		int total = 0;
 		for (int next : theSecFail) {
-			total+=next;
+			total += next;
 		}
-		
-		double avg = ((double)total) / (double)theSecFail.size();
-		return "Avg: " +NumberFormat.getFormat("0.0#").format(avg) + "/min";
+
+		double avg = ((double) total) / (double) theSecFail.size();
+		return "Avg: " + NumberFormat.getFormat("0.0#").format(avg) + "/min";
 	}
 
 }

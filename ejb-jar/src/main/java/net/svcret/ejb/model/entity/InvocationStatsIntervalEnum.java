@@ -45,4 +45,8 @@ public enum InvocationStatsIntervalEnum {
 		throw new IllegalStateException("Unknown constant: " + this);
 	}
 
+	public long numMinutes() {
+		return millis() / DateUtils.MILLIS_PER_MINUTE;
+	}
+
 }

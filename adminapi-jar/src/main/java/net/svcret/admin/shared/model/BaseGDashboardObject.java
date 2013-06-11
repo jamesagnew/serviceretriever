@@ -13,7 +13,7 @@ public abstract class BaseGDashboardObject<T> extends BaseGKeepsRecentMessages<T
 	private Date myLastSuccessfulInvocation;
 	private int[] myLatency60mins;
 	private String myName;
-	private boolean myStatsInitialized;
+	private Date myStatsInitialized;
 	private StatusEnum myStatus;
 	private int[] myTransactions60mins;
 
@@ -98,6 +98,13 @@ public abstract class BaseGDashboardObject<T> extends BaseGKeepsRecentMessages<T
 	 * @return the statsInitialized
 	 */
 	public boolean isStatsInitialized() {
+		return myStatsInitialized!=null;
+	}
+
+	/**
+	 * @return the statsInitialized
+	 */
+	public Date getStatsInitialized() {
 		return myStatsInitialized;
 	}
 
@@ -166,7 +173,7 @@ public abstract class BaseGDashboardObject<T> extends BaseGKeepsRecentMessages<T
 	 * @param theStatsInitialized
 	 *            the statsInitialized to set
 	 */
-	public void setStatsInitialized(boolean theStatsInitialized) {
+	public void setStatsInitialized(Date theStatsInitialized) {
 		myStatsInitialized = theStatsInitialized;
 	}
 
@@ -202,7 +209,7 @@ public abstract class BaseGDashboardObject<T> extends BaseGKeepsRecentMessages<T
 		setName(theObject.getName());
 
 		if (theObject.isStatsInitialized()) {
-			setStatsInitialized(true);
+			setStatsInitialized(theObject.getStatsInitialized());
 			setStatus(theObject.getStatus());
 			setTransactions60mins(theObject.getTransactions60mins());
 			setLatency60mins(theObject.getLatency60mins());

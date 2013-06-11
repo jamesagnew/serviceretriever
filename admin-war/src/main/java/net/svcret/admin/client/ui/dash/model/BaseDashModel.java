@@ -2,7 +2,9 @@ package net.svcret.admin.client.ui.dash.model;
 
 import static net.svcret.admin.client.AdminPortal.*;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.CssConstants;
@@ -63,7 +65,7 @@ public abstract class BaseDashModel implements IDashModel {
 
 	@Override
 	public final Widget renderLatency() {
-		return returnSparklineFor60mins(myModel.getLatency60mins(), Integer.toString(myModel.getAverageLatency()), "ms");
+		return returnSparklineFor60mins(myModel.getLatency60mins(), myModel.getStatsInitialized(), Integer.toString(myModel.getAverageLatency()), "ms");
 	}
 
 	@Override
@@ -123,14 +125,14 @@ public abstract class BaseDashModel implements IDashModel {
 	public final Widget renderUsage() {
 		int[] list = myModel.getTransactions60mins();
 		double averagePerMin = myModel.getAverageTransactionsPerMin();
-		return returnSparklineFor60MinsUsage(list, averagePerMin);
+		return returnSparklineFor60MinsUsage(list, myModel.getStatsInitialized(), averagePerMin);
 	}
 
-	public static Widget returnSparklineFor60MinsUsage(int[] list, double averagePerMin) {
+	public static Widget returnSparklineFor60MinsUsage(int[] list, Date theStatsInitialized, double averagePerMin) {
 		if (averagePerMin < 0.1) {
-			return returnBarSparklineFor60mins(list, formatDouble(averagePerMin * 60), "/hr");
+			return returnBarSparklineFor60mins(list, theStatsInitialized, formatDouble(averagePerMin * 60), "/hr");
 		} else {
-			return returnBarSparklineFor60mins(list, formatDouble(averagePerMin), "/min");
+			return returnBarSparklineFor60mins(list, theStatsInitialized, formatDouble(averagePerMin), "/min");
 		}
 	}
 
@@ -155,25 +157,41 @@ public abstract class BaseDashModel implements IDashModel {
 		return null;
 	}
 
-	public static Widget returnBarSparklineFor60mins(int[] theList, String theCurrentValue, String theUnitDesc) {
+	public static Widget returnBarSparklineFor60mins(int[] theList, Date theStatsInitialized, String theCurrentValue, String theUnitDesc) {
 		if (theList == null) {
 			GWT.log(new Date() + " - No 60 minutes data");
 			return null;
 		}
 		String text = theCurrentValue + theUnitDesc;
-		Sparkline retVal = new Sparkline(theList, text);
+		
+		List<Long> dates = new ArrayList<Long>();
+		long nextDate = theStatsInitialized.getTime() - (60 * 60 * 1000L);
+		for (int i = 0; i < 60; i++) {
+			dates.add(nextDate);
+			nextDate += (60 * 1000L);
+		}
+		
+		Sparkline retVal = new Sparkline(theList, dates, text);
 		retVal.setBar(true);
 		retVal.setWidth("100px");
 		return retVal;
 	}
 
-	public static Widget returnSparklineFor60mins(int[] theList, String theCurrentValue, String theUnitDesc) {
+	public static Widget returnSparklineFor60mins(int[] theList,Date theStatsInitialized, String theCurrentValue, String theUnitDesc) {
 		if (theList == null) {
 			GWT.log(new Date() + " - No 60 minutes data");
 			return null;
 		}
 		String text = theCurrentValue + theUnitDesc;
-		Sparkline retVal = new Sparkline(theList, text);
+		
+		List<Long> dates = new ArrayList<Long>();
+		long nextDate = theStatsInitialized.getTime() - (60 * 60 * 1000L);
+		for (int i = 0; i < 60; i++) {
+			dates.add(nextDate);
+			nextDate += (60 * 1000L);
+		}
+		
+		Sparkline retVal = new Sparkline(theList,dates, text);
 		retVal.setWidth("100px");
 		return retVal;
 	}

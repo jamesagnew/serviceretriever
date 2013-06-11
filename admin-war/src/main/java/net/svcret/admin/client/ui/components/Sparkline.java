@@ -2,6 +2,7 @@ package net.svcret.admin.client.ui.components;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -9,6 +10,8 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.SpanElement;
+import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.user.client.ui.Widget;
 
 public class Sparkline extends Widget {
@@ -17,9 +20,12 @@ public class Sparkline extends Widget {
 	private boolean myBar;
 	private String myHeight = "20px";
 	private String myId;
+	private List<String> myTimes;
 	private List<Integer> myValues;
 	private String myWidth = "35px";
+	private DateTimeFormat ourTimeFormat = DateTimeFormat.getFormat(PredefinedFormat.TIME_SHORT);
 
+	@Deprecated
 	public Sparkline(int[] theList, String theText) {
 		this(toList(theList), theText);
 	}
@@ -30,6 +36,7 @@ public class Sparkline extends Widget {
 	 * @param theValues
 	 *            The numberic values for the chart
 	 */
+	@Deprecated
 	public Sparkline(List<Integer> theValues) {
 		this(theValues, null);
 	}
@@ -40,6 +47,25 @@ public class Sparkline extends Widget {
 	 * @param theValues
 	 *            The numberic values for the chart
 	 */
+	public Sparkline(List<Integer> theValues, List<Long> theDates, String theText) {
+		this(theValues, theText);
+		
+		if (theDates != null) {
+			myTimes = new ArrayList<String>();
+			for (Long next : theDates) {
+				myTimes.add(ourTimeFormat.format(new Date(next)));
+			}
+		}
+		
+	}
+	
+	/**
+	 * Constructor
+	 * 
+	 * @param theValues
+	 *            The numberic values for the chart
+	 */
+	@Deprecated
 	public Sparkline(List<Integer> theValues, String theText) {
 
 		if (theValues != null) {
@@ -61,6 +87,10 @@ public class Sparkline extends Widget {
 			Node textNode = Document.get().createTextNode(theText);
 			rootElement.insertAfter(textNode, spanElement);
 		}
+	}
+
+	public Sparkline(int[] theList, List<Long> theDates, String theText) {
+		this(toList(theList), theDates, theText);
 	}
 
 	/**
@@ -109,19 +139,31 @@ public class Sparkline extends Widget {
 		return this;
 	}
 
-	private native void drawSparkline(final com.google.gwt.dom.client.Element theElement, String theValues, String theHeight, String theWidth, String theType) /*-{
+	private native void drawSparkline(final com.google.gwt.dom.client.Element theElement, String theValues, String theHeight, String theWidth, String theType, String theTimelines) /*-{
 		var sparkOptions = new Array();
 		sparkOptions['chartRangeMin'] = 0;
 		sparkOptions['height'] = theHeight;
 		sparkOptions['width'] = theWidth;
 		sparkOptions['type'] = theType;
-		sparkOptions['tooltipFormat'] = '{{value:levels}} - {{value}}';
+		sparkOptions['tooltipFormat'] = '{{offset:names}} - {{value}}';
 		if (theType == 'bar') {
 			sparkOptions['barWidth'] = 1;
 		}
 
-		var splitValues = theValues.split(",");
+		if (theTimelines != null) {
+			var rangeNames = new Object();
+			sparkOptions['tooltipValueLookups'] = rangeNames;
+			rangeNames.names = new Array();
 
+			var splitValues = theTimelines.split(",");
+			var values = new Array();
+			for ( var i = 0; i < splitValues.length; i++) {
+				rangeNames.names[i] = splitValues[i];
+			}
+			
+		}
+		
+		var splitValues = theValues.split(",");
 		var values = new Array();
 		for ( var i = 0; i < splitValues.length; i++) {
 			values[i] = parseInt(splitValues[i]);
@@ -143,10 +185,21 @@ public class Sparkline extends Widget {
 			}
 		}
 
+		StringBuilder tBuilder = new StringBuilder();
+		if (myTimes != null) {
+			for (String next : myTimes) {
+				if (tBuilder.length()>0) {
+					tBuilder.append(",");
+				}
+				tBuilder.append(next);
+			}
+		}
+		
 		Element firstChild = (Element) getElement().getFirstChild();
 		String valuesString = valuesBuilder.toString();
 		String type = myBar ? "bar" : "line";
-		drawSparkline(firstChild, valuesString, myHeight, myWidth, type);
+		String timelines = tBuilder.length() > 0 ? tBuilder.toString() : null;
+		drawSparkline(firstChild, valuesString, myHeight, myWidth, type, timelines);
 	}
 
 	private static List<Integer> toList(int[] theList) {

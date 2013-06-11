@@ -1,5 +1,7 @@
 package net.svcret.ejb.ejb;
 
+import static net.svcret.ejb.ejb.AdminServiceBean.*;
+
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -53,13 +55,13 @@ public class ChartingServiceBean implements IChartingServiceBean {
 
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
 		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
-			 AdminServiceBean.doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats() {
+			 doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats() {
 				@Override
 				public void withStats(int theIndex, BasePersInvocationStats theStats) {
-					AdminServiceBean.growToSizeInt(invCount60Min, theIndex);
-					AdminServiceBean.growToSizeLong(time60min, theIndex);
-					AdminServiceBean.growToSizeLong(timestamps, theIndex);
-					invCount60Min.set(theIndex, AdminServiceBean.addToInt(invCount60Min.get(theIndex), theStats.getSuccessInvocationCount()));
+					growToSizeInt(invCount60Min, theIndex);
+					growToSizeLong(time60min, theIndex);
+					growToSizeLong(timestamps, theIndex);
+					invCount60Min.set(theIndex, addToInt(invCount60Min.get(theIndex), theStats.getSuccessInvocationCount()));
 					time60min.set(theIndex, time60min.get(theIndex) + theStats.getSuccessInvocationTotalTime());
 					timestamps.set(theIndex, theStats.getPk().getStartTime().getTime());
 				}
@@ -80,17 +82,17 @@ public class ChartingServiceBean implements IChartingServiceBean {
 
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
 		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
-			AdminServiceBean.doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats() {
+			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats() {
 				@Override
 				public void withStats(int theIndex, BasePersInvocationStats theStats) {
-					AdminServiceBean.growToSizeInt(invCount, theIndex);
-					AdminServiceBean.growToSizeLong(totalSuccessRespBytes, theIndex);
-					AdminServiceBean.growToSizeLong(totalSuccessReqBytes, theIndex);
-					AdminServiceBean.growToSizeLong(timestamps, theIndex);
+					growToSizeInt(invCount, theIndex);
+					growToSizeLong(totalSuccessRespBytes, theIndex);
+					growToSizeLong(totalSuccessReqBytes, theIndex);
+					growToSizeLong(timestamps, theIndex);
 
-					totalSuccessReqBytes.set(theIndex, AdminServiceBean.addToLong(totalSuccessReqBytes.get(theIndex), theStats.getSuccessRequestMessageBytes()));
-					totalSuccessRespBytes.set(theIndex, AdminServiceBean.addToLong(totalSuccessRespBytes.get(theIndex), theStats.getSuccessResponseMessageBytes()));
-					invCount.set(theIndex, AdminServiceBean.addToInt(invCount.get(theIndex), theStats.getSuccessInvocationCount()));
+					totalSuccessReqBytes.set(theIndex, addToLong(totalSuccessReqBytes.get(theIndex), theStats.getSuccessRequestMessageBytes()));
+					totalSuccessRespBytes.set(theIndex, addToLong(totalSuccessRespBytes.get(theIndex), theStats.getSuccessResponseMessageBytes()));
+					invCount.set(theIndex, addToInt(invCount.get(theIndex), theStats.getSuccessInvocationCount()));
 					timestamps.set(theIndex, theStats.getPk().getStartTime().getTime());
 				}
 			});
@@ -139,27 +141,29 @@ public class ChartingServiceBean implements IChartingServiceBean {
 	public byte[] renderUsageGraphForServiceVersion(long theServiceVersionPid, TimeRange theRange) throws IOException, ProcessingException {
 		ourLog.info("Rendering latency graph for service version {}", theServiceVersionPid);
 
-		final List<Integer> invCount = new ArrayList<Integer>();
-		final List<Integer> invCountFault = new ArrayList<Integer>();
-		final List<Integer> invCountFail = new ArrayList<Integer>();
-		final List<Integer> invCountSecurityFail = new ArrayList<Integer>();
+		final List<Double> invCount = new ArrayList<Double>();
+		final List<Double> invCountFault = new ArrayList<Double>();
+		final List<Double> invCountFail = new ArrayList<Double>();
+		final List<Double> invCountSecurityFail = new ArrayList<Double>();
 		final List<Long> timestamps = new ArrayList<Long>();
 
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
 		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
-			AdminServiceBean.doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats() {
+			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats() {
 				@Override
 				public void withStats(int theIndex, BasePersInvocationStats theStats) {
-					AdminServiceBean.growToSizeInt(invCount, theIndex);
-					AdminServiceBean.growToSizeInt(invCountFault, theIndex);
-					AdminServiceBean.growToSizeInt(invCountFail, theIndex);
-					AdminServiceBean.growToSizeInt(invCountSecurityFail, theIndex);
-					AdminServiceBean.growToSizeLong(timestamps, theIndex);
+					growToSizeDouble(invCount, theIndex);
+					growToSizeDouble(invCountFault, theIndex);
+					growToSizeDouble(invCountFail, theIndex);
+					growToSizeDouble(invCountSecurityFail, theIndex);
+					growToSizeLong(timestamps, theIndex);
 
-					invCount.set(theIndex, AdminServiceBean.addToInt(invCount.get(theIndex), theStats.getSuccessInvocationCount()));
-					invCountFault.set(theIndex, AdminServiceBean.addToInt(invCountFault.get(theIndex), theStats.getFaultInvocationCount()));
-					invCountFail.set(theIndex, AdminServiceBean.addToInt(invCountFail.get(theIndex), theStats.getFailInvocationCount()));
-					invCountSecurityFail.set(theIndex, AdminServiceBean.addToInt(invCountSecurityFail.get(theIndex), theStats.getServerSecurityFailures()));
+					double numMinutes = theStats.getPk().getInterval().numMinutes();
+					
+					invCount.set(theIndex, invCount.get(theIndex)+( theStats.getSuccessInvocationCount()/numMinutes));
+					invCountFault.set(theIndex, invCountFault.get(theIndex)+ (theStats.getFaultInvocationCount()/numMinutes));
+					invCountFail.set(theIndex, invCountFail.get(theIndex)+ (theStats.getFailInvocationCount()/numMinutes));
+					invCountSecurityFail.set(theIndex, invCountSecurityFail.get(theIndex)+ (theStats.getServerSecurityFailures()/numMinutes));
 					timestamps.set(theIndex, theStats.getPk().getStartTime().getTime());
 				}
 			});
@@ -210,7 +214,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		return render(graphDef);
 	}
 
-	private byte[] renderUsage(List<Integer> theInvCount, List<Integer> theInvCountFault, List<Integer> theInvCountFail, List<Integer> theInvCountSecurityFail, String theIntervalDesc, List<Long> theTimestampsMillis) throws IOException {
+	private byte[] renderUsage(List<Double> theInvCount, List<Double> theInvCountFault, List<Double> theInvCountFail, List<Double> theInvCountSecurityFail, String theIntervalDesc, List<Long> theTimestampsMillis) throws IOException {
 		RrdGraphDef graphDef = new RrdGraphDef();
 		graphDef.setWidth(600);
 		graphDef.setHeight(200);
@@ -225,27 +229,36 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		graphDef.setVerticalLabel(theIntervalDesc);
 		graphDef.setTextAntiAliasing(true);
 
-		LinearInterpolator avgPlot = new LinearInterpolator(timestamps, toDoubles(theInvCount));
+		LinearInterpolator avgPlot = new LinearInterpolator(timestamps, toDoublesFromDoubles(theInvCount));
 		graphDef.datasource("inv", avgPlot);
 		graphDef.area("inv", Color.GREEN, "Successful Calls");
 		graphDef.gprint("inv", ConsolFun.AVERAGE, "Average %.1f\\l");
 
-		LinearInterpolator avgFaultPlot = new LinearInterpolator(timestamps, toDoubles(theInvCountFault));
+		LinearInterpolator avgFaultPlot = new LinearInterpolator(timestamps, toDoublesFromDoubles(theInvCountFault));
 		graphDef.datasource("invfault", avgFaultPlot);
 		graphDef.stack("invfault", Color.BLUE, "Faults");
 		graphDef.gprint("invfault", ConsolFun.AVERAGE, "Average %.1f\\l");
 
-		LinearInterpolator avgFailPlot = new LinearInterpolator(timestamps, toDoubles(theInvCountFail));
+		LinearInterpolator avgFailPlot = new LinearInterpolator(timestamps, toDoublesFromDoubles(theInvCountFail));
 		graphDef.datasource("invfail", avgFailPlot);
 		graphDef.stack("invfail", Color.GRAY, "Fails");
 		graphDef.gprint("invfail", ConsolFun.AVERAGE, "Average %.1f\\l");
 
-		LinearInterpolator avgSecurityFailPlot = new LinearInterpolator(timestamps, toDoubles(theInvCountSecurityFail));
+		LinearInterpolator avgSecurityFailPlot = new LinearInterpolator(timestamps, toDoublesFromDoubles(theInvCountSecurityFail));
 		graphDef.datasource("invSecurityFail", avgSecurityFailPlot);
 		graphDef.stack("invSecurityFail", Color.RED, "SecurityFails");
 		graphDef.gprint("invSecurityFail", ConsolFun.AVERAGE, "Average %.1f\\l");
 
 		return render(graphDef);
+	}
+
+	private double[] toDoublesFromDoubles(List<Double> theInvCount) {
+		double[] retVal = new double[theInvCount.size()];
+		int i = 0;
+		for (Double next : theInvCount) {
+			retVal[i++] = next;
+		}
+		return retVal;
 	}
 
 	private double[] toDoubles(List<Integer> theInvCount) {
@@ -291,15 +304,15 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		fos.write(bytes);
 		fos.close();
 
-		List<Integer> calls = new ArrayList<Integer>();
-		List<Integer> callsFault = new ArrayList<Integer>();
-		List<Integer> callsFail = new ArrayList<Integer>();
-		List<Integer> callsSecFail = new ArrayList<Integer>();
+		List<Double> calls = new ArrayList<Double>();
+		List<Double> callsFault = new ArrayList<Double>();
+		List<Double> callsFail = new ArrayList<Double>();
+		List<Double> callsSecFail = new ArrayList<Double>();
 		for (int i = 0; i < num; i++) {
-			calls.add((int) (1000.0 * Math.random()));
-			callsFault.add((int) (1000.0 * Math.random()));
-			callsFail.add((int) (1000.0 * Math.random()));
-			callsSecFail.add((int) (1000.0 * Math.random()));
+			calls.add( (1000.0 * Math.random()));
+			callsFault.add( (1000.0 * Math.random()));
+			callsFail.add( (1000.0 * Math.random()));
+			callsSecFail.add( (1000.0 * Math.random()));
 		}
 
 		bytes = new ChartingServiceBean().renderUsage(calls, callsFault, callsFail, callsSecFail, "Calls/Min", timestamps);

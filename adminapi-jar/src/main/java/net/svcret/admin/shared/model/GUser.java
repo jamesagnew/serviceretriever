@@ -18,7 +18,7 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	private ArrayList<GUserDomainPermission> myDomainPermissions;
 	private HashSet<UserGlobalPermissionEnum> myGlobalPermissions;
 	private Date myStatsLastAccess;
-	private boolean myStatsLoaded;
+	private Date myStatsInitialized;
 	private int[] myStatsSecurityFailTransactions;
 	private double myStatsSecurityFailTransactionsAvgPerMin;
 	private int[] myStatsSuccessTransactions;
@@ -152,10 +152,17 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	}
 
 	/**
-	 * @return the isStatsLoaded
+	 * @return the isStatsInitialized
 	 */
-	public boolean isStatsLoaded() {
-		return myStatsLoaded;
+	public boolean isStatsInitialized() {
+		return myStatsInitialized!=null;
+	}
+
+	/**
+	 * @return the statsInitialized
+	 */
+	public Date getStatsInitialized() {
+		return myStatsInitialized;
 	}
 
 	@Override
@@ -163,6 +170,7 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 		setPid(theUser.getPid());
 		setUsername(theUser.getUsername());
 		setAllowableSourceIps(theUser.getAllowableSourceIps());
+		setStatsInitialized(theUser.getStatsInitialized());
 	}
 
 	public void removeDomainPermission(GUserDomainPermission theGUserDomainPermission) {
@@ -247,11 +255,11 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	}
 
 	/**
-	 * @param theStatsLoaded
-	 *            the isStatsLoaded to set
+	 * @param theStatsInitialized
+	 *            the isStatsInitialized to set
 	 */
-	public void setStatsLoaded(boolean theStatsLoaded) {
-		myStatsLoaded = theStatsLoaded;
+	public void setStatsInitialized(Date theStatsInitialized) {
+		myStatsInitialized = theStatsInitialized;
 	}
 
 	/**

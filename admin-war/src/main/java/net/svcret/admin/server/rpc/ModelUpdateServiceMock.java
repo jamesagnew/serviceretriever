@@ -217,7 +217,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	}
 
 	private void populateRandom(BaseGDashboardObjectWithUrls<?> obj) {
-		obj.setStatsInitialized(true);
+		obj.setStatsInitialized(new Date());
 		obj.setStatus(randomStatus());
 		obj.setTransactions60mins(random60mins());
 		obj.setLatency60mins(random60mins());
@@ -234,7 +234,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	}
 
 	private void populateRandom(BaseGDashboardObject<?> obj) {
-		obj.setStatsInitialized(true);
+		obj.setStatsInitialized(new Date());
 		obj.setStatus(randomStatus());
 		obj.setTransactions60mins(random60mins());
 		obj.setLatency60mins(random60mins());

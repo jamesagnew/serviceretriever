@@ -70,29 +70,29 @@ public class EditUsersPanel extends FlowPanel {
 
 		HorizontalPanel addPanel = new HorizontalPanel();
 		contentPanel.add(addPanel);
-		
+
 		addPanel.add(new PButton(IMAGES.iconAdd(), MSGS.actions_AddNewDotDotDot(), new ClickHandler() {
-			
+
 			@Override
 			public void onClick(ClickEvent theEvent) {
 				History.newItem(NavProcessor.getTokenAddUser(true, Long.parseLong(myAuthHostsListBox.getValue(myAuthHostsListBox.getSelectedIndex()))));
 			}
 		}));
 		addPanel.add(new Label("Using Authentication Host:"));
-		
+
 		myAuthHostsListBox = new ListBox();
 		addPanel.add(myAuthHostsListBox);
-		
+
 		Model.getInstance().loadAuthenticationHosts(new IAsyncLoadCallback<GAuthenticationHostList>() {
 			@Override
 			public void onSuccess(GAuthenticationHostList theResult) {
-				for (BaseGAuthHost next:theResult) {
+				for (BaseGAuthHost next : theResult) {
 					myAuthHostsListBox.addItem(next.getModuleId(), next.getPidOrNull().toString());
 				}
 				myAuthHostsListBox.setSelectedIndex(0);
 			}
 		});
-		
+
 		loadUserList();
 
 	}
@@ -125,8 +125,8 @@ public class EditUsersPanel extends FlowPanel {
 
 			myTable.setText(row, COL_USERNAME, nextUser.getUsername());
 			myTable.setText(row, COL_LAST_SVC_ACCESS, DateUtil.formatTime(nextUser.getStatsLastAccess()));
-			myTable.setWidget(row, COL_SUCCESSFUL_XACTS, BaseDashModel.returnSparklineFor60MinsUsage(nextUser.getStatsSuccessTransactions(), nextUser.getStatsSuccessTransactionsAvgPerMin()));
-			myTable.setWidget(row, COL_SECURITY_FAILURE_XACTS, BaseDashModel.returnSparklineFor60MinsUsage(nextUser.getStatsSecurityFailTransactions(), nextUser.getStatsSecurityFailTransactionsAvgPerMin()));
+			myTable.setWidget(row, COL_SUCCESSFUL_XACTS, BaseDashModel.returnSparklineFor60MinsUsage(nextUser.getStatsSuccessTransactions(), nextUser.getStatsInitialized(), nextUser.getStatsSuccessTransactionsAvgPerMin()));
+			myTable.setWidget(row, COL_SECURITY_FAILURE_XACTS, BaseDashModel.returnSparklineFor60MinsUsage(nextUser.getStatsSecurityFailTransactions(), nextUser.getStatsInitialized(), nextUser.getStatsSecurityFailTransactionsAvgPerMin()));
 
 			Panel actionPanel = new HorizontalPanel();
 			myTable.setWidget(row, COL_ACTIONS, actionPanel);

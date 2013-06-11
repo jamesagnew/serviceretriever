@@ -780,6 +780,12 @@ public class AdminServiceBean implements IAdminService {
 		}
 	}
 
+	public static void growToSizeDouble(List<Double> theCountArray, int theIndex) {
+		while (theCountArray.size() <= (theIndex)) {
+			theCountArray.add(0.0);
+		}
+	}
+
 	public static void growToSizeLong(List<Long> theCountArray, int theIndex) {
 		while (theCountArray.size() <= (theIndex)) {
 			theCountArray.add(0L);
@@ -1315,7 +1321,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setHttpClientConfigPid(httpClientConfig.getPid());
 
 		if (theLoadStats) {
-			retVal.setStatsInitialized(true);
+			retVal.setStatsInitialized(new Date());
 			ArrayList<Integer> t60minCount = new ArrayList<Integer>();
 			ArrayList<Long> t60minTime = new ArrayList<Long>();
 
@@ -1452,7 +1458,7 @@ public class AdminServiceBean implements IAdminService {
 		theDomain.populateKeepRecentTransactionsToDto(retVal);
 
 		if (theLoadStats) {
-			retVal.setStatsInitialized(true);
+			retVal.setStatsInitialized(new Date());
 			StatusEnum status = StatusEnum.UNKNOWN;
 			ArrayList<Integer> t60minCount = new ArrayList<Integer>();
 			ArrayList<Long> t60minTime = new ArrayList<Long>();
@@ -1533,7 +1539,7 @@ public class AdminServiceBean implements IAdminService {
 		theService.populateKeepRecentTransactionsToDto(retVal);
 
 		if (theLoadStats) {
-			retVal.setStatsInitialized(true);
+			retVal.setStatsInitialized(new Date());
 			StatusEnum status = StatusEnum.UNKNOWN;
 			ArrayList<Integer> t60minCount = new ArrayList<Integer>();
 			ArrayList<Long> t60minTime = new ArrayList<Long>();
@@ -1590,7 +1596,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setName(theMethod.getName());
 
 		if (theLoadStats) {
-			retVal.setStatsInitialized(true);
+			retVal.setStatsInitialized(new Date());
 			StatusEnum status = StatusEnum.UNKNOWN;
 			ArrayList<Integer> t60minCount = new ArrayList<Integer>();
 			ArrayList<Long> t60minTime = new ArrayList<Long>();
@@ -1638,7 +1644,7 @@ public class AdminServiceBean implements IAdminService {
 
 		if (theLoadStats) {
 			PersUserStatus status = thePersUser.getStatus();
-			retVal.setStatsLoaded(true);
+			retVal.setStatsInitialized(new Date());
 			retVal.setStatsLastAccess(status.getLastAccess());
 
 			final ArrayList<Integer> t60minSuccessCount = new ArrayList<Integer>();
@@ -1931,6 +1937,8 @@ public class AdminServiceBean implements IAdminService {
 		final Map<Long, List<Integer>> methodPidToSecurityFailCount = new HashMap<Long, List<Integer>>();
 		final Map<Long, List<Integer>> methodPidToFaultCount = new HashMap<Long, List<Integer>>();
 
+		final List<Long> statsTimestamps = new ArrayList<Long>();
+		
 		PersConfig config = myConfigSvc.getConfig();
 		for (final PersServiceVersionMethod nextMethod : ver.getMethods()) {
 			methodPidToSuccessCount.put(nextMethod.getPid(), new ArrayList<Integer>());
@@ -1949,10 +1957,12 @@ public class AdminServiceBean implements IAdminService {
 					growToSizeInt(failCounts, theIndex);
 					growToSizeInt(securityFailCounts, theIndex);
 					growToSizeInt(faultCounts, theIndex);
+					growToSizeLong(statsTimestamps, theIndex);
 					successCounts.set(theIndex, addToInt(successCounts.get(theIndex), theStats.getSuccessInvocationCount()));
 					failCounts.set(theIndex, addToInt(failCounts.get(theIndex), theStats.getFailInvocationCount()));
 					securityFailCounts.set(theIndex, addToInt(securityFailCounts.get(theIndex), theStats.getServerSecurityFailures()));
 					faultCounts.set(theIndex, addToInt(faultCounts.get(theIndex), theStats.getFaultInvocationCount()));
+					statsTimestamps.set(theIndex, theStats.getPk().getStartTime().getTime());
 				}
 			});
 		}
@@ -1963,6 +1973,8 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setMethodPidToFailCount(methodPidToFailCount);
 		retVal.setMethodPidToSecurityFailCount(methodPidToSecurityFailCount);
 		retVal.setMethodPidToFaultCount(methodPidToFaultCount);
+		
+		retVal.setStatsTimestamps(statsTimestamps);
 
 		return retVal;
 	}
