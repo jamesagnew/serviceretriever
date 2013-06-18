@@ -184,6 +184,7 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 		HorizontalPanel timePanel = new HorizontalPanel();
 		graphsPanel.add(timePanel);
 
+		// Graphs Time Dropdown
 		final ListBox timeListBox = new ListBox();
 		timePanel.add(timeListBox);
 		for (TimeRangeEnum next : TimeRangeEnum.values()) {
