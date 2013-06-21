@@ -48,6 +48,9 @@ import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
 import net.svcret.ejb.model.entity.PersLocks;
+import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
+import net.svcret.ejb.model.entity.PersMonitorRule;
+import net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
@@ -1078,6 +1081,26 @@ public class DaoBean implements IDao {
 			}
 			transactions.get(0).trimUsingDao(this);
 		}
+	}
+
+	public PersMonitorRule saveOrCreateMonitorRule(PersMonitorRule theRule) {
+		Validate.notNull(theRule, "theRule");
+		
+		for (PersMonitorAppliesTo next : theRule.getAppliesTo()) {
+			next.setRule(theRule);
+		}
+		
+		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
+			next.setRule(theRule);
+		}
+		
+		return myEntityManager.merge(theRule);
+	}
+
+	@Override
+	public List<PersMonitorRule> getMonitorRules() {
+		TypedQuery<PersMonitorRule> q = myEntityManager.createNamedQuery(Queries.MONITORRULE_FINDALL, PersMonitorRule.class);
+		return q.getResultList();
 	}
 
 }

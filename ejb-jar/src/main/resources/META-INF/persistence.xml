@@ -20,6 +20,9 @@
 		<class>net.svcret.ejb.model.entity.PersInvocationStats</class>
 		<class>net.svcret.ejb.model.entity.PersInvocationUserStats</class>
 		<class>net.svcret.ejb.model.entity.PersLocks</class>
+		<class>net.svcret.ejb.model.entity.PersMonitorAppliesTo</class>
+		<class>net.svcret.ejb.model.entity.PersMonitorRule</class>
+		<class>net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact</class>
 		<class>net.svcret.ejb.model.entity.PersServiceVersionMethod</class>
 		<class>net.svcret.ejb.model.entity.PersService</class>
 		<class>net.svcret.ejb.model.entity.PersUser</class>
@@ -81,6 +84,9 @@
 		<class>net.svcret.ejb.model.entity.PersInvocationStats</class>
 		<class>net.svcret.ejb.model.entity.PersInvocationUserStats</class>
 		<class>net.svcret.ejb.model.entity.PersLocks</class>
+		<class>net.svcret.ejb.model.entity.PersMonitorAppliesTo</class>
+		<class>net.svcret.ejb.model.entity.PersMonitorRule</class>
+		<class>net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact</class>
 		<class>net.svcret.ejb.model.entity.PersServiceVersionMethod</class>
 		<class>net.svcret.ejb.model.entity.PersService</class>
 		<class>net.svcret.ejb.model.entity.PersUser</class>

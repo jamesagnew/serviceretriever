@@ -90,7 +90,8 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
-	public AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion) throws ServiceFailureException {
+	public AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion)
+			throws ServiceFailureException {
 		if (theExistingDomainPid == null && isBlank(theCreateDomainId)) {
 			throw new IllegalArgumentException("Domain PID and new domain ID are both missing");
 		}
@@ -104,9 +105,11 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 			throw new IllegalArgumentException("Service PID and new domain ID can not both be provided");
 		}
 		if (theVersion.getPid() != 0) {
-			ourLog.info("Saving service version for Domain[{}/create {}] and Service[{}/create {}] with id: {}", new Object[] { theExistingDomainPid, theCreateDomainId, theExistingServicePid, theCreateServiceId, theVersion.getId() });
+			ourLog.info("Saving service version for Domain[{}/create {}] and Service[{}/create {}] with id: {}", new Object[] { theExistingDomainPid, theCreateDomainId, theExistingServicePid,
+					theCreateServiceId, theVersion.getId() });
 		} else {
-			ourLog.info("Adding service version for Domain[{}/create {}] and Service[{}/create {}] with id: {}", new Object[] { theExistingDomainPid, theCreateDomainId, theExistingServicePid, theCreateServiceId, theVersion.getId() });
+			ourLog.info("Adding service version for Domain[{}/create {}] and Service[{}/create {}] with id: {}", new Object[] { theExistingDomainPid, theCreateDomainId, theExistingServicePid,
+					theCreateServiceId, theVersion.getId() });
 		}
 
 		if (isMockMode()) {
@@ -176,7 +179,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 
 	@Override
 	public BaseGServiceVersion createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncommittedId) {
-		BaseGServiceVersion retVal=null;
+		BaseGServiceVersion retVal = null;
 		HttpSession session = getThreadLocalRequest().getSession(true);
 
 		if (theUncommittedId != null) {
@@ -200,7 +203,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		if (retVal == null) {
 			throw new java.lang.IllegalStateException("Unknown type: " + theProtocol);
 		}
-		
+
 		if (isMockMode()) {
 			retVal.setHttpClientConfigPid(myMock.getDefaultHttpClientConfigPid());
 			retVal.setId("1.0");
@@ -349,16 +352,27 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 
 	@Override
 	public GPartialUserList loadUsers(PartialUserListRequest theRequest) throws ServiceFailureException {
+		GPartialUserList retVal;
 		if (isMockMode()) {
-			return myMock.loadUsers(theRequest);
+			retVal = myMock.loadUsers(theRequest);
+			return retVal;
+		} else {
+			try {
+				retVal=myAdminSvc.loadUsers(theRequest);
+			} catch (ProcessingException e) {
+				ourLog.error("Failed to load users", e);
+				throw new ServiceFailureException(e.getMessage());
+			}
 		}
 
-		try {
-			return myAdminSvc.loadUsers(theRequest);
-		} catch (ProcessingException e) {
-			ourLog.error("Failed to load users", e);
-			throw new ServiceFailureException(e.getMessage());			
+		// Response validation
+		if (theRequest.isLoadStats()) {
+			for (GUser next : retVal) {
+				Validate.notNull(next.getStatsInitialized());
+			}
 		}
+		
+		return retVal;
 	}
 
 	@Override
@@ -608,7 +622,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		if (isMockMode()) {
 			return myMock.loadRecentTransactionListForServiceVersion(theServiceVersionPid);
 		}
-		
+
 		return myAdminSvc.loadRecentTransactionListForServiceVersion(theServiceVersionPid);
 	}
 
@@ -625,7 +639,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		if (isMockMode()) {
 			return myMock.loadRecentTransactionListForuser(thePid);
 		}
-		
+
 		return myAdminSvc.loadRecentTransactionListForUser(thePid);
 	}
 
@@ -642,7 +656,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		if (isMockMode()) {
 			return myMock.loadServiceVersionDetailedStats(theVersionPid);
 		}
-		
+
 		try {
 			return myAdminSvc.loadServiceVersionDetailedStats(theVersionPid);
 		} catch (ProcessingException e) {

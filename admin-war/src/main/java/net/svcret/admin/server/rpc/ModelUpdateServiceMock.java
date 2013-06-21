@@ -136,6 +136,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		user.setAuthHostPid(hostList.getPid());
 		user.addGlobalPermission(UserGlobalPermissionEnum.SUPERUSER);
 		user.setStatsLastAccess(new Date());
+		user.setStatsInitialized(new Date());
 		user.setStatsSecurityFailTransactions(random60mins());
 		user.setStatsSuccessTransactions(random60mins());
 		user.setStatsSecurityFailTransactionsAvgPerMin(2.0);
@@ -152,6 +153,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		user.addDomainPermission(perm);
 		user.setAuthHostPid(hostList.getPid());
 		user.addGlobalPermission(UserGlobalPermissionEnum.SUPERUSER);
+		user.setStatsInitialized(new Date());
 		user.setStatsSecurityFailTransactions(random60mins());
 		user.setStatsSuccessTransactions(random60mins());
 		user.setStatsSecurityFailTransactionsAvgPerMin(2.0);

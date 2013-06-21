@@ -38,6 +38,9 @@ import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
+import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
+import net.svcret.ejb.model.entity.PersMonitorRule;
+import net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
@@ -63,6 +66,50 @@ public class DaoBeanTest extends BaseJpaTest {
 
 	private DateFormat myTimeFormat = new SimpleDateFormat("HH:mm");
 
+	@Test
+	public void testCreateRule() throws ProcessingException {
+		newEntityManager();
+
+		PersAuthenticationHostLocalDatabase ah = mySvc.getOrCreateAuthenticationHostLocalDatabase("AH");
+		PersUser user = mySvc.getOrCreateUser(ah, "user");
+
+		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
+		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
+		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
+
+		Collection<PersMonitorRule> rules = mySvc.getMonitorRules();
+		assertEquals(0, rules.size());
+
+		newEntityManager();
+
+		PersMonitorRule rule = new PersMonitorRule();
+		rule.setRuleName("rule0");
+		rule.setRuleActive(true);
+		rule.setFireIfAllBackingUrlsAreUnavailable(true);
+		rule.setFireIfSingleBackingUrlIsUnavailable(true);
+		
+		PersMonitorAppliesTo appliesTo = new PersMonitorAppliesTo();
+		appliesTo.setServiceVersion(ver);
+		rule.getAppliesTo().add(appliesTo);
+		
+		PersMonitorRuleNotifyContact ctact = new PersMonitorRuleNotifyContact();
+		ctact.setEmail("foo@example.com");
+		rule.getNotifyContact().add(ctact);
+		
+		mySvc.saveOrCreateMonitorRule(rule);
+		
+		newEntityManager();
+		
+		rules = mySvc.getMonitorRules();
+		assertEquals(1, rules.size());
+		PersMonitorRule gotRule = rules.iterator().next();
+		assertEquals(1, gotRule.getNotifyContact().size());
+		assertEquals(1, gotRule.getAppliesTo().size());
+		assertEquals(ver, gotRule.getAppliesTo().iterator().next().getServiceVersion());
+		assertEquals("foo@example.com", gotRule.getNotifyContact().iterator().next().getEmail());
+		
+	}
+	
 	@Test
 	public void testSaveRecentUserMessages() throws Exception {
 		newEntityManager();

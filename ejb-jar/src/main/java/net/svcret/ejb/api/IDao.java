@@ -28,6 +28,7 @@ import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
+import net.svcret.ejb.model.entity.PersMonitorRule;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
@@ -41,6 +42,8 @@ import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 @Local
 public interface IDao {
 
+	Collection<PersMonitorRule> getMonitorRules();
+	
 	void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost);
 
 	void deleteHttpClientConfig(PersHttpClientConfig theConfig);
@@ -54,6 +57,8 @@ public interface IDao {
 	Collection<PersDomain> getAllDomains();
 
 	Collection<PersService> getAllServices();
+
+	PersMonitorRule saveOrCreateMonitorRule(PersMonitorRule theRule);
 
 	Collection<PersServiceVersionSoap11> getAllServiceVersions();
 
