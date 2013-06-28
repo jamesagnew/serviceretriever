@@ -52,20 +52,20 @@
 							<groupId>net.svcret</groupId>
 							<artifactId>serviceretriever-ejb-jar</artifactId>
 						</ejbModule>
-						<webModule>
+						<ejbModule>
 							<groupId>net.svcret</groupId>
-							<artifactId>serviceretriever-proxy-war</artifactId>
-							<contextRoot>/service</contextRoot>
-						</webModule>
+							<artifactId>serviceretriever-demoservices-jar</artifactId>
+						</ejbModule>
 						<webModule>
 							<groupId>net.svcret</groupId>
 							<artifactId>serviceretriever-admin-war</artifactId>
 							<contextRoot>/admin</contextRoot>
 						</webModule>
-						<ejbModule>
+						<webModule>
 							<groupId>net.svcret</groupId>
-							<artifactId>serviceretriever-demoservices-jar</artifactId>
-						</ejbModule>
+							<artifactId>serviceretriever-proxy-war</artifactId>
+							<contextRoot>/</contextRoot>
+						</webModule>
 					</modules>
                     <defaultLibBundleDir>lib</defaultLibBundleDir>
 				</configuration>

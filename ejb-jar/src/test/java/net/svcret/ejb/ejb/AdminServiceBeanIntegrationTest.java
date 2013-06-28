@@ -516,6 +516,8 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		GService service = mySvc.addService(domain.getPid(), "svc_id", "svc_name", true);
 
+		newEntityManager();
+		
 		assertEquals("svc_id", service.getId());
 		assertEquals("svc_name", service.getName());
 

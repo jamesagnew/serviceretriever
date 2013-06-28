@@ -47,8 +47,11 @@
 		<class>net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth</class>
 		<exclude-unlisted-classes>false</exclude-unlisted-classes>
 		<properties>
+            <!-- 
             <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5Dialect"/>
   			<property name="hibernate.connection.driver_class" value="com.mysql.jdbc.Driver"/>
+			 -->
+			<property name="hibernate.dialect" value="org.hibernate.dialect.Oracle10gDialect" />
 
 <!--
 			<property name="hibernate.connection.driver_class" value="org.hsqldb.jdbcDriver" />
@@ -64,9 +67,10 @@
 			<property name="hibernate.cache.use_second_level_cache" value="true" />
 			<property name="hibernate.cache.use_structured_entries" value="true" />
 			<property name="hibernate.cache.region.factory_class" value="org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory" />
+			
 			<!-- <property name="hibernate.cache.provider_configuration_file_resource_path" value="ehcache-hibernate.xml"/>  -->
 			<!-- <property name="hibernate.hbm2ddl.auto" value="create-drop" />-->
-			<property name="hibernate.hbm2ddl.auto" value="update" />
+			<property name="hibernate.hbm2ddl.auto" value="create" />
  		</properties>
 	</persistence-unit>
 

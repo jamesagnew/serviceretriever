@@ -158,6 +158,12 @@
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-ehcache</artifactId>
 			<version>4.2.1.Final</version>
+<exclusions>
+ <exclusion>
+  <groupId>net.sf.ehcache</groupId>
+  <artifactId>ehcache-core</artifactId>
+ </exclusion>
+</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>javax.transaction</groupId>

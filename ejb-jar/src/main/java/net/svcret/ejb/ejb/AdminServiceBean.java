@@ -156,7 +156,7 @@ public class AdminServiceBean implements IAdminService {
 		Validate.notBlank(theId, "ID");
 		Validate.notBlank(theName, "Name");
 
-		ourLog.info("Adding service with ID[{}] to domain PID[{}]", theId, theDomainPid);
+		ourLog.info("Adding service with ID[{}] and NAME[{}] to domain PID[{}]", new Object[] { theId, theName, theDomainPid });
 
 		PersDomain domain = myDao.getDomainByPid(theDomainPid);
 		if (domain == null) {
@@ -712,7 +712,8 @@ public class AdminServiceBean implements IAdminService {
 		return (int) newValue;
 	}
 
-	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, List<Integer> the60MinInvCount, List<Long> the60minTime, StatusEnum theStatus, BasePersServiceVersion nextVersion) throws ProcessingException {
+	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, List<Integer> the60MinInvCount, List<Long> the60minTime, StatusEnum theStatus,
+			BasePersServiceVersion nextVersion) throws ProcessingException {
 		StatusEnum status = theStatus;
 
 		for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
@@ -742,7 +743,8 @@ public class AdminServiceBean implements IAdminService {
 		return status;
 	}
 
-	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Long> the60minTime, PersService theService) throws ProcessingException {
+	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Long> the60minTime, PersService theService)
+			throws ProcessingException {
 
 		// Value will be changed below
 		StatusEnum status = theInitialStatus;
@@ -762,7 +764,8 @@ public class AdminServiceBean implements IAdminService {
 	/**
 	 * @return The start timestamp
 	 */
-	public static void extractSuccessfulInvocationInvocationTimes(PersConfig theConfig, int theNumMinsBack, final List<Integer> the60MinInvCount, final List<Long> the60minTime, PersServiceVersionMethod nextMethod, IRuntimeStatus statusSvc) {
+	public static void extractSuccessfulInvocationInvocationTimes(PersConfig theConfig, int theNumMinsBack, final List<Integer> the60MinInvCount, final List<Long> the60minTime,
+			PersServiceVersionMethod nextMethod, IRuntimeStatus statusSvc) {
 		doWithStatsByMinute(theConfig, theNumMinsBack, statusSvc, nextMethod, new IWithStats() {
 			@Override
 			public void withStats(int theIndex, BasePersInvocationStats theStats) {
@@ -1938,7 +1941,7 @@ public class AdminServiceBean implements IAdminService {
 		final Map<Long, List<Integer>> methodPidToFaultCount = new HashMap<Long, List<Integer>>();
 
 		final List<Long> statsTimestamps = new ArrayList<Long>();
-		
+
 		PersConfig config = myConfigSvc.getConfig();
 		for (final PersServiceVersionMethod nextMethod : ver.getMethods()) {
 			methodPidToSuccessCount.put(nextMethod.getPid(), new ArrayList<Integer>());
@@ -1973,16 +1976,16 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setMethodPidToFailCount(methodPidToFailCount);
 		retVal.setMethodPidToSecurityFailCount(methodPidToSecurityFailCount);
 		retVal.setMethodPidToFaultCount(methodPidToFaultCount);
-		
+
 		retVal.setStatsTimestamps(statsTimestamps);
 
 		return retVal;
 	}
 
 	public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatus theStatus, PersServiceVersionMethod theNextMethod, IWithStats theOperator) {
-		
-		Date start = new Date(System.currentTimeMillis() - (theRange.getRange().getNumMins()*60*1000L));
-		Date end=new Date();
+
+		Date start = new Date(System.currentTimeMillis() - (theRange.getRange().getNumMins() * 60 * 1000L));
+		Date end = new Date();
 		doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator, start, end);
 	}
 
