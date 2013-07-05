@@ -99,7 +99,7 @@ public class HttpClientBeanTest {
 
 		assertEquals(body.trim(), respBean.getBody().trim());
 		assertEquals("text/xml", respBean.getContentType());
-		assertThat(respBean.getResponseTime(), greaterThan(1L));
+		assertThat(respBean.getResponseTime(), greaterThan(0L));
 
 		if (resp.myFailed != null) {
 			throw new Exception(resp.myFailed);
@@ -123,7 +123,7 @@ public class HttpClientBeanTest {
 
 		assertEquals(body.trim(), respBean.getBody().trim());
 		assertEquals("text/xml", respBean.getContentType());
-		assertThat(respBean.getResponseTime(), greaterThan(1L));
+		assertThat(respBean.getResponseTime(), greaterThan(0L));
 
 		if (resp.myFailed != null) {
 			throw new Exception(resp.myFailed);

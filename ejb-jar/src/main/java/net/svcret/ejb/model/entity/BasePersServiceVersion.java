@@ -36,6 +36,7 @@ import javax.persistence.Version;
 import net.svcret.admin.shared.model.ServerSecuredEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.api.ResponseTypeEnum;
+import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.util.Validate;
 
 import org.hibernate.annotations.ForeignKey;
@@ -46,9 +47,9 @@ import org.hibernate.annotations.ForeignKey;
 @DiscriminatorColumn(name = "SVCVER_TYPE", length = 20, discriminatorType = DiscriminatorType.STRING)
 public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransactions {
 
-	private static final long serialVersionUID = 1L;
-
 	static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(BasePersServiceVersion.class);
+
+	private static final long serialVersionUID = 1L;
 
 	@Column(name = "ISACTIVE")
 	private boolean myActive;
@@ -59,6 +60,9 @@ public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransact
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("CAUTH_ORDER")
 	private List<PersBaseClientAuth<?>> myClientAuths;
+
+	@Column(name = "EXPLICIT_PROXY_PATH", length = 400, nullable = true)
+	private String myExplicitProxyPath;
 
 	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
 	@ForeignKey(name = "PX_SVCVER_HTTP_CONFIG_PID")
@@ -115,6 +119,9 @@ public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransact
 
 	@Column(name = "VERSION_ID", length = 200, nullable = false)
 	private String myVersionId;
+
+	@Transient
+	private transient HashMap<String, PersServiceVersionMethod> myRootElementNameToMethod;
 
 	public void addClientAuth(int theIndex, PersBaseClientAuth<?> theAuth) {
 		theAuth.setServiceVersion(this);
@@ -189,6 +196,9 @@ public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransact
 		return null;
 	}
 
+	public String getExplicitProxyPath() {
+		return myExplicitProxyPath;
+	}
 
 	/**
 	 * @return the httpClientConfig
@@ -199,8 +209,7 @@ public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransact
 
 	public PersServiceVersionMethod getMethod(String theName) {
 		/*
-		 * We avoid synchronization here at the expense of the small chance
-		 * we'll create the nameToMethod map more than once..
+		 * We avoid synchronization here at the expense of the small chance we'll create the nameToMethod map more than once..
 		 */
 
 		if (myNameToMethod == null) {
@@ -215,6 +224,23 @@ public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransact
 		return myNameToMethod.get(theName);
 	}
 
+	public PersServiceVersionMethod getMethodForRootElementName(String theName) {
+		/*
+		 * We avoid synchronization here at the expense of the small chance we'll create the nameToMethod map more than once..
+		 */
+
+		if (myRootElementNameToMethod == null) {
+			HashMap<String, PersServiceVersionMethod> nameToMethod = new HashMap<String, PersServiceVersionMethod>();
+			for (PersServiceVersionMethod next : getMethods()) {
+				nameToMethod.put(next.getRootElements(), next);
+			}
+			myRootElementNameToMethod = nameToMethod;
+			return nameToMethod.get(theName);
+		}
+
+		return myRootElementNameToMethod.get(theName);
+	}
+	
 	public List<String> getMethodNames() {
 		ArrayList<String> retVal = new ArrayList<String>();
 		for (PersServiceVersionMethod nextMethod : getMethods()) {
@@ -271,6 +297,9 @@ public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransact
 	public abstract ServiceProtocolEnum getProtocol();
 
 	public String getProxyPath() {
+		if (getExplicitProxyPath() != null) {
+			return getExplicitProxyPath();
+		}
 		PersService service = getService();
 		PersDomain domain = service.getDomain();
 		return "/" + domain.getDomainId() + "/" + service.getServiceId() + "/" + getVersionId();
@@ -481,6 +510,8 @@ public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransact
 	 * Remove any URLs whose ID doesn't appear in the given IDs
 	 */
 	public void retainOnlyMethodsWithNames(Collection<String> theIds) {
+		ourLog.debug("Retaining method names: {}", theIds);
+		
 		HashSet<String> ids = new HashSet<String>(theIds);
 		for (Iterator<PersServiceVersionMethod> iter = getMethods().iterator(); iter.hasNext();) {
 			PersServiceVersionMethod next = iter.next();
@@ -530,7 +561,15 @@ public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransact
 		myActive = theActive;
 	}
 
-	
+	public void setExplicitProxyPath(String theExplicitProxyPath) throws ProcessingException {
+		if (theExplicitProxyPath != null) {
+			if (!theExplicitProxyPath.startsWith("/")) {
+				throw new ProcessingException("Proxy path must start with '/'");
+			}
+		}
+		myExplicitProxyPath = theExplicitProxyPath;
+	}
+
 	/**
 	 * @param theHttpClientConfig
 	 *            the httpClientConfig to set
@@ -565,7 +604,6 @@ public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransact
 		}
 		myService = theService;
 	}
-
 
 	public void setStatus(PersServiceVersionStatus theStatus) {
 		Validate.notNull(theStatus, "Status");

@@ -6,7 +6,16 @@ public class GServiceMethod extends BaseGDashboardObject<GServiceMethod> {
 
 	private transient boolean myEditMode;
 	
+	private String myRootElements;
 	
+	public String getRootElements() {
+		return myRootElements;
+	}
+
+	public void setRootElements(String theRootElements) {
+		myRootElements = theRootElements;
+	}
+
 	/**
 	 * @return the editMode
 	 */
@@ -23,6 +32,7 @@ public class GServiceMethod extends BaseGDashboardObject<GServiceMethod> {
 
 	@Override
 	public void merge(GServiceMethod theObject) {
+		myRootElements=theObject.getRootElements();
 		super.merge((BaseGDashboardObject<GServiceMethod>) theObject);
 	}
 

@@ -29,7 +29,6 @@ public abstract class BaseDashModel implements IDashModel {
 	private static final long MILLIS_PER_MINUTE = 60 * 1000L;
 	private static final long MILLIS_PER_HOUR = 60 * MILLIS_PER_MINUTE;
 	private static final long MILLIS_PER_DAY = MILLIS_PER_HOUR * 24;
-
 	private static NumberFormat ourDecimalFormat = NumberFormat.getFormat("0.0");
 
 	private BaseGDashboardObject<?> myModel;
@@ -66,6 +65,19 @@ public abstract class BaseDashModel implements IDashModel {
 	@Override
 	public final Widget renderLatency() {
 		return returnSparklineFor60mins(myModel.getLatency60mins(), myModel.getStatsInitialized(), Integer.toString(myModel.getAverageLatency()), "ms");
+	}
+
+	protected Widget renderName(String thePrefix, String theName, String thePostFix) {
+		HorizontalPanel hp = new HorizontalPanel();
+		hp.setStyleName(CssConstants.UNSTYLED_TABLE);
+		if (thePrefix != null) {
+			hp.add(new HTML(thePrefix));
+		}
+		hp.add(new HTML(theName));
+		if (thePostFix != null) {
+			hp.add(new HTML(thePostFix));
+		}
+		return hp;
 	}
 
 	@Override
@@ -108,19 +120,6 @@ public abstract class BaseDashModel implements IDashModel {
 		return retVal;
 	}
 
-	protected Widget renderName(String thePrefix, String theName, String thePostFix) {
-		HorizontalPanel hp = new HorizontalPanel();
-		hp.setStyleName(CssConstants.UNSTYLED_TABLE);
-		if (thePrefix != null) {
-			hp.add(new HTML(thePrefix));
-		}
-		hp.add(new HTML(theName));
-		if (thePostFix != null) {
-			hp.add(new HTML(thePostFix));
-		}
-		return hp;
-	}
-
 	@Override
 	public final Widget renderUsage() {
 		int[] list = myModel.getTransactions60mins();
@@ -128,33 +127,8 @@ public abstract class BaseDashModel implements IDashModel {
 		return returnSparklineFor60MinsUsage(list, myModel.getStatsInitialized(), averagePerMin);
 	}
 
-	public static Widget returnSparklineFor60MinsUsage(int[] list, Date theStatsInitialized, double averagePerMin) {
-		if (averagePerMin < 0.1) {
-			return returnBarSparklineFor60mins(list, theStatsInitialized, formatDouble(averagePerMin * 60), "/hr");
-		} else {
-			return returnBarSparklineFor60mins(list, theStatsInitialized, formatDouble(averagePerMin), "/min");
-		}
-	}
-
 	private static String formatDouble(double theNumber) {
 		return ourDecimalFormat.format(theNumber);
-	}
-
-	public static Widget returnImageForStatus(StatusEnum status) {
-		if (status == null) {
-			GWT.log("Status is null");
-			return null;
-		}
-
-		switch (status) {
-		case ACTIVE:
-			return new Image("images/icon_check_16.png");
-		case DOWN:
-			return new Image("images/icon_warn_16.png");
-		case UNKNOWN:
-			return new Image("images/icon_unknown_16.png");
-		}
-		return null;
 	}
 
 	public static Widget returnBarSparklineFor60mins(int[] theList, Date theStatsInitialized, String theCurrentValue, String theUnitDesc) {
@@ -177,6 +151,23 @@ public abstract class BaseDashModel implements IDashModel {
 		return retVal;
 	}
 
+	public static Widget returnImageForStatus(StatusEnum status) {
+		if (status == null) {
+			GWT.log("Status is null");
+			return null;
+		}
+
+		switch (status) {
+		case ACTIVE:
+			return new Image("images/icon_check_16.png");
+		case DOWN:
+			return new Image("images/icon_warn_16.png");
+		case UNKNOWN:
+			return new Image("images/icon_unknown_16.png");
+		}
+		return null;
+	}
+
 	public static Widget returnSparklineFor60mins(int[] theList,Date theStatsInitialized, String theCurrentValue, String theUnitDesc) {
 		if (theList == null) {
 			GWT.log(new Date() + " - No 60 minutes data");
@@ -194,6 +185,14 @@ public abstract class BaseDashModel implements IDashModel {
 		Sparkline retVal = new Sparkline(theList,dates, text);
 		retVal.setWidth("100px");
 		return retVal;
+	}
+
+	public static Widget returnSparklineFor60MinsUsage(int[] list, Date theStatsInitialized, double averagePerMin) {
+		if (averagePerMin < 0.1) {
+			return returnBarSparklineFor60mins(list, theStatsInitialized, formatDouble(averagePerMin * 60), "/hr");
+		} else {
+			return returnBarSparklineFor60mins(list, theStatsInitialized, formatDouble(averagePerMin), "/min");
+		}
 	}
 
 }

@@ -2,6 +2,7 @@ package net.svcret.ejb.model.entity;
 
 import java.util.Date;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -20,9 +21,11 @@ public class PersUserStatus extends BasePersObject {
 
 	private static final long serialVersionUID = 1L;
 
+	@Column(name = "LAST_ACCESS")
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date myLastAccess;
 
+	@Column(name="PID")
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long myPid;

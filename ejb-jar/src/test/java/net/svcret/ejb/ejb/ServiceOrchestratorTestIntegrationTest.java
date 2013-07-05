@@ -118,6 +118,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		PersServiceVersionMethod d0s0v0m0 = new PersServiceVersionMethod();
 		d0s0v0m0.setName("d0s0v0m0");
 		d0s0v0.addMethod(d0s0v0m0);
+		d0s0v0m0.setRootElements("net:svcret:demo:d0s0v0m0");
 		PersWsSecUsernameTokenServerAuth serverAuth = new PersWsSecUsernameTokenServerAuth();
 		serverAuth.setAuthenticationHost(authHost);
 		d0s0v0.addServerAuth(serverAuth);

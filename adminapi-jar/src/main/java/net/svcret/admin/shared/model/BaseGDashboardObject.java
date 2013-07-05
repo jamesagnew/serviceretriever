@@ -84,7 +84,7 @@ public abstract class BaseGDashboardObject<T> extends BaseGKeepsRecentMessages<T
 	 * Do we need this? Maybe make it configurable
 	 */
 	public boolean hideDashboardRowWhenExpanded() {
-		return false;
+		return true;
 	}
 
 	/**
@@ -199,7 +199,7 @@ public abstract class BaseGDashboardObject<T> extends BaseGKeepsRecentMessages<T
 			total += i;
 		}
 		if (myTransactions60mins.length > 0) {
-			myAverageTransactionsPerMin = total / myTransactions60mins.length;
+			myAverageTransactionsPerMin = (double)total / (double)myTransactions60mins.length;
 		}
 	}
 

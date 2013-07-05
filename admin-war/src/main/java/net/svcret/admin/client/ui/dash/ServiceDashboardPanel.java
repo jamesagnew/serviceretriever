@@ -66,9 +66,9 @@ public class ServiceDashboardPanel extends FlowPanel {
 		myGrid.setText(0, 0, "Name");
 		myGrid.getFlexCellFormatter().setColSpan(0, 0, HierarchyEnum.getHighestOrdinal() + 2);
 		myGrid.setText(0, COL_STATUS, "Status");
-		myGrid.setText(0, COL_USAGE, "Usage");
+		myGrid.setText(0, COL_USAGE, "Usage 1hr Avg");
+		myGrid.setText(0, COL_LATENCY, "Latency 1hr Avg");
 		myGrid.setText(0, COL_BACKING_URLS, "Backing URLs");
-		myGrid.setText(0, COL_LATENCY, "Latency");
 		myGrid.setText(0, COL_LAST_INVOC, "Last Invoc");
 		myGrid.setText(0, COL_SECURITY, "Security");
 		myGrid.setText(0, COL_ACTIONS, "Actions");

@@ -64,6 +64,7 @@ import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.ISecurityService;
 import net.svcret.ejb.api.IServiceInvoker;
+import net.svcret.ejb.api.IServiceInvokerSoap11;
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.ex.ProcessingException;
@@ -116,8 +117,8 @@ public class AdminServiceBean implements IAdminService {
 	@EJB
 	private IConfigService myConfigSvc;
 
-	@EJB(name = "SOAP11Invoker")
-	private IServiceInvoker<PersServiceVersionSoap11> myInvokerSoap11;
+	@EJB()
+	private IServiceInvokerSoap11 myInvokerSoap11;
 
 	@EJB
 	private IDao myDao;
@@ -341,6 +342,10 @@ public class AdminServiceBean implements IAdminService {
 	@Override
 	public GSoap11ServiceVersionAndResources loadServiceVersion(long theServiceVersionPid) throws ProcessingException {
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
+		if (svcVer == null) {
+			throw new ProcessingException("Unknown service version PID: " + theServiceVersionPid);
+		}
+
 		BaseGServiceVersion uiService = toUi(svcVer, false);
 		GSoap11ServiceVersionAndResources retVal = toUi(uiService, svcVer);
 		return retVal;
@@ -476,7 +481,7 @@ public class AdminServiceBean implements IAdminService {
 
 		PersService newService = fromUi(theService);
 		service.merge(newService);
-		myDao.saveService(newService);
+		myDao.saveService(service);
 
 		return loadDomainList();
 	}
@@ -641,7 +646,16 @@ public class AdminServiceBean implements IAdminService {
 		Validate.notNull(theService);
 		Validate.notBlank(theVersionId);
 
-		BasePersServiceVersion retVal = myServiceRegistry.getOrCreateServiceVersionWithId(theService, theVersion.getProtocol(), theVersionId);
+		BasePersServiceVersion retVal;
+		if (theVersion.getPidOrNull() != null) {
+			ourLog.debug("Retrieving existing service version PID[{}]", theVersion.getPidOrNull());
+			retVal = myDao.getServiceVersionByPid(theVersion.getPid());
+		} else {
+			ourLog.debug("Retrieving service version ID[{}]", theVersionId);
+			retVal = myServiceRegistry.getOrCreateServiceVersionWithId(theService, theVersion.getProtocol(), theVersionId);
+			ourLog.debug("Found service version NEW[{}], PID[{}], PROTOCOL[{}]", new Object[] {retVal.isNewlyCreated(), retVal.getPid(), retVal.getProtocol().name()});
+		}
+
 		switch (theVersion.getProtocol()) {
 		case SOAP11:
 			fromUi((PersServiceVersionSoap11) retVal, (GSoap11ServiceVersion) theVersion);
@@ -653,6 +667,7 @@ public class AdminServiceBean implements IAdminService {
 
 		retVal.setActive(theVersion.isActive());
 		retVal.setVersionId(theVersion.getId());
+		retVal.setExplicitProxyPath(theVersion.getExplicitProxyPath());
 
 		PersHttpClientConfig httpClientConfig = myDao.getHttpClientConfig(theVersion.getHttpClientConfigPid());
 		if (httpClientConfig == null) {
@@ -996,6 +1011,7 @@ public class AdminServiceBean implements IAdminService {
 
 	private PersService fromUi(GService theService) {
 		PersService retVal = new PersService();
+		retVal.setPid(theService.getPidOrNull());
 		retVal.setActive(theService.isActive());
 		retVal.setServiceId(theService.getId());
 		retVal.setServiceName(theService.getName());
@@ -1008,6 +1024,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setName(theMethod.getName());
 		retVal.setPid(theMethod.getPidOrNull());
 		retVal.setServiceVersion(myDao.getServiceVersionByPid(theServiceVersionPid));
+		retVal.setRootElements(theMethod.getRootElements());
 		return retVal;
 	}
 
@@ -1316,6 +1333,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setName(theVersion.getVersionId());
 		retVal.setServerSecured(theVersion.getServerSecured());
 		retVal.setProxyPath(theVersion.getProxyPath());
+		retVal.setExplicitProxyPath(theVersion.getExplicitProxyPath());
 
 		PersHttpClientConfig httpClientConfig = theVersion.getHttpClientConfig();
 		if (httpClientConfig == null) {
@@ -1597,6 +1615,7 @@ public class AdminServiceBean implements IAdminService {
 		}
 		retVal.setId(theMethod.getName());
 		retVal.setName(theMethod.getName());
+		retVal.setRootElements(theMethod.getRootElements());
 
 		if (theLoadStats) {
 			retVal.setStatsInitialized(new Date());
@@ -1738,7 +1757,7 @@ public class AdminServiceBean implements IAdminService {
 	/**
 	 * Unit test only
 	 */
-	void setInvokerSoap11(IServiceInvoker<PersServiceVersionSoap11> theInvokerSoap11) {
+	void setInvokerSoap11(IServiceInvokerSoap11 theInvokerSoap11) {
 		myInvokerSoap11 = theInvokerSoap11;
 	}
 

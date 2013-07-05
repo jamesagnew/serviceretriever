@@ -4,6 +4,7 @@ import static net.svcret.admin.client.AdminPortal.*;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
+import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.HierarchyEnum;
@@ -33,9 +34,9 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 	@Override
 	public Widget renderName() {
 
-		String postFix=null;
+		String postFix = null;
 		if (myService.getVersionList().size() == 0) {
-			postFix=AdminPortal.MSGS.dashboard_ServiceNoServiceVersionsSuffix();
+			postFix = AdminPortal.MSGS.dashboard_ServiceNoServiceVersionsSuffix();
 		}
 
 		return renderName(AdminPortal.MSGS.dashboard_ServicePrefix(), myService.getName(), postFix);
@@ -136,6 +137,12 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 					});
 					content.add(addService);
 
+					if (myService.getVersionList().size() == 1) {
+						BaseGServiceVersion svcVer = myService.getVersionList().get(0);
+						DashModelServiceVersion.addToActions(content, myActionPopup, myDomain, myService, svcVer, false);
+					}
+					
+					
 					myActionPopup.showRelativeTo(retVal);
 
 				} else {
