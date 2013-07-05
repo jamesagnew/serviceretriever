@@ -647,15 +647,6 @@ public class AdminServiceBean implements IAdminService {
 		Validate.notBlank(theVersionId);
 
 		BasePersServiceVersion retVal;
-<<<<<<< HEAD
-		
-		if (theVersionPid!=null) {
-			retVal = myDao.getServiceVersionByPid(theVersionPid);
-		}else {
-			retVal = myServiceRegistry.getOrCreateServiceVersionWithId(theService, theVersion.getProtocol(), theVersionId);
-		}
-		
-=======
 		if (theVersion.getPidOrNull() != null) {
 			ourLog.debug("Retrieving existing service version PID[{}]", theVersion.getPidOrNull());
 			retVal = myDao.getServiceVersionByPid(theVersion.getPid());
@@ -665,7 +656,6 @@ public class AdminServiceBean implements IAdminService {
 			ourLog.debug("Found service version NEW[{}], PID[{}], PROTOCOL[{}]", new Object[] {retVal.isNewlyCreated(), retVal.getPid(), retVal.getProtocol().name()});
 		}
 
->>>>>>> 4bfab8e1a4dbf19a3c44a49db7619d04f59b312e
 		switch (theVersion.getProtocol()) {
 		case SOAP11:
 			fromUi((PersServiceVersionSoap11) retVal, (GSoap11ServiceVersion) theVersion);

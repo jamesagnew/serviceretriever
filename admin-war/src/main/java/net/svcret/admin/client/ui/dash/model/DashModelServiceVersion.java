@@ -126,54 +126,8 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 			FlowPanel content = new FlowPanel();
 			myActionPopup.add(content);
 
-<<<<<<< HEAD
-			SafeHtmlBuilder titleB = new SafeHtmlBuilder();
-			titleB.appendEscaped(mySvc.getName());
-			titleB.appendHtmlConstant("<br/>");
-			titleB.appendEscaped(myObj.getId());
-			content.add(new HeaderLabel(titleB.toSafeHtml()));
-
-			// Status button
-			
-			ActionPButton viewStatus = new ActionPButton(IMAGES.iconStatus(), MSGS.actions_ViewRuntimeStatus());
-			viewStatus.addClickHandler(new ClickHandler() {
-				@Override
-				public void onClick(ClickEvent theEvent) {
-					History.newItem(NavProcessor.getTokenServiceVersionStats(true, myDomain.getPid(), mySvc.getPid(), myObj.getPid()));
-				}
-			});
-			content.add(viewStatus);
-			
-			// Edit button
-			
-			Button editDomain = new ActionPButton(AdminPortal.IMAGES.iconEdit(), "Edit");
-			editDomain.addClickHandler(new ClickHandler() {
-				@Override
-				public void onClick(ClickEvent theEvent) {
-					myActionPopup.hide();
-					myActionPopup = null;
-					History.newItem(NavProcessor.getTokenEditServiceVersion(myObj.getPid()));
-				}
-			});
-			content.add(editDomain);
-
-			// Delete button
-			
-			Button deleteDomain = new ActionPButton(AdminPortal.IMAGES.iconRemove(), MSGS.actions_Remove());
-			deleteDomain.addClickHandler(new ClickHandler() {
-				@Override
-				public void onClick(ClickEvent theEvent) {
-					myActionPopup.hide();
-					myActionPopup = null;
-					History.newItem(NavProcessor.getTokenDeleteServiceVersion(true, myObj.getPid()));
-				}
-			});
-			content.add(deleteDomain);
-
-=======
 			addToActions(content, myActionPopup, myDomain, myService, mySvcVer, true);
 			
->>>>>>> 4bfab8e1a4dbf19a3c44a49db7619d04f59b312e
 			myActionPopup.showRelativeTo(theButton);
 		} else {
 			myActionPopup.hide();
