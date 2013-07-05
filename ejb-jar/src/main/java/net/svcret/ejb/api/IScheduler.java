@@ -12,6 +12,8 @@ public interface IScheduler {
 	void collapseStats();
 
 	void flushTransactionLogs();
+
+	void monitorCheck();
  
 	
 }

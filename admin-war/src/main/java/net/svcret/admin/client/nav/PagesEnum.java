@@ -75,7 +75,12 @@ public enum PagesEnum {
 	/**
 	 * Add User
 	 */
-	ADU(MSGS.addUser_Breadcrumb());
+	ADU(MSGS.addUser_Breadcrumb()), 
+	
+	/**
+	 * Delete service version
+	 */
+	DSV(MSGS.deleteServiceVersion_Breadcrumb()),
 	;
 	
 	private String myBreadcrumb;

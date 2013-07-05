@@ -44,7 +44,7 @@ import org.hibernate.annotations.ForeignKey;
 @Table(name = "PX_SVC_VER", uniqueConstraints = { @UniqueConstraint(columnNames = { "SERVICE_PID", "VERSION_ID" }) })
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "SVCVER_TYPE", length = 20, discriminatorType = DiscriminatorType.STRING)
-public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransactions {
+public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem {
 
 	private static final long serialVersionUID = 1L;
 
@@ -170,6 +170,11 @@ public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransact
 		return retVal;
 	}
 
+	@Override
+	public Collection<? extends BasePersServiceVersion> getAllServiceVersions() {
+		return Collections.singleton(this);
+	}
+
 	/**
 	 * @return the clientAuths
 	 */
@@ -188,7 +193,6 @@ public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransact
 		}
 		return null;
 	}
-
 
 	/**
 	 * @return the httpClientConfig
@@ -530,7 +534,6 @@ public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransact
 		myActive = theActive;
 	}
 
-	
 	/**
 	 * @param theHttpClientConfig
 	 *            the httpClientConfig to set
@@ -565,7 +568,6 @@ public abstract class BasePersServiceVersion extends BasePersKeepsRecentTransact
 		}
 		myService = theService;
 	}
-
 
 	public void setStatus(PersServiceVersionStatus theStatus) {
 		Validate.notNull(theStatus, "Status");

@@ -14,6 +14,7 @@ import javax.management.MBeanServer;
 
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.management.ManagementService;
+import net.svcret.ejb.api.IMonitorService;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.api.ISecurityService;
@@ -36,6 +37,9 @@ public class SchedulerBean implements IScheduler {
 	@EJB
 	private ITransactionLogger myTransactionLogger;
 
+	@EJB
+	private IMonitorService myMonitorSvc;
+	
 	private ManagementService registry;
 
 	@Override
@@ -44,6 +48,17 @@ public class SchedulerBean implements IScheduler {
 	public void collapseStats() {
 		try {
 			myStatsSvc.collapseStats();
+		} catch (Exception e) {
+			ourLog.error("Failed to collapse stats", e);
+		}
+	}
+
+	@Override
+	@Schedule(second = "0", minute = "*", hour = "*")
+	@TransactionAttribute(TransactionAttributeType.NEVER)
+	public void monitorCheck() {
+		try {
+			myMonitorSvc.check();
 		} catch (Exception e) {
 			ourLog.error("Failed to collapse stats", e);
 		}

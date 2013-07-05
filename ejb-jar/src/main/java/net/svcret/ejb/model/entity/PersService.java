@@ -33,7 +33,7 @@ import com.google.common.base.Objects;
 @Table(name = "PX_SVC", uniqueConstraints = { @UniqueConstraint(name = "PX_SVC_CONS_DOMSVC", columnNames = { "DOMAIN_PID", "SERVICE_ID" }) })
 @Entity
 @NamedQueries(value = { @NamedQuery(name = Queries.SERVICE_FIND, query = Queries.SERVICE_FIND_Q) })
-public class PersService extends BasePersKeepsRecentTransactions {
+public class PersService extends BasePersServiceCatalogItem {
 
 	private static final long serialVersionUID = 1L;
 
@@ -278,5 +278,15 @@ public class PersService extends BasePersKeepsRecentTransactions {
 	public void setServiceName(String theServiceName) {
 		myServiceName = theServiceName;
 	}
+
+	@Override
+	public Collection<? extends BasePersServiceVersion> getAllServiceVersions() {
+		ArrayList<BasePersServiceVersion> retVal = new ArrayList<BasePersServiceVersion>();
+		for (BasePersServiceVersion next : getVersions()) {
+			retVal.addAll(next.getAllServiceVersions());
+		}
+		return retVal;
+	}
+
 
 }

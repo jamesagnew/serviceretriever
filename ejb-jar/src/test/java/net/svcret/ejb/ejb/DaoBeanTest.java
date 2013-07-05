@@ -1,15 +1,7 @@
 package net.svcret.ejb.ejb;
 
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.DAY;
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.HOUR;
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.MINUTE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.*;
+import static org.junit.Assert.*;
 
 import java.sql.SQLException;
 import java.text.DateFormat;
@@ -89,7 +81,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		rule.setFireIfSingleBackingUrlIsUnavailable(true);
 		
 		PersMonitorAppliesTo appliesTo = new PersMonitorAppliesTo();
-		appliesTo.setServiceVersion(ver);
+		appliesTo.setItem(ver);
 		rule.getAppliesTo().add(appliesTo);
 		
 		PersMonitorRuleNotifyContact ctact = new PersMonitorRuleNotifyContact();
@@ -105,7 +97,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		PersMonitorRule gotRule = rules.iterator().next();
 		assertEquals(1, gotRule.getNotifyContact().size());
 		assertEquals(1, gotRule.getAppliesTo().size());
-		assertEquals(ver, gotRule.getAppliesTo().iterator().next().getServiceVersion());
+		assertEquals(ver, gotRule.getAppliesTo().iterator().next().getItem());
 		assertEquals("foo@example.com", gotRule.getNotifyContact().iterator().next().getEmail());
 		
 	}

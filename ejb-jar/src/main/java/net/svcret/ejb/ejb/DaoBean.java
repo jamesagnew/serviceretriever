@@ -790,7 +790,7 @@ public class DaoBean implements IDao {
 	@Override
 	public BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theVersion) throws ProcessingException {
 		Validate.notNull(theVersion, "ServiceVersion");
-		Validate.notNull(theVersion.getPid(), "ServiceVersion.myId");
+		Validate.notNull(theVersion.getPid(), "ServiceVersion.myPid");
 		Validate.throwProcessingExceptionIfBlank(theVersion.getVersionId(), "ID may not be missing or null");
 
 		ourLog.info("Saving service version with PID {}", theVersion.getPid());
@@ -1101,6 +1101,11 @@ public class DaoBean implements IDao {
 	public List<PersMonitorRule> getMonitorRules() {
 		TypedQuery<PersMonitorRule> q = myEntityManager.createNamedQuery(Queries.MONITORRULE_FINDALL, PersMonitorRule.class);
 		return q.getResultList();
+	}
+
+	@Override
+	public void deleteServiceVersion(BasePersServiceVersion theSv) {
+		myEntityManager.remove(theSv);
 	}
 
 }

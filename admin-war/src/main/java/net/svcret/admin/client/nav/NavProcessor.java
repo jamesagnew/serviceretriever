@@ -16,6 +16,7 @@ import net.svcret.admin.client.ui.config.auth.EditUsersPanel;
 import net.svcret.admin.client.ui.config.domain.AddDomainPanel;
 import net.svcret.admin.client.ui.config.domain.AddDomainStep2Panel;
 import net.svcret.admin.client.ui.config.domain.DeleteDomainPanel;
+import net.svcret.admin.client.ui.config.domain.DeleteServiceVersionPanel;
 import net.svcret.admin.client.ui.config.domain.EditDomainPanel;
 import net.svcret.admin.client.ui.config.service.AddServicePanel;
 import net.svcret.admin.client.ui.config.service.DeleteServicePanel;
@@ -103,12 +104,6 @@ public class NavProcessor {
 		return page;
 	}
 
-	private static String getCurrentToken() {
-		String token = History.getToken();
-		token = StringUtil.defaultString(token, DEFAULT_PAGE.name());
-		return token;
-	}
-
 	public static String getLastTokenBefore(PagesEnum... thePages) {
 		HashSet<String> names = new HashSet<String>();
 		for (PagesEnum pagesEnum : thePages) {
@@ -182,6 +177,19 @@ public class NavProcessor {
 		return token;
 	}
 
+	public static String getTokenAddUser(boolean theAddToHistory, long theAuthHostPid) {
+		String token = "";
+		if (theAddToHistory) {
+			token = getCurrentToken();
+			if (!token.isEmpty()) {
+				token = token + SEPARATOR;
+			}
+		}
+		token = token + PagesEnum.ADU + "_" + theAuthHostPid;
+		token = removeDuplicates(token);
+		return token;
+	}
+
 	public static String getTokenDeleteDomain(boolean theAddToHistory, long theDomainPid) {
 		String token = "";
 		if (theAddToHistory) {
@@ -208,7 +216,7 @@ public class NavProcessor {
 		return token;
 	}
 
-	public static String getTokenEditService(boolean theAddToHistory, long theDomainPid, long theServicePid) {
+	public static String getTokenDeleteServiceVersion(boolean theAddToHistory, long thePid) {
 		String token = "";
 		if (theAddToHistory) {
 			token = getCurrentToken();
@@ -216,7 +224,7 @@ public class NavProcessor {
 				token = token + SEPARATOR;
 			}
 		}
-		token = token + PagesEnum.ESE + "_" + theDomainPid + "_" + theServicePid;
+		token = token + PagesEnum.DSV + "_" + thePid;
 		token = removeDuplicates(token);
 		return token;
 	}
@@ -248,6 +256,19 @@ public class NavProcessor {
 	// return Long.parseLong(numStr);
 	// }
 
+	public static String getTokenEditService(boolean theAddToHistory, long theDomainPid, long theServicePid) {
+		String token = "";
+		if (theAddToHistory) {
+			token = getCurrentToken();
+			if (!token.isEmpty()) {
+				token = token + SEPARATOR;
+			}
+		}
+		token = token + PagesEnum.ESE + "_" + theDomainPid + "_" + theServicePid;
+		token = removeDuplicates(token);
+		return token;
+	}
+
 	public static String getTokenEditServiceVersion(long theVersionPid) {
 		String token = "";
 		token = getCurrentToken();
@@ -270,6 +291,45 @@ public class NavProcessor {
 			}
 		}
 		token = token + PagesEnum.EDU + "_" + theUserPid;
+		token = removeDuplicates(token);
+		return token;
+	}
+
+	public static String getTokenServiceVersionStats(boolean theAddToHistory, long theDomainPid, long theServicePid, long theServiceVersionPid) {
+		String token = "";
+		if (theAddToHistory) {
+			token = getCurrentToken();
+			if (!token.isEmpty()) {
+				token = token + SEPARATOR;
+			}
+		}
+		token = token + PagesEnum.SVS + "_" + theDomainPid + "_" + theServicePid + "_" + theServiceVersionPid;
+		token = removeDuplicates(token);
+		return token;
+	}
+
+	public static String getTokenViewServiceVersionRecentMessage(boolean theAddToHistory, long thePid) {
+		String token = "";
+		if (theAddToHistory) {
+			token = getCurrentToken();
+			if (!token.isEmpty()) {
+				token = token + SEPARATOR;
+			}
+		}
+		token = token + PagesEnum.RSV + "_" + thePid;
+		token = removeDuplicates(token);
+		return token;
+	}
+
+	public static String getTokenViewUserRecentMessage(boolean theAddToHistory, long thePid) {
+		String token = "";
+		if (theAddToHistory) {
+			token = getCurrentToken();
+			if (!token.isEmpty()) {
+				token = token + SEPARATOR;
+			}
+		}
+		token = token + PagesEnum.RUS + "_" + thePid;
 		token = removeDuplicates(token);
 		return token;
 	}
@@ -342,6 +402,9 @@ public class NavProcessor {
 		case DDO:
 			panel = new DeleteDomainPanel(Long.parseLong(args));
 			break;
+		case DSV:
+			panel = new DeleteServiceVersionPanel(Long.parseLong(args));
+			break;
 		case DSH:
 			panel = new ServiceDashboardPanel();
 			break;
@@ -411,12 +474,18 @@ public class NavProcessor {
 
 	}
 
-	private static void navigateToDefault() {
-		History.newItem("");
-	}
-
 	public static void navRoot(PagesEnum thePage) {
 		History.newItem(thePage.name(), true);
+	}
+
+	private static String getCurrentToken() {
+		String token = History.getToken();
+		token = StringUtil.defaultString(token, DEFAULT_PAGE.name());
+		return token;
+	}
+
+	private static void navigateToDefault() {
+		History.newItem("");
 	}
 
 	private static String removeDuplicates(String theToken) {
@@ -448,58 +517,6 @@ public class NavProcessor {
 
 		return retVal.toString();
 
-	}
-
-	public static String getTokenServiceVersionStats(boolean theAddToHistory, long theDomainPid, long theServicePid, long theServiceVersionPid) {
-		String token = "";
-		if (theAddToHistory) {
-			token = getCurrentToken();
-			if (!token.isEmpty()) {
-				token = token + SEPARATOR;
-			}
-		}
-		token = token + PagesEnum.SVS + "_" + theDomainPid + "_" + theServicePid + "_" + theServiceVersionPid;
-		token = removeDuplicates(token);
-		return token;
-	}
-
-	public static String getTokenViewServiceVersionRecentMessage(boolean theAddToHistory, long thePid) {
-		String token = "";
-		if (theAddToHistory) {
-			token = getCurrentToken();
-			if (!token.isEmpty()) {
-				token = token + SEPARATOR;
-			}
-		}
-		token = token + PagesEnum.RSV + "_" + thePid;
-		token = removeDuplicates(token);
-		return token;
-	}
-
-	public static String getTokenViewUserRecentMessage(boolean theAddToHistory, long thePid) {
-		String token = "";
-		if (theAddToHistory) {
-			token = getCurrentToken();
-			if (!token.isEmpty()) {
-				token = token + SEPARATOR;
-			}
-		}
-		token = token + PagesEnum.RUS + "_" + thePid;
-		token = removeDuplicates(token);
-		return token;
-	}
-
-	public static String getTokenAddUser(boolean theAddToHistory, long theAuthHostPid) {
-		String token = "";
-		if (theAddToHistory) {
-			token = getCurrentToken();
-			if (!token.isEmpty()) {
-				token = token + SEPARATOR;
-			}
-		}
-		token = token + PagesEnum.ADU + "_" + theAuthHostPid;
-		token = removeDuplicates(token);
-		return token;
 	}
 
 }

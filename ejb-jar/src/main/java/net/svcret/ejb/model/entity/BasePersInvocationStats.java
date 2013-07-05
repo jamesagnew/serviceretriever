@@ -37,34 +37,34 @@ public abstract class BasePersInvocationStats extends BasePersMethodStats {
 	@Column(name = "TOT_FAULT_RES_BYTES", nullable = false)
 	private long myTotalFaultResponseMessageBytes;
 
+	@Column(name = "TOT_SRV_SECURITY_FAILS", nullable = false)
+	private long myTotalServerSecurityFailures;
 	@Column(name = "TOT_SUC_INV_COUNT", nullable = false)
 	private long myTotalSuccessInvocationCount;
 	@Column(name = "TOT_SUC_INV_TIME", nullable = false)
 	private long myTotalSuccessInvocationTime;
 	@Column(name = "TOT_SUC_REQ_BYTES", nullable = false)
 	private long myTotalSuccessRequestMessageBytes;
+	
 	@Column(name = "TOT_SUC_RES_BYTES", nullable = false)
 	private long myTotalSuccessResponseMessageBytes;
-	
-	@Column(name = "TOT_SRV_SECURITY_FAILS", nullable = false)
-	private long myTotalServerSecurityFailures;
 
-	public synchronized void addServerSecurityFailInvocation() {
-		myTotalServerSecurityFailures++;
-	}
-	
 	public synchronized void addFailInvocation(long theTime, long theRequestBytes, long theResponseBytes) {
 		myTotalFailInvocationCount++;
 		myTotalFailInvocationTime += theTime;
 		myTotalFailRequestMessageBytes += theRequestBytes;
 		myTotalFailResponseMessageBytes += theResponseBytes;
 	}
-
+	
 	public synchronized void addFaultInvocation(long theTime, long theRequestBytes, long theResponseBytes) {
 		myTotalFaultInvocationCount++;
 		myTotalFaultInvocationTime += theTime;
 		myTotalFaultRequestMessageBytes += theRequestBytes;
 		myTotalFaultResponseMessageBytes += theResponseBytes;
+	}
+
+	public synchronized void addServerSecurityFailInvocation() {
+		myTotalServerSecurityFailures++;
 	}
 
 	public synchronized void addSuccessInvocation(long theTime, long theRequestBytes, long theResponseBytes) {
@@ -83,62 +83,6 @@ public abstract class BasePersInvocationStats extends BasePersMethodStats {
 			myMinSuccessResponseMessageBytes = Math.min(myMinSuccessResponseMessageBytes, theResponseBytes);
 			myMaxSuccessResponseMessageBytes = Math.max(myMaxSuccessResponseMessageBytes, theResponseBytes);
 		}
-	}
-
-	/**
-	 * @return the maxSuccessRequestMessageBytes
-	 */
-	public synchronized long getMaxSuccessRequestMessageBytes() {
-		return myMaxSuccessRequestMessageBytes;
-	}
-
-	/**
-	 * @return the maxSuccessResponseMessageBytes
-	 */
-	public synchronized long getMaxSuccessResponseMessageBytes() {
-		return myMaxSuccessResponseMessageBytes;
-	}
-
-	/**
-	 * @return the minSuccessRequestMessageBytes
-	 */
-	public synchronized long getMinSuccessRequestMessageBytes() {
-		return myMinSuccessRequestMessageBytes;
-	}
-
-	/**
-	 * @return the minSuccessResponseMessageBytes
-	 */
-	public synchronized long getMinSuccessResponseMessageBytes() {
-		return myMinSuccessResponseMessageBytes;
-	}
-
-	public synchronized long getSuccessInvocationAvgRequestBytes() {
-		if (myTotalSuccessInvocationCount == 0) {
-			return 0;
-		} else {
-			return myTotalSuccessRequestMessageBytes / myTotalSuccessInvocationCount;
-		}
-	}
-
-	public synchronized long getSuccessInvocationAvgResponseBytes() {
-		if (myTotalSuccessInvocationCount == 0) {
-			return 0;
-		} else {
-			return myTotalSuccessResponseMessageBytes / myTotalSuccessInvocationCount;
-		}
-	}
-
-	public synchronized long getSuccessInvocationAvgTime() {
-		if (myTotalSuccessInvocationCount == 0) {
-			return 0;
-		} else {
-			return myTotalSuccessInvocationTime / myTotalSuccessInvocationCount;
-		}
-	}
-
-	public synchronized long getSuccessInvocationTotalTime() {
-		return myTotalSuccessInvocationTime;
 	}
 
 	/**
@@ -197,11 +141,73 @@ public abstract class BasePersInvocationStats extends BasePersMethodStats {
 		return myTotalFaultResponseMessageBytes;
 	}
 
+	/**
+	 * @return the maxSuccessRequestMessageBytes
+	 */
+	public synchronized long getMaxSuccessRequestMessageBytes() {
+		return myMaxSuccessRequestMessageBytes;
+	}
 
 	/**
-	 * @return the totalSuccessInvocationTime
+	 * @return the maxSuccessResponseMessageBytes
 	 */
-	public synchronized long getSuccessInvocationTime() {
+	public synchronized long getMaxSuccessResponseMessageBytes() {
+		return myMaxSuccessResponseMessageBytes;
+	}
+
+	/**
+	 * @return the minSuccessRequestMessageBytes
+	 */
+	public synchronized long getMinSuccessRequestMessageBytes() {
+		return myMinSuccessRequestMessageBytes;
+	}
+
+	/**
+	 * @return the minSuccessResponseMessageBytes
+	 */
+	public synchronized long getMinSuccessResponseMessageBytes() {
+		return myMinSuccessResponseMessageBytes;
+	}
+
+	/**
+	 * @return the totalServerSecurityFailures
+	 */
+	public synchronized long getServerSecurityFailures() {
+		return myTotalServerSecurityFailures;
+	}
+
+	public abstract StatsTypeEnum getStatsType();
+
+	public synchronized long getSuccessInvocationAvgRequestBytes() {
+		if (myTotalSuccessInvocationCount == 0) {
+			return 0;
+		} else {
+			return myTotalSuccessRequestMessageBytes / myTotalSuccessInvocationCount;
+		}
+	}
+
+	public synchronized long getSuccessInvocationAvgResponseBytes() {
+		if (myTotalSuccessInvocationCount == 0) {
+			return 0;
+		} else {
+			return myTotalSuccessResponseMessageBytes / myTotalSuccessInvocationCount;
+		}
+	}
+
+
+	public synchronized long getSuccessInvocationAvgTime() {
+		if (myTotalSuccessInvocationCount == 0) {
+			return 0;
+		} else {
+			return myTotalSuccessInvocationTime / myTotalSuccessInvocationCount;
+		}
+	}
+
+	public synchronized long getSuccessInvocationCount() {
+		return myTotalSuccessInvocationCount;
+	}
+
+	public synchronized long getSuccessInvocationTotalTime() {
 		return myTotalSuccessInvocationTime;
 	}
 
@@ -212,28 +218,12 @@ public abstract class BasePersInvocationStats extends BasePersMethodStats {
 		return myTotalSuccessRequestMessageBytes;
 	}
 
+
 	/**
 	 * @return the totalSuccessResponseMessageBytes
 	 */
 	public synchronized long getSuccessResponseMessageBytes() {
 		return myTotalSuccessResponseMessageBytes;
-	}
-
-	/**
-	 * @return the totalServerSecurityFailures
-	 */
-	public synchronized long getServerSecurityFailures() {
-		return myTotalServerSecurityFailures;
-	}
-
-	public synchronized long getSuccessInvocationCount() {
-		return myTotalSuccessInvocationCount;
-	}
-
-
-	public synchronized void mergeUnsynchronizedEvents(BasePersMethodStats theStats) {
-		BasePersInvocationStats stats = (BasePersInvocationStats)theStats;
-		mergeUnsynchronizedEvents(stats);
 	}
 
 	public synchronized void mergeUnsynchronizedEvents(BasePersInvocationStats stats) {
@@ -269,13 +259,10 @@ public abstract class BasePersInvocationStats extends BasePersMethodStats {
 		}
 	}
 
-	public abstract StatsTypeEnum getStatsType();
-	
-	public static enum StatsTypeEnum{
-		INVOCATION,USER
-		
+	public synchronized void mergeUnsynchronizedEvents(BasePersMethodStats theStats) {
+		BasePersInvocationStats stats = (BasePersInvocationStats)theStats;
+		mergeUnsynchronizedEvents(stats);
 	}
-
 	
 	@Override
 	public String toString() {
@@ -301,6 +288,12 @@ public abstract class BasePersInvocationStats extends BasePersMethodStats {
 			tos.add("NoStats", true);
 		}
 		return tos.toString();
+	}
+
+	
+	public static enum StatsTypeEnum{
+		INVOCATION,USER
+		
 	}
 
 }

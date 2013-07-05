@@ -44,6 +44,8 @@ public interface IAdminService {
 
 	long getDefaultHttpClientConfigPid();
 
+	GDomainList deleteServiceVersion(long thePid) throws ProcessingException;
+	
 	GDomain getDomainByPid(long theDomain) throws ProcessingException;
 
 	long getDomainPid(String theDomainId) throws ProcessingException;

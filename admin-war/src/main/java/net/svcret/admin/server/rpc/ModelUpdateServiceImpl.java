@@ -665,4 +665,22 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		}
 	}
 
+	@Override
+	public GDomainList removeServiceVersion(long thePid) throws ServiceFailureException {
+		Validate.greaterThanZero(thePid, "PID");
+		ourLog.info("Removing service version {}", thePid);
+		
+		if (isMockMode()) {
+			return myMock.removeServiceVersion(thePid);
+		}
+		
+		try {
+			return myAdminSvc.deleteServiceVersion(thePid);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to delete service version", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+		
+	}
+
 }

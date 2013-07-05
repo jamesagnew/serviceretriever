@@ -42,13 +42,13 @@ import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 @Local
 public interface IDao {
 
-	Collection<PersMonitorRule> getMonitorRules();
-	
 	void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost);
 
 	void deleteHttpClientConfig(PersHttpClientConfig theConfig);
 
 	void deleteService(PersService theService);
+
+	void deleteServiceVersion(BasePersServiceVersion theSv);
 
 	void deleteUser(PersUser theUser);
 
@@ -57,8 +57,6 @@ public interface IDao {
 	Collection<PersDomain> getAllDomains();
 
 	Collection<PersService> getAllServices();
-
-	PersMonitorRule saveOrCreateMonitorRule(PersMonitorRule theRule);
 
 	Collection<PersServiceVersionSoap11> getAllServiceVersions();
 
@@ -88,6 +86,8 @@ public interface IDao {
 	BasePersInvocationStats getInvocationUserStats(PersInvocationUserStatsPk thePk);
 
 	List<PersInvocationUserStats> getInvocationUserStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff);
+
+	Collection<PersMonitorRule> getMonitorRules();
 
 	PersAuthenticationHostLdap getOrCreateAuthenticationHostLdap(String theModuleId) throws ProcessingException;
 
@@ -150,6 +150,8 @@ public interface IDao {
 	void saveInvocationStats(Collection<BasePersMethodStats> theStats);
 
 	void saveInvocationStats(Collection<BasePersMethodStats> theStats, List<BasePersMethodStats> theStatsToDelete);
+
+	PersMonitorRule saveOrCreateMonitorRule(PersMonitorRule theRule);
 
 	void saveRecentMessagesAndTrimInNewTransaction(BaseUnflushed<? extends BasePersRecentMessage> theNextTransactions);
 

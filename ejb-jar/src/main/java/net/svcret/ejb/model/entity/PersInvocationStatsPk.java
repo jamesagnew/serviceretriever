@@ -17,6 +17,10 @@ public class PersInvocationStatsPk extends BasePersInvocationMethodStatsPk {
 		super(theInterval, theStartTime, theMethod);
 	}
 
+	public PersInvocationStatsPk(InvocationStatsIntervalEnum theInterval, long theStartTime, PersServiceVersionMethod theMethod) {
+		super(theInterval, new Date(theStartTime), theMethod);
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */

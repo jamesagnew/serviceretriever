@@ -624,4 +624,18 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		return retVal;
 	}
 
+	@Override
+	public GDomainList removeServiceVersion(long thePid) {
+		for (GDomain nextDomain : myDomainList) {
+			for (GService nextSvc : nextDomain.getServiceList()) {
+				BaseGServiceVersion ver = nextSvc.getVersionList().getVersionByPid(thePid);
+				if (ver!=null) {
+					nextSvc.getVersionList().remove(ver);
+				}
+			}
+		}
+		
+		return myDomainList;
+	}
+
 }

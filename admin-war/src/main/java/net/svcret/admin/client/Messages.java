@@ -634,4 +634,13 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("HTTP Basic Auth")
 	String httpBasicAuthServerSecurity_Name();
 
+	@DefaultMessage("Delete Service Version")
+	String deleteServiceVersion_Breadcrumb();
+
+	@DefaultMessage("Delete Service Version")
+	String deleteServiceVersionPanel_Title();
+
+	@DefaultMessage("Are you sure you want to delete the service version \"{0}\"?")
+	String deleteServiceVersionPanel_Confirm(String theId);
+
 }

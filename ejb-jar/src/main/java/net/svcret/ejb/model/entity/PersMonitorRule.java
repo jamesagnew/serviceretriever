@@ -2,11 +2,12 @@ package net.svcret.ejb.model.entity;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -24,6 +25,12 @@ public class PersMonitorRule extends BasePersObject {
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myRule")
 	private Collection<PersMonitorAppliesTo> myAppliesTo;
+
+	@Column(name = "FIRE_FOR_LATENCY_MILLIS", nullable = true)
+	private Integer myFireForBackingServiceLatencyIsAboveMillis;
+
+	@Column(name = "FIRE_FOR_LATENCY_SUS_MINS", nullable = true)
+	private Integer myFireForBackingServiceLatencySustainTimeMins;
 
 	@Column(name = "FIRE_FOR_ALL_URLS")
 	private boolean myFireIfAllBackingUrlsAreUnavailable;
@@ -50,6 +57,20 @@ public class PersMonitorRule extends BasePersObject {
 			myAppliesTo = new ArrayList<PersMonitorAppliesTo>();
 		}
 		return myAppliesTo;
+	}
+
+	/**
+	 * @return the fireForBackingServiceLatencyIsAboveMillis
+	 */
+	public Integer getFireForBackingServiceLatencyIsAboveMillis() {
+		return myFireForBackingServiceLatencyIsAboveMillis;
+	}
+
+	/**
+	 * @return the fireForBackingServiceLatencySustainTimeMins
+	 */
+	public Integer getFireForBackingServiceLatencySustainTimeMins() {
+		return myFireForBackingServiceLatencySustainTimeMins;
 	}
 
 	public Collection<PersMonitorRuleNotifyContact> getNotifyContact() {
@@ -80,6 +101,27 @@ public class PersMonitorRule extends BasePersObject {
 		return myRuleActive;
 	}
 
+	/**
+	 * @param theFireForBackingServiceLatencyIsAboveMillis
+	 *            the fireForBackingServiceLatencyIsAboveMillis to set
+	 */
+	public void setFireForBackingServiceLatencyIsAboveMillis(Integer theFireForBackingServiceLatencyIsAboveMillis) {
+		if (theFireForBackingServiceLatencyIsAboveMillis != null) {
+			if (theFireForBackingServiceLatencyIsAboveMillis < 1) {
+				throw new IllegalArgumentException("Invalid value: " + theFireForBackingServiceLatencyIsAboveMillis);
+			}
+		}
+		myFireForBackingServiceLatencyIsAboveMillis = theFireForBackingServiceLatencyIsAboveMillis;
+	}
+
+	/**
+	 * @param theFireForBackingServiceLatencySustainTimeMins
+	 *            the fireForBackingServiceLatencySustainTimeMins to set
+	 */
+	public void setFireForBackingServiceLatencySustainTimeMins(Integer theFireForBackingServiceLatencySustainTimeMins) {
+		myFireForBackingServiceLatencySustainTimeMins = theFireForBackingServiceLatencySustainTimeMins;
+	}
+
 	public void setFireIfAllBackingUrlsAreUnavailable(boolean theFireIfAllBackingUrlsAreUnavailable) {
 		myFireIfAllBackingUrlsAreUnavailable = theFireIfAllBackingUrlsAreUnavailable;
 	}
@@ -94,6 +136,16 @@ public class PersMonitorRule extends BasePersObject {
 
 	public void setRuleName(String theRuleName) {
 		myRuleName = theRuleName;
+	}
+
+	public Set<BasePersServiceVersion> toAppliesToServiceVersions() {
+		HashSet<BasePersServiceVersion> retVal = new HashSet<BasePersServiceVersion>();
+
+		for (PersMonitorAppliesTo next : getAppliesTo()) {
+			retVal.addAll(next.getItem().getAllServiceVersions());
+		}
+
+		return retVal;
 	}
 
 }

@@ -85,4 +85,6 @@ public interface ModelUpdateServiceAsync {
 
 	void loadServiceVersionDetailedStats(long theVersionPid, AsyncCallback<GServiceVersionDetailedStats> theAsyncCallback);
 
+	void removeServiceVersion(long thePid, AsyncCallback<GDomainList> theAsyncCallback);
+
 }

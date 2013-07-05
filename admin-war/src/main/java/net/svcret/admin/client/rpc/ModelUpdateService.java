@@ -144,4 +144,6 @@ public interface ModelUpdateService extends RemoteService {
 
 	GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws ServiceFailureException;
 
+	GDomainList removeServiceVersion(long thePid) throws ServiceFailureException;
+
 }

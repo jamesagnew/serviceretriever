@@ -10,13 +10,13 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name="PX_MONITOR_APPLIES_TO")
+@Table(name = "PX_MONITOR_APPLIES_TO")
 public class PersMonitorAppliesTo extends BasePersObject {
 
 	private static final long serialVersionUID = 1L;
-	
-	@ManyToOne(cascade= {}, optional=true)
-	@JoinColumn(name="DOMAIN_PID", nullable=true)
+
+	@ManyToOne(cascade = {}, optional = true)
+	@JoinColumn(name = "DOMAIN_PID", nullable = true)
 	private PersDomain myDomain;
 
 	@Id
@@ -24,21 +24,17 @@ public class PersMonitorAppliesTo extends BasePersObject {
 	@Column(name = "PID")
 	private Long myPid;
 
-	@ManyToOne(cascade= {}, optional=false)
-	@JoinColumn(name="RULE_PID", nullable=false)
+	@ManyToOne(cascade = {}, optional = false)
+	@JoinColumn(name = "RULE_PID", nullable = false)
 	private PersMonitorRule myRule;
-	
-	@ManyToOne(cascade= {}, optional=true)
-	@JoinColumn(name="SVC_PID", nullable=true)
+
+	@ManyToOne(cascade = {}, optional = true)
+	@JoinColumn(name = "SVC_PID", nullable = true)
 	private PersService myService;
 
-	@ManyToOne(cascade= {}, optional=true)
-	@JoinColumn(name="SVCVER_PID", nullable=true)
+	@ManyToOne(cascade = {}, optional = true)
+	@JoinColumn(name = "SVCVER_PID", nullable = true)
 	private BasePersServiceVersion myServiceVersion;
-
-	public PersDomain getDomain() {
-		return myDomain;
-	}
 
 	@Override
 	public Long getPid() {
@@ -49,29 +45,31 @@ public class PersMonitorAppliesTo extends BasePersObject {
 		return myRule;
 	}
 
-	public PersService getService() {
-		return myService;
-	}
-
-	public BasePersServiceVersion getServiceVersion() {
-		return myServiceVersion;
-	}
-
-	public void setDomain(PersDomain theDomain) {
-		myDomain = theDomain;
-	}
-
 	public void setRule(PersMonitorRule theRule) {
 		myRule = theRule;
 	}
 
-	public void setService(PersService theService) {
-		myService = theService;
+	public void setItem(BasePersServiceCatalogItem theItem) {
+		myDomain = null;
+		myService = null;
+		myServiceVersion = null;
+		if (theItem instanceof PersDomain) {
+			myDomain = (PersDomain) theItem;
+		} else if (theItem instanceof PersService) {
+			myService = (PersService) theItem;
+		} else if (theItem instanceof BasePersServiceVersion) {
+			myServiceVersion = (BasePersServiceVersion) theItem;
+		}
 	}
 
-	public void setServiceVersion(BasePersServiceVersion theServiceVersion) {
-		myServiceVersion = theServiceVersion;
+	public BasePersServiceCatalogItem getItem() {
+		if (myDomain != null) {
+			return myDomain;
+		}
+		if (myService != null) {
+			return myService;
+		}
+		return myServiceVersion;
 	}
 
-	
 }

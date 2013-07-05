@@ -121,7 +121,6 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		mySoapInvoker = mock(IServiceInvoker.class, new DefaultAnswer());
 		mySvc.setInvokerSoap11(mySoapInvoker);
 
-
 		mySecSvc = new SecurityServiceBean();
 		mySecSvc.setPersSvc(myDao);
 		mySecSvc.setBroadcastSender(myBroadcastSender);
@@ -132,8 +131,6 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		mySvcReg.setDao(myDao);
 		mySvc.setServiceRegistry(mySvcReg);
 
-		
-		
 		DefaultAnswer.setDesignTime();
 	}
 
@@ -479,20 +476,20 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		GConfig config = mySvc.loadConfig();
-		
+
 		newEntityManager();
 
 		config.getProxyUrlBases().clear();
 		config.getProxyUrlBases().add("http://foo");
-		
+
 		config = mySvc.saveConfig(config);
-		
+
 		newEntityManager();
 
 		config = mySvc.loadConfig();
 		assertEquals(1, config.getProxyUrlBases().size());
 		assertEquals("http://foo", config.getProxyUrlBases().get(0));
-		
+
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -520,6 +517,45 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		assertEquals("svc_name", service.getName());
 
 		assertFalse(service.isStatsInitialized());
+
+	}
+
+	@Test
+	public void testRenameServiceVersion() throws ProcessingException {
+		newEntityManager();
+
+		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
+
+		newEntityManager();
+
+		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setHttpClientConfigPid(hcc.getPid());
+
+		List<GResource> resources = new ArrayList<GResource>();
+		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
+
+		newEntityManager();
+
+		PersDomain pDomain = myDao.getDomainByPid(d1.getPid());
+		Collection<BasePersServiceVersion> versions = pDomain.getServices().iterator().next().getVersions();
+
+		assertEquals(1, versions.size());
+
+		d1s1v1.setId("newId");
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
+
+		newEntityManager();
+
+		pDomain = myDao.getDomainByPid(d1.getPid());
+		versions = pDomain.getServices().iterator().next().getVersions();
+
+		assertEquals(1, versions.size());
 
 	}
 
@@ -566,6 +602,52 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		assertEquals(2, pVersion.getUrls().size());
 		assertEquals("url1", pVersion.getUrls().get(0).getUrlId());
 		assertEquals("url2", pVersion.getUrls().get(1).getUrlId());
+
+	}
+
+	@Test
+	public void testDeleteServiceVersion() throws ProcessingException {
+		newEntityManager();
+
+		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
+
+		newEntityManager();
+
+		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setHttpClientConfigPid(hcc.getPid());
+
+		List<GResource> resources = new ArrayList<GResource>();
+		resources.add(new GResource("http://foo", "text/xml", "contents1"));
+		resources.add(new GResource("http://bar", "text/xml", "contents2"));
+
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", "http://url1"));
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", "http://url2"));
+
+		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
+
+		newEntityManager();
+
+		PersDomain pDomain = myDao.getDomainByPid(d1.getPid());
+		Collection<BasePersServiceVersion> versions = pDomain.getServices().iterator().next().getVersions();
+
+		assertEquals(1, versions.size());
+
+		newEntityManager();
+
+		mySvc.deleteServiceVersion(d1s1v1.getPid());
+
+		newEntityManager();
+
+		pDomain = myDao.getDomainByPid(d1.getPid());
+		versions = pDomain.getServices().iterator().next().getVersions();
+
+		assertEquals(0, versions.size());
 
 	}
 
@@ -709,9 +791,9 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	@Test
 	public void testMultipleStatsLoadsInParallel() throws Exception {
 		newEntityManager();
-		
+
 		myConfigSvc.getConfig();
-		
+
 		newEntityManager();
 
 		PersDomain d0 = myDao.getOrCreateDomainWithId("d0");

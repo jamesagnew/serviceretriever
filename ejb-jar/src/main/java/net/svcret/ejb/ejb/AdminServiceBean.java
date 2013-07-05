@@ -503,7 +503,7 @@ public class AdminServiceBean implements IAdminService {
 
 		String versionId = theVersion.getId();
 
-		BasePersServiceVersion version = fromUi(theVersion, service, versionId);
+		BasePersServiceVersion version = fromUi(theVersion, service, theVersion.getPidOrNull(), versionId);
 
 		Map<String, PersServiceVersionResource> uriToResource = version.getUriToResource();
 		Set<String> urls = new HashSet<String>();
@@ -636,12 +636,19 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private <T extends BaseGServiceVersion> BasePersServiceVersion fromUi(T theVersion, PersService theService, String theVersionId) throws ProcessingException {
+	private <T extends BaseGServiceVersion> BasePersServiceVersion fromUi(T theVersion, PersService theService, Long theVersionPid, String theVersionId) throws ProcessingException {
 		Validate.notNull(theVersion);
 		Validate.notNull(theService);
 		Validate.notBlank(theVersionId);
 
-		BasePersServiceVersion retVal = myServiceRegistry.getOrCreateServiceVersionWithId(theService, theVersion.getProtocol(), theVersionId);
+		BasePersServiceVersion retVal;
+		
+		if (theVersionPid!=null) {
+			retVal = myDao.getServiceVersionByPid(theVersionPid);
+		}else {
+			retVal = myServiceRegistry.getOrCreateServiceVersionWithId(theService, theVersion.getProtocol(), theVersionId);
+		}
+		
 		switch (theVersion.getProtocol()) {
 		case SOAP11:
 			fromUi((PersServiceVersionSoap11) retVal, (GSoap11ServiceVersion) theVersion);
@@ -1984,6 +1991,20 @@ public class AdminServiceBean implements IAdminService {
 		Date start = new Date(System.currentTimeMillis() - (theRange.getRange().getNumMins()*60*1000L));
 		Date end=new Date();
 		doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator, start, end);
+	}
+
+	@Override
+	public GDomainList deleteServiceVersion(long thePid) throws ProcessingException {
+		ourLog.info("Deleting service version {}", thePid);
+		
+		BasePersServiceVersion sv = myDao.getServiceVersionByPid(thePid);
+		if (sv==null) {
+			throw new ProcessingException("Unknown service version ID:"+thePid);
+		}
+		
+		myDao.deleteServiceVersion(sv);
+		
+		return loadDomainList();
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {

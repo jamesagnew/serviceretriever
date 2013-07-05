@@ -147,6 +147,7 @@ public class LeftBarPanel extends FlowPanel {
 		case RSV:
 		case RUS:
 		case VUS:
+		case DSV:
 			break;
 		}
 		
