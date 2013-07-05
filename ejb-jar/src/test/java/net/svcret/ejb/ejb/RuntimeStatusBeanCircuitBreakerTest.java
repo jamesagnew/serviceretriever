@@ -121,7 +121,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		when(httpConfig.isCircuitBreakerEnabled()).thenReturn(true);
 		when(httpConfig.getCircuitBreakerTimeBetweenResetAttempts()).thenReturn(200);
 		
-		DefaultAnswer.setRunTime();
+//		DefaultAnswer.setRunTime();
 		
 		/*
 		 * Normal
@@ -151,7 +151,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		when(httpResponse.getFailedUrls()).thenReturn(failures);
 		when(httpResponse.getSuccessfulUrl()).thenReturn(persUrl2);
 
-		DefaultAnswer.setRunTime();
+//		DefaultAnswer.setRunTime();
 		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse);
 		pool = myBean.buildUrlPool(svcVersion);
 		assertEquals(persUrl2, pool.getPreferredUrl());

@@ -89,6 +89,8 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	}
 
 	private void doFlush() {
+		ourLog.debug("Flushing recent transactions");
+		
 		doFlush(myUnflushedMessages);
 		doFlush(myUnflushedUserMessages);
 	}
@@ -180,6 +182,9 @@ public class TransactionLoggerBean implements ITransactionLogger {
 			Validate.notNull(theTransactionTime);
 
 			Integer keepRecent = theServiceVersion.determineKeepNumRecentTransactions(theInvocationResponse.getResponseType());
+			
+			ourLog.debug("Keeping {} recent SvcVer transactions for response type {}", keepRecent, theInvocationResponse.getResponseType());
+			
 			if (keepRecent != null && keepRecent > 0) {
 
 				PersServiceVersionRecentMessage message = new PersServiceVersionRecentMessage();
@@ -240,6 +245,9 @@ public class TransactionLoggerBean implements ITransactionLogger {
 			Validate.notNull(theInvocationResponse);
 
 			Integer keepNum = theUser.getAuthenticationHost().determineKeepNumRecentTransactions(theInvocationResponse.getResponseType());
+			
+			ourLog.debug("Keeping {} recent User transactions for response type {}", keepNum, theInvocationResponse.getResponseType());
+
 			if (keepNum != null && keepNum > 0) {
 
 				PersUserRecentMessage userMessage = new PersUserRecentMessage();

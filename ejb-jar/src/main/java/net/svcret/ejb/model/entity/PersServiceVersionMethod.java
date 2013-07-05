@@ -25,16 +25,19 @@ public class PersServiceVersionMethod extends BasePersObject {
 
 	@Column(name="METHOD_ORDER", nullable=false)
 	private int myOrder;
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "PID")
 	private Long myPid;
 
+	@Column(name = "ROOT_ELEMENTS", length = 1000, nullable=true)
+	private String myRootElements;
+
 	@ManyToOne()
 	@JoinColumn(name = "SVC_VERSION_PID", referencedColumnName = "PID", nullable = false)
 	private BasePersServiceVersion myServiceVersion;
-
+	
 	/**
 	 * Constructor
 	 */
@@ -57,7 +60,7 @@ public class PersServiceVersionMethod extends BasePersObject {
 	public String getName() {
 		return myName;
 	}
-	
+
 	/**
 	 * @return the optLock
 	 */
@@ -71,12 +74,16 @@ public class PersServiceVersionMethod extends BasePersObject {
 	public int getOrder() {
 		return myOrder;
 	}
-
+	
 	/**
 	 * @return the id
 	 */
 	public Long getPid() {
 		return myPid;
+	}
+
+	public String getRootElements() {
+		return myRootElements;
 	}
 
 	/**
@@ -88,6 +95,10 @@ public class PersServiceVersionMethod extends BasePersObject {
 
 	public void loadAllAssociations() {
 		// nothing
+	}
+
+	public void merge(PersServiceVersionMethod theObj) {
+		setName(theObj.getName());
 	}
 
 	/**
@@ -121,6 +132,10 @@ public class PersServiceVersionMethod extends BasePersObject {
 		myPid = theId;
 	}
 
+	public void setRootElements(String theRootElements) {
+		myRootElements = theRootElements;
+	}
+
 	/**
 	 * @param theServiceVersion
 	 *            the serviceVersion to set
@@ -138,10 +153,6 @@ public class PersServiceVersionMethod extends BasePersObject {
 		
 		myServiceVersion = theServiceVersion;
 //		theServiceVersion.addMethod(this);
-	}
-
-	public void merge(PersServiceVersionMethod theObj) {
-		setName(theObj.getName());
 	}
 
 }

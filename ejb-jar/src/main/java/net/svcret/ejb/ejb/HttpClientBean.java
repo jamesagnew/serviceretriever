@@ -127,6 +127,7 @@ public class HttpClientBean implements IHttpClient {
 		params.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, theUrlPool.getConnectTimeoutMillis());
 		params.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, theUrlPool.getReadTimeoutMillis());
 		params.setBooleanParameter(CoreConnectionPNames.STALE_CONNECTION_CHECK, false);
+		params.setBooleanParameter(CoreConnectionPNames.SO_KEEPALIVE, true);
 
 		ContentType contentType = ContentType.create(theContentType, ourDefaultCharset);
 		HttpEntity postEntity = new StringEntity(theContentBody, contentType);
@@ -243,7 +244,7 @@ public class HttpClientBean implements IHttpClient {
 		HttpParams params = new BasicHttpParams();
 		params.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, 10 * 1000);
 		params.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, 10 * 1000);
-		params.setBooleanParameter(CoreConnectionPNames.STALE_CONNECTION_CHECK, false);
+		params.setBooleanParameter(CoreConnectionPNames.STALE_CONNECTION_CHECK, true);
 
 		myDefaultClient = new DefaultHttpClient(myConMgr, params);
 	}

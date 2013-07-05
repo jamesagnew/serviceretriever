@@ -147,7 +147,7 @@ public class Soap11ServiceInvokerTest {
 
 		PersServiceVersionSoap11 serviceVer = mock(PersServiceVersionSoap11.class);
 		PersService service = mock(PersService.class);
-		when(serviceVer.getMethod("getPatientByMrnBAD")).thenReturn(null);
+		when(serviceVer.getMethodForRootElementName("http://ws.ehr.uhn.ca:getPatientByMrnBAD")).thenReturn(null);
 		when(serviceVer.getService()).thenReturn(service);
 		when(service.getServiceName()).thenReturn("MyServiceName");
 		when(serviceVer.getClientAuths()).thenReturn(new ArrayList<PersBaseClientAuth<?>>());
@@ -163,7 +163,7 @@ public class Soap11ServiceInvokerTest {
 
 		verify(serviceVer, atLeastOnce()).getClientAuths();
 		verify(serviceVer, atLeastOnce()).getServerAuths();
-		verify(serviceVer, atLeastOnce()).getMethod("getPatientByMrnBAD");
+		verify(serviceVer, atLeastOnce()).getMethodForRootElementName("http://ws.ehr.uhn.ca:getPatientByMrnBAD");
 		verify(serviceVer, atLeastOnce()).getService();
 		verify(service, atLeastOnce()).getServiceName();
 		verifyNoMoreInteractions(serviceVer, service);
@@ -186,7 +186,7 @@ public class Soap11ServiceInvokerTest {
 		PersServiceVersionSoap11 serviceVer = mock(PersServiceVersionSoap11.class);
 		PersService service = mock(PersService.class);
 		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class);
-		when(serviceVer.getMethod("getPatientByMrn")).thenReturn(method);
+		when(serviceVer.getMethodForRootElementName("http://ws.ehr.uhn.ca:getPatientByMrn")).thenReturn(method);
 		when(serviceVer.getClientAuths()).thenReturn(clientAuths);
 		when(serviceVer.getServerAuths()).thenReturn(serverAuths);
 
@@ -208,7 +208,7 @@ public class Soap11ServiceInvokerTest {
 		
 		verify(serviceVer, atLeastOnce()).getClientAuths();
 		verify(serviceVer, atLeastOnce()).getServerAuths();
-		verify(serviceVer, atLeastOnce()).getMethod("getPatientByMrn");
+		verify(serviceVer, atLeastOnce()).getMethodForRootElementName("http://ws.ehr.uhn.ca:getPatientByMrn");
 		verifyNoMoreInteractions(serviceVer, service, method);
 	}
 
@@ -402,7 +402,40 @@ public class Soap11ServiceInvokerTest {
 		assertEquals(1, def.getUrls().size());
 		assertEquals("http://uhnvesb01d.uhn.on.ca:18780/tst-uhn-ehr-ws/services/ehrPatientService", def.getUrls().get(0).getUrl());
 		
+		
 	}
 	
+	@Test
+	public void testIntrospectDocumentServiceFromUrl() throws Throwable {
+		
+		Soap11ServiceInvoker svc = new Soap11ServiceInvoker();
+		
+		IHttpClient httpClient = mock(IHttpClient.class);
+		svc.setHttpClient(httpClient);
 
+		String wsdlBody = IOUtils.readClasspathIntoString("/wsdl/journal.wsdl");
+		String wsdlUrl = "http://foo/wsdl.wsdl";
+		when(httpClient.get(wsdlUrl)).thenReturn(new HttpResponseBean(null, "text/xml", 200, wsdlBody));
+
+		when(httpClient.get("http://foo/journal_1.xsd")).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_1.xsd")));
+		when(httpClient.get("http://foo/journal_12.xsd")).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_12.xsd")));
+		when(httpClient.get("http://foo/journal_14.xsd")).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_14.xsd")));
+		when(httpClient.get("http://foo/journal_4.xsd")).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_4.xsd")));
+		when(httpClient.get("http://foo/journal_5.xsd")).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_5.xsd")));
+		when(httpClient.get("http://foo/journal_7.xsd")).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_7.xsd")));
+		
+		DefaultAnswer.setRunTime();
+		
+		PersServiceVersionSoap11 def;
+		def = svc.introspectServiceFromUrl(wsdlUrl);
+		
+		assertEquals(5, def.getMethods().size());
+		
+		assertEquals("journal", def.getMethods().get(0).getName());
+		assertEquals("urn:sail:xsd:canonical:hl7v2:CanonicalHl7V2MessageElement", def.getMethods().get(0).getRootElements());
+
+		
+	}
+
+	
 }

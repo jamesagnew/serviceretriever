@@ -1,9 +1,11 @@
 package net.svcret.admin.client.ui.config.svcver;
 
 import net.svcret.admin.client.AdminPortal;
+import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.HtmlLabel;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
+import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
@@ -16,6 +18,7 @@ import net.svcret.admin.shared.model.GServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.util.StringUtil;
 
+import com.google.gwt.dom.client.Style.Float;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -23,6 +26,7 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
@@ -50,6 +54,10 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 	Long myUncommittedSessionId;
 	BaseGServiceVersion myVersion;
 	TextBox myVersionTextBox;
+	private FlowPanel myProxyPathPanel;
+	private FlowPanel myProxyPathContentPanel;
+	private CheckBox myExplicitProxyPathEnabledCheckbox;
+	private TextBox myExplicitProxyPathTextbox;
 
 	public AbstractServiceVersionPanel() {
 		this(null, null, null);
@@ -142,19 +150,50 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 		addTypeSelector();
 
 		PButton saveButton = new PButton(AdminPortal.IMAGES.iconSave(), AdminPortal.MSGS.actions_Save());
+		saveButton.getElement().getStyle().setFloat(Float.LEFT);
 		myContentPanel.add(saveButton);
 		saveButton.addClickHandler(new SaveClickHandler());
 
 		myLoadingSpinner = new LoadingSpinner();
 		myContentPanel.add(myLoadingSpinner);
+		
+		myContentPanel.add(new HtmlBr());
+
+		addExplicitProxyPathPanel();
 
 		/*
-		 * The following panel contains the rest of the screen (i.e. no
-		 * background, so that it can have lots of contents
+		 * The following panel contains the rest of the screen (i.e. no background, so that it can have lots of contents
 		 */
 
 		myBottomPanel = new FlowPanel();
 		add(myBottomPanel);
+
+	}
+
+	private void addExplicitProxyPathPanel() {
+		myProxyPathPanel = new FlowPanel();
+		add(myProxyPathPanel);
+
+		myProxyPathPanel.setStylePrimaryName("mainPanel");
+
+		Label titleLabel = new Label("Explicit Service Path");
+		titleLabel.setStyleName("mainPanelTitle");
+		myProxyPathPanel.add(titleLabel);
+
+		myProxyPathContentPanel = new FlowPanel();
+		myProxyPathContentPanel.addStyleName("contentInnerPanel");
+		myProxyPathPanel.add(myProxyPathContentPanel);
+
+		Label intro = new Label("If specified, the options below define the path at which " + "the service will be deployed. If not specified, a default will be used.");
+		myProxyPathContentPanel.add(intro);
+
+		TwoColumnGrid grid = new TwoColumnGrid();
+		myProxyPathContentPanel.add(grid);
+
+		myExplicitProxyPathEnabledCheckbox = new CheckBox("Use Explicit Proxy Path:");
+		myExplicitProxyPathTextbox = new TextBox();
+
+		grid.addRow(myExplicitProxyPathEnabledCheckbox, myExplicitProxyPathTextbox);
 
 	}
 
@@ -267,6 +306,10 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 
 		myBottomPanel.clear();
 		myBottomPanel.add(myBottomContents);
+
+		myExplicitProxyPathEnabledCheckbox.setValue(theResult.getExplicitProxyPath() != null);
+		myExplicitProxyPathTextbox.setValue(theResult.getExplicitProxyPath());
+
 	}
 
 	void initParents(GDomainList theDomainList) {
@@ -320,10 +363,27 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 				serviceId = null;
 			}
 
+			if (myExplicitProxyPathEnabledCheckbox.getValue()) {
+				String newPath = myExplicitProxyPathTextbox.getValue();
+				if (StringUtil.isBlank(newPath)) {
+					myLoadingSpinner.showMessage("Explicit proxy path is enabled, but no path is specified.", false);
+					myExplicitProxyPathTextbox.setFocus(true);
+					return;
+				}
+				if (!newPath.startsWith("/") || newPath.length() < 2) {
+					myLoadingSpinner.showMessage("Explicit proxy path must be of the form /[path[/more path]]", false);
+					myExplicitProxyPathTextbox.setFocus(true);
+					return;
+				}
+				myVersion.setExplicitProxyPath(newPath);
+			} else {
+				myVersion.setExplicitProxyPath(null);
+			}
+
 			if (!myBottomContents.validateValuesAndApplyIfGood()) {
 				return;
 			}
-			
+
 			AsyncCallback<AddServiceVersionResponse> callback = new AsyncCallback<AddServiceVersionResponse>() {
 				@Override
 				public void onFailure(Throwable theCaught) {
@@ -349,7 +409,6 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 
 			AdminPortal.MODEL_SVC.addServiceVersion(myDomainPid, domainId, myServicePid, serviceId, myVersion, callback);
 		}
-
 
 	}
 }

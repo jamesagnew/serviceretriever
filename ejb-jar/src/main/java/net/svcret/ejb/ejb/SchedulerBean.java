@@ -47,6 +47,7 @@ public class SchedulerBean implements IScheduler {
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	public void collapseStats() {
 		try {
+			ourLog.debug("collapseStats()");
 			myStatsSvc.collapseStats();
 		} catch (Exception e) {
 			ourLog.error("Failed to collapse stats", e);
@@ -69,6 +70,7 @@ public class SchedulerBean implements IScheduler {
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	public void flushStats() {
 		try {
+			ourLog.debug("flushStats()");
 			myStatsSvc.flushStatus();
 		} catch (Exception e) {
 			ourLog.error("Failed to flush stats", e);
@@ -79,6 +81,7 @@ public class SchedulerBean implements IScheduler {
 	@Schedule(second = "0", minute = "*", hour = "*")
 	public void flushTransactionLogs() {
 		try {
+			ourLog.debug("flushTransactionLogs()");
 			myTransactionLogger.flush();
 		} catch (Exception e) {
 			ourLog.error("Failed to flush transaction logs", e);

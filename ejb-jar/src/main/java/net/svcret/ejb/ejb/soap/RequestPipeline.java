@@ -102,7 +102,7 @@ class RequestPipeline {
 					StartElement elem = (StartElement) nextEvent;
 					if (haveProcessedBody) {
 						if (myMethodName == null) {
-							setMethodName(elem.getName().getLocalPart());
+							setMethodName(elem.getName().getNamespaceURI()+":"+elem.getName().getLocalPart());
 						}
 					} else if (Constants.SOAPENV11_HEADER_QNAME.equals(elem.getName())) {
 						processHeader(elem.getName().getPrefix(), streamReader, streamWriter);

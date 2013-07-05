@@ -145,30 +145,35 @@ public class Sparkline extends Widget {
 		sparkOptions['height'] = theHeight;
 		sparkOptions['width'] = theWidth;
 		sparkOptions['type'] = theType;
-		sparkOptions['tooltipFormat'] = '{{offset:names}} - {{value}}';
+		sparkOptions['tooltipFormat'] = '{{offset:names}} - {{offset:values}}';
 		if (theType == 'bar') {
-			sparkOptions['barWidth'] = 1;
+			sparkOptions['barWidth'] = 2;
+			sparkOptions['barSpacing'] = 0;
+			sparkOptions['barColor'] = '#AAD';
 		}
 
 		if (theTimelines != null) {
 			var rangeNames = new Object();
 			sparkOptions['tooltipValueLookups'] = rangeNames;
 			rangeNames.names = new Array();
+			rangeNames.values = new Array();
 
-			var splitValues = theTimelines.split(",");
-			var values = new Array();
-			for ( var i = 0; i < splitValues.length; i++) {
-				rangeNames.names[i] = splitValues[i];
+			var splitValues = theValues.split(",");
+			var splitTimes = theTimelines.split(",");
+			for ( var i = 0; i < splitTimes.length; i++) {
+				rangeNames.names[i] = splitTimes[i];
+				rangeNames.values[i] = splitValues[i];
 			}
 			
 		}
-		
+
 		var splitValues = theValues.split(",");
 		var values = new Array();
 		for ( var i = 0; i < splitValues.length; i++) {
 			values[i] = parseInt(splitValues[i]);
 		}
 
+		
 		$wnd.jQuery(theElement).sparkline(values, sparkOptions);
 	}-*/;
 

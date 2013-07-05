@@ -3,6 +3,7 @@ package net.svcret.admin.server.rpc;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -120,7 +121,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		List<GResource> resList = getServiceVersionResourcesFromSession(uncommittedSessionId);
 		if (resList == null) {
 			ourLog.info("Unable to find a resource collection in the session with ID " + uncommittedSessionId);
-			throw new ServiceFailureException("An internal failure occurred, please reload the WSDL for this service and try again.");
+			resList = new ArrayList<GResource>();
 		}
 
 		long domain;
@@ -186,7 +187,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 			String key = SESSION_PREFIX_UNCOMITTED_SVC_VER + theUncommittedId;
 			retVal = (BaseGServiceVersion) session.getAttribute(key);
 			if (retVal != null && retVal.getProtocol() == theProtocol) {
-				ourLog.info("Retrieving SOAP 1.1 Service Version with uncommitted ID[{}]", theUncommittedId);
+				ourLog.info("Retrieving {} Service Version with uncommitted ID[{}]", retVal.getProtocol().name(), theUncommittedId);
 				return retVal;
 			}
 		}
@@ -222,7 +223,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		String key = SESSION_PREFIX_UNCOMITTED_SVC_VER + sessionId;
 		session.setAttribute(key, retVal);
 
-		ourLog.info("Creating SOAP 1.1 Service Version with uncommitted ID[{}]", sessionId);
+		ourLog.info("Creating {} Service Version with uncommitted UNC_ID[{}]", theProtocol.name(), sessionId);
 
 		return retVal;
 	}
@@ -274,7 +275,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 			} else {
 				retVal = myAdminSvc.loadModelUpdate(theRequest);
 			}
-		} catch (ProcessingException e) {
+		} catch (Throwable e) {
 			ourLog.error("Failed to load model update", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
@@ -562,7 +563,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		Validate.notNull(theServiceVersion, "ServiceVersion");
 		Validate.notNull(theServiceVersion.getUncommittedSessionId(), "ServiceVersion#UncommittedSessionId");
 
-		ourLog.info("Saving Service Version[{}] to Session", theServiceVersion.getUncommittedSessionId());
+		ourLog.info("Saving Service Version UNC_ID[{}] PID[{}] to Session", theServiceVersion.getUncommittedSessionId(), theServiceVersion.getPidOrNull());
 
 		String key = SESSION_PREFIX_UNCOMITTED_SVC_VER + theServiceVersion.getUncommittedSessionId();
 		getThreadLocalRequest().getSession(true).setAttribute(key, theServiceVersion);

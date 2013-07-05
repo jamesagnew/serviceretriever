@@ -24,26 +24,26 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class DashModelServiceVersion extends BaseDashModel implements IDashModel {
 
-	private BaseGServiceVersion myObj;
+	private BaseGServiceVersion mySvcVer;
 	private PopupPanel myActionPopup;
-	private GService mySvc;
+	private GService myService;
 	private GDomain myDomain;
 
 	public DashModelServiceVersion(GDomain theDomain, GService theService, BaseGServiceVersion theServiceVersion) {
 		super(theServiceVersion);
 		myDomain = theDomain;
-		mySvc = theService;
-		myObj = theServiceVersion;
+		myService = theService;
+		mySvcVer = theServiceVersion;
 	}
 
 	@Override
 	public Widget renderName() {
-		return renderName(AdminPortal.MSGS.dashboard_ServiceVersionPrefix(), myObj.getId(), null);
+		return renderName(AdminPortal.MSGS.dashboard_ServiceVersionPrefix(), mySvcVer.getId(), null);
 	}
 
 	@Override
 	public int hashCode() {
-		return myObj.hashCode();
+		return mySvcVer.hashCode();
 	}
 
 	@Override
@@ -51,12 +51,12 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		if (!(theObj instanceof DashModelServiceVersion)) {
 			return false;
 		}
-		return ((DashModelServiceVersion) theObj).myObj.equals(theObj);
+		return ((DashModelServiceVersion) theObj).mySvcVer.equals(theObj);
 	}
 
 	@Override
 	public Widget renderStatus() {
-		StatusEnum status = myObj.getStatus();
+		StatusEnum status = mySvcVer.getStatus();
 		return DashModelDomain.returnImageForStatus(status);
 	}
 
@@ -67,12 +67,12 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 
 	@Override
 	public BaseGDashboardObject<?> getModel() {
-		return myObj;
+		return mySvcVer;
 	}
 
 	@Override
 	public Widget renderUrls() {
-		return renderUrlCount(myObj);
+		return renderUrlCount(mySvcVer);
 	}
 
 	public static Widget renderUrlCount(IProvidesUrlCount theObj) {
@@ -126,6 +126,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 			FlowPanel content = new FlowPanel();
 			myActionPopup.add(content);
 
+<<<<<<< HEAD
 			SafeHtmlBuilder titleB = new SafeHtmlBuilder();
 			titleB.appendEscaped(mySvc.getName());
 			titleB.appendHtmlConstant("<br/>");
@@ -169,11 +170,45 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 			});
 			content.add(deleteDomain);
 
+=======
+			addToActions(content, myActionPopup, myDomain, myService, mySvcVer, true);
+			
+>>>>>>> 4bfab8e1a4dbf19a3c44a49db7619d04f59b312e
 			myActionPopup.showRelativeTo(theButton);
 		} else {
 			myActionPopup.hide();
 			myActionPopup = null;
 		}
+	}
+
+	public static void addToActions(FlowPanel content, final PopupPanel theActionPopup, final GDomain theDomain, final GService theService, final BaseGServiceVersion theSvcVer, boolean addServiceToTitle) {
+		SafeHtmlBuilder titleB = new SafeHtmlBuilder();
+		if (addServiceToTitle) {
+			titleB.appendEscaped(theService.getName());
+			titleB.appendHtmlConstant("<br/>");
+		}
+		
+		titleB.appendEscaped(theSvcVer.getId());
+		content.add(new HeaderLabel(titleB.toSafeHtml()));
+
+		Button editDomain = new ActionPButton(AdminPortal.IMAGES.iconEdit(), "Edit");
+		editDomain.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				theActionPopup.hide();
+				History.newItem(NavProcessor.getTokenEditServiceVersion(theSvcVer.getPid()));
+			}
+		});
+		content.add(editDomain);
+
+		ActionPButton viewStatus = new ActionPButton(IMAGES.iconStatus(), MSGS.actions_ViewRuntimeStatus());
+		viewStatus.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				History.newItem(NavProcessor.getTokenServiceVersionStats(true, theDomain.getPid(), theService.getPid(), theSvcVer.getPid()));
+			}
+		});
+		content.add(viewStatus);
 	}
 
 	@Override
@@ -183,7 +218,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 
 	@Override
 	public boolean hasChildren() {
-		return myObj.getMethodList().size() > 0;
+		return mySvcVer.getMethodList().size() > 0;
 	}
 
 }

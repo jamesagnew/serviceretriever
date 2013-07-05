@@ -28,7 +28,7 @@ import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IHttpClient;
-import net.svcret.ejb.api.IServiceInvoker;
+import net.svcret.ejb.api.IServiceInvokerSoap11;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.RequestType;
@@ -58,8 +58,8 @@ import org.w3c.dom.NodeList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-@Stateless(name = "SOAP11Invoker")
-public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionSoap11> {
+@Stateless()
+public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(Soap11ServiceInvoker.class);
 
@@ -223,7 +223,7 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 			throw new UnknownRequestException("No method found in request message for Service \"" + theServiceDefinition.getService().getServiceName() + "\"");
 		}
 
-		PersServiceVersionMethod method = theServiceDefinition.getMethod(methodName);
+		PersServiceVersionMethod method = theServiceDefinition.getMethodForRootElementName(methodName);
 		if (method == null) {
 			throw new UnknownRequestException("Unknown method \"" + methodName + "\" for Service \"" + theServiceDefinition.getService().getServiceName() + "\"");
 		}
@@ -483,7 +483,63 @@ public class Soap11ServiceInvoker implements IServiceInvoker<PersServiceVersionS
 			String opName = nextOperationElem.getAttribute("name");
 			ourLog.info(" * Found operation: {}", opName);
 
+			String rootElementNs = null;
+			String rootElementName = null;
+			
+			for (int j = 0; j < nextOperationElem.getChildNodes().getLength(); j++) {
+				if (!(nextOperationElem.getChildNodes().item(j) instanceof Element)) {
+					continue;
+				}
+				Element nextOpChild = (Element) nextOperationElem.getChildNodes().item(j);
+				
+				if (nextOpChild.getLocalName().equals("input")) {
+					String[] messageParts = nextOpChild.getAttribute("message").split("\\:");
+					String msgNs = messageParts[0];
+					String msgName = messageParts[1];
+					ourLog.info("Found message reference {} : {}", msgNs, msgName);
+					
+					NodeList messageList = wsdlDocument.getElementsByTagNameNS(Constants.NS_WSDL, "message");
+					for (int msgCount = 0; msgCount < messageList.getLength(); msgCount++) {
+						if (!(messageList.item(msgCount) instanceof Element)) {
+							continue;
+						}
+						
+						Element nextMessage = (Element) messageList.item(msgCount);
+						if (msgName.equals(nextMessage.getAttribute("name"))) {
+							
+							ourLog.info("Found corresponding message at index {}", msgCount);
+							
+							for (int partCount = 0; partCount < nextMessage.getChildNodes().getLength();partCount++) {
+								if (!(nextMessage.getChildNodes().item(partCount) instanceof Element)) {
+									continue;
+								}
+								
+								Element partElem = (Element) nextMessage.getChildNodes().item(partCount);
+								if (partElem.getLocalName().equals("part")) {
+									
+									String element = partElem.getAttribute("element");
+									String[] elementParts = element.split("\\:");
+									
+									rootElementNs = partElem.lookupNamespaceURI(elementParts[0]);
+									rootElementName = elementParts[1];
+									ourLog.info("Root element is " + rootElementNs+":"+rootElementName);
+								}
+								
+							}
+							
+						}
+						
+					}
+					
+					
+				}
+				
+			}
+			
 			PersServiceVersionMethod method = retVal.getOrCreateAndAddMethodWithName(opName);
+			
+			method.setRootElements(rootElementNs + ":" + rootElementName);
+			
 			retVal.putMethodAtIndex(method, operationNames.size());
 
 			operationNames.add(opName);

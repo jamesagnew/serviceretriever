@@ -376,6 +376,7 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	 */
 	public void setLastSuccess(Date theLastSuccess) {
 		if (!ObjectUtils.equals(myLastSuccess, theLastSuccess)) {
+			ourLog.debug("Marking URL status {} as DIRTY for last success time {}", getPid(), theLastSuccess);
 			myDirty = true;
 		}
 		myLastSuccess = theLastSuccess;

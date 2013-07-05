@@ -1,8 +1,16 @@
 package net.svcret.ejb.ejb;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.isOneOf;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -32,7 +40,7 @@ import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IRuntimeStatus;
-import net.svcret.ejb.api.IServiceInvoker;
+import net.svcret.ejb.api.IServiceInvokerSoap11;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.ejb.AdminServiceBean.IWithStats;
@@ -59,7 +67,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 	private DaoBean myDao;
 	@SuppressWarnings("rawtypes")
-	private IServiceInvoker mySoapInvoker;
+	private IServiceInvokerSoap11 mySoapInvoker;
 	private RuntimeStatusBean myStatsSvc;
 	private AdminServiceBean mySvc;
 
@@ -118,7 +126,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		myStatsSvc.setDao(myDao);
 		myStatsSvc.setConfigSvc(myConfigSvc);
 
-		mySoapInvoker = mock(IServiceInvoker.class, new DefaultAnswer());
+		mySoapInvoker = mock(IServiceInvokerSoap11.class, new DefaultAnswer());
 		mySvc.setInvokerSoap11(mySoapInvoker);
 
 		mySecSvc = new SecurityServiceBean();
@@ -450,6 +458,19 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		assertEquals("ASV_SV1", svcVer.getId());
 		assertEquals(2, copy.getResource().size());
 
+		svcVer.setId("2.0");
+		
+		newEntityManager();
+
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), svcVer, copy.getResource());
+
+		newEntityManager();
+
+		copy = mySvc.loadServiceVersion(d1s1v1.getPid());
+		svcVer = (GServiceVersionJsonRpc20) copy.getServiceVersion();
+		assertEquals("2.0", svcVer.getId());
+		assertEquals(2, copy.getResource().size());
+		
 	}
 
 	@Override
@@ -505,7 +526,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testAddService() throws ProcessingException {
+	public void testAddAndSaveService() throws ProcessingException {
 		newEntityManager();
 
 		GDomain domain = mySvc.addDomain("domain_id3", "domain_name");
@@ -513,11 +534,19 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		GService service = mySvc.addService(domain.getPid(), "svc_id", "svc_name", true);
 
+		newEntityManager();
+		
 		assertEquals("svc_id", service.getId());
 		assertEquals("svc_name", service.getName());
 
 		assertFalse(service.isStatsInitialized());
 
+		newEntityManager();
+		
+		service.setName("name2");
+		mySvc.saveService(service);
+		
+		
 	}
 
 	@Test

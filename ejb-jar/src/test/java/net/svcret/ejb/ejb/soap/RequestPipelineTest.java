@@ -58,7 +58,7 @@ public class RequestPipelineTest {
 		assertEquals(1, p.getCredentialGrabbers().size());
 		assertEquals("user", p.getCredentialGrabbers().get(0).getUsername());
 		assertEquals("pass", p.getCredentialGrabbers().get(0).getPassword());
-		assertEquals("getPatientByMrn", p.getMethodName());
+		assertEquals("http://ws.ehr.uhn.ca:getPatientByMrn", p.getMethodName());
 		
 	}
 

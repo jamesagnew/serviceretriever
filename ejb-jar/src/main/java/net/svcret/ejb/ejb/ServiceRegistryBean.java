@@ -34,7 +34,7 @@ import net.svcret.ejb.util.Validate;
 public class ServiceRegistryBean implements IServiceRegistry {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceRegistryBean.class);
-	private static volatile Map<String, PersServiceVersionSoap11> ourProxyPathToServices;
+	private static volatile Map<String, BasePersServiceVersion> ourProxyPathToServices;
 	private static Object ourRegistryLock = new Object();
 	private static final String STATE_KEY = ServiceRegistryBean.class.getName() + "_VERSION";
 
@@ -189,7 +189,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		long newVersion = myDao.getStateCounter(STATE_KEY);
 		
 		Map<String, PersDomain> domainMap = new HashMap<String, PersDomain>();
-		Map<String, PersServiceVersionSoap11> pathToServiceVersions = new HashMap<String, PersServiceVersionSoap11>();
+		Map<String, BasePersServiceVersion> pathToServiceVersions = new HashMap<String, BasePersServiceVersion>();
 		Collection<PersDomain> domains = myDao.getAllDomains();
 		for (PersDomain nextDomain : domains) {
 			domainMap.put(nextDomain.getDomainId(), nextDomain);
@@ -202,7 +202,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 						ourLog.warn("Service version {} created duplicate proxy path, so it will be ignored!", nextVersion.getPid());
 						continue;
 					}
-					pathToServiceVersions.put(nextProxyPath, (PersServiceVersionSoap11) nextVersion);
+					pathToServiceVersions.put(nextProxyPath, nextVersion);
 				}
 			}
 

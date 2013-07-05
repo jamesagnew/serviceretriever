@@ -8,6 +8,8 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 
 	private boolean myActive;
 	private BaseGClientSecurityList myClientSecurityList;
+	private GServiceVersionDetailedStats myDetailedStats;
+	private String myExplicitProxyPath;
 	private long myHttpClientConfigPid;
 	private Date myLastAccess;
 	private String myProxyPath;
@@ -16,8 +18,6 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	private GServiceMethodList myServiceMethodList;
 	private GServiceVersionUrlList myServiceUrlList;
 
-	private GServiceVersionDetailedStats myDetailedStats;
-	
 	public BaseGServiceVersion() {
 		myServiceMethodList = new GServiceMethodList();
 		myServiceUrlList = new GServiceVersionUrlList();
@@ -32,7 +32,18 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	public BaseGClientSecurityList getClientSecurityList() {
 		return myClientSecurityList;
 	}
-	
+
+	/**
+	 * @return the detailedStats
+	 */
+	public GServiceVersionDetailedStats getDetailedStats() {
+		return myDetailedStats;
+	}
+
+	public String getExplicitProxyPath() {
+		return myExplicitProxyPath;
+	}
+
 	/**
 	 * @return the httpClientConfigPid
 	 */
@@ -46,17 +57,15 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	public Date getLastAccess() {
 		return myLastAccess;
 	}
-	
+
 	/**
 	 * @return the serviceUrlList
 	 */
 	public GServiceMethodList getMethodList() {
 		return myServiceMethodList;
 	}
-	
+
 	public abstract ServiceProtocolEnum getProtocol();
-
-
 
 	/**
 	 * @return the proxyPath
@@ -116,7 +125,7 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	@Override
 	public void merge(BaseGServiceVersion theObject) {
 		super.merge((BaseGDashboardObject<BaseGServiceVersion>) theObject);
-		
+
 		myActive = theObject.myActive;
 		myLastAccess = theObject.myLastAccess;
 
@@ -150,8 +159,17 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 		myActive = theActive;
 	}
 
+	public void setDetailedStats(GServiceVersionDetailedStats theResult) {
+		myDetailedStats = theResult;
+	}
+
+	public void setExplicitProxyPath(String theExplicitProxyPath) {
+		myExplicitProxyPath = theExplicitProxyPath;
+	}
+
 	/**
-	 * @param theHttpClientConfigPid the httpClientConfigPid to set
+	 * @param theHttpClientConfigPid
+	 *            the httpClientConfigPid to set
 	 */
 	public void setHttpClientConfigPid(long theHttpClientConfigPid) {
 		myHttpClientConfigPid = theHttpClientConfigPid;
@@ -166,7 +184,7 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	}
 
 	public void setProxyPath(String theProxyPath) {
-		myProxyPath=theProxyPath;
+		myProxyPath = theProxyPath;
 	}
 
 	/**
@@ -175,17 +193,6 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	 */
 	public void setResourcePointerList(GServiceVersionResourcePointerList theResourcePointerList) {
 		myResourcePointerList = theResourcePointerList;
-	}
-
-	public void setDetailedStats(GServiceVersionDetailedStats theResult) {
-		myDetailedStats=theResult;
-	}
-
-	/**
-	 * @return the detailedStats
-	 */
-	public GServiceVersionDetailedStats getDetailedStats() {
-		return myDetailedStats;
 	}
 
 }

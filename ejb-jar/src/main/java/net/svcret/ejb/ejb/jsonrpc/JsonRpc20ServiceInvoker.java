@@ -8,9 +8,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.ejb.Stateless;
+
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.IServiceInvoker;
+import net.svcret.ejb.api.IServiceInvokerJsonRpc20;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.RequestType;
@@ -32,7 +35,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 
-public class JsonRpc20ServiceInvoker implements IServiceInvoker<PersServiceVersionJsonRpc20> {
+@Stateless()
+public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 
 	static final String TOKEN_ID = "id";
 	static final String TOKEN_PARAMS = "params";
@@ -287,6 +291,10 @@ public class JsonRpc20ServiceInvoker implements IServiceInvoker<PersServiceVersi
 		String contentType = "application/json";
 		Map<String, String> headers = new HashMap<String, String>();
 		PersServiceVersionMethod methodDef = theServiceDefinition.getMethod(method);
+		if (methodDef == null) {
+			throw new UnknownRequestException("Unknown method \"" + method + "\" for Service \"" + theServiceDefinition.getService().getServiceName() + "\"");
+		}
+		
 		retVal.setResultMethod(methodDef, requestBody, contentType, headers);
 
 		return retVal;

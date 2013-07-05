@@ -27,10 +27,10 @@
 }
 
 .contentInnerPanel {
-	padding: 5px;
-	border-bottom: 2px #A5D1F3 solid;
-	border-right: 2px #A5D1F3 solid;
-	border-left: 2px #A5D1F3 solid;
+	padding:       5px;
+	border-bottom: 1px #A5D1F3 solid;
+	border-right:  1px #A5D1F3 solid;
+	border-left:   1px #A5D1F3 solid;
 }
 
 .contentInnerSubPanel {
@@ -231,6 +231,7 @@ TABLE.listTable TBODY TR:nth-child(odd) {
 	background-color: #FFFFFF;
 	/* border: 1px solid #808080; */
 	border-top-right-radius: 10px;
+	box-shadow: 4px 4px 3px -1px #bbb;
 }
 
 .mainPanelTitle {

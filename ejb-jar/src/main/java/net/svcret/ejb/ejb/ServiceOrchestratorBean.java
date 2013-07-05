@@ -22,6 +22,8 @@ import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.ISecurityService;
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
 import net.svcret.ejb.api.IServiceInvoker;
+import net.svcret.ejb.api.IServiceInvokerJsonRpc20;
+import net.svcret.ejb.api.IServiceInvokerSoap11;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.ITransactionLogger;
@@ -44,6 +46,7 @@ import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.http.PersHttpBasicCredentialGrabber;
 import net.svcret.ejb.model.entity.http.PersHttpBasicServerAuth;
+import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.util.Validate;
 
@@ -63,9 +66,12 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	@EJB
 	private ISecurityService mySecuritySvc;
 
-	@EJB(name = "SOAP11Invoker")
-	private IServiceInvoker<PersServiceVersionSoap11> mySoap11ServiceInvoker;
+	@EJB()
+	private IServiceInvokerSoap11 mySoap11ServiceInvoker;
 
+	@EJB()
+	private IServiceInvokerJsonRpc20 myJsonRpc20ServiceInvoker;
+	
 	@EJB
 	private IServiceRegistry mySvcRegistry;
 
@@ -121,19 +127,28 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		 * Process request
 		 */
 
-		InvocationResultsBean results;
-		IServiceInvoker<?> serviceInvoker;
+		InvocationResultsBean results = null;
+		IServiceInvoker<?> serviceInvoker=null;
 		switch (serviceVersion.getProtocol()) {
 		case SOAP11:
-			PersServiceVersionSoap11 serviceVersionSoap = (PersServiceVersionSoap11) serviceVersion;
 			serviceInvoker = mySoap11ServiceInvoker;
 			ourLog.debug("Handling service with invoker {}", serviceInvoker);
-			results = mySoap11ServiceInvoker.processInvocation(serviceVersionSoap, theRequest.getRequestType(), path, theRequest.getQuery(), reader);
+			results = mySoap11ServiceInvoker.processInvocation((PersServiceVersionSoap11) serviceVersion, theRequest.getRequestType(), path, theRequest.getQuery(), reader);
 			break;
-		default:
-			throw new InternalErrorException("Unknown service protocol: " + serviceVersion.getProtocol());
+		case JSONRPC20:
+			serviceInvoker = myJsonRpc20ServiceInvoker;
+			ourLog.debug("Handling service with invoker {}", serviceInvoker);
+			results = myJsonRpc20ServiceInvoker.processInvocation((PersServiceVersionJsonRpc20) serviceVersion, theRequest.getRequestType(), path, theRequest.getQuery(), reader);
 		}
 
+		if (serviceInvoker == null) {
+			throw new InternalErrorException("Unknown service protocol: " + serviceVersion.getProtocol());
+		}
+		
+		if (results == null) {
+			throw new InternalErrorException("Invoker " + serviceInvoker + " returned null");
+		}
+		
 		/*
 		 * Security
 		 * 
@@ -309,7 +324,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	 * FOR UNIT TESTS ONLY
 	 */
 	@VisibleForTesting
-	void setSoap11ServiceInvoker(IServiceInvoker<PersServiceVersionSoap11> theSoap11ServiceInvoker) {
+	void setSoap11ServiceInvoker(IServiceInvokerSoap11 theSoap11ServiceInvoker) {
 		mySoap11ServiceInvoker = theSoap11ServiceInvoker;
 	}
 

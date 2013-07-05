@@ -442,6 +442,8 @@ public class DaoBean implements IDao {
 		retVal = new PersService();
 
 		retVal.setServiceId(theId);
+		retVal.setServiceName(theId);
+		
 		retVal.setDomain(theDomain);
 
 		// retVal = myEntityManager.merge(retVal);

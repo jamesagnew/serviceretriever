@@ -64,6 +64,7 @@ import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.ISecurityService;
 import net.svcret.ejb.api.IServiceInvoker;
+import net.svcret.ejb.api.IServiceInvokerSoap11;
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.ex.ProcessingException;
@@ -116,8 +117,8 @@ public class AdminServiceBean implements IAdminService {
 	@EJB
 	private IConfigService myConfigSvc;
 
-	@EJB(name = "SOAP11Invoker")
-	private IServiceInvoker<PersServiceVersionSoap11> myInvokerSoap11;
+	@EJB()
+	private IServiceInvokerSoap11 myInvokerSoap11;
 
 	@EJB
 	private IDao myDao;
@@ -156,7 +157,7 @@ public class AdminServiceBean implements IAdminService {
 		Validate.notBlank(theId, "ID");
 		Validate.notBlank(theName, "Name");
 
-		ourLog.info("Adding service with ID[{}] to domain PID[{}]", theId, theDomainPid);
+		ourLog.info("Adding service with ID[{}] and NAME[{}] to domain PID[{}]", new Object[] { theId, theName, theDomainPid });
 
 		PersDomain domain = myDao.getDomainByPid(theDomainPid);
 		if (domain == null) {
@@ -341,6 +342,10 @@ public class AdminServiceBean implements IAdminService {
 	@Override
 	public GSoap11ServiceVersionAndResources loadServiceVersion(long theServiceVersionPid) throws ProcessingException {
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
+		if (svcVer == null) {
+			throw new ProcessingException("Unknown service version PID: " + theServiceVersionPid);
+		}
+
 		BaseGServiceVersion uiService = toUi(svcVer, false);
 		GSoap11ServiceVersionAndResources retVal = toUi(uiService, svcVer);
 		return retVal;
@@ -642,6 +647,7 @@ public class AdminServiceBean implements IAdminService {
 		Validate.notBlank(theVersionId);
 
 		BasePersServiceVersion retVal;
+<<<<<<< HEAD
 		
 		if (theVersionPid!=null) {
 			retVal = myDao.getServiceVersionByPid(theVersionPid);
@@ -649,6 +655,17 @@ public class AdminServiceBean implements IAdminService {
 			retVal = myServiceRegistry.getOrCreateServiceVersionWithId(theService, theVersion.getProtocol(), theVersionId);
 		}
 		
+=======
+		if (theVersion.getPidOrNull() != null) {
+			ourLog.debug("Retrieving existing service version PID[{}]", theVersion.getPidOrNull());
+			retVal = myDao.getServiceVersionByPid(theVersion.getPid());
+		} else {
+			ourLog.debug("Retrieving service version ID[{}]", theVersionId);
+			retVal = myServiceRegistry.getOrCreateServiceVersionWithId(theService, theVersion.getProtocol(), theVersionId);
+			ourLog.debug("Found service version NEW[{}], PID[{}], PROTOCOL[{}]", new Object[] {retVal.isNewlyCreated(), retVal.getPid(), retVal.getProtocol().name()});
+		}
+
+>>>>>>> 4bfab8e1a4dbf19a3c44a49db7619d04f59b312e
 		switch (theVersion.getProtocol()) {
 		case SOAP11:
 			fromUi((PersServiceVersionSoap11) retVal, (GSoap11ServiceVersion) theVersion);
@@ -660,6 +677,7 @@ public class AdminServiceBean implements IAdminService {
 
 		retVal.setActive(theVersion.isActive());
 		retVal.setVersionId(theVersion.getId());
+		retVal.setExplicitProxyPath(theVersion.getExplicitProxyPath());
 
 		PersHttpClientConfig httpClientConfig = myDao.getHttpClientConfig(theVersion.getHttpClientConfigPid());
 		if (httpClientConfig == null) {
@@ -719,7 +737,8 @@ public class AdminServiceBean implements IAdminService {
 		return (int) newValue;
 	}
 
-	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, List<Integer> the60MinInvCount, List<Long> the60minTime, StatusEnum theStatus, BasePersServiceVersion nextVersion) throws ProcessingException {
+	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, List<Integer> the60MinInvCount, List<Long> the60minTime, StatusEnum theStatus,
+			BasePersServiceVersion nextVersion) throws ProcessingException {
 		StatusEnum status = theStatus;
 
 		for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
@@ -749,7 +768,8 @@ public class AdminServiceBean implements IAdminService {
 		return status;
 	}
 
-	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Long> the60minTime, PersService theService) throws ProcessingException {
+	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Long> the60minTime, PersService theService)
+			throws ProcessingException {
 
 		// Value will be changed below
 		StatusEnum status = theInitialStatus;
@@ -769,7 +789,8 @@ public class AdminServiceBean implements IAdminService {
 	/**
 	 * @return The start timestamp
 	 */
-	public static void extractSuccessfulInvocationInvocationTimes(PersConfig theConfig, int theNumMinsBack, final List<Integer> the60MinInvCount, final List<Long> the60minTime, PersServiceVersionMethod nextMethod, IRuntimeStatus statusSvc) {
+	public static void extractSuccessfulInvocationInvocationTimes(PersConfig theConfig, int theNumMinsBack, final List<Integer> the60MinInvCount, final List<Long> the60minTime,
+			PersServiceVersionMethod nextMethod, IRuntimeStatus statusSvc) {
 		doWithStatsByMinute(theConfig, theNumMinsBack, statusSvc, nextMethod, new IWithStats() {
 			@Override
 			public void withStats(int theIndex, BasePersInvocationStats theStats) {
@@ -1000,6 +1021,7 @@ public class AdminServiceBean implements IAdminService {
 
 	private PersService fromUi(GService theService) {
 		PersService retVal = new PersService();
+		retVal.setPid(theService.getPidOrNull());
 		retVal.setActive(theService.isActive());
 		retVal.setServiceId(theService.getId());
 		retVal.setServiceName(theService.getName());
@@ -1012,6 +1034,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setName(theMethod.getName());
 		retVal.setPid(theMethod.getPidOrNull());
 		retVal.setServiceVersion(myDao.getServiceVersionByPid(theServiceVersionPid));
+		retVal.setRootElements(theMethod.getRootElements());
 		return retVal;
 	}
 
@@ -1320,6 +1343,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setName(theVersion.getVersionId());
 		retVal.setServerSecured(theVersion.getServerSecured());
 		retVal.setProxyPath(theVersion.getProxyPath());
+		retVal.setExplicitProxyPath(theVersion.getExplicitProxyPath());
 
 		PersHttpClientConfig httpClientConfig = theVersion.getHttpClientConfig();
 		if (httpClientConfig == null) {
@@ -1601,6 +1625,7 @@ public class AdminServiceBean implements IAdminService {
 		}
 		retVal.setId(theMethod.getName());
 		retVal.setName(theMethod.getName());
+		retVal.setRootElements(theMethod.getRootElements());
 
 		if (theLoadStats) {
 			retVal.setStatsInitialized(new Date());
@@ -1742,7 +1767,7 @@ public class AdminServiceBean implements IAdminService {
 	/**
 	 * Unit test only
 	 */
-	void setInvokerSoap11(IServiceInvoker<PersServiceVersionSoap11> theInvokerSoap11) {
+	void setInvokerSoap11(IServiceInvokerSoap11 theInvokerSoap11) {
 		myInvokerSoap11 = theInvokerSoap11;
 	}
 
@@ -1945,7 +1970,7 @@ public class AdminServiceBean implements IAdminService {
 		final Map<Long, List<Integer>> methodPidToFaultCount = new HashMap<Long, List<Integer>>();
 
 		final List<Long> statsTimestamps = new ArrayList<Long>();
-		
+
 		PersConfig config = myConfigSvc.getConfig();
 		for (final PersServiceVersionMethod nextMethod : ver.getMethods()) {
 			methodPidToSuccessCount.put(nextMethod.getPid(), new ArrayList<Integer>());
@@ -1980,16 +2005,16 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setMethodPidToFailCount(methodPidToFailCount);
 		retVal.setMethodPidToSecurityFailCount(methodPidToSecurityFailCount);
 		retVal.setMethodPidToFaultCount(methodPidToFaultCount);
-		
+
 		retVal.setStatsTimestamps(statsTimestamps);
 
 		return retVal;
 	}
 
 	public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatus theStatus, PersServiceVersionMethod theNextMethod, IWithStats theOperator) {
-		
-		Date start = new Date(System.currentTimeMillis() - (theRange.getRange().getNumMins()*60*1000L));
-		Date end=new Date();
+
+		Date start = new Date(System.currentTimeMillis() - (theRange.getRange().getNumMins() * 60 * 1000L));
+		Date end = new Date();
 		doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator, start, end);
 	}
 
