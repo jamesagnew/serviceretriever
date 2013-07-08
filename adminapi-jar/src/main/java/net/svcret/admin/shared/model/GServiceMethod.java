@@ -8,12 +8,17 @@ public class GServiceMethod extends BaseGDashboardObject<GServiceMethod> {
 	
 	private String myRootElements;
 	
-	public String getRootElements() {
-		return myRootElements;
+	public GServiceMethod() {
+		super();
+	}
+	
+	public GServiceMethod(String theId) {
+		setId(theId);
+		setName(theId);
 	}
 
-	public void setRootElements(String theRootElements) {
-		myRootElements = theRootElements;
+	public String getRootElements() {
+		return myRootElements;
 	}
 
 	/**
@@ -23,6 +28,12 @@ public class GServiceMethod extends BaseGDashboardObject<GServiceMethod> {
 		return myEditMode;
 	}
 
+	@Override
+	public void merge(GServiceMethod theObject) {
+		myRootElements=theObject.getRootElements();
+		super.merge((BaseGDashboardObject<GServiceMethod>) theObject);
+	}
+
 	/**
 	 * @param theEditMode the editMode to set
 	 */
@@ -30,10 +41,8 @@ public class GServiceMethod extends BaseGDashboardObject<GServiceMethod> {
 		myEditMode = theEditMode;
 	}
 
-	@Override
-	public void merge(GServiceMethod theObject) {
-		myRootElements=theObject.getRootElements();
-		super.merge((BaseGDashboardObject<GServiceMethod>) theObject);
+	public void setRootElements(String theRootElements) {
+		myRootElements = theRootElements;
 	}
 
 }

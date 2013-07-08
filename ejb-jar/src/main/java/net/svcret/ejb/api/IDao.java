@@ -14,6 +14,7 @@ import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersMethodStats;
 import net.svcret.ejb.model.entity.BasePersRecentMessage;
+import net.svcret.ejb.model.entity.BasePersServiceCatalogItem;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
@@ -29,6 +30,7 @@ import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
 import net.svcret.ejb.model.entity.PersMonitorRule;
+import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
@@ -201,5 +203,9 @@ public interface IDao {
 		}
 
 	}
+
+	PersMonitorRuleFiring saveMonitorRuleFiring(PersMonitorRuleFiring theFiring);
+
+	BasePersServiceCatalogItem saveServiceCatalogItem(BasePersServiceCatalogItem theItem);
 
 }

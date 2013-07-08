@@ -33,6 +33,7 @@ import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersMethodStats;
 import net.svcret.ejb.model.entity.BasePersRecentMessage;
+import net.svcret.ejb.model.entity.BasePersServiceCatalogItem;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
@@ -50,6 +51,8 @@ import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
 import net.svcret.ejb.model.entity.PersLocks;
 import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorRule;
+import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
+import net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem;
 import net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
@@ -1108,6 +1111,19 @@ public class DaoBean implements IDao {
 	@Override
 	public void deleteServiceVersion(BasePersServiceVersion theSv) {
 		myEntityManager.remove(theSv);
+	}
+
+	@Override
+	public PersMonitorRuleFiring saveMonitorRuleFiring(PersMonitorRuleFiring theFiring) {
+		for (PersMonitorRuleFiringProblem next : theFiring.getProblems()) {
+			next.setFiring(theFiring);
+		}
+		return myEntityManager.merge(theFiring);
+	}
+
+	@Override
+	public BasePersServiceCatalogItem saveServiceCatalogItem(BasePersServiceCatalogItem theItem) {
+		return myEntityManager.merge(theItem);
 	}
 
 }

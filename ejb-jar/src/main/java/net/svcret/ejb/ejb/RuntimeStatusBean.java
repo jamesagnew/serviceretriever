@@ -592,11 +592,16 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	private void doRecordInvocationMethod(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean,
 			BasePersInvocationStatsPk theStatsPk) {
+		Validate.notNull(theInvocationResponseResultsBean.getResponseType(), "responseType");
+		
 		BasePersInvocationStats stats = (BasePersInvocationStats) getStatsForPk(theStatsPk);
 
 		long responseTime;
 		long responseBytes;
 		if (theHttpResponse != null) {
+			if (theHttpResponse.getBody()==null) {
+				throw new NullPointerException("HTTP Response is null");
+			}
 			responseTime = theHttpResponse.getResponseTime();
 			responseBytes = theHttpResponse.getBody().length();
 		} else {

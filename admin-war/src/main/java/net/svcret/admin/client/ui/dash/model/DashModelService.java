@@ -7,6 +7,7 @@ import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GService;
+import net.svcret.admin.shared.model.GServiceVersionList;
 import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 
@@ -35,11 +36,16 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 	public Widget renderName() {
 
 		String postFix = null;
-		if (myService.getVersionList().size() == 0) {
+		String name = myService.getName();
+		GServiceVersionList versionList = myService.getVersionList();
+		
+		if (versionList.size() == 0) {
 			postFix = AdminPortal.MSGS.dashboard_ServiceNoServiceVersionsSuffix();
+		} else if (versionList.size() == 1) {
+			name = name + " (" + versionList.get(0).getName() + ")";
 		}
-
-		return renderName(AdminPortal.MSGS.dashboard_ServicePrefix(), myService.getName(), postFix);
+		
+		return renderName(AdminPortal.MSGS.dashboard_ServicePrefix(), name, postFix);
 	}
 
 	@Override

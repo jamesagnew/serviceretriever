@@ -108,28 +108,29 @@ public class ServiceDashboardPanel extends FlowPanel {
 							newUiList.add(new DashModelService(nextDomain, nextService));
 
 							if (nextService.isExpandedOnDashboard()) {
-								for (BaseGServiceVersion nextServiceVersion : nextService.getVersionList()) {
-									if (!nextServiceVersion.isStatsInitialized()) {
-										addSpinnerToList(newUiList);
-										haveStatsToLoad = true;
-									} else {
-										newUiList.add(new DashModelServiceVersion(nextDomain, nextService, nextServiceVersion));
 
-										if (nextServiceVersion.isExpandedOnDashboard()) {
-											for (GServiceMethod nextMethod : nextServiceVersion.getMethodList()) {
-												if (!nextMethod.isStatsInitialized()) {
-													addSpinnerToList(newUiList);
-													haveStatsToLoad = true;
-												} else {
-													newUiList.add(new DashModelServiceMethod(nextMethod));
-												}
+								if (nextService.getVersionList().size() == 1) {
+									
+									haveStatsToLoad = addServiceVersionChildren(newUiList, haveStatsToLoad, nextService.getVersionList().get(0));
+									
+								} else {
+									
+									for (BaseGServiceVersion nextServiceVersion : nextService.getVersionList()) {
+										if (!nextServiceVersion.isStatsInitialized()) {
+											addSpinnerToList(newUiList);
+											haveStatsToLoad = true;
+										} else {
+											newUiList.add(new DashModelServiceVersion(nextDomain, nextService, nextServiceVersion));
+
+											if (nextServiceVersion.isExpandedOnDashboard()) {
+												haveStatsToLoad = addServiceVersionChildren(newUiList, haveStatsToLoad, nextServiceVersion);
 											}
+
 										}
 
-									}
-
+									} // for service versions
+									
 								}
-
 							}
 
 						}
@@ -149,6 +150,18 @@ public class ServiceDashboardPanel extends FlowPanel {
 				}
 			});
 		}
+	}
+
+	private boolean addServiceVersionChildren(ArrayList<IDashModel> newUiList, boolean haveStatsToLoad, BaseGServiceVersion nextServiceVersion) {
+		for (GServiceMethod nextMethod : nextServiceVersion.getMethodList()) {
+			if (!nextMethod.isStatsInitialized()) {
+				addSpinnerToList(newUiList);
+				haveStatsToLoad = true;
+			} else {
+				newUiList.add(new DashModelServiceMethod(nextMethod));
+			}
+		}
+		return haveStatsToLoad;
 	}
 
 	private void addSpinnerToList(ArrayList<IDashModel> newUiList) {

@@ -7,7 +7,15 @@ public class HtmlPre extends Widget {
 
     public HtmlPre(String theText) {
         setElement(Document.get().createPreElement());
-        getElement().setInnerText(theText);
+        setText(theText);
     }
+
+	public void setText(String theText) {
+		getElement().setInnerText(theText);
+	}
+
+	public String getText() {
+		return getElement().getInnerText();
+	}
 
 }

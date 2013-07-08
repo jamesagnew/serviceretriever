@@ -66,17 +66,12 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(AdminServiceBeanIntegrationTest.class);
 
 	private DaoBean myDao;
-	@SuppressWarnings("rawtypes")
 	private IServiceInvokerSoap11 mySoapInvoker;
 	private RuntimeStatusBean myStatsSvc;
 	private AdminServiceBean mySvc;
-
 	private SecurityServiceBean mySecSvc;
-
 	private IBroadcastSender myBroadcastSender;
-
 	private ServiceRegistryBean mySvcReg;
-
 	private ConfigServiceBean myConfigSvc;
 
 	@After

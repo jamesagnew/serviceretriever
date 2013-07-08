@@ -36,6 +36,24 @@ public class PersMonitorAppliesTo extends BasePersObject {
 	@JoinColumn(name = "SVCVER_PID", nullable = true)
 	private BasePersServiceVersion myServiceVersion;
 
+	public PersMonitorAppliesTo() {
+	}
+
+	public PersMonitorAppliesTo(PersMonitorRule theRule, BasePersServiceCatalogItem theItem) {
+		myRule=theRule;
+		setItem(theItem);
+	}
+
+	public BasePersServiceCatalogItem getItem() {
+		if (myDomain != null) {
+			return myDomain;
+		}
+		if (myService != null) {
+			return myService;
+		}
+		return myServiceVersion;
+	}
+
 	@Override
 	public Long getPid() {
 		return myPid;
@@ -43,10 +61,6 @@ public class PersMonitorAppliesTo extends BasePersObject {
 
 	public PersMonitorRule getRule() {
 		return myRule;
-	}
-
-	public void setRule(PersMonitorRule theRule) {
-		myRule = theRule;
 	}
 
 	public void setItem(BasePersServiceCatalogItem theItem) {
@@ -62,14 +76,8 @@ public class PersMonitorAppliesTo extends BasePersObject {
 		}
 	}
 
-	public BasePersServiceCatalogItem getItem() {
-		if (myDomain != null) {
-			return myDomain;
-		}
-		if (myService != null) {
-			return myService;
-		}
-		return myServiceVersion;
+	public void setRule(PersMonitorRule theRule) {
+		myRule = theRule;
 	}
 
 }

@@ -15,6 +15,8 @@ import javax.ejb.TransactionAttributeType;
 
 import org.apache.commons.lang3.time.DateUtils;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IMonitorService;
@@ -53,14 +55,40 @@ public class MonitorServiceBean implements IMonitorService {
 
 			PersMonitorRuleFiring firing = evaluateRule(rule);
 			ourLog.debug("Checking firing produced result: {}", firing);
-			
+
 			for (PersMonitorAppliesTo nextAppliesTo : rule.getAppliesTo()) {
 				BasePersServiceCatalogItem item = nextAppliesTo.getItem();
+				PersMonitorRuleFiring mostRecentFiring = item.getMostRecentMonitorRuleFiring();
+
+				if (mostRecentFiring == null || mostRecentFiring.getEndDate() != null) {
+					if (firing != null) {
+						firing = myDao.saveMonitorRuleFiring(firing);
+						item.setMostRecentMonitorRuleFiring(firing);
+						item = myDao.saveServiceCatalogItem(item);
+					}
+				} else if (mostRecentFiring.getEndDate() == null) {
+					if (mostRecentFiring.getRule().equals(rule)) {
+						if (firing == null) {
+							mostRecentFiring.setEndDate(new Date());
+							myDao.saveMonitorRuleFiring(mostRecentFiring);
+						}
+					}
+				}
+
 			}
-			
 
 		}
 
+	}
+
+	@VisibleForTesting
+	public void setDao(IDao theDao) {
+		myDao = theDao;
+	}
+
+	@VisibleForTesting
+	public void setRuntimeStatus(IRuntimeStatus theRuntimeStatus) {
+		myRuntimeStatus = theRuntimeStatus;
 	}
 
 	private PersMonitorRuleFiring evaluateRule(PersMonitorRule theRule) {
@@ -72,8 +100,8 @@ public class MonitorServiceBean implements IMonitorService {
 			Set<PersMonitorRuleFiringProblem> svcVerProblems = new HashSet<PersMonitorRuleFiringProblem>();
 			if (theRule.isFireIfAllBackingUrlsAreUnavailable() || theRule.isFireIfSingleBackingUrlIsUnavailable()) {
 				for (PersServiceVersionUrl nextUrl : nextSvcVer.getUrls()) {
-					if (nextUrl.getStatus().getStatus() != StatusEnum.DOWN) {
-						svcVerProblems.add(PersMonitorRuleFiringProblem.getInstanceForUrlDown(nextSvcVer, nextUrl));
+					if (nextUrl.getStatus().getStatus() == StatusEnum.DOWN) {
+						svcVerProblems.add(PersMonitorRuleFiringProblem.getInstanceForUrlDown(nextSvcVer, nextUrl, nextUrl.getStatus().getLastFailMessage()));
 					}
 				}
 			}
@@ -82,11 +110,11 @@ public class MonitorServiceBean implements IMonitorService {
 
 			if (theRule.isFireIfAllBackingUrlsAreUnavailable()) {
 				if (svcVerProblems.size() == nextSvcVer.getUrls().size()) {
-					problems.addAll(problems);
+					problems.addAll(svcVerProblems);
 				}
 			} else if (theRule.isFireIfSingleBackingUrlIsUnavailable()) {
 				if (svcVerProblems.size() > 0) {
-					problems.addAll(problems);
+					problems.addAll(svcVerProblems);
 				}
 			}
 
@@ -128,8 +156,8 @@ public class MonitorServiceBean implements IMonitorService {
 		if (problems.isEmpty()) {
 			return null;
 		}
-		
-		PersMonitorRuleFiring firing=new PersMonitorRuleFiring();
+
+		PersMonitorRuleFiring firing = new PersMonitorRuleFiring();
 		firing.setRule(theRule);
 		firing.getProblems().addAll(problems);
 		firing.setStartDate(new Date());

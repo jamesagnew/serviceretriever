@@ -243,6 +243,14 @@ TABLE.listTable TBODY TR:nth-child(odd) {
 	padding-left: 5px;
 }
 
+.messageHeaderKey {
+	color: #662222;	
+}
+
+.messageHeaderValue {
+	color: #226622;	
+}
+
 .outerLayoutBody {
 	background-color: #F0F0F0;
 	background-image: url(images/sidebar_shadow.png);

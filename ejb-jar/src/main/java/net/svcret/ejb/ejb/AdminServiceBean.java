@@ -55,6 +55,7 @@ import net.svcret.admin.shared.model.GWsSecServerSecurity;
 import net.svcret.admin.shared.model.GWsSecUsernameTokenClientSecurity;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
+import net.svcret.admin.shared.model.Pair;
 import net.svcret.admin.shared.model.PartialUserListRequest;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.model.TimeRange;
@@ -63,7 +64,6 @@ import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.ISecurityService;
-import net.svcret.ejb.api.IServiceInvoker;
 import net.svcret.ejb.api.IServiceInvokerSoap11;
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.ResponseTypeEnum;
@@ -653,7 +653,7 @@ public class AdminServiceBean implements IAdminService {
 		} else {
 			ourLog.debug("Retrieving service version ID[{}]", theVersionId);
 			retVal = myServiceRegistry.getOrCreateServiceVersionWithId(theService, theVersion.getProtocol(), theVersionId);
-			ourLog.debug("Found service version NEW[{}], PID[{}], PROTOCOL[{}]", new Object[] {retVal.isNewlyCreated(), retVal.getPid(), retVal.getProtocol().name()});
+			ourLog.debug("Found service version NEW[{}], PID[{}], PROTOCOL[{}]", new Object[] { retVal.isNewlyCreated(), retVal.getPid(), retVal.getProtocol().name() });
 		}
 
 		switch (theVersion.getProtocol()) {
@@ -727,8 +727,7 @@ public class AdminServiceBean implements IAdminService {
 		return (int) newValue;
 	}
 
-	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, List<Integer> the60MinInvCount, List<Long> the60minTime, StatusEnum theStatus,
-			BasePersServiceVersion nextVersion) throws ProcessingException {
+	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, List<Integer> the60MinInvCount, List<Long> the60minTime, StatusEnum theStatus, BasePersServiceVersion nextVersion) throws ProcessingException {
 		StatusEnum status = theStatus;
 
 		for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
@@ -758,8 +757,7 @@ public class AdminServiceBean implements IAdminService {
 		return status;
 	}
 
-	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Long> the60minTime, PersService theService)
-			throws ProcessingException {
+	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Long> the60minTime, PersService theService) throws ProcessingException {
 
 		// Value will be changed below
 		StatusEnum status = theInitialStatus;
@@ -779,8 +777,7 @@ public class AdminServiceBean implements IAdminService {
 	/**
 	 * @return The start timestamp
 	 */
-	public static void extractSuccessfulInvocationInvocationTimes(PersConfig theConfig, int theNumMinsBack, final List<Integer> the60MinInvCount, final List<Long> the60minTime,
-			PersServiceVersionMethod nextMethod, IRuntimeStatus statusSvc) {
+	public static void extractSuccessfulInvocationInvocationTimes(PersConfig theConfig, int theNumMinsBack, final List<Integer> the60MinInvCount, final List<Long> the60minTime, PersServiceVersionMethod nextMethod, IRuntimeStatus statusSvc) {
 		doWithStatsByMinute(theConfig, theNumMinsBack, statusSvc, nextMethod, new IWithStats() {
 			@Override
 			public void withStats(int theIndex, BasePersInvocationStats theStats) {
@@ -1886,8 +1883,16 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setAuthorizationOutcome(theMsg.getAuthorizationOutcome());
 
 		if (theLoadMsgContents) {
-			retVal.setRequestMessage(theMsg.getRequestBody());
-			retVal.setResponseMessage(theMsg.getResponseBody());
+			int bodyIdx = theMsg.getRequestBody().indexOf("\r\n\r\n");
+			retVal.setRequestMessage(theMsg.getRequestBody().substring(bodyIdx + 4));
+			retVal.setRequestHeaders(toHeaders(theMsg.getRequestBody().substring(0, bodyIdx)));
+			retVal.setRequestContentType(toHeaderContentType(retVal.getRequestHeaders()));
+			
+			bodyIdx = theMsg.getResponseBody().indexOf("\r\n\r\n");
+			retVal.setResponseMessage(theMsg.getResponseBody().substring(bodyIdx + 4));
+			retVal.setResponseHeaders(toHeaders(theMsg.getResponseBody().substring(0, bodyIdx)));
+			retVal.setResponseContentType(toHeaderContentType(retVal.getResponseHeaders()));
+
 		}
 
 		if (theMsg instanceof PersServiceVersionRecentMessage) {
@@ -1904,6 +1909,24 @@ public class AdminServiceBean implements IAdminService {
 			}
 		}
 
+		return retVal;
+	}
+
+	private String toHeaderContentType(List<Pair<String>> theResponseHeaders) {
+		for (Pair<String> pair : theResponseHeaders) {
+			if (pair.getFirst().equalsIgnoreCase("content-type")) {
+				return pair.getSecond().split(";")[0].trim();
+			}
+		}
+		return null;
+	}
+
+	private List<Pair<String>> toHeaders(String theHeaders) {
+		ArrayList<Pair<String>> retVal = new ArrayList<Pair<String>>();
+		for (String next : theHeaders.split("\\r\\n")) {
+			int idx = next.indexOf(": ");
+			retVal.add(new Pair<String>(next.substring(0,idx), next.substring(idx+2)));
+		}
 		return retVal;
 	}
 
@@ -2011,14 +2034,14 @@ public class AdminServiceBean implements IAdminService {
 	@Override
 	public GDomainList deleteServiceVersion(long thePid) throws ProcessingException {
 		ourLog.info("Deleting service version {}", thePid);
-		
+
 		BasePersServiceVersion sv = myDao.getServiceVersionByPid(thePid);
-		if (sv==null) {
-			throw new ProcessingException("Unknown service version ID:"+thePid);
+		if (sv == null) {
+			throw new ProcessingException("Unknown service version ID:" + thePid);
 		}
-		
+
 		myDao.deleteServiceVersion(sv);
-		
+
 		return loadDomainList();
 	}
 

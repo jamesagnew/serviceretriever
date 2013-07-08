@@ -1,7 +1,9 @@
 package net.svcret.ejb.model.entity;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -56,7 +58,7 @@ public class PersMonitorRule extends BasePersObject {
 		if (myAppliesTo == null) {
 			myAppliesTo = new ArrayList<PersMonitorAppliesTo>();
 		}
-		return myAppliesTo;
+		return Collections.unmodifiableCollection(myAppliesTo);
 	}
 
 	/**
@@ -99,6 +101,35 @@ public class PersMonitorRule extends BasePersObject {
 
 	public boolean isRuleActive() {
 		return myRuleActive;
+	}
+
+	public void setAppliesToItems(BasePersServiceCatalogItem... theItems) {
+		setAppliesToItems(Arrays.asList(theItems));
+	}
+	
+	public void setAppliesToItems(Collection<BasePersServiceCatalogItem> theItems) {
+		getAppliesTo();
+
+		ArrayList<BasePersServiceCatalogItem> toAdd = new ArrayList<BasePersServiceCatalogItem>(theItems);
+		ArrayList<PersMonitorAppliesTo> toRemove = new ArrayList<PersMonitorAppliesTo>();
+
+		for (PersMonitorAppliesTo nextExisting : myAppliesTo) {
+			if (toAdd.contains(nextExisting.getItem())) {
+				toAdd.remove(nextExisting.getItem());
+			}
+			if (!theItems.contains(nextExisting.getItem())) {
+				toRemove.add(nextExisting);
+			}
+		}
+
+		for (BasePersServiceCatalogItem next : toAdd) {
+			myAppliesTo.add(new PersMonitorAppliesTo(this, next));
+		}
+
+		for (PersMonitorAppliesTo next : toRemove) {
+			myAppliesTo.remove(next);
+		}
+
 	}
 
 	/**

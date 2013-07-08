@@ -36,6 +36,7 @@ import net.svcret.admin.shared.model.GUserDomainPermission;
 import net.svcret.admin.shared.model.GUserList;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
+import net.svcret.admin.shared.model.Pair;
 import net.svcret.admin.shared.model.PartialUserListRequest;
 import net.svcret.admin.shared.model.ServerSecuredEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
@@ -563,13 +564,25 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	}
 
 	private GRecentMessage createMessage(boolean theIncludeContents) {
-		String responseMessage = "Response Message Contents";
-		String requestMessage = "Request Message Contents";
+		String responseMessage = "<req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req></req>";
+		String requestMessage = "<resp a='qqqqq'><tags/></resp>";
+		List<Pair<String>> reqHeaders = new ArrayList<Pair<String>>();
+		reqHeaders.add(new Pair<String>("Content-Type","text/xml"));
+		reqHeaders.add(new Pair<String>("Content-Encoding","chunked"));
+		List<Pair<String>> respHeaders=new ArrayList<Pair<String>>();
+		respHeaders.add(new Pair<String>("Content-Type","text/xml"));
+		respHeaders.add(new Pair<String>("X-Server","Some Server"));
+		String reqCt="text/xml";
+		String respCt="text/xml";
 		if (!theIncludeContents) {
 			responseMessage = null;
 			requestMessage = null;
+			reqHeaders=null;
+			respHeaders=null;
+			reqCt=null;
+			respCt=null;
 		}
-		return new GRecentMessage(ourNextPid++, new Date(), "http://foo", "127.0.0.1", requestMessage, responseMessage);
+		return new GRecentMessage(ourNextPid++, new Date(), "http://foo", "127.0.0.1", requestMessage, responseMessage, reqHeaders, respHeaders, reqCt, respCt);
 	}
 
 	@Override

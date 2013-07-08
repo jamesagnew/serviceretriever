@@ -26,5 +26,7 @@ public class CssConstants {
 	public static final String UNSTYLED_TABLE = "unstyledTable";
 	public static final String STATS_IMAGE = "statusRrdImage";
 	public static final String FORM_LABEL = "formLabel";
+	public static final String MESSAGE_HEADER_KEY = "messageHeaderKey";
+	public static final String MESSAGE_HEADER_VALUE = "messageHeaderValue";
 	
 }
