@@ -37,27 +37,30 @@ import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
 
+import org.apache.http.client.ClientProtocolException;
 import org.junit.Before;
 import org.junit.Test;
 
 public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
-	private IHttpClient myHttpClient;
-	private RuntimeStatusBean myRuntimeStatus;
-	private DaoBean myDao;
-	private SecurityServiceBean mySecurityService;
+	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceOrchestratorTestIntegrationTest.class);
 	private IBroadcastSender myBroadcastSender;
-	private LocalDatabaseAuthorizationServiceBean myLocalDbAuthService;
-	private Soap11ServiceInvoker mySoapInvoker;
 	private IConfigService myConfigService;
+	private DaoBean myDao;
+	private IHttpClient myHttpClient;
+	private LocalDatabaseAuthorizationServiceBean myLocalDbAuthService;
+	private RuntimeStatusBean myRuntimeStatus;
+	private SecurityServiceBean mySecurityService;
 	private ServiceRegistryBean myServiceRegistry;
+	private Soap11ServiceInvoker mySoapInvoker;
+
 	private ServiceOrchestratorBean mySvc;
 
 	@Before
 	public void before() {
 		DefaultAnswer.setDesignTime();
 	}
-	
+
 	@SuppressWarnings("null")
 	@Test
 	public void testSoap11GoodRequest() throws ProcessingException, InternalErrorException, UnknownRequestException, IOException, SecurityFailureException {
@@ -102,9 +105,9 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		PersAuthenticationHostLocalDatabase authHost = myDao.getOrCreateAuthenticationHostLocalDatabase("authHost");
-                authHost.setCacheSuccessfulCredentialsForMillis(1000000);
-                myDao.saveAuthenticationHost(authHost);
-                
+		authHost.setCacheSuccessfulCredentialsForMillis(1000000);
+		myDao.saveAuthenticationHost(authHost);
+
 		PersUser user = myDao.getOrCreateUser(authHost, "test");
 		user.setPassword("admin");
 		user.setAllowAllDomains(true);
@@ -131,14 +134,12 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
 		myServiceRegistry.reloadRegistryFromDatabase();
 		mySecurityService.loadUserCatalogIfNeeded();
-		
+
 		d0s0v0 = myDao.getServiceVersionByPid(d0s0v0.getPid());
 		url = d0s0v0.getUrls().get(0);
-		
+
 		newEntityManager();
 
-		
-		
 		myDao.setEntityManager(null);
 
 		/*
@@ -172,7 +173,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
 		ITransactionLogger transactionLogger = mock(ITransactionLogger.class);
 		mySvc.setTransactionLogger(transactionLogger);
-		
+
 		DefaultAnswer.setRunTime();
 
 		OrchestratorResponseBean resp = null;
@@ -181,30 +182,31 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		for (int i = 0; i < reps; i++) {
 			String query = "";
 			Reader reader = new StringReader(request);
-			HttpRequestBean req=new HttpRequestBean();
+			HttpRequestBean req = new HttpRequestBean();
 			req.setRequestType(RequestType.POST);
-			req.setRequestHostIp( "127.0.0.1");
+			req.setRequestHostIp("127.0.0.1");
 			req.setPath("/d0/d0s0/d0s0v0");
-			req.setQuery( query);
-			req.setInputReader( reader);
+			req.setQuery(query);
+			req.setInputReader(reader);
 			req.setRequestHeaders(new HashMap<String, List<String>>());
 			resp = mySvc.handle(req);
 		}
 		long delay = System.currentTimeMillis() - start;
 		assertEquals(response, resp.getResponseBody());
 
-		ourLog.info("Did {} reps in {}ms for {}ms/rep", new Object[] {reps, delay, (delay/reps)});
-		
+		ourLog.info("Did {} reps in {}ms for {}ms/rep", new Object[] { reps, delay, (delay / reps) });
+
 	}
-private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceOrchestratorTestIntegrationTest.class);
+
+
 	@Override
 	protected void newEntityManager() {
 		super.newEntityManager();
 		myDao.setEntityManager(myEntityManager);
 	}
 
-        public static void main(String[] args) throws Exception {
-            new ServiceOrchestratorTestIntegrationTest().testSoap11GoodRequest();
-        }
-        
+	public static void main(String[] args) throws Exception {
+		new ServiceOrchestratorTestIntegrationTest().testSoap11GoodRequest();
+	}
+
 }

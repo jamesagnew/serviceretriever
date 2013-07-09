@@ -126,7 +126,7 @@ public class HttpClientBean implements IHttpClient {
 		HttpParams params = new BasicHttpParams();
 		params.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, theUrlPool.getConnectTimeoutMillis());
 		params.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, theUrlPool.getReadTimeoutMillis());
-		params.setBooleanParameter(CoreConnectionPNames.STALE_CONNECTION_CHECK, false);
+		params.setBooleanParameter(CoreConnectionPNames.STALE_CONNECTION_CHECK, true);
 		params.setBooleanParameter(CoreConnectionPNames.SO_KEEPALIVE, true);
 
 		ContentType contentType = ContentType.create(theContentType, ourDefaultCharset);
@@ -213,7 +213,8 @@ public class HttpClientBean implements IHttpClient {
 				ourLog.debug("Exception while invoking remote service", e);
 				theResponse.addFailedUrl(theNextUrl, Messages.getString("HttpClientBean.postClientProtocolException", e.getMessage()), 0, null, null);
 				theResponse.setResponseTime(System.currentTimeMillis() - start);
-			} catch (IOException e) {
+				return;
+			} catch (Exception e) {
 				if (failuresRemaining > 0) {
 					ourLog.info("Failed to invoke service at URL[{}] with {} retries remaining: {}", new Object[] {theNextUrl, failuresRemaining, e.toString()});
 					continue;
@@ -221,6 +222,7 @@ public class HttpClientBean implements IHttpClient {
 				ourLog.debug("Exception while invoking remote service", e);
 				theResponse.addFailedUrl(theNextUrl, Messages.getString("HttpClientBean.postIoException", e.getMessage()), 0, null, null);
 				theResponse.setResponseTime(System.currentTimeMillis() - start);
+				return;
 			} finally {
 				if (entity != null) {
 					try {

@@ -161,6 +161,27 @@ public class HttpClientBeanTest {
 	}
 
 	@Test
+	public void testFailingPost() throws InterruptedException {
+
+		int port = RandomServerPortProvider.findFreePort();
+		String reqBody = provideXmlRequest();
+
+		IResponseValidator validator = new NullResponseValidator();
+		UrlPoolBean urlPool = new UrlPoolBean();
+		urlPool.setPreferredUrl(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port + "/Uri"));
+		urlPool.setConnectTimeoutMillis(1000);
+		urlPool.setReadTimeoutMillis(1000);
+
+		Map<String, String> reqHeaders = new HashMap<String, String>();
+		String reqContentType = "text/xml";
+		HttpResponseBean respBean = mySvc.post(validator, urlPool, reqBody, reqHeaders, reqContentType);
+
+		assertEquals(null, respBean.getSuccessfulUrl());
+		assertEquals(1, respBean.getFailedUrls().size());
+
+	}
+
+	@Test
 	public void testPostWithValidation() throws InterruptedException {
 
 		int port = RandomServerPortProvider.findFreePort();
