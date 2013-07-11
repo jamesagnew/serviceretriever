@@ -20,6 +20,8 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.TemporalType;
 import javax.persistence.Temporal;
 
+import org.apache.commons.lang3.Validate;
+
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.IDao;
@@ -184,6 +186,8 @@ public abstract class BasePersRecentMessage implements Serializable {
 	 *            the requestHostIp to set
 	 */
 	public void setRequestHostIp(String theRequestHostIp) {
+		Validate.notNull(theRequestHostIp);
+		
 		if (theRequestHostIp != null && theRequestHostIp.length() > MAX_REQ_IP_LEN) {
 			myRequestHostIp = theRequestHostIp.substring(0, MAX_REQ_IP_LEN);
 		} else {

@@ -1,6 +1,7 @@
 package net.svcret.admin.client.ui.config.svcver;
 
 import net.svcret.admin.client.AdminPortal;
+import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.HtmlLabel;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
@@ -78,7 +79,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 		myTopPanel.add(titleLabel);
 
 		myContentPanel = new FlowPanel();
-		myContentPanel.addStyleName("contentInnerPanel");
+		myContentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
 		myTopPanel.add(myContentPanel);
 
 		Label intro = new Label(getDialogDescription());

@@ -72,7 +72,7 @@ public class ServiceServlet extends HttpServlet {
 
 		String base = extractBase(contextPath, requestURL);
 
-		ourLog.debug("New GET request at path[{}] and base[{}] and context path[{}]", new Object[] { path, base, contextPath });
+		ourLog.debug("New {} request at path[{}] and base[{}] and context path[{}]", new Object[] { get.name(), path, base, contextPath });
 
 		OrchestratorResponseBean response;
 		try {
@@ -114,7 +114,7 @@ public class ServiceServlet extends HttpServlet {
 
 		Map<String, List<String>> responseHeaders = response.getResponseHeaders();
 		if (responseHeaders != null) {
-			ourLog.debug("Responding with headers: {}", response.getResponseHeaders());
+			ourLog.trace("Responding with headers: {}", response.getResponseHeaders());
 			for (Entry<String, List<String>> next : responseHeaders.entrySet()) {
 				if (ourFilterHeaders.contains(next.getKey())) {
 					continue;

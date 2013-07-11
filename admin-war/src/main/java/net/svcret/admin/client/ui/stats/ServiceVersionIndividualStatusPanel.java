@@ -24,6 +24,8 @@ public class ServiceVersionIndividualStatusPanel extends FlowPanel {
 	private BaseGServiceVersion myServiceVersion;
 
 	public ServiceVersionIndividualStatusPanel(long theDomainPid, long theServicePid, long theServiceVersionPid) {
+		addStyleName(CssConstants.CONTENT_INNER_PANEL);
+		
 		Model.getInstance().loadServiceVersion(theDomainPid, theServicePid, theServiceVersionPid, true, new IAsyncLoadCallback<BaseGServiceVersion>() {
 
 			@Override

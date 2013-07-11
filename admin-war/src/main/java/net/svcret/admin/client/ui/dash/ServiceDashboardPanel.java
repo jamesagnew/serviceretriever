@@ -1,6 +1,7 @@
 package net.svcret.admin.client.ui.dash;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import net.svcret.admin.client.ui.components.CssConstants;
@@ -21,12 +22,17 @@ import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.HierarchyEnum;
 
+import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
-public class ServiceDashboardPanel extends FlowPanel {
+public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 
 	private static final int COL_ACTIONS = 7;
 	private static final int COL_BACKING_URLS = 4;
@@ -41,22 +47,31 @@ public class ServiceDashboardPanel extends FlowPanel {
 	private FlexTable myGrid;
 	private LoadingSpinner myLoadingSpinner;
 	private List<IDashModel> myUiList = new ArrayList<IDashModel>();
+	private Label myLastUpdateLabel;
+	private Timer myTimer;
+	private boolean myUpdating;
 
 	public ServiceDashboardPanel() {
 		setStylePrimaryName(CssConstants.MAIN_PANEL);
 
-		Label titleLabel = new Label("Service Dashboard");
-		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
-		add(titleLabel);
+		HorizontalPanel titlePanel = new HorizontalPanel();
+		titlePanel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
+		add(titlePanel);
 
-		// TreeViewModel viewModel = new DashboardTreeViewModel();
-		// Object rootValue = Model.getInstance().getDomainList();
-		// myDashboardTree = new CellTree(viewModel, rootValue);
-		// add(myDashboardTree);
+		Label titleLabel = new Label("Service Dashboard");
+		titleLabel.addStyleName(CssConstants.MAIN_PANEL_TITLE_TEXT);
+		titlePanel.add(titleLabel);
+
+		HTML spacer = new HTML("&nbsp;");
+		titlePanel.add(spacer);
+		titlePanel.setCellWidth(spacer, "100%");
+
+		myLastUpdateLabel = new Label();
+		myLastUpdateLabel.addStyleName(CssConstants.MAIN_PANEL_UPDATE);
+		titlePanel.add(myLastUpdateLabel);
 
 		myLoadingSpinner = new LoadingSpinner();
-		myLoadingSpinner.show();
-		add(myLoadingSpinner);
+		titlePanel.add(myLoadingSpinner);
 
 		myGrid = new FlexTable();
 		add(myGrid);
@@ -74,19 +89,46 @@ public class ServiceDashboardPanel extends FlowPanel {
 		myGrid.setText(0, COL_ACTIONS, "Actions");
 
 		updateView();
+
+		myTimer = new Timer() {
+			@Override
+			public void run() {
+				if (myUpdating) {
+					return;
+				}
+				myLoadingSpinner.showMessage("", true);
+				myUpdating = true;
+				Model.getInstance().loadDomainListAndStats(new IAsyncLoadCallback<GDomainList>() {
+					@Override
+					public void onSuccess(GDomainList theResult) {
+						myUpdating = false;
+						updateView(theResult);
+					}
+				});
+			}
+		};
+		myTimer.scheduleRepeating(30 * 1000);
+
 	}
 
 	public void updateView() {
+		if (myUpdating) {
+			return;
+		}
+		myLoadingSpinner.showMessage("", true);
+		myUpdating = true;
 		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
 			@Override
 			public void onSuccess(GDomainList theResult) {
+				myUpdating = false;
 				updateView(theResult);
 			}
 		});
 	}
 
 	public void updateView(GDomainList theDomainList) {
-		myLoadingSpinner.hideCompletely();
+		myLoadingSpinner.hide();
+		myLastUpdateLabel.setText("Updated " + DateTimeFormat.getFormat(PredefinedFormat.TIME_MEDIUM).format(new Date()));
 
 		ArrayList<IDashModel> newUiList = new ArrayList<IDashModel>();
 
@@ -110,11 +152,11 @@ public class ServiceDashboardPanel extends FlowPanel {
 							if (nextService.isExpandedOnDashboard()) {
 
 								if (nextService.getVersionList().size() == 1) {
-									
+
 									haveStatsToLoad = addServiceVersionChildren(newUiList, haveStatsToLoad, nextService.getVersionList().get(0));
-									
+
 								} else {
-									
+
 									for (BaseGServiceVersion nextServiceVersion : nextService.getVersionList()) {
 										if (!nextServiceVersion.isStatsInitialized()) {
 											addSpinnerToList(newUiList);
@@ -129,7 +171,7 @@ public class ServiceDashboardPanel extends FlowPanel {
 										}
 
 									} // for service versions
-									
+
 								}
 							}
 
@@ -278,6 +320,11 @@ public class ServiceDashboardPanel extends FlowPanel {
 		}
 
 		myUiList = theNewUiList;
+	}
+
+	@Override
+	public void destroy() {
+		myTimer.cancel();
 	}
 
 }

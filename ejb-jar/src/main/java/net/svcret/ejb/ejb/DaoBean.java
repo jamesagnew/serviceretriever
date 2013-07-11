@@ -67,6 +67,7 @@ import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserAllowableSourceIps;
 import net.svcret.ejb.model.entity.PersUserContact;
 import net.svcret.ejb.model.entity.PersUserRecentMessage;
+import net.svcret.ejb.model.entity.PersUserServiceVersionMethodPermission;
 import net.svcret.ejb.model.entity.PersUserStatus;
 import net.svcret.ejb.model.entity.Queries;
 import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
@@ -590,6 +591,14 @@ public class DaoBean implements IDao {
 
 	@Override
 	public void removeDomain(PersDomain theDomain) {
+		for (BasePersServiceVersion nextSv : theDomain.getAllServiceVersions()) {
+			for (PersServiceVersionMethod nextMethod : nextSv.getMethods()) {
+				for (PersUserServiceVersionMethodPermission nextMethodPerm : nextMethod.getUserPermissions()) {
+					myEntityManager.remove(nextMethodPerm);
+				}
+			}
+		}
+
 		myEntityManager.remove(theDomain);
 	}
 
@@ -1111,6 +1120,11 @@ public class DaoBean implements IDao {
 	@Override
 	public void deleteServiceVersion(BasePersServiceVersion theSv) {
 		myEntityManager.remove(theSv);
+		
+		PersService svc = theSv.getService();
+		svc.removeVersion(theSv);
+		myEntityManager.merge(svc);
+		
 	}
 
 	@Override

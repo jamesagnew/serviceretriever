@@ -643,4 +643,15 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Are you sure you want to delete the service version \"{0}\"?")
 	String deleteServiceVersionPanel_Confirm(String theId);
 
+	@DefaultMessage("Authentication Host")
+	String editUsersPanel_ColumnAuthHost();
+
+	@DefaultMessage("Domain")
+	String recentMessagesGrid_ColDomain();
+
+	@DefaultMessage("Service")
+	String recentMessagesGrid_ColService();
+	@DefaultMessage("Version")
+	String recentMessagesGrid_ColSvcVersion();
+	
 }

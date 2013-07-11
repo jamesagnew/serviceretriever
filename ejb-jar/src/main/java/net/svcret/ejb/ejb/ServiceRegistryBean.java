@@ -25,7 +25,9 @@ import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersService;
+import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersUser;
+import net.svcret.ejb.model.entity.PersUserServiceVersionMethodPermission;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.util.Validate;
 
@@ -135,6 +137,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	@Override
 	public void removeDomain(PersDomain theDomain) throws ProcessingException {
 		catalogHasChanged();
+				
 		myDao.removeDomain(theDomain);
 	}
 

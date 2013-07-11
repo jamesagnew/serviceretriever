@@ -26,6 +26,8 @@ import net.svcret.ejb.util.Validate;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
+import com.google.common.annotations.VisibleForTesting;
+
 @Singleton
 public class TransactionLoggerBean implements ITransactionLogger {
 
@@ -35,8 +37,36 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	private IDao myDao;
 
 	private ReentrantLock myFlushLock = new ReentrantLock();
+
 	private ConcurrentHashMap<BasePersServiceVersion, UnflushedServiceVersionRecentMessages> myUnflushedMessages = new ConcurrentHashMap<BasePersServiceVersion, UnflushedServiceVersionRecentMessages>();
 	private ConcurrentHashMap<PersUser, UnflushedUserRecentMessages> myUnflushedUserMessages = new ConcurrentHashMap<PersUser, UnflushedUserRecentMessages>();
+	private void doFlush() {
+		ourLog.debug("Flushing recent transactions");
+		
+		doFlush(myUnflushedMessages);
+		doFlush(myUnflushedUserMessages);
+	}
+
+	private void doFlush(ConcurrentHashMap<?, ? extends BaseUnflushed<? extends BasePersRecentMessage>> unflushedMessages) {
+		if (unflushedMessages.isEmpty()) {
+			return;
+		}
+
+		ourLog.debug("Going to flush recent transactions to database: {}", unflushedMessages.values());
+		long start = System.currentTimeMillis();
+
+		int saveCount = 0;
+		for (Object next : new HashSet<Object>(unflushedMessages.keySet())) {
+			BaseUnflushed<? extends BasePersRecentMessage> nextTransactions = unflushedMessages.remove(next);
+			if (nextTransactions != null) {
+				myDao.saveRecentMessagesAndTrimInNewTransaction(nextTransactions);
+				saveCount += nextTransactions.getCount();
+			}
+		}
+		
+		long delay = System.currentTimeMillis() - start;
+		ourLog.info("Done saving {} recent transactions to database in {}ms", saveCount, delay);
+	}
 
 	@Override
 	public void flush() {
@@ -88,32 +118,9 @@ public class TransactionLoggerBean implements ITransactionLogger {
 		}
 	}
 
-	private void doFlush() {
-		ourLog.debug("Flushing recent transactions");
-		
-		doFlush(myUnflushedMessages);
-		doFlush(myUnflushedUserMessages);
-	}
-
-	private void doFlush(ConcurrentHashMap<?, ? extends BaseUnflushed<? extends BasePersRecentMessage>> unflushedMessages) {
-		if (unflushedMessages.isEmpty()) {
-			return;
-		}
-
-		ourLog.debug("Going to flush recent transactions to database: {}", unflushedMessages.values());
-		long start = System.currentTimeMillis();
-
-		int saveCount = 0;
-		for (Object next : new HashSet<Object>(unflushedMessages.keySet())) {
-			BaseUnflushed<? extends BasePersRecentMessage> nextTransactions = unflushedMessages.remove(next);
-			if (nextTransactions != null) {
-				myDao.saveRecentMessagesAndTrimInNewTransaction(nextTransactions);
-				saveCount += nextTransactions.getCount();
-			}
-		}
-		
-		long delay = System.currentTimeMillis() - start;
-		ourLog.info("Done saving {} recent transactions to database in {}ms", saveCount, delay);
+	@VisibleForTesting
+	public void setDao(IDao theDao) {
+		myDao = theDao;
 	}
 
 	private static void trimOldest(LinkedList<?> theList, int theSize) {
@@ -128,15 +135,15 @@ public class TransactionLoggerBean implements ITransactionLogger {
 		protected LinkedList<T> mySecurityFail;
 		protected LinkedList<T> mySuccess;
 
+		public int getCount() {
+			return myFail.size() + mySecurityFail.size()+mySuccess.size()+myFault.size();
+		}
+
 		/**
 		 * @return the fail
 		 */
 		public LinkedList<T> getFail() {
 			return myFail;
-		}
-
-		public int getCount() {
-			return myFail.size() + mySecurityFail.size()+mySuccess.size()+myFault.size();
 		}
 
 		/**

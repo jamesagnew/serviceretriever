@@ -4,6 +4,7 @@ import static net.svcret.admin.client.AdminPortal.*;
 
 import java.util.List;
 
+import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.HtmlH1;
 import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.admin.shared.model.GRecentMessageLists;
@@ -14,6 +15,7 @@ import com.google.gwt.user.client.ui.Label;
 public class RecentMessagesPanel extends FlowPanel {
 
 	public RecentMessagesPanel(GRecentMessageLists theLists, boolean theIsUser) {
+		addStyleName(CssConstants.CONTENT_INNER_PANEL);
 		
 		if (!theLists.hasAtLeastOneList()) {
 			this.add(new Label(MSGS.serviceVersionStats_NoRecentMsgs()));

@@ -4,6 +4,10 @@ public class GServiceList extends BaseGList<GService> {
 
 	private static final long serialVersionUID = 1L;
 
+	public GServiceList() {
+		setComparator(new BaseGDashboardObjectComparator());
+	}
+
 	public GService getServiceById(String theServiceId) {
 		for (GService next : this) {
 			if (next.getId().equals(theServiceId)) {

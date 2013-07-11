@@ -3,6 +3,7 @@ package net.svcret.ejb.ejb;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.isOneOf;
 import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -16,10 +17,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.persistence.EntityManager;
 
+import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
@@ -32,11 +35,14 @@ import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.GUserDomainPermission;
+import net.svcret.admin.shared.model.GUserServicePermission;
+import net.svcret.admin.shared.model.GUserServiceVersionPermission;
 import net.svcret.admin.shared.model.GWsSecServerSecurity;
 import net.svcret.admin.shared.model.GWsSecUsernameTokenClientSecurity;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
+import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IRuntimeStatus;
@@ -45,6 +51,7 @@ import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.ejb.AdminServiceBean.IWithStats;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersConfig;
@@ -54,6 +61,7 @@ import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
+import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 
 import org.hamcrest.Matchers;
@@ -73,6 +81,8 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	private IBroadcastSender myBroadcastSender;
 	private ServiceRegistryBean mySvcReg;
 	private ConfigServiceBean myConfigSvc;
+
+	private TransactionLoggerBean myTransactionLogSvc;
 
 	@After
 	public void after2() {
@@ -134,6 +144,9 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		mySvcReg.setDao(myDao);
 		mySvc.setServiceRegistry(mySvcReg);
 
+		myTransactionLogSvc = new TransactionLoggerBean();
+		myTransactionLogSvc.setDao(myDao);
+		
 		DefaultAnswer.setDesignTime();
 	}
 
@@ -173,6 +186,8 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 	}
 
+	
+	
 	@Test
 	public void testLoadAndSaveSvcVerClientSecurity() throws ProcessingException {
 
@@ -664,14 +679,22 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		mySvc.deleteServiceVersion(d1s1v1.getPid());
+		long pid = d1s1v1.getPid();
+		mySvc.deleteServiceVersion(pid);
 
 		newEntityManager();
 
+		BasePersServiceVersion ver = myDao.getServiceVersionByPid(pid);
+		assertNull(ver);
+		
 		pDomain = myDao.getDomainByPid(d1.getPid());
 		versions = pDomain.getServices().iterator().next().getVersions();
 
-		assertEquals(0, versions.size());
+		if (versions.size() > 0) {
+			ver = versions.iterator().next();
+			fail(ver.toString());
+		}
+		
 
 	}
 
@@ -692,6 +715,53 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	@Test
 	public void testDeleteDomain() throws ProcessingException {
 
+		createEverything();
+
+		long pid = mySvc.getDomainPid("asv_did");
+		assertTrue(pid > 0);
+		
+		mySvc.deleteDomain(pid);
+
+		newEntityManager();
+
+		GDomain domain = mySvc.getDomainByPid(pid);
+		assertNull(domain);
+
+	}
+
+	@Test
+	public void testDeleteUser() throws ProcessingException {
+
+		createEverything();
+
+		BasePersAuthenticationHost authHost = myDao.getAuthenticationHost(BasePersAuthenticationHost.MODULE_ID_ADMIN_AUTH);
+		long pid = myDao.getOrCreateUser(authHost, "username").getPid();
+		assertTrue(pid > 0);
+
+		assertEquals(2, myDao.getAllUsersAndInitializeThem().size());
+
+		newEntityManager();
+		
+		mySvc.deleteUser(pid);
+
+		newEntityManager();
+
+		assertEquals(1, myDao.getAllUsersAndInitializeThem().size());
+		
+	}
+
+	private GDomain createEverything() throws ProcessingException {
+		newEntityManager();
+		
+		mySecSvc.loadUserCatalogIfNeeded();
+		
+		BasePersAuthenticationHost authHost = myDao.getAuthenticationHost(BasePersAuthenticationHost.MODULE_ID_ADMIN_AUTH);
+		authHost.setKeepNumRecentTransactionsFail(100);
+		authHost.setKeepNumRecentTransactionsFault(100);
+		authHost.setKeepNumRecentTransactionsSecurityFail(100);
+		authHost.setKeepNumRecentTransactionsSuccess(100);
+		myDao.saveAuthenticationHost(authHost);
+		
 		newEntityManager();
 
 		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
@@ -707,6 +777,11 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		d1s1v1.setWsdlLocation("http://foo");
 		d1s1v1.setHttpClientConfigPid(hcc.getPid());
 
+		d1s1v1.setKeepNumRecentTransactionsFail(100);
+		d1s1v1.setKeepNumRecentTransactionsFault(100);
+		d1s1v1.setKeepNumRecentTransactionsSecurityFail(100);
+		d1s1v1.setKeepNumRecentTransactionsSuccess(100);
+		
 		GServiceMethod d1s1v1m1 = new GServiceMethod();
 		d1s1v1m1.setName("d1s1v1m1");
 		d1s1v1.getMethodList().add(d1s1v1m1);
@@ -717,17 +792,41 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		GSoap11ServiceVersion ver = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
 
+		ver.getUrlList().add(new GServiceVersionUrl("url1", "http://foo"));
+		ver = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), ver, resources);
+		
+		newEntityManager();
+		BasePersServiceVersion persVer = myDao.getServiceVersionByPid(ver.getPid());
+		
+		// Create a user with access
+		GUser user = new GUser();
+		user.setAuthHostPid(myDao.getAllAuthenticationHosts().iterator().next().getPid());
+		user.setUsername("username");
+		user.setDomainPermissions(new ArrayList<GUserDomainPermission>());
+		user.getDomainPermissions().add(new GUserDomainPermission());
+		user.getDomainPermissions().get(0).setDomainPid(persVer.getService().getDomain().getPid());
+		user.getDomainPermissions().get(0).setServicePermissions(new ArrayList<GUserServicePermission>());
+		user.getDomainPermissions().get(0).getServicePermissions().add(new GUserServicePermission());
+		user.getDomainPermissions().get(0).getServicePermissions().get(0).setServicePid(persVer.getService().getPid());
+		user.getDomainPermissions().get(0).getServicePermissions().get(0).setServiceVersionPermissions(new ArrayList<GUserServiceVersionPermission>());
+		user.getDomainPermissions().get(0).getServicePermissions().get(0).getServiceVersionPermissions().add(new GUserServiceVersionPermission());
+		user.getDomainPermissions().get(0).getServicePermissions().get(0).getServiceVersionPermissions().get(0).setServiceVersionPid(persVer.getPid());
+		user.getDomainPermissions().get(0).getServicePermissions().get(0).getServiceVersionPermissions().get(0).getOrCreateServiceVersionMethodPermission(persVer.getMethods().get(0).getPid()).setAllow(true);
+		
+		user = mySvc.saveUser(user);
+
 		newEntityManager();
 
 		// Add stats
-		BasePersServiceVersion persVer = myDao.getServiceVersionByPid(ver.getPid());
+		persVer = myDao.getServiceVersionByPid(ver.getPid());
 		PersServiceVersionStatus status = persVer.getStatus();
 		assertNotNull(status);
 
 		PersServiceVersionMethod m1 = persVer.getMethods().iterator().next();
-
+				
 		newEntityManager();
 
+		// Record invocation
 		HttpResponseBean httpResponse = new HttpResponseBean();
 		httpResponse.setBody("1234");
 		httpResponse.setResponseTime(123);
@@ -736,14 +835,31 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		myStatsSvc.recordInvocationMethod(new Date(), 100, m1, null, httpResponse, bean);
 
 		newEntityManager();
+		
+		myStatsSvc.flushStatus();
+		
+		newEntityManager();
+		
+		persVer = myDao.getServiceVersionByPid(ver.getPid());
 
-		mySvc.deleteDomain(d1.getPid());
+		HttpRequestBean request = new HttpRequestBean();
+		request.setRequestHostIp("127.0.0.1");
+		request.setRequestHeaders(new HashMap<String, List<String>>());
+		String requestBody= "request body";
+		InvocationResponseResultsBean invocationResponse = new InvocationResponseResultsBean();
+		invocationResponse.setResponseHeaders(new HashMap<String, List<String>>());
+		invocationResponse.setResponseType(ResponseTypeEnum.SUCCESS);
+		PersServiceVersionUrl implementationUrl=persVer.getUrls().get(0);
+		AuthorizationOutcomeEnum authorizationOutcome=AuthorizationOutcomeEnum.AUTHORIZED;
+		PersUser persUser = myDao.getUser(user.getPidOrNull());
+		myTransactionLogSvc.logTransaction(new Date(), request, m1.getServiceVersion(), persUser, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome);
 
 		newEntityManager();
 
-		GDomain domain = mySvc.getDomainByPid(d1.getPid());
-		assertNull(domain);
-
+		myTransactionLogSvc.flush();
+		
+		newEntityManager();
+		return d1;
 	}
 
 	@Test

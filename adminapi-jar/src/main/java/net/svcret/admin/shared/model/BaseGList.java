@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -12,17 +13,9 @@ public class BaseGList<T extends BaseGObject<T>> implements Iterable<T>, Seriali
 
 	private static final long serialVersionUID = 1L;
 
-	private List<T> myList;
-
+	private Comparator<? super T> myComparator;
 	private Date myLastMerged;
-
-	public void clear() {
-		myList.clear();
-	}
-
-	public Collection<T> toCollection() {
-		return Collections.unmodifiableCollection(myList);
-	}
+	private List<T> myList;
 
 	public BaseGList() {
 		myList = new ArrayList<T>();
@@ -30,14 +23,31 @@ public class BaseGList<T extends BaseGObject<T>> implements Iterable<T>, Seriali
 
 	public void add(T theObject) {
 		myList.add(theObject);
+		sort();
 	}
 
-	public void remove(T theObject) {
-		myList.remove(theObject);
-	}
-	
 	public void addAll(Collection<T> theList) {
 		myList.addAll(theList);
+		sort();
+	}
+
+	public void clear() {
+		myList.clear();
+	}
+
+	public T get(int theIndex) {
+		return myList.get(theIndex);
+	}
+
+	/**
+	 * @return the lastMerged
+	 */
+	public Date getLastMerged() {
+		return myLastMerged;
+	}
+
+	public Iterator<T> iterator() {
+		return myList.iterator();
 	}
 
 	public void mergeResults(BaseGList<T> theResult) {
@@ -58,28 +68,32 @@ public class BaseGList<T extends BaseGObject<T>> implements Iterable<T>, Seriali
 		while (myList.size() > theResult.size()) {
 			myList.remove(myList.size() - 1);
 		}
+		sort();
 		myLastMerged = new Date();
 	}
 
-	/**
-	 * @return the lastMerged
-	 */
-	public Date getLastMerged() {
-		return myLastMerged;
+	public void remove(T theObject) {
+		myList.remove(theObject);
 	}
 
-	public T get(int theIndex) {
-		return myList.get(theIndex);
+	protected void setComparator(Comparator<? super T> theComparator) {
+		myComparator = theComparator;
+		sort();
 	}
 
 	public int size() {
 		return myList.size();
 	}
 
-	public Iterator<T> iterator() {
-		return myList.iterator();
+	private void sort() {
+		if (myComparator != null) {
+			Collections.sort(myList, myComparator);
+		}
 	}
 
+	public Collection<T> toCollection() {
+		return Collections.unmodifiableCollection(myList);
+	}
 
 	// public AbstractDataProvider<T> asDataProvider() {
 	// return myDataProvider;

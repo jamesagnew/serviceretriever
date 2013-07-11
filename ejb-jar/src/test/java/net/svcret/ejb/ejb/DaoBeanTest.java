@@ -80,9 +80,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		rule.setFireIfAllBackingUrlsAreUnavailable(true);
 		rule.setFireIfSingleBackingUrlIsUnavailable(true);
 		
-		PersMonitorAppliesTo appliesTo = new PersMonitorAppliesTo();
-		appliesTo.setItem(ver);
-		rule.getAppliesTo().add(appliesTo);
+		rule.setAppliesToItems(ver);
 		
 		PersMonitorRuleNotifyContact ctact = new PersMonitorRuleNotifyContact();
 		ctact.setEmail("foo@example.com");

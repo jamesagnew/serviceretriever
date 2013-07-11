@@ -8,7 +8,11 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 	private static final long serialVersionUID = 1L;
 
 	private AuthorizationOutcomeEnum myAuthorizationOutcome;
-	private String myImplementationUrl;
+	private String myDomainName;
+	private long myDomainPid;
+	private String myImplementationUrlHref;
+	private String myImplementationUrlId;
+	private long myImplementationUrlPid;
 	private String myRequestContentType;
 	private List<Pair<String>> myRequestHeaders;
 	private String myRequestHostIp;
@@ -18,6 +22,10 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 	private String myResponseContentType;
 	private List<Pair<String>> myResponseHeaders;
 	private String myResponseMessage;
+	private String myServiceName;
+	private long myServicePid;
+	private String myServiceVersionId;
+	private long myServiceVersionPid;
 	private long myTransactionMillis;
 	private Date myTransactionTime;
 	
@@ -25,10 +33,9 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 		super();
 	}
 
-	public GRecentMessage(long thePid, Date theDate, String theUrl, String theRequestHostIp, String theRequestMessage, String theResponseMessage, List<Pair<String>> theRequestHeaders, List<Pair<String>> theResponseHeaders, String theRequestContentType, String theResponseContentType) {
+	public GRecentMessage(long thePid, Date theDate, String theRequestHostIp, String theRequestMessage, String theResponseMessage, List<Pair<String>> theRequestHeaders, List<Pair<String>> theResponseHeaders, String theRequestContentType, String theResponseContentType) {
 		setPid(thePid);
 		myTransactionTime = theDate;
-		myImplementationUrl = theUrl;
 		myRequestHostIp = theRequestHostIp;
 		myRequestMessage = theRequestMessage;
 		myResponseMessage = theResponseMessage;
@@ -45,11 +52,25 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 		return myAuthorizationOutcome;
 	}
 
-	/**
-	 * @return the implementationUrl
-	 */
-	public String getImplementationUrl() {
-		return myImplementationUrl;
+
+	public String getDomainName() {
+		return myDomainName;
+	}
+
+	public long getDomainPid() {
+		return myDomainPid;
+	}
+
+	public String getImplementationUrlHref() {
+		return myImplementationUrlHref;
+	}
+
+	public String getImplementationUrlId() {
+		return myImplementationUrlId;
+	}
+
+	public long getImplementationUrlPid() {
+		return myImplementationUrlPid;
 	}
 
 	/**
@@ -112,6 +133,22 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 		return myResponseMessage;
 	}
 
+	public String getServiceName() {
+		return myServiceName;
+	}
+
+	public long getServicePid() {
+		return myServicePid;
+	}
+
+	public String getServiceVersionId() {
+		return myServiceVersionId;
+	}
+
+	public long getServiceVersionPid() {
+		return myServiceVersionPid;
+	}
+
 	/**
 	 * @return the transactionMillis
 	 */
@@ -135,12 +172,24 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 		myAuthorizationOutcome = theAuthorizationOutcome;
 	}
 
-	/**
-	 * @param theImplementationUrl
-	 *            the implementationUrl to set
-	 */
-	public void setImplementationUrl(String theImplementationUrl) {
-		myImplementationUrl = theImplementationUrl;
+	public void setDomainName(String theDomainName) {
+		myDomainName = theDomainName;
+	}
+
+	public void setDomainPid(long theDomainPid) {
+		myDomainPid = theDomainPid;
+	}
+
+	public void setImplementationUrlHref(String theImplementationUrlHref) {
+		myImplementationUrlHref = theImplementationUrlHref;
+	}
+
+	public void setImplementationUrlId(String theImplementationUrlId) {
+		myImplementationUrlId = theImplementationUrlId;
+	}
+
+	public void setImplementationUrlPid(long theImplementationUrlPid) {
+		myImplementationUrlPid = theImplementationUrlPid;
 	}
 
 	/**
@@ -201,6 +250,22 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 	 */
 	public void setResponseMessage(String theResponseMessage) {
 		myResponseMessage = theResponseMessage;
+	}
+
+	public void setServiceName(String theServiceName) {
+		myServiceName = theServiceName;
+	}
+
+	public void setServicePid(long theServicePid) {
+		myServicePid = theServicePid;
+	}
+
+	public void setServiceVersionId(String theServiceVersionId) {
+		myServiceVersionId = theServiceVersionId;
+	}
+
+	public void setServiceVersionPid(long theServiceVersionPid) {
+		myServiceVersionPid = theServiceVersionPid;
 	}
 
 	public void setTransactionMillis(long theTransactionMillis) {

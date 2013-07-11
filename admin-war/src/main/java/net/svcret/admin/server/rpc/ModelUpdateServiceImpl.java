@@ -343,7 +343,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		GUser user;
 		try {
 			user = myAdminSvc.loadUser(thePid, theLoadStats);
-			BaseGAuthHost authHost = myAdminSvc.loadAuthenticationHost(user.getPid());
+			BaseGAuthHost authHost = myAdminSvc.loadAuthenticationHost(user.getAuthHostPid());
 			return new UserAndAuthHost(user, authHost);
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to load user " + thePid, e);

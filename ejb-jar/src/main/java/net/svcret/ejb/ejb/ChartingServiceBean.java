@@ -37,13 +37,56 @@ public class ChartingServiceBean implements IChartingServiceBean {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ChartingServiceBean.class);
 
 	@EJB
-	private IDao myDao;
+	private IConfigService myConfig;
 
 	@EJB
-	private IRuntimeStatus myStatus;
+	private IDao myDao;
 	
 	@EJB
-	private IConfigService myConfig;
+	private IRuntimeStatus myStatus;
+
+	private byte[] render(RrdGraphDef graphDef) throws IOException {
+
+		graphDef.setImageFormat("PNG");
+		RrdGraph graph = new RrdGraph(graphDef);
+
+		BufferedImage bi = new BufferedImage(graph.getRrdGraphInfo().getWidth(), graph.getRrdGraphInfo().getHeight(), BufferedImage.TYPE_INT_RGB);
+		graph.render(bi.getGraphics());
+
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		ImageIO.write(bi, "png", bos);
+
+		return bos.toByteArray();
+	}
+
+	private byte[] renderLatency(List<Integer> theNumCalls, List<Long> theTotalTime, List<Long> theTimestampsMillis) throws IOException {
+		Validate.isTrue(theNumCalls.size() == theTotalTime.size());
+
+		RrdGraphDef graphDef = new RrdGraphDef();
+		graphDef.setWidth(600);
+		graphDef.setHeight(200);
+
+		long[] timestamps = new long[theNumCalls.size()];
+		double[] avgValues = new double[theNumCalls.size()];
+
+		double previousValue = 0.0;
+		for (int i = 0; i < theNumCalls.size(); i++) {
+			timestamps[i] = theTimestampsMillis.get(i) / 1000;
+			previousValue = theNumCalls.get(i) > 0 ? (theTotalTime.get(i) / theNumCalls.get(i)) : previousValue;
+			avgValues[i] = previousValue;
+		}
+
+		LinearInterpolator avgPlot = new LinearInterpolator(timestamps, avgValues);
+		graphDef.datasource("avg", avgPlot);
+		graphDef.setTimeSpan(timestamps);
+		graphDef.setVerticalLabel("Latency (millis/call)");
+		graphDef.setTextAntiAliasing(true);
+
+		graphDef.line("avg", Color.BLACK, "Average (ms)", 2);
+		graphDef.gprint("avg", ConsolFun.AVERAGE, "average %.1f");
+
+		return render(graphDef);
+	}
 
 	@Override
 	public byte[] renderLatencyGraphForServiceVersion(long theServiceVersionPid, TimeRange theRange) throws IOException, ProcessingException {
@@ -69,6 +112,45 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		}
 
 		return renderLatency(invCount60Min, time60min, timestamps);
+	}
+
+	private byte[] renderPayloadSize(List<Integer> theInvCount, double[] theAvgSuccessReqBytes, double[] theAvgSuccessRespBytes, String theIntervalDesc, List<Long> theTimestampsMillis) throws IOException {
+		RrdGraphDef graphDef = new RrdGraphDef();
+		graphDef.setWidth(600);
+		graphDef.setHeight(200);
+
+		long[] timestamps = new long[theInvCount.size()];
+
+		double prevReq = 0.0;
+		double prevResp = 0.0;
+		for (int i = 0; i < theInvCount.size(); i++) {
+			timestamps[i] = theTimestampsMillis.get(i) / 1000;
+			prevReq = theAvgSuccessReqBytes[i] > 0 ? theAvgSuccessReqBytes[i] : prevReq;
+			theAvgSuccessReqBytes[i] = prevReq;
+			prevResp = theAvgSuccessRespBytes[i] > 0 ? theAvgSuccessRespBytes[i] : prevResp;
+			theAvgSuccessRespBytes[i] = prevResp;
+		}
+		
+		for (int i = 0; i < theAvgSuccessReqBytes.length; i++) {
+		}
+		
+
+		graphDef.setTimeSpan(timestamps);
+		graphDef.setVerticalLabel(theIntervalDesc);
+		graphDef.setTextAntiAliasing(true);
+
+		LinearInterpolator reqPlot = new LinearInterpolator(timestamps, theAvgSuccessReqBytes);
+		graphDef.datasource("req", reqPlot);
+		graphDef.line("req", Color.RED, "Requests", 2.0f);
+		graphDef.gprint("req", ConsolFun.AVERAGE, "Average Size %.1f\\l");
+
+		LinearInterpolator respPlot = new LinearInterpolator(timestamps, theAvgSuccessRespBytes);
+		graphDef.datasource("resp", respPlot);
+		graphDef.line("resp", Color.GREEN, "Responses", 2.0f);
+		graphDef.gprint("resp", ConsolFun.AVERAGE, "Average Size %.1f\\l");
+
+		return render(graphDef);
+
 	}
 
 	@Override
@@ -106,112 +188,6 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		}
 
 		return renderPayloadSize(invCount, avgSuccessReqSize, avgSuccessRespSize, "Bytes/Message", timestamps);
-	}
-
-	private byte[] renderPayloadSize(List<Integer> theInvCount, double[] theAvgSuccessReqBytes, double[] theAvgSuccessRespBytes, String theIntervalDesc, List<Long> theTimestampsMillis) throws IOException {
-		RrdGraphDef graphDef = new RrdGraphDef();
-		graphDef.setWidth(600);
-		graphDef.setHeight(200);
-
-		long[] timestamps = new long[theInvCount.size()];
-
-		for (int i = 0; i < theInvCount.size(); i++) {
-			timestamps[i] = theTimestampsMillis.get(i) / 1000;
-		}
-
-		graphDef.setTimeSpan(timestamps);
-		graphDef.setVerticalLabel(theIntervalDesc);
-		graphDef.setTextAntiAliasing(true);
-
-		LinearInterpolator reqPlot = new LinearInterpolator(timestamps, theAvgSuccessReqBytes);
-		graphDef.datasource("req", reqPlot);
-		graphDef.line("req", Color.RED, "Requests", 2.0f);
-		graphDef.gprint("req", ConsolFun.AVERAGE, "Average Size %.1f\\l");
-
-		LinearInterpolator respPlot = new LinearInterpolator(timestamps, theAvgSuccessRespBytes);
-		graphDef.datasource("resp", respPlot);
-		graphDef.line("resp", Color.GREEN, "Responses", 2.0f);
-		graphDef.gprint("resp", ConsolFun.AVERAGE, "Average Size %.1f\\l");
-
-		return render(graphDef);
-
-	}
-
-	@Override
-	public byte[] renderUsageGraphForServiceVersion(long theServiceVersionPid, TimeRange theRange) throws IOException, ProcessingException {
-		ourLog.info("Rendering latency graph for service version {}", theServiceVersionPid);
-
-		final List<Double> invCount = new ArrayList<Double>();
-		final List<Double> invCountFault = new ArrayList<Double>();
-		final List<Double> invCountFail = new ArrayList<Double>();
-		final List<Double> invCountSecurityFail = new ArrayList<Double>();
-		final List<Long> timestamps = new ArrayList<Long>();
-
-		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
-		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
-			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats() {
-				@Override
-				public void withStats(int theIndex, BasePersInvocationStats theStats) {
-					growToSizeDouble(invCount, theIndex);
-					growToSizeDouble(invCountFault, theIndex);
-					growToSizeDouble(invCountFail, theIndex);
-					growToSizeDouble(invCountSecurityFail, theIndex);
-					growToSizeLong(timestamps, theIndex);
-
-					double numMinutes = theStats.getPk().getInterval().numMinutes();
-					
-					invCount.set(theIndex, invCount.get(theIndex)+( theStats.getSuccessInvocationCount()/numMinutes));
-					invCountFault.set(theIndex, invCountFault.get(theIndex)+ (theStats.getFaultInvocationCount()/numMinutes));
-					invCountFail.set(theIndex, invCountFail.get(theIndex)+ (theStats.getFailInvocationCount()/numMinutes));
-					invCountSecurityFail.set(theIndex, invCountSecurityFail.get(theIndex)+ (theStats.getServerSecurityFailures()/numMinutes));
-					timestamps.set(theIndex, theStats.getPk().getStartTime().getTime());
-				}
-			});
-						
-		}
-
-		return renderUsage(invCount, invCountFault, invCountFail, invCountSecurityFail, "Calls / Min", timestamps);
-	}
-
-	private byte[] render(RrdGraphDef graphDef) throws IOException {
-
-		graphDef.setImageFormat("PNG");
-		RrdGraph graph = new RrdGraph(graphDef);
-
-		BufferedImage bi = new BufferedImage(graph.getRrdGraphInfo().getWidth(), graph.getRrdGraphInfo().getHeight(), BufferedImage.TYPE_INT_RGB);
-		graph.render(bi.getGraphics());
-
-		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		ImageIO.write(bi, "png", bos);
-
-		return bos.toByteArray();
-	}
-
-	private byte[] renderLatency(List<Integer> theNumCalls, List<Long> theTotalTime, List<Long> theTimestampsMillis) throws IOException {
-		Validate.isTrue(theNumCalls.size() == theTotalTime.size());
-
-		RrdGraphDef graphDef = new RrdGraphDef();
-		graphDef.setWidth(600);
-		graphDef.setHeight(200);
-
-		long[] timestamps = new long[theNumCalls.size()];
-		double[] avgValues = new double[theNumCalls.size()];
-
-		for (int i = 0; i < theNumCalls.size(); i++) {
-			timestamps[i] = theTimestampsMillis.get(i) / 1000;
-			avgValues[i] = theNumCalls.get(i) > 0 ? (theTotalTime.get(i) / theNumCalls.get(i)) : 0;
-		}
-
-		LinearInterpolator avgPlot = new LinearInterpolator(timestamps, avgValues);
-		graphDef.datasource("avg", avgPlot);
-		graphDef.setTimeSpan(timestamps);
-		graphDef.setVerticalLabel("Latency (millis/call)");
-		graphDef.setTextAntiAliasing(true);
-
-		graphDef.line("avg", Color.BLACK, "Average (ms)", 2);
-		graphDef.gprint("avg", ConsolFun.AVERAGE, "average %.1f");
-
-		return render(graphDef);
 	}
 
 	private byte[] renderUsage(List<Double> theInvCount, List<Double> theInvCountFault, List<Double> theInvCountFail, List<Double> theInvCountSecurityFail, String theIntervalDesc, List<Long> theTimestampsMillis) throws IOException {
@@ -252,19 +228,55 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		return render(graphDef);
 	}
 
-	private double[] toDoublesFromDoubles(List<Double> theInvCount) {
-		double[] retVal = new double[theInvCount.size()];
-		int i = 0;
-		for (Double next : theInvCount) {
-			retVal[i++] = next;
+	@Override
+	public byte[] renderUsageGraphForServiceVersion(long theServiceVersionPid, TimeRange theRange) throws IOException, ProcessingException {
+		ourLog.info("Rendering latency graph for service version {}", theServiceVersionPid);
+
+		final List<Double> invCount = new ArrayList<Double>();
+		final List<Double> invCountFault = new ArrayList<Double>();
+		final List<Double> invCountFail = new ArrayList<Double>();
+		final List<Double> invCountSecurityFail = new ArrayList<Double>();
+		final List<Long> timestamps = new ArrayList<Long>();
+
+		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
+		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
+			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats() {
+				@Override
+				public void withStats(int theIndex, BasePersInvocationStats theStats) {
+					growToSizeDouble(invCount, theIndex);
+					growToSizeDouble(invCountFault, theIndex);
+					growToSizeDouble(invCountFail, theIndex);
+					growToSizeDouble(invCountSecurityFail, theIndex);
+					growToSizeLong(timestamps, theIndex);
+
+					double numMinutes = theStats.getPk().getInterval().numMinutes();
+					
+					invCount.set(theIndex, invCount.get(theIndex)+( theStats.getSuccessInvocationCount()/numMinutes));
+					invCountFault.set(theIndex, invCountFault.get(theIndex)+ (theStats.getFaultInvocationCount()/numMinutes));
+					invCountFail.set(theIndex, invCountFail.get(theIndex)+ (theStats.getFailInvocationCount()/numMinutes));
+					invCountSecurityFail.set(theIndex, invCountSecurityFail.get(theIndex)+ (theStats.getServerSecurityFailures()/numMinutes));
+					timestamps.set(theIndex, theStats.getPk().getStartTime().getTime());
+				}
+			});
+						
 		}
-		return retVal;
+
+		return renderUsage(invCount, invCountFault, invCountFail, invCountSecurityFail, "Calls / Min", timestamps);
 	}
 
 	private double[] toDoubles(List<Integer> theInvCount) {
 		double[] retVal = new double[theInvCount.size()];
 		int i = 0;
 		for (int next : theInvCount) {
+			retVal[i++] = next;
+		}
+		return retVal;
+	}
+
+	private double[] toDoublesFromDoubles(List<Double> theInvCount) {
+		double[] retVal = new double[theInvCount.size()];
+		int i = 0;
+		for (Double next : theInvCount) {
 			retVal[i++] = next;
 		}
 		return retVal;

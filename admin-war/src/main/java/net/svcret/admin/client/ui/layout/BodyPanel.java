@@ -6,6 +6,7 @@ import com.google.gwt.user.client.ui.ScrollPanel;
 public class BodyPanel extends ScrollPanel {
 
 	private static BodyPanel ourInstance;
+	private Panel myContents;
 
 	public BodyPanel() {
 		assert ourInstance == null;
@@ -24,5 +25,13 @@ public class BodyPanel extends ScrollPanel {
 	public void setContents(Panel thePanel) {
 		clear();
 		add(thePanel);
+		myContents = thePanel;
 	}
+
+	public Panel getContents() {
+		return myContents;
+	}
+	
+	
+	
 }

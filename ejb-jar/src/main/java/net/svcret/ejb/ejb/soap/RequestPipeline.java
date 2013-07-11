@@ -27,7 +27,6 @@ import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
 
-
 class RequestPipeline {
 
 	private static XMLEventFactory ourEventFactory;
@@ -38,15 +37,14 @@ class RequestPipeline {
 	private List<ICredentialGrabber> myCredentialGrabbers = new ArrayList<ICredentialGrabber>();
 	private boolean myPrettyPrint;
 	private boolean myUsed = false;
-	private List<PersBaseServerAuth<?,?>> myServerAuths;
+	private List<PersBaseServerAuth<?, ?>> myServerAuths;
 	private String myMethodName;
 
 	/**
 	 * @param theClientAuths
-	 *            The authentication types that will be applied to the proxy
-	 *            client when it makes requests to the actual service definition
+	 *            The authentication types that will be applied to the proxy client when it makes requests to the actual service definition
 	 */
-	public RequestPipeline(List<PersBaseServerAuth<?,?>> theServerAuth, List<PersBaseClientAuth<?>> theClientAuths) {
+	public RequestPipeline(List<PersBaseServerAuth<?, ?>> theServerAuth, List<PersBaseClientAuth<?>> theClientAuths) {
 		myServerAuths = theServerAuth;
 		myClientAuths = theClientAuths;
 	}
@@ -102,15 +100,15 @@ class RequestPipeline {
 					StartElement elem = (StartElement) nextEvent;
 					if (haveProcessedBody) {
 						if (myMethodName == null) {
-							setMethodName(elem.getName().getNamespaceURI()+":"+elem.getName().getLocalPart());
+							setMethodName(elem.getName().getNamespaceURI() + ":" + elem.getName().getLocalPart());
 						}
 					} else if (Constants.SOAPENV11_HEADER_QNAME.equals(elem.getName())) {
-						processHeader(elem.getName().getPrefix(), streamReader, streamWriter);
+						processHeader(elem, elem.getName().getPrefix(), streamReader, streamWriter);
 						haveProcessedHeader = true;
 						continue;
 					} else if (Constants.SOAPENV11_BODY_QNAME.equals(elem.getName())) {
 						if (!haveProcessedHeader) {
-							processHeader(elem.getName().getPrefix(), streamReader, streamWriter);
+							processHeader(null, elem.getName().getPrefix(), streamReader, streamWriter);
 							haveProcessedHeader = true;
 						}
 						haveProcessedBody = true;
@@ -150,19 +148,27 @@ class RequestPipeline {
 
 	/**
 	 * 
+	 * @param theStartElem
 	 * @param theXmlPrefix
-	 *            The element prefix. E.g. if the header element is
-	 *            &lt;soapenv:Header&gt; this string is "soapenv"
+	 *            The element prefix. E.g. if the header element is &lt;soapenv:Header&gt; this string is "soapenv"
 	 * @param theStreamReader
 	 * @param theStreamWriter
 	 * @throws ProcessingException
 	 */
-	private void processHeader(String theXmlPrefix, XMLEventReader theStreamReader, XMLEventWriter theStreamWriter) throws ProcessingException {
+	private void processHeader(StartElement theStartElem, String theXmlPrefix, XMLEventReader theStreamReader, XMLEventWriter theStreamWriter) throws ProcessingException {
+
+		// try {
+		// writeSecurityHeader(theXmlPrefix, theStreamWriter);
+		// } catch (XMLStreamException e) {
+		// throw new ProcessingException(e);
+		// }
 
 		try {
-			writeSecurityHeader(theXmlPrefix, theStreamWriter);
-		} catch (XMLStreamException e) {
-			throw new ProcessingException(e);
+			if (theStartElem != null) {
+				theStreamWriter.add(theStartElem);
+			}
+		} catch (XMLStreamException e1) {
+			throw new ProcessingException(e1);
 		}
 
 		List<XMLEvent> headerEvents = new ArrayList<XMLEvent>();
@@ -173,11 +179,13 @@ class RequestPipeline {
 				if (nextEvent.isEndElement()) {
 					EndElement elem = (EndElement) nextEvent;
 					if (Constants.SOAPENV11_HEADER_QNAME.equals(elem.getName())) {
+						theStreamWriter.add(nextEvent);
 						break;
 					}
 				}
 
 				headerEvents.add(nextEvent);
+				theStreamWriter.add(nextEvent);
 			}
 		} catch (XMLStreamException e) {
 			throw new ProcessingException(e);
@@ -186,7 +194,7 @@ class RequestPipeline {
 		/*
 		 * Grab security headers
 		 */
-		for (PersBaseServerAuth<?,?> next : myServerAuths) {
+		for (PersBaseServerAuth<?, ?> next : myServerAuths) {
 			if (next instanceof PersWsSecUsernameTokenServerAuth) {
 				ICredentialGrabber grabber = ((PersWsSecUsernameTokenServerAuth) next).newCredentialGrabber(headerEvents);
 				myCredentialGrabbers.add(grabber);

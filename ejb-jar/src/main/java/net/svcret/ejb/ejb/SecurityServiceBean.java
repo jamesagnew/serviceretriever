@@ -11,6 +11,8 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import org.apache.commons.lang3.Validate;
+
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.api.IAuthorizationService;
@@ -50,6 +52,8 @@ public class SecurityServiceBean implements ISecurityService {
 	private ILocalDatabaseAuthorizationService myLocalDbAuthService;
 
 	public AuthorizationResultsBean authorizeMethodInvocation(BasePersAuthenticationHost theAuthHost, ICredentialGrabber theCredentialGrabber, PersServiceVersionMethod theMethod, String theRequestHostIp) throws ProcessingException {
+		Validate.notNull(theAuthHost, "AuthHost");
+		
 		BasePersAuthenticationHost authHost = myInMemoryUserCatalog.getAuthHostByPid(theAuthHost.getPid());
 
 		AuthorizationResultsBean retVal = new AuthorizationResultsBean();

@@ -24,6 +24,7 @@ import net.svcret.admin.client.ui.config.service.EditServicePanel;
 import net.svcret.admin.client.ui.config.svcver.AddServiceVersionPanel;
 import net.svcret.admin.client.ui.config.svcver.AddServiceVersionStep2Panel;
 import net.svcret.admin.client.ui.config.svcver.EditServiceVersionPanel;
+import net.svcret.admin.client.ui.dash.IDestroyable;
 import net.svcret.admin.client.ui.dash.ServiceDashboardPanel;
 import net.svcret.admin.client.ui.layout.BodyPanel;
 import net.svcret.admin.client.ui.layout.BreadcrumbPanel;
@@ -269,11 +270,13 @@ public class NavProcessor {
 		return token;
 	}
 
-	public static String getTokenEditServiceVersion(long theVersionPid) {
+	public static String getTokenEditServiceVersion(boolean theAddToHistory, long theVersionPid) {
 		String token = "";
-		token = getCurrentToken();
-		if (!token.isEmpty()) {
-			token = token + SEPARATOR;
+		if (theAddToHistory) {
+			token = getCurrentToken();
+			if (!token.isEmpty()) {
+				token = token + SEPARATOR;
+			}
 		}
 
 		token = token + PagesEnum.ESV + "_" + theVersionPid;
@@ -465,6 +468,13 @@ public class NavProcessor {
 			navigateToDefault();
 		}
 
+		Panel existingContents = BodyPanel.getInstance().getContents();
+		if (existingContents!=null) {
+			if (existingContents instanceof IDestroyable) {
+				((IDestroyable) existingContents).destroy();
+			}
+		}
+		
 		BodyPanel.getInstance().setContents(panel);
 
 		// } catch (Exception e) {

@@ -69,12 +69,21 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	@JoinColumn(name = "HTTP_CONFIG_PID", referencedColumnName = "PID", nullable = false)
 	private PersHttpClientConfig myHttpClientConfig;
 
+	@OneToMany(fetch=FetchType.LAZY, cascade= {}, orphanRemoval=true, mappedBy="myServiceVersion")
+	private Collection<PersUserServiceVersionPermission> myUserPermissions;
+
 	@Transient
 	private transient Map<String, PersServiceVersionUrl> myIdToUrl;
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("METHOD_ORDER")
 	private List<PersServiceVersionMethod> myMethods;
+
+	@OneToMany(fetch=FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myServiceVersion")
+	private List<PersServiceVersionRecentMessage> myRecentMessages;
+
+	@OneToMany(fetch=FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myServiceVersion")
+	private List<PersUserRecentMessage> myUserRecentMessages;
 
 	@Transient
 	private transient Map<String, PersServiceVersionMethod> myNameToMethod;
