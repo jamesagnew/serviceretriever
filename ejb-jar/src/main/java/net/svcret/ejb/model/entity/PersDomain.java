@@ -17,6 +17,8 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 
+import org.apache.commons.lang3.StringUtils;
+
 import net.svcret.admin.shared.model.ServerSecuredEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 
@@ -50,6 +52,9 @@ public class PersDomain extends BasePersServiceCatalogItem {
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy="myDomain")
 	private Collection<PersService> myServices;
 
+	@OneToMany(fetch=FetchType.LAZY, cascade= {}, orphanRemoval=true, mappedBy="myDomain")
+	private Collection<PersUserDomainPermission> myUserPermissions;
+	
 	@Transient
 	private transient StatusEnum myStatus;
 
@@ -184,6 +189,7 @@ public class PersDomain extends BasePersServiceCatalogItem {
 	}
 
 	public void merge(PersDomain theDomain) {
+		super.merge(theDomain);
 		setDomainId(theDomain.getDomainId());
 		setDomainName(theDomain.getDomainName());
 	}
@@ -204,6 +210,13 @@ public class PersDomain extends BasePersServiceCatalogItem {
 			retVal.addAll(next.getAllServiceVersions());
 		}
 		return retVal;
+	}
+
+	public String getDomainNameOrId() {
+		if (StringUtils.isNotBlank(getDomainName())) {
+			return getDomainName();
+		}
+		return getDomainId();
 	}
 
 }

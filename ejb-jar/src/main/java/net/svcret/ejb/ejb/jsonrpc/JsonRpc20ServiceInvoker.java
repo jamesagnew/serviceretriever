@@ -12,7 +12,6 @@ import javax.ejb.Stateless;
 
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IResponseValidator;
-import net.svcret.ejb.api.IServiceInvoker;
 import net.svcret.ejb.api.IServiceInvokerJsonRpc20;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;

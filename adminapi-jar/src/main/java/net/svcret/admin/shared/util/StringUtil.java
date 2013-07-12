@@ -52,6 +52,10 @@ public class StringUtil {
 		return true;
 	}
 
+	public static int compare(String theName, String theName2) {
+		return defaultString(theName).compareTo(defaultString(theName2));
+	}
+
 	
 	
 }

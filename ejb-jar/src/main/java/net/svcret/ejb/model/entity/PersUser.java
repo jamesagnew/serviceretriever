@@ -64,6 +64,13 @@ public class PersUser extends BasePersObject {
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true, mappedBy = "myUser")
 	private Collection<PersUserDomainPermission> myDomainPermissions;
 
+
+	@OneToMany(fetch=FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myUser")
+	private List<PersServiceVersionRecentMessage> myRecentMessages;
+
+	@OneToMany(fetch=FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myUser")
+	private List<PersUserRecentMessage> myUserRecentMessages;
+
 	/**
 	 * NB: Nullable because user can be backed by external authorization
 	 */

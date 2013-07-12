@@ -120,4 +120,11 @@ public abstract class BasePersKeepsRecentTransactions extends BasePersObject {
 		setKeepNumRecentTransactionsSuccess(theDto.getKeepNumRecentTransactionsSuccess());
 	}
 
+	public void merge(BasePersKeepsRecentTransactions theObject) {
+		setKeepNumRecentTransactionsFail(theObject.getKeepNumRecentTransactionsFail());
+		setKeepNumRecentTransactionsSecurityFail(theObject.getKeepNumRecentTransactionsSecurityFail());
+		setKeepNumRecentTransactionsFault(theObject.getKeepNumRecentTransactionsFault());
+		setKeepNumRecentTransactionsSuccess(theObject.getKeepNumRecentTransactionsSuccess());
+	}
+
 }

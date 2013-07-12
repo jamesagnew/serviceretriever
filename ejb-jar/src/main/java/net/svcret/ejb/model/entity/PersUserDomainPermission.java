@@ -35,7 +35,7 @@ public class PersUserDomainPermission extends BasePersObject {
 
 	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
 	@JoinColumn(name = "SVC_DOMAIN_PID", referencedColumnName = "PID", nullable = false)
-	private PersDomain myServiceDomain;
+	private PersDomain myDomain;
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy="myDomainPermission")
 	private Collection<PersUserServicePermission> myServicePermissions;
@@ -86,7 +86,7 @@ public class PersUserDomainPermission extends BasePersObject {
 	 * @return the serviceDomain
 	 */
 	public PersDomain getServiceDomain() {
-		return myServiceDomain;
+		return myDomain;
 	}
 
 	/**
@@ -134,7 +134,7 @@ public class PersUserDomainPermission extends BasePersObject {
 	 *            the serviceDomain to set
 	 */
 	public void setServiceDomain(PersDomain theServiceDomain) {
-		myServiceDomain = theServiceDomain;
+		myDomain = theServiceDomain;
 	}
 
 	/**

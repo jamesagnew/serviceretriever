@@ -237,10 +237,18 @@ TABLE.listTable TBODY TR:nth-child(odd) {
 .mainPanelTitle {
 	background: #A5D1F3;
 	color: #6194BC;
-	font-size: 1.5em;
 	border-top-right-radius: 10px;
 	display: block;
 	padding-left: 5px;
+	white-space: nowrap;
+}
+
+.mainPanelUpdate {
+	white-space: nowrap;
+}
+
+.mainPanelTitle, .mainPanelTitleText {
+	font-size: 1.5em;
 }
 
 .messageHeaderKey {
@@ -325,6 +333,11 @@ TABLE.propertyTable TBODY TR:nth-child(even) {
 TABLE.propertyTable TBODY TR:first-child {
 	background: #6194BC;
 	color: #FFFFFF;
+}
+
+.recentMessageScroller {
+	max-height: 200px;
+	background: #F0F8FF;
 }
 
 .twoColumnPropertyGrid TR {

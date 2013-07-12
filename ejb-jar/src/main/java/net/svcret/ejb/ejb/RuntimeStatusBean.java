@@ -115,7 +115,10 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			PersServiceVersionUrlStatus status = getUrlStatus(next);
 			if (status.getStatus() == StatusEnum.DOWN) {
 				if (theRetVal.getPreferredUrl() == null) {
-					if (!status.attemptToResetCircuitBreaker()) {
+					if (status.attemptToResetCircuitBreaker()) {
+						theRetVal.setPreferredUrl(next);
+						iter.remove();
+					} else {
 						iter.remove();
 						continue;
 					}
@@ -125,12 +128,12 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				}
 			}
 
-			if (theRetVal.getPreferredUrl() == null) {
-				theRetVal.setPreferredUrl(next);
-				iter.remove();
-				continue;
-			}
 		}
+		
+		if (theRetVal.getPreferredUrl() == null && urls.size() > 0) {
+			theRetVal.setPreferredUrl(urls.remove(0));
+		}
+		
 		theRetVal.setAlternateUrls(urls);
 
 	}
@@ -279,7 +282,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			PersInvocationUserStatsPk uStatsPk = new PersInvocationUserStatsPk(interval, theInvocationTime, theUser);
 			doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, uStatsPk);
 
-			doUpdateUserStatus(theUser, theInvocationTime);
+			doUpdateUserStatus(theInvocationResponseResultsBean, theUser, theInvocationTime);
 		}
 
 		if (theHttpResponse != null) {
@@ -340,10 +343,21 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	private ConcurrentHashMap<PersUser, PersUserStatus> myUnflushedUserStatus = new ConcurrentHashMap<PersUser, PersUserStatus>();
 
-	private void doUpdateUserStatus(PersUser theUser, Date theTransactionTime) {
-
+	private void doUpdateUserStatus(InvocationResponseResultsBean theInvocationResponseResultsBean, PersUser theUser, Date theTransactionTime) {
 		PersUserStatus status = getUserStatusForUser(theUser);
-		status.setLastAccessIfNewer(theTransactionTime);
+		
+		switch (theInvocationResponseResultsBean.getResponseType()) {
+		case SUCCESS:
+			status.setLastAccessIfNewer(theTransactionTime);
+			break;
+		case FAULT:
+			break;
+		case SECURITY_FAIL:
+			break;
+		case FAIL:
+			break;
+		}
+		
 
 	}
 

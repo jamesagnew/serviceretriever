@@ -29,11 +29,12 @@ import com.google.gwt.user.client.ui.Panel;
 
 public class EditUsersPanel extends FlowPanel {
 
-	private static final int COL_USERNAME = 0;
-	private static final int COL_LAST_SVC_ACCESS = 1;
-	private static final int COL_SUCCESSFUL_XACTS = 2;
-	private static final int COL_SECURITY_FAILURE_XACTS = 3;
-	private static final int COL_ACTIONS = 4;
+	private static final int COL_AUTHHOST = 0;
+	private static final int COL_USERNAME = 1;
+	private static final int COL_LAST_SVC_ACCESS = 2;
+	private static final int COL_SUCCESSFUL_XACTS = 3;
+	private static final int COL_SECURITY_FAILURE_XACTS = 4;
+	private static final int COL_ACTIONS = 5;
 
 	private FlexTable myTable;
 	private GPartialUserList myUserList;
@@ -62,6 +63,7 @@ public class EditUsersPanel extends FlowPanel {
 		contentPanel.add(myTable);
 
 		myTable.addStyleName(CssConstants.PROPERTY_TABLE);
+		myTable.setText(0, COL_AUTHHOST, MSGS.editUsersPanel_ColumnAuthHost());
 		myTable.setText(0, COL_USERNAME, MSGS.editUsersPanel_ColumnUsername());
 		myTable.setText(0, COL_ACTIONS, MSGS.editUsersPanel_ColumnActions());
 		myTable.setText(0, COL_LAST_SVC_ACCESS, MSGS.editUsersPanel_ColumnLastServiceAccess());
@@ -99,7 +101,10 @@ public class EditUsersPanel extends FlowPanel {
 
 	private void loadUserList() {
 		myLoadingSpinner.show();
+
 		PartialUserListRequest request = new PartialUserListRequest();
+		request.setLoadStats(true);
+		
 		AsyncCallback<GPartialUserList> callback = new AsyncCallback<GPartialUserList>() {
 			@Override
 			public void onFailure(Throwable theCaught) {
@@ -121,8 +126,14 @@ public class EditUsersPanel extends FlowPanel {
 		for (int i = 0; i < myUserList.size(); i++) {
 
 			final GUser nextUser = myUserList.get(i);
-			int row = i + 1;
+			final int row = i + 1;
 
+			Model.getInstance().loadAuthenticationHost(nextUser.getAuthHostPid(), new IAsyncLoadCallback<BaseGAuthHost>() {
+				@Override
+				public void onSuccess(BaseGAuthHost theResult) {
+					myTable.setText(row, COL_AUTHHOST, theResult.getModuleName());
+				}
+			});
 			myTable.setText(row, COL_USERNAME, nextUser.getUsername());
 			myTable.setText(row, COL_LAST_SVC_ACCESS, DateUtil.formatTime(nextUser.getStatsLastAccess()));
 			myTable.setWidget(row, COL_SUCCESSFUL_XACTS, BaseDashModel.returnSparklineFor60MinsUsage(nextUser.getStatsSuccessTransactions(), nextUser.getStatsInitialized(), nextUser.getStatsSuccessTransactionsAvgPerMin()));

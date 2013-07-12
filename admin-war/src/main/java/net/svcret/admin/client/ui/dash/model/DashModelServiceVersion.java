@@ -150,7 +150,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 			@Override
 			public void onClick(ClickEvent theEvent) {
 				theActionPopup.hide();
-				History.newItem(NavProcessor.getTokenEditServiceVersion(theSvcVer.getPid()));
+				History.newItem(NavProcessor.getTokenEditServiceVersion(true, theSvcVer.getPid()));
 			}
 		});
 		content.add(editDomain);

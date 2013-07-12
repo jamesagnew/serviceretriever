@@ -11,6 +11,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.ForeignKey;
+
 @Table(name = "PX_USER_PERM_SVCVER_METHOD", uniqueConstraints = { // -
 @UniqueConstraint(columnNames = { "SVCVER_METHOD_PID", "USER_PERM_SVCVER_PID" }) })
 @Entity
@@ -28,10 +30,12 @@ public class PersUserServiceVersionMethodPermission extends BasePersObject {
 
 	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
 	@JoinColumn(name = "SVCVER_METHOD_PID", referencedColumnName = "PID", nullable = false)
+	@ForeignKey(name="FK_USER_PERM_SVCVER_METHOD_METHOD")
 	private PersServiceVersionMethod myServiceVersionMethod;
 
 	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
 	@JoinColumn(name = "USER_PERM_SVCVER_PID", referencedColumnName = "PID", nullable = false)
+	@ForeignKey(name="FK_USER_PERM_SVCVER_METHOD_PERM")
 	private PersUserServiceVersionPermission myServiceVersionPermission;
 
 	/**
@@ -92,6 +96,10 @@ public class PersUserServiceVersionMethodPermission extends BasePersObject {
 	 */
 	public void setServiceVersionPermission(PersUserServiceVersionPermission theServiceVersionPermission) {
 		myServiceVersionPermission = theServiceVersionPermission;
+	}
+
+	public void loadAllAssociations() {
+		// nothing
 	}
 
 }

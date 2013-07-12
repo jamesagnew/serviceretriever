@@ -1,6 +1,7 @@
 package net.svcret.admin.client.ui.config.auth;
 
-import static net.svcret.admin.client.AdminPortal.*;
+import static net.svcret.admin.client.AdminPortal.IMAGES;
+import static net.svcret.admin.client.AdminPortal.MSGS;
 
 import java.util.List;
 
@@ -104,6 +105,10 @@ public abstract class BaseUserPanel extends FlowPanel {
 					}
 				}
 			});
+			if (this instanceof AddUserPanel) {
+				myPasswordCheckbox.setValue(true);
+				myPasswordCheckbox.setEnabled(false);
+			}
 			myUsernamePasswordGrid.addRow(myPasswordCheckbox, myPasswordTextbox);
 		}
 
@@ -189,6 +194,7 @@ public abstract class BaseUserPanel extends FlowPanel {
 
 	private void updateIpsGrid() {
 		final List<String> allowableIps = myUser.getAllowableSourceIps();
+		
 		myIpsGrid.resize(allowableIps.size() + 1, 3);
 
 		for (int i = 0; i < allowableIps.size(); i++) {

@@ -69,12 +69,12 @@ public class GUrlStatus implements Serializable {
 		return myStatus;
 	}
 
-	/**
-	 * @return the url
-	 */
-	public String getUrl() {
-		return myUrl;
-	}
+//	/**
+//	 * @return the url
+//	 */
+//	public String getUrl() {
+//		return myUrl;
+//	}
 
 	/**
 	 * @return the urlPid
@@ -139,13 +139,13 @@ public class GUrlStatus implements Serializable {
 		myStatus = theStatus;
 	}
 
-	/**
-	 * @param theUrl
-	 *            the url to set
-	 */
-	public void setUrl(String theUrl) {
-		myUrl = theUrl;
-	}
+//	/**
+//	 * @param theUrl
+//	 *            the url to set
+//	 */
+//	public void setUrl(String theUrl) {
+//		myUrl = theUrl;
+//	}
 
 	/**
 	 * @param theUrlPid

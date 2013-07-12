@@ -146,7 +146,8 @@ public class AdminServiceBean implements IAdminService {
 			throw new IllegalArgumentException("Domain with ID[" + theDomain.getId() + "] already exists");
 		}
 
-		domain.setDomainName(theDomain.getName());
+		domain.merge(fromUi(theDomain));
+		
 		myServiceRegistry.saveDomain(domain);
 
 		return toUi(domain, false);
@@ -211,6 +212,8 @@ public class AdminServiceBean implements IAdminService {
 
 		ourLog.info("DELETING domain with PID {} and ID {}", thePid, domain.getDomainId());
 
+		domain.loadAllAssociations();
+		
 		myServiceRegistry.removeDomain(domain);
 
 	}
@@ -481,7 +484,7 @@ public class AdminServiceBean implements IAdminService {
 
 		PersService newService = fromUi(theService);
 		service.merge(newService);
-		myDao.saveService(newService);
+		myDao.saveService(service);
 
 		return loadDomainList();
 	}
@@ -508,7 +511,7 @@ public class AdminServiceBean implements IAdminService {
 
 		String versionId = theVersion.getId();
 
-		BasePersServiceVersion version = fromUi(theVersion, service, theVersion.getPidOrNull(), versionId);
+		BasePersServiceVersion version = fromUi(theVersion, service, versionId);
 
 		Map<String, PersServiceVersionResource> uriToResource = version.getUriToResource();
 		Set<String> urls = new HashSet<String>();
@@ -641,7 +644,7 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private <T extends BaseGServiceVersion> BasePersServiceVersion fromUi(T theVersion, PersService theService, Long theVersionPid, String theVersionId) throws ProcessingException {
+	private <T extends BaseGServiceVersion> BasePersServiceVersion fromUi(T theVersion, PersService theService, String theVersionId) throws ProcessingException {
 		Validate.notNull(theVersion);
 		Validate.notNull(theService);
 		Validate.notBlank(theVersionId);
@@ -732,6 +735,10 @@ public class AdminServiceBean implements IAdminService {
 
 		for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
 			PersServiceVersionUrlStatus nextUrlStatus = nextUrl.getStatus();
+			if (nextUrlStatus == null) {
+				continue;
+			}
+			
 			switch (nextUrlStatus.getStatus()) {
 			case ACTIVE:
 				status = StatusEnum.ACTIVE;
@@ -860,14 +867,21 @@ public class AdminServiceBean implements IAdminService {
 
 	private static InvocationStatsIntervalEnum doWithStatsSupportFindInterval(PersConfig theConfig, Date date) {
 		InvocationStatsIntervalEnum interval;
-		if (date.before(theConfig.getCollapseStatsToDaysCutoff())) {
+		Date collapseStatsToDaysCutoff = InvocationStatsIntervalEnum.DAY.truncate(theConfig.getCollapseStatsToDaysCutoff());
+		if (date.before(collapseStatsToDaysCutoff)) {
 			interval = InvocationStatsIntervalEnum.DAY;
-		} else if (date.before(theConfig.getCollapseStatsToHoursCutoff())) {
-			interval = InvocationStatsIntervalEnum.HOUR;
-		} else if (date.before(theConfig.getCollapseStatsToTenMinutesCutoff())) {
-			interval = InvocationStatsIntervalEnum.TEN_MINUTE;
 		} else {
-			interval = InvocationStatsIntervalEnum.MINUTE;
+			Date collapseStatsToHoursCutoff = InvocationStatsIntervalEnum.HOUR.truncate(theConfig.getCollapseStatsToHoursCutoff());
+			if (date.before(collapseStatsToHoursCutoff)) {
+				interval = InvocationStatsIntervalEnum.HOUR;
+			} else {
+				Date collapseStatsToTenMinutesCutoff = InvocationStatsIntervalEnum.TEN_MINUTE.truncate(theConfig.getCollapseStatsToTenMinutesCutoff());
+				if (date.before(collapseStatsToTenMinutesCutoff)) {
+					interval = InvocationStatsIntervalEnum.TEN_MINUTE;
+				} else {
+					interval = InvocationStatsIntervalEnum.MINUTE;
+				}
+			}
 		}
 		return interval;
 	}
@@ -1038,6 +1052,9 @@ public class AdminServiceBean implements IAdminService {
 
 		if (theUser.getPidOrNull() == null) {
 			BasePersAuthenticationHost authHost = myDao.getAuthenticationHostByPid(theUser.getAuthHostPid());
+			if (authHost == null) {
+				throw new ProcessingException("Unknown authentication host PID " + theUser.getAuthHostPid());
+			}
 			retVal = myDao.getOrCreateUser(authHost, theUser.getUsername());
 			if (retVal.isNewlyCreated() == false) {
 				throw new ProcessingException("User '" + theUser.getUsername() + "' already exists!");
@@ -1332,6 +1349,12 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setProxyPath(theVersion.getProxyPath());
 		retVal.setExplicitProxyPath(theVersion.getExplicitProxyPath());
 
+		theVersion.populateKeepRecentTransactionsToDto(retVal);
+		
+		for (PersServiceVersionMethod next : theVersion.getMethods()) {
+			retVal.getMethodList().add(toUi(next, theLoadStats));
+		}
+		
 		PersHttpClientConfig httpClientConfig = theVersion.getHttpClientConfig();
 		if (httpClientConfig == null) {
 			throw new ProcessingException("Service version doesn't have an HTTP client config");
@@ -1799,7 +1822,6 @@ public class AdminServiceBean implements IAdminService {
 	private GUrlStatus toUi(PersServiceVersionUrlStatus theUrlStatus, PersServiceVersionUrl theUrl) {
 		GUrlStatus retVal = new GUrlStatus();
 		retVal.setUrlPid(theUrl.getPid());
-		retVal.setUrl(theUrl.getUrl());
 		retVal.setStatus(theUrlStatus.getStatus());
 		retVal.setLastFailure(theUrlStatus.getLastFail());
 		retVal.setLastFailureMessage(theUrlStatus.getLastFailMessage());
@@ -1875,8 +1897,21 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setPid(theMsg.getPid());
 		PersServiceVersionUrl implementationUrl = theMsg.getImplementationUrl();
 		if (implementationUrl != null) {
-			retVal.setImplementationUrl(implementationUrl.getUrl());
+			retVal.setImplementationUrlId(implementationUrl.getUrlId());
+			retVal.setImplementationUrlHref(implementationUrl.getUrl());
+			retVal.setImplementationUrlPid(implementationUrl.getPid());
+			
+			retVal.setDomainPid(implementationUrl.getServiceVersion().getService().getDomain().getPid());
+			retVal.setDomainName(implementationUrl.getServiceVersion().getService().getDomain().getDomainNameOrId());
+			
+			retVal.setServicePid(implementationUrl.getServiceVersion().getService().getPid());
+			retVal.setServiceName(implementationUrl.getServiceVersion().getService().getServiceNameOrId());
+
+			retVal.setServiceVersionPid(implementationUrl.getServiceVersion().getPid());
+			retVal.setServiceVersionId(implementationUrl.getServiceVersion().getVersionId());
+
 		}
+		
 		retVal.setRequestHostIp(theMsg.getRequestHostIp());
 		retVal.setTransactionTime(theMsg.getTransactionTime());
 		retVal.setTransactionMillis(theMsg.getTransactionMillis());
@@ -2026,8 +2061,12 @@ public class AdminServiceBean implements IAdminService {
 
 	public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatus theStatus, PersServiceVersionMethod theNextMethod, IWithStats theOperator) {
 
-		Date start = new Date(System.currentTimeMillis() - (theRange.getRange().getNumMins() * 60 * 1000L));
 		Date end = new Date();
+		doWithStatsByMinute(theConfig, theRange, theStatus, theNextMethod, theOperator, end);
+	}
+
+	public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatus theStatus, PersServiceVersionMethod theNextMethod, IWithStats theOperator, Date end) {
+		Date start = new Date(System.currentTimeMillis() - (theRange.getRange().getNumMins() * 60 * 1000L));
 		doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator, start, end);
 	}
 
@@ -2043,6 +2082,17 @@ public class AdminServiceBean implements IAdminService {
 		myDao.deleteServiceVersion(sv);
 
 		return loadDomainList();
+	}
+
+	public void deleteUser(long thePid) throws ProcessingException {
+		ourLog.info("Deleting user {}", thePid);
+		
+		PersUser user = myDao.getUser(thePid);
+		if (user==null) {
+			throw new ProcessingException("Unknown user: " + thePid);
+		}
+		
+		myDao.deleteUser(user);
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {

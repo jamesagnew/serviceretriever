@@ -172,6 +172,7 @@ public abstract class BasePersAuthenticationHost extends BasePersKeepsRecentTran
 	}
 
 	public void merge(BasePersAuthenticationHost theHost) {
+		super.merge(theHost);
 		setAutoCreateAuthorizedUsers(theHost.isAutoCreateAuthorizedUsers());
 		setAutoCreateAuthorizedUsers(theHost.isAutoCreateAuthorizedUsers());
 		setCacheSuccessfulCredentialsForMillis(theHost.getCacheSuccessfulCredentialsForMillis());

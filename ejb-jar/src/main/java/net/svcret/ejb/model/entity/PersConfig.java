@@ -12,18 +12,21 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.Version;
 
 import org.apache.commons.lang3.time.DateUtils;
+
+import com.google.common.annotations.VisibleForTesting;
 
 @Entity
 @Table(name = "PX_CONFIG")
 public class PersConfig {
 
-	public static final long DEFAULT_ID = 1L;
 	private static final int DEF_STATS_COL_10MIN = 2;
 	private static final int DEF_STATS_COL_DAYS = 90;
 	private static final int DEF_STATS_COL_HOUR = 48;
+	public static final long DEFAULT_ID = 1L;
 
 	@Column(name = "STATS_COL_DAY", nullable = false)
 	private int myCollapseStatsToDaysAfterNumDays;
@@ -34,6 +37,9 @@ public class PersConfig {
 	@Column(name = "STATS_COL_10MIN", nullable = false)
 	private int myCollapseStatsToTenMinutesAfterNumHours;
 
+	@Transient
+	private transient long myNowForUnitTests;
+
 	@Version()
 	@Column(name = "OPTLOCK")
 	private int myOptLock;
@@ -41,7 +47,6 @@ public class PersConfig {
 	@Id
 	@Column(name = "PID")
 	private long myPid = DEFAULT_ID;
-
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "myConfig", fetch = FetchType.EAGER, orphanRemoval=true)
 	private Collection<PersConfigProxyUrlBase> myProxyUrlBases;
 
@@ -61,6 +66,10 @@ public class PersConfig {
 		return myCollapseStatsToDaysAfterNumDays;
 	}
 
+	public Date getCollapseStatsToDaysCutoff() {
+		return new Date(getNow() - (getCollapseStatsToDaysAfterNumDays() * DateUtils.MILLIS_PER_DAY));
+	}
+
 	/**
 	 * @return the collapseStatsToHoursAfterNumHours
 	 */
@@ -69,6 +78,10 @@ public class PersConfig {
 			return DEF_STATS_COL_HOUR;
 		}
 		return myCollapseStatsToHoursAfterNumHours;
+	}
+
+	public Date getCollapseStatsToHoursCutoff() {
+		return new Date(getNow() - (getCollapseStatsToHoursAfterNumHours() * DateUtils.MILLIS_PER_HOUR));
 	}
 
 	/**
@@ -81,6 +94,17 @@ public class PersConfig {
 		return myCollapseStatsToTenMinutesAfterNumHours;
 	}
 
+	public Date getCollapseStatsToTenMinutesCutoff() {
+		return new Date(getNow() - (getCollapseStatsToTenMinutesAfterNumHours() * DateUtils.MILLIS_PER_HOUR));
+	}
+
+	private long getNow() {
+		if (myNowForUnitTests > 0) {
+			return myNowForUnitTests;
+		}
+		return System.currentTimeMillis();
+	}
+
 	/**
 	 * @return the proxyUrlBases
 	 */
@@ -91,13 +115,25 @@ public class PersConfig {
 		return Collections.unmodifiableCollection(myProxyUrlBases);
 	}
 
+	public void merge(PersConfig theFromUi) {
+		myCollapseStatsToDaysAfterNumDays = theFromUi.getCollapseStatsToDaysAfterNumDays();
+		myCollapseStatsToHoursAfterNumHours = theFromUi.getCollapseStatsToDaysAfterNumDays();
+		myCollapseStatsToTenMinutesAfterNumHours = theFromUi.getCollapseStatsToTenMinutesAfterNumHours();
+		
+		// Merge base URLs
+		getProxyUrlBases();
+		myProxyUrlBases.clear();
+		myProxyUrlBases.addAll(theFromUi.getProxyUrlBases());
+		
+	}
+
 	/**
 	 * @param theCollapseStatsToDaysAfterNumDays the collapseStatsToDaysAfterNumDays to set
 	 */
 	public void setCollapseStatsToDaysAfterNumDays(int theCollapseStatsToDaysAfterNumDays) {
 		myCollapseStatsToDaysAfterNumDays = theCollapseStatsToDaysAfterNumDays;
 	}
-
+	
 	/**
 	 * @param theCollapseStatsToHoursAfterNumHours the collapseStatsToHoursAfterNumHours to set
 	 */
@@ -119,27 +155,8 @@ public class PersConfig {
 		myCollapseStatsToDaysAfterNumDays = DEF_STATS_COL_DAYS;
 	}
 
-	public Date getCollapseStatsToDaysCutoff() {
-		return new Date(System.currentTimeMillis() - (getCollapseStatsToDaysAfterNumDays() * DateUtils.MILLIS_PER_DAY));
-	}
-
-	public Date getCollapseStatsToHoursCutoff() {
-		return new Date(System.currentTimeMillis() - (getCollapseStatsToHoursAfterNumHours() * DateUtils.MILLIS_PER_HOUR));
-	}
-
-	public Date getCollapseStatsToTenMinutesCutoff() {
-		return new Date(System.currentTimeMillis() - (getCollapseStatsToTenMinutesAfterNumHours() * DateUtils.MILLIS_PER_HOUR));
-	}
-
-	public void merge(PersConfig theFromUi) {
-		myCollapseStatsToDaysAfterNumDays = theFromUi.getCollapseStatsToDaysAfterNumDays();
-		myCollapseStatsToHoursAfterNumHours = theFromUi.getCollapseStatsToDaysAfterNumDays();
-		myCollapseStatsToTenMinutesAfterNumHours = theFromUi.getCollapseStatsToTenMinutesAfterNumHours();
-		
-		// Merge base URLs
-		getProxyUrlBases();
-		myProxyUrlBases.clear();
-		myProxyUrlBases.addAll(theFromUi.getProxyUrlBases());
-		
+	@VisibleForTesting
+	public void setNow(long theNow) {
+		myNowForUnitTests = theNow;
 	}
 }

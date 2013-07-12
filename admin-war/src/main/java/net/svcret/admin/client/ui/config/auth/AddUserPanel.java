@@ -17,7 +17,9 @@ public class AddUserPanel extends BaseUserPanel {
 			public void onSuccess(GAuthenticationHostList theResult) {
 				BaseGAuthHost authHost = theResult.getAuthHostByPid(theAuthHostPid);
 				initContents();
-				setUser(new GUser(), authHost);
+				GUser user = new GUser();
+				user.setAuthHostPid(theAuthHostPid);
+				setUser(user, authHost);
 			}
 		});
 

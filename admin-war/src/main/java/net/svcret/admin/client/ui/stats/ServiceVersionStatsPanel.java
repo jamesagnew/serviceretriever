@@ -46,6 +46,7 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 	private FlowPanel myRecentMessagesPanel;
 	private LoadingSpinner myRecentMessagesLoadingSpinner;
 	private FlowPanel myChartsPanel;
+	private HorizontalPanel myGraphsTimePanel;
 
 	public ServiceVersionStatsPanel(final long theDomainPid, final long theServicePid, long theVersionPid) {
 		myServiceVersionPid = theVersionPid;
@@ -108,8 +109,12 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 		urlsTitleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
 		urlsPanel.add(urlsTitleLabel);
 
+		FlowPanel flowPanel = new FlowPanel();
+		flowPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
+		urlsPanel.add(flowPanel);
+		
 		Grid urlGrid = new Grid(theUrlStatuses.size() + 1, 8);
-		urlsPanel.add(urlGrid);
+		flowPanel.add(urlGrid);
 		urlGrid.addStyleName(CssConstants.PROPERTY_TABLE);
 
 		int URLTBL_COL_URL = 0;
@@ -132,15 +137,18 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 
 		for (int i = 0; i < theUrlStatuses.size(); i++) {
 			GUrlStatus status = theUrlStatuses.get(i);
-
-			GServiceVersionUrl url = theServiceVersion.getUrlList().getUrlWithPid(status.getUrlPid());
-
+			long urlPid = status.getUrlPid();
+			GServiceVersionUrl url = theServiceVersion.getUrlList().getUrlWithPid(urlPid);
+			if (url == null) {
+				continue;
+			}
+			
 			Anchor urlAnchor = new Anchor();
-			urlAnchor.setText(status.getUrl());
-			if (url != null && StringUtil.isNotBlank(url.getId())) {
-				urlAnchor.setHref(url.getId());
+			urlAnchor.setHref(url.getUrl());
+			if (StringUtil.isNotBlank(url.getId())) {
+				urlAnchor.setText(url.getId());
 			} else {
-				urlAnchor.setHref(status.getUrl());
+				urlAnchor.setText(url.getUrl());
 			}
 			urlGrid.setWidget(i + 1, URLTBL_COL_URL, urlAnchor);
 
@@ -181,12 +189,11 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 		graphsTitleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
 		graphsPanel.add(graphsTitleLabel);
 
-		HorizontalPanel timePanel = new HorizontalPanel();
-		graphsPanel.add(timePanel);
+		myGraphsTimePanel = new HorizontalPanel();
 
 		// Graphs Time Dropdown
 		final ListBox timeListBox = new ListBox();
-		timePanel.add(timeListBox);
+		myGraphsTimePanel.add(timeListBox);
 		for (TimeRangeEnum next : TimeRangeEnum.values()) {
 			timeListBox.addItem(next.getFriendlyName(), next.name());
 		}
@@ -199,6 +206,7 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 		});
 
 		myChartsPanel = new FlowPanel();
+		myChartsPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
 		graphsPanel.add(myChartsPanel);
 
 		redrawCharts(TimeRangeEnum.valueOf(timeListBox.getValue(timeListBox.getSelectedIndex())));
@@ -210,6 +218,8 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 
 	private void redrawCharts(TimeRangeEnum theTimeRange) {
 		myChartsPanel.clear();
+		myChartsPanel.add(myGraphsTimePanel);
+		
 		myChartsPanel.add(new HtmlH1(MSGS.serviceVersionStats_UsageTitle()));
 		Image img = new Image("graph.png?ct=" + ChartTypeEnum.USAGE.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.name());
 		addStatsImage(myChartsPanel, img);

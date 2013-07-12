@@ -108,7 +108,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			path = theRequest.getPath();
 		}
 
-		ourLog.debug("New request of type {} for path: {}", theRequest.getRequestType(), theRequest.getPath());
+		ourLog.trace("New request of type {} for path: {}", theRequest.getRequestType(), theRequest.getPath());
 
 		/*
 		 * Figure out who should handle this request
@@ -121,7 +121,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			throw new UnknownRequestException(path, validPaths);
 		}
 
-		ourLog.debug("Request corresponds to service version {}", serviceVersion.getPid());
+		ourLog.trace("Request corresponds to service version {}", serviceVersion.getPid());
 
 		/*
 		 * Process request
@@ -132,12 +132,12 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		switch (serviceVersion.getProtocol()) {
 		case SOAP11:
 			serviceInvoker = mySoap11ServiceInvoker;
-			ourLog.debug("Handling service with invoker {}", serviceInvoker);
+			ourLog.trace("Handling service with invoker {}", serviceInvoker);
 			results = mySoap11ServiceInvoker.processInvocation((PersServiceVersionSoap11) serviceVersion, theRequest.getRequestType(), path, theRequest.getQuery(), reader);
 			break;
 		case JSONRPC20:
 			serviceInvoker = myJsonRpc20ServiceInvoker;
-			ourLog.debug("Handling service with invoker {}", serviceInvoker);
+			ourLog.trace("Handling service with invoker {}", serviceInvoker);
 			results = myJsonRpc20ServiceInvoker.processInvocation((PersServiceVersionJsonRpc20) serviceVersion, theRequest.getRequestType(), path, theRequest.getQuery(), reader);
 		}
 
@@ -156,12 +156,13 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		 */
 
 		AuthorizationResultsBean authorized = null;
+		PersUser user = null;
 		if (results.getResultType() == ResultTypeEnum.METHOD) {
 			if (ourLog.isDebugEnabled()) {
 				if (serviceVersion.getServerAuths().isEmpty()) {
-					ourLog.debug("Service has no server auths");
+					ourLog.trace("Service has no server auths");
 				} else {
-					ourLog.debug("Service has the following server auths: {}", serviceVersion.getServerAuths());
+					ourLog.trace("Service has the following server auths: {}", serviceVersion.getServerAuths());
 				}
 			}
 
@@ -178,20 +179,20 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 				if (credentials == null) {
 					// This probably shouldn't happen..
-					ourLog.debug("No credential grabber in request (Should invoker have provided one)");
+					ourLog.trace("No credential grabber in request (Should invoker have provided one)");
 					InvocationResponseResultsBean invocationResponse = new InvocationResponseResultsBean();
 					invocationResponse.setResponseType(ResponseTypeEnum.SECURITY_FAIL);
-					invocationResponse.setResponseStatusMessage("ServiceRetriever failed to extract credentials");
+					invocationResponse.setResponseStatusMessage("Internal error: ServiceRetriever failed to extract credentials");
 					myRuntimeStatus.recordInvocationMethod(startTime, 0, method, null, null, invocationResponse);
 					throw new SecurityFailureException();
 				}
 
-				ourLog.debug("Checking credentials: {}", credentials);
+				ourLog.trace("Checking credentials: {}", credentials);
 				authorized = mySecuritySvc.authorizeMethodInvocation(authHost, credentials, method, theRequest.getRequestHostIp());
 				if (authorized.isAuthorized() != AuthorizationOutcomeEnum.AUTHORIZED) {
 					InvocationResponseResultsBean invocationResponse = new InvocationResponseResultsBean();
 					invocationResponse.setResponseType(ResponseTypeEnum.SECURITY_FAIL);
-					invocationResponse.setResponseStatusMessage("ServiceRetriever failed to extract credentials");
+					invocationResponse.setResponseStatusMessage("Failed to authorize credentials");
 					// TODO: also pass authorization outcome to save it
 					myRuntimeStatus.recordInvocationMethod(startTime, 0, method, authorized.getUser(), null, invocationResponse);
 
@@ -199,7 +200,10 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 					logTransaction(theRequest, startTime, reader, serviceVersion, authorized, null, invocationResponse);
 
 					throw new SecurityFailureException();
+				} else {
+					user = authorized.getUser();
 				}
+				
 			}
 		}
 
@@ -220,7 +224,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			PersServiceVersionResource resource = results.getStaticResourceDefinition();
 			myRuntimeStatus.recordInvocationStaticResource(startTime, resource);
 
-			ourLog.debug("Handling request for static URL contents: {}", resource);
+			ourLog.trace("Handling request for static URL contents: {}", resource);
 			break;
 		}
 		case METHOD: {
@@ -258,7 +262,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			invocationResponse.validate();
 
 			int requestLength = contentBody.length();
-			myRuntimeStatus.recordInvocationMethod(startTime, requestLength, method, null, httpResponse, invocationResponse);
+			myRuntimeStatus.recordInvocationMethod(startTime, requestLength, method, user, httpResponse, invocationResponse);
 
 			String responseBody = invocationResponse.getResponseBody();
 			String responseContentType = invocationResponse.getResponseContentType();

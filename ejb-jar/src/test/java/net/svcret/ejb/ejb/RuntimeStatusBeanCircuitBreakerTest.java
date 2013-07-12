@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
@@ -31,19 +32,19 @@ import org.junit.Test;
 
 public class RuntimeStatusBeanCircuitBreakerTest {
 
+	private PersHttpClientConfig httpConfig;
+	private HttpResponseBean httpResponse;
+	private InvocationResponseResultsBean invocationResponse;
 	private RuntimeStatusBean myBean;
 	private IDao myDao;
 	private PersServiceVersionMethod myMethod;
-	private HttpResponseBean httpResponse;
-	private InvocationResponseResultsBean invocationResponse;
-	private PersServiceVersionSoap11 svcVersion;
-	private PersHttpClientConfig httpConfig;
 	private PersServiceVersionUrl persUrl1;
 	private PersServiceVersionUrl persUrl2;
+	private PersServiceVersionSoap11 svcVersion;
 	private String url1;
+	private PersServiceVersionUrlStatus url1status;
 	private String url2;
 	private PersServiceVersionUrlStatus url2status;
-	private PersServiceVersionUrlStatus url1status;
 	private PersUser user;
 
 	@Before
@@ -73,8 +74,6 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		httpConfig = mock(PersHttpClientConfig.class, new DefaultAnswer());
 
 		when(svcVersion.getHttpClientConfig()).thenReturn(httpConfig);
-		when(httpConfig.getUrlSelectionPolicy()).thenReturn(UrlSelectionPolicy.PREFER_LOCAL);
-
 		
 		List<PersServiceVersionUrl> persUrls = new ArrayList<PersServiceVersionUrl>();
 		
@@ -114,8 +113,9 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 	}
 	
 	@Test
-	public void testCircuitBreaker() throws InterruptedException {
-		
+	public void testCircuitBreakerPreferLocalOneFailing() throws InterruptedException {
+		when(httpConfig.getUrlSelectionPolicy()).thenReturn(UrlSelectionPolicy.PREFER_LOCAL);
+
 		when(httpResponse.getSuccessfulUrl()).thenReturn(persUrl1);
 		when(httpResponse.getFailedUrls()).thenReturn(new HashMap<PersServiceVersionUrl, HttpResponseBean.Failure>());
 		when(httpConfig.isCircuitBreakerEnabled()).thenReturn(true);
@@ -190,13 +190,160 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 
 
 	@Test
-	public void testCircuitBreakerWithAllFailing() throws InterruptedException {
-		
+	public void testCircuitBreakerPreferLocalWithAllFailing() throws InterruptedException {
+		when(httpConfig.getUrlSelectionPolicy()).thenReturn(UrlSelectionPolicy.PREFER_LOCAL);
+
 		when(httpResponse.getSuccessfulUrl()).thenReturn(persUrl1);
 		when(httpResponse.getFailedUrls()).thenReturn(new HashMap<PersServiceVersionUrl, HttpResponseBean.Failure>());
 		when(httpConfig.isCircuitBreakerEnabled()).thenReturn(true);
 		when(httpConfig.getCircuitBreakerTimeBetweenResetAttempts()).thenReturn(200);
 		
+		DefaultAnswer.setRunTime();
+		
+		/*
+		 * Normal
+		 */
+		UrlPoolBean pool = myBean.buildUrlPool(svcVersion);
+		assertEquals(persUrl1, pool.getPreferredUrl());
+		assertThat(pool.getAlternateUrls(), Matchers.hasSize(1));
+		assertThat(pool.getAlternateUrls(), Matchers.contains(persUrl2));
+
+		/*
+		 * Mark a failure
+		 */
+		DefaultAnswer.setDesignTime();
+		HashMap<PersServiceVersionUrl, Failure> failures = new HashMap<PersServiceVersionUrl, HttpResponseBean.Failure>();
+		failures.put(persUrl1, new Failure("aaa", "", "Excplanation", 400));
+		failures.put(persUrl2, new Failure("aaa", "", "Excplanation", 400));
+		when(httpResponse.getFailedUrls()).thenReturn(failures);
+		when(httpResponse.getSuccessfulUrl()).thenReturn(null);
+
+		DefaultAnswer.setRunTime();
+		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse);
+		pool = myBean.buildUrlPool(svcVersion);
+		assertEquals(null, pool.getPreferredUrl());
+		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
+		assertEquals(StatusEnum.DOWN, url1status.getStatus());
+		assertEquals(StatusEnum.DOWN, url2status.getStatus());
+
+		/*
+		 * Wait a bit and then see if we get just one reset attempt
+		 */
+		Thread.sleep(200);
+		
+		pool = myBean.buildUrlPool(svcVersion);
+		assertEquals(persUrl1, pool.getPreferredUrl());
+		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
+
+		pool = myBean.buildUrlPool(svcVersion);
+		assertEquals(persUrl2, pool.getPreferredUrl());
+		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
+
+	}
+
+	@Test
+	public void testCircuitBreakerRoundRobinOneFailing() throws InterruptedException {
+		when(httpConfig.getUrlSelectionPolicy()).thenReturn(UrlSelectionPolicy.ROUND_ROBIN);
+		when(svcVersion.getUrlCounter()).thenReturn(new AtomicInteger());
+
+		when(httpResponse.getSuccessfulUrl()).thenReturn(persUrl1);
+		when(httpResponse.getFailedUrls()).thenReturn(new HashMap<PersServiceVersionUrl, HttpResponseBean.Failure>());
+		when(httpConfig.isCircuitBreakerEnabled()).thenReturn(true);
+		when(httpConfig.getCircuitBreakerTimeBetweenResetAttempts()).thenReturn(200);
+		
+//		DefaultAnswer.setRunTime();
+		
+		/*
+		 * Normal
+		 */
+		UrlPoolBean pool = myBean.buildUrlPool(svcVersion);
+		assertEquals(persUrl1, pool.getPreferredUrl());
+		assertThat(pool.getAlternateUrls(), Matchers.hasSize(1));
+		assertThat(pool.getAlternateUrls(), Matchers.contains(persUrl2));
+
+		pool = myBean.buildUrlPool(svcVersion);
+		assertEquals(persUrl2, pool.getPreferredUrl());
+		assertThat(pool.getAlternateUrls(), Matchers.hasSize(1));
+		assertThat(pool.getAlternateUrls(), Matchers.contains(persUrl1));
+
+		pool = myBean.buildUrlPool(svcVersion);
+		assertEquals(persUrl1, pool.getPreferredUrl());
+		assertThat(pool.getAlternateUrls(), Matchers.hasSize(1));
+		assertThat(pool.getAlternateUrls(), Matchers.contains(persUrl2));
+
+		pool = myBean.buildUrlPool(svcVersion);
+		assertEquals(persUrl2, pool.getPreferredUrl());
+		assertThat(pool.getAlternateUrls(), Matchers.hasSize(1));
+		assertThat(pool.getAlternateUrls(), Matchers.contains(persUrl1));
+
+		/*
+		 * Mark a success and try again
+		 */
+		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse);
+		pool = myBean.buildUrlPool(svcVersion);
+		assertEquals(persUrl1, pool.getPreferredUrl());
+		assertThat(pool.getAlternateUrls(), Matchers.hasSize(1));
+		assertThat(pool.getAlternateUrls(), Matchers.contains(persUrl2));
+		assertEquals(StatusEnum.ACTIVE, url1status.getStatus());
+		assertEquals(StatusEnum.UNKNOWN, url2status.getStatus());
+		
+		/*
+		 * Mark a failure
+		 */
+		DefaultAnswer.setDesignTime();
+		HashMap<PersServiceVersionUrl, Failure> failures = new HashMap<PersServiceVersionUrl, HttpResponseBean.Failure>();
+		failures.put(persUrl1, new Failure("aaa", "", "Excplanation", 400));
+		when(httpResponse.getFailedUrls()).thenReturn(failures);
+		when(httpResponse.getSuccessfulUrl()).thenReturn(persUrl2);
+
+//		DefaultAnswer.setRunTime();
+		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse);
+		pool = myBean.buildUrlPool(svcVersion);
+		assertEquals(persUrl2, pool.getPreferredUrl());
+		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
+		assertEquals(StatusEnum.DOWN, url1status.getStatus());
+		assertEquals(StatusEnum.ACTIVE, url2status.getStatus());
+
+		/*
+		 * Make sure we keep using the non-tripped URL
+		 */
+		pool = myBean.buildUrlPool(svcVersion);
+		assertEquals(persUrl2, pool.getPreferredUrl());
+		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
+		assertEquals(StatusEnum.DOWN, url1status.getStatus());
+		assertEquals(StatusEnum.ACTIVE, url2status.getStatus());
+
+		/*
+		 * Wait a bit and then see if we get just one reset attempt
+		 */
+		Thread.sleep(200);
+		
+		pool = myBean.buildUrlPool(svcVersion);
+		assertEquals(persUrl1, pool.getPreferredUrl());
+		assertThat(pool.getAlternateUrls(), Matchers.hasSize(1));
+		assertThat(pool.getAlternateUrls(), Matchers.contains(persUrl2));
+		assertEquals(StatusEnum.DOWN, url1status.getStatus());
+		assertEquals(StatusEnum.ACTIVE, url2status.getStatus());
+
+		pool = myBean.buildUrlPool(svcVersion);
+		assertEquals(persUrl2, pool.getPreferredUrl());
+		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
+		assertEquals(StatusEnum.DOWN, url1status.getStatus());
+		assertEquals(StatusEnum.ACTIVE, url2status.getStatus());
+
+	}
+
+
+	@Test
+	public void testCircuitBreakerRoundRobinWithAllFailing() throws InterruptedException {
+		when(httpConfig.getUrlSelectionPolicy()).thenReturn(UrlSelectionPolicy.ROUND_ROBIN);
+
+		when(httpResponse.getSuccessfulUrl()).thenReturn(persUrl1);
+		when(httpResponse.getFailedUrls()).thenReturn(new HashMap<PersServiceVersionUrl, HttpResponseBean.Failure>());
+		when(httpConfig.isCircuitBreakerEnabled()).thenReturn(true);
+		when(httpConfig.getCircuitBreakerTimeBetweenResetAttempts()).thenReturn(200);
+		when(svcVersion.getUrlCounter()).thenReturn(new AtomicInteger());
+
 		DefaultAnswer.setRunTime();
 		
 		/*

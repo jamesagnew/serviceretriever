@@ -1,6 +1,7 @@
 package net.svcret.admin.shared.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -22,11 +23,13 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	private int[] myStatsSecurityFailTransactions;
 	private double myStatsSecurityFailTransactionsAvgPerMin;
 	private int[] myStatsSuccessTransactions;
-
 	private double myStatsSuccessTransactionsAvgPerMin;
-
 	private String myUsername;
 
+	public GUser() {
+		super();
+	}
+	
 	public void addDomainPermission(GUserDomainPermission thePermission) {
 		if (myDomainPermissions == null) {
 			myDomainPermissions = new ArrayList<GUserDomainPermission>();
@@ -43,6 +46,9 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	 * @return the allowableSourceIps
 	 */
 	public List<String> getAllowableSourceIps() {
+		if (myAllowableSourceIps==null) {
+			return Collections.emptyList();
+		}
 		return myAllowableSourceIps;
 	}
 

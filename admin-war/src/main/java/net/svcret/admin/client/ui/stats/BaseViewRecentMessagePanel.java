@@ -56,7 +56,7 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		myTopPanel.add(topGrid);
 		
 		topGrid.addRow(MSGS.recentMessagesGrid_ColTimestamp(), new Label(DateUtil.formatTime(theResult.getTransactionTime())));
-		topGrid.addRow(MSGS.recentMessagesGrid_ColImplementationUrl(), new Anchor(theResult.getImplementationUrl(), theResult.getImplementationUrl()));
+		topGrid.addRow(MSGS.recentMessagesGrid_ColImplementationUrl(), new Anchor(theResult.getImplementationUrlId(), theResult.getImplementationUrlHref()));
 		topGrid.addRow(MSGS.recentMessagesGrid_ColIp(), new Label(theResult.getRequestHostIp()));
 
 		/*
@@ -92,6 +92,7 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		
 		myReqPre = new HtmlPre(theResult.getRequestMessage());
 		ScrollPanel reqMsgPanel = new ScrollPanel(myReqPre);
+		reqMsgPanel.addStyleName(CssConstants.RECENT_MESSAGE_SCROLLER);
 		myReqPanel.add(reqMsgPanel);
 		
 		/*
@@ -125,7 +126,9 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		myRespPanel.add(respFunctions);
 
 		myRespPre = new HtmlPre(theResult.getResponseMessage());
-		myRespPanel.add(myRespPre);
+		ScrollPanel respMsgPanel = new ScrollPanel(myRespPre);
+		respMsgPanel.addStyleName(CssConstants.RECENT_MESSAGE_SCROLLER);
+		myRespPanel.add(respMsgPanel);
 		
 	}
 	
@@ -139,7 +142,7 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		b.appendHtmlConstant(": ");
 		
 		b.appendHtmlConstant("</span><span class='" + CssConstants.MESSAGE_HEADER_VALUE + "'>");
-		b.appendEscaped(theNext.getFirst());
+		b.appendEscaped(theNext.getSecond());
 		b.appendHtmlConstant("</span>");
 		
 		return b.toSafeHtml();

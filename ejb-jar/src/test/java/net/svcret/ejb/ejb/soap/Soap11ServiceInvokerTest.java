@@ -200,7 +200,11 @@ public class Soap11ServiceInvokerTest {
 		assertEquals(InvocationResultsBean.ResultTypeEnum.METHOD, result.getResultType());
 		
 		// Security header doesn't match so don't compare it
-		assertEquals(msg.replace("\n", "").replaceAll(".*\\/soapenv:Header", ""), result.getMethodRequestBody().replace("\n", "").replaceAll(".*\\/soapenv:Header", ""));
+		String expected = msg.replace("\n", "").replaceAll(".*<soapenv:Body>", "<soapenv:Body>");
+		String actual = result.getMethodRequestBody().replace("\n", "").replaceAll(".*<soapenv:Body>", "<soapenv:Body>");
+		ourLog.info("Expecting: {}", expected);
+		ourLog.info("Got: {}", actual);
+		assertEquals(expected, actual);
 		
 		assertEquals(Constants.CONTENT_TYPE_XML, result.getMethodContentType());
 		assertTrue(result.getMethodHeaders().keySet().contains("SOAPAction"));

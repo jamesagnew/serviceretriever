@@ -51,11 +51,11 @@ import org.apache.commons.lang3.time.DateUtils;
 public class ModelUpdateServiceMock implements ModelUpdateService {
 
 	private static long ourNextPid = 1000000L;
-	private GDomainList myDomainList;
-	private GHttpClientConfigList myClientConfigList;
 	private GAuthenticationHostList myAuthHostList;
-	private GUserList myUserList;
+	private GHttpClientConfigList myClientConfigList;
 	private GConfig myConfig;
+	private GDomainList myDomainList;
+	private GUserList myUserList;
 
 	public ModelUpdateServiceMock() {
 		myConfig = new GConfig();
@@ -84,6 +84,18 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		ver.setProxyPath("/some/service");
 		ver.setLastAccess(new Date());
 		svc.getVersionList().add(ver);
+
+		GServiceVersionUrl url = new GServiceVersionUrl();
+		url.setPid(1);
+		url.setId("url1");
+		url.setUrl("http://foo");
+		ver.getUrlList().add(url);
+
+		url = new GServiceVersionUrl();
+		url.setPid(2);
+		url.setId("url2");
+		url.setUrl("http://bar");
+		ver.getUrlList().add(url);
 
 		GServiceMethod met = new GServiceMethod();
 		met.setPid(1000L);
@@ -167,118 +179,10 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	}
 
 	@Override
-	public ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) {
-		ModelUpdateResponse retVal = new ModelUpdateResponse();
-
-		retVal.setDomainList(new GDomainList());
-		retVal.getDomainList().mergeResults(myDomainList);
-
-		for (GDomain nextDomain : retVal.getDomainList()) {
-			Set<Long> domainsToLoadStats = theRequest.getDomainsToLoadStats();
-			long nextDomainPid = nextDomain.getPid();
-			if (domainsToLoadStats.contains(nextDomainPid)) {
-				populateRandom(nextDomain);
-			}
-			for (GService nextService : nextDomain.getServiceList()) {
-				if (theRequest.getServicesToLoadStats().contains(nextService.getPid())) {
-					populateRandom(nextService);
-				}
-				for (BaseGServiceVersion nextVersion : nextService.getVersionList()) {
-					if (theRequest.getVersionsToLoadStats().contains(nextVersion.getPid())) {
-						populateRandom(nextVersion);
-						for (GServiceMethod nextMethod : nextVersion.getMethodList()) {
-							if (theRequest.getVersionMethodsToLoadStats().contains(nextMethod.getPid())) {
-								populateRandom(nextMethod);
-							}
-						}
-					}
-				}
-			}
-		}
-
-		if (theRequest.isLoadHttpClientConfigs()) {
-			retVal.setHttpClientConfigList(getHttpClientConfigList());
-		}
-
-		if (theRequest.isLoadAuthHosts()) {
-			retVal.setAuthenticationHostList(getAuthHostList());
-		}
-
-		return retVal;
-	}
-
-	private GAuthenticationHostList getAuthHostList() {
-		GAuthenticationHostList retVal = new GAuthenticationHostList();
-		retVal.mergeResults(myAuthHostList);
-		return retVal;
-	}
-
-	private GHttpClientConfigList getHttpClientConfigList() {
-		GHttpClientConfigList clientConfigList = new GHttpClientConfigList();
-		clientConfigList.mergeResults(myClientConfigList);
-		return clientConfigList;
-	}
-
-	private void populateRandom(BaseGDashboardObjectWithUrls<?> obj) {
-		obj.setStatsInitialized(new Date());
-		obj.setStatus(randomStatus());
-		obj.setTransactions60mins(random60mins());
-		obj.setLatency60mins(random60mins());
-		obj.setUrlsActive(randomUrlNumber());
-		obj.setUrlsDown(randomUrlNumber());
-		obj.setUrlsUnknown(randomUrlNumber());
-		obj.setLastSuccessfulInvocation(randomRecentDate());
-		obj.setLastServerSecurityFailure(randomRecentDate());
-		obj.setServerSecured(ServerSecuredEnum.FULLY);
-	}
-
-	private Date randomRecentDate() {
-		return new Date(System.currentTimeMillis() - (long) (DateUtils.MILLIS_PER_DAY * Math.random()));
-	}
-
-	private void populateRandom(BaseGDashboardObject<?> obj) {
-		obj.setStatsInitialized(new Date());
-		obj.setStatus(randomStatus());
-		obj.setTransactions60mins(random60mins());
-		obj.setLatency60mins(random60mins());
-	}
-
-	private int randomUrlNumber() {
-		return (int) (5.0 * Math.random());
-	}
-
-	private StatusEnum randomStatus() {
-		double rnd = 3.0 * Math.random();
-		if (rnd < 1) {
-			return StatusEnum.ACTIVE;
-		}
-		if (rnd < 2) {
-			return StatusEnum.DOWN;
-		}
-		return StatusEnum.UNKNOWN;
-	}
-
-	private int[] random60mins() {
-		int[] retVal = new int[60];
-		for (int i = 0; i < 60; i++) {
-			retVal[i] = (int) (Math.random() * 100.0);
-		}
-		return retVal;
-	}
-
-	@Override
 	public GDomain addDomain(GDomain theDomain) throws ServiceFailureException {
 		theDomain.setPid(ourNextPid++);
 		myDomainList.add(theDomain);
 		return theDomain;
-	}
-
-	@Override
-	public GDomain saveDomain(GDomain theDomain) {
-		GDomain retVal = myDomainList.getDomainByPid(theDomain.getPid());
-		retVal.setId(theDomain.getId());
-		retVal.setName(theDomain.getName());
-		return retVal;
 	}
 
 	@Override
@@ -298,51 +202,6 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		dom.getServiceList().add(svc);
 
 		return svc;
-	}
-
-	@Override
-	public GSoap11ServiceVersion loadWsdl(GSoap11ServiceVersion theService, String theWsdlUrl) throws ServiceFailureException {
-		if (StringUtil.isBlank(theWsdlUrl)) {
-			throw new ServiceFailureException("Failed to load URL: \"" + theWsdlUrl + '"');
-		}
-
-		GSoap11ServiceVersion retVal = new GSoap11ServiceVersion();
-		retVal.setWsdlLocation(theWsdlUrl);
-
-		retVal.setActive(true);
-		retVal.setUncommittedSessionId(theService.getUncommittedSessionId());
-
-		GServiceMethod method = new GServiceMethod();
-		method.setId("method1");
-		method.setName("method1");
-		retVal.getMethodList().add(method);
-
-		method = new GServiceMethod();
-		method.setId("method2");
-		method.setName("method2");
-		retVal.getMethodList().add(method);
-
-		GServiceVersionUrl url = new GServiceVersionUrl();
-		url.setId("url1");
-		url.setUrl("http://something/aaaa.html");
-		retVal.getUrlList().add(url);
-
-		return retVal;
-	}
-
-	@Override
-	public void saveServiceVersionToSession(BaseGServiceVersion theServiceVersion) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public GSoap11ServiceVersion createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncomittedId) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void reportClientError(String theMessage, Throwable theException) {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -394,17 +253,43 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 
 	}
 
-	@Override
-	public GHttpClientConfig saveHttpClientConfig(boolean theCreate, GHttpClientConfig theConfig) {
-		if (theCreate) {
-			theConfig.setPid(ourNextPid++);
-			myClientConfigList.add(theConfig);
-			return theConfig;
-		} else {
-			GHttpClientConfig existing = myClientConfigList.getConfigByPid(theConfig.getPid());
-			existing.merge(theConfig);
-			return existing;
+	private GRecentMessage createMessage(boolean theIncludeContents) {
+		String responseMessage = "<req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req></req>";
+		String requestMessage = "<resp a='qqqqq'><tags/></resp>";
+		List<Pair<String>> reqHeaders = new ArrayList<Pair<String>>();
+		reqHeaders.add(new Pair<String>("Content-Type","text/xml"));
+		reqHeaders.add(new Pair<String>("Content-Encoding","chunked"));
+		List<Pair<String>> respHeaders=new ArrayList<Pair<String>>();
+		respHeaders.add(new Pair<String>("Content-Type","text/xml"));
+		respHeaders.add(new Pair<String>("X-Server","Some Server"));
+		String reqCt="text/xml";
+		String respCt="text/xml";
+		if (!theIncludeContents) {
+			responseMessage = null;
+			requestMessage = null;
+			reqHeaders=null;
+			respHeaders=null;
+			reqCt=null;
+			respCt=null;
 		}
+
+		GRecentMessage retVal = new GRecentMessage(ourNextPid++, new Date(), "http://foo", "127.0.0.1", requestMessage, reqHeaders, respHeaders, reqCt, respCt);
+		retVal.setImplementationUrlPid(999L);
+		retVal.setImplementationUrlId("dev1");
+		retVal.setImplementationUrlHref("http://foo");
+		retVal.setDomainPid(0l);
+		retVal.setDomainName("DomainName1");
+		retVal.setServicePid(0l);
+		retVal.setServiceName("ServiceName1");
+		retVal.setServiceVersionPid(0l);
+		retVal.setServiceVersionId("1.0");
+		
+		return retVal;
+	}
+
+	@Override
+	public GSoap11ServiceVersion createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncomittedId) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -415,76 +300,20 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		return getHttpClientConfigList();
 	}
 
-	@Override
-	public GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) {
-		if (theAuthHost.getPid() <= 0) {
-			theAuthHost.setPid(ourNextPid++);
-			myAuthHostList.add(theAuthHost);
-		} else {
-			myAuthHostList.getAuthHostByPid(theAuthHost.getPid()).merge(theAuthHost);
-		}
-		return myAuthHostList;
-	}
-
-	@Override
-	public GAuthenticationHostList removeAuthenticationHost(long thePid) {
-		myAuthHostList.remove(myAuthHostList.getAuthHostByPid(thePid));
-		return getAuthHostList();
-	}
-
-	@Override
-	public GPartialUserList loadUsers(PartialUserListRequest theRequest) {
-		GPartialUserList retVal = new GPartialUserList();
-		retVal.addAll(myUserList.toCollection());
+	private GAuthenticationHostList getAuthHostList() {
+		GAuthenticationHostList retVal = new GAuthenticationHostList();
+		retVal.mergeResults(myAuthHostList);
 		return retVal;
-	}
-
-	@Override
-	public UserAndAuthHost loadUser(long thePid, boolean theLoadStats) {
-		GUser user = myUserList.getUserByPid(thePid);
-		BaseGAuthHost authHost = myAuthHostList.getAuthHostByPid(user.getAuthHostPid());
-
-		return new UserAndAuthHost(user, authHost);
-	}
-
-	@Override
-	public void saveUser(GUser theUser) {
-		myUserList.getUserByPid(theUser.getPid()).merge(theUser);
 	}
 
 	public long getDefaultHttpClientConfigPid() {
 		return myClientConfigList.get(0).getPid();
 	}
 
-	@Override
-	public GDomainList removeDomain(long thePid) {
-		myDomainList.remove(myDomainList.getDomainByPid(thePid));
-		return myDomainList;
-	}
-
-	@Override
-	public BaseGServiceVersion loadServiceVersionIntoSession(long theServiceVersionPid) throws ServiceFailureException {
-		BaseGServiceVersion ver = myDomainList.getServiceVersionByPid(theServiceVersionPid);
-		return ver;
-	}
-
-	@Override
-	public GDomainList removeService(long theDomainPid, long theServicePid) {
-		GServiceList serviceList = myDomainList.getDomainByPid(theDomainPid).getServiceList();
-		serviceList.remove(serviceList.getServiceByPid(theServicePid));
-		return myDomainList;
-	}
-
-	@Override
-	public GDomainList saveService(GService theService) {
-		for (GDomain nextDomain : myDomainList) {
-			for (GService nextService : nextDomain.getServiceList()) {
-				if (nextService.getPid() == theService.getPid()) {
-					nextService.mergeSimple(theService);
-				}
-			}
-		}
-		return myDomainList;
+	private GHttpClientConfigList getHttpClientConfigList() {
+		GHttpClientConfigList clientConfigList = new GHttpClientConfigList();
+		clientConfigList.mergeResults(myClientConfigList);
+		return clientConfigList;
 	}
 
 	@Override
@@ -493,35 +322,54 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	}
 
 	@Override
-	public void saveConfig(GConfig theConfig) {
-		myConfig = theConfig;
+	public ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) {
+		ModelUpdateResponse retVal = new ModelUpdateResponse();
+
+		retVal.setDomainList(new GDomainList());
+		retVal.getDomainList().mergeResults(myDomainList);
+
+		for (GDomain nextDomain : retVal.getDomainList()) {
+			Set<Long> domainsToLoadStats = theRequest.getDomainsToLoadStats();
+			long nextDomainPid = nextDomain.getPid();
+			if (domainsToLoadStats.contains(nextDomainPid)) {
+				populateRandom(nextDomain);
+			}
+			for (GService nextService : nextDomain.getServiceList()) {
+				if (theRequest.getServicesToLoadStats().contains(nextService.getPid())) {
+					populateRandom(nextService);
+				}
+				for (BaseGServiceVersion nextVersion : nextService.getVersionList()) {
+					if (theRequest.getVersionsToLoadStats().contains(nextVersion.getPid())) {
+						populateRandom(nextVersion);
+						for (GServiceMethod nextMethod : nextVersion.getMethodList()) {
+							if (theRequest.getVersionMethodsToLoadStats().contains(nextMethod.getPid())) {
+								populateRandom(nextMethod);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if (theRequest.isLoadHttpClientConfigs()) {
+			retVal.setHttpClientConfigList(getHttpClientConfigList());
+		}
+
+		if (theRequest.isLoadAuthHosts()) {
+			retVal.setAuthenticationHostList(getAuthHostList());
+		}
+
+		return retVal;
 	}
 
 	@Override
-	public List<GUrlStatus> loadServiceVersionUrlStatuses(long theServiceVersionPid) {
-		ArrayList<GUrlStatus> retVal = new ArrayList<GUrlStatus>();
+	public GRecentMessage loadRecentMessageForServiceVersion(long thePid) {
+		return createMessage(true);
+	}
 
-		GUrlStatus url = new GUrlStatus();
-		url.setUrl("http://foo");
-		url.setUrlPid(1);
-		url.setLastFailure(new Date());
-		url.setLastFailureMessage("This is a fail message");
-		url.setLastSuccess(new Date());
-		url.setLastSuccessMessage("This is a success message");
-		url.setStatus(StatusEnum.ACTIVE);
-		retVal.add(url);
-
-		url = new GUrlStatus();
-		url.setUrl("http://bar/werwe/werw");
-		url.setUrlPid(2);
-		url.setLastFailure(new Date());
-		url.setLastFailureMessage("This is a fail message");
-		url.setLastSuccess(new Date());
-		url.setLastSuccessMessage("This is a success message");
-		url.setStatus(StatusEnum.ACTIVE);
-		retVal.add(url);
-
-		return retVal;
+	@Override
+	public GRecentMessage loadRecentMessageForUser(long thePid) {
+		return loadRecentMessageForServiceVersion(thePid);
 	}
 
 	@Override
@@ -563,41 +411,9 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		return retVal;
 	}
 
-	private GRecentMessage createMessage(boolean theIncludeContents) {
-		String responseMessage = "<req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req></req>";
-		String requestMessage = "<resp a='qqqqq'><tags/></resp>";
-		List<Pair<String>> reqHeaders = new ArrayList<Pair<String>>();
-		reqHeaders.add(new Pair<String>("Content-Type","text/xml"));
-		reqHeaders.add(new Pair<String>("Content-Encoding","chunked"));
-		List<Pair<String>> respHeaders=new ArrayList<Pair<String>>();
-		respHeaders.add(new Pair<String>("Content-Type","text/xml"));
-		respHeaders.add(new Pair<String>("X-Server","Some Server"));
-		String reqCt="text/xml";
-		String respCt="text/xml";
-		if (!theIncludeContents) {
-			responseMessage = null;
-			requestMessage = null;
-			reqHeaders=null;
-			respHeaders=null;
-			reqCt=null;
-			respCt=null;
-		}
-		return new GRecentMessage(ourNextPid++, new Date(), "http://foo", "127.0.0.1", requestMessage, responseMessage, reqHeaders, respHeaders, reqCt, respCt);
-	}
-
-	@Override
-	public GRecentMessage loadRecentMessageForServiceVersion(long thePid) {
-		return createMessage(true);
-	}
-
 	@Override
 	public GRecentMessageLists loadRecentTransactionListForuser(long thePid) {
 		return loadRecentTransactionListForServiceVersion(thePid);
-	}
-
-	@Override
-	public GRecentMessage loadRecentMessageForUser(long thePid) {
-		return loadRecentMessageForServiceVersion(thePid);
 	}
 
 	@Override
@@ -629,12 +445,154 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		throw new IllegalArgumentException("Can't find "+theVersionPid);
 	}
 
+	@Override
+	public BaseGServiceVersion loadServiceVersionIntoSession(long theServiceVersionPid) throws ServiceFailureException {
+		BaseGServiceVersion ver = myDomainList.getServiceVersionByPid(theServiceVersionPid);
+		return ver;
+	}
+
+	@Override
+	public List<GUrlStatus> loadServiceVersionUrlStatuses(long theServiceVersionPid) {
+		ArrayList<GUrlStatus> retVal = new ArrayList<GUrlStatus>();
+
+		GUrlStatus url = new GUrlStatus();
+		url.setUrlPid(1);
+		url.setLastFailure(new Date());
+		url.setLastFailureMessage("This is a fail message");
+		url.setLastSuccess(new Date());
+		url.setLastSuccessMessage("This is a success message");
+		url.setStatus(StatusEnum.ACTIVE);
+		retVal.add(url);
+
+		url = new GUrlStatus();
+		url.setUrlPid(2);
+		url.setLastFailure(new Date());
+		url.setLastFailureMessage("This is a fail message");
+		url.setLastSuccess(new Date());
+		url.setLastSuccessMessage("This is a success message");
+		url.setStatus(StatusEnum.ACTIVE);
+		retVal.add(url);
+
+		return retVal;
+	}
+
+	@Override
+	public UserAndAuthHost loadUser(long thePid, boolean theLoadStats) {
+		GUser user = myUserList.getUserByPid(thePid);
+		BaseGAuthHost authHost = myAuthHostList.getAuthHostByPid(user.getAuthHostPid());
+
+		return new UserAndAuthHost(user, authHost);
+	}
+
+	@Override
+	public GPartialUserList loadUsers(PartialUserListRequest theRequest) {
+		GPartialUserList retVal = new GPartialUserList();
+		retVal.addAll(myUserList.toCollection());
+		return retVal;
+	}
+
+	@Override
+	public GSoap11ServiceVersion loadWsdl(GSoap11ServiceVersion theService, String theWsdlUrl) throws ServiceFailureException {
+		if (StringUtil.isBlank(theWsdlUrl)) {
+			throw new ServiceFailureException("Failed to load URL: \"" + theWsdlUrl + '"');
+		}
+
+		GSoap11ServiceVersion retVal = new GSoap11ServiceVersion();
+		retVal.setWsdlLocation(theWsdlUrl);
+
+		retVal.setActive(true);
+		retVal.setUncommittedSessionId(theService.getUncommittedSessionId());
+
+		GServiceMethod method = new GServiceMethod();
+		method.setId("method1");
+		method.setName("method1");
+		retVal.getMethodList().add(method);
+
+		method = new GServiceMethod();
+		method.setId("method2");
+		method.setName("method2");
+		retVal.getMethodList().add(method);
+
+		GServiceVersionUrl url = new GServiceVersionUrl();
+		url.setId("url1");
+		url.setUrl("http://something/aaaa.html");
+		retVal.getUrlList().add(url);
+
+		return retVal;
+	}
+
+	private void populateRandom(BaseGDashboardObject<?> obj) {
+		obj.setStatsInitialized(new Date());
+		obj.setStatus(randomStatus());
+		obj.setTransactions60mins(random60mins());
+		obj.setLatency60mins(random60mins());
+	}
+
+	private void populateRandom(BaseGDashboardObjectWithUrls<?> obj) {
+		obj.setStatsInitialized(new Date());
+		obj.setStatus(randomStatus());
+		obj.setTransactions60mins(random60mins());
+		obj.setLatency60mins(random60mins());
+		obj.setUrlsActive(randomUrlNumber());
+		obj.setUrlsDown(randomUrlNumber());
+		obj.setUrlsUnknown(randomUrlNumber());
+		obj.setLastSuccessfulInvocation(randomRecentDate());
+		obj.setLastServerSecurityFailure(randomRecentDate());
+		obj.setServerSecured(ServerSecuredEnum.FULLY);
+	}
+
+	private int[] random60mins() {
+		int[] retVal = new int[60];
+		for (int i = 0; i < 60; i++) {
+			retVal[i] = (int) (Math.random() * 100.0);
+		}
+		return retVal;
+	}
+
 	private List<Integer> random60minsList() {
 		List<Integer> retVal=new ArrayList<Integer>();
 		for (int next : random60mins()) {
 			retVal.add(next);
 		}
 		return retVal;
+	}
+
+	private Date randomRecentDate() {
+		return new Date(System.currentTimeMillis() - (long) (DateUtils.MILLIS_PER_DAY * Math.random()));
+	}
+
+	private StatusEnum randomStatus() {
+		double rnd = 3.0 * Math.random();
+		if (rnd < 1) {
+			return StatusEnum.ACTIVE;
+		}
+		if (rnd < 2) {
+			return StatusEnum.DOWN;
+		}
+		return StatusEnum.UNKNOWN;
+	}
+
+	private int randomUrlNumber() {
+		return (int) (5.0 * Math.random());
+	}
+
+	@Override
+	public GAuthenticationHostList removeAuthenticationHost(long thePid) {
+		myAuthHostList.remove(myAuthHostList.getAuthHostByPid(thePid));
+		return getAuthHostList();
+	}
+
+	@Override
+	public GDomainList removeDomain(long thePid) {
+		myDomainList.remove(myDomainList.getDomainByPid(thePid));
+		return myDomainList;
+	}
+
+	@Override
+	public GDomainList removeService(long theDomainPid, long theServicePid) {
+		GServiceList serviceList = myDomainList.getDomainByPid(theDomainPid).getServiceList();
+		serviceList.remove(serviceList.getServiceByPid(theServicePid));
+		return myDomainList;
 	}
 
 	@Override
@@ -649,6 +607,70 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		}
 		
 		return myDomainList;
+	}
+
+	@Override
+	public void reportClientError(String theMessage, Throwable theException) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) {
+		if (theAuthHost.getPid() <= 0) {
+			theAuthHost.setPid(ourNextPid++);
+			myAuthHostList.add(theAuthHost);
+		} else {
+			myAuthHostList.getAuthHostByPid(theAuthHost.getPid()).merge(theAuthHost);
+		}
+		return myAuthHostList;
+	}
+
+	@Override
+	public void saveConfig(GConfig theConfig) {
+		myConfig = theConfig;
+	}
+
+	@Override
+	public GDomain saveDomain(GDomain theDomain) {
+		GDomain retVal = myDomainList.getDomainByPid(theDomain.getPid());
+		retVal.setId(theDomain.getId());
+		retVal.setName(theDomain.getName());
+		return retVal;
+	}
+
+	@Override
+	public GHttpClientConfig saveHttpClientConfig(boolean theCreate, GHttpClientConfig theConfig) {
+		if (theCreate) {
+			theConfig.setPid(ourNextPid++);
+			myClientConfigList.add(theConfig);
+			return theConfig;
+		} else {
+			GHttpClientConfig existing = myClientConfigList.getConfigByPid(theConfig.getPid());
+			existing.merge(theConfig);
+			return existing;
+		}
+	}
+
+	@Override
+	public GDomainList saveService(GService theService) {
+		for (GDomain nextDomain : myDomainList) {
+			for (GService nextService : nextDomain.getServiceList()) {
+				if (nextService.getPid() == theService.getPid()) {
+					nextService.mergeSimple(theService);
+				}
+			}
+		}
+		return myDomainList;
+	}
+
+	@Override
+	public void saveServiceVersionToSession(BaseGServiceVersion theServiceVersion) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void saveUser(GUser theUser) {
+		myUserList.getUserByPid(theUser.getPid()).merge(theUser);
 	}
 
 }

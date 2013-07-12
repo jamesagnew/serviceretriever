@@ -26,6 +26,7 @@ import javax.persistence.Version;
 import net.svcret.admin.shared.model.ServerSecuredEnum;
 import net.svcret.ejb.api.ResponseTypeEnum;
 
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.ForeignKey;
 
 import com.google.common.base.Objects;
@@ -60,6 +61,9 @@ public class PersService extends BasePersServiceCatalogItem {
 	@Transient
 	private transient ServerSecuredEnum myServerSecured;
 
+	@OneToMany(fetch=FetchType.LAZY, cascade= {}, orphanRemoval=true, mappedBy="myService")
+	private Collection<PersUserServicePermission> myUserPermissions;
+
 	@Column(name = "SERVICE_ID", nullable = false, length = 100)
 	private String myServiceId;
 
@@ -87,6 +91,8 @@ public class PersService extends BasePersServiceCatalogItem {
 		}
 	}
 
+
+	
 	@Override
 	public Integer determineKeepNumRecentTransactions(ResponseTypeEnum theResultType) {
 		Integer retVal = super.determineKeepNumRecentTransactions(theResultType);
@@ -132,6 +138,13 @@ public class PersService extends BasePersServiceCatalogItem {
 	 */
 	public PersDomain getDomain() {
 		return myDomain;
+	}
+
+	public String getServiceNameOrId() {
+		if (StringUtils.isNotBlank(getServiceName())) {
+			return getServiceName();
+		}
+		return getServiceId();
 	}
 
 	/**
@@ -217,6 +230,7 @@ public class PersService extends BasePersServiceCatalogItem {
 	}
 
 	public void merge(PersService theService) {
+		super.merge(theService);
 		setServiceId(theService.getServiceId());
 		setServiceName(theService.getServiceName());
 		setActive(theService.isActive());

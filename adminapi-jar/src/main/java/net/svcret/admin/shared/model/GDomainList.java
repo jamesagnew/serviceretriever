@@ -5,6 +5,10 @@ public class GDomainList extends BaseGList<GDomain> {
 
 	private static final long serialVersionUID = 1L;
 
+	public GDomainList() {
+		setComparator(new BaseGDashboardObjectComparator());
+	}
+	
 //	public GDomain getDomainByPid(String theDomainId) {
 //		if (StringUtil.isBlank(theDomainId)) {
 //			return null;
