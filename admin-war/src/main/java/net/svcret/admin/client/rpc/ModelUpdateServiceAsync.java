@@ -12,6 +12,7 @@ import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
+import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.admin.shared.model.GRecentMessageLists;
@@ -86,5 +87,7 @@ public interface ModelUpdateServiceAsync {
 	void loadServiceVersionDetailedStats(long theVersionPid, AsyncCallback<GServiceVersionDetailedStats> theAsyncCallback);
 
 	void removeServiceVersion(long thePid, AsyncCallback<GDomainList> theAsyncCallback);
+
+	void loadMonitorRuleList(AsyncCallback<GMonitorRuleList> theAsyncCallback);
 
 }

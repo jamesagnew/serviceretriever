@@ -53,6 +53,7 @@ import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.ejb.model.entity.PersStaticResourceStats;
 import net.svcret.ejb.model.entity.PersStaticResourceStatsPk;
 import net.svcret.ejb.model.entity.PersUser;
+import net.svcret.ejb.model.entity.PersUserMethodStatus;
 import net.svcret.ejb.model.entity.PersUserStatus;
 import net.svcret.ejb.util.Validate;
 
@@ -282,7 +283,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			PersInvocationUserStatsPk uStatsPk = new PersInvocationUserStatsPk(interval, theInvocationTime, theUser);
 			doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, uStatsPk);
 
-			doUpdateUserStatus(theInvocationResponseResultsBean, theUser, theInvocationTime);
+			doUpdateUserStatus(theMethod, theInvocationResponseResultsBean, theUser, theInvocationTime);
 		}
 
 		if (theHttpResponse != null) {
@@ -343,18 +344,28 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	private ConcurrentHashMap<PersUser, PersUserStatus> myUnflushedUserStatus = new ConcurrentHashMap<PersUser, PersUserStatus>();
 
-	private void doUpdateUserStatus(InvocationResponseResultsBean theInvocationResponseResultsBean, PersUser theUser, Date theTransactionTime) {
+	private void doUpdateUserStatus(PersServiceVersionMethod theMethod, InvocationResponseResultsBean theInvocationResponseResultsBean, PersUser theUser, Date theTransactionTime) {
 		PersUserStatus status = getUserStatusForUser(theUser);
+
+		PersUserMethodStatus methodStatus = status.getOrCreateMethodStatus(theMethod);
+		
 		
 		switch (theInvocationResponseResultsBean.getResponseType()) {
 		case SUCCESS:
 			status.setLastAccessIfNewer(theTransactionTime);
+			methodStatus.setLastSuccessfulInvocationIfNewer(theTransactionTime);
 			break;
 		case FAULT:
+			status.setLastAccessIfNewer(theTransactionTime);
+			methodStatus.setLastFaultInvocationIfNewer(theTransactionTime);
 			break;
 		case SECURITY_FAIL:
+			status.setLastSecurityFailIfNewer(theTransactionTime);
+			methodStatus.setLastSecurityFailInvocationIfNewer(theTransactionTime);
 			break;
 		case FAIL:
+			status.setLastAccessIfNewer(theTransactionTime);
+			methodStatus.setLastFailInvocationIfNewer(theTransactionTime);
 			break;
 		}
 		
