@@ -17,6 +17,7 @@ import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
+import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GUrlStatus;
 import net.svcret.admin.shared.model.GUser;
@@ -86,5 +87,7 @@ public interface ModelUpdateServiceAsync {
 	void loadServiceVersionDetailedStats(long theVersionPid, AsyncCallback<GServiceVersionDetailedStats> theAsyncCallback);
 
 	void removeServiceVersion(long thePid, AsyncCallback<GDomainList> theAsyncCallback);
+
+	void testServiceVersionWithSingleMessage(String theMessageText, long thePid, AsyncCallback<GServiceVersionSingleFireResponse> theAsyncCallback);
 
 }

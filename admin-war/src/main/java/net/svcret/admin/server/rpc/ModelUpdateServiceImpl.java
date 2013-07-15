@@ -28,6 +28,7 @@ import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
 import net.svcret.admin.shared.model.GServiceVersionJsonRpc20;
+import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
 import net.svcret.admin.shared.model.GUrlStatus;
@@ -682,6 +683,15 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 			throw new ServiceFailureException(e.getMessage());
 		}
 		
+	}
+
+	@Override
+	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid) throws ServiceFailureException {
+		try {
+			return myAdminSvc.testServiceVersionWithSingleMessage(theMessageText, thePid);
+		} catch (ProcessingException e) {
+			throw new ServiceFailureException(e.getMessage());
+		}
 	}
 
 }

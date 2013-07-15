@@ -23,8 +23,6 @@ public class EndpointRendererJsonRpc20 extends BaseEndpointRenderer<GServiceVers
 		endpoint.setHref(url);
 		retVal.add(endpoint);
 		
-		endpoint.getElement().getStyle().setPaddingLeft(4, Unit.PX);
-		
 		return retVal;
 	}
 

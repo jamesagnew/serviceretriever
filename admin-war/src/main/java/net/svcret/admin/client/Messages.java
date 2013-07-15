@@ -581,8 +581,11 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Response Message")
 	String viewRecentMessageServiceVersion_ResponseMessage();
 
-	@DefaultMessage("View Transaction")
+	@DefaultMessage("View Service Version Transaction")
 	String viewRecentMessageServiceVersion_Title();
+
+	@DefaultMessage("View User Transaction")
+	String viewRecentMessageUser_Title();
 
 	@DefaultMessage("Recent Transactions")
 	String viewRecentMessagUser_Breadcrumb();

@@ -29,14 +29,15 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 	private FlowPanel myRespPanel;
 	private HtmlPre myReqPre;
 	private HtmlPre myRespPre;
+	private TwoColumnGrid myTopGrid;
 
-	public BaseViewRecentMessagePanel(long thePid) {
+	public BaseViewRecentMessagePanel() {
 		myTopPanel = new FlowPanel();
 		add(myTopPanel);
-		
+
 		myTopPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
 
-		Label titleLabel = new Label(MSGS.viewRecentMessageServiceVersion_Title());
+		Label titleLabel = new Label(getPanelTitle());
 		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
 		myTopPanel.add(titleLabel);
 
@@ -44,28 +45,32 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		myTopLoadingSpinner.show();
 		myTopPanel.add(myTopLoadingSpinner);
 
-		loadMessage(thePid);
+		myTopGrid = new TwoColumnGrid();
+		myTopPanel.add(myTopGrid);
+
 	}
 
-	protected abstract void loadMessage(long thePid);
+	protected abstract String getPanelTitle();
 
-	protected void setMessage(final GRecentMessage theResult) {
+	public void setMessage(final GRecentMessage theResult) {
 		myTopLoadingSpinner.hideCompletely();
-		
-		TwoColumnGrid topGrid = new TwoColumnGrid();
-		myTopPanel.add(topGrid);
-		
-		topGrid.addRow(MSGS.recentMessagesGrid_ColTimestamp(), new Label(DateUtil.formatTime(theResult.getTransactionTime())));
-		topGrid.addRow(MSGS.recentMessagesGrid_ColImplementationUrl(), new Anchor(theResult.getImplementationUrlId(), theResult.getImplementationUrlHref()));
-		topGrid.addRow(MSGS.recentMessagesGrid_ColIp(), new Label(theResult.getRequestHostIp()));
+
+		myTopGrid.clear();
+		myTopGrid.addRow(MSGS.recentMessagesGrid_ColTimestamp(), new Label(DateUtil.formatTime(theResult.getTransactionTime())));
+		myTopGrid.addRow(MSGS.recentMessagesGrid_ColImplementationUrl(), new Anchor(theResult.getImplementationUrlId(), theResult.getImplementationUrlHref()));
+		myTopGrid.addRow(MSGS.recentMessagesGrid_ColIp(), new Label(theResult.getRequestHostIp()));
 
 		/*
 		 * Request Message
 		 */
-		
-		myReqPanel = new FlowPanel();
-		add(myReqPanel);
-		
+
+		if (myReqPanel == null) {
+			myReqPanel = new FlowPanel();
+			add(myReqPanel);
+		} else {
+			myReqPanel.clear();
+		}
+
 		myReqPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
 
 		Label titleLabel = new Label(MSGS.viewRecentMessageServiceVersion_RequestMessage());
@@ -77,7 +82,7 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 			reqHeaderPanel.add(new HTML(formatHeader(next)));
 		}
 		myReqPanel.add(reqHeaderPanel);
-		
+
 		HorizontalPanel reqFunctions = new HorizontalPanel();
 		if (theResult.getRequestContentType().toLowerCase().contains("xml")) {
 			reqFunctions.add(new PButton("Format XML", new ClickHandler() {
@@ -86,28 +91,32 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 					myReqPre.setText(formatXml(theResult.getRequestMessage()));
 				}
 			}));
-		};
+		}
+		;
 		myReqPanel.add(reqFunctions);
-		
-		
+
 		myReqPre = new HtmlPre(theResult.getRequestMessage());
 		ScrollPanel reqMsgPanel = new ScrollPanel(myReqPre);
 		reqMsgPanel.addStyleName(CssConstants.RECENT_MESSAGE_SCROLLER);
 		myReqPanel.add(reqMsgPanel);
-		
+
 		/*
 		 * Response Message
 		 */
-		
-		myRespPanel = new FlowPanel();
-		add(myRespPanel);
+
+		if (myRespPanel == null) {
+			myRespPanel = new FlowPanel();
+			add(myRespPanel);
+		} else {
+			myRespPanel.clear();
+		}
 		
 		myRespPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
 
 		Label respTitleLabel = new Label(MSGS.viewRecentMessageServiceVersion_ResponseMessage());
 		respTitleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
 		myRespPanel.add(respTitleLabel);
-		
+
 		Panel respHeaderPanel = new FlowPanel();
 		for (Pair<String> next : theResult.getResponseHeaders()) {
 			respHeaderPanel.add(new HTML(formatHeader(next)));
@@ -122,35 +131,34 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 					myRespPre.setText(formatXml(theResult.getResponseMessage()));
 				}
 			}));
-		};
+		}
+		;
 		myRespPanel.add(respFunctions);
 
 		myRespPre = new HtmlPre(theResult.getResponseMessage());
 		ScrollPanel respMsgPanel = new ScrollPanel(myRespPre);
 		respMsgPanel.addStyleName(CssConstants.RECENT_MESSAGE_SCROLLER);
 		myRespPanel.add(respMsgPanel);
-		
+
 	}
-	
-	
+
 	private SafeHtml formatHeader(Pair<String> theNext) {
 		SafeHtmlBuilder b = new SafeHtmlBuilder();
-		
+
 		b.appendHtmlConstant("<span class='" + CssConstants.MESSAGE_HEADER_KEY + "'>");
 		b.appendEscaped(theNext.getFirst());
-		
+
 		b.appendHtmlConstant(": ");
-		
+
 		b.appendHtmlConstant("</span><span class='" + CssConstants.MESSAGE_HEADER_VALUE + "'>");
 		b.appendEscaped(theNext.getSecond());
 		b.appendHtmlConstant("</span>");
-		
+
 		return b.toSafeHtml();
 	}
 
 	private native String formatXml(String theExisting) /*-{
 		return $wnd.vkbeautify.xml(theExisting);
 	}-*/;
-
 
 }

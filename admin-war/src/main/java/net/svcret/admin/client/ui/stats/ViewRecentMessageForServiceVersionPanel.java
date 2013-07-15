@@ -10,11 +10,11 @@ public class ViewRecentMessageForServiceVersionPanel extends BaseViewRecentMessa
 
 
 	public ViewRecentMessageForServiceVersionPanel(long thePid) {
-		super(thePid);
+		super();
+		loadMessage(thePid);
 	}
 
-	@Override
-	protected void loadMessage(long thePid) {
+	private void loadMessage(long thePid) {
 		MODEL_SVC.loadRecentMessageForServiceVersion(thePid, new AsyncCallback<GRecentMessage>() {
 
 			@Override
@@ -27,6 +27,11 @@ public class ViewRecentMessageForServiceVersionPanel extends BaseViewRecentMessa
 				setMessage(theResult);
 			}
 		});
+	}
+
+	@Override
+	protected String getPanelTitle() {
+		return MSGS.viewRecentMessageServiceVersion_Title();
 	}
 
 }

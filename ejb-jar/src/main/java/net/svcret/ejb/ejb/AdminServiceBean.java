@@ -1,5 +1,7 @@
 package net.svcret.ejb.ejb;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -41,6 +43,7 @@ import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
 import net.svcret.admin.shared.model.GServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.GServiceVersionResourcePointer;
+import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
@@ -59,15 +62,22 @@ import net.svcret.admin.shared.model.Pair;
 import net.svcret.admin.shared.model.PartialUserListRequest;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.model.TimeRange;
+import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.IAdminService;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.ISecurityService;
 import net.svcret.ejb.api.IServiceInvokerSoap11;
+import net.svcret.ejb.api.IServiceOrchestrator;
+import net.svcret.ejb.api.RequestType;
+import net.svcret.ejb.api.IServiceOrchestrator.OrchestratorResponseBean;
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.ResponseTypeEnum;
+import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.SecurityFailureException;
+import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersRecentMessage;
@@ -121,6 +131,9 @@ public class AdminServiceBean implements IAdminService {
 	private IServiceInvokerSoap11 myInvokerSoap11;
 
 	@EJB
+	private IServiceOrchestrator myOrchestrator;
+	
+	@EJB
 	private IDao myDao;
 
 	@EJB
@@ -147,7 +160,7 @@ public class AdminServiceBean implements IAdminService {
 		}
 
 		domain.merge(fromUi(theDomain));
-		
+
 		myServiceRegistry.saveDomain(domain);
 
 		return toUi(domain, false);
@@ -213,7 +226,7 @@ public class AdminServiceBean implements IAdminService {
 		ourLog.info("DELETING domain with PID {} and ID {}", thePid, domain.getDomainId());
 
 		domain.loadAllAssociations();
-		
+
 		myServiceRegistry.removeDomain(domain);
 
 	}
@@ -730,7 +743,8 @@ public class AdminServiceBean implements IAdminService {
 		return (int) newValue;
 	}
 
-	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, List<Integer> the60MinInvCount, List<Long> the60minTime, StatusEnum theStatus, BasePersServiceVersion nextVersion) throws ProcessingException {
+	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, List<Integer> the60MinInvCount, List<Long> the60minTime, StatusEnum theStatus,
+			BasePersServiceVersion nextVersion) throws ProcessingException {
 		StatusEnum status = theStatus;
 
 		for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
@@ -738,7 +752,7 @@ public class AdminServiceBean implements IAdminService {
 			if (nextUrlStatus == null) {
 				continue;
 			}
-			
+
 			switch (nextUrlStatus.getStatus()) {
 			case ACTIVE:
 				status = StatusEnum.ACTIVE;
@@ -764,7 +778,8 @@ public class AdminServiceBean implements IAdminService {
 		return status;
 	}
 
-	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Long> the60minTime, PersService theService) throws ProcessingException {
+	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Long> the60minTime, PersService theService)
+			throws ProcessingException {
 
 		// Value will be changed below
 		StatusEnum status = theInitialStatus;
@@ -784,7 +799,8 @@ public class AdminServiceBean implements IAdminService {
 	/**
 	 * @return The start timestamp
 	 */
-	public static void extractSuccessfulInvocationInvocationTimes(PersConfig theConfig, int theNumMinsBack, final List<Integer> the60MinInvCount, final List<Long> the60minTime, PersServiceVersionMethod nextMethod, IRuntimeStatus statusSvc) {
+	public static void extractSuccessfulInvocationInvocationTimes(PersConfig theConfig, int theNumMinsBack, final List<Integer> the60MinInvCount, final List<Long> the60minTime,
+			PersServiceVersionMethod nextMethod, IRuntimeStatus statusSvc) {
 		doWithStatsByMinute(theConfig, theNumMinsBack, statusSvc, nextMethod, new IWithStats() {
 			@Override
 			public void withStats(int theIndex, BasePersInvocationStats theStats) {
@@ -1348,13 +1364,15 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setServerSecured(theVersion.getServerSecured());
 		retVal.setProxyPath(theVersion.getProxyPath());
 		retVal.setExplicitProxyPath(theVersion.getExplicitProxyPath());
-
-		theVersion.populateKeepRecentTransactionsToDto(retVal);
+		retVal.setParentServiceName(theVersion.getService().getServiceName());
+		retVal.setParentServicePid(theVersion.getService().getPid());
 		
+		theVersion.populateKeepRecentTransactionsToDto(retVal);
+
 		for (PersServiceVersionMethod next : theVersion.getMethods()) {
 			retVal.getMethodList().add(toUi(next, theLoadStats));
 		}
-		
+
 		PersHttpClientConfig httpClientConfig = theVersion.getHttpClientConfig();
 		if (httpClientConfig == null) {
 			throw new ProcessingException("Service version doesn't have an HTTP client config");
@@ -1900,10 +1918,10 @@ public class AdminServiceBean implements IAdminService {
 			retVal.setImplementationUrlId(implementationUrl.getUrlId());
 			retVal.setImplementationUrlHref(implementationUrl.getUrl());
 			retVal.setImplementationUrlPid(implementationUrl.getPid());
-			
+
 			retVal.setDomainPid(implementationUrl.getServiceVersion().getService().getDomain().getPid());
 			retVal.setDomainName(implementationUrl.getServiceVersion().getService().getDomain().getDomainNameOrId());
-			
+
 			retVal.setServicePid(implementationUrl.getServiceVersion().getService().getPid());
 			retVal.setServiceName(implementationUrl.getServiceVersion().getService().getServiceNameOrId());
 
@@ -1911,7 +1929,7 @@ public class AdminServiceBean implements IAdminService {
 			retVal.setServiceVersionId(implementationUrl.getServiceVersion().getVersionId());
 
 		}
-		
+
 		retVal.setRequestHostIp(theMsg.getRequestHostIp());
 		retVal.setTransactionTime(theMsg.getTransactionTime());
 		retVal.setTransactionMillis(theMsg.getTransactionMillis());
@@ -1919,14 +1937,26 @@ public class AdminServiceBean implements IAdminService {
 
 		if (theLoadMsgContents) {
 			int bodyIdx = theMsg.getRequestBody().indexOf("\r\n\r\n");
-			retVal.setRequestMessage(theMsg.getRequestBody().substring(bodyIdx + 4));
-			retVal.setRequestHeaders(toHeaders(theMsg.getRequestBody().substring(0, bodyIdx)));
-			retVal.setRequestContentType(toHeaderContentType(retVal.getRequestHeaders()));
-			
+			if (bodyIdx == -1) {
+				retVal.setRequestMessage(theMsg.getRequestBody());
+				retVal.setRequestHeaders(new ArrayList<Pair<String>>());
+				retVal.setRequestContentType("unknown");
+			} else {
+				retVal.setRequestMessage(theMsg.getRequestBody().substring(bodyIdx + 4));
+				retVal.setRequestHeaders(toHeaders(theMsg.getRequestBody().substring(0, bodyIdx)));
+				retVal.setRequestContentType(toHeaderContentType(retVal.getRequestHeaders()));
+			}
+
 			bodyIdx = theMsg.getResponseBody().indexOf("\r\n\r\n");
-			retVal.setResponseMessage(theMsg.getResponseBody().substring(bodyIdx + 4));
-			retVal.setResponseHeaders(toHeaders(theMsg.getResponseBody().substring(0, bodyIdx)));
-			retVal.setResponseContentType(toHeaderContentType(retVal.getResponseHeaders()));
+			if (bodyIdx == -1) {
+				retVal.setResponseMessage(theMsg.getResponseBody());
+				retVal.setResponseHeaders(new ArrayList<Pair<String>>());
+				retVal.setResponseContentType("unknown");
+			} else {
+				retVal.setResponseMessage(theMsg.getResponseBody().substring(bodyIdx + 4));
+				retVal.setResponseHeaders(toHeaders(theMsg.getResponseBody().substring(0, bodyIdx)));
+				retVal.setResponseContentType(toHeaderContentType(retVal.getResponseHeaders()));
+			}
 
 		}
 
@@ -1960,7 +1990,7 @@ public class AdminServiceBean implements IAdminService {
 		ArrayList<Pair<String>> retVal = new ArrayList<Pair<String>>();
 		for (String next : theHeaders.split("\\r\\n")) {
 			int idx = next.indexOf(": ");
-			retVal.add(new Pair<String>(next.substring(0,idx), next.substring(idx+2)));
+			retVal.add(new Pair<String>(next.substring(0, idx), next.substring(idx + 2)));
 		}
 		return retVal;
 	}
@@ -2086,13 +2116,49 @@ public class AdminServiceBean implements IAdminService {
 
 	public void deleteUser(long thePid) throws ProcessingException {
 		ourLog.info("Deleting user {}", thePid);
-		
+
 		PersUser user = myDao.getUser(thePid);
-		if (user==null) {
+		if (user == null) {
 			throw new ProcessingException("Unknown user: " + thePid);
 		}
-		
+
 		myDao.deleteUser(user);
+	}
+
+	@Override
+	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid) throws ProcessingException {
+		ourLog.info("Testing single fire of service version {}",thePid);
+		
+		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(thePid);
+		if (svcVer==null) {
+			throw new IllegalArgumentException("Unknown service version: " + thePid);
+		}
+		
+		HttpRequestBean request = new HttpRequestBean();
+		request.setInputReader(new StringReader(theMessageText));
+		request.setPath(svcVer.getProxyPath());
+		request.setQuery("");
+		request.setRequestHostIp("127.0.0.1");
+		request.setRequestType(RequestType.POST);
+
+		HashMap<String, List<String>> requestHeaders = new HashMap<String, List<String>>();
+		ArrayList<String> ct = new ArrayList<String>();
+		ct.add(svcVer.getProtocol().getRequestContentType());
+		requestHeaders.put("Content-Type", ct);
+		request.setRequestHeaders(requestHeaders);
+
+		GServiceVersionSingleFireResponse retVal;
+		try {
+			OrchestratorResponseBean response = myOrchestrator.handle(request);
+			
+			retVal = new GServiceVersionSingleFireResponse();
+			
+		} catch (Exception e) {
+			ourLog.error("Failed to invoke service", e);
+			throw new ProcessingException(e.getMessage());
+		} 
+		
+		return retVal;
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {

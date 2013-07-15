@@ -18,6 +18,7 @@ import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
+import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
 import net.svcret.admin.shared.model.GUrlStatus;
@@ -97,5 +98,7 @@ public interface IAdminService {
 	GUser loadUser(long thePid, boolean theLoadStats) throws ProcessingException;
 
 	GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws ProcessingException;
+
+	GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid) throws ProcessingException;
 
 }

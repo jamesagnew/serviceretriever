@@ -354,7 +354,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 
 		retVal.setResponseBody(body);
 		retVal.setResponseContentType("application/json");
-		retVal.setResponseHeaders(new HashMap<String, List<String>>());
+
 		if (retVal.getResponseType() == null) {
 			retVal.setResponseType(ResponseTypeEnum.SUCCESS);
 		}

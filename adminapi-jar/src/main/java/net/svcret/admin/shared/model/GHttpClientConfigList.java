@@ -1,9 +1,17 @@
 package net.svcret.admin.shared.model;
 
-public class GHttpClientConfigList extends BaseGList<GHttpClientConfig> {
+import java.util.Comparator;
+
+import net.svcret.admin.shared.util.StringUtil;
+
+public class GHttpClientConfigList extends BaseGList<GHttpClientConfig> implements Comparator<GHttpClientConfig> {
 
 	private static final long serialVersionUID = 1L;
 
+	public GHttpClientConfigList(){
+		setComparator(this);
+	}
+	
 	public GHttpClientConfig getConfigByPid(long thePid) {
 		for (GHttpClientConfig next : this) {
 			if (next.getPid() == thePid) {
@@ -24,6 +32,17 @@ public class GHttpClientConfigList extends BaseGList<GHttpClientConfig> {
 		}
 		b.append(']');
 		return b.toString();
+	}
+
+	@Override
+	public int compare(GHttpClientConfig theO1, GHttpClientConfig theO2) {
+		if (GHttpClientConfig.DEFAULT_ID.equals(theO1.getId())) {
+			return -1;
+		}
+		if (GHttpClientConfig.DEFAULT_ID.equals(theO2.getId())) {
+			return 1;
+		}
+		return StringUtil.compare(theO1.getId(), theO2.getId());
 	}
 
 }

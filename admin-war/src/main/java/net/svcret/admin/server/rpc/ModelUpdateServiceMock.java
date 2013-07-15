@@ -28,6 +28,7 @@ import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceList;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
+import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GUrlStatus;
@@ -254,6 +255,12 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	}
 
 	private GRecentMessage createMessage(boolean theIncludeContents) {
+		GRecentMessage retVal = new GRecentMessage();
+
+		return createMessage(theIncludeContents, retVal);
+	}
+
+	private GRecentMessage createMessage(boolean theIncludeContents, GRecentMessage retVal) {
 		String responseMessage = "<req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req></req>";
 		String requestMessage = "<resp a='qqqqq'><tags/></resp>";
 		List<Pair<String>> reqHeaders = new ArrayList<Pair<String>>();
@@ -272,8 +279,18 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 			reqCt=null;
 			respCt=null;
 		}
+		
+		retVal.setPid(ourNextPid++);
+		retVal.setTransactionTime(new Date());
+		retVal.setRequestHostIp("http://foo");
+		retVal.setRequestMessage(requestMessage);
+		retVal.setResponseMessage(responseMessage);
+		retVal.setRequestHeaders ( reqHeaders);
+		retVal.setResponseHeaders( respHeaders);
+		retVal.setRequestContentType (reqCt);
+		retVal.setResponseContentType (respCt);
 
-		GRecentMessage retVal = new GRecentMessage(ourNextPid++, new Date(), "http://foo", "127.0.0.1", requestMessage, reqHeaders, respHeaders, reqCt, respCt);
+		
 		retVal.setImplementationUrlPid(999L);
 		retVal.setImplementationUrlId("dev1");
 		retVal.setImplementationUrlHref("http://foo");
@@ -671,6 +688,11 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	@Override
 	public void saveUser(GUser theUser) {
 		myUserList.getUserByPid(theUser.getPid()).merge(theUser);
+	}
+
+	@Override
+	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid) {
+		return (GServiceVersionSingleFireResponse) createMessage(true, new GServiceVersionSingleFireResponse());
 	}
 
 }

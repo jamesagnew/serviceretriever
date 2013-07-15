@@ -9,7 +9,9 @@ public enum ServiceProtocolEnum {
 	/*
 	 * NB: Add new entries to the natural order in the static block below
 	 */
-	JSONRPC20("JSON-RPC 2.0"), SOAP11("SOAP 1.1");
+	JSONRPC20("JSON-RPC 2.0", "application/json"), 
+	
+	SOAP11("SOAP 1.1", "text/xml");
 
 	private static List<ServiceProtocolEnum> ourNaturalOrder;
 
@@ -25,9 +27,11 @@ public enum ServiceProtocolEnum {
 	}
 
 	private String myNiceName;
+	private String myRequestContentType;
 
-	private ServiceProtocolEnum(String theName) {
+	private ServiceProtocolEnum(String theName, String theRequestContentType) {
 		myNiceName = theName;
+		myRequestContentType=theRequestContentType;
 	}
 
 	/**
@@ -35,6 +39,10 @@ public enum ServiceProtocolEnum {
 	 */
 	public String getNiceName() {
 		return myNiceName;
+	}
+
+	public String getRequestContentType() {
+		return myRequestContentType;
 	}
 
 }
