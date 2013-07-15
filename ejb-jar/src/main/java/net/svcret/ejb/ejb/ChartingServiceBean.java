@@ -334,4 +334,42 @@ public class ChartingServiceBean implements IChartingServiceBean {
 
 	}
 
+	@Override
+	public byte[] renderUserMethodGraphForUser(long theUserPid) {
+		ourLog.info("Rendering latency graph for user {}", theUserPid);
+
+		final List<Double> invCount = new ArrayList<Double>();
+		final List<Double> invCountFault = new ArrayList<Double>();
+		final List<Double> invCountFail = new ArrayList<Double>();
+		final List<Double> invCountSecurityFail = new ArrayList<Double>();
+		final List<Long> timestamps = new ArrayList<Long>();
+
+//		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
+//		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
+//			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats() {
+//				@Override
+//				public void withStats(int theIndex, BasePersInvocationStats theStats) {
+//					growToSizeDouble(invCount, theIndex);
+//					growToSizeDouble(invCountFault, theIndex);
+//					growToSizeDouble(invCountFail, theIndex);
+//					growToSizeDouble(invCountSecurityFail, theIndex);
+//					growToSizeLong(timestamps, theIndex);
+//
+//					double numMinutes = theStats.getPk().getInterval().numMinutes();
+//					
+//					invCount.set(theIndex, invCount.get(theIndex)+( theStats.getSuccessInvocationCount()/numMinutes));
+//					invCountFault.set(theIndex, invCountFault.get(theIndex)+ (theStats.getFaultInvocationCount()/numMinutes));
+//					invCountFail.set(theIndex, invCountFail.get(theIndex)+ (theStats.getFailInvocationCount()/numMinutes));
+//					invCountSecurityFail.set(theIndex, invCountSecurityFail.get(theIndex)+ (theStats.getServerSecurityFailures()/numMinutes));
+//					timestamps.set(theIndex, theStats.getPk().getStartTime().getTime());
+//				}
+//			});
+//						
+//		}
+//
+//		return renderUsage(invCount, invCountFault, invCountFail, invCountSecurityFail, "Calls / Min", timestamps);
+
+		return null;
+	}
+
 }

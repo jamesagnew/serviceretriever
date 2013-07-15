@@ -201,7 +201,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 					theJsonReader.nextString();
 					break;
 			}
-		} while (objectDepth > 0 || arrayDepth > 0);
+		} while (theJsonReader.hasNext() && (objectDepth > 0 || arrayDepth > 0));
 
 	}
 

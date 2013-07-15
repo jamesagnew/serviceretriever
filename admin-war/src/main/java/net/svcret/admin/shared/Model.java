@@ -11,6 +11,7 @@ import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
+import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceList;
 import net.svcret.admin.shared.model.GServiceMethod;
@@ -30,6 +31,7 @@ public class Model {
 	private GDomainList myDomainList;
 	private boolean myDomainListInitialized = false;
 	private GHttpClientConfigList myHttpClientConfigList;
+	private GMonitorRuleList myMonitorRuleList;
 
 	private Model() {
 		initLists();
@@ -358,6 +360,26 @@ public class Model {
 			}
 		}
 
+	}
+
+	public void loadMonitorRuleList(final IAsyncLoadCallback<GMonitorRuleList> theIAsyncLoadCallback) {
+		if (myMonitorRuleList == null) {
+			AdminPortal.MODEL_SVC.loadMonitorRuleList(new AsyncCallback<GMonitorRuleList>() {
+
+				@Override
+				public void onFailure(Throwable theCaught) {
+					handleFailure(theCaught);
+				}
+
+				@Override
+				public void onSuccess(GMonitorRuleList theResult) {
+					myMonitorRuleList=theResult;
+					theIAsyncLoadCallback.onSuccess(theResult);
+				}
+			});
+		}else {
+			theIAsyncLoadCallback.onSuccess(myMonitorRuleList);
+		}
 	}
 
 }

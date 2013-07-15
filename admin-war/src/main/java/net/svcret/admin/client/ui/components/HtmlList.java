@@ -11,34 +11,40 @@ import com.google.gwt.user.client.ui.Widget;
  */
 public class HtmlList extends Widget {
 
-    public HtmlList(ListType listType) {
-        setElement(listType.createElement());
-        setStylePrimaryName("html-list");
-    }
+	public HtmlList(ListType listType) {
+		setElement(listType.createElement());
+		setStylePrimaryName("html-list");
+	}
 
+	public void addItem(String text) {
+		addItem(text, false);
+	}
 
-    public void addItem(String text) {
-        LIElement liElement = Document.get().createLIElement();
-        liElement.setInnerText(text);
-        getElement().appendChild(liElement);
+	public void addItem(String theText, boolean theHtml) {
+		LIElement liElement = Document.get().createLIElement();
+		if (theHtml) {
+			liElement.setInnerHTML(theText);
+		} else {
+			liElement.setInnerText(theText);
+		}
+		getElement().appendChild(liElement);
+	}
 
-    }
-
-    public static enum ListType {
-        ORDERED {
-            @Override
+	public static enum ListType {
+		ORDERED {
+			@Override
 			public Element createElement() {
-                return Document.get().createOLElement();
-            }
-        },
-        UNORDERED {
-            @Override
+				return Document.get().createOLElement();
+			}
+		},
+		UNORDERED {
+			@Override
 			public Element createElement() {
-                return Document.get().createULElement();
-            }
-        };
+				return Document.get().createULElement();
+			}
+		};
 
-        public abstract Element createElement();
-    }
+		public abstract Element createElement();
+	}
 
 }

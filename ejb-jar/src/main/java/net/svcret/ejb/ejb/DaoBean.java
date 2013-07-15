@@ -693,6 +693,7 @@ public class DaoBean implements IDao {
 				ourLog.info("No user status with PID {} so not going to save this one", persUserStatus.getPid());
 				continue;
 			}
+			
 			existing.merge(persUserStatus);
 			myEntityManager.merge(existing);
 		}

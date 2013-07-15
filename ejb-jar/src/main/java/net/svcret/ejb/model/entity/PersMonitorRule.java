@@ -48,10 +48,10 @@ public class PersMonitorRule extends BasePersObject {
 	@Column(name = "PID")
 	private Long myPid;
 
-	@Column(name = "RULE_ACTIVE")
+	@Column(name = "RULE_ACTIVE", nullable=false)
 	private boolean myRuleActive;
 
-	@Column(name = "RULE_NAME", length = 200)
+	@Column(name = "RULE_NAME", length = 200, nullable=true)
 	private String myRuleName;
 
 	public Collection<PersMonitorAppliesTo> getAppliesTo() {

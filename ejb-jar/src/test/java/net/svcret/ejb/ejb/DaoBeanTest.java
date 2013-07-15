@@ -8,6 +8,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -40,6 +41,7 @@ import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserAllowableSourceIps;
+import net.svcret.ejb.model.entity.PersUserMethodStatus;
 import net.svcret.ejb.model.entity.PersUserRecentMessage;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
@@ -522,6 +524,59 @@ public class DaoBeanTest extends BaseJpaTest {
 
 	}
 
+	@Test
+	public void testUserMethodStatus() throws ProcessingException {
+		Date date1 = new Date();
+		Date date2 = new Date(date1.getTime() - 100000L);
+		
+		newEntityManager();
+
+		mySvc.getOrCreateAuthenticationHostLocalDatabase("ah0");
+
+		newEntityManager();
+
+		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
+		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
+		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
+		ver.getOrCreateAndAddMethodWithName("method1");
+		ver.getOrCreateAndAddMethodWithName("method2");
+		mySvc.saveServiceVersion(ver);
+		
+		PersUser user = mySvc.getOrCreateUser(mySvc.getAuthenticationHost("ah0"), "Username");
+
+		newEntityManager();
+
+		user = mySvc.getUser(user.getPid());
+		ver = (PersServiceVersionSoap11) mySvc.getServiceVersionByPid(ver.getPid());
+
+		assertNotNull(user.getStatus());
+		assertNotNull(user.getStatus().getMethodStatuses());
+		
+		PersServiceVersionMethod method1 = ver.getMethod("method1");
+		PersServiceVersionMethod method2 = ver.getMethod("method2");
+		
+		PersUserMethodStatus status1 = user.getStatus().getOrCreateMethodStatus(method1);
+		status1.setLastSuccessfulInvocation(date1);
+
+		PersUserMethodStatus status2 = user.getStatus().getOrCreateMethodStatus(method2);
+		status2.setLastSuccessfulInvocation(date2);
+
+		mySvc.saveUserStatus(Collections.singleton(user.getStatus()));
+		
+		newEntityManager();
+		
+		user = mySvc.getUser(user.getPid());
+
+		assertNotNull(user.getStatus());
+		assertNotNull(user.getStatus().getMethodStatuses());
+		assertNotNull(user.getStatus().getMethodStatuses().get(method1));
+		assertNotNull(user.getStatus().getMethodStatuses().get(method2));
+		assertEquals(date1,user.getStatus().getMethodStatuses().get(method1).getLastSuccessfulInvocation());
+		assertEquals(date2,user.getStatus().getMethodStatuses().get(method2).getLastSuccessfulInvocation());
+		
+		
+	}
+	
 	@Test
 	public void testUserStatus() throws ProcessingException {
 		Date now = new Date();
