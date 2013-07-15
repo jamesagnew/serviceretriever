@@ -21,6 +21,9 @@ import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
+import net.svcret.admin.shared.model.GMonitorRule;
+import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
+import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.admin.shared.model.GRecentMessageLists;
@@ -56,6 +59,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	private GConfig myConfig;
 	private GDomainList myDomainList;
 	private GUserList myUserList;
+	private GMonitorRuleList myMonitorRuleList;
 
 	public ModelUpdateServiceMock() {
 		myConfig = new GConfig();
@@ -176,6 +180,16 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		user.getAllowableSourceIps().add("192.168.1.1");
 		myUserList.add(user);
 
+		myMonitorRuleList=new GMonitorRuleList();
+		myMonitorRuleList.add(new GMonitorRule());
+		myMonitorRuleList.get(0).setFireForBackingServiceLatencyIsAboveMillis(100);
+		myMonitorRuleList.get(0).setFireForBackingServiceLatencySustainTimeMins(5);
+		myMonitorRuleList.get(0).getNotifyEmailContacts().add("foo@example.com");
+		myMonitorRuleList.get(0).getAppliesTo().add(new GMonitorRuleAppliesTo());
+		myMonitorRuleList.get(0).getAppliesTo().iterator().next().setDomainPid(1L);
+		myMonitorRuleList.get(0).getAppliesTo().iterator().next().setDomainName("Service Domain");
+		myMonitorRuleList.get(0).getAppliesTo().iterator().next().setServicePid(2L);
+		myMonitorRuleList.get(0).getAppliesTo().iterator().next().setServiceName("Service Domain");
 	}
 
 	@Override
@@ -671,6 +685,11 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	@Override
 	public void saveUser(GUser theUser) {
 		myUserList.getUserByPid(theUser.getPid()).merge(theUser);
+	}
+
+	@Override
+	public GMonitorRuleList loadMonitorRuleList() {
+		return myMonitorRuleList;
 	}
 
 }

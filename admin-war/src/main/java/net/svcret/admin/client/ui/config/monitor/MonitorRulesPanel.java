@@ -10,6 +10,7 @@ import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.GMonitorRule;
+import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -62,22 +63,30 @@ public class MonitorRulesPanel extends FlowPanel {
 			List<String> typeDescriptions = toTypeDescriptions(next);
 			if (typeDescriptions.size() == 0) {
 				myRulesGrid.setText(row, COL_TYPE, "No triggers defined");
-			}else if (typeDescriptions.size() == 1) {
+			} else if (typeDescriptions.size() == 1) {
 				myRulesGrid.setText(row, COL_TYPE, typeDescriptions.get(0));
-			}else {
+			} else {
 				HtmlList list = new HtmlList(ListType.UNORDERED);
 				for (String string : typeDescriptions) {
 					list.addItem(string);
 				}
 				myRulesGrid.setWidget(row, COL_TYPE, list);
 			}
-			
+
 			myRulesGrid.setText(row, COL_RULE_NAME, next.getName());
-			
+
+			List<String> appliesTos = toAppliesTo(next);
 			myRulesGrid.setText(row, COL_APPLIES_TO, "Applies To");
 			myRulesGrid.setText(row, COL_ACTIVE, "Active");
 		}
 
+	}
+
+	private List<String> toAppliesTo(GMonitorRule theNext) {
+		for (GMonitorRuleAppliesTo nextApplies : theNext.getAppliesTo()) {
+			
+		}
+		return null;
 	}
 
 	private List<String> toTypeDescriptions(GMonitorRule theNext) {
@@ -89,10 +98,10 @@ public class MonitorRulesPanel extends FlowPanel {
 			retVal.add("Fire if all backing URLs unavailable");
 		}
 
-		if (theNext.getFireForBackingServiceLatencyIsAboveMillis()!=null){
+		if (theNext.getFireForBackingServiceLatencyIsAboveMillis() != null) {
 			retVal.add("Fire is backing service latency exceeds " + theNext.getFireForBackingServiceLatencyIsAboveMillis() + "ms");
 		}
-		
+
 		return retVal;
 	}
 
@@ -129,58 +138,62 @@ public class MonitorRulesPanel extends FlowPanel {
 		}
 
 		HorizontalPanel hPanel = new HorizontalPanel();
-//		contentPanel.add(hPanel);
-//
-//		VerticalPanel toolbar = new VerticalPanel();
-//
-//		HorizontalPanel addPanel = new HorizontalPanel();
-//		toolbar.add(addPanel);
-//		myAddButton = new PButton(AdminPortal.IMAGES.iconAdd(), AdminPortal.MSGS.actions_AddNewDotDotDot());
-//		myAddButton.setEnabled(false);
-//		myAddButton.addClickHandler(new ClickHandler() {
-//			@Override
-//			public void onClick(ClickEvent theEvent) {
-//				addHost();
-//			}
-//		});
-//		addPanel.add(myAddButton);
-//		addPanel.add(new Label("Type:"));
-//		myAddListBox = new ListBox();
-//		for (AuthorizationHostTypeEnum next : AuthorizationHostTypeEnum.values()) {
-//			myAddListBox.addItem(next.description(), next.name());
-//		}
-//		myAddListBox.setSelectedIndex(0);
-//		addPanel.add(myAddListBox);
-//
-//		myRemoveButton = new PButton(AdminPortal.IMAGES.iconRemove(), AdminPortal.MSGS.actions_RemoveSelectedDotDotDot());
-//		myRemoveButton.setEnabled(false);
-//		myRemoveButton.addClickHandler(new ClickHandler() {
-//			@Override
-//			public void onClick(ClickEvent theEvent) {
-//				removeHost();
-//			}
-//		});
-//		toolbar.add(myRemoveButton);
-//
-//		myHostsListBox = new ListBox(false);
-//		myHostsListBox.setVisibleItemCount(5);
-//		myHostsListBox.addChangeHandler(new ChangeHandler() {
-//			@Override
-//			public void onChange(ChangeEvent theEvent) {
-//				if (myUpdatingConfigsListBox) {
-//					return;
-//				}
-//				mySelectedPid = Long.parseLong(myHostsListBox.getValue(myHostsListBox.getSelectedIndex()));
-//				updateSelectedHost();
-//			}
-//
-//		});
-//
-//		hPanel.add(myHostsListBox);
-//		hPanel.add(toolbar);
-//
-//		HorizontalPanel buttonsBar = new HorizontalPanel();
-//		contentPanel.add(buttonsBar);
+		// contentPanel.add(hPanel);
+		//
+		// VerticalPanel toolbar = new VerticalPanel();
+		//
+		// HorizontalPanel addPanel = new HorizontalPanel();
+		// toolbar.add(addPanel);
+		// myAddButton = new PButton(AdminPortal.IMAGES.iconAdd(),
+		// AdminPortal.MSGS.actions_AddNewDotDotDot());
+		// myAddButton.setEnabled(false);
+		// myAddButton.addClickHandler(new ClickHandler() {
+		// @Override
+		// public void onClick(ClickEvent theEvent) {
+		// addHost();
+		// }
+		// });
+		// addPanel.add(myAddButton);
+		// addPanel.add(new Label("Type:"));
+		// myAddListBox = new ListBox();
+		// for (AuthorizationHostTypeEnum next :
+		// AuthorizationHostTypeEnum.values()) {
+		// myAddListBox.addItem(next.description(), next.name());
+		// }
+		// myAddListBox.setSelectedIndex(0);
+		// addPanel.add(myAddListBox);
+		//
+		// myRemoveButton = new PButton(AdminPortal.IMAGES.iconRemove(),
+		// AdminPortal.MSGS.actions_RemoveSelectedDotDotDot());
+		// myRemoveButton.setEnabled(false);
+		// myRemoveButton.addClickHandler(new ClickHandler() {
+		// @Override
+		// public void onClick(ClickEvent theEvent) {
+		// removeHost();
+		// }
+		// });
+		// toolbar.add(myRemoveButton);
+		//
+		// myHostsListBox = new ListBox(false);
+		// myHostsListBox.setVisibleItemCount(5);
+		// myHostsListBox.addChangeHandler(new ChangeHandler() {
+		// @Override
+		// public void onChange(ChangeEvent theEvent) {
+		// if (myUpdatingConfigsListBox) {
+		// return;
+		// }
+		// mySelectedPid =
+		// Long.parseLong(myHostsListBox.getValue(myHostsListBox.getSelectedIndex()));
+		// updateSelectedHost();
+		// }
+		//
+		// });
+		//
+		// hPanel.add(myHostsListBox);
+		// hPanel.add(toolbar);
+		//
+		// HorizontalPanel buttonsBar = new HorizontalPanel();
+		// contentPanel.add(buttonsBar);
 
 	}
 

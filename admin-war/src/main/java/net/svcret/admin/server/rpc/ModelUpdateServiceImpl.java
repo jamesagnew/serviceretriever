@@ -21,6 +21,7 @@ import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
+import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.admin.shared.model.GRecentMessageLists;
@@ -682,6 +683,12 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 			throw new ServiceFailureException(e.getMessage());
 		}
 		
+	}
+
+	@Override
+	public GMonitorRuleList loadMonitorRuleList() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

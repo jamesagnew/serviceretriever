@@ -7,13 +7,23 @@ public class GMonitorRule extends BaseGObject<GMonitorRule> {
 
 	private static final long serialVersionUID = 1L;
 
+	private Set<GMonitorRuleAppliesTo> myAppliesTo;
 	private Integer myFireForBackingServiceLatencyIsAboveMillis;
 	private Integer myFireForBackingServiceLatencySustainTimeMins;
 	private boolean myFireIfAllBackingUrlsAreUnavailable;
 	private boolean myFireIfSingleBackingUrlIsUnavailable;
 	private String myName;
-
 	private Set<String> myNotifyEmailContacts;
+
+	/**
+	 * @return the appliesTo
+	 */
+	public Set<GMonitorRuleAppliesTo> getAppliesTo() {
+		if (myAppliesTo == null) {
+			myAppliesTo = new HashSet<GMonitorRuleAppliesTo>();
+		}
+		return myAppliesTo;
+	}
 
 	/**
 	 * @return the fireForBackingServiceLatencyIsAboveMillis
@@ -95,7 +105,8 @@ public class GMonitorRule extends BaseGObject<GMonitorRule> {
 	}
 
 	/**
-	 * @param theName the name to set
+	 * @param theName
+	 *            the name to set
 	 */
 	public void setName(String theName) {
 		myName = theName;
