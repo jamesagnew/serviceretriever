@@ -237,6 +237,8 @@ public class PersUser extends BasePersObject {
 		for (PersUserDomainPermission nextDomain : getDomainPermissions()) {
 			allowedMethods.addAll(nextDomain.getAllAllowedMethods());
 		}
+		
+		getStatus().loadAllAssociations();
 
 		getAllowSourceIps().size();
 

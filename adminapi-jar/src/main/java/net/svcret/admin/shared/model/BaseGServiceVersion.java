@@ -213,4 +213,15 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 		myResourcePointerList = theResourcePointerList;
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder b = new StringBuilder();
+		b.append("ServiceVersion[type=").append(getProtocol().name()).append(", ");
+		b.append("pid=").append(getPid()).append(", ");
+		b.append("methodCound=").append(getMethodList().size());
+		b.append("]");
+		return b.toString();
+	}
+
+	
 }

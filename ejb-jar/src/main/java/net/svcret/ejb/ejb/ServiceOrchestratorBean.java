@@ -1,6 +1,8 @@
 package net.svcret.ejb.ejb;
 
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +32,7 @@ import net.svcret.ejb.api.ITransactionLogger;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean.ResultTypeEnum;
+import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ex.InternalErrorException;
@@ -71,16 +74,33 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 	@EJB()
 	private IServiceInvokerJsonRpc20 myJsonRpc20ServiceInvoker;
-	
+
 	@EJB
 	private IServiceRegistry mySvcRegistry;
 
 	@EJB
 	private ITransactionLogger myTransactionLogger;
 
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	@Override
+	public SidechannelOrchestratorResponseBean handleSidechannelRequest(long theServiceVersionPid, String theRequestBody) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException {
+		Date startTime = new Date();
+		BasePersServiceVersion svcVer = mySvcRegistry.getServiceVersionByPid(theServiceVersionPid);
+
+		CapturingReader reader = new CapturingReader(new StringReader(theRequestBody));
+		String path = svcVer.getProxyPath();
+		InvocationResultsBean results = processInvokeService(reader, path, svcVer, RequestType.POST, "");
+
+		HttpRequestBean request = new HttpRequestBean();
+		AuthorizationResultsBean authorized = null;
+		SidechannelOrchestratorResponseBean retVal = processRequestMethod(request, startTime, reader, svcVer, results, authorized);
+
+		return retVal;
+	}	
+	
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public OrchestratorResponseBean handle(HttpRequestBean theRequest) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException {
+	public OrchestratorResponseBean handleServiceRequest(HttpRequestBean theRequest) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException {
 		Validate.notNull(theRequest.getRequestType(), "RequestType");
 		Validate.notNull(theRequest.getPath(), "Path");
 		Validate.notNull(theRequest.getQuery(), "Query");
@@ -127,36 +147,106 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		 * Process request
 		 */
 
-		InvocationResultsBean results = null;
-		IServiceInvoker<?> serviceInvoker=null;
-		switch (serviceVersion.getProtocol()) {
-		case SOAP11:
-			serviceInvoker = mySoap11ServiceInvoker;
-			ourLog.trace("Handling service with invoker {}", serviceInvoker);
-			results = mySoap11ServiceInvoker.processInvocation((PersServiceVersionSoap11) serviceVersion, theRequest.getRequestType(), path, theRequest.getQuery(), reader);
-			break;
-		case JSONRPC20:
-			serviceInvoker = myJsonRpc20ServiceInvoker;
-			ourLog.trace("Handling service with invoker {}", serviceInvoker);
-			results = myJsonRpc20ServiceInvoker.processInvocation((PersServiceVersionJsonRpc20) serviceVersion, theRequest.getRequestType(), path, theRequest.getQuery(), reader);
-		}
+		InvocationResultsBean results = processInvokeService(reader, path, serviceVersion, theRequest.getRequestType(), theRequest.getQuery());
 
-		if (serviceInvoker == null) {
-			throw new InternalErrorException("Unknown service protocol: " + serviceVersion.getProtocol());
-		}
-		
-		if (results == null) {
-			throw new InternalErrorException("Invoker " + serviceInvoker + " returned null");
-		}
-		
 		/*
 		 * Security
 		 * 
 		 * Currently only active for method invocations
 		 */
 
+		AuthorizationResultsBean authorized = processSecurity(theRequest, startTime, reader, serviceVersion, results);
+
+		/*
+		 * Forward request to backend implementation
+		 */
+		ourLog.info("Request is of type: {}", results.getResultType());
+
+		OrchestratorResponseBean retVal;
+		switch (results.getResultType()) {
+
+		case STATIC_RESOURCE:
+			retVal = processRequestResource(startTime, results);
+			break;
+		case METHOD:
+			retVal = processRequestMethod(theRequest, startTime, reader, serviceVersion, results, authorized);
+			break;
+		default:
+			throw new InternalErrorException("Unknown request type: " + results.getResultType());
+		}
+
+		return retVal;
+	}
+
+	private SidechannelOrchestratorResponseBean processRequestMethod(HttpRequestBean theRequest, Date startTime, CapturingReader reader, BasePersServiceVersion serviceVersion, InvocationResultsBean results,
+			AuthorizationResultsBean authorized) throws ProcessingException {
+		SidechannelOrchestratorResponseBean retVal;
+		PersServiceVersionMethod method = results.getMethodDefinition();
+		Map<String, String> headers = results.getMethodHeaders();
+		String contentType = results.getMethodContentType();
+		String contentBody = results.getMethodRequestBody();
+		IResponseValidator responseValidator = results.getServiceInvoker().provideInvocationResponseValidator();
+
+		UrlPoolBean urlPool = myRuntimeStatus.buildUrlPool(method.getServiceVersion());
+		if (urlPool.getPreferredUrl() == null) {
+			/*
+			 * TODO: record this failure? ALso should we allow throttled CB reset attempts when all URLs are failing?
+			 */
+			throw new ProcessingException("No URLs available to service this request!");
+		}
+
+		PersHttpClientConfig clientConfig = serviceVersion.getHttpClientConfig();
+		urlPool.setConnectTimeoutMillis(clientConfig.getConnectTimeoutMillis());
+		urlPool.setReadTimeoutMillis(clientConfig.getReadTimeoutMillis());
+		urlPool.setFailureRetriesBeforeAborting(clientConfig.getFailureRetriesBeforeAborting());
+
+		HttpResponseBean httpResponse;
+		httpResponse = myHttpClient.post(responseValidator, urlPool, contentBody, headers, contentType);
+		markUrlsFailed(httpResponse.getFailedUrls());
+
+		if (httpResponse.getSuccessfulUrl() == null) {
+			markUrlsFailed(httpResponse.getFailedUrls());
+			Failure exampleFailure = httpResponse.getFailedUrls().values().iterator().next();
+			throw new ProcessingException("All service URLs appear to be failing, unable to successfully invoke method. Example failure: " + exampleFailure.getExplanation());
+		}
+
+		InvocationResponseResultsBean invocationResponse = results.getServiceInvoker().processInvocationResponse(httpResponse);
+		invocationResponse.validate();
+
+		int requestLength = contentBody.length();
+		PersUser user = ((authorized != null && authorized.isAuthorized() == AuthorizationOutcomeEnum.AUTHORIZED) ? authorized.getUser() : null);
+		myRuntimeStatus.recordInvocationMethod(startTime, requestLength, method, user, httpResponse, invocationResponse);
+
+		String responseBody = invocationResponse.getResponseBody();
+		String responseContentType = invocationResponse.getResponseContentType();
+		Map<String, List<String>> responseHeaders = invocationResponse.getResponseHeaders();
+
+		/*
+		 * Log transaction if needed
+		 */
+		logTransaction(theRequest, startTime, reader, serviceVersion, authorized, httpResponse, invocationResponse);
+
+		retVal = new SidechannelOrchestratorResponseBean(responseBody, responseContentType, responseHeaders, httpResponse);
+		return retVal;
+	}
+
+	private OrchestratorResponseBean processRequestResource(Date startTime, InvocationResultsBean results) {
+		OrchestratorResponseBean retVal;
+		String responseBody = results.getStaticResourceText();
+		String responseContentType = results.getStaticResourceContentTyoe();
+		Map<String, List<String>> responseHeaders = results.getStaticResourceHeaders();
+		retVal = new OrchestratorResponseBean(responseBody, responseContentType, responseHeaders);
+
+		PersServiceVersionResource resource = results.getStaticResourceDefinition();
+		myRuntimeStatus.recordInvocationStaticResource(startTime, resource);
+
+		ourLog.trace("Handling request for static URL contents: {}", resource);
+		return retVal;
+	}
+
+	private AuthorizationResultsBean processSecurity(HttpRequestBean theRequest, Date startTime, CapturingReader reader, BasePersServiceVersion serviceVersion, InvocationResultsBean results)
+			throws SecurityFailureException, ProcessingException {
 		AuthorizationResultsBean authorized = null;
-		PersUser user = null;
 		if (results.getResultType() == ResultTypeEnum.METHOD) {
 			if (ourLog.isDebugEnabled()) {
 				if (serviceVersion.getServerAuths().isEmpty()) {
@@ -184,7 +274,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 					invocationResponse.setResponseType(ResponseTypeEnum.SECURITY_FAIL);
 					invocationResponse.setResponseStatusMessage("Internal error: ServiceRetriever failed to extract credentials");
 					myRuntimeStatus.recordInvocationMethod(startTime, 0, method, null, null, invocationResponse);
-					throw new SecurityFailureException();
+					throw new SecurityFailureException(AuthorizationOutcomeEnum.FAILED_INTERNAL_ERROR, invocationResponse.getResponseStatusMessage());
 				}
 
 				ourLog.trace("Checking credentials: {}", credentials);
@@ -199,92 +289,45 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 					// Log transaction
 					logTransaction(theRequest, startTime, reader, serviceVersion, authorized, null, invocationResponse);
 
-					throw new SecurityFailureException();
-				} else {
-					user = authorized.getUser();
+					throw new SecurityFailureException(authorized.isAuthorized(), invocationResponse.getResponseStatusMessage());
 				}
-				
+
 			}
 		}
-
-		/*
-		 * Forward request to backend implementation
-		 */
-		ourLog.info("Request is of type: {}", results.getResultType());
-
-		OrchestratorResponseBean retVal;
-		switch (results.getResultType()) {
-
-		case STATIC_RESOURCE: {
-			String responseBody = results.getStaticResourceText();
-			String responseContentType = results.getStaticResourceContentTyoe();
-			Map<String, List<String>> responseHeaders = results.getStaticResourceHeaders();
-			retVal = new OrchestratorResponseBean(responseBody, responseContentType, responseHeaders);
-
-			PersServiceVersionResource resource = results.getStaticResourceDefinition();
-			myRuntimeStatus.recordInvocationStaticResource(startTime, resource);
-
-			ourLog.trace("Handling request for static URL contents: {}", resource);
-			break;
-		}
-		case METHOD: {
-			PersServiceVersionMethod method = results.getMethodDefinition();
-			Map<String, String> headers = results.getMethodHeaders();
-			String contentType = results.getMethodContentType();
-			String contentBody = results.getMethodRequestBody();
-			IResponseValidator responseValidator = serviceInvoker.provideInvocationResponseValidator();
-
-			UrlPoolBean urlPool = myRuntimeStatus.buildUrlPool(method.getServiceVersion());
-			if (urlPool.getPreferredUrl() == null) {
-				/*
-				 * TODO: record this failure? ALso should we allow throttled CB
-				 * reset attempts when all URLs are failing?
-				 */
-				throw new ProcessingException("No URLs available to service this request!");
-			}
-
-			PersHttpClientConfig clientConfig = serviceVersion.getHttpClientConfig();
-			urlPool.setConnectTimeoutMillis(clientConfig.getConnectTimeoutMillis());
-			urlPool.setReadTimeoutMillis(clientConfig.getReadTimeoutMillis());
-			urlPool.setFailureRetriesBeforeAborting(clientConfig.getFailureRetriesBeforeAborting());
-
-			HttpResponseBean httpResponse;
-			httpResponse = myHttpClient.post(responseValidator, urlPool, contentBody, headers, contentType);
-			markUrlsFailed(httpResponse.getFailedUrls());
-
-			if (httpResponse.getSuccessfulUrl() == null) {
-				markUrlsFailed(httpResponse.getFailedUrls());
-				Failure exampleFailure = httpResponse.getFailedUrls().values().iterator().next();
-				throw new ProcessingException("All service URLs appear to be failing, unable to successfully invoke method. Example failure: " + exampleFailure.getExplanation());
-			}
-
-			InvocationResponseResultsBean invocationResponse = serviceInvoker.processInvocationResponse(httpResponse);
-			invocationResponse.validate();
-
-			int requestLength = contentBody.length();
-			myRuntimeStatus.recordInvocationMethod(startTime, requestLength, method, user, httpResponse, invocationResponse);
-
-			String responseBody = invocationResponse.getResponseBody();
-			String responseContentType = invocationResponse.getResponseContentType();
-			Map<String, List<String>> responseHeaders = invocationResponse.getResponseHeaders();
-
-			/*
-			 * Log transaction if needed
-			 */
-			logTransaction(theRequest, startTime, reader, serviceVersion, authorized, httpResponse, invocationResponse);
-
-			retVal = new OrchestratorResponseBean(responseBody, responseContentType, responseHeaders);
-			break;
-		}
-		default: {
-			throw new InternalErrorException("Unknown request type: " + results.getResultType());
-		}
-		}
-
-		return retVal;
+		return authorized;
 	}
 
-	private void logTransaction(HttpRequestBean theRequest, Date startTime, CapturingReader reader, BasePersServiceVersion serviceVersion, AuthorizationResultsBean authorized, HttpResponseBean httpResponse, InvocationResponseResultsBean invocationResponse) {
+	private InvocationResultsBean processInvokeService(Reader theReader, String path, BasePersServiceVersion serviceVersion, RequestType theRequestType, String theRequestQuery) throws UnknownRequestException,
+			ProcessingException {
+		IServiceInvoker<?> svcInvoker = null;
+		InvocationResultsBean results = null;
+		switch (serviceVersion.getProtocol()) {
+		case SOAP11:
+			svcInvoker = mySoap11ServiceInvoker;
+			ourLog.trace("Handling service with invoker {}", svcInvoker);
+			results = mySoap11ServiceInvoker.processInvocation((PersServiceVersionSoap11) serviceVersion, theRequestType, path, theRequestQuery, theReader);
+			break;
+		case JSONRPC20:
+			svcInvoker = myJsonRpc20ServiceInvoker;
+			ourLog.trace("Handling service with invoker {}", svcInvoker);
+			results = myJsonRpc20ServiceInvoker.processInvocation((PersServiceVersionJsonRpc20) serviceVersion, theRequestType, path, theRequestQuery, theReader);
+		}
+
+		if (svcInvoker == null) {
+			throw new InternalErrorException("Unknown service protocol: " + serviceVersion.getProtocol());
+		}
+
+		if (results == null) {
+			throw new InternalErrorException("Invoker " + svcInvoker + " returned null");
+		}
+		
+		results.setServiceInvoker(svcInvoker);
+		
+		return results;
+	}
+
+	private void logTransaction(HttpRequestBean theRequest, Date startTime, CapturingReader reader, BasePersServiceVersion serviceVersion, AuthorizationResultsBean authorized,
+			HttpResponseBean httpResponse, InvocationResponseResultsBean invocationResponse) {
 		PersUser user = authorized != null ? authorized.getUser() : null;
 		String requestBody = reader.getCapturedString();
 		PersServiceVersionUrl successfulUrl = httpResponse != null ? httpResponse.getSuccessfulUrl() : null;

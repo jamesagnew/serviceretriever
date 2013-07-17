@@ -7,6 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import javax.ejb.Schedule;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
 import net.svcret.ejb.api.IAuthorizationService;
 import net.svcret.ejb.api.ICredentialGrabber;
@@ -70,22 +72,27 @@ public abstract class BaseAuthorizationServiceBean<T extends BasePersAuthenticat
 	 * Purge old entries from the cache
 	 */
 	@Schedule(second = "0", minute = "*", hour = "*")
+	@TransactionAttribute(TransactionAttributeType.NEVER)
 	public void clearCache() {
-		long now = System.currentTimeMillis();
-		int count = 0;
-		for (Entry<String, CacheBean> nextEntry : new ArrayList<Entry<String, CacheBean>>(myCredentialHashToExpiry.entrySet())) {
-			if (now > nextEntry.getValue().getExpiry()) {
-				if (myCredentialHashToExpiry.remove(nextEntry.getKey(), nextEntry.getValue())) {
-					ourLog.debug("Removing cached entry for user {}", nextEntry.getValue().getUserPid());
-				} else {
-					ourLog.debug("Tried to remove cached entry for user {} but it was gone", nextEntry.getValue().getUserPid());
+		try {
+			long now = System.currentTimeMillis();
+			int count = 0;
+			for (Entry<String, CacheBean> nextEntry : new ArrayList<Entry<String, CacheBean>>(myCredentialHashToExpiry.entrySet())) {
+				if (now > nextEntry.getValue().getExpiry()) {
+					if (myCredentialHashToExpiry.remove(nextEntry.getKey(), nextEntry.getValue())) {
+						ourLog.debug("Removing cached entry for user {}", nextEntry.getValue().getUserPid());
+					} else {
+						ourLog.debug("Tried to remove cached entry for user {} but it was gone", nextEntry.getValue().getUserPid());
+					}
 				}
+				count++;
 			}
-			count++;
-		}
 
-		if (count > 0) {
-			ourLog.info("Purged {} entries from in-memory authorization cache", count);
+			if (count > 0) {
+				ourLog.info("Purged {} entries from in-memory authorization cache", count);
+			}
+		} catch (Exception e) {
+			ourLog.error("Failed to clear credential cache", e);
 		}
 	}
 
@@ -101,7 +108,7 @@ public abstract class BaseAuthorizationServiceBean<T extends BasePersAuthenticat
 		Validate.notNull(theAuthHostPid, "AuthHostPid");
 		Validate.notNull(theUserPid, "UserPid");
 		Validate.greaterThanZero(theCacheForMillis, "CacheForMillis");
-		
+
 		String hash = theCredentialGrabber.getCredentialHash();
 		long expiry = System.currentTimeMillis() + theCacheForMillis;
 		myCredentialHashToExpiry.put(hash, new CacheBean(expiry, theUserPid, theAuthHostPid));

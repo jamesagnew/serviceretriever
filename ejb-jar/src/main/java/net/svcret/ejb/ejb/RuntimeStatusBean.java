@@ -473,15 +473,16 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 			if (ourLog.isDebugEnabled()) {
 				ourLog.debug("Merging stats for {} into {}", next, target);
-				ourLog.debug("Deleting stats {}", statsToDelete);
 			}
 
-			if (statsToDelete.size() > MAX_STATS_TO_FLUSH_AT_ONCE) {
+			if (statsToFlush.size() > MAX_STATS_TO_FLUSH_AT_ONCE || statsToDelete.size() > MAX_STATS_TO_FLUSH_AT_ONCE) {
 				myDao.saveInvocationStats(statsToFlush.values(), statsToDelete);
 				statsToDelete.clear();
 				statsToFlush.clear();
 			}
 		}
+
+		ourLog.trace("Deleting stats {}", statsToDelete);
 
 		if (statsToFlush.size() > 0 || statsToDelete.size() > 0) {
 			myDao.saveInvocationStats(statsToFlush.values(), statsToDelete);
@@ -527,8 +528,11 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 			// try {
 
-			ourLog.debug("Flushing stats: {}", stats);
-			myDao.saveInvocationStats(stats);
+			ourLog.trace("Flushing stats: {}", stats);
+			for (int index = 0; index < stats.size(); index += MAX_STATS_TO_FLUSH_AT_ONCE) {
+				int toIndex = Math.min(index + MAX_STATS_TO_FLUSH_AT_ONCE, stats.size());
+				myDao.saveInvocationStats(stats.subList(index, toIndex));
+			}
 			ourLog.info("Done flushing stats");
 
 			// } catch (PersistenceException e) {

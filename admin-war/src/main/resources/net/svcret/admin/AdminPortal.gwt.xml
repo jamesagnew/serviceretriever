@@ -12,6 +12,9 @@
 	<source path='shared' />
 
 
-	<set-property name="user.agent" value="safari" />
+	<!--
+	Uncomment this during testing to only compile for Chrome/Safari 
+	<set-property name="user.agent" value="safari" />  
+	-->
 
 </module>

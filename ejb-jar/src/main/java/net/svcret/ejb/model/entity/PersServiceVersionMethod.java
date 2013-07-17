@@ -44,10 +44,10 @@ public class PersServiceVersionMethod extends BasePersObject {
 	private BasePersServiceVersion myServiceVersion;
 	
 	@OneToMany(fetch=FetchType.LAZY, cascade= {}, orphanRemoval=true, mappedBy="myServiceVersionMethod")
-	private Collection<PersUserServiceVersionMethodPermission> myUserPermissions;
+	private transient Collection<PersUserServiceVersionMethodPermission> myUserPermissions;
 
 	@OneToMany(fetch=FetchType.LAZY, cascade= {}, orphanRemoval=true, mappedBy="myPk.myMethod")
-	private Collection<PersInvocationStats> myInvocationStats;
+	private transient Collection<PersInvocationStats> myInvocationStats;
 
 	/**
 	 * Constructor

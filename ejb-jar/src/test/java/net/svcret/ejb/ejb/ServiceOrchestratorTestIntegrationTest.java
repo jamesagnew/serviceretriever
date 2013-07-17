@@ -189,7 +189,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 			req.setQuery(query);
 			req.setInputReader(reader);
 			req.setRequestHeaders(new HashMap<String, List<String>>());
-			resp = mySvc.handle(req);
+			resp = mySvc.handleServiceRequest(req);
 		}
 		long delay = System.currentTimeMillis() - start;
 		assertEquals(response, resp.getResponseBody());

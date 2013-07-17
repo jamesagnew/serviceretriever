@@ -23,4 +23,7 @@ public interface Images extends ClientBundle {
 	@Source("net/svcret/images/icon_status_24.png")
 	ImageResource iconStatus();
 	
+	@Source("net/svcret/images/icon_test_24.png")
+	ImageResource iconTest();
+
 }

@@ -1,0 +1,2570 @@
+{
+  "jsonrpc": "2.0",
+  "result": [
+    {
+      "pid": 5719196,
+      "id": "U07-1133008-TSH-0",
+      "name": "TSH",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:24 PM",
+      "effectiveTime": "Nov 22, 2007 03:32:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "2047",
+          "name": "2047"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "TSH"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "2047",
+        "name": "2047"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5718122,
+      "id": "104499879",
+      "name": "TSH",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:21 PM",
+      "effectiveTime": "Nov 21, 2007 04:56:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "2047",
+          "name": "2047"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "TSH"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "2047",
+        "name": "2047"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5759106,
+      "id": "108724700",
+      "name": "Hemoglobin A1c",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:29 PM",
+      "effectiveTime": "Feb 21, 2008 10:43:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "2067",
+          "name": "2067"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Hemoglobin A1c"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "2067",
+        "name": "2067"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5718127,
+      "id": "104332734",
+      "name": "HDL/LDL Cholesterol",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:22 PM",
+      "effectiveTime": "Nov 19, 2007 07:07:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "2129",
+          "name": "2129"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "HDL/LDL Cholesterol"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "2129",
+        "name": "2129"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5728812,
+      "id": "104991914",
+      "name": "CBC",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:33 PM",
+      "effectiveTime": "Dec 01, 2007 11:26:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "1743",
+          "name": "1743"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "CBC"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "1743",
+        "name": "1743"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5728811,
+      "id": "105020532",
+      "name": "CBC",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:32 PM",
+      "effectiveTime": "Dec 02, 2007 11:48:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "1743",
+          "name": "1743"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "CBC"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "1743",
+        "name": "1743"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5728810,
+      "id": "105067812",
+      "name": "CBC",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:32 PM",
+      "effectiveTime": "Dec 03, 2007 11:05:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "1743",
+          "name": "1743"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "CBC"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "1743",
+        "name": "1743"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5728808,
+      "id": "105186588",
+      "name": "CBC",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:31 PM",
+      "effectiveTime": "Dec 05, 2007 11:32:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "1743",
+          "name": "1743"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "CBC"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "1743",
+        "name": "1743"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5728807,
+      "id": "105244229",
+      "name": "CBC",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:31 PM",
+      "effectiveTime": "Dec 06, 2007 11:15:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "1743",
+          "name": "1743"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "CBC"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "1743",
+        "name": "1743"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5728806,
+      "id": "105294261",
+      "name": "CBC",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:31 PM",
+      "effectiveTime": "Dec 07, 2007 11:53:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "1743",
+          "name": "1743"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "CBC"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "1743",
+        "name": "1743"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5728804,
+      "id": "105365409",
+      "name": "CBC",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:30 PM",
+      "effectiveTime": "Dec 10, 2007 01:39:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "1743",
+          "name": "1743"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "CBC"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "1743",
+        "name": "1743"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5728803,
+      "id": "105407893",
+      "name": "CBC",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:30 PM",
+      "effectiveTime": "Dec 10, 2007 10:57:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "1743",
+          "name": "1743"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "CBC"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "1743",
+        "name": "1743"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5718117,
+      "id": "104415333",
+      "name": "PT/INR",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:20 PM",
+      "effectiveTime": "Nov 22, 2007 08:37:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "2640",
+          "name": "2640"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "PT/INR"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "2640",
+        "name": "2640"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5718118,
+      "id": "104508249",
+      "name": "aPTT",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:20 PM",
+      "effectiveTime": "Nov 21, 2007 10:44:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "2641",
+          "name": "2641"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "aPTT"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "2641",
+        "name": "2641"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5719043,
+      "id": "104544069",
+      "name": "Ferritin",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:23 PM",
+      "effectiveTime": "Nov 22, 2007 12:26:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "552",
+          "name": "552"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Ferritin"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "552",
+        "name": "552"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5719195,
+      "id": "104357880",
+      "name": "T4 Free",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:24 PM",
+      "effectiveTime": "Nov 23, 2007 10:03:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "568",
+          "name": "568"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "T4 Free"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "568",
+        "name": "568"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5718121,
+      "id": "104487848",
+      "name": "T4 Free",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:21 PM",
+      "effectiveTime": "Nov 21, 2007 02:31:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "568",
+          "name": "568"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "T4 Free"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "568",
+        "name": "568"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5719194,
+      "id": "104357879",
+      "name": "T3 Free",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:24 PM",
+      "effectiveTime": "Nov 23, 2007 10:03:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "570",
+          "name": "570"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "T3 Free"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "570",
+        "name": "570"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5718120,
+      "id": "104492966",
+      "name": "T3 Free",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:21 PM",
+      "effectiveTime": "Nov 21, 2007 02:44:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "570",
+          "name": "570"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "T3 Free"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "570",
+        "name": "570"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5718125,
+      "id": "104150248",
+      "name": "PTH, Intact",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:22 PM",
+      "effectiveTime": "Nov 16, 2007 08:40:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "623",
+          "name": "623"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "PTH, Intact"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "623",
+        "name": "623"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5719045,
+      "id": "104580755",
+      "name": "Iron Level",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:23 PM",
+      "effectiveTime": "Nov 23, 2007 08:06:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "2950",
+          "name": "2950"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Iron Level"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "2950",
+        "name": "2950"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5718128,
+      "id": "104347302",
+      "name": "Iron Level",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:22 PM",
+      "effectiveTime": "Nov 19, 2007 02:05:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "2950",
+          "name": "2950"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Iron Level"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "2950",
+        "name": "2950"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5719044,
+      "id": "104580754",
+      "name": "Iron Transferrin Level",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:23 PM",
+      "effectiveTime": "Nov 23, 2007 08:06:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "2951",
+          "name": "2951"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Iron Transferrin Level"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "2951",
+        "name": "2951"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5718129,
+      "id": "104507158",
+      "name": "Iron Saturation Level",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:23 PM",
+      "effectiveTime": "Nov 21, 2007 10:51:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "2952",
+          "name": "2952"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Iron Saturation Level"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "2952",
+        "name": "2952"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5723542,
+      "id": "103701354",
+      "name": "ALT",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:25 PM",
+      "effectiveTime": "Nov 27, 2007 09:26:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "362",
+          "name": "362"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "ALT"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "362",
+        "name": "362"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5719197,
+      "id": "102152975",
+      "name": "Albumin, Plasma",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:24 PM",
+      "effectiveTime": "Nov 23, 2007 11:23:00 AM",
+      "statusCode": {
+        "id": "C",
+        "name": "C"
+      },
+      "statusCodes": [
+        {
+          "id": "C",
+          "name": "C"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "363",
+          "name": "363"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Albumin, Plasma"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "363",
+        "name": "363"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5718123,
+      "id": "103176876",
+      "name": "Albumin, Plasma",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:21 PM",
+      "effectiveTime": "Nov 22, 2007 07:01:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "363",
+          "name": "363"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Albumin, Plasma"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "363",
+        "name": "363"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5723541,
+      "id": "103436507",
+      "name": "ALP",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:25 PM",
+      "effectiveTime": "Nov 27, 2007 09:25:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "366",
+          "name": "366"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "ALP"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "366",
+        "name": "366"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5723543,
+      "id": "99603033",
+      "name": "AST",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:25 PM",
+      "effectiveTime": "Nov 27, 2007 09:10:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "410",
+          "name": "410"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "AST"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "410",
+        "name": "410"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5719042,
+      "id": "104564366",
+      "name": "Calcium Total, Plasma",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:23 PM",
+      "effectiveTime": "Nov 22, 2007 11:15:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "448",
+          "name": "448"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Calcium Total, Plasma"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "448",
+        "name": "448"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5719193,
+      "id": "104591721",
+      "name": "Bicarbonate, Plasma",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:24 PM",
+      "effectiveTime": "Nov 23, 2007 10:26:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "453",
+          "name": "453"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Bicarbonate, Plasma"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "453",
+        "name": "453"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5723539,
+      "id": "103758711",
+      "name": "Bicarbonate, Plasma",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:24 PM",
+      "effectiveTime": "Nov 27, 2007 09:18:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "453",
+          "name": "453"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Bicarbonate, Plasma"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "453",
+        "name": "453"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5723538,
+      "id": "104724540",
+      "name": "Creatinine, Plasma",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:24 PM",
+      "effectiveTime": "Nov 27, 2007 08:04:00 AM",
+      "statusCode": {
+        "id": "C",
+        "name": "C"
+      },
+      "statusCodes": [
+        {
+          "id": "C",
+          "name": "C"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "491",
+          "name": "491"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Creatinine, Plasma"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "491",
+        "name": "491"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5723537,
+      "id": "104716784",
+      "name": "Electrolytes, Plasma",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:24 PM",
+      "effectiveTime": "Nov 27, 2007 08:11:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "522",
+          "name": "522"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Electrolytes, Plasma"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "522",
+        "name": "522"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5565258,
+      "id": "1127104",
+      "name": "Electrolytes, Plasma",
+      "fullyLoaded": false,
+      "availabilityTime": "Aug 16, 2007 11:29:33 AM",
+      "effectiveTime": "Aug 16, 2007 11:29:00 AM",
+      "statusCode": {
+        "id": "I",
+        "name": "I"
+      },
+      "statusCodes": [
+        {
+          "id": "I",
+          "name": "I"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "522",
+          "name": "522"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Electrolytes, Plasma"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5557013,
+      "procCode": {
+        "id": "522",
+        "name": "522"
+      },
+      "visitPid": 5557014,
+      "resulted": false,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5565257,
+      "id": "1127103",
+      "name": "Electrolytes, Plasma",
+      "fullyLoaded": false,
+      "availabilityTime": "Aug 16, 2007 05:39:37 PM",
+      "effectiveTime": "Aug 16, 2007 11:29:00 AM",
+      "statusCode": {
+        "id": "C",
+        "name": "C"
+      },
+      "statusCodes": [
+        {
+          "id": "C",
+          "name": "C"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "522",
+          "name": "522"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Electrolytes, Plasma"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5557013,
+      "procCode": {
+        "id": "522",
+        "name": "522"
+      },
+      "visitPid": 5557014,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5718124,
+      "id": "104507660",
+      "name": "Phosphate, Plasma",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:22 PM",
+      "effectiveTime": "Nov 21, 2007 09:53:00 PM",
+      "statusCode": {
+        "id": "C",
+        "name": "C"
+      },
+      "statusCodes": [
+        {
+          "id": "C",
+          "name": "C"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "718",
+          "name": "718"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Phosphate, Plasma"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "718",
+        "name": "718"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5718119,
+      "id": "104508593",
+      "name": "Bilirubin Total",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:21 PM",
+      "effectiveTime": "Nov 21, 2007 11:01:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "811",
+          "name": "811"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Bilirubin Total"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "811",
+        "name": "811"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5565256,
+      "id": "1127102",
+      "name": "Glucose, Random-Green",
+      "fullyLoaded": false,
+      "availabilityTime": "Aug 16, 2007 05:39:38 PM",
+      "effectiveTime": "Aug 16, 2007 11:29:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "2165",
+          "name": "2165"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Glucose, Random-Green"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5557013,
+      "procCode": {
+        "id": "2165",
+        "name": "2165"
+      },
+      "visitPid": 5557014,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5759107,
+      "id": "109040624",
+      "name": "Glucose, Random-Grey",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:30 PM",
+      "effectiveTime": "Feb 28, 2008 04:07:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "3966",
+          "name": "3966"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Glucose, Random-Grey"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "3966",
+        "name": "3966"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5718126,
+      "id": "104333082",
+      "name": "Cholesterol",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:22 PM",
+      "effectiveTime": "Nov 18, 2007 11:38:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "468",
+          "name": "468"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Cholesterol"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "468",
+        "name": "468"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5723527,
+      "id": "104486837",
+      "name": "HDL/LDL Cholesterol ",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:22 PM",
+      "effectiveTime": "Nov 27, 2007 08:19:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "589",
+          "name": "589"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "HDL/LDL Cholesterol "
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "589",
+        "name": "589"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5565259,
+      "id": "1127105",
+      "name": "Troponin I",
+      "fullyLoaded": false,
+      "availabilityTime": "Aug 16, 2007 11:29:34 AM",
+      "effectiveTime": "Aug 16, 2007 11:29:00 AM",
+      "statusCode": {
+        "id": "I",
+        "name": "I"
+      },
+      "statusCodes": [
+        {
+          "id": "I",
+          "name": "I"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "4062",
+          "name": "4062"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Troponin I"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5557013,
+      "procCode": {
+        "id": "4062",
+        "name": "4062"
+      },
+      "visitPid": 5557014,
+      "resulted": false,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5723540,
+      "id": "104752294",
+      "name": "aPTT",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:25 PM",
+      "effectiveTime": "Nov 27, 2007 08:37:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "358",
+          "name": "358"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "aPTT"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "358",
+        "name": "358"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5757330,
+      "id": "601129",
+      "name": "CBC",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 21, 2008 10:15:58 AM",
+      "effectiveTime": "Feb 21, 2008 10:15:00 AM",
+      "statusCode": {
+        "id": "I",
+        "name": "I"
+      },
+      "statusCodes": [
+        {
+          "id": "I",
+          "name": "I"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "483",
+          "name": "483"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "CBC"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "483",
+        "name": "483"
+      },
+      "visitPid": 5558477,
+      "resulted": false,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5728813,
+      "id": "104961821",
+      "name": "CBC",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 07, 2012 02:55:55 PM",
+      "effectiveTime": "Feb 01, 2012 12:00:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "483",
+          "name": "483"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "CBC"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "483",
+        "name": "483"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5728809,
+      "id": "105130392",
+      "name": "CBC",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:32 PM",
+      "effectiveTime": "Dec 04, 2007 11:32:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "483",
+          "name": "483"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "CBC"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "483",
+        "name": "483"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5728805,
+      "id": "105336523",
+      "name": "CBC",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:31 PM",
+      "effectiveTime": "Dec 09, 2007 01:56:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "483",
+          "name": "483"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "CBC"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "483",
+        "name": "483"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5707959,
+      "id": "809619",
+      "name": "CBC",
+      "fullyLoaded": false,
+      "availabilityTime": "Nov 15, 2007 04:45:39 PM",
+      "effectiveTime": "Nov 15, 2007 04:42:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "483",
+          "name": "483"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "CBC"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "483",
+        "name": "483"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5757333,
+      "id": "601132",
+      "name": "PT/INR",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2013 01:06:16 PM",
+      "effectiveTime": "Feb 25, 2013 12:00:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "752",
+          "name": "752"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "PT/INR"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "752",
+        "name": "752"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5723549,
+      "id": "104759819",
+      "name": "PT/INR",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:25 PM",
+      "effectiveTime": "Nov 27, 2007 10:38:00 AM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "752",
+          "name": "752"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "PT/INR"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "752",
+        "name": "752"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5707958,
+      "id": "809618",
+      "name": "C\u0026S - Urine, MSU",
+      "fullyLoaded": false,
+      "availabilityTime": "Nov 15, 2007 04:43:04 PM",
+      "effectiveTime": "Nov 15, 2007 04:30:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "4246",
+          "name": "4246"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "C\u0026S - Urine, MSU"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "4246",
+        "name": "4246"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5707961,
+      "id": "809635",
+      "name": "C\u0026S - Urine, MSU",
+      "fullyLoaded": false,
+      "availabilityTime": "Nov 15, 2007 04:59:26 PM",
+      "effectiveTime": "Nov 15, 2007 04:56:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "4246",
+          "name": "4246"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "C\u0026S - Urine, MSU"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "4246",
+        "name": "4246"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5757334,
+      "id": "601133",
+      "name": "Ova \u0026 Parasite, Stool",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 21, 2008 10:22:40 AM",
+      "effectiveTime": "Feb 21, 2008 10:22:00 AM",
+      "statusCode": {
+        "id": "I",
+        "name": "I"
+      },
+      "statusCodes": [
+        {
+          "id": "I",
+          "name": "I"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "4249",
+          "name": "4249"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Ova \u0026 Parasite, Stool"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "4249",
+        "name": "4249"
+      },
+      "visitPid": 5558477,
+      "resulted": false,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5723555,
+      "id": "104608076",
+      "name": "Hep B Surface Ab",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:26 PM",
+      "effectiveTime": "Nov 23, 2007 04:21:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "4289",
+          "name": "4289"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Hep B Surface Ab"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "4289",
+        "name": "4289"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5723554,
+      "id": "96478376",
+      "name": "Hep B Surface Ag",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:25 PM",
+      "effectiveTime": "Nov 23, 2007 12:16:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "4293",
+          "name": "4293"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Hep B Surface Ag"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "4293",
+        "name": "4293"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    },
+    {
+      "pid": 5723553,
+      "id": "103866994",
+      "name": "Hepatitis C Antibody",
+      "fullyLoaded": false,
+      "availabilityTime": "Feb 28, 2008 03:44:25 PM",
+      "effectiveTime": "Nov 21, 2007 12:28:00 PM",
+      "statusCode": {
+        "id": "F",
+        "name": "F"
+      },
+      "statusCodes": [
+        {
+          "id": "F",
+          "name": "F"
+        }
+      ],
+      "procCodes": [
+        {
+          "id": "4313",
+          "name": "4313"
+        }
+      ],
+      "sourceSystem": {
+        "provideResults": false,
+        "isPlsSite": false,
+        "plsCode": "3910",
+        "frontendIntegrated": false,
+        "olisContributor": false
+      },
+      "notes": [
+        {
+          "name": "Hepatitis C Antibody"
+        }
+      ],
+      "observations": [],
+      "patientPid": 5556918,
+      "procCode": {
+        "id": "4313",
+        "name": "4313"
+      },
+      "visitPid": 5558477,
+      "resulted": true,
+      "nurseReviewed": false
+    }
+  ]
+}

@@ -1055,6 +1055,26 @@ Here is an example of CacheManager level resource tuning, which will use up to 4
     Sample caches. Following are some example caches. Remove these before use.
     -->
 
+    <cache name="net.svcret.ejb.model.entity.PersInvocationUserStats"
+           maxEntriesLocalHeap="100000"
+           maxEntriesLocalDisk="0"
+           eternal="false"
+           timeToIdleSeconds="30000"
+           timeToLiveSeconds="60000"
+           memoryStoreEvictionPolicy="LRU"
+           transactionalMode="off">
+    </cache>
+
+    <cache name="net.svcret.ejb.model.entity.PersInvocationStats"
+           maxEntriesLocalHeap="100000"
+           maxEntriesLocalDisk="0"
+           eternal="false"
+           timeToIdleSeconds="30000"
+           timeToLiveSeconds="60000"
+           memoryStoreEvictionPolicy="LRU"
+           transactionalMode="off">
+    </cache>
+
     <!--
     Sample cache named sampleCache1
     This cache contains a maximum in memory of 10000 elements, and will expire

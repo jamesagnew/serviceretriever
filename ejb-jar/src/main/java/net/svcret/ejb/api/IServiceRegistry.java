@@ -56,4 +56,6 @@ public interface IServiceRegistry {
 
 	BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theSv) throws ProcessingException;
 
+	BasePersServiceVersion getServiceVersionByPid(long theServiceVersionPid);
+
 }

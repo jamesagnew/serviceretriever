@@ -7,8 +7,9 @@ import com.google.gwt.safehtml.shared.SafeHtml;
 
 public interface Messages extends com.google.gwt.i18n.client.Messages {
 
-	static final String SVCVER_DESC = "Each service can have one or more versions. A Service Version is the " + "central unit in a service definition, as it defines the fundamental building " + "block. A Service Version has a defined protocol, security model, and other "
-			+ "configuration. A Service Version will also have one or more Methods it " + "can provide, and will be backed by one or more Implementation URLs. Each " + "Service will have one or more Service Versions, and Services are grouped " + "into Domains.";
+	static final String SVCVER_DESC = "Each service can have one or more versions. A Service Version is the " + "central unit in a service definition, as it defines the fundamental building "
+			+ "block. A Service Version has a defined protocol, security model, and other " + "configuration. A Service Version will also have one or more Methods it "
+			+ "can provide, and will be backed by one or more Implementation URLs. Each " + "Service will have one or more Service Versions, and Services are grouped " + "into Domains.";
 
 	@DefaultMessage("Add")
 	String actions_Add();
@@ -78,8 +79,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Cache")
 	String baseAuthenticationHostEditPanel_CacheResponses();
 
-	@DefaultMessage("If <b>cache responses</b> is enabled, the ServiceRetriever will keep a weak (SHA-512) hash of " + "any successful authentication credentials in memory for the given amount of time. This "
-			+ "means that performance will be improved as there will be fewer calls to the backing " + "credential store. Naturally, this does increase the chance that someone could " + "deduce your passwords if they have physical access to the server.")
+	@DefaultMessage("If <b>cache responses</b> is enabled, the ServiceRetriever will keep a weak (SHA-512) hash of "
+			+ "any successful authentication credentials in memory for the given amount of time. This " + "means that performance will be improved as there will be fewer calls to the backing "
+			+ "credential store. Naturally, this does increase the chance that someone could " + "deduce your passwords if they have physical access to the server.")
 	String baseAuthenticationHostEditPanel_CacheResponsesDesc();
 
 	@DefaultMessage("Enabled - Cache for (ms):")
@@ -115,12 +117,11 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("URL Base")
 	String configPanel_UrlBase();
 
-	@DefaultMessage("The URL Base is the URL where the service proxy is deployed, and forms the base for " +
-	"any service endpoints exposed by ServiceRetriever. Typically this is a simple URL expressing the " +
-	"hostname and port of the server that ServiceRetriever is deployed (e.g. \"http://somehost:8080\" but " +
-	"if ServiceRetriever is deployed behind a load balancer or other network infrastructure this might " +
-	"be something different. Note that URLs within WSDL and XSD links for exposed services will be translated " +
-	"to use this base as well.")
+	@DefaultMessage("The URL Base is the URL where the service proxy is deployed, and forms the base for "
+			+ "any service endpoints exposed by ServiceRetriever. Typically this is a simple URL expressing the "
+			+ "hostname and port of the server that ServiceRetriever is deployed (e.g. \"http://somehost:8080\" but "
+			+ "if ServiceRetriever is deployed behind a load balancer or other network infrastructure this might "
+			+ "be something different. Note that URLs within WSDL and XSD links for exposed services will be translated " + "to use this base as well.")
 	String configPanel_UrlBaseDesc();
 
 	@DefaultMessage(" <span class=\"" + CssConstants.DASHBOARD_NAME_SUFFIX + "\">(No Services Defined)</span>")
@@ -168,7 +169,7 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Delete Domain")
 	String deleteDomainPanel_Breadcrumb();
 
-	@DefaultMessage("Are you sure you want to delete the domain \"{0}\"? This will " + //-
+	@DefaultMessage("Are you sure you want to delete the domain \"{0}\"? This will " + // -
 			"delete all services associated with this domain as well!")
 	String deleteDomainPanel_Confirm(String theId);
 
@@ -178,7 +179,7 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Delete Service")
 	String deleteServicePanel_Breadcrumb();
 
-	@DefaultMessage("Are you sure you want to delete the service \"{1}\" from domain \"{0}\"? This will " + //-
+	@DefaultMessage("Are you sure you want to delete the service \"{1}\" from domain \"{0}\"? This will " + // -
 			"delete all service versions associated with this service as well!")
 	String deleteServicePanel_Confirm(String theDomainId, String theServiceId);
 
@@ -239,7 +240,8 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Users")
 	String editUsersPanel_Dashboard();
 
-	@DefaultMessage("The following table lists all of the defined users. A user account may " + "be defined to have permissions to access specific servives, or to administer " + "them, or even to administer ServiceProxy itself.")
+	@DefaultMessage("The following table lists all of the defined users. A user account may " + "be defined to have permissions to access specific servives, or to administer "
+			+ "them, or even to administer ServiceProxy itself.")
 	String editUsersPanel_ListDescription();
 
 	@DefaultMessage("Edit Users")
@@ -251,10 +253,12 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Reset Period")
 	String httpClientConfigsPanel_CircuitBreakerDelayBetweenReset();
 
-	@DefaultMessage("A <a href=\"http://en.wikipedia.org/wiki/Circuit_breaker_design_pattern\" target=\"_blank\">Circuit Breaker</a> " + "remembers when a service implementation is down and prevents the proxy from trying to access that service "
-			+ "repeatedly. In other words, when an attempt to invoke a service fails for some reason, the proxy will remember that " + "the service has failed and will not attempt to invoke that service again until a given number of milliseconds has "
-			+ "elapsed (the reset period). Circuit breakers are particularly useful if there are multiple backing implementations, " + "since the proxy will remember the state for each implementation and will quickly move to a good one when "
-			+ "one backing implementation is failing.")
+	@DefaultMessage("A <a href=\"http://en.wikipedia.org/wiki/Circuit_breaker_design_pattern\" target=\"_blank\">Circuit Breaker</a> "
+			+ "remembers when a service implementation is down and prevents the proxy from trying to access that service "
+			+ "repeatedly. In other words, when an attempt to invoke a service fails for some reason, the proxy will remember that "
+			+ "the service has failed and will not attempt to invoke that service again until a given number of milliseconds has "
+			+ "elapsed (the reset period). Circuit breakers are particularly useful if there are multiple backing implementations, "
+			+ "since the proxy will remember the state for each implementation and will quickly move to a good one when " + "one backing implementation is failing.")
 	String httpClientConfigsPanel_CircuitBreakerDescription();
 
 	@DefaultMessage("Enabled")
@@ -272,15 +276,15 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Edit Details")
 	String httpClientConfigsPanel_EditDetailsTitle();
 
-	@DefaultMessage("Every service invocation will use an HTTP Client Configuration. These " + "configurations may be shared among multiple service implementations. At " + "a minimum, a configuration named 'DEFAULT' will always exist, but you may "
-			+ "also create others for specific purposes.")
+	@DefaultMessage("Every service invocation will use an HTTP Client Configuration. These " + "configurations may be shared among multiple service implementations. At "
+			+ "a minimum, a configuration named 'DEFAULT' will always exist, but you may " + "also create others for specific purposes.")
 	String httpClientConfigsPanel_IntroMessage();
 
 	@DefaultMessage("HTTP Client Config")
 	String httpClientConfigsPanel_ListTitle();
 
-	@DefaultMessage("Set the number of retries the proxy will make against a single backing " + "implementation URL before moving on to the next one. For instance, if this is set to " + "2 and you have URLs A and B, the proxy will try A three times before moving to B if A "
-			+ "is failing.")
+	@DefaultMessage("Set the number of retries the proxy will make against a single backing " + "implementation URL before moving on to the next one. For instance, if this is set to "
+			+ "2 and you have URLs A and B, the proxy will try A three times before moving to B if A " + "is failing.")
 	String httpClientConfigsPanel_RetriesDesc();
 
 	@DefaultMessage("Retries")
@@ -295,13 +299,15 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("TCP Properties")
 	String httpClientConfigsPanel_TcpProperties();
 
-	@DefaultMessage("Use the following settings to control the outbound connection settings. These should " + "be adjusted to provide sensible defaults so that services which are hung don''t block for too long " + "while still allowing for even the longest legitimate queries.")
+	@DefaultMessage("Use the following settings to control the outbound connection settings. These should "
+			+ "be adjusted to provide sensible defaults so that services which are hung don''t block for too long " + "while still allowing for even the longest legitimate queries.")
 	String httpClientConfigsPanel_TcpPropertiesDesc();
 
 	@DefaultMessage("Read Timeout (millis):")
 	String httpClientConfigsPanel_TcpReadMillis();
 
-	@DefaultMessage("If the service " + "implementation has more than one URL defined (i.e. there " + "are multiple redundant implementations) the URL Selection Policy defines how the " + "proxy should select which implementation to use.")
+	@DefaultMessage("If the service " + "implementation has more than one URL defined (i.e. there " + "are multiple redundant implementations) the URL Selection Policy defines how the "
+			+ "proxy should select which implementation to use.")
 	String httpClientConfigsPanel_UrlSelectionDescription();
 
 	@DefaultMessage("Policy")
@@ -325,50 +331,43 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Error: An invalid value {0} was found. Numbers must be 0 (meaning no messages will be stored) or positive (meaning this number will be stored before the oldest entries are deleted), and for performance reasons must be below {1}")
 	String keepRecentTransactionsPanel_AlertInvalidValue(String theValue, String theMax);
 
-	@DefaultMessage("If enabled, the given number of recent transactions will be kept in the Service Retriever database " +
-			"for troubleshooting, etc. As new transactions are performed, old transactions are removed from the database, " +
-			"so this feature is really only intended for troubleshooting and health checks. Responses are stored in " +
-			"different buckets according to transaction outcome, so it is possible to save (for example) " +
-			"more security failure transactions than successful ones. This also means that if most transactions " +
-			"have one outcome, transactions will still be saved for other outcomes. It is important to note " +
-			"that for performance, transactions to be written to the database are buffered in memory for " +
-			"up to a minute so it is important to not choose a very large number here.")
+	@DefaultMessage("If enabled, the given number of recent transactions will be kept in the Service Retriever database "
+			+ "for troubleshooting, etc. As new transactions are performed, old transactions are removed from the database, "
+			+ "so this feature is really only intended for troubleshooting and health checks. Responses are stored in "
+			+ "different buckets according to transaction outcome, so it is possible to save (for example) "
+			+ "more security failure transactions than successful ones. This also means that if most transactions "
+			+ "have one outcome, transactions will still be saved for other outcomes. It is important to note "
+			+ "that for performance, transactions to be written to the database are buffered in memory for " + "up to a minute so it is important to not choose a very large number here.")
 	String keepRecentTransactionsPanel_Description();
 
 	@DefaultMessage("Fail")
 	String keepRecentTransactionsPanel_OutcomeFail();
 
-	@DefaultMessage("Put the number of recent failed transactions to store here. If you do not " +
-			"wish to store transactions with this outcome, put zero or leave this field blank. Failed " +
-			"transactions are transactions where underlying service implementation failed to produce " +
-			"a valid response, or was unavailable.")
+	@DefaultMessage("Put the number of recent failed transactions to store here. If you do not " + "wish to store transactions with this outcome, put zero or leave this field blank. Failed "
+			+ "transactions are transactions where underlying service implementation failed to produce " + "a valid response, or was unavailable.")
 	String keepRecentTransactionsPanel_OutcomeFailDesc();
 
 	@DefaultMessage("Fault")
 	String keepRecentTransactionsPanel_OutcomeFault();
 
-	@DefaultMessage("Put the number of recent fault transactions to store here. If you do not " +
-			"wish to store transactions with this outcome, put zero or leave this field blank. Fault " +
-			"transactions are transactions where the underlying service implementation produced a result " +
-			"which was valid, but which constituted a non-successful response.")
+	@DefaultMessage("Put the number of recent fault transactions to store here. If you do not " + "wish to store transactions with this outcome, put zero or leave this field blank. Fault "
+			+ "transactions are transactions where the underlying service implementation produced a result " + "which was valid, but which constituted a non-successful response.")
 	String keepRecentTransactionsPanel_OutcomeFaultDesc();
 
 	@DefaultMessage("Security Fail")
 	String keepRecentTransactionsPanel_OutcomeSecurityFail();
 
-	@DefaultMessage("Put the number of recent security failure transactions to store here. If you do not " +
-			"wish to store transactions with this outcome, put zero or leave this field blank. Security failure " +
-			"transactions are transactions where Service Retriever could not successfully authenticate " +
-			"the requesting user, so the request was not allowed to proceed to the underlying service.")
+	@DefaultMessage("Put the number of recent security failure transactions to store here. If you do not "
+			+ "wish to store transactions with this outcome, put zero or leave this field blank. Security failure "
+			+ "transactions are transactions where Service Retriever could not successfully authenticate "
+			+ "the requesting user, so the request was not allowed to proceed to the underlying service.")
 	String keepRecentTransactionsPanel_OutcomeSecurityFailDesc();
 
 	@DefaultMessage("Success")
 	String keepRecentTransactionsPanel_OutcomeSuccess();
 
-	@DefaultMessage("Put the number of recent successful transactions to store here. If you do not " +
-			"wish to store transactions with this outcome, put zero or leave this field blank. Successful " +
-			"transactions are transactions where the underlying service implementation successfully returned " +
-			"a result.")
+	@DefaultMessage("Put the number of recent successful transactions to store here. If you do not " + "wish to store transactions with this outcome, put zero or leave this field blank. Successful "
+			+ "transactions are transactions where the underlying service implementation successfully returned " + "a result.")
 	String keepRecentTransactionsPanel_OutcomeSuccessDesc();
 
 	@DefaultMessage("Store Recent Transactions")
@@ -376,28 +375,6 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("The base DN to search for the user being authenticated")
 	String ldapAuthenticationHostEditPanel_AuthenticateBaseDnDescription();
-
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-
 
 	@DefaultMessage("Base DN")
 	String ldapAuthenticationHostEditPanel_AuthenticateBaseDnName();
@@ -420,12 +397,10 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Bind User Password")
 	String ldapAuthenticationHostEditPanel_BindUserPasswordName();
 
-	@DefaultMessage("An <b>LDAP</b> Authentication host stores users and their " +
-			"passwords in an external LDAP database, such as an Active Directory server. Use this option if " +
-			"you have external LDAP database against which users can be authenticated. Note that for each " +
-			"record in the LDAP database which is used to actually authorize service invocations, a parallel entry " +
-			"is created in the ServiceRetriever database. This entry is used to link to usage statistics and may " +
-			"also be used to store permission rules.")
+	@DefaultMessage("An <b>LDAP</b> Authentication host stores users and their " + "passwords in an external LDAP database, such as an Active Directory server. Use this option if "
+			+ "you have external LDAP database against which users can be authenticated. Note that for each "
+			+ "record in the LDAP database which is used to actually authorize service invocations, a parallel entry "
+			+ "is created in the ServiceRetriever database. This entry is used to link to usage statistics and may " + "also be used to store permission rules.")
 	String ldapAuthenticationHostEditPanel_description();
 
 	@DefaultMessage("LDAP Properties")
@@ -452,7 +427,8 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("HTTP Clients")
 	String leftPanel_HttpClients();
 
-	@DefaultMessage("A <b>Local Database</b> Authentication host stores users and their " + "passwords in the ServiceRetriever database. Use this option if you do not have " + "an external database or LDAP against which users can be authenticated.")
+	@DefaultMessage("A <b>Local Database</b> Authentication host stores users and their " + "passwords in the ServiceRetriever database. Use this option if you do not have "
+			+ "an external database or LDAP against which users can be authenticated.")
 	String localDatabaseAuthenticationHostEditPanel_description();
 
 	@DefaultMessage("Local Database")
@@ -487,7 +463,7 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Full access")
 	SafeHtml permissionsPanel_TreeAllServiceVersionsCheckbox();
-	
+
 	@DefaultMessage("ID")
 	String propertyNameId();
 
@@ -563,13 +539,11 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Service Usage")
 	String serviceVersionStats_UsageTitle();
 
-	@DefaultMessage("<b>Prefer Local</b> means that the proxy will favour any URLs which are on " + 
-			"the same host as the service retriever itself, and will only use remote " + 
-			"implementations if all local URLs are down")
+	@DefaultMessage("<b>Prefer Local</b> means that the proxy will favour any URLs which are on " + "the same host as the service retriever itself, and will only use remote "
+			+ "implementations if all local URLs are down")
 	String urlSelectionPolicy_Desc_PreferLocal();
 
-	@DefaultMessage("<b>Round Robin</b> means that the proxy will attempt to distribute requests " +
-			"evenly across all URLs")
+	@DefaultMessage("<b>Round Robin</b> means that the proxy will attempt to distribute requests " + "evenly across all URLs")
 	String urlSelectionPolicy_Desc_RoundRobin();
 
 	@DefaultMessage("View Transaction")
@@ -620,9 +594,8 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Service Firewall")
 	String editUser_IpsTitle();
 
-	@DefaultMessage("A list of allowable IPs may optionally be specified. If specified, only " +
-			"requests originating from one of the allowable IPs will be permitted to access " +
-			"services using this user.")
+	@DefaultMessage("A list of allowable IPs may optionally be specified. If specified, only " + "requests originating from one of the allowable IPs will be permitted to access "
+			+ "services using this user.")
 	String editUser_IpsDesc();
 
 	@DefaultMessage("Graphs")
@@ -654,7 +627,14 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Service")
 	String recentMessagesGrid_ColService();
+
 	@DefaultMessage("Version")
 	String recentMessagesGrid_ColSvcVersion();
-	
+
+	@DefaultMessage("Test Service Version")
+	String testServiceVersion_Breadcrumb();
+
+	@DefaultMessage("Test / Manually Invoke")
+	String actions_TestServiceVersion();
+
 }

@@ -17,11 +17,22 @@ public class InvocationResultsBean {
 	private Map<String, String> myMethodHeaders;
 	private String myMethodRequestBody;
 	private ResultTypeEnum myResultType;
+	private IServiceInvoker<?> myServiceInvoker;
 	private String myStaticResourceContentTyoe;
 	private PersServiceVersionResource myStaticResourceDefinition;
 	private Map<String, List<String>> myStaticResourceHeaders;
 	private String myStaticResourceText;
 	private String myStaticResourceUrl;
+
+	public void addCredentials(ICredentialGrabber theCredentials) {
+		Validate.notNull(theCredentials);
+
+		if (myCredentialsInRequest.containsKey(theCredentials.getClass())) {
+			throw new IllegalArgumentException("Duplicate credential grabber type: " + theCredentials.getClass());
+		}
+
+		myCredentialsInRequest.put(theCredentials.getClass(), theCredentials);
+	}
 
 	/**
 	 * @return the credentialsInRequest
@@ -65,6 +76,10 @@ public class InvocationResultsBean {
 		return myResultType;
 	}
 
+	public IServiceInvoker<?> getServiceInvoker() {
+		return myServiceInvoker;
+	}
+
 	/**
 	 * @return the staticResourceContentTyoe
 	 */
@@ -100,16 +115,6 @@ public class InvocationResultsBean {
 		return myStaticResourceUrl;
 	}
 
-	public void addCredentials(ICredentialGrabber theCredentials) {
-		Validate.notNull(theCredentials);
-
-		if (myCredentialsInRequest.containsKey(theCredentials.getClass())) {
-			throw new IllegalArgumentException("Duplicate credential grabber type: " + theCredentials.getClass());
-		}
-
-		myCredentialsInRequest.put(theCredentials.getClass(), theCredentials);
-	}
-
 	public void setResultMethod(PersServiceVersionMethod theMethod, String theRequestBody, String theContentType, Map<String, String> theHeaders) {
 		validateResultTypeNotSet();
 		myResultType = ResultTypeEnum.METHOD;
@@ -127,6 +132,10 @@ public class InvocationResultsBean {
 		myStaticResourceContentTyoe = theContentType;
 		myStaticResourceHeaders = theHeaders;
 		myStaticResourceText = theResourceText;
+	}
+
+	public void setServiceInvoker(IServiceInvoker<?> theServiceInvoker) {
+		myServiceInvoker = theServiceInvoker;
 	}
 
 	private void validateResultTypeNotSet() {

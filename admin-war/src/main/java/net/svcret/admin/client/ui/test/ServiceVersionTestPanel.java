@@ -1,6 +1,5 @@
 package net.svcret.admin.client.ui.test;
 
-import static net.svcret.admin.client.AdminPortal.*;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
@@ -9,10 +8,8 @@ import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
-import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
 
-import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -20,12 +17,9 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextArea;
-import com.google.gwt.user.client.ui.TextBox;
 
 public class ServiceVersionTestPanel extends FlowPanel {
 
-	private GConfig myConfig;
-	private TextBox myUrlBaseTextBox;
 	private TextArea mySendMessageTextArea;
 	private ServiceVersionTestResponsePanel myResponsePanel;
 	private LoadingSpinner mySendSpinner;
@@ -42,12 +36,12 @@ public class ServiceVersionTestPanel extends FlowPanel {
 		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
 		mainPanel.add(titleLabel);
 
-		FlowPanel contentPanel = new FlowPanel();
+		final FlowPanel contentPanel = new FlowPanel();
 		contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
 		mainPanel.add(contentPanel);
 
 		final LoadingSpinner initSpinner = new LoadingSpinner();
-		mainPanel.add(initSpinner);
+		contentPanel.add(initSpinner);
 		initSpinner.show();
 
 		myResponsePanel = new ServiceVersionTestResponsePanel();
@@ -59,9 +53,9 @@ public class ServiceVersionTestPanel extends FlowPanel {
 			@Override
 			public void onSuccess(BaseGServiceVersion theResult) {
 				initSpinner.hideCompletely();
-
+				
 				TwoColumnGrid grid = new TwoColumnGrid();
-				myResponsePanel.add(grid);
+				contentPanel.add(grid);
 
 				grid.addRow("Service", theResult.getParentServiceName());
 				grid.addRow("Version", theResult.getId());
@@ -73,7 +67,7 @@ public class ServiceVersionTestPanel extends FlowPanel {
 				grid.addDescription("Enter the raw message to send here");
 
 				HorizontalPanel controlsPanel = new HorizontalPanel();
-				myResponsePanel.add(controlsPanel);
+				contentPanel.add(controlsPanel);
 
 				PButton sendButton = new PButton("Send");
 				sendButton.addClickHandler(new ClickHandler() {
@@ -85,6 +79,7 @@ public class ServiceVersionTestPanel extends FlowPanel {
 				controlsPanel.add(sendButton);
 
 				mySendSpinner = new LoadingSpinner("Sending Message...");
+				mySendSpinner.hide();
 				controlsPanel.add(mySendSpinner);
 
 			}

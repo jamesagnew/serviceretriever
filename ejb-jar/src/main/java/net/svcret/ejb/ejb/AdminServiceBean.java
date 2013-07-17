@@ -1,6 +1,5 @@
 package net.svcret.ejb.ejb;
 
-import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -19,6 +18,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.BaseGClientSecurity;
 import net.svcret.admin.shared.model.BaseGDashboardObjectWithUrls;
@@ -70,14 +70,12 @@ import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.ISecurityService;
 import net.svcret.ejb.api.IServiceInvokerSoap11;
 import net.svcret.ejb.api.IServiceOrchestrator;
-import net.svcret.ejb.api.RequestType;
-import net.svcret.ejb.api.IServiceOrchestrator.OrchestratorResponseBean;
+import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
 import net.svcret.ejb.api.IServiceRegistry;
+import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.ResponseTypeEnum;
-import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
-import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersRecentMessage;
@@ -132,7 +130,7 @@ public class AdminServiceBean implements IAdminService {
 
 	@EJB
 	private IServiceOrchestrator myOrchestrator;
-	
+
 	@EJB
 	private IDao myDao;
 
@@ -362,7 +360,7 @@ public class AdminServiceBean implements IAdminService {
 			throw new ProcessingException("Unknown service version PID: " + theServiceVersionPid);
 		}
 
-		BaseGServiceVersion uiService = toUi(svcVer, false);
+		BaseGServiceVersion uiService = toUi(svcVer, false, null);
 		GSoap11ServiceVersionAndResources retVal = toUi(uiService, svcVer);
 		return retVal;
 	}
@@ -652,7 +650,7 @@ public class AdminServiceBean implements IAdminService {
 		version = myServiceRegistry.saveServiceVersion(version);
 
 		@SuppressWarnings("unchecked")
-		T retVal = (T) toUi(version, false);
+		T retVal = (T) toUi(version, false, null);
 
 		return retVal;
 	}
@@ -1174,33 +1172,8 @@ public class AdminServiceBean implements IAdminService {
 			gDomain.getServiceList().add(gService);
 
 			for (BasePersServiceVersion nextVersion : nextService.getVersions()) {
-				BaseGServiceVersion gVersion = toUi(nextVersion, theLoadVerStats.contains(nextVersion.getPid()));
+				BaseGServiceVersion gVersion = toUi(nextVersion, theLoadVerStats.contains(nextVersion.getPid()), theLoadVerMethodStats);
 				gService.getVersionList().add(gVersion);
-
-				for (PersServiceVersionMethod nextMethod : nextVersion.getMethods()) {
-					GServiceMethod gMethod = toUi(nextMethod, theLoadVerMethodStats.contains(nextMethod.getPid()));
-					gVersion.getMethodList().add(gMethod);
-				} // for methods
-
-				for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
-					GServiceVersionUrl gUrl = toUi(nextUrl);
-					gVersion.getUrlList().add(gUrl);
-				} // for URLs
-
-				for (PersServiceVersionResource nextResource : nextVersion.getUriToResource().values()) {
-					GServiceVersionResourcePointer gResource = toUi(nextResource);
-					gVersion.getResourcePointerList().add(gResource);
-				} // for resources
-
-				for (PersBaseServerAuth<?, ?> nextServerAuth : nextVersion.getServerAuths()) {
-					BaseGServerSecurity gServerAuth = toUi(nextServerAuth);
-					gVersion.getServerSecurityList().add(gServerAuth);
-				} // server auths
-
-				for (PersBaseClientAuth<?> nextClientAuth : nextVersion.getClientAuths()) {
-					BaseGClientSecurity gClientAuth = toUi(nextClientAuth);
-					gVersion.getClientSecurityList().add(gClientAuth);
-				} // Client auths
 
 			} // for service versions
 		} // for services
@@ -1340,7 +1313,7 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private BaseGServiceVersion toUi(BasePersServiceVersion theVersion, boolean theLoadStats) throws ProcessingException {
+	private BaseGServiceVersion toUi(BasePersServiceVersion theVersion, boolean theLoadStats, Set<Long> theLoadMethodStats) throws ProcessingException {
 		BaseGServiceVersion retVal = null;
 		switch (theVersion.getProtocol()) {
 		case SOAP11:
@@ -1366,12 +1339,34 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setExplicitProxyPath(theVersion.getExplicitProxyPath());
 		retVal.setParentServiceName(theVersion.getService().getServiceName());
 		retVal.setParentServicePid(theVersion.getService().getPid());
-		
+
 		theVersion.populateKeepRecentTransactionsToDto(retVal);
 
-		for (PersServiceVersionMethod next : theVersion.getMethods()) {
-			retVal.getMethodList().add(toUi(next, theLoadStats));
-		}
+		for (PersServiceVersionMethod nextMethod : theVersion.getMethods()) {
+			boolean loadStats = theLoadMethodStats != null && theLoadMethodStats.contains(nextMethod.getPid());
+			GServiceMethod gMethod = toUi(nextMethod, loadStats);
+			retVal.getMethodList().add(gMethod);
+		} // for methods
+
+		for (PersServiceVersionUrl nextUrl : theVersion.getUrls()) {
+			GServiceVersionUrl gUrl = toUi(nextUrl);
+			retVal.getUrlList().add(gUrl);
+		} // for URLs
+
+		for (PersServiceVersionResource nextResource : theVersion.getUriToResource().values()) {
+			GServiceVersionResourcePointer gResource = toUi(nextResource);
+			retVal.getResourcePointerList().add(gResource);
+		} // for resources
+
+		for (PersBaseServerAuth<?, ?> nextServerAuth : theVersion.getServerAuths()) {
+			BaseGServerSecurity gServerAuth = toUi(nextServerAuth);
+			retVal.getServerSecurityList().add(gServerAuth);
+		} // server auths
+
+		for (PersBaseClientAuth<?> nextClientAuth : theVersion.getClientAuths()) {
+			BaseGClientSecurity gClientAuth = toUi(nextClientAuth);
+			retVal.getClientSecurityList().add(gClientAuth);
+		} // Client auths
 
 		PersHttpClientConfig httpClientConfig = theVersion.getHttpClientConfig();
 		if (httpClientConfig == null) {
@@ -2127,13 +2122,14 @@ public class AdminServiceBean implements IAdminService {
 
 	@Override
 	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid) throws ProcessingException {
-		ourLog.info("Testing single fire of service version {}",thePid);
+		ourLog.info("Testing single fire of service version {}", thePid);
+		Date transactionTime = new Date();
 		
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(thePid);
-		if (svcVer==null) {
+		if (svcVer == null) {
 			throw new IllegalArgumentException("Unknown service version: " + thePid);
 		}
-		
+
 		HttpRequestBean request = new HttpRequestBean();
 		request.setInputReader(new StringReader(theMessageText));
 		request.setPath(svcVer.getProxyPath());
@@ -2141,23 +2137,44 @@ public class AdminServiceBean implements IAdminService {
 		request.setRequestHostIp("127.0.0.1");
 		request.setRequestType(RequestType.POST);
 
-		HashMap<String, List<String>> requestHeaders = new HashMap<String, List<String>>();
-		ArrayList<String> ct = new ArrayList<String>();
-		ct.add(svcVer.getProtocol().getRequestContentType());
-		requestHeaders.put("Content-Type", ct);
-		request.setRequestHeaders(requestHeaders);
-
-		GServiceVersionSingleFireResponse retVal;
+		GServiceVersionSingleFireResponse retVal = new GServiceVersionSingleFireResponse();
 		try {
-			OrchestratorResponseBean response = myOrchestrator.handle(request);
+			SidechannelOrchestratorResponseBean response = myOrchestrator.handleSidechannelRequest(thePid, theMessageText);
+
+			retVal.setAuthorizationOutcome(AuthorizationOutcomeEnum.AUTHORIZED);
+			retVal.setDomainName(svcVer.getService().getDomain().getDomainName());
+			retVal.setDomainPid(svcVer.getService().getDomain().getPid());
+			if (response.getHttpResponse().getSuccessfulUrl() != null) {
+				retVal.setImplementationUrlHref(response.getHttpResponse().getSuccessfulUrl().getUrl());
+				retVal.setImplementationUrlId(response.getHttpResponse().getSuccessfulUrl().getUrlId());
+				retVal.setImplementationUrlPid(response.getHttpResponse().getSuccessfulUrl().getPid());
+			}	
 			
-			retVal = new GServiceVersionSingleFireResponse();
+			List<Pair<String>> requestHeaders = new ArrayList<Pair<String>>();
+			requestHeaders.add(new Pair<String>("Content-Type", svcVer.getProtocol().getRequestContentType()));
+
+			retVal.setRequestContentType(svcVer.getProtocol().getRequestContentType());
+			retVal.setRequestHeaders(requestHeaders);
 			
+			retVal.setRequestMessage(theMessageText);
+			retVal.setResponseContentType(response.getResponseContentType());
+			retVal.setResponseHeaders(response.getHttpResponse().getResponseHeadersAsPairList());
+			retVal.setResponseMessage(response.getResponseBody());
+			retVal.setServiceName(svcVer.getService().getServiceName());
+			retVal.setServicePid(svcVer.getService().getPid());
+			retVal.setServiceVersionId(svcVer.getVersionId());
+			retVal.setServiceVersionPid(svcVer.getPid());
+			retVal.setTransactionMillis(response.getHttpResponse().getResponseTime());
+			retVal.setTransactionTime(transactionTime);
+			
+		} catch (SecurityFailureException e) {
+			retVal.setAuthorizationOutcome(e.getAuthorizationOutcomeEnum());
+			retVal.setResponseMessage(e.getMessage());
 		} catch (Exception e) {
 			ourLog.error("Failed to invoke service", e);
-			throw new ProcessingException(e.getMessage());
-		} 
-		
+			retVal.setResponseMessage("Failed with internal exception: " + e.getMessage());
+		}
+
 		return retVal;
 	}
 
