@@ -170,4 +170,8 @@ public class PersUserStatus extends BasePersObject {
 		myUser = theUser;
 	}
 
+	public void loadAllAssociations() {
+		myMethodStatuses.size();
+	}
+
 }

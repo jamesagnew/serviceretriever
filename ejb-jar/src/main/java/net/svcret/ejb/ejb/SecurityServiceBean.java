@@ -54,6 +54,10 @@ public class SecurityServiceBean implements ISecurityService {
 	public AuthorizationResultsBean authorizeMethodInvocation(BasePersAuthenticationHost theAuthHost, ICredentialGrabber theCredentialGrabber, PersServiceVersionMethod theMethod, String theRequestHostIp) throws ProcessingException {
 		Validate.notNull(theAuthHost, "AuthHost");
 		
+		if (myInMemoryUserCatalog == null) {
+			loadUserCatalogIfNeeded();
+		}
+		
 		BasePersAuthenticationHost authHost = myInMemoryUserCatalog.getAuthHostByPid(theAuthHost.getPid());
 
 		AuthorizationResultsBean retVal = new AuthorizationResultsBean();

@@ -32,6 +32,7 @@ import net.svcret.admin.client.ui.stats.ServiceVersionStatsPanel;
 import net.svcret.admin.client.ui.stats.UserStatsPanel;
 import net.svcret.admin.client.ui.stats.ViewRecentMessageForServiceVersionPanel;
 import net.svcret.admin.client.ui.stats.ViewRecentMessageForUserPanel;
+import net.svcret.admin.client.ui.test.ServiceVersionTestPanel;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -311,6 +312,19 @@ public class NavProcessor {
 		return token;
 	}
 
+	public static String getTestServiceVersion(boolean theAddToHistory, long theServiceVersionPid) {
+		String token = "";
+		if (theAddToHistory) {
+			token = getCurrentToken();
+			if (!token.isEmpty()) {
+				token = token + SEPARATOR;
+			}
+		}
+		token = token + PagesEnum.TSV + "_" + theServiceVersionPid;
+		token = removeDuplicates(token);
+		return token;
+	}
+
 	public static String getTokenViewServiceVersionRecentMessage(boolean theAddToHistory, long thePid) {
 		String token = "";
 		if (theAddToHistory) {
@@ -407,6 +421,9 @@ public class NavProcessor {
 			break;
 		case DSV:
 			panel = new DeleteServiceVersionPanel(Long.parseLong(args));
+			break;
+		case TSV:
+			panel = new ServiceVersionTestPanel(Long.parseLong(args));
 			break;
 		case DSH:
 			panel = new ServiceDashboardPanel();

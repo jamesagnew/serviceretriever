@@ -93,7 +93,8 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
-	public AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion) throws ServiceFailureException {
+	public AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion)
+			throws ServiceFailureException {
 		if (theExistingDomainPid == null && isBlank(theCreateDomainId)) {
 			throw new IllegalArgumentException("Domain PID and new domain ID are both missing");
 		}
@@ -107,9 +108,11 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 			throw new IllegalArgumentException("Service PID and new domain ID can not both be provided");
 		}
 		if (theVersion.getPid() != 0) {
-			ourLog.info("Saving service version for Domain[{}/create {}] and Service[{}/create {}] with id: {}", new Object[] { theExistingDomainPid, theCreateDomainId, theExistingServicePid, theCreateServiceId, theVersion.getId() });
+			ourLog.info("Saving service version for Domain[{}/create {}] and Service[{}/create {}] with id: {}", new Object[] { theExistingDomainPid, theCreateDomainId, theExistingServicePid,
+					theCreateServiceId, theVersion.getId() });
 		} else {
-			ourLog.info("Adding service version for Domain[{}/create {}] and Service[{}/create {}] with id: {}", new Object[] { theExistingDomainPid, theCreateDomainId, theExistingServicePid, theCreateServiceId, theVersion.getId() });
+			ourLog.info("Adding service version for Domain[{}/create {}] and Service[{}/create {}] with id: {}", new Object[] { theExistingDomainPid, theCreateDomainId, theExistingServicePid,
+					theCreateServiceId, theVersion.getId() });
 		}
 
 		if (isMockMode()) {
@@ -282,17 +285,6 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		long delay = System.currentTimeMillis() - start;
 		ourLog.info("Loaded model update in {}ms", delay);
 
-		if (ourLog.isTraceEnabled()) {
-			for (GDomain nextDomain : retVal.getDomainList()) {
-				ourLog.trace(" * Returning Domain: {}", nextDomain);
-				for (GService nextSvc : nextDomain.getServiceList()) {
-					for (BaseGServiceVersion nextSvcVer : nextSvc.getVersionList()) {
-						ourLog.trace(" * Returning SvcVer: {}", nextSvcVer);
-					}
-				}
-			}
-		}
-		
 		if (theRequest.isLoadAuthHosts()) {
 			if (retVal.getAuthenticationHostList() == null || retVal.getAuthenticationHostList().size() == 0) {
 				throw new ServiceFailureException("Failed to return any authentication hosts!");
@@ -369,7 +361,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 			return retVal;
 		} else {
 			try {
-				retVal = myAdminSvc.loadUsers(theRequest);
+				retVal=myAdminSvc.loadUsers(theRequest);
 			} catch (ProcessingException e) {
 				ourLog.error("Failed to load users", e);
 				throw new ServiceFailureException(e.getMessage());
@@ -382,7 +374,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 				Validate.notNull(next.getStatsInitialized());
 			}
 		}
-
+		
 		return retVal;
 	}
 
@@ -680,40 +672,33 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	public GDomainList removeServiceVersion(long thePid) throws ServiceFailureException {
 		Validate.greaterThanZero(thePid, "PID");
 		ourLog.info("Removing service version {}", thePid);
-
+		
 		if (isMockMode()) {
 			return myMock.removeServiceVersion(thePid);
 		}
-
+		
 		try {
 			return myAdminSvc.deleteServiceVersion(thePid);
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to delete service version", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
-
+		
 	}
 
 	@Override
+<<<<<<< HEAD
 	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid) throws ServiceFailureException {
 		try {
 			return myAdminSvc.testServiceVersionWithSingleMessage(theMessageText, thePid);
 		} catch (ProcessingException e) {
 			throw new ServiceFailureException(e.getMessage());
 		}
-	}
-	
-	
+=======
 	public GMonitorRuleList loadMonitorRuleList() {
-		GMonitorRuleList retVal;
-
-		if (isMockMode()) {
-			retVal = myMock.loadMonitorRuleList();
-		} else {
-			retVal = myAdminSvc.loadMonitorRuleList();
-		}
-
-		return retVal;
+		// TODO Auto-generated method stub
+		return null;
+>>>>>>> 0956b48784ee30dcacc3cf8dfc55fcd5ef12aafe
 	}
 
 }

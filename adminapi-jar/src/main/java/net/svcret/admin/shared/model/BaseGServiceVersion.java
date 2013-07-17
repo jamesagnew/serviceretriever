@@ -12,6 +12,8 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	private String myExplicitProxyPath;
 	private long myHttpClientConfigPid;
 	private Date myLastAccess;
+	private String myParentServiceName;
+	private long myParentServicePid;
 	private String myProxyPath;
 	private GServiceVersionResourcePointerList myResourcePointerList;
 	private BaseGServerSecurityList myServerSecurityList;
@@ -63,6 +65,14 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	 */
 	public GServiceMethodList getMethodList() {
 		return myServiceMethodList;
+	}
+
+	public String getParentServiceName() {
+		return myParentServiceName;
+	}
+
+	public long getParentServicePid() {
+		return myParentServicePid;
 	}
 
 	public abstract ServiceProtocolEnum getProtocol();
@@ -183,6 +193,14 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 		myLastAccess = theLastAccess;
 	}
 
+	public void setParentServiceName(String theParentServiceName) {
+		myParentServiceName = theParentServiceName;
+	}
+
+	public void setParentServicePid(long theParentServicePid) {
+		myParentServicePid = theParentServicePid;
+	}
+
 	public void setProxyPath(String theProxyPath) {
 		myProxyPath = theProxyPath;
 	}
@@ -195,4 +213,15 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 		myResourcePointerList = theResourcePointerList;
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder b = new StringBuilder();
+		b.append("ServiceVersion[type=").append(getProtocol().name()).append(", ");
+		b.append("pid=").append(getPid()).append(", ");
+		b.append("methodCound=").append(getMethodList().size());
+		b.append("]");
+		return b.toString();
+	}
+
+	
 }

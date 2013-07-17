@@ -28,6 +28,7 @@ import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
@@ -69,10 +70,12 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 		myLastUpdateLabel = new Label();
 		myLastUpdateLabel.addStyleName(CssConstants.MAIN_PANEL_UPDATE);
 		titlePanel.add(myLastUpdateLabel);
+		titlePanel.setCellVerticalAlignment(myLastUpdateLabel, HasVerticalAlignment.ALIGN_MIDDLE);
 
 		myLoadingSpinner = new LoadingSpinner();
 		titlePanel.add(myLoadingSpinner);
-
+		titlePanel.setCellVerticalAlignment(myLoadingSpinner, HasVerticalAlignment.ALIGN_MIDDLE);
+		titlePanel.setCellWidth(myLoadingSpinner, "16px");
 		myGrid = new FlexTable();
 		add(myGrid);
 

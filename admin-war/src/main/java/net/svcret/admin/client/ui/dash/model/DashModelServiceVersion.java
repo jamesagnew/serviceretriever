@@ -145,16 +145,20 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		titleB.appendEscaped(theSvcVer.getId());
 		content.add(new HeaderLabel(titleB.toSafeHtml()));
 
-		Button editDomain = new ActionPButton(AdminPortal.IMAGES.iconEdit(), "Edit");
-		editDomain.addClickHandler(new ClickHandler() {
+		// Edit Service Version
+		
+		Button editServiceVersion = new ActionPButton(AdminPortal.IMAGES.iconEdit(), "Edit");
+		editServiceVersion.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
 				theActionPopup.hide();
 				History.newItem(NavProcessor.getTokenEditServiceVersion(true, theSvcVer.getPid()));
 			}
 		});
-		content.add(editDomain);
+		content.add(editServiceVersion);
 
+		// View Runtime Status
+		
 		ActionPButton viewStatus = new ActionPButton(IMAGES.iconStatus(), MSGS.actions_ViewRuntimeStatus());
 		viewStatus.addClickHandler(new ClickHandler() {
 			@Override
@@ -163,6 +167,19 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 			}
 		});
 		content.add(viewStatus);
+		
+		// Test Version
+		
+		ActionPButton testSvcVer = new ActionPButton(IMAGES.iconTest(), MSGS.actions_TestServiceVersion());
+		testSvcVer.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				History.newItem(NavProcessor.getTestServiceVersion(true, theSvcVer.getPid()));
+			}
+		});
+		content.add(testSvcVer);
+
+		
 	}
 
 	@Override

@@ -3,7 +3,6 @@ package net.svcret.admin.client.ui.catalog;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GServiceVersionJsonRpc20;
 
-import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -22,8 +21,6 @@ public class EndpointRendererJsonRpc20 extends BaseEndpointRenderer<GServiceVers
 		Anchor endpoint = new Anchor("Endpoint");
 		endpoint.setHref(url);
 		retVal.add(endpoint);
-		
-		endpoint.getElement().getStyle().setPaddingLeft(4, Unit.PX);
 		
 		return retVal;
 	}

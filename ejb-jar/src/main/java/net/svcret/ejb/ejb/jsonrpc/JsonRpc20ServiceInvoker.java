@@ -5,7 +5,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.ejb.Stateless;
@@ -19,7 +18,6 @@ import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcCredentialGrabber;
@@ -91,7 +89,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 				case NULL:
 					theJsonReader.nextNull();
 					theJsonWriter.nullValue();
-					return;
+					break;
 				case BEGIN_ARRAY:
 					theJsonReader.beginArray();
 					theJsonWriter.beginArray();
@@ -118,16 +116,19 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 					objectDepth--;
 					break;
 				case NAME:
-					theJsonWriter.name(theJsonReader.nextName());
+				String nextName = theJsonReader.nextName();
+				theJsonWriter.name(nextName);
 					break;
 				case NUMBER:
-					theJsonWriter.value(theJsonReader.nextLong());
+				long nextLong = theJsonReader.nextLong();
+				theJsonWriter.value(nextLong);
 					break;
 				case STRING:
-					theJsonWriter.value(theJsonReader.nextString());
+				String nextString = theJsonReader.nextString();
+				theJsonWriter.value(nextString);
 					break;
 			}
-		} while (objectDepth > 0 || arrayDepth > 0);
+		} while ((objectDepth > 0 || arrayDepth > 0));
 
 	}
 
@@ -143,6 +144,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 				objectDepth++;
 				break;
 			case BEGIN_ARRAY:
+				theJsonReader.beginArray();
 				arrayDepth++;
 				break;
 			case NULL:
@@ -169,7 +171,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 			switch (next) {
 				case NULL:
 					theJsonReader.nextNull();
-					return;
+					break;
 				case BEGIN_ARRAY:
 					theJsonReader.beginArray();
 					arrayDepth++;
@@ -201,24 +203,44 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 					theJsonReader.nextString();
 					break;
 			}
-		} while (theJsonReader.hasNext() && (objectDepth > 0 || arrayDepth > 0));
+		} while ((objectDepth > 0 || arrayDepth > 0));
 
 	}
 
 
 	@Override
-	public InvocationResultsBean processInvocation(PersServiceVersionJsonRpc20 theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, Reader theReader) throws InternalErrorException, UnknownRequestException, IOException, ProcessingException {
+	public InvocationResultsBean processInvocation(PersServiceVersionJsonRpc20 theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, Reader theReader) throws ProcessingException {
 		Validate.notNull(theReader, "Reader");
 		if (theRequestType != RequestType.POST) {
-			throw new UnknownRequestException("This service requires all requests to be of type HTTP POST");
+			throw new ProcessingException("This service requires all requests to be of type HTTP POST");
 		}
 
+		InvocationResultsBean retVal;
+		try {
+			retVal = doProcessInvocation(theServiceDefinition, theReader);
+		} catch (IOException e) {
+			throw new ProcessingException(e);
+		}
+
+		return retVal;
+	}
+
+
+	private InvocationResultsBean doProcessInvocation(PersServiceVersionJsonRpc20 theServiceDefinition, Reader theReader) throws IOException, ProcessingException {
 		InvocationResultsBean retVal = new InvocationResultsBean();
 
+		// Writer
 		StringWriter stringWriter = new StringWriter();
-
 		IJsonWriter jsonWriter = new MyJsonWriter(stringWriter);
-		IJsonReader jsonReader = new MyJsonReader(theReader);
+
+		// Reader
+		Reader inputReader;
+		
+		String inputMessage = IOUtils.toString(theReader);
+		ourLog.debug("Input message:\n{}", inputMessage);
+		inputReader = new StringReader(inputMessage);
+		
+		IJsonReader jsonReader = new MyJsonReader(inputReader);
 
 		/*
 		 * Create security pipeline if needed
@@ -291,11 +313,10 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 		Map<String, String> headers = new HashMap<String, String>();
 		PersServiceVersionMethod methodDef = theServiceDefinition.getMethod(method);
 		if (methodDef == null) {
-			throw new UnknownRequestException("Unknown method \"" + method + "\" for Service \"" + theServiceDefinition.getService().getServiceName() + "\"");
+			throw new ProcessingException("Unknown method \"" + method + "\" for Service \"" + theServiceDefinition.getService().getServiceName() + "\"");
 		}
 		
 		retVal.setResultMethod(methodDef, requestBody, contentType, headers);
-
 		return retVal;
 	}
 
@@ -307,7 +328,9 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 
 		String body = theResponse.getBody();
 		StringReader reader = new StringReader(body);
-		
+
+		ourLog.debug("JSON Response: {}", body);
+
 		JsonReader jsonReader = new JsonReader(reader);
 		try {
 			jsonReader.beginObject();
@@ -354,7 +377,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 
 		retVal.setResponseBody(body);
 		retVal.setResponseContentType("application/json");
-		retVal.setResponseHeaders(new HashMap<String, List<String>>());
+
 		if (retVal.getResponseType() == null) {
 			retVal.setResponseType(ResponseTypeEnum.SUCCESS);
 		}

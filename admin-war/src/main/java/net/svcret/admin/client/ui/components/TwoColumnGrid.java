@@ -51,4 +51,8 @@ public class TwoColumnGrid extends FlexTable {
 		HTML widget = createDescriptionWidget(theDescription);
 		setWidget(getRowCount()-1, 2, widget);
 	}
+
+	public void addRow(String theLabel, String theComponent) {
+		addRow(theLabel, new Label(theComponent));
+	}
 }

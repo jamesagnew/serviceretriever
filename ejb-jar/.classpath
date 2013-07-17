@@ -89,7 +89,7 @@
 	<classpathentry kind="var" path="M2_REPO/commons-collections/commons-collections/3.2.1/commons-collections-3.2.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/apache/mina/mina-core/2.0.7/mina-core-2.0.7.jar"/>
 	<classpathentry exported="true" kind="var" path="M2_REPO/org/apache/openejb/javaee-api/6.0-4/javaee-api-6.0-4.jar" sourcepath="/M2_REPO/org/apache/openejb/javaee-api/6.0-4/javaee-api-6.0-4-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/com/google/code/gson/gson/2.2.2/gson-2.2.2.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/google/code/gson/gson/2.2.4/gson-2.2.4.jar" sourcepath="/M2_REPO/com/google/code/gson/gson/2.2.4/gson-2.2.4-sources.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/adminapi-jar"/>
 	<classpathentry kind="var" path="M2_REPO/ch/qos/logback/logback-core/1.0.10/logback-core-1.0.10.jar"/>
 	<classpathentry kind="var" path="M2_REPO/ch/qos/logback/logback-classic/1.0.10/logback-classic-1.0.10.jar"/>

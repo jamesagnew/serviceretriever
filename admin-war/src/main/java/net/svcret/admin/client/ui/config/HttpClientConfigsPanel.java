@@ -115,7 +115,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 			config.setCircuitBreakerTimeBetweenResetAttempts(cbRetryTimeout);
 		}
 
-		Integer retries = myCircuitBreakerDelayBox.getValue();
+		Integer retries = myRetriesTextBox.getValue();
 		myRetriesTextBox.removeStyleName(CssConstants.TEXTBOX_WITH_ERR);
 		if (retries == null || retries < 0) {
 			myRetriesTextBox.addStyleName(CssConstants.TEXTBOX_WITH_ERR);

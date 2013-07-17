@@ -76,7 +76,7 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 		ourValidContentTypes.add("application/soap+xml");
 	}
 
-	private void doHandleGet(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, String thePath, String theQuery) throws InternalErrorException, UnknownRequestException, IOException, DOMException, ProcessingException {
+	private void doHandleGet(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, String thePath, String theQuery) throws UnknownRequestException, ProcessingException {
 
 		if (theQuery.toLowerCase().equals("?wsdl")) {
 			doHandleGetWsdl(theResults, theServiceDefinition, thePath);
@@ -167,7 +167,7 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 		return myConfigService.getConfig().getProxyUrlBases().iterator().next().getUrlBase();
 	}
 
-	private void doHandleGetXsd(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, String thePath, String theQuery) throws UnknownRequestException, IOException {
+	private void doHandleGetXsd(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, String thePath, String theQuery) throws UnknownRequestException {
 		StringTokenizer tok = new StringTokenizer(theQuery, "&");
 		String xsdNumString = null;
 		while (tok.hasMoreElements()) {
@@ -242,7 +242,7 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 	 */
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public InvocationResultsBean processInvocation(PersServiceVersionSoap11 theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, Reader theReader) throws InternalErrorException, UnknownRequestException, IOException, ProcessingException {
+	public InvocationResultsBean processInvocation(PersServiceVersionSoap11 theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, Reader theReader) throws ProcessingException, UnknownRequestException {
 		InvocationResultsBean retVal = new InvocationResultsBean();
 
 		switch (theRequestType) {

@@ -89,8 +89,10 @@ public interface ModelUpdateServiceAsync {
 
 	void removeServiceVersion(long thePid, AsyncCallback<GDomainList> theAsyncCallback);
 
+<<<<<<< HEAD
 	void testServiceVersionWithSingleMessage(String theMessageText, long thePid, AsyncCallback<GServiceVersionSingleFireResponse> theAsyncCallback);
-
+=======
 	void loadMonitorRuleList(AsyncCallback<GMonitorRuleList> theAsyncCallback);
+>>>>>>> 0956b48784ee30dcacc3cf8dfc55fcd5ef12aafe
 
 }

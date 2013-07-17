@@ -148,8 +148,10 @@ public interface ModelUpdateService extends RemoteService {
 
 	GDomainList removeServiceVersion(long thePid) throws ServiceFailureException;
 
+<<<<<<< HEAD
 	GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid) throws ServiceFailureException;
-	
+=======
 	GMonitorRuleList loadMonitorRuleList();
+>>>>>>> 0956b48784ee30dcacc3cf8dfc55fcd5ef12aafe
 
 }

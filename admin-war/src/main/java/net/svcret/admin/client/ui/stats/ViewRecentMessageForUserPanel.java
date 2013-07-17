@@ -10,11 +10,16 @@ public class ViewRecentMessageForUserPanel extends BaseViewRecentMessagePanel {
 
 
 	public ViewRecentMessageForUserPanel(long thePid) {
-		super(thePid);
+		super();
+		loadMessage(thePid);
 	}
 
 	@Override
-	protected void loadMessage(long thePid) {
+	protected String getPanelTitle() {
+		return MSGS.viewRecentMessageUser_Title();
+	}
+
+	private void loadMessage(long thePid) {
 		MODEL_SVC.loadRecentMessageForUser(thePid, new AsyncCallback<GRecentMessage>() {
 
 			@Override

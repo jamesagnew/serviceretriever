@@ -40,6 +40,7 @@ import net.svcret.admin.shared.model.GUserServiceVersionPermission;
 import net.svcret.admin.shared.model.GWsSecServerSecurity;
 import net.svcret.admin.shared.model.GWsSecUsernameTokenClientSecurity;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
+import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.api.HttpRequestBean;
@@ -184,6 +185,13 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
 
 		newEntityManager();
+		
+		ModelUpdateResponse response = mySvc.loadModelUpdate(new ModelUpdateRequest());
+		assertEquals(1, response.getDomainList().size());
+		assertEquals(1, response.getDomainList().get(0).getServiceList().size());
+		assertEquals(1, response.getDomainList().get(0).getServiceList().get(0).getVersionList().size());
+		assertEquals(1, response.getDomainList().get(0).getServiceList().get(0).getVersionList().get(0).getMethodList().size());
+		
 	}
 
 	

@@ -1,10 +1,13 @@
 package net.svcret.ejb.api;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
+import net.svcret.admin.shared.model.Pair;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 
 public class HttpResponseBean {
@@ -171,5 +174,15 @@ public class HttpResponseBean {
 		public int getStatusCode() {
 			return myStatusCode;
 		}
+	}
+
+	public List<Pair<String>> getResponseHeadersAsPairList() {
+		ArrayList<Pair<String>> retVal = new ArrayList<Pair<String>>();
+		for (Entry<String, List<String>> next : getHeaders().entrySet()) {
+			for (String nextValue : next.getValue()) {
+				retVal.add(new Pair<String>(next.getKey(), nextValue));
+			}
+		}
+		return retVal;
 	}
 }

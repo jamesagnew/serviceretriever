@@ -91,7 +91,7 @@ public class ServiceServlet extends HttpServlet {
 			}
 			request.setRequestHeaders(requestHeaders);
 
-			response = myOrch.handle(request);
+			response = myOrch.handleServiceRequest(request);
 		} catch (InternalErrorException e) {
 			ourLog.info("Processing Failure", e);
 			sendFailure(theResp, e.getMessage());

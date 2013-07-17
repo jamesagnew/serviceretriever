@@ -232,6 +232,19 @@ public class Model {
 		});
 	}
 
+	public void loadServiceVersion(final long theServiceVersionPid, final IAsyncLoadCallback<BaseGServiceVersion> theCallback) {
+		loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+			@Override
+			public void onSuccess(GDomainList theResult) {
+				BaseGServiceVersion serviceVersion = theResult.getServiceVersionByPid(theServiceVersionPid);
+				if (serviceVersion == null) {
+					throw new Error("Unknown version: " + theServiceVersionPid);
+				}
+				theCallback.onSuccess(serviceVersion);
+			}
+		});
+	}
+
 	public void loadServiceVersion(long theDomainPid, long theServicePid, final long theVersionPid, final boolean theLoadDetailedStats, final IAsyncLoadCallback<BaseGServiceVersion> theCallback) {
 		loadService(theDomainPid, theServicePid, new IAsyncLoadCallback<GService>() {
 

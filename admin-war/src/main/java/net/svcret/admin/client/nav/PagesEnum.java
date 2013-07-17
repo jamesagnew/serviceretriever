@@ -68,6 +68,11 @@ public enum PagesEnum {
 	RUS(MSGS.viewRecentMessagUser_Breadcrumb()), 
 	
 	/**
+	 * Test service version
+	 */
+	TSV(MSGS.testServiceVersion_Breadcrumb()),
+	
+	/**
 	 * View usee stats
 	 */
 	VUS(MSGS.viewUserStats_Breadcrumb()), 

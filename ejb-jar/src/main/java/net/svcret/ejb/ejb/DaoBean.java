@@ -704,7 +704,7 @@ public class DaoBean implements IDao {
 		Validate.notNull(theStats);
 		Validate.notNull(theStatsToDelete);
 
-		ourLog.info("Going to save {} invocation stats entries", theStats.size());
+		ourLog.info("Going to save {} invocation stats entries and delete {} entries", theStats.size(), theStatsToDelete.size());
 
 		grabLock("FLUSH_STATS");
 
