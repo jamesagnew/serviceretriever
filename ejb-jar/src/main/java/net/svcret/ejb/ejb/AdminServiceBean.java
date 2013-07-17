@@ -31,6 +31,7 @@ import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GLdapAuthHost;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
+import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GNamedParameterJsonRpcServerAuth;
 import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GRecentMessage;
@@ -83,6 +84,7 @@ import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
+import net.svcret.ejb.model.entity.PersMonitorRule;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
@@ -2093,6 +2095,18 @@ public class AdminServiceBean implements IAdminService {
 		}
 		
 		myDao.deleteUser(user);
+	}
+
+	@Override
+	public GMonitorRuleList loadMonitorRuleList() {
+		GMonitorRuleList retVal = new GMonitorRuleList();
+		
+		Collection<PersMonitorRule> allRules = myDao.getMonitorRules();
+		for (PersMonitorRule persMonitorRule : allRules) {
+			
+		}
+		
+		return null;
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {
