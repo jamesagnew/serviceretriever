@@ -6,14 +6,13 @@ import javax.ejb.Local;
 public interface IScheduler {
 
 	void reloadUserRegistry();
-	
-	void flushStats();
 
 	void collapseStats();
 
-	void flushTransactionLogs();
-
 	void monitorCheck();
- 
-	
+
+	void flushInMemoryStatisticsAndTransactionsSecondary();
+
+	void flushInMemoryStatisticsAndTransactionsPrimary();
+
 }

@@ -565,19 +565,16 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				iter.remove();
 			} else {
 				next.setLastStatusSave(new Date());
+				/*
+				 * TODO: Maybe use a "last saved" timestamp here instead of a flag to prevent race conditions
+				 */
+				next.setDirty(false);
 			}
 		}
 
 		if (!urlStatuses.isEmpty()) {
 			ourLog.info("Going to persist {} URL statuses", urlStatuses.size());
 			myDao.saveServiceVersionUrlStatus(urlStatuses);
-		}
-
-		/*
-		 * TODO: Maybe use a "last saved" timestamp here instead of a flag to prevent race conditions
-		 */
-		for (PersServiceVersionUrlStatus next : urlStatuses) {
-			next.setDirty(false);
 		}
 
 		/*
@@ -591,6 +588,10 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				iter.remove();
 			} else {
 				next.setLastSave(new Date());
+				/*
+				 * TODO: Maybe use a "last saved" timestamp here instead of a flag to prevent race conditions
+				 */
+				next.setDirty(false);
 			}
 		}
 
@@ -600,15 +601,9 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 
 		/*
-		 * TODO: Maybe use a "last saved" timestamp here instead of a flag to prevent race conditions
-		 */
-		for (PersServiceVersionStatus next : serviceVersionStatuses) {
-			next.setDirty(false);
-		}
-
-		/*
 		 * Flush user status
 		 */
+		
 		List<PersUserStatus> userStatuses = new ArrayList<PersUserStatus>();
 		for (PersUser next : new HashSet<PersUser>(myUnflushedUserStatus.keySet())) {
 			PersUserStatus nextStatus = myUnflushedUserStatus.remove(next);

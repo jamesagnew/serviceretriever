@@ -1,7 +1,10 @@
 package net.svcret.ejb.api;
 
+import java.util.List;
+
 import javax.ejb.Local;
 
+import net.svcret.admin.shared.model.RetrieverNodeTypeEnum;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.PersConfig;
 
@@ -14,5 +17,8 @@ public interface IConfigService {
 
 	void reloadConfigIfNeeded();
 
+	RetrieverNodeTypeEnum getNodeType();
 
+	List<String> getSecondaryNodeRefreshUrls();
+	
 }

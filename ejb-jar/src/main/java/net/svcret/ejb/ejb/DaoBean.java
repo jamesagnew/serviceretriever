@@ -941,6 +941,8 @@ public class DaoBean implements IDao {
 	}
 
 	private void grabLock(String lockName) {
+		if (true) return;
+		
 		Map<String, Object> properties = new HashMap<String, Object>();
 		properties.put("javax.persistence.lock.timeout", 10 * 1000);
 		PersLocks lock = myEntityManager.find(PersLocks.class, lockName, LockModeType.PESSIMISTIC_WRITE, properties);

@@ -14,6 +14,9 @@ import javax.management.MBeanServer;
 
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.management.ManagementService;
+import net.svcret.admin.shared.model.RetrieverNodeTypeEnum;
+import net.svcret.ejb.api.IConfigService;
+import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IMonitorService;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IScheduler;
@@ -29,8 +32,14 @@ public class SchedulerBean implements IScheduler {
 	private CacheManager myCacheManager;
 
 	@EJB
+	private IMonitorService myMonitorSvc;
+
+	@EJB
 	private ISecurityService mySecuritySvc;
 
+	@EJB
+	private IConfigService myConfigSvc;
+	
 	@EJB
 	private IRuntimeStatus myStatsSvc;
 
@@ -38,7 +47,7 @@ public class SchedulerBean implements IScheduler {
 	private ITransactionLogger myTransactionLogger;
 
 	@EJB
-	private IMonitorService myMonitorSvc;
+	private IHttpClient myHttpClient;
 	
 	private ManagementService registry;
 
@@ -47,6 +56,10 @@ public class SchedulerBean implements IScheduler {
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	public void collapseStats() {
 		try {
+			if (myConfigSvc.getNodeType() != RetrieverNodeTypeEnum.PRIMARY) {
+				return;
+			}
+
 			ourLog.debug("collapseStats()");
 			myStatsSvc.collapseStats();
 		} catch (Exception e) {
@@ -57,43 +70,63 @@ public class SchedulerBean implements IScheduler {
 	@Override
 	@Schedule(second = "0", minute = "*", hour = "*")
 	@TransactionAttribute(TransactionAttributeType.NEVER)
-	public void monitorCheck() {
+	public void flushInMemoryStatisticsAndTransactionsPrimary() {
 		try {
-			myMonitorSvc.check();
-		} catch (Exception e) {
-			ourLog.error("Failed to collapse stats", e);
-		}
-	}
+			if (myConfigSvc.getNodeType() != RetrieverNodeTypeEnum.PRIMARY) {
+				return;
+			}
 
-	@Override
-	@Schedule(second = "0", minute = "*", hour = "*")
-	@TransactionAttribute(TransactionAttributeType.NEVER)
-	public void flushStats() {
-		try {
 			ourLog.debug("flushStats()");
 			myStatsSvc.flushStatus();
+
+			ourLog.debug("flushTransactionLogs()");
+			myTransactionLogger.flush();
+
+			for (String nextUrl : myConfigSvc.getSecondaryNodeRefreshUrls()) {
+				ourLog.debug("Invoking secondary refresh URL: {}", nextUrl);
+				myHttpClient.get(nextUrl);
+			}
+			
 		} catch (Exception e) {
 			ourLog.error("Failed to flush stats", e);
 		}
 	}
 
 	@Override
-	@Schedule(second = "0", minute = "*", hour = "*")
-	public void flushTransactionLogs() {
+	@TransactionAttribute(TransactionAttributeType.NEVER)
+	public void flushInMemoryStatisticsAndTransactionsSecondary() {
 		try {
+			ourLog.debug("flushStats()");
+			myStatsSvc.flushStatus();
+
 			ourLog.debug("flushTransactionLogs()");
 			myTransactionLogger.flush();
 		} catch (Exception e) {
-			ourLog.error("Failed to flush transaction logs", e);
+			ourLog.error("Failed to flush stats", e);
 		}
 	}
+
 	
+	@Override
+	@Schedule(second = "0", minute = "*", hour = "*")
+	@TransactionAttribute(TransactionAttributeType.NEVER)
+	public void monitorCheck() {
+		try {
+			if (myConfigSvc.getNodeType() != RetrieverNodeTypeEnum.PRIMARY) {
+				return;
+			}
+
+			myMonitorSvc.check();
+		} catch (Exception e) {
+			ourLog.error("Failed to collapse stats", e);
+		}
+	}
+
 	@PostConstruct
 	public void postConstruct() {
 		ourLog.info("Scheduler has started");
 		mySecuritySvc.loadUserCatalogIfNeeded();
-		
-		
+
 		ourLog.info("Registering MBeans");
 		myCacheManager = CacheManager.getInstance();
 		MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();

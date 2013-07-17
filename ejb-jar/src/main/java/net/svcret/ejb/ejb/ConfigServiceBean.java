@@ -1,18 +1,27 @@
 package net.svcret.ejb.ejb;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
-import com.google.common.annotations.VisibleForTesting;
-
+import net.svcret.admin.shared.model.RetrieverNodeTypeEnum;
 import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.PersConfig;
 
+import org.apache.commons.lang3.StringUtils;
+
+import com.google.common.annotations.VisibleForTesting;
+
 @Stateless
 public class ConfigServiceBean implements IConfigService {
+
+	private static final String SYSTEM_PROPERTY_NODETYPE = "net.svcret.nodetype";
+	private static final String SYSTEM_PROPERTY_SECONDARY_REFRESHURLS = "net.svcret.secondarynodes.refreshurls";
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ConfigServiceBean.class);
 
@@ -28,6 +37,20 @@ public class ConfigServiceBean implements IConfigService {
 	@EJB
 	private IDao myDao;
 
+	@Override
+	public List<String> getSecondaryNodeRefreshUrls() {
+		ArrayList<String> retVal = new ArrayList<String>();
+		
+		String[] allUrls= System.getProperty(SYSTEM_PROPERTY_SECONDARY_REFRESHURLS, "").split(",");
+		for (String next : allUrls) {
+			if (StringUtils.isNotBlank(next)) {
+				retVal.add(next.trim());
+			}
+		}
+		
+		return retVal;
+	}
+	
 	@Override
 	public PersConfig getConfig() throws ProcessingException {
 		if (myConfig != null) {
@@ -83,5 +106,19 @@ public class ConfigServiceBean implements IConfigService {
 	@VisibleForTesting
 	void setBroadcastSender(IBroadcastSender theBroadcastSender) {
 		myBroadcastSender = theBroadcastSender;
+	}
+
+	@Override
+	public RetrieverNodeTypeEnum getNodeType() {
+		String nodetype = System.getProperty(SYSTEM_PROPERTY_NODETYPE);
+		if (StringUtils.isBlank(nodetype)) {
+			throw new IllegalStateException("Can't find system property: " + SYSTEM_PROPERTY_NODETYPE);
+		}
+
+		try {
+			return RetrieverNodeTypeEnum.valueOf(nodetype);
+		} catch (IllegalArgumentException e) {
+			throw new IllegalStateException("Invalid value for system property '" + SYSTEM_PROPERTY_NODETYPE + "': " + nodetype);
+		}
 	}
 }
