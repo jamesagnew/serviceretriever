@@ -8,6 +8,7 @@ import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.admin.shared.model.Pair;
+import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -56,9 +57,21 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		myTopLoadingSpinner.hideCompletely();
 
 		myTopGrid.clear();
+		if (theResult.getOutcomeDescription() != null) {
+			myTopGrid.addRow("Outcome", new Label(theResult.getOutcomeDescription()));
+		}
+		if (theResult.getAuthorizationOutcome() != null) {
+			myTopGrid.addRow("Authorization", new Label(theResult.getAuthorizationOutcome().getDescription()));
+		}
 		myTopGrid.addRow(MSGS.recentMessagesGrid_ColTimestamp(), new Label(DateUtil.formatTime(theResult.getTransactionTime())));
-		myTopGrid.addRow(MSGS.recentMessagesGrid_ColImplementationUrl(), new Anchor(theResult.getImplementationUrlId(), theResult.getImplementationUrlHref()));
-		myTopGrid.addRow(MSGS.recentMessagesGrid_ColIp(), new Label(theResult.getRequestHostIp()));
+		
+		if (StringUtil.isNotBlank(theResult.getImplementationUrlId())) {
+			myTopGrid.addRow(MSGS.recentMessagesGrid_ColImplementationUrl(), new Anchor(theResult.getImplementationUrlId(), theResult.getImplementationUrlHref()));
+		}
+		
+		if (StringUtil.isNotBlank(theResult.getRequestHostIp())) {
+			myTopGrid.addRow(MSGS.recentMessagesGrid_ColIp(), new Label(theResult.getRequestHostIp()));
+		}
 
 		/*
 		 * Request Message
@@ -84,7 +97,7 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		myReqPanel.add(reqHeaderPanel);
 
 		HorizontalPanel reqFunctions = new HorizontalPanel();
-		if (theResult.getRequestContentType().toLowerCase().contains("xml")) {
+		if (theResult.getRequestContentType() != null && theResult.getRequestContentType().toLowerCase().contains("xml")) {
 			reqFunctions.add(new PButton("Format XML", new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent theEvent) {
@@ -110,7 +123,7 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		} else {
 			myRespPanel.clear();
 		}
-		
+
 		myRespPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
 
 		Label respTitleLabel = new Label(MSGS.viewRecentMessageServiceVersion_ResponseMessage());
@@ -124,7 +137,7 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		myRespPanel.add(respHeaderPanel);
 
 		HorizontalPanel respFunctions = new HorizontalPanel();
-		if (theResult.getResponseContentType().toLowerCase().contains("xml")) {
+		if (theResult.getResponseContentType() != null && theResult.getResponseContentType().toLowerCase().contains("xml")) {
 			respFunctions.add(new PButton("Format XML", new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent theEvent) {

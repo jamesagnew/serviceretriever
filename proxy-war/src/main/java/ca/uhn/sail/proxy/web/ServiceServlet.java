@@ -57,6 +57,8 @@ public class ServiceServlet extends HttpServlet {
 	}
 
 	private void handle(HttpServletRequest theReq, HttpServletResponse theResp, RequestType get) throws IOException {
+		long start = System.currentTimeMillis();
+		
 		String path = theReq.getRequestURI().substring(theReq.getContextPath().length());
 		try {
 			path = new URLCodec().decode(path);
@@ -131,7 +133,9 @@ public class ServiceServlet extends HttpServlet {
 		w.append(response.getResponseBody());
 		w.close();
 
-		ourLog.debug("Done handling request");
+		long delay = System.currentTimeMillis() - start;
+		ourLog.info("Handled {} request at path[{}] with {} byte response in {} ms", new Object[] { get.name(), path,  response.getResponseBody().length(), delay });
+		
 	}
 
 	private void sendSecurityFailure(HttpServletResponse theResp) throws IOException {

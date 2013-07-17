@@ -697,7 +697,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	@Override
 	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid) throws ServiceFailureException {
 		try {
-			return myAdminSvc.testServiceVersionWithSingleMessage(theMessageText, thePid);
+			return myAdminSvc.testServiceVersionWithSingleMessage(theMessageText, thePid, "ServiceRetriever Admin Console");
 		} catch (ProcessingException e) {
 			throw new ServiceFailureException(e.getMessage());
 		}

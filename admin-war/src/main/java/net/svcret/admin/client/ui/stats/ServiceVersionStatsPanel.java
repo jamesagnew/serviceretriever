@@ -38,7 +38,6 @@ import com.google.gwt.user.client.ui.ListBox;
 
 public class ServiceVersionStatsPanel extends FlowPanel {
 
-	private static DateTimeFormat ourDateTimeFormat = DateTimeFormat.getFormat(PredefinedFormat.DATE_TIME_MEDIUM);
 	private LoadingSpinner myTopLoadingSpinner;
 	private long myServiceVersionPid;
 	private Label myTitleLabel;
@@ -77,7 +76,7 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 		if (theDate == null) {
 			return null;
 		}
-		return ourDateTimeFormat.format(theDate);
+		return DateUtil.formatTimeElapsedForLastInvocation(theDate);
 	}
 
 	private void set01ServiceVersion(final long theDomainPid, final long theServicePid, final BaseGServiceVersion theResult) {

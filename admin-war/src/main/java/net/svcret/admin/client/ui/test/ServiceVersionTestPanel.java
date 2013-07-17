@@ -105,6 +105,7 @@ public class ServiceVersionTestPanel extends FlowPanel {
 
 			@Override
 			public void onSuccess(GServiceVersionSingleFireResponse theResult) {
+				mySendSpinner.hide();
 				myResponsePanel.setVisible(true);
 				myResponsePanel.setMessage(theResult);
 			}

@@ -353,7 +353,7 @@ public class DaoBean implements IDao {
 
 		if (retVal == null) {
 			retVal = new PersInvocationStats(thePk);
-			ourLog.info("Adding new invocation stats: {}", thePk);
+			ourLog.debug("Adding new invocation stats: {}", thePk);
 			retVal = myEntityManager.merge(retVal);
 			retVal.setNewlyCreated(true);
 		} else {
@@ -369,7 +369,7 @@ public class DaoBean implements IDao {
 
 		if (retVal == null) {
 			retVal = new PersInvocationUserStats(thePk);
-			ourLog.info("Adding new invocation user stats: {}", thePk);
+			ourLog.debug("Adding new invocation user stats: {}", thePk);
 			retVal = myEntityManager.merge(retVal);
 			retVal.setNewlyCreated(true);
 		}
@@ -932,7 +932,7 @@ public class DaoBean implements IDao {
 
 		if (retVal == null) {
 			retVal = new PersStaticResourceStats(thePk);
-			ourLog.info("Adding new static resource stats: {}", thePk);
+			ourLog.debug("Adding new static resource stats: {}", thePk);
 			retVal = myEntityManager.merge(retVal);
 			retVal.setNewlyCreated(true);
 		}

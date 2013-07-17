@@ -9,6 +9,7 @@ import java.util.List;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.Sparkline;
+import net.svcret.admin.client.ui.stats.DateUtil;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.BaseGDashboardObjectWithUrls;
 import net.svcret.admin.shared.model.StatusEnum;
@@ -26,9 +27,6 @@ import com.google.gwt.user.client.ui.Widget;
 
 public abstract class BaseDashModel implements IDashModel {
 
-	private static final long MILLIS_PER_MINUTE = 60 * 1000L;
-	private static final long MILLIS_PER_HOUR = 60 * MILLIS_PER_MINUTE;
-	private static final long MILLIS_PER_DAY = MILLIS_PER_HOUR * 24;
 	private static NumberFormat ourDecimalFormat = NumberFormat.getFormat("0.0");
 
 	private BaseGDashboardObject<?> myModel;
@@ -44,21 +42,8 @@ public abstract class BaseDashModel implements IDashModel {
 		}
 
 		Date lastInvoc = myModel.getLastSuccessfulInvocation();
-		if (lastInvoc == null) {
-			return new Label(MSGS.dashboard_LastInvocNever());
-		}
-
-		long age = System.currentTimeMillis() - lastInvoc.getTime();
-		if (age < MILLIS_PER_MINUTE) {
-			return new Label(MSGS.dashboard_LastInvocUnder60Secs());
-		}
-		if (age < MILLIS_PER_HOUR) {
-			return new Label(MSGS.dashboard_LastInvocUnder1Hour((int) (age / MILLIS_PER_MINUTE)));
-		}
-		if (age < MILLIS_PER_DAY) {
-			return new Label(MSGS.dashboard_LastInvocUnder1Day((int) (age / MILLIS_PER_HOUR)));
-		}
-		return new Label(MSGS.dashboard_LastInvocOver1Day((int) (age / MILLIS_PER_DAY)));
+		String text = DateUtil.formatTimeElapsedForLastInvocation(lastInvoc);
+		return new Label(text);
 
 	}
 
@@ -137,14 +122,14 @@ public abstract class BaseDashModel implements IDashModel {
 			return null;
 		}
 		String text = theCurrentValue + theUnitDesc;
-		
+
 		List<Long> dates = new ArrayList<Long>();
 		long nextDate = theStatsInitialized.getTime() - (60 * 60 * 1000L);
 		for (int i = 0; i < 60; i++) {
 			dates.add(nextDate);
 			nextDate += (60 * 1000L);
 		}
-		
+
 		Sparkline retVal = new Sparkline(theList, dates, text);
 		retVal.setBar(true);
 		retVal.setWidth("100px");
@@ -168,21 +153,21 @@ public abstract class BaseDashModel implements IDashModel {
 		return null;
 	}
 
-	public static Widget returnSparklineFor60mins(int[] theList,Date theStatsInitialized, String theCurrentValue, String theUnitDesc) {
+	public static Widget returnSparklineFor60mins(int[] theList, Date theStatsInitialized, String theCurrentValue, String theUnitDesc) {
 		if (theList == null) {
 			GWT.log(new Date() + " - No 60 minutes data");
 			return null;
 		}
 		String text = theCurrentValue + theUnitDesc;
-		
+
 		List<Long> dates = new ArrayList<Long>();
 		long nextDate = theStatsInitialized.getTime() - (60 * 60 * 1000L);
 		for (int i = 0; i < 60; i++) {
 			dates.add(nextDate);
 			nextDate += (60 * 1000L);
 		}
-		
-		Sparkline retVal = new Sparkline(theList,dates, text);
+
+		Sparkline retVal = new Sparkline(theList, dates, text);
 		retVal.setWidth("100px");
 		return retVal;
 	}

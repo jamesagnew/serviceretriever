@@ -1,5 +1,6 @@
 package net.svcret.ejb.ejb;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,6 +14,11 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+
+import org.slf4j.LoggerFactory;
+
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.joran.JoranConfigurator;
 
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.api.IBroadcastSender;
@@ -71,11 +77,11 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		ourLog.info("Reloading service registry from database");
 
 		long newVersion = myDao.getStateCounter(STATE_KEY);
-		
+
 		Map<String, PersDomain> domainMap = new HashMap<String, PersDomain>();
 		Map<String, BasePersServiceVersion> pathToServiceVersions = new HashMap<String, BasePersServiceVersion>();
-		Map<Long, BasePersServiceVersion> pidToServiceVersions=new HashMap<Long, BasePersServiceVersion>();
-		
+		Map<Long, BasePersServiceVersion> pidToServiceVersions = new HashMap<Long, BasePersServiceVersion>();
+
 		Collection<PersDomain> domains = myDao.getAllDomains();
 		for (PersDomain nextDomain : domains) {
 			domainMap.put(nextDomain.getDomainId(), nextDomain);
@@ -174,6 +180,25 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	@PostConstruct
 	public void postConstruct() {
 		reloadRegistryFromDatabase();
+
+		ourLog.info("Setting up Logback");
+
+		try {
+
+			LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+			JoranConfigurator jc = new JoranConfigurator();
+			jc.setContext(context);
+			context.reset();
+
+			InputStream inputStream = AdminServiceBean.class.getResourceAsStream("/svcret-ejb-logback.xml");
+			ourLog.info("Configuring using {}", inputStream);
+
+			jc.doConfigure(inputStream);
+
+		} catch (Exception e) {
+			ourLog.error("Failed to set up logback", e);
+		}
+
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -181,9 +206,9 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	public void reloadRegistryFromDatabase() {
 
 		long newVersion = myDao.getStateCounter(STATE_KEY);
-		
+
 		ourLog.debug("New service registry version is {} - Have version {} in memory", newVersion, myCurrentVersion);
-		
+
 		if (newVersion == 0 || newVersion > myCurrentVersion) {
 			doReloadRegistryFromDatabase();
 		}
@@ -193,7 +218,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	@Override
 	public void removeDomain(PersDomain theDomain) throws ProcessingException {
 		catalogHasChanged();
-				
+
 		myDao.removeDomain(theDomain);
 	}
 

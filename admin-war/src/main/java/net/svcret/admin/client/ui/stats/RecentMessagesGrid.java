@@ -1,6 +1,6 @@
 package net.svcret.admin.client.ui.stats;
 
-import static net.svcret.admin.client.AdminPortal.*;
+import static net.svcret.admin.client.AdminPortal.MSGS;
 
 import java.util.List;
 
@@ -9,8 +9,6 @@ import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.admin.shared.util.StringUtil;
 
-import com.google.gwt.i18n.client.DateTimeFormat;
-import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
@@ -30,7 +28,6 @@ public class RecentMessagesGrid extends FlowPanel {
 	private static final int COL_AUTHORIZATION = 9;
 
 	private Grid myGrid;
-	private DateTimeFormat myDateFormat = DateTimeFormat.getFormat(PredefinedFormat.DATE_TIME_LONG);
 
 	public RecentMessagesGrid(List<GRecentMessage> theList, boolean theIsUserGrid) {
 		myGrid = new Grid(theList.size() + 1, 10);
@@ -50,7 +47,7 @@ public class RecentMessagesGrid extends FlowPanel {
 
 		for (int row = 1, index = theList.size() - 1; index >= 0; index--, row++) {
 			GRecentMessage next = theList.get(index);
-			myGrid.setText(row, COL_TIMESTAMP, myDateFormat.format(next.getTransactionTime()));
+			myGrid.setText(row, COL_TIMESTAMP, DateUtil.formatTimeElapsedForMessage(next.getTransactionTime()));
 			myGrid.setText(row, COL_IP, next.getRequestHostIp());
 			
 			Anchor url = new Anchor();

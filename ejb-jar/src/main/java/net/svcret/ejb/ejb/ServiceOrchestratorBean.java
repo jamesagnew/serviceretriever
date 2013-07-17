@@ -3,7 +3,9 @@ package net.svcret.ejb.ejb;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -83,7 +85,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override
-	public SidechannelOrchestratorResponseBean handleSidechannelRequest(long theServiceVersionPid, String theRequestBody) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException {
+	public SidechannelOrchestratorResponseBean handleSidechannelRequest(long theServiceVersionPid, String theRequestBody, String theRequestedByString) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException {
 		Date startTime = new Date();
 		BasePersServiceVersion svcVer = mySvcRegistry.getServiceVersionByPid(theServiceVersionPid);
 
@@ -92,6 +94,10 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		InvocationResultsBean results = processInvokeService(reader, path, svcVer, RequestType.POST, "");
 
 		HttpRequestBean request = new HttpRequestBean();
+		request.setRequestHostIp("127.0.0.1");
+		request.setRequestHeaders(new HashMap<String, List<String>>());
+		request.getRequestHeaders().put("X-RequestedBy", Collections.singletonList(theRequestedByString));
+		request.getRequestHeaders().put("Content-Type", Collections.singletonList(svcVer.getProtocol().getRequestContentType()));
 		AuthorizationResultsBean authorized = null;
 		SidechannelOrchestratorResponseBean retVal = processRequestMethod(request, startTime, reader, svcVer, results, authorized);
 
@@ -160,7 +166,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		/*
 		 * Forward request to backend implementation
 		 */
-		ourLog.info("Request is of type: {}", results.getResultType());
+		ourLog.debug("Request is of type: {}", results.getResultType());
 
 		OrchestratorResponseBean retVal;
 		switch (results.getResultType()) {
@@ -235,7 +241,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		String responseBody = results.getStaticResourceText();
 		String responseContentType = results.getStaticResourceContentTyoe();
 		Map<String, List<String>> responseHeaders = results.getStaticResourceHeaders();
-		retVal = new OrchestratorResponseBean(responseBody, responseContentType, responseHeaders);
+		retVal = new OrchestratorResponseBean(responseBody, responseContentType, responseHeaders, null);
 
 		PersServiceVersionResource resource = results.getStaticResourceDefinition();
 		myRuntimeStatus.recordInvocationStaticResource(startTime, resource);

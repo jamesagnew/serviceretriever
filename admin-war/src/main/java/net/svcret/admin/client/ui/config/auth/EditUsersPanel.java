@@ -135,7 +135,7 @@ public class EditUsersPanel extends FlowPanel {
 				}
 			});
 			myTable.setText(row, COL_USERNAME, nextUser.getUsername());
-			myTable.setText(row, COL_LAST_SVC_ACCESS, DateUtil.formatTime(nextUser.getStatsLastAccess()));
+			myTable.setText(row, COL_LAST_SVC_ACCESS, DateUtil.formatTimeElapsedForLastInvocation(nextUser.getStatsLastAccess()));
 			myTable.setWidget(row, COL_SUCCESSFUL_XACTS, BaseDashModel.returnSparklineFor60MinsUsage(nextUser.getStatsSuccessTransactions(), nextUser.getStatsInitialized(), nextUser.getStatsSuccessTransactionsAvgPerMin()));
 			myTable.setWidget(row, COL_SECURITY_FAILURE_XACTS, BaseDashModel.returnSparklineFor60MinsUsage(nextUser.getStatsSecurityFailTransactions(), nextUser.getStatsInitialized(), nextUser.getStatsSecurityFailTransactionsAvgPerMin()));
 

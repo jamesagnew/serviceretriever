@@ -102,6 +102,6 @@ public interface IAdminService {
 
 	GMonitorRuleList loadMonitorRuleList();
 	
-	GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid) throws ProcessingException;
+	GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid, String theRequestedByString) throws ProcessingException;
 
 }

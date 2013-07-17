@@ -2125,19 +2125,20 @@ public class AdminServiceBean implements IAdminService {
 	@Override
 	public GMonitorRuleList loadMonitorRuleList() {
 		GMonitorRuleList retVal = new GMonitorRuleList();
-		
+
 		Collection<PersMonitorRule> allRules = myDao.getMonitorRules();
 		for (PersMonitorRule persMonitorRule : allRules) {
-			
+
 		}
-		
+
 		return null;
 	}
 
-	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid) throws ProcessingException {
+	@Override
+	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid, String theRequestedByString) throws ProcessingException {
 		ourLog.info("Testing single fire of service version {}", thePid);
 		Date transactionTime = new Date();
-		
+
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(thePid);
 		if (svcVer == null) {
 			throw new IllegalArgumentException("Unknown service version: " + thePid);
@@ -2152,7 +2153,7 @@ public class AdminServiceBean implements IAdminService {
 
 		GServiceVersionSingleFireResponse retVal = new GServiceVersionSingleFireResponse();
 		try {
-			SidechannelOrchestratorResponseBean response = myOrchestrator.handleSidechannelRequest(thePid, theMessageText);
+			SidechannelOrchestratorResponseBean response = myOrchestrator.handleSidechannelRequest(thePid, theMessageText, theRequestedByString);
 
 			retVal.setAuthorizationOutcome(AuthorizationOutcomeEnum.AUTHORIZED);
 			retVal.setDomainName(svcVer.getService().getDomain().getDomainName());
@@ -2161,14 +2162,14 @@ public class AdminServiceBean implements IAdminService {
 				retVal.setImplementationUrlHref(response.getHttpResponse().getSuccessfulUrl().getUrl());
 				retVal.setImplementationUrlId(response.getHttpResponse().getSuccessfulUrl().getUrlId());
 				retVal.setImplementationUrlPid(response.getHttpResponse().getSuccessfulUrl().getPid());
-			}	
-			
+			}
+
 			List<Pair<String>> requestHeaders = new ArrayList<Pair<String>>();
 			requestHeaders.add(new Pair<String>("Content-Type", svcVer.getProtocol().getRequestContentType()));
 
 			retVal.setRequestContentType(svcVer.getProtocol().getRequestContentType());
 			retVal.setRequestHeaders(requestHeaders);
-			
+
 			retVal.setRequestMessage(theMessageText);
 			retVal.setResponseContentType(response.getResponseContentType());
 			retVal.setResponseHeaders(response.getHttpResponse().getResponseHeadersAsPairList());
@@ -2179,13 +2180,13 @@ public class AdminServiceBean implements IAdminService {
 			retVal.setServiceVersionPid(svcVer.getPid());
 			retVal.setTransactionMillis(response.getHttpResponse().getResponseTime());
 			retVal.setTransactionTime(transactionTime);
-			
+
 		} catch (SecurityFailureException e) {
 			retVal.setAuthorizationOutcome(e.getAuthorizationOutcomeEnum());
-			retVal.setResponseMessage(e.getMessage());
+			retVal.setOutcomeDescription(e.getMessage());
 		} catch (Exception e) {
 			ourLog.error("Failed to invoke service", e);
-			retVal.setResponseMessage("Failed with internal exception: " + e.getMessage());
+			retVal.setOutcomeDescription("Failed with internal exception: " + e.getMessage());
 		}
 
 		return retVal;

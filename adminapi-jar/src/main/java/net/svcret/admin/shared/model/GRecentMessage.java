@@ -1,5 +1,6 @@
 package net.svcret.admin.shared.model;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -13,6 +14,7 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 	private String myImplementationUrlHref;
 	private String myImplementationUrlId;
 	private long myImplementationUrlPid;
+	private String myOutcomeDescription;
 	private String myRequestContentType;
 	private List<Pair<String>> myRequestHeaders;
 	private String myRequestHostIp;
@@ -28,12 +30,13 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 	private long myServiceVersionPid;
 	private long myTransactionMillis;
 	private Date myTransactionTime;
-	
+
 	public GRecentMessage() {
 		super();
 	}
 
-	public GRecentMessage(long thePid, Date theDate, String theRequestHostIp, String theRequestMessage, String theResponseMessage, List<Pair<String>> theRequestHeaders, List<Pair<String>> theResponseHeaders, String theRequestContentType, String theResponseContentType) {
+	public GRecentMessage(long thePid, Date theDate, String theRequestHostIp, String theRequestMessage, String theResponseMessage, List<Pair<String>> theRequestHeaders,
+			List<Pair<String>> theResponseHeaders, String theRequestContentType, String theResponseContentType) {
 		setPid(thePid);
 		myTransactionTime = theDate;
 		myRequestHostIp = theRequestHostIp;
@@ -51,7 +54,6 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 	public AuthorizationOutcomeEnum getAuthorizationOutcome() {
 		return myAuthorizationOutcome;
 	}
-
 
 	public String getDomainName() {
 		return myDomainName;
@@ -73,6 +75,10 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 		return myImplementationUrlPid;
 	}
 
+	public String getOutcomeDescription() {
+		return myOutcomeDescription;
+	}
+
 	/**
 	 * @return the requestContentType
 	 */
@@ -84,6 +90,9 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 	 * @return the requestHeaders
 	 */
 	public List<Pair<String>> getRequestHeaders() {
+		if (myRequestHeaders==null) {
+			return Collections.emptyList();
+		}
 		return myRequestHeaders;
 	}
 
@@ -123,6 +132,9 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 	 * @return the responseHeaders
 	 */
 	public List<Pair<String>> getResponseHeaders() {
+		if (myResponseHeaders==null) {
+			return Collections.emptyList();
+		}
 		return myResponseHeaders;
 	}
 
@@ -192,15 +204,21 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 		myImplementationUrlPid = theImplementationUrlPid;
 	}
 
+	public void setOutcomeDescription(String theOutcomeDescription) {
+		myOutcomeDescription = theOutcomeDescription;
+	}
+
 	/**
-	 * @param theRequestContentType the requestContentType to set
+	 * @param theRequestContentType
+	 *            the requestContentType to set
 	 */
 	public void setRequestContentType(String theRequestContentType) {
 		myRequestContentType = theRequestContentType;
 	}
 
 	/**
-	 * @param theRequestHeaders the requestHeaders to set
+	 * @param theRequestHeaders
+	 *            the requestHeaders to set
 	 */
 	public void setRequestHeaders(List<Pair<String>> theRequestHeaders) {
 		myRequestHeaders = theRequestHeaders;
@@ -231,14 +249,16 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 	}
 
 	/**
-	 * @param theResponseContentType the responseContentType to set
+	 * @param theResponseContentType
+	 *            the responseContentType to set
 	 */
 	public void setResponseContentType(String theResponseContentType) {
 		myResponseContentType = theResponseContentType;
 	}
 
 	/**
-	 * @param theResponseHeaders the responseHeaders to set
+	 * @param theResponseHeaders
+	 *            the responseHeaders to set
 	 */
 	public void setResponseHeaders(List<Pair<String>> theResponseHeaders) {
 		myResponseHeaders = theResponseHeaders;

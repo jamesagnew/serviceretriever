@@ -2,6 +2,7 @@ package net.svcret.admin.server.rpc;
 
 import java.io.IOException;
 
+import javax.ejb.EJB;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -17,6 +18,7 @@ public class SchedulerEventListenerServlet extends HttpServlet {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(SchedulerEventListenerServlet.class);
 
+	@EJB
 	private IScheduler myScheduler;
 
 	@Override
