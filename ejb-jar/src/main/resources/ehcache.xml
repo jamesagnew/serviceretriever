@@ -341,6 +341,7 @@ Here is an example of CacheManager level resource tuning, which will use up to 4
     * acknowledgementMode - the JMS Acknowledgement mode for both publisher and subscriber. The available choices are
                             AUTO_ACKNOWLEDGE, DUPS_OK_ACKNOWLEDGE and SESSION_TRANSACTED. The default is AUTO_ACKNOWLEDGE.
     -->
+    <!-- 
     <cacheManagerPeerProviderFactory
             class="net.sf.ehcache.distribution.RMICacheManagerPeerProviderFactory"
             properties="peerDiscovery=automatic,
@@ -348,7 +349,17 @@ Here is an example of CacheManager level resource tuning, which will use up to 4
                         multicastGroupPort=4446, timeToLive=1"
             propertySeparator=","
             />
+ 	-->
 
+	<!-- 
+	<cacheManagerPeerProviderFactory
+	 		class="net.sf.ehcache.distribution.jms.JMSCacheManagerPeerProviderFactory"
+	 		properties="initialContextFactoryName=com.sun.enterprise.naming.SerialInitContextFactory,
+	 		providerURL=iiop://localhost:26037,
+	 		topicConnectionFactoryBindingName=jms/TopicConnectionFactory,
+	 		topicBindingName=jms/EhcacheReplication"
+	 		propertySeparator="," />
+	 -->
 
     <!--
     CacheManagerPeerListener

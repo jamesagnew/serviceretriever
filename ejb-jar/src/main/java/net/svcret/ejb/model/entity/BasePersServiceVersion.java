@@ -23,6 +23,7 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKey;
 import javax.persistence.OneToMany;
@@ -61,6 +62,13 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	@OrderBy("CAUTH_ORDER")
 	private List<PersBaseClientAuth<?>> myClientAuths;
 
+	@Column(name = "SVC_DESC", length = 2000, nullable = true)
+	private String myDescription;
+
+	@Lob()
+	@Column(name = "SVC_DESC_EXT", nullable = true)
+	private String myDescriptionExtended;
+
 	@Column(name = "EXPLICIT_PROXY_PATH", length = 400, nullable = true)
 	private String myExplicitProxyPath;
 
@@ -69,21 +77,12 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	@JoinColumn(name = "HTTP_CONFIG_PID", referencedColumnName = "PID", nullable = false)
 	private PersHttpClientConfig myHttpClientConfig;
 
-	@OneToMany(fetch=FetchType.LAZY, cascade= {}, orphanRemoval=true, mappedBy="myServiceVersion")
-	private Collection<PersUserServiceVersionPermission> myUserPermissions;
-
 	@Transient
 	private transient Map<String, PersServiceVersionUrl> myIdToUrl;
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("METHOD_ORDER")
 	private List<PersServiceVersionMethod> myMethods;
-
-	@OneToMany(fetch=FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myServiceVersion")
-	private List<PersServiceVersionRecentMessage> myRecentMessages;
-
-	@OneToMany(fetch=FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myServiceVersion")
-	private List<PersUserRecentMessage> myUserRecentMessages;
 
 	@Transient
 	private transient Map<String, PersServiceVersionMethod> myNameToMethod;
@@ -99,6 +98,12 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 
 	@Transient
 	private transient Map<Long, PersServiceVersionUrl> myPidToUrl;
+
+	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myServiceVersion")
+	private List<PersServiceVersionRecentMessage> myRecentMessages;
+
+	@Transient
+	private transient HashMap<String, PersServiceVersionMethod> myRootElementNameToMethod;
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("SAUTH_ORDER")
@@ -126,11 +131,14 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	@Transient
 	private transient Map<String, PersServiceVersionUrl> myUrlToUrl;
 
+	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myServiceVersion")
+	private Collection<PersUserServiceVersionPermission> myUserPermissions;
+
+	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myServiceVersion")
+	private List<PersUserRecentMessage> myUserRecentMessages;
+
 	@Column(name = "VERSION_ID", length = 200, nullable = false)
 	private String myVersionId;
-
-	@Transient
-	private transient HashMap<String, PersServiceVersionMethod> myRootElementNameToMethod;
 
 	public void addClientAuth(int theIndex, PersBaseClientAuth<?> theAuth) {
 		theAuth.setServiceVersion(this);
@@ -210,6 +218,13 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		return null;
 	}
 
+	public String getDescription() {
+		if (myDescriptionExtended != null) {
+			return myDescriptionExtended;
+		}
+		return myDescription;
+	}
+
 	public String getExplicitProxyPath() {
 		return myExplicitProxyPath;
 	}
@@ -254,7 +269,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 
 		return myRootElementNameToMethod.get(theName);
 	}
-	
+
 	public List<String> getMethodNames() {
 		ArrayList<String> retVal = new ArrayList<String>();
 		for (PersServiceVersionMethod nextMethod : getMethods()) {
@@ -525,7 +540,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	 */
 	public void retainOnlyMethodsWithNames(Collection<String> theIds) {
 		ourLog.debug("Retaining method names: {}", theIds);
-		
+
 		HashSet<String> ids = new HashSet<String>(theIds);
 		for (Iterator<PersServiceVersionMethod> iter = getMethods().iterator(); iter.hasNext();) {
 			PersServiceVersionMethod next = iter.next();
@@ -573,6 +588,19 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	 */
 	public void setActive(boolean theActive) {
 		myActive = theActive;
+	}
+
+	public void setDescription(String theDescription) {
+		if (theDescription == null) {
+			myDescription = null;
+			myDescriptionExtended = null;
+		} else if (theDescription.length() < 2000) {
+			myDescription = theDescription;
+			myDescriptionExtended = null;
+		} else {
+			myDescriptionExtended = theDescription;
+			myDescription = null;
+		}
 	}
 
 	public void setExplicitProxyPath(String theExplicitProxyPath) throws ProcessingException {

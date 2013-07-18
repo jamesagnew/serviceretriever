@@ -8,6 +8,7 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 
 	private boolean myActive;
 	private BaseGClientSecurityList myClientSecurityList;
+	private String myDescription;
 	private GServiceVersionDetailedStats myDetailedStats;
 	private String myExplicitProxyPath;
 	private long myHttpClientConfigPid;
@@ -33,6 +34,10 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	 */
 	public BaseGClientSecurityList getClientSecurityList() {
 		return myClientSecurityList;
+	}
+
+	public String getDescription() {
+		return myDescription;
 	}
 
 	/**
@@ -169,6 +174,10 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 		myActive = theActive;
 	}
 
+	public void setDescription(String theDescription) {
+		myDescription = theDescription;
+	}
+
 	public void setDetailedStats(GServiceVersionDetailedStats theResult) {
 		myDetailedStats = theResult;
 	}
@@ -223,5 +232,4 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 		return b.toString();
 	}
 
-	
 }

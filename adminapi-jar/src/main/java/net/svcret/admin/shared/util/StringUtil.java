@@ -56,6 +56,10 @@ public class StringUtil {
 		return defaultString(theName).compareTo(defaultString(theName2));
 	}
 
+	public static String convertPlaintextToHtml(String theDescription) {
+		return theDescription.replace("\n", "<br/>").replaceAll("(http(s?):.*?)( |$)", "<a href=\"$1\">$1</a>");
+	}
+
 	
 	
 }

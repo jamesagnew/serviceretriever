@@ -19,6 +19,7 @@ import org.apache.commons.lang3.Validate;
 @Stateless
 public class BroadcastSenderBean implements IBroadcastSender {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(BroadcastSenderBean.class);
+	
 	@Resource(mappedName = "jms/TopicConnectionFactory")
 	private TopicConnectionFactory myConnectionFactory;
 
@@ -28,6 +29,8 @@ public class BroadcastSenderBean implements IBroadcastSender {
 	private void sendMessage(String theText) throws ProcessingException {
 		Validate.notBlank(theText);
 
+		ourLog.info("Sending broadcast message: {}", theText);
+		
 		TopicConnection con = null;
 		TopicSession ses = null;
 		TopicPublisher sender = null;
@@ -62,6 +65,9 @@ public class BroadcastSenderBean implements IBroadcastSender {
 				}
 			}
 		}
+		
+		ourLog.info("Done sending broadcast message: {}", theText);
+
 	}
 
 	@Override

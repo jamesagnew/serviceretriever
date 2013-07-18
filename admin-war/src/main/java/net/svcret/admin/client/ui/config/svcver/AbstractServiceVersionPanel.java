@@ -30,8 +30,10 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TextBox;
 
 public abstract class AbstractServiceVersionPanel extends FlowPanel {
@@ -59,6 +61,10 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 	private FlowPanel myProxyPathContentPanel;
 	private CheckBox myExplicitProxyPathEnabledCheckbox;
 	private TextBox myExplicitProxyPathTextbox;
+	private FlowPanel myDescriptionPanel;
+	private FlowPanel myDescriptionContentPanel;
+	private HTML myDescriptionLabel;
+	private TextArea myDescriptionEditor;
 
 	public AbstractServiceVersionPanel() {
 		this(null, null, null);
@@ -157,8 +163,10 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 
 		myLoadingSpinner = new LoadingSpinner();
 		myContentPanel.add(myLoadingSpinner);
-		
+
 		myContentPanel.add(new HtmlBr());
+
+		addDescriptionPanel();
 
 		addExplicitProxyPathPanel();
 
@@ -169,6 +177,38 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 		myBottomPanel = new FlowPanel();
 		add(myBottomPanel);
 
+	}
+
+	private void addDescriptionPanel() {
+		myDescriptionPanel = new FlowPanel();
+		add(myDescriptionPanel);
+
+		myDescriptionPanel.setStylePrimaryName("mainPanel");
+
+		Label titleLabel = new Label("Description");
+		titleLabel.setStyleName("mainPanelTitle");
+		myDescriptionPanel.add(titleLabel);
+
+		myDescriptionContentPanel = new FlowPanel();
+		myDescriptionContentPanel.addStyleName("contentInnerPanel");
+		myDescriptionPanel.add(myDescriptionContentPanel);
+
+		myDescriptionLabel = new HTML();
+		myDescriptionContentPanel.add(myDescriptionLabel);
+
+		myDescriptionEditor = new TextArea();
+		myDescriptionEditor.setVisible(false);
+		myDescriptionEditor.setWidth("90%");
+		myDescriptionContentPanel.add(myDescriptionEditor);
+
+		myDescriptionLabel.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				myDescriptionEditor.setText(myVersion.getDescription());
+				myDescriptionLabel.setVisible(false);
+				myDescriptionEditor.setVisible(true);
+			}
+		});
 	}
 
 	private void addExplicitProxyPathPanel() {
@@ -311,6 +351,13 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 		myExplicitProxyPathEnabledCheckbox.setValue(theResult.getExplicitProxyPath() != null);
 		myExplicitProxyPathTextbox.setValue(theResult.getExplicitProxyPath());
 
+		myDescriptionEditor.setVisible(false);
+		if (StringUtil.isNotBlank(myVersion.getDescription())) {
+			myDescriptionLabel.setHTML(StringUtil.convertPlaintextToHtml(myVersion.getDescription()));
+		} else {
+			myDescriptionLabel.setText("No description provided. Click here to add one.");
+		}
+
 	}
 
 	void initParents(GDomainList theDomainList) {
@@ -385,6 +432,10 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 				return;
 			}
 
+			if (myDescriptionEditor.isVisible()) {
+				myVersion.setDescription(myDescriptionEditor.getText());
+			}
+			
 			AsyncCallback<AddServiceVersionResponse> callback = new AsyncCallback<AddServiceVersionResponse>() {
 				@Override
 				public void onFailure(Throwable theCaught) {
