@@ -138,6 +138,11 @@ public class Sparkline extends Widget {
 		myWidth = theWidth;
 		return this;
 	}
+	
+	public Sparkline asBar(boolean theBar) {
+		setBar(theBar);
+		return this;
+	}
 
 	private native void drawSparkline(final com.google.gwt.dom.client.Element theElement, String theValues, String theHeight, String theWidth, String theType, String theTimelines) /*-{
 		var sparkOptions = new Array();
@@ -150,6 +155,7 @@ public class Sparkline extends Widget {
 			sparkOptions['barWidth'] = 2;
 			sparkOptions['barSpacing'] = 0;
 			sparkOptions['barColor'] = '#AAD';
+			sparkOptions['zeroColor'] = '#CCF';
 		}
 
 		if (theTimelines != null) {
