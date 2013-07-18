@@ -452,7 +452,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 			BasePersInvocationStatsPk dayPk;
 			if (invocClass == PersInvocationStats.class) {
-				dayPk = new PersInvocationStatsPk(toIntervalTyoe, next.getPk().getStartTime(), ((PersInvocationStatsPk) next.getPk()).getMethod());
+				dayPk = new PersInvocationStatsPk(toIntervalTyoe, next.getPk().getStartTime(), ((PersInvocationStatsPk) next.getPk()).getMethodPid());
 				if (!statsToFlush.containsKey(dayPk)) {
 					statsToFlush.put(dayPk, new PersInvocationStats((PersInvocationStatsPk) dayPk));
 					// statsToFlush.put(dayPk, myDao.getOrCreateInvocationStats((PersInvocationStatsPk) dayPk));

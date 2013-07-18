@@ -3,6 +3,7 @@ package net.svcret.admin.client.ui.dash.model;
 import static net.svcret.admin.client.AdminPortal.*;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
+import net.svcret.admin.client.ui.config.domain.EditDomainServicesPanel.ActionPanel;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GDomain;
@@ -99,56 +100,13 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 				if (myActionPopup == null || myActionPopup.isShowing() == false) {
 					myActionPopup = new PopupPanel(true, true);
 
-					FlowPanel content = new FlowPanel();
+					final GDomain domain = myDomain;
+					final GService service = myService;
+
+					FlowPanel content = createActionPanel(myActionPopup, domain, service);
+
+					
 					myActionPopup.add(content);
-
-					content.add(new HeaderLabel(myService.getName()));
-
-					// Edit domain
-
-					Button editDomain = new ActionPButton(IMAGES.iconEdit(), "Edit Service");
-					editDomain.addClickHandler(new ClickHandler() {
-						@Override
-						public void onClick(ClickEvent theEvent) {
-							myActionPopup.hide();
-							myActionPopup = null;
-							History.newItem(NavProcessor.getTokenEditService(true, myDomain.getPid(), myService.getPid()));
-						}
-					});
-					content.add(editDomain);
-
-					// Remove Domain
-
-					Button delete = new ActionPButton(IMAGES.iconRemove(), MSGS.actions_RemoveService());
-					delete.addClickHandler(new ClickHandler() {
-						@Override
-						public void onClick(ClickEvent theEvent) {
-							myActionPopup.hide();
-							History.newItem(NavProcessor.getTokenDeleteService(true, myDomain.getPid(), myService.getPid()));
-						}
-					});
-					content.add(delete);
-
-					// Add service
-
-					Button addService = new ActionPButton(IMAGES.iconAdd(), "Add New Version to Service");
-					addService.addClickHandler(new ClickHandler() {
-						@Override
-						public void onClick(ClickEvent theEvent) {
-							myActionPopup.hide();
-							myActionPopup = null;
-							String newToken = NavProcessor.getTokenAddServiceVersion(true, myDomain.getPid(), myService.getPid(), null);
-							History.newItem(newToken);
-						}
-					});
-					content.add(addService);
-
-					if (myService.getVersionList().size() == 1) {
-						BaseGServiceVersion svcVer = myService.getVersionList().get(0);
-						DashModelServiceVersion.addToActions(content, myActionPopup, myDomain, myService, svcVer, false);
-					}
-					
-					
 					myActionPopup.showRelativeTo(retVal);
 
 				} else {
@@ -156,8 +114,74 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 					myActionPopup = null;
 				}
 			}
+
 		});
 		return retVal;
+	}
+
+	
+	static FlowPanel createActionPanel(final PopupPanel thePopupPanel, final GDomain domain, final GService service) {
+		final FlowPanel content = new FlowPanel();
+		content.add(new HeaderLabel(service.getName()));
+
+		// Edit domain
+
+		Button editDomain = new ActionPButton(IMAGES.iconEdit(), "Edit Service");
+		editDomain.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				thePopupPanel.hide();
+				History.newItem(NavProcessor.getTokenEditService(true, domain.getPid(), service.getPid()));
+			}
+		});
+		content.add(editDomain);
+
+		// Remove Domain
+
+		Button delete = new ActionPButton(IMAGES.iconRemove(), MSGS.actions_RemoveService());
+		delete.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				thePopupPanel.hide();
+				History.newItem(NavProcessor.getTokenDeleteService(true, domain.getPid(), service.getPid()));
+			}
+		});
+		content.add(delete);
+
+		// Services
+
+		int versionCount = service.getVersionList().size();
+		content.add(new HeaderLabel(AdminPortal.MSGS.dashboard_ActionServiceVersionsHeader(versionCount)));
+
+		// Add Version
+
+		Button addService = new ActionPButton(IMAGES.iconAdd(), "Add New Version to Service");
+		addService.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				thePopupPanel.hide();
+				String newToken = NavProcessor.getTokenAddServiceVersion(true, domain.getPid(), service.getPid(), null);
+				History.newItem(newToken);
+			}
+		});
+		content.add(addService);
+
+		// Versions
+		
+		for (final BaseGServiceVersion nextVersion : service.getVersionList()) {
+			Button svcButton = new ActionPButton(IMAGES.iconEdit(), nextVersion.getId());
+			svcButton.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent theEvent) {
+					thePopupPanel.remove(content);
+					thePopupPanel.add(DashModelServiceVersion.createActionPanel(thePopupPanel, domain, service, nextVersion, false));
+				}
+			});
+			content.add(svcButton);
+		}
+
+		return content;
+
 	}
 
 	@Override

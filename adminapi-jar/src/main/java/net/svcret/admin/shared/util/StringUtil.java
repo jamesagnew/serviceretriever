@@ -57,7 +57,7 @@ public class StringUtil {
 	}
 
 	public static String convertPlaintextToHtml(String theDescription) {
-		return theDescription.replace("\n", "<br/>").replaceAll("(http(s?):.*?)( |$)", "<a href=\"$1\">$1</a>");
+		return theDescription.replace("<", "&lt;").replaceAll("(http(s?):\\S+)( |$)", "<a href=\"$1\">$1</a>$3").replace("\n", "<br/>");
 	}
 
 	

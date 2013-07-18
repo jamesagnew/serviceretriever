@@ -84,9 +84,11 @@ TABLE.dashboardTable TBODY TR:first-child {
 	background: #D0EAFF;
 }
 
+/*
 TABLE.dashboardTable TBODY TR:hover {
 	background-color: #C0C0C0;
 }
+*/
 
 .dashboardTableDomainCell {
 	background: #F0F0F0;

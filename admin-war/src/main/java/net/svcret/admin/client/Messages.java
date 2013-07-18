@@ -657,5 +657,19 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("{0,localdatetime,HHmmss} (< 1min)")
 	String dashboard_TransactionDateUnder60Secs(Date theDate);
 
+	@DefaultMessage("Domain has {0} Services")
+	@AlternateMessage({ 
+		"one", "Domain has one Service",
+		"=0", "Domain has no Services"
+		})
+	String dashboard_ActionDomainServicesHeader(@PluralCount(DefaultRule_en.class) int theServiceCount);
+
+	@DefaultMessage("Service has {0} Versions")
+	@AlternateMessage({ 
+		"one", "Service has one Version",
+		"=0", "Service has no Versions"
+		})
+	String dashboard_ActionServiceVersionsHeader(@PluralCount(DefaultRule_en.class) int theServiceCount);
+	
 	
 }

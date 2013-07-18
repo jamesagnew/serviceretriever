@@ -171,7 +171,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		/*
 		 * Wait a bit and then see if we get just one reset attempt
 		 */
-		Thread.sleep(200);
+		Thread.sleep(300);
 		
 		pool = myBean.buildUrlPool(svcVersion);
 		assertEquals(persUrl1, pool.getPreferredUrl());
@@ -198,8 +198,6 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		when(httpConfig.isCircuitBreakerEnabled()).thenReturn(true);
 		when(httpConfig.getCircuitBreakerTimeBetweenResetAttempts()).thenReturn(200);
 		
-		DefaultAnswer.setRunTime();
-		
 		/*
 		 * Normal
 		 */
@@ -211,14 +209,12 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		/*
 		 * Mark a failure
 		 */
-		DefaultAnswer.setDesignTime();
 		HashMap<PersServiceVersionUrl, Failure> failures = new HashMap<PersServiceVersionUrl, HttpResponseBean.Failure>();
 		failures.put(persUrl1, new Failure("aaa", "", "Excplanation", 400));
 		failures.put(persUrl2, new Failure("aaa", "", "Excplanation", 400));
 		when(httpResponse.getFailedUrls()).thenReturn(failures);
 		when(httpResponse.getSuccessfulUrl()).thenReturn(null);
 
-		DefaultAnswer.setRunTime();
 		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse);
 		pool = myBean.buildUrlPool(svcVersion);
 		assertEquals(null, pool.getPreferredUrl());
@@ -229,7 +225,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		/*
 		 * Wait a bit and then see if we get just one reset attempt
 		 */
-		Thread.sleep(200);
+		Thread.sleep(300);
 		
 		pool = myBean.buildUrlPool(svcVersion);
 		assertEquals(persUrl1, pool.getPreferredUrl());
@@ -344,8 +340,6 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		when(httpConfig.getCircuitBreakerTimeBetweenResetAttempts()).thenReturn(200);
 		when(svcVersion.getUrlCounter()).thenReturn(new AtomicInteger());
 
-		DefaultAnswer.setRunTime();
-		
 		/*
 		 * Normal
 		 */
@@ -357,14 +351,12 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		/*
 		 * Mark a failure
 		 */
-		DefaultAnswer.setDesignTime();
 		HashMap<PersServiceVersionUrl, Failure> failures = new HashMap<PersServiceVersionUrl, HttpResponseBean.Failure>();
 		failures.put(persUrl1, new Failure("aaa", "", "Excplanation", 400));
 		failures.put(persUrl2, new Failure("aaa", "", "Excplanation", 400));
 		when(httpResponse.getFailedUrls()).thenReturn(failures);
 		when(httpResponse.getSuccessfulUrl()).thenReturn(null);
 
-		DefaultAnswer.setRunTime();
 		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse);
 		pool = myBean.buildUrlPool(svcVersion);
 		assertEquals(null, pool.getPreferredUrl());
@@ -375,7 +367,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		/*
 		 * Wait a bit and then see if we get just one reset attempt
 		 */
-		Thread.sleep(200);
+		Thread.sleep(300);
 		
 		pool = myBean.buildUrlPool(svcVersion);
 		assertEquals(persUrl1, pool.getPreferredUrl());

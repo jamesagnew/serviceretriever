@@ -21,6 +21,10 @@ public class PersInvocationStatsPk extends BasePersInvocationMethodStatsPk {
 		super(theInterval, new Date(theStartTime), theMethod);
 	}
 
+	public PersInvocationStatsPk(InvocationStatsIntervalEnum theToIntervalTyoe, Date theStartTime, long theMethodPid) {
+		super(theToIntervalTyoe, theStartTime, theMethodPid);
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -33,7 +37,7 @@ public class PersInvocationStatsPk extends BasePersInvocationMethodStatsPk {
 	protected boolean doEquals(BasePersInvocationStatsPk theObj2) {
 		PersInvocationStatsPk theObj = (PersInvocationStatsPk) theObj2;
 		return getInterval().equals(theObj.getInterval()) // -
-				&& getMethod().equals(theObj.getMethod()) // -
+				&& getMethodPid() == (theObj.getMethodPid()) // -
 				&& getStartTime().equals(theObj.getStartTime()); // -
 	}
 

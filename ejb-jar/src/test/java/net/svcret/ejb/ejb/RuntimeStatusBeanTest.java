@@ -309,6 +309,10 @@ public class RuntimeStatusBeanTest {
 		assertEquals(urlLocal2, pool.getAlternateUrls().get(1));
 		assertEquals(urlRemote1, pool.getAlternateUrls().get(2));
 
+		DefaultAnswer.setDesignTime();
+		when(statusR2.attemptToResetCircuitBreaker()).thenReturn(false);
+		DefaultAnswer.setRunTime();
+
 		pool = bean.buildUrlPool(ver);
 		assertEquals(urlLocal1, pool.getPreferredUrl());
 		assertEquals(2, pool.getAlternateUrls().size());

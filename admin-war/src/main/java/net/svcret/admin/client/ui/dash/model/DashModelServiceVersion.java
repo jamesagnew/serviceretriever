@@ -123,11 +123,10 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		if (myActionPopup == null || myActionPopup.isShowing() == false) {
 
 			myActionPopup = new PopupPanel(true, true);
-			FlowPanel content = new FlowPanel();
-			myActionPopup.add(content);
 
-			addToActions(content, myActionPopup, myDomain, myService, mySvcVer, true);
-			
+			FlowPanel content = createActionPanel(myActionPopup, myDomain, myService, mySvcVer, true);
+
+			myActionPopup.add(content);
 			myActionPopup.showRelativeTo(theButton);
 		} else {
 			myActionPopup.hide();
@@ -135,7 +134,9 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		}
 	}
 
-	public static void addToActions(FlowPanel content, final PopupPanel theActionPopup, final GDomain theDomain, final GService theService, final BaseGServiceVersion theSvcVer, boolean addServiceToTitle) {
+	static FlowPanel createActionPanel(final PopupPanel theActionPopup, final GDomain theDomain, final GService theService, final BaseGServiceVersion theSvcVer, boolean addServiceToTitle) {
+		FlowPanel content = new FlowPanel();
+
 		SafeHtmlBuilder titleB = new SafeHtmlBuilder();
 		if (addServiceToTitle) {
 			titleB.appendEscaped(theService.getName());
@@ -179,7 +180,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		});
 		content.add(testSvcVer);
 
-		
+		return content;
 	}
 
 	@Override

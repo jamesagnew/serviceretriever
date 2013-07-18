@@ -157,18 +157,16 @@ class RequestPipeline {
 	 */
 	private void processHeader(StartElement theStartElem, String theXmlPrefix, XMLEventReader theStreamReader, XMLEventWriter theStreamWriter) throws ProcessingException {
 
-		// try {
-		// writeSecurityHeader(theXmlPrefix, theStreamWriter);
-		// } catch (XMLStreamException e) {
-		// throw new ProcessingException(e);
-		// }
+		boolean haveClientSecurity = myClientAuths.size() > 0;
 
-		try {
-			if (theStartElem != null) {
-				theStreamWriter.add(theStartElem);
+		if (!haveClientSecurity) {
+			try {
+				if (theStartElem != null) {
+					theStreamWriter.add(theStartElem);
+				}
+			} catch (XMLStreamException e1) {
+				throw new ProcessingException(e1);
 			}
-		} catch (XMLStreamException e1) {
-			throw new ProcessingException(e1);
 		}
 
 		List<XMLEvent> headerEvents = new ArrayList<XMLEvent>();
@@ -179,13 +177,19 @@ class RequestPipeline {
 				if (nextEvent.isEndElement()) {
 					EndElement elem = (EndElement) nextEvent;
 					if (Constants.SOAPENV11_HEADER_QNAME.equals(elem.getName())) {
-						theStreamWriter.add(nextEvent);
+						if (!haveClientSecurity) {
+							theStreamWriter.add(nextEvent);
+						}
 						break;
 					}
 				}
 
 				headerEvents.add(nextEvent);
-				theStreamWriter.add(nextEvent);
+
+				if (!haveClientSecurity) {
+					theStreamWriter.add(nextEvent);
+				}
+
 			}
 		} catch (XMLStreamException e) {
 			throw new ProcessingException(e);
@@ -200,6 +204,14 @@ class RequestPipeline {
 				myCredentialGrabbers.add(grabber);
 			} else {
 				throw new InternalErrorException("Don't know how to handle server auth of type: " + next);
+			}
+		}
+
+		if (haveClientSecurity) {
+			try {
+				writeSecurityHeader(theXmlPrefix, theStreamWriter);
+			} catch (XMLStreamException e) {
+				throw new ProcessingException(e);
 			}
 		}
 

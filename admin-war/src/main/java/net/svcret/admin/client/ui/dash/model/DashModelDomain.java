@@ -2,9 +2,11 @@ package net.svcret.admin.client.ui.dash.model;
 
 import static net.svcret.admin.client.AdminPortal.*;
 import net.svcret.admin.client.AdminPortal;
+import net.svcret.admin.client.Messages;
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 
@@ -31,8 +33,7 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 		if (myActionPopup == null || myActionPopup.isShowing() == false) {
 			myActionPopup = new PopupPanel(true, true);
 
-			FlowPanel content = new FlowPanel();
-			myActionPopup.add(content);
+			final FlowPanel content = new FlowPanel();
 
 			content.add(new HeaderLabel(myDomain.getName()));
 
@@ -61,6 +62,11 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 			});
 			content.add(delete);
 
+			// Services
+
+			int serviceCount = myDomain.getServiceList().size();
+			content.add(new HeaderLabel(AdminPortal.MSGS.dashboard_ActionDomainServicesHeader(serviceCount)));
+
 			// Add service
 
 			Button addService = new ActionPButton(IMAGES.iconAdd(), "Add Service to Domain");
@@ -75,6 +81,20 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 			});
 			content.add(addService);
 
+			for (final GService next : myDomain.getServiceList()) {
+				Button svcButton = new ActionPButton(IMAGES.iconEdit(), next.getName());
+				svcButton.addClickHandler(new ClickHandler() {
+					@Override
+					public void onClick(ClickEvent theEvent) {
+						myActionPopup.remove(content);
+						myActionPopup.add(DashModelService.createActionPanel(myActionPopup, myDomain, next));
+					}
+				});
+				content.add(svcButton);
+			}
+			
+			
+			myActionPopup.add(content);
 			myActionPopup.showRelativeTo(theButton);
 		} else {
 			myActionPopup.hide();

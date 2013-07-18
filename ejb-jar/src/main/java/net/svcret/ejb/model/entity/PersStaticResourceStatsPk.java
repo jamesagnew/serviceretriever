@@ -7,6 +7,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 
+import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
+
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
 
@@ -20,6 +22,7 @@ public class PersStaticResourceStatsPk extends BasePersInvocationStatsPk {
 	
 	@ManyToOne(cascade= {})
 	@JoinColumn(name="RESOURCE_PID", referencedColumnName="PID", nullable=false)
+	@IgnoreSizeOf
 	private PersServiceVersionResource myResource;
 	
 	public PersStaticResourceStatsPk() {

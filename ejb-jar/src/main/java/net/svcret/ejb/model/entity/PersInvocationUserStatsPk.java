@@ -8,6 +8,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 
+import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
+
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
 
@@ -21,6 +23,7 @@ public class PersInvocationUserStatsPk extends BasePersInvocationStatsPk {
 
 	@JoinColumn(name = "USER_PID", nullable = false)
 	@ManyToOne(fetch = FetchType.LAZY, cascade = {})
+	@IgnoreSizeOf
 	private PersUser myUser;
 
 	public PersInvocationUserStatsPk() {

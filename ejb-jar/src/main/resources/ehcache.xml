@@ -1067,7 +1067,7 @@ Here is an example of CacheManager level resource tuning, which will use up to 4
     -->
 
     <cache name="net.svcret.ejb.model.entity.PersInvocationUserStats"
-           maxEntriesLocalHeap="100000"
+           maxEntriesLocalHeap="1000"
            maxEntriesLocalDisk="0"
            eternal="false"
            timeToIdleSeconds="30000"
@@ -1076,8 +1076,9 @@ Here is an example of CacheManager level resource tuning, which will use up to 4
            transactionalMode="off">
     </cache>
 
+          <!--  maxEntriesLocalHeap="100000"  -->
     <cache name="net.svcret.ejb.model.entity.PersInvocationStats"
-           maxEntriesLocalHeap="100000"
+           maxBytesLocalHeap="100M"
            maxEntriesLocalDisk="0"
            eternal="false"
            timeToIdleSeconds="30000"
