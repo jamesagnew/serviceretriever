@@ -32,4 +32,6 @@ public interface IJsonWriter {
 
 	void close()throws IOException;
 
+	JsonWriter value(double theParseDouble) throws IOException;
+
 }

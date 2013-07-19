@@ -353,11 +353,22 @@ Here is an example of CacheManager level resource tuning, which will use up to 4
 
 	<!-- 
 	<cacheManagerPeerProviderFactory
+	    class="net.sf.ehcache.distribution.jgroups.JGroupsCacheManagerPeerProviderFactory"
+	    properties="channel=ehcachehibernate"
+	    propertySeparator="^"
+	    />
+	 -->
+
+	<!-- 
+	<cacheManagerPeerProviderFactory
 	 		class="net.sf.ehcache.distribution.jms.JMSCacheManagerPeerProviderFactory"
-	 		properties="initialContextFactoryName=com.sun.enterprise.naming.SerialInitContextFactory,
-	 		providerURL=iiop://localhost:26037,
-	 		topicConnectionFactoryBindingName=jms/TopicConnectionFactory,
-	 		topicBindingName=jms/EhcacheReplication"
+	 		properties="providerURL=iiop://localhost:26027,
+	 			topicConnectionFactoryBindingName=jms/TopicConnectionFactory,
+	 			topicBindingName=jms/Ehcache,
+	 			replicationTopicConnectionFactoryBindingName=jms/TopicConnectionFactory,
+	 			replicationTopicBindingName=jms/EhcacheReplication,
+	 			getQueueConnectionFactoryBindingName=jms/QueueConnectionFactory,
+	 			getQueueBindingName=jms/EhcacheQueue"
 	 		propertySeparator="," />
 	 -->
 
@@ -398,9 +409,11 @@ Here is an example of CacheManager level resource tuning, which will use up to 4
       If not specified it defaults to 120000ms.
 
     -->
+    <!-- 
     <cacheManagerPeerListenerFactory
             class="net.sf.ehcache.distribution.RMICacheManagerPeerListenerFactory"/>
-
+	-->
+	
     <!--
     TerracottaConfig
     ========================
@@ -1073,18 +1086,20 @@ Here is an example of CacheManager level resource tuning, which will use up to 4
            timeToIdleSeconds="30000"
            timeToLiveSeconds="60000"
            memoryStoreEvictionPolicy="LRU"
-           transactionalMode="off">
+           transactionalMode="off"
+           statistics="true">
     </cache>
 
-          <!--  maxEntriesLocalHeap="100000"  -->
+          <!--  maxEntriesLocalHeap="100000" maxBytesLocalHeap="100M" -->
     <cache name="net.svcret.ejb.model.entity.PersInvocationStats"
-           maxBytesLocalHeap="100M"
+           maxEntriesLocalHeap="50000"
            maxEntriesLocalDisk="0"
            eternal="false"
            timeToIdleSeconds="30000"
            timeToLiveSeconds="60000"
            memoryStoreEvictionPolicy="LRU"
-           transactionalMode="off">
+           transactionalMode="off"
+           statistics="true">
     </cache>
 
     <!--

@@ -225,6 +225,12 @@ public class NamedParameterJsonRpcCredentialGrabber extends BaseCredentialGrabbe
 				myJsonWriter.value(theRpcVal);
 				return null;
 			}
+
+			@Override
+			public JsonWriter value(double theParseDouble) throws IOException {
+				myJsonWriter.value(theParseDouble);
+				return null;
+			}
 		};
 	}
 

@@ -1,13 +1,12 @@
 package net.svcret.admin.client.ui.dash.model;
 
-import static net.svcret.admin.client.AdminPortal.*;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.CssConstants;
+import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.Sparkline;
 import net.svcret.admin.client.ui.stats.DateUtil;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
@@ -16,6 +15,8 @@ import net.svcret.admin.shared.model.StatusEnum;
 
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Style.Display;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -23,6 +24,7 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 public abstract class BaseDashModel implements IDashModel {
@@ -50,6 +52,18 @@ public abstract class BaseDashModel implements IDashModel {
 	@Override
 	public final Widget renderLatency() {
 		return returnSparklineFor60mins(myModel.getLatency60mins(), myModel.getStatsInitialized(), Integer.toString(myModel.getAverageLatency()), "ms");
+	}
+
+	static void createBackButton(final PopupPanel theActionPopup, final FlowPanel thePreviousContent, final FlowPanel content) {
+		PButton backButton = new ActionPButton("Back");
+		backButton.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				theActionPopup.remove(content);
+				theActionPopup.add(thePreviousContent);
+			}
+		});
+		content.add(backButton.toBackwardNavButtonPanel());
 	}
 
 	protected Widget renderName(String thePrefix, String theName, String thePostFix) {

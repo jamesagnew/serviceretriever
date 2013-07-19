@@ -138,6 +138,61 @@ public class JsonRpc20ServiceInvokerTest {
 	}
 
 	@Test
+	public void testProcessInvocationWithNumbers() throws InternalErrorException, UnknownRequestException, IOException, ProcessingException {
+
+		JsonRpc20ServiceInvoker svc = new JsonRpc20ServiceInvoker();
+		PersServiceVersionJsonRpc20 def = mock(PersServiceVersionJsonRpc20.class, new DefaultAnswer());
+		RequestType reqType = RequestType.POST;
+		String path = "/";
+		String query = "";
+		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class, new DefaultAnswer());
+
+		when(def.getMethod("someMethod")).thenReturn(method);
+		when(def.getServerAuths()).thenReturn(new ArrayList<PersBaseServerAuth<?, ?>>());
+
+		DefaultAnswer.setRunTime();
+		InvocationResultsBean resp;
+
+		String request = //- 
+				"{ \"jsonrpc\": \"2.0\",\n" + //- 
+				"  \"method\": \"someMethod\",\n" + //- 
+				"  \"params\": 123\n" + //-
+				"}"; //-
+		resp = svc.processInvocation(def, reqType, path, query, new StringReader(request));
+
+		request = //- 
+				"{ \"jsonrpc\": \"2.0\",\n" + //- 
+				"  \"method\": \"someMethod\",\n" + //- 
+				"  \"params\": -123.456\n" + //-
+				"}"; //-
+		resp = svc.processInvocation(def, reqType, path, query, new StringReader(request));
+
+		request = //- 
+				"{ \"jsonrpc\": \"2.0\",\n" + //- 
+				"  \"method\": \"someMethod\",\n" + //- 
+				"  \"params\": [123.456, 876.543] \n" + //-
+				"}"; //-
+		resp = svc.processInvocation(def, reqType, path, query, new StringReader(request));
+
+		request = //- 
+				"{ \"jsonrpc\": \"2.0\",\n" + //- 
+				"  \"method\": \"someMethod\",\n" + //- 
+				"  \"params\": [123.456, 876.543, '222.222'] \n" + //-
+				"}"; //-
+		resp = svc.processInvocation(def, reqType, path, query, new StringReader(request));
+
+		request = //- 
+				"{ \"jsonrpc\": \"2.0\",\n" + //- 
+				"  \"method\": \"someMethod\",\n" + //- 
+				"  \"params\": { \"hello\" :  876.543 } \n" + //-
+				"}"; //-
+		resp = svc.processInvocation(def, reqType, path, query, new StringReader(request));
+
+		
+	}
+	
+	
+	@Test
 	public void testProcessServiceInvocation() throws InternalErrorException, UnknownRequestException, IOException, ProcessingException {
 
 		String request = "{\n" + "  \"jsonrpc\": \"2.0\",\n" + "  \"method\": \"getCanonicalMappings\",\n" + "  \"params\": {\n" + "    \"request\": {\n"
@@ -220,6 +275,32 @@ public class JsonRpc20ServiceInvokerTest {
 
 	}
 
+	
+	@Test
+	public void testProcessInvocationResponseWithNumbers() throws ProcessingException {
+
+		JsonRpc20ServiceInvoker svc = new JsonRpc20ServiceInvoker();
+		HttpResponseBean respBean = new HttpResponseBean();
+
+		respBean.setBody("{\"jsonrpc\": \"2.0\", \"result\": -19, \"id\": 2}");
+		InvocationResponseResultsBean resp = svc.processInvocationResponse(respBean);
+		Assert.assertEquals(ResponseTypeEnum.SUCCESS, resp.getResponseType());
+
+		respBean.setBody("{\"jsonrpc\": \"2.0\", \"result\": -19.9, \"id\": 2}");
+		resp = svc.processInvocationResponse(respBean);
+		Assert.assertEquals(ResponseTypeEnum.SUCCESS, resp.getResponseType());
+
+		respBean.setBody("{\"jsonrpc\": \"2.0\", \"result\": [ -19.1, 22.2 ], \"id\": 2}");
+		resp = svc.processInvocationResponse(respBean);
+		Assert.assertEquals(ResponseTypeEnum.SUCCESS, resp.getResponseType());
+
+		respBean.setBody("{\"jsonrpc\": \"2.0\", \"result\": { \"hello\": 22.2 }, \"id\": 2}");
+		resp = svc.processInvocationResponse(respBean);
+		Assert.assertEquals(ResponseTypeEnum.SUCCESS, resp.getResponseType());
+
+
+	}
+	
 
 	@Test
 	public void testProcessLargeInvocationResponse() throws ProcessingException, IOException {

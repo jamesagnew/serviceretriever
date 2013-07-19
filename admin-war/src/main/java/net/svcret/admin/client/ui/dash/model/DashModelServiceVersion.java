@@ -1,6 +1,7 @@
 package net.svcret.admin.client.ui.dash.model;
 
-import static net.svcret.admin.client.AdminPortal.*;
+import static net.svcret.admin.client.AdminPortal.IMAGES;
+import static net.svcret.admin.client.AdminPortal.MSGS;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
@@ -124,7 +125,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 
 			myActionPopup = new PopupPanel(true, true);
 
-			FlowPanel content = createActionPanel(myActionPopup, myDomain, myService, mySvcVer, true);
+			FlowPanel content = createActionPanel(myActionPopup, myDomain, myService, mySvcVer, true, null);
 
 			myActionPopup.add(content);
 			myActionPopup.showRelativeTo(theButton);
@@ -134,9 +135,13 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		}
 	}
 
-	static FlowPanel createActionPanel(final PopupPanel theActionPopup, final GDomain theDomain, final GService theService, final BaseGServiceVersion theSvcVer, boolean addServiceToTitle) {
-		FlowPanel content = new FlowPanel();
+	static FlowPanel createActionPanel(final PopupPanel theActionPopup, final GDomain theDomain, final GService theService, final BaseGServiceVersion theSvcVer, boolean addServiceToTitle, final FlowPanel thePreviousContent) {
+		final FlowPanel content = new FlowPanel();
 
+		if (thePreviousContent!=null) {
+			createBackButton(theActionPopup, thePreviousContent, content);
+		}
+		
 		SafeHtmlBuilder titleB = new SafeHtmlBuilder();
 		if (addServiceToTitle) {
 			titleB.appendEscaped(theService.getName());
@@ -182,6 +187,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 
 		return content;
 	}
+
 
 	@Override
 	public String getCellStyle() {

@@ -1,9 +1,10 @@
 package net.svcret.admin.client.ui.dash.model;
 
-import static net.svcret.admin.client.AdminPortal.*;
+import static net.svcret.admin.client.AdminPortal.IMAGES;
+import static net.svcret.admin.client.AdminPortal.MSGS;
 import net.svcret.admin.client.AdminPortal;
-import net.svcret.admin.client.Messages;
 import net.svcret.admin.client.nav.NavProcessor;
+import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GService;
@@ -82,15 +83,15 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 			content.add(addService);
 
 			for (final GService next : myDomain.getServiceList()) {
-				Button svcButton = new ActionPButton(IMAGES.iconEdit(), next.getName());
+				PButton svcButton = new ActionPButton(next.getName());
 				svcButton.addClickHandler(new ClickHandler() {
 					@Override
 					public void onClick(ClickEvent theEvent) {
 						myActionPopup.remove(content);
-						myActionPopup.add(DashModelService.createActionPanel(myActionPopup, myDomain, next));
+						myActionPopup.add(DashModelService.createActionPanel(myActionPopup, myDomain, next, content));
 					}
 				});
-				content.add(svcButton);
+				content.add(svcButton.toForwardNavButtonPanel());
 			}
 			
 			

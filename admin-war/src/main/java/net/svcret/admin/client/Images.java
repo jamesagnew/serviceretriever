@@ -13,7 +13,7 @@ public interface Images extends ClientBundle {
 
 	@Source("net/svcret/images/icon_edit_24.png")
 	ImageResource iconEdit();
-	
+
 	@Source("net/svcret/images/icon_remove_24.png")
 	ImageResource iconRemove();
 
@@ -22,8 +22,14 @@ public interface Images extends ClientBundle {
 
 	@Source("net/svcret/images/icon_status_24.png")
 	ImageResource iconStatus();
-	
+
 	@Source("net/svcret/images/icon_test_24.png")
 	ImageResource iconTest();
+
+	@Source("net/svcret/images/icon_arrow_simple_right_24.png")
+	ImageResource arrowSimpleRight();
+
+	@Source("net/svcret/images/icon_arrow_simple_left_24.png")
+	ImageResource arrowSimpleLeft();
 
 }

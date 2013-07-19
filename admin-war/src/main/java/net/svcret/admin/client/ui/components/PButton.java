@@ -1,5 +1,7 @@
 package net.svcret.admin.client.ui.components;
 
+import net.svcret.admin.client.AdminPortal;
+
 import com.google.gwt.dom.client.ButtonElement;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Document;
@@ -7,12 +9,16 @@ import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Image;
+import com.google.gwt.user.client.ui.Widget;
 
 public class PButton extends Button {
 
 	public PButton(String theText) {
 		setText(theText);
 		setStylePrimaryName(CssConstants.PUSHBUTTON);
+		addStyleName(CssConstants.PUSHBUTTON_TEXT);
 	}
 
 	public PButton(ImageResource theIcon, String theText) {
@@ -31,7 +37,7 @@ public class PButton extends Button {
 		div.setClassName(CssConstants.PUSHBUTTON_TEXT);
 		div.setInnerText(theText);
 		retVal.appendChild(div);
-		
+
 		return retVal;
 	}
 
@@ -45,4 +51,26 @@ public class PButton extends Button {
 		addClickHandler(theClickHandler);
 	}
 
+	public Widget toForwardNavButtonPanel() {
+		HorizontalPanel retVal = new HorizontalPanel();
+		retVal.add(this);
+		
+		Image image = new Image(AdminPortal.IMAGES.arrowSimpleRight());
+		retVal.add(image);
+		retVal.setCellWidth(image, "24px");
+		
+		return retVal;
+	}
+
+	public Widget toBackwardNavButtonPanel() {
+		HorizontalPanel retVal = new HorizontalPanel();
+		
+		Image image = new Image(AdminPortal.IMAGES.arrowSimpleLeft());
+		retVal.add(image);
+		retVal.setCellWidth(image, "24px");
+		
+		retVal.add(this);
+		
+		return retVal;
+	}
 }

@@ -1,9 +1,10 @@
 package net.svcret.admin.client.ui.dash.model;
 
-import static net.svcret.admin.client.AdminPortal.*;
+import static net.svcret.admin.client.AdminPortal.IMAGES;
+import static net.svcret.admin.client.AdminPortal.MSGS;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
-import net.svcret.admin.client.ui.config.domain.EditDomainServicesPanel.ActionPanel;
+import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GDomain;
@@ -18,6 +19,7 @@ import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Image;
+import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -103,7 +105,7 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 					final GDomain domain = myDomain;
 					final GService service = myService;
 
-					FlowPanel content = createActionPanel(myActionPopup, domain, service);
+					FlowPanel content = createActionPanel(myActionPopup, domain, service, null);
 
 					
 					myActionPopup.add(content);
@@ -120,8 +122,13 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 	}
 
 	
-	static FlowPanel createActionPanel(final PopupPanel thePopupPanel, final GDomain domain, final GService service) {
+	static FlowPanel createActionPanel(final PopupPanel thePopupPanel, final GDomain domain, final GService service, FlowPanel thePreviousContent) {
 		final FlowPanel content = new FlowPanel();
+
+		if (thePreviousContent!=null) {
+			createBackButton(thePopupPanel, thePreviousContent, content);
+		}
+		
 		content.add(new HeaderLabel(service.getName()));
 
 		// Edit domain
@@ -169,15 +176,15 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 		// Versions
 		
 		for (final BaseGServiceVersion nextVersion : service.getVersionList()) {
-			Button svcButton = new ActionPButton(IMAGES.iconEdit(), nextVersion.getId());
+			PButton svcButton = new ActionPButton(nextVersion.getId());
 			svcButton.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent theEvent) {
 					thePopupPanel.remove(content);
-					thePopupPanel.add(DashModelServiceVersion.createActionPanel(thePopupPanel, domain, service, nextVersion, false));
+					thePopupPanel.add(DashModelServiceVersion.createActionPanel(thePopupPanel, domain, service, nextVersion, false, content));
 				}
 			});
-			content.add(svcButton);
+			content.add(svcButton.toForwardNavButtonPanel());
 		}
 
 		return content;

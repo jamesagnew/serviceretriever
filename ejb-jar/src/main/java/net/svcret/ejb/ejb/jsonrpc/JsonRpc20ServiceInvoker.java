@@ -45,93 +45,107 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 	static final String TOKEN_RESULT = "result";
 	static final String TOKEN_ERROR = "error";
 
-
 	public static void consumeEqually(IJsonReader theJsonReader, IJsonWriter theJsonWriter) throws IOException, ProcessingException {
 		int objectDepth = 0;
 		int arrayDepth = 0;
 
 		JsonToken next = theJsonReader.peek();
 		switch (next) {
+		case NULL:
+			theJsonReader.nextNull();
+			theJsonWriter.nullValue();
+			return;
+		case BEGIN_OBJECT:
+			theJsonReader.beginObject();
+			theJsonWriter.beginObject();
+			objectDepth++;
+			break;
+		case BEGIN_ARRAY:
+			theJsonReader.beginArray();
+			theJsonWriter.beginArray();
+			arrayDepth++;
+			break;
+		case BOOLEAN:
+			theJsonWriter.value(theJsonReader.nextBoolean());
+			return;
+		case NUMBER:
+			consumeNumberEqually(theJsonReader, theJsonWriter);
+			return;
+		case STRING:
+			theJsonWriter.value(theJsonReader.nextString());
+			break;
+		case NAME:
+		case END_ARRAY:
+		case END_DOCUMENT:
+		case END_OBJECT:
+		default:
+			throw new ProcessingException("Found token of " + next + " in an unexpected place");
+		}
+
+		do {
+			next = theJsonReader.peek();
+			switch (next) {
 			case NULL:
 				theJsonReader.nextNull();
 				theJsonWriter.nullValue();
-				return;
-			case BEGIN_OBJECT:
-				theJsonReader.beginObject();
-				theJsonWriter.beginObject();
-				objectDepth++;
 				break;
 			case BEGIN_ARRAY:
 				theJsonReader.beginArray();
 				theJsonWriter.beginArray();
 				arrayDepth++;
 				break;
+			case BEGIN_OBJECT:
+				theJsonReader.beginObject();
+				theJsonWriter.beginObject();
+				objectDepth++;
+				break;
 			case BOOLEAN:
 				theJsonWriter.value(theJsonReader.nextBoolean());
-				return;
-			case NUMBER:
-				theJsonWriter.value(theJsonReader.nextLong());
-				return;
-			case STRING:
-				theJsonWriter.value(theJsonReader.nextString());
+				break;
+			case END_ARRAY:
+				theJsonReader.endArray();
+				theJsonWriter.endArray();
+				arrayDepth--;
+				break;
+			case END_DOCUMENT:
+				break;
+			case END_OBJECT:
+				theJsonReader.endObject();
+				theJsonWriter.endObject();
+				objectDepth--;
 				break;
 			case NAME:
-			case END_ARRAY:
-			case END_DOCUMENT:
-			case END_OBJECT:
-			default:
-				throw new ProcessingException("Found token of " + next + " in an unexpected place");
-		}
-
-		do {
-			next = theJsonReader.peek();
-			switch (next) {
-				case NULL:
-					theJsonReader.nextNull();
-					theJsonWriter.nullValue();
-					break;
-				case BEGIN_ARRAY:
-					theJsonReader.beginArray();
-					theJsonWriter.beginArray();
-					arrayDepth++;
-					break;
-				case BEGIN_OBJECT:
-					theJsonReader.beginObject();
-					theJsonWriter.beginObject();
-					objectDepth++;
-					break;
-				case BOOLEAN:
-					theJsonWriter.value(theJsonReader.nextBoolean());
-					break;
-				case END_ARRAY:
-					theJsonReader.endArray();
-					theJsonWriter.endArray();
-					arrayDepth--;
-					break;
-				case END_DOCUMENT:
-					break;
-				case END_OBJECT:
-					theJsonReader.endObject();
-					theJsonWriter.endObject();
-					objectDepth--;
-					break;
-				case NAME:
 				String nextName = theJsonReader.nextName();
 				theJsonWriter.name(nextName);
-					break;
-				case NUMBER:
-				long nextLong = theJsonReader.nextLong();
-				theJsonWriter.value(nextLong);
-					break;
-				case STRING:
+				break;
+			case NUMBER:
+				consumeNumberEqually(theJsonReader, theJsonWriter);
+				break;
+			case STRING:
 				String nextString = theJsonReader.nextString();
 				theJsonWriter.value(nextString);
-					break;
+				break;
 			}
 		} while ((objectDepth > 0 || arrayDepth > 0));
 
 	}
 
+	private static void consumeNumberEqually(IJsonReader theJsonReader, IJsonWriter theJsonWriter) throws IOException, ProcessingException {
+		String value = theJsonReader.nextString();
+		if (value.contains(".")) {
+			try {
+				theJsonWriter.value(Double.parseDouble(value));
+			} catch (NumberFormatException e) {
+				throw new ProcessingException("Invalid double value found in JSON: " + value);
+			}
+		} else {
+			try {
+				theJsonWriter.value(Long.parseLong(value));
+			} catch (NumberFormatException e) {
+				throw new ProcessingException("Invalid long value found in JSON: " + value);
+			}
+		}
+	}
 
 	public static void consumeEqually(JsonReader theJsonReader) throws IOException, ProcessingException {
 		int objectDepth = 0;
@@ -139,77 +153,77 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 
 		JsonToken next = theJsonReader.peek();
 		switch (next) {
-			case BEGIN_OBJECT:
-				theJsonReader.beginObject();
-				objectDepth++;
-				break;
-			case BEGIN_ARRAY:
-				theJsonReader.beginArray();
-				arrayDepth++;
-				break;
-			case NULL:
-				theJsonReader.nextNull();
-				return;
-			case BOOLEAN:
-				theJsonReader.nextBoolean();
-				return;
-			case END_ARRAY:
-			case END_DOCUMENT:
-			case END_OBJECT:
-			case NAME:
-				throw new IllegalStateException("Not expected here");
-			case NUMBER:
-				theJsonReader.nextLong();
-				return;
-			case STRING:
-				theJsonReader.nextString();
-				return;
+		case BEGIN_OBJECT:
+			theJsonReader.beginObject();
+			objectDepth++;
+			break;
+		case BEGIN_ARRAY:
+			theJsonReader.beginArray();
+			arrayDepth++;
+			break;
+		case NULL:
+			theJsonReader.nextNull();
+			return;
+		case BOOLEAN:
+			theJsonReader.nextBoolean();
+			return;
+		case END_ARRAY:
+		case END_DOCUMENT:
+		case END_OBJECT:
+		case NAME:
+			throw new IllegalStateException("Not expected here");
+		case NUMBER:
+			theJsonReader.nextString(); // avoid long/double problems by just using string
+			return;
+		case STRING:
+			theJsonReader.nextString();
+			return;
 		}
 
 		do {
 			next = theJsonReader.peek();
 			switch (next) {
-				case NULL:
-					theJsonReader.nextNull();
-					break;
-				case BEGIN_ARRAY:
-					theJsonReader.beginArray();
-					arrayDepth++;
-					break;
-				case BEGIN_OBJECT:
-					theJsonReader.beginObject();
-					objectDepth++;
-					break;
-				case BOOLEAN:
-					theJsonReader.nextBoolean();
-					break;
-				case END_ARRAY:
-					theJsonReader.endArray();
-					arrayDepth--;
-					break;
-				case END_DOCUMENT:
-					break;
-				case END_OBJECT:
-					theJsonReader.endObject();
-					objectDepth--;
-					break;
-				case NAME:
-					theJsonReader.nextName();
-					break;
-				case NUMBER:
-					theJsonReader.nextLong();
-					break;
-				case STRING:
-					theJsonReader.nextString();
-					break;
+			case NULL:
+				theJsonReader.nextNull();
+				break;
+			case BEGIN_ARRAY:
+				theJsonReader.beginArray();
+				arrayDepth++;
+				break;
+			case BEGIN_OBJECT:
+				theJsonReader.beginObject();
+				objectDepth++;
+				break;
+			case BOOLEAN:
+				theJsonReader.nextBoolean();
+				break;
+			case END_ARRAY:
+				theJsonReader.endArray();
+				arrayDepth--;
+				break;
+			case END_DOCUMENT:
+				break;
+			case END_OBJECT:
+				theJsonReader.endObject();
+				objectDepth--;
+				break;
+			case NAME:
+				theJsonReader.nextName();
+				break;
+			case NUMBER:
+				theJsonReader.nextString(); // avoid long/double problems by just using string
+				break;
+			case STRING:
+				theJsonReader.nextString();
+				break;
 			}
 		} while ((objectDepth > 0 || arrayDepth > 0));
 
 	}
 
-
 	@Override
-	public InvocationResultsBean processInvocation(PersServiceVersionJsonRpc20 theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, Reader theReader) throws ProcessingException {
+	public InvocationResultsBean processInvocation(PersServiceVersionJsonRpc20 theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, Reader theReader)
+			throws ProcessingException {
 		Validate.notNull(theReader, "Reader");
 		if (theRequestType != RequestType.POST) {
 			throw new ProcessingException("This service requires all requests to be of type HTTP POST");
@@ -225,7 +239,6 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 		return retVal;
 	}
 
-
 	private InvocationResultsBean doProcessInvocation(PersServiceVersionJsonRpc20 theServiceDefinition, Reader theReader) throws IOException, ProcessingException {
 		InvocationResultsBean retVal = new InvocationResultsBean();
 
@@ -235,17 +248,17 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 
 		// Reader
 		Reader inputReader;
-		
+
 		String inputMessage = IOUtils.toString(theReader);
 		ourLog.debug("Input message:\n{}", inputMessage);
 		inputReader = new StringReader(inputMessage);
-		
+
 		IJsonReader jsonReader = new MyJsonReader(inputReader);
 
 		/*
 		 * Create security pipeline if needed
 		 */
-		for (PersBaseServerAuth<?,?> next : theServiceDefinition.getServerAuths()) {
+		for (PersBaseServerAuth<?, ?> next : theServiceDefinition.getServerAuths()) {
 			if (next instanceof NamedParameterJsonRpcServerAuth) {
 				NamedParameterJsonRpcCredentialGrabber grabber = ((NamedParameterJsonRpcServerAuth) next).newCredentialGrabber(jsonReader, jsonWriter);
 				jsonWriter = grabber.getWrappedWriter();
@@ -315,11 +328,10 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 		if (methodDef == null) {
 			throw new ProcessingException("Unknown method \"" + method + "\" for Service \"" + theServiceDefinition.getService().getServiceName() + "\"");
 		}
-		
+
 		retVal.setResultMethod(methodDef, requestBody, contentType, headers);
 		return retVal;
 	}
-
 
 	@Override
 	public InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws ProcessingException {
@@ -351,15 +363,15 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 				} else if (JsonRpc20ServiceInvoker.TOKEN_ERROR.equals(nextName)) {
 
 					ourLog.debug("Response is fault");
-					
+
 					Gson gson = new GsonBuilder().create();
 					JsonErrorType error = gson.fromJson(jsonReader, JsonErrorType.class);
 					assert error != null;
-					
+
 					retVal.setResponseType(ResponseTypeEnum.FAULT);
 					retVal.setResponseFaultCode(Integer.toString(error.getCode()));
 					retVal.setResponseFaultDescription(error.getMessage());
-					
+
 				} else if (JsonRpc20ServiceInvoker.TOKEN_ID.equals(nextName)) {
 
 					String requestId = jsonReader.nextString();
@@ -381,16 +393,14 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 		if (retVal.getResponseType() == null) {
 			retVal.setResponseType(ResponseTypeEnum.SUCCESS);
 		}
-		
+
 		return retVal;
 	}
-
 
 	@Override
 	public IResponseValidator provideInvocationResponseValidator() {
 		return new JsonRpc20ResponseValidator();
 	}
-
 
 	@Override
 	public PersServiceVersionJsonRpc20 introspectServiceFromUrl(String theUrl) throws ProcessingException {
