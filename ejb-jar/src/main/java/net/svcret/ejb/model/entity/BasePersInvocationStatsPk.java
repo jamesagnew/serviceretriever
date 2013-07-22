@@ -11,6 +11,8 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
 
@@ -76,10 +78,16 @@ public abstract class BasePersInvocationStatsPk implements Serializable {
 	@Override
 	public int hashCode() {
 		if (myHashCode == 0) {
-			myHashCode = Objects.hashCode(myInterval, myStartTime);
+			HashCodeBuilder b = new HashCodeBuilder();
+			b.append(myInterval);
+			b.append(myStartTime);
+			doHashCode(b);
+			myHashCode = b.toHashCode();
 		}
 		return myHashCode;
 	}
+
+	protected abstract void doHashCode(HashCodeBuilder theB);
 
 	/**
 	 * @param theInterval

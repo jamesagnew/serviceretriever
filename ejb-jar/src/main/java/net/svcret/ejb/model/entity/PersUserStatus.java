@@ -45,7 +45,7 @@ public class PersUserStatus extends BasePersObject {
 
 	@OneToOne(cascade = {})
 	@JoinColumn(name = "USER_PID", referencedColumnName = "PID", nullable = false)
-	private PersUser myUser;
+	private IThrottleable myUser;
 
 	public PersUserStatus() {
 	}
@@ -104,7 +104,7 @@ public class PersUserStatus extends BasePersObject {
 	/**
 	 * @return the user
 	 */
-	public PersUser getUser() {
+	public IThrottleable getUser() {
 		return myUser;
 	}
 
@@ -166,7 +166,7 @@ public class PersUserStatus extends BasePersObject {
 	 * @param theUser
 	 *            the user to set
 	 */
-	public void setUser(PersUser theUser) {
+	public void setUser(IThrottleable theUser) {
 		myUser = theUser;
 	}
 

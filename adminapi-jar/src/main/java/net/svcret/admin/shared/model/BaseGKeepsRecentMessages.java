@@ -67,4 +67,11 @@ public abstract class BaseGKeepsRecentMessages<T> extends BaseGObject<T> {
 		myKeepNumRecentTransactionsSuccess = theKeepNumRecentTransactionsSuccess;
 	}
 
+	public void merge(BaseGKeepsRecentMessages<?> theObject) {
+		setKeepNumRecentTransactionsSuccess(theObject.getKeepNumRecentTransactionsSuccess());
+		setKeepNumRecentTransactionsFail(theObject.getKeepNumRecentTransactionsFail());
+		setKeepNumRecentTransactionsFault(theObject.getKeepNumRecentTransactionsFault());
+		setKeepNumRecentTransactionsSecurityFail(theObject.getKeepNumRecentTransactionsSecurityFail());
+	}
+
 }

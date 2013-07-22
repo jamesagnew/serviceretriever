@@ -4,9 +4,11 @@ import java.io.Reader;
 import java.util.List;
 import java.util.Map;
 
+import net.svcret.ejb.ejb.CapturingReader;
+
 public class HttpRequestBean {
 
-	private Reader myInputReader;
+	private CapturingReader myInputReader;
 	private String myPath;
 	private String myQuery;
 	private Map<String, List<String>> myRequestHeaders;
@@ -60,7 +62,7 @@ public class HttpRequestBean {
 	 *            the inputReader to set
 	 */
 	public void setInputReader(Reader theInputReader) {
-		myInputReader = theInputReader;
+		myInputReader = new CapturingReader(theInputReader);
 	}
 
 	/**
@@ -97,6 +99,10 @@ public class HttpRequestBean {
 	 */
 	public void setRequestType(RequestType theRequestType) {
 		myRequestType = theRequestType;
+	}
+
+	public String getRequestBody() {
+		return myInputReader.getCapturedString();
 	}
 
 }

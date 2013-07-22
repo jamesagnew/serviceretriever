@@ -204,6 +204,8 @@ public abstract class BaseGDashboardObject<T> extends BaseGKeepsRecentMessages<T
 	}
 
 	protected void merge(BaseGDashboardObject<T> theObject) {
+		super.merge((BaseGKeepsRecentMessages<?>) theObject);
+		
 		setPid(theObject.getPid());
 		setId(theObject.getId());
 		setName(theObject.getName());

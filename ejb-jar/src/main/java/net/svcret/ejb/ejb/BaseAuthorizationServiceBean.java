@@ -14,6 +14,7 @@ import net.svcret.ejb.api.IAuthorizationService;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
+import net.svcret.ejb.model.entity.IThrottleable;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.util.Validate;
 
@@ -96,7 +97,7 @@ public abstract class BaseAuthorizationServiceBean<T extends BasePersAuthenticat
 		}
 	}
 
-	protected abstract PersUser doAuthorize(T theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException;
+	protected abstract IThrottleable doAuthorize(T theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException;
 
 	protected abstract Class<T> getConfigType();
 

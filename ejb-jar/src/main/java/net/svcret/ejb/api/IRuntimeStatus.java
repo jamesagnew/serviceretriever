@@ -56,5 +56,15 @@ public interface IRuntimeStatus {
 	int getCachedPopulatedKeyCount();
 
 	int getCachedEmptyKeyCount();
+
+	void purgeCachedStats();
+
+	void setMaxCachedPopulatedStatCount(int theCount);
+
+	void setMaxCachedNullStatCount(int theCount);
+
+	int getMaxCachedNullStatCount();
+
+	int getMaxCachedPopulatedStatCount();
 	
 }

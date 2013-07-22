@@ -12,8 +12,8 @@ import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.ISecurityService;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
+import net.svcret.ejb.model.entity.IThrottleable;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
-import net.svcret.ejb.model.entity.PersUser;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
@@ -34,7 +34,7 @@ public class LdapAuthorizationServiceBean extends BaseAuthorizationServiceBean<P
 	private ISecurityService mySecuritySvc;
 
 	@Override
-	protected PersUser doAuthorize(PersAuthenticationHostLdap theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException {
+	protected IThrottleable doAuthorize(PersAuthenticationHostLdap theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException {
 		Validate.notNull(theHost);
 		Validate.notNull(theUserCatalog);
 		Validate.notNull(theCredentialGrabber);
@@ -59,7 +59,7 @@ public class LdapAuthorizationServiceBean extends BaseAuthorizationServiceBean<P
 			return null;
 		}
 
-		PersUser user = theUserCatalog.findUser(theHost.getPid(), theCredentialGrabber.getUsername());
+		IThrottleable user = theUserCatalog.findUser(theHost.getPid(), theCredentialGrabber.getUsername());
 
 		// TODO: auto-create user if needed (mayve refactor into common
 		// superclass or something?)

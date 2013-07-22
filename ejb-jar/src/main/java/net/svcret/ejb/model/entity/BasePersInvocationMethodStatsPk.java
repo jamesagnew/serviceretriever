@@ -10,6 +10,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
 
 import com.google.common.base.Objects;
@@ -31,6 +33,10 @@ public abstract class BasePersInvocationMethodStatsPk extends BasePersInvocation
 	@Column(name="METHOD_PID", nullable=false)
 	private Long myMethodPid;
 
+	@Override
+	protected void doHashCode(HashCodeBuilder theB) {
+		theB.append(myMethodPid);
+	}
 
 
 	public BasePersInvocationMethodStatsPk() {

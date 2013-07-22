@@ -42,7 +42,7 @@ public class PersUserDomainPermission extends BasePersObject {
 
 	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
 	@JoinColumn(name = "USER_PID", referencedColumnName = "PID", nullable = false)
-	private PersUser myUser;
+	private IThrottleable myUser;
 
 	/**
 	 * @param theServicePermissions
@@ -102,7 +102,7 @@ public class PersUserDomainPermission extends BasePersObject {
 	/**
 	 * @return the serviceUser
 	 */
-	public PersUser getServiceUser() {
+	public IThrottleable getServiceUser() {
 		return myUser;
 	}
 
@@ -152,7 +152,7 @@ public class PersUserDomainPermission extends BasePersObject {
 	 * @param theServiceUser
 	 *            the serviceUser to set
 	 */
-	public void setServiceUser(PersUser theServiceUser) {
+	public void setServiceUser(IThrottleable theServiceUser) {
 		myUser = theServiceUser;
 	}
 

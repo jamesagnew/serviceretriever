@@ -24,7 +24,7 @@ public class RuleAppliesToTree extends DomainTreePanel {
 
 	@Override
 	protected SafeHtml getTextServiceVersionAllMethodsCheckbox(int theCount) {
-		return MSGS.ruleAppliesToPanel_TreeAllMethodsCheckbox(theCount);
+		return MSGS.ruleAppliesToPanel_TreeAllMethodsCheckbox();
 	}
 	
 	@Override

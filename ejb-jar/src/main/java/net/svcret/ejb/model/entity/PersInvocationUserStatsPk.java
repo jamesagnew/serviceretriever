@@ -8,6 +8,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
 
 import com.google.common.base.Objects;
@@ -34,6 +36,12 @@ public class PersInvocationUserStatsPk extends BasePersInvocationStatsPk {
 		super(theInterval, theStartTime);
 		myUser = theUser;
 	}
+	
+	@Override
+	protected void doHashCode(HashCodeBuilder theB) {
+		theB.append(myUser);
+	}
+
 
 	/**
 	 * {@inheritDoc}

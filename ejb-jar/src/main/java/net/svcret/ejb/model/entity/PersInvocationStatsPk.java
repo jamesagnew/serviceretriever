@@ -4,6 +4,8 @@ import java.util.Date;
 
 import javax.persistence.Embeddable;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 @Embeddable
 public class PersInvocationStatsPk extends BasePersInvocationMethodStatsPk {
 
@@ -39,6 +41,12 @@ public class PersInvocationStatsPk extends BasePersInvocationMethodStatsPk {
 		return getInterval().equals(theObj.getInterval()) // -
 				&& getMethodPid() == (theObj.getMethodPid()) // -
 				&& getStartTime().equals(theObj.getStartTime()); // -
+	}
+
+	@Override
+	protected void doHashCode(HashCodeBuilder theB) {
+		// TODO Auto-generated method stub
+		
 	}
 
 

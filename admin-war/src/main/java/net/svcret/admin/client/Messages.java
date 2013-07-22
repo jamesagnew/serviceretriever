@@ -552,7 +552,7 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	
 	@DefaultMessage("Applies to this version")
-	SafeHtml ruleAppliesToPanel_TreeAllMethodsCheckbox(int count);
+	SafeHtml ruleAppliesToPanel_TreeAllMethodsCheckbox();
 
 	@DefaultMessage("Applies to all {0} services")
 	SafeHtml ruleAppliesToPanel_TreeAllServicesCheckbox(int count);

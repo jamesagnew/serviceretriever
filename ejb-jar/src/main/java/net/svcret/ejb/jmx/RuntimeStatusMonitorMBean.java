@@ -6,5 +6,13 @@ public interface RuntimeStatusMonitorMBean {
 
 	int getCachedNullStatCount();
 	
-	
+	int getMaxCachedPopulatedStatCount();
+
+	int getMaxCachedNullStatCount();
+
+	void setMaxCachedPopulatedStatCount(int theCount);
+
+	void setMaxCachedNullStatCount(int theCount);
+
+	void purgeCachedStats();
 }

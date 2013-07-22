@@ -7,6 +7,7 @@ import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.client.ui.config.auth.DomainTreePanel.ITreeStatusModel;
+import net.svcret.admin.shared.HtmlUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
@@ -15,7 +16,6 @@ import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GMonitorRule;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
-import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -118,7 +118,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		grid.addFullWidthCell(h1);
 
 		myLatencyBox = new IntegerBox();
-		myLatencyEnabledCheck = new CheckBox(StringUtil.toSafeHtml("Latency exceeds: "));
+		myLatencyEnabledCheck = new CheckBox(HtmlUtil.toSafeHtml("Latency exceeds: "));
 		myLatencyEnabledCheck.setEnabled(true);
 		myLatencyEnabledCheck.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
 			@Override
@@ -131,7 +131,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		grid.addDescription("If enabled, this rule will fire if the backing service latency (in other words, " + "the average amount of time that the backing service is taking to respond to requests) " + "exceeds the threshold set here (in milliseconds).");
 
 		myLatencyOverMinsBox = new IntegerBox();
-		myLatencyOverMinsEnabledCheck = new CheckBox(StringUtil.toSafeHtml("Over Minutes"));
+		myLatencyOverMinsEnabledCheck = new CheckBox(HtmlUtil.toSafeHtml("Over Minutes"));
 		myLatencyOverMinsEnabledCheck.setEnabled(true);
 		myLatencyOverMinsEnabledCheck.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
 			@Override

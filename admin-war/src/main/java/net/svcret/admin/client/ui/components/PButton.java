@@ -53,6 +53,7 @@ public class PButton extends Button {
 
 	public Widget toForwardNavButtonPanel() {
 		HorizontalPanel retVal = new HorizontalPanel();
+		retVal.setWidth("100%");
 		retVal.add(this);
 		
 		Image image = new Image(AdminPortal.IMAGES.arrowSimpleRight());

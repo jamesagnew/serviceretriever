@@ -1,7 +1,6 @@
 package net.svcret.ejb.jmx;
 
 import java.lang.management.ManagementFactory;
-import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -54,4 +53,29 @@ public class RuntimeStatusMonitor implements RuntimeStatusMonitorMBean {
             throw new IllegalStateException("Problem during unregistration of Monitoring into JMX:" + e);
         }
     }
+
+	@Override
+	public int getMaxCachedPopulatedStatCount() {
+		return myRuntimeStatus.getMaxCachedPopulatedStatCount();
+	}
+
+	@Override
+	public int getMaxCachedNullStatCount() {
+		return myRuntimeStatus.getMaxCachedNullStatCount();
+	}
+
+	@Override
+	public void setMaxCachedPopulatedStatCount(int theCount) {
+		myRuntimeStatus.setMaxCachedPopulatedStatCount(theCount);
+	}
+
+	@Override
+	public void setMaxCachedNullStatCount(int theCount) {
+		myRuntimeStatus.setMaxCachedNullStatCount(theCount);
+	}
+
+	@Override
+	public void purgeCachedStats() {
+		myRuntimeStatus.purgeCachedStats();
+	}
 }

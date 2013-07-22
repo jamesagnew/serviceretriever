@@ -8,6 +8,7 @@ import java.util.Map;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
+import net.svcret.ejb.model.entity.IThrottleable;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
 import net.svcret.ejb.model.entity.PersUser;
 
@@ -79,7 +80,7 @@ public class BaseAuthorizationServiceBeanTest {
 		private int myInvocationCount = 0;
 
 		@Override
-		protected PersUser doAuthorize(PersAuthenticationHostLdap theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException {
+		protected IThrottleable doAuthorize(PersAuthenticationHostLdap theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException {
 			myInvocationCount++;
 
 			if (!theCredentialGrabber.getUsername().equals("username123")) {
