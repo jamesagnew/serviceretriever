@@ -137,6 +137,7 @@ public class SchedulerBean implements IScheduler {
 
 	@Override
 	@Schedule(second = "0", minute = "*", hour = "*")
+	@TransactionAttribute(TransactionAttributeType.NEVER)
 	public void reloadUserRegistry() {
 		try {
 			mySecuritySvc.loadUserCatalogIfNeeded();

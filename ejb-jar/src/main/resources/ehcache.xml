@@ -351,6 +351,12 @@ Here is an example of CacheManager level resource tuning, which will use up to 4
             />
  	-->
 
+    <cacheManagerPeerProviderFactory
+                        class="net.sf.ehcache.distribution.RMICacheManagerPeerProviderFactory"
+                        properties="peerDiscovery=automatic, multicastGroupAddress=230.0.0.1,
+                                    multicastGroupPort=26070, timeToLive=32"/>
+
+
 	<!-- 
 	<cacheManagerPeerProviderFactory
 	    class="net.sf.ehcache.distribution.jgroups.JGroupsCacheManagerPeerProviderFactory"
@@ -409,10 +415,8 @@ Here is an example of CacheManager level resource tuning, which will use up to 4
       If not specified it defaults to 120000ms.
 
     -->
-    <!-- 
     <cacheManagerPeerListenerFactory
             class="net.sf.ehcache.distribution.RMICacheManagerPeerListenerFactory"/>
-	-->
 	
     <!--
     TerracottaConfig
