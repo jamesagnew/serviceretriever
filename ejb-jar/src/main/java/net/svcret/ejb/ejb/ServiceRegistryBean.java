@@ -14,12 +14,6 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.naming.InitialContext;
-
-import org.slf4j.LoggerFactory;
-
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.joran.JoranConfigurator;
 
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.api.IBroadcastSender;
@@ -35,6 +29,11 @@ import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.util.Validate;
 
+import org.slf4j.LoggerFactory;
+
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.joran.JoranConfigurator;
+
 @Startup
 @Singleton
 public class ServiceRegistryBean implements IServiceRegistry {
@@ -44,6 +43,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	private static volatile Map<Long, BasePersServiceVersion> ourPidToServices;
 	private static Object ourRegistryLock = new Object();
 	private static final String STATE_KEY = ServiceRegistryBean.class.getName() + "_VERSION";
+	private static Map<String, PersDomain> ourDomainMap;
 
 	@EJB
 	private IBroadcastSender myBroadcastSender;
@@ -111,6 +111,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		ourLog.info("Done loading service registry from database");
 
 		synchronized (ourRegistryLock) {
+			ourDomainMap = domainMap;
 			ourPidToServices = pidToServiceVersions;
 			ourProxyPathToServices = pathToServiceVersions;
 			myCurrentVersion = newVersion;
@@ -268,6 +269,11 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	public void setSvcHttpClient(IHttpClient theSvcHttpClient) {
 		Validate.isNull(mySvcHttpClient, "IServicHttpClient");
 		mySvcHttpClient = theSvcHttpClient;
+	}
+
+	@Override
+	public Collection<PersDomain> getAllDomains() {
+		return ourDomainMap.values();
 	}
 
 }

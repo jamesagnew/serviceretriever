@@ -1,18 +1,25 @@
 package net.svcret.admin.client.ui.config.monitor;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import net.svcret.admin.client.AdminPortal;
+import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.HtmlList;
 import net.svcret.admin.client.ui.components.HtmlList.ListType;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
+import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.GMonitorRule;
 import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HTML;
@@ -22,7 +29,6 @@ import com.google.gwt.user.client.ui.Label;
 public class MonitorRulesPanel extends FlowPanel {
 
 	private LoadingSpinner myConfigListLoadingSpinner;
-	private FlowPanel myDetailsContainer;
 	private Grid myRulesGrid;
 
 	private static final int COL_ACTIONS = 0;
@@ -34,11 +40,11 @@ public class MonitorRulesPanel extends FlowPanel {
 
 	public MonitorRulesPanel() {
 		initListPanel();
-		initDetailsPanel();
 
 		Model.getInstance().loadMonitorRuleList(new IAsyncLoadCallback<GMonitorRuleList>() {
 			@Override
 			public void onSuccess(GMonitorRuleList theResult) {
+				myConfigListLoadingSpinner.hideCompletely();
 				setRuleList(theResult);
 			}
 		});
@@ -48,16 +54,26 @@ public class MonitorRulesPanel extends FlowPanel {
 		myRulesGrid.resize(theResult.size() + 1, NUM_COLS);
 
 		myRulesGrid.setText(0, COL_ACTIONS, "Actions");
-		myRulesGrid.setText(0, COL_TYPE, "Type");
+		myRulesGrid.setText(0, COL_TYPE, "Criteria");
 		myRulesGrid.setText(0, COL_RULE_NAME, "Rule Name");
 		myRulesGrid.setText(0, COL_APPLIES_TO, "Applies To");
 		myRulesGrid.setText(0, COL_ACTIVE, "Active");
 
 		int row = 0;
-		for (GMonitorRule next : theResult) {
+		for (final GMonitorRule next : theResult) {
 			row++;
 
 			HorizontalPanel actionsPanel = new HorizontalPanel();
+			
+			PButton editButton = new PButton(AdminPortal.IMAGES.iconEdit(), AdminPortal.MSGS.actions_Edit());
+			editButton.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent theEvent) {
+					History.newItem(NavProcessor.getTokenEditMonitorRule(true, next.getPid()));
+				}
+			});
+			actionsPanel.add(editButton);
+			
 			myRulesGrid.setWidget(row, COL_ACTIONS, actionsPanel);
 
 			List<String> typeDescriptions = toTypeDescriptions(next);
@@ -76,17 +92,42 @@ public class MonitorRulesPanel extends FlowPanel {
 			myRulesGrid.setText(row, COL_RULE_NAME, next.getName());
 
 			List<String> appliesTos = toAppliesTo(next);
-			myRulesGrid.setText(row, COL_APPLIES_TO, "Applies To");
-			myRulesGrid.setText(row, COL_ACTIVE, "Active");
+			if (appliesTos.size() == 0) {
+				myRulesGrid.setText(row, COL_APPLIES_TO, "No triggers defined");
+			} else if (appliesTos.size() == 1) {
+				myRulesGrid.setText(row, COL_APPLIES_TO, appliesTos.get(0));
+			} else {
+				HtmlList list = new HtmlList(ListType.UNORDERED);
+				for (String string : appliesTos) {
+					list.addItem(string);
+				}
+				myRulesGrid.setWidget(row, COL_APPLIES_TO, list);
+			}
+			myRulesGrid.setText(row, COL_ACTIVE, next.isActive() ? "Active" : "No");
 		}
 
 	}
 
 	private List<String> toAppliesTo(GMonitorRule theNext) {
+		ArrayList<String> retVal = new ArrayList<String>();
 		for (GMonitorRuleAppliesTo nextApplies : theNext.getAppliesTo()) {
-			
+			StringBuilder b= new StringBuilder();
+			b.append(nextApplies.getDomainName());
+			if (nextApplies.getServiceName() != null) {
+				b.append(" / ").append(nextApplies.getServiceName());
+				if (nextApplies.getVersionId() != null) {
+					b.append(" / ").append(nextApplies.getVersionId());
+				}else {
+					b.append(" - All Versions");
+				}
+			}else {
+				b.append(" - All Services and Versions");
+			}
 		}
-		return null;
+		
+		Collections.sort(retVal);
+		
+		return retVal;
 	}
 
 	private List<String> toTypeDescriptions(GMonitorRule theNext) {
@@ -105,10 +146,6 @@ public class MonitorRulesPanel extends FlowPanel {
 		return retVal;
 	}
 
-	private void initDetailsPanel() {
-		myDetailsContainer = new FlowPanel();
-		add(myDetailsContainer);
-	}
 
 	private void initListPanel() {
 		FlowPanel listPanel = new FlowPanel();
@@ -133,6 +170,16 @@ public class MonitorRulesPanel extends FlowPanel {
 		myRulesGrid.addStyleName(CssConstants.PROPERTY_TABLE);
 		contentPanel.add(myRulesGrid);
 
+		PButton addButton = new PButton(AdminPortal.IMAGES.iconAdd(), AdminPortal.MSGS.actions_Add());
+		addButton.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				History.newItem(NavProcessor.getTokenAddMonitorRule(true));
+			}
+		});
+		contentPanel.add(addButton);
+
+		
 		if (true) {
 			return;
 		}

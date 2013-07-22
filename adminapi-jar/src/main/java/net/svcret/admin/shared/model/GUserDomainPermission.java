@@ -58,6 +58,14 @@ public class GUserDomainPermission extends BaseGObject<GUserDomainPermission> {
 		setServicePermissions(theObject.getServicePermissions());
 	}
 	
+	public GUserServicePermission getServicePermission(long theServicePid) {
+		for (GUserServicePermission next : getServicePermissions()) {
+			if (next.getServicePid() == theServicePid) {
+				return next;
+			}
+		}
+		return null;
+	}
 	public GUserServicePermission getOrCreateServicePermission(long theServicePid) {
 		for (GUserServicePermission next : getServicePermissions()) {
 			if (next.getServicePid() == theServicePid) {
@@ -68,6 +76,14 @@ public class GUserDomainPermission extends BaseGObject<GUserDomainPermission> {
 		permission.setServicePid(theServicePid);
 		myServicePermissions.add(permission);
 		return permission;
+	}
+	public void removeServicePermission(long thePid) {
+		for (GUserServicePermission next : getServicePermissions()) {
+			if (next.getServicePid() == thePid) {
+				myServicePermissions.remove(next);
+				break;
+			}
+		}
 	}
 	
 }

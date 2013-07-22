@@ -138,7 +138,6 @@ public class SecurityServiceBeanTest {
 		PersUserServicePermission servicePer = domainPer.addPermission(myD0S0);
 		PersUserServiceVersionPermission versionPer = servicePer.addPermission(myD0S0V0);
 		PersUserServiceVersionMethodPermission methodPerm = versionPer.addPermission(myD0S0V0M0);
-		methodPerm.setAllow(true);
 		
 		myUser.loadAllAssociations();
 		
@@ -148,7 +147,7 @@ public class SecurityServiceBeanTest {
 		assertEquals(AuthorizationOutcomeEnum.AUTHORIZED, mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M0,"").isAuthorized());
 		assertEquals(AuthorizationOutcomeEnum.FAILED_USER_NO_PERMISSIONS, mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M1,"").isAuthorized());
 		
-		methodPerm.setAllow(false);
+		versionPer.removePermission(myD0S0V0M0);
 		myUser.loadAllAssociations();
 		assertEquals(AuthorizationOutcomeEnum.FAILED_USER_NO_PERMISSIONS, mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M0,"").isAuthorized());
 		assertEquals(AuthorizationOutcomeEnum.FAILED_USER_NO_PERMISSIONS, mySvc.authorizeMethodInvocation(myHost, myGoodGrabber, myD0S0V0M1,"").isAuthorized());

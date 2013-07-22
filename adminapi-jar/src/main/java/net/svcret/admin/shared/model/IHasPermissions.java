@@ -37,8 +37,18 @@ public interface IHasPermissions {
 	 void setGlobalPermissions(Set<UserGlobalPermissionEnum> theGlobalPermissions);
 
 	 /**
-	  * Returns null if none
+	  * 
 	  */
 	 GUserDomainPermission getOrCreateDomainPermission(long theDomainPid);
+
+	 /**
+	  * 
+	  */
+	 GUserDomainPermission getDomainPermission(long theDomainPid);
+
+	 /**
+	  * 
+	  */
+	 void removeDomainPermission(long theDomainPid);
 
 }

@@ -314,4 +314,24 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 		}
 	}
 
+	@Override
+	public GUserDomainPermission getDomainPermission(long theDomainPid) {
+		for (GUserDomainPermission next : getDomainPermissions()) {
+			if (next.getDomainPid() == theDomainPid) {
+				return next;
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public void removeDomainPermission(long theDomainPid) {
+		for (GUserDomainPermission next : getDomainPermissions()) {
+			if (next.getDomainPid() == theDomainPid) {
+				myDomainPermissions.remove(next);
+				break;
+			}
+		}
+	}
+
 }

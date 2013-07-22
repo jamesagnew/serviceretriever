@@ -17,10 +17,10 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 
-import org.apache.commons.lang3.StringUtils;
-
 import net.svcret.admin.shared.model.ServerSecuredEnum;
 import net.svcret.admin.shared.model.StatusEnum;
+
+import org.apache.commons.lang3.StringUtils;
 
 @Table(name = "PX_DOMAIN")
 @Entity()

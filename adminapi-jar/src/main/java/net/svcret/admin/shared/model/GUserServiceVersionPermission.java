@@ -79,4 +79,22 @@ public class GUserServiceVersionPermission extends BaseGObject<GUserServiceVersi
 		myServiceVersionPid = theServiceVersionPid;
 	}
 
+	public void removeMethodPermission(long thePid) {
+		for (GUserServiceVersionMethodPermission next : getServiceVersionMethodPermissions()) {
+			if (next.getServiceVersionMethodPid() == thePid) {
+				myServiceVersionMethodPermissions.remove(next);
+				break;
+			}
+		}
+	}
+
+	public GUserServiceVersionMethodPermission getServiceVersionMethodPermission(long thePid) {
+		for (GUserServiceVersionMethodPermission next : getServiceVersionMethodPermissions()) {
+			if (next.getServiceVersionMethodPid() == thePid) {
+				return next;
+			}
+		}
+		return null;
+	}
+
 }

@@ -40,14 +40,23 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Save")
 	String actions_Save();
 
+	@DefaultMessage("Test / Manually Invoke")
+	String actions_TestServiceVersion();
+
 	@DefaultMessage("View Runtime Status")
 	String actions_ViewRuntimeStatus();
+
+	@DefaultMessage("View Usage")
+	String actions_ViewStats();
 
 	@DefaultMessage("Add Domain")
 	String addDomain_Breadcrumb();
 
 	@DefaultMessage("Domain Added")
 	String addDomainStep2_Breadcrumb();
+
+	@DefaultMessage("Add Monitor Rule")
+	String AddMonitorRule_Breadcrumb();
 
 	@DefaultMessage("Add Service")
 	String addService_Breadcrumb();
@@ -60,6 +69,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Service Version Added")
 	String addServiceVersionStep2_Breadcrumb();
+
+	@DefaultMessage("Add User")
+	String addUser_Breadcrumb();
 
 	@DefaultMessage("Authentication Hosts")
 	String authenticationHostsPanel_Breadcrumb();
@@ -126,6 +138,20 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 			+ "be something different. Note that URLs within WSDL and XSD links for exposed services will be translated " + "to use this base as well.")
 	String configPanel_UrlBaseDesc();
 
+	@DefaultMessage("Domain has {0} Services")
+	@AlternateMessage({ 
+		"one", "Domain has one Service",
+		"=0", "Domain has no Services"
+		})
+	String dashboard_ActionDomainServicesHeader(@PluralCount(DefaultRule_en.class) int theServiceCount);
+
+	@DefaultMessage("Service has {0} Versions")
+	@AlternateMessage({ 
+		"one", "Service has one Version",
+		"=0", "Service has no Versions"
+		})
+	String dashboard_ActionServiceVersionsHeader(@PluralCount(DefaultRule_en.class) int theServiceCount);
+
 	@DefaultMessage(" <span class=\"" + CssConstants.DASHBOARD_NAME_SUFFIX + "\">(No Services Defined)</span>")
 	String dashboard_DomainNoServicesSuffix();
 
@@ -168,6 +194,24 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage(" <span class=\"" + CssConstants.DASHBOARD_NAME_PREFIX + "\">Version:</span>")
 	String dashboard_ServiceVersionPrefix();
 
+	@DefaultMessage("")
+	String dashboard_TransactionDateNever();
+
+	@DefaultMessage("{0,localdatetime,MMMdd HHmm} ({1,number} days ago)")
+	@AlternateMessage({ "one", "{0,localdatetime,MMMdd HHmm} (1 day ago)" })
+	String dashboard_TransactionDateOver1Day(Date theDate, @PluralCount(DefaultRule_en.class) int theDay);
+
+	@DefaultMessage("{0,localdatetime,HHmm} ({1,number} hrs ago)")
+	@AlternateMessage({ "one", "{0,localdatetime,HHmm} (1 hr ago)" })
+	String dashboard_TransactionDateUnder1Day(Date theDate, @PluralCount(DefaultRule_en.class) int theHour);
+
+	@DefaultMessage("{0,localdatetime,HHmmss} ({1,number} mins ago)")
+	@AlternateMessage({ "one", "{0,localdatetime,HHmmss} (1 min ago)" })
+	String dashboard_TransactionDateUnder1Hour(Date theDate, @PluralCount(DefaultRule_en.class) int theMins);
+
+	@DefaultMessage("{0,localdatetime,HHmmss} (< 1min)")
+	String dashboard_TransactionDateUnder60Secs(Date theDate);
+
 	@DefaultMessage("Delete Domain")
 	String deleteDomainPanel_Breadcrumb();
 
@@ -188,8 +232,20 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Delete Service")
 	String deleteServicePanel_Title();
 
+	@DefaultMessage("Delete Service Version")
+	String deleteServiceVersion_Breadcrumb();
+
+	@DefaultMessage("Are you sure you want to delete the service version \"{0}\"?")
+	String deleteServiceVersionPanel_Confirm(String theId);
+
+	@DefaultMessage("Delete Service Version")
+	String deleteServiceVersionPanel_Title();
+
 	@DefaultMessage("Edit Domain")
 	String editDomain_Breadcrumb();
+
+	@DefaultMessage("Edit Monitor Rule")
+	String EditMonitorRule_Breadcrumb();
 
 	@DefaultMessage("Edit Service")
 	String editServicePanel_Breadcrumb();
@@ -203,11 +259,24 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Edit Service Version")
 	String editServiceVersion_Title();
 
+	@DefaultMessage("Notes")
+	String editUser_ContactNotes();
+
+	@DefaultMessage("Contact Information")
+	String editUser_ContactTitle();
+
 	@DefaultMessage("Edit User")
 	String editUser_Dashboard();
 
 	@DefaultMessage("Saved User")
 	String editUser_DoneSaving();
+
+	@DefaultMessage("A list of allowable IPs may optionally be specified. If specified, only " + "requests originating from one of the allowable IPs will be permitted to access "
+			+ "services using this user.")
+	String editUser_IpsDesc();
+
+	@DefaultMessage("Service Firewall")
+	String editUser_IpsTitle();
 
 	@DefaultMessage("Change Password")
 	String editUser_Password();
@@ -226,6 +295,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Actions")
 	String editUsersPanel_ColumnActions();
+
+	@DefaultMessage("Authentication Host")
+	String editUsersPanel_ColumnAuthHost();
 
 	@DefaultMessage("Last Access")
 	String editUsersPanel_ColumnLastServiceAccess();
@@ -248,6 +320,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Edit Users")
 	String editUsersPanel_Title();
+
+	@DefaultMessage("HTTP Basic Auth")
+	String httpBasicAuthServerSecurity_Name();
 
 	@DefaultMessage("Cannot remove the default config")
 	String httpClientConfigsPanel_CantDeleteDefault();
@@ -329,6 +404,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Retries must be 0 or a positive integer")
 	String httpClientConfigsPanel_validateFailed_Retries();
+
+	@DefaultMessage("JSON-RPC Named Parameter Server Security")
+	String jsonRpcNamedParameterServerSecurity_Name();
 
 	@DefaultMessage("Error: An invalid value {0} was found. Numbers must be 0 (meaning no messages will be stored) or positive (meaning this number will be stored before the oldest entries are deleted), and for performance reasons must be below {1}")
 	String keepRecentTransactionsPanel_AlertInvalidValue(String theValue, String theMax);
@@ -436,6 +514,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Local Database")
 	String localDatabaseAuthenticationHostEditPanel_title();
 
+	@DefaultMessage("Monitor Rules")
+	String MonitorRulesList_Breadcrumb();
+
 	@DefaultMessage("Administration Permissions")
 	String permissionsPanel_AdministrationPermissions();
 
@@ -457,20 +538,44 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Any user with super user permissions is able to configure any aspects of " + "the ServiceProxy")
 	String permissionsPanel_SuperUserDesc();
 
-	@DefaultMessage("Full access")
-	SafeHtml permissionsPanel_TreeAllMethodsCheckbox();
+	@DefaultMessage("Grant access to all {0} methods")
+	SafeHtml permissionsPanel_TreeAllMethodsCheckbox(int count);
 
-	@DefaultMessage("Full access")
-	SafeHtml permissionsPanel_TreeAllServicesCheckbox();
+	@DefaultMessage("Grant access to all {0} services")
+	SafeHtml permissionsPanel_TreeAllServicesCheckbox(int count);
 
-	@DefaultMessage("Full access")
-	SafeHtml permissionsPanel_TreeAllServiceVersionsCheckbox();
+	@DefaultMessage("Grant access to all {0} versions")
+	SafeHtml permissionsPanel_TreeAllServiceVersionsCheckbox(int count);
 
+	@DefaultMessage("Allow Access")
+	SafeHtml permissionsPanel_TreeMethodCheckbox();
+
+	
+	@DefaultMessage("Applies to this version")
+	SafeHtml ruleAppliesToPanel_TreeAllMethodsCheckbox(int count);
+
+	@DefaultMessage("Applies to all {0} services")
+	SafeHtml ruleAppliesToPanel_TreeAllServicesCheckbox(int count);
+
+	@DefaultMessage("Applies to all {0} versions")
+	SafeHtml ruleAppliesToPanel_TreeAllServiceVersionsCheckbox(int count);
+
+	@DefaultMessage("Applies")
+	SafeHtml ruleAppliesToPanel_TreeMethodCheckbox();
+
+	
+	
 	@DefaultMessage("ID")
 	String propertyNameId();
 
 	@DefaultMessage("Name")
 	String propertyNameName();
+
+	@DefaultMessage("Authorization")
+	String recentMessagesGrid_ColAuthorization();
+
+	@DefaultMessage("Domain")
+	String recentMessagesGrid_ColDomain();
 
 	@DefaultMessage("Implementation URL")
 	String recentMessagesGrid_ColImplementationUrl();
@@ -481,8 +586,17 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Millis")
 	String recentMessagesGrid_ColMillis();
 
+	@DefaultMessage("Service")
+	String recentMessagesGrid_ColService();
+
+	@DefaultMessage("Version")
+	String recentMessagesGrid_ColSvcVersion();
+
 	@DefaultMessage("Time")
 	String recentMessagesGrid_ColTimestamp();
+
+	@DefaultMessage("User")
+	String recentMessagesGrid_ColUser();
 
 	/**
 	 * Header value for column
@@ -507,6 +621,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Service Version Status")
 	String serviceVersionStats_Breadcrumb();
+
+	@DefaultMessage("Graphs")
+	String serviceVersionStats_GraphsTitle();
 
 	@DefaultMessage("Service Latency")
 	String serviceVersionStats_LatencyTitle();
@@ -541,6 +658,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Service Usage")
 	String serviceVersionStats_UsageTitle();
 
+	@DefaultMessage("Test Service Version")
+	String testServiceVersion_Breadcrumb();
+
 	@DefaultMessage("<b>Prefer Local</b> means that the proxy will favour any URLs which are on " + "the same host as the service retriever itself, and will only use remote "
 			+ "implementations if all local URLs are down")
 	String urlSelectionPolicy_Desc_PreferLocal();
@@ -566,110 +686,18 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Recent Transactions")
 	String viewRecentMessagUser_Breadcrumb();
 
+	@DefaultMessage("User Statistics and Usage")
+	String viewUserStats_Breadcrumb();
+
 	@DefaultMessage("Authentication Host")
 	String wsSecServerSecurity_AuthenticationHost();
-
+	
 	@DefaultMessage("WS-Security")
 	String wsSecServerSecurity_Name();
 
 	@DefaultMessage("Using authentication host: {0}")
 	String wsSecServerSecurity_UsesAuthenticationHost(String theModuleId);
 
-	@DefaultMessage("User Statistics and Usage")
-	String viewUserStats_Breadcrumb();
-
-	@DefaultMessage("View Usage")
-	String actions_ViewStats();
-
-	@DefaultMessage("Add User")
-	String addUser_Breadcrumb();
-
-	@DefaultMessage("Contact Information")
-	String editUser_ContactTitle();
-
-	@DefaultMessage("Notes")
-	String editUser_ContactNotes();
-
-	@DefaultMessage("JSON-RPC Named Parameter Server Security")
-	String jsonRpcNamedParameterServerSecurity_Name();
-
-	@DefaultMessage("Service Firewall")
-	String editUser_IpsTitle();
-
-	@DefaultMessage("A list of allowable IPs may optionally be specified. If specified, only " + "requests originating from one of the allowable IPs will be permitted to access "
-			+ "services using this user.")
-	String editUser_IpsDesc();
-
-	@DefaultMessage("Graphs")
-	String serviceVersionStats_GraphsTitle();
-
-	@DefaultMessage("User")
-	String recentMessagesGrid_ColUser();
-
-	@DefaultMessage("Authorization")
-	String recentMessagesGrid_ColAuthorization();
-
-	@DefaultMessage("HTTP Basic Auth")
-	String httpBasicAuthServerSecurity_Name();
-
-	@DefaultMessage("Delete Service Version")
-	String deleteServiceVersion_Breadcrumb();
-
-	@DefaultMessage("Delete Service Version")
-	String deleteServiceVersionPanel_Title();
-
-	@DefaultMessage("Are you sure you want to delete the service version \"{0}\"?")
-	String deleteServiceVersionPanel_Confirm(String theId);
-
-	@DefaultMessage("Authentication Host")
-	String editUsersPanel_ColumnAuthHost();
-
-	@DefaultMessage("Domain")
-	String recentMessagesGrid_ColDomain();
-
-	@DefaultMessage("Service")
-	String recentMessagesGrid_ColService();
-
-	@DefaultMessage("Version")
-	String recentMessagesGrid_ColSvcVersion();
-
-	@DefaultMessage("Test Service Version")
-	String testServiceVersion_Breadcrumb();
-
-	@DefaultMessage("Test / Manually Invoke")
-	String actions_TestServiceVersion();
-
-	@DefaultMessage("")
-	String dashboard_TransactionDateNever();
-
-	@DefaultMessage("{0,localdatetime,MMMdd HHmm} ({1,number} days ago)")
-	@AlternateMessage({ "one", "{0,localdatetime,MMMdd HHmm} (1 day ago)" })
-	String dashboard_TransactionDateOver1Day(Date theDate, @PluralCount(DefaultRule_en.class) int theDay);
-
-	@DefaultMessage("{0,localdatetime,HHmm} ({1,number} hrs ago)")
-	@AlternateMessage({ "one", "{0,localdatetime,HHmm} (1 hr ago)" })
-	String dashboard_TransactionDateUnder1Day(Date theDate, @PluralCount(DefaultRule_en.class) int theHour);
-
-	@DefaultMessage("{0,localdatetime,HHmmss} ({1,number} mins ago)")
-	@AlternateMessage({ "one", "{0,localdatetime,HHmmss} (1 min ago)" })
-	String dashboard_TransactionDateUnder1Hour(Date theDate, @PluralCount(DefaultRule_en.class) int theMins);
-
-	@DefaultMessage("{0,localdatetime,HHmmss} (< 1min)")
-	String dashboard_TransactionDateUnder60Secs(Date theDate);
-
-	@DefaultMessage("Domain has {0} Services")
-	@AlternateMessage({ 
-		"one", "Domain has one Service",
-		"=0", "Domain has no Services"
-		})
-	String dashboard_ActionDomainServicesHeader(@PluralCount(DefaultRule_en.class) int theServiceCount);
-
-	@DefaultMessage("Service has {0} Versions")
-	@AlternateMessage({ 
-		"one", "Service has one Version",
-		"=0", "Service has no Versions"
-		})
-	String dashboard_ActionServiceVersionsHeader(@PluralCount(DefaultRule_en.class) int theServiceCount);
 	
 	
 }

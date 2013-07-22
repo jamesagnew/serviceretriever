@@ -20,9 +20,6 @@ public class PersUserServiceVersionMethodPermission extends BasePersObject {
 
 	private static final long serialVersionUID = 1L;
 
-	@Column(name = "ALLOW", nullable = false)
-	private boolean myAllow;
-
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "PID")
@@ -57,21 +54,6 @@ public class PersUserServiceVersionMethodPermission extends BasePersObject {
 	 */
 	public PersUserServiceVersionPermission getServiceVersionPermission() {
 		return myServiceVersionPermission;
-	}
-
-	/**
-	 * @return the allow
-	 */
-	public boolean isAllow() {
-		return myAllow;
-	}
-
-	/**
-	 * @param theAllow
-	 *            the allow to set
-	 */
-	public void setAllow(boolean theAllow) {
-		myAllow = theAllow;
 	}
 
 	/**

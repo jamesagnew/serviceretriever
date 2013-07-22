@@ -4,7 +4,9 @@ import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.*;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -62,6 +64,8 @@ import org.apache.commons.lang3.time.DateUtils;
 @Stateless
 public class RuntimeStatusBean implements IRuntimeStatus {
 
+	private static final int CACHED_ENTRIES = 20000;
+
 	private static final int MAX_STATS_TO_FLUSH_AT_ONCE = 100;
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(RuntimeStatusBean.class);
 	private ReentrantLock myCollapseLock = new ReentrantLock();
@@ -75,6 +79,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private ConcurrentHashMap<Long, PersServiceVersionUrlStatus> myUrlStatus = new ConcurrentHashMap<Long, PersServiceVersionUrlStatus>();
 	private ConcurrentHashMap<BasePersInvocationStatsPk, BasePersMethodStats> myUnflushedInvocationStats = new ConcurrentHashMap<BasePersInvocationStatsPk, BasePersMethodStats>();
 	private ConcurrentHashMap<Long, PersServiceVersionStatus> myUnflushedServiceVersionStatus = new ConcurrentHashMap<Long, PersServiceVersionStatus>();
+	private ConcurrentHashMap<BasePersInvocationStatsPk, BasePersInvocationStats> myInvocationStatCache = new ConcurrentHashMap<BasePersInvocationStatsPk, BasePersInvocationStats>(CACHED_ENTRIES);
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
@@ -130,11 +135,11 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			}
 
 		}
-		
+
 		if (theRetVal.getPreferredUrl() == null && urls.size() > 0) {
 			theRetVal.setPreferredUrl(urls.remove(0));
 		}
-		
+
 		theRetVal.setAlternateUrls(urls);
 
 	}
@@ -192,7 +197,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				case DOWN:
 					if (retVal.getPreferredUrl() != null) {
 						/*
-						 * We don't try to reset the circuit breaker on more than one URL at a time
+						 * We don't try to reset the circuit breaker on more
+						 * than one URL at a time
 						 */
 					} else if (status.attemptToResetCircuitBreaker()) {
 						if (retVal.getPreferredUrl() != null) {
@@ -201,7 +207,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 						retVal.setPreferredUrl(next);
 					} else {
 						/*
-						 * we just won't try this one of it's down and it's not time to try resetting the CB
+						 * we just won't try this one of it's down and it's not
+						 * time to try resetting the CB
 						 */
 					}
 				}
@@ -247,22 +254,75 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	}
 
+	private ArrayDeque<PersInvocationStatsPk> myInvocationStatPopulatedKeys = new ArrayDeque<PersInvocationStatsPk>(CACHED_ENTRIES);
+	private ArrayDeque<PersInvocationStatsPk> myInvocationStatEmptyKeys = new ArrayDeque<PersInvocationStatsPk>(CACHED_ENTRIES);
+	
 	@Override
 	public BasePersInvocationStats getOrCreateInvocationStatsSynchronously(PersInvocationStatsPk thePk) {
-		synchronized (myUnflushedInvocationStats) {
+		Date oneMinuteAgoTruncated = DateUtils.truncate(new Date(System.currentTimeMillis() - DateUtils.MILLIS_PER_MINUTE), Calendar.MINUTE);
+		if (!thePk.getStartTime().before(oneMinuteAgoTruncated)) {
 			BasePersInvocationStats retVal = myDao.getInvocationStats(thePk);
-			if (retVal != null) {
-				return retVal;
-			} else {
-				return (BasePersInvocationStats) getStatsForPk(thePk);
+			if (retVal == null) {
+				return thePk.newObjectInstance();
 			}
 		}
+
+		BasePersInvocationStats retVal = myInvocationStatCache.get(thePk);
+		if (retVal == PLACEHOLDER) {
+			return thePk.newObjectInstance();
+		} else if (retVal == null) {
+			synchronized (myInvocationStatCache) {
+				retVal = myDao.getInvocationStats(thePk);
+				if (retVal != null) {
+					if (myInvocationStatPopulatedKeys.size() + 1 > CACHED_ENTRIES) {
+						myInvocationStatCache.remove(myInvocationStatPopulatedKeys.pollFirst());
+					}
+					myInvocationStatCache.put(thePk, retVal);
+					myInvocationStatPopulatedKeys.add(thePk);
+					return retVal;
+				} else {
+					if (myInvocationStatEmptyKeys.size() + 1 > CACHED_ENTRIES) {
+						myInvocationStatCache.remove(myInvocationStatEmptyKeys.pollFirst());
+					}
+					myInvocationStatCache.put(thePk, PLACEHOLDER);
+					myInvocationStatEmptyKeys.add(thePk);
+					return thePk.newObjectInstance();
+				}
+			}
+		} else {
+			return retVal;
+		}
+	}
+
+	@Override
+	public int getCachedPopulatedKeyCount() {
+		return myInvocationStatPopulatedKeys.size();
+	}
+	
+	@Override
+	public int getCachedEmptyKeyCount() {
+		return myInvocationStatEmptyKeys.size();
+	}
+
+	private static final Placeholder PLACEHOLDER = new Placeholder();
+
+	private static class Placeholder extends BasePersInvocationStats {
+
+		@Override
+		public StatsTypeEnum getStatsType() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public BasePersInvocationStatsPk getPk() {
+			throw new UnsupportedOperationException();
+		}
+
 	}
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, PersServiceVersionMethod theMethod, PersUser theUser, HttpResponseBean theHttpResponse,
-			InvocationResponseResultsBean theInvocationResponseResultsBean) {
+	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, PersServiceVersionMethod theMethod, PersUser theUser, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean) {
 		Validate.notNull(theInvocationTime, "InvocationTime");
 		Validate.notNull(theMethod, "Method");
 		Validate.notNull(theInvocationResponseResultsBean, "InvocationResponseResults");
@@ -298,8 +358,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 				String message;
 				if (wasFault) {
-					message = Messages.getString("RuntimeStatusBean.faultUrl", theHttpResponse.getResponseTime(), theInvocationResponseResultsBean.getResponseFaultCode(),
-							theInvocationResponseResultsBean.getResponseFaultDescription());
+					message = Messages.getString("RuntimeStatusBean.faultUrl", theHttpResponse.getResponseTime(), theInvocationResponseResultsBean.getResponseFaultCode(), theInvocationResponseResultsBean.getResponseFaultDescription());
 				} else {
 					message = Messages.getString("RuntimeStatusBean.successfulUrl", theHttpResponse.getResponseTime());
 				}
@@ -348,8 +407,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		PersUserStatus status = getUserStatusForUser(theUser);
 
 		PersUserMethodStatus methodStatus = status.getOrCreateMethodStatus(theMethod);
-		
-		
+
 		switch (theInvocationResponseResultsBean.getResponseType()) {
 		case SUCCESS:
 			status.setLastAccessIfNewer(theTransactionTime);
@@ -368,7 +426,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			methodStatus.setLastFailInvocationIfNewer(theTransactionTime);
 			break;
 		}
-		
 
 	}
 
@@ -455,13 +512,17 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				dayPk = new PersInvocationStatsPk(toIntervalTyoe, next.getPk().getStartTime(), ((PersInvocationStatsPk) next.getPk()).getMethodPid());
 				if (!statsToFlush.containsKey(dayPk)) {
 					statsToFlush.put(dayPk, new PersInvocationStats((PersInvocationStatsPk) dayPk));
-					// statsToFlush.put(dayPk, myDao.getOrCreateInvocationStats((PersInvocationStatsPk) dayPk));
+					// statsToFlush.put(dayPk,
+					// myDao.getOrCreateInvocationStats((PersInvocationStatsPk)
+					// dayPk));
 				}
 			} else if (invocClass == PersInvocationUserStats.class) {
 				dayPk = new PersInvocationUserStatsPk(toIntervalTyoe, next.getPk().getStartTime(), ((PersInvocationUserStatsPk) next.getPk()).getUser());
 				if (!statsToFlush.containsKey(dayPk)) {
 					statsToFlush.put(dayPk, new PersInvocationUserStats((PersInvocationUserStatsPk) dayPk));
-					// statsToFlush.put(dayPk, myDao.getOrCreateInvocationUserStats((PersInvocationUserStatsPk) dayPk));
+					// statsToFlush.put(dayPk,
+					// myDao.getOrCreateInvocationUserStats((PersInvocationUserStatsPk)
+					// dayPk));
 				}
 			} else {
 				throw new IllegalStateException("Unknown type: " + invocClass);
@@ -557,7 +618,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 		ArrayList<PersServiceVersionUrlStatus> urlStatuses = new ArrayList<PersServiceVersionUrlStatus>(myUrlStatus.values());
 		ourLog.debug("Going to flush {} URL statuses", urlStatuses.size());
-		
+
 		for (Iterator<PersServiceVersionUrlStatus> iter = urlStatuses.iterator(); iter.hasNext();) {
 			PersServiceVersionUrlStatus next = iter.next();
 			if (!next.isDirty()) {
@@ -566,7 +627,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			} else {
 				next.setLastStatusSave(new Date());
 				/*
-				 * TODO: Maybe use a "last saved" timestamp here instead of a flag to prevent race conditions
+				 * TODO: Maybe use a "last saved" timestamp here instead of a
+				 * flag to prevent race conditions
 				 */
 				next.setDirty(false);
 			}
@@ -589,7 +651,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			} else {
 				next.setLastSave(new Date());
 				/*
-				 * TODO: Maybe use a "last saved" timestamp here instead of a flag to prevent race conditions
+				 * TODO: Maybe use a "last saved" timestamp here instead of a
+				 * flag to prevent race conditions
 				 */
 				next.setDirty(false);
 			}
@@ -603,7 +666,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		/*
 		 * Flush user status
 		 */
-		
+
 		List<PersUserStatus> userStatuses = new ArrayList<PersUserStatus>();
 		for (PersUser next : new HashSet<PersUser>(myUnflushedUserStatus.keySet())) {
 			PersUserStatus nextStatus = myUnflushedUserStatus.remove(next);
@@ -614,16 +677,15 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 	}
 
-	private void doRecordInvocationMethod(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean,
-			BasePersInvocationStatsPk theStatsPk) {
+	private void doRecordInvocationMethod(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, BasePersInvocationStatsPk theStatsPk) {
 		Validate.notNull(theInvocationResponseResultsBean.getResponseType(), "responseType");
-		
+
 		BasePersInvocationStats stats = (BasePersInvocationStats) getStatsForPk(theStatsPk);
 
 		long responseTime;
 		long responseBytes;
 		if (theHttpResponse != null) {
-			if (theHttpResponse.getBody()==null) {
+			if (theHttpResponse.getBody() == null) {
 				throw new NullPointerException("HTTP Response is null");
 			}
 			responseTime = theHttpResponse.getResponseTime();
@@ -684,8 +746,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 				Date nextReset = theUrlStatusBean.getNextCircuitBreakerReset();
 				if (nextReset != null) {
-					ourLog.info("URL[{}] is DOWN, Next circuit breaker reset attempt is {} - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), myTimeFormat.format(nextReset),
-							theUrlStatusBean.getUrl().getUrl() });
+					ourLog.info("URL[{}] is DOWN, Next circuit breaker reset attempt is {} - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), myTimeFormat.format(nextReset), theUrlStatusBean.getUrl().getUrl() });
 				} else {
 					ourLog.info("URL[{}] is DOWN - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), theUrlStatusBean.getUrl().getUrl() });
 				}

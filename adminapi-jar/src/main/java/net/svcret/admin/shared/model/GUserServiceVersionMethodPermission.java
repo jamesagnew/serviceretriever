@@ -5,20 +5,7 @@ public class GUserServiceVersionMethodPermission extends BaseGObject<GUserServic
 	private static final long serialVersionUID = 1L;
 	
 	private long myServiceVersionMethodPid;
-	private boolean myAllow;
 	
-	/**
-	 * @return the allow
-	 */
-	public boolean isAllow() {
-		return myAllow;
-	}
-	/**
-	 * @param theAllow the allow to set
-	 */
-	public void setAllow(boolean theAllow) {
-		myAllow = theAllow;
-	}
 	/**
 	 * @return the ServiceVersionPid
 	 */
@@ -36,7 +23,6 @@ public class GUserServiceVersionMethodPermission extends BaseGObject<GUserServic
 	public void merge(GUserServiceVersionMethodPermission theObject) {
 		setPid(theObject.getPid());
 		setServiceVersionMethodPid(theObject.getServiceVersionMethodPid());
-		setAllow(theObject.isAllow());
 	}
 
 }

@@ -79,7 +79,17 @@ public class LeftBarPanel extends FlowPanel {
 		
 		myEditUsersBtn = configure.addItem(MSGS.leftPanel_EditUsers(), PagesEnum.EUL);
 		myAllButtons.add(myEditUsersBtn);
+
+		/*
+		 * Configuration
+		 */
 		
+		LeftMenuComponent monitoring = new LeftMenuComponent("Monitoring");
+		add(monitoring);
+
+		myProxyConfigBtn = monitoring.addItem(MSGS.leftPanel_Configuration(), PagesEnum.MRL);
+		myAllButtons.add(myProxyConfigBtn);
+
 		updateStyles();
 		
 		History.addValueChangeHandler(new ValueChangeHandler<String>() {

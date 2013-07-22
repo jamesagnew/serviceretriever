@@ -355,6 +355,10 @@ TABLE.propertyTable TBODY TR:first-child {
 	color: #808080;
 }
 
+.twoColumnPropertyGridFirstColumn {
+	white-space: nowrap;
+}
+
 .spinnerElement {
 	display: inline-block;
 	margin-right: 5px;
