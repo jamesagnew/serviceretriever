@@ -18,6 +18,9 @@ import net.svcret.admin.client.ui.config.domain.AddDomainStep2Panel;
 import net.svcret.admin.client.ui.config.domain.DeleteDomainPanel;
 import net.svcret.admin.client.ui.config.domain.DeleteServiceVersionPanel;
 import net.svcret.admin.client.ui.config.domain.EditDomainPanel;
+import net.svcret.admin.client.ui.config.monitor.AddMonitorRulePanel;
+import net.svcret.admin.client.ui.config.monitor.EditMonitorRulePanel;
+import net.svcret.admin.client.ui.config.monitor.MonitorRulesPanel;
 import net.svcret.admin.client.ui.config.service.AddServicePanel;
 import net.svcret.admin.client.ui.config.service.DeleteServicePanel;
 import net.svcret.admin.client.ui.config.service.EditServicePanel;
@@ -124,6 +127,36 @@ public class NavProcessor {
 		return prev;
 	}
 
+	public static String getMonitorRules(boolean theAddToHistory) {
+		return createArgumentToken(theAddToHistory, PagesEnum.MRL);
+	}
+
+	private static String createArgumentToken(boolean theAddToHistory, PagesEnum thePage) {
+		String token = "";
+		if (theAddToHistory) {
+			token = getCurrentToken();
+			if (!token.isEmpty()) {
+				token = token + SEPARATOR;
+			}
+		}
+		token = token + thePage;
+		token = removeDuplicates(token);
+		return token;
+	}
+
+	public static String getTestServiceVersion(boolean theAddToHistory, long theServiceVersionPid) {
+		String token = "";
+		if (theAddToHistory) {
+			token = getCurrentToken();
+			if (!token.isEmpty()) {
+				token = token + SEPARATOR;
+			}
+		}
+		token = token + PagesEnum.TSV + "_" + theServiceVersionPid;
+		token = removeDuplicates(token);
+		return token;
+	}
+
 	public static String getTokenAddDomainStep2(long theId) {
 		String token = getCurrentToken();
 		if (!token.isEmpty()) {
@@ -135,16 +168,7 @@ public class NavProcessor {
 	}
 
 	public static String getTokenAddService(boolean theAddToHistory, long theDomainPid) {
-		String token = "";
-		if (theAddToHistory) {
-			token = getCurrentToken();
-			if (!token.isEmpty()) {
-				token = token + SEPARATOR;
-			}
-		}
-		token = token + PagesEnum.ASE + "_" + theDomainPid;
-		token = removeDuplicates(token);
-		return token;
+		return createArgumentToken(theAddToHistory, PagesEnum.ASE, theDomainPid);
 	}
 
 	public static String getTokenAddServiceVersion(boolean theAddToHistory, Long theDomainId, Long theServiceId, Long theUncommittedSessionId) {
@@ -244,6 +268,14 @@ public class NavProcessor {
 		return token;
 	}
 
+	public static String getTokenEditMonitorRule(boolean theAddToHistory, long theRulePid) {
+		return createArgumentToken(theAddToHistory, PagesEnum.EMR, theRulePid);
+	}
+
+	public static String getTokenAddMonitorRule(boolean theAddToHistory) {
+		return createArgumentToken(theAddToHistory, PagesEnum.AMR);
+	}
+
 	// public static Long getParamAddServiceVersionUncommittedId() {
 	// String current = getCurrentToken();
 	// if (!current.startsWith(PagesEnum.ASV.name() + "_")) {
@@ -283,7 +315,8 @@ public class NavProcessor {
 		token = token + PagesEnum.ESV + "_" + theVersionPid;
 
 		token = removeDuplicates(token);
-		return token;
+		
+		return createArgumentToken(theAddToHistory, PagesEnum.ESV, theVersionPid);
 	}
 
 	public static String getTokenEditUser(boolean theAddToHistory, long theUserPid) {
@@ -308,19 +341,6 @@ public class NavProcessor {
 			}
 		}
 		token = token + PagesEnum.SVS + "_" + theDomainPid + "_" + theServicePid + "_" + theServiceVersionPid;
-		token = removeDuplicates(token);
-		return token;
-	}
-
-	public static String getTestServiceVersion(boolean theAddToHistory, long theServiceVersionPid) {
-		String token = "";
-		if (theAddToHistory) {
-			token = getCurrentToken();
-			if (!token.isEmpty()) {
-				token = token + SEPARATOR;
-			}
-		}
-		token = token + PagesEnum.TSV + "_" + theServiceVersionPid;
 		token = removeDuplicates(token);
 		return token;
 	}
@@ -381,6 +401,9 @@ public class NavProcessor {
 			break;
 		case AD2:
 			panel = new AddDomainStep2Panel(Long.parseLong(args));
+			break;
+		case MRL:
+			panel = new MonitorRulesPanel();
 			break;
 		case ADU:
 			panel = new AddUserPanel(Long.parseLong(args));
@@ -479,6 +502,12 @@ public class NavProcessor {
 		case VUS:
 			panel = new UserStatsPanel(Long.parseLong(args));
 			break;
+		case AMR:
+			panel = new AddMonitorRulePanel();
+			break;
+		case EMR:
+			panel = new EditMonitorRulePanel(Long.parseLong(args));
+			break;
 		}
 
 		if (panel == null) {
@@ -503,6 +532,19 @@ public class NavProcessor {
 
 	public static void navRoot(PagesEnum thePage) {
 		History.newItem(thePage.name(), true);
+	}
+
+	private static String createArgumentToken(boolean theAddToHistory, PagesEnum thePage,long theArgument) {
+		String token = "";
+		if (theAddToHistory) {
+			token = getCurrentToken();
+			if (!token.isEmpty()) {
+				token = token + SEPARATOR;
+			}
+		}
+		token = token + thePage + "_" + theArgument;
+		token = removeDuplicates(token);
+		return token;
 	}
 
 	private static String getCurrentToken() {

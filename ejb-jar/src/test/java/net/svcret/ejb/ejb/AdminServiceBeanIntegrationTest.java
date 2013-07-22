@@ -1,17 +1,8 @@
 package net.svcret.ejb.ejb;
 
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.isOneOf;
-import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -114,7 +105,6 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 	}
 
-	@SuppressWarnings("unchecked")
 	@Before
 	public void before2() throws SQLException, ProcessingException {
 		myDao = new DaoBean();
@@ -124,27 +114,28 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		myConfigSvc.setDao(myDao);
 		myConfigSvc.setBroadcastSender(myBroadcastSender);
 
-		mySvc = new AdminServiceBean();
-		mySvc.setPersSvc(myDao);
-		mySvc.setConfigSvc(myConfigSvc);
-
 		myStatsSvc = new RuntimeStatusBean();
 		myStatsSvc.setDao(myDao);
 		myStatsSvc.setConfigSvc(myConfigSvc);
-
+		
 		mySoapInvoker = mock(IServiceInvokerSoap11.class, new DefaultAnswer());
-		mySvc.setInvokerSoap11(mySoapInvoker);
 
 		mySecSvc = new SecurityServiceBean();
 		mySecSvc.setPersSvc(myDao);
 		mySecSvc.setBroadcastSender(myBroadcastSender);
-		mySvc.setSecuritySvc(mySecSvc);
 
 		mySvcReg = new ServiceRegistryBean();
 		mySvcReg.setBroadcastSender(myBroadcastSender);
 		mySvcReg.setDao(myDao);
-		mySvc.setServiceRegistry(mySvcReg);
 
+		mySvc = new AdminServiceBean();
+		mySvc.setPersSvc(myDao);
+		mySvc.setConfigSvc(myConfigSvc);
+		mySvc.setRuntimeStatusSvc(myStatsSvc);
+		mySvc.setServiceRegistry(mySvcReg);
+		mySvc.setInvokerSoap11(mySoapInvoker);
+		mySvc.setSecuritySvc(mySecSvc);
+		
 		myTransactionLogSvc = new TransactionLoggerBean();
 		myTransactionLogSvc.setDao(myDao);
 		
@@ -819,7 +810,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		user.getDomainPermissions().get(0).getServicePermissions().get(0).setServiceVersionPermissions(new ArrayList<GUserServiceVersionPermission>());
 		user.getDomainPermissions().get(0).getServicePermissions().get(0).getServiceVersionPermissions().add(new GUserServiceVersionPermission());
 		user.getDomainPermissions().get(0).getServicePermissions().get(0).getServiceVersionPermissions().get(0).setServiceVersionPid(persVer.getPid());
-		user.getDomainPermissions().get(0).getServicePermissions().get(0).getServiceVersionPermissions().get(0).getOrCreateServiceVersionMethodPermission(persVer.getMethods().get(0).getPid()).setAllow(true);
+		user.getDomainPermissions().get(0).getServicePermissions().get(0).getServiceVersionPermissions().get(0).getOrCreateServiceVersionMethodPermission(persVer.getMethods().get(0).getPid());
 		
 		user = mySvc.saveUser(user);
 
@@ -952,9 +943,15 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
+		mySvcReg.reloadRegistryFromDatabase();
+		
+		newEntityManager();
+		
 		final ModelUpdateRequest req = new ModelUpdateRequest();
 		req.addServiceToLoadStats(d0s0.getPid());
 
+		
+		
 		List<RetrieverThread> ts = new ArrayList<RetrieverThread>();
 		for (int i = 0; i < 3; i++) {
 			RetrieverThread t = new RetrieverThread(req);
@@ -1109,8 +1106,8 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		 * Add method to each version perm
 		 */
 
-		user.getDomainPermissions().get(0).getOrCreateServicePermission(d1s1.getPid()).getOrCreateServiceVersionPermission(d1s1v1.getPid()).getOrCreateServiceVersionMethodPermission(d1s1v1m1.getPid()).setAllow(true);
-		user.getDomainPermissions().get(1).getOrCreateServicePermission(d2s1.getPid()).getOrCreateServiceVersionPermission(d2s1v1.getPid()).getOrCreateServiceVersionMethodPermission(d2s1v1m1.getPid()).setAllow(true);
+		user.getDomainPermissions().get(0).getOrCreateServicePermission(d1s1.getPid()).getOrCreateServiceVersionPermission(d1s1v1.getPid()).getOrCreateServiceVersionMethodPermission(d1s1v1m1.getPid());
+		user.getDomainPermissions().get(1).getOrCreateServicePermission(d2s1.getPid()).getOrCreateServiceVersionPermission(d2s1v1.getPid()).getOrCreateServiceVersionMethodPermission(d2s1v1m1.getPid());
 		mySvc.saveUser(user);
 		newEntityManager();
 		user = mySvc.loadUser(user.getPid(), false);
@@ -1155,10 +1152,12 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 				AdminServiceBean sSvc = new AdminServiceBean();
 				sSvc.setPersSvc(persSvc);
 				sSvc.setConfigSvc(myConfigSvc);
-				sSvc.setRuntimeStatusBean(rs);
+				sSvc.setServiceRegistry(mySvcReg);
+				sSvc.setRuntimeStatusSvc(rs);
 
 				RuntimeStatusBean statsSvc = new RuntimeStatusBean();
 				statsSvc.setDao(persSvc);
+
 				sSvc.loadModelUpdate(myReq);
 
 				entityManager.getTransaction().commit();

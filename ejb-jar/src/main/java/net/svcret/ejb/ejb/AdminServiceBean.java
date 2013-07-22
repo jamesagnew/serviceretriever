@@ -118,6 +118,8 @@ import net.svcret.ejb.util.Validate;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 
+import com.google.common.annotations.VisibleForTesting;
+
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
 @Stateless
 public class AdminServiceBean implements IAdminService {
@@ -716,7 +718,8 @@ public class AdminServiceBean implements IAdminService {
 	/**
 	 * FOR UNIT TESTS ONLY
 	 */
-	public void setRuntimeStatusBean(RuntimeStatusBean theRs) {
+	@VisibleForTesting
+	void setRuntimeStatusSvc(RuntimeStatusBean theRs) {
 		myStatusSvc = theRs;
 	}
 
@@ -1128,7 +1131,6 @@ public class AdminServiceBean implements IAdminService {
 		PersUserServiceVersionMethodPermission retVal = new PersUserServiceVersionMethodPermission();
 		retVal.setPid(theObj.getPidOrNull());
 		retVal.setServiceVersionMethod(myDao.getServiceVersionMethodByPid(theObj.getServiceVersionMethodPid()));
-		retVal.setAllow(theObj.isAllow());
 		return retVal;
 	}
 
@@ -1186,7 +1188,7 @@ public class AdminServiceBean implements IAdminService {
 	private GDomainList loadDomainList(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats) throws ProcessingException {
 		GDomainList domainList = new GDomainList();
 
-		for (PersDomain nextDomain : myDao.getAllDomains()) {
+		for (PersDomain nextDomain : myServiceRegistry.getAllDomains()) {
 			GDomain gDomain = loadDomain(nextDomain, theLoadDomStats, theLoadSvcStats, theLoadVerStats, theLoadVerMethodStats);
 
 			domainList.add(gDomain);
@@ -1764,7 +1766,6 @@ public class AdminServiceBean implements IAdminService {
 		GUserServiceVersionMethodPermission retVal = new GUserServiceVersionMethodPermission();
 		retVal.setPid(theObj.getPid());
 		retVal.setServiceVersionMethodPid(theObj.getServiceVersionMethod().getPid());
-		retVal.setAllow(theObj.isAllow());
 		return retVal;
 	}
 
@@ -2095,7 +2096,7 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatus theStatus, PersServiceVersionMethod theNextMethod, IWithStats theOperator, Date end) {
-		Date start = new Date(System.currentTimeMillis() - (theRange.getRange().getNumMins() * 60 * 1000L));
+		Date start = new Date(end.getTime() - (theRange.getRange().getNumMins() * 60 * 1000L));
 		doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator, start, end);
 	}
 

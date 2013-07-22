@@ -54,6 +54,7 @@ private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger
 		});
 		
 		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class, DefaultAnswer.INSTANCE);
+		when(method.getPid()).thenReturn(123L);
 
 		final Set<BasePersInvocationStatsPk> all = new HashSet<BasePersInvocationStatsPk>();
 		IWithStats operator = new IWithStats() {

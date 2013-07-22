@@ -1,5 +1,6 @@
 package net.svcret.ejb.api;
 
+import java.util.Collection;
 import java.util.List;
 
 import javax.ejb.Local;
@@ -57,5 +58,7 @@ public interface IServiceRegistry {
 	BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theSv) throws ProcessingException;
 
 	BasePersServiceVersion getServiceVersionByPid(long theServiceVersionPid);
+
+	Collection<PersDomain> getAllDomains();
 
 }

@@ -53,5 +53,8 @@ public interface IRuntimeStatus {
 
 	BasePersInvocationStats getOrCreateUserInvocationStatsSynchronously(PersInvocationUserStatsPk thePk);
 
+	int getCachedPopulatedKeyCount();
+
+	int getCachedEmptyKeyCount();
 	
 }

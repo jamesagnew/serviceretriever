@@ -9,6 +9,7 @@ public class TwoColumnGrid extends FlexTable {
 
 	public TwoColumnGrid() {
 		setStyleName(CssConstants.TWO_COLUMN_PROPERTY_GRID);
+		getColumnFormatter().addStyleName(0, CssConstants.TWO_COLUMN_PROPERTY_GRID_FIRSTCOLUMN);
 	}
 	
 	private static int ourNextId;
@@ -28,6 +29,7 @@ public class TwoColumnGrid extends FlexTable {
 		int row = getRowCount();
 		setWidget(row, 0, lbl);
 		setWidget(row, 1, theComponent);
+		
 	}
 	
 	public void addDescription(String theDescription) {
@@ -54,5 +56,11 @@ public class TwoColumnGrid extends FlexTable {
 
 	public void addRow(String theLabel, String theComponent) {
 		addRow(theLabel, new Label(theComponent));
+	}
+
+	public void addFullWidthCell(Widget theWidget) {
+		int row = getRowCount();
+		setWidget(row, 0, theWidget);
+		getFlexCellFormatter().setColSpan(row, 0, 3);
 	}
 }

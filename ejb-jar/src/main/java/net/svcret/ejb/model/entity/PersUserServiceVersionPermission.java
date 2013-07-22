@@ -3,6 +3,7 @@ package net.svcret.ejb.model.entity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -16,6 +17,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+
+import org.apache.commons.lang3.Validate;
 
 @Table(name = "PX_USER_PERM_SVCVER", uniqueConstraints = { // -
 @UniqueConstraint(columnNames = { "SVCVER_PID", "USER_PERM_SERVICE_PID" }) } // -
@@ -47,7 +50,7 @@ public class PersUserServiceVersionPermission extends BasePersObject {
 	/**
 	 * Children
 	 */
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy="myServiceVersionPermission")
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersionPermission")
 	private Collection<PersUserServiceVersionMethodPermission> myServiceVersionMethodPermissions;
 
 	/**
@@ -75,9 +78,7 @@ public class PersUserServiceVersionPermission extends BasePersObject {
 		}
 
 		for (PersUserServiceVersionMethodPermission nextMethod : getServiceVersionMethodPermissions()) {
-			if (nextMethod.isAllow()) {
-				retVal.add(nextMethod.getServiceVersionMethod());
-			}
+			retVal.add(nextMethod.getServiceVersionMethod());
 		}
 		return retVal;
 	}
@@ -167,6 +168,18 @@ public class PersUserServiceVersionPermission extends BasePersObject {
 		getServiceVersionMethodPermissions();
 		myServiceVersionMethodPermissions.add(thePerm);
 		thePerm.setServiceVersionPermission(this);
+	}
+
+	public void removePermission(PersServiceVersionMethod theMethod) {
+		Validate.notNull(theMethod);
+		
+		getServiceVersionMethodPermissions();
+		for (Iterator<PersUserServiceVersionMethodPermission> iter = myServiceVersionMethodPermissions.iterator();iter.hasNext();) {
+			if (iter.next().getServiceVersionMethod().equals(theMethod)) {
+				iter.remove();
+			}
+		}
+		
 	}
 
 }

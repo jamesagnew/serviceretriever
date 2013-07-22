@@ -4,6 +4,13 @@ import static net.svcret.admin.client.AdminPortal.MSGS;
 public enum PagesEnum {
 
 	/** Add domain step 2 */
+	MRL(MSGS.MonitorRulesList_Breadcrumb()),
+
+	AMR(MSGS.AddMonitorRule_Breadcrumb()),
+	
+	EMR(MSGS.EditMonitorRule_Breadcrumb()),
+
+	/** Add domain step 2 */
 	AD2(MSGS.addDomainStep2_Breadcrumb()),
 
 	/** Add domain */

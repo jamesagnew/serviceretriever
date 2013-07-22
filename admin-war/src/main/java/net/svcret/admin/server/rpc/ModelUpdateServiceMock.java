@@ -183,6 +183,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 
 		myMonitorRuleList=new GMonitorRuleList();
 		myMonitorRuleList.add(new GMonitorRule());
+		myMonitorRuleList.get(0).setName("Demo Rule");
 		myMonitorRuleList.get(0).setFireForBackingServiceLatencyIsAboveMillis(100);
 		myMonitorRuleList.get(0).setFireForBackingServiceLatencySustainTimeMins(5);
 		myMonitorRuleList.get(0).getNotifyEmailContacts().add("foo@example.com");

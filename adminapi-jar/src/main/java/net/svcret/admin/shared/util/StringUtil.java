@@ -1,5 +1,8 @@
 package net.svcret.admin.shared.util;
 
+import com.google.gwt.safehtml.shared.SafeHtml;
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
+
 public class StringUtil {
 
 	public static String defaultString(String theString) {
@@ -58,6 +61,10 @@ public class StringUtil {
 
 	public static String convertPlaintextToHtml(String theDescription) {
 		return theDescription.replace("<", "&lt;").replaceAll("(http(s?):\\S+)( |$)", "<a href=\"$1\">$1</a>$3").replace("\n", "<br/>");
+	}
+
+	public static SafeHtml toSafeHtml(String theString) {
+		return new SafeHtmlBuilder().appendHtmlConstant(theString).toSafeHtml();
 	}
 
 	
