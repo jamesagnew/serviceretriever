@@ -21,6 +21,7 @@ import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
+import net.svcret.admin.shared.model.GMonitorRule;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GRecentMessage;
@@ -715,6 +716,16 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		}
 
 		return retVal;
+	}
+
+	@Override
+	public GMonitorRuleList saveMonitorRule(GMonitorRule theRule) {
+		if (isMockMode()) {
+			myMock.saveMonitorRule(theRule);
+		}else {
+			myAdminSvc.saveMonitorRule(theRule);
+		}
+		return loadMonitorRuleList();
 	}
 
 }

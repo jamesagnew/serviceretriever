@@ -213,6 +213,26 @@ public class Model {
 		}
 	}
 
+	public void loadMonitorRuleList(final IAsyncLoadCallback<GMonitorRuleList> theIAsyncLoadCallback) {
+		if (myMonitorRuleList == null) {
+			AdminPortal.MODEL_SVC.loadMonitorRuleList(new AsyncCallback<GMonitorRuleList>() {
+
+				@Override
+				public void onFailure(Throwable theCaught) {
+					handleFailure(theCaught);
+				}
+
+				@Override
+				public void onSuccess(GMonitorRuleList theResult) {
+					myMonitorRuleList = theResult;
+					theIAsyncLoadCallback.onSuccess(theResult);
+				}
+			});
+		} else {
+			theIAsyncLoadCallback.onSuccess(myMonitorRuleList);
+		}
+	}
+
 	public void loadService(final long theDomainPid, final long theServicePid, final IAsyncLoadCallback<GService> theIAsyncLoadCallback) {
 		loadServiceList(theDomainPid, new IAsyncLoadCallback<GServiceList>() {
 			@Override
@@ -298,6 +318,10 @@ public class Model {
 
 	}
 
+	public void setMonitorRuleList(GMonitorRuleList theResult) {
+		myMonitorRuleList = theResult;
+	}
+
 	public static Model getInstance() {
 		if (ourInstance == null) {
 			ourInstance = new Model();
@@ -360,26 +384,6 @@ public class Model {
 			}
 		}
 
-	}
-
-	public void loadMonitorRuleList(final IAsyncLoadCallback<GMonitorRuleList> theIAsyncLoadCallback) {
-		if (myMonitorRuleList == null) {
-			AdminPortal.MODEL_SVC.loadMonitorRuleList(new AsyncCallback<GMonitorRuleList>() {
-
-				@Override
-				public void onFailure(Throwable theCaught) {
-					handleFailure(theCaught);
-				}
-
-				@Override
-				public void onSuccess(GMonitorRuleList theResult) {
-					myMonitorRuleList=theResult;
-					theIAsyncLoadCallback.onSuccess(theResult);
-				}
-			});
-		}else {
-			theIAsyncLoadCallback.onSuccess(myMonitorRuleList);
-		}
 	}
 
 }

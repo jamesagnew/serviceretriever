@@ -32,5 +32,6 @@ public class CssConstants {
 	public static final String MAIN_PANEL_UPDATE = "mainPanelUpdate";
 	public static final String RECENT_MESSAGE_SCROLLER = "recentMessageScroller";
 	public static final String TWO_COLUMN_PROPERTY_GRID_FIRSTCOLUMN = "twoColumnPropertyGridFirstColumn";
+	public static final String EDITABLE_LABEL = "editableLabel";
 	
 }

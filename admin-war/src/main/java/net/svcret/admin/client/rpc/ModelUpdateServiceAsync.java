@@ -12,6 +12,7 @@ import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
+import net.svcret.admin.shared.model.GMonitorRule;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GRecentMessage;
@@ -92,5 +93,7 @@ public interface ModelUpdateServiceAsync {
 	void testServiceVersionWithSingleMessage(String theMessageText, long thePid, AsyncCallback<GServiceVersionSingleFireResponse> theAsyncCallback);
 
 	void loadMonitorRuleList(AsyncCallback<GMonitorRuleList> theAsyncCallback);
+
+	void saveMonitorRule(GMonitorRule theRule, AsyncCallback<GMonitorRuleList> theAsyncCallback);
 
 }

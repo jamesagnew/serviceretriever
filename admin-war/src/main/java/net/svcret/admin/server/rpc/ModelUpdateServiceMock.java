@@ -709,7 +709,19 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid) {
 		return (GServiceVersionSingleFireResponse) createMessage(true, new GServiceVersionSingleFireResponse());
 }
+	@Override
 	public GMonitorRuleList loadMonitorRuleList() {
+		return myMonitorRuleList;
+	}
+
+	@Override
+	public GMonitorRuleList saveMonitorRule(GMonitorRule theRule) {
+		if (theRule.getPidOrNull()==null) {
+			myMonitorRuleList.getRuleByPid(theRule.getPidOrNull()).merge(theRule);
+		}else {
+			theRule.setPid(ourNextPid++);
+			myMonitorRuleList.add(theRule);
+		}
 		return myMonitorRuleList;
 	}
 

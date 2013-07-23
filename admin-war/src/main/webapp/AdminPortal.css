@@ -116,6 +116,15 @@ TABLE.dashboardTable TBODY TR:hover {
 	background: transparent !important;
 }
 
+.editableLabel {
+	background: #E0E0E0;
+	border: 1px solid #FFFFFF; 	
+}
+
+.editableLabel:HOVER {
+	border: 1px solid #A0A0A0; 	
+}
+
 .errorLabel {
 	display: block;
 	color: #FF0000;
@@ -347,17 +356,17 @@ TABLE.propertyTable TBODY TR:first-child {
 	background: #F0F8FF;
 }
 
-.twoColumnPropertyGrid TR {
+.twoColumnPropertyGrid TBODY TR {
 	background: transparent !important;
+}
+
+.twoColumnPropertyGrid TBODY TR TD:FIRST-CHILD {
+	white-space: nowrap;
 }
 
 .twoColumnPropertyGridDesc {
 	font-size: 0.8em;
 	color: #808080;
-}
-
-.twoColumnPropertyGridFirstColumn {
-	white-space: nowrap;
 }
 
 .spinnerElement {

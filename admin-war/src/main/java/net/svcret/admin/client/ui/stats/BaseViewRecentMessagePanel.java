@@ -47,7 +47,11 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		myTopPanel.add(myTopLoadingSpinner);
 
 		myTopGrid = new TwoColumnGrid();
-		myTopPanel.add(myTopGrid);
+		FlowPanel topContentPanel = new FlowPanel();
+		topContentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
+		myTopPanel.add(topContentPanel);
+		
+		topContentPanel.add(myTopGrid);
 
 	}
 
@@ -90,28 +94,25 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
 		myReqPanel.add(titleLabel);
 
+		FlowPanel reqContentPanel = new FlowPanel();
+		reqContentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
+		myReqPanel.add(reqContentPanel);
+		
 		Panel reqHeaderPanel = new FlowPanel();
 		for (Pair<String> next : theResult.getRequestHeaders()) {
 			reqHeaderPanel.add(new HTML(formatHeader(next)));
 		}
-		myReqPanel.add(reqHeaderPanel);
-
-		HorizontalPanel reqFunctions = new HorizontalPanel();
-		if (theResult.getRequestContentType() != null && theResult.getRequestContentType().toLowerCase().contains("xml")) {
-			reqFunctions.add(new PButton("Format XML", new ClickHandler() {
-				@Override
-				public void onClick(ClickEvent theEvent) {
-					myReqPre.setText(formatXml(theResult.getRequestMessage()));
-				}
-			}));
-		}
-		;
-		myReqPanel.add(reqFunctions);
+		reqContentPanel.add(reqHeaderPanel);
 
 		myReqPre = new HtmlPre(theResult.getRequestMessage());
+
+		HorizontalPanel reqFunctions = new HorizontalPanel();
+		addResponseFormatButtons(reqFunctions, theResult.getRequestContentType(), myReqPre, theResult.getRequestMessage());
+		reqContentPanel.add(reqFunctions);
+
 		ScrollPanel reqMsgPanel = new ScrollPanel(myReqPre);
 		reqMsgPanel.addStyleName(CssConstants.RECENT_MESSAGE_SCROLLER);
-		myReqPanel.add(reqMsgPanel);
+		reqContentPanel.add(reqMsgPanel);
 
 		/*
 		 * Response Message
@@ -130,29 +131,46 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		respTitleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
 		myRespPanel.add(respTitleLabel);
 
+		FlowPanel respContentPanel = new FlowPanel();
+		respContentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
+		myRespPanel.add(respContentPanel);
+		
 		Panel respHeaderPanel = new FlowPanel();
 		for (Pair<String> next : theResult.getResponseHeaders()) {
 			respHeaderPanel.add(new HTML(formatHeader(next)));
 		}
-		myRespPanel.add(respHeaderPanel);
+		respContentPanel.add(respHeaderPanel);
+
+		myRespPre = new HtmlPre(theResult.getResponseMessage());
 
 		HorizontalPanel respFunctions = new HorizontalPanel();
-		if (theResult.getResponseContentType() != null && theResult.getResponseContentType().toLowerCase().contains("xml")) {
+		addResponseFormatButtons(respFunctions, theResult.getResponseContentType(), myRespPre, theResult.getResponseMessage());
+		
+		respContentPanel.add(respFunctions);
+
+		ScrollPanel respMsgPanel = new ScrollPanel(myRespPre);
+		respMsgPanel.addStyleName(CssConstants.RECENT_MESSAGE_SCROLLER);
+		respContentPanel.add(respMsgPanel);
+
+	}
+
+	private void addResponseFormatButtons(HorizontalPanel respFunctions, String contentType, final HtmlPre respPre, final String messageBody) {
+		if (contentType != null && contentType.toLowerCase().contains("xml")) {
 			respFunctions.add(new PButton("Format XML", new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent theEvent) {
-					myRespPre.setText(formatXml(theResult.getResponseMessage()));
+					respPre.setText(formatXml(messageBody));
 				}
 			}));
 		}
-		;
-		myRespPanel.add(respFunctions);
-
-		myRespPre = new HtmlPre(theResult.getResponseMessage());
-		ScrollPanel respMsgPanel = new ScrollPanel(myRespPre);
-		respMsgPanel.addStyleName(CssConstants.RECENT_MESSAGE_SCROLLER);
-		myRespPanel.add(respMsgPanel);
-
+		if (contentType != null && contentType.toLowerCase().contains("json")) {
+			respFunctions.add(new PButton("Format JSON", new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent theEvent) {
+					respPre.setText(formatJson(messageBody));
+				}
+			}));
+		}
 	}
 
 	private SafeHtml formatHeader(Pair<String> theNext) {
@@ -174,4 +192,8 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		return $wnd.vkbeautify.xml(theExisting);
 	}-*/;
 
+	private native String formatJson(String theExisting) /*-{
+		return $wnd.vkbeautify.xml(theExisting);
+	}-*/;
+	
 }

@@ -33,6 +33,8 @@ import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GLdapAuthHost;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
+import net.svcret.admin.shared.model.GMonitorRule;
+import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GNamedParameterJsonRpcServerAuth;
 import net.svcret.admin.shared.model.GPartialUserList;
@@ -92,7 +94,9 @@ import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
+import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorRule;
+import net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
@@ -2126,15 +2130,56 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	@Override
-	public GMonitorRuleList loadMonitorRuleList() {
+	public GMonitorRuleList loadMonitorRuleList() throws ProcessingException {
 		GMonitorRuleList retVal = new GMonitorRuleList();
 
 		Collection<PersMonitorRule> allRules = myDao.getMonitorRules();
 		for (PersMonitorRule persMonitorRule : allRules) {
-
+			retVal.add(toUi(persMonitorRule));
 		}
 
-		return null;
+		return retVal;
+	}
+
+	private GMonitorRule toUi(PersMonitorRule theRule) throws ProcessingException {
+		GMonitorRule retVal = new GMonitorRule();
+
+		retVal.setPid(theRule.getPid());
+		retVal.setActive(theRule.isRuleActive());
+		retVal.setName(theRule.getRuleName());
+
+		retVal.setFireForBackingServiceLatencyIsAboveMillis(theRule.getFireForBackingServiceLatencyIsAboveMillis());
+		retVal.setFireForBackingServiceLatencySustainTimeMins(theRule.getFireForBackingServiceLatencySustainTimeMins());
+
+		retVal.setFireIfAllBackingUrlsAreUnavailable(theRule.isFireIfAllBackingUrlsAreUnavailable());
+		retVal.setFireIfSingleBackingUrlIsUnavailable(theRule.isFireIfSingleBackingUrlIsUnavailable());
+
+		for (PersMonitorAppliesTo next : theRule.getAppliesTo()) {
+			if (next.getItem() instanceof PersDomain) {
+				PersDomain domain = (PersDomain) next.getItem();
+				retVal.applyTo(toUi(domain, false), true);
+			} else if (next.getItem() instanceof PersService) {
+				PersService service = (PersService) next.getItem();
+				PersDomain domain = service.getDomain();
+				retVal.applyTo(toUi(domain, false), toUi(service, false), true);
+			} else if (next.getItem() instanceof BasePersServiceVersion) {
+				BasePersServiceVersion svcVer = (BasePersServiceVersion) next.getItem();
+				PersService service = svcVer.getService();
+				PersDomain domain = service.getDomain();
+				retVal.applyTo(toUi(domain, false), toUi(service, false), toUi(svcVer, false), true);
+			}
+		}
+
+		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
+			retVal.getNotifyEmailContacts().add(next.getEmail());
+		}
+		
+		return retVal;
+	}
+
+	private BaseGServiceVersion toUi(BasePersServiceVersion theSvcVer, boolean theLoadStats) throws ProcessingException {
+		Set<Long> emptySet = Collections.emptySet();
+		return toUi(theSvcVer, theLoadStats, emptySet);
 	}
 
 	@Override
@@ -2193,6 +2238,51 @@ public class AdminServiceBean implements IAdminService {
 		}
 
 		return retVal;
+	}
+
+	@Override
+	public void saveMonitorRule(GMonitorRule theRule) {
+
+		PersMonitorRule rule = fromUi(theRule);
+
+	}
+
+	private PersMonitorRule fromUi(GMonitorRule theRule) {
+		
+		PersMonitorRule retVal = new PersMonitorRule();
+		retVal.setRuleActive(theRule.isActive());
+		retVal.setRuleName(theRule.getName());
+
+		retVal.setFireForBackingServiceLatencyIsAboveMillis(theRule.getFireForBackingServiceLatencyIsAboveMillis());
+		retVal.setFireForBackingServiceLatencySustainTimeMins(theRule.getFireForBackingServiceLatencySustainTimeMins());
+
+		retVal.setFireIfAllBackingUrlsAreUnavailable(theRule.isFireIfAllBackingUrlsAreUnavailable());
+		retVal.setFireIfSingleBackingUrlIsUnavailable(theRule.isFireIfSingleBackingUrlIsUnavailable());
+
+		for (GMonitorRuleAppliesTo next : theRule.getAppliesTo()) {
+			if (next.getServiceVersionPid() != null) {
+				retVal.getAppliesTo().add(new PersMonitorAppliesTo(retVal, myDao.getServiceVersionByPid(next.getServiceVersionPid())));
+			}
+			if (next.getItem() instanceof PersDomain) {
+				PersDomain domain = (PersDomain) next.getItem();
+				retVal.applyTo(toUi(domain, false), true);
+			} else if (next.getItem() instanceof PersService) {
+				PersService service = (PersService) next.getItem();
+				PersDomain domain = service.getDomain();
+				retVal.applyTo(toUi(domain, false), toUi(service, false), true);
+			} else if (next.getItem() instanceof BasePersServiceVersion) {
+				BasePersServiceVersion svcVer = (BasePersServiceVersion) next.getItem();
+				PersService service = svcVer.getService();
+				PersDomain domain = service.getDomain();
+				retVal.applyTo(toUi(domain, false), toUi(service, false), toUi(svcVer, false), true);
+			}
+		}
+
+		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
+			retVal.getNotifyEmailContacts().add(next.getEmail());
+		}
+		
+		return null;
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {

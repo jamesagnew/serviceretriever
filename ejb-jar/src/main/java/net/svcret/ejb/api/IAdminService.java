@@ -12,6 +12,7 @@ import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
+import net.svcret.admin.shared.model.GMonitorRule;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GRecentMessage;
@@ -100,8 +101,10 @@ public interface IAdminService {
 
 	GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws ProcessingException;
 
-	GMonitorRuleList loadMonitorRuleList();
+	GMonitorRuleList loadMonitorRuleList() throws ProcessingException;
 	
 	GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid, String theRequestedByString) throws ProcessingException;
+
+	void saveMonitorRule(GMonitorRule theRule);
 
 }

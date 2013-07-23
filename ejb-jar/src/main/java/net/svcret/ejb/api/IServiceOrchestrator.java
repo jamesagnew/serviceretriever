@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.ejb.Local;
 
+import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
 import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
@@ -14,6 +15,8 @@ import net.svcret.ejb.ex.UnknownRequestException;
 
 @Local
 public interface IServiceOrchestrator {
+
+	OrchestratorResponseBean handlePreviouslyThrottledRequest(long theRequestStartTime, InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization);
 
 	/**
 	 * Process a normal request
@@ -24,16 +27,16 @@ public interface IServiceOrchestrator {
 	 * Process a request invoked through a means other than the proxy itself (e.g. monitoring, management console, etc.)
 	 */
 	SidechannelOrchestratorResponseBean handleSidechannelRequest(long theServiceVersionPid, String theRequestBody, String theRequestedByString) throws UnknownRequestException, InternalErrorException,
-	ProcessingException, IOException, SecurityFailureException;
+			ProcessingException, IOException, SecurityFailureException;
 
 	/**
 	 * Response type for {@link IServiceOrchestrator#handle(RequestType, String, String, Reader)}
 	 */
 	public static class OrchestratorResponseBean {
+		private HttpResponseBean myHttpResponse;
 		private String myResponseBody;
 		private String myResponseContentType;
 		private Map<String, List<String>> myResponseHeaders;
-		private HttpResponseBean myHttpResponse;
 
 		public OrchestratorResponseBean(String theResponseBody, String theResponseContentType, Map<String, List<String>> theResponseHeaders, HttpResponseBean theHttpResponse) {
 			super();
@@ -41,6 +44,10 @@ public interface IServiceOrchestrator {
 			myResponseContentType = theResponseContentType;
 			myResponseHeaders = theResponseHeaders;
 			myHttpResponse = theHttpResponse;
+		}
+
+		public HttpResponseBean getHttpResponse() {
+			return myHttpResponse;
 		}
 
 		/**
@@ -64,20 +71,14 @@ public interface IServiceOrchestrator {
 			return myResponseHeaders;
 		}
 
-		public HttpResponseBean getHttpResponse() {
-			return myHttpResponse;
-		}
-
 	}
 
 	public static class SidechannelOrchestratorResponseBean extends OrchestratorResponseBean {
-
 
 		public SidechannelOrchestratorResponseBean(String theResponseBody, String theResponseContentType, Map<String, List<String>> theResponseHeaders, HttpResponseBean theHttpResponse) {
 			super(theResponseBody, theResponseContentType, theResponseHeaders, theHttpResponse);
 		}
 
-	
 	}
 
 }

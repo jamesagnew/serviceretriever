@@ -9,7 +9,6 @@ public class TwoColumnGrid extends FlexTable {
 
 	public TwoColumnGrid() {
 		setStyleName(CssConstants.TWO_COLUMN_PROPERTY_GRID);
-		getColumnFormatter().addStyleName(0, CssConstants.TWO_COLUMN_PROPERTY_GRID_FIRSTCOLUMN);
 	}
 	
 	private static int ourNextId;
