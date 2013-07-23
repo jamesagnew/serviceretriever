@@ -1,7 +1,6 @@
 package net.svcret.ejb.ejb;
 
 import java.util.ArrayList;
-
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -14,7 +13,6 @@ import net.svcret.ejb.api.IAuthorizationService;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
-import net.svcret.ejb.model.entity.IThrottleable;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.util.Validate;
 
@@ -97,7 +95,7 @@ public abstract class BaseAuthorizationServiceBean<T extends BasePersAuthenticat
 		}
 	}
 
-	protected abstract IThrottleable doAuthorize(T theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException;
+	protected abstract PersUser doAuthorize(T theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException;
 
 	protected abstract Class<T> getConfigType();
 

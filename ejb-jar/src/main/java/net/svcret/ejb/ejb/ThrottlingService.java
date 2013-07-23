@@ -4,7 +4,10 @@ import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
 
+import javax.ejb.AsyncResult;
+import javax.ejb.Asynchronous;
 import javax.ejb.Singleton;
 
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
@@ -58,7 +61,13 @@ public class ThrottlingService implements IThrottlingService {
 		throw new ThrottleException(theRequestStartTime, rateLimiter, theInvocationRequest, theAuthorization, user);
 	}
 
-
+	@Override
+	@Asynchronous
+	public Future<Void> serviceThrottledRequests() {
+		
+		
+		return new AsyncResult<Void>(null);
+	}
 	
 	
 }

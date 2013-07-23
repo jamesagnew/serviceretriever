@@ -7,7 +7,6 @@ import net.svcret.ejb.api.IAuthorizationService.ILocalDatabaseAuthorizationServi
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.model.entity.IThrottleable;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersUser;
 
@@ -15,7 +14,7 @@ import net.svcret.ejb.model.entity.PersUser;
 public class LocalDatabaseAuthorizationServiceBean extends BaseAuthorizationServiceBean<PersAuthenticationHostLocalDatabase> implements ILocalDatabaseAuthorizationService {
 
 	@Override
-	protected IThrottleable doAuthorize(PersAuthenticationHostLocalDatabase theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException {
+	protected PersUser doAuthorize(PersAuthenticationHostLocalDatabase theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException {
 		PersUser user = theUserCatalog.findUser(theHost.getPid(), theCredentialGrabber.getUsername());
 		if (user == null) {
 			return null;
