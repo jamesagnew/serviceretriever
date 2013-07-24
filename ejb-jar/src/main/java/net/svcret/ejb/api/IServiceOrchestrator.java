@@ -16,7 +16,7 @@ import net.svcret.ejb.ex.UnknownRequestException;
 @Local
 public interface IServiceOrchestrator {
 
-	OrchestratorResponseBean handlePreviouslyThrottledRequest(long theRequestStartTime, InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization);
+	OrchestratorResponseBean handlePreviouslyThrottledRequest(InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization, HttpRequestBean theRequest) throws ProcessingException;
 
 	/**
 	 * Process a normal request

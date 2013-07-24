@@ -293,7 +293,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 				}
 			}
 		}
-		
+
 		if (theRequest.isLoadAuthHosts()) {
 			if (retVal.getAuthenticationHostList() == null || retVal.getAuthenticationHostList().size() == 0) {
 				throw new ServiceFailureException("Failed to return any authentication hosts!");
@@ -301,6 +301,72 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		}
 
 		return retVal;
+	}
+
+	@Override
+	public GMonitorRuleList loadMonitorRuleList() throws ServiceFailureException {
+		GMonitorRuleList retVal;
+
+		if (isMockMode()) {
+			retVal = myMock.loadMonitorRuleList();
+		} else {
+			try {
+				retVal = myAdminSvc.loadMonitorRuleList();
+			} catch (ProcessingException e) {
+				ourLog.error("Failed to load monitor rules", e);
+				throw new ServiceFailureException(e.getMessage());
+			}
+		}
+
+		return retVal;
+	}
+
+	@Override
+	public GRecentMessage loadRecentMessageForServiceVersion(long thePid) {
+		if (isMockMode()) {
+			return myMock.loadRecentMessageForServiceVersion(thePid);
+		}
+		return myAdminSvc.loadRecentMessageForServiceVersion(thePid);
+	}
+
+	@Override
+	public GRecentMessage loadRecentMessageForUser(long thePid) {
+		if (isMockMode()) {
+			return myMock.loadRecentMessageForUser(thePid);
+		}
+		return myAdminSvc.loadRecentMessageForUser(thePid);
+	}
+
+	@Override
+	public GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid) {
+		if (isMockMode()) {
+			return myMock.loadRecentTransactionListForServiceVersion(theServiceVersionPid);
+		}
+
+		return myAdminSvc.loadRecentTransactionListForServiceVersion(theServiceVersionPid);
+	}
+
+	@Override
+	public GRecentMessageLists loadRecentTransactionListForuser(long thePid) {
+		if (isMockMode()) {
+			return myMock.loadRecentTransactionListForuser(thePid);
+		}
+
+		return myAdminSvc.loadRecentTransactionListForUser(thePid);
+	}
+
+	@Override
+	public GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws ServiceFailureException {
+		if (isMockMode()) {
+			return myMock.loadServiceVersionDetailedStats(theVersionPid);
+		}
+
+		try {
+			return myAdminSvc.loadServiceVersionDetailedStats(theVersionPid);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to load detailed stats", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
 	}
 
 	@Override
@@ -475,6 +541,24 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
+	public GDomainList removeServiceVersion(long thePid) throws ServiceFailureException {
+		Validate.greaterThanZero(thePid, "PID");
+		ourLog.info("Removing service version {}", thePid);
+
+		if (isMockMode()) {
+			return myMock.removeServiceVersion(thePid);
+		}
+
+		try {
+			return myAdminSvc.deleteServiceVersion(thePid);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to delete service version", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+
+	}
+
+	@Override
 	public void reportClientError(String theMessage, Throwable theException) {
 		ourLog.warn("Client error - " + theMessage, theException);
 	}
@@ -556,6 +640,21 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
+	public GMonitorRuleList saveMonitorRule(GMonitorRule theRule) throws ServiceFailureException {
+		if (isMockMode()) {
+			myMock.saveMonitorRule(theRule);
+		} else {
+			myAdminSvc.saveMonitorRule(theRule);
+		}
+		try {
+			return loadMonitorRuleList();
+		} catch (ServiceFailureException e) {
+			ourLog.error("Failed to save rule", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+	}
+
+	@Override
 	public GDomainList saveService(GService theService) throws ServiceFailureException {
 		if (isMockMode()) {
 			return myMock.saveService(theService);
@@ -599,6 +698,16 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		ourLog.info("Done saving user {} / {}", theUser.getPid(), theUser.getUsername());
 	}
 
+	@Override
+	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid) throws ServiceFailureException {
+		try {
+			return myAdminSvc.testServiceVersionWithSingleMessage(theMessageText, thePid, "ServiceRetriever Admin Console");
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to test service version", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+	}
+
 	@SuppressWarnings("unchecked")
 	private List<GResource> getServiceVersionResourcesFromSession(long theServiceVersionUncommittedSessionId) {
 		String key = SESSION_PREFIX_UNCOMITTED_SVC_VER_RES + theServiceVersionUncommittedSessionId;
@@ -627,105 +736,6 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	 */
 	void setAdminSvc(IAdminService theAdminSvc) {
 		myAdminSvc = theAdminSvc;
-	}
-
-	@Override
-	public GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid) {
-		if (isMockMode()) {
-			return myMock.loadRecentTransactionListForServiceVersion(theServiceVersionPid);
-		}
-
-		return myAdminSvc.loadRecentTransactionListForServiceVersion(theServiceVersionPid);
-	}
-
-	@Override
-	public GRecentMessage loadRecentMessageForServiceVersion(long thePid) {
-		if (isMockMode()) {
-			return myMock.loadRecentMessageForServiceVersion(thePid);
-		}
-		return myAdminSvc.loadRecentMessageForServiceVersion(thePid);
-	}
-
-	@Override
-	public GRecentMessageLists loadRecentTransactionListForuser(long thePid) {
-		if (isMockMode()) {
-			return myMock.loadRecentTransactionListForuser(thePid);
-		}
-
-		return myAdminSvc.loadRecentTransactionListForUser(thePid);
-	}
-
-	@Override
-	public GRecentMessage loadRecentMessageForUser(long thePid) {
-		if (isMockMode()) {
-			return myMock.loadRecentMessageForUser(thePid);
-		}
-		return myAdminSvc.loadRecentMessageForUser(thePid);
-	}
-
-	@Override
-	public GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws ServiceFailureException {
-		if (isMockMode()) {
-			return myMock.loadServiceVersionDetailedStats(theVersionPid);
-		}
-
-		try {
-			return myAdminSvc.loadServiceVersionDetailedStats(theVersionPid);
-		} catch (ProcessingException e) {
-			ourLog.error("Failed to load detailed stats", e);
-			throw new ServiceFailureException(e.getMessage());
-		}
-	}
-
-	@Override
-	public GDomainList removeServiceVersion(long thePid) throws ServiceFailureException {
-		Validate.greaterThanZero(thePid, "PID");
-		ourLog.info("Removing service version {}", thePid);
-
-		if (isMockMode()) {
-			return myMock.removeServiceVersion(thePid);
-		}
-
-		try {
-			return myAdminSvc.deleteServiceVersion(thePid);
-		} catch (ProcessingException e) {
-			ourLog.error("Failed to delete service version", e);
-			throw new ServiceFailureException(e.getMessage());
-		}
-
-	}
-
-	@Override
-	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid) throws ServiceFailureException {
-		try {
-			return myAdminSvc.testServiceVersionWithSingleMessage(theMessageText, thePid, "ServiceRetriever Admin Console");
-		} catch (ProcessingException e) {
-			throw new ServiceFailureException(e.getMessage());
-		}
-	}
-	
-	
-	@Override
-	public GMonitorRuleList loadMonitorRuleList() {
-		GMonitorRuleList retVal;
-
-		if (isMockMode()) {
-			retVal = myMock.loadMonitorRuleList();
-		} else {
-			retVal = myAdminSvc.loadMonitorRuleList();
-		}
-
-		return retVal;
-	}
-
-	@Override
-	public GMonitorRuleList saveMonitorRule(GMonitorRule theRule) {
-		if (isMockMode()) {
-			myMock.saveMonitorRule(theRule);
-		}else {
-			myAdminSvc.saveMonitorRule(theRule);
-		}
-		return loadMonitorRuleList();
 	}
 
 }

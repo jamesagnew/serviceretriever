@@ -1,6 +1,7 @@
 package net.svcret.ejb.api;
 
 import java.io.Reader;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -13,6 +14,7 @@ public class HttpRequestBean {
 	private String myQuery;
 	private Map<String, List<String>> myRequestHeaders;
 	private String myRequestHostIp;
+	private Date myRequestTime;
 	private RequestType myRequestType;
 
 	/**
@@ -36,6 +38,10 @@ public class HttpRequestBean {
 		return myQuery;
 	}
 
+	public String getRequestBody() {
+		return myInputReader.getCapturedString();
+	}
+
 	/**
 	 * @return the requestHeaders
 	 */
@@ -48,6 +54,10 @@ public class HttpRequestBean {
 	 */
 	public String getRequestHostIp() {
 		return myRequestHostIp;
+	}
+
+	public Date getRequestTime() {
+		return myRequestTime;
 	}
 
 	/**
@@ -93,16 +103,16 @@ public class HttpRequestBean {
 		myRequestHostIp = theRequestHostIp;
 	}
 
+	public void setRequestTime(Date theRequestTime) {
+		myRequestTime = theRequestTime;
+	}
+
 	/**
 	 * @param theRequestType
 	 *            the requestType to set
 	 */
 	public void setRequestType(RequestType theRequestType) {
 		myRequestType = theRequestType;
-	}
-
-	public String getRequestBody() {
-		return myInputReader.getCapturedString();
 	}
 
 }

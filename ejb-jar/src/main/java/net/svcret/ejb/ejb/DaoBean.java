@@ -1144,4 +1144,22 @@ public class DaoBean implements IDao {
 		return myEntityManager.merge(theItem);
 	}
 
+	@Override
+	public PersMonitorRule getMonitorRule(long thePid) {
+		return myEntityManager.find(PersMonitorRule.class, thePid);
+	}
+
+	@Override
+	public void saveMonitorRule(PersMonitorRule theRule) {
+		
+		for (PersMonitorAppliesTo next : theRule.getAppliesTo()) {
+			next.setRule(theRule);
+		}
+		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
+			next.setRule(theRule);
+		}
+		
+		myEntityManager.merge(theRule);
+	}
+
 }

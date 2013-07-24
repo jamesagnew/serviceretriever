@@ -1,7 +1,5 @@
 package net.svcret.ejb.api;
 
-import java.util.Date;
-
 import javax.ejb.Local;
 
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
@@ -14,7 +12,7 @@ public interface ITransactionLogger {
 
 	void flush();
 
-	void logTransaction(Date theTransactionDate, HttpRequestBean theRequest, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl,
+	void logTransaction(HttpRequestBean theRequest, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl,
 			HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome);
 
 }

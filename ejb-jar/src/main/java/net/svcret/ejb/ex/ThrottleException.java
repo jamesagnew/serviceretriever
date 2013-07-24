@@ -1,5 +1,8 @@
 package net.svcret.ejb.ex;
 
+import java.util.Date;
+
+import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.model.entity.IThrottleable;
@@ -12,18 +15,18 @@ public class ThrottleException extends Exception {
 	private AuthorizationResultsBean myAuthorization;
 	private InvocationResultsBean myInvocationRequest;
 	private RateLimiter myRateLimiter;
-	private long myRequestStartTime;
+	private HttpRequestBean myHttpRequest;
 	private IThrottleable myThrottleKey;
 
 	/**
-	 * @param theRequestStartTime
+	 * @param theHttpRequest
 	 * @param theRateLimiter
 	 * @param theInvocationRequest
 	 * @param theAuthorization
 	 * @param theThrottleKey The service catalog object whose throttling is being applied
 	 */
-	public ThrottleException(long theRequestStartTime, RateLimiter theRateLimiter, InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization, IThrottleable theThrottleKey) {
-		myRequestStartTime = theRequestStartTime;
+	public ThrottleException(HttpRequestBean theHttpRequest, RateLimiter theRateLimiter, InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization, IThrottleable theThrottleKey) {
+		myHttpRequest = theHttpRequest;
 		myRateLimiter = theRateLimiter;
 		myInvocationRequest = theInvocationRequest;
 		myAuthorization = theAuthorization;
@@ -46,8 +49,8 @@ public class ThrottleException extends Exception {
 		return myRateLimiter;
 	}
 
-	public long getRequestStartTime() {
-		return myRequestStartTime;
+	public HttpRequestBean getHttpRequest() {
+		return myHttpRequest;
 	}
 
 }

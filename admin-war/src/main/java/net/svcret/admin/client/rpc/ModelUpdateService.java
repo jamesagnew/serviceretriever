@@ -44,11 +44,25 @@ public interface ModelUpdateService extends RemoteService {
 
 	AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion) throws ServiceFailureException;
 
+	BaseGServiceVersion createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncommittedId);
+
 	GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ServiceFailureException;
 
 	GConfig loadConfig() throws ServiceFailureException;
 
 	ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ServiceFailureException;
+
+	GMonitorRuleList loadMonitorRuleList() throws ServiceFailureException;
+
+	GRecentMessage loadRecentMessageForServiceVersion(long thePid);
+
+	GRecentMessage loadRecentMessageForUser(long thePid);
+
+	GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid);
+
+	GRecentMessageLists loadRecentTransactionListForuser(long thePid);
+
+	GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws ServiceFailureException;
 
 	BaseGServiceVersion loadServiceVersionIntoSession(long theServiceVersionPid) throws ServiceFailureException;
 
@@ -66,6 +80,8 @@ public interface ModelUpdateService extends RemoteService {
 
 	GDomainList removeService(long theDomainPid, long theServicePid) throws ServiceFailureException;
 
+	GDomainList removeServiceVersion(long thePid) throws ServiceFailureException;
+
 	void reportClientError(String theMessage, Throwable theException);
 
 	GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) throws ServiceFailureException;
@@ -76,11 +92,15 @@ public interface ModelUpdateService extends RemoteService {
 
 	GHttpClientConfig saveHttpClientConfig(boolean theCreate, GHttpClientConfig theConfig) throws ServiceFailureException;
 
+	GMonitorRuleList saveMonitorRule(GMonitorRule theRule) throws ServiceFailureException;
+
 	GDomainList saveService(GService theService) throws ServiceFailureException;
 
 	void saveServiceVersionToSession(BaseGServiceVersion theServiceVersion);
 
 	void saveUser(GUser theUser) throws ServiceFailureException;
+
+	GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid) throws ServiceFailureException;
 
 	public static class UserAndAuthHost implements Serializable {
 		private static final long serialVersionUID = 1L;
@@ -134,25 +154,5 @@ public interface ModelUpdateService extends RemoteService {
 			myUser = theUser;
 		}
 	}
-
-	GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid);
-
-	GRecentMessage loadRecentMessageForServiceVersion(long thePid);
-
-	GRecentMessageLists loadRecentTransactionListForuser(long thePid);
-
-	GRecentMessage loadRecentMessageForUser(long thePid);
-
-	BaseGServiceVersion createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncommittedId);
-
-	GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws ServiceFailureException;
-
-	GDomainList removeServiceVersion(long thePid) throws ServiceFailureException;
-
-	GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid) throws ServiceFailureException;
-	
-	GMonitorRuleList loadMonitorRuleList();
-
-	GMonitorRuleList saveMonitorRule(GMonitorRule theRule);
 
 }

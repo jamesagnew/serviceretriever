@@ -7,6 +7,7 @@ import java.util.List;
 
 import javax.ejb.Local;
 
+import net.svcret.admin.shared.model.GMonitorRule;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.ejb.TransactionLoggerBean.BaseUnflushed;
 import net.svcret.ejb.ex.ProcessingException;
@@ -90,6 +91,8 @@ public interface IDao {
 
 	List<PersInvocationUserStats> getInvocationUserStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff);
 
+	PersMonitorRule getMonitorRule(long thePid);
+
 	Collection<PersMonitorRule> getMonitorRules();
 
 	PersAuthenticationHostLdap getOrCreateAuthenticationHostLdap(String theModuleId) throws ProcessingException;
@@ -154,6 +157,8 @@ public interface IDao {
 
 	void saveInvocationStats(Collection<BasePersMethodStats> theStats, List<BasePersMethodStats> theStatsToDelete);
 
+	PersMonitorRuleFiring saveMonitorRuleFiring(PersMonitorRuleFiring theFiring);
+
 	PersMonitorRule saveOrCreateMonitorRule(PersMonitorRule theRule);
 
 	void saveRecentMessagesAndTrimInNewTransaction(BaseUnflushed<? extends BasePersRecentMessage> theNextTransactions);
@@ -161,6 +166,8 @@ public interface IDao {
 	PersBaseServerAuth<?, ?> saveServerAuth(PersBaseServerAuth<?, ?> theNextPers);
 
 	void saveService(PersService theService);
+
+	BasePersServiceCatalogItem saveServiceCatalogItem(BasePersServiceCatalogItem theItem);
 
 	PersUser saveServiceUser(PersUser theUser);
 
@@ -205,8 +212,6 @@ public interface IDao {
 
 	}
 
-	PersMonitorRuleFiring saveMonitorRuleFiring(PersMonitorRuleFiring theFiring);
-
-	BasePersServiceCatalogItem saveServiceCatalogItem(BasePersServiceCatalogItem theItem);
+	void saveMonitorRule(PersMonitorRule theRule);
 
 }

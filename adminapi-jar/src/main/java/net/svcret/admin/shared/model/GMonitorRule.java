@@ -189,7 +189,7 @@ public class GMonitorRule extends BaseGObject<GMonitorRule> {
 	private GMonitorRuleAppliesTo getAppliesToService(GService theService) {
 		GMonitorRuleAppliesTo appliesTo = null;
 		for (GMonitorRuleAppliesTo next : getAppliesTo()) {
-			if (next.getServicePid() == theService.getPid() && next.getServiceVersionPid() == null) {
+			if (next.getServicePid() != null && next.getServicePid() == theService.getPid() && next.getServiceVersionPid() == null) {
 				appliesTo = next;
 				break;
 			}
@@ -200,7 +200,7 @@ public class GMonitorRule extends BaseGObject<GMonitorRule> {
 	private GMonitorRuleAppliesTo getAppliesToServiceVersion(BaseGServiceVersion theSvcVer) {
 		GMonitorRuleAppliesTo appliesTo = null;
 		for (GMonitorRuleAppliesTo next : getAppliesTo()) {
-			if (next.getServiceVersionPid() == theSvcVer.getPid()) {
+			if (next.getServiceVersionPid() != null && next.getServiceVersionPid() == theSvcVer.getPid()) {
 				appliesTo = next;
 				break;
 			}

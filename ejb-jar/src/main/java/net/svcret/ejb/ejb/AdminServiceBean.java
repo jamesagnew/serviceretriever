@@ -751,8 +751,7 @@ public class AdminServiceBean implements IAdminService {
 		return (int) newValue;
 	}
 
-	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, List<Integer> the60MinInvCount, List<Long> the60minTime, StatusEnum theStatus,
-			BasePersServiceVersion nextVersion) throws ProcessingException {
+	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, List<Integer> the60MinInvCount, List<Long> the60minTime, StatusEnum theStatus, BasePersServiceVersion nextVersion) throws ProcessingException {
 		StatusEnum status = theStatus;
 
 		for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
@@ -786,8 +785,7 @@ public class AdminServiceBean implements IAdminService {
 		return status;
 	}
 
-	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Long> the60minTime, PersService theService)
-			throws ProcessingException {
+	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Long> the60minTime, PersService theService) throws ProcessingException {
 
 		// Value will be changed below
 		StatusEnum status = theInitialStatus;
@@ -807,8 +805,7 @@ public class AdminServiceBean implements IAdminService {
 	/**
 	 * @return The start timestamp
 	 */
-	public static void extractSuccessfulInvocationInvocationTimes(PersConfig theConfig, int theNumMinsBack, final List<Integer> the60MinInvCount, final List<Long> the60minTime,
-			PersServiceVersionMethod nextMethod, IRuntimeStatus statusSvc) {
+	public static void extractSuccessfulInvocationInvocationTimes(PersConfig theConfig, int theNumMinsBack, final List<Integer> the60MinInvCount, final List<Long> the60minTime, PersServiceVersionMethod nextMethod, IRuntimeStatus statusSvc) {
 		doWithStatsByMinute(theConfig, theNumMinsBack, statusSvc, nextMethod, new IWithStats() {
 			@Override
 			public void withStats(int theIndex, BasePersInvocationStats theStats) {
@@ -2173,7 +2170,7 @@ public class AdminServiceBean implements IAdminService {
 		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
 			retVal.getNotifyEmailContacts().add(next.getEmail());
 		}
-		
+
 		return retVal;
 	}
 
@@ -2245,10 +2242,17 @@ public class AdminServiceBean implements IAdminService {
 
 		PersMonitorRule rule = fromUi(theRule);
 
+		if (theRule.getPidOrNull() != null) {
+			PersMonitorRule existing = myDao.getMonitorRule(theRule.getPid());
+			existing.merge(rule);
+			rule = existing;
+		}
+
+		myDao.saveMonitorRule(rule);
 	}
 
 	private PersMonitorRule fromUi(GMonitorRule theRule) {
-		
+
 		PersMonitorRule retVal = new PersMonitorRule();
 		retVal.setRuleActive(theRule.isActive());
 		retVal.setRuleName(theRule.getName());
@@ -2262,27 +2266,18 @@ public class AdminServiceBean implements IAdminService {
 		for (GMonitorRuleAppliesTo next : theRule.getAppliesTo()) {
 			if (next.getServiceVersionPid() != null) {
 				retVal.getAppliesTo().add(new PersMonitorAppliesTo(retVal, myDao.getServiceVersionByPid(next.getServiceVersionPid())));
-			}
-			if (next.getItem() instanceof PersDomain) {
-				PersDomain domain = (PersDomain) next.getItem();
-				retVal.applyTo(toUi(domain, false), true);
-			} else if (next.getItem() instanceof PersService) {
-				PersService service = (PersService) next.getItem();
-				PersDomain domain = service.getDomain();
-				retVal.applyTo(toUi(domain, false), toUi(service, false), true);
-			} else if (next.getItem() instanceof BasePersServiceVersion) {
-				BasePersServiceVersion svcVer = (BasePersServiceVersion) next.getItem();
-				PersService service = svcVer.getService();
-				PersDomain domain = service.getDomain();
-				retVal.applyTo(toUi(domain, false), toUi(service, false), toUi(svcVer, false), true);
+			} else if (next.getServicePid() != null) {
+				retVal.getAppliesTo().add(new PersMonitorAppliesTo(retVal, myDao.getServiceByPid(next.getServicePid())));
+			} else {
+				retVal.getAppliesTo().add(new PersMonitorAppliesTo(retVal, myDao.getDomainByPid(next.getDomainPid())));
 			}
 		}
 
-		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
-			retVal.getNotifyEmailContacts().add(next.getEmail());
+		for (String next : theRule.getNotifyEmailContacts()) {
+			retVal.getNotifyContact().add(new PersMonitorRuleNotifyContact(next));
 		}
-		
-		return null;
+
+		return retVal;
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {

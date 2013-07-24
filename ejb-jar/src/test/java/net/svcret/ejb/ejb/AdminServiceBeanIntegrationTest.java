@@ -17,6 +17,8 @@ import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
+import net.svcret.admin.shared.model.GMonitorRule;
+import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
@@ -73,7 +75,6 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	private IBroadcastSender myBroadcastSender;
 	private ServiceRegistryBean mySvcReg;
 	private ConfigServiceBean myConfigSvc;
-
 	private TransactionLoggerBean myTransactionLogSvc;
 
 	@After
@@ -185,6 +186,79 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		
 	}
 
+	@Test
+	public void testAddMonitorRule() throws ProcessingException {
+
+		newEntityManager();
+
+		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
+		myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
+
+		newEntityManager();
+
+		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setHttpClientConfigPid(hcc.getPid());
+		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		assertEquals(0, mySvc.loadMonitorRuleList().size());
+
+		newEntityManager();
+
+		GMonitorRule rule = new GMonitorRule();
+		rule.setFireIfAllBackingUrlsAreUnavailable(true);
+		rule.setFireForBackingServiceLatencyIsAboveMillis(100);
+		rule.applyTo(d1, true);
+		rule.applyTo(d1, d1s1, true);
+		rule.getNotifyEmailContacts().add("foo@foo.com");
+		rule.getNotifyEmailContacts().add("bar@bar.com");
+		
+		mySvc.saveMonitorRule(rule);
+		
+		newEntityManager();
+		
+		GMonitorRuleList rules = mySvc.loadMonitorRuleList();
+		assertEquals(1, rules.size());
+		
+		rule = rules.get(0);
+		assertEquals(true, rule.isFireIfAllBackingUrlsAreUnavailable());
+		assertEquals(false, rule.isFireIfSingleBackingUrlIsUnavailable());
+		assertTrue(rule.getNotifyEmailContacts().contains("foo@foo.com"));
+		assertTrue(rule.getNotifyEmailContacts().contains("bar@bar.com"));
+		assertTrue(rule.appliesTo(d1));
+		assertTrue(rule.appliesTo(d1s1));
+		assertFalse(rule.appliesTo(d1s1v1));
+		
+		rule.applyTo(d1, d1s1, false);
+		rule.applyTo(d1, d1s1, d1s1v1, true);
+		rule.getNotifyEmailContacts().remove("foo@foo.com");
+		rule.getNotifyEmailContacts().add("baz@baz.com");
+		
+		mySvc.saveMonitorRule(rule);
+		
+		newEntityManager();
+		
+		rules = mySvc.loadMonitorRuleList();
+		assertEquals(1, rules.size());
+		
+		rule = rules.get(0);
+		assertEquals(true, rule.isFireIfAllBackingUrlsAreUnavailable());
+		assertEquals(false, rule.isFireIfSingleBackingUrlIsUnavailable());
+		assertFalse(rule.getNotifyEmailContacts().contains("foo@foo.com"));
+		assertTrue(rule.getNotifyEmailContacts().contains("bar@bar.com"));
+		assertTrue(rule.getNotifyEmailContacts().contains("baz@baz.com"));
+		assertTrue(rule.appliesTo(d1));
+		assertFalse(rule.appliesTo(d1s1));
+		assertTrue(rule.appliesTo(d1s1v1));
+		
+	}
 	
 	
 	@Test
@@ -844,6 +918,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		HttpRequestBean request = new HttpRequestBean();
 		request.setRequestHostIp("127.0.0.1");
 		request.setRequestHeaders(new HashMap<String, List<String>>());
+		request.setRequestTime(new Date());
 		String requestBody= "request body";
 		InvocationResponseResultsBean invocationResponse = new InvocationResponseResultsBean();
 		invocationResponse.setResponseHeaders(new HashMap<String, List<String>>());
@@ -851,7 +926,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		PersServiceVersionUrl implementationUrl=persVer.getUrls().get(0);
 		AuthorizationOutcomeEnum authorizationOutcome=AuthorizationOutcomeEnum.AUTHORIZED;
 		PersUser persUser = myDao.getUser(user.getPidOrNull());
-		myTransactionLogSvc.logTransaction(new Date(), request, m1.getServiceVersion(), persUser, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome);
+		myTransactionLogSvc.logTransaction(request, m1.getServiceVersion(), persUser, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome);
 
 		newEntityManager();
 

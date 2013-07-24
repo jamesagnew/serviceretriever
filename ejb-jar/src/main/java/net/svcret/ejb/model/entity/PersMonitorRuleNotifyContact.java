@@ -27,6 +27,13 @@ public class PersMonitorRuleNotifyContact extends BasePersObject {
 	@Column(name = "EMAIL", length=200)
 	private String myEmail;
 
+	public PersMonitorRuleNotifyContact() {
+	}
+	
+	public PersMonitorRuleNotifyContact(String theNext) {
+		myEmail = theNext;
+	}
+
 	public PersMonitorRule getRule() {
 		return myRule;
 	}

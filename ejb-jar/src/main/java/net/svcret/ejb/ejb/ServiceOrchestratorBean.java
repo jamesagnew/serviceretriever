@@ -1,7 +1,6 @@
 package net.svcret.ejb.ejb;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.io.StringReader;
 import java.util.Collections;
 import java.util.Date;
@@ -101,7 +100,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		AuthorizationResultsBean authorized = null;
 
 		InvocationResultsBean results = processInvokeService(request, path, svcVer, RequestType.POST, "");
-		SidechannelOrchestratorResponseBean retVal = processRequestMethod(request, startTime, results, authorized);
+		SidechannelOrchestratorResponseBean retVal = processRequestMethod(request,results, authorized);
 
 		return retVal;
 	}	
@@ -122,8 +121,6 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	}
 
 	private OrchestratorResponseBean doHandle(HttpRequestBean theRequest) throws UnknownRequestException, IOException, ProcessingException, SecurityFailureException {
-		Date startTime = new Date();
-
 		if (theRequest.getQuery().length() > 0 && theRequest.getQuery().charAt(0) != '?') {
 			throw new IllegalArgumentException("Path must be blank or start with '?'");
 		}
@@ -161,30 +158,35 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		 * Currently only active for method invocations
 		 */
 
-		AuthorizationResultsBean authorized = processSecurity(theRequest, startTime, serviceVersion, results);
+		AuthorizationResultsBean authorized = processSecurity(theRequest, serviceVersion, results);
 
 		/*
 		 * Forward request to backend implementation
 		 */
 		ourLog.debug("Request is of type: {}", results.getResultType());
 
-		OrchestratorResponseBean retVal;
-		switch (results.getResultType()) {
-
-		case STATIC_RESOURCE:
-			retVal = processRequestResource(startTime, results);
-			break;
-		case METHOD:
-			retVal = processRequestMethod(theRequest, startTime, results, authorized);
-			break;
-		default:
-			throw new InternalErrorException("Unknown request type: " + results.getResultType());
-		}
+		OrchestratorResponseBean retVal = makeProxiedRequest(theRequest, results, authorized);
 
 		return retVal;
 	}
 
-	private SidechannelOrchestratorResponseBean processRequestMethod(HttpRequestBean theRequest, Date startTime, InvocationResultsBean results,
+	private OrchestratorResponseBean makeProxiedRequest(HttpRequestBean theRequest, InvocationResultsBean results, AuthorizationResultsBean authorized) throws ProcessingException {
+		OrchestratorResponseBean retVal;
+		switch (results.getResultType()) {
+
+		case STATIC_RESOURCE:
+			retVal = processRequestResource(theRequest, results);
+			break;
+		case METHOD:
+			retVal = processRequestMethod(theRequest, results, authorized);
+			break;
+		default:
+			throw new InternalErrorException("Unknown request type: " + results.getResultType());
+		}
+		return retVal;
+	}
+
+	private SidechannelOrchestratorResponseBean processRequestMethod(HttpRequestBean theRequest, InvocationResultsBean results,
 			AuthorizationResultsBean authorized) throws ProcessingException {
 		SidechannelOrchestratorResponseBean retVal;
 		PersServiceVersionMethod method = results.getMethodDefinition();
@@ -222,7 +224,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 		int requestLength = contentBody.length();
 		PersUser user = ((authorized != null && authorized.isAuthorized() == AuthorizationOutcomeEnum.AUTHORIZED) ? authorized.getUser() : null);
-		myRuntimeStatus.recordInvocationMethod(startTime, requestLength, method, user, httpResponse, invocationResponse);
+		myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), requestLength, method, user, httpResponse, invocationResponse);
 
 		String responseBody = invocationResponse.getResponseBody();
 		String responseContentType = invocationResponse.getResponseContentType();
@@ -231,13 +233,13 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		/*
 		 * Log transaction if needed
 		 */
-		logTransaction(theRequest, startTime, serviceVersion, authorized, httpResponse, invocationResponse);
+		logTransaction(theRequest, serviceVersion, authorized, httpResponse, invocationResponse);
 
 		retVal = new SidechannelOrchestratorResponseBean(responseBody, responseContentType, responseHeaders, httpResponse);
 		return retVal;
 	}
 
-	private OrchestratorResponseBean processRequestResource(Date startTime, InvocationResultsBean results) {
+	private OrchestratorResponseBean processRequestResource(HttpRequestBean theRequest, InvocationResultsBean results) {
 		OrchestratorResponseBean retVal;
 		String responseBody = results.getStaticResourceText();
 		String responseContentType = results.getStaticResourceContentTyoe();
@@ -245,13 +247,13 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		retVal = new OrchestratorResponseBean(responseBody, responseContentType, responseHeaders, null);
 
 		PersServiceVersionResource resource = results.getStaticResourceDefinition();
-		myRuntimeStatus.recordInvocationStaticResource(startTime, resource);
+		myRuntimeStatus.recordInvocationStaticResource(theRequest.getRequestTime(), resource);
 
 		ourLog.trace("Handling request for static URL contents: {}", resource);
 		return retVal;
 	}
 
-	private AuthorizationResultsBean processSecurity(HttpRequestBean theRequest, Date startTime, BasePersServiceVersion serviceVersion, InvocationResultsBean results)
+	private AuthorizationResultsBean processSecurity(HttpRequestBean theRequest, BasePersServiceVersion serviceVersion, InvocationResultsBean results)
 			throws SecurityFailureException, ProcessingException {
 		AuthorizationResultsBean authorized = null;
 		if (results.getResultType() == ResultTypeEnum.METHOD) {
@@ -280,7 +282,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 					InvocationResponseResultsBean invocationResponse = new InvocationResponseResultsBean();
 					invocationResponse.setResponseType(ResponseTypeEnum.SECURITY_FAIL);
 					invocationResponse.setResponseStatusMessage("Internal error: ServiceRetriever failed to extract credentials");
-					myRuntimeStatus.recordInvocationMethod(startTime, 0, method, null, null, invocationResponse);
+					myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), 0, method, null, null, invocationResponse);
 					throw new SecurityFailureException(AuthorizationOutcomeEnum.FAILED_INTERNAL_ERROR, invocationResponse.getResponseStatusMessage());
 				}
 
@@ -291,10 +293,10 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 					invocationResponse.setResponseType(ResponseTypeEnum.SECURITY_FAIL);
 					invocationResponse.setResponseStatusMessage("Failed to authorize credentials");
 					// TODO: also pass authorization outcome to save it
-					myRuntimeStatus.recordInvocationMethod(startTime, 0, method, authorized.getUser(), null, invocationResponse);
+					myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), 0, method, authorized.getUser(), null, invocationResponse);
 
 					// Log transaction
-					logTransaction(theRequest, startTime, serviceVersion, authorized, null, invocationResponse);
+					logTransaction(theRequest, serviceVersion, authorized, null, invocationResponse);
 
 					throw new SecurityFailureException(authorized.isAuthorized(), invocationResponse.getResponseStatusMessage());
 				}
@@ -333,13 +335,13 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		return results;
 	}
 
-	private void logTransaction(HttpRequestBean theRequest, Date startTime, BasePersServiceVersion serviceVersion, AuthorizationResultsBean authorized,
+	private void logTransaction(HttpRequestBean theRequest, BasePersServiceVersion serviceVersion, AuthorizationResultsBean authorized,
 			HttpResponseBean httpResponse, InvocationResponseResultsBean invocationResponse) {
 		PersUser user = authorized != null ? authorized.getUser() : null;
 		String requestBody = theRequest.getRequestBody();
 		PersServiceVersionUrl successfulUrl = httpResponse != null ? httpResponse.getSuccessfulUrl() : null;
 		AuthorizationOutcomeEnum authorizationOutcome = authorized != null ? authorized.isAuthorized() : AuthorizationOutcomeEnum.AUTHORIZED;
-		myTransactionLogger.logTransaction(startTime, theRequest, serviceVersion, user, requestBody, invocationResponse, successfulUrl, httpResponse, authorizationOutcome);
+		myTransactionLogger.logTransaction(theRequest, serviceVersion, user, requestBody, invocationResponse, successfulUrl, httpResponse, authorizationOutcome);
 	}
 
 	private void markUrlsFailed(Map<PersServiceVersionUrl, Failure> theMap) {
@@ -396,5 +398,10 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	@VisibleForTesting
 	void setTransactionLogger(ITransactionLogger theTransactionLogger) {
 		myTransactionLogger = theTransactionLogger;
+	}
+
+	@Override
+	public OrchestratorResponseBean handlePreviouslyThrottledRequest(InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization, HttpRequestBean theRequest) throws ProcessingException {
+		return makeProxiedRequest(theRequest, theInvocationRequest, theAuthorization);
 	}
 }

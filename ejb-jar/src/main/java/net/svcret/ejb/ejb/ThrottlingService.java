@@ -12,11 +12,13 @@ import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 
+import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.OrchestratorResponseBean;
 import net.svcret.ejb.api.IThrottlingService;
 import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.ThrottleException;
 import net.svcret.ejb.model.entity.IThrottleable;
 import net.svcret.ejb.model.entity.PersUser;
@@ -38,7 +40,7 @@ public class ThrottlingService implements IThrottlingService {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ThrottlingService.class);
 
 	@Override
-	public void applyThrottle(long theRequestStartTime, InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization) throws ThrottleException, ThrottleQueueFullException {
+	public void applyThrottle(HttpRequestBean theHttpRequest, InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization) throws ThrottleException, ThrottleQueueFullException {
 		PersUser user = theAuthorization.getUser();
 		if (user == null) {
 			return;
@@ -72,7 +74,7 @@ public class ThrottlingService implements IThrottlingService {
 			throw new ThrottleQueueFullException();
 		}
 
-		throw new ThrottleException(theRequestStartTime, rateLimiter, theInvocationRequest, theAuthorization, user);
+		throw new ThrottleException(theHttpRequest, rateLimiter, theInvocationRequest, theAuthorization, user);
 
 	}
 
@@ -106,7 +108,12 @@ public class ThrottlingService implements IThrottlingService {
 			try {
 				ThrottleException taskToExecute = theTaskQueue.getTasks().poll();
 				if (taskToExecute.getRateLimiter().tryAcquire()) {
-					OrchestratorResponseBean response = myServiceOrchestrator.handlePreviouslyThrottledRequest(taskToExecute.getRequestStartTime(), taskToExecute.getInvocationRequest(), taskToExecute.getAuthorization());
+					try {
+						OrchestratorResponseBean response = myServiceOrchestrator.handlePreviouslyThrottledRequest(taskToExecute.getInvocationRequest(), taskToExecute.getAuthorization(), taskToExecute.getHttpRequest());
+					} catch (ProcessingException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				} else {
 					theTaskQueue.getTasks().push(taskToExecute);
 				}

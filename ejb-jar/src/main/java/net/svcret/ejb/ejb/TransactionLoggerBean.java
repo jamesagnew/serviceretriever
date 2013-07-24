@@ -92,7 +92,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	 * @param theHttpResponse
 	 */
 	@Override
-	public void logTransaction(Date theTransactionDate, HttpRequestBean theRequest, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl,
+	public void logTransaction(HttpRequestBean theRequest, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl,
 			HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome) {
 		Validate.notNull(theServiceVersion);
 
@@ -103,7 +103,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 				newValue.init();
 				existing = newValue;
 			}
-			existing.recordTransaction(theTransactionDate, theServiceVersion, theUser, theRequestBody, theInvocationResponse, theRequest, theImplementationUrl, theHttpResponse, theAuthorizationOutcome);
+			existing.recordTransaction(theRequest.getRequestTime(), theServiceVersion, theUser, theRequestBody, theInvocationResponse, theRequest, theImplementationUrl, theHttpResponse, theAuthorizationOutcome);
 		}
 
 		if (theUser != null) {
@@ -114,7 +114,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 				existing = newValue;
 			}
 
-			existing.recordTransaction(theTransactionDate, theRequest, theServiceVersion, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome);
+			existing.recordTransaction(theRequest.getRequestTime(), theRequest, theServiceVersion, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome);
 		}
 	}
 

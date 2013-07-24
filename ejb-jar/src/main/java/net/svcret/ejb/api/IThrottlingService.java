@@ -9,10 +9,10 @@ import net.svcret.ejb.ex.ThrottleException;
 
 public interface IThrottlingService {
 
-	void applyThrottle(long theRequestStartTime, InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization) throws ThrottleException, ThrottleQueueFullException;
-
 	void scheduleThrottledTaskForLaterExecution(ThrottleException theTask) throws ThrottleQueueFullException;
 
 	Future<Void> serviceThrottledRequests(ThrottledTaskQueue theTaskQueue);
+
+	void applyThrottle(HttpRequestBean theHttpRequest, InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization) throws ThrottleException, ThrottleQueueFullException;
 
 }

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -84,6 +85,7 @@ public class ServiceServlet extends HttpServlet {
 			request.setPath(path);
 			request.setQuery(query);
 			request.setInputReader(theReq.getReader());
+			request.setRequestTime(new Date(start));
 
 			Map<String, List<String>> requestHeaders = new HashMap<String, List<String>>();
 			for (Iterator<String> nameIter = Iterators.forEnumeration(theReq.getHeaderNames()); nameIter.hasNext();) {
