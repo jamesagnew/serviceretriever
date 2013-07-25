@@ -40,8 +40,7 @@ public class DashModelServiceMethod extends BaseDashModel implements IDashModel 
 
 	@Override
 	public Widget renderStatus() {
-		StatusEnum status = myServiceMethod.getStatus();
-		return DashModelDomain.returnImageForStatus(status);
+		return null;
 	}
 
 	

@@ -55,5 +55,9 @@ public class PersMonitorRuleNotifyContact extends BasePersObject {
 		return myPid;
 	}
 
+	public void loadAllAssociations() {
+		// nothing for now
+	}
+
 	
 }

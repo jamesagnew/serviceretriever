@@ -157,11 +157,7 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 
 	@Override
 	public Widget renderStatus() {
-		if (myDomain.getServiceList().size() == 0) {
-			return null;
-		}
-		StatusEnum status = myDomain.getStatus();
-		return returnImageForStatus(status);
+		return returnImageForStatus(myDomain);
 	}
 
 	@Override

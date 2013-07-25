@@ -21,6 +21,10 @@ public abstract class BasePersServiceCatalogItem extends BasePersKeepsRecentTran
 		return myMostRecentMonitorRuleFiring;
 	}
 
+	public boolean isMostRecentMonitorRuleFiringActive() {
+		return getMostRecentMonitorRuleFiring() != null && getMostRecentMonitorRuleFiring().getEndDate() == null;
+	}
+
 	/**
 	 * @param theMostRecentMonitorRuleFiring
 	 *            the mostRecentMonitorRuleFiring to set

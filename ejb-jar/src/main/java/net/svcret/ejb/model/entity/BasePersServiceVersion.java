@@ -62,6 +62,9 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	@OrderBy("CAUTH_ORDER")
 	private List<PersBaseClientAuth<?>> myClientAuths;
 
+	@OneToMany(fetch=FetchType.LAZY, cascade= {}, orphanRemoval=true, mappedBy="myServiceVersion")
+	private Collection<PersMonitorAppliesTo> myMonitorRules;
+
 	@Column(name = "SVC_DESC", length = 2000, nullable = true)
 	private String myDescription;
 
@@ -168,6 +171,13 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		res.setNewlyCreated(true);
 		getUriToResource().put(theUrl, res);
 		return res;
+	}
+
+	public Collection<PersMonitorAppliesTo> getMonitorRules() {
+		if (myMonitorRules==null) {
+			myMonitorRules=new ArrayList<PersMonitorAppliesTo>();
+		}
+		return myMonitorRules;
 	}
 
 	public void addServerAuth(PersBaseServerAuth<?, ?> theAuth) {
@@ -503,6 +513,10 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		}
 
 		for (PersServiceVersionUrl next : getUrls()) {
+			next.loadAllAssociations();
+		}
+
+		for (PersMonitorAppliesTo next : getMonitorRules()) {
 			next.loadAllAssociations();
 		}
 

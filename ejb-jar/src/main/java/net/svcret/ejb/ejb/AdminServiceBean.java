@@ -1516,6 +1516,36 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setId(theDomain.getDomainId());
 		retVal.setName(theDomain.getDomainName());
 		retVal.setServerSecured(theDomain.getServerSecured());
+
+		for(PersService nextSvc : theDomain.getServices()) {
+			for(BasePersServiceVersion nextSvcVer : nextSvc.getVersions()) {
+				for (PersMonitorAppliesTo nextRule : nextSvcVer.getMonitorRules()) {
+					if (nextRule.getItem().equals(nextSvcVer)) {
+						retVal.getMonitorRulePids().add(nextRule.getPid());
+					}
+				}
+				if (nextSvcVer.isMostRecentMonitorRuleFiringActive()) {
+					retVal.setFailingRuleCount(retVal.getFailingRuleCount()+1);
+				}
+			}
+			for (PersMonitorAppliesTo nextRule : nextSvc.getMonitorRules()) {
+				if (nextRule.getItem().equals(nextSvc)) {
+					retVal.getMonitorRulePids().add(nextRule.getPid());
+				}
+			}
+			if (nextSvc.isMostRecentMonitorRuleFiringActive()) {
+				retVal.setFailingRuleCount(retVal.getFailingRuleCount()+1);
+			}
+		}
+		for (PersMonitorAppliesTo nextRule : theDomain.getMonitorRules()) {
+			if (nextRule.getItem().equals(theDomain)) {
+				retVal.getMonitorRulePids().add(nextRule.getPid());
+			}
+		}
+		if (theDomain.isMostRecentMonitorRuleFiringActive()) {
+			retVal.setFailingRuleCount(retVal.getFailingRuleCount()+1);
+		}
+		
 		theDomain.populateKeepRecentTransactionsToDto(retVal);
 
 		if (theLoadStats) {

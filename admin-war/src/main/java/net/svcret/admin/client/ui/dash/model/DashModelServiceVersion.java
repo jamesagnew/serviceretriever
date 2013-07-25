@@ -57,8 +57,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 
 	@Override
 	public Widget renderStatus() {
-		StatusEnum status = mySvcVer.getStatus();
-		return DashModelDomain.returnImageForStatus(status);
+		return DashModelDomain.returnImageForStatus(mySvcVer);
 	}
 
 	@Override

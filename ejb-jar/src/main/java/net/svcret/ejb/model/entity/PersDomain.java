@@ -55,6 +55,9 @@ public class PersDomain extends BasePersServiceCatalogItem {
 	@OneToMany(fetch=FetchType.LAZY, cascade= {}, orphanRemoval=true, mappedBy="myDomain")
 	private Collection<PersUserDomainPermission> myUserPermissions;
 	
+	@OneToMany(fetch=FetchType.LAZY, cascade= {}, orphanRemoval=true, mappedBy="myDomain")
+	private Collection<PersMonitorAppliesTo> myMonitorRules;
+
 	@Transient
 	private transient StatusEnum myStatus;
 
@@ -108,6 +111,13 @@ public class PersDomain extends BasePersServiceCatalogItem {
 		return myServices;
 	}
 
+	public Collection<PersMonitorAppliesTo> getMonitorRules() {
+		if (myMonitorRules==null) {
+			myMonitorRules=new ArrayList<PersMonitorAppliesTo>();
+		}
+		return myMonitorRules;
+	}
+
 	public StatusEnum getStatus() {
 		return myStatus;
 	}
@@ -119,6 +129,10 @@ public class PersDomain extends BasePersServiceCatalogItem {
 		}
 
 		initIdToServices();
+		
+		for (PersMonitorAppliesTo next : getMonitorRules()) {
+			next.loadAllAssociations();
+		}
 
 		myAllAssociationsLoaded = true;
 	}

@@ -85,4 +85,10 @@ public class PersMonitorAppliesTo extends BasePersObject {
 		myRule = theRule;
 	}
 
+	public void loadAllAssociations() {
+		for (PersMonitorRuleNotifyContact nextContact :myRule.getNotifyContact()) {
+			nextContact.loadAllAssociations();
+		}
+	}
+
 }

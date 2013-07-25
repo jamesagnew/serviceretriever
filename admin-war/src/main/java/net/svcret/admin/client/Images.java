@@ -31,5 +31,13 @@ public interface Images extends ClientBundle {
 
 	@Source("net/svcret/images/icon_arrow_simple_left_24.png")
 	ImageResource arrowSimpleLeft();
+	
+	@Source("net/svcret/images/dash_monitor_ok_16.png")
+	ImageResource dashMonitorOk();
 
+	@Source("net/svcret/images/dash_monitor_norules_16.png")
+	ImageResource dashMonitorNorules();
+	
+	@Source("net/svcret/images/dash_monitor_alert_16.png")
+	ImageResource dashMonitorAlert();
 }

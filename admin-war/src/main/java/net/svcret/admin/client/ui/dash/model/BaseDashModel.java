@@ -15,6 +15,7 @@ import net.svcret.admin.shared.model.StatusEnum;
 
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Style.Display;
+import com.google.gwt.dom.client.Style.Float;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.i18n.client.NumberFormat;
@@ -150,6 +151,31 @@ public abstract class BaseDashModel implements IDashModel {
 		return retVal;
 	}
 
+	public static Widget returnImageForStatus(BaseGDashboardObjectWithUrls<?> theObject) {
+		String text;
+		ImageResource image;
+		if (theObject.getFailingRuleCount() > 0) {
+			image = AdminPortal.IMAGES.dashMonitorAlert();
+			text = theObject.getFailingRuleCount() + " rules failing!";
+		}else if (theObject.getMonitorRulePids().size() > 0) {
+			image = AdminPortal.IMAGES.dashMonitorOk();
+			text = theObject.getMonitorRulePids().size() + " rules ok";
+		}else {
+			image = AdminPortal.IMAGES.dashMonitorNorules();
+			text = "No rules";
+		}
+
+		FlowPanel flowPanel = new FlowPanel();
+		
+		Image w = new Image(image);
+		flowPanel.add(w);
+		
+		HTML w2 = new HTML("<nobr>"+text+"</nobr>");
+		flowPanel.add(w2);
+		return flowPanel;
+	}
+
+	
 	public static Widget returnImageForStatus(StatusEnum status) {
 		if (status == null) {
 			GWT.log("Status is null");

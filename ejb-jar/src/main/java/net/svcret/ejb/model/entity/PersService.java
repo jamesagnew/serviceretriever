@@ -64,6 +64,9 @@ public class PersService extends BasePersServiceCatalogItem {
 	@OneToMany(fetch=FetchType.LAZY, cascade= {}, orphanRemoval=true, mappedBy="myService")
 	private Collection<PersUserServicePermission> myUserPermissions;
 
+	@OneToMany(fetch=FetchType.LAZY, cascade= {}, orphanRemoval=true, mappedBy="myService")
+	private Collection<PersMonitorAppliesTo> myMonitorRules;
+
 	@Column(name = "SERVICE_ID", nullable = false, length = 100)
 	private String myServiceId;
 
@@ -100,6 +103,13 @@ public class PersService extends BasePersServiceCatalogItem {
 			retVal = myDomain.determineKeepNumRecentTransactions(theResultType);
 		}
 		return retVal;
+	}
+
+	public Collection<PersMonitorAppliesTo> getMonitorRules() {
+		if (myMonitorRules==null) {
+			myMonitorRules=new ArrayList<PersMonitorAppliesTo>();
+		}
+		return myMonitorRules;
 	}
 
 	/**
@@ -227,6 +237,11 @@ public class PersService extends BasePersServiceCatalogItem {
 			myIdToVersion.put(next.getVersionId(), next);
 			next.loadAllAssociations();
 		}
+		
+		for (PersMonitorAppliesTo next : getMonitorRules()) {
+			next.loadAllAssociations();
+		}
+
 	}
 
 	public void merge(PersService theService) {
