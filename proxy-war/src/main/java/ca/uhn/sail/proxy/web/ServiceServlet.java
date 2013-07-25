@@ -1,18 +1,22 @@
 package ca.uhn.sail.proxy.web;
 
+import static net.svcret.ejb.util.HttpUtil.sendFailure;
+import static net.svcret.ejb.util.HttpUtil.sendSecurityFailure;
+import static net.svcret.ejb.util.HttpUtil.sendSuccessfulResponse;
+import static net.svcret.ejb.util.HttpUtil.sendThrottleQueueFullFailure;
+import static net.svcret.ejb.util.HttpUtil.sendUnknownLocation;
+
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.ejb.EJB;
+import javax.servlet.AsyncContext;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -24,9 +28,11 @@ import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.OrchestratorResponseBean;
 import net.svcret.ejb.api.RequestType;
+import net.svcret.ejb.ejb.ThrottleQueueFullException;
 import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
+import net.svcret.ejb.ex.ThrottleException;
 import net.svcret.ejb.ex.UnknownRequestException;
 
 import org.apache.commons.codec.DecoderException;
@@ -34,20 +40,13 @@ import org.apache.commons.codec.net.URLCodec;
 
 import com.google.common.collect.Iterators;
 
-@WebServlet(asyncSupported = false, loadOnStartup = 1, urlPatterns = { "/" })
+@WebServlet(asyncSupported = true, loadOnStartup = 1, urlPatterns = { "/" })
 public class ServiceServlet extends HttpServlet {
 
-	private static final long serialVersionUID = 1L;
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceServlet.class);
 
-	private static HashSet<String> ourFilterHeaders;
-
-	@Override
-	public void init(ServletConfig theConfig) throws ServletException {
-		ourLog.info("Starting servlet with path: " + theConfig.getServletContext().getContextPath());
-		ourLog.info("Real path: " + theConfig.getServletContext().getRealPath("/"));
-	}
+	private static final long serialVersionUID = 1L;
 
 	@EJB
 	private IServiceOrchestrator myOrch;
@@ -55,6 +54,11 @@ public class ServiceServlet extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest theReq, HttpServletResponse theResp) throws ServletException, IOException {
 		handle(theReq, theResp, RequestType.GET);
+	}
+
+	@Override
+	protected void doPost(HttpServletRequest theReq, HttpServletResponse theResp) throws ServletException, IOException {
+		handle(theReq, theResp, RequestType.POST);
 	}
 
 	private void handle(HttpServletRequest theReq, HttpServletResponse theResp, RequestType get) throws IOException {
@@ -112,49 +116,36 @@ public class ServiceServlet extends HttpServlet {
 			ourLog.info("Security Failure accessing URL: {}", theReq.getRequestURL());
 			sendSecurityFailure(theResp);
 			return;
-		}
-
-		theResp.setStatus(200);
-
-		Map<String, List<String>> responseHeaders = response.getResponseHeaders();
-		if (responseHeaders != null) {
-			ourLog.trace("Responding with headers: {}", response.getResponseHeaders());
-			for (Entry<String, List<String>> next : responseHeaders.entrySet()) {
-				if (ourFilterHeaders.contains(next.getKey())) {
-					continue;
-				}
-				for (String nextValue : next.getValue()) {
-					theResp.addHeader(next.getKey(), nextValue);
-				}
+		} catch (ThrottleException e) {
+			
+			AsyncContext asyncContext = theReq.startAsync();
+			e.setAsyncContext(asyncContext);
+			
+			try {
+				myOrch.enqueueThrottledRequest(e);
+			} catch (ThrottleQueueFullException e1) {
+				ourLog.info("Request was throttled and queue was full for URL: {}", theReq.getRequestURL());
+				sendThrottleQueueFullFailure(theResp);
 			}
+			return;
+			
+		} catch (ThrottleQueueFullException e) {
+			ourLog.info("Request was throttled and queue was full for URL: {}", theReq.getRequestURL());
+			sendThrottleQueueFullFailure(theResp);
+			return;
 		}
 
-		theResp.setContentType(theResp.getContentType());
-
-		PrintWriter w = theResp.getWriter();
-		w.append(response.getResponseBody());
-		w.close();
+		sendSuccessfulResponse(theResp, response);
 
 		long delay = System.currentTimeMillis() - start;
 		ourLog.info("Handled {} request at path[{}] with {} byte response in {} ms", new Object[] { get.name(), path,  response.getResponseBody().length(), delay });
 		
 	}
 
-	private void sendSecurityFailure(HttpServletResponse theResp) throws IOException {
-		theResp.setStatus(403);
-		theResp.setContentType("text/plain");
-
-		PrintWriter w = theResp.getWriter();
-		w.append("HTTP 403 - Forbidden (Invalid or unknown credentials, or user does not have access to this service)");
-
-		w.close();
-	}
-
-	static {
-		ourFilterHeaders = new HashSet<String>();
-		ourFilterHeaders.add("Transfer-Encoding");
-		ourFilterHeaders.add("Content-Length");
-		ourFilterHeaders.add("server");
+	@Override
+	public void init(ServletConfig theConfig) throws ServletException {
+		ourLog.info("Starting servlet with path: " + theConfig.getServletContext().getContextPath());
+		ourLog.info("Real path: " + theConfig.getServletContext().getRealPath("/"));
 	}
 
 	private static String extractBase(String contextPath, String requestURL) {
@@ -163,41 +154,5 @@ public class ServiceServlet extends HttpServlet {
 		return requestURL.substring(0, pathStart) + contextPath;
 	}
 
-	private void sendUnknownLocation(HttpServletResponse theResp, UnknownRequestException theE) throws IOException {
-		theResp.setStatus(404);
-		theResp.setContentType("text/plain");
-
-		PrintWriter w = theResp.getWriter();
-		w.append("HTTP 404 - ServiceRetriever\n\n");
-		w.append("Unknown Request Location: ");
-		w.append(theE.getPath());
-
-		if (theE.getValidPaths() != null) {
-			w.append("\nValid Paths: ");
-			w.append(theE.getValidPaths().toString());
-		}
-
-		if (theE.getMessage() != null) {
-			w.append("\nMessage: ");
-			w.append(theE.getMessage());
-		}
-
-		w.close();
-	}
-
-	private void sendFailure(HttpServletResponse theResp, String theMessage) throws IOException {
-		theResp.setStatus(500);
-		theResp.setContentType("text/plain");
-
-		PrintWriter w = theResp.getWriter();
-		w.append("HTTP 500 - ServiceRetriever\n\n");
-		w.append("Failure: " + theMessage);
-		w.close();
-	}
-
-	@Override
-	protected void doPost(HttpServletRequest theReq, HttpServletResponse theResp) throws ServletException, IOException {
-		handle(theReq, theResp, RequestType.POST);
-	}
 
 }

@@ -139,7 +139,7 @@ public class MonitorServiceBean implements IMonitorService {
 				for (PersServiceVersionMethod nextMethod : nextSvcVer.getMethods()) {
 					for (long nextTime : times) {
 						PersInvocationStatsPk statsPk = new PersInvocationStatsPk(InvocationStatsIntervalEnum.MINUTE, nextTime, nextMethod);
-						BasePersInvocationStats stats = myRuntimeStatus.getOrCreateInvocationStatsSynchronously(statsPk);
+						BasePersInvocationStats stats = myRuntimeStatus.getInvocationStatsSynchronously(statsPk);
 						totalTime += stats.getSuccessInvocationTotalTime();
 						totalTime += stats.getSuccessInvocationCount();
 					}

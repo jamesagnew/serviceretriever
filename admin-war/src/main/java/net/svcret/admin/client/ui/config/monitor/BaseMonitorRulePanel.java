@@ -197,6 +197,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		grid.addRow("Enabled", myRuleActiveCheckBox);
 
 		HorizontalPanel controlsPanel = new HorizontalPanel();
+		contentPanel.add(controlsPanel);
 		
 		PButton saveButton = new PButton(AdminPortal.IMAGES.iconSave(), AdminPortal.MSGS.actions_Save());
 		saveButton.addClickHandler(new ClickHandler() {

@@ -3,6 +3,7 @@ package net.svcret.admin.client.ui.config.auth;
 import static net.svcret.admin.client.AdminPortal.IMAGES;
 import static net.svcret.admin.client.AdminPortal.MSGS;
 
+import java.util.Arrays;
 import java.util.List;
 
 import net.svcret.admin.client.AdminPortal;
@@ -11,6 +12,7 @@ import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.shared.Model;
+import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.util.StringUtil;
@@ -24,7 +26,11 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TextBox;
 
@@ -40,6 +46,11 @@ public abstract class BaseUserPanel extends FlowPanel {
 	private TextBox myUsernameTextBox;
 	private TextArea myNotesTextBox;
 	private Grid myIpsGrid;
+	private CheckBox myThrottleCheckbox;
+	private IntegerBox myThrottleNumberBox;
+	private ListBox myThrottlePeriodCombo;
+	private CheckBox myThrottleQueueCheckbox;
+	private IntegerBox myThrottleQueueMaxLength;
 
 	public BaseUserPanel() {
 		FlowPanel listPanel = new FlowPanel();
@@ -110,6 +121,18 @@ public abstract class BaseUserPanel extends FlowPanel {
 				myPasswordCheckbox.setEnabled(false);
 			}
 			myUsernamePasswordGrid.addRow(myPasswordCheckbox, myPasswordTextbox);
+		}
+
+		boolean throttle = myUser.getThrottle().getMaxRequests() != null;
+		myThrottleCheckbox.setValue(throttle);
+		if (throttle) {
+			myThrottleNumberBox.setValue(myUser.getThrottle().getMaxRequests());
+			myThrottlePeriodCombo.setSelectedIndex(Arrays.asList(ThrottlePeriodEnum.values()).indexOf(myUser.getThrottle().getPeriod()));
+			boolean queue = myUser.getThrottle().getQueue() != null;
+			myThrottleQueueCheckbox.setValue(queue);
+			if (queue) {
+				myThrottleQueueMaxLength.setValue(myUser.getThrottle().getQueue());
+			}
 		}
 
 		updateIpsGrid();
@@ -190,11 +213,74 @@ public abstract class BaseUserPanel extends FlowPanel {
 		// myIpsGrid.addStyleName(CssConstants.PROPERTY_TABLE);
 		ipsPanel.add(myIpsGrid);
 
+		/*
+		 * Throttling
+		 */
+
+		FlowPanel throttlePanel = new FlowPanel();
+		throttlePanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
+		add(throttlePanel);
+
+		Label throttleTitleLabel = new Label(AdminPortal.MSGS.user_requestThrottling());
+		throttleTitleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
+		throttlePanel.add(throttleTitleLabel);
+
+		FlowPanel throttleContentPanel = new FlowPanel();
+		throttleContentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
+		throttlePanel.add(throttleContentPanel);
+
+		TwoColumnGrid throttleGrid = new TwoColumnGrid();
+		throttleContentPanel.add(throttleGrid);
+
+		myThrottleCheckbox = new CheckBox("Enable Throttling");
+		myThrottleNumberBox = new IntegerBox();
+		myThrottlePeriodCombo = new ListBox(false);
+		for (ThrottlePeriodEnum next : ThrottlePeriodEnum.values()) {
+			myThrottlePeriodCombo.addItem(next.getDescription(), next.name());
+		}
+		HorizontalPanel throttleCheckboxValuePanel = new HorizontalPanel();
+		throttleCheckboxValuePanel.add(myThrottleNumberBox);
+		throttleCheckboxValuePanel.add(new HTML("&nbsp;requests&nbsp;/&nbsp;"));
+		throttleCheckboxValuePanel.add(myThrottlePeriodCombo);
+		throttleGrid.addRow(myThrottleCheckbox, throttleCheckboxValuePanel);
+		throttleGrid.addDescription("If enabled, requests from this user will not be permitted to proceed " + "faster than the given rate.");
+
+		myThrottleQueueCheckbox = new CheckBox("Queue");
+		myThrottleQueueMaxLength = new IntegerBox();
+		throttleGrid.addRow(myThrottleQueueCheckbox, myThrottleQueueMaxLength);
+		throttleGrid.addDescription("If enabled, up to the given number of requests will be allowed to queue if they arrive "
+				+ "faster than the given throttle limit. After the throttle period has been passed, they will be permitted to "
+				+ "proceed (and will receive a normal response). If more than the given number of requests arrive during the " + "throttle period, any excess requests will be rejected immediately.");
+
+		myThrottleCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
+				myThrottlePeriodCombo.setEnabled(theEvent.getValue());
+				myThrottleNumberBox.setEnabled(theEvent.getValue());
+				myThrottleQueueCheckbox.setEnabled(theEvent.getValue());
+				myThrottleQueueMaxLength.setEnabled(theEvent.getValue() && myThrottleQueueCheckbox.getValue());
+				if (theEvent.getValue()) {
+					if (myThrottleNumberBox.getValue() == null) {
+						myThrottleNumberBox.setValue(1);
+					}
+				}
+			}
+		});
+
+		myThrottleQueueCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
+				if (theEvent.getValue() && myThrottleQueueMaxLength.getValue() == null) {
+					myThrottleQueueMaxLength.setValue(10);
+				}
+			}
+		});
+
 	}
 
 	private void updateIpsGrid() {
 		final List<String> allowableIps = myUser.getAllowableSourceIps();
-		
+
 		myIpsGrid.resize(allowableIps.size() + 1, 3);
 
 		for (int i = 0; i < allowableIps.size(); i++) {
@@ -258,6 +344,20 @@ public abstract class BaseUserPanel extends FlowPanel {
 
 	protected void save() {
 
+		if (myThrottleCheckbox.getValue()) {
+			myUser.getThrottle().setMaxRequests(myThrottleNumberBox.getValue());
+			myUser.getThrottle().setPeriod(ThrottlePeriodEnum.valueOf(myThrottlePeriodCombo.getValue(myThrottlePeriodCombo.getSelectedIndex())));
+			if (myThrottleQueueCheckbox.getValue()) {
+				myUser.getThrottle().setQueue(myThrottleQueueMaxLength.getValue());
+			}else {
+				myUser.getThrottle().setQueue(null);
+			}
+		}else {
+			myUser.getThrottle().setMaxRequests(null);
+			myUser.getThrottle().setPeriod(null);
+			myUser.getThrottle().setQueue(null);
+		}
+		
 		myLoadingSpinner.show();
 		AdminPortal.MODEL_SVC.saveUser(myUser, new AsyncCallback<Void>() {
 			@Override

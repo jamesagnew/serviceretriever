@@ -26,6 +26,7 @@ import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.util.Validate;
 
+import org.apache.commons.lang3.StringUtils;
 import org.rrd4j.ConsolFun;
 import org.rrd4j.data.LinearInterpolator;
 import org.rrd4j.graph.RrdGraph;
@@ -81,9 +82,11 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		graphDef.setTimeSpan(timestamps);
 		graphDef.setVerticalLabel("Latency (millis/call)");
 		graphDef.setTextAntiAliasing(true);
-
+		
 		graphDef.line("avg", Color.BLACK, "Average (ms)", 2);
-		graphDef.gprint("avg", ConsolFun.AVERAGE, "average %.1f");
+		graphDef.gprint("avg", ConsolFun.AVERAGE, "Average %8.1f    ");
+		graphDef.gprint("avg", ConsolFun.MIN, "Min  %8.1f    ");
+		graphDef.gprint("avg", ConsolFun.MAX, "Max  %8.1f    ");
 
 		return render(graphDef);
 	}
@@ -114,6 +117,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		return renderLatency(invCount60Min, time60min, timestamps);
 	}
 
+	
 	private byte[] renderPayloadSize(List<Integer> theInvCount, double[] theAvgSuccessReqBytes, double[] theAvgSuccessRespBytes, String theIntervalDesc, List<Long> theTimestampsMillis) throws IOException {
 		RrdGraphDef graphDef = new RrdGraphDef();
 		graphDef.setWidth(600);
@@ -141,13 +145,17 @@ public class ChartingServiceBean implements IChartingServiceBean {
 
 		LinearInterpolator reqPlot = new LinearInterpolator(timestamps, theAvgSuccessReqBytes);
 		graphDef.datasource("req", reqPlot);
-		graphDef.line("req", Color.RED, "Requests", 2.0f);
-		graphDef.gprint("req", ConsolFun.AVERAGE, "Average Size %.1f\\l");
+		graphDef.line("req", Color.RED, "Requests  ", 2.0f);
+		graphDef.gprint("req", ConsolFun.AVERAGE, "Average Size %8.1f   ");
+		graphDef.gprint("req", ConsolFun.MIN, "Min %8.1f   ");
+		graphDef.gprint("req", ConsolFun.MAX, "Max %8.1f\\l");
 
 		LinearInterpolator respPlot = new LinearInterpolator(timestamps, theAvgSuccessRespBytes);
 		graphDef.datasource("resp", respPlot);
-		graphDef.line("resp", Color.GREEN, "Responses", 2.0f);
-		graphDef.gprint("resp", ConsolFun.AVERAGE, "Average Size %.1f\\l");
+		graphDef.line("resp", Color.GREEN, "Responses ", 2.0f);
+		graphDef.gprint("resp", ConsolFun.AVERAGE, "Average Size %8.1f   ");
+		graphDef.gprint("resp", ConsolFun.MIN, "Min %8.1f   ");
+		graphDef.gprint("resp", ConsolFun.MAX, "Max %8.1f\\l");
 
 		return render(graphDef);
 
@@ -207,23 +215,63 @@ public class ChartingServiceBean implements IChartingServiceBean {
 
 		LinearInterpolator avgPlot = new LinearInterpolator(timestamps, toDoublesFromDoubles(theInvCount));
 		graphDef.datasource("inv", avgPlot);
-		graphDef.area("inv", Color.GREEN, "Successful Calls");
-		graphDef.gprint("inv", ConsolFun.AVERAGE, "Average %.1f\\l");
+		graphDef.area("inv", Color.GREEN, StringUtils.rightPad("Successful Calls", 20));
+		graphDef.gprint("inv", ConsolFun.AVERAGE, "Average %8.1f   ");
+		graphDef.gprint("inv", ConsolFun.MIN, "Min %8.1f   ");
+		graphDef.gprint("inv", ConsolFun.MAX, "Max %8.1f\\l");
 
 		LinearInterpolator avgFaultPlot = new LinearInterpolator(timestamps, toDoublesFromDoubles(theInvCountFault));
 		graphDef.datasource("invfault", avgFaultPlot);
-		graphDef.stack("invfault", Color.BLUE, "Faults");
-		graphDef.gprint("invfault", ConsolFun.AVERAGE, "Average %.1f\\l");
+		graphDef.stack("invfault", Color.BLUE, StringUtils.rightPad("Faults", 20));
+		graphDef.gprint("invfault", ConsolFun.AVERAGE, "Average %8.1f   ");
+		graphDef.gprint("invfault", ConsolFun.MIN, "Min %8.1f   ");
+		graphDef.gprint("invfault", ConsolFun.MAX, "Max %8.1f\\l");
 
 		LinearInterpolator avgFailPlot = new LinearInterpolator(timestamps, toDoublesFromDoubles(theInvCountFail));
 		graphDef.datasource("invfail", avgFailPlot);
-		graphDef.stack("invfail", Color.GRAY, "Fails");
-		graphDef.gprint("invfail", ConsolFun.AVERAGE, "Average %.1f\\l");
+		graphDef.stack("invfail", Color.GRAY, StringUtils.rightPad("Fails", 20));
+		graphDef.gprint("invfail", ConsolFun.AVERAGE, "Average %8.1f   ");
+		graphDef.gprint("invfail", ConsolFun.MIN, "Min %8.1f   ");
+		graphDef.gprint("invfail", ConsolFun.MAX, "Max %8.1f\\l");
 
 		LinearInterpolator avgSecurityFailPlot = new LinearInterpolator(timestamps, toDoublesFromDoubles(theInvCountSecurityFail));
 		graphDef.datasource("invSecurityFail", avgSecurityFailPlot);
-		graphDef.stack("invSecurityFail", Color.RED, "SecurityFails");
-		graphDef.gprint("invSecurityFail", ConsolFun.AVERAGE, "Average %.1f\\l");
+		graphDef.stack("invSecurityFail", Color.RED, StringUtils.rightPad("Security Fails", 20));
+		graphDef.gprint("invSecurityFail", ConsolFun.AVERAGE, "Average %8.1f   ");
+		graphDef.gprint("invSecurityFail", ConsolFun.MIN, "Min %8.1f   ");
+		graphDef.gprint("invSecurityFail", ConsolFun.MAX, "Max %8.1f\\l");
+
+		return render(graphDef);
+	}
+	
+	private byte[] renderThrottling(List<Long> theAcceptCount, List<Long> theReject, List<Long> theTimestampsMillis, String theIntervalDesc) throws IOException {
+		RrdGraphDef graphDef = new RrdGraphDef();
+		graphDef.setWidth(600);
+		graphDef.setHeight(200);
+
+		long[] timestamps = new long[theTimestampsMillis.size()];
+
+		for (int i = 0; i < theTimestampsMillis.size(); i++) {
+			timestamps[i] = theTimestampsMillis.get(i) / 1000;
+		}
+
+		graphDef.setTimeSpan(timestamps);
+		graphDef.setVerticalLabel(theIntervalDesc);
+		graphDef.setTextAntiAliasing(true);
+
+		LinearInterpolator avgPlot = new LinearInterpolator(timestamps, toDoublesFromLongs(theAcceptCount));
+		graphDef.datasource("inv", avgPlot);
+		graphDef.area("inv", Color.GREEN, "Accepted (Throttled but call was allowed to proceed after delay)\\l");
+		graphDef.gprint("inv", ConsolFun.AVERAGE, "Average %8.1f   ");
+		graphDef.gprint("inv", ConsolFun.MIN, "Min %8.1f   ");
+		graphDef.gprint("inv", ConsolFun.MAX, "Max %8.1f\\l");
+
+		LinearInterpolator avgFaultPlot = new LinearInterpolator(timestamps, toDoublesFromLongs(theReject));
+		graphDef.datasource("invfault", avgFaultPlot);
+		graphDef.stack("invfault", Color.BLUE, "Rejected (Throttle queue was full or not allowed)\\l");
+		graphDef.gprint("invfault", ConsolFun.AVERAGE, "Average %8.1f   ");
+		graphDef.gprint("invfault", ConsolFun.MIN, "Min %8.1f   ");
+		graphDef.gprint("invfault", ConsolFun.MAX, "Max %8.1f\\l");
 
 		return render(graphDef);
 	}
@@ -264,19 +312,48 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		return renderUsage(invCount, invCountFault, invCountFail, invCountSecurityFail, "Calls / Min", timestamps);
 	}
 
-	private double[] toDoubles(List<Integer> theInvCount) {
-		double[] retVal = new double[theInvCount.size()];
-		int i = 0;
-		for (int next : theInvCount) {
-			retVal[i++] = next;
+	@Override
+	public byte[] renderThrottlingGraphForServiceVersion(long theServiceVersionPid, TimeRange theRange) throws IOException, ProcessingException {
+		ourLog.info("Rendering throttling graph for service version {}", theServiceVersionPid);
+
+		final List<Long> throttleAcceptCount = new ArrayList<Long>();
+		final List<Long> throttleRejectCount = new ArrayList<Long>();
+		final List<Long> timestamps = new ArrayList<Long>();
+
+		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
+		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
+			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats() {
+				@Override
+				public void withStats(int theIndex, BasePersInvocationStats theStats) {
+					growToSizeLong(throttleAcceptCount, theIndex);
+					growToSizeLong(throttleRejectCount, theIndex);
+					growToSizeLong(timestamps, theIndex);
+
+					throttleAcceptCount.set(theIndex, throttleAcceptCount.get(theIndex)+ theStats.getTotalThrottleAccepts());
+					throttleRejectCount.set(theIndex, throttleRejectCount.get(theIndex)+ theStats.getTotalThrottleRejections());
+					timestamps.set(theIndex, theStats.getPk().getStartTime().getTime());
+				}
+			});
+						
 		}
-		return retVal;
+
+		return renderThrottling(throttleAcceptCount, throttleRejectCount, timestamps,"Throttled Calls / Min");
 	}
+	
 
 	private double[] toDoublesFromDoubles(List<Double> theInvCount) {
 		double[] retVal = new double[theInvCount.size()];
 		int i = 0;
 		for (Double next : theInvCount) {
+			retVal[i++] = next;
+		}
+		return retVal;
+	}
+
+	private double[] toDoublesFromLongs(List<Long> theInvCount) {
+		double[] retVal = new double[theInvCount.size()];
+		int i = 0;
+		for (Long next : theInvCount) {
 			retVal[i++] = next;
 		}
 		return retVal;
@@ -305,8 +382,8 @@ public class ChartingServiceBean implements IChartingServiceBean {
 
 		long lastTime = startTime;
 		for (int i = 0; i < num; i++) {
-			numCalls.add((int) (100.0 * Math.random()));
-			totalTime.add((long) (1000.0 * Math.random()));
+			numCalls.add((int) (2 * Math.random()));
+			totalTime.add((long) (2 * Math.random()));
 			timestamps.add(lastTime);
 			lastTime = lastTime + interval;
 		}

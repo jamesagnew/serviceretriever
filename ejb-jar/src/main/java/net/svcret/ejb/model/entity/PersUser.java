@@ -29,6 +29,7 @@ import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.util.Password;
@@ -97,7 +98,6 @@ public class PersUser extends BasePersObject implements IThrottleable {
 	@Column(name="THROTTLE_PERIOD", nullable=true)
 	@Enumerated(EnumType.STRING)
 	private ThrottlePeriodEnum myThrottlePeriod;
-
 
 	@Column(unique = true, name = "USERNAME", nullable = false, length = 200)
 	private String myUsername;

@@ -78,7 +78,7 @@ public class PersUserStatus extends BasePersObject {
 		return myMethodStatuses;
 	}
 
-	public PersUserMethodStatus getOrCreateMethodStatus(PersServiceVersionMethod theMethod) {
+	public PersUserMethodStatus getOrCreateUserMethodStatus(PersServiceVersionMethod theMethod) {
 		Validate.notNull(theMethod);
 
 		PersUserMethodStatus retVal;
@@ -115,7 +115,7 @@ public class PersUserStatus extends BasePersObject {
 
 		for (PersUserMethodStatus nextNew : thePersUserStatus.getMethodStatuses().values()) {
 
-			PersUserMethodStatus nextExisting = getOrCreateMethodStatus(nextNew.getPk().getMethod());
+			PersUserMethodStatus nextExisting = getOrCreateUserMethodStatus(nextNew.getPk().getMethod());
 			nextExisting.merge(nextNew);
 
 		}

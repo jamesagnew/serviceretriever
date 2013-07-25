@@ -18,18 +18,19 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	private String myContactNotes;
 	private ArrayList<GUserDomainPermission> myDomainPermissions;
 	private HashSet<UserGlobalPermissionEnum> myGlobalPermissions;
-	private Date myStatsLastAccess;
 	private Date myStatsInitialized;
+	private Date myStatsLastAccess;
 	private int[] myStatsSecurityFailTransactions;
 	private double myStatsSecurityFailTransactionsAvgPerMin;
 	private int[] myStatsSuccessTransactions;
 	private double myStatsSuccessTransactionsAvgPerMin;
+	private GThrottle myThrottle=new GThrottle();
 	private String myUsername;
 
 	public GUser() {
 		super();
 	}
-	
+
 	public void addDomainPermission(GUserDomainPermission thePermission) {
 		if (myDomainPermissions == null) {
 			myDomainPermissions = new ArrayList<GUserDomainPermission>();
@@ -41,7 +42,7 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 		initGlobalPermissions();
 		myGlobalPermissions.add(thePermission);
 	}
-
+	
 	/**
 	 * @return the allowableSourceIps
 	 */
@@ -74,6 +75,16 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	}
 
 	@Override
+	public GUserDomainPermission getDomainPermission(long theDomainPid) {
+		for (GUserDomainPermission next : getDomainPermissions()) {
+			if (next.getDomainPid() == theDomainPid) {
+				return next;
+			}
+		}
+		return null;
+	}
+
+	@Override
 	public List<GUserDomainPermission> getDomainPermissions() {
 		if (myDomainPermissions == null) {
 			myDomainPermissions = new ArrayList<GUserDomainPermission>();
@@ -103,6 +114,13 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 		myDomainPermissions.add(permission);
 		permission.setDomainPid(theDomainPid);
 		return permission;
+	}
+
+	/**
+	 * @return the statsInitialized
+	 */
+	public Date getStatsInitialized() {
+		return myStatsInitialized;
 	}
 
 	/**
@@ -140,11 +158,21 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 		return myStatsSuccessTransactionsAvgPerMin;
 	}
 
+	public GThrottle getThrottle() {
+		return myThrottle;
+	}
+
 	/**
 	 * @return the id
 	 */
 	public String getUsername() {
 		return myUsername;
+	}
+
+	private void initGlobalPermissions() {
+		if (myGlobalPermissions == null) {
+			setGlobalPermissions(new HashSet<UserGlobalPermissionEnum>());
+		}
 	}
 
 	/*
@@ -164,13 +192,6 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 		return myStatsInitialized!=null;
 	}
 
-	/**
-	 * @return the statsInitialized
-	 */
-	public Date getStatsInitialized() {
-		return myStatsInitialized;
-	}
-
 	@Override
 	public void merge(GUser theUser) {
 		setPid(theUser.getPid());
@@ -181,6 +202,16 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 
 	public void removeDomainPermission(GUserDomainPermission theGUserDomainPermission) {
 		myDomainPermissions.remove(theGUserDomainPermission);
+	}
+
+	@Override
+	public void removeDomainPermission(long theDomainPid) {
+		for (GUserDomainPermission next : getDomainPermissions()) {
+			if (next.getDomainPid() == theDomainPid) {
+				myDomainPermissions.remove(next);
+				break;
+			}
+		}
 	}
 
 	public void removeGlobalPermission(UserGlobalPermissionEnum thePermission) {
@@ -253,19 +284,19 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	}
 
 	/**
-	 * @param theStatsLastAccess
-	 *            the statsLastAccess to set
-	 */
-	public void setStatsLastAccess(Date theStatsLastAccess) {
-		myStatsLastAccess = theStatsLastAccess;
-	}
-
-	/**
 	 * @param theStatsInitialized
 	 *            the isStatsInitialized to set
 	 */
 	public void setStatsInitialized(Date theStatsInitialized) {
 		myStatsInitialized = theStatsInitialized;
+	}
+
+	/**
+	 * @param theStatsLastAccess
+	 *            the statsLastAccess to set
+	 */
+	public void setStatsLastAccess(Date theStatsLastAccess) {
+		myStatsLastAccess = theStatsLastAccess;
 	}
 
 	/**
@@ -300,38 +331,16 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 		myStatsSuccessTransactionsAvgPerMin = theStatsSuccessTransactionsAvgPerMin;
 	}
 
+	public void setThrottle(GThrottle theThrottle) {
+		myThrottle = theThrottle;
+	}
+
 	/**
 	 * @param theId
 	 *            the id to set
 	 */
 	public void setUsername(String theUsername) {
 		myUsername = theUsername;
-	}
-
-	private void initGlobalPermissions() {
-		if (myGlobalPermissions == null) {
-			setGlobalPermissions(new HashSet<UserGlobalPermissionEnum>());
-		}
-	}
-
-	@Override
-	public GUserDomainPermission getDomainPermission(long theDomainPid) {
-		for (GUserDomainPermission next : getDomainPermissions()) {
-			if (next.getDomainPid() == theDomainPid) {
-				return next;
-			}
-		}
-		return null;
-	}
-
-	@Override
-	public void removeDomainPermission(long theDomainPid) {
-		for (GUserDomainPermission next : getDomainPermissions()) {
-			if (next.getDomainPid() == theDomainPid) {
-				myDomainPermissions.remove(next);
-				break;
-			}
-		}
 	}
 
 }

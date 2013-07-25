@@ -38,6 +38,9 @@ public abstract class BasePersKeepsRecentTransactions extends BasePersObject {
 		case SUCCESS:
 			retVal = myKeepNumRecentTransactionsSuccess;
 			break;
+		case THROTTLE_REJ:
+			retVal = 0;
+			break;
 		default:
 			throw new IllegalStateException("Unknown type: " + theResultType);
 		}

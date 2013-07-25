@@ -14,34 +14,38 @@ import com.google.gwt.user.client.ui.Label;
 
 public class RecentMessagesPanel extends FlowPanel {
 
-	public RecentMessagesPanel(GRecentMessageLists theLists, boolean theIsUser) {
+	private String myUnitType;
+
+	public RecentMessagesPanel(GRecentMessageLists theLists, boolean theIsUser, String theUnitType) {
 		addStyleName(CssConstants.CONTENT_INNER_PANEL);
-		
+
+		myUnitType = theUnitType;
+
 		if (!theLists.hasAtLeastOneList()) {
-			this.add(new Label(MSGS.serviceVersionStats_NoRecentMsgs()));
+			this.add(new Label(MSGS.serviceVersionStats_NoRecentMsgs(theUnitType)));
 		}
 
 		if (theLists.getSuccessList() != null) {
-			addRecentTransactionTable(MSGS.serviceVersionStats_RecentSuccessTitle(), theLists.getKeepSuccess(), theLists.getSuccessList(), theIsUser);
+			addRecentTransactionTable(MSGS.serviceVersionStats_RecentSuccessTitle(), theLists.getKeepSuccess(), theLists.getSuccessList(), theIsUser, "Success");
 		}
 
 		if (theLists.getFaultList() != null) {
-			addRecentTransactionTable(MSGS.serviceVersionStats_RecentFaultTitle(), theLists.getKeepFault(), theLists.getFaultList(), theIsUser);
+			addRecentTransactionTable(MSGS.serviceVersionStats_RecentFaultTitle(), theLists.getKeepFault(), theLists.getFaultList(), theIsUser, "Fault");
 		}
 
 		if (theLists.getFailList() != null) {
-			addRecentTransactionTable(MSGS.serviceVersionStats_RecentFailTitle(), theLists.getKeepFail(), theLists.getFailList(), theIsUser);
+			addRecentTransactionTable(MSGS.serviceVersionStats_RecentFailTitle(), theLists.getKeepFail(), theLists.getFailList(), theIsUser, "Failed");
 		}
 
 		if (theLists.getSecurityFailList() != null) {
-			addRecentTransactionTable(MSGS.serviceVersionStats_RecentSecurityFailTitle(), theLists.getKeepSecurityFail(), theLists.getSecurityFailList(), theIsUser);
+			addRecentTransactionTable(MSGS.serviceVersionStats_RecentSecurityFailTitle(), theLists.getKeepSecurityFail(), theLists.getSecurityFailList(), theIsUser, "Security Failure");
 		}
-		
+
 	}
 
-	private void addRecentTransactionTable(String theTitle, int theNumToKeep, List<GRecentMessage> theList, boolean theIsUsers) {
+	private void addRecentTransactionTable(String theTitle, int theNumToKeep, List<GRecentMessage> theList, boolean theIsUsers, String theTransactionType) {
 		this.add(new HtmlH1(theTitle));
-		this.add(new Label(MSGS.serviceVersionStats_RecentConfigNum(Integer.toString(theNumToKeep))));
+		this.add(new Label(MSGS.serviceVersionStats_RecentConfigNum(myUnitType, theNumToKeep, theTransactionType)));
 		this.add(new RecentMessagesGrid(theList, theIsUsers));
 	}
 

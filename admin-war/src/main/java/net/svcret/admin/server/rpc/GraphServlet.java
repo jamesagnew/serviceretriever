@@ -68,6 +68,9 @@ public class GraphServlet extends HttpServlet {
 		case PAYLOADSIZE:
 			bytes = renderPayloadSize(theReq, range);
 			break;
+		case THROTTLING:
+			bytes = renderThrottling(theReq, range);
+			break;
 		}
 
 		if (bytes == null) {
@@ -89,6 +92,21 @@ public class GraphServlet extends HttpServlet {
 		byte[] graph;
 		try {
 			graph = myChartSvc.renderPayloadSizeGraphForServiceVersion(pid, theRange);
+		} catch (ProcessingException e) {
+			throw new ServletException(e);
+		}
+
+		return graph;
+	}
+
+	private byte[] renderThrottling(HttpServletRequest theReq, TimeRange theRange) throws IOException, ServletException {
+		long pid = getPid(theReq);
+		
+		ourLog.info("Rendering throttling graph for service version {}", pid);
+
+		byte[] graph;
+		try {
+			graph = myChartSvc.renderThrottlingGraphForServiceVersion(pid, theRange);
 		} catch (ProcessingException e) {
 			throw new ServletException(e);
 		}

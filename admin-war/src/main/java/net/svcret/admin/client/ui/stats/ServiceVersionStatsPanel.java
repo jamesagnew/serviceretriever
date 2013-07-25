@@ -230,6 +230,11 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 		myChartsPanel.add(new HtmlH1(MSGS.serviceVersionStats_MessageSizeTitle()));
 		img = new Image("graph.png?ct=" + ChartTypeEnum.PAYLOADSIZE.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.name());
 		addStatsImage(myChartsPanel, img);
+
+		myChartsPanel.add(new HtmlH1(MSGS.serviceVersionStats_ThrottlingTitle()));
+		img = new Image("graph.png?ct=" + ChartTypeEnum.THROTTLING.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.name());
+		addStatsImage(myChartsPanel, img);
+		
 	}
 
 	private void addStatsImage(FlowPanel graphsPanel, Image img) {
@@ -280,7 +285,7 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 	private void set04RecentMessages(GRecentMessageLists theLists) {
 		myRecentMessagesLoadingSpinner.hideCompletely();
 
-		myRecentMessagesPanel.add(new RecentMessagesPanel(theLists, false));
+		myRecentMessagesPanel.add(new RecentMessagesPanel(theLists, false, "Service Version"));
 
 	}
 

@@ -556,10 +556,10 @@ public class DaoBeanTest extends BaseJpaTest {
 		PersServiceVersionMethod method1 = ver.getMethod("method1");
 		PersServiceVersionMethod method2 = ver.getMethod("method2");
 		
-		PersUserMethodStatus status1 = user.getStatus().getOrCreateMethodStatus(method1);
+		PersUserMethodStatus status1 = user.getStatus().getOrCreateUserMethodStatus(method1);
 		status1.setLastSuccessfulInvocation(date1);
 
-		PersUserMethodStatus status2 = user.getStatus().getOrCreateMethodStatus(method2);
+		PersUserMethodStatus status2 = user.getStatus().getOrCreateUserMethodStatus(method2);
 		status2.setLastSuccessfulInvocation(date2);
 
 		mySvc.saveUserStatus(Collections.singleton(user.getStatus()));

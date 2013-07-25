@@ -9,7 +9,7 @@ import com.google.common.base.Objects.ToStringHelper;
 public abstract class BasePersInvocationStats extends BasePersMethodStats {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	@Column(name = "MAX_SUC_REQ_BYTES", nullable = false)
 	private long myMaxSuccessRequestMessageBytes;
 	@Column(name = "MAX_SUC_RES_BYTES", nullable = false)
@@ -39,15 +39,32 @@ public abstract class BasePersInvocationStats extends BasePersMethodStats {
 
 	@Column(name = "TOT_SRV_SECURITY_FAILS", nullable = false)
 	private long myTotalServerSecurityFailures;
+
+	@Column(name = "TOT_THROTTLE_REJECTS", nullable = true)
+	private long myTotalThrottleRejections;
+	@Column(name = "TOT_THROTTLE_ACCEPTS", nullable = true)
+	private long myTotalThrottleAccepts;
+	@Column(name = "TOT_THROTTLE_TIME", nullable = true)
+	private long myTotalThrottleTime;
+
 	@Column(name = "TOT_SUC_INV_COUNT", nullable = false)
 	private long myTotalSuccessInvocationCount;
 	@Column(name = "TOT_SUC_INV_TIME", nullable = false)
 	private long myTotalSuccessInvocationTime;
 	@Column(name = "TOT_SUC_REQ_BYTES", nullable = false)
 	private long myTotalSuccessRequestMessageBytes;
-	
+
 	@Column(name = "TOT_SUC_RES_BYTES", nullable = false)
 	private long myTotalSuccessResponseMessageBytes;
+
+	public synchronized void addThrottleReject() {
+		myTotalThrottleRejections++;
+	}
+
+	public synchronized void addThrottleAccept(long theThrottleTime) {
+		myTotalThrottleAccepts++;
+		myTotalThrottleTime += theThrottleTime;
+	}
 
 	public synchronized void addFailInvocation(long theTime, long theRequestBytes, long theResponseBytes) {
 		myTotalFailInvocationCount++;
@@ -55,7 +72,7 @@ public abstract class BasePersInvocationStats extends BasePersMethodStats {
 		myTotalFailRequestMessageBytes += theRequestBytes;
 		myTotalFailResponseMessageBytes += theResponseBytes;
 	}
-	
+
 	public synchronized void addFaultInvocation(long theTime, long theRequestBytes, long theResponseBytes) {
 		myTotalFaultInvocationCount++;
 		myTotalFaultInvocationTime += theTime;
@@ -111,6 +128,18 @@ public abstract class BasePersInvocationStats extends BasePersMethodStats {
 	 */
 	public synchronized long getFailResponseMessageBytes() {
 		return myTotalFailResponseMessageBytes;
+	}
+
+	public long getTotalThrottleRejections() {
+		return myTotalThrottleRejections;
+	}
+
+	public long getTotalThrottleAccepts() {
+		return myTotalThrottleAccepts;
+	}
+
+	public long getTotalThrottleTime() {
+		return myTotalThrottleTime;
 	}
 
 	/**
@@ -194,7 +223,6 @@ public abstract class BasePersInvocationStats extends BasePersMethodStats {
 		}
 	}
 
-
 	public synchronized long getSuccessInvocationAvgTime() {
 		if (myTotalSuccessInvocationCount == 0) {
 			return 0;
@@ -217,7 +245,6 @@ public abstract class BasePersInvocationStats extends BasePersMethodStats {
 	public synchronized long getSuccessRequestMessageBytes() {
 		return myTotalSuccessRequestMessageBytes;
 	}
-
 
 	/**
 	 * @return the totalSuccessResponseMessageBytes
@@ -244,7 +271,11 @@ public abstract class BasePersInvocationStats extends BasePersMethodStats {
 			myTotalFaultResponseMessageBytes += stats.myTotalFaultResponseMessageBytes;
 
 			myTotalServerSecurityFailures += stats.myTotalServerSecurityFailures;
-			
+
+			myTotalThrottleAccepts += stats.myTotalThrottleAccepts;
+			myTotalThrottleRejections += stats.myTotalThrottleRejections;
+			myTotalThrottleTime += stats.myTotalThrottleTime;
+
 			if (myMinSuccessRequestMessageBytes == -1) {
 				myMinSuccessRequestMessageBytes = stats.myMinSuccessRequestMessageBytes;
 				myMaxSuccessRequestMessageBytes = stats.myMaxSuccessRequestMessageBytes;
@@ -260,29 +291,29 @@ public abstract class BasePersInvocationStats extends BasePersMethodStats {
 	}
 
 	public synchronized void mergeUnsynchronizedEvents(BasePersMethodStats theStats) {
-		BasePersInvocationStats stats = (BasePersInvocationStats)theStats;
+		BasePersInvocationStats stats = (BasePersInvocationStats) theStats;
 		mergeUnsynchronizedEvents(stats);
 	}
-	
+
 	@Override
 	public String toString() {
 		ToStringHelper tos = getPk().getToStringHelper();
 		boolean haveStats = false;
-		if (getSuccessInvocationCount()>0) {
+		if (getSuccessInvocationCount() > 0) {
 			tos.add("Success", getSuccessInvocationCount());
-			haveStats=true;
+			haveStats = true;
 		}
-		if (getFaultInvocationCount()>0) {
+		if (getFaultInvocationCount() > 0) {
 			tos.add("Fault", getFaultInvocationCount());
-			haveStats=true;
+			haveStats = true;
 		}
-		if (getFailInvocationCount()>0) {
+		if (getFailInvocationCount() > 0) {
 			tos.add("Fail", getFailInvocationCount());
-			haveStats=true;
+			haveStats = true;
 		}
-		if (getServerSecurityFailures()>0) {
+		if (getServerSecurityFailures() > 0) {
 			tos.add("SecurityFail", getServerSecurityFailures());
-			haveStats=true;
+			haveStats = true;
 		}
 		if (!haveStats) {
 			tos.add("NoStats", true);
@@ -290,10 +321,9 @@ public abstract class BasePersInvocationStats extends BasePersMethodStats {
 		return tos.toString();
 	}
 
-	
-	public static enum StatsTypeEnum{
-		INVOCATION,USER
-		
+	public static enum StatsTypeEnum {
+		INVOCATION, USER
+
 	}
 
 }

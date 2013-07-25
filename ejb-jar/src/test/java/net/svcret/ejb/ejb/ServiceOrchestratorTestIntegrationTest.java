@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,7 @@ import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IResponseValidator;
+import net.svcret.ejb.api.IThrottlingService;
 import net.svcret.ejb.api.IServiceOrchestrator.OrchestratorResponseBean;
 import net.svcret.ejb.api.ITransactionLogger;
 import net.svcret.ejb.api.RequestType;
@@ -27,6 +29,7 @@ import net.svcret.ejb.ejb.soap.Soap11ServiceInvoker;
 import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
+import net.svcret.ejb.ex.ThrottleException;
 import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
@@ -63,7 +66,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
 	@SuppressWarnings("null")
 	@Test
-	public void testSoap11GoodRequest() throws ProcessingException, InternalErrorException, UnknownRequestException, IOException, SecurityFailureException {
+	public void testSoap11GoodRequest() throws ProcessingException, InternalErrorException, UnknownRequestException, IOException, SecurityFailureException, ThrottleException, ThrottleQueueFullException {
 
 		myHttpClient = mock(IHttpClient.class, DefaultAnswer.INSTANCE);
 		myBroadcastSender = mock(IBroadcastSender.class);
@@ -97,7 +100,8 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		mySvc.setSecuritySvc(mySecurityService);
 		mySvc.setSoap11ServiceInvoker(mySoapInvoker);
 		mySvc.setSvcRegistry(myServiceRegistry);
-
+		mySvc.setThrottlingService(mock(IThrottlingService.class));
+		
 		/*
 		 * Start test
 		 */
@@ -188,6 +192,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 			req.setPath("/d0/d0s0/d0s0v0");
 			req.setQuery(query);
 			req.setInputReader(reader);
+			req.setRequestTime(new Date());
 			req.setRequestHeaders(new HashMap<String, List<String>>());
 			resp = mySvc.handleServiceRequest(req);
 		}

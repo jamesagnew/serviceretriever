@@ -43,10 +43,14 @@ public class PersServiceVersionStatus extends BasePersObject {
 	@Column(name = "LAST_SEC_FAIL")
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date myLastServerSecurityFailure;
-
+	
 	@Column(name = "LAST_SUCCESS")
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date myLastSuccessfulInvocation;
+
+	@Column(name = "LAST_THROTTLE_REJECT")
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date myLastThrottleReject;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -95,6 +99,10 @@ public class PersServiceVersionStatus extends BasePersObject {
 		return myLastSuccessfulInvocation;
 	}
 
+	public Date getLastThrottleReject() {
+		return myLastThrottleReject;
+	}
+
 	/**
 	 * @return the pid
 	 */
@@ -117,6 +125,9 @@ public class PersServiceVersionStatus extends BasePersObject {
 		myLastSave = newer(myLastSave, theStatus.getLastSave());
 		myLastServerSecurityFailure = newer(myLastServerSecurityFailure, theStatus.getLastServerSecurityFailure());
 		myLastSuccessfulInvocation = newer(myLastSuccessfulInvocation, theStatus.getLastSuccessfulInvocation());
+		myLastFaultInvocation = newer(myLastFaultInvocation, theStatus.getLastFaultInvocation());
+		myLastFailInvocation = newer(myLastFailInvocation, theStatus.getLastFailInvocation());
+		myLastThrottleReject = newer(myLastThrottleReject, theStatus.getLastThrottleReject());
 	}
 
 	/**
@@ -159,6 +170,10 @@ public class PersServiceVersionStatus extends BasePersObject {
 	public void setLastSuccessfulInvocation(Date theLastSuccessfulInvocation) {
 		myDirty = true;
 		myLastSuccessfulInvocation = theLastSuccessfulInvocation;
+	}
+
+	public void setLastThrottleReject(Date theLastThrottleReject) {
+		myLastThrottleReject = theLastThrottleReject;
 	}
 
 	/**

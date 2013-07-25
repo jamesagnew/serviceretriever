@@ -83,11 +83,11 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private IDao myDao;
 	private ReentrantLock myFlushLock = new ReentrantLock();
 
+	private final ConcurrentHashMap<BasePersInvocationStatsPk, BasePersInvocationStats> myInvocationStatCache;
+	private final ArrayDeque<BasePersInvocationStatsPk> myInvocationStatEmptyKeys;
+	private final ArrayDeque<BasePersInvocationStatsPk> myInvocationStatPopulatedKeys;
 	private int myMaxNullCachedEntries = INITIAL_CACHED_ENTRIES;
 	private int myMaxPopulatedCachedEntries = INITIAL_CACHED_ENTRIES;
-	private final ConcurrentHashMap<BasePersInvocationStatsPk, BasePersInvocationStats> myInvocationStatCache;
-	private final ArrayDeque<PersInvocationStatsPk> myInvocationStatEmptyKeys;
-	private final ArrayDeque<PersInvocationStatsPk> myInvocationStatPopulatedKeys;
 	private Date myNowForUnitTests;
 	private DateFormat myTimeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
 	private final ConcurrentHashMap<BasePersInvocationStatsPk, BasePersMethodStats> myUnflushedInvocationStats;
@@ -97,8 +97,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	public RuntimeStatusBean() {
 		myInvocationStatCache = new ConcurrentHashMap<BasePersInvocationStatsPk, BasePersInvocationStats>(myMaxNullCachedEntries + myMaxPopulatedCachedEntries);
-		myInvocationStatEmptyKeys = new ArrayDeque<PersInvocationStatsPk>(myMaxNullCachedEntries);
-		myInvocationStatPopulatedKeys = new ArrayDeque<PersInvocationStatsPk>(myMaxPopulatedCachedEntries);
+		myInvocationStatEmptyKeys = new ArrayDeque<BasePersInvocationStatsPk>(myMaxNullCachedEntries);
+		myInvocationStatPopulatedKeys = new ArrayDeque<BasePersInvocationStatsPk>(myMaxPopulatedCachedEntries);
 		myUnflushedInvocationStats = new ConcurrentHashMap<BasePersInvocationStatsPk, BasePersMethodStats>();
 		myUnflushedServiceVersionStatus = new ConcurrentHashMap<Long, PersServiceVersionStatus>();
 		myUnflushedUserStatus = new ConcurrentHashMap<PersUser, PersUserStatus>();
@@ -474,10 +474,14 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	}
 
 	private void doRecordInvocationMethod(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean,
-			BasePersInvocationStatsPk theStatsPk) {
+			BasePersInvocationStatsPk theStatsPk, Long theThrottleFullIfAny) {
 		Validate.notNull(theInvocationResponseResultsBean.getResponseType(), "responseType");
 
 		BasePersInvocationStats stats = (BasePersInvocationStats) getStatsForPk(theStatsPk);
+
+		if (theThrottleFullIfAny != null && theThrottleFullIfAny > 0) {
+			stats.addThrottleAccept(theThrottleFullIfAny);
+		}
 
 		long responseTime;
 		long responseBytes;
@@ -504,7 +508,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		case SECURITY_FAIL:
 			stats.addServerSecurityFailInvocation();
 			break;
-		default:
+		case THROTTLE_REJ:
+			stats.addThrottleReject();
 			break;
 		}
 	}
@@ -557,7 +562,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private void doUpdateUserStatus(PersServiceVersionMethod theMethod, InvocationResponseResultsBean theInvocationResponseResultsBean, PersUser theUser, Date theTransactionTime) {
 		PersUserStatus status = getUserStatusForUser(theUser);
 
-		PersUserMethodStatus methodStatus = status.getOrCreateMethodStatus(theMethod);
+		PersUserMethodStatus methodStatus = status.getOrCreateUserMethodStatus(theMethod);
 
 		switch (theInvocationResponseResultsBean.getResponseType()) {
 		case SUCCESS:
@@ -575,6 +580,9 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		case FAIL:
 			status.setLastAccessIfNewer(theTransactionTime);
 			methodStatus.setLastFailInvocationIfNewer(theTransactionTime);
+			break;
+		case THROTTLE_REJ:
+			methodStatus.setLastThrottleRejectIfNewer(theTransactionTime);
 			break;
 		}
 
@@ -609,24 +617,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	}
 
 	@Override
-	public int getMaxCachedNullStatCount() {
-		return myMaxNullCachedEntries;
-	}
-
-	@Override
-	public int getMaxCachedPopulatedStatCount() {
-		return myMaxPopulatedCachedEntries;
-	}
-
-	private Date getNow() {
-		if (myNowForUnitTests != null) {
-			return myNowForUnitTests;
-		}
-		return new Date();
-	}
-
-	@Override
-	public BasePersInvocationStats getOrCreateInvocationStatsSynchronously(PersInvocationStatsPk thePk) {
+	public BasePersInvocationStats getInvocationStatsSynchronously(PersInvocationStatsPk thePk) {
 		Date oneMinuteAgoTruncated = DateUtils.truncate(new Date(System.currentTimeMillis() - DateUtils.MILLIS_PER_MINUTE), Calendar.MINUTE);
 		if (!thePk.getStartTime().before(oneMinuteAgoTruncated)) {
 			BasePersInvocationStats retVal = myDao.getInvocationStats(thePk);
@@ -665,15 +656,59 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	}
 
 	@Override
-	public BasePersInvocationStats getOrCreateUserInvocationStatsSynchronously(PersInvocationUserStatsPk thePk) {
-		synchronized (myUnflushedInvocationStats) {
+	public BasePersInvocationStats getInvocationUserStatsSynchronously(PersInvocationUserStatsPk thePk) {
+		Date oneMinuteAgoTruncated = DateUtils.truncate(new Date(System.currentTimeMillis() - DateUtils.MILLIS_PER_MINUTE), Calendar.MINUTE);
+		if (!thePk.getStartTime().before(oneMinuteAgoTruncated)) {
 			BasePersInvocationStats retVal = myDao.getInvocationUserStats(thePk);
-			if (retVal != null) {
-				return retVal;
-			} else {
-				return (BasePersInvocationStats) getStatsForPk(thePk);
+			if (retVal == null) {
+				return thePk.newObjectInstance();
 			}
 		}
+
+		BasePersInvocationStats retVal = myInvocationStatCache.get(thePk);
+		if (retVal == PLACEHOLDER) {
+			return thePk.newObjectInstance();
+		} else if (retVal == null) {
+			synchronized (myInvocationStatCache) {
+				retVal = myDao.getInvocationUserStats(thePk);
+				if (retVal != null) {
+					if (myInvocationStatPopulatedKeys.size() + 1 > myMaxPopulatedCachedEntries) {
+						myInvocationStatCache.remove(myInvocationStatPopulatedKeys.pollFirst());
+					}
+					if (myInvocationStatCache.put(thePk, retVal) == null) {
+						myInvocationStatPopulatedKeys.add(thePk);
+					}
+					return retVal;
+				} else {
+					if (myInvocationStatEmptyKeys.size() + 1 > myMaxNullCachedEntries) {
+						myInvocationStatCache.remove(myInvocationStatEmptyKeys.pollFirst());
+					}
+					if (myInvocationStatCache.put(thePk, PLACEHOLDER) == null) {
+						myInvocationStatEmptyKeys.add(thePk);
+					}
+					return thePk.newObjectInstance();
+				}
+			}
+		} else {
+			return retVal;
+		}
+	}
+
+	@Override
+	public int getMaxCachedNullStatCount() {
+		return myMaxNullCachedEntries;
+	}
+
+	@Override
+	public int getMaxCachedPopulatedStatCount() {
+		return myMaxPopulatedCachedEntries;
+	}
+
+	private Date getNow() {
+		if (myNowForUnitTests != null) {
+			return myNowForUnitTests;
+		}
+		return new Date();
 	}
 
 	private BasePersMethodStats getStatsForPk(BasePersInvocationStatsPk statsPk) {
@@ -736,7 +771,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
 	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, PersServiceVersionMethod theMethod, PersUser theUser, HttpResponseBean theHttpResponse,
-			InvocationResponseResultsBean theInvocationResponseResultsBean) {
+			InvocationResponseResultsBean theInvocationResponseResultsBean, Long theThrottleFullIfAny) {
 		Validate.notNull(theInvocationTime, "InvocationTime");
 		Validate.notNull(theMethod, "Method");
 		Validate.notNull(theInvocationResponseResultsBean, "InvocationResponseResults");
@@ -748,14 +783,14 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		 */
 		InvocationStatsIntervalEnum interval = MINUTE;
 		BasePersInvocationMethodStatsPk statsPk = new PersInvocationStatsPk(interval, theInvocationTime, theMethod);
-		doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, statsPk);
+		doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, statsPk, theThrottleFullIfAny);
 
 		/*
 		 * Record user/anon method statistics
 		 */
 		if (theUser != null) {
 			PersInvocationUserStatsPk uStatsPk = new PersInvocationUserStatsPk(interval, theInvocationTime, theUser);
-			doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, uStatsPk);
+			doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, uStatsPk, theThrottleFullIfAny);
 
 			doUpdateUserStatus(theMethod, theInvocationResponseResultsBean, theUser, theInvocationTime);
 		}
@@ -811,6 +846,9 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			break;
 		case FAULT:
 			serviceVersionStatus.setLastFaultInvocation(theInvocationTime);
+			break;
+		case THROTTLE_REJ:
+			serviceVersionStatus.setLastThrottleReject(theInvocationTime);
 			break;
 		}
 

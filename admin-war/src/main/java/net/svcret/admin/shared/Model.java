@@ -11,6 +11,7 @@ import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
+import net.svcret.admin.shared.model.GMonitorRule;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceList;
@@ -384,6 +385,21 @@ public class Model {
 			}
 		}
 
+	}
+
+	public void loadMonitorRule(final long theRulePid, final IAsyncLoadCallback<GMonitorRule> theIAsyncLoadCallback) {
+		loadMonitorRuleList(new IAsyncLoadCallback<GMonitorRuleList>() {
+			@Override
+			public void onSuccess(GMonitorRuleList theResult) {
+				GMonitorRule rule = theResult.getRuleByPid(theRulePid);
+				if (rule == null) {
+					handleFailure(new Exception("Unknown rule: " + theRulePid));
+					return;
+				}
+				
+				theIAsyncLoadCallback.onSuccess(rule);
+			}
+		});
 	}
 
 }

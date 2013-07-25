@@ -39,7 +39,7 @@ private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger
 		IRuntimeStatus status= mock(IRuntimeStatus.class, DefaultAnswer.INSTANCE);
 		
 		final ArgumentCaptor<PersInvocationStatsPk> captor = ArgumentCaptor.forClass(PersInvocationStatsPk.class);
-		when(status.getOrCreateInvocationStatsSynchronously(captor.capture())).thenReturn(new BasePersInvocationStats() {
+		when(status.getInvocationStatsSynchronously(captor.capture())).thenReturn(new BasePersInvocationStats() {
 			private static final long serialVersionUID = 1L;
 
 			@Override

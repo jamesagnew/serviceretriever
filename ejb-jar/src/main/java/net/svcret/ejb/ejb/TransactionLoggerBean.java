@@ -221,6 +221,8 @@ public class TransactionLoggerBean implements ITransactionLogger {
 					mySuccess.add(message);
 					trimOldest(mySuccess, keepRecent);
 					break;
+				case THROTTLE_REJ:
+					throw new UnsupportedOperationException();
 				}
 
 			}
@@ -283,6 +285,8 @@ public class TransactionLoggerBean implements ITransactionLogger {
 					mySuccess.add(userMessage);
 					trimOldest(mySuccess, keepNum);
 					break;
+				case THROTTLE_REJ:
+					throw new UnsupportedOperationException();
 				}
 
 			}

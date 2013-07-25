@@ -50,6 +50,7 @@ import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
+import net.svcret.admin.shared.model.GThrottle;
 import net.svcret.admin.shared.model.GUrlStatus;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.GUserDomainPermission;
@@ -751,7 +752,8 @@ public class AdminServiceBean implements IAdminService {
 		return (int) newValue;
 	}
 
-	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, List<Integer> the60MinInvCount, List<Long> the60minTime, StatusEnum theStatus, BasePersServiceVersion nextVersion) throws ProcessingException {
+	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, List<Integer> the60MinInvCount, List<Long> the60minTime, StatusEnum theStatus,
+			BasePersServiceVersion nextVersion) throws ProcessingException {
 		StatusEnum status = theStatus;
 
 		for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
@@ -785,7 +787,8 @@ public class AdminServiceBean implements IAdminService {
 		return status;
 	}
 
-	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Long> the60minTime, PersService theService) throws ProcessingException {
+	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Long> the60minTime, PersService theService)
+			throws ProcessingException {
 
 		// Value will be changed below
 		StatusEnum status = theInitialStatus;
@@ -805,7 +808,8 @@ public class AdminServiceBean implements IAdminService {
 	/**
 	 * @return The start timestamp
 	 */
-	public static void extractSuccessfulInvocationInvocationTimes(PersConfig theConfig, int theNumMinsBack, final List<Integer> the60MinInvCount, final List<Long> the60minTime, PersServiceVersionMethod nextMethod, IRuntimeStatus statusSvc) {
+	public static void extractSuccessfulInvocationInvocationTimes(PersConfig theConfig, int theNumMinsBack, final List<Integer> the60MinInvCount, final List<Long> the60minTime,
+			PersServiceVersionMethod nextMethod, IRuntimeStatus statusSvc) {
 		doWithStatsByMinute(theConfig, theNumMinsBack, statusSvc, nextMethod, new IWithStats() {
 			@Override
 			public void withStats(int theIndex, BasePersInvocationStats theStats) {
@@ -850,7 +854,7 @@ public class AdminServiceBean implements IAdminService {
 			date = doWithStatsSupportFindDate(date, interval);
 
 			PersInvocationStatsPk pk = new PersInvocationStatsPk(interval, date, theMethod);
-			BasePersInvocationStats stats = statusSvc.getOrCreateInvocationStatsSynchronously(pk);
+			BasePersInvocationStats stats = statusSvc.getInvocationStatsSynchronously(pk);
 			theOperator.withStats(min, stats);
 
 			date = doWithStatsSupportIncrement(date, interval);
@@ -878,7 +882,7 @@ public class AdminServiceBean implements IAdminService {
 			date = doWithStatsSupportFindDate(date, interval);
 
 			PersInvocationUserStatsPk pk = new PersInvocationUserStatsPk(interval, date, theUser);
-			BasePersInvocationStats stats = statusSvc.getOrCreateUserInvocationStatsSynchronously(pk);
+			BasePersInvocationStats stats = statusSvc.getInvocationUserStatsSynchronously(pk);
 			theOperator.withStats(min, stats);
 
 			date = doWithStatsSupportIncrement(date, interval);
@@ -1100,6 +1104,10 @@ public class AdminServiceBean implements IAdminService {
 			ourLog.info("Changing password for user {}", theUser.getPidOrNull());
 			retVal.setPassword(theUser.getChangePassword());
 		}
+		
+		retVal.setThrottleMaxRequests(theUser.getThrottle().getMaxRequests());
+		retVal.setThrottlePeriod(theUser.getThrottle().getPeriod());
+		retVal.setThrottleMaxQueueDepth(theUser.getThrottle().getQueue());
 
 		return retVal;
 	}
@@ -1348,6 +1356,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setDescription(theVersion.getDescription());
 
 		theVersion.populateKeepRecentTransactionsToDto(retVal);
+		toUiMonitorRules(retVal, theVersion);
 
 		for (PersServiceVersionMethod nextMethod : theVersion.getMethods()) {
 			boolean loadStats = theLoadMethodStats != null && theLoadMethodStats.contains(nextMethod.getPid());
@@ -1517,35 +1526,8 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setName(theDomain.getDomainName());
 		retVal.setServerSecured(theDomain.getServerSecured());
 
-		for(PersService nextSvc : theDomain.getServices()) {
-			for(BasePersServiceVersion nextSvcVer : nextSvc.getVersions()) {
-				for (PersMonitorAppliesTo nextRule : nextSvcVer.getMonitorRules()) {
-					if (nextRule.getItem().equals(nextSvcVer)) {
-						retVal.getMonitorRulePids().add(nextRule.getPid());
-					}
-				}
-				if (nextSvcVer.isMostRecentMonitorRuleFiringActive()) {
-					retVal.setFailingRuleCount(retVal.getFailingRuleCount()+1);
-				}
-			}
-			for (PersMonitorAppliesTo nextRule : nextSvc.getMonitorRules()) {
-				if (nextRule.getItem().equals(nextSvc)) {
-					retVal.getMonitorRulePids().add(nextRule.getPid());
-				}
-			}
-			if (nextSvc.isMostRecentMonitorRuleFiringActive()) {
-				retVal.setFailingRuleCount(retVal.getFailingRuleCount()+1);
-			}
-		}
-		for (PersMonitorAppliesTo nextRule : theDomain.getMonitorRules()) {
-			if (nextRule.getItem().equals(theDomain)) {
-				retVal.getMonitorRulePids().add(nextRule.getPid());
-			}
-		}
-		if (theDomain.isMostRecentMonitorRuleFiringActive()) {
-			retVal.setFailingRuleCount(retVal.getFailingRuleCount()+1);
-		}
-		
+		toUiMonitorRules(theDomain, retVal);
+
 		theDomain.populateKeepRecentTransactionsToDto(retVal);
 
 		if (theLoadStats) {
@@ -1600,6 +1582,45 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
+	private void toUiMonitorRules(PersDomain theDomain, BaseGDashboardObjectWithUrls<?> retVal) {
+		for (PersService nextSvc : theDomain.getServices()) {
+			toUiMonitorRules(retVal, nextSvc);
+		}
+		for (PersMonitorAppliesTo nextRule : theDomain.getMonitorRules()) {
+			if (nextRule.getItem().equals(theDomain)) {
+				retVal.getMonitorRulePids().add(nextRule.getPid());
+			}
+		}
+		if (theDomain.isMostRecentMonitorRuleFiringActive()) {
+			retVal.setFailingRuleCount(retVal.getFailingRuleCount() + 1);
+		}
+	}
+
+	private void toUiMonitorRules(BaseGDashboardObjectWithUrls<?> retVal, PersService nextSvc) {
+		for (BasePersServiceVersion nextSvcVer : nextSvc.getVersions()) {
+			toUiMonitorRules(retVal, nextSvcVer);
+		}
+		for (PersMonitorAppliesTo nextRule : nextSvc.getMonitorRules()) {
+			if (nextRule.getItem().equals(nextSvc)) {
+				retVal.getMonitorRulePids().add(nextRule.getPid());
+			}
+		}
+		if (nextSvc.isMostRecentMonitorRuleFiringActive()) {
+			retVal.setFailingRuleCount(retVal.getFailingRuleCount() + 1);
+		}
+	}
+
+	private void toUiMonitorRules(BaseGDashboardObjectWithUrls<?> retVal, BasePersServiceVersion nextSvcVer) {
+		for (PersMonitorAppliesTo nextRule : nextSvcVer.getMonitorRules()) {
+			if (nextRule.getItem().equals(nextSvcVer)) {
+				retVal.getMonitorRulePids().add(nextRule.getPid());
+			}
+		}
+		if (nextSvcVer.isMostRecentMonitorRuleFiringActive()) {
+			retVal.setFailingRuleCount(retVal.getFailingRuleCount() + 1);
+		}
+	}
+
 	private GHttpClientConfig toUi(PersHttpClientConfig theConfig) {
 		GHttpClientConfig retVal = new GHttpClientConfig();
 
@@ -1627,7 +1648,9 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setName(theService.getServiceName());
 		retVal.setActive(theService.isActive());
 		retVal.setServerSecured(theService.getServerSecured());
+
 		theService.populateKeepRecentTransactionsToDto(retVal);
+		toUiMonitorRules(retVal, theService);
 
 		if (theLoadStats) {
 			retVal.setStatsInitialized(new Date());
@@ -1698,7 +1721,7 @@ public class AdminServiceBean implements IAdminService {
 			retVal.setTransactions60mins(toArray(t60minCount));
 			retVal.setLatency60mins(toLatency(t60minCount, t60minTime));
 			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
-
+			
 		}
 
 		return retVal;
@@ -1756,6 +1779,11 @@ public class AdminServiceBean implements IAdminService {
 			retVal.setStatsSecurityFailTransactions(toArray(t60minSecurityFailCount));
 			retVal.setStatsSecurityFailTransactionsAvgPerMin(to60MinAveragePerMin(t60minSecurityFailCount));
 
+			retVal.setThrottle(new GThrottle());
+			retVal.getThrottle().setMaxRequests(thePersUser.getThrottleMaxRequests());
+			retVal.getThrottle().setPeriod(thePersUser.getThrottlePeriod());
+			retVal.getThrottle().setQueue(thePersUser.getThrottleMaxQueueDepth());
+			
 		}
 
 		return retVal;

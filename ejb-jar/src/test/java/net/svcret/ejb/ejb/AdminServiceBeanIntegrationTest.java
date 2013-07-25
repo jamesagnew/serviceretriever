@@ -905,7 +905,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		httpResponse.setResponseTime(123);
 		InvocationResponseResultsBean bean = new InvocationResponseResultsBean();
 		bean.setResponseType(ResponseTypeEnum.SUCCESS);
-		myStatsSvc.recordInvocationMethod(new Date(), 100, m1, null, httpResponse, bean);
+		myStatsSvc.recordInvocationMethod(new Date(), 100, m1, null, httpResponse, bean, null);
 
 		newEntityManager();
 		

@@ -29,6 +29,18 @@ public class PersUserMethodStatus implements Serializable {
 	private Date myLastSecurityFailInvocation;
 
 	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name = "LAST_THROTTLE_REJECT")
+	private Date myLastThrottleReject;
+
+	public Date getLastThrottleReject() {
+		return myLastThrottleReject;
+	}
+
+	public void setLastThrottleReject(Date theLastThrottleReject) {
+		myLastThrottleReject = theLastThrottleReject;
+	}
+
+	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "LAST_SUC_INVOC")
 	private Date myLastSuccessfulInvocation;
 
@@ -145,6 +157,12 @@ public class PersUserMethodStatus implements Serializable {
 	public void setLastSecurityFailInvocationIfNewer(Date lastSecurityFailInvocation) {
 		if (myLastSecurityFailInvocation == null || (lastSecurityFailInvocation != null && myLastSecurityFailInvocation.before(lastSecurityFailInvocation))) {
 			myLastSecurityFailInvocation = lastSecurityFailInvocation;
+		}
+	}
+
+	public void setLastThrottleRejectIfNewer(Date lastReject) {
+		if (myLastThrottleReject == null || (lastReject != null && myLastThrottleReject.before(lastReject))) {
+			myLastThrottleReject = lastReject;
 		}
 	}
 

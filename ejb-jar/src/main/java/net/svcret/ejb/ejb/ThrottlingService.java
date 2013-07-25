@@ -1,6 +1,12 @@
 package net.svcret.ejb.ejb;
 
+import static net.svcret.ejb.util.HttpUtil.sendFailure;
+import static net.svcret.ejb.util.HttpUtil.sendSecurityFailure;
+import static net.svcret.ejb.util.HttpUtil.sendSuccessfulResponse;
+
+import java.io.IOException;
 import java.util.ArrayDeque;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,18 +17,33 @@ import javax.ejb.AsyncResult;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.servlet.AsyncContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import net.svcret.ejb.api.HttpRequestBean;
+import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.OrchestratorResponseBean;
 import net.svcret.ejb.api.IThrottlingService;
+import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.ResponseTypeEnum;
+import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.ex.ThrottleException;
 import net.svcret.ejb.model.entity.IThrottleable;
+import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersUser;
 
+import org.apache.commons.lang3.Validate;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.RateLimiter;
 
 @Singleton
@@ -32,7 +53,10 @@ public class ThrottlingService implements IThrottlingService {
 	private Map<IThrottleable, ThrottledTaskQueue> myThrottleQueues = new HashMap<IThrottleable, ThrottledTaskQueue>();
 
 	@EJB
-	private ThrottlingService myThis;
+	private IThrottlingService myThis;
+
+	@EJB
+	private IRuntimeStatus myRuntimeStatusSvc;
 
 	@EJB
 	private IServiceOrchestrator myServiceOrchestrator;
@@ -40,7 +64,11 @@ public class ThrottlingService implements IThrottlingService {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ThrottlingService.class);
 
 	@Override
-	public void applyThrottle(HttpRequestBean theHttpRequest, InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization) throws ThrottleException, ThrottleQueueFullException {
+	public void applyThrottle(HttpRequestBean theHttpRequest, InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization) throws ThrottleException,
+			ThrottleQueueFullException {
+		if (theAuthorization == null) {
+			return;
+		}
 		PersUser user = theAuthorization.getUser();
 		if (user == null) {
 			return;
@@ -56,11 +84,13 @@ public class ThrottlingService implements IThrottlingService {
 			RateLimiter newRateLimiter = RateLimiter.create(requestsPerSecond);
 			rateLimiter = myUserRateLimiters.putIfAbsent(user, newRateLimiter);
 			if (rateLimiter == null) {
+				ourLog.info("Creating new RateLimiter for {} with {} reqs/second", user, requestsPerSecond);
 				rateLimiter = newRateLimiter;
 			}
 		}
 
 		if (rateLimiter.getRate() != requestsPerSecond) {
+			ourLog.info("Updating RateLimiter for {} with {} reqs/second", user, requestsPerSecond);
 			rateLimiter.setRate(requestsPerSecond);
 		}
 
@@ -71,6 +101,7 @@ public class ThrottlingService implements IThrottlingService {
 		ourLog.info("Throttling user {} because it has exceeded {} reqs/second", user.getUsername(), requestsPerSecond);
 
 		if (user.getThrottleMaxQueueDepth() == null || user.getThrottleMaxQueueDepth() == 0) {
+			recordInvocationForThrottleQueueFull(theHttpRequest, theInvocationRequest, user);
 			throw new ThrottleQueueFullException();
 		}
 
@@ -78,75 +109,174 @@ public class ThrottlingService implements IThrottlingService {
 
 	}
 
+	private void recordInvocationForThrottleQueueFull(HttpRequestBean theHttpRequest, InvocationResultsBean theInvocationRequest, PersUser user) {
+
+		switch (theInvocationRequest.getResultType()) {
+		case METHOD:
+			Date invocationTime = theHttpRequest.getRequestTime();
+			int requestLength = theHttpRequest.getRequestBody().length();
+			PersServiceVersionMethod method = theInvocationRequest.getMethodDefinition();
+			HttpResponseBean httpResponse = null;
+			InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
+			invocationResponseResultsBean.setResponseType(ResponseTypeEnum.THROTTLE_REJ);
+			myRuntimeStatusSvc.recordInvocationMethod(invocationTime, requestLength, method, user, httpResponse, invocationResponseResultsBean, null);
+			break;
+		case STATIC_RESOURCE:
+			throw new UnsupportedOperationException();
+		}
+
+	}
+
+	@VisibleForTesting
+	void setRuntimeStatusSvcForTesting(IRuntimeStatus theRuntimeStatusSvc) {
+		myRuntimeStatusSvc = theRuntimeStatusSvc;
+	}
+
 	@Override
 	public void scheduleThrottledTaskForLaterExecution(ThrottleException theTask) throws ThrottleQueueFullException {
+		Validate.notNull(theTask.getAsyncContext());
+		Validate.isTrue(theTask.getAsyncContext().getResponse() instanceof HttpServletResponse);
 
 		Integer throttleMaxQueueDepth = theTask.getThrottleKey().getThrottleMaxQueueDepth();
 		if (throttleMaxQueueDepth == null || theTask.getThrottleKey().getThrottleMaxQueueDepth() == 0) {
+			recordInvocationForThrottleQueueFull(theTask.getHttpRequest(), theTask.getInvocationRequest(), theTask.getUser());
 			throw new ThrottleQueueFullException();
 		}
 
 		ThrottledTaskQueue taskQueue;
 		synchronized (myThrottleQueues) {
 			if (!myThrottleQueues.containsKey(theTask.getThrottleKey())) {
-				myThrottleQueues.put(theTask.getThrottleKey(), new ThrottledTaskQueue());
+				myThrottleQueues.put(theTask.getThrottleKey(), new ThrottledTaskQueue(theTask.getThrottleKey()));
 			}
 			taskQueue = myThrottleQueues.get(theTask.getThrottleKey());
 		}
 
-		taskQueue.tryToAddTask(theTask, throttleMaxQueueDepth);
+		try {
+			taskQueue.tryToAddTask(theTask, throttleMaxQueueDepth);
+		} catch (ThrottleQueueFullException e) {
+			recordInvocationForThrottleQueueFull(theTask.getHttpRequest(), theTask.getInvocationRequest(), theTask.getUser());
+			throw e;
+		}
+		
+		myThis.serviceThrottledRequests(taskQueue);
 
-		serviceThrottledRequests(taskQueue);
+	}
 
+	@VisibleForTesting
+	void setThisForTesting(IThrottlingService theThis) {
+		myThis = theThis;
+	}
+
+	@VisibleForTesting
+	void setServiceOrchestratorForTesting(IServiceOrchestrator theServiceOrchestrator) {
+		myServiceOrchestrator = theServiceOrchestrator;
 	}
 
 	@Override
 	@Asynchronous
+	@TransactionAttribute(TransactionAttributeType.NEVER)
 	public Future<Void> serviceThrottledRequests(ThrottledTaskQueue theTaskQueue) {
-		
-		if (theTaskQueue.getExecutionSemaphore().tryAcquire()) {
-			try {
-				ThrottleException taskToExecute = theTaskQueue.getTasks().poll();
-				if (taskToExecute.getRateLimiter().tryAcquire()) {
-					try {
-						OrchestratorResponseBean response = myServiceOrchestrator.handlePreviouslyThrottledRequest(taskToExecute.getInvocationRequest(), taskToExecute.getAuthorization(), taskToExecute.getHttpRequest());
-					} catch (ProcessingException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+
+		for (;;) {
+
+			if (theTaskQueue.getExecutionSemaphore().tryAcquire()) {
+				try {
+					ThrottleException taskToExecute = theTaskQueue.pollTask();
+
+					if (taskToExecute == null) {
+					} else if (taskToExecute.getRateLimiter().tryAcquire()) {
+
+						AsyncContext asyncContext = taskToExecute.getAsyncContext();
+						try {
+							HttpServletResponse theResp = (HttpServletResponse) asyncContext.getResponse();
+							HttpServletRequest theReq = (HttpServletRequest) asyncContext.getRequest();
+							HttpRequestBean request = taskToExecute.getHttpRequest();
+							try {
+
+								InvocationResultsBean invocationRequest = taskToExecute.getInvocationRequest();
+								AuthorizationResultsBean authorization = taskToExecute.getAuthorization();
+								HttpRequestBean httpRequest = taskToExecute.getHttpRequest();
+								long throttleTime = taskToExecute.getTimeSinceThrottleStarted();
+								OrchestratorResponseBean response = myServiceOrchestrator.handlePreviouslyThrottledRequest(invocationRequest, authorization, httpRequest, throttleTime);
+
+								sendSuccessfulResponse(theResp, response);
+
+								long delay = System.currentTimeMillis() - request.getRequestTime().getTime();
+								ourLog.info("Handled throttled {} request at path[{}] with {} byte response in {}ms ({}ms throttle time)",
+										new Object[] { request.getRequestType().name(), request.getPath(), response.getResponseBody().length(), delay, throttleTime });
+
+							} catch (InternalErrorException e) {
+								ourLog.info("Processing Failure", e);
+								sendFailure(theResp, e.getMessage());
+							} catch (ProcessingException e) {
+								ourLog.info("Processing Failure", e);
+								sendFailure(theResp, e.getMessage());
+							} catch (SecurityFailureException e) {
+								ourLog.info("Security Failure accessing URL: {}", theReq.getRequestURL());
+								sendSecurityFailure(theResp);
+							}
+						} catch (IOException e) {
+							ourLog.error("Failed to respond to throttled request due to IOException: ", e);
+						} finally {
+							asyncContext.complete();
+						}
+					} else {
+						theTaskQueue.pushTask(taskToExecute);
 					}
-				} else {
-					theTaskQueue.getTasks().push(taskToExecute);
+
+				} finally {
+					theTaskQueue.getExecutionSemaphore().release();
 				}
-				
-			}finally {
-				theTaskQueue.getExecutionSemaphore().release();
 			}
+
+			if (theTaskQueue.hasTasks()) {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					// ignore
+				}
+			} else {
+				break;
+			}
+
 		}
-		
-		
+
 		return new AsyncResult<Void>(null);
 	}
 
 	public static class ThrottledTaskQueue {
 		private final ArrayDeque<ThrottleException> myTasks = new ArrayDeque<ThrottleException>();
 		private final Semaphore myExecutionSemaphore = new Semaphore(1);
+		private IThrottleable myKey;
+
+		public ThrottledTaskQueue(IThrottleable theThrottleKey) {
+			myKey=theThrottleKey;
+		}
 
 		public Semaphore getExecutionSemaphore() {
 			return myExecutionSemaphore;
 		}
 
-		public ArrayDeque<ThrottleException> getTasks() {
-			return myTasks;
+		public synchronized boolean hasTasks() {
+			return myTasks.size() > 0;
 		}
 
+		public synchronized ThrottleException pollTask() {
+			return myTasks.poll();
+		}
+
+		public synchronized void pushTask(ThrottleException theTask) {
+			myTasks.push(theTask);
+		}
 
 		public synchronized void tryToAddTask(ThrottleException theTask, Integer theThrottleMaxQueueDepth) throws ThrottleQueueFullException {
-			if (getTasks().size() > theThrottleMaxQueueDepth) {
+			if (myTasks.size() >= theThrottleMaxQueueDepth) {
 				throw new ThrottleQueueFullException();
 			}
 
-			getTasks().add(theTask);
+			myTasks.add(theTask);
 
+			ourLog.info("Throttle queue for {} now has {} / {} tasks in queue", new Object[] {myKey, myTasks.size(), theThrottleMaxQueueDepth});
 		}
 	}
 

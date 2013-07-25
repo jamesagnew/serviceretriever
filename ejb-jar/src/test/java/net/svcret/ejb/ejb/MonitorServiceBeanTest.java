@@ -1,11 +1,12 @@
 package net.svcret.ejb.ejb;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -130,7 +131,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		httpResponse.setBody("successful response");
 		InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
 		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
-		myStatsSvc.recordInvocationMethod(new Date(), 100, myMethod, null, httpResponse, invocationResponseResultsBean);
+		myStatsSvc.recordInvocationMethod(new Date(), 100, myMethod, null, httpResponse, invocationResponseResultsBean, null);
 		newEntityManager();
 		myStatsSvc.flushStatus();
 		newEntityManager();
@@ -151,7 +152,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		httpResponse.setBody("successful response");
 		invocationResponseResultsBean = new InvocationResponseResultsBean();
 		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
-		myStatsSvc.recordInvocationMethod(new Date(), 100, myMethod, null, httpResponse, invocationResponseResultsBean);
+		myStatsSvc.recordInvocationMethod(new Date(), 100, myMethod, null, httpResponse, invocationResponseResultsBean, null);
 		newEntityManager();
 		myStatsSvc.flushStatus();
 		newEntityManager();
@@ -191,7 +192,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		httpResponse.setBody("successful response");
 		InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
 		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
-		myStatsSvc.recordInvocationMethod(new Date(), 100, myMethod, null, httpResponse, invocationResponseResultsBean);
+		myStatsSvc.recordInvocationMethod(new Date(), 100, myMethod, null, httpResponse, invocationResponseResultsBean, null);
 		newEntityManager();
 		myStatsSvc.flushStatus();
 		newEntityManager();
@@ -209,7 +210,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		httpResponse.setBody("successful response");
 		invocationResponseResultsBean = new InvocationResponseResultsBean();
 		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
-		myStatsSvc.recordInvocationMethod(new Date(), 100, myMethod, null, httpResponse, invocationResponseResultsBean);
+		myStatsSvc.recordInvocationMethod(new Date(), 100, myMethod, null, httpResponse, invocationResponseResultsBean, null);
 		newEntityManager();
 		myStatsSvc.flushStatus();
 		newEntityManager();

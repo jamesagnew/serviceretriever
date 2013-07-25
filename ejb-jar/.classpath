@@ -25,7 +25,7 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/dom4j/dom4j/1.6.1/dom4j-1.6.1.jar" sourcepath="M2_REPO/dom4j/dom4j/1.6.1/dom4j-1.6.1-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/rrd4j/rrd4j/2.1.1/rrd4j-2.1.1.jar" sourcepath="/M2_REPO/org/rrd4j/rrd4j/2.1.1/rrd4j-2.1.1-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/rrd4j/rrd4j/2.2/rrd4j-2.2.jar" sourcepath="/M2_REPO/org/rrd4j/rrd4j/2.2/rrd4j-2.2-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/com/google/guava/guava/14.0.1/guava-14.0.1.jar" sourcepath="/M2_REPO/com/google/guava/guava/14.0.1/guava-14.0.1-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/hamcrest/hamcrest-all/1.3/hamcrest-all-1.3.jar" sourcepath="M2_REPO/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3-sources.jar">
 		<attributes>
@@ -84,7 +84,7 @@
 	<classpathentry kind="var" path="M2_REPO/commons-io/commons-io/2.4/commons-io-2.4.jar" sourcepath="/M2_REPO/commons-io/commons-io/2.4/commons-io-2.4-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-collections/commons-collections/3.2.1/commons-collections-3.2.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/apache/mina/mina-core/2.0.7/mina-core-2.0.7.jar"/>
-	<classpathentry exported="true" kind="var" path="M2_REPO/org/apache/openejb/javaee-api/6.0-4/javaee-api-6.0-4.jar" sourcepath="/M2_REPO/org/apache/openejb/javaee-api/6.0-4/javaee-api-6.0-4-sources.jar"/>
+	<classpathentry exported="true" kind="var" path="M2_REPO/org/apache/openejb/javaee-api/6.0-4/javaee-api-6.0-4.jar" sourcepath="/M2_REPO/org/apache/openejb/javaee-api/6.0-5/javaee-api-6.0-5-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/com/google/code/gson/gson/2.2.4/gson-2.2.4.jar" sourcepath="/M2_REPO/com/google/code/gson/gson/2.2.4/gson-2.2.4-sources.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/adminapi-jar"/>
 	<classpathentry kind="var" path="M2_REPO/ch/qos/logback/logback-core/1.0.10/logback-core-1.0.10.jar"/>

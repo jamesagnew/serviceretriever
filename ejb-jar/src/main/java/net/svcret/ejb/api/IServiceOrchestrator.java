@@ -8,20 +8,25 @@ import java.util.Map;
 import javax.ejb.Local;
 
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
+import net.svcret.ejb.ejb.ThrottleQueueFullException;
 import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
+import net.svcret.ejb.ex.ThrottleException;
 import net.svcret.ejb.ex.UnknownRequestException;
 
 @Local
 public interface IServiceOrchestrator {
 
-	OrchestratorResponseBean handlePreviouslyThrottledRequest(InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization, HttpRequestBean theRequest) throws ProcessingException;
+	void enqueueThrottledRequest(ThrottleException theE) throws ThrottleQueueFullException;
+
+	OrchestratorResponseBean handlePreviouslyThrottledRequest(InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization, HttpRequestBean theRequest, long theThrottleTime)
+			throws ProcessingException, SecurityFailureException;
 
 	/**
 	 * Process a normal request
 	 */
-	OrchestratorResponseBean handleServiceRequest(HttpRequestBean theRequest) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException;
+	OrchestratorResponseBean handleServiceRequest(HttpRequestBean theRequest) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException, ThrottleException, ThrottleQueueFullException;
 
 	/**
 	 * Process a request invoked through a means other than the proxy itself (e.g. monitoring, management console, etc.)

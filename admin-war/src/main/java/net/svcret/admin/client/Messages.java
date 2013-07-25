@@ -631,11 +631,11 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Message Sizes")
 	String serviceVersionStats_MessageSizeTitle();
 
-	@DefaultMessage("This Service Version is not configured to retain recent transactions")
-	String serviceVersionStats_NoRecentMsgs();
+	@DefaultMessage("This {0} is not configured to retain any recent transactions")
+	String serviceVersionStats_NoRecentMsgs(String theUnitType);
 
-	@DefaultMessage("This Service Version is configured to retain the last {0} recent transactions")
-	String serviceVersionStats_RecentConfigNum(String theNumber);
+	@DefaultMessage("This {0} is configured to retain the last {1} recent {2} transactions")
+	String serviceVersionStats_RecentConfigNum(String theUnitType, int theNumber, String theTransactionType);
 
 	@DefaultMessage("Failed (Non-Security) Transactions")
 	String serviceVersionStats_RecentFailTitle();
@@ -697,6 +697,12 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Using authentication host: {0}")
 	String wsSecServerSecurity_UsesAuthenticationHost(String theModuleId);
+
+	@DefaultMessage("Request Throttling")
+	String serviceVersionStats_ThrottlingTitle();
+
+	@DefaultMessage("Request Throttling")
+	String user_requestThrottling();
 
 	
 	

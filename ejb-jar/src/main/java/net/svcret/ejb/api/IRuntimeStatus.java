@@ -30,7 +30,7 @@ public interface IRuntimeStatus {
 	 * @param theHttpResponse The response from the actual service implementation, if we got that far. Can be null if no request was ever made (e.g. because of security failure before that point)
 	 * @param theInvocationResponseResultsBean
 	 */
-	void recordInvocationMethod(Date theInvocationTime, int theRequestLength, PersServiceVersionMethod theMethod, PersUser theUser, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean);
+	void recordInvocationMethod(Date theInvocationTime, int theRequestLength, PersServiceVersionMethod theMethod, PersUser theUser, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, Long theThrottleDelayIfAny);
 
 	/**
 	 * Records a single invocation requesting a static resource
@@ -47,11 +47,11 @@ public interface IRuntimeStatus {
 	 */
 	void flushStatus();
 
-	BasePersInvocationStats getOrCreateInvocationStatsSynchronously(PersInvocationStatsPk thePk);
+	BasePersInvocationStats getInvocationStatsSynchronously(PersInvocationStatsPk thePk);
 
 	void collapseStats() throws ProcessingException;
 
-	BasePersInvocationStats getOrCreateUserInvocationStatsSynchronously(PersInvocationUserStatsPk thePk);
+	BasePersInvocationStats getInvocationUserStatsSynchronously(PersInvocationUserStatsPk thePk);
 
 	int getCachedPopulatedKeyCount();
 

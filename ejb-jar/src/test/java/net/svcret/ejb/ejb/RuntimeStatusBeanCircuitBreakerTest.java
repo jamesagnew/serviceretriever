@@ -134,7 +134,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		/*
 		 * Mark a success and try again
 		 */
-		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse);
+		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse, null);
 		pool = myBean.buildUrlPool(svcVersion);
 		assertEquals(persUrl1, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(1));
@@ -152,7 +152,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		when(httpResponse.getSuccessfulUrl()).thenReturn(persUrl2);
 
 //		DefaultAnswer.setRunTime();
-		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse);
+		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse, null);
 		pool = myBean.buildUrlPool(svcVersion);
 		assertEquals(persUrl2, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
@@ -215,7 +215,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		when(httpResponse.getFailedUrls()).thenReturn(failures);
 		when(httpResponse.getSuccessfulUrl()).thenReturn(null);
 
-		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse);
+		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse, null);
 		pool = myBean.buildUrlPool(svcVersion);
 		assertEquals(null, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
@@ -275,7 +275,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		/*
 		 * Mark a success and try again
 		 */
-		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse);
+		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse, null);
 		pool = myBean.buildUrlPool(svcVersion);
 		assertEquals(persUrl1, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(1));
@@ -293,7 +293,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		when(httpResponse.getSuccessfulUrl()).thenReturn(persUrl2);
 
 //		DefaultAnswer.setRunTime();
-		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse);
+		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse, null);
 		pool = myBean.buildUrlPool(svcVersion);
 		assertEquals(persUrl2, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
@@ -357,7 +357,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		when(httpResponse.getFailedUrls()).thenReturn(failures);
 		when(httpResponse.getSuccessfulUrl()).thenReturn(null);
 
-		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse);
+		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse, null);
 		pool = myBean.buildUrlPool(svcVersion);
 		assertEquals(null, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));

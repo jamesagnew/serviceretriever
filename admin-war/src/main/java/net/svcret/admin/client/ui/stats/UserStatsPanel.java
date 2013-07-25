@@ -37,7 +37,7 @@ public class UserStatsPanel extends FlowPanel {
 			public void onSuccess(GRecentMessageLists theResult) {
 				myLoadingSpinner.hideCompletely();
 				
-				listPanel.add(new RecentMessagesPanel(theResult, true));
+				listPanel.add(new RecentMessagesPanel(theResult, true, "User"));
 			}
 		});
 	}
