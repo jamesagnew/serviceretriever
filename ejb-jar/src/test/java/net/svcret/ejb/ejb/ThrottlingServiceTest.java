@@ -1,9 +1,11 @@
 package net.svcret.ejb.ejb;
 
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.io.StringReader;
+import java.util.Date;
 
 import javax.ejb.AsyncResult;
 import javax.servlet.AsyncContext;
@@ -12,31 +14,73 @@ import javax.servlet.http.HttpServletResponse;
 
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.ejb.api.HttpRequestBean;
-import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
+import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IRuntimeStatus;
+import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
 import net.svcret.ejb.api.IThrottlingService;
+import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.ejb.ThrottlingService.ThrottledTaskQueue;
 import net.svcret.ejb.ex.ThrottleException;
+import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersUser;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.util.concurrent.RateLimiter;
+
 public class ThrottlingServiceTest {
 
 	private ThrottlingService mySvc;
 	private IThrottlingService myThis;
+	private IRuntimeStatus myRuntimeStatusSvc;
 
 	@Before
 	public void setUp() {
 		mySvc = new ThrottlingService();
 		myThis = mock(IThrottlingService.class);
 		mySvc.setThisForTesting(myThis);
-		mySvc.setRuntimeStatusSvcForTesting(mock(IRuntimeStatus.class));
+		myRuntimeStatusSvc = mock(IRuntimeStatus.class);
+		mySvc.setRuntimeStatusSvcForTesting(myRuntimeStatusSvc);
 	}
 
+	@Test
+	public void testRecordStatsForQueueFull() throws ThrottleException, ThrottleQueueFullException, InterruptedException {
+		HttpRequestBean httpRequest=new HttpRequestBean();
+		httpRequest.setInputReader(new StringReader(""));
+		
+		RateLimiter rateLimiter=RateLimiter.create(2);
+		
+		InvocationResultsBean invocationRequest=new InvocationResultsBean();
+		invocationRequest.setResultMethod(null, null, null, null);
+		AuthorizationResultsBean authorization=new AuthorizationResultsBean();
+		
+		PersUser throttleKey = new PersUser();
+		throttleKey.setThrottleMaxQueueDepth(2);
+		
+		ThrottleException e=new ThrottleException(httpRequest, rateLimiter, invocationRequest, authorization, throttleKey);
+
+		AsyncContext asyncContext = mock(AsyncContext.class);
+		when(asyncContext.getRequest()).thenReturn(mock(HttpServletRequest.class));
+		when(asyncContext.getResponse()).thenReturn(mock(HttpServletResponse.class));
+		e.setAsyncContext(asyncContext);
+		
+		mySvc.scheduleThrottledTaskForLaterExecution(e);		
+		mySvc.scheduleThrottledTaskForLaterExecution(e);		
+		
+		try {
+		mySvc.scheduleThrottledTaskForLaterExecution(e);
+		fail();
+		} catch (ThrottleQueueFullException e2) {
+			//expected
+		}
+		
+		verify(myRuntimeStatusSvc).recordInvocationMethod((Date)any(), 0, (PersServiceVersionMethod)any(), (PersUser)any(), (HttpResponseBean)any(), (InvocationResponseResultsBean)any(), anyLong());
+		
+	}
+	
 	@Test
 	public void testExecuteThrottledUser() throws ThrottleException, ThrottleQueueFullException, InterruptedException {
 

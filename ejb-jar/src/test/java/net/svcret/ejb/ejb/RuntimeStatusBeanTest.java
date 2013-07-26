@@ -451,6 +451,63 @@ public class RuntimeStatusBeanTest {
 
 	}
 
+
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Test
+	public void testRecordThrottleReject() throws ParseException {
+		Date ts1 = myFmt.parse("2013-01-01 10:00:09");
+		Date ts2 = myFmt.parse("2013-01-01 10:00:10");
+
+		IDao dao = mock(IDao.class);
+
+		RuntimeStatusBean svc = new RuntimeStatusBean();
+		svc.setDao(dao);
+
+		PersDomain domain = new PersDomain(ourNextPid++, "domain_id");
+		PersService service = new PersService(ourNextPid++, domain, "service_id", "service_name");
+		BasePersServiceVersion version = new PersServiceVersionSoap11(ourNextPid++, service, "1.0");
+		PersServiceVersionMethod method = new PersServiceVersionMethod(ourNextPid++, version, "method1");
+		PersServiceVersionStatus status = new PersServiceVersionStatus(ourNextPid++, version);
+		version.setStatus(status);
+
+		PersUser user = new PersUser(32L);
+		user.setStatus(new PersUserStatus(33L));
+
+//		InvocationResponseResultsBean invocationResponse = new InvocationResponseResultsBean();
+//		invocationResponse.setResponseType(ResponseTypeEnum.SECURITY_FAIL);
+//		invocationResponse.setResponseStatusMessage("Security fail");
+//
+//		svc.recordInvocationMethod(ts1, 0, method, user, null, invocationResponse, null);
+//		svc.recordInvocationMethod(ts2, 0, method, user, null, invocationResponse, null);
+
+		Date invocationTime = ts1;
+		int requestLength = 1001;
+		HttpResponseBean httpResponse = null;
+		InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
+		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.THROTTLE_REJ);
+		svc.recordInvocationMethod(invocationTime, requestLength, method, user, httpResponse, invocationResponseResultsBean, null);
+
+		svc.flushStatus();
+
+		ArgumentCaptor<Collection> forCollection = ArgumentCaptor.forClass(Collection.class);
+		verify(dao, times(1)).saveInvocationStats(forCollection.capture());
+
+		Iterator statsIter = forCollection.getValue().iterator();
+
+		for (int i = 0; i < 2; i++) {
+			Object next = statsIter.next();
+			if (next instanceof PersInvocationUserStats) {
+				PersInvocationUserStats userStats = (PersInvocationUserStats) next;
+				assertEquals(1, userStats.getTotalThrottleRejections());
+			} else {
+				PersInvocationStats verStats = (PersInvocationStats) next;
+				assertEquals(1, verStats.getTotalThrottleRejections());
+			}
+		}
+
+	}
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testRecordStaticResource() throws ParseException {
