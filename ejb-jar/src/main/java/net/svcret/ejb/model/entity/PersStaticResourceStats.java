@@ -12,7 +12,7 @@ import org.hibernate.annotations.Index;
 @org.hibernate.annotations.Table(indexes = { @Index(columnNames = { "START_TIME" }, name = "IDX_SRS_START_TIME") }, appliesTo = "PX_STATIC_RES_STATS")
 @Table(name = "PX_STATIC_RES_STATS")
 @Entity()
-public class PersStaticResourceStats extends BasePersMethodStats {
+public class PersStaticResourceStats extends BasePersInvocationStats {
 
 	private static final long serialVersionUID = 1L;
 
@@ -50,7 +50,7 @@ public class PersStaticResourceStats extends BasePersMethodStats {
 	}
 
 	@Override
-	public synchronized void mergeUnsynchronizedEvents(BasePersMethodStats theNext) {
+	public synchronized void mergeUnsynchronizedEvents(BasePersInvocationStats theNext) {
 		PersStaticResourceStats next = (PersStaticResourceStats) theNext;
 		synchronized (next) {
 			myAccessCount += next.getAccessCount();

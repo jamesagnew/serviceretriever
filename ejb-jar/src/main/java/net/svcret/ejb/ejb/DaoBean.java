@@ -30,8 +30,8 @@ import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.ejb.TransactionLoggerBean.BaseUnflushed;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
+import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
-import net.svcret.ejb.model.entity.BasePersMethodStats;
 import net.svcret.ejb.model.entity.BasePersRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceCatalogItem;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -84,7 +84,7 @@ public class DaoBean implements IDao {
 	private EntityManager myEntityManager;
 
 	private Map<Long, Long> myServiceVersionPidToStatusPid = new HashMap<Long, Long>();
-	
+
 	@Override
 	public void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost) {
 		Validate.notNull(theAuthHost, "AuthenticationHost");
@@ -234,9 +234,9 @@ public class DaoBean implements IDao {
 		TypedQuery<PersInvocationStats> q = myEntityManager.createNamedQuery(Queries.PERSINVOC_STATS, PersInvocationStats.class);
 		q.setParameter("INTERVAL", theHour);
 		q.setParameter("BEFORE_DATE", theDaysCutoff, TemporalType.TIMESTAMP);
-		
+
 		List<PersInvocationStats> resultList = q.getResultList();
-		ourLog.debug("Querying for invocation stats with interval {} before start date {} and found {}", new Object[]{theHour, theDaysCutoff, resultList.size()});
+		ourLog.debug("Querying for invocation stats with interval {} before start date {} and found {}", new Object[] { theHour, theDaysCutoff, resultList.size() });
 		return resultList;
 	}
 
@@ -347,7 +347,6 @@ public class DaoBean implements IDao {
 		}
 	}
 
-
 	@Override
 	public PersInvocationStats getOrCreateInvocationStats(PersInvocationStatsPk thePk) {
 		PersInvocationStats retVal = myEntityManager.find(PersInvocationStats.class, thePk);
@@ -386,7 +385,8 @@ public class DaoBean implements IDao {
 		Validate.notNull(theService, "PersService");
 		Validate.throwProcessingExceptionIfBlank(theId, "The ID may not be blank");
 
-		TypedQuery<BasePersServiceVersion> q = myEntityManager.createQuery("SELECT v FROM BasePersServiceVersion v WHERE v.myService.myPid = :SERVICE_PID AND v.myVersionId = :VERSION_ID", BasePersServiceVersion.class);
+		TypedQuery<BasePersServiceVersion> q = myEntityManager.createQuery("SELECT v FROM BasePersServiceVersion v WHERE v.myService.myPid = :SERVICE_PID AND v.myVersionId = :VERSION_ID",
+				BasePersServiceVersion.class);
 		q.setParameter("SERVICE_PID", theService.getPid());
 		q.setParameter("VERSION_ID", theId);
 		BasePersServiceVersion retVal = null;
@@ -448,7 +448,7 @@ public class DaoBean implements IDao {
 
 		retVal.setServiceId(theId);
 		retVal.setServiceName(theId);
-		
+
 		retVal.setDomain(theDomain);
 
 		// retVal = myEntityManager.merge(retVal);
@@ -473,20 +473,20 @@ public class DaoBean implements IDao {
 		} catch (NoResultException e) {
 			retVal = new PersUser();
 			retVal.getAllowSourceIps();
-			
+
 			PersUserContact contact = new PersUserContact();
 			contact = myEntityManager.merge(contact);
 			retVal.setContact(contact);
 			contact.getUsers().add(retVal);
-			
+
 			retVal.setUsername(theUsername);
 			retVal.setAuthenticationHost(theAuthHost);
 			retVal = myEntityManager.merge(retVal);
-			
+
 			PersUserStatus status = new PersUserStatus();
 			status.setUser(retVal);
 			retVal.setStatus(status);
-			
+
 			status = myEntityManager.merge(status);
 			retVal.setStatus(status);
 			retVal.setNewlyCreated(true);
@@ -675,8 +675,8 @@ public class DaoBean implements IDao {
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	@Override
-	public void saveInvocationStats(Collection<BasePersMethodStats> theStats) {
-		List<BasePersMethodStats> emptyList = Collections.emptyList();
+	public void saveInvocationStats(Collection<BasePersInvocationStats> theStats) {
+		List<BasePersInvocationStats> emptyList = Collections.emptyList();
 		saveInvocationStats(theStats, emptyList);
 	}
 
@@ -684,24 +684,24 @@ public class DaoBean implements IDao {
 	@Override
 	public void saveUserStatus(Collection<PersUserStatus> theStatus) {
 		ourLog.info("Flushing {} user status entries", theStatus.size());
-		
+
 		grabLock("FLUSH_STATS");
-		
+
 		for (PersUserStatus persUserStatus : theStatus) {
-			
+
 			PersUserStatus existing = myEntityManager.find(PersUserStatus.class, persUserStatus.getPid());
 			if (existing == null) {
 				ourLog.info("No user status with PID {} so not going to save this one", persUserStatus.getPid());
 				continue;
 			}
-			
+
 			existing.merge(persUserStatus);
 			myEntityManager.merge(existing);
 		}
 	}
 
 	@Override
-	public void saveInvocationStats(Collection<BasePersMethodStats> theStats, List<BasePersMethodStats> theStatsToDelete) {
+	public void saveInvocationStats(Collection<BasePersInvocationStats> theStats, List<BasePersInvocationStats> theStatsToDelete) {
 		Validate.notNull(theStats);
 		Validate.notNull(theStatsToDelete);
 
@@ -714,10 +714,10 @@ public class DaoBean implements IDao {
 		int count = 0;
 		int ucount = 0;
 		int acount = 0;
-		for (Iterator<BasePersMethodStats> iter = theStats.iterator(); iter.hasNext();) {
-			BasePersMethodStats next = iter.next();
+		for (Iterator<BasePersInvocationStats> iter = theStats.iterator(); iter.hasNext();) {
+			BasePersInvocationStats next = iter.next();
 
-			BasePersMethodStats persisted;
+			BasePersInvocationStats persisted;
 			if (next instanceof PersInvocationUserStats) {
 				PersInvocationUserStats cNext = (PersInvocationUserStats) next;
 				persisted = getOrCreateInvocationUserStats(cNext.getPk());
@@ -751,9 +751,13 @@ public class DaoBean implements IDao {
 			myEntityManager.merge(persisted);
 		}
 
-		for (BasePersMethodStats next : theStatsToDelete) {
+		for (BasePersInvocationStats next : theStatsToDelete) {
 			ourLog.debug("Removing stats entry: {}", next);
-			myEntityManager.remove(next);
+
+			next = myEntityManager.find(next.getClass(), next.getPk());
+			if (next != null) {
+				myEntityManager.remove(next);
+			}
 		}
 
 		ourLog.info("Persisted {} invocation status entries, {} user invocation status entries, and {} anonymous status entries", new Object[] { count, ucount, acount });
@@ -784,7 +788,7 @@ public class DaoBean implements IDao {
 				myEntityManager.remove(next);
 			}
 		}
-		
+
 		for (int i = 0; i < theUser.getAllowSourceIps().size(); i++) {
 			PersUserAllowableSourceIps ip = theUser.getAllowSourceIps().get(i);
 			if (ip.getPid() == null) {
@@ -794,7 +798,7 @@ public class DaoBean implements IDao {
 			}
 			ip.setOrder(i);
 		}
-		
+
 		return myEntityManager.merge(theUser);
 	}
 
@@ -928,7 +932,7 @@ public class DaoBean implements IDao {
 		return retVal;
 	}
 
-	private BasePersMethodStats getOrCreateInvocationStats(PersStaticResourceStatsPk thePk) {
+	private BasePersInvocationStats getOrCreateInvocationStats(PersStaticResourceStatsPk thePk) {
 		PersStaticResourceStats retVal = myEntityManager.find(PersStaticResourceStats.class, thePk);
 
 		if (retVal == null) {
@@ -942,8 +946,9 @@ public class DaoBean implements IDao {
 	}
 
 	private void grabLock(String lockName) {
-		if (true) return;
-		
+		if (true)
+			return;
+
 		Map<String, Object> properties = new HashMap<String, Object>();
 		properties.put("javax.persistence.lock.timeout", 10 * 1000);
 		PersLocks lock = myEntityManager.find(PersLocks.class, lockName, LockModeType.PESSIMISTIC_WRITE, properties);
@@ -1070,26 +1075,26 @@ public class DaoBean implements IDao {
 	@Override
 	public void deleteUser(PersUser theUser) {
 		Validate.notNull(theUser);
-		
+
 		ourLog.info("Deleting user {}", theUser.getPid());
-		
+
 		myEntityManager.remove(theUser);
 	}
 
 	@Override
-	public BasePersInvocationStats getInvocationUserStats(PersInvocationUserStatsPk thePk) {
+	public BasePersMethodInvocationStats getInvocationUserStats(PersInvocationUserStatsPk thePk) {
 		return myEntityManager.find(PersInvocationUserStats.class, thePk);
 	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void saveRecentMessagesAndTrimInNewTransaction(BaseUnflushed<? extends BasePersRecentMessage> theNextTransactions) {
-		
+
 		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getSuccess());
 		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getFail());
 		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getSecurityFail());
 		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getFault());
-		
+
 	}
 
 	private void doSaveRecentMessagesAndTrimInNewTransaction(LinkedList<? extends BasePersRecentMessage> transactions) {
@@ -1103,15 +1108,15 @@ public class DaoBean implements IDao {
 
 	public PersMonitorRule saveOrCreateMonitorRule(PersMonitorRule theRule) {
 		Validate.notNull(theRule, "theRule");
-		
+
 		for (PersMonitorAppliesTo next : theRule.getAppliesTo()) {
 			next.setRule(theRule);
 		}
-		
+
 		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
 			next.setRule(theRule);
 		}
-		
+
 		return myEntityManager.merge(theRule);
 	}
 
@@ -1124,11 +1129,11 @@ public class DaoBean implements IDao {
 	@Override
 	public void deleteServiceVersion(BasePersServiceVersion theSv) {
 		myEntityManager.remove(theSv);
-		
+
 		PersService svc = theSv.getService();
 		svc.removeVersion(theSv);
 		myEntityManager.merge(svc);
-		
+
 	}
 
 	@Override
@@ -1151,14 +1156,14 @@ public class DaoBean implements IDao {
 
 	@Override
 	public void saveMonitorRule(PersMonitorRule theRule) {
-		
+
 		for (PersMonitorAppliesTo next : theRule.getAppliesTo()) {
 			next.setRule(theRule);
 		}
 		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
 			next.setRule(theRule);
 		}
-		
+
 		myEntityManager.merge(theRule);
 	}
 

@@ -2,15 +2,11 @@ package net.svcret.ejb.model.entity;
 
 import java.util.Date;
 
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-
-import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
@@ -23,38 +19,25 @@ public class PersInvocationUserStatsPk extends BasePersInvocationStatsPk {
 	@Transient
 	private volatile int myHashCode;
 
-	@JoinColumn(name = "USER_PID", nullable = false)
-	@ManyToOne(fetch = FetchType.LAZY, cascade = {})
-	@IgnoreSizeOf
-	private PersUser myUser;
+//	@JoinColumn(name = "USER_PID", nullable = false)
+//	@ManyToOne(fetch = FetchType.LAZY, cascade = {})
+//	@IgnoreSizeOf
+	
+	@Column(name = "USER_PID", nullable = false)
+	private long myUserPid;
 
 	public PersInvocationUserStatsPk() {
 		super();
 	}
 
+	public PersInvocationUserStatsPk(InvocationStatsIntervalEnum theInterval, Date theStartTime, long theUser) {
+		super(theInterval, theStartTime);
+		myUserPid = theUser;
+	}
+
 	public PersInvocationUserStatsPk(InvocationStatsIntervalEnum theInterval, Date theStartTime, PersUser theUser) {
 		super(theInterval, theStartTime);
-		myUser = theUser;
-	}
-	
-	@Override
-	protected void doHashCode(HashCodeBuilder theB) {
-		theB.append(myUser);
-	}
-
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public boolean equals(Object theObj) {
-		if (!(theObj instanceof PersInvocationUserStatsPk)) {
-			return false;
-		}
-
-		PersInvocationUserStatsPk pk = (PersInvocationUserStatsPk) theObj;
-		return super.equals(pk) // /-
-				&& myUser.equals(pk.getUser()); // -
+		myUserPid = theUser.getPid();
 	}
 
 	@Override
@@ -62,14 +45,26 @@ public class PersInvocationUserStatsPk extends BasePersInvocationStatsPk {
 		PersInvocationUserStatsPk obj = (PersInvocationUserStatsPk) theObj;
 		return getInterval().equals(obj.getInterval()) // -
 				&& getStartTime().equals(obj.getStartTime()) // -
-				&& getUser().equals(obj.getUser()); // -
+				&& getUserPid()== (obj.getUserPid()); // -
 	}
+
+	@Override
+	protected void doHashCode(HashCodeBuilder theB) {
+		theB.append(myUserPid);
+	}
+
+
+	@Override
+	ToStringHelper getToStringHelper() {
+		return super.getToStringHelper().add("User", getUserPid());
+	}
+
 
 	/**
 	 * @return the user
 	 */
-	public PersUser getUser() {
-		return myUser;
+	public long getUserPid() {
+		return myUserPid;
 	}
 
 	/**
@@ -78,27 +73,9 @@ public class PersInvocationUserStatsPk extends BasePersInvocationStatsPk {
 	@Override
 	public int hashCode() {
 		if (myHashCode == 0) {
-			myHashCode = Objects.hashCode(super.hashCode(), myUser);
+			myHashCode = Objects.hashCode(super.hashCode(), myUserPid);
 		}
 		return myHashCode;
-	}
-
-	/**
-	 * @param theUser
-	 *            the user to set
-	 */
-	public void setUser(PersUser theUser) {
-		myUser = theUser;
-	}
-
-	@Override
-	public String toString() {
-		return getToStringHelper().toString();
-	}
-
-	@Override
-	ToStringHelper getToStringHelper() {
-		return super.getToStringHelper().add("User", getUser().getUsername());
 	}
 
 	/**
@@ -107,6 +84,15 @@ public class PersInvocationUserStatsPk extends BasePersInvocationStatsPk {
 	@Override
 	public PersInvocationUserStats newObjectInstance() {
 		return new PersInvocationUserStats(this);
+	}
+
+	public void setUserPid(long theUserPid) {
+		myUserPid = theUserPid;
+	}
+
+	@Override
+	public String toString() {
+		return getToStringHelper().toString();
 	}
 
 }

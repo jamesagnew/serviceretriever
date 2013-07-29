@@ -8,6 +8,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.HttpRequestBean;
@@ -68,6 +70,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 		ourLog.info("Done saving {} recent transactions to database in {}ms", saveCount, delay);
 	}
 
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override
 	public void flush() {
 

@@ -21,7 +21,7 @@ import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.api.UrlPoolBean;
-import net.svcret.ejb.model.entity.BasePersMethodStats;
+import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersConfig;
@@ -375,7 +375,7 @@ public class RuntimeStatusBeanTest {
 		ArgumentCaptor<Collection> createCaptor = ArgumentCaptor.forClass(Collection.class);
 		ArgumentCaptor<List> deleteCaptor = ArgumentCaptor.forClass(List.class);
 
-		verify(dao).saveInvocationStats((Collection<BasePersMethodStats>) createCaptor.capture(), (List<BasePersMethodStats>) deleteCaptor.capture());
+		verify(dao).saveInvocationStats((Collection<BasePersInvocationStats>) createCaptor.capture(), (List<BasePersInvocationStats>) deleteCaptor.capture());
 
 		assertEquals(1, createCaptor.getAllValues().size());
 		PersInvocationStats obj = (PersInvocationStats) createCaptor.getValue().iterator().next();
@@ -546,7 +546,7 @@ public class RuntimeStatusBeanTest {
 		verify(pers, times(1)).saveInvocationStats(capt.capture());
 		verifyNoMoreInteractions(pers);
 
-		List<BasePersMethodStats> value = capt.getValue();
+		List<BasePersInvocationStats> value = capt.getValue();
 		assertEquals(1, value.size());
 
 		PersStaticResourceStats sr = findSr(value);
@@ -557,8 +557,8 @@ public class RuntimeStatusBeanTest {
 
 	}
 
-	private PersStaticResourceStats findSr(List<BasePersMethodStats> theValue) {
-		for (BasePersMethodStats next : theValue) {
+	private PersStaticResourceStats findSr(List<BasePersInvocationStats> theValue) {
+		for (BasePersInvocationStats next : theValue) {
 			if (next instanceof PersStaticResourceStats) {
 				return (PersStaticResourceStats) next;
 			}

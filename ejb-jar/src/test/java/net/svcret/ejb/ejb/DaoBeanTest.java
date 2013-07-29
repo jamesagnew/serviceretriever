@@ -17,8 +17,8 @@ import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
+import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
-import net.svcret.ejb.model.entity.BasePersMethodStats;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.IThrottleable;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
@@ -501,7 +501,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		status = mySvc.getStatusForServiceVersionWithPid(ver.getPid());
 		assertNotNull(status);
 		PersInvocationStatsPk pk = new PersInvocationStatsPk(InvocationStatsIntervalEnum.MINUTE, now, method);
-		BasePersInvocationStats loadedStats = mySvc.getOrCreateInvocationStats(pk);
+		BasePersMethodInvocationStats loadedStats = mySvc.getOrCreateInvocationStats(pk);
 
 		assertEquals(2, loadedStats.getSuccessInvocationCount());
 		assertEquals(150, loadedStats.getSuccessInvocationAvgTime());
@@ -616,7 +616,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		status = mySvc.getStatusForServiceVersionWithPid(ver.getPid());
 		assertNotNull(status);
 		PersInvocationUserStatsPk pk = PersServiceVersionStatus.createEntryPk(InvocationStatsIntervalEnum.MINUTE, now, user);
-		BasePersInvocationStats loadedStats = mySvc.getOrCreateInvocationUserStats(pk);
+		BasePersMethodInvocationStats loadedStats = mySvc.getOrCreateInvocationUserStats(pk);
 
 		assertEquals(2, loadedStats.getSuccessInvocationCount());
 		assertEquals(150, loadedStats.getSuccessInvocationAvgTime());
@@ -640,8 +640,8 @@ public class DaoBeanTest extends BaseJpaTest {
 
 	}
 
-	private Collection<BasePersMethodStats> sing(BasePersInvocationStats theStats) {
-		ArrayList<BasePersMethodStats> retVal = new ArrayList<BasePersMethodStats>();
+	private Collection<BasePersInvocationStats> sing(BasePersMethodInvocationStats theStats) {
+		ArrayList<BasePersInvocationStats> retVal = new ArrayList<BasePersInvocationStats>();
 		retVal.add(theStats);
 		return retVal;
 	}

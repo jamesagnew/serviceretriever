@@ -4,8 +4,6 @@ import java.util.Date;
 
 import javax.persistence.Embeddable;
 
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-
 @Embeddable
 public class PersInvocationStatsPk extends BasePersInvocationMethodStatsPk {
 
@@ -15,16 +13,29 @@ public class PersInvocationStatsPk extends BasePersInvocationMethodStatsPk {
 		super();
 	}
 
+	public PersInvocationStatsPk(InvocationStatsIntervalEnum theInterval, Date theStartTime, long theMethodPid) {
+		super(theInterval, theStartTime, theMethodPid);
+	}
+
+
 	public PersInvocationStatsPk(InvocationStatsIntervalEnum theInterval, Date theStartTime, PersServiceVersionMethod theMethod) {
-		super(theInterval, theStartTime, theMethod);
+		super(theInterval, theStartTime, theMethod.getPid());
 	}
 
 	public PersInvocationStatsPk(InvocationStatsIntervalEnum theInterval, long theStartTime, PersServiceVersionMethod theMethod) {
-		super(theInterval, new Date(theStartTime), theMethod);
+		super(theInterval, new Date(theStartTime), theMethod.getPid());
 	}
 
-	public PersInvocationStatsPk(InvocationStatsIntervalEnum theToIntervalTyoe, Date theStartTime, long theMethodPid) {
-		super(theToIntervalTyoe, theStartTime, theMethodPid);
+	public PersInvocationStatsPk(InvocationStatsIntervalEnum theInterval, long theStartTime, long theMethodPid) {
+		super(theInterval, new Date(theStartTime), theMethodPid);
+	}
+
+	@Override
+	protected boolean doEquals(BasePersInvocationStatsPk theObj2) {
+		PersInvocationStatsPk theObj = (PersInvocationStatsPk) theObj2;
+		return getInterval().equals(theObj.getInterval()) // -
+				&& getMethod() == (theObj.getMethod()) // -
+				&& getStartTime().equals(theObj.getStartTime()); // -
 	}
 
 	/**
@@ -34,20 +45,5 @@ public class PersInvocationStatsPk extends BasePersInvocationMethodStatsPk {
 	public PersInvocationStats newObjectInstance() {
 		return new PersInvocationStats(this);
 	}
-	
-	@Override
-	protected boolean doEquals(BasePersInvocationStatsPk theObj2) {
-		PersInvocationStatsPk theObj = (PersInvocationStatsPk) theObj2;
-		return getInterval().equals(theObj.getInterval()) // -
-				&& getMethodPid() == (theObj.getMethodPid()) // -
-				&& getStartTime().equals(theObj.getStartTime()); // -
-	}
-
-	@Override
-	protected void doHashCode(HashCodeBuilder theB) {
-		// TODO Auto-generated method stub
-		
-	}
-
 
 }

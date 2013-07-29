@@ -7,11 +7,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-
 import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
 
-import com.google.common.base.Objects;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import com.google.common.base.Objects.ToStringHelper;
 
 @Embeddable
@@ -21,38 +20,19 @@ public class PersStaticResourceStatsPk extends BasePersInvocationStatsPk {
 
 	@Transient
 	private volatile int myHashCode;
-	
-	@ManyToOne(cascade= {})
-	@JoinColumn(name="RESOURCE_PID", referencedColumnName="PID", nullable=false)
+
+	@ManyToOne(cascade = {})
+	@JoinColumn(name = "RESOURCE_PID", referencedColumnName = "PID", nullable = false)
 	@IgnoreSizeOf
 	private PersServiceVersionResource myResource;
-	
+
 	public PersStaticResourceStatsPk() {
 		super();
 	}
 
-	@Override
-	protected void doHashCode(HashCodeBuilder theB) {
-		theB.append(myResource);
-	}
-
 	public PersStaticResourceStatsPk(InvocationStatsIntervalEnum theInterval, Date theStartTime, PersServiceVersionResource theResource) {
-		super(theInterval,theStartTime);
+		super(theInterval, theStartTime);
 		myResource = theResource;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public boolean equals(Object theObj) {
-		if (!(theObj instanceof PersStaticResourceStatsPk)) {
-			return false;
-		}
-		
-		PersStaticResourceStatsPk pk = (PersStaticResourceStatsPk)theObj;
-		return super.equals(pk) ///-
-				&& myResource.equals(pk.getResource()); //-
 	}
 
 	@Override
@@ -63,7 +43,11 @@ public class PersStaticResourceStatsPk extends BasePersInvocationStatsPk {
 				&& getStartTime().equals(obj.getStartTime()); // -
 	}
 
-	
+	@Override
+	protected void doHashCode(HashCodeBuilder theB) {
+		theB.append(myResource);
+	}
+
 	/**
 	 * @return the user
 	 */
@@ -76,29 +60,6 @@ public class PersStaticResourceStatsPk extends BasePersInvocationStatsPk {
 	 */
 	public Long getResourcePid() {
 		return getResource().getPid();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public int hashCode() {
-		if (myHashCode == 0) {
-			myHashCode = Objects.hashCode(super.hashCode(), myResource);
-		}
-		return myHashCode;
-	}
-
-	/**
-	 * @param theResource the user to set
-	 */
-	public void setResource(PersServiceVersionResource theResource) {
-		myResource = theResource;
-	}
-
-	@Override
-	public String toString() {
-		return getToStringHelper().toString();
 	}
 
 	@Override
@@ -114,6 +75,17 @@ public class PersStaticResourceStatsPk extends BasePersInvocationStatsPk {
 		return new PersStaticResourceStats(this);
 	}
 
-	
-	
+	/**
+	 * @param theResource
+	 *            the user to set
+	 */
+	public void setResource(PersServiceVersionResource theResource) {
+		myResource = theResource;
+	}
+
+	@Override
+	public String toString() {
+		return getToStringHelper().toString();
+	}
+
 }

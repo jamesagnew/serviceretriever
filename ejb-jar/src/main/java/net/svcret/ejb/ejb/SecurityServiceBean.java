@@ -102,7 +102,7 @@ public class SecurityServiceBean implements ISecurityService {
 
 	}
 
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public synchronized void loadUserCatalogIfNeeded() {
 		ourLog.debug("Checking for updated user catalog");
 

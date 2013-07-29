@@ -77,7 +77,7 @@ public class ThrottlingServiceTest {
 			//expected
 		}
 		
-		verify(myRuntimeStatusSvc).recordInvocationMethod((Date)any(), 0, (PersServiceVersionMethod)any(), (PersUser)any(), (HttpResponseBean)any(), (InvocationResponseResultsBean)any(), anyLong());
+		verify(myRuntimeStatusSvc).recordInvocationMethod((Date)any(), eq(0), (PersServiceVersionMethod)any(), (PersUser)any(), (HttpResponseBean)any(), (InvocationResponseResultsBean)any(), anyLong());
 		
 	}
 	

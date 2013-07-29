@@ -21,7 +21,7 @@ import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.ejb.AdminServiceBean.IWithStats;
 import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.model.entity.BasePersInvocationStats;
+import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.util.Validate;
@@ -103,7 +103,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
 			 doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats() {
 				@Override
-				public void withStats(int theIndex, BasePersInvocationStats theStats) {
+				public void withStats(int theIndex, BasePersMethodInvocationStats theStats) {
 					growToSizeInt(invCount60Min, theIndex);
 					growToSizeLong(time60min, theIndex);
 					growToSizeLong(timestamps, theIndex);
@@ -174,7 +174,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
 			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats() {
 				@Override
-				public void withStats(int theIndex, BasePersInvocationStats theStats) {
+				public void withStats(int theIndex, BasePersMethodInvocationStats theStats) {
 					growToSizeInt(invCount, theIndex);
 					growToSizeLong(totalSuccessRespBytes, theIndex);
 					growToSizeLong(totalSuccessReqBytes, theIndex);
@@ -290,7 +290,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
 			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats() {
 				@Override
-				public void withStats(int theIndex, BasePersInvocationStats theStats) {
+				public void withStats(int theIndex, BasePersMethodInvocationStats theStats) {
 					growToSizeDouble(invCount, theIndex);
 					growToSizeDouble(invCountFault, theIndex);
 					growToSizeDouble(invCountFail, theIndex);
@@ -324,7 +324,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
 			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats() {
 				@Override
-				public void withStats(int theIndex, BasePersInvocationStats theStats) {
+				public void withStats(int theIndex, BasePersMethodInvocationStats theStats) {
 					growToSizeLong(throttleAcceptCount, theIndex);
 					growToSizeLong(throttleRejectCount, theIndex);
 					growToSizeLong(timestamps, theIndex);

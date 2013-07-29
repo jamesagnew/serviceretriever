@@ -21,7 +21,7 @@ import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IMonitorService;
 import net.svcret.ejb.api.IRuntimeStatus;
-import net.svcret.ejb.model.entity.BasePersInvocationStats;
+import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.BasePersServiceCatalogItem;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
@@ -45,7 +45,7 @@ public class MonitorServiceBean implements IMonitorService {
 	private IRuntimeStatus myRuntimeStatus;
 
 	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void check() {
 		ourLog.debug("Beginning monitor checking pass");
 
@@ -139,7 +139,7 @@ public class MonitorServiceBean implements IMonitorService {
 				for (PersServiceVersionMethod nextMethod : nextSvcVer.getMethods()) {
 					for (long nextTime : times) {
 						PersInvocationStatsPk statsPk = new PersInvocationStatsPk(InvocationStatsIntervalEnum.MINUTE, nextTime, nextMethod);
-						BasePersInvocationStats stats = myRuntimeStatus.getInvocationStatsSynchronously(statsPk);
+						BasePersMethodInvocationStats stats = myRuntimeStatus.getInvocationStatsSynchronously(statsPk);
 						totalTime += stats.getSuccessInvocationTotalTime();
 						totalTime += stats.getSuccessInvocationCount();
 					}

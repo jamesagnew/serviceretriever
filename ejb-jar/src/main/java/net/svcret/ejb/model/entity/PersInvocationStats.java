@@ -28,7 +28,7 @@ import org.hibernate.annotations.Index;
 //NB: Using nonstrict here is actually less performant..
 @Cache(usage=CacheConcurrencyStrategy.READ_WRITE)
 //@formatter:on
-public class PersInvocationStats extends BasePersInvocationStats {
+public class PersInvocationStats extends BasePersMethodInvocationStats {
 
 	private static final long serialVersionUID = 1L;
 
