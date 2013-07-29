@@ -185,6 +185,10 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 		
+		mySvcReg.reloadRegistryFromDatabase();
+		
+		newEntityManager();
+		
 		ModelUpdateResponse response = mySvc.loadModelUpdate(new ModelUpdateRequest());
 		assertEquals(1, response.getDomainList().size());
 		assertEquals(1, response.getDomainList().get(0).getServiceList().size());

@@ -55,13 +55,14 @@ public class ServiceVersionTestPanel extends FlowPanel {
 				initSpinner.hideCompletely();
 				
 				TwoColumnGrid grid = new TwoColumnGrid();
+				grid.setWidth("100%");
 				contentPanel.add(grid);
 
 				grid.addRow("Service", theResult.getParentServiceName());
 				grid.addRow("Version", theResult.getId());
 
 				mySendMessageTextArea = new TextArea();
-				mySendMessageTextArea.setHeight("100px");
+				mySendMessageTextArea.setHeight("200px");
 				mySendMessageTextArea.setWidth("100%");
 				grid.addRow("Message", mySendMessageTextArea);
 				grid.addDescription("Enter the raw message to send here");

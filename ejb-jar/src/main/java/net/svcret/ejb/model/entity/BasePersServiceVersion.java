@@ -683,6 +683,9 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 
 	@Override
 	public Integer determineInheritedKeepNumRecentTransactions(ResponseTypeEnum theResultType) {
+		if (myService==null) {
+			return null;
+		}
 		return myService.determineKeepNumRecentTransactions(theResultType);
 	}
 

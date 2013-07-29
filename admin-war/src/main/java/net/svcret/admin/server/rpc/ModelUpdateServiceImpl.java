@@ -599,7 +599,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
-	public GDomain saveDomain(GDomain theDomain) throws ServiceFailureException {
+	public GDomainList saveDomain(GDomain theDomain) throws ServiceFailureException {
 		if (isMockMode()) {
 			return myMock.saveDomain(theDomain);
 		}

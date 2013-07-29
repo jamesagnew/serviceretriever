@@ -3,6 +3,7 @@ package net.svcret.ejb.model.entity;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -43,11 +44,11 @@ public class PersServiceVersionMethod extends BasePersObject {
 	@JoinColumn(name = "SVC_VERSION_PID", referencedColumnName = "PID", nullable = false)
 	private BasePersServiceVersion myServiceVersion;
 	
-	@OneToMany(fetch=FetchType.LAZY, cascade= {}, orphanRemoval=true, mappedBy="myServiceVersionMethod")
-	private transient Collection<PersUserServiceVersionMethodPermission> myUserPermissions;
+	@OneToMany(fetch=FetchType.LAZY, cascade= {CascadeType.REMOVE}, orphanRemoval=true, mappedBy="myServiceVersionMethod")
+	private Collection<PersUserServiceVersionMethodPermission> myUserPermissions;
 
-	@OneToMany(fetch=FetchType.LAZY, cascade= {}, orphanRemoval=true, mappedBy="myPk.myMethod")
-	private transient Collection<PersInvocationStats> myInvocationStats;
+	@OneToMany(fetch=FetchType.LAZY, cascade= {CascadeType.REMOVE}, orphanRemoval=true, mappedBy="myPk.myMethod")
+	private Collection<PersInvocationStats> myInvocationStats;
 
 	/**
 	 * Constructor

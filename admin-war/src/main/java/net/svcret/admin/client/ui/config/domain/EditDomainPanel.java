@@ -114,7 +114,7 @@ public class EditDomainPanel extends FlowPanel {
 		});
 	}
 
-	public class MySaveButtonHandler implements ClickHandler, AsyncCallback<GDomain> {
+	public class MySaveButtonHandler implements ClickHandler, AsyncCallback<GDomainList> {
 
 		@Override
 		public void onClick(ClickEvent theEvent) {
@@ -135,8 +135,8 @@ public class EditDomainPanel extends FlowPanel {
 		}
 
 		@Override
-		public void onSuccess(GDomain theResult) {
-			Model.getInstance().addDomain(theResult);
+		public void onSuccess(GDomainList theResult) {
+			Model.getInstance().mergeDomainList(theResult);
 			myEditDomainBasicPropertiesPanel.showMessage("Domain has been saved", false);
 		}
 

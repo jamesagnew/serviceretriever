@@ -45,7 +45,8 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 			myGrid.addDescriptionToRight(MSGS.keepRecentTransactionsPanel_OutcomeSuccessDesc(), descRows);
 			if (canInherit) {
 				Integer inherited = theKeepsRecentTransactions.getInheritedKeepNumRecentTransactionsSuccess();
-				addInheritControl(mySuccessTextbox, inherited);
+				Integer value = theKeepsRecentTransactions.getKeepNumRecentTransactionsSuccess();
+				addInheritControl(mySuccessTextbox, inherited, value);
 			}
 		}
 
@@ -56,7 +57,8 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 			myGrid.addDescriptionToRight(MSGS.keepRecentTransactionsPanel_OutcomeFaultDesc(), descRows);
 			if (canInherit) {
 				Integer inherited = theKeepsRecentTransactions.getInheritedKeepNumRecentTransactionsFault();
-				addInheritControl(myFaultTextbox, inherited);
+				Integer value = theKeepsRecentTransactions.getKeepNumRecentTransactionsFault();
+				addInheritControl(myFaultTextbox, inherited, value);
 			}
 		}
 
@@ -67,7 +69,8 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 			myGrid.addDescriptionToRight(MSGS.keepRecentTransactionsPanel_OutcomeFailDesc(), descRows);
 			if (canInherit) {
 				Integer inherited = theKeepsRecentTransactions.getInheritedKeepNumRecentTransactionsFail();
-				addInheritControl(myFailTextbox, inherited);
+				Integer value = theKeepsRecentTransactions.getKeepNumRecentTransactionsFail();
+				addInheritControl(myFailTextbox, inherited, value);
 			}
 		}
 
@@ -78,17 +81,18 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 			myGrid.addDescriptionToRight(MSGS.keepRecentTransactionsPanel_OutcomeSecurityFailDesc(), descRows);
 			if (canInherit) {
 				Integer inherited = theKeepsRecentTransactions.getInheritedKeepNumRecentTransactionsSecurityFail();
-				addInheritControl(mySecurityFailTextbox, inherited);
+				Integer value = theKeepsRecentTransactions.getKeepNumRecentTransactionsSecurityFail();
+				addInheritControl(mySecurityFailTextbox, inherited, value);
 			}
 		}
 	}
 
-	private void addInheritControl(final IntegerBox textBox, Integer inherited) {
-		if (inherited != null) {
-			final CheckBox inheritCheckbox = new CheckBox("Override inherited value: " + inherited);
+	private void addInheritControl(final IntegerBox textBox, Integer theInheritedValue, Integer theValue) {
+		if (theInheritedValue != null) {
+			final CheckBox inheritCheckbox = new CheckBox("Override inherited value: " + theInheritedValue);
 			inheritCheckbox.addStyleName(CssConstants.RECENT_TRANSACTIONS_INHERIT_CHECKBOX);
 			
-			inheritCheckbox.setValue(inherited != null);
+			inheritCheckbox.setValue(theValue != null);
 			myGrid.addRow("", inheritCheckbox);
 			inheritCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
 				@Override

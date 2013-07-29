@@ -49,7 +49,7 @@ public interface IServiceRegistry {
 
 	void removeDomain(PersDomain theDomain) throws ProcessingException;
 
-	PersDomain saveDomain(PersDomain theDomain) throws ProcessingException;
+	void saveDomain(PersDomain theDomain) throws ProcessingException;
 
 	PersHttpClientConfig saveHttpClientConfig(PersHttpClientConfig theConfig) throws ProcessingException;
 

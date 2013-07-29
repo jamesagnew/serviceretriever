@@ -78,7 +78,7 @@ public interface IAdminService {
 
 	GConfig saveConfig(GConfig theConfig) throws ProcessingException;
 
-	GDomain saveDomain(GDomain theDomain) throws ProcessingException;
+	GDomainList saveDomain(GDomain theDomain) throws ProcessingException;
 
 	GHttpClientConfig saveHttpClientConfig(GHttpClientConfig theConfig) throws ProcessingException;
 

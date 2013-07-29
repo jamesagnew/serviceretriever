@@ -430,9 +430,10 @@ TABLE.propertyTable TBODY TR TD TABLE TBODY TR {
 }
 
 .tooltipPopup {
-	background-color: #000;
+	background: rgba(0, 0, 0, 0.4);
 	color: #FFF;
-	border: 1px solid #888;
+	border: 1px solid #333;
+	max-width: 400px;
 }
 
 .twoColumnPropertyGrid TBODY TR {

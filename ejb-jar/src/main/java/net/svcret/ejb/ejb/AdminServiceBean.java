@@ -462,16 +462,17 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	@Override
-	public GDomain saveDomain(GDomain theDomain) throws ProcessingException {
+	public GDomainList saveDomain(GDomain theDomain) throws ProcessingException {
 		ourLog.info("Saving domain with PID {}", theDomain.getPid());
 
 		PersDomain domain = myDao.getDomainByPid(theDomain.getPid());
 		PersDomain newDomain = fromUi(theDomain);
 		domain.merge(newDomain);
 
-		domain = myServiceRegistry.saveDomain(domain);
+		myServiceRegistry.saveDomain(domain);
 
-		return getDomainByPid(domain.getPid());
+		// TODO: make this synchronous? (ie don't use a cached version, or force a cache refresh or something?
+		return loadDomainList();
 	}
 
 	@Override
@@ -516,6 +517,7 @@ public class AdminServiceBean implements IAdminService {
 		service.merge(newService);
 		myDao.saveService(service);
 
+		// TODO: make this synchronous? (ie don't use a cached version, or force a cache refresh or something?
 		return loadDomainList();
 	}
 

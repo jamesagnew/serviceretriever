@@ -156,7 +156,7 @@ public abstract class BaseDashModel implements IDashModel {
 		ImageResource image;
 		if (theObject.getFailingRuleCount() > 0) {
 			image = AdminPortal.IMAGES.dashMonitorAlert();
-			text = theObject.getFailingRuleCount() + " rules failing!";
+			text = theObject.getFailingRuleCount() + " failures!";
 		}else if (theObject.getMonitorRulePids().size() > 0) {
 			image = AdminPortal.IMAGES.dashMonitorOk();
 			text = theObject.getMonitorRulePids().size() + " rules ok";
@@ -168,9 +168,11 @@ public abstract class BaseDashModel implements IDashModel {
 		FlowPanel flowPanel = new FlowPanel();
 		
 		Image w = new Image(image);
+		w.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
 		flowPanel.add(w);
 		
 		HTML w2 = new HTML("<nobr>"+text+"</nobr>");
+		w2.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
 		flowPanel.add(w2);
 		return flowPanel;
 	}

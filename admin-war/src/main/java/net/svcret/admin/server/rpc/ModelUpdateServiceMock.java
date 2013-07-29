@@ -671,7 +671,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	}
 
 	@Override
-	public GDomain saveDomain(GDomain theDomain) {
+	public GDomainList saveDomain(GDomain theDomain) {
 		GDomain retVal = myDomainList.getDomainByPid(theDomain.getPid());
 		retVal.merge(theDomain);
 		
@@ -682,7 +682,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 			next.setInheritedKeepNumRecentTransactionsSecurityFail(retVal.getKeepNumRecentTransactionsSecurityFail());
 		}
 		
-		return retVal;
+		return myDomainList;
 	}
 
 	@Override

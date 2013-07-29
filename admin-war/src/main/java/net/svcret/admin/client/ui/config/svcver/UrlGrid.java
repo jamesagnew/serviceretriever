@@ -269,7 +269,7 @@ public class UrlGrid extends FlowPanel {
 			urlField.setMultiline(false);
 			urlField.setTransparent(true);
 			urlField.setProcessHtml(false);
-			urlField.setMaxFieldWidth(100);
+			urlField.setMaxFieldWidth(180);
 			urlField.setLabelIsPlainText(true);
 			urlField.setShowTooltip(true);
 			urlField.setValue(next.getUrl());

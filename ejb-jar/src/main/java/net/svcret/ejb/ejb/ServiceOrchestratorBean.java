@@ -170,6 +170,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		String path = svcVer.getProxyPath();
 
 		HttpRequestBean request = new HttpRequestBean();
+		request.setRequestTime(startTime);
 		request.setInputReader(reader);
 		request.setRequestHostIp("127.0.0.1");
 		request.setRequestHeaders(new HashMap<String, List<String>>());

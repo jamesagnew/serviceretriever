@@ -3,6 +3,7 @@ package net.svcret.admin.client.rpc;
 import java.util.List;
 
 import net.svcret.admin.client.rpc.ModelUpdateService.UserAndAuthHost;
+import net.svcret.admin.client.ui.config.domain.EditDomainPanel.MySaveButtonHandler;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
 import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
@@ -61,7 +62,7 @@ public interface ModelUpdateServiceAsync {
 
 	void saveAuthenticationHost(BaseGAuthHost theAuthHost, AsyncCallback<GAuthenticationHostList> theCallback);
 
-	void saveDomain(GDomain theDomain, AsyncCallback<GDomain> callback);
+	void saveDomain(GDomain theDomain, AsyncCallback<GDomainList> theDomainList);
 
 	void saveHttpClientConfig(boolean theCreate, GHttpClientConfig theConfig, AsyncCallback<GHttpClientConfig> theAsyncCallback);
 

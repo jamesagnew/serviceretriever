@@ -47,7 +47,7 @@ public class PersMonitorRuleFiring extends BasePersObject {
 	@Column(name = "PID")
 	private Long myPid;
 
-	@OneToMany(cascade= {CascadeType.REMOVE}, fetch=FetchType.EAGER, orphanRemoval = true)
+	@OneToMany(cascade= {CascadeType.REMOVE}, fetch=FetchType.EAGER, orphanRemoval = true, mappedBy="myFiring")
 	private Collection<PersMonitorRuleFiringProblem> myProblems;
 
 	@ManyToOne(cascade = {}, optional = false)

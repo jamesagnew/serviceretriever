@@ -89,7 +89,7 @@ public interface ModelUpdateService extends RemoteService {
 
 	void saveConfig(GConfig theConfig) throws ServiceFailureException;
 
-	GDomain saveDomain(GDomain theDomain) throws ServiceFailureException;
+	GDomainList saveDomain(GDomain theDomain) throws ServiceFailureException;
 
 	GHttpClientConfig saveHttpClientConfig(boolean theCreate, GHttpClientConfig theConfig) throws ServiceFailureException;
 

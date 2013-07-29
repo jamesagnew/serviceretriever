@@ -231,14 +231,14 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	@Override
 	public void removeDomain(PersDomain theDomain) throws ProcessingException {
 		catalogHasChanged();
-
 		myDao.removeDomain(theDomain);
 	}
 
 	@Override
-	public PersDomain saveDomain(PersDomain theDomain) throws ProcessingException {
+	public void saveDomain(PersDomain theDomain) throws ProcessingException {
 		catalogHasChanged();
-		return myDao.saveDomain(theDomain);
+		myDao.saveDomain(theDomain);
+		reloadRegistryFromDatabase();
 	}
 
 	@Override
@@ -251,11 +251,13 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	public void saveService(PersService theService) throws ProcessingException {
 		catalogHasChanged();
 		myDao.saveService(theService);
+		reloadRegistryFromDatabase();
 	}
 
 	@Override
 	public BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theSv) throws ProcessingException {
 		catalogHasChanged();
+//		reloadRegistryFromDatabase();
 		return myDao.saveServiceVersion(theSv);
 	}
 

@@ -92,4 +92,8 @@ public class TwoColumnGrid extends FlexTable {
 		addRow(theLabel, theComponent);
 		getFlexCellFormatter().setColSpan(myNextRow, 1, 2);
 	}
+
+	public void setMaximizeSecondColumn() {
+		getColumnFormatter().setWidth(1, "100%");
+	}
 }

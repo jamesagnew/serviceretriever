@@ -110,6 +110,10 @@ public class Model {
 		return retVal;
 	}
 
+	public void invalidateDomainList() {
+		myDomainListInitialized=false;
+	}
+	
 	private void initLists() {
 		if (myDomainList == null) {
 			myDomainList = new GDomainList();
