@@ -26,6 +26,11 @@ public class PButton extends Button {
 		setStylePrimaryName(CssConstants.PUSHBUTTON);
 	}
 
+	public PButton(ImageResource theIcon) {
+		super(createButtonElement(theIcon, null));
+		setStylePrimaryName(CssConstants.PUSHBUTTON);
+	}
+
 	private static ButtonElement createButtonElement(ImageResource theIcon, String theText) {
 		ButtonElement retVal = Document.get().createPushButtonElement();
 
@@ -33,10 +38,12 @@ public class PButton extends Button {
 		img.setSrc(theIcon.getSafeUri().asString());
 		retVal.appendChild(img);
 
-		DivElement div = Document.get().createDivElement();
-		div.setClassName(CssConstants.PUSHBUTTON_TEXT);
-		div.setInnerText(theText);
-		retVal.appendChild(div);
+		if (theText != null) {
+			DivElement div = Document.get().createDivElement();
+			div.setClassName(CssConstants.PUSHBUTTON_TEXT);
+			div.setInnerText(theText);
+			retVal.appendChild(div);
+		}
 
 		return retVal;
 	}
@@ -55,23 +62,23 @@ public class PButton extends Button {
 		HorizontalPanel retVal = new HorizontalPanel();
 		retVal.setWidth("100%");
 		retVal.add(this);
-		
+
 		Image image = new Image(AdminPortal.IMAGES.arrowSimpleRight());
 		retVal.add(image);
 		retVal.setCellWidth(image, "24px");
-		
+
 		return retVal;
 	}
 
 	public Widget toBackwardNavButtonPanel() {
 		HorizontalPanel retVal = new HorizontalPanel();
-		
+
 		Image image = new Image(AdminPortal.IMAGES.arrowSimpleLeft());
 		retVal.add(image);
 		retVal.setCellWidth(image, "24px");
-		
+
 		retVal.add(this);
-		
+
 		return retVal;
 	}
 }

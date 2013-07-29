@@ -8,6 +8,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
@@ -18,9 +20,11 @@ import org.apache.commons.lang3.time.DateUtils;
 import com.google.common.annotations.VisibleForTesting;
 
 import net.svcret.admin.shared.model.StatusEnum;
+import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IMonitorService;
 import net.svcret.ejb.api.IRuntimeStatus;
+import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersServiceCatalogItem;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -34,6 +38,7 @@ import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 
 @Singleton
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class MonitorServiceBean implements IMonitorService {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(MonitorServiceBean.class);
@@ -43,6 +48,9 @@ public class MonitorServiceBean implements IMonitorService {
 
 	@EJB
 	private IRuntimeStatus myRuntimeStatus;
+
+	@EJB
+	private IBroadcastSender myBroadcastSender;
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -162,6 +170,27 @@ public class MonitorServiceBean implements IMonitorService {
 		firing.getProblems().addAll(problems);
 		firing.setStartDate(new Date());
 		return firing;
+	}
+
+	@Override
+	public void saveRule(PersMonitorRule theRule) throws ProcessingException {
+
+		PersMonitorRule ruleToSave = theRule;
+		if (theRule.getPid() != null) {
+			PersMonitorRule existing = myDao.getMonitorRule(theRule.getPid());
+			existing.merge(theRule);
+			ruleToSave = existing;
+		}
+
+		myDao.saveMonitorRule(ruleToSave);
+
+		myBroadcastSender.monitorRulesChanged();
+	}
+
+	@VisibleForTesting
+	void setBroadcastSender(IBroadcastSender theBroadcastSender) {
+		myBroadcastSender = theBroadcastSender;
+
 	}
 
 }

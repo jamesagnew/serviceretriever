@@ -3,7 +3,9 @@ package net.svcret.ejb.model.entity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -19,6 +21,7 @@ import javax.persistence.Version;
 
 import net.svcret.admin.shared.model.ServerSecuredEnum;
 import net.svcret.admin.shared.model.StatusEnum;
+import net.svcret.ejb.api.ResponseTypeEnum;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -218,10 +221,12 @@ public class PersDomain extends BasePersServiceCatalogItem {
 	}
 
 	@Override
-	public Collection<? extends BasePersServiceVersion> getAllServiceVersions() {
-		ArrayList<BasePersServiceVersion> retVal = new ArrayList<BasePersServiceVersion>();
+	public Set<BasePersServiceVersion> getAllServiceVersions() {
+		Set<BasePersServiceVersion> retVal = new HashSet<BasePersServiceVersion>();
 		for (PersService next : getServices()) {
-			retVal.addAll(next.getAllServiceVersions());
+			for (BasePersServiceVersion nextVer : next.getAllServiceVersions()) {
+				retVal.add(nextVer);
+			}
 		}
 		return retVal;
 	}
@@ -231,6 +236,16 @@ public class PersDomain extends BasePersServiceCatalogItem {
 			return getDomainName();
 		}
 		return getDomainId();
+	}
+
+	@Override
+	public Integer determineInheritedKeepNumRecentTransactions(ResponseTypeEnum theResultType) {
+		return null;
+	}
+
+	@Override
+	public boolean canInheritKeepNumRecentTransactions() {
+		return false;
 	}
 
 }

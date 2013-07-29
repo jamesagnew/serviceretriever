@@ -60,5 +60,15 @@ public class StringUtil {
 	public static String convertPlaintextToHtml(String theDescription) {
 		return theDescription.replace("<", "&lt;").replaceAll("(http(s?):\\S+)( |$)", "<a href=\"$1\">$1</a>$3").replace("\n", "<br/>");
 	}
+
+	public static boolean equals(String theValue, String theValue2) {
+		if (theValue==null && theValue2==null) {
+			return true;
+		}
+		if (theValue==null || theValue2==null) {
+			return false;
+		}
+		return theValue.equals(theValue2);
+	}
 	
 }

@@ -87,7 +87,7 @@ public class LeftBarPanel extends FlowPanel {
 		LeftMenuComponent monitoring = new LeftMenuComponent("Monitoring");
 		add(monitoring);
 
-		myProxyConfigBtn = monitoring.addItem(MSGS.leftPanel_Configuration(), PagesEnum.MRL);
+		myProxyConfigBtn = monitoring.addItem(MSGS.leftPanel_MonitorRules(), PagesEnum.MRL);
 		myAllButtons.add(myProxyConfigBtn);
 
 		updateStyles();

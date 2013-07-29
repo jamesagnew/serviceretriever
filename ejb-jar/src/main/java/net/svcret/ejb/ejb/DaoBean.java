@@ -9,13 +9,13 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
-import javax.persistence.LockModeType;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceContextType;
@@ -49,7 +49,6 @@ import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
-import net.svcret.ejb.model.entity.PersLocks;
 import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorRule;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
@@ -685,8 +684,6 @@ public class DaoBean implements IDao {
 	public void saveUserStatus(Collection<PersUserStatus> theStatus) {
 		ourLog.info("Flushing {} user status entries", theStatus.size());
 		
-		grabLock("FLUSH_STATS");
-		
 		for (PersUserStatus persUserStatus : theStatus) {
 			
 			PersUserStatus existing = myEntityManager.find(PersUserStatus.class, persUserStatus.getPid());
@@ -706,8 +703,6 @@ public class DaoBean implements IDao {
 		Validate.notNull(theStatsToDelete);
 
 		ourLog.info("Going to save {} invocation stats entries and delete {} entries", theStats.size(), theStatsToDelete.size());
-
-		grabLock("FLUSH_STATS");
 
 		ourLog.debug("Got lock on FLUSH_STATS");
 
@@ -863,9 +858,6 @@ public class DaoBean implements IDao {
 
 		ourLog.info("Going to save {} service version status entries", theStatuses.size());
 
-		grabLock("FLUSH_STATS");
-		ourLog.debug("Got lock on FLUSH_STATS");
-
 		for (PersServiceVersionStatus next : theStatuses) {
 
 			PersServiceVersionStatus existing = myEntityManager.find(PersServiceVersionStatus.class, next.getPid());
@@ -885,7 +877,6 @@ public class DaoBean implements IDao {
 
 	@Override
 	public void saveServiceVersionUrlStatus(ArrayList<PersServiceVersionUrlStatus> theStatuses) {
-		grabLock("URL_STATUS");
 
 		int count = 0;
 		if (theStatuses != null) {
@@ -939,22 +930,6 @@ public class DaoBean implements IDao {
 		}
 
 		return retVal;
-	}
-
-	private void grabLock(String lockName) {
-		if (true) return;
-		
-		Map<String, Object> properties = new HashMap<String, Object>();
-		properties.put("javax.persistence.lock.timeout", 10 * 1000);
-		PersLocks lock = myEntityManager.find(PersLocks.class, lockName, LockModeType.PESSIMISTIC_WRITE, properties);
-		if (lock == null) {
-			lock = new PersLocks(lockName);
-			myEntityManager.persist(lock);
-			myEntityManager.flush();
-			lock = myEntityManager.find(PersLocks.class, lockName, LockModeType.PESSIMISTIC_WRITE, properties);
-			// myEntityManager.lock(lock, LockModeType.PESSIMISTIC_WRITE,
-			// properties);
-		}
 	}
 
 	@Override
@@ -1133,10 +1108,20 @@ public class DaoBean implements IDao {
 
 	@Override
 	public PersMonitorRuleFiring saveMonitorRuleFiring(PersMonitorRuleFiring theFiring) {
+		
+		PersMonitorRuleFiring firing = myEntityManager.merge(theFiring);
+		
+		List<PersMonitorRuleFiringProblem> newProblems = new ArrayList<PersMonitorRuleFiringProblem>();
 		for (PersMonitorRuleFiringProblem next : theFiring.getProblems()) {
-			next.setFiring(theFiring);
+			next.setFiring(firing);
+			PersMonitorRuleFiringProblem newProblem = myEntityManager.merge(next);
+			newProblems.add(newProblem);
 		}
-		return myEntityManager.merge(theFiring);
+		
+		firing.getProblems().clear();
+		firing.getProblems().addAll(newProblems);
+		
+		return firing;
 	}
 
 	@Override
@@ -1160,6 +1145,17 @@ public class DaoBean implements IDao {
 		}
 		
 		myEntityManager.merge(theRule);
+	}
+
+	@Override
+	public List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<? extends BasePersServiceVersion> theAllSvcVers, int theStart) {
+		
+		TypedQuery<PersMonitorRuleFiring> q = myEntityManager.createNamedQuery(Queries.RULEFIRING, PersMonitorRuleFiring.class);
+		q.setParameter("SVC_VERS", theAllSvcVers);
+		q.setFirstResult(theStart);
+		q.setMaxResults(10);
+		
+		return q.getResultList();
 	}
 
 }

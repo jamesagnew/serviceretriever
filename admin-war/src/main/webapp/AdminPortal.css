@@ -40,6 +40,41 @@
 	border-top: 3px #A5D1F3 solid;
 }
 
+.contentOuterTabPanel {
+	margin-top: 6px;
+	margin-left: 10px;
+	margin-right: 10px;
+	margin-bottom: 10px;
+}
+
+.contentOuterTabPanel TBODY TR TD TABLE.gwt-TabBar TBODY TR TD DIV.gwt-TabBarItem {
+	border-top-right-radius: 5px;
+	box-shadow: 4px 4px 3px -1px #bbb;
+	padding-top: 2px;
+	padding-bottom: 0px;
+	font-size: 1.1em;
+	color: #94b7d1;
+}
+
+.contentOuterTabPanel TBODY TR TD TABLE.gwt-TabBar TBODY TR TD DIV.gwt-TabBarItem-selected {
+	color: #6194BC;
+}
+
+/*
+.contentOuterTabPanel TBODY TR TD TABLE.gwt-TabBar TBODY TR TD DIV.gwt-TabBarItem DIV {
+	color: #6194BC;
+}
+*/
+
+.contentOuterTabPanel TBODY TR TD DIV.gwt-TabPanelBottom {
+	box-shadow: 4px 4px 3px -1px #bbb;
+	background: #FFF;
+	border-top:    2px #A5D1F3 solid;
+	border-bottom: 1px #A5D1F3 solid;
+	border-right:  1px #A5D1F3 solid;
+	border-left:   1px #A5D1F3 solid;
+}
+
 .dashboardActionButton {
 	cursor: pointer;
 }
@@ -121,8 +156,19 @@ TABLE.dashboardTable TBODY TR:hover {
 	border: 1px solid #FFFFFF; 	
 }
 
+.editableLabelTransparent {
+	background: inherit;
+	border: 1px solid #E0E0E0; 	
+}
+
 .editableLabel:HOVER {
+	background: #E0E0E0;
 	border: 1px solid #A0A0A0; 	
+}
+
+.editableLabelNoValue {
+	font-style: italic;
+	font-size: 0.8em;	
 }
 
 .errorLabel {
@@ -150,8 +196,11 @@ LABEL.formLabel {
 	padding-bottom: 0px;
 	height: 22px;
 	*/
-	text-align: left;
+	height: 24px;
 	padding-bottom: 1px;
+	margin-bottom: 1px;
+	text-align: left;
+	white-space: nowrap;
 }
 
 .pushButtonText {
@@ -204,7 +253,7 @@ H1 {
 	margin-top: 6px;
 	margin-left: 10px;
 	margin-right: 10px;
-	width: 280px;
+	width: 180px;
 	background-color: #FFFFFF;
 	padding: 0px;
 	/* border: 1px solid #6194BC; */
@@ -243,11 +292,10 @@ TABLE.listTable TBODY TR:nth-child(odd) {
 	margin-top: 6px;
 	margin-left: 10px;
 	margin-right: 10px;
+	box-shadow: 4px 4px 3px -1px #bbb;
 	background: rgba(255, 255, 255, 0.7);
 	background-color: #FFFFFF;
-	/* border: 1px solid #808080; */
 	border-top-right-radius: 10px;
-	box-shadow: 4px 4px 3px -1px #bbb;
 }
 
 .mainPanelTitle {
@@ -328,27 +376,52 @@ TABLE.listTable TBODY TR:nth-child(odd) {
 	color: #004040;
 }
 
-.propertyTable {
-	
-}
-
 TABLE.propertyTable {
 	border-collapse: separate;
-	border-spacing: 2px;
-	/*background: #F0F0F0;*/
+	border-spacing: 0px;
 }
 
+TABLE.propertyTable TBODY TR TD {
+	padding: 5px;
+}
+	
 TABLE.propertyTable TBODY TR:nth-child(odd) {
 	background: #D0D0D0;
 }
 
 TABLE.propertyTable TBODY TR:nth-child(even) {
-	background: #E0E0E0;
+	background: #FFF;
 }
 
 TABLE.propertyTable TBODY TR:first-child {
+	/*
 	background: #6194BC;
 	color: #FFFFFF;
+	*/
+	background: #FFF;
+	font-weight: bold;
+	font-size: 1.2em;
+	
+
+}
+
+TABLE.propertyTable TBODY TR:first-child TD {
+	border-bottom: 2px solid #6f7277;
+	padding: 3px 15px;
+	text-align: left;
+	color: #4b4a4a;
+	text-shadow: #ddf 1px 1px 0;
+	overflow: hidden;
+}
+
+TABLE.propertyTable TBODY TR TD TABLE TBODY TR {
+	background: inherit !important;
+}
+
+.recentTransactionsInheritCheckbox, .recentTransactionsInheritCheckbox LABEL {
+	font-size: 0.8em;
+	white-space: nowrap;
+	color: #888;
 }
 
 .recentMessageScroller {

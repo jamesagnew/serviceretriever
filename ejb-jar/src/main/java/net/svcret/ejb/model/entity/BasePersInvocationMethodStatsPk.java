@@ -12,8 +12,6 @@ import javax.persistence.Transient;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
-
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
 
@@ -27,7 +25,6 @@ public abstract class BasePersInvocationMethodStatsPk extends BasePersInvocation
 
 	@JoinColumn(name = "METHOD_PID", nullable = false)
 	@ManyToOne(fetch = FetchType.LAZY, cascade = {})
-	@IgnoreSizeOf
 	private transient PersServiceVersionMethod myMethod;
 
 	@Column(name="METHOD_PID", nullable=false)

@@ -2,7 +2,7 @@ package net.svcret.admin.client.ui.config.svcver;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
-import net.svcret.admin.client.ui.components.HtmlLabel;
+import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
@@ -30,7 +30,6 @@ public class AddServiceVersionPanel extends AbstractServiceVersionPanel {
 		});
 	}
 
-
 	@Override
 	protected String getDialogTitle() {
 		return "Add Service Version";
@@ -41,15 +40,11 @@ public class AddServiceVersionPanel extends AbstractServiceVersionPanel {
 		return AdminPortal.MSGS.addServiceVersion_Description();
 	}
 
-	@Override
-	protected boolean allowTypeSelect() {
-		return true;
-	}
 
 	void handleTypeChange() {
 		ServiceProtocolEnum protocol = ServiceProtocolEnum.valueOf(myTypeComboBox.getValue(myTypeComboBox.getSelectedIndex()));
 		if (getBottomContents() == null || getBottomContents().getProtocol() != protocol) {
-			
+
 			myLoadingSpinner.show();
 			myBottomPanel.clear();
 
@@ -70,21 +65,21 @@ public class AddServiceVersionPanel extends AbstractServiceVersionPanel {
 			};
 
 			AdminPortal.MODEL_SVC.createNewServiceVersion(protocol, myDomainPid, myServicePid, myUncommittedSessionId, callback);
-			
+
 		}
-		
+
 	}
 
-
+	@Override
+	protected void handleDoneSaving(AddServiceVersionResponse theResult) {
+		String token = NavProcessor.getTokenAddServiceVersionStep2(myDomainPid, myServicePid, theResult.getNewServiceVersion().getPid());
+		History.newItem(token);
+	}
 
 	@Override
-	protected void addTypeSelector() {
-		HtmlLabel typeLabel = new HtmlLabel("Protocol", "cbType");
-		myParentsGrid.setWidget(3, 0, typeLabel);
+	protected void addProtocolSelectionUi(TwoColumnGrid theGrid) {
 		myTypeComboBox = new ListBox(false);
-		myTypeComboBox.getElement().setId("cbType");
-		myParentsGrid.setWidget(3, 1, myTypeComboBox);
-
+		theGrid.addRow("Protocol", myTypeComboBox);
 		for (ServiceProtocolEnum next : ServiceProtocolEnum.getNaturalOrder()) {
 			myTypeComboBox.addItem(next.getNiceName(), next.name());
 			myTypeComboBox.addChangeHandler(new ChangeHandler() {
@@ -94,14 +89,6 @@ public class AddServiceVersionPanel extends AbstractServiceVersionPanel {
 				}
 			});
 		}
-
-	}
-
-
-	@Override
-	protected void handleDoneSaving(AddServiceVersionResponse theResult) {
-		String token = NavProcessor.getTokenAddServiceVersionStep2(myDomainPid, myServicePid, theResult.getNewServiceVersion().getPid());
-		History.newItem(token);
 	}
 
 }

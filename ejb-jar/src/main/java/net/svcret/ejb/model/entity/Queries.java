@@ -15,7 +15,10 @@ public class Queries {
 
 	public static final String SERVICE_FIND = "PersService.find";
 	public static final String SERVICE_FIND_Q = "SELECT s FROM PersService s WHERE s.myServiceId = :SERVICE_ID AND s.myDomain.myPid = :DOMAIN_PID";
-	
+
+	public static final String RULEFIRING = "PersMonitorRuleFiring.find";
+	public static final String RULEFIRING_Q = "SELECT f FROM PersMonitorRuleFiring f JOIN f.myProblems as p WHERE p.myServiceVersion IN :SVC_VERS ORDER BY f.myStartDate DESC";
+
 	public static final String PERSINVOC_STATS = "PersInvocationStats.findBeforeDate";
 	public static final String PERSINVOC_STATS_Q = "SELECT s FROM PersInvocationStats s WHERE s.myPk.myInterval = :INTERVAL AND s.myPk.myStartTime < :BEFORE_DATE";
 

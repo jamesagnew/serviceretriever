@@ -1,8 +1,6 @@
 package net.svcret.ejb.ejb;
 
-import static net.svcret.ejb.util.HttpUtil.sendFailure;
-import static net.svcret.ejb.util.HttpUtil.sendSecurityFailure;
-import static net.svcret.ejb.util.HttpUtil.sendSuccessfulResponse;
+import static net.svcret.ejb.util.HttpUtil.*;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
@@ -15,6 +13,8 @@ import java.util.concurrent.Semaphore;
 
 import javax.ejb.AsyncResult;
 import javax.ejb.Asynchronous;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
@@ -23,6 +23,7 @@ import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IRuntimeStatus;
@@ -47,6 +48,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.RateLimiter;
 
 @Singleton
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class ThrottlingService implements IThrottlingService {
 
 	private ConcurrentHashMap<PersUser, RateLimiter> myUserRateLimiters = new ConcurrentHashMap<PersUser, RateLimiter>();
@@ -81,6 +83,9 @@ public class ThrottlingService implements IThrottlingService {
 		double requestsPerSecond = user.getThrottlePeriod().toRequestsPerSecond(user.getThrottleMaxRequests());
 		RateLimiter rateLimiter = myUserRateLimiters.get(user);
 		if (rateLimiter == null) {
+
+			ourLog.debug("Creating rate limiter with {} reqs/second", requestsPerSecond);
+			
 			RateLimiter newRateLimiter = RateLimiter.create(requestsPerSecond);
 			rateLimiter = myUserRateLimiters.putIfAbsent(user, newRateLimiter);
 			if (rateLimiter == null) {
@@ -137,6 +142,8 @@ public class ThrottlingService implements IThrottlingService {
 		Validate.notNull(theTask.getAsyncContext());
 		Validate.isTrue(theTask.getAsyncContext().getResponse() instanceof HttpServletResponse);
 
+		ourLog.debug("Going to try and schedule task for later execution");
+		
 		Integer throttleMaxQueueDepth = theTask.getThrottleKey().getThrottleMaxQueueDepth();
 		if (throttleMaxQueueDepth == null || theTask.getThrottleKey().getThrottleMaxQueueDepth() == 0) {
 			recordInvocationForThrottleQueueFull(theTask.getHttpRequest(), theTask.getInvocationRequest(), theTask.getUser());
@@ -229,13 +236,16 @@ public class ThrottlingService implements IThrottlingService {
 				}
 			}
 
-			if (theTaskQueue.hasTasks()) {
+			int numTasks = theTaskQueue.numTasks();
+			if (numTasks > 0) {
+				ourLog.debug("Task queue has {} tasks in it, going to sleep", numTasks);
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
 					// ignore
 				}
 			} else {
+				ourLog.debug("Task queue is empty, quitting worker");
 				break;
 			}
 
@@ -257,6 +267,10 @@ public class ThrottlingService implements IThrottlingService {
 			return myExecutionSemaphore;
 		}
 
+		public synchronized int numTasks() {
+			return myTasks.size();
+		}
+		
 		public synchronized boolean hasTasks() {
 			return myTasks.size() > 0;
 		}
@@ -279,5 +293,13 @@ public class ThrottlingService implements IThrottlingService {
 			ourLog.info("Throttle queue for {} now has {} / {} tasks in queue", new Object[] {myKey, myTasks.size(), theThrottleMaxQueueDepth});
 		}
 	}
+	
+	public static void main(String[] args) {
+		
+		double requestsPerSecond = ThrottlePeriodEnum.MINUTE.toRequestsPerSecond(5);
+		System.out.println(requestsPerSecond);
+		
+	}
+	
 
 }

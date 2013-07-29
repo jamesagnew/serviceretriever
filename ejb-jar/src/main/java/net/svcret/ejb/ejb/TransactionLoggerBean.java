@@ -6,6 +6,8 @@ import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 
@@ -29,6 +31,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import com.google.common.annotations.VisibleForTesting;
 
 @Singleton
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class TransactionLoggerBean implements ITransactionLogger {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(TransactionLoggerBean.class);

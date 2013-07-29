@@ -20,7 +20,6 @@ import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersMethodStats;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
-import net.svcret.ejb.model.entity.IThrottleable;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
@@ -32,8 +31,9 @@ import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
-import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorRule;
+import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
+import net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem;
 import net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
@@ -54,19 +54,70 @@ import org.junit.Test;
 
 public class DaoBeanTest extends BaseJpaTest {
 
-	@SuppressWarnings("unused")
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(DaoBeanTest.class);
-	
+
 	private DaoBean mySvc;
 
 	private DateFormat myTimeFormat = new SimpleDateFormat("HH:mm");
 
 	@Test
-	public void testCreateRule() throws ProcessingException {
+	public void testGetRuleFirings() throws ProcessingException {
 		newEntityManager();
 
-		PersAuthenticationHostLocalDatabase ah = mySvc.getOrCreateAuthenticationHostLocalDatabase("AH");
-		IThrottleable user = mySvc.getOrCreateUser(ah, "user");
+		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
+		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
+		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
+
+		newEntityManager();
+
+		PersMonitorRule rule = new PersMonitorRule();
+		rule.setRuleName("rule0");
+		rule.setRuleActive(true);
+		rule.setFireIfAllBackingUrlsAreUnavailable(true);
+		rule.setFireIfSingleBackingUrlIsUnavailable(true);
+
+		rule.setAppliesToItems(ver);
+
+		PersMonitorRuleNotifyContact ctact = new PersMonitorRuleNotifyContact();
+		ctact.setEmail("foo@example.com");
+		rule.getNotifyContact().add(ctact);
+
+		rule= mySvc.saveOrCreateMonitorRule(rule);
+
+		newEntityManager();
+
+		List<PersMonitorRuleFiring> firings = new ArrayList<PersMonitorRuleFiring>();
+		for (int i = 0; i < 100; i++) {
+			PersMonitorRuleFiring firing = new PersMonitorRuleFiring();
+			firings.add(firing);
+			firing.setStartDate(new Date((long) i * 10000));
+			firing.setEndDate(new Date((long) i * 11000));
+			firing.setRule(rule);
+
+			PersMonitorRuleFiringProblem prob = new PersMonitorRuleFiringProblem();
+			prob.setServiceVersion(ver);
+//			prob.setFiring(firing);
+			prob.setLatencyAverageMillisPerCall(100L);
+			prob.setLatencyExceededThreshold(true);
+			firing.getProblems().add(prob);
+
+			mySvc.saveMonitorRuleFiring(firing);
+			newEntityManager();
+		}
+		
+		List<PersMonitorRuleFiring> gotFirings = mySvc.loadMonitorRuleFirings(Collections.singleton(ver), 0);
+		assertEquals(10, gotFirings.size());
+		assertEquals(firings.get(99).getStartDate(), gotFirings.get(0).getStartDate());
+		
+		gotFirings = mySvc.loadMonitorRuleFirings(Collections.singleton(ver), 10);
+		assertEquals(10, gotFirings.size());
+		assertEquals(firings.get(89).getStartDate(), gotFirings.get(0).getStartDate());
+
+	}
+
+	@Test
+	public void testCreateRule() throws ProcessingException {
+		newEntityManager();
 
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
@@ -82,17 +133,17 @@ public class DaoBeanTest extends BaseJpaTest {
 		rule.setRuleActive(true);
 		rule.setFireIfAllBackingUrlsAreUnavailable(true);
 		rule.setFireIfSingleBackingUrlIsUnavailable(true);
-		
+
 		rule.setAppliesToItems(ver);
-		
+
 		PersMonitorRuleNotifyContact ctact = new PersMonitorRuleNotifyContact();
 		ctact.setEmail("foo@example.com");
 		rule.getNotifyContact().add(ctact);
-		
+
 		mySvc.saveOrCreateMonitorRule(rule);
-		
+
 		newEntityManager();
-		
+
 		rules = mySvc.getMonitorRules();
 		assertEquals(1, rules.size());
 		PersMonitorRule gotRule = rules.iterator().next();
@@ -100,9 +151,9 @@ public class DaoBeanTest extends BaseJpaTest {
 		assertEquals(1, gotRule.getAppliesTo().size());
 		assertEquals(ver, gotRule.getAppliesTo().iterator().next().getItem());
 		assertEquals("foo@example.com", gotRule.getNotifyContact().iterator().next().getEmail());
-		
+
 	}
-	
+
 	@Test
 	public void testSaveRecentUserMessages() throws Exception {
 		newEntityManager();
@@ -122,7 +173,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		url.setUrlId("url");
 		ver.addUrl(url);
 		ver = (PersServiceVersionSoap11) mySvc.saveServiceVersion(ver);
-		
+
 		newEntityManager();
 
 		ver = (PersServiceVersionSoap11) mySvc.getServiceVersionByPid(ver.getPid());
@@ -207,12 +258,12 @@ public class DaoBeanTest extends BaseJpaTest {
 		url.setUrlId("url");
 		ver.addUrl(url);
 		ver = (PersServiceVersionSoap11) mySvc.saveServiceVersion(ver);
-		
+
 		newEntityManager();
 
 		ver = (PersServiceVersionSoap11) mySvc.getServiceVersionByPid(ver.getPid());
 		url = ver.getUrls().get(0);
-		
+
 		for (int i = 0; i < 10; i++) {
 			PersServiceVersionRecentMessage msg = new PersServiceVersionRecentMessage();
 			msg.setServiceVersion(ver);
@@ -315,9 +366,9 @@ public class DaoBeanTest extends BaseJpaTest {
 	@Test
 	public void testSaveAuthenticationHostWithKeepRecentTransactions() throws ProcessingException {
 		newEntityManager();
-		
+
 		PersAuthenticationHostLocalDatabase host = mySvc.getOrCreateAuthenticationHostLocalDatabase("mid");
-		
+
 		newEntityManager();
 
 		host.setKeepNumRecentTransactionsFault(5);
@@ -325,12 +376,12 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		mySvc.saveAuthenticationHost(host);
 		newEntityManager();
-		
+
 		host = mySvc.getOrCreateAuthenticationHostLocalDatabase("mid");
 		assertEquals(Integer.valueOf(5), host.determineKeepNumRecentTransactions(ResponseTypeEnum.FAULT));
 		assertEquals(Integer.valueOf(6), host.determineKeepNumRecentTransactions(ResponseTypeEnum.FAIL));
 	}
-	
+
 	@Test
 	public void testGetInvocationUserStatsBeforeDate() throws Exception {
 		newEntityManager();
@@ -338,26 +389,26 @@ public class DaoBeanTest extends BaseJpaTest {
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
 		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
-//		PersServiceVersionMethod method = new PersServiceVersionMethod();
-//		method.setName("method0");
-//		ver.addMethod(method);
+		// PersServiceVersionMethod method = new PersServiceVersionMethod();
+		// method.setName("method0");
+		// ver.addMethod(method);
 
 		mySvc.saveServiceVersion(ver);
 
 		newEntityManager();
 
-//		method = mySvc.getServiceVersionByPid(ver.getPid()).getMethods().iterator().next();
+		// method = mySvc.getServiceVersionByPid(ver.getPid()).getMethods().iterator().next();
 
 		PersAuthenticationHostLocalDatabase authHost = mySvc.getOrCreateAuthenticationHostLocalDatabase("AID");
 		PersUser user = mySvc.getOrCreateUser(authHost, "userid");
 
 		newEntityManager();
 
-		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(HOUR, myTimeFormat.parse("01:10"),  user));
+		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(HOUR, myTimeFormat.parse("01:10"), user));
 		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(MINUTE, myTimeFormat.parse("01:10"), user));
-		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(HOUR, myTimeFormat.parse("02:10"),  user));
+		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(HOUR, myTimeFormat.parse("02:10"), user));
 		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(MINUTE, myTimeFormat.parse("01:10"), user));
-		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(HOUR, myTimeFormat.parse("03:10"),  user));
+		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(HOUR, myTimeFormat.parse("03:10"), user));
 		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(MINUTE, myTimeFormat.parse("01:10"), user));
 
 		newEntityManager();
@@ -376,22 +427,22 @@ public class DaoBeanTest extends BaseJpaTest {
 		assertEquals(0, stats.size());
 
 	}
-	
+
 	@Test
 	public void testCreateAndDeleteUser() throws ProcessingException {
 		newEntityManager();
-		
+
 		PersAuthenticationHostLocalDatabase authHost = mySvc.getOrCreateAuthenticationHostLocalDatabase("modid");
-		
+
 		newEntityManager();
-		
+
 		PersUser user = mySvc.getOrCreateUser(authHost, "username");
 		assertNotNull(user);
 		assertNotNull(user.getStatus());
 		assertNotNull(user.getContact());
 		assertNotNull(user.getStatus().getPid());
 		assertNotNull(user.getContact().getPid());
-		
+
 		newEntityManager();
 
 		user = mySvc.getOrCreateUser(authHost, "username");
@@ -401,53 +452,52 @@ public class DaoBeanTest extends BaseJpaTest {
 		assertNotNull(user.getContact().getPid());
 
 		newEntityManager();
-		
+
 		user = mySvc.getOrCreateUser(authHost, "username");
 		mySvc.deleteUser(user);
-		
+
 		newEntityManager();
 	}
-	
+
 	@Test
 	public void testSaveUserAllowableSourceIps() throws ProcessingException {
 		newEntityManager();
-		
+
 		PersAuthenticationHostLocalDatabase authHost = mySvc.getOrCreateAuthenticationHostLocalDatabase("modid");
-		
+
 		newEntityManager();
-		
+
 		PersUser user = mySvc.getOrCreateUser(authHost, "username");
 		assertThat(user.getAllowSourceIps(), Matchers.empty());
-		
+
 		newEntityManager();
 
 		user = mySvc.getUser(user.getPid());
 		user.getAllowSourceIps().add(new PersUserAllowableSourceIps(user, "1.1.1.1"));
 		user.getAllowSourceIps().add(new PersUserAllowableSourceIps(user, "1.1.1.2"));
 		mySvc.saveServiceUser(user);
-		
+
 		newEntityManager();
-		
+
 		user = mySvc.getOrCreateUser(authHost, "username");
 		ourLog.info("FOund: " + user.getAllowSourceIps());
 		ourLog.info("FOund: " + user.getAllowSourceIpsAsStrings());
 		assertEquals(2, user.getAllowSourceIpsAsStrings().size());
 		assertThat(user.getAllowSourceIpsAsStrings(), Matchers.contains("1.1.1.1", "1.1.1.2"));
-		
+
 		List<String> strings = new ArrayList<String>();
 		strings.add("1.1.1.1");
 		strings.add("1.1.1.3");
 		user.setAllowSourceIpsAsStrings(strings);
-		
+
 		mySvc.saveServiceUser(user);
-		
+
 		newEntityManager();
-		
+
 		user = mySvc.getOrCreateUser(authHost, "username");
 		assertEquals(2, user.getAllowSourceIpsAsStrings().size());
 		assertThat(user.getAllowSourceIpsAsStrings(), Matchers.contains("1.1.1.1", "1.1.1.3"));
 	}
-
 
 	@Test
 	public void testHttpClientConfigCreateDefault() {
@@ -529,7 +579,7 @@ public class DaoBeanTest extends BaseJpaTest {
 	public void testUserMethodStatus() throws ProcessingException {
 		Date date1 = new Date();
 		Date date2 = new Date(date1.getTime() - 100000L);
-		
+
 		newEntityManager();
 
 		mySvc.getOrCreateAuthenticationHostLocalDatabase("ah0");
@@ -542,7 +592,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		ver.getOrCreateAndAddMethodWithName("method1");
 		ver.getOrCreateAndAddMethodWithName("method2");
 		mySvc.saveServiceVersion(ver);
-		
+
 		PersUser user = mySvc.getOrCreateUser(mySvc.getAuthenticationHost("ah0"), "Username");
 
 		newEntityManager();
@@ -552,10 +602,10 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		assertNotNull(user.getStatus());
 		assertNotNull(user.getStatus().getMethodStatuses());
-		
+
 		PersServiceVersionMethod method1 = ver.getMethod("method1");
 		PersServiceVersionMethod method2 = ver.getMethod("method2");
-		
+
 		PersUserMethodStatus status1 = user.getStatus().getOrCreateUserMethodStatus(method1);
 		status1.setLastSuccessfulInvocation(date1);
 
@@ -563,21 +613,20 @@ public class DaoBeanTest extends BaseJpaTest {
 		status2.setLastSuccessfulInvocation(date2);
 
 		mySvc.saveUserStatus(Collections.singleton(user.getStatus()));
-		
+
 		newEntityManager();
-		
+
 		user = mySvc.getUser(user.getPid());
 
 		assertNotNull(user.getStatus());
 		assertNotNull(user.getStatus().getMethodStatuses());
 		assertNotNull(user.getStatus().getMethodStatuses().get(method1));
 		assertNotNull(user.getStatus().getMethodStatuses().get(method2));
-		assertEquals(date1,user.getStatus().getMethodStatuses().get(method1).getLastSuccessfulInvocation());
-		assertEquals(date2,user.getStatus().getMethodStatuses().get(method2).getLastSuccessfulInvocation());
-		
-		
+		assertEquals(date1, user.getStatus().getMethodStatuses().get(method1).getLastSuccessfulInvocation());
+		assertEquals(date2, user.getStatus().getMethodStatuses().get(method2).getLastSuccessfulInvocation());
+
 	}
-	
+
 	@Test
 	public void testUserStatus() throws ProcessingException {
 		Date now = new Date();

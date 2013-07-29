@@ -1,24 +1,39 @@
 package net.svcret.ejb.model.entity;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.hibernate.annotations.Index;
+
+//@formatter:off
+@org.hibernate.annotations.Table( 
+	indexes = {
+		@Index(columnNames = { "START_DATE" }, name = "IDX_PMRF_START_DATE"),
+	}, appliesTo = "PX_MONITOR_RULE_FIRING")
 @Entity()
 @Table(name = "PX_MONITOR_RULE_FIRING")
+@NamedQueries(value= {
+	@NamedQuery(name=Queries.RULEFIRING, query=Queries.RULEFIRING_Q)
+})
+//@formatter:on
+
 public class PersMonitorRuleFiring extends BasePersObject {
 
 	private static final long serialVersionUID = 1L;
@@ -32,8 +47,8 @@ public class PersMonitorRuleFiring extends BasePersObject {
 	@Column(name = "PID")
 	private Long myPid;
 
-	@OneToMany(cascade=CascadeType.ALL, orphanRemoval = true, mappedBy="myFiring")
-	private Set<PersMonitorRuleFiringProblem> myProblems;
+	@OneToMany(cascade= {CascadeType.REMOVE}, fetch=FetchType.EAGER, orphanRemoval = true)
+	private Collection<PersMonitorRuleFiringProblem> myProblems;
 
 	@ManyToOne(cascade = {}, optional = false)
 	@JoinColumn(name = "RULE_PID", nullable = false)
@@ -57,9 +72,9 @@ public class PersMonitorRuleFiring extends BasePersObject {
 		return myPid;
 	}
 
-	public Set<PersMonitorRuleFiringProblem> getProblems() {
+	public Collection<PersMonitorRuleFiringProblem> getProblems() {
 		if (myProblems == null) {
-			myProblems = new HashSet<PersMonitorRuleFiringProblem>();
+			myProblems = new ArrayList<PersMonitorRuleFiringProblem>();
 		}
 		return myProblems;
 	}

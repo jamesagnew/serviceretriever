@@ -1,5 +1,6 @@
 package net.svcret.admin.client.ui.config.domain;
 
+import net.svcret.admin.client.ui.components.EditableField;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
@@ -11,17 +12,19 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.HasValue;
 import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.Widget;
 
 public class EditDomainBasicPropertiesPanel extends FlowPanel {
 
-	private TextBox myIdTextBox;
-	private TextBox myNameTextBox;
+	private HasValue<String> myIdTextBox;
+	private HasValue<String> myNameTextBox;
 	private LoadingSpinner mySpinner;
-	private KeepRecentTransactionsPanel myKeepRecentTransactionsPanel;
+//	private KeepRecentTransactionsPanel myKeepRecentTransactionsPanel;
 	private GDomain myDomain;
 
-	public EditDomainBasicPropertiesPanel(final GDomain theDomain, String theButtonText, ClickHandler theButtonHandler, ImageResource theButtonIcon) {
+	public EditDomainBasicPropertiesPanel(final GDomain theDomain, String theButtonText, ClickHandler theButtonHandler, ImageResource theButtonIcon, boolean theNewDomain) {
 		myDomain = theDomain;
 		
 		TwoColumnGrid formGrid = new TwoColumnGrid();
@@ -30,16 +33,16 @@ public class EditDomainBasicPropertiesPanel extends FlowPanel {
 		/*
 		 * Id
 		 */
-		myIdTextBox = new TextBox();
+		myIdTextBox = theNewDomain ? new TextBox() : new EditableField();
 		myIdTextBox.setValue(theDomain.getId());
-		formGrid.addRow("ID", myIdTextBox);
+		formGrid.addRow("ID", (Widget)myIdTextBox);
 
 		/*
 		 * Name
 		 */
-		myNameTextBox = new TextBox();
+		myNameTextBox = theNewDomain ? new TextBox() : new EditableField();
 		myNameTextBox.setValue(theDomain.getName());
-		formGrid.addRow("Name",myNameTextBox);
+		formGrid.addRow("Name",(Widget)myNameTextBox);
 
 		mySpinner = new LoadingSpinner();
 		mySpinner.hideCompletely();
@@ -49,16 +52,16 @@ public class EditDomainBasicPropertiesPanel extends FlowPanel {
 		addButton.addClickHandler(theButtonHandler);
 		add(addButton);
 		
-		myKeepRecentTransactionsPanel = new KeepRecentTransactionsPanel(theDomain);
-		add(myKeepRecentTransactionsPanel);
+//		myKeepRecentTransactionsPanel = new KeepRecentTransactionsPanel(theDomain);
+//		add(myKeepRecentTransactionsPanel);
 		
 		
 	}
 
 	public boolean validateValuesAndApplyValues() {
-		if (!myKeepRecentTransactionsPanel.validateAndShowErrorIfNotValid()) {
-			return false;
-		}
+//		if (!myKeepRecentTransactionsPanel.validateAndShowErrorIfNotValid()) {
+//			return false;
+//		}
 		
 		String id = myIdTextBox.getValue();
 		if (StringUtil.isBlank(id)) {
@@ -74,7 +77,7 @@ public class EditDomainBasicPropertiesPanel extends FlowPanel {
 
 		myDomain.setId(myIdTextBox.getValue());
 		myDomain.setName(myNameTextBox.getValue());
-		myKeepRecentTransactionsPanel.populateDto(myDomain);
+//		myKeepRecentTransactionsPanel.populateDto(myDomain);
 
 		return true;
 	}

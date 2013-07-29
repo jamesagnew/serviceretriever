@@ -26,6 +26,7 @@ public class BroadcastListenerBean implements MessageListener {
 	static final String UPDATE_SERVICE_REGISTRY = "UPDATE_SERVICE_REGISTRY";
 	static final String UPDATE_USER_CATALOG = "UPDATE_USER_CATALOG";
 	static final String UPDATE_CONFIG = "UPDATE_CONFIG";
+	static final String UPDATE_MONITOR_RULES = "UPDATE_MONITOR_RULES";
 	
 	@Resource
 	private MessageDrivenContext mdc;
@@ -56,6 +57,10 @@ public class BroadcastListenerBean implements MessageListener {
 			} else if (text.startsWith(UPDATE_CONFIG)) {
 				ourLog.info("Received broadcast for updated config");
 				myConfigService.reloadConfigIfNeeded();
+			} else if (text.startsWith(UPDATE_MONITOR_RULES)) {
+				ourLog.info("Received broadcast for updated monitor rules");
+				// Reload the service registry because the SR contains active rules
+				myServiceRegistry.reloadRegistryFromDatabase();
 			}
 			
 		} catch (JMSException e) {

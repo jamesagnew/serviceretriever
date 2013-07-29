@@ -3,7 +3,6 @@ package net.svcret.admin.client.ui.config.service;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
-import net.svcret.admin.client.ui.config.KeepRecentTransactionsPanel;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.util.StringUtil;
 
@@ -18,7 +17,6 @@ public class EditServiceBasicPropertiesPanel extends FlowPanel {
 	private TextBox myIdTextBox;
 	private TextBox myNameTextBox;
 	private LoadingSpinner mySpinner;
-	private KeepRecentTransactionsPanel myKeepRecentTransactionsPanel;
 	private GService myService;
 
 	public EditServiceBasicPropertiesPanel(final GService theService, String theButtonText, ClickHandler theButtonHandler, ImageResource theButtonIcon) {
@@ -49,16 +47,10 @@ public class EditServiceBasicPropertiesPanel extends FlowPanel {
 		addButton.addClickHandler(theButtonHandler);
 		add(addButton);
 
-		myKeepRecentTransactionsPanel = new KeepRecentTransactionsPanel(theService);
-		add(myKeepRecentTransactionsPanel);
 
 	}
 
 	public boolean validateValues() {
-
-		if (!myKeepRecentTransactionsPanel.validateAndShowErrorIfNotValid()) {
-			return false;
-		}
 
 		String id = myIdTextBox.getValue();
 		if (StringUtil.isBlank(id)) {
@@ -74,7 +66,6 @@ public class EditServiceBasicPropertiesPanel extends FlowPanel {
 
 		myService.setName(myNameTextBox.getValue());
 		myService.setId(myIdTextBox.getValue());
-		myKeepRecentTransactionsPanel.populateDto(myService);
 
 		return true;
 	}

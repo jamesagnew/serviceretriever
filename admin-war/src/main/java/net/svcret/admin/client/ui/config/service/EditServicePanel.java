@@ -2,7 +2,10 @@ package net.svcret.admin.client.ui.config.service;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
+import net.svcret.admin.client.ui.alert.AlertGrid;
+import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
+import net.svcret.admin.client.ui.config.KeepRecentTransactionsPanel;
 import net.svcret.admin.client.ui.config.domain.EditDomainServicesPanel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
@@ -13,71 +16,130 @@ import net.svcret.admin.shared.model.GService;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.logical.shared.SelectionEvent;
+import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.TabPanel;
 
 public class EditServicePanel extends FlowPanel {
 	private EditServiceBasicPropertiesPanel myEditServiceBasicPropertiesPanel;
+	private FlowPanel myTopContentPanel;
+	private KeepRecentTransactionsPanel myKeepRecentTransactionsPanel;
 
 	public EditServicePanel(final long theDomainPid, final long theServicePid) {
-		setStylePrimaryName("mainPanel");
+		FlowPanel topPanel = new FlowPanel();
+		add(topPanel);
+		
+		topPanel.setStylePrimaryName("mainPanel");
 
 		Label titleLabel = new Label("Edit Service");
 		titleLabel.setStyleName("mainPanelTitle");
-		add(titleLabel);
+		topPanel.add(titleLabel);
 
-		final FlowPanel contentPanel = new FlowPanel();
-		contentPanel.addStyleName("contentInnerPanel");
-		add(contentPanel);
+		myTopContentPanel = new FlowPanel();
+		myTopContentPanel.addStyleName("contentInnerPanel");
+		topPanel.add(myTopContentPanel);
 
-		contentPanel.add(new Label(EditDomainServicesPanel.SVC_DESC));
-		
+		myTopContentPanel.add(new Label(EditDomainServicesPanel.SVC_DESC));
+
 		final LoadingSpinner spinner = new LoadingSpinner();
 		spinner.show();
-		contentPanel.add(spinner);
-		
-		IAsyncLoadCallback<GDomainList> callback=new IAsyncLoadCallback<GDomainList>() {
+		myTopContentPanel.add(spinner);
+
+		IAsyncLoadCallback<GDomainList> callback = new IAsyncLoadCallback<GDomainList>() {
 
 			@Override
 			public void onSuccess(GDomainList theResult) {
-				
+
 				GDomain domain = theResult.getDomainByPid(theDomainPid);
 				if (domain == null) {
 					GWT.log("Unknown domain PID: " + theDomainPid);
 					NavProcessor.goHome();
 					return;
 				}
-				
-				GService service = domain.getServiceList().getServiceByPid(theServicePid);
-				if (service	 == null) {
+
+				myService = domain.getServiceList().getServiceByPid(theServicePid);
+				if (myService == null) {
 					GWT.log("Unknown service PID: " + theDomainPid);
 					NavProcessor.goHome();
 					return;
 				}
-				
+
 				spinner.hideCompletely();
-				
-				myEditServiceBasicPropertiesPanel = new EditServiceBasicPropertiesPanel(service, "Save", new MySaveButtonHandler(service), AdminPortal.IMAGES.iconSave());
-				contentPanel.add(myEditServiceBasicPropertiesPanel);
-//				add(new EditServicePropertiesPanel(service));
+
+				initUi();
 			}
+
 		};
 		Model.getInstance().loadDomainList(callback);
 	}
-	
-	
-	
+
+	private void initUi() {
+		myEditServiceBasicPropertiesPanel = new EditServiceBasicPropertiesPanel(myService, "Save", new MySaveButtonHandler(myService), AdminPortal.IMAGES.iconSave());
+		myTopContentPanel.add(myEditServiceBasicPropertiesPanel);
+
+		TabPanel domainTabs = new TabPanel();
+		domainTabs.addStyleName(CssConstants.CONTENT_OUTER_TAB_PANEL);
+		add(domainTabs);
+
+		EditServiceVersionsPanel childrenPanel = new EditServiceVersionsPanel(myService);
+		domainTabs.add(childrenPanel, "Versions");
+
+		FlowPanel configPanel = new FlowPanel();
+		domainTabs.add(configPanel, "Config");
+		myKeepRecentTransactionsPanel = new KeepRecentTransactionsPanel(myService);
+		configPanel.add(myKeepRecentTransactionsPanel);
+
+		final FlowPanel alertsPanel = new FlowPanel();
+		domainTabs.add(alertsPanel, "Alerts");
+
+		domainTabs.addSelectionHandler(new SelectionHandler<Integer>() {
+			@Override
+			public void onSelection(SelectionEvent<Integer> theEvent) {
+				Integer selectedItem = theEvent.getSelectedItem();
+				if (selectedItem == 2 && alertsPanel.getWidgetCount() == 0) {
+					initAlertsPanel(alertsPanel);
+				}
+			}
+		});
+		domainTabs.selectTab(0);
+	}
+
+	private void initAlertsPanel(final FlowPanel theAlertsPanel) {
+		final LoadingSpinner spinner = new LoadingSpinner();
+		spinner.show();
+		theAlertsPanel.add(spinner);
+
+		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+
+			@Override
+			public void onSuccess(GDomainList theResult) {
+				spinner.hideCompletely();
+
+				final AlertGrid grid = new AlertGrid(theResult, null, myService.getPid(), null);
+				theAlertsPanel.add(grid);
+			}
+		});
+	}
+
+	private GService myService;
+
 	public class MySaveButtonHandler implements ClickHandler, AsyncCallback<GDomainList> {
 
 		private GService myService;
 
 		public MySaveButtonHandler(GService theService) {
-			myService=theService;
+			myService = theService;
 		}
 
 		@Override
 		public void onClick(ClickEvent theEvent) {
+			if (!myKeepRecentTransactionsPanel.validateAndShowErrorIfNotValid()) {
+				return;
+			}
+			myKeepRecentTransactionsPanel.populateDto(myService);
 			if (myEditServiceBasicPropertiesPanel.validateValues()) {
 				myEditServiceBasicPropertiesPanel.showMessage("Saving Domain...", true);
 				AdminPortal.MODEL_SVC.saveService(myService, this);
@@ -97,6 +159,5 @@ public class EditServicePanel extends FlowPanel {
 		}
 
 	}
-
 
 }

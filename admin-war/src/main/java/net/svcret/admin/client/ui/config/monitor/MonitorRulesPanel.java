@@ -123,6 +123,8 @@ public class MonitorRulesPanel extends FlowPanel {
 			}else {
 				b.append(" - All Services and Versions");
 			}
+			
+			retVal.add(b.toString());
 		}
 		
 		Collections.sort(retVal);

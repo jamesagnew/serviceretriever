@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -309,13 +311,22 @@ public class PersService extends BasePersServiceCatalogItem {
 	}
 
 	@Override
-	public Collection<? extends BasePersServiceVersion> getAllServiceVersions() {
-		ArrayList<BasePersServiceVersion> retVal = new ArrayList<BasePersServiceVersion>();
+	public Set<BasePersServiceVersion> getAllServiceVersions() {
+		Set<BasePersServiceVersion> retVal = new HashSet<BasePersServiceVersion>();
 		for (BasePersServiceVersion next : getVersions()) {
 			retVal.addAll(next.getAllServiceVersions());
 		}
 		return retVal;
 	}
 
+	@Override
+	public Integer determineInheritedKeepNumRecentTransactions(ResponseTypeEnum theResultType) {
+		return myDomain.determineKeepNumRecentTransactions(theResultType);
+	}
+
+	@Override
+	public boolean canInheritKeepNumRecentTransactions() {
+		return true;
+	}
 
 }

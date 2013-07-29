@@ -410,6 +410,36 @@ public class Soap11ServiceInvokerTest {
 	}
 	
 	@Test
+	public void testIntrospectServiceFromUrl2() throws IOException, ProcessingException {
+		
+		Soap11ServiceInvoker svc = new Soap11ServiceInvoker();
+		
+		IHttpClient httpClient = mock(IHttpClient.class, DefaultAnswer.INSTANCE);
+		svc.setHttpClient(httpClient);
+
+		String wsdlBody = IOUtils.readClasspathIntoString("/test_simple2.wsdl");
+		String wsdlUrl = "http://foo/wsdl.wsdl";
+		when(httpClient.get(wsdlUrl)).thenReturn(new HttpResponseBean(null, "text/xml", 200, wsdlBody));
+
+		String xsdBody = IOUtils.readClasspathIntoString("/basic_schema2.xsd");
+		String xsdUrl = "http://192.168.1.3:8081/DemoServiceSvc/StringConcatService?xsd=1";
+		when(httpClient.get(xsdUrl)).thenReturn(new HttpResponseBean(null, "text/xml", 200, xsdBody));
+		
+		PersServiceVersionSoap11 def;
+		def = svc.introspectServiceFromUrl(wsdlUrl);
+		
+		assertEquals(def.getMethodNames().toString(), 2, def.getMethods().size());
+		assertEquals("addStrings", def.getMethods().get(0).getName());
+		assertEquals("net:svcret:demo:addStrings", def.getMethods().get(0).getRootElements());
+		
+		Map<String, PersServiceVersionResource> uriToResource = def.getUriToResource();
+		assertEquals(wsdlBody, uriToResource.get(wsdlUrl).getResourceText());
+		assertEquals("text/xml", uriToResource.get(wsdlUrl).getResourceContentType());
+		
+		
+	}
+
+	@Test
 	public void testIntrospectDocumentServiceFromUrl() throws Throwable {
 		
 		Soap11ServiceInvoker svc = new Soap11ServiceInvoker();

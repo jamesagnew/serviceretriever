@@ -23,6 +23,10 @@ public abstract class BasePersKeepsRecentTransactions extends BasePersObject {
 	@Column(name = "KEEP_RCNT_NUM_SUC", nullable = true)
 	private Integer myKeepNumRecentTransactionsSuccess;
 
+	public abstract Integer determineInheritedKeepNumRecentTransactions(ResponseTypeEnum theResultType);
+
+	public abstract boolean canInheritKeepNumRecentTransactions();
+
 	public Integer determineKeepNumRecentTransactions(ResponseTypeEnum theResultType) {
 		Integer retVal;
 		switch (theResultType) {
@@ -114,6 +118,14 @@ public abstract class BasePersKeepsRecentTransactions extends BasePersObject {
 		theDto.setKeepNumRecentTransactionsSecurityFail(this.getKeepNumRecentTransactionsSecurityFail());
 		theDto.setKeepNumRecentTransactionsFault(this.getKeepNumRecentTransactionsFault());
 		theDto.setKeepNumRecentTransactionsSuccess(this.getKeepNumRecentTransactionsSuccess());
+
+		theDto.setCanInheritKeepNumRecentTransactions(canInheritKeepNumRecentTransactions());
+		if (canInheritKeepNumRecentTransactions()) {
+			theDto.setInheritedKeepNumRecentTransactionsFail(determineInheritedKeepNumRecentTransactions(ResponseTypeEnum.FAIL));
+			theDto.setInheritedKeepNumRecentTransactionsSecurityFail(determineInheritedKeepNumRecentTransactions(ResponseTypeEnum.SECURITY_FAIL));
+			theDto.setInheritedKeepNumRecentTransactionsFault(determineInheritedKeepNumRecentTransactions(ResponseTypeEnum.FAULT));
+			theDto.setInheritedKeepNumRecentTransactionsSuccess(determineInheritedKeepNumRecentTransactions(ResponseTypeEnum.SUCCESS));
+		}
 	}
 
 	public void populateKeepRecentTransactionsFromDto(BaseGKeepsRecentMessages<?> theDto) {

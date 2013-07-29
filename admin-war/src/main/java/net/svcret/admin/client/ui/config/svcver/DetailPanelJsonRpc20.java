@@ -13,7 +13,7 @@ public class DetailPanelJsonRpc20 extends BaseDetailPanel<GServiceVersionJsonRpc
 	}
 
 	@Override
-	protected void addProtocolSpecificPanelsToTop() {
+	protected void addProtocolSpecificPanelsToTop(boolean theIsAddPanel) {
 		// none
 	}
 

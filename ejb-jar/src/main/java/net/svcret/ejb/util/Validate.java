@@ -75,4 +75,10 @@ public class Validate extends org.apache.commons.lang3.Validate {
 		}
 	}
 
+	public static void isNull(Object theObject) {
+		if (theObject != null) {
+			throw new IllegalArgumentException("Must be null");
+		}
+	}
+
 }

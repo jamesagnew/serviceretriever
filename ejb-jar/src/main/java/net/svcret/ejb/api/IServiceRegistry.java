@@ -61,4 +61,8 @@ public interface IServiceRegistry {
 
 	Collection<PersDomain> getAllDomains();
 
+	PersDomain getDomainByPid(Long theDomainPid);
+
+	PersService getServiceByPid(Long theServicePid);
+
 }

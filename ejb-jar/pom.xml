@@ -317,16 +317,30 @@
 				<groupId>de.juplo</groupId>
 				<artifactId>hibernate4-maven-plugin</artifactId>
 				<version>1.0.1</version>
+				<configuration>
+					<force>true</force>
+					<target>SCRIPT</target>
+					<skip>false</skip>
+				</configuration>
 				<executions>
 					<execution>
+						<id>o10g</id>
 						<goals>
 							<goal>export</goal>
 						</goals>
 						<configuration>
-							<force>true</force>
 							<hibernateDialect>org.hibernate.dialect.Oracle10gDialect</hibernateDialect>
-							<target>SCRIPT</target>
-							<skip>false</skip>
+							<outputFile>${project.build.directory}/schema_oracle_10g.sql</outputFile>
+						</configuration>
+					</execution>
+					<execution>
+						<id>mysql5</id>
+						<goals>
+							<goal>export</goal>
+						</goals>
+						<configuration>
+							<hibernateDialect>org.hibernate.dialect.MySQL5Dialect</hibernateDialect>
+							<outputFile>${project.build.directory}/schema_mysql_5.sql</outputFile>
 						</configuration>
 					</execution>
 				</executions>

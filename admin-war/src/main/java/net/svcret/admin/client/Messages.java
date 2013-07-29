@@ -241,7 +241,7 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Delete Service Version")
 	String deleteServiceVersionPanel_Title();
 
-	@DefaultMessage("Edit Domain")
+	@DefaultMessage("Domain")
 	String editDomain_Breadcrumb();
 
 	@DefaultMessage("Edit Monitor Rule")
@@ -450,7 +450,7 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 			+ "transactions are transactions where the underlying service implementation successfully returned " + "a result.")
 	String keepRecentTransactionsPanel_OutcomeSuccessDesc();
 
-	@DefaultMessage("Store Recent Transactions")
+	@DefaultMessage("Transaction Log")
 	String keepRecentTransactionsPanel_Title();
 
 	@DefaultMessage("The base DN to search for the user being authenticated")
@@ -703,6 +703,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Request Throttling")
 	String user_requestThrottling();
+
+	@DefaultMessage("Edit Rules")
+	String leftPanel_MonitorRules();
 
 	
 	

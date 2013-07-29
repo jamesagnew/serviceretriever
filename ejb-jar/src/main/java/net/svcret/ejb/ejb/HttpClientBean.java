@@ -172,7 +172,8 @@ public class HttpClientBean implements IHttpClient {
 				entity = resp.getEntity();
 				String body = IOUtils.toString(entity.getContent());
 				int statusCode = resp.getStatusLine().getStatusCode();
-				String contentType = resp.getEntity().getContentType().getValue();
+				String contentType;
+				contentType = resp.getEntity() != null && resp.getEntity().getContentType() != null ? resp.getEntity().getContentType().getValue() : "";
 				
 				int sep = contentType.indexOf(';');
 				if (sep > -1) {
@@ -211,7 +212,7 @@ public class HttpClientBean implements IHttpClient {
 					continue;
 				}
 				ourLog.debug("Exception while invoking remote service", e);
-				theResponse.addFailedUrl(theNextUrl, Messages.getString("HttpClientBean.postClientProtocolException", e.getMessage()), 0, null, null);
+				theResponse.addFailedUrl(theNextUrl, Messages.getString("HttpClientBean.postClientProtocolException", e.toString()), 0, null, null);
 				theResponse.setResponseTime(System.currentTimeMillis() - start);
 				return;
 			} catch (Exception e) {
@@ -220,7 +221,7 @@ public class HttpClientBean implements IHttpClient {
 					continue;
 				}
 				ourLog.debug("Exception while invoking remote service", e);
-				theResponse.addFailedUrl(theNextUrl, Messages.getString("HttpClientBean.postIoException", e.getMessage()), 0, null, null);
+				theResponse.addFailedUrl(theNextUrl, Messages.getString("HttpClientBean.postIoException", e.toString()), 0, null, null);
 				theResponse.setResponseTime(System.currentTimeMillis() - start);
 				return;
 			} finally {

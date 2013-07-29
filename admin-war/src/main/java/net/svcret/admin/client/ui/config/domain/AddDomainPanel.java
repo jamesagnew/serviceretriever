@@ -39,7 +39,7 @@ public class AddDomainPanel extends FlowPanel implements ClickHandler, AsyncCall
 		Label intro = new Label(DOMAIN_DESC);
 		contentPanel.add(intro);
 		
-		myEditDomainBasicPropertiesPanel = new EditDomainBasicPropertiesPanel(myDomain, "Add", this, AdminPortal.IMAGES.iconAdd());
+		myEditDomainBasicPropertiesPanel = new EditDomainBasicPropertiesPanel(myDomain, "Add", this, AdminPortal.IMAGES.iconAdd(), true);
 		contentPanel.add(myEditDomainBasicPropertiesPanel);
 	}
 

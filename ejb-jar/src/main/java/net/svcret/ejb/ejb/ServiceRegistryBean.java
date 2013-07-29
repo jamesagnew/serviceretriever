@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
@@ -36,11 +38,14 @@ import ch.qos.logback.classic.joran.JoranConfigurator;
 
 @Startup
 @Singleton
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class ServiceRegistryBean implements IServiceRegistry {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceRegistryBean.class);
 	private static volatile Map<String, BasePersServiceVersion> ourProxyPathToServices;
-	private static volatile Map<Long, BasePersServiceVersion> ourPidToServices;
+	private static volatile Map<Long, BasePersServiceVersion> ourPidToServiceVersions;
+	private static volatile Map<Long, PersService> ourPidToServices;
+	private static volatile Map<Long, PersDomain> ourPidToDomains;
 	private static Object ourRegistryLock = new Object();
 	private static final String STATE_KEY = ServiceRegistryBean.class.getName() + "_VERSION";
 	private static Map<String, PersDomain> ourDomainMap;
@@ -82,13 +87,17 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		Map<String, PersDomain> domainMap = new HashMap<String, PersDomain>();
 		Map<String, BasePersServiceVersion> pathToServiceVersions = new HashMap<String, BasePersServiceVersion>();
 		Map<Long, BasePersServiceVersion> pidToServiceVersions = new HashMap<Long, BasePersServiceVersion>();
+		Map<Long, PersDomain> pidToDomains=new HashMap<Long, PersDomain>();
+		Map<Long, PersService> pidToServices=new HashMap<Long, PersService>();
 
 		Collection<PersDomain> domains = myDao.getAllDomains();
 		for (PersDomain nextDomain : domains) {
 			domainMap.put(nextDomain.getDomainId(), nextDomain);
+			pidToDomains.put(nextDomain.getPid(), nextDomain);
 			nextDomain.loadAllAssociations();
 
 			for (PersService nextService : nextDomain.getServices()) {
+				pidToServices.put(nextService.getPid(), nextService);
 				for (BasePersServiceVersion nextVersion : nextService.getVersions()) {
 					String nextProxyPath = nextVersion.getProxyPath();
 					pidToServiceVersions.put(nextVersion.getPid(), nextVersion);
@@ -112,7 +121,9 @@ public class ServiceRegistryBean implements IServiceRegistry {
 
 		synchronized (ourRegistryLock) {
 			ourDomainMap = domainMap;
-			ourPidToServices = pidToServiceVersions;
+			ourPidToDomains = pidToDomains;
+			ourPidToServices = pidToServices;
+			ourPidToServiceVersions = pidToServiceVersions;
 			ourProxyPathToServices = pathToServiceVersions;
 			myCurrentVersion = newVersion;
 		}
@@ -147,7 +158,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 
 	@Override
 	public BasePersServiceVersion getServiceVersionByPid(long theServiceVersionPid) {
-		return ourPidToServices.get(theServiceVersionPid);
+		return ourPidToServiceVersions.get(theServiceVersionPid);
 	}
 
 	/**
@@ -274,6 +285,16 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	@Override
 	public Collection<PersDomain> getAllDomains() {
 		return ourDomainMap.values();
+	}
+
+	@Override
+	public PersDomain getDomainByPid(Long theDomainPid) {
+		return ourPidToDomains.get(theDomainPid);
+	}
+
+	@Override
+	public PersService getServiceByPid(Long theServicePid) {
+		return ourPidToServices.get(theServicePid);
 	}
 
 }

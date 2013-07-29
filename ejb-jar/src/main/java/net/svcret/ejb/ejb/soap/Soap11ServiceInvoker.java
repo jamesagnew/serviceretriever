@@ -263,7 +263,7 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 	public InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws ProcessingException {
 		InvocationResponseResultsBean retVal = new InvocationResponseResultsBean();
 		retVal.setResponseHeaders(theResponse.getHeaders());
-		
+
 		String contentType = theResponse.getContentType();
 		if (StringUtils.isBlank(contentType)) {
 			retVal.setResponseType(ResponseTypeEnum.FAIL);
@@ -463,89 +463,7 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 			}
 		}
 
-		/*
-		 * Process Operations
-		 */
-
-		Element portType = (Element) portTypeElements.item(0);
-		NodeList operations = portType.getElementsByTagNameNS(Constants.NS_WSDL, "operation");
-
-		if (operations.getLength() == 0) {
-			throw new ProcessingException("WSDL \"" + theUrl + "\" has no operations defined");
-		}
-
-		ourLog.info("Parsed WSDL and found {} methods", operations.getLength());
-
-		List<String> operationNames = Lists.newArrayList();
-		for (int i = 0; i < operations.getLength(); i++) {
-
-			Element nextOperationElem = (Element) operations.item(i);
-			String opName = nextOperationElem.getAttribute("name");
-			ourLog.info(" * Found operation: {}", opName);
-
-			String rootElementNs = null;
-			String rootElementName = null;
-			
-			for (int j = 0; j < nextOperationElem.getChildNodes().getLength(); j++) {
-				if (!(nextOperationElem.getChildNodes().item(j) instanceof Element)) {
-					continue;
-				}
-				Element nextOpChild = (Element) nextOperationElem.getChildNodes().item(j);
-				
-				if (nextOpChild.getLocalName().equals("input")) {
-					String[] messageParts = nextOpChild.getAttribute("message").split("\\:");
-					String msgNs = messageParts[0];
-					String msgName = messageParts[1];
-					ourLog.info("Found message reference {} : {}", msgNs, msgName);
-					
-					NodeList messageList = wsdlDocument.getElementsByTagNameNS(Constants.NS_WSDL, "message");
-					for (int msgCount = 0; msgCount < messageList.getLength(); msgCount++) {
-						if (!(messageList.item(msgCount) instanceof Element)) {
-							continue;
-						}
-						
-						Element nextMessage = (Element) messageList.item(msgCount);
-						if (msgName.equals(nextMessage.getAttribute("name"))) {
-							
-							ourLog.info("Found corresponding message at index {}", msgCount);
-							
-							for (int partCount = 0; partCount < nextMessage.getChildNodes().getLength();partCount++) {
-								if (!(nextMessage.getChildNodes().item(partCount) instanceof Element)) {
-									continue;
-								}
-								
-								Element partElem = (Element) nextMessage.getChildNodes().item(partCount);
-								if (partElem.getLocalName().equals("part")) {
-									
-									String element = partElem.getAttribute("element");
-									String[] elementParts = element.split("\\:");
-									
-									rootElementNs = partElem.lookupNamespaceURI(elementParts[0]);
-									rootElementName = elementParts[1];
-									ourLog.info("Root element is " + rootElementNs+":"+rootElementName);
-								}
-								
-							}
-							
-						}
-						
-					}
-					
-					
-				}
-				
-			}
-			
-			PersServiceVersionMethod method = retVal.getOrCreateAndAddMethodWithName(opName);
-			
-			method.setRootElements(rootElementNs + ":" + rootElementName);
-			
-			retVal.putMethodAtIndex(method, operationNames.size());
-
-			operationNames.add(opName);
-		}
-
-		retVal.retainOnlyMethodsWithNames(operationNames);
+		introspectPortType(theUrl, retVal, wsdlDocument, portTypeElements);
 
 		/*
 		 * Process Ports (bound implementation URLs)
@@ -589,6 +507,189 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 		return retVal;
 	}
 
+	private void introspectPortType(String theUrl, PersServiceVersionSoap11 retVal, Document wsdlDocument, NodeList portTypeElements) throws ProcessingException {
+		/*
+		 * Process Operations
+		 */
+
+		Element portType = (Element) portTypeElements.item(0);
+		NodeList operations = portType.getElementsByTagNameNS(Constants.NS_WSDL, "operation");
+
+		if (operations.getLength() == 0) {
+			throw new ProcessingException("WSDL \"" + theUrl + "\" has no operations defined");
+		}
+
+		ourLog.info("Parsed WSDL and found {} methods", operations.getLength());
+
+		List<String> operationNames = Lists.newArrayList();
+		for (int i = 0; i < operations.getLength(); i++) {
+
+			Element nextOperationElem = (Element) operations.item(i);
+			String opName = nextOperationElem.getAttribute("name");
+			ourLog.info(" * Found operation: {}", opName);
+
+			StyleEnum styleEnum = introspectBindingForStyle(wsdlDocument);
+
+			PersServiceVersionMethod method=null;
+			switch (styleEnum) {
+			case DOCUMENT:
+				method = introspectWsdlForDocumentOperation(retVal, wsdlDocument, nextOperationElem, opName);
+				break;
+			case RPC:
+				method = introspectWsdlForRpcOperation(wsdlDocument, opName, retVal);
+			}
+
+			retVal.putMethodAtIndex(method, operationNames.size());
+
+			operationNames.add(opName);
+		}
+
+		retVal.retainOnlyMethodsWithNames(operationNames);
+	}
+
+	private PersServiceVersionMethod introspectWsdlForRpcOperation(Document theWsdlDocument, String theOpName, PersServiceVersionSoap11 retVal) throws ProcessingException {
+		Element binding = findWsdlBindingInDocument(theWsdlDocument);
+		NodeList operationList = binding.getElementsByTagNameNS(Constants.NS_WSDL, "operation");
+		for (int operationIdx = 0; operationIdx < operationList.getLength(); operationIdx++) {
+			Element operation = (Element) operationList.item(operationIdx);
+			if (!theOpName.equals(operation.getAttribute("name"))) {
+				continue;
+			}
+			
+			NodeList inputList = operation.getElementsByTagNameNS(Constants.NS_WSDL, "input");
+			if (inputList.getLength()!=1) {
+				throw new ProcessingException("Binding operation for "+theOpName + " must have 1 input, found " + inputList.getLength());
+			}
+			Element inputElement = (Element) inputList.item(0);
+
+			NodeList bodyElements = inputElement.getElementsByTagNameNS(Constants.NS_WSDLSOAP, "body");
+			if (bodyElements.getLength() != 1) {
+				throw new ProcessingException("Binding operation input must have exactly one body tag, found " + bodyElements.getLength());
+			}
+			Element bodyElement = (Element) bodyElements.item(0);
+
+			String ns = bodyElement.getAttribute("namespace");
+			
+			PersServiceVersionMethod method = retVal.getOrCreateAndAddMethodWithName(theOpName);
+			method.setRootElements(ns + ":" + theOpName);
+			return method;
+			
+		}
+		
+		throw new ProcessingException("Couldn't find operation '" + theOpName+"' in binding");
+	}
+
+	private PersServiceVersionMethod introspectWsdlForDocumentOperation(PersServiceVersionSoap11 retVal, Document wsdlDocument, Element nextOperationElem, String opName) throws ProcessingException {
+		String rootElementNs = null;
+		String rootElementName = null;
+
+		for (int j = 0; j < nextOperationElem.getChildNodes().getLength(); j++) {
+			if (!(nextOperationElem.getChildNodes().item(j) instanceof Element)) {
+				continue;
+			}
+			Element nextOpChild = (Element) nextOperationElem.getChildNodes().item(j);
+
+			if (nextOpChild.getLocalName().equals("input")) {
+
+				String[] messageParts = nextOpChild.getAttribute("message").split("\\:");
+				String msgNs = messageParts[0];
+				String msgName = messageParts[1];
+				ourLog.info("Found message reference {} : {}", msgNs, msgName);
+
+				NodeList messageList = wsdlDocument.getElementsByTagNameNS(Constants.NS_WSDL, "message");
+				for (int msgCount = 0; msgCount < messageList.getLength(); msgCount++) {
+					if (!(messageList.item(msgCount) instanceof Element)) {
+						continue;
+					}
+
+					Element nextMessage = (Element) messageList.item(msgCount);
+					if (msgName.equals(nextMessage.getAttribute("name"))) {
+
+						ourLog.info("Found corresponding message at index {}", msgCount);
+
+						for (int partCount = 0; partCount < nextMessage.getChildNodes().getLength(); partCount++) {
+							if (!(nextMessage.getChildNodes().item(partCount) instanceof Element)) {
+								continue;
+							}
+
+							Element partElem = (Element) nextMessage.getChildNodes().item(partCount);
+							if (partElem.getLocalName().equals("part")) {
+
+								String type = partElem.getAttribute("type");
+								if (StringUtils.isNotBlank(type)) {
+
+									// TODO: infer this from the binding
+									// element
+									ourLog.info("This looks like an RPC service");
+
+								}
+
+								String element = partElem.getAttribute("element");
+								String[] elementParts = element.split("\\:");
+
+								rootElementNs = partElem.lookupNamespaceURI(elementParts[0]);
+								rootElementName = elementParts[1];
+								ourLog.info("Root element is " + rootElementNs + ":" + rootElementName);
+							}
+
+						}
+					}
+
+				}
+
+			}
+
+		}
+
+		PersServiceVersionMethod method = retVal.getOrCreateAndAddMethodWithName(opName);
+		method.setRootElements(rootElementNs + ":" + rootElementName);
+		return method;
+	}
+
+	private StyleEnum introspectBindingForStyle(Document theWsdlDocument) throws ProcessingException {
+		/*
+		 * Find binding
+		 */
+
+		Element binding = findWsdlBindingInDocument(theWsdlDocument);
+		
+		NodeList bindingChildren = binding.getElementsByTagNameNS(Constants.NS_WSDLSOAP, "binding");
+		if (bindingChildren.getLength() != 1) {
+			throw new ProcessingException("Binding must contain one child named binding, found " + bindingChildren.getLength());
+		}
+		Element binding2 = (Element) bindingChildren.item(0);
+
+		String transport = binding2.getAttribute("transport");
+		if (!"http://schemas.xmlsoap.org/soap/http".equals(transport)) {
+			throw new ProcessingException("Binding contains unsupported transport value: " + transport);
+		}
+
+		String style = binding2.getAttribute("style");
+		if (StringUtils.isBlank(style)) {
+			throw new ProcessingException("Missing style attribute in binding");
+		}
+		StyleEnum styleEnum;
+		try {
+			styleEnum = StyleEnum.valueOf(style.toUpperCase());
+		} catch (Exception e) {
+			throw new ProcessingException("Unknown binding style: " + style);
+		}
+
+		return styleEnum;
+	}
+
+	private Element findWsdlBindingInDocument(Document theWsdlDocument) throws ProcessingException {
+		NodeList bindingList = theWsdlDocument.getElementsByTagNameNS(Constants.NS_WSDL, "binding");
+		if (bindingList.getLength() == 0) {
+			throw new ProcessingException("WSDL contains no bindings. This is not supported");
+		} else if (bindingList.getLength() > 1) {
+			throw new ProcessingException("WSDL contains multiple bindings. This is not supported");
+		}
+
+		Element binding = (Element) bindingList.item(0);
+		return binding;
+	}
+
 	/**
 	 * UNIT TESTS ONLY
 	 */
@@ -604,4 +705,7 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 		myConfigService = theMock;
 	}
 
+	private enum StyleEnum {
+		DOCUMENT, RPC
+	}
 }

@@ -35,6 +35,8 @@ import net.svcret.admin.shared.model.GLdapAuthHost;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
 import net.svcret.admin.shared.model.GMonitorRule;
 import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
+import net.svcret.admin.shared.model.GMonitorRuleFiring;
+import net.svcret.admin.shared.model.GMonitorRuleFiringProblem;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GNamedParameterJsonRpcServerAuth;
 import net.svcret.admin.shared.model.GPartialUserList;
@@ -70,6 +72,7 @@ import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.IAdminService;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
+import net.svcret.ejb.api.IMonitorService;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.ISecurityService;
 import net.svcret.ejb.api.IServiceInvokerSoap11;
@@ -97,6 +100,8 @@ import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
 import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorRule;
+import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
+import net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem;
 import net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
@@ -369,7 +374,12 @@ public class AdminServiceBean implements IAdminService {
 			throw new ProcessingException("Unknown service version PID: " + theServiceVersionPid);
 		}
 
-		BaseGServiceVersion uiService = toUi(svcVer, false, null);
+		Set<Long> methodPids=new HashSet<Long>();
+		for (PersServiceVersionMethod next : svcVer.getMethods()) {
+			methodPids.add(next.getPid());
+		}
+		
+		BaseGServiceVersion uiService = toUi(svcVer, true, methodPids);
 		GSoap11ServiceVersionAndResources retVal = toUi(uiService, svcVer);
 		return retVal;
 	}
@@ -1104,7 +1114,7 @@ public class AdminServiceBean implements IAdminService {
 			ourLog.info("Changing password for user {}", theUser.getPidOrNull());
 			retVal.setPassword(theUser.getChangePassword());
 		}
-		
+
 		retVal.setThrottleMaxRequests(theUser.getThrottle().getMaxRequests());
 		retVal.setThrottlePeriod(theUser.getThrottle().getPeriod());
 		retVal.setThrottleMaxQueueDepth(theUser.getThrottle().getQueue());
@@ -1721,7 +1731,7 @@ public class AdminServiceBean implements IAdminService {
 			retVal.setTransactions60mins(toArray(t60minCount));
 			retVal.setLatency60mins(toLatency(t60minCount, t60minTime));
 			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
-			
+
 		}
 
 		return retVal;
@@ -1783,7 +1793,7 @@ public class AdminServiceBean implements IAdminService {
 			retVal.getThrottle().setMaxRequests(thePersUser.getThrottleMaxRequests());
 			retVal.getThrottle().setPeriod(thePersUser.getThrottlePeriod());
 			retVal.getThrottle().setQueue(thePersUser.getThrottleMaxQueueDepth());
-			
+
 		}
 
 		return retVal;
@@ -2296,24 +2306,20 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	@Override
-	public void saveMonitorRule(GMonitorRule theRule) {
-
+	public void saveMonitorRule(GMonitorRule theRule) throws ProcessingException {
 		PersMonitorRule rule = fromUi(theRule);
-
-		if (theRule.getPidOrNull() != null) {
-			PersMonitorRule existing = myDao.getMonitorRule(theRule.getPid());
-			existing.merge(rule);
-			rule = existing;
-		}
-
-		myDao.saveMonitorRule(rule);
+		myMonitorSvc.saveRule(rule);
 	}
+
+	@EJB
+	private IMonitorService myMonitorSvc;
 
 	private PersMonitorRule fromUi(GMonitorRule theRule) {
 
 		PersMonitorRule retVal = new PersMonitorRule();
 		retVal.setRuleActive(theRule.isActive());
 		retVal.setRuleName(theRule.getName());
+		retVal.setPid(theRule.getPidOrNull());
 
 		retVal.setFireForBackingServiceLatencyIsAboveMillis(theRule.getFireForBackingServiceLatencyIsAboveMillis());
 		retVal.setFireForBackingServiceLatencySustainTimeMins(theRule.getFireForBackingServiceLatencySustainTimeMins());
@@ -2336,6 +2342,83 @@ public class AdminServiceBean implements IAdminService {
 		}
 
 		return retVal;
+	}
+
+	@Override
+	public List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart) {
+		
+		Set<BasePersServiceVersion> allSvcVers;
+		if (theDomainPid != null) {
+			assert theServicePid == null;
+			assert theServiceVersionPid == null;
+			PersDomain domain = myServiceRegistry.getDomainByPid(theDomainPid);
+			allSvcVers = domain.getAllServiceVersions();
+		}else if (theServicePid!=null) {
+			assert theDomainPid == null;
+			assert theServiceVersionPid == null;
+			PersService service = myServiceRegistry.getServiceByPid(theServicePid);
+			allSvcVers=service.getAllServiceVersions();
+		}else if (theServiceVersionPid!=null) {
+			assert theServicePid == null;
+			assert theDomainPid == null;
+			allSvcVers = Collections.singleton(myServiceRegistry.getServiceVersionByPid(theServiceVersionPid));
+		}else {
+			throw new NullPointerException("No domain/service/svcver pid provided!");
+		}
+
+		List<GMonitorRuleFiring> retVal=new ArrayList<GMonitorRuleFiring>();
+		List<PersMonitorRuleFiring> firings = myDao.loadMonitorRuleFirings(allSvcVers, theStart);
+		for (PersMonitorRuleFiring next : firings) {
+			retVal.add(toUi(next));
+		}
+		
+//		Set<Long> svcVerPids = new HashSet<Long>();
+//		for (BasePersServiceVersion basePersServiceVersion : allSvcVers) {
+//			
+//		}
+		
+		
+		return retVal;
+	}
+
+	private GMonitorRuleFiring toUi(PersMonitorRuleFiring theNext) {
+		GMonitorRuleFiring retVal=new GMonitorRuleFiring();
+		retVal.setPid(theNext.getPid());
+		retVal.setStartDate(theNext.getStartDate());
+		retVal.setEndDate(theNext.getEndDate());
+		
+		for (PersMonitorRuleFiringProblem next : theNext.getProblems()) {
+			retVal.getProblems().add(toUi(next));
+		}
+		
+		return retVal;
+	}
+
+	private GMonitorRuleFiringProblem toUi(PersMonitorRuleFiringProblem theNext) {
+		GMonitorRuleFiringProblem retVal=new GMonitorRuleFiringProblem();
+		retVal.setPid(theNext.getPid());
+		retVal.setServiceVersionPid(theNext.getServiceVersion().getPid());
+		
+		if (theNext.getFailedUrl()!=null) {
+			retVal.setFailedUrlPid(theNext.getFailedUrl().getPid());
+			retVal.setFailedUrlMessage(theNext.getFailedUrlMessage());
+		}
+		
+		if (theNext.getLatencyAverageMillisPerCall()!=null) {
+			retVal.setFailedLatencyAverageMillisPerCall(theNext.getLatencyAverageMillisPerCall());
+			retVal.setFailedLatencyAverageOverMinutes(theNext.getLatencyAverageOverMinutes());
+			
+			// TODO: store this in the firing
+			retVal.setFailedLatencyThreshold((long)theNext.getFiring().getRule().getFireForBackingServiceLatencyIsAboveMillis());
+			
+		}
+		
+		return retVal;
+	}
+
+	@VisibleForTesting
+	void setMonitorSvc(MonitorServiceBean theMonitorSvc) {
+		myMonitorSvc=theMonitorSvc;
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {

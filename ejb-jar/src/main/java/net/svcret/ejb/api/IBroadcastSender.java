@@ -12,5 +12,7 @@ public interface IBroadcastSender {
 	void notifyServiceCatalogChanged() throws ProcessingException;
 
 	void notifyConfigChanged() throws ProcessingException;
+
+	void monitorRulesChanged() throws ProcessingException;
 	
 }

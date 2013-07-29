@@ -23,6 +23,8 @@ import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
 import net.svcret.admin.shared.model.GMonitorRule;
 import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
+import net.svcret.admin.shared.model.GMonitorRuleFiring;
+import net.svcret.admin.shared.model.GMonitorRuleFiringProblem;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GRecentMessage;
@@ -78,6 +80,9 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		svc.setId("svc1a");
 		svc.setName("Service 1-A");
 		svc.setPid(10L);
+		svc.setCanInheritKeepNumRecentTransactions(true);
+		svc.setInheritedKeepNumRecentTransactionsSuccess(23);
+		svc.setInheritedKeepNumRecentTransactionsSecurityFail(22);
 		dom.getServiceList().add(svc);
 
 		GSoap11ServiceVersion ver = new GSoap11ServiceVersion();
@@ -115,6 +120,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		ver.getMethodList().add(met);
 
 		svc = new GService();
+		svc.setCanInheritKeepNumRecentTransactions(true);
 		svc.setId("svc1b");
 		svc.setName("Service 1-B");
 		svc.setPid(11L);
@@ -207,6 +213,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		GDomain dom = myDomainList.getDomainByPid(theDomainPid);
 
 		GService svc = new GService();
+		svc.setCanInheritKeepNumRecentTransactions(true);
 		svc.setPid(ourNextPid++);
 		svc.setId(theId);
 		svc.setName(theName);
@@ -244,6 +251,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 			}
 		} else {
 			svc = new GService();
+			svc.setCanInheritKeepNumRecentTransactions(true);
 			svc.setPid(ourNextPid++);
 			svc.setId(theCreateServiceId);
 			svc.setName(theCreateServiceId);
@@ -665,8 +673,15 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	@Override
 	public GDomain saveDomain(GDomain theDomain) {
 		GDomain retVal = myDomainList.getDomainByPid(theDomain.getPid());
-		retVal.setId(theDomain.getId());
-		retVal.setName(theDomain.getName());
+		retVal.merge(theDomain);
+		
+		for (GService next : retVal.getServiceList()) {
+			next.setInheritedKeepNumRecentTransactionsSuccess(retVal.getKeepNumRecentTransactionsSuccess());
+			next.setInheritedKeepNumRecentTransactionsFail(retVal.getKeepNumRecentTransactionsFail());
+			next.setInheritedKeepNumRecentTransactionsFault(retVal.getKeepNumRecentTransactionsFault());
+			next.setInheritedKeepNumRecentTransactionsSecurityFail(retVal.getKeepNumRecentTransactionsSecurityFail());
+		}
+		
 		return retVal;
 	}
 
@@ -723,6 +738,50 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 			myMonitorRuleList.add(theRule);
 		}
 		return myMonitorRuleList;
+	}
+
+	@Override
+	public List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart) {
+		ArrayList<GMonitorRuleFiring> list = new ArrayList<GMonitorRuleFiring>();
+		GMonitorRuleFiring firing = new GMonitorRuleFiring();
+		firing.setStartDate(new Date());
+		firing.setEndDate(new Date());
+		firing.getProblems().add(new GMonitorRuleFiringProblem());
+		firing.getProblems().get(0).setServiceVersionPid(myDomainList.get(0).getServiceList().get(0).getVersionList().get(0).getPid());
+		firing.getProblems().get(0).setFailedLatencyAverageMillisPerCall(57l);
+		firing.getProblems().get(0).setFailedLatencyAverageOverMinutes(5l);
+		firing.getProblems().get(0).setFailedLatencyThreshold(20l);
+
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		list.add(firing);
+		return list;
 	}
 
 }

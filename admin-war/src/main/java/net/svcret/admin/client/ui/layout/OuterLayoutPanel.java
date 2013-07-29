@@ -12,7 +12,7 @@ public class OuterLayoutPanel extends DockLayoutPanel {
 		super(Unit.PX);
 		
 		addNorth(new TopBarPanel(), 62);
-		addWest(new LeftBarPanel(), 300);
+		addWest(new LeftBarPanel(), 200);
 		//addEast(new RightBarPanel(), 300);
 		
 		DockLayoutPanel bodyDock = new DockLayoutPanel(Unit.PX);

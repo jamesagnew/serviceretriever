@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import javax.ejb.Local;
 
-import net.svcret.admin.shared.model.GMonitorRule;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.ejb.TransactionLoggerBean.BaseUnflushed;
 import net.svcret.ejb.ex.ProcessingException;
@@ -157,6 +157,8 @@ public interface IDao {
 
 	void saveInvocationStats(Collection<BasePersMethodStats> theStats, List<BasePersMethodStats> theStatsToDelete);
 
+	void saveMonitorRule(PersMonitorRule theRule);
+
 	PersMonitorRuleFiring saveMonitorRuleFiring(PersMonitorRuleFiring theFiring);
 
 	PersMonitorRule saveOrCreateMonitorRule(PersMonitorRule theRule);
@@ -212,6 +214,8 @@ public interface IDao {
 
 	}
 
-	void saveMonitorRule(PersMonitorRule theRule);
+//	List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int theStart);
+
+	List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<? extends BasePersServiceVersion> theAllSvcVers, int theStart);
 
 }

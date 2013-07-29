@@ -26,8 +26,8 @@ public class PersMonitorRuleFiringProblem extends BasePersObject {
 	@Column(name="FAILED_URL_MSG", length=PersServiceVersionUrlStatus.MAX_LENGTH_MSG)
 	private String myFailedUrlMessage;
 	
-	@ManyToOne(cascade = {}, optional = false)
-	@JoinColumn(name = "FIRING_PID", nullable = false)
+	@ManyToOne()
+	@JoinColumn(name = "FIRING_PID", nullable = false, referencedColumnName = "PID")
 	private PersMonitorRuleFiring myFiring;
 
 	@Column(name = "LATENCY_AVG_CALLMILLIS", nullable = true)
@@ -134,6 +134,9 @@ public class PersMonitorRuleFiringProblem extends BasePersObject {
 	 *            the failedUrl to set
 	 */
 	public void setFailedUrl(PersServiceVersionUrl theFailedUrl) {
+		if (myLatencyExceededThreshold == Boolean.TRUE) {
+			throw new IllegalStateException();
+		}
 		myFailedUrl = theFailedUrl;
 	}
 
@@ -172,6 +175,9 @@ public class PersMonitorRuleFiringProblem extends BasePersObject {
 	 * @param theLatencyExceededThreshold the latencyExceededThreshold to set
 	 */
 	public void setLatencyExceededThreshold(Boolean theLatencyExceededThreshold) {
+		if (myFailedUrl != null) {
+			throw new IllegalStateException();
+		}
 		myLatencyExceededThreshold = theLatencyExceededThreshold;
 	}
 

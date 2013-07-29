@@ -2,6 +2,7 @@ package net.svcret.admin.client.ui.config.svcver;
 
 import static net.svcret.admin.client.AdminPortal.*;
 import net.svcret.admin.client.AdminPortal;
+import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
@@ -9,8 +10,11 @@ import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GDomainList;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.Label;
 
 public class EditServiceVersionPanel extends AbstractServiceVersionPanel {
+
+	private Label myProtocolLabel;
 
 	public EditServiceVersionPanel(final long theServiceVersionPid) {
 		super();
@@ -31,6 +35,7 @@ public class EditServiceVersionPanel extends AbstractServiceVersionPanel {
 					public void onSuccess(BaseGServiceVersion theServiceVersion) {
 						setServiceVersion(theServiceVersion);
 						myLoadingSpinner.hide();
+						myProtocolLabel.setText(theServiceVersion.getProtocol().getNiceName());
 					}
 				});
 			}
@@ -48,19 +53,16 @@ public class EditServiceVersionPanel extends AbstractServiceVersionPanel {
 		return MSGS.editServiceVersion_Description();
 	}
 
-	@Override
-	protected boolean allowTypeSelect() {
-		return false;
-	}
-
-	@Override
-	protected void addTypeSelector() {
-		// nothing
-	}
 
 	@Override
 	protected void handleDoneSaving(AddServiceVersionResponse theResult) {
 		myLoadingSpinner.showMessage("Saved service version", false);
+	}
+
+	@Override
+	protected void addProtocolSelectionUi(TwoColumnGrid theGrid) {
+		myProtocolLabel = new Label();
+		theGrid.addRow("Protocol", myProtocolLabel);
 	}
 
 }

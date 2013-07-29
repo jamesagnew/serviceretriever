@@ -1,19 +1,15 @@
 package net.svcret.ejb.ejb;
 
-import java.lang.management.ManagementFactory;
-
 import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.management.MBeanServer;
 
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.management.ManagementService;
 import net.svcret.admin.shared.model.RetrieverNodeTypeEnum;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IHttpClient;
@@ -25,11 +21,10 @@ import net.svcret.ejb.api.ITransactionLogger;
 
 @Startup
 @Singleton()
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class SchedulerBean implements IScheduler {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(SchedulerBean.class);
-
-	private CacheManager myCacheManager;
 
 	@EJB
 	private IMonitorService myMonitorSvc;
@@ -49,8 +44,6 @@ public class SchedulerBean implements IScheduler {
 	@EJB
 	private IHttpClient myHttpClient;
 	
-	private ManagementService registry;
-
 	@Override
 	@Schedule(second = "0", minute = "*", hour = "*")
 	@TransactionAttribute(TransactionAttributeType.NEVER)
@@ -126,13 +119,6 @@ public class SchedulerBean implements IScheduler {
 	public void postConstruct() {
 		ourLog.info("Scheduler has started");
 		mySecuritySvc.loadUserCatalogIfNeeded();
-
-		ourLog.info("Registering MBeans");
-		myCacheManager = CacheManager.getInstance();
-		MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-		registry = new ManagementService(myCacheManager, mBeanServer, true, true, true, true, true);
-
-		registry.init();
 	}
 
 	@Override
@@ -144,12 +130,6 @@ public class SchedulerBean implements IScheduler {
 		} catch (Exception e) {
 			ourLog.error("Failed to load user catalog", e);
 		}
-	}
-
-	@PreDestroy
-	public void unregisterMBeans() {
-		ourLog.info("Unegistering MBeans");
-		registry.dispose();
 	}
 
 }

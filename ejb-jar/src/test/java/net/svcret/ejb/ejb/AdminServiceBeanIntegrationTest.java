@@ -77,6 +77,8 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	private ConfigServiceBean myConfigSvc;
 	private TransactionLoggerBean myTransactionLogSvc;
 
+	private MonitorServiceBean myMonitorSvc;
+
 	@After
 	public void after2() {
 
@@ -128,7 +130,11 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		mySvcReg = new ServiceRegistryBean();
 		mySvcReg.setBroadcastSender(myBroadcastSender);
 		mySvcReg.setDao(myDao);
-
+		
+		myMonitorSvc = new MonitorServiceBean();
+		myMonitorSvc.setDao(myDao);
+		myMonitorSvc.setBroadcastSender(myBroadcastSender);
+		
 		mySvc = new AdminServiceBean();
 		mySvc.setPersSvc(myDao);
 		mySvc.setConfigSvc(myConfigSvc);
@@ -136,6 +142,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		mySvc.setServiceRegistry(mySvcReg);
 		mySvc.setInvokerSoap11(mySoapInvoker);
 		mySvc.setSecuritySvc(mySecSvc);
+		mySvc.setMonitorSvc(myMonitorSvc);
 		
 		myTransactionLogSvc = new TransactionLoggerBean();
 		myTransactionLogSvc.setDao(myDao);

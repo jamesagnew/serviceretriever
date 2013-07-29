@@ -22,6 +22,7 @@ import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GMonitorRule;
+import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GRecentMessage;
@@ -641,14 +642,17 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 
 	@Override
 	public GMonitorRuleList saveMonitorRule(GMonitorRule theRule) throws ServiceFailureException {
-		if (isMockMode()) {
-			myMock.saveMonitorRule(theRule);
-		} else {
-			myAdminSvc.saveMonitorRule(theRule);
-		}
 		try {
+			if (isMockMode()) {
+				myMock.saveMonitorRule(theRule);
+			} else {
+				myAdminSvc.saveMonitorRule(theRule);
+			}
 			return loadMonitorRuleList();
 		} catch (ServiceFailureException e) {
+			ourLog.error("Failed to save rule", e);
+			throw new ServiceFailureException(e.getMessage());
+		} catch (ProcessingException e) {
 			ourLog.error("Failed to save rule", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
@@ -736,6 +740,14 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	 */
 	void setAdminSvc(IAdminService theAdminSvc) {
 		myAdminSvc = theAdminSvc;
+	}
+
+	@Override
+	public List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart) {
+		if (isMockMode()) {
+			return myMock.loadMonitorRuleFirings(theDomainPid, theServicePid, theServiceVersionPid, theStart);
+		}
+		return myAdminSvc.loadMonitorRuleFirings(theDomainPid, theServicePid, theServiceVersionPid, theStart);
 	}
 
 }

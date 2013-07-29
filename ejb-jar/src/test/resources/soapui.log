@@ -1,0 +1,118 @@
+2013-07-26 16:06:16,653 INFO  [DefaultSoapUICore] initialized soapui-settings from [/Users/james/soapui/soapui-4.5.1/soapui-settings.xml]
+2013-07-26 16:06:18,775 INFO  [SoapUI] Used java version: 1.7.0_05
+2013-07-26 16:06:41,271 INFO  [SchemaUtils] Added default schema from file:/Users/james/soapui/soapui-4.5.1/bin/soapui-4.5.1.jar!/com/eviware/soapui/resources/xsds/xop.xsd with targetNamespace http://www.w3.org/2004/08/xop/include
+2013-07-26 16:06:41,392 INFO  [SchemaUtils] Added default schema from file:/Users/james/soapui/soapui-4.5.1/bin/soapui-4.5.1.jar!/com/eviware/soapui/resources/xsds/XMLSchema.xsd with targetNamespace http://www.w3.org/2001/XMLSchema
+2013-07-26 16:06:41,395 INFO  [SchemaUtils] Added default schema from file:/Users/james/soapui/soapui-4.5.1/bin/soapui-4.5.1.jar!/com/eviware/soapui/resources/xsds/xml.xsd with targetNamespace http://www.w3.org/XML/1998/namespace
+2013-07-26 16:06:41,400 INFO  [SchemaUtils] Added default schema from file:/Users/james/soapui/soapui-4.5.1/bin/soapui-4.5.1.jar!/com/eviware/soapui/resources/xsds/swaref.xsd with targetNamespace http://ws-i.org/profiles/basic/1.1/xsd
+2013-07-26 16:06:41,402 INFO  [SchemaUtils] Added default schema from file:/Users/james/soapui/soapui-4.5.1/bin/soapui-4.5.1.jar!/com/eviware/soapui/resources/xsds/xmime200505.xsd with targetNamespace http://www.w3.org/2005/05/xmlmime
+2013-07-26 16:06:41,403 INFO  [SchemaUtils] Added default schema from file:/Users/james/soapui/soapui-4.5.1/bin/soapui-4.5.1.jar!/com/eviware/soapui/resources/xsds/xmime200411.xsd with targetNamespace http://www.w3.org/2004/11/xmlmime
+2013-07-26 16:06:41,406 INFO  [SchemaUtils] Added default schema from file:/Users/james/soapui/soapui-4.5.1/bin/soapui-4.5.1.jar!/com/eviware/soapui/resources/xsds/soapEnvelope.xsd with targetNamespace http://schemas.xmlsoap.org/soap/envelope/
+2013-07-26 16:06:41,442 INFO  [SchemaUtils] Added default schema from file:/Users/james/soapui/soapui-4.5.1/bin/soapui-4.5.1.jar!/com/eviware/soapui/resources/xsds/soapEncoding.xsd with targetNamespace http://schemas.xmlsoap.org/soap/encoding/
+2013-07-26 16:06:41,446 INFO  [SchemaUtils] Added default schema from file:/Users/james/soapui/soapui-4.5.1/bin/soapui-4.5.1.jar!/com/eviware/soapui/resources/xsds/soapEnvelope12.xsd with targetNamespace http://www.w3.org/2003/05/soap-envelope
+2013-07-26 16:06:41,553 INFO  [SchemaUtils] Added default schema from file:/Users/james/soapui/soapui-4.5.1/bin/soapui-4.5.1.jar!/com/eviware/soapui/resources/xsds/soapEncoding12.xsd with targetNamespace http://www.w3.org/2003/05/soap-encoding
+2013-07-26 16:06:42,215 INFO  [SchemaUtils] Loading schema types from [http://192.168.1.3:8081/DemoServiceSvc/StringConcatService?wsdl]
+2013-07-26 16:06:42,216 INFO  [SchemaUtils] Getting schema http://192.168.1.3:8081/DemoServiceSvc/StringConcatService?wsdl
+2013-07-26 16:06:42,223 INFO  [SchemaUtils] Getting schema http://192.168.1.3:8081/DemoServiceSvc/StringConcatService?xsd=1
+2013-07-26 16:06:42,711 INFO  [WsdlImporter] Finding importer for {net:svcret:demo}DemoServicePortBinding
+2013-07-26 16:06:42,717 INFO  [WsdlImporter] Importing binding {net:svcret:demo}DemoServicePortBinding
+2013-07-26 16:06:42,783 INFO  [Soap11HttpBindingImporter] importing endpoint http://192.168.1.3:8081/DemoServiceSvc/StringConcatService
+2013-07-26 16:06:42,940 INFO  [Soap11HttpBindingImporter] importing operation addStrings
+2013-07-26 16:06:42,965 INFO  [Soap11HttpBindingImporter] importing operation addStringsSlow
+2013-07-26 16:53:38,057 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 65ms (149 bytes)
+2013-07-26 16:57:17,909 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 15ms (148 bytes)
+2013-07-26 16:57:19,707 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 18ms (148 bytes)
+2013-07-26 16:57:32,539 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 860ms (99 bytes)
+2013-07-26 16:57:59,408 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 34ms (99 bytes)
+2013-07-26 16:59:23,660 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 209ms (1335 bytes)
+2013-07-26 17:02:05,342 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 145ms (142 bytes)
+2013-07-26 17:02:18,052 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 265ms (1335 bytes)
+2013-07-26 17:05:17,941 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 379ms (1335 bytes)
+2013-07-26 17:12:58,643 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 404ms (1335 bytes)
+2013-07-26 17:19:37,905 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 2058ms (404 bytes)
+2013-07-26 17:19:58,346 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 181ms (228 bytes)
+2013-07-26 17:20:10,048 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 2225ms (228 bytes)
+2013-07-26 17:20:22,338 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 6215ms (228 bytes)
+2013-07-26 17:20:33,994 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 7205ms (228 bytes)
+2013-07-26 17:20:38,870 INFO  [AbstractHttpRequestDesktopPanel] [DemoServicePortBinding.addStrings:Request 1] - CANCELED
+2013-07-26 17:20:40,370 INFO  [AbstractHttpRequestDesktopPanel] [DemoServicePortBinding.addStrings:Request 1] - CANCELED
+2013-07-26 17:20:43,232 INFO  [AbstractHttpRequestDesktopPanel] [DemoServicePortBinding.addStrings:Request 1] - CANCELED
+2013-07-26 17:20:49,176 INFO  [AbstractHttpRequestDesktopPanel] [DemoServicePortBinding.addStrings:Request 1] - CANCELED
+2013-07-26 17:20:51,217 INFO  [AbstractHttpRequestDesktopPanel] [DemoServicePortBinding.addStrings:Request 1] - CANCELED
+2013-07-26 17:20:53,827 INFO  [AbstractHttpRequestDesktopPanel] [DemoServicePortBinding.addStrings:Request 1] - CANCELED
+2013-07-26 17:21:04,810 INFO  [AbstractHttpRequestDesktopPanel] [DemoServicePortBinding.addStrings:Request 1] - CANCELED
+2013-07-26 17:21:06,524 INFO  [AbstractHttpRequestDesktopPanel] [DemoServicePortBinding.addStrings:Request 1] - CANCELED
+2013-07-26 17:21:08,859 INFO  [AbstractHttpRequestDesktopPanel] [DemoServicePortBinding.addStrings:Request 1] - CANCELED
+2013-07-26 17:21:11,842 INFO  [AbstractHttpRequestDesktopPanel] [DemoServicePortBinding.addStrings:Request 1] - CANCELED
+2013-07-26 17:21:43,380 ERROR [WsdlSubmit] Exception in request: java.net.SocketException: Connection reset
+2013-07-26 17:21:43,384 ERROR [SoapUI] An error occured [Connection reset], see error log for details
+2013-07-26 17:21:43,388 ERROR [errorlog] java.net.SocketException: Connection reset
+java.net.SocketException: Connection reset
+	at java.net.SocketInputStream.read(SocketInputStream.java:189)
+	at java.net.SocketInputStream.read(SocketInputStream.java:121)
+	at org.apache.http.impl.io.AbstractSessionInputBuffer.fillBuffer(AbstractSessionInputBuffer.java:149)
+	at org.apache.http.impl.io.SocketInputBuffer.fillBuffer(SocketInputBuffer.java:110)
+	at org.apache.http.impl.io.AbstractSessionInputBuffer.readLine(AbstractSessionInputBuffer.java:264)
+	at org.apache.http.impl.conn.LoggingSessionInputBuffer.readLine(LoggingSessionInputBuffer.java:115)
+	at org.apache.http.impl.conn.DefaultResponseParser.parseHead(DefaultResponseParser.java:98)
+	at org.apache.http.impl.io.AbstractMessageParser.parse(AbstractMessageParser.java:252)
+	at org.apache.http.impl.AbstractHttpClientConnection.receiveResponseHeader(AbstractHttpClientConnection.java:281)
+	at org.apache.http.impl.conn.DefaultClientConnection.receiveResponseHeader(DefaultClientConnection.java:247)
+	at org.apache.http.impl.conn.AbstractClientConnAdapter.receiveResponseHeader(AbstractClientConnAdapter.java:219)
+	at com.eviware.soapui.impl.wsdl.support.http.HttpClientSupport$SoapUIHttpRequestExecutor.doReceiveResponse(HttpClientSupport.java:147)
+	at org.apache.http.protocol.HttpRequestExecutor.execute(HttpRequestExecutor.java:125)
+	at org.apache.http.impl.client.DefaultRequestDirector.tryExecute(DefaultRequestDirector.java:633)
+	at org.apache.http.impl.client.DefaultRequestDirector.execute(DefaultRequestDirector.java:454)
+	at org.apache.http.impl.client.AbstractHttpClient.execute(AbstractHttpClient.java:820)
+	at org.apache.http.impl.client.AbstractHttpClient.execute(AbstractHttpClient.java:754)
+	at com.eviware.soapui.impl.wsdl.support.http.HttpClientSupport$Helper.execute(HttpClientSupport.java:236)
+	at com.eviware.soapui.impl.wsdl.support.http.HttpClientSupport.execute(HttpClientSupport.java:345)
+	at com.eviware.soapui.impl.wsdl.submit.transports.http.HttpClientRequestTransport.sendRequest(HttpClientRequestTransport.java:241)
+	at com.eviware.soapui.impl.wsdl.WsdlSubmit.run(WsdlSubmit.java:123)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:471)
+	at java.util.concurrent.FutureTask$Sync.innerRun(FutureTask.java:334)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:166)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1110)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:603)
+	at java.lang.Thread.run(Thread.java:722)
+2013-07-26 17:21:43,403 INFO  [AbstractHttpRequestDesktopPanel] Error getting response for [DemoServicePortBinding.addStrings:Request 1]; java.net.SocketException: Connection reset
+2013-07-26 17:22:37,692 INFO  [AbstractHttpRequestDesktopPanel] [DemoServicePortBinding.addStrings:Request 1] - CANCELED
+2013-07-26 17:22:38,691 ERROR [WsdlSubmit] Exception in request: org.apache.http.client.ClientProtocolException
+2013-07-26 17:22:38,691 ERROR [SoapUI] An error occured [org.apache.http.client.ClientProtocolException], see error log for details
+2013-07-26 17:22:38,691 ERROR [errorlog] org.apache.http.client.ClientProtocolException
+org.apache.http.client.ClientProtocolException
+	at org.apache.http.impl.client.AbstractHttpClient.execute(AbstractHttpClient.java:822)
+	at org.apache.http.impl.client.AbstractHttpClient.execute(AbstractHttpClient.java:754)
+	at com.eviware.soapui.impl.wsdl.support.http.HttpClientSupport$Helper.execute(HttpClientSupport.java:236)
+	at com.eviware.soapui.impl.wsdl.support.http.HttpClientSupport.execute(HttpClientSupport.java:345)
+	at com.eviware.soapui.impl.wsdl.submit.transports.http.HttpClientRequestTransport.sendRequest(HttpClientRequestTransport.java:241)
+	at com.eviware.soapui.impl.wsdl.WsdlSubmit.run(WsdlSubmit.java:123)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:471)
+	at java.util.concurrent.FutureTask$Sync.innerRun(FutureTask.java:334)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:166)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1110)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:603)
+	at java.lang.Thread.run(Thread.java:722)
+Caused by: org.apache.http.ProtocolException: The server failed to respond with a valid HTTP response
+	at org.apache.http.impl.conn.DefaultResponseParser.parseHead(DefaultResponseParser.java:109)
+	at org.apache.http.impl.io.AbstractMessageParser.parse(AbstractMessageParser.java:252)
+	at org.apache.http.impl.AbstractHttpClientConnection.receiveResponseHeader(AbstractHttpClientConnection.java:281)
+	at org.apache.http.impl.conn.DefaultClientConnection.receiveResponseHeader(DefaultClientConnection.java:247)
+	at org.apache.http.impl.conn.AbstractClientConnAdapter.receiveResponseHeader(AbstractClientConnAdapter.java:219)
+	at com.eviware.soapui.impl.wsdl.support.http.HttpClientSupport$SoapUIHttpRequestExecutor.doReceiveResponse(HttpClientSupport.java:147)
+	at org.apache.http.protocol.HttpRequestExecutor.execute(HttpRequestExecutor.java:125)
+	at org.apache.http.impl.client.DefaultRequestDirector.tryExecute(DefaultRequestDirector.java:633)
+	at org.apache.http.impl.client.DefaultRequestDirector.execute(DefaultRequestDirector.java:454)
+	at org.apache.http.impl.client.AbstractHttpClient.execute(AbstractHttpClient.java:820)
+	... 11 more
+2013-07-26 17:22:38,699 INFO  [AbstractHttpRequestDesktopPanel] Error getting response for [DemoServicePortBinding.addStrings:Request 1]; org.apache.http.client.ClientProtocolException
+2013-07-26 17:22:40,462 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 12ms (228 bytes)
+2013-07-26 17:22:41,467 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 19ms (228 bytes)
+2013-07-26 17:23:00,923 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 15055ms (228 bytes)
+2013-07-26 17:23:58,350 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 146ms (228 bytes)
+2013-07-26 17:24:00,719 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 189ms (1380 bytes)
+2013-07-26 17:30:31,433 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 1063ms (228 bytes)
+2013-07-26 17:30:33,244 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 162ms (71 bytes)
+2013-07-26 17:30:37,702 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 139ms (71 bytes)
+2013-07-26 17:32:18,055 INFO  [AbstractHttpRequestDesktopPanel] Got response for [DemoServicePortBinding.addStrings:Request 1] in 153ms (228 bytes)
+2013-07-26 17:32:26,332 INFO  [AbstractHttpRequestDesktopPanel] [DemoServicePortBinding.addStrings:Request 1] - CANCELED
+2013-07-26 17:32:35,266 INFO  [AbstractHttpRequestDesktopPanel] [DemoServicePortBinding.addStrings:Request 1] - CANCELED

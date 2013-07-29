@@ -85,4 +85,9 @@ public class BroadcastSenderBean implements IBroadcastSender {
 		sendMessage(BroadcastListenerBean.UPDATE_CONFIG);
 	}
 
+	@Override
+	public void monitorRulesChanged() throws ProcessingException {
+		sendMessage(BroadcastListenerBean.UPDATE_MONITOR_RULES);
+	}
+
 }

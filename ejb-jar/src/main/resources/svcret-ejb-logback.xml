@@ -4,7 +4,7 @@
 		class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>/var/log/glassfish/svcret/svcret-ejb.log</file>
 		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-			<level>DEBUG</level>
+			<level>INFO</level>
 		</filter>
 		<encoder>
 			<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%file:%line] %msg%n</pattern>
@@ -14,6 +14,25 @@
 		</rollingPolicy>
 	</appender>
 
+	<appender name="DEBUGFILE"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>/var/log/glassfish/svcret/svcret-debug.log</file>
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>DEBUG</level>
+		</filter>
+		<encoder>
+			<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%file:%line] %msg%n</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<fileNamePattern>/var/log/glassfish/svcret/svcret-debug-%i.log</fileNamePattern>
+			<minIndex>1</minIndex>
+			<maxIndex>10</maxIndex>
+		</rollingPolicy>	
+		<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<maxFileSize>5MB</maxFileSize>
+		</triggeringPolicy>	
+	</appender>
+	
 	<appender name="ADMINFILE"
 		class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>/var/log/glassfish/svcret/svcret-admin.log</file>
@@ -37,19 +56,22 @@
 		</encoder>
 	</appender>
 
-	<logger name="net.svcret.admin" level="info" additivity="false">
+	<logger name="net.svcret.admin" level="DEBUG" additivity="false">
 		<appender-ref ref="STDOUT" />
 		<appender-ref ref="ADMINFILE" />
+		<appender-ref ref="DEBUGFILE" />
 	</logger>
 
-	<logger name="net.svcret" level="info" additivity="false">
+	<logger name="net.svcret" level="DEBUG" additivity="false">
 		<appender-ref ref="STDOUT" />
 		<appender-ref ref="EJBFILE" />
+		<appender-ref ref="DEBUGFILE" />
 	</logger>
 
 	<root level="info">
 		<appender-ref ref="STDOUT" />
 		<appender-ref ref="EJBFILE" />
+		<appender-ref ref="DEBUGFILE" />
 	</root>
 
 </configuration>

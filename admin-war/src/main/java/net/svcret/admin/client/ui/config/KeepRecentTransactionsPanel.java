@@ -7,6 +7,9 @@ import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.shared.model.BaseGKeepsRecentMessages;
 
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.Label;
@@ -18,50 +21,109 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 	private IntegerBox myFaultTextbox;
 	private IntegerBox mySecurityFailTextbox;
 	private LoadingSpinner myLoadingSpinner;
+	private TwoColumnGrid myGrid;
 
 	public KeepRecentTransactionsPanel(BaseGKeepsRecentMessages<?> theKeepsRecentTransactions) {
-		
+
+		boolean canInherit = theKeepsRecentTransactions.isCanInheritKeepNumRecentTransactions();
+		int descRows = canInherit ? 2 : 1;
+
 		add(new HtmlH1(MSGS.keepRecentTransactionsPanel_Title()));
 		add(new Label(MSGS.keepRecentTransactionsPanel_Description()));
-		
+
 		myLoadingSpinner = new LoadingSpinner();
 		myLoadingSpinner.hideCompletely();
 		add(myLoadingSpinner);
-		
-		TwoColumnGrid grid = new TwoColumnGrid();
-		add(grid);
-		
-		mySuccessTextbox = new IntegerBox();
-		mySuccessTextbox.setValue(theKeepsRecentTransactions.getKeepNumRecentTransactionsSuccess());
-		grid.addRow(MSGS.keepRecentTransactionsPanel_OutcomeSuccess(), mySuccessTextbox);
-		grid.addDescriptionToRight(MSGS.keepRecentTransactionsPanel_OutcomeSuccessDesc());
-		
-		myFaultTextbox = new IntegerBox();
-		myFaultTextbox.setValue(theKeepsRecentTransactions.getKeepNumRecentTransactionsFault());
-		grid.addRow(MSGS.keepRecentTransactionsPanel_OutcomeFault(), myFaultTextbox);
-		grid.addDescriptionToRight(MSGS.keepRecentTransactionsPanel_OutcomeFaultDesc());
-		
-		myFailTextbox = new IntegerBox();
-		myFailTextbox.setValue(theKeepsRecentTransactions.getKeepNumRecentTransactionsFail());
-		grid.addRow(MSGS.keepRecentTransactionsPanel_OutcomeFail(), myFailTextbox);
-		grid.addDescriptionToRight(MSGS.keepRecentTransactionsPanel_OutcomeFailDesc());
 
-		mySecurityFailTextbox = new IntegerBox();
-		mySecurityFailTextbox.setValue(theKeepsRecentTransactions.getKeepNumRecentTransactionsSecurityFail());
-		grid.addRow(MSGS.keepRecentTransactionsPanel_OutcomeSecurityFail(), mySecurityFailTextbox);
-		grid.addDescriptionToRight(MSGS.keepRecentTransactionsPanel_OutcomeSecurityFailDesc());
+		myGrid = new TwoColumnGrid();
+		add(myGrid);
 
+		{
+			mySuccessTextbox = new IntegerBox();
+			mySuccessTextbox.setValue(theKeepsRecentTransactions.getKeepNumRecentTransactionsSuccess());
+			myGrid.addRow(MSGS.keepRecentTransactionsPanel_OutcomeSuccess(), mySuccessTextbox);
+			myGrid.addDescriptionToRight(MSGS.keepRecentTransactionsPanel_OutcomeSuccessDesc(), descRows);
+			if (canInherit) {
+				Integer inherited = theKeepsRecentTransactions.getInheritedKeepNumRecentTransactionsSuccess();
+				addInheritControl(mySuccessTextbox, inherited);
+			}
+		}
+
+		{
+			myFaultTextbox = new IntegerBox();
+			myFaultTextbox.setValue(theKeepsRecentTransactions.getKeepNumRecentTransactionsFault());
+			myGrid.addRow(MSGS.keepRecentTransactionsPanel_OutcomeFault(), myFaultTextbox);
+			myGrid.addDescriptionToRight(MSGS.keepRecentTransactionsPanel_OutcomeFaultDesc(), descRows);
+			if (canInherit) {
+				Integer inherited = theKeepsRecentTransactions.getInheritedKeepNumRecentTransactionsFault();
+				addInheritControl(myFaultTextbox, inherited);
+			}
+		}
+
+		{
+			myFailTextbox = new IntegerBox();
+			myFailTextbox.setValue(theKeepsRecentTransactions.getKeepNumRecentTransactionsFail());
+			myGrid.addRow(MSGS.keepRecentTransactionsPanel_OutcomeFail(), myFailTextbox);
+			myGrid.addDescriptionToRight(MSGS.keepRecentTransactionsPanel_OutcomeFailDesc(), descRows);
+			if (canInherit) {
+				Integer inherited = theKeepsRecentTransactions.getInheritedKeepNumRecentTransactionsFail();
+				addInheritControl(myFailTextbox, inherited);
+			}
+		}
+
+		{
+			mySecurityFailTextbox = new IntegerBox();
+			mySecurityFailTextbox.setValue(theKeepsRecentTransactions.getKeepNumRecentTransactionsSecurityFail());
+			myGrid.addRow(MSGS.keepRecentTransactionsPanel_OutcomeSecurityFail(), mySecurityFailTextbox);
+			myGrid.addDescriptionToRight(MSGS.keepRecentTransactionsPanel_OutcomeSecurityFailDesc(), descRows);
+			if (canInherit) {
+				Integer inherited = theKeepsRecentTransactions.getInheritedKeepNumRecentTransactionsSecurityFail();
+				addInheritControl(mySecurityFailTextbox, inherited);
+			}
+		}
+	}
+
+	private void addInheritControl(final IntegerBox textBox, Integer inherited) {
+		if (inherited != null) {
+			final CheckBox inheritCheckbox = new CheckBox("Override inherited value: " + inherited);
+			inheritCheckbox.addStyleName(CssConstants.RECENT_TRANSACTIONS_INHERIT_CHECKBOX);
+			
+			inheritCheckbox.setValue(inherited != null);
+			myGrid.addRow("", inheritCheckbox);
+			inheritCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+				@Override
+				public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
+					if (theEvent.getValue()) {
+						textBox.setValue(0, false);
+					} else {
+						textBox.setValue(null, false);
+					}
+				}
+			});
+			textBox.addValueChangeHandler(new ValueChangeHandler<Integer>() {
+				@Override
+				public void onValueChange(ValueChangeEvent<Integer> theEvent) {
+					if (theEvent.getValue() != null) {
+						inheritCheckbox.setValue(false, false);
+					} else {
+						inheritCheckbox.setValue(true, false);
+					}
+				}
+			});
+		} else {
+			myGrid.addRow("", "");
+		}
 	}
 
 	private static final int MAX = 100;
-	
+
 	public boolean validateAndShowErrorIfNotValid() {
-		
+
 		mySuccessTextbox.removeStyleName(CssConstants.TEXTBOX_WITH_ERR);
 		myFailTextbox.removeStyleName(CssConstants.TEXTBOX_WITH_ERR);
 		mySecurityFailTextbox.removeStyleName(CssConstants.TEXTBOX_WITH_ERR);
 		myFaultTextbox.removeStyleName(CssConstants.TEXTBOX_WITH_ERR);
-		
+
 		Integer sval = mySuccessTextbox.getValue();
 		if (sval != null && (sval < 0 || sval > MAX)) {
 			myLoadingSpinner.showMessage(MSGS.keepRecentTransactionsPanel_AlertInvalidValue(sval.toString(), Integer.toString(MAX)), false);
@@ -96,14 +158,14 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 
 		return true;
 	}
-	
+
 	public void populateDto(BaseGKeepsRecentMessages<?> theDto) {
-		
+
 		theDto.setKeepNumRecentTransactionsSuccess(mySuccessTextbox.getValue());
 		theDto.setKeepNumRecentTransactionsFail(myFailTextbox.getValue());
 		theDto.setKeepNumRecentTransactionsSecurityFail(mySecurityFailTextbox.getValue());
 		theDto.setKeepNumRecentTransactionsFault(myFaultTextbox.getValue());
-		
+
 	}
-	
+
 }

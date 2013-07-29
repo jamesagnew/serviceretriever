@@ -15,6 +15,7 @@ import javax.persistence.Table;
 import javax.persistence.Version;
 
 import net.svcret.admin.shared.model.AuthorizationHostTypeEnum;
+import net.svcret.ejb.api.ResponseTypeEnum;
 
 /**
  * Authentication host: This is a module which is used to take credentials of
@@ -28,20 +29,19 @@ import net.svcret.admin.shared.model.AuthorizationHostTypeEnum;
 public abstract class BasePersAuthenticationHost extends BasePersKeepsRecentTransactions {
 
 	public static final String MODULE_DESC_ADMIN_AUTH = "Default authentication host";
-
 	public static final String MODULE_ID_ADMIN_AUTH = "DEFAULT";
 
 	private static final long serialVersionUID = 1L;
 
 	@Column(name = "AUTOCREATE_AUTHD_USERS", nullable = false)
 	private boolean myAutoCreateAuthorizedUsers;
-	
+
 	@Column(name = "CACHE_SUCCESS_MILLIS", nullable = true)
 	private Integer myCacheSuccessfulCredentialsForMillis;
 
 	@Column(name = "MODULE_ID", length = 100, nullable = false, unique = true)
 	private String myModuleId;
-
+	
 	@Column(name = "MODULE_NAME", length = 200, nullable = false)
 	private String myModuleName;
 
@@ -56,13 +56,23 @@ public abstract class BasePersAuthenticationHost extends BasePersKeepsRecentTran
 
 	@Column(name="SUPTS_PW_CHG", nullable=false)
 	private boolean mySupportsPasswordChange;
-	
+
 	public BasePersAuthenticationHost() {
 		super();
 	}
 
 	public BasePersAuthenticationHost(String theModuleId) {
 		myModuleId = theModuleId;
+	}
+	
+	@Override
+	public boolean canInheritKeepNumRecentTransactions() {
+		return false;
+	}
+
+	@Override
+	public Integer determineInheritedKeepNumRecentTransactions(ResponseTypeEnum theResultType) {
+		return null;
 	}
 
 	/**
@@ -114,6 +124,16 @@ public abstract class BasePersAuthenticationHost extends BasePersKeepsRecentTran
 	 */
 	public boolean isSupportsPasswordChange() {
 		return mySupportsPasswordChange;
+	}
+
+	public void merge(BasePersAuthenticationHost theHost) {
+		super.merge(theHost);
+		setAutoCreateAuthorizedUsers(theHost.isAutoCreateAuthorizedUsers());
+		setAutoCreateAuthorizedUsers(theHost.isAutoCreateAuthorizedUsers());
+		setCacheSuccessfulCredentialsForMillis(theHost.getCacheSuccessfulCredentialsForMillis());
+		setModuleId(theHost.getModuleId());
+		setModuleName(theHost.getModuleName());
+		setSupportsPasswordChange(theHost.isSupportsPasswordChange());
 	}
 
 	/**
@@ -169,16 +189,6 @@ public abstract class BasePersAuthenticationHost extends BasePersKeepsRecentTran
 	 */
 	public void setSupportsPasswordChange(boolean theSupportsPasswordChange) {
 		mySupportsPasswordChange = theSupportsPasswordChange;
-	}
-
-	public void merge(BasePersAuthenticationHost theHost) {
-		super.merge(theHost);
-		setAutoCreateAuthorizedUsers(theHost.isAutoCreateAuthorizedUsers());
-		setAutoCreateAuthorizedUsers(theHost.isAutoCreateAuthorizedUsers());
-		setCacheSuccessfulCredentialsForMillis(theHost.getCacheSuccessfulCredentialsForMillis());
-		setModuleId(theHost.getModuleId());
-		setModuleName(theHost.getModuleName());
-		setSupportsPasswordChange(theHost.isSupportsPasswordChange());
 	}
 
 }

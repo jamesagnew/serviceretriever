@@ -4,6 +4,8 @@ import java.lang.management.ManagementFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
@@ -14,6 +16,7 @@ import net.svcret.ejb.api.IRuntimeStatus;
 
 @Singleton
 @Startup
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class RuntimeStatusMonitor implements RuntimeStatusMonitorMBean {
 
 

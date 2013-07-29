@@ -1,14 +1,34 @@
 package net.svcret.admin.shared.model;
 
-
 public abstract class BaseGKeepsRecentMessages<T> extends BaseGObject<T> {
 
 	private static final long serialVersionUID = 1L;
 
+	private boolean myCanInheritKeepNumRecentTransactions;
+	private Integer myInheritedKeepNumRecentTransactionsFail;
+	private Integer myInheritedKeepNumRecentTransactionsFault;
+	private Integer myInheritedKeepNumRecentTransactionsSecurityFail;
+	private Integer myInheritedKeepNumRecentTransactionsSuccess;
 	private Integer myKeepNumRecentTransactionsFail;
 	private Integer myKeepNumRecentTransactionsFault;
 	private Integer myKeepNumRecentTransactionsSecurityFail;
 	private Integer myKeepNumRecentTransactionsSuccess;
+
+	public Integer getInheritedKeepNumRecentTransactionsFail() {
+		return myInheritedKeepNumRecentTransactionsFail;
+	}
+
+	public Integer getInheritedKeepNumRecentTransactionsFault() {
+		return myInheritedKeepNumRecentTransactionsFault;
+	}
+
+	public Integer getInheritedKeepNumRecentTransactionsSecurityFail() {
+		return myInheritedKeepNumRecentTransactionsSecurityFail;
+	}
+
+	public Integer getInheritedKeepNumRecentTransactionsSuccess() {
+		return myInheritedKeepNumRecentTransactionsSuccess;
+	}
 
 	/**
 	 * @return the keepNumRecentTransactionsFail
@@ -38,33 +58,8 @@ public abstract class BaseGKeepsRecentMessages<T> extends BaseGObject<T> {
 		return myKeepNumRecentTransactionsSuccess;
 	}
 
-	/**
-	 * @param theKeepNumRecentTransactionsFail
-	 *            the keepNumRecentTransactionsFail to set
-	 */
-	public void setKeepNumRecentTransactionsFail(Integer theKeepNumRecentTransactionsFail) {
-		myKeepNumRecentTransactionsFail = theKeepNumRecentTransactionsFail;
-	}
-	/**
-	 * @param theKeepNumRecentTransactionsFault
-	 *            the keepNumRecentTransactionsFault to set
-	 */
-	public void setKeepNumRecentTransactionsFault(Integer theKeepNumRecentTransactionsFault) {
-		myKeepNumRecentTransactionsFault = theKeepNumRecentTransactionsFault;
-	}
-	/**
-	 * @param theKeepNumRecentTransactionsSecurityFail
-	 *            the keepNumRecentTransactionsSecurityFail to set
-	 */
-	public void setKeepNumRecentTransactionsSecurityFail(Integer theKeepNumRecentTransactionsSecurityFail) {
-		myKeepNumRecentTransactionsSecurityFail = theKeepNumRecentTransactionsSecurityFail;
-	}
-	/**
-	 * @param theKeepNumRecentTransactionsSuccess
-	 *            the keepNumRecentTransactionsSuccess to set
-	 */
-	public void setKeepNumRecentTransactionsSuccess(Integer theKeepNumRecentTransactionsSuccess) {
-		myKeepNumRecentTransactionsSuccess = theKeepNumRecentTransactionsSuccess;
+	public boolean isCanInheritKeepNumRecentTransactions() {
+		return myCanInheritKeepNumRecentTransactions;
 	}
 
 	public void merge(BaseGKeepsRecentMessages<?> theObject) {
@@ -72,6 +67,58 @@ public abstract class BaseGKeepsRecentMessages<T> extends BaseGObject<T> {
 		setKeepNumRecentTransactionsFail(theObject.getKeepNumRecentTransactionsFail());
 		setKeepNumRecentTransactionsFault(theObject.getKeepNumRecentTransactionsFault());
 		setKeepNumRecentTransactionsSecurityFail(theObject.getKeepNumRecentTransactionsSecurityFail());
+	}
+
+	public void setCanInheritKeepNumRecentTransactions(boolean theCanInheritKeepNumRecentTransactions) {
+		myCanInheritKeepNumRecentTransactions = theCanInheritKeepNumRecentTransactions;
+	}
+
+	public void setInheritedKeepNumRecentTransactionsFail(Integer theInheritedKeepNumRecentTransactionsFail) {
+		myInheritedKeepNumRecentTransactionsFail = theInheritedKeepNumRecentTransactionsFail;
+	}
+
+	public void setInheritedKeepNumRecentTransactionsFault(Integer theInheritedKeepNumRecentTransactionsFault) {
+		myInheritedKeepNumRecentTransactionsFault = theInheritedKeepNumRecentTransactionsFault;
+	}
+
+	public void setInheritedKeepNumRecentTransactionsSecurityFail(Integer theInheritedKeepNumRecentTransactionsSecurityFail) {
+		myInheritedKeepNumRecentTransactionsSecurityFail = theInheritedKeepNumRecentTransactionsSecurityFail;
+	}
+
+	public void setInheritedKeepNumRecentTransactionsSuccess(Integer theInheritedKeepNumRecentTransactionsSuccess) {
+		myInheritedKeepNumRecentTransactionsSuccess = theInheritedKeepNumRecentTransactionsSuccess;
+	}
+
+	/**
+	 * @param theKeepNumRecentTransactionsFail
+	 *            the keepNumRecentTransactionsFail to set
+	 */
+	public void setKeepNumRecentTransactionsFail(Integer theKeepNumRecentTransactionsFail) {
+		myKeepNumRecentTransactionsFail = theKeepNumRecentTransactionsFail;
+	}
+
+	/**
+	 * @param theKeepNumRecentTransactionsFault
+	 *            the keepNumRecentTransactionsFault to set
+	 */
+	public void setKeepNumRecentTransactionsFault(Integer theKeepNumRecentTransactionsFault) {
+		myKeepNumRecentTransactionsFault = theKeepNumRecentTransactionsFault;
+	}
+
+	/**
+	 * @param theKeepNumRecentTransactionsSecurityFail
+	 *            the keepNumRecentTransactionsSecurityFail to set
+	 */
+	public void setKeepNumRecentTransactionsSecurityFail(Integer theKeepNumRecentTransactionsSecurityFail) {
+		myKeepNumRecentTransactionsSecurityFail = theKeepNumRecentTransactionsSecurityFail;
+	}
+
+	/**
+	 * @param theKeepNumRecentTransactionsSuccess
+	 *            the keepNumRecentTransactionsSuccess to set
+	 */
+	public void setKeepNumRecentTransactionsSuccess(Integer theKeepNumRecentTransactionsSuccess) {
+		myKeepNumRecentTransactionsSuccess = theKeepNumRecentTransactionsSuccess;
 	}
 
 }

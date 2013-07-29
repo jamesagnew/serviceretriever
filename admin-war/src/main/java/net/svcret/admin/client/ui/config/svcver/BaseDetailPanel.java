@@ -1,10 +1,13 @@
 package net.svcret.admin.client.ui.config.svcver;
 
+import static net.svcret.admin.client.AdminPortal.*;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.HtmlBr;
+import net.svcret.admin.client.ui.components.HtmlH1;
 import net.svcret.admin.client.ui.components.HtmlLabel;
 import net.svcret.admin.client.ui.components.PButton;
+import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.client.ui.config.KeepRecentTransactionsPanel;
 import net.svcret.admin.client.ui.config.sec.IProvidesViewAndEdit;
 import net.svcret.admin.client.ui.config.sec.IProvidesViewAndEdit.IValueChangeHandler;
@@ -19,7 +22,6 @@ import net.svcret.admin.shared.model.ClientSecurityEnum;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GServiceMethod;
-import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.ServerSecurityEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.util.StringUtil;
@@ -34,23 +36,20 @@ import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.TabPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
-import static net.svcret.admin.client.AdminPortal.*;
-
-
-public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends FlowPanel {
+public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends TabPanel {
 
 	private static final int COL_CLI_SECURITY_MODULE = 1;
 	private static final int COL_METHOD_NAME = 1;
 	private static final int COL_SVR_SECURITY_MODULE = 1;
-	private static final int COL_URL_ID = 1;
-	private static final int COL_URL_URL = 2;
 
 	private AbstractServiceVersionPanel myParent;
 	private T myServiceVersion;
@@ -61,41 +60,64 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Flo
 	private Label myNoClientSercuritysLabel;
 	private Label myNoMethodsLabel;
 	private Label myNoServerSercuritysLabel;
-	private Label myNoUrlsLabel;
 	private Grid myServerSecurityGrid;
-	private Grid myUrlGrid;
 	private KeepRecentTransactionsPanel myKeepRecentTransactionsPanel;
+	private CheckBox myExplicitProxyPathEnabledCheckbox;
+	private TextBox myExplicitProxyPathTextbox;
+	private UrlGrid myUrlGrid;
 
 	public BaseDetailPanel(AbstractServiceVersionPanel theParent, T theServiceVersion) {
 		myServiceVersion = theServiceVersion;
 		myParent = theParent;
 
-		addProtocolSpecificPanelsToTop();
+		addStyleName(CssConstants.CONTENT_OUTER_TAB_PANEL);
 
-		FlowPanel urlPanel = new FlowPanel();
-		add(urlPanel);
-		initUrlPanel(urlPanel);
+		addProtocolSpecificPanelsToTop(theParent.isAddPanel());
 
 		FlowPanel methodPanel = new FlowPanel();
-		add(methodPanel);
+		add(methodPanel, "Methods");
 		initMethodPanel(methodPanel);
 
-		FlowPanel clientSecurityPanel = new FlowPanel();
-		add(clientSecurityPanel);
-		initClientSecurityPanel(clientSecurityPanel);
+		FlowPanel urlsPanel = new FlowPanel();
+		add(urlsPanel, "Proxy");
+		initUrlPanel(urlsPanel);
 
-		FlowPanel serverSecurityPanel = new FlowPanel();
-		add(serverSecurityPanel);
-		initServerSecurityPanel(serverSecurityPanel);
+		FlowPanel accessPanel = new FlowPanel();
+		add(accessPanel, "Access");
+		initAccessPanel(accessPanel);
+
+		FlowPanel securityPanel = new FlowPanel();
+		add(securityPanel, "Security");
+		initServerSecurityPanel(securityPanel);
+		initClientSecurityPanel(securityPanel);
 
 		FlowPanel transactionFlowPanel = new FlowPanel();
-		add(transactionFlowPanel);
+		add(transactionFlowPanel, "Config");
 		initJournalPanel(transactionFlowPanel);
+
+		selectTab(0);
+
+	}
+
+	private void initAccessPanel(FlowPanel thePanel) {
+		Label intro = new Label("If specified, the options below define the path at which " + "the service will be deployed. If not specified, a default will be used.");
+		thePanel.add(intro);
+
+		TwoColumnGrid grid = new TwoColumnGrid();
+		thePanel.add(grid);
+
+		myExplicitProxyPathEnabledCheckbox = new CheckBox("Use Explicit Proxy Path:");
+		myExplicitProxyPathTextbox = new TextBox();
+		grid.addRow(myExplicitProxyPathEnabledCheckbox, myExplicitProxyPathTextbox);
+		
+		myExplicitProxyPathEnabledCheckbox.setValue(myServiceVersion.getExplicitProxyPath() != null);
+		myExplicitProxyPathTextbox.setValue(myServiceVersion.getExplicitProxyPath());
+
 	}
 
 	public abstract ServiceProtocolEnum getProtocol();
-	
-	protected abstract void addProtocolSpecificPanelsToTop();
+
+	protected abstract void addProtocolSpecificPanelsToTop(boolean theIsAddPanel);
 
 	/**
 	 * @return the parent
@@ -138,39 +160,41 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Flo
 	}
 
 	private void initClientSecurityPanel(FlowPanel thePanel) {
-		thePanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
+		// thePanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
+		//
+		// Label titleLabel = new Label("Client Security");
+		// titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
+		// thePanel.add(titleLabel);
+		//
+		// FlowPanel contentPanel = new FlowPanel();
+		// contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
+		// thePanel.add(contentPanel);
 
-		Label titleLabel = new Label("Client Security");
-		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
-		thePanel.add(titleLabel);
-
-		FlowPanel contentPanel = new FlowPanel();
-		contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
-		thePanel.add(contentPanel);
+		thePanel.add(new HtmlH1("Client Security"));
 
 		Label urlLabel = new Label("Client Security modules provide credentials to proxied service implementations. In other words, " + "if the service which is being proxied requires credentials in order to be invoked, a client "
 				+ "security module can be used to provide those credentials.");
-		contentPanel.add(urlLabel);
+		thePanel.add(urlLabel);
 
 		myClientSecurityGrid = new Grid(1, 2);
 		myClientSecurityGrid.addStyleName(CssConstants.PROPERTY_TABLE);
-		contentPanel.add(myClientSecurityGrid);
+		thePanel.add(myClientSecurityGrid);
 
 		myClientSecurityGrid.setWidget(0, 0, new Label("Action"));
 		myClientSecurityGrid.setWidget(0, COL_METHOD_NAME, new Label("Module"));
 
 		myNoClientSercuritysLabel = new Label("No Client Sercurity Modules Configured");
-		contentPanel.add(myNoClientSercuritysLabel);
+		thePanel.add(myNoClientSercuritysLabel);
 
-		contentPanel.add(new HtmlBr());
+		thePanel.add(new HtmlBr());
 
 		PButton addClientButton = new PButton(IMAGES.iconAdd(), MSGS.actions_Add());
-		contentPanel.add(addClientButton);
+		thePanel.add(addClientButton);
 		final ListBox addClientList = new ListBox(false);
 		for (ClientSecurityEnum next : ClientSecurityEnum.values()) {
 			addClientList.addItem(next.getName(), next.name());
 		}
-		contentPanel.add(addClientList);
+		thePanel.add(addClientList);
 		addClientButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
@@ -188,50 +212,50 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Flo
 	}
 
 	private void initJournalPanel(FlowPanel thePanel) {
-		thePanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
-
-		Label titleLabel = new Label("Transaction Flow");
-		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
-		thePanel.add(titleLabel);
-
-		FlowPanel contentPanel = new FlowPanel();
-		contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
-		thePanel.add(contentPanel);
+		// thePanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
+		//
+		// Label titleLabel = new Label("Transaction Flow");
+		// titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
+		// thePanel.add(titleLabel);
+		//
+		// FlowPanel contentPanel = new FlowPanel();
+		// contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
+		// thePanel.add(contentPanel);
 
 		myKeepRecentTransactionsPanel = new KeepRecentTransactionsPanel(getServiceVersion());
-		contentPanel.add(myKeepRecentTransactionsPanel);
+		thePanel.add(myKeepRecentTransactionsPanel);
 	}
 
 	private void initMethodPanel(FlowPanel theMethodPanel) {
-		theMethodPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
-
-		Label titleLabel = new Label("Methods");
-		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
-		theMethodPanel.add(titleLabel);
-
-		FlowPanel contentPanel = new FlowPanel();
-		contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
-		theMethodPanel.add(contentPanel);
+		// theMethodPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
+		//
+		// Label titleLabel = new Label("Methods");
+		// titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
+		// theMethodPanel.add(titleLabel);
+		//
+		// FlowPanel contentPanel = new FlowPanel();
+		// contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
+		// theMethodPanel.add(contentPanel);
 
 		myMethodGrid = new Grid(1, 2);
 		myMethodGrid.addStyleName(CssConstants.PROPERTY_TABLE);
-		contentPanel.add(myMethodGrid);
+		theMethodPanel.add(myMethodGrid);
 
 		myMethodGrid.setWidget(0, 0, new Label("Action"));
 		myMethodGrid.setWidget(0, COL_METHOD_NAME, new Label("Name"));
 
 		myNoMethodsLabel = new Label("No Methods Defined");
-		contentPanel.add(myNoMethodsLabel);
+		theMethodPanel.add(myNoMethodsLabel);
 
-		contentPanel.add(new HtmlBr());
+		theMethodPanel.add(new HtmlBr());
 
 		PButton addButton = new PButton(IMAGES.iconAdd(), MSGS.actions_Add());
-		contentPanel.add(addButton);
+		theMethodPanel.add(addButton);
 		HtmlLabel addNameLabel = new HtmlLabel("Method Name:", "addMethodTb");
-		contentPanel.add(addNameLabel);
+		theMethodPanel.add(addNameLabel);
 		final TextBox addText = new TextBox();
 		addText.getElement().setId("addMethodTb");
-		contentPanel.add(addText);
+		theMethodPanel.add(addText);
 		addButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
@@ -261,41 +285,43 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Flo
 	}
 
 	private void initServerSecurityPanel(FlowPanel thePanel) {
-		thePanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
+		// thePanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
+		//
+		// Label titleLabel = new Label("Server Security");
+		// titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
+		// thePanel.add(titleLabel);
+		//
+		// FlowPanel contentPanel = new FlowPanel();
+		// contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
+		// thePanel.add(contentPanel);
 
-		Label titleLabel = new Label("Server Security");
-		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
-		thePanel.add(titleLabel);
-
-		FlowPanel contentPanel = new FlowPanel();
-		contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
-		thePanel.add(contentPanel);
+		thePanel.add(new HtmlH1("Server Security"));
 
 		Label urlLabel = new Label("Server Security modules verify that the client which is making requests coming " + "in to the proxy are authorized to invoke the particular service they are attempting to "
 				+ "invoke. If no server security modules are defined for this service version, all requests will be " + "allowed to proceed.");
-		contentPanel.add(urlLabel);
+		thePanel.add(urlLabel);
 
 		myServerSecurityGrid = new Grid(1, 2);
 		myServerSecurityGrid.addStyleName(CssConstants.PROPERTY_TABLE);
-		contentPanel.add(myServerSecurityGrid);
+		thePanel.add(myServerSecurityGrid);
 
 		myServerSecurityGrid.setWidget(0, 0, new Label("Action"));
 		myServerSecurityGrid.setWidget(0, COL_METHOD_NAME, new Label("Module"));
 
 		myNoServerSercuritysLabel = new Label("No Server Sercurity Modules Configured");
-		contentPanel.add(myNoServerSercuritysLabel);
+		thePanel.add(myNoServerSercuritysLabel);
 
-		contentPanel.add(new HtmlBr());
+		thePanel.add(new HtmlBr());
 
 		PButton addServerButton = new PButton(IMAGES.iconAdd(), MSGS.actions_Add());
-		contentPanel.add(addServerButton);
+		thePanel.add(addServerButton);
 		final ListBox addServerList = new ListBox(false);
 		for (ServerSecurityEnum next : ServerSecurityEnum.values()) {
 			if (next.appliesTo(myServiceVersion.getClass())) {
 				addServerList.addItem(next.getName(), next.name());
 			}
 		}
-		contentPanel.add(addServerList);
+		thePanel.add(addServerList);
 		addServerButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
@@ -313,7 +339,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Flo
 
 	}
 
-	private long newUncommittedSessionId() {
+	static long newUncommittedSessionId() {
 		return (long) (Math.random() * Long.MAX_VALUE);
 	}
 
@@ -519,162 +545,45 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Flo
 		}
 	}
 
-	private final class UrlEditButtonPanel extends FlowPanel implements ClickHandler {
-		private PButton myDeleteButton;
-		private PButton myEditButton;
-		private GServiceVersionUrl myUrl;
-
-		private UrlEditButtonPanel(GServiceVersionUrl theUrl) {
-			myUrl = theUrl;
-
-			myEditButton = new PButton(IMAGES.iconEdit(), MSGS.actions_Edit());
-			myEditButton.addClickHandler(this);
-			add(myEditButton);
-
-			myDeleteButton = new PButton(IMAGES.iconRemove(), MSGS.actions_Remove());
-			myDeleteButton.addClickHandler(this);
-			add(myDeleteButton);
-		}
-
-		@Override
-		public void onClick(ClickEvent theEvent) {
-			PButton source = (PButton) theEvent.getSource();
-			if (source == myDeleteButton) {
-				if (Window.confirm("Delete - Are you sure?")) {
-					getServiceVersion().getUrlList().remove(myUrl);
-					updateMethodPanel();
-					doBackgroundSave();
-				}
-			} else if (source == myEditButton) {
-				myUrl.setEditMode(true);
-				updateUrlPanel();
-			}
-
-			source.setEnabled(false);
-		}
-	}
 
 	public boolean validateValuesAndApplyIfGood() {
 		boolean retVal = myKeepRecentTransactionsPanel.validateAndShowErrorIfNotValid();
-		if (retVal) {
-			myKeepRecentTransactionsPanel.populateDto(getServiceVersion());
+		if (!retVal) {
+			return false;
 		}
+
+		myKeepRecentTransactionsPanel.populateDto(getServiceVersion());
+
+		if (myExplicitProxyPathEnabledCheckbox.getValue()) {
+			String newPath = myExplicitProxyPathTextbox.getValue();
+			if (StringUtil.isBlank(newPath)) {
+				Window.alert("Explicit proxy path is enabled, but no path is specified.");
+				myExplicitProxyPathTextbox.setFocus(true);
+				return false;
+			}
+			if (!newPath.startsWith("/") || newPath.length() < 2) {
+				Window.alert("Explicit proxy path must be of the form /[path[/more path]]");
+				myExplicitProxyPathTextbox.setFocus(true);
+				return false;
+			}
+			myServiceVersion.setExplicitProxyPath(newPath);
+		} else {
+			myServiceVersion.setExplicitProxyPath(null);
+		}
+
 		return retVal;
 	}
 
-	protected void updateUrlPanel() {
-		myUrlGrid.resize(getServiceVersion().getUrlList().size() + 1, 3);
 
-		int row = 0;
-		for (final GServiceVersionUrl next : getServiceVersion().getUrlList()) {
-			row++;
+	private void initUrlPanel(FlowPanel thePanel) {
 
-			myUrlGrid.setWidget(row, 0, new UrlEditButtonPanel(next));
+		myUrlGrid = new UrlGrid(myServiceVersion);
+		thePanel.add(myUrlGrid);
 
-			if (next.isEditMode()) {
-				final TextBox idTextBox = new TextBox();
-				idTextBox.setValue(next.getId());
-				idTextBox.addValueChangeHandler(new ValueChangeHandler<String>() {
-					@Override
-					public void onValueChange(ValueChangeEvent<String> theEvent) {
-						next.setId(idTextBox.getValue());
-						doBackgroundSave();
-					}
-				});
-				myUrlGrid.setWidget(row, COL_URL_ID, idTextBox);
-
-				final TextBox urlTextBox = new TextBox();
-				urlTextBox.setValue(next.getUrl());
-				urlTextBox.addValueChangeHandler(new ValueChangeHandler<String>() {
-					@Override
-					public void onValueChange(ValueChangeEvent<String> theEvent) {
-						next.setUrl(urlTextBox.getValue());
-						doBackgroundSave();
-					}
-				});
-				myUrlGrid.setWidget(row, COL_URL_URL, urlTextBox);
-			} else {
-				myUrlGrid.setWidget(row, COL_URL_ID, new Label(next.getId()));
-				myUrlGrid.setWidget(row, COL_URL_URL, new Label(next.getUrl()));
-			}
-		}
-
-		myNoUrlsLabel.setVisible(getServiceVersion().getUrlList().size() == 0);
-	}
-
-	private void initUrlPanel(FlowPanel theProxyPanel) {
-		theProxyPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
-
-		Label titleLabel = new Label("Implementation URLs");
-		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
-		theProxyPanel.add(titleLabel);
-
-		FlowPanel contentPanel = new FlowPanel();
-		contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
-		theProxyPanel.add(contentPanel);
-
-		contentPanel.add(new Label("Each proxied service will have one or more implementation URLs. " + "When a client attempts to invoke a service that has been proxied, the ServiceProxy will " + "forward this request to one of these implementations. Specifying more than one "
-				+ "implementation URL means that if one is unavailable, another can be tried (i.e. redundancy)."));
-
-		myUrlGrid = new Grid(1, 3);
-		myUrlGrid.addStyleName(CssConstants.PROPERTY_TABLE);
-		contentPanel.add(myUrlGrid);
-
-		myUrlGrid.setWidget(0, 0, new Label("Action"));
-		myUrlGrid.setWidget(0, COL_URL_ID, new Label("ID"));
-		myUrlGrid.setWidget(0, COL_URL_URL, new Label("URL"));
-
-		myNoUrlsLabel = new Label("No URLs Defined");
-		contentPanel.add(myNoUrlsLabel);
-
-		contentPanel.add(new HtmlBr());
-
-		PButton addButton = new PButton(IMAGES.iconAdd(), MSGS.actions_Add());
-		contentPanel.add(addButton);
-		HtmlLabel addNameLabel = new HtmlLabel("URL:", "addUrlTb");
-		contentPanel.add(addNameLabel);
-		final TextBox addText = new TextBox();
-		addText.getElement().setId("addUrlTb");
-		contentPanel.add(addText);
-		addButton.addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent theEvent) {
-				String urlText = addText.getValue();
-				if (StringUtil.isBlank(urlText)) {
-					Window.alert("Please enter a URL");
-					addText.setFocus(true);
-					return;
-				}
-				if (getServiceVersion().hasUrlWithName(urlText)) {
-					Window.alert("Duplicate URL: " + urlText);
-					return;
-				}
-
-				GServiceVersionUrl url = new GServiceVersionUrl();
-				url.setUncommittedSessionId(newUncommittedSessionId());
-				url.setEditMode(true);
-				url.setUrl(urlText);
-
-				getServiceVersion().getUrlList().add(url);
-
-				for (int urlNum = getServiceVersion().getUrlList().size();; urlNum++) {
-					String name = "url" + urlNum;
-					if (getServiceVersion().getUrlList().getUrlWithId(name) == null) {
-						url.setId(name);
-						break;
-					}
-				}
-
-				updateUrlPanel();
-
-				addText.setValue("");
-			}
-		});
-
-		contentPanel.add(new HtmlBr());
+		thePanel.add(new HtmlBr());
 
 		FlowPanel clientConfigPanel = new FlowPanel();
-		contentPanel.add(clientConfigPanel);
+		thePanel.add(clientConfigPanel);
 
 		clientConfigPanel.addStyleName(CssConstants.CONTENT_INNER_SUBPANEL);
 		clientConfigPanel.add(new Label("The HTTP client configuration provides the connection details for " + "how the proxy will attempt to invoke proxied service implementations. This includes " + "settings for timeouts, round-robin policies, etc."));
@@ -705,7 +614,10 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Flo
 			}
 		});
 
-		updateUrlPanel();
+	}
+
+	public UrlGrid getUrlGrid() {
+		return myUrlGrid;
 	}
 
 }

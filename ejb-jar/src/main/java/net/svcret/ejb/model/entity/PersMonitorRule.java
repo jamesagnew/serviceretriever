@@ -104,10 +104,50 @@ public class PersMonitorRule extends BasePersObject {
 		return myRuleActive;
 	}
 
+	public void merge(PersMonitorRule theRule) {
+		setRuleName(theRule.getRuleName());
+		setRuleActive(theRule.isRuleActive());
+		
+		setFireForBackingServiceLatencyIsAboveMillis(theRule.getFireForBackingServiceLatencyIsAboveMillis());
+		setFireForBackingServiceLatencySustainTimeMins(theRule.getFireForBackingServiceLatencySustainTimeMins());
+		
+		setFireIfAllBackingUrlsAreUnavailable(theRule.isFireIfAllBackingUrlsAreUnavailable());
+		setFireIfSingleBackingUrlIsUnavailable(theRule.isFireIfSingleBackingUrlIsUnavailable());
+		
+		for (PersMonitorAppliesTo nextApplies : new ArrayList<PersMonitorAppliesTo>(theRule.getAppliesTo())) {
+			PersMonitorAppliesTo existing = getAppliesTo(nextApplies.getItem());
+			if (existing == null) {
+				getAppliesTo().add(new PersMonitorAppliesTo(this, nextApplies.getItem()));
+			}
+		}
+		for (Iterator<PersMonitorAppliesTo> iter = getAppliesTo().iterator();iter.hasNext();) {
+			PersMonitorAppliesTo nextApplies = iter.next();
+			PersMonitorAppliesTo wanted = theRule.getAppliesTo(nextApplies.getItem());
+			if (wanted == null) {
+				iter.remove();
+			}
+		}
+
+		for (PersMonitorRuleNotifyContact nextContact : new ArrayList<PersMonitorRuleNotifyContact>(theRule.getNotifyContact())) {
+			PersMonitorRuleNotifyContact existing = getContact(nextContact.getEmail());
+			if (existing == null) {
+				getNotifyContact().add(new PersMonitorRuleNotifyContact(nextContact.getEmail()));
+			}
+		}
+		for (Iterator<PersMonitorRuleNotifyContact> iter = getNotifyContact().iterator();iter.hasNext();) {
+			PersMonitorRuleNotifyContact nextApplies = iter.next();
+			PersMonitorRuleNotifyContact wanted = theRule.getContact(nextApplies.getEmail());
+			if (wanted == null) {
+				iter.remove();
+			}
+		}
+		
+	}
+	
 	public void setAppliesToItems(BasePersServiceCatalogItem... theItems) {
 		setAppliesToItems(Arrays.asList(theItems));
 	}
-	
+
 	public void setAppliesToItems(Collection<BasePersServiceCatalogItem> theItems) {
 		getAppliesTo();
 
@@ -162,6 +202,10 @@ public class PersMonitorRule extends BasePersObject {
 		myFireIfSingleBackingUrlIsUnavailable = theFireIfSingleBackingUrlIsUnavailable;
 	}
 
+	public void setPid(Long thePid) {
+		myPid=thePid;
+	}
+
 	public void setRuleActive(boolean theRuleActive) {
 		myRuleActive = theRuleActive;
 	}
@@ -180,58 +224,18 @@ public class PersMonitorRule extends BasePersObject {
 		return retVal;
 	}
 
-	public void merge(PersMonitorRule theRule) {
-		setRuleName(theRule.getRuleName());
-		setRuleActive(theRule.isRuleActive());
-		
-		setFireForBackingServiceLatencyIsAboveMillis(theRule.getFireForBackingServiceLatencyIsAboveMillis());
-		setFireForBackingServiceLatencySustainTimeMins(theRule.getFireForBackingServiceLatencySustainTimeMins());
-		
-		setFireIfAllBackingUrlsAreUnavailable(theRule.isFireIfAllBackingUrlsAreUnavailable());
-		setFireIfSingleBackingUrlIsUnavailable(theRule.isFireIfSingleBackingUrlIsUnavailable());
-		
-		for (PersMonitorAppliesTo nextApplies : new ArrayList<PersMonitorAppliesTo>(theRule.getAppliesTo())) {
-			PersMonitorAppliesTo existing = getAppliesTo(nextApplies.getItem());
-			if (existing == null) {
-				getAppliesTo().add(new PersMonitorAppliesTo(this, nextApplies.getItem()));
-			}
-		}
-		for (Iterator<PersMonitorAppliesTo> iter = getAppliesTo().iterator();iter.hasNext();) {
-			PersMonitorAppliesTo nextApplies = iter.next();
-			PersMonitorAppliesTo wanted = theRule.getAppliesTo(nextApplies.getItem());
-			if (wanted == null) {
-				iter.remove();
-			}
-		}
-
-		for (PersMonitorRuleNotifyContact nextContact : new ArrayList<PersMonitorRuleNotifyContact>(theRule.getNotifyContact())) {
-			PersMonitorRuleNotifyContact existing = getContact(nextContact.getEmail());
-			if (existing == null) {
-				getNotifyContact().add(new PersMonitorRuleNotifyContact(nextContact.getEmail()));
-			}
-		}
-		for (Iterator<PersMonitorRuleNotifyContact> iter = getNotifyContact().iterator();iter.hasNext();) {
-			PersMonitorRuleNotifyContact nextApplies = iter.next();
-			PersMonitorRuleNotifyContact wanted = theRule.getContact(nextApplies.getEmail());
-			if (wanted == null) {
-				iter.remove();
-			}
-		}
-		
-	}
-
-	private PersMonitorRuleNotifyContact getContact(String theEmail) {
-		for (PersMonitorRuleNotifyContact next : getNotifyContact()) {
-			if (next.getEmail().equals(theEmail)) {
+	private PersMonitorAppliesTo getAppliesTo(BasePersServiceCatalogItem theItem) {
+		for (PersMonitorAppliesTo next : getAppliesTo()) {
+			if (next.getItem().equals(theItem)) {
 				return next;
 			}
 		}
 		return null;
 	}
 
-	private PersMonitorAppliesTo getAppliesTo(BasePersServiceCatalogItem theItem) {
-		for (PersMonitorAppliesTo next : getAppliesTo()) {
-			if (next.getItem().equals(theItem)) {
+	private PersMonitorRuleNotifyContact getContact(String theEmail) {
+		for (PersMonitorRuleNotifyContact next : getNotifyContact()) {
+			if (next.getEmail().equals(theEmail)) {
 				return next;
 			}
 		}

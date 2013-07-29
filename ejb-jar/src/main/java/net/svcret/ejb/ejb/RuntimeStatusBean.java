@@ -23,6 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
@@ -68,6 +70,7 @@ import org.apache.commons.lang3.time.DateUtils;
 
 @Singleton
 @Startup
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class RuntimeStatusBean implements IRuntimeStatus {
 
 	private static final int INITIAL_CACHED_ENTRIES = 20000;
@@ -768,7 +771,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 	}
 
-	@TransactionAttribute(TransactionAttributeType.NEVER)
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override
 	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, PersServiceVersionMethod theMethod, PersUser theUser, HttpResponseBean theHttpResponse,
 			InvocationResponseResultsBean theInvocationResponseResultsBean, Long theThrottleFullIfAny) {

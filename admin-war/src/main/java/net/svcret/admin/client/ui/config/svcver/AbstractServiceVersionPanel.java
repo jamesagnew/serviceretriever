@@ -2,7 +2,7 @@ package net.svcret.admin.client.ui.config.svcver;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.CssConstants;
-import net.svcret.admin.client.ui.components.HtmlBr;
+import net.svcret.admin.client.ui.components.EditableField;
 import net.svcret.admin.client.ui.components.HtmlLabel;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
@@ -27,44 +27,36 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.Grid;
-import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HasValue;
+import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.Widget;
 
 public abstract class AbstractServiceVersionPanel extends FlowPanel {
 
 	private BaseDetailPanel<?> myBottomContents;
 	private FlowPanel myContentPanel;
+	private EditableField myDescriptionEditor;
 	private ListBox myDomainListBox;
 	private HtmlLabel myNewDomainLabel;
 	private TextBox myNewDomainNameTextBox;
 	private HtmlLabel myNewServiceLabel;
 	private TextBox myNewServiceNameTextBox;
+	private TwoColumnGrid myParentsGrid2;
 	private ListBox myServiceListBox;
 	private FlowPanel myTopPanel;
 	private boolean myUpdating;
 	protected FlowPanel myBottomPanel;
 	protected LoadingSpinner myLoadingSpinner;
-	protected Grid myParentsGrid;
 	protected ListBox myTypeComboBox;
 	Long myDomainPid;
 	Long myServicePid;
 	Long myUncommittedSessionId;
 	BaseGServiceVersion myVersion;
-	TextBox myVersionTextBox;
-	private FlowPanel myProxyPathPanel;
-	private FlowPanel myProxyPathContentPanel;
-	private CheckBox myExplicitProxyPathEnabledCheckbox;
-	private TextBox myExplicitProxyPathTextbox;
-	private FlowPanel myDescriptionPanel;
-	private FlowPanel myDescriptionContentPanel;
-	private HTML myDescriptionLabel;
-	private TextArea myDescriptionEditor;
+	HasValue<String> myVersionTextBox;
 
 	public AbstractServiceVersionPanel() {
 		this(null, null, null);
@@ -91,14 +83,14 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 		Label intro = new Label(getDialogDescription());
 		myContentPanel.add(intro);
 
-		myParentsGrid = new Grid(4, 4);
-		myContentPanel.add(myParentsGrid);
+		myParentsGrid2 = new TwoColumnGrid();
+		myContentPanel.add(myParentsGrid2);
 
 		/*
 		 * Parents
 		 */
-		HtmlLabel domainLbl = new HtmlLabel("Domain", "cbDomain");
-		myParentsGrid.setWidget(0, 0, domainLbl);
+
+		// Choose from existing domain
 		myDomainListBox = new ListBox(false);
 		myDomainListBox.getElement().setId("cbDomain");
 		myDomainListBox.addChangeHandler(new ChangeHandler() {
@@ -107,17 +99,19 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 				handleDomainListChange();
 			}
 		});
-		myParentsGrid.setWidget(0, 1, myDomainListBox);
+		myParentsGrid2.addRow("Domain", myDomainListBox);
 
+		// New domain (textbox for name)
+		HorizontalPanel newDomainPanel = new HorizontalPanel();
 		myNewDomainLabel = new HtmlLabel(" Name:", "cbNewDomainName");
-		myParentsGrid.setWidget(0, 2, myNewDomainLabel);
+		newDomainPanel.add(myNewDomainLabel);
 		myNewDomainNameTextBox = new TextBox();
 		myNewDomainNameTextBox.getElement().setId("cbNewDomainName");
 		myNewDomainNameTextBox.setValue("Untitled Domain");
-		myParentsGrid.setWidget(0, 3, myNewDomainNameTextBox);
+		newDomainPanel.add(myNewDomainNameTextBox);
+		myParentsGrid2.addWidgetToRight(newDomainPanel);
 
-		HtmlLabel svcLbl = new HtmlLabel("Service", "cbSvc");
-		myParentsGrid.setWidget(1, 0, svcLbl);
+		// Existing Service
 		myServiceListBox = new ListBox(false);
 		myServiceListBox.getElement().setId("cbSvc");
 		myServiceListBox.addChangeHandler(new ChangeHandler() {
@@ -126,24 +120,28 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 				handleServiceListChange();
 			}
 		});
-		myParentsGrid.setWidget(1, 1, myServiceListBox);
+		myParentsGrid2.addRow("Service", myServiceListBox);
 
+		// New Service
+		HorizontalPanel newSvcPanel = new HorizontalPanel();
 		myNewServiceLabel = new HtmlLabel(" Name:", "cbNewServiceName");
-		myParentsGrid.setWidget(1, 2, myNewServiceLabel);
+		newSvcPanel.add(myNewServiceLabel);
 		myNewServiceNameTextBox = new TextBox();
 		myNewServiceNameTextBox.getElement().setId("cbNewServiceName");
 		myNewServiceNameTextBox.setValue("Untitled Service");
-		myParentsGrid.setWidget(1, 3, myNewServiceNameTextBox);
+		newSvcPanel.add(myNewServiceNameTextBox);
+		myParentsGrid2.addWidgetToRight(newSvcPanel);
 
 		/*
 		 * Version
 		 */
 
-		HtmlLabel versionLabel = new HtmlLabel("Version", "tbVer");
-		myParentsGrid.setWidget(2, 0, versionLabel);
-		myVersionTextBox = new TextBox();
+		if (isAddPanel()) {
+			myVersionTextBox = new TextBox();
+		} else {
+			myVersionTextBox = new EditableField();
+		}
 		myVersionTextBox.setValue("1.0");
-		myVersionTextBox.getElement().setId("tbVer");
 		myVersionTextBox.addValueChangeHandler(new ValueChangeHandler<String>() {
 			@Override
 			public void onValueChange(ValueChangeEvent<String> theEvent) {
@@ -152,89 +150,34 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 				}
 			}
 		});
-		myParentsGrid.setWidget(2, 1, myVersionTextBox);
+		myParentsGrid2.addRow("Version", (Widget) myVersionTextBox);
 
-		addTypeSelector();
+		myDescriptionEditor = new EditableField();
+		myDescriptionEditor.setMultiline(true);
+		myParentsGrid2.addRowDoubleWidth("Description", myDescriptionEditor);
+
+		addProtocolSelectionUi(myParentsGrid2);
 
 		PButton saveButton = new PButton(AdminPortal.IMAGES.iconSave(), AdminPortal.MSGS.actions_Save());
 		saveButton.getElement().getStyle().setFloat(Float.LEFT);
-		myContentPanel.add(saveButton);
 		saveButton.addClickHandler(new SaveClickHandler());
 
 		myLoadingSpinner = new LoadingSpinner();
-		myContentPanel.add(myLoadingSpinner);
 
-		myContentPanel.add(new HtmlBr());
+		HorizontalPanel savePanel = new HorizontalPanel();
+		myContentPanel.add(savePanel);
+		savePanel.add(saveButton);
+		savePanel.add(myLoadingSpinner);
 
-		addDescriptionPanel();
-
-		addExplicitProxyPathPanel();
+		// addDescriptionPanel();
 
 		/*
-		 * The following panel contains the rest of the screen (i.e. no background, so that it can have lots of contents
+		 * The following panel contains the rest of the screen (i.e. no
+		 * background, so that it can have lots of contents
 		 */
 
 		myBottomPanel = new FlowPanel();
 		add(myBottomPanel);
-
-	}
-
-	private void addDescriptionPanel() {
-		myDescriptionPanel = new FlowPanel();
-		add(myDescriptionPanel);
-
-		myDescriptionPanel.setStylePrimaryName("mainPanel");
-
-		Label titleLabel = new Label("Description");
-		titleLabel.setStyleName("mainPanelTitle");
-		myDescriptionPanel.add(titleLabel);
-
-		myDescriptionContentPanel = new FlowPanel();
-		myDescriptionContentPanel.addStyleName("contentInnerPanel");
-		myDescriptionPanel.add(myDescriptionContentPanel);
-
-		myDescriptionLabel = new HTML();
-		myDescriptionContentPanel.add(myDescriptionLabel);
-
-		myDescriptionEditor = new TextArea();
-		myDescriptionEditor.setVisible(false);
-		myDescriptionEditor.setWidth("90%");
-		myDescriptionContentPanel.add(myDescriptionEditor);
-
-		myDescriptionLabel.addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent theEvent) {
-				myDescriptionEditor.setText(myVersion.getDescription());
-				myDescriptionLabel.setVisible(false);
-				myDescriptionEditor.setVisible(true);
-			}
-		});
-	}
-
-	private void addExplicitProxyPathPanel() {
-		myProxyPathPanel = new FlowPanel();
-		add(myProxyPathPanel);
-
-		myProxyPathPanel.setStylePrimaryName("mainPanel");
-
-		Label titleLabel = new Label("Explicit Service Path");
-		titleLabel.setStyleName("mainPanelTitle");
-		myProxyPathPanel.add(titleLabel);
-
-		myProxyPathContentPanel = new FlowPanel();
-		myProxyPathContentPanel.addStyleName("contentInnerPanel");
-		myProxyPathPanel.add(myProxyPathContentPanel);
-
-		Label intro = new Label("If specified, the options below define the path at which " + "the service will be deployed. If not specified, a default will be used.");
-		myProxyPathContentPanel.add(intro);
-
-		TwoColumnGrid grid = new TwoColumnGrid();
-		myProxyPathContentPanel.add(grid);
-
-		myExplicitProxyPathEnabledCheckbox = new CheckBox("Use Explicit Proxy Path:");
-		myExplicitProxyPathTextbox = new TextBox();
-
-		grid.addRow(myExplicitProxyPathEnabledCheckbox, myExplicitProxyPathTextbox);
 
 	}
 
@@ -247,6 +190,10 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 	 */
 	public Long getServicePid() {
 		return myServicePid;
+	}
+
+	public boolean isAddPanel() {
+		return this instanceof AddServiceVersionPanel;
 	}
 
 	private void handleDomainListChange() {
@@ -317,9 +264,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 		handleServiceListChange();
 	}
 
-	protected abstract void addTypeSelector();
-
-	protected abstract boolean allowTypeSelect();
+	protected abstract void addProtocolSelectionUi(TwoColumnGrid theGrid);
 
 	protected BaseDetailPanel<?> getBottomContents() {
 		return myBottomContents;
@@ -339,7 +284,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 
 		switch (theResult.getProtocol()) {
 		case SOAP11:
-			myBottomContents = new SoapDetailPanel(AbstractServiceVersionPanel.this, (GSoap11ServiceVersion) theResult);
+			myBottomContents = new SoapDetailPanel(this, (GSoap11ServiceVersion) theResult);
 			break;
 		case JSONRPC20:
 			myBottomContents = new DetailPanelJsonRpc20(this, (GServiceVersionJsonRpc20) theResult);
@@ -348,15 +293,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 		myBottomPanel.clear();
 		myBottomPanel.add(myBottomContents);
 
-		myExplicitProxyPathEnabledCheckbox.setValue(theResult.getExplicitProxyPath() != null);
-		myExplicitProxyPathTextbox.setValue(theResult.getExplicitProxyPath());
-
-		myDescriptionEditor.setVisible(false);
-		if (StringUtil.isNotBlank(myVersion.getDescription())) {
-			myDescriptionLabel.setHTML(StringUtil.convertPlaintextToHtml(myVersion.getDescription()));
-		} else {
-			myDescriptionLabel.setText("No description provided. Click here to add one.");
-		}
+		myDescriptionEditor.setValue(myVersion.getDescription());
 
 	}
 
@@ -411,31 +348,12 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 				serviceId = null;
 			}
 
-			if (myExplicitProxyPathEnabledCheckbox.getValue()) {
-				String newPath = myExplicitProxyPathTextbox.getValue();
-				if (StringUtil.isBlank(newPath)) {
-					myLoadingSpinner.showMessage("Explicit proxy path is enabled, but no path is specified.", false);
-					myExplicitProxyPathTextbox.setFocus(true);
-					return;
-				}
-				if (!newPath.startsWith("/") || newPath.length() < 2) {
-					myLoadingSpinner.showMessage("Explicit proxy path must be of the form /[path[/more path]]", false);
-					myExplicitProxyPathTextbox.setFocus(true);
-					return;
-				}
-				myVersion.setExplicitProxyPath(newPath);
-			} else {
-				myVersion.setExplicitProxyPath(null);
-			}
-
 			if (!myBottomContents.validateValuesAndApplyIfGood()) {
 				return;
 			}
 
-			if (myDescriptionEditor.isVisible()) {
-				myVersion.setDescription(myDescriptionEditor.getText());
-			}
-			
+			myVersion.setDescription(myDescriptionEditor.getValue());
+
 			AsyncCallback<AddServiceVersionResponse> callback = new AsyncCallback<AddServiceVersionResponse>() {
 				@Override
 				public void onFailure(Throwable theCaught) {

@@ -52,7 +52,7 @@ public class SoapDetailPanel extends BaseDetailPanel<GSoap11ServiceVersion> {
 
 				getServiceVersion().merge(theResult);
 				updateMethodPanel();
-				updateUrlPanel();
+				getUrlGrid().updateUrlPanel();
 
 				String navToken = NavProcessor.getTokenAddServiceVersion(true, getParentPanel().getDomainPid(), getParentPanel().getServicePid(), getServiceVersion().getUncommittedSessionId());
 				History.newItem(navToken, false);
@@ -63,22 +63,13 @@ public class SoapDetailPanel extends BaseDetailPanel<GSoap11ServiceVersion> {
 
 
 
-	private void initWsdlPanel(FlowPanel wsdlPanel) {
-		wsdlPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
+	private void initWsdlPanel(FlowPanel thePanel) {
 
-		Label titleLabel = new Label("WSDL Location");
-		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
-		wsdlPanel.add(titleLabel);
-
-		FlowPanel contentPanel = new FlowPanel();
-		contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
-		wsdlPanel.add(contentPanel);
-
-		contentPanel.add(new Label("Every SOAP based service must have a backing WSDL, which provides " + "clients with the service contract being implemented. Enter a URL to a remote WSDL " + "here, and click the \"Load\" button below, and ServiceRetriever will fetch the "
+		thePanel.add(new Label("Every SOAP based service must have a backing WSDL, which provides " + "clients with the service contract being implemented. Enter a URL to a remote WSDL " + "here, and click the \"Load\" button below, and ServiceRetriever will fetch the "
 				+ "WSDL and initialize your service."));
 
 		HtmlLabel urlLabel = new HtmlLabel("URL:", "urlTb");
-		contentPanel.add(urlLabel);
+		thePanel.add(urlLabel);
 
 		myUrlTextBox = new TextBox();
 		myUrlTextBox.setValue(getServiceVersion().getWsdlLocation());
@@ -90,17 +81,17 @@ public class SoapDetailPanel extends BaseDetailPanel<GSoap11ServiceVersion> {
 				getServiceVersion().setWsdlLocation(myUrlTextBox.getValue());
 			}
 		});
-		contentPanel.add(myUrlTextBox);
+		thePanel.add(myUrlTextBox);
 
-		contentPanel.add(new HtmlBr());
+		thePanel.add(new HtmlBr());
 
 		PButton loadButton = new PButton("Load WSDL");
 		loadButton.getElement().getStyle().setFloat(Float.LEFT);
-		contentPanel.add(loadButton);
+		thePanel.add(loadButton);
 
 		myLoadWsdlSpinner = new LoadingSpinner();
 		myLoadWsdlSpinner.hideCompletely();
-		contentPanel.add(myLoadWsdlSpinner);
+		thePanel.add(myLoadWsdlSpinner);
 
 		loadButton.addClickHandler(new ClickHandler() {
 			@Override
@@ -109,16 +100,16 @@ public class SoapDetailPanel extends BaseDetailPanel<GSoap11ServiceVersion> {
 			}
 		});
 
-		contentPanel.add(new HtmlBr());
+		thePanel.add(new HtmlBr());
 	}
 
 
 
 
 	@Override
-	protected void addProtocolSpecificPanelsToTop() {
+	protected void addProtocolSpecificPanelsToTop(boolean theIsAddPanel) {
 		FlowPanel wsdlPanel = new FlowPanel();
-		add(wsdlPanel);
+		add(wsdlPanel, "WSDL");
 		initWsdlPanel(wsdlPanel);
 	}
 
