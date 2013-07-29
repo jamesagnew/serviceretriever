@@ -19,9 +19,9 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 
+import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.ServerSecuredEnum;
 import net.svcret.admin.shared.model.StatusEnum;
-import net.svcret.ejb.api.ResponseTypeEnum;
 
 import org.apache.commons.lang3.StringUtils;
 

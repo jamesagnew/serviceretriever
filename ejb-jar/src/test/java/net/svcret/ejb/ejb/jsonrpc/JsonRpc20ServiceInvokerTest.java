@@ -8,13 +8,13 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 
+import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean.ResultTypeEnum;
 import net.svcret.ejb.api.RequestType;
-import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.ejb.DefaultAnswer;
 import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;

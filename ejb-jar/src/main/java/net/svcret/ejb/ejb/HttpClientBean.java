@@ -11,6 +11,8 @@ import java.util.Map.Entry;
 import javax.annotation.PostConstruct;
 import javax.ejb.PrePassivate;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
 import net.svcret.ejb.Messages;
 import net.svcret.ejb.api.HttpResponseBean;
@@ -56,6 +58,7 @@ public class HttpClientBean implements IHttpClient {
 		myConMgr = null;
 	}
 
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override
 	public HttpResponseBean get(String theUrl) throws ClientProtocolException, IOException {
 		Validate.notBlank(theUrl, "URL");
@@ -108,6 +111,7 @@ public class HttpClientBean implements IHttpClient {
 		return retVal;
 	}
 
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override
 	public HttpResponseBean post(IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody, Map<String, String> theHeaders, String theContentType) {
 		if (theUrlPool.getConnectTimeoutMillis() <= 0) {

@@ -79,7 +79,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		initMethodPanel(methodPanel);
 
 		FlowPanel urlsPanel = new FlowPanel();
-		add(urlsPanel, "Proxy");
+		add(urlsPanel, "URLs");
 		initUrlPanel(urlsPanel);
 
 		FlowPanel accessPanel = new FlowPanel();
@@ -89,7 +89,10 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		FlowPanel securityPanel = new FlowPanel();
 		add(securityPanel, "Security");
 		initServerSecurityPanel(securityPanel);
-		initClientSecurityPanel(securityPanel);
+		FlowPanel csp = new FlowPanel();
+		csp.addStyleName(CssConstants.CONTENT_INNER_SUBPANEL);
+		securityPanel.add(csp);
+		initClientSecurityPanel(csp);
 
 		FlowPanel transactionFlowPanel = new FlowPanel();
 		add(transactionFlowPanel, "Config");
@@ -227,15 +230,6 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 	}
 
 	private void initMethodPanel(FlowPanel theMethodPanel) {
-		// theMethodPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
-		//
-		// Label titleLabel = new Label("Methods");
-		// titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
-		// theMethodPanel.add(titleLabel);
-		//
-		// FlowPanel contentPanel = new FlowPanel();
-		// contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
-		// theMethodPanel.add(contentPanel);
 
 		myMethodGrid = new Grid(1, 2);
 		myMethodGrid.addStyleName(CssConstants.PROPERTY_TABLE);
@@ -273,7 +267,6 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 				GServiceMethod method = new GServiceMethod();
 				method.setUncommittedSessionId(newUncommittedSessionId());
 				method.setName(name);
-				method.setEditMode(true);
 				getServiceVersion().getMethodList().add(method);
 				updateMethodPanel();
 
@@ -375,21 +368,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 
 			myMethodGrid.setWidget(row, 0, new MethodEditButtonPanel(next));
 
-			Widget nameWidget;
-			if (next.isEditMode()) {
-				final TextBox textBox = new TextBox();
-				textBox.setValue(next.getName());
-				textBox.addValueChangeHandler(new ValueChangeHandler<String>() {
-					@Override
-					public void onValueChange(ValueChangeEvent<String> theEvent) {
-						next.setName(textBox.getValue());
-						doBackgroundSave();
-					}
-				});
-				nameWidget = textBox;
-			} else {
-				nameWidget = new Label(next.getName());
-			}
+			Widget nameWidget = new Label(next.getName());
 
 			myMethodGrid.setWidget(row, COL_METHOD_NAME, nameWidget);
 
@@ -474,16 +453,12 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 
 	private final class MethodEditButtonPanel extends FlowPanel implements ClickHandler {
 		private PButton myDeleteButton;
-		private PButton myEditButton;
 		private GServiceMethod myMethod;
 
 		private MethodEditButtonPanel(GServiceMethod theMethod) {
 			myMethod = theMethod;
-			myEditButton = new PButton(IMAGES.iconEdit(), MSGS.actions_Edit());
-			myEditButton.addClickHandler(this);
-			add(myEditButton);
 
-			myDeleteButton = new PButton(IMAGES.iconRemove(), MSGS.actions_Remove());
+			myDeleteButton = new PButton(IMAGES.iconRemove());
 			myDeleteButton.addClickHandler(this);
 			add(myDeleteButton);
 		}
@@ -497,9 +472,6 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 					updateMethodPanel();
 					doBackgroundSave();
 				}
-			} else if (source == myEditButton) {
-				myMethod.setEditMode(true);
-				updateMethodPanel();
 			}
 
 			source.setEnabled(false);

@@ -22,11 +22,11 @@ import javax.persistence.Temporal;
 
 import org.apache.commons.lang3.Validate;
 
+import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.api.ResponseTypeEnum;
 
 @MappedSuperclass()
 public abstract class BasePersRecentMessage implements Serializable {

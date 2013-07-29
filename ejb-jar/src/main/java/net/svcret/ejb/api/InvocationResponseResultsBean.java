@@ -3,6 +3,8 @@ package net.svcret.ejb.api;
 import java.util.List;
 import java.util.Map;
 
+import net.svcret.admin.shared.enm.ResponseTypeEnum;
+
 /**
  * Return type for {@link IServiceInvoker#}
  */

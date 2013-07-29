@@ -44,6 +44,8 @@ public abstract class BasePersInvocationStatsPk implements Serializable {
 
 	protected abstract boolean doEquals(BasePersInvocationStatsPk theObj);
 
+	protected abstract void doHashCode(HashCodeBuilder theB);
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -63,7 +65,6 @@ public abstract class BasePersInvocationStatsPk implements Serializable {
 		return myInterval;
 	}
 
-
 	/**
 	 * @return the startTime
 	 */
@@ -71,6 +72,9 @@ public abstract class BasePersInvocationStatsPk implements Serializable {
 		return myStartTime;
 	}
 
+	ToStringHelper getToStringHelper() {
+		return Objects.toStringHelper(this).add("Interval", getInterval().name()).add("StartTime", myStartTime);
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -87,7 +91,7 @@ public abstract class BasePersInvocationStatsPk implements Serializable {
 		return myHashCode;
 	}
 
-	protected abstract void doHashCode(HashCodeBuilder theB);
+	public abstract BasePersInvocationStats newObjectInstance();
 
 	/**
 	 * @param theInterval
@@ -96,7 +100,6 @@ public abstract class BasePersInvocationStatsPk implements Serializable {
 	public void setInterval(InvocationStatsIntervalEnum theInterval) {
 		myInterval = theInterval;
 	}
-
 
 	/**
 	 * @param theStartTime
@@ -113,11 +116,5 @@ public abstract class BasePersInvocationStatsPk implements Serializable {
 	public String toString() {
 		return getToStringHelper().toString();
 	}
-
-	ToStringHelper getToStringHelper() {
-		return Objects.toStringHelper(this).add("Interval", getInterval().name()).add("StartTime", myStartTime);
-	}
-
-	public abstract BasePersMethodStats newObjectInstance();
 
 }

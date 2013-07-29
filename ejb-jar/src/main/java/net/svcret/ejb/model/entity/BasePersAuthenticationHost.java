@@ -14,8 +14,8 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
+import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.AuthorizationHostTypeEnum;
-import net.svcret.ejb.api.ResponseTypeEnum;
 
 /**
  * Authentication host: This is a module which is used to take credentials of

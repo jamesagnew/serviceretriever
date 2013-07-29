@@ -9,13 +9,13 @@ import java.util.Map;
 
 import javax.ejb.Stateless;
 
+import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.IServiceInvokerJsonRpc20;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.RequestType;
-import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;

@@ -18,6 +18,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.BaseGClientSecurity;
@@ -80,11 +81,10 @@ import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.RequestType;
-import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
-import net.svcret.ejb.model.entity.BasePersInvocationStats;
+import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.BasePersRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
@@ -822,7 +822,7 @@ public class AdminServiceBean implements IAdminService {
 			PersServiceVersionMethod nextMethod, IRuntimeStatus statusSvc) {
 		doWithStatsByMinute(theConfig, theNumMinsBack, statusSvc, nextMethod, new IWithStats() {
 			@Override
-			public void withStats(int theIndex, BasePersInvocationStats theStats) {
+			public void withStats(int theIndex, BasePersMethodInvocationStats theStats) {
 				growToSizeInt(the60MinInvCount, theIndex);
 				growToSizeLong(the60minTime, theIndex);
 				the60MinInvCount.set(theIndex, addToInt(the60MinInvCount.get(theIndex), theStats.getSuccessInvocationCount()));
@@ -863,8 +863,8 @@ public class AdminServiceBean implements IAdminService {
 			InvocationStatsIntervalEnum interval = doWithStatsSupportFindInterval(theConfig, date);
 			date = doWithStatsSupportFindDate(date, interval);
 
-			PersInvocationStatsPk pk = new PersInvocationStatsPk(interval, date, theMethod);
-			BasePersInvocationStats stats = statusSvc.getInvocationStatsSynchronously(pk);
+			PersInvocationStatsPk pk = new PersInvocationStatsPk(interval, date, theMethod.getPid());
+			BasePersMethodInvocationStats stats = statusSvc.getInvocationStatsSynchronously(pk);
 			theOperator.withStats(min, stats);
 
 			date = doWithStatsSupportIncrement(date, interval);
@@ -892,7 +892,7 @@ public class AdminServiceBean implements IAdminService {
 			date = doWithStatsSupportFindDate(date, interval);
 
 			PersInvocationUserStatsPk pk = new PersInvocationUserStatsPk(interval, date, theUser);
-			BasePersInvocationStats stats = statusSvc.getInvocationUserStatsSynchronously(pk);
+			BasePersMethodInvocationStats stats = statusSvc.getInvocationUserStatsSynchronously(pk);
 			theOperator.withStats(min, stats);
 
 			date = doWithStatsSupportIncrement(date, interval);
@@ -923,7 +923,7 @@ public class AdminServiceBean implements IAdminService {
 
 	public interface IWithStats {
 
-		void withStats(int theIndex, BasePersInvocationStats theStats);
+		void withStats(int theIndex, BasePersMethodInvocationStats theStats);
 
 	}
 
@@ -1776,7 +1776,7 @@ public class AdminServiceBean implements IAdminService {
 			final ArrayList<Integer> t60minSecurityFailCount = new ArrayList<Integer>();
 			IWithStats withStats = new IWithStats() {
 				@Override
-				public void withStats(int theIndex, BasePersInvocationStats theStats) {
+				public void withStats(int theIndex, BasePersMethodInvocationStats theStats) {
 					growToSizeInt(t60minSuccessCount, theIndex);
 					growToSizeInt(t60minSecurityFailCount, theIndex);
 					t60minSecurityFailCount.set(theIndex, addToInt(t60minSecurityFailCount.get(theIndex), theStats.getServerSecurityFailures()));
@@ -2127,7 +2127,7 @@ public class AdminServiceBean implements IAdminService {
 
 			doWithStatsByMinute(config, 60, myStatusSvc, nextMethod, new IWithStats() {
 				@Override
-				public void withStats(int theIndex, BasePersInvocationStats theStats) {
+				public void withStats(int theIndex, BasePersMethodInvocationStats theStats) {
 					List<Integer> successCounts = methodPidToSuccessCount.get(nextMethod.getPid());
 					List<Integer> failCounts = methodPidToFailCount.get(nextMethod.getPid());
 					List<Integer> securityFailCounts = methodPidToSecurityFailCount.get(nextMethod.getPid());

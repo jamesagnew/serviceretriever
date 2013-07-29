@@ -19,12 +19,18 @@ public class PersInvocationUserStatsPk extends BasePersInvocationStatsPk {
 	@Transient
 	private volatile int myHashCode;
 
+<<<<<<< HEAD
+	@JoinColumn(name = "USER_PID", nullable = false)
+	@ManyToOne(fetch = FetchType.LAZY, cascade = {})
+	private PersUser myUser;
+=======
 //	@JoinColumn(name = "USER_PID", nullable = false)
 //	@ManyToOne(fetch = FetchType.LAZY, cascade = {})
 //	@IgnoreSizeOf
 	
 	@Column(name = "USER_PID", nullable = false)
 	private long myUserPid;
+>>>>>>> 2dcefae77333d3b49668eefb79146525f1b26bcb
 
 	public PersInvocationUserStatsPk() {
 		super();

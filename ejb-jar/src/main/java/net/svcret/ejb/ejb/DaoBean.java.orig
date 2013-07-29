@@ -23,10 +23,10 @@ import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 
-import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.api.IDao;
+import net.svcret.ejb.api.ResponseTypeEnum;
 import net.svcret.ejb.ejb.TransactionLoggerBean.BaseUnflushed;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
@@ -683,7 +683,13 @@ public class DaoBean implements IDao {
 	@Override
 	public void saveUserStatus(Collection<PersUserStatus> theStatus) {
 		ourLog.info("Flushing {} user status entries", theStatus.size());
+<<<<<<< HEAD
+		
+=======
 
+		grabLock("FLUSH_STATS");
+
+>>>>>>> 2dcefae77333d3b49668eefb79146525f1b26bcb
 		for (PersUserStatus persUserStatus : theStatus) {
 
 			PersUserStatus existing = myEntityManager.find(PersUserStatus.class, persUserStatus.getPid());
@@ -936,6 +942,26 @@ public class DaoBean implements IDao {
 		return retVal;
 	}
 
+<<<<<<< HEAD
+=======
+	private void grabLock(String lockName) {
+		if (true)
+			return;
+
+		Map<String, Object> properties = new HashMap<String, Object>();
+		properties.put("javax.persistence.lock.timeout", 10 * 1000);
+		PersLocks lock = myEntityManager.find(PersLocks.class, lockName, LockModeType.PESSIMISTIC_WRITE, properties);
+		if (lock == null) {
+			lock = new PersLocks(lockName);
+			myEntityManager.persist(lock);
+			myEntityManager.flush();
+			lock = myEntityManager.find(PersLocks.class, lockName, LockModeType.PESSIMISTIC_WRITE, properties);
+			// myEntityManager.lock(lock, LockModeType.PESSIMISTIC_WRITE,
+			// properties);
+		}
+	}
+
+>>>>>>> 2dcefae77333d3b49668eefb79146525f1b26bcb
 	@Override
 	public void saveServiceVersionRecentMessage(PersServiceVersionRecentMessage theMsg) {
 		Validate.notNull(theMsg);

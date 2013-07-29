@@ -8,12 +8,13 @@ import java.util.Set;
 
 import javax.ejb.Local;
 
+import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.ejb.TransactionLoggerBean.BaseUnflushed;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
+import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
-import net.svcret.ejb.model.entity.BasePersMethodStats;
 import net.svcret.ejb.model.entity.BasePersRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceCatalogItem;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -83,11 +84,11 @@ public interface IDao {
 
 	Collection<PersHttpClientConfig> getHttpClientConfigs();
 
-	BasePersInvocationStats getInvocationStats(PersInvocationStatsPk thePk);
+	BasePersMethodInvocationStats getInvocationStats(PersInvocationStatsPk thePk);
 
 	List<PersInvocationStats> getInvocationStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff);
 
-	BasePersInvocationStats getInvocationUserStats(PersInvocationUserStatsPk thePk);
+	BasePersMethodInvocationStats getInvocationUserStats(PersInvocationUserStatsPk thePk);
 
 	List<PersInvocationUserStats> getInvocationUserStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff);
 
@@ -153,9 +154,9 @@ public interface IDao {
 
 	PersHttpClientConfig saveHttpClientConfig(PersHttpClientConfig theConfig);
 
-	void saveInvocationStats(Collection<BasePersMethodStats> theStats);
+	void saveInvocationStats(Collection<BasePersInvocationStats> theStats);
 
-	void saveInvocationStats(Collection<BasePersMethodStats> theStats, List<BasePersMethodStats> theStatsToDelete);
+	void saveInvocationStats(Collection<BasePersInvocationStats> theStats, List<BasePersInvocationStats> theStatsToDelete);
 
 	void saveMonitorRule(PersMonitorRule theRule);
 

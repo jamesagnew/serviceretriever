@@ -45,7 +45,7 @@ public class SchedulerBean implements IScheduler {
 	private IHttpClient myHttpClient;
 	
 	@Override
-	@Schedule(second = "0", minute = "*", hour = "*")
+	@Schedule(second = "0", minute = "*", hour = "*", persistent=false)
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	public void collapseStats() {
 		try {
@@ -61,7 +61,7 @@ public class SchedulerBean implements IScheduler {
 	}
 
 	@Override
-	@Schedule(second = "0", minute = "*", hour = "*")
+	@Schedule(second = "0", minute = "*", hour = "*", persistent=false)
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	public void flushInMemoryStatisticsAndTransactionsPrimary() {
 		try {
@@ -101,7 +101,7 @@ public class SchedulerBean implements IScheduler {
 
 	
 	@Override
-	@Schedule(second = "0", minute = "*", hour = "*")
+	@Schedule(second = "0", minute = "*", hour = "*", persistent=false)
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	public void monitorCheck() {
 		try {
@@ -122,7 +122,7 @@ public class SchedulerBean implements IScheduler {
 	}
 
 	@Override
-	@Schedule(second = "0", minute = "*", hour = "*")
+	@Schedule(second = "0", minute = "*", hour = "*", persistent=false)
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	public void reloadUserRegistry() {
 		try {

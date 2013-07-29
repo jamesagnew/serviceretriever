@@ -10,6 +10,10 @@ import javax.persistence.Transient;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+<<<<<<< HEAD
+import com.google.common.base.Objects;
+=======
+>>>>>>> 2dcefae77333d3b49668eefb79146525f1b26bcb
 import com.google.common.base.Objects.ToStringHelper;
 
 @MappedSuperclass
@@ -20,10 +24,25 @@ public abstract class BasePersInvocationMethodStatsPk extends BasePersInvocation
 	@Transient
 	private volatile int myHashCode;
 
+<<<<<<< HEAD
+	@JoinColumn(name = "METHOD_PID", nullable = false)
+	@ManyToOne(fetch = FetchType.LAZY, cascade = {})
+	private transient PersServiceVersionMethod myMethod;
+
+	@Column(name="METHOD_PID", nullable=false)
+	private Long myMethodPid;
+
+	@Override
+	protected void doHashCode(HashCodeBuilder theB) {
+		theB.append(myMethodPid);
+	}
+
+=======
 	// @JoinColumn(name = "METHOD_PID", nullable = false)
 	// @ManyToOne(fetch = FetchType.LAZY, cascade = {})
 	@Column(name = "METHOD_PID")
 	private long myMethod;
+>>>>>>> 2dcefae77333d3b49668eefb79146525f1b26bcb
 
 	public BasePersInvocationMethodStatsPk() {
 		super();

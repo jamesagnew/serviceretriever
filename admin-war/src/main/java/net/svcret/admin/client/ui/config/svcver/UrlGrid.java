@@ -2,6 +2,7 @@ package net.svcret.admin.client.ui.config.svcver;
 
 import static net.svcret.admin.client.AdminPortal.*;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,24 +10,26 @@ import java.util.Map;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.EditableField;
+import net.svcret.admin.client.ui.components.FlowPanelWithTooltip;
 import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.HtmlLabel;
+import net.svcret.admin.client.ui.components.IProvidesTooltip;
 import net.svcret.admin.client.ui.components.PButton;
-import net.svcret.admin.client.ui.components.TooltipListener;
 import net.svcret.admin.client.ui.dash.model.BaseDashModel;
 import net.svcret.admin.client.ui.stats.DateUtil;
 import net.svcret.admin.shared.Model;
+import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.GUrlStatus;
 import net.svcret.admin.shared.util.StringUtil;
 
+import com.google.gwt.dom.client.Style.Display;
+import com.google.gwt.dom.client.Style.WhiteSpace;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
-import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -41,7 +44,7 @@ public class UrlGrid extends FlowPanel {
 	private static final int COL_URL_URL = 2;
 	private static final int COL_URL_STATUS = 3;
 	private static final int COL_URL_LAST_TRANSACTION = 4;
-	
+
 	private Grid myUrlGrid;
 	private BaseGServiceVersion myServiceVersion;
 	private Label myNoUrlsLabel;
@@ -107,43 +110,80 @@ public class UrlGrid extends FlowPanel {
 				addText.setValue("");
 			}
 		});
-		
+
 		updateUrlPanel();
 	}
 
-	private final class MyPanel extends FlowPanel {
-		private final GUrlStatus myStatus;
+	private final class MyPanel extends FlowPanelWithTooltip implements IProvidesTooltip {
 		private net.svcret.admin.client.ui.components.TooltipListener.Tooltip myTooltip;
+		private ResponseTypeEnum myResponseType;
+		private GUrlStatus myStatus;
 
-		private MyPanel(GUrlStatus theStatus) {
+		private MyPanel(GUrlStatus theStatus, ResponseTypeEnum theResponseType) {
+			setTooltipProvider(this);
+			myResponseType = theResponseType;
 			myStatus = theStatus;
-            sinkEvents(Event.ONMOUSEOVER);
-            sinkEvents(Event.ONMOUSEOUT);
+			
+			String message=null;
+			switch(myResponseType) {
+			case FAIL:
+				message = "Failed to Invoke: " + DateUtil.formatTimeElapsedForLastInvocation(myStatus.getLastFailure());
+				break;
+			case FAULT:
+				message = "Fault Response: " + DateUtil.formatTimeElapsedForLastInvocation(myStatus.getLastFault());
+				break;
+			case SECURITY_FAIL:
+			case THROTTLE_REJ:
+				throw new IllegalArgumentException();
+			case SUCCESS:
+				message = "Successful Response: " + DateUtil.formatTimeElapsedForLastInvocation(myStatus.getLastSuccess());
+				break;
+			}
+
+			Label label = new Label(message);
+			label.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
+			add(label);
+			
+			Image image = new Image(AdminPortal.IMAGES.iconI16());
+			image.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
+			add(image);
+
+			getElement().getStyle().setWhiteSpace(WhiteSpace.NOWRAP);
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
 		@Override
-		public void onBrowserEvent(Event theArg0) {
-		    super.onBrowserEvent(theArg0);
-
-		    switch (DOM.eventGetType(theArg0)) {
-		        case Event.ONMOUSEOUT:
-		            if (myTooltip != null) {
-		                myTooltip.hideTooltip();
-		                myTooltip = null;
-		            }
-		            break;
-
-		        case Event.ONMOUSEOVER:
-		            if (myTooltip == null) {
-		                myTooltip = new TooltipListener.Tooltip(this, "Message: " + myStatus.getLastSuccessMessage());
-		                myTooltip.displayPopup();
-		            }
-		            break;
-
-		    }
+		public String getTooltip() {
+			String message = null;
+			Date date = null;
+			String desc=null;
+			
+			switch(myResponseType) {
+			case FAIL:
+				message=myStatus.getLastFailureMessage();
+				date=myStatus.getLastFailure();
+				desc ="failure";
+				break;
+			case FAULT:
+				message=myStatus.getLastFaultMessage();
+				date=myStatus.getLastFault();
+				desc="fault";
+				break;
+			case SECURITY_FAIL:
+			case THROTTLE_REJ:
+				// not applicable
+				break;
+			case SUCCESS:
+				message=myStatus.getLastSuccessMessage();
+				date=myStatus.getLastSuccess();
+				desc="success";
+				break;
+			}
+			
+			if (message!=null||date!=null) {
+				return "Last " + desc + "<br/><ul><li>" + "<b>Date:</b> " + DateUtil.formatTime(date) + "</li><li>Message: " + message+"</li></ul>";
+			}
+			
+			return null;
 		}
 	}
 
@@ -201,9 +241,10 @@ public class UrlGrid extends FlowPanel {
 		int row = 0;
 
 		for (final GServiceVersionUrl next : myServiceVersion.getUrlList()) {
-			final GUrlStatus status = urlPidToUrlStatus.get(next.getPid());// NB may
-																		// be
-																		// null
+			final GUrlStatus status = urlPidToUrlStatus.get(next.getPid());// NB
+																			// may
+																			// be
+																			// null
 			row++;
 
 			myUrlGrid.setWidget(row, 0, new UrlEditButtonPanel(next));
@@ -263,18 +304,13 @@ public class UrlGrid extends FlowPanel {
 					break;
 				}
 				myUrlGrid.setWidget(row, COL_URL_STATUS, statusPanel);
-				
+
 				FlowPanel lastXPanel = new FlowPanel();
-				
-				FlowPanel successpanel = new MyPanel(status);
-				Label label = new Label("Success: " + DateUtil.formatTimeElapsedForLastInvocation(status.getLastSuccess()));
-				successpanel.add(label);
-				successpanel.add(new Image(AdminPortal.IMAGES.iconI16()));
-				lastXPanel.add(successpanel);
-				
-				lastXPanel.add(new Label("Fault: " + DateUtil.formatTimeElapsedForLastInvocation(status.getLastFault())));
-				lastXPanel.add(new Label("Fail: " + DateUtil.formatTimeElapsedForLastInvocation(status.getLastFailure())));
-				
+
+				lastXPanel.add(new MyPanel(status,ResponseTypeEnum.SUCCESS));
+				lastXPanel.add(new MyPanel(status,ResponseTypeEnum.FAULT));
+				lastXPanel.add(new MyPanel(status,ResponseTypeEnum.FAIL));
+
 				myUrlGrid.setWidget(row, COL_URL_LAST_TRANSACTION, lastXPanel);
 
 			}

@@ -3,8 +3,8 @@ package net.svcret.ejb.model.entity;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 
+import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.BaseGKeepsRecentMessages;
-import net.svcret.ejb.api.ResponseTypeEnum;
 
 @MappedSuperclass
 public abstract class BasePersKeepsRecentTransactions extends BasePersObject {

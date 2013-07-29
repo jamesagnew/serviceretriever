@@ -7,8 +7,16 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 
+<<<<<<< HEAD
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import com.google.common.base.Objects;
+=======
+import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
+
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+>>>>>>> 2dcefae77333d3b49668eefb79146525f1b26bcb
 import com.google.common.base.Objects.ToStringHelper;
 
 @Embeddable
@@ -18,9 +26,16 @@ public class PersStaticResourceStatsPk extends BasePersInvocationStatsPk {
 
 	@Transient
 	private volatile int myHashCode;
+<<<<<<< HEAD
+	
+	@ManyToOne(cascade= {})
+	@JoinColumn(name="RESOURCE_PID", referencedColumnName="PID", nullable=false)
+=======
 
 	@ManyToOne(cascade = {})
 	@JoinColumn(name = "RESOURCE_PID", referencedColumnName = "PID", nullable = false)
+	@IgnoreSizeOf
+>>>>>>> 2dcefae77333d3b49668eefb79146525f1b26bcb
 	private PersServiceVersionResource myResource;
 
 	public PersStaticResourceStatsPk() {

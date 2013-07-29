@@ -6,8 +6,6 @@ public class GServiceMethod extends BaseGDashboardObject<GServiceMethod> {
 
 	private static final long serialVersionUID = 1L;
 
-	private transient boolean myEditMode;
-
 	private String myRootElements;
 	private Date myLastAccess;
 
@@ -32,13 +30,6 @@ public class GServiceMethod extends BaseGDashboardObject<GServiceMethod> {
 		return myRootElements;
 	}
 
-	/**
-	 * @return the editMode
-	 */
-	public boolean isEditMode() {
-		return myEditMode;
-	}
-
 	@Override
 	public void merge(GServiceMethod theObject) {
 		myRootElements = theObject.getRootElements();
@@ -46,14 +37,6 @@ public class GServiceMethod extends BaseGDashboardObject<GServiceMethod> {
 			myLastAccess = theObject.getLastAccess();
 		}
 		super.merge((BaseGDashboardObject<GServiceMethod>) theObject);
-	}
-
-	/**
-	 * @param theEditMode
-	 *            the editMode to set
-	 */
-	public void setEditMode(boolean theEditMode) {
-		myEditMode = theEditMode;
 	}
 
 	public void setRootElements(String theRootElements) {

@@ -14,13 +14,13 @@ import net.svcret.admin.shared.model.TimeRangeEnum;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.ejb.AdminServiceBean.IWithStats;
 import net.svcret.ejb.model.entity.BasePersInvocationMethodStatsPk;
-import net.svcret.ejb.model.entity.BasePersInvocationStats;
+import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStatsPk;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
-import net.svcret.ejb.model.entity.BasePersInvocationStats.StatsTypeEnum;
+import net.svcret.ejb.model.entity.BasePersMethodInvocationStats.StatsTypeEnum;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -39,7 +39,7 @@ private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger
 		IRuntimeStatus status= mock(IRuntimeStatus.class, DefaultAnswer.INSTANCE);
 		
 		final ArgumentCaptor<PersInvocationStatsPk> captor = ArgumentCaptor.forClass(PersInvocationStatsPk.class);
-		when(status.getInvocationStatsSynchronously(captor.capture())).thenReturn(new BasePersInvocationStats() {
+		when(status.getInvocationStatsSynchronously(captor.capture())).thenReturn(new BasePersMethodInvocationStats() {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -59,7 +59,7 @@ private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger
 		final Set<BasePersInvocationStatsPk> all = new HashSet<BasePersInvocationStatsPk>();
 		IWithStats operator = new IWithStats() {
 			@Override
-			public void withStats(int theIndex, BasePersInvocationStats theStats) {
+			public void withStats(int theIndex, BasePersMethodInvocationStats theStats) {
 				ourLog.info("{} - {}", theStats.getPk().getInterval(), theStats.getPk().getStartTime());
 				all.add(theStats.getPk());
 			}

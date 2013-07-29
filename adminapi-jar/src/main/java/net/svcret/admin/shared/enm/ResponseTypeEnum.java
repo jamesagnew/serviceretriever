@@ -1,4 +1,4 @@
-package net.svcret.ejb.api;
+package net.svcret.admin.shared.enm;
 
 public enum ResponseTypeEnum {
 
