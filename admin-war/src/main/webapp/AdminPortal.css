@@ -436,6 +436,11 @@ TABLE.propertyTable TBODY TR TD TABLE TBODY TR {
 	max-width: 400px;
 }
 
+.transactionGraphHeader {
+	font-size: 0.8em;
+	color: #888;
+}
+
 .twoColumnPropertyGrid TBODY TR {
 	background: transparent !important;
 }

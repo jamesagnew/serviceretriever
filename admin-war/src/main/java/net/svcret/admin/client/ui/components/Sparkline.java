@@ -6,10 +6,13 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.LabelElement;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.SpanElement;
+import com.google.gwt.dom.client.Text;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.user.client.ui.Widget;
@@ -25,6 +28,10 @@ public class Sparkline extends Widget {
 	private String myWidth = "35px";
 	private DateTimeFormat ourTimeFormat = DateTimeFormat.getFormat(PredefinedFormat.TIME_SHORT);
 
+	public Sparkline(int[] theList, List<Long> theDates, String theText) {
+		this(toList(theList), theDates, theText);
+	}
+
 	@Deprecated
 	public Sparkline(int[] theList, String theText) {
 		this(toList(theList), theText);
@@ -38,7 +45,11 @@ public class Sparkline extends Widget {
 	 */
 	@Deprecated
 	public Sparkline(List<Integer> theValues) {
-		this(theValues, null);
+		this(theValues, (String)null);
+	}
+	
+	public Sparkline(List<Integer> theSuccess, List<Long> theDates) {
+		this(theSuccess, theDates, null);
 	}
 
 	/**
@@ -57,8 +68,10 @@ public class Sparkline extends Widget {
 			}
 		}
 		
+		GWT.log("Instantiating sparkline");
+		
 	}
-	
+
 	/**
 	 * Constructor
 	 * 
@@ -86,11 +99,16 @@ public class Sparkline extends Widget {
 		if (theText != null) {
 			Node textNode = Document.get().createTextNode(theText);
 			rootElement.insertAfter(textNode, spanElement);
+		}else {
+			LabelElement textNode = Document.get().createLabelElement();
+			textNode.setInnerHTML("&nbsp;");
+			rootElement.insertAfter(textNode, spanElement);
 		}
 	}
 
-	public Sparkline(int[] theList, List<Long> theDates, String theText) {
-		this(toList(theList), theDates, theText);
+	public Sparkline asBar(boolean theBar) {
+		setBar(theBar);
+		return this;
 	}
 
 	/**
@@ -128,7 +146,7 @@ public class Sparkline extends Widget {
 	public void setWidth(String theWidth) {
 		myWidth = theWidth;
 	}
-
+	
 	/**
 	 * @param theWidth
 	 *            the width to set
@@ -136,11 +154,6 @@ public class Sparkline extends Widget {
 	 */
 	public Sparkline withWidth(String theWidth) {
 		myWidth = theWidth;
-		return this;
-	}
-	
-	public Sparkline asBar(boolean theBar) {
-		setBar(theBar);
 		return this;
 	}
 
@@ -188,6 +201,8 @@ public class Sparkline extends Widget {
 	 */
 	@Override
 	protected void onLoad() {
+		GWT.log("Building sparkline");
+		
 		StringBuilder valuesBuilder = new StringBuilder();
 		for (Iterator<Integer> iter = myValues.iterator(); iter.hasNext();) {
 			valuesBuilder.append(iter.next());

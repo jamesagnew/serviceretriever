@@ -37,5 +37,6 @@ public class CssConstants {
 	public static final String RECENT_TRANSACTIONS_INHERIT_CHECKBOX = "recentTransactionsInheritCheckbox";
 	public static final String EDITABLE_LABEL_NOVALUE = "editableLabelNoValue";
 	public static final String EDITABLE_LABEL_TRANSPARENT = "editableLabelTransparent";
+	public static final String TRANSACTION_GRAPH_HEADER = "transactionGraphHeader";
 	
 }

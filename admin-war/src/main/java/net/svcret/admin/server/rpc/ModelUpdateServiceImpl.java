@@ -398,6 +398,8 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		saveServiceVersionToSession(retVal);
 		saveServiceVersionResourcesToSession(serviceAndResources);
 
+		retVal.setDetailedStats(loadServiceVersionDetailedStats(theServiceVersionPid));
+		
 		return retVal;
 	}
 

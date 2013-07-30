@@ -1,12 +1,18 @@
 package net.svcret.admin.client.ui.config.svcver;
 
 import static net.svcret.admin.client.AdminPortal.*;
+
+import java.util.List;
+import java.util.Map;
+
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.HtmlH1;
 import net.svcret.admin.client.ui.components.HtmlLabel;
+import net.svcret.admin.client.ui.components.LabelWithStyle;
 import net.svcret.admin.client.ui.components.PButton;
+import net.svcret.admin.client.ui.components.Sparkline;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.client.ui.config.KeepRecentTransactionsPanel;
 import net.svcret.admin.client.ui.config.sec.IProvidesViewAndEdit;
@@ -22,6 +28,7 @@ import net.svcret.admin.shared.model.ClientSecurityEnum;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GServiceMethod;
+import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
 import net.svcret.admin.shared.model.ServerSecurityEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.util.StringUtil;
@@ -31,8 +38,9 @@ import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.logical.shared.ValueChangeEvent;
-import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.event.logical.shared.SelectionEvent;
+import com.google.gwt.event.logical.shared.SelectionHandler;
+import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -47,8 +55,11 @@ import com.google.gwt.user.client.ui.Widget;
 
 public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends TabPanel {
 
+	private static final NumberFormat TRANSACTION_FORMAT = NumberFormat.getFormat("0.0#");
 	private static final int COL_CLI_SECURITY_MODULE = 1;
 	private static final int COL_METHOD_NAME = 1;
+	private static final int COL_METHOD_USAGE = 2;
+	private static final int NUM_METHOD_COLS = 3;
 	private static final int COL_SVR_SECURITY_MODULE = 1;
 
 	private AbstractServiceVersionPanel myParent;
@@ -74,9 +85,9 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 
 		addProtocolSpecificPanelsToTop(theParent.isAddPanel());
 
-		FlowPanel methodPanel = new FlowPanel();
+		final int methodsIndex = getWidgetCount();
+		final FlowPanel methodPanel = new FlowPanel();
 		add(methodPanel, "Methods");
-		initMethodPanel(methodPanel);
 
 		FlowPanel urlsPanel = new FlowPanel();
 		add(urlsPanel, "URLs");
@@ -98,6 +109,15 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		add(transactionFlowPanel, "Config");
 		initJournalPanel(transactionFlowPanel);
 
+		addSelectionHandler(new SelectionHandler<Integer>() {
+			@Override
+			public void onSelection(SelectionEvent<Integer> theEvent) {
+				if (theEvent.getSelectedItem() == methodsIndex && methodPanel.getWidgetCount() == 0) {
+					initMethodPanel(methodPanel);
+				}
+			}
+		});
+
 		selectTab(0);
 
 	}
@@ -112,7 +132,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		myExplicitProxyPathEnabledCheckbox = new CheckBox("Use Explicit Proxy Path:");
 		myExplicitProxyPathTextbox = new TextBox();
 		grid.addRow(myExplicitProxyPathEnabledCheckbox, myExplicitProxyPathTextbox);
-		
+
 		myExplicitProxyPathEnabledCheckbox.setValue(myServiceVersion.getExplicitProxyPath() != null);
 		myExplicitProxyPathTextbox.setValue(myServiceVersion.getExplicitProxyPath());
 
@@ -231,12 +251,13 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 
 	private void initMethodPanel(FlowPanel theMethodPanel) {
 
-		myMethodGrid = new Grid(1, 2);
+		myMethodGrid = new Grid(1, NUM_METHOD_COLS);
 		myMethodGrid.addStyleName(CssConstants.PROPERTY_TABLE);
 		theMethodPanel.add(myMethodGrid);
 
 		myMethodGrid.setWidget(0, 0, new Label("Action"));
 		myMethodGrid.setWidget(0, COL_METHOD_NAME, new Label("Name"));
+		myMethodGrid.setWidget(0, COL_METHOD_USAGE, new Label("Usage"));
 
 		myNoMethodsLabel = new Label("No Methods Defined");
 		theMethodPanel.add(myNoMethodsLabel);
@@ -360,7 +381,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 	}
 
 	protected void updateMethodPanel() {
-		myMethodGrid.resize(getServiceVersion().getMethodList().size() + 1, 2);
+		myMethodGrid.resize(getServiceVersion().getMethodList().size() + 1, NUM_METHOD_COLS);
 
 		int row = 0;
 		for (final GServiceMethod next : getServiceVersion().getMethodList()) {
@@ -369,12 +390,75 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 			myMethodGrid.setWidget(row, 0, new MethodEditButtonPanel(next));
 
 			Widget nameWidget = new Label(next.getName());
-
 			myMethodGrid.setWidget(row, COL_METHOD_NAME, nameWidget);
+
+			FlowPanel usageWidget = new FlowPanel();
+			myMethodGrid.setWidget(row, COL_METHOD_USAGE, usageWidget);
+
+			GServiceVersionDetailedStats detailedStats = myServiceVersion.getDetailedStats();
+			Map<Long, List<Integer>> methodPidToSuccessCount = detailedStats.getMethodPidToSuccessCount();
+			List<Integer> success = methodPidToSuccessCount.get(next.getPid());
+			boolean hasAnything = false;
+			if (hasValues(success)) {
+				hasAnything = true;
+				usageWidget.add(new LabelWithStyle("Success (" + toMethodStatDesc(success) + ")", CssConstants.TRANSACTION_GRAPH_HEADER));
+				usageWidget.add(new Sparkline(success, detailedStats.getStatsTimestamps()).withWidth("120px").asBar(true));
+			}
+			List<Integer> fault = detailedStats.getMethodPidToFaultCount().get(next.getPid());
+			if (hasValues(fault)) {
+				hasAnything = true;
+				if (usageWidget.getWidgetCount() > 0) {
+					usageWidget.add(new HtmlBr());
+				}
+				usageWidget.add(new LabelWithStyle("Fault (" + toMethodStatDesc(fault) + ")", CssConstants.TRANSACTION_GRAPH_HEADER));
+				usageWidget.add(new Sparkline(fault, detailedStats.getStatsTimestamps()).withWidth("120px").asBar(true));
+			}
+			List<Integer> fail = detailedStats.getMethodPidToFailCount().get(next.getPid());
+			if (hasValues(fail)) {
+				hasAnything = true;
+				if (usageWidget.getWidgetCount() > 0) {
+					usageWidget.add(new HtmlBr());
+				}
+				usageWidget.add(new LabelWithStyle("Failure (" + toMethodStatDesc(fail) + ")", CssConstants.TRANSACTION_GRAPH_HEADER));
+				usageWidget.add(new Sparkline(fail, detailedStats.getStatsTimestamps()).withWidth("120px").asBar(true));
+			}
+			List<Integer> secFail = detailedStats.getMethodPidToSecurityFailCount().get(next.getPid());
+			if (hasValues(secFail)) {
+				hasAnything = true;
+				if (usageWidget.getWidgetCount() > 0) {
+					usageWidget.add(new HtmlBr());
+				}
+				usageWidget.add(new LabelWithStyle("Security Failure (" + toMethodStatDesc(secFail) + ")", CssConstants.TRANSACTION_GRAPH_HEADER));
+				usageWidget.add(new Sparkline(secFail, detailedStats.getStatsTimestamps()).withWidth("120px").asBar(true));
+			}
+			if (!hasAnything) {
+				usageWidget.add(new Label("No Usage"));
+			}
 
 		}
 
 		myNoMethodsLabel.setVisible(getServiceVersion().getMethodList().size() == 0);
+	}
+
+	private boolean hasValues(List<Integer> theSuccess) {
+		for (Integer integer : theSuccess) {
+			if (integer != 0) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private String toMethodStatDesc(List<Integer> theSecFail) {
+		int total = 0;
+		int max = 0;
+		for (int next : theSecFail) {
+			total += next;
+			max = Math.max(max, next);
+		}
+
+		double avg = ((double) total) / (double) theSecFail.size();
+		return "Avg:" + TRANSACTION_FORMAT.format(avg)+" Max:" + TRANSACTION_FORMAT.format(max) + "/min";
 	}
 
 	private void updateServerSercurityPanel() {
@@ -517,7 +601,6 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		}
 	}
 
-
 	public boolean validateValuesAndApplyIfGood() {
 		boolean retVal = myKeepRecentTransactionsPanel.validateAndShowErrorIfNotValid();
 		if (!retVal) {
@@ -545,7 +628,6 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 
 		return retVal;
 	}
-
 
 	private void initUrlPanel(FlowPanel thePanel) {
 
