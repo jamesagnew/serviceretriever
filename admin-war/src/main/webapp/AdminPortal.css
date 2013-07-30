@@ -210,6 +210,11 @@ LABEL.formLabel {
 	color: #303060;
 	font-weight: bold;
 }
+
+.pushButton:DISABLED, .pushButtonText:DISABLED {
+	color: #888;
+}
+
 /*
 .pushButton:ACTIVE {
 	border: 1px #E0E0E0 solid;
@@ -430,10 +435,11 @@ TABLE.propertyTable TBODY TR TD TABLE TBODY TR {
 }
 
 .tooltipPopup {
-	background: rgba(0, 0, 0, 0.4);
+	background: rgba(0, 0, 0, 0.8);
 	color: #FFF;
 	border: 1px solid #333;
 	max-width: 400px;
+	box-shadow: 4px 4px 3px -1px #bbb;
 }
 
 .transactionGraphHeader {

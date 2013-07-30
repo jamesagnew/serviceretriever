@@ -47,7 +47,7 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 	private FlowPanel myChartsPanel;
 	private HorizontalPanel myGraphsTimePanel;
 
-	public ServiceVersionStatsPanel(final long theDomainPid, final long theServicePid, long theVersionPid) {
+	public ServiceVersionStatsPanel(long theVersionPid) {
 		myServiceVersionPid = theVersionPid;
 
 		myTopPanel = new FlowPanel();
@@ -63,10 +63,10 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 		myTopLoadingSpinner.show();
 		myTopPanel.add(myTopLoadingSpinner);
 
-		Model.getInstance().loadServiceVersion(theDomainPid, theServicePid, theVersionPid, true, new IAsyncLoadCallback<BaseGServiceVersion>() {
+		Model.getInstance().loadServiceVersion(theVersionPid, true, new IAsyncLoadCallback<BaseGServiceVersion>() {
 			@Override
 			public void onSuccess(BaseGServiceVersion theResult) {
-				set01ServiceVersion(theDomainPid, theServicePid, theResult);
+				set01ServiceVersion(theResult);
 			}
 		});
 
@@ -79,10 +79,10 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 		return DateUtil.formatTimeElapsedForLastInvocation(theDate);
 	}
 
-	private void set01ServiceVersion(final long theDomainPid, final long theServicePid, final BaseGServiceVersion theResult) {
+	private void set01ServiceVersion(final BaseGServiceVersion theResult) {
 		myTitleLabel.setText(MSGS.serviceVersionStats_Title(theResult.getName()));
 
-		myTopPanel.add(new ServiceVersionIndividualStatusPanel(theDomainPid, theServicePid, theResult.getPid()));
+		myTopPanel.add(new ServiceVersionIndividualStatusPanel(theResult.getPid()));
 
 		AdminPortal.MODEL_SVC.loadServiceVersionUrlStatuses(myServiceVersionPid, new AsyncCallback<List<GUrlStatus>>() {
 

@@ -1,6 +1,7 @@
 package net.svcret.admin.client.ui.config.svcver;
 
 import net.svcret.admin.client.AdminPortal;
+import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.EditableField;
 import net.svcret.admin.client.ui.components.HtmlLabel;
@@ -26,6 +27,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HasValue;
@@ -167,13 +169,45 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 		HorizontalPanel savePanel = new HorizontalPanel();
 		myContentPanel.add(savePanel);
 		savePanel.add(saveButton);
+
+		if (!isAddPanel()) {
+			PButton testButton = new PButton(AdminPortal.IMAGES.iconTest16(), "Test Service");
+			testButton.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent theEvent) {
+					History.newItem(NavProcessor.getTokenTestServiceVersion(true, myVersion.getPid()));
+				}
+			});
+			savePanel.add(testButton);
+			
+			// TODO: better icon
+			PButton transactionsButton = new PButton(AdminPortal.IMAGES.iconEdit(), "Recent Transactions");
+			transactionsButton.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent theEvent) {
+					History.newItem(NavProcessor.getTokenViewServiceVersionRecentMessages(true, myVersion.getPid()));
+				}
+			});
+			savePanel.add(transactionsButton);
+
+			// TODO: better icon
+			PButton statsButton = new PButton(AdminPortal.IMAGES.iconStatus(), "Statistics");
+			statsButton.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent theEvent) {
+					History.newItem(NavProcessor.getTokenServiceVersionStats(true, myVersion.getPid()));
+				}
+			});
+			savePanel.add(statsButton);
+
+		}
+
 		savePanel.add(myLoadingSpinner);
 
 		// addDescriptionPanel();
 
 		/*
-		 * The following panel contains the rest of the screen (i.e. no
-		 * background, so that it can have lots of contents
+		 * The following panel contains the rest of the screen (i.e. no background, so that it can have lots of contents
 		 */
 
 		myBottomPanel = new FlowPanel();

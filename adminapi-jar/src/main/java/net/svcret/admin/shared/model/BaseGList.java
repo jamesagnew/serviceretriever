@@ -26,6 +26,10 @@ public class BaseGList<T extends BaseGObject<T>> implements Iterable<T>, Seriali
 		sort();
 	}
 
+	public List<T> toList() {
+		return Collections.unmodifiableList(myList);
+	}
+
 	public void addAll(Collection<T> theList) {
 		myList.addAll(theList);
 		sort();

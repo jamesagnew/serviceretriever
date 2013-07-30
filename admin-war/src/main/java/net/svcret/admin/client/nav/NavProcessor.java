@@ -27,6 +27,7 @@ import net.svcret.admin.client.ui.config.service.EditServicePanel;
 import net.svcret.admin.client.ui.config.svcver.AddServiceVersionPanel;
 import net.svcret.admin.client.ui.config.svcver.AddServiceVersionStep2Panel;
 import net.svcret.admin.client.ui.config.svcver.EditServiceVersionPanel;
+import net.svcret.admin.client.ui.config.svcver.ServiceVersionRecentMessagePanel;
 import net.svcret.admin.client.ui.dash.IDestroyable;
 import net.svcret.admin.client.ui.dash.ServiceDashboardPanel;
 import net.svcret.admin.client.ui.layout.BodyPanel;
@@ -144,7 +145,7 @@ public class NavProcessor {
 		return token;
 	}
 
-	public static String getTestServiceVersion(boolean theAddToHistory, long theServiceVersionPid) {
+	public static String getTokenTestServiceVersion(boolean theAddToHistory, long theServiceVersionPid) {
 		String token = "";
 		if (theAddToHistory) {
 			token = getCurrentToken();
@@ -332,7 +333,7 @@ public class NavProcessor {
 		return token;
 	}
 
-	public static String getTokenServiceVersionStats(boolean theAddToHistory, long theDomainPid, long theServicePid, long theServiceVersionPid) {
+	public static String getTokenServiceVersionStats(boolean theAddToHistory, long theServiceVersionPid) {
 		String token = "";
 		if (theAddToHistory) {
 			token = getCurrentToken();
@@ -340,7 +341,7 @@ public class NavProcessor {
 				token = token + SEPARATOR;
 			}
 		}
-		token = token + PagesEnum.SVS + "_" + theDomainPid + "_" + theServicePid + "_" + theServiceVersionPid;
+		token = token + PagesEnum.SVS + "_" + theServiceVersionPid;
 		token = removeDuplicates(token);
 		return token;
 	}
@@ -354,6 +355,19 @@ public class NavProcessor {
 			}
 		}
 		token = token + PagesEnum.RSV + "_" + thePid;
+		token = removeDuplicates(token);
+		return token;
+	}
+
+	public static String getTokenViewServiceVersionRecentMessages(boolean theAddToHistory, long thePid) {
+		String token = "";
+		if (theAddToHistory) {
+			token = getCurrentToken();
+			if (!token.isEmpty()) {
+				token = token + SEPARATOR;
+			}
+		}
+		token = token + PagesEnum.SRM + "_" + thePid;
 		token = removeDuplicates(token);
 		return token;
 	}
@@ -408,6 +422,9 @@ public class NavProcessor {
 		case ADU:
 			panel = new AddUserPanel(Long.parseLong(args));
 			break;
+		case SRM:
+			panel = new ServiceVersionRecentMessagePanel(Long.parseLong(args));
+			break;
 		case AHL:
 			panel = new AuthenticationHostsPanel();
 			break;
@@ -446,7 +463,11 @@ public class NavProcessor {
 			panel = new DeleteServiceVersionPanel(Long.parseLong(args));
 			break;
 		case TSV:
-			panel = new ServiceVersionTestPanel(Long.parseLong(args));
+			if (StringUtil.isBlank(args)) {
+				panel = new ServiceVersionTestPanel();
+			}else {
+				panel = new ServiceVersionTestPanel(Long.parseLong(args));
+			}
 			break;
 		case DSH:
 			panel = new ServiceDashboardPanel();
@@ -492,12 +513,7 @@ public class NavProcessor {
 			panel = new ServiceCatalogPanel();
 			break;
 		case SVS:
-			argsSplit = args.split("_");
-			if (argsSplit.length < 3) {
-				navigateToDefault();
-			} else {
-				panel = new ServiceVersionStatsPanel(Long.parseLong(argsSplit[0]), Long.parseLong(argsSplit[1]), Long.parseLong(argsSplit[2]));
-			}
+			panel = new ServiceVersionStatsPanel(Long.parseLong(args));
 			break;
 		case VUS:
 			panel = new UserStatsPanel(Long.parseLong(args));

@@ -26,6 +26,8 @@ public class LeftBarPanel extends FlowPanel {
 	private Hyperlink myEditUsersBtn;
 	private Hyperlink mySvcCatalogBtn;
 	private Hyperlink myProxyConfigBtn;
+	private Hyperlink myEditRulesBtn;
+	private Hyperlink myManualTestBtn;
 
 	public LeftBarPanel() {
 		setStylePrimaryName("outerLayoutLeftBar");
@@ -81,15 +83,25 @@ public class LeftBarPanel extends FlowPanel {
 		myAllButtons.add(myEditUsersBtn);
 
 		/*
-		 * Configuration
+		 * Monitoring
 		 */
 		
 		LeftMenuComponent monitoring = new LeftMenuComponent("Monitoring");
 		add(monitoring);
 
-		myProxyConfigBtn = monitoring.addItem(MSGS.leftPanel_MonitorRules(), PagesEnum.MRL);
-		myAllButtons.add(myProxyConfigBtn);
+		myEditRulesBtn = monitoring.addItem(MSGS.leftPanel_MonitorRules(), PagesEnum.MRL);
+		myAllButtons.add(myEditRulesBtn);
 
+		/*
+		 * Testing
+		 */
+		
+		LeftMenuComponent testing = new LeftMenuComponent("Testing");
+		add(testing);
+
+		myManualTestBtn = testing.addItem(MSGS.leftPanel_ManuallyTestService(), PagesEnum.TSV);
+		myAllButtons.add(myManualTestBtn);
+		
 		updateStyles();
 		
 		History.addValueChangeHandler(new ValueChangeHandler<String>() {
@@ -137,8 +149,6 @@ public class LeftBarPanel extends FlowPanel {
 			myHttpClientConfigsBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
 			buttons.remove(myHttpClientConfigsBtn);
 			break;
-		case EDO:
-			break;
 		case EUL:
 		case EDU:
 			myEditUsersBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
@@ -147,6 +157,14 @@ public class LeftBarPanel extends FlowPanel {
 		case SEC:
 			mySvcCatalogBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
 			buttons.remove(mySvcCatalogBtn);
+			break;
+		case MRL:
+			myEditRulesBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
+			buttons.remove(myEditRulesBtn);
+			break;
+		case TSV:
+			myManualTestBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
+			buttons.remove(myManualTestBtn);
 			break;
 		case ADU:
 		case DDO:
@@ -158,6 +176,9 @@ public class LeftBarPanel extends FlowPanel {
 		case RUS:
 		case VUS:
 		case DSV:
+		case EMR:
+		case AMR:
+		case EDO:
 			break;
 		}
 		

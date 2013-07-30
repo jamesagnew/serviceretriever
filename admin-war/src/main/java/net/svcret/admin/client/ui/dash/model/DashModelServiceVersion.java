@@ -168,7 +168,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		viewStatus.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
-				History.newItem(NavProcessor.getTokenServiceVersionStats(true, theDomain.getPid(), theService.getPid(), theSvcVer.getPid()));
+				History.newItem(NavProcessor.getTokenServiceVersionStats(true, theSvcVer.getPid()));
 			}
 		});
 		content.add(viewStatus);
@@ -179,7 +179,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		testSvcVer.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
-				History.newItem(NavProcessor.getTestServiceVersion(true, theSvcVer.getPid()));
+				History.newItem(NavProcessor.getTokenTestServiceVersion(true, theSvcVer.getPid()));
 			}
 		});
 		content.add(testSvcVer);

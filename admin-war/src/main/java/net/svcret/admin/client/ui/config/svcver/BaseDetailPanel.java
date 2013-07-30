@@ -1,7 +1,9 @@
 package net.svcret.admin.client.ui.config.svcver;
 
-import static net.svcret.admin.client.AdminPortal.*;
+import static net.svcret.admin.client.AdminPortal.IMAGES;
+import static net.svcret.admin.client.AdminPortal.MSGS;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -10,8 +12,8 @@ import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.HtmlH1;
 import net.svcret.admin.client.ui.components.HtmlLabel;
-import net.svcret.admin.client.ui.components.LabelWithStyle;
 import net.svcret.admin.client.ui.components.PButton;
+import net.svcret.admin.client.ui.components.PButtonCell;
 import net.svcret.admin.client.ui.components.Sparkline;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.client.ui.config.KeepRecentTransactionsPanel;
@@ -33,6 +35,8 @@ import net.svcret.admin.shared.model.ServerSecurityEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.util.StringUtil;
 
+import com.google.gwt.cell.client.FieldUpdater;
+import com.google.gwt.cell.client.SafeHtmlCell;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
@@ -41,6 +45,12 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.i18n.client.NumberFormat;
+import com.google.gwt.safehtml.shared.SafeHtml;
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
+import com.google.gwt.user.cellview.client.CellTable;
+import com.google.gwt.user.cellview.client.Column;
+import com.google.gwt.user.cellview.client.ColumnSortEvent.ListHandler;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -52,6 +62,7 @@ import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.TabPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.view.client.ListDataProvider;
 
 public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends TabPanel {
 
@@ -66,16 +77,15 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 	private T myServiceVersion;
 	private Grid myClientSecurityGrid;
 	private ListBox myHttpConfigList;
-	private Grid myMethodGrid;
 	private long myNextBackgroundSave;
 	private Label myNoClientSercuritysLabel;
-	private Label myNoMethodsLabel;
 	private Label myNoServerSercuritysLabel;
 	private Grid myServerSecurityGrid;
 	private KeepRecentTransactionsPanel myKeepRecentTransactionsPanel;
 	private CheckBox myExplicitProxyPathEnabledCheckbox;
 	private TextBox myExplicitProxyPathTextbox;
 	private UrlGrid myUrlGrid;
+	private ListDataProvider<GServiceMethod> myMethodDataProvider;
 
 	public BaseDetailPanel(AbstractServiceVersionPanel theParent, T theServiceVersion) {
 		myServiceVersion = theServiceVersion;
@@ -195,8 +205,8 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 
 		thePanel.add(new HtmlH1("Client Security"));
 
-		Label urlLabel = new Label("Client Security modules provide credentials to proxied service implementations. In other words, " + "if the service which is being proxied requires credentials in order to be invoked, a client "
-				+ "security module can be used to provide those credentials.");
+		Label urlLabel = new Label("Client Security modules provide credentials to proxied service implementations. In other words, "
+				+ "if the service which is being proxied requires credentials in order to be invoked, a client " + "security module can be used to provide those credentials.");
 		thePanel.add(urlLabel);
 
 		myClientSecurityGrid = new Grid(1, 2);
@@ -250,17 +260,158 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 	}
 
 	private void initMethodPanel(FlowPanel theMethodPanel) {
+		final CellTable<GServiceMethod> grid = new CellTable<GServiceMethod>();
+		theMethodPanel.add(grid);
+		grid.setEmptyTableWidget(new Label("No methods defined."));
 
-		myMethodGrid = new Grid(1, NUM_METHOD_COLS);
-		myMethodGrid.addStyleName(CssConstants.PROPERTY_TABLE);
-		theMethodPanel.add(myMethodGrid);
+		// Action
 
-		myMethodGrid.setWidget(0, 0, new Label("Action"));
-		myMethodGrid.setWidget(0, COL_METHOD_NAME, new Label("Name"));
-		myMethodGrid.setWidget(0, COL_METHOD_USAGE, new Label("Usage"));
+		PButtonCell deleteCell = new PButtonCell(AdminPortal.IMAGES.iconRemove());
+		Column<GServiceMethod, String> action = new Column<GServiceMethod, String>(deleteCell) {
+			@Override
+			public String getValue(GServiceMethod theObject) {
+				return null;
+			}
+		};
+		grid.addColumn(action, "");
+		action.setFieldUpdater(new FieldUpdater<GServiceMethod, String>() {
+			@Override
+			public void update(int theIndex, GServiceMethod theObject, String theValue) {
+				if (Window.confirm("Delete - Are you sure?")) {
+					getServiceVersion().getMethodList().remove(theObject);
+					updateMethodPanel();
+					doBackgroundSave();
+				}
+			}
+		});
 
-		myNoMethodsLabel = new Label("No Methods Defined");
-		theMethodPanel.add(myNoMethodsLabel);
+		// Name
+
+		Column<GServiceMethod, SafeHtml> nameColumn = new Column<GServiceMethod, SafeHtml>(new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(GServiceMethod theObject) {
+				return SafeHtmlUtils.fromString(theObject.getName());
+			}
+		};
+		int nameColumnIdx = grid.getColumnCount();
+		grid.addColumn(nameColumn, "Name");
+
+		// Usage
+
+		Column<GServiceMethod, SafeHtml> usageColumn = new Column<GServiceMethod, SafeHtml>(new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(GServiceMethod theObject) {
+				SafeHtmlBuilder b = new SafeHtmlBuilder();
+
+				GServiceVersionDetailedStats detailedStats = myServiceVersion.getDetailedStats();
+				Map<Long, List<Integer>> methodPidToSuccessCount = detailedStats.getMethodPidToSuccessCount();
+				List<Integer> success = methodPidToSuccessCount.get(theObject.getPid());
+				boolean hasAnything = false;
+				if (hasValues(success)) {
+					hasAnything = true;
+					b.appendHtmlConstant("<span class='" + CssConstants.TRANSACTION_GRAPH_HEADER + "'>");
+					b.appendHtmlConstant("Success (" + toMethodStatDesc(success) + ")</span>");
+					Sparkline sparkline = new Sparkline(success, detailedStats.getStatsTimestamps()).withWidth("120px").asBar(true);
+					b.appendHtmlConstant("<br/>");
+					b.appendHtmlConstant("<span id='" + sparkline.getId() + "' onmouseover=\"" + sparkline.getNativeInvocation(sparkline.getId()) + "\">AAAA</span>");
+					b.appendHtmlConstant("<img src='images/empty.png' onload=\"" + sparkline.getNativeInvocation(sparkline.getId()) + "\" />");
+				}
+				List<Integer> fault = detailedStats.getMethodPidToFaultCount().get(theObject.getPid());
+				if (hasValues(fault)) {
+					hasAnything = true;
+					if (hasAnything) {
+						b.appendHtmlConstant("<br/>");
+					}
+					b.appendHtmlConstant("<span class='" + CssConstants.TRANSACTION_GRAPH_HEADER + "'>");
+					b.appendHtmlConstant("Fault (" + toMethodStatDesc(fault) + ")</span>");
+					Sparkline sparkline = new Sparkline(fault, detailedStats.getStatsTimestamps()).withWidth("120px").asBar(true);
+					b.appendHtmlConstant("<br/>");
+					b.appendHtmlConstant("<span id='" + sparkline.getId() + "'></span>");
+					b.appendHtmlConstant("<img src='images/empty.png' onload=\"" + sparkline.getNativeInvocation(sparkline.getId()) + "\" />");
+				}
+				List<Integer> fail = detailedStats.getMethodPidToFailCount().get(theObject.getPid());
+				if (hasValues(fail)) {
+					hasAnything = true;
+					if (hasAnything) {
+						b.appendHtmlConstant("<br/>");
+					}
+					b.appendHtmlConstant("<span class='" + CssConstants.TRANSACTION_GRAPH_HEADER + "'>");
+					b.appendHtmlConstant("Fail (" + toMethodStatDesc(fail) + ")</span>");
+					Sparkline sparkline = new Sparkline(fail, detailedStats.getStatsTimestamps()).withWidth("120px").asBar(true);
+					b.appendHtmlConstant("<br/>");
+					b.appendHtmlConstant("<span id='" + sparkline.getId() + "'></span>");
+					b.appendHtmlConstant("<img src='images/empty.png' onload=\"" + sparkline.getNativeInvocation(sparkline.getId()) + "\" />");
+				}
+				List<Integer> secFail = detailedStats.getMethodPidToSecurityFailCount().get(theObject.getPid());
+				if (hasValues(secFail)) {
+					hasAnything = true;
+					if (hasAnything) {
+						b.appendHtmlConstant("<br/>");
+					}
+					b.appendHtmlConstant("<span class='" + CssConstants.TRANSACTION_GRAPH_HEADER + "'>");
+					b.appendHtmlConstant("Security Failure (" + toMethodStatDesc(secFail) + ")</span>");
+					Sparkline sparkline = new Sparkline(secFail, detailedStats.getStatsTimestamps()).withWidth("120px").asBar(true);
+					b.appendHtmlConstant("<br/>");
+					b.appendHtmlConstant("<span id='" + sparkline.getId() + "'></span>");
+					b.appendHtmlConstant("<img src='images/empty.png' onload=\"" + sparkline.getNativeInvocation(sparkline.getId()) + "\" />");
+				}
+				if (!hasAnything) {
+					b.appendHtmlConstant("No Usage");
+				}
+
+				return b.toSafeHtml();
+			}
+		};
+		int usageColumnIdx = grid.getColumnCount();
+		grid.addColumn(usageColumn, "Usage");
+
+		myMethodDataProvider = new ListDataProvider<GServiceMethod>();
+		myMethodDataProvider.addDataDisplay(grid);
+
+		grid.getColumn(nameColumnIdx).setSortable(true);
+		grid.getColumn(usageColumnIdx).setSortable(true);
+		ListHandler<GServiceMethod> columnSortHandler = new ListHandler<GServiceMethod>(myMethodDataProvider.getList());
+		columnSortHandler.setComparator(nameColumn, new Comparator<GServiceMethod>() {
+			@Override
+			public int compare(GServiceMethod theO1, GServiceMethod theO2) {
+				return StringUtil.compare(theO1.getName(), theO2.getName());
+			}
+		});
+		columnSortHandler.setComparator(usageColumn, new Comparator<GServiceMethod>() {
+			@Override
+			public int compare(GServiceMethod theO1, GServiceMethod theO2) {
+				GServiceVersionDetailedStats detailedStats = myServiceVersion.getDetailedStats();
+				if (detailedStats == null) {
+					return 0;
+				}
+				long o1 = theO1.getPid();
+				long o2 = theO2.getPid();
+
+				Map<Long, List<Integer>> successCount = detailedStats.getMethodPidToSuccessCount();
+				Map<Long, List<Integer>> faultCount = detailedStats.getMethodPidToFaultCount();
+				Map<Long, List<Integer>> failCount = detailedStats.getMethodPidToFailCount();
+				Map<Long, List<Integer>> secFailCount = detailedStats.getMethodPidToSecurityFailCount();
+				int total1 = addToTotal(successCount.get(o1), faultCount.get(o1), failCount.get(o1), secFailCount.get(o1));
+				int total2 = addToTotal(successCount.get(o2), faultCount.get(o2), failCount.get(o2), secFailCount.get(o2));
+				return total2 - total1;
+			}
+
+			private int addToTotal(List<Integer>... theLists) {
+				int retVal = 0;
+				for (List<Integer> next : theLists) {
+					if (next != null) {
+						for (Integer nextInteger : next) {
+							if (nextInteger != null) {
+								retVal += nextInteger;
+							}
+						}
+					}
+				}
+				return retVal;
+			}
+		});
+		grid.addColumnSortHandler(columnSortHandler);
+		grid.getColumnSortList().push(nameColumn);
 
 		theMethodPanel.add(new HtmlBr());
 
@@ -311,7 +462,8 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 
 		thePanel.add(new HtmlH1("Server Security"));
 
-		Label urlLabel = new Label("Server Security modules verify that the client which is making requests coming " + "in to the proxy are authorized to invoke the particular service they are attempting to "
+		Label urlLabel = new Label("Server Security modules verify that the client which is making requests coming "
+				+ "in to the proxy are authorized to invoke the particular service they are attempting to "
 				+ "invoke. If no server security modules are defined for this service version, all requests will be " + "allowed to proceed.");
 		thePanel.add(urlLabel);
 
@@ -380,64 +532,11 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		myNoClientSercuritysLabel.setVisible(getServiceVersion().getClientSecurityList().size() == 0);
 	}
 
-	protected void updateMethodPanel() {
-		myMethodGrid.resize(getServiceVersion().getMethodList().size() + 1, NUM_METHOD_COLS);
-
-		int row = 0;
-		for (final GServiceMethod next : getServiceVersion().getMethodList()) {
-			row++;
-
-			myMethodGrid.setWidget(row, 0, new MethodEditButtonPanel(next));
-
-			Widget nameWidget = new Label(next.getName());
-			myMethodGrid.setWidget(row, COL_METHOD_NAME, nameWidget);
-
-			FlowPanel usageWidget = new FlowPanel();
-			myMethodGrid.setWidget(row, COL_METHOD_USAGE, usageWidget);
-
-			GServiceVersionDetailedStats detailedStats = myServiceVersion.getDetailedStats();
-			Map<Long, List<Integer>> methodPidToSuccessCount = detailedStats.getMethodPidToSuccessCount();
-			List<Integer> success = methodPidToSuccessCount.get(next.getPid());
-			boolean hasAnything = false;
-			if (hasValues(success)) {
-				hasAnything = true;
-				usageWidget.add(new LabelWithStyle("Success (" + toMethodStatDesc(success) + ")", CssConstants.TRANSACTION_GRAPH_HEADER));
-				usageWidget.add(new Sparkline(success, detailedStats.getStatsTimestamps()).withWidth("120px").asBar(true));
-			}
-			List<Integer> fault = detailedStats.getMethodPidToFaultCount().get(next.getPid());
-			if (hasValues(fault)) {
-				hasAnything = true;
-				if (usageWidget.getWidgetCount() > 0) {
-					usageWidget.add(new HtmlBr());
-				}
-				usageWidget.add(new LabelWithStyle("Fault (" + toMethodStatDesc(fault) + ")", CssConstants.TRANSACTION_GRAPH_HEADER));
-				usageWidget.add(new Sparkline(fault, detailedStats.getStatsTimestamps()).withWidth("120px").asBar(true));
-			}
-			List<Integer> fail = detailedStats.getMethodPidToFailCount().get(next.getPid());
-			if (hasValues(fail)) {
-				hasAnything = true;
-				if (usageWidget.getWidgetCount() > 0) {
-					usageWidget.add(new HtmlBr());
-				}
-				usageWidget.add(new LabelWithStyle("Failure (" + toMethodStatDesc(fail) + ")", CssConstants.TRANSACTION_GRAPH_HEADER));
-				usageWidget.add(new Sparkline(fail, detailedStats.getStatsTimestamps()).withWidth("120px").asBar(true));
-			}
-			List<Integer> secFail = detailedStats.getMethodPidToSecurityFailCount().get(next.getPid());
-			if (hasValues(secFail)) {
-				hasAnything = true;
-				if (usageWidget.getWidgetCount() > 0) {
-					usageWidget.add(new HtmlBr());
-				}
-				usageWidget.add(new LabelWithStyle("Security Failure (" + toMethodStatDesc(secFail) + ")", CssConstants.TRANSACTION_GRAPH_HEADER));
-				usageWidget.add(new Sparkline(secFail, detailedStats.getStatsTimestamps()).withWidth("120px").asBar(true));
-			}
-			if (!hasAnything) {
-				usageWidget.add(new Label("No Usage"));
-			}
-
-		}
-
-		myNoMethodsLabel.setVisible(getServiceVersion().getMethodList().size() == 0);
+	void updateMethodPanel() {
+		List<GServiceMethod> list = myMethodDataProvider.getList();
+		list.clear();
+		list.addAll(myServiceVersion.getMethodList().toList());
+		myMethodDataProvider.refresh();
 	}
 
 	private boolean hasValues(List<Integer> theSuccess) {
@@ -458,7 +557,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		}
 
 		double avg = ((double) total) / (double) theSecFail.size();
-		return "Avg:" + TRANSACTION_FORMAT.format(avg)+" Max:" + TRANSACTION_FORMAT.format(max) + "/min";
+		return "Avg:" + TRANSACTION_FORMAT.format(avg) + " Max:" + TRANSACTION_FORMAT.format(max) + "/min";
 	}
 
 	private void updateServerSercurityPanel() {
@@ -528,7 +627,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 					}
 				};
 				final Widget editPanel = ViewAndEditFactory.provideClientSecurity(mySec).provideEdit(myRow, mySec, vcf);
-				myMethodGrid.setWidget(myRow, COL_METHOD_NAME, editPanel);
+				myClientSecurityGrid.setWidget(myRow, COL_METHOD_NAME, editPanel);
 			}
 
 			source.setEnabled(false);
@@ -594,7 +693,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 			} else if (source == myEditButton) {
 				IValueChangeHandler vcf = new AutosaveValueChangeHandler();
 				final Widget editPanel = ViewAndEditFactory.provideServerSecurity(mySec).provideEdit(myRow, mySec, vcf);
-				myMethodGrid.setWidget(myRow, COL_METHOD_NAME, editPanel);
+				myServerSecurityGrid.setWidget(myRow, COL_METHOD_NAME, editPanel);
 			}
 
 			source.setEnabled(false);
@@ -640,7 +739,8 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		thePanel.add(clientConfigPanel);
 
 		clientConfigPanel.addStyleName(CssConstants.CONTENT_INNER_SUBPANEL);
-		clientConfigPanel.add(new Label("The HTTP client configuration provides the connection details for " + "how the proxy will attempt to invoke proxied service implementations. This includes " + "settings for timeouts, round-robin policies, etc."));
+		clientConfigPanel.add(new Label("The HTTP client configuration provides the connection details for " + "how the proxy will attempt to invoke proxied service implementations. This includes "
+				+ "settings for timeouts, round-robin policies, etc."));
 
 		myHttpConfigList = new ListBox();
 		clientConfigPanel.add(myHttpConfigList);

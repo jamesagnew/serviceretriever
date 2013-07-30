@@ -707,6 +707,12 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Edit Rules")
 	String leftPanel_MonitorRules();
 
+	@DefaultMessage("Manually Test Service")
+	String leftPanel_ManuallyTestService();
+
+	@DefaultMessage("Recent Messages")
+	String serviceVersionRecentMessages_Breadcrumb();
+
 	
 	
 }

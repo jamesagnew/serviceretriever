@@ -92,7 +92,12 @@ public enum PagesEnum {
 	/**
 	 * Delete service version
 	 */
-	DSV(MSGS.deleteServiceVersion_Breadcrumb()),
+	DSV(MSGS.deleteServiceVersion_Breadcrumb()), 
+	
+	/**
+	 * Service version recent messages
+	 */
+	SRM(MSGS.serviceVersionRecentMessages_Breadcrumb()),
 	;
 	
 	private String myBreadcrumb;

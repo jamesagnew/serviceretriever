@@ -157,6 +157,24 @@ public class Sparkline extends Widget {
 		return this;
 	}
 
+	public String getNativeInvocation(String theElementId) {
+		StringBuilder b = new StringBuilder();
+		b.append("jsDrawSparkline('#");
+		b.append(theElementId);
+		b.append("', '");
+		b.append(createValuesString());
+		b.append("', '");
+		b.append(myHeight);
+		b.append("', '");
+		b.append(myWidth);
+		b.append("', '");
+		b.append(createTypeString());
+		b.append("', '");
+		b.append(createEimelinesString());
+		b.append("');");
+		return b.toString();
+	}
+	
 	private native void drawSparkline(final com.google.gwt.dom.client.Element theElement, String theValues, String theHeight, String theWidth, String theType, String theTimelines) /*-{
 		var sparkOptions = new Array();
 		sparkOptions['chartRangeMin'] = 0;
@@ -203,14 +221,20 @@ public class Sparkline extends Widget {
 	protected void onLoad() {
 		GWT.log("Building sparkline");
 		
-		StringBuilder valuesBuilder = new StringBuilder();
-		for (Iterator<Integer> iter = myValues.iterator(); iter.hasNext();) {
-			valuesBuilder.append(iter.next());
-			if (iter.hasNext()) {
-				valuesBuilder.append(",");
-			}
-		}
+		String valuesString = createValuesString();
+		String timelines = createEimelinesString();
+		String type = createTypeString();
+		
+		Element firstChild = (Element) getElement().getFirstChild();
+		drawSparkline(firstChild, valuesString, myHeight, myWidth, type, timelines);
+	}
 
+	private String createTypeString() {
+		String type = myBar ? "bar" : "line";
+		return type;
+	}
+
+	private String createEimelinesString() {
 		StringBuilder tBuilder = new StringBuilder();
 		if (myTimes != null) {
 			for (String next : myTimes) {
@@ -220,12 +244,20 @@ public class Sparkline extends Widget {
 				tBuilder.append(next);
 			}
 		}
-		
-		Element firstChild = (Element) getElement().getFirstChild();
-		String valuesString = valuesBuilder.toString();
-		String type = myBar ? "bar" : "line";
 		String timelines = tBuilder.length() > 0 ? tBuilder.toString() : null;
-		drawSparkline(firstChild, valuesString, myHeight, myWidth, type, timelines);
+		return timelines;
+	}
+
+	private String createValuesString() {
+		StringBuilder valuesBuilder = new StringBuilder();
+		for (Iterator<Integer> iter = myValues.iterator(); iter.hasNext();) {
+			valuesBuilder.append(iter.next());
+			if (iter.hasNext()) {
+				valuesBuilder.append(",");
+			}
+		}
+		String valuesString = valuesBuilder.toString();
+		return valuesString;
 	}
 
 	private static List<Integer> toList(int[] theList) {
@@ -234,6 +266,10 @@ public class Sparkline extends Widget {
 			retVal.add(i);
 		}
 		return retVal;
+	}
+
+	public String getId() {
+		return myId;
 	}
 
 }

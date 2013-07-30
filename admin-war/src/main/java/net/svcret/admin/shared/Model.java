@@ -270,12 +270,12 @@ public class Model {
 		});
 	}
 
-	public void loadServiceVersion(long theDomainPid, long theServicePid, final long theVersionPid, final boolean theLoadDetailedStats, final IAsyncLoadCallback<BaseGServiceVersion> theCallback) {
-		loadService(theDomainPid, theServicePid, new IAsyncLoadCallback<GService>() {
+	public void loadServiceVersion(final long theVersionPid, final boolean theLoadDetailedStats, final IAsyncLoadCallback<BaseGServiceVersion> theCallback) {
+		loadServiceVersion(theVersionPid, new IAsyncLoadCallback<BaseGServiceVersion>() {
 
 			@Override
-			public void onSuccess(GService theResult) {
-				final BaseGServiceVersion version = theResult.getVersionList().getVersionByPid(theVersionPid);
+			public void onSuccess(BaseGServiceVersion theResult) {
+				final BaseGServiceVersion version = theResult;
 				if (version == null) {
 					GWT.log("Unknown version! " + theVersionPid);
 					return;
