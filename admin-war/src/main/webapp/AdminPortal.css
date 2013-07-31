@@ -103,21 +103,23 @@
 	white-space: pre;
 }
 
-.dashboardTable {
-	
-}
-
 TABLE.unstyledTable, TABLE.unstyledTable TBODY, TABLE.unstyledTable TBODY TR {
 	background: transparent !important;
 }
 
 TABLE.dashboardTable {
-	border-collapse: separate;
-	border-spacing: 2px;
 }
 
-TABLE.dashboardTable TBODY TR:first-child {
+.dashboardSparkline {
+	font-size: 0.8em;
+	color: #666;
+}
+
+.dashboardTableHeader {
 	background: #D0EAFF;
+	text-align: center;
+	font-weight: bold;
+	color: #809AAF;
 }
 
 /*
@@ -127,15 +129,15 @@ TABLE.dashboardTable TBODY TR:hover {
 */
 
 .dashboardTableDomainCell {
-	background: #F0F0F0;
+	background: #CCC;
 }
 
 .dashboardTableServiceCell {
-	background: #F4F4F4;
+	background: #DDD;
 }
 
 .dashboardTableServiceVersionCell {
-	background: #F8F8F8;
+	background: #EEE;
 }
 
 .dashboardTableServiceMethodCell {

@@ -77,9 +77,12 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 		titlePanel.setCellVerticalAlignment(myLoadingSpinner, HasVerticalAlignment.ALIGN_MIDDLE);
 		titlePanel.setCellWidth(myLoadingSpinner, "16px");
 		myGrid = new FlexTable();
+		myGrid.setCellPadding(2);
+		myGrid.setCellSpacing(0);
 		add(myGrid);
 
 		myGrid.addStyleName("dashboardTable");
+		myGrid.getRowFormatter().addStyleName(0,CssConstants.DASHBOARD_TABLE_HEADER);
 
 		myGrid.setText(0, 0, "Name");
 		myGrid.getFlexCellFormatter().setColSpan(0, 0, HierarchyEnum.getHighestOrdinal() + 2);
@@ -154,28 +157,21 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 
 							if (nextService.isExpandedOnDashboard()) {
 
-								if (nextService.getVersionList().size() == 1) {
+								for (BaseGServiceVersion nextServiceVersion : nextService.getVersionList()) {
+									if (!nextServiceVersion.isStatsInitialized()) {
+										addSpinnerToList(newUiList);
+										haveStatsToLoad = true;
+									} else {
+										newUiList.add(new DashModelServiceVersion(nextDomain, nextService, nextServiceVersion));
 
-									haveStatsToLoad = addServiceVersionChildren(newUiList, haveStatsToLoad, nextService.getVersionList().get(0));
-
-								} else {
-
-									for (BaseGServiceVersion nextServiceVersion : nextService.getVersionList()) {
-										if (!nextServiceVersion.isStatsInitialized()) {
-											addSpinnerToList(newUiList);
-											haveStatsToLoad = true;
-										} else {
-											newUiList.add(new DashModelServiceVersion(nextDomain, nextService, nextServiceVersion));
-
-											if (nextServiceVersion.isExpandedOnDashboard()) {
-												haveStatsToLoad = addServiceVersionChildren(newUiList, haveStatsToLoad, nextServiceVersion);
-											}
-
+										if (nextServiceVersion.isExpandedOnDashboard()) {
+											haveStatsToLoad = addServiceVersionChildren(newUiList, haveStatsToLoad, nextServiceVersion);
 										}
 
-									} // for service versions
+									}
 
-								}
+								} // for service versions
+
 							}
 
 						}
@@ -242,7 +238,10 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 			int colSpan = (HierarchyEnum.getHighestOrdinal() - offset + 1);
 			// boolean expanded = false;
 
-			boolean hideMostOfRow = model.getModel() != null && model.getModel().isExpandedOnDashboard() && model.getModel().hideDashboardRowWhenExpanded();
+			boolean hideMostOfRow = false; // model.getModel() != null &&
+											// model.getModel().isExpandedOnDashboard()
+											// &&
+											// model.getModel().hideDashboardRowWhenExpanded();
 			if (hideMostOfRow) {
 				colSpan += NUM_STATUS_COLS;
 				// expanded = true;

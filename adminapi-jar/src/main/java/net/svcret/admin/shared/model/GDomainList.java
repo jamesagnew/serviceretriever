@@ -84,4 +84,30 @@ public class GDomainList extends BaseGList<GDomain> {
 		return null;
 	}
 
+	public Long getDomainPidWithServiceVersion(long theServiceVersionPid) {
+		for (GDomain nextDomain : this) {
+			for (GService nextSvc : nextDomain.getServiceList()) {
+				for (BaseGServiceVersion nextVer : nextSvc.getVersionList()) {
+					if (nextVer.getPid() == theServiceVersionPid) {
+						return nextDomain.getPid();
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+	public Long getServicePidWithServiceVersion(long theServiceVersionPid) {
+		for (GDomain nextDomain : this) {
+			for (GService nextSvc : nextDomain.getServiceList()) {
+				for (BaseGServiceVersion nextVer : nextSvc.getVersionList()) {
+					if (nextVer.getPid() == theServiceVersionPid) {
+						return nextSvc.getPid();
+					}
+				}
+			}
+		}
+		return null;
+	}
+
 }

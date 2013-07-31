@@ -97,7 +97,12 @@ public enum PagesEnum {
 	/**
 	 * Service version recent messages
 	 */
-	SRM(MSGS.serviceVersionRecentMessages_Breadcrumb()),
+	SRM(MSGS.serviceVersionRecentMessages_Breadcrumb()), 
+	
+	/**
+	 * Replay Message
+	 */
+	RPM(MSGS.replayMessage_Breadcrumb())
 	;
 	
 	private String myBreadcrumb;

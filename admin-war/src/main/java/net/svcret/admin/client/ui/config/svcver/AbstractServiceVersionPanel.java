@@ -20,7 +20,9 @@ import net.svcret.admin.shared.model.GServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.util.StringUtil;
 
+import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Style.Float;
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -29,15 +31,31 @@ import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HasValue;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.RequiresResize;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
-public abstract class AbstractServiceVersionPanel extends FlowPanel {
+public abstract class AbstractServiceVersionPanel extends FlowPanel implements RequiresResize {
+
+	@Override
+	public void onResize() {
+		GWT.log("Setting width");
+		if (myBottomContents!=null) {
+			myBottomContents.setWidth((getOffsetWidth()-20)+"px");
+		}
+	}
+
+	@Override
+	protected void onLoad() {
+		super.onLoad();
+		onResize();
+	}
 
 	private BaseDetailPanel<?> myBottomContents;
 	private FlowPanel myContentPanel;
@@ -51,7 +69,6 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 	private ListBox myServiceListBox;
 	private FlowPanel myTopPanel;
 	private boolean myUpdating;
-	protected FlowPanel myBottomPanel;
 	protected LoadingSpinner myLoadingSpinner;
 	protected ListBox myTypeComboBox;
 	Long myDomainPid;
@@ -65,6 +82,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 	}
 
 	protected AbstractServiceVersionPanel(Long theDomainPid, Long theServicePid, Long theUncommittedSessionId) {
+		
 		myDomainPid = theDomainPid;
 		myServicePid = theServicePid;
 		myUncommittedSessionId = theUncommittedSessionId;
@@ -204,15 +222,6 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 
 		savePanel.add(myLoadingSpinner);
 
-		// addDescriptionPanel();
-
-		/*
-		 * The following panel contains the rest of the screen (i.e. no background, so that it can have lots of contents
-		 */
-
-		myBottomPanel = new FlowPanel();
-		add(myBottomPanel);
-
 	}
 
 	public Long getDomainPid() {
@@ -316,6 +325,10 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 		myVersion = theResult;
 		myVersionTextBox.setValue(myVersion.getId(), false);
 
+		if (myBottomContents!=null) {
+			remove(myBottomContents);
+		}
+		
 		switch (theResult.getProtocol()) {
 		case SOAP11:
 			myBottomContents = new SoapDetailPanel(this, (GSoap11ServiceVersion) theResult);
@@ -324,11 +337,11 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel {
 			myBottomContents = new DetailPanelJsonRpc20(this, (GServiceVersionJsonRpc20) theResult);
 		}
 
-		myBottomPanel.clear();
-		myBottomPanel.add(myBottomContents);
+		add(myBottomContents);
 
 		myDescriptionEditor.setValue(myVersion.getDescription());
 
+		onResize();
 	}
 
 	void initParents(GDomainList theDomainList) {

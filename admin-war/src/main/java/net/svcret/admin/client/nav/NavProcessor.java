@@ -36,6 +36,7 @@ import net.svcret.admin.client.ui.stats.ServiceVersionStatsPanel;
 import net.svcret.admin.client.ui.stats.UserStatsPanel;
 import net.svcret.admin.client.ui.stats.ViewRecentMessageForServiceVersionPanel;
 import net.svcret.admin.client.ui.stats.ViewRecentMessageForUserPanel;
+import net.svcret.admin.client.ui.test.ReplayMessagePanel;
 import net.svcret.admin.client.ui.test.ServiceVersionTestPanel;
 import net.svcret.admin.shared.util.StringUtil;
 
@@ -316,7 +317,7 @@ public class NavProcessor {
 		token = token + PagesEnum.ESV + "_" + theVersionPid;
 
 		token = removeDuplicates(token);
-		
+
 		return createArgumentToken(theAddToHistory, PagesEnum.ESV, theVersionPid);
 	}
 
@@ -465,9 +466,12 @@ public class NavProcessor {
 		case TSV:
 			if (StringUtil.isBlank(args)) {
 				panel = new ServiceVersionTestPanel();
-			}else {
+			} else {
 				panel = new ServiceVersionTestPanel(Long.parseLong(args));
 			}
+			break;
+		case RPM:
+			panel = new ReplayMessagePanel(Long.parseLong(args));
 			break;
 		case DSH:
 			panel = new ServiceDashboardPanel();
@@ -531,12 +535,12 @@ public class NavProcessor {
 		}
 
 		Panel existingContents = BodyPanel.getInstance().getContents();
-		if (existingContents!=null) {
+		if (existingContents != null) {
 			if (existingContents instanceof IDestroyable) {
 				((IDestroyable) existingContents).destroy();
 			}
 		}
-		
+
 		BodyPanel.getInstance().setContents(panel);
 
 		// } catch (Exception e) {
@@ -550,7 +554,7 @@ public class NavProcessor {
 		History.newItem(thePage.name(), true);
 	}
 
-	private static String createArgumentToken(boolean theAddToHistory, PagesEnum thePage,long theArgument) {
+	private static String createArgumentToken(boolean theAddToHistory, PagesEnum thePage, long theArgument) {
 		String token = "";
 		if (theAddToHistory) {
 			token = getCurrentToken();
@@ -602,6 +606,10 @@ public class NavProcessor {
 
 		return retVal.toString();
 
+	}
+
+	public static String getTokenReplayMessage(boolean theAddToHistory, long theMessagePid) {
+		return createArgumentToken(theAddToHistory, PagesEnum.RPM, theMessagePid);
 	}
 
 }

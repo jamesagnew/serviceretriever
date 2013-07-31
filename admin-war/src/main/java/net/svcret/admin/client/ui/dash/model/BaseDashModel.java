@@ -52,7 +52,7 @@ public abstract class BaseDashModel implements IDashModel {
 
 	@Override
 	public final Widget renderLatency() {
-		return returnSparklineFor60mins(myModel.getLatency60mins(), myModel.getStatsInitialized(), Integer.toString(myModel.getAverageLatency()), "ms");
+		return returnSparklineFor60mins(myModel.getLatency60mins(), myModel.getStatsInitialized(), myModel.getAverageLatency60min(), myModel.getMaxLatency60min(), "ms");
 	}
 
 	static void createBackButton(final PopupPanel theActionPopup, final FlowPanel thePreviousContent, final FlowPanel content) {
@@ -123,20 +123,21 @@ public abstract class BaseDashModel implements IDashModel {
 	@Override
 	public final Widget renderUsage() {
 		int[] list = myModel.getTransactions60mins();
-		double averagePerMin = myModel.getAverageTransactionsPerMin();
-		return returnSparklineFor60MinsUsage(list, myModel.getStatsInitialized(), averagePerMin);
+		double averagePerMin = myModel.getAverageTransactionsPerMin60min();
+		double maxPerMin = myModel.getMaxTransactionsPerMin60min();
+		return returnSparklineFor60MinsUsage(list, myModel.getStatsInitialized(), averagePerMin, maxPerMin);
 	}
 
 	private static String formatDouble(double theNumber) {
 		return ourDecimalFormat.format(theNumber);
 	}
 
-	public static Widget returnBarSparklineFor60mins(int[] theList, Date theStatsInitialized, String theCurrentValue, String theUnitDesc) {
+	public static Widget returnBarSparklineFor60mins(int[] theList, Date theStatsInitialized, String theAvgValue, String theMaxValue, String theUnitDesc) {
 		if (theList == null) {
 			GWT.log(new Date() + " - No 60 minutes data");
 			return null;
 		}
-		String text = theCurrentValue + theUnitDesc;
+		String text = "Avg:" + theAvgValue + " Max:"+theMaxValue +" "+ theUnitDesc;
 
 		List<Long> dates = new ArrayList<Long>();
 		long nextDate = theStatsInitialized.getTime() - (60 * 60 * 1000L);
@@ -148,6 +149,7 @@ public abstract class BaseDashModel implements IDashModel {
 		Sparkline retVal = new Sparkline(theList, dates, text);
 		retVal.setBar(true);
 		retVal.setWidth("100px");
+		retVal.addStyleName(CssConstants.DASHBOARD_SPARKLINE);
 		return retVal;
 	}
 
@@ -157,27 +159,26 @@ public abstract class BaseDashModel implements IDashModel {
 		if (theObject.getFailingRuleCount() > 0) {
 			image = AdminPortal.IMAGES.dashMonitorAlert();
 			text = theObject.getFailingRuleCount() + " failures!";
-		}else if (theObject.getMonitorRulePids().size() > 0) {
+		} else if (theObject.getMonitorRulePids().size() > 0) {
 			image = AdminPortal.IMAGES.dashMonitorOk();
 			text = theObject.getMonitorRulePids().size() + " rules ok";
-		}else {
+		} else {
 			image = AdminPortal.IMAGES.dashMonitorNorules();
 			text = "No rules";
 		}
 
 		FlowPanel flowPanel = new FlowPanel();
-		
+
 		Image w = new Image(image);
 		w.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
 		flowPanel.add(w);
-		
-		HTML w2 = new HTML("<nobr>"+text+"</nobr>");
+
+		HTML w2 = new HTML("<nobr>" + text + "</nobr>");
 		w2.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
 		flowPanel.add(w2);
 		return flowPanel;
 	}
 
-	
 	public static Widget returnImageForStatus(StatusEnum status) {
 		if (status == null) {
 			GWT.log("Status is null");
@@ -195,12 +196,12 @@ public abstract class BaseDashModel implements IDashModel {
 		return null;
 	}
 
-	public static Widget returnSparklineFor60mins(int[] theList, Date theStatsInitialized, String theCurrentValue, String theUnitDesc) {
+	public static Widget returnSparklineFor60mins(int[] theList, Date theStatsInitialized, int theAvgValue, int theMaxValue, String theUnitDesc) {
 		if (theList == null) {
 			GWT.log(new Date() + " - No 60 minutes data");
 			return null;
 		}
-		String text = theCurrentValue + theUnitDesc;
+		String text = "Avg:" + theAvgValue + " Max:" + theMaxValue + " " + theUnitDesc;
 
 		List<Long> dates = new ArrayList<Long>();
 		long nextDate = theStatsInitialized.getTime() - (60 * 60 * 1000L);
@@ -211,14 +212,15 @@ public abstract class BaseDashModel implements IDashModel {
 
 		Sparkline retVal = new Sparkline(theList, dates, text);
 		retVal.setWidth("100px");
+		retVal.addStyleName(CssConstants.DASHBOARD_SPARKLINE);
 		return retVal;
 	}
 
-	public static Widget returnSparklineFor60MinsUsage(int[] list, Date theStatsInitialized, double averagePerMin) {
-		if (averagePerMin < 0.1) {
-			return returnBarSparklineFor60mins(list, theStatsInitialized, formatDouble(averagePerMin * 60), "/hr");
+	public static Widget returnSparklineFor60MinsUsage(int[] list, Date theStatsInitialized, double averagePerMin, double theMaxPerMin) {
+		if (averagePerMin < 0.1||theMaxPerMin<0.1) {
+			return returnBarSparklineFor60mins(list, theStatsInitialized, formatDouble(averagePerMin * 60), formatDouble(theMaxPerMin * 60),"/hr");
 		} else {
-			return returnBarSparklineFor60mins(list, theStatsInitialized, formatDouble(averagePerMin), "/min");
+			return returnBarSparklineFor60mins(list, theStatsInitialized, formatDouble(averagePerMin),formatDouble(theMaxPerMin),  "/min");
 		}
 	}
 

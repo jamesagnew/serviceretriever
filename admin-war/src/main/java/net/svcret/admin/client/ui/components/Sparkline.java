@@ -6,13 +6,11 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LabelElement;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.SpanElement;
-import com.google.gwt.dom.client.Text;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.user.client.ui.Widget;
@@ -67,8 +65,6 @@ public class Sparkline extends Widget {
 				myTimes.add(ourTimeFormat.format(new Date(next)));
 			}
 		}
-		
-		GWT.log("Instantiating sparkline");
 		
 	}
 
@@ -219,7 +215,6 @@ public class Sparkline extends Widget {
 	 */
 	@Override
 	protected void onLoad() {
-		GWT.log("Building sparkline");
 		
 		String valuesString = createValuesString();
 		String timelines = createEimelinesString();

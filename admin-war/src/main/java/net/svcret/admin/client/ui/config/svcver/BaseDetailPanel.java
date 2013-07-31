@@ -69,8 +69,6 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 	private static final NumberFormat TRANSACTION_FORMAT = NumberFormat.getFormat("0.0#");
 	private static final int COL_CLI_SECURITY_MODULE = 1;
 	private static final int COL_METHOD_NAME = 1;
-	private static final int COL_METHOD_USAGE = 2;
-	private static final int NUM_METHOD_COLS = 3;
 	private static final int COL_SVR_SECURITY_MODULE = 1;
 
 	private AbstractServiceVersionPanel myParent;

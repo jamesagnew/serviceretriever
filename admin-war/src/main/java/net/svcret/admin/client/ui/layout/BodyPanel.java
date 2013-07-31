@@ -26,6 +26,7 @@ public class BodyPanel extends ScrollPanel {
 		clear();
 		add(thePanel);
 		myContents = thePanel;
+		
 	}
 
 	public Panel getContents() {

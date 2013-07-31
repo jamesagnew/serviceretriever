@@ -46,7 +46,6 @@ public class AddServiceVersionPanel extends AbstractServiceVersionPanel {
 		if (getBottomContents() == null || getBottomContents().getProtocol() != protocol) {
 
 			myLoadingSpinner.show();
-			myBottomPanel.clear();
 
 			AsyncCallback<BaseGServiceVersion> callback = new AsyncCallback<BaseGServiceVersion>() {
 

@@ -38,5 +38,7 @@ public class CssConstants {
 	public static final String EDITABLE_LABEL_NOVALUE = "editableLabelNoValue";
 	public static final String EDITABLE_LABEL_TRANSPARENT = "editableLabelTransparent";
 	public static final String TRANSACTION_GRAPH_HEADER = "transactionGraphHeader";
+	public static final String DASHBOARD_TABLE_HEADER = "dashboardTableHeader";
+	public static final String DASHBOARD_SPARKLINE = "dashboardSparkline";
 	
 }

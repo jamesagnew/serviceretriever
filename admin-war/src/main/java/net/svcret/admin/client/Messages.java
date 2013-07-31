@@ -574,8 +574,6 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Authorization")
 	String recentMessagesGrid_ColAuthorization();
 
-	@DefaultMessage("Domain")
-	String recentMessagesGrid_ColDomain();
 
 	@DefaultMessage("Implementation URL")
 	String recentMessagesGrid_ColImplementationUrl();
@@ -588,9 +586,6 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Service")
 	String recentMessagesGrid_ColService();
-
-	@DefaultMessage("Version")
-	String recentMessagesGrid_ColSvcVersion();
 
 	@DefaultMessage("Time")
 	String recentMessagesGrid_ColTimestamp();
@@ -712,6 +707,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Recent Messages")
 	String serviceVersionRecentMessages_Breadcrumb();
+
+	@DefaultMessage("Replay Message")
+	String replayMessage_Breadcrumb();
 
 	
 	

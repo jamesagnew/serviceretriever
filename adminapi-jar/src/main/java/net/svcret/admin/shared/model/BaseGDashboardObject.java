@@ -5,8 +5,8 @@ import java.util.Date;
 public abstract class BaseGDashboardObject<T> extends BaseGKeepsRecentMessages<T> {
 
 	private static final long serialVersionUID = 1L;
-	private int myAverageLatency;
-	private double myAverageTransactionsPerMin;
+	private int myAverageLatency60min;
+	private double myAverageTransactionsPerMin60min;
 	private boolean myExpandedOnDashboard;
 	private String myId;
 	private Date myLastServerSecurityFailure;
@@ -16,19 +16,35 @@ public abstract class BaseGDashboardObject<T> extends BaseGKeepsRecentMessages<T
 	private Date myStatsInitialized;
 	private StatusEnum myStatus;
 	private int[] myTransactions60mins;
+	private int myMaxLatency60min;
+	private double myMaxTransactionsPerMin60min;
 
 	/**
 	 * @return the averageLatency
 	 */
-	public int getAverageLatency() {
-		return myAverageLatency;
+	public int getAverageLatency60min() {
+		return myAverageLatency60min;
+	}
+
+	/**
+	 * @return the averageLatency
+	 */
+	public int getMaxLatency60min() {
+		return myMaxLatency60min;
 	}
 
 	/**
 	 * @return the averageTransactionsPerMin
 	 */
-	public double getAverageTransactionsPerMin() {
-		return myAverageTransactionsPerMin;
+	public double getAverageTransactionsPerMin60min() {
+		return myAverageTransactionsPerMin60min;
+	}
+
+	/**
+	 * @return the averageTransactionsPerMin
+	 */
+	public double getMaxTransactionsPerMin60min() {
+		return myMaxTransactionsPerMin60min;
 	}
 
 	/**
@@ -150,15 +166,18 @@ public abstract class BaseGDashboardObject<T> extends BaseGKeepsRecentMessages<T
 
 		int count = 0;
 		int total = 0;
+		int max = 0;
 		for (int i : theLatency60mins) {
 			if (i > 0) {
 				total++;
 				count += i;
 			}
+			max = Math.max(max, i);
 		}
 		if (total > 0) {
-			myAverageLatency = count / total;
+			myAverageLatency60min = count / total;
 		}
+		myMaxLatency60min = max;
 	}
 
 	/**
@@ -195,11 +214,14 @@ public abstract class BaseGDashboardObject<T> extends BaseGKeepsRecentMessages<T
 	public void setTransactions60mins(int[] theTransactions60mins) {
 		myTransactions60mins = theTransactions60mins;
 		long total = 0;
+		long max = 0;
 		for (int i : theTransactions60mins) {
 			total += i;
+			max = Math.max(max, i);
 		}
 		if (myTransactions60mins.length > 0) {
-			myAverageTransactionsPerMin = (double)total / (double)myTransactions60mins.length;
+			myAverageTransactionsPerMin60min = ((double)total / (double)myTransactions60mins.length);
+			myMaxTransactionsPerMin60min = max;
 		}
 	}
 
