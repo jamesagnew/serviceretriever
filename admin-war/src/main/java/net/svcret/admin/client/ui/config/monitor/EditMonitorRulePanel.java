@@ -1,11 +1,8 @@
 package net.svcret.admin.client.ui.config.monitor;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
-
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.GMonitorRule;
-import net.svcret.admin.shared.model.ModelUpdateRequest;
 
 public class EditMonitorRulePanel extends BaseMonitorRulePanel {
 

@@ -28,9 +28,11 @@
 
 .contentInnerPanel {
 	padding:       5px;
+	/*
 	border-bottom: 1px #A5D1F3 solid;
 	border-right:  1px #A5D1F3 solid;
 	border-left:   1px #A5D1F3 solid;
+	*/
 }
 
 .contentInnerSubPanel {
@@ -86,6 +88,19 @@
 	font-weight: bold;
 }
 
+.dashboardLastUsage, .dashboardLastUsageRecent {
+	font-size: 0.8em;
+	white-space: nowrap;
+}
+
+.dashboardLastUsage {
+	color: #666;
+}
+
+.dashboardLastUsageRecent {
+	color: #000;
+}
+
 .dashboardNamePrefix {
 	color: #808080;
 	font-style: italic;
@@ -115,6 +130,15 @@ TABLE.dashboardTable {
 	color: #666;
 }
 
+.dashboardSparklineNoUsage {
+	text-align:center;
+	vertical-align:middle;
+	font-size: 0.8em;
+	color: #666;
+	width: 100%;
+	height: 100%;
+}
+
 .dashboardTableHeader {
 	background: #D0EAFF;
 	text-align: center;
@@ -128,8 +152,15 @@ TABLE.dashboardTable TBODY TR:hover {
 }
 */
 
+.dashboardTableDomainCell, .dashboardTableServiceCell, .dashboardTableServiceVersionCell, .dashboardTableServiceMethodCell {
+	text-align: center;
+}
+
 .dashboardTableDomainCell {
 	background: #CCC;
+	border-bottom-style: dotted;
+	border-bottom-width: 1px;
+	border-bottom-color: #AAA;
 }
 
 .dashboardTableServiceCell {
@@ -303,6 +334,9 @@ TABLE.listTable TBODY TR:nth-child(odd) {
 	background: rgba(255, 255, 255, 0.7);
 	background-color: #FFFFFF;
 	border-top-right-radius: 10px;
+	border-bottom: 2px #A5D1F3 solid;
+	border-right: 1px #A5D1F3 solid;
+	border-left: 1px #A5D1F3 solid;
 }
 
 .mainPanelTitle {

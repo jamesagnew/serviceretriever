@@ -148,9 +148,11 @@ public abstract class BasePersRecentMessage implements Serializable {
 
 	private String extractHeadersForBody(Map<String, List<String>> headers) {
 		StringBuilder b = new StringBuilder();
-		for (String nextHeader : headers.keySet()) {
-			for (String nextValue : headers.get(nextHeader)) {
-				b.append(nextHeader).append(": ").append(nextValue).append("\r\n");
+		if (headers != null) {
+			for (String nextHeader : headers.keySet()) {
+				for (String nextValue : headers.get(nextHeader)) {
+					b.append(nextHeader).append(": ").append(nextValue).append("\r\n");
+				}
 			}
 		}
 		b.append("\r\n");

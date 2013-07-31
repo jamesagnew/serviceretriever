@@ -1,14 +1,20 @@
 package net.svcret.admin.client.ui.alert;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import net.svcret.admin.client.AdminPortal;
+import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.stats.DateUtil;
 import net.svcret.admin.shared.Model;
+import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleFiringProblem;
+import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 
 import com.google.gwt.cell.client.SafeHtmlCell;
@@ -32,10 +38,10 @@ public class AlertGrid extends FlowPanel {
 	public AlertGrid(GDomainList theDomainList, Long theDomainPid, Long theServicePid, Long theServiceVersionPid) {
 		myDomainList = theDomainList;
 
-//		DataGrid<GMonitorRuleFiring> grid = new DataGrid<GMonitorRuleFiring>();
+		// DataGrid<GMonitorRuleFiring> grid = new DataGrid<GMonitorRuleFiring>();
 		final CellTable<GMonitorRuleFiring> grid = new CellTable<GMonitorRuleFiring>();
 		add(grid);
-		
+
 		grid.setEmptyTableWidget(new Label("No firings"));
 
 		// Create a Pager to control the table.
@@ -44,14 +50,6 @@ public class AlertGrid extends FlowPanel {
 		pager.setDisplay(grid);
 		pager.setPageSize(5);
 		add(pager);
-		
-		// Add a selection model so we can select cells.
-		// final SelectionModel<GMonitorRuleFiring> selectionModel =
-		// new
-		// MultiSelectionModel<GMonitorRuleFiring>(ContactDatabase.ContactInfo.KEY_PROVIDER);
-		// dataGrid.setSelectionModel(selectionModel,
-		// DefaultSelectionEventManager
-		// .<ContactInfo> createCheckboxManager());
 
 		Column<GMonitorRuleFiring, SafeHtml> startedColumn = new Column<GMonitorRuleFiring, SafeHtml>(new SafeHtmlCell()) {
 			@Override
@@ -66,7 +64,7 @@ public class AlertGrid extends FlowPanel {
 			@Override
 			public SafeHtml getValue(GMonitorRuleFiring theObject) {
 				Date time = theObject.getEndDate();
-				if (time==null) {
+				if (time == null) {
 					return SafeHtmlUtils.fromTrustedString("Still active");
 				}
 				return SafeHtmlUtils.fromTrustedString(DateUtil.formatTimeElapsedForMessage(time));
@@ -90,9 +88,53 @@ public class AlertGrid extends FlowPanel {
 		};
 		grid.addColumn(problemsColumn, "Issue(s) Detected");
 
+		Column<GMonitorRuleFiring, SafeHtml> affectsColumn = new Column<GMonitorRuleFiring, SafeHtml>(new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(GMonitorRuleFiring theObject) {
+				SafeHtmlBuilder b = new SafeHtmlBuilder();
+
+				Set<Long> affectedSvcVerPids = new HashSet<Long>();
+				for (GMonitorRuleFiringProblem next : theObject.getProblems()) {
+					affectedSvcVerPids.add(next.getServiceVersionPid());
+				}
+
+				b.appendHtmlConstant("<ul>");
+
+				for (GDomain nextDomain : myDomainList) {
+					for (GService nextSvc : nextDomain.getServiceList()) {
+						if (nextSvc.anyVersionPidsInThisServiceAreAmongThesePids(affectedSvcVerPids)) {
+							b.appendHtmlConstant("<li>");
+							b.appendHtmlConstant("<a href=\"#" + NavProcessor.getTokenEditDomain(true, nextDomain.getPid()) + "\">");
+							b.appendEscaped(nextDomain.getId());
+							b.appendHtmlConstant("</a> / <a href=\"#" + NavProcessor.getTokenEditService(true, nextDomain.getPid(), nextSvc.getPid()) + "\">");
+							b.appendEscaped(nextSvc.getId());
+							b.appendHtmlConstant("</a>");
+							if (nextSvc.allVersionPidsInThisServiceAreAmongThesePids(affectedSvcVerPids)) {
+								b.appendHtmlConstant(" (all versions)");
+							} else {
+								b.appendHtmlConstant("<ul>");
+								for (BaseGServiceVersion nextSvcVer : nextSvc.getVersionList()) {
+									b.appendHtmlConstant("<li>");
+									b.appendHtmlConstant("<a href=\"#" + NavProcessor.getTokenEditServiceVersion(true, nextSvcVer.getPid()) + "\">");
+									b.appendEscaped(nextSvcVer.getId());
+									b.appendHtmlConstant("</a></li>");
+								}
+								b.appendHtmlConstant("</ul>");
+							}
+						}
+					}
+				}
+
+				b.appendHtmlConstant("</ul>");
+				return b.toSafeHtml();
+			}
+
+		};
+		grid.addColumn(affectsColumn, "Affects Services");
+
 		final ListDataProvider<GMonitorRuleFiring> dp = new ListDataProvider<GMonitorRuleFiring>();
 		dp.addDataDisplay(grid);
-		
+
 		int start = 0;
 		AdminPortal.MODEL_SVC.loadMonitorRuleFirings(theDomainPid, theServicePid, theServiceVersionPid, start, new AsyncCallback<List<GMonitorRuleFiring>>() {
 
@@ -105,13 +147,13 @@ public class AlertGrid extends FlowPanel {
 			public void onSuccess(List<GMonitorRuleFiring> theResult) {
 				dp.getList().addAll(theResult);
 				dp.refresh();
-				
+
 				if (theResult.size() == 0) {
 					grid.setRowCount(dp.getList().size(), true);
-				}else {
+				} else {
 					grid.setRowCount(dp.getList().size(), false);
 				}
-				
+
 			}
 		});
 	}

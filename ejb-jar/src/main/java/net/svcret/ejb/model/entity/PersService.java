@@ -63,10 +63,10 @@ public class PersService extends BasePersServiceCatalogItem {
 	@Transient
 	private transient ServerSecuredEnum myServerSecured;
 
-	@OneToMany(fetch=FetchType.LAZY, cascade= {}, orphanRemoval=true, mappedBy="myService")
+	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myService")
 	private Collection<PersUserServicePermission> myUserPermissions;
 
-	@OneToMany(fetch=FetchType.LAZY, cascade= {}, orphanRemoval=true, mappedBy="myService")
+	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myService")
 	private Collection<PersMonitorAppliesTo> myMonitorRules;
 
 	@Column(name = "SERVICE_ID", nullable = false, length = 100)
@@ -96,8 +96,6 @@ public class PersService extends BasePersServiceCatalogItem {
 		}
 	}
 
-
-	
 	@Override
 	public Integer determineKeepNumRecentTransactions(ResponseTypeEnum theResultType) {
 		Integer retVal = super.determineKeepNumRecentTransactions(theResultType);
@@ -108,8 +106,8 @@ public class PersService extends BasePersServiceCatalogItem {
 	}
 
 	public Collection<PersMonitorAppliesTo> getMonitorRules() {
-		if (myMonitorRules==null) {
-			myMonitorRules=new ArrayList<PersMonitorAppliesTo>();
+		if (myMonitorRules == null) {
+			myMonitorRules = new ArrayList<PersMonitorAppliesTo>();
 		}
 		return myMonitorRules;
 	}
@@ -239,7 +237,7 @@ public class PersService extends BasePersServiceCatalogItem {
 			myIdToVersion.put(next.getVersionId(), next);
 			next.loadAllAssociations();
 		}
-		
+
 		for (PersMonitorAppliesTo next : getMonitorRules()) {
 			next.loadAllAssociations();
 		}
@@ -327,6 +325,16 @@ public class PersService extends BasePersServiceCatalogItem {
 	@Override
 	public boolean canInheritKeepNumRecentTransactions() {
 		return true;
+	}
+
+	@Override
+	public Set<PersMonitorRuleFiring> getActiveRuleFiringsWhichMightApply() {
+		Set<PersMonitorRuleFiring> retVal = new HashSet<PersMonitorRuleFiring>();
+		if (getMostRecentMonitorRuleFiring() != null && getMostRecentMonitorRuleFiring().getEndDate() == null) {
+			retVal.add(getMostRecentMonitorRuleFiring());
+		}
+		retVal.addAll(myDomain.getActiveRuleFiringsWhichMightApply());
+		return retVal;
 	}
 
 }

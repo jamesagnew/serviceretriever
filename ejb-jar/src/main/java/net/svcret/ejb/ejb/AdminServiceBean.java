@@ -1368,7 +1368,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setDescription(theVersion.getDescription());
 
 		theVersion.populateKeepRecentTransactionsToDto(retVal);
-		toUiMonitorRules(retVal, theVersion);
+		toUiMonitorRules(theVersion, retVal);
 
 		for (PersServiceVersionMethod nextMethod : theVersion.getMethods()) {
 			boolean loadStats = theLoadMethodStats != null && theLoadMethodStats.contains(nextMethod.getPid());
@@ -1596,41 +1596,35 @@ public class AdminServiceBean implements IAdminService {
 
 	private void toUiMonitorRules(PersDomain theDomain, BaseGDashboardObjectWithUrls<?> retVal) {
 		for (PersService nextSvc : theDomain.getServices()) {
-			toUiMonitorRules(retVal, nextSvc);
+			toUiMonitorRules(nextSvc, retVal);
 		}
 		for (PersMonitorAppliesTo nextRule : theDomain.getMonitorRules()) {
 			if (nextRule.getItem().equals(theDomain)) {
 				retVal.getMonitorRulePids().add(nextRule.getPid());
 			}
 		}
-		if (theDomain.isMostRecentMonitorRuleFiringActive()) {
-			retVal.setFailingRuleCount(retVal.getFailingRuleCount() + 1);
-		}
+		retVal.getFailingApplicableRulePids().addAll(theDomain.getActiveMonitorRuleFiringPidsWhichApply());
 	}
 
-	private void toUiMonitorRules(BaseGDashboardObjectWithUrls<?> retVal, PersService nextSvc) {
-		for (BasePersServiceVersion nextSvcVer : nextSvc.getVersions()) {
-			toUiMonitorRules(retVal, nextSvcVer);
+	private void toUiMonitorRules(PersService theService, BaseGDashboardObjectWithUrls<?> retVal) {
+		for (BasePersServiceVersion nextSvcVer : theService.getVersions()) {
+			toUiMonitorRules(nextSvcVer, retVal);
 		}
-		for (PersMonitorAppliesTo nextRule : nextSvc.getMonitorRules()) {
-			if (nextRule.getItem().equals(nextSvc)) {
+		for (PersMonitorAppliesTo nextRule : theService.getMonitorRules()) {
+			if (nextRule.getItem().equals(theService)) {
 				retVal.getMonitorRulePids().add(nextRule.getPid());
 			}
 		}
-		if (nextSvc.isMostRecentMonitorRuleFiringActive()) {
-			retVal.setFailingRuleCount(retVal.getFailingRuleCount() + 1);
-		}
+		retVal.getFailingApplicableRulePids().addAll(theService.getActiveMonitorRuleFiringPidsWhichApply());
 	}
 
-	private void toUiMonitorRules(BaseGDashboardObjectWithUrls<?> retVal, BasePersServiceVersion nextSvcVer) {
-		for (PersMonitorAppliesTo nextRule : nextSvcVer.getMonitorRules()) {
-			if (nextRule.getItem().equals(nextSvcVer)) {
+	private void toUiMonitorRules(BasePersServiceVersion theSvcVer, BaseGDashboardObjectWithUrls<?> retVal) {
+		for (PersMonitorAppliesTo nextRule : theSvcVer.getMonitorRules()) {
+			if (nextRule.getItem().equals(theSvcVer)) {
 				retVal.getMonitorRulePids().add(nextRule.getPid());
 			}
 		}
-		if (nextSvcVer.isMostRecentMonitorRuleFiringActive()) {
-			retVal.setFailingRuleCount(retVal.getFailingRuleCount() + 1);
-		}
+		retVal.getFailingApplicableRulePids().addAll(theSvcVer.getActiveMonitorRuleFiringPidsWhichApply());
 	}
 
 	private GHttpClientConfig toUi(PersHttpClientConfig theConfig) {
@@ -1662,7 +1656,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setServerSecured(theService.getServerSecured());
 
 		theService.populateKeepRecentTransactionsToDto(retVal);
-		toUiMonitorRules(retVal, theService);
+		toUiMonitorRules(theService, retVal);
 
 		if (theLoadStats) {
 			retVal.setStatsInitialized(new Date());

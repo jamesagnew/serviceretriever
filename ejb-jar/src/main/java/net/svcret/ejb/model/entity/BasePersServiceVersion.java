@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.persistence.CascadeType;
@@ -692,6 +693,16 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	@Override
 	public boolean canInheritKeepNumRecentTransactions() {
 		return true;
+	}
+
+	@Override
+	public Set<PersMonitorRuleFiring> getActiveRuleFiringsWhichMightApply() {
+		Set<PersMonitorRuleFiring> retVal = new HashSet<PersMonitorRuleFiring>();
+		if (getMostRecentMonitorRuleFiring() != null && getMostRecentMonitorRuleFiring().getEndDate() == null) {
+			retVal.add(getMostRecentMonitorRuleFiring());
+		}
+		retVal.addAll(myService.getActiveRuleFiringsWhichMightApply());
+		return retVal;
 	}
 
 }

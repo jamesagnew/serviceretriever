@@ -3,6 +3,8 @@ package net.svcret.ejb.model.entity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -115,6 +117,14 @@ public class PersMonitorRuleFiring extends BasePersObject {
 	 */
 	public void setStartDate(Date theStartDate) {
 		myStartDate = theStartDate;
+	}
+
+	public Set<Long> getAppliesToServiceVersionPids() {
+		HashSet<Long> retVal = new HashSet<Long>();
+		for (PersMonitorRuleFiringProblem next : getProblems()) {
+			retVal.add(next.getServiceVersion().getPid());
+		}
+		return retVal;
 	}
 
 }

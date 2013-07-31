@@ -15,7 +15,6 @@ import net.svcret.admin.shared.model.StatusEnum;
 
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Style.Display;
-import com.google.gwt.dom.client.Style.Float;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.i18n.client.NumberFormat;
@@ -46,13 +45,22 @@ public abstract class BaseDashModel implements IDashModel {
 
 		Date lastInvoc = myModel.getLastSuccessfulInvocation();
 		String text = DateUtil.formatTimeElapsedForLastInvocation(lastInvoc);
-		return new Label(text);
+		
+		Label label = new Label(text);
+
+		if (lastInvoc != null && lastInvoc.getTime() > (System.currentTimeMillis() - DateUtil.MILLIS_PER_HOUR)) {
+			label.addStyleName(CssConstants.DASHBOARD_LAST_USAGE_RECENT);
+		}else {
+			label.addStyleName(CssConstants.DASHBOARD_LAST_USAGE);
+		}
+		
+		return label;
 
 	}
 
 	@Override
 	public final Widget renderLatency() {
-		return returnSparklineFor60mins(myModel.getLatency60mins(), myModel.getStatsInitialized(), myModel.getAverageLatency60min(), myModel.getMaxLatency60min(), "ms");
+		return returnSparklineFor60minsLatency(myModel.getLatency60mins(), myModel.getStatsInitialized(), myModel.getAverageLatency60min(), myModel.getMaxLatency60min(), "ms");
 	}
 
 	static void createBackButton(final PopupPanel theActionPopup, final FlowPanel thePreviousContent, final FlowPanel content) {
@@ -132,7 +140,7 @@ public abstract class BaseDashModel implements IDashModel {
 		return ourDecimalFormat.format(theNumber);
 	}
 
-	public static Widget returnBarSparklineFor60mins(int[] theList, Date theStatsInitialized, String theAvgValue, String theMaxValue, String theUnitDesc) {
+	private static Widget returnBarSparklineFor60mins(int[] theList, Date theStatsInitialized, String theAvgValue, String theMaxValue, String theUnitDesc) {
 		if (theList == null) {
 			GWT.log(new Date() + " - No 60 minutes data");
 			return null;
@@ -156,9 +164,9 @@ public abstract class BaseDashModel implements IDashModel {
 	public static Widget returnImageForStatus(BaseGDashboardObjectWithUrls<?> theObject) {
 		String text;
 		ImageResource image;
-		if (theObject.getFailingRuleCount() > 0) {
+		if (theObject.getFailingApplicableRulePids().size() > 0) {
 			image = AdminPortal.IMAGES.dashMonitorAlert();
-			text = theObject.getFailingRuleCount() + " failures!";
+			text = theObject.getFailingApplicableRulePids().size() + " failures!";
 		} else if (theObject.getMonitorRulePids().size() > 0) {
 			image = AdminPortal.IMAGES.dashMonitorOk();
 			text = theObject.getMonitorRulePids().size() + " rules ok";
@@ -196,11 +204,16 @@ public abstract class BaseDashModel implements IDashModel {
 		return null;
 	}
 
-	public static Widget returnSparklineFor60mins(int[] theList, Date theStatsInitialized, int theAvgValue, int theMaxValue, String theUnitDesc) {
+	public static Widget returnSparklineFor60minsLatency(int[] theList, Date theStatsInitialized, int theAvgValue, int theMaxValue, String theUnitDesc) {
 		if (theList == null) {
 			GWT.log(new Date() + " - No 60 minutes data");
 			return null;
 		}
+
+		if (theMaxValue==0.0) {
+			return null;
+		}
+		
 		String text = "Avg:" + theAvgValue + " Max:" + theMaxValue + " " + theUnitDesc;
 
 		List<Long> dates = new ArrayList<Long>();
@@ -217,7 +230,11 @@ public abstract class BaseDashModel implements IDashModel {
 	}
 
 	public static Widget returnSparklineFor60MinsUsage(int[] list, Date theStatsInitialized, double averagePerMin, double theMaxPerMin) {
-		if (averagePerMin < 0.1||theMaxPerMin<0.1) {
+		if (theMaxPerMin == 0.0) {
+			Label retVal = new Label("No usage");
+			retVal.addStyleName(CssConstants.DASHBOARD_SPARKLINE_NOUSAGE);
+			return retVal;
+		}else if (averagePerMin < 0.1||theMaxPerMin<0.1) {
 			return returnBarSparklineFor60mins(list, theStatsInitialized, formatDouble(averagePerMin * 60), formatDouble(theMaxPerMin * 60),"/hr");
 		} else {
 			return returnBarSparklineFor60mins(list, theStatsInitialized, formatDouble(averagePerMin),formatDouble(theMaxPerMin),  "/min");

@@ -1,5 +1,6 @@
 package net.svcret.ejb.model.entity;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -113,11 +114,9 @@ public class PersUserStatus extends BasePersObject {
 			setLastAccessIfNewer(thePersUserStatus.getLastAccess());
 		}
 
-		for (PersUserMethodStatus nextNew : thePersUserStatus.getMethodStatuses().values()) {
-
+		for (PersUserMethodStatus nextNew : new ArrayList<PersUserMethodStatus>(thePersUserStatus.getMethodStatuses().values())) {
 			PersUserMethodStatus nextExisting = getOrCreateUserMethodStatus(nextNew.getPk().getMethod());
 			nextExisting.merge(nextNew);
-
 		}
 
 	}

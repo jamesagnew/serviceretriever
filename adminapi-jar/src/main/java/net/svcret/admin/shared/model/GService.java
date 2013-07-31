@@ -1,10 +1,14 @@
 package net.svcret.admin.shared.model;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class GService extends BaseGDashboardObjectWithUrls<GService> {
 
 	private static final long serialVersionUID = 1L;
 	private boolean myActive;
 	private GServiceVersionList myVersionList = new GServiceVersionList();;
+	private transient Set<Long> myServiceVersionPids = new HashSet<Long>();
 
 	public GServiceVersionList getVersionList() {
 		return myVersionList;
@@ -25,6 +29,7 @@ public class GService extends BaseGDashboardObjectWithUrls<GService> {
 			getVersionList().mergeResults(theObject.getVersionList());
 		}
 
+		myServiceVersionPids.clear();
 	}
 
 	/**
@@ -37,6 +42,29 @@ public class GService extends BaseGDashboardObjectWithUrls<GService> {
 
 	public void mergeSimple(GService theService) {
 		super.merge((BaseGDashboardObject<GService>) theService);
+	}
+
+	public boolean allVersionPidsInThisServiceAreAmongThesePids(Set<Long> theAffectedSvcVerPids) {
+		populateSvcVerPids();
+		return myServiceVersionPids.containsAll(theAffectedSvcVerPids);
+	}
+
+	private void populateSvcVerPids() {
+		if (myServiceVersionPids.isEmpty()) {
+			for (BaseGServiceVersion next : getVersionList()) {
+				myServiceVersionPids.add(next.getPid());
+			}
+		}
+	}
+
+	public boolean anyVersionPidsInThisServiceAreAmongThesePids(Set<Long> theAffectedSvcVerPids) {
+		populateSvcVerPids();
+		for (long next : myServiceVersionPids) {
+			if (theAffectedSvcVerPids.contains(next)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 }

@@ -2,6 +2,7 @@ package net.svcret.ejb.model.entity;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -246,6 +247,17 @@ public class PersDomain extends BasePersServiceCatalogItem {
 	@Override
 	public boolean canInheritKeepNumRecentTransactions() {
 		return false;
+	}
+
+	@Override
+	public Set<PersMonitorRuleFiring> getActiveRuleFiringsWhichMightApply() {
+		if (getMostRecentMonitorRuleFiring() != null && getMostRecentMonitorRuleFiring().getEndDate() == null) {
+			HashSet<PersMonitorRuleFiring> retVal = new HashSet<PersMonitorRuleFiring>();
+			retVal.add(getMostRecentMonitorRuleFiring());
+			return retVal;
+		}else {
+			return Collections.emptySet();
+		}
 	}
 
 }

@@ -1,6 +1,8 @@
 package net.svcret.ejb.model.entity;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -17,12 +19,26 @@ public abstract class BasePersServiceCatalogItem extends BasePersKeepsRecentTran
 
 	public abstract Collection<? extends BasePersServiceVersion> getAllServiceVersions();
 
+	public abstract Collection<PersMonitorRuleFiring> getActiveRuleFiringsWhichMightApply();
+	
 	public PersMonitorRuleFiring getMostRecentMonitorRuleFiring() {
 		return myMostRecentMonitorRuleFiring;
 	}
 
-	public boolean isMostRecentMonitorRuleFiringActive() {
-		return getMostRecentMonitorRuleFiring() != null && getMostRecentMonitorRuleFiring().getEndDate() == null;
+	public Set<Long> getActiveMonitorRuleFiringPidsWhichApply() {
+		HashSet<Long> retVal = new HashSet<Long>();
+		
+		for (PersMonitorRuleFiring next : getActiveRuleFiringsWhichMightApply()) {
+			Set<Long> applicableSvcVerPids = next.getAppliesToServiceVersionPids();
+			for (BasePersServiceVersion nextSvcVer : getAllServiceVersions()) {
+				if (applicableSvcVerPids.contains(nextSvcVer.getPid())) {
+					retVal.add(next.getPid());
+				}
+			}
+			
+		}
+		
+		return retVal;
 	}
 
 	/**

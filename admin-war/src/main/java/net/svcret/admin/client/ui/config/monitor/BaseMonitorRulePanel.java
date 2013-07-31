@@ -237,6 +237,8 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		myLatencyBox.removeStyleName(CssConstants.TEXTBOX_WITH_ERR);
 
 		myRule.setActive(myRuleActiveCheckBox.getValue());
+		myRule.setName(myRuleNameTextBox.getValue());
+		
 		Integer latency = null;
 		Integer latencyOverMins = null;
 		if (myLatencyEnabledCheck.getValue()) {

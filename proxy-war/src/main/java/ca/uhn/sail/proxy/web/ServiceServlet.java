@@ -133,6 +133,10 @@ public class ServiceServlet extends HttpServlet {
 			ourLog.info("Request was throttled and queue was full for URL: {}", theReq.getRequestURL());
 			sendThrottleQueueFullFailure(theResp);
 			return;
+		} catch (Throwable e) {
+			ourLog.info("Processing Failure", e);
+			sendFailure(theResp, e.getMessage());
+			return;
 		}
 
 		sendSuccessfulResponse(theResp, response);

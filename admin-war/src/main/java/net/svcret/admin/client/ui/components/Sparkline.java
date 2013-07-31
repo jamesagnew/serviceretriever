@@ -9,7 +9,6 @@ import java.util.List;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LabelElement;
-import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.SpanElement;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
@@ -93,7 +92,8 @@ public class Sparkline extends Widget {
 		rootElement.insertFirst(spanElement);
 
 		if (theText != null) {
-			Node textNode = Document.get().createTextNode(theText);
+			Element textNode = Document.get().createElement("nobr");
+			textNode.setInnerText(theText);
 			rootElement.insertAfter(textNode, spanElement);
 		}else {
 			LabelElement textNode = Document.get().createLabelElement();

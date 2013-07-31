@@ -40,5 +40,8 @@ public class CssConstants {
 	public static final String TRANSACTION_GRAPH_HEADER = "transactionGraphHeader";
 	public static final String DASHBOARD_TABLE_HEADER = "dashboardTableHeader";
 	public static final String DASHBOARD_SPARKLINE = "dashboardSparkline";
+	public static final String DASHBOARD_SPARKLINE_NOUSAGE = "dashboardSparklineNoUsage";
+	public static final String DASHBOARD_LAST_USAGE_RECENT = "dashboardLastUsageRecent";
+	public static final String DASHBOARD_LAST_USAGE = "dashboardLastUsage";
 	
 }

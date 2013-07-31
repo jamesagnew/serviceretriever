@@ -1,21 +1,26 @@
 package net.svcret.admin.shared.model;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public abstract class BaseGDashboardObjectWithUrls<T> extends BaseGDashboardObject<T> implements IProvidesUrlCount {
 
 	private static final long serialVersionUID = 1L;
 
-	private int myFailingRuleCount;
+	private Set<Long> myFailingApplicableRulePids;
 	private List<Long> myMonitorRulePids;
 	private ServerSecuredEnum myServerSecured;
 	private int myUrlsActive;
 	private int myUrlsDown;
 	private int myUrlsUnknown;
 
-	public int getFailingRuleCount() {
-		return myFailingRuleCount;
+	public Set<Long> getFailingApplicableRulePids() {
+		if (myFailingApplicableRulePids == null) {
+			myFailingApplicableRulePids = new HashSet<Long>();
+		}
+		return myFailingApplicableRulePids;
 	}
 
 	public List<Long> getMonitorRulePids() {
@@ -65,10 +70,6 @@ public abstract class BaseGDashboardObjectWithUrls<T> extends BaseGDashboardObje
 			setUrlsDown(obj.getUrlsDown());
 			setUrlsUnknown(obj.getUrlsUnknown());
 		}
-	}
-
-	public void setFailingRuleCount(int theFailingRuleCount) {
-		myFailingRuleCount = theFailingRuleCount;
 	}
 
 	/**
