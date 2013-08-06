@@ -2,6 +2,7 @@ package net.svcret.admin.client.ui.config.svcver;
 
 import static net.svcret.admin.client.AdminPortal.*;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -115,7 +116,6 @@ public class UrlGrid extends FlowPanel {
 	}
 
 	private final class MyPanel extends FlowPanelWithTooltip implements IProvidesTooltip {
-		private net.svcret.admin.client.ui.components.TooltipListener.Tooltip myTooltip;
 		private ResponseTypeEnum myResponseType;
 		private GUrlStatus myStatus;
 
@@ -214,6 +214,11 @@ public class UrlGrid extends FlowPanel {
 	}
 
 	protected void updateUrlPanel() {
+		if (myServiceVersion.getPidOrNull()==null) {
+			updateUrlPanel(new ArrayList<GUrlStatus>());
+			return;
+		}
+		
 		AdminPortal.MODEL_SVC.loadServiceVersionUrlStatuses(myServiceVersion.getPid(), new AsyncCallback<List<GUrlStatus>>() {
 
 			@Override

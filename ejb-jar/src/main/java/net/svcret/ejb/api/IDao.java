@@ -32,6 +32,7 @@ import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
+import net.svcret.ejb.model.entity.PersLibraryMessage;
 import net.svcret.ejb.model.entity.PersMonitorRule;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersService;
@@ -50,7 +51,7 @@ public interface IDao {
 	void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost);
 
 	void deleteHttpClientConfig(PersHttpClientConfig theConfig);
-
+	
 	void deleteService(PersService theService);
 
 	void deleteServiceVersion(BasePersServiceVersion theSv);
@@ -91,6 +92,10 @@ public interface IDao {
 	BasePersMethodInvocationStats getInvocationUserStats(PersInvocationUserStatsPk thePk);
 
 	List<PersInvocationUserStats> getInvocationUserStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff);
+
+	Collection<PersLibraryMessage> getLibraryMessagesWhichApplyToService(long thePid);
+
+	Collection<PersLibraryMessage> getLibraryMessagesWhichApplyToServiceVersion(long theServiceVersionPid);
 
 	PersMonitorRule getMonitorRule(long thePid);
 
@@ -136,6 +141,8 @@ public interface IDao {
 
 	long incrementStateCounter(String theKey);
 
+	List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<? extends BasePersServiceVersion> theAllSvcVers, int theStart);
+
 	BasePersRecentMessage loadRecentMessageForServiceVersion(long thePid);
 
 	BasePersRecentMessage loadRecentMessageForUser(long thePid);
@@ -157,6 +164,8 @@ public interface IDao {
 	void saveInvocationStats(Collection<BasePersInvocationStats> theStats);
 
 	void saveInvocationStats(Collection<BasePersInvocationStats> theStats, List<BasePersInvocationStats> theStatsToDelete);
+
+	void saveLibraryMessage(PersLibraryMessage theMessage);
 
 	void saveMonitorRule(PersMonitorRule theRule);
 
@@ -188,6 +197,8 @@ public interface IDao {
 
 	void trimServiceVersionRecentMessages(BasePersServiceVersion theVersion, ResponseTypeEnum theType, int theNumberToTrimTo);
 
+//	List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int theStart);
+
 	void trimUserRecentMessages(PersUser theUser, ResponseTypeEnum theType, int theNumberToTrimTo);
 
 	public static class RecentMessagesAndMaxToKeep {
@@ -215,8 +226,6 @@ public interface IDao {
 
 	}
 
-//	List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int theStart);
-
-	List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<? extends BasePersServiceVersion> theAllSvcVers, int theStart);
+	PersLibraryMessage getLibraryMessageByPid(long theMessagePid);
 
 }

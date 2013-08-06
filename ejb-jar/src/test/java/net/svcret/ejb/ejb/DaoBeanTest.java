@@ -31,6 +31,7 @@ import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
+import net.svcret.ejb.model.entity.PersLibraryMessage;
 import net.svcret.ejb.model.entity.PersMonitorRule;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem;
@@ -1021,6 +1022,71 @@ public class DaoBeanTest extends BaseJpaTest {
 		assertEquals(ldap, serverAuth.getAuthenticationHost());
 	}
 
+	@Test
+	public void testLibrary() throws ProcessingException {
+		
+		newEntityManager();
+
+		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
+		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
+		PersServiceVersionSoap11 version0 = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
+		PersServiceVersionSoap11 version1 = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId1", ServiceProtocolEnum.SOAP11);
+
+		newEntityManager();
+		
+		PersLibraryMessage m0 = new PersLibraryMessage();
+		m0.setAppliesTo(version0);
+		m0.setContentType("ct0");
+		m0.setDescription("desc0");
+		m0.setMessage("m0");
+		mySvc.saveLibraryMessage(m0);
+		
+		PersLibraryMessage m1 = new PersLibraryMessage();
+		m1.setAppliesTo(version1);
+		m1.setContentType("ct1");
+		m1.setDescription("desc1");
+		m1.setMessage("m1");
+		mySvc.saveLibraryMessage(m1);
+		
+		newEntityManager();
+		
+		Collection<PersLibraryMessage> msgs = mySvc.getLibraryMessagesWhichApplyToServiceVersion(version0.getPid());
+		assertEquals(1, msgs.size());
+		
+		PersLibraryMessage message = msgs.iterator().next();
+		assertEquals("ct0", message.getContentType());
+		assertEquals("desc0", message.getDescription());
+		assertEquals("m0", message.getMessage());
+
+		msgs = mySvc.getLibraryMessagesWhichApplyToServiceVersion(version1.getPid());
+		assertEquals(1, msgs.size());
+
+		message.setAppliesTo(version0, version1);
+		
+		mySvc.saveLibraryMessage(message);
+		
+		newEntityManager();
+
+		msgs = mySvc.getLibraryMessagesWhichApplyToServiceVersion(version1.getPid());
+		assertEquals(2, msgs.size());
+		msgs = mySvc.getLibraryMessagesWhichApplyToService(service.getPid());
+		assertEquals(2, msgs.size());
+
+		message.setAppliesTo(version1);
+		
+		mySvc.saveLibraryMessage(message);
+		
+		newEntityManager();
+
+		msgs = mySvc.getLibraryMessagesWhichApplyToServiceVersion(version0.getPid());
+		assertEquals(0, msgs.size());
+		msgs = mySvc.getLibraryMessagesWhichApplyToServiceVersion(version1.getPid());
+		assertEquals(2, msgs.size());
+		msgs = mySvc.getLibraryMessagesWhichApplyToService(service.getPid());
+		assertEquals(2, msgs.size());
+
+	}
+	
 	@Test
 	public void testGetOrCreateServiceVersion() throws ProcessingException {
 		newEntityManager();

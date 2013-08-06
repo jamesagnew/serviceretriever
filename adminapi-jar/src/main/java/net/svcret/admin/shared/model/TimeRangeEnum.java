@@ -12,7 +12,9 @@ public enum TimeRangeEnum {
 
 	ONE_WEEK(7 * 24 * 60, "Last Week"),
 
-	ONE_MONTH(31 * 24 * 60, "Last Month");
+	ONE_MONTH(31 * 24 * 60, "Last Month"),
+
+	SIX_MONTH(6 * 31 * 24 * 60, "Six Months");
 
 	private int myNumMins;
 	private String myFriendlyName;

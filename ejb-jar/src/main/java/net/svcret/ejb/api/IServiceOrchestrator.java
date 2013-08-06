@@ -31,7 +31,7 @@ public interface IServiceOrchestrator {
 	/**
 	 * Process a request invoked through a means other than the proxy itself (e.g. monitoring, management console, etc.)
 	 */
-	SidechannelOrchestratorResponseBean handleSidechannelRequest(long theServiceVersionPid, String theRequestBody, String theRequestedByString) throws UnknownRequestException, InternalErrorException,
+	SidechannelOrchestratorResponseBean handleSidechannelRequest(long theServiceVersionPid, String theRequestBody,String theContentType, String theRequestedByString) throws UnknownRequestException, InternalErrorException,
 			ProcessingException, IOException, SecurityFailureException;
 
 	/**

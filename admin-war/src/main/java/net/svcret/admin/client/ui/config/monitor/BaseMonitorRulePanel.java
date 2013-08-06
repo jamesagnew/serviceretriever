@@ -49,7 +49,6 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 	private TextBox myRuleNameTextBox;
 	private CheckBox myUrlUnavailableCheckbox;
 	private ListBox myUrlUnavailableTypeCombo;
-	private GDomainList myDomainList;
 	private EditableField myNotificationEditor;
 
 	public BaseMonitorRulePanel() {
@@ -298,7 +297,6 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 
 			@Override
 			public void onSuccess(GDomainList theResult) {
-				myDomainList = theResult;
 				myRule = theRule;
 
 				myLoadingSpinner.hideCompletely();

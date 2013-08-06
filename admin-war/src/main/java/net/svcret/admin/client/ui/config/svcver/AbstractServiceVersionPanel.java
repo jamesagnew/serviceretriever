@@ -22,7 +22,6 @@ import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Style.Float;
-import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -31,7 +30,6 @@ import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HasValue;
 import com.google.gwt.user.client.ui.HorizontalPanel;
@@ -42,20 +40,6 @@ import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
 public abstract class AbstractServiceVersionPanel extends FlowPanel implements RequiresResize {
-
-	@Override
-	public void onResize() {
-		GWT.log("Setting width");
-		if (myBottomContents!=null) {
-			myBottomContents.setWidth((getOffsetWidth()-20)+"px");
-		}
-	}
-
-	@Override
-	protected void onLoad() {
-		super.onLoad();
-		onResize();
-	}
 
 	private BaseDetailPanel<?> myBottomContents;
 	private FlowPanel myContentPanel;
@@ -82,7 +66,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 	}
 
 	protected AbstractServiceVersionPanel(Long theDomainPid, Long theServicePid, Long theUncommittedSessionId) {
-		
+
 		myDomainPid = theDomainPid;
 		myServicePid = theServicePid;
 		myUncommittedSessionId = theUncommittedSessionId;
@@ -90,10 +74,10 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 		myTopPanel = new FlowPanel();
 		add(myTopPanel);
 
-		myTopPanel.setStylePrimaryName("mainPanel");
+		myTopPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
 
 		Label titleLabel = new Label(getDialogTitle());
-		titleLabel.setStyleName("mainPanelTitle");
+		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
 		myTopPanel.add(titleLabel);
 
 		myContentPanel = new FlowPanel();
@@ -197,7 +181,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 				}
 			});
 			savePanel.add(testButton);
-			
+
 			// TODO: better icon
 			PButton transactionsButton = new PButton(AdminPortal.IMAGES.iconEdit(), "Recent Transactions");
 			transactionsButton.addClickHandler(new ClickHandler() {
@@ -208,7 +192,15 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 			});
 			savePanel.add(transactionsButton);
 
-			// TODO: better icon
+			PButton msgLibButton = new PButton(AdminPortal.IMAGES.iconLibrary(), AdminPortal.MSGS.actions_MessageLibrary());
+			msgLibButton.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent theEvent) {
+					History.newItem(NavProcessor.getTokenServiceVersionMessageLibrary(true, myVersion.getPid()));
+				}
+			});
+			savePanel.add(msgLibButton);
+
 			PButton statsButton = new PButton(AdminPortal.IMAGES.iconStatus(), "Statistics");
 			statsButton.addClickHandler(new ClickHandler() {
 				@Override
@@ -237,6 +229,14 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 
 	public boolean isAddPanel() {
 		return this instanceof AddServiceVersionPanel;
+	}
+
+	@Override
+	public void onResize() {
+		GWT.log("Setting width");
+		if (myBottomContents != null) {
+			myBottomContents.setWidth((getOffsetWidth() - 20) + "px");
+		}
 	}
 
 	private void handleDomainListChange() {
@@ -319,16 +319,22 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 
 	protected abstract void handleDoneSaving(AddServiceVersionResponse theResult);
 
+	@Override
+	protected void onLoad() {
+		super.onLoad();
+		onResize();
+	}
+
 	protected void setServiceVersion(BaseGServiceVersion theResult) {
 		myLoadingSpinner.hide();
 
 		myVersion = theResult;
 		myVersionTextBox.setValue(myVersion.getId(), false);
 
-		if (myBottomContents!=null) {
+		if (myBottomContents != null) {
 			remove(myBottomContents);
 		}
-		
+
 		switch (theResult.getProtocol()) {
 		case SOAP11:
 			myBottomContents = new SoapDetailPanel(this, (GSoap11ServiceVersion) theResult);

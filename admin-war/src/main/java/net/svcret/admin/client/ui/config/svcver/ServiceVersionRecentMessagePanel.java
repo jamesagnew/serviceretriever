@@ -1,6 +1,6 @@
 package net.svcret.admin.client.ui.config.svcver;
 
-import static net.svcret.admin.client.AdminPortal.MSGS;
+import static net.svcret.admin.client.AdminPortal.*;
 
 import java.util.List;
 
@@ -9,7 +9,6 @@ import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.HtmlH1;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.stats.RecentMessagesGrid;
-import net.svcret.admin.client.ui.stats.RecentMessagesPanel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
@@ -81,27 +80,26 @@ public class ServiceVersionRecentMessagePanel extends FlowPanel {
 		myTransactionTypes.addStyleName(CssConstants.CONTENT_OUTER_TAB_PANEL);
 		add(myTransactionTypes);
 
-		boolean isUser=false;
 		if (theLists.getSuccessList() != null) {
-			addRecentTransactionTable(MSGS.serviceVersionStats_RecentSuccessTitle(), theLists.getKeepSuccess(), theLists.getSuccessList(), isUser, "Success");
+			addRecentTransactionTable(MSGS.serviceVersionStats_RecentSuccessTitle(), theLists.getKeepSuccess(), theLists.getSuccessList(), "Success");
 		}else {
 			addNotKeptRecentTransactionTable(MSGS.serviceVersionStats_RecentSuccessTitle(), "Success");
 		}
 
 		if (theLists.getFaultList() != null) {
-			addRecentTransactionTable(MSGS.serviceVersionStats_RecentFaultTitle(), theLists.getKeepFault(), theLists.getFaultList(), isUser, "Fault");
+			addRecentTransactionTable(MSGS.serviceVersionStats_RecentFaultTitle(), theLists.getKeepFault(), theLists.getFaultList(), "Fault");
 		}else {
 			addNotKeptRecentTransactionTable(MSGS.serviceVersionStats_RecentFaultTitle(), "Fault");
 		}
 
 		if (theLists.getFailList() != null) {
-			addRecentTransactionTable(MSGS.serviceVersionStats_RecentFailTitle(), theLists.getKeepFail(), theLists.getFailList(), isUser, "Failed");
+			addRecentTransactionTable(MSGS.serviceVersionStats_RecentFailTitle(), theLists.getKeepFail(), theLists.getFailList(), "Failed");
 		}else {
 			addNotKeptRecentTransactionTable(MSGS.serviceVersionStats_RecentFailTitle(), "Failed");
 		}
 
 		if (theLists.getSecurityFailList() != null) {
-			addRecentTransactionTable(MSGS.serviceVersionStats_RecentSecurityFailTitle(), theLists.getKeepSecurityFail(), theLists.getSecurityFailList(), isUser, "Security Failure");
+			addRecentTransactionTable(MSGS.serviceVersionStats_RecentSecurityFailTitle(), theLists.getKeepSecurityFail(), theLists.getSecurityFailList(), "Security Failure");
 		}else {
 			addNotKeptRecentTransactionTable(MSGS.serviceVersionStats_RecentSecurityFailTitle(), "Security Failure");
 		}
@@ -109,12 +107,12 @@ public class ServiceVersionRecentMessagePanel extends FlowPanel {
 		myTransactionTypes.selectTab(0);
 	}
 
-	private void addRecentTransactionTable(String theTitle, int theNumToKeep, List<GRecentMessage> theList, boolean theIsUsers, String theTransactionType) {
+	private void addRecentTransactionTable(String theTitle, int theNumToKeep, List<GRecentMessage> theList, String theTransactionType) {
 		
 		FlowPanel panel = new FlowPanel();
 		panel.add(new HtmlH1(theTitle));
 		panel.add(new Label(MSGS.serviceVersionStats_RecentConfigNum("Service Version", theNumToKeep, theTransactionType)));
-		panel.add(new RecentMessagesGrid(theList, theIsUsers));
+		panel.add(new RecentMessagesGrid(theList));
 		
 		myTransactionTypes.add(panel, theTransactionType + "(" + theList.size() + ")");
 		
@@ -132,37 +130,4 @@ public class ServiceVersionRecentMessagePanel extends FlowPanel {
 		
 	}
 	
-	// public RecentMessagesPanel(GRecentMessageLists theLists, boolean theIsUser, String theUnitType) {
-	// addStyleName(CssConstants.CONTENT_INNER_PANEL);
-	//
-	// myUnitType = theUnitType;
-	//
-	// if (!theLists.hasAtLeastOneList()) {
-	// this.add(new Label(MSGS.serviceVersionStats_NoRecentMsgs(theUnitType)));
-	// }
-	//
-	// if (theLists.getSuccessList() != null) {
-	// addRecentTransactionTable(MSGS.serviceVersionStats_RecentSuccessTitle(), theLists.getKeepSuccess(), theLists.getSuccessList(), theIsUser, "Success");
-	// }
-	//
-	// if (theLists.getFaultList() != null) {
-	// addRecentTransactionTable(MSGS.serviceVersionStats_RecentFaultTitle(), theLists.getKeepFault(), theLists.getFaultList(), theIsUser, "Fault");
-	// }
-	//
-	// if (theLists.getFailList() != null) {
-	// addRecentTransactionTable(MSGS.serviceVersionStats_RecentFailTitle(), theLists.getKeepFail(), theLists.getFailList(), theIsUser, "Failed");
-	// }
-	//
-	// if (theLists.getSecurityFailList() != null) {
-	// addRecentTransactionTable(MSGS.serviceVersionStats_RecentSecurityFailTitle(), theLists.getKeepSecurityFail(), theLists.getSecurityFailList(), theIsUser, "Security Failure");
-	// }
-	//
-	// }
-	//
-	// private void addRecentTransactionTable(String theTitle, int theNumToKeep, List<GRecentMessage> theList, boolean theIsUsers, String theTransactionType) {
-	// this.add(new HtmlH1(theTitle));
-	// this.add(new Label(MSGS.serviceVersionStats_RecentConfigNum(myUnitType, theNumToKeep, theTransactionType)));
-	// this.add(new RecentMessagesGrid(theList, theIsUsers));
-	// }
-
 }

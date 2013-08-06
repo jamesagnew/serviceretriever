@@ -18,14 +18,21 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	private String myContactNotes;
 	private ArrayList<GUserDomainPermission> myDomainPermissions;
 	private HashSet<UserGlobalPermissionEnum> myGlobalPermissions;
+	private List<Integer> myStatsFaultTransactions;
 	private Date myStatsInitialized;
 	private Date myStatsLastAccess;
-	private int[] myStatsSecurityFailTransactions;
+	private List<Integer> myStatsSecurityFailTransactions;
 	private double myStatsSecurityFailTransactionsAvgPerMin;
-	private int[] myStatsSuccessTransactions;
+
+	private List<Integer> myStatsSuccessTransactions;
+
 	private double myStatsSuccessTransactionsAvgPerMin;
-	private GThrottle myThrottle=new GThrottle();
+	private GThrottle myThrottle = new GThrottle();
 	private String myUsername;
+
+	private long myStatsStartTime;
+
+	private double myStatsFaultTransactionsAvgPerMin;
 
 	public GUser() {
 		super();
@@ -42,12 +49,12 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 		initGlobalPermissions();
 		myGlobalPermissions.add(thePermission);
 	}
-	
+
 	/**
 	 * @return the allowableSourceIps
 	 */
 	public List<String> getAllowableSourceIps() {
-		if (myAllowableSourceIps==null) {
+		if (myAllowableSourceIps == null) {
 			return Collections.emptyList();
 		}
 		return myAllowableSourceIps;
@@ -116,6 +123,10 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 		return permission;
 	}
 
+	public List<Integer> getStatsFaultTransactions() {
+		return myStatsFaultTransactions;
+	}
+
 	/**
 	 * @return the statsInitialized
 	 */
@@ -133,7 +144,7 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	/**
 	 * @return the statsSecurityFailTransactions
 	 */
-	public int[] getStatsSecurityFailTransactions() {
+	public List<Integer> getStatsSecurityFailTransactions() {
 		return myStatsSecurityFailTransactions;
 	}
 
@@ -147,7 +158,7 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	/**
 	 * @return the statsTransactions
 	 */
-	public int[] getStatsSuccessTransactions() {
+	public List<Integer> getStatsSuccessTransactions() {
 		return myStatsSuccessTransactions;
 	}
 
@@ -169,12 +180,6 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 		return myUsername;
 	}
 
-	private void initGlobalPermissions() {
-		if (myGlobalPermissions == null) {
-			setGlobalPermissions(new HashSet<UserGlobalPermissionEnum>());
-		}
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -189,7 +194,7 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	 * @return the isStatsInitialized
 	 */
 	public boolean isStatsInitialized() {
-		return myStatsInitialized!=null;
+		return myStatsInitialized != null;
 	}
 
 	@Override
@@ -283,6 +288,10 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 		}
 	}
 
+	public void setStatsFaultTransactions(List<Integer> theStatsFaultTransactions) {
+		myStatsFaultTransactions = theStatsFaultTransactions;
+	}
+
 	/**
 	 * @param theStatsInitialized
 	 *            the isStatsInitialized to set
@@ -303,7 +312,7 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	 * @param theStatsSecurityFailTransactions
 	 *            the statsSecurityFailTransactions to set
 	 */
-	public void setStatsSecurityFailTransactions(int[] theStatsSecurityFailTransactions) {
+	public void setStatsSecurityFailTransactions(List<Integer> theStatsSecurityFailTransactions) {
 		myStatsSecurityFailTransactions = theStatsSecurityFailTransactions;
 	}
 
@@ -319,7 +328,7 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	 * @param theStatsSuccessTransactions
 	 *            the statsTransactions to set
 	 */
-	public void setStatsSuccessTransactions(int[] theStatsSuccessTransactions) {
+	public void setStatsSuccessTransactions(List<Integer> theStatsSuccessTransactions) {
 		myStatsSuccessTransactions = theStatsSuccessTransactions;
 	}
 
@@ -341,6 +350,38 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 	 */
 	public void setUsername(String theUsername) {
 		myUsername = theUsername;
+	}
+
+	private void initGlobalPermissions() {
+		if (myGlobalPermissions == null) {
+			setGlobalPermissions(new HashSet<UserGlobalPermissionEnum>());
+		}
+	}
+
+	public void setStatsStartTime(long theStartTime) {
+		myStatsStartTime = theStartTime;
+	}
+
+	public List<Long> getStats60MinsTimestamps() {
+		ArrayList<Long> retVal = new ArrayList<Long>();
+		long next = myStatsStartTime;
+		for (int i = 0; i < 60; i++) {
+			retVal.add(next);
+			next += (60 * 1000);
+		}
+		return retVal;
+	}
+
+	public double getStatsTotalAvgPerMin() {
+		return getStatsFaultTransactionsAvgPerMin() + getStatsSecurityFailTransactionsAvgPerMin() + getStatsSuccessTransactionsAvgPerMin();
+	}
+
+	public void setStatsFaultTransactionsAvgPerMin(double theTo60MinAveragePerMin) {
+		myStatsFaultTransactionsAvgPerMin = theTo60MinAveragePerMin;
+	}
+
+	public double getStatsFaultTransactionsAvgPerMin() {
+		return myStatsFaultTransactionsAvgPerMin;
 	}
 
 }

@@ -49,4 +49,10 @@ public interface Images extends ClientBundle {
 	
 	@Source("net/svcret/images/dash_monitor_alert_16.png")
 	ImageResource dashMonitorAlert();
+
+	@Source("net/svcret/images/icon_tools_16.png")
+	ImageResource iconTools16();
+
+	@Source("net/svcret/images/icon_library_16.png")
+	ImageResource iconLibrary();
 }

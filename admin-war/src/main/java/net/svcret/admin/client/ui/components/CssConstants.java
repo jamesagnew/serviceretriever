@@ -43,5 +43,10 @@ public class CssConstants {
 	public static final String DASHBOARD_SPARKLINE_NOUSAGE = "dashboardSparklineNoUsage";
 	public static final String DASHBOARD_LAST_USAGE_RECENT = "dashboardLastUsageRecent";
 	public static final String DASHBOARD_LAST_USAGE = "dashboardLastUsage";
+	public static final String DASHBOARD_SECURITY_PANEL_NOTSECURED = "dashboardSecurityPanelNotSecured";
+	public static final String DASHBOARD_MONITOR_FAILURES = "dashboardMonitorPanelFailures";
+	public static final String DASHBOARD_MONITOR = "dashboardMonitorPanel";
+	public static final String DASHBOARD_MONITOR_NORULES = "dashboardMonitorPanelNoRules";
+	public static final String RECENT_TRANSACTIONS_ACTION_BUTTON = "recentTransactionsActionButton";
 	
 }

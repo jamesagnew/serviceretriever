@@ -49,6 +49,7 @@ import net.svcret.ejb.util.XMLUtils;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.ClientProtocolException;
+import org.w3c.dom.Attr;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -405,15 +406,10 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 		ourLog.info("Loaded WSDL ({} bytes) in {}ms, going to parse", wsdlHttpResponse.getBody().length(), wsdlHttpResponse.getResponseTime());
 
 		Document wsdlDocument = XMLUtils.parse(wsdlHttpResponse.getBody());
-		NodeList portTypeElements = wsdlDocument.getElementsByTagNameNS(Constants.NS_WSDL, "portType");
 
-		if (portTypeElements.getLength() == 0) {
-			throw new ProcessingException("WSDL \"" + theUrl + "\" has no PortType defined");
-		}
-
-		if (portTypeElements.getLength() > 1) {
-			throw new ProcessingException("WSDL \"" + theUrl + "\" has more than one PortType defined (this is not currently supported by ServiceProxy)");
-		}
+//		if (portTypeElements.getLength() > 1) {
+//			throw new ProcessingException("WSDL \"" + theUrl + "\" has more than one PortType defined (this is not currently supported by ServiceProxy)");
+//		}
 
 		retVal.setWsdlUrl(theUrl);
 		String contentType = wsdlHttpResponse.getContentType();
@@ -463,15 +459,17 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 			}
 		}
 
-		introspectPortType(theUrl, retVal, wsdlDocument, portTypeElements);
-
 		/*
 		 * Process Ports (bound implementation URLs)
 		 */
 
 		int idx = 0;
 		NodeList servicesList = wsdlDocument.getElementsByTagNameNS(Constants.NS_WSDL, "service");
-		for (int svcIdx = 0; svcIdx < servicesList.getLength(); svcIdx++) {
+		
+		String bindingNs=null;
+		String bindingLocal=null;
+				
+		for (int svcIdx = 0; svcIdx < servicesList.getLength() && bindingNs==null; svcIdx++) {
 			Element serviceElem = (Element) servicesList.item(svcIdx);
 			NodeList portList = serviceElem.getElementsByTagNameNS(Constants.NS_WSDL, "port");
 			for (int portIdx = 0; portIdx < portList.getLength(); portIdx++) {
@@ -498,22 +496,78 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 
 						retVal.addUrl(persUrl);
 
+						String bindingNode = portElem.getAttribute("binding");
+						if (StringUtils.isNotBlank(bindingNode)) {
+							int colonIndex = bindingNode.indexOf(':');
+							String prefix = bindingNode.substring(0, colonIndex);
+							bindingNs = portElem.getOwnerDocument().lookupNamespaceURI(prefix);
+							bindingLocal = bindingNode.substring(colonIndex+1);
+						}
+						
 					}
 				}
 
 			}
 		}
 
+		if (bindingNs==null||bindingLocal==null) {
+			throw new ProcessingException("WSDL \"" + theUrl + "\" does not appear to have a SOAP 1.1 binding");
+		}
+		
+		// We found the service, now find the corresponding binding
+		NodeList bindingElements = wsdlDocument.getElementsByTagNameNS(Constants.NS_WSDL, "binding");
+		Element bindingElement= null;
+		for (int i = 0; i < bindingElements.getLength(); i++) {
+			Element nextBindingElement = (Element) bindingElements.item(i);
+			if (bindingLocal.equals(nextBindingElement.getAttribute("name"))) {
+				bindingElement=nextBindingElement;
+			}
+		}
+		
+		if (bindingElement==null) {
+			throw new ProcessingException("WSDL \"" + theUrl + "\" does not appear to have a SOAP 1.1 binding named '" + bindingLocal + "'");
+		}
+		
+		String bindingPortTypeFull = bindingElement.getAttribute("type");
+		if (StringUtils.isBlank(bindingPortTypeFull)) {
+			throw new ProcessingException("WSDL \"" + theUrl + "\" binding named '" + bindingLocal + "' does not have a type attribute");
+		}
+		
+		String bindingPortType = bindingPortTypeFull.replaceFirst(".*\\:", "");
+		NodeList portTypeElements = wsdlDocument.getElementsByTagNameNS(Constants.NS_WSDL, "portType");
+
+		if (portTypeElements.getLength() == 0) {
+			throw new ProcessingException("WSDL \"" + theUrl + "\" has no PortType defined");
+		}
+		
+		Element portType = null;
+		for (int i = 0; i < portTypeElements.getLength(); i++) {
+			Element next = (Element) portTypeElements.item(i);
+			String name = next.getAttribute("name");
+			if (bindingPortType.equals(name)) {
+				portType = next;
+			}
+		}
+		
+		if (portType==null) {
+			throw new ProcessingException("WSDL \"" + theUrl + "\" has no PortType named '" + bindingLocal + "'");
+		}
+	
+		introspectPortType(theUrl, retVal, wsdlDocument, portType);
+//		if (portTypeElements.getLength() > 1) {
+//		throw new ProcessingException("WSDL \"" + theUrl + "\" has more than one PortType defined (this is not currently supported by ServiceProxy)");
+//	}
+
+		
 		return retVal;
 	}
 
-	private void introspectPortType(String theUrl, PersServiceVersionSoap11 retVal, Document wsdlDocument, NodeList portTypeElements) throws ProcessingException {
+	private void introspectPortType(String theUrl, PersServiceVersionSoap11 retVal, Document wsdlDocument, Element thePortType) throws ProcessingException {
 		/*
 		 * Process Operations
 		 */
 
-		Element portType = (Element) portTypeElements.item(0);
-		NodeList operations = portType.getElementsByTagNameNS(Constants.NS_WSDL, "operation");
+		NodeList operations = thePortType.getElementsByTagNameNS(Constants.NS_WSDL, "operation");
 
 		if (operations.getLength() == 0) {
 			throw new ProcessingException("WSDL \"" + theUrl + "\" has no operations defined");
@@ -666,7 +720,7 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 
 		String style = binding2.getAttribute("style");
 		if (StringUtils.isBlank(style)) {
-			throw new ProcessingException("Missing style attribute in binding");
+			style= "document"; // according to spec, this is the default
 		}
 		StyleEnum styleEnum;
 		try {
@@ -682,12 +736,17 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 		NodeList bindingList = theWsdlDocument.getElementsByTagNameNS(Constants.NS_WSDL, "binding");
 		if (bindingList.getLength() == 0) {
 			throw new ProcessingException("WSDL contains no bindings. This is not supported");
-		} else if (bindingList.getLength() > 1) {
-			throw new ProcessingException("WSDL contains multiple bindings. This is not supported");
+		} 
+		
+		for (int i = 0; i < bindingList.getLength(); i++) {
+			Element binding = (Element) bindingList.item(i);
+			
+			if (binding.getElementsByTagNameNS(Constants.NS_WSDLSOAP, "binding").getLength() == 1) {
+				return binding;
+			}
 		}
-
-		Element binding = (Element) bindingList.item(0);
-		return binding;
+		
+		throw new ProcessingException("WSDL contains no bindings with SOAP 1.1 protocol. This is not supported");
 	}
 
 	/**

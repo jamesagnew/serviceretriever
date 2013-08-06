@@ -2,7 +2,6 @@ package net.svcret.admin.client.ui.config.svcver;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
-import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.HtmlLabel;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
@@ -34,7 +33,6 @@ public class SoapDetailPanel extends BaseDetailPanel<GSoap11ServiceVersion> {
 		super(theParent, theServiceVersion);
 	}
 
-
 	private void handleLoadWsdl() {
 		myLoadWsdlSpinner.show();
 		final long start = System.currentTimeMillis();
@@ -61,12 +59,22 @@ public class SoapDetailPanel extends BaseDetailPanel<GSoap11ServiceVersion> {
 		AdminPortal.MODEL_SVC.loadWsdl(getServiceVersion(), myUrlTextBox.getValue(), callback);
 	}
 
-
-
 	private void initWsdlPanel(FlowPanel thePanel) {
 
-		thePanel.add(new Label("Every SOAP based service must have a backing WSDL, which provides " + "clients with the service contract being implemented. Enter a URL to a remote WSDL " + "here, and click the \"Load\" button below, and ServiceRetriever will fetch the "
-				+ "WSDL and initialize your service."));
+		//@formatter:off
+		if (getParentPanel().isAddPanel()) {
+			thePanel.add(new Label(
+					"Every SOAP based service must have a backing WSDL, which provides " + 
+					"clients with the service contract being implemented. Enter a URL to a remote WSDL " + 
+					"here, and click the \"Load\" button below, and ServiceRetriever will fetch the "
+					+ "WSDL and initialize your service."));
+		} else {
+			thePanel.add(new Label(
+					"This box contains the URL to the WSDL that was used to define this " +
+					"version of the service initially. Click the 'Load WSDL' button below to reload " +
+					"the WSDL, updating the method definitions accordingly."));
+		}
+		//@formatter:on
 
 		HtmlLabel urlLabel = new HtmlLabel("URL:", "urlTb");
 		thePanel.add(urlLabel);
@@ -103,16 +111,12 @@ public class SoapDetailPanel extends BaseDetailPanel<GSoap11ServiceVersion> {
 		thePanel.add(new HtmlBr());
 	}
 
-
-
-
 	@Override
 	protected void addProtocolSpecificPanelsToTop(boolean theIsAddPanel) {
 		FlowPanel wsdlPanel = new FlowPanel();
 		add(wsdlPanel, "WSDL");
 		initWsdlPanel(wsdlPanel);
 	}
-
 
 	@Override
 	public ServiceProtocolEnum getProtocol() {

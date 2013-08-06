@@ -1,6 +1,7 @@
 package net.svcret.admin.server.rpc;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -9,11 +10,13 @@ import java.util.Set;
 
 import net.svcret.admin.client.rpc.ModelUpdateService;
 import net.svcret.admin.shared.ServiceFailureException;
+import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
 import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.BaseGDashboardObjectWithUrls;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
@@ -161,8 +164,9 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		user.addGlobalPermission(UserGlobalPermissionEnum.SUPERUSER);
 		user.setStatsLastAccess(new Date());
 		user.setStatsInitialized(new Date());
-		user.setStatsSecurityFailTransactions(random60mins());
-		user.setStatsSuccessTransactions(random60mins());
+		user.setStatsSecurityFailTransactions(random60minsList());
+		user.setStatsSuccessTransactions(random60minsList());
+		user.setStatsStartTime(99999999L);
 		user.setStatsSecurityFailTransactionsAvgPerMin(2.0);
 		user.setStatsSuccessTransactionsAvgPerMin(0.01);
 		user.setAllowableSourceIps(new ArrayList<String>());
@@ -178,8 +182,9 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		user.setAuthHostPid(hostList.getPid());
 		user.addGlobalPermission(UserGlobalPermissionEnum.SUPERUSER);
 		user.setStatsInitialized(new Date());
-		user.setStatsSecurityFailTransactions(random60mins());
-		user.setStatsSuccessTransactions(random60mins());
+		user.setStatsSecurityFailTransactions(random60minsList());
+		user.setStatsSuccessTransactions(random60minsList());
+		user.setStatsStartTime(99999999L);
 		user.setStatsSecurityFailTransactionsAvgPerMin(2.0);
 		user.setStatsSuccessTransactionsAvgPerMin(0.01);
 		user.setAllowableSourceIps(new ArrayList<String>());
@@ -187,7 +192,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		user.getAllowableSourceIps().add("192.168.1.1");
 		myUserList.add(user);
 
-		myMonitorRuleList=new GMonitorRuleList();
+		myMonitorRuleList = new GMonitorRuleList();
 		myMonitorRuleList.add(new GMonitorRule());
 		myMonitorRuleList.get(0).setName("Demo Rule");
 		myMonitorRuleList.get(0).setFireForBackingServiceLatencyIsAboveMillis(100);
@@ -277,43 +282,42 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 
 	}
 
-	private GRecentMessage createMessage(boolean theIncludeContents) {
+	private GRecentMessage createMessage(boolean theIncludeContents, RecentMessageTypeEnum theType) {
 		GRecentMessage retVal = new GRecentMessage();
 
-		return createMessage(theIncludeContents, retVal);
+		return createMessage(theIncludeContents, retVal, theType);
 	}
 
-	private GRecentMessage createMessage(boolean theIncludeContents, GRecentMessage retVal) {
+	private GRecentMessage createMessage(boolean theIncludeContents, GRecentMessage retVal, RecentMessageTypeEnum theType) {
 		String responseMessage = "<req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req></req>";
 		String requestMessage = "<resp a='qqqqq'><tags/></resp>";
 		List<Pair<String>> reqHeaders = new ArrayList<Pair<String>>();
-		reqHeaders.add(new Pair<String>("Content-Type","text/xml"));
-		reqHeaders.add(new Pair<String>("Content-Encoding","chunked"));
-		List<Pair<String>> respHeaders=new ArrayList<Pair<String>>();
-		respHeaders.add(new Pair<String>("Content-Type","text/xml"));
-		respHeaders.add(new Pair<String>("X-Server","Some Server"));
-		String reqCt="text/xml";
-		String respCt="text/xml";
+		reqHeaders.add(new Pair<String>("Content-Type", "text/xml"));
+		reqHeaders.add(new Pair<String>("Content-Encoding", "chunked"));
+		List<Pair<String>> respHeaders = new ArrayList<Pair<String>>();
+		respHeaders.add(new Pair<String>("Content-Type", "text/xml"));
+		respHeaders.add(new Pair<String>("X-Server", "Some Server"));
+		String reqCt = "text/xml";
+		String respCt = "text/xml";
 		if (!theIncludeContents) {
 			responseMessage = null;
 			requestMessage = null;
-			reqHeaders=null;
-			respHeaders=null;
-			reqCt=null;
-			respCt=null;
+			reqHeaders = null;
+			respHeaders = null;
+			reqCt = null;
+			respCt = null;
 		}
-		
+
 		retVal.setPid(ourNextPid++);
 		retVal.setTransactionTime(new Date());
 		retVal.setRequestHostIp("http://foo");
 		retVal.setRequestMessage(requestMessage);
 		retVal.setResponseMessage(responseMessage);
-		retVal.setRequestHeaders ( reqHeaders);
-		retVal.setResponseHeaders( respHeaders);
-		retVal.setRequestContentType (reqCt);
-		retVal.setResponseContentType (respCt);
+		retVal.setRequestHeaders(reqHeaders);
+		retVal.setResponseHeaders(respHeaders);
+		retVal.setRequestContentType(reqCt);
+		retVal.setResponseContentType(respCt);
 
-		
 		retVal.setImplementationUrlPid(999L);
 		retVal.setImplementationUrlId("dev1");
 		retVal.setImplementationUrlHref("http://foo");
@@ -323,6 +327,8 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		retVal.setServiceName("ServiceName1");
 		retVal.setServiceVersionPid(0l);
 		retVal.setServiceVersionId("1.0");
+
+		retVal.setRecentMessageType(theType);
 		
 		return retVal;
 	}
@@ -404,47 +410,49 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 
 	@Override
 	public GRecentMessage loadRecentMessageForServiceVersion(long thePid) {
-		return createMessage(true);
+		return createMessage(true, RecentMessageTypeEnum.SVCVER);
 	}
 
 	@Override
 	public GRecentMessage loadRecentMessageForUser(long thePid) {
-		return loadRecentMessageForServiceVersion(thePid);
+		return createMessage(true, RecentMessageTypeEnum.USER);
 	}
 
 	@Override
 	public GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid) {
+		return loadRecentTransactionList(RecentMessageTypeEnum.SVCVER);
+	}
+
+	private GRecentMessageLists loadRecentTransactionList(RecentMessageTypeEnum theType) {
 		GRecentMessageLists retVal = new GRecentMessageLists();
 
 		ArrayList<GRecentMessage> list = new ArrayList<GRecentMessage>();
-//		list.add(createMessage(false));
-//		list.add(createMessage(false));
-//		list.add(createMessage(false));
-//		list.add(createMessage(false));
-//		retVal.setSuccessList(list);
-//		retVal.setKeepSuccess(10);
-		
+		// list.add(createMessage(false));
+		// list.add(createMessage(false));
+		// list.add(createMessage(false));
+		// list.add(createMessage(false));
+		// retVal.setSuccessList(list);
+		// retVal.setKeepSuccess(10);
+
 		list = new ArrayList<GRecentMessage>();
-		list.add(createMessage(false));
-		list.add(createMessage(false));
-		list.add(createMessage(false));
-		list.add(createMessage(false));
+		list.add(createMessage(false, theType));
+		list.add(createMessage(false, theType));
 		retVal.setFailList(list);
 		retVal.setKeepFail(10);
 
 		list = new ArrayList<GRecentMessage>();
-		list.add(createMessage(false));
-		list.add(createMessage(false));
-		list.add(createMessage(false));
-		list.add(createMessage(false));
+		list.add(createMessage(false, theType));
+		list.add(createMessage(false, theType));
+		list.add(createMessage(false, theType));
+		list.add(createMessage(false, theType));
 		retVal.setSecurityFailList(list);
 		retVal.setKeepSecurityFail(10);
 
 		list = new ArrayList<GRecentMessage>();
-		list.add(createMessage(false));
-		list.add(createMessage(false));
-		list.add(createMessage(false));
-		list.add(createMessage(false));
+		list.add(createMessage(false, theType));
+		list.add(createMessage(false, theType));
+		list.add(createMessage(false, theType));
+		list.add(createMessage(false, theType));
 		retVal.setFaultList(list);
 		retVal.setKeepFault(10);
 
@@ -453,7 +461,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 
 	@Override
 	public GRecentMessageLists loadRecentTransactionListForuser(long thePid) {
-		return loadRecentTransactionListForServiceVersion(thePid);
+		return loadRecentTransactionList(RecentMessageTypeEnum.USER);
 	}
 
 	@Override
@@ -461,12 +469,12 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		for (GDomain nextDomain : myDomainList) {
 			for (GService nextService : nextDomain.getServiceList()) {
 				for (BaseGServiceVersion nextVersion : nextService.getVersionList()) {
-					if (nextVersion.getPid()==theVersionPid) {
+					if (nextVersion.getPid() == theVersionPid) {
 						GServiceVersionDetailedStats retVal = new GServiceVersionDetailedStats();
-						Map<Long, List<Integer>> fail=new HashMap<Long, List<Integer>>();
-						Map<Long, List<Integer>> fault=new HashMap<Long, List<Integer>>();
-						Map<Long, List<Integer>> securityFail=new HashMap<Long, List<Integer>>();
-						Map<Long, List<Integer>> success=new HashMap<Long, List<Integer>>();
+						Map<Long, List<Integer>> fail = new HashMap<Long, List<Integer>>();
+						Map<Long, List<Integer>> fault = new HashMap<Long, List<Integer>>();
+						Map<Long, List<Integer>> securityFail = new HashMap<Long, List<Integer>>();
+						Map<Long, List<Integer>> success = new HashMap<Long, List<Integer>>();
 						for (GServiceMethod nextMethod : nextVersion.getMethodList()) {
 							success.put(nextMethod.getPid(), random60minsList());
 							fail.put(nextMethod.getPid(), random60minsList());
@@ -482,7 +490,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 				}
 			}
 		}
-		throw new IllegalArgumentException("Can't find "+theVersionPid);
+		throw new IllegalArgumentException("Can't find " + theVersionPid);
 	}
 
 	@Override
@@ -590,7 +598,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	}
 
 	private List<Integer> random60minsList() {
-		List<Integer> retVal=new ArrayList<Integer>();
+		List<Integer> retVal = new ArrayList<Integer>();
 		for (int next : random60mins()) {
 			retVal.add(next);
 		}
@@ -640,12 +648,12 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		for (GDomain nextDomain : myDomainList) {
 			for (GService nextSvc : nextDomain.getServiceList()) {
 				BaseGServiceVersion ver = nextSvc.getVersionList().getVersionByPid(thePid);
-				if (ver!=null) {
+				if (ver != null) {
 					nextSvc.getVersionList().remove(ver);
 				}
 			}
 		}
-		
+
 		return myDomainList;
 	}
 
@@ -674,14 +682,14 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	public GDomainList saveDomain(GDomain theDomain) {
 		GDomain retVal = myDomainList.getDomainByPid(theDomain.getPid());
 		retVal.merge(theDomain);
-		
+
 		for (GService next : retVal.getServiceList()) {
 			next.setInheritedKeepNumRecentTransactionsSuccess(retVal.getKeepNumRecentTransactionsSuccess());
 			next.setInheritedKeepNumRecentTransactionsFail(retVal.getKeepNumRecentTransactionsFail());
 			next.setInheritedKeepNumRecentTransactionsFault(retVal.getKeepNumRecentTransactionsFault());
 			next.setInheritedKeepNumRecentTransactionsSecurityFail(retVal.getKeepNumRecentTransactionsSecurityFail());
 		}
-		
+
 		return myDomainList;
 	}
 
@@ -721,19 +729,15 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	}
 
 	@Override
-	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid) {
-		return (GServiceVersionSingleFireResponse) createMessage(true, new GServiceVersionSingleFireResponse());
-}
-	@Override
 	public GMonitorRuleList loadMonitorRuleList() {
 		return myMonitorRuleList;
 	}
 
 	@Override
 	public GMonitorRuleList saveMonitorRule(GMonitorRule theRule) {
-		if (theRule.getPidOrNull()==null) {
+		if (theRule.getPidOrNull() == null) {
 			myMonitorRuleList.getRuleByPid(theRule.getPidOrNull()).merge(theRule);
-		}else {
+		} else {
 			theRule.setPid(ourNextPid++);
 			myMonitorRuleList.add(theRule);
 		}
@@ -782,6 +786,46 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		list.add(firing);
 		list.add(firing);
 		return list;
+	}
+
+	@Override
+	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long theServiceVersionPid) {
+		return (GServiceVersionSingleFireResponse) createMessage(true, new GServiceVersionSingleFireResponse(), RecentMessageTypeEnum.SVCVER);
+	}
+
+	@Override
+	public DtoLibraryMessage loadLibraryMessage(long theMessagePid) {
+		DtoLibraryMessage msg = new DtoLibraryMessage();
+		Collection<Long> pids = myDomainList.getAllServiceVersionPids();
+		msg.setAppliesToServiceVersionPids(pids.toArray(new Long[pids.size()]));
+		msg.setContentType("text/xml");
+		msg.setDescription("this is the description");
+		msg.setMessage("<tag>this is the message</tag>");
+		msg.setPid(1L);
+		return msg;
+	}
+
+	@Override
+	public Collection<DtoLibraryMessage> loadLibraryMessagesForServiveVersion(long thePid) {
+		ArrayList<DtoLibraryMessage> retVal = new ArrayList<DtoLibraryMessage>();
+
+		for (int i = 0; i < 10; i++) {
+			DtoLibraryMessage msg = new DtoLibraryMessage();
+			Collection<Long> pids = myDomainList.getAllServiceVersionPids();
+			msg.setAppliesToServiceVersionPids(pids.toArray(new Long[pids.size()]));
+			msg.setContentType("text/xml");
+			msg.setDescription("this is the description");
+			msg.setMessage("<tag>this is the message</tag>");
+			msg.setPid((long)i);
+			retVal.add(msg);
+		}
+
+		return retVal;
+	}
+
+	@Override
+	public void saveLibraryMessage(DtoLibraryMessage theMessage) {
+		// nothing
 	}
 
 }

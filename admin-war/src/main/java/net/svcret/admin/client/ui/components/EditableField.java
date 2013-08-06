@@ -23,7 +23,7 @@ import com.google.gwt.user.client.ui.ValueBoxBase;
 public class EditableField extends FlowPanel implements HasValue<String> {
 
 	private ValueBoxBase<String> myEditorComponent;
-	private String myEmptyTextToDisplay = "Click to add a value)";
+	private String myEmptyTextToDisplay = "(Click to add a value)";
 	private Label myLabel;
 	private boolean myLabelIsPlainText;
 	private int myMaxFieldWidth;

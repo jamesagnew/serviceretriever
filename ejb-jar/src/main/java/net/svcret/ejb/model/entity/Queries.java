@@ -7,6 +7,12 @@ public class Queries {
 			"u.myUsername = :USERNAME AND " + // -
 			"u.myAuthenticationHost = :AUTH_HOST";
 
+	public static final String LIBRARY_FINDBYSVCVER = "PersLibraryMessage.findBySvcVer";
+	public static final String LIBRARY_FINDBYSVCVER_Q = "SELECT m FROM PersLibraryMessage m JOIN m.myAppliesTo a WHERE a.myPk.myServiceVersion IN :SVC_VERS";
+
+	public static final String LIBRARY_FINDBYSVC = "PersLibraryMessage.findBySvc";
+	public static final String LIBRARY_FINDBYSVC_Q = "SELECT m FROM PersLibraryMessage m JOIN m.myAppliesTo a WHERE a.myPk.myServiceVersion.myService IN :SVC";
+
 	public static final String AUTHHOST_FINDALL = "BasePersAuthenticationHost.findAll";
 	public static final String AUTHHOST_FINDALL_Q = "SELECT h FROM BasePersAuthenticationHost h";
 

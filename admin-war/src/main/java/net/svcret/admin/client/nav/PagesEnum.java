@@ -3,6 +3,9 @@ import static net.svcret.admin.client.AdminPortal.MSGS;
 
 public enum PagesEnum {
 
+	/** Save recent message to library */
+	SML(MSGS.saveRecentMessageToLibrary_Breadcrumb()),
+
 	/** Add domain step 2 */
 	MRL(MSGS.MonitorRulesList_Breadcrumb()),
 
@@ -102,7 +105,17 @@ public enum PagesEnum {
 	/**
 	 * Replay Message
 	 */
-	RPM(MSGS.replayMessage_Breadcrumb())
+	RPM(MSGS.replayMessage_Breadcrumb()), 
+	
+	/**
+	 * Replay library message
+	 */
+	RLM(MSGS.replayLibraryMessage_Breadcrumb()),
+	
+	/**
+	 * Service version message library
+	 */
+	SVL(MSGS.serviceVersionMessageLibrary_Breadcrumb())
 	;
 	
 	private String myBreadcrumb;

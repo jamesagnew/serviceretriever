@@ -1,12 +1,19 @@
 package net.svcret.admin.client.ui.config.auth;
 
 import static net.svcret.admin.client.AdminPortal.*;
+
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
-import net.svcret.admin.client.ui.dash.model.BaseDashModel;
+import net.svcret.admin.client.ui.components.PButtonCell;
+import net.svcret.admin.client.ui.config.svcver.BaseDetailPanel;
+import net.svcret.admin.client.ui.config.svcver.NullColumn;
 import net.svcret.admin.client.ui.stats.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
@@ -15,31 +22,37 @@ import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.PartialUserListRequest;
+import net.svcret.admin.shared.util.StringUtil;
 
+import com.google.gwt.cell.client.FieldUpdater;
+import com.google.gwt.cell.client.SafeHtmlCell;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.safehtml.shared.SafeHtml;
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
+import com.google.gwt.user.cellview.client.CellTable;
+import com.google.gwt.user.cellview.client.Column;
+import com.google.gwt.user.cellview.client.ColumnSortEvent.ListHandler;
+import com.google.gwt.user.cellview.client.SimplePager;
+import com.google.gwt.user.cellview.client.SimplePager.TextLocation;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.Panel;
+import com.google.gwt.view.client.ListDataProvider;
 
 public class EditUsersPanel extends FlowPanel {
 
-	private static final int COL_AUTHHOST = 0;
-	private static final int COL_USERNAME = 1;
-	private static final int COL_LAST_SVC_ACCESS = 2;
-	private static final int COL_SUCCESSFUL_XACTS = 3;
-	private static final int COL_SECURITY_FAILURE_XACTS = 4;
-	private static final int COL_ACTIONS = 5;
-
-	private FlexTable myTable;
+	private CellTable<GUser> myTable;
 	private GPartialUserList myUserList;
 	private LoadingSpinner myLoadingSpinner;
 	private ListBox myAuthHostsListBox;
+	private GAuthenticationHostList myAuthenticationHostList;
+	private ListDataProvider<GUser> myMethodDataProvider;
 
 	public EditUsersPanel() {
 		FlowPanel listPanel = new FlowPanel();
@@ -59,17 +72,152 @@ public class EditUsersPanel extends FlowPanel {
 		myLoadingSpinner = new LoadingSpinner();
 		contentPanel.add(myLoadingSpinner);
 
-		myTable = new FlexTable();
+		myTable = new CellTable<GUser>();
 		contentPanel.add(myTable);
 
-		myTable.addStyleName(CssConstants.PROPERTY_TABLE);
-		myTable.setText(0, COL_AUTHHOST, MSGS.editUsersPanel_ColumnAuthHost());
-		myTable.setText(0, COL_USERNAME, MSGS.editUsersPanel_ColumnUsername());
-		myTable.setText(0, COL_ACTIONS, MSGS.editUsersPanel_ColumnActions());
-		myTable.setText(0, COL_LAST_SVC_ACCESS, MSGS.editUsersPanel_ColumnLastServiceAccess());
-		myTable.setText(0, COL_SECURITY_FAILURE_XACTS, MSGS.editUsersPanel_ColumnSecurityFailures());
-		myTable.setText(0, COL_SUCCESSFUL_XACTS, MSGS.editUsersPanel_ColumnSuccessfulTransactions());
+		// Create a Pager to control the table.
+		SimplePager.Resources pagerResources = GWT.create(SimplePager.Resources.class);
+		SimplePager pager = new SimplePager(TextLocation.CENTER, pagerResources, false, 0, true);
+		pager.setDisplay(myTable);
+		pager.setPageSize(10);
+		contentPanel.add(pager);
 
+		PButtonCell editCell = new PButtonCell(AdminPortal.IMAGES.iconEdit(), AdminPortal.MSGS.actions_Edit());
+		Column<GUser, String> editColumn = new NullColumn<GUser>(editCell);
+		editColumn.setFieldUpdater(new FieldUpdater<GUser, String>() {
+			@Override
+			public void update(int theIndex, GUser theObject, String theValue) {
+				editUser(theObject);
+			}
+		});
+		myTable.addColumn(editColumn, "");
+
+		PButtonCell viewCell = new PButtonCell(AdminPortal.IMAGES.iconStatus(), AdminPortal.MSGS.actions_ViewStats());
+		Column<GUser, String> viewColumn = new NullColumn<GUser>(viewCell);
+		viewColumn.setFieldUpdater(new FieldUpdater<GUser, String>() {
+			@Override
+			public void update(int theIndex, GUser theObject, String theValue) {
+				viewUserStats(theObject);
+			}
+		});
+		myTable.addColumn(viewColumn, "");
+
+		// Auth Host
+		
+		Column<GUser, SafeHtml> authHostCol = new Column<GUser, SafeHtml>(new SafeHtmlCell()){
+			@Override
+			public SafeHtml getValue(GUser theObject) {
+				BaseGAuthHost authHostByPid = myAuthenticationHostList.getAuthHostByPid(theObject.getAuthHostPid());
+				if (authHostByPid==null) {
+					return SafeHtmlUtils.fromString("ERROR");
+				}
+				return SafeHtmlUtils.fromString(authHostByPid.getModuleName());
+			}};
+		int authHostColIdx = myTable.getColumnCount();
+		myTable.addColumn(authHostCol, MSGS.editUsersPanel_ColumnAuthHost());
+		
+		// Username
+		
+		Column<GUser, SafeHtml> usernameCol = new Column<GUser, SafeHtml>(new SafeHtmlCell()){
+			@Override
+			public SafeHtml getValue(GUser theObject) {
+				return SafeHtmlUtils.fromString(theObject.getUsername());
+			}};
+		int usernameColIdx = myTable.getColumnCount();
+		myTable.addColumn(usernameCol, MSGS.editUsersPanel_ColumnUsername());
+
+		// Last Access
+		
+		Column<GUser, SafeHtml> lastAccessCol = new Column<GUser, SafeHtml>(new SafeHtmlCell()){
+			@Override
+			public SafeHtml getValue(GUser theObject) {
+				return SafeHtmlUtils.fromString(DateUtil.formatTimeElapsedForLastInvocation(theObject.getStatsLastAccess()));
+			}};
+		int lastAccessColIdx = myTable.getColumnCount();
+		myTable.addColumn(lastAccessCol, MSGS.editUsersPanel_ColumnLastServiceAccess());
+
+		// Transactions
+		
+		Column<GUser, SafeHtml> transactionsCol = new Column<GUser, SafeHtml>(new SafeHtmlCell()){
+			@Override
+			public SafeHtml getValue(GUser theObject) {
+				SafeHtmlBuilder b = new SafeHtmlBuilder();
+				List<Integer> success=theObject.getStatsSuccessTransactions();
+				List<Integer> fault=theObject.getStatsFaultTransactions();
+				List<Integer> fail=null;
+				List<Integer> secFail=theObject.getStatsSecurityFailTransactions();
+				List<Long> statsTimestamps=theObject.getStats60MinsTimestamps();
+				BaseDetailPanel.renderTransactionGraphsAsHtml(b, success, fault, fail, secFail, statsTimestamps);
+				
+				return b.toSafeHtml();
+			}};
+		int transactionsColIdx = myTable.getColumnCount();
+		myTable.addColumn(transactionsCol, MSGS.editUsersPanel_ColumnTransactions());
+
+		myMethodDataProvider = new ListDataProvider<GUser>();
+		myMethodDataProvider.addDataDisplay(myTable);
+
+		// Sorting
+		ListHandler<GUser> columnSortHandler = new ListHandler<GUser>(myMethodDataProvider.getList());
+		myTable.getColumn(authHostColIdx).setSortable(true);
+		columnSortHandler.setComparator(authHostCol, new Comparator<GUser>() {
+			@Override
+			public int compare(GUser theO1, GUser theO2) {
+				String ah1 = myAuthenticationHostList.getAuthHostByPid(theO1.getAuthHostPid()).getModuleName();
+				String ah2 = myAuthenticationHostList.getAuthHostByPid(theO2.getAuthHostPid()).getModuleName();
+				return StringUtil.compare(ah1,ah2);
+			}
+		});
+		myTable.getColumn(usernameColIdx).setSortable(true);
+		columnSortHandler.setComparator(usernameCol, new Comparator<GUser>() {
+			@Override
+			public int compare(GUser theO1, GUser theO2) {
+				return StringUtil.compare(theO1.getUsername(), theO2.getUsername());
+			}
+		});
+		myTable.getColumn(lastAccessColIdx).setSortable(true);
+		columnSortHandler.setComparator(lastAccessCol, new Comparator<GUser>() {
+			@Override
+			public int compare(GUser theO1, GUser theO2) {
+				Date la1 = theO1.getStatsLastAccess();
+				Date la2 = theO2.getStatsLastAccess();
+				if (la1==null && la2==null) {
+					return 0;
+				}
+				if (la1==null) {
+					return 1;
+				}
+				if (la2==null) {
+					return -1;
+				}
+				long cmp = (la2.getTime()-la1.getTime());
+				if (cmp > 0) {
+					return 1;
+				}else if (cmp < 0) {
+					return -1;
+				}else {
+					return 0;
+				}
+			}
+		});
+		myTable.getColumn(transactionsColIdx).setSortable(true);
+		columnSortHandler.setComparator(lastAccessCol, new Comparator<GUser>() {
+			@Override
+			public int compare(GUser theO1, GUser theO2) {
+				double cmp = theO2.getStatsTotalAvgPerMin() - theO1.getStatsTotalAvgPerMin();
+				if (cmp > 0) {
+					return 1;
+				}else if (cmp < 0) {
+					return -1;
+				}else {
+					return 0;
+				}
+			}
+		});
+		
+		myTable.addColumnSortHandler(columnSortHandler);
+		myTable.getColumnSortList().push(usernameCol);
+		
 		HorizontalPanel addPanel = new HorizontalPanel();
 		contentPanel.add(addPanel);
 
@@ -120,42 +268,18 @@ public class EditUsersPanel extends FlowPanel {
 		AdminPortal.MODEL_SVC.loadUsers(request, callback);
 	}
 
-	private void setUserlist(GPartialUserList theUserList) {
-		myUserList = theUserList;
-
-		for (int i = 0; i < myUserList.size(); i++) {
-
-			final GUser nextUser = myUserList.get(i);
-			final int row = i + 1;
-
-			Model.getInstance().loadAuthenticationHost(nextUser.getAuthHostPid(), new IAsyncLoadCallback<BaseGAuthHost>() {
-				@Override
-				public void onSuccess(BaseGAuthHost theResult) {
-					myTable.setText(row, COL_AUTHHOST, theResult.getModuleName());
-				}
-			});
-			myTable.setText(row, COL_USERNAME, nextUser.getUsername());
-			myTable.setText(row, COL_LAST_SVC_ACCESS, DateUtil.formatTimeElapsedForLastInvocation(nextUser.getStatsLastAccess()));
-			// TODO: add max
-			myTable.setWidget(row, COL_SUCCESSFUL_XACTS, BaseDashModel.returnSparklineFor60MinsUsage(nextUser.getStatsSuccessTransactions(), nextUser.getStatsInitialized(), nextUser.getStatsSuccessTransactionsAvgPerMin(), 0));
-			myTable.setWidget(row, COL_SECURITY_FAILURE_XACTS, BaseDashModel.returnSparklineFor60MinsUsage(nextUser.getStatsSecurityFailTransactions(), nextUser.getStatsInitialized(), nextUser.getStatsSecurityFailTransactionsAvgPerMin(),0));
-
-			Panel actionPanel = new HorizontalPanel();
-			myTable.setWidget(row, COL_ACTIONS, actionPanel);
-
-			actionPanel.add(new PButton(IMAGES.iconEdit(), MSGS.actions_Edit(), new ClickHandler() {
-				@Override
-				public void onClick(ClickEvent theEvent) {
-					editUser(nextUser);
-				}
-			}));
-			actionPanel.add(new PButton(IMAGES.iconStatus(), MSGS.actions_ViewStats(), new ClickHandler() {
-				@Override
-				public void onClick(ClickEvent theEvent) {
-					viewUserStats(nextUser);
-				}
-			}));
-		}
+	private void setUserlist(final GPartialUserList theUserList) {
+		Model.getInstance().loadAuthenticationHosts(new IAsyncLoadCallback<GAuthenticationHostList>() {
+			@Override
+			public void onSuccess(GAuthenticationHostList theResult) {
+				myAuthenticationHostList=theResult;
+				myUserList = theUserList;
+				
+				myMethodDataProvider.getList().addAll(myUserList.toCollection());
+				myMethodDataProvider.refresh();
+			}
+		});
+		
 	}
 
 	private void viewUserStats(GUser theNextUser) {

@@ -162,7 +162,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override
-	public SidechannelOrchestratorResponseBean handleSidechannelRequest(long theServiceVersionPid, String theRequestBody, String theRequestedByString) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException {
+	public SidechannelOrchestratorResponseBean handleSidechannelRequest(long theServiceVersionPid, String theRequestBody,String theContentType,  String theRequestedByString) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException {
 		Date startTime = new Date();
 		BasePersServiceVersion svcVer = mySvcRegistry.getServiceVersionByPid(theServiceVersionPid);
 
@@ -175,7 +175,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		request.setRequestHostIp("127.0.0.1");
 		request.setRequestHeaders(new HashMap<String, List<String>>());
 		request.getRequestHeaders().put("X-RequestedBy", Collections.singletonList(theRequestedByString));
-		request.getRequestHeaders().put("Content-Type", Collections.singletonList(svcVer.getProtocol().getRequestContentType()));
+		request.getRequestHeaders().put("Content-Type", Collections.singletonList(theContentType));
 		AuthorizationResultsBean authorized = null;
 
 		InvocationResultsBean results = processInvokeService(request, path, svcVer, RequestType.POST, "");

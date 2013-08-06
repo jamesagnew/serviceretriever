@@ -1,11 +1,13 @@
 package net.svcret.ejb.api;
 
+import java.util.Collection;
 import java.util.List;
 
 import javax.ejb.Local;
 
 import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
@@ -34,6 +36,12 @@ import net.svcret.ejb.ex.ProcessingException;
 @Local
 public interface IAdminService {
 
+	Collection<DtoLibraryMessage> getLibraryMessagesForSvcVer(long thePid, boolean theLoadContents) throws ProcessingException;
+
+	Collection<DtoLibraryMessage> getLibraryMessagesForService(long thePid, boolean theLoadContents) throws ProcessingException;
+
+	void saveLibraryMessage(DtoLibraryMessage theMessage) throws ProcessingException;
+
 	GDomain addDomain(GDomain theDomain) throws ProcessingException;
 
 	GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ProcessingException;
@@ -49,7 +57,7 @@ public interface IAdminService {
 	long getDefaultHttpClientConfigPid();
 
 	GDomainList deleteServiceVersion(long thePid) throws ProcessingException;
-	
+
 	GDomain getDomainByPid(long theDomain) throws ProcessingException;
 
 	long getDomainPid(String theDomainId) throws ProcessingException;
@@ -103,11 +111,13 @@ public interface IAdminService {
 	GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws ProcessingException;
 
 	GMonitorRuleList loadMonitorRuleList() throws ProcessingException;
-	
-	GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid, String theRequestedByString) throws ProcessingException;
+
+	GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long thePid, String theRequestedByString) throws ProcessingException;
 
 	void saveMonitorRule(GMonitorRule theRule) throws ProcessingException;
 
 	List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart);
+
+	DtoLibraryMessage getLibraryMessage(long theMessagePid) throws ProcessingException;
 
 }

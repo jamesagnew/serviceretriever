@@ -7,6 +7,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
+import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
 import net.svcret.ejb.api.IDao;
 
 import org.hibernate.annotations.Index;
@@ -73,6 +74,11 @@ public class PersServiceVersionRecentMessage extends BasePersRecentMessage {
 	@Override
 	public void trimUsingDao(IDao theDaoBean) {
 		theDaoBean.trimServiceVersionRecentMessages(myServiceVersion, getResponseType(), myServiceVersion.determineKeepNumRecentTransactions(getResponseType()));
+	}
+
+	@Override
+	public RecentMessageTypeEnum getRecentMessageType() {
+		return RecentMessageTypeEnum.SVCVER;
 	}
 
 }

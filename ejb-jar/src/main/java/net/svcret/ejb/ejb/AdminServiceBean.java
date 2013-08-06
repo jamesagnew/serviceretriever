@@ -25,6 +25,7 @@ import net.svcret.admin.shared.model.BaseGClientSecurity;
 import net.svcret.admin.shared.model.BaseGDashboardObjectWithUrls;
 import net.svcret.admin.shared.model.BaseGServerSecurity;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
@@ -98,6 +99,8 @@ import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
+import net.svcret.ejb.model.entity.PersLibraryMessage;
+import net.svcret.ejb.model.entity.PersLibraryMessageAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorRule;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
@@ -374,11 +377,11 @@ public class AdminServiceBean implements IAdminService {
 			throw new ProcessingException("Unknown service version PID: " + theServiceVersionPid);
 		}
 
-		Set<Long> methodPids=new HashSet<Long>();
+		Set<Long> methodPids = new HashSet<Long>();
 		for (PersServiceVersionMethod next : svcVer.getMethods()) {
 			methodPids.add(next.getPid());
 		}
-		
+
 		BaseGServiceVersion uiService = toUi(svcVer, true, methodPids);
 		GSoap11ServiceVersionAndResources retVal = toUi(uiService, svcVer);
 		return retVal;
@@ -1770,20 +1773,30 @@ public class AdminServiceBean implements IAdminService {
 
 			final ArrayList<Integer> t60minSuccessCount = new ArrayList<Integer>();
 			final ArrayList<Integer> t60minSecurityFailCount = new ArrayList<Integer>();
+			final ArrayList<Integer> t60minFaultCount = new ArrayList<Integer>();
+			final long[] t60minStatisticsStart = new long[1];
 			IWithStats withStats = new IWithStats() {
 				@Override
 				public void withStats(int theIndex, BasePersMethodInvocationStats theStats) {
+					if (theIndex == 0) {
+						t60minStatisticsStart[0] = theStats.getPk().getStartTime().getTime();
+					}
 					growToSizeInt(t60minSuccessCount, theIndex);
 					growToSizeInt(t60minSecurityFailCount, theIndex);
+					growToSizeInt(t60minFaultCount, theIndex);
+					t60minFaultCount.set(theIndex, addToInt(t60minFaultCount.get(theIndex), theStats.getFaultInvocationCount()));
 					t60minSecurityFailCount.set(theIndex, addToInt(t60minSecurityFailCount.get(theIndex), theStats.getServerSecurityFailures()));
 					t60minSuccessCount.set(theIndex, addToInt(t60minSuccessCount.get(theIndex), theStats.getSuccessInvocationCount()));
 				}
 			};
 			doWithUserStatsByMinute(myConfigSvc.getConfig(), thePersUser, 60, myStatusSvc, withStats);
-			retVal.setStatsSuccessTransactions(toArray(t60minSuccessCount));
+			retVal.setStatsStartTime(t60minStatisticsStart[0]);
+			retVal.setStatsSuccessTransactions((t60minSuccessCount));
 			retVal.setStatsSuccessTransactionsAvgPerMin(to60MinAveragePerMin(t60minSuccessCount));
-			retVal.setStatsSecurityFailTransactions(toArray(t60minSecurityFailCount));
+			retVal.setStatsSecurityFailTransactions((t60minSecurityFailCount));
 			retVal.setStatsSecurityFailTransactionsAvgPerMin(to60MinAveragePerMin(t60minSecurityFailCount));
+			retVal.setStatsFaultTransactions((t60minSecurityFailCount));
+			retVal.setStatsFaultTransactionsAvgPerMin(to60MinAveragePerMin(t60minSecurityFailCount));
 
 			retVal.setThrottle(new GThrottle());
 			retVal.getThrottle().setMaxRequests(thePersUser.getThrottleMaxRequests());
@@ -1995,6 +2008,7 @@ public class AdminServiceBean implements IAdminService {
 
 		}
 
+		retVal.setRecentMessageType(theMsg.getRecentMessageType());
 		retVal.setRequestHostIp(theMsg.getRequestHostIp());
 		retVal.setTransactionTime(theMsg.getTransactionTime());
 		retVal.setTransactionMillis(theMsg.getTransactionMillis());
@@ -2244,7 +2258,7 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	@Override
-	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid, String theRequestedByString) throws ProcessingException {
+	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long thePid, String theRequestedByString) throws ProcessingException {
 		ourLog.info("Testing single fire of service version {}", thePid);
 		Date transactionTime = new Date();
 
@@ -2262,7 +2276,7 @@ public class AdminServiceBean implements IAdminService {
 
 		GServiceVersionSingleFireResponse retVal = new GServiceVersionSingleFireResponse();
 		try {
-			SidechannelOrchestratorResponseBean response = myOrchestrator.handleSidechannelRequest(thePid, theMessageText, theRequestedByString);
+			SidechannelOrchestratorResponseBean response = myOrchestrator.handleSidechannelRequest(thePid,theMessageText,theContentType,  theRequestedByString);
 
 			retVal.setAuthorizationOutcome(AuthorizationOutcomeEnum.AUTHORIZED);
 			retVal.setDomainName(svcVer.getService().getDomain().getDomainName());
@@ -2342,79 +2356,150 @@ public class AdminServiceBean implements IAdminService {
 
 	@Override
 	public List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart) {
-		
+
 		Set<BasePersServiceVersion> allSvcVers;
 		if (theDomainPid != null) {
 			assert theServicePid == null;
 			assert theServiceVersionPid == null;
 			PersDomain domain = myServiceRegistry.getDomainByPid(theDomainPid);
 			allSvcVers = domain.getAllServiceVersions();
-		}else if (theServicePid!=null) {
+		} else if (theServicePid != null) {
 			assert theDomainPid == null;
 			assert theServiceVersionPid == null;
 			PersService service = myServiceRegistry.getServiceByPid(theServicePid);
-			allSvcVers=service.getAllServiceVersions();
-		}else if (theServiceVersionPid!=null) {
+			allSvcVers = service.getAllServiceVersions();
+		} else if (theServiceVersionPid != null) {
 			assert theServicePid == null;
 			assert theDomainPid == null;
 			allSvcVers = Collections.singleton(myServiceRegistry.getServiceVersionByPid(theServiceVersionPid));
-		}else {
+		} else {
 			throw new NullPointerException("No domain/service/svcver pid provided!");
 		}
 
-		List<GMonitorRuleFiring> retVal=new ArrayList<GMonitorRuleFiring>();
+		List<GMonitorRuleFiring> retVal = new ArrayList<GMonitorRuleFiring>();
 		List<PersMonitorRuleFiring> firings = myDao.loadMonitorRuleFirings(allSvcVers, theStart);
 		for (PersMonitorRuleFiring next : firings) {
 			retVal.add(toUi(next));
 		}
-		
-//		Set<Long> svcVerPids = new HashSet<Long>();
-//		for (BasePersServiceVersion basePersServiceVersion : allSvcVers) {
-//			
-//		}
-		
-		
+
+		// Set<Long> svcVerPids = new HashSet<Long>();
+		// for (BasePersServiceVersion basePersServiceVersion : allSvcVers) {
+		//
+		// }
+
 		return retVal;
 	}
 
 	private GMonitorRuleFiring toUi(PersMonitorRuleFiring theNext) {
-		GMonitorRuleFiring retVal=new GMonitorRuleFiring();
+		GMonitorRuleFiring retVal = new GMonitorRuleFiring();
 		retVal.setPid(theNext.getPid());
 		retVal.setStartDate(theNext.getStartDate());
 		retVal.setEndDate(theNext.getEndDate());
-		
+
 		for (PersMonitorRuleFiringProblem next : theNext.getProblems()) {
 			retVal.getProblems().add(toUi(next));
 		}
-		
+
 		return retVal;
 	}
 
 	private GMonitorRuleFiringProblem toUi(PersMonitorRuleFiringProblem theNext) {
-		GMonitorRuleFiringProblem retVal=new GMonitorRuleFiringProblem();
+		GMonitorRuleFiringProblem retVal = new GMonitorRuleFiringProblem();
 		retVal.setPid(theNext.getPid());
 		retVal.setServiceVersionPid(theNext.getServiceVersion().getPid());
-		
-		if (theNext.getFailedUrl()!=null) {
+
+		if (theNext.getFailedUrl() != null) {
 			retVal.setFailedUrlPid(theNext.getFailedUrl().getPid());
 			retVal.setFailedUrlMessage(theNext.getFailedUrlMessage());
 		}
-		
-		if (theNext.getLatencyAverageMillisPerCall()!=null) {
+
+		if (theNext.getLatencyAverageMillisPerCall() != null) {
 			retVal.setFailedLatencyAverageMillisPerCall(theNext.getLatencyAverageMillisPerCall());
 			retVal.setFailedLatencyAverageOverMinutes(theNext.getLatencyAverageOverMinutes());
-			
+
 			// TODO: store this in the firing
-			retVal.setFailedLatencyThreshold((long)theNext.getFiring().getRule().getFireForBackingServiceLatencyIsAboveMillis());
-			
+			retVal.setFailedLatencyThreshold((long) theNext.getFiring().getRule().getFireForBackingServiceLatencyIsAboveMillis());
+
 		}
-		
+
 		return retVal;
 	}
 
 	@VisibleForTesting
 	void setMonitorSvc(MonitorServiceBean theMonitorSvc) {
-		myMonitorSvc=theMonitorSvc;
+		myMonitorSvc = theMonitorSvc;
+	}
+
+	@Override
+	public Collection<DtoLibraryMessage> getLibraryMessagesForSvcVer(long thePid, boolean theLoadContents) throws ProcessingException {
+		Collection<PersLibraryMessage> msgs = myDao.getLibraryMessagesWhichApplyToServiceVersion(thePid);
+		return toUiCollectionLibraryMessages(msgs,theLoadContents);
+	}
+
+	private Collection<DtoLibraryMessage> toUiCollectionLibraryMessages(Collection<PersLibraryMessage> theMsgs, boolean theLoadContents) throws ProcessingException {
+		ArrayList<DtoLibraryMessage> retVal = new ArrayList<DtoLibraryMessage>();
+		for (PersLibraryMessage next : theMsgs) {
+			retVal.add(toUi(next,theLoadContents));
+		}
+		return retVal;
+	}
+
+	@Override
+	public Collection<DtoLibraryMessage> getLibraryMessagesForService(long thePid, boolean theLoadContents) throws ProcessingException {
+		Collection<PersLibraryMessage> msgs = myDao.getLibraryMessagesWhichApplyToService(thePid);
+		return toUiCollectionLibraryMessages(msgs, theLoadContents);
+	}
+
+	@Override
+	public void saveLibraryMessage(DtoLibraryMessage theMessage) throws ProcessingException {
+		ourLog.info("Saving library message");
+
+		PersLibraryMessage msg = fromUi(theMessage);
+		myDao.saveLibraryMessage(msg);
+
+	}
+
+	private PersLibraryMessage fromUi(DtoLibraryMessage theMessage) throws ProcessingException {
+		PersLibraryMessage retVal = new PersLibraryMessage();
+
+		retVal.setPid(theMessage.getPid());
+		retVal.setContentType(theMessage.getContentType());
+		retVal.setDescription(theMessage.getDescription());
+		retVal.setMessage(theMessage.getMessage());
+
+		for (Long next : theMessage.getAppliesToServiceVersionPids()) {
+			BasePersServiceVersion ver = myDao.getServiceVersionByPid(next);
+			if (ver == null) {
+				throw new ProcessingException("Unknown svcver PID: " + next);
+			}
+			retVal.getAppliesTo().add(new PersLibraryMessageAppliesTo(retVal, ver));
+		}
+
+		return retVal;
+	}
+
+	private DtoLibraryMessage toUi(PersLibraryMessage theMessage, boolean theLoadContents) throws ProcessingException {
+		DtoLibraryMessage retVal = new DtoLibraryMessage();
+
+		retVal.setContentType(theMessage.getContentType());
+		retVal.setDescription(theMessage.getDescription());
+		retVal.setPid(theMessage.getPid());
+		retVal.setMessageLength(theMessage.getMessageLength());
+
+		for (PersLibraryMessageAppliesTo next : theMessage.getAppliesTo()) {
+			retVal.getAppliesToServiceVersionPids().add(next.getPk().getServiceVersion().getPid());
+		}
+
+		if (theLoadContents) {
+			retVal.setMessage(theMessage.getMessage());
+		}
+
+		return retVal;
+	}
+
+	@Override
+	public DtoLibraryMessage getLibraryMessage(long theMessagePid) throws ProcessingException {
+		return toUi(myDao.getLibraryMessageByPid(theMessagePid), true);
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {

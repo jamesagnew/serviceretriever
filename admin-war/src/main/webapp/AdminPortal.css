@@ -77,10 +77,6 @@
 	border-left:   1px #A5D1F3 solid;
 }
 
-.dashboardActionButton {
-	cursor: pointer;
-}
-
 .dashboardActionHeader {
 	background: #E0E0E0;
 	padding: 5px;
@@ -114,15 +110,41 @@
 	font-size: 0.9em;
 }
 
-.dashboardSecurityPanel {
-	white-space: pre;
+.dashboardMonitorPanel DIV, .dashboardMonitorPanelFailures DIV, .dashboardMonitorPanelNoRules DIV {
+	vertical-align: super;
 }
+
+.dashboardMonitorPanel, .dashboardMonitorPanelNoRules {
+	font-size: 0.8em;
+	color: #808080;
+}
+
+.dashboardMonitorPanelFailures {
+	font-size: 0.8em;
+	color: #000000;
+}
+
+.dashboardSecurityPanel, .dashboardSecurityPanelNotSecured {
+	white-space: pre;
+	font-size: 0.8em;
+	vertical-align: super;
+}
+
+.dashboardSecurityPanelNotSecured {
+	color: #808080;
+}
+
+.dashboardSecurityPanel DIV, .dashboardSecurityPanelNotSecured DIV {
+	vertical-align: super;
+}
+
 
 TABLE.unstyledTable, TABLE.unstyledTable TBODY, TABLE.unstyledTable TBODY TR {
 	background: transparent !important;
 }
 
 TABLE.dashboardTable {
+	width: 100%;
 }
 
 .dashboardSparkline {
@@ -215,7 +237,7 @@ LABEL.formLabel {
 }
 
 .gwt-PopupPanel {
-	border: 2px solid #808080 !important;
+	border: 1px solid #808080 !important;
 	padding: 2px !important;
 }
 
@@ -420,6 +442,7 @@ TABLE.listTable TBODY TR:nth-child(odd) {
 TABLE.propertyTable {
 	border-collapse: separate;
 	border-spacing: 0px;
+	margin-bottom: 3px;
 }
 
 TABLE.propertyTable TBODY TR TD {
@@ -459,6 +482,11 @@ TABLE.propertyTable TBODY TR TD TABLE TBODY TR {
 	background: inherit !important;
 }
 
+.recentTransactionsActionButton {
+	width: 75px;
+	margin: 2px;	
+}
+
 .recentTransactionsInheritCheckbox, .recentTransactionsInheritCheckbox LABEL {
 	font-size: 0.8em;
 	white-space: nowrap;
@@ -481,6 +509,7 @@ TABLE.propertyTable TBODY TR TD TABLE TBODY TR {
 .transactionGraphHeader {
 	font-size: 0.8em;
 	color: #888;
+	white-space: nowrap;
 }
 
 .twoColumnPropertyGrid TBODY TR {

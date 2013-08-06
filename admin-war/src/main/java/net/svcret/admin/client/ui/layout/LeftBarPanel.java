@@ -179,6 +179,11 @@ public class LeftBarPanel extends FlowPanel {
 		case EMR:
 		case AMR:
 		case EDO:
+		case RLM:
+		case RPM:
+		case SML:
+		case SRM:
+		case SVL:
 			break;
 		}
 		

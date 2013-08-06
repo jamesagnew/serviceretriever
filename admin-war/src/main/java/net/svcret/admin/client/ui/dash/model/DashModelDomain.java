@@ -1,7 +1,6 @@
 package net.svcret.admin.client.ui.dash.model;
 
-import static net.svcret.admin.client.AdminPortal.IMAGES;
-import static net.svcret.admin.client.AdminPortal.MSGS;
+import static net.svcret.admin.client.AdminPortal.*;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.PButton;
@@ -9,14 +8,12 @@ import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.HierarchyEnum;
-import net.svcret.admin.shared.model.StatusEnum;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -30,7 +27,7 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 		myDomain = theDomain;
 	}
 
-	private void actionMenu(Image theButton) {
+	private void actionMenu(PButton theRetVal) {
 		if (myActionPopup == null || myActionPopup.isShowing() == false) {
 			myActionPopup = new PopupPanel(true, true);
 
@@ -96,7 +93,7 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 			
 			
 			myActionPopup.add(content);
-			myActionPopup.showRelativeTo(theButton);
+			myActionPopup.showRelativeTo(theRetVal);
 		} else {
 			myActionPopup.hide();
 			myActionPopup = null;
@@ -132,9 +129,8 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 	}
 
 	@Override
-	public Widget renderActions() {
-		final Image retVal = (new Image("images/tools_16.png"));
-		retVal.addStyleName("dashboardActionButton");
+	public PButton renderActions() {
+		final PButton retVal = new PButton(AdminPortal.IMAGES.iconTools16());
 		retVal.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {

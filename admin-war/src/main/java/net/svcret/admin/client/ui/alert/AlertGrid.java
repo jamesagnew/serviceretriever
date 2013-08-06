@@ -100,34 +100,13 @@ public class AlertGrid extends FlowPanel {
 
 				b.appendHtmlConstant("<ul>");
 
-				for (GDomain nextDomain : myDomainList) {
-					for (GService nextSvc : nextDomain.getServiceList()) {
-						if (nextSvc.anyVersionPidsInThisServiceAreAmongThesePids(affectedSvcVerPids)) {
-							b.appendHtmlConstant("<li>");
-							b.appendHtmlConstant("<a href=\"#" + NavProcessor.getTokenEditDomain(true, nextDomain.getPid()) + "\">");
-							b.appendEscaped(nextDomain.getId());
-							b.appendHtmlConstant("</a> / <a href=\"#" + NavProcessor.getTokenEditService(true, nextDomain.getPid(), nextSvc.getPid()) + "\">");
-							b.appendEscaped(nextSvc.getId());
-							b.appendHtmlConstant("</a>");
-							if (nextSvc.allVersionPidsInThisServiceAreAmongThesePids(affectedSvcVerPids)) {
-								b.appendHtmlConstant(" (all versions)");
-							} else {
-								b.appendHtmlConstant("<ul>");
-								for (BaseGServiceVersion nextSvcVer : nextSvc.getVersionList()) {
-									b.appendHtmlConstant("<li>");
-									b.appendHtmlConstant("<a href=\"#" + NavProcessor.getTokenEditServiceVersion(true, nextSvcVer.getPid()) + "\">");
-									b.appendEscaped(nextSvcVer.getId());
-									b.appendHtmlConstant("</a></li>");
-								}
-								b.appendHtmlConstant("</ul>");
-							}
-						}
-					}
-				}
+				GDomainList domainList = myDomainList;
+				createAppliesToHtml(b, affectedSvcVerPids, domainList);
 
 				b.appendHtmlConstant("</ul>");
 				return b.toSafeHtml();
 			}
+
 
 		};
 		grid.addColumn(affectsColumn, "Affects Services");
@@ -184,6 +163,34 @@ public class AlertGrid extends FlowPanel {
 			theB.appendHtmlConstant("</i>");
 		}
 
+	}
+
+	
+	public static void createAppliesToHtml(SafeHtmlBuilder theSafeHtmlBuilder, Set<Long> theSvcVerPids, GDomainList theDomainList) {
+		for (GDomain nextDomain : theDomainList) {
+			for (GService nextSvc : nextDomain.getServiceList()) {
+				if (nextSvc.anyVersionPidsInThisServiceAreAmongThesePids(theSvcVerPids)) {
+					theSafeHtmlBuilder.appendHtmlConstant("<li>");
+					theSafeHtmlBuilder.appendHtmlConstant("<a href=\"#" + NavProcessor.getTokenEditDomain(true, nextDomain.getPid()) + "\">");
+					theSafeHtmlBuilder.appendEscaped(nextDomain.getId());
+					theSafeHtmlBuilder.appendHtmlConstant("</a> / <a href=\"#" + NavProcessor.getTokenEditService(true, nextDomain.getPid(), nextSvc.getPid()) + "\">");
+					theSafeHtmlBuilder.appendEscaped(nextSvc.getId());
+					theSafeHtmlBuilder.appendHtmlConstant("</a>");
+					if (nextSvc.allVersionPidsInThisServiceAreAmongThesePids(theSvcVerPids)) {
+						theSafeHtmlBuilder.appendHtmlConstant(" (all versions)");
+					} else {
+						theSafeHtmlBuilder.appendHtmlConstant("<ul>");
+						for (BaseGServiceVersion nextSvcVer : nextSvc.getVersionList()) {
+							theSafeHtmlBuilder.appendHtmlConstant("<li>");
+							theSafeHtmlBuilder.appendHtmlConstant("<a href=\"#" + NavProcessor.getTokenEditServiceVersion(true, nextSvcVer.getPid()) + "\">");
+							theSafeHtmlBuilder.appendEscaped(nextSvcVer.getId());
+							theSafeHtmlBuilder.appendHtmlConstant("</a></li>");
+						}
+						theSafeHtmlBuilder.appendHtmlConstant("</ul>");
+					}
+				}
+			}
+		}
 	}
 
 }
