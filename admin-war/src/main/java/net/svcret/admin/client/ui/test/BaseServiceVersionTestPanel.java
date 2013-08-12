@@ -23,6 +23,7 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.TextArea;
+import com.google.gwt.user.client.ui.TextBox;
 
 public abstract class BaseServiceVersionTestPanel extends FlowPanel {
 
@@ -36,9 +37,15 @@ public abstract class BaseServiceVersionTestPanel extends FlowPanel {
 	private Long myServiceVersionPid;
 	private ListBox myServiceBox;
 	private ListBox myVersionBox;
+	private String myInitialContentType;
+	private TextBox myContentTypeBox;
 
 	public BaseServiceVersionTestPanel() {
 		// nothing
+	}
+
+	protected void setInitialContentType(String theContentType) {
+		myInitialContentType = theContentType;
 	}
 
 	public BaseServiceVersionTestPanel(Long theServiceVersionPid, String theInitialMessage) {
@@ -90,6 +97,17 @@ public abstract class BaseServiceVersionTestPanel extends FlowPanel {
 			myServiceVersionPid = Long.parseLong(myVersionBox.getValue(myVersionBox.getSelectedIndex()));
 			mySendButton.setEnabled(true);
 		}
+
+		if (myInitialContentType != null) {
+			myContentTypeBox.setValue(myInitialContentType);
+		} else {
+			Model.getInstance().loadServiceVersion(myServiceVersionPid, false, new IAsyncLoadCallback<BaseGServiceVersion>() {
+				@Override
+				public void onSuccess(BaseGServiceVersion theResult) {
+					myContentTypeBox.setValue(theResult.getProtocol().getRequestContentType());
+				}
+			});
+		}
 	}
 
 	private void send() {
@@ -97,7 +115,9 @@ public abstract class BaseServiceVersionTestPanel extends FlowPanel {
 		myResponsePanel.setVisible(false);
 
 		String messageText = mySendMessageTextArea.getText();
-		AdminPortal.MODEL_SVC.testServiceVersionWithSingleMessage(messageText, myServiceVersionPid, new AsyncCallback<GServiceVersionSingleFireResponse>() {
+		String contentType = myContentTypeBox.getValue();
+
+		AdminPortal.MODEL_SVC.testServiceVersionWithSingleMessage(messageText, contentType, myServiceVersionPid, new AsyncCallback<GServiceVersionSingleFireResponse>() {
 
 			@Override
 			public void onFailure(Throwable theCaught) {
@@ -174,6 +194,9 @@ public abstract class BaseServiceVersionTestPanel extends FlowPanel {
 					}
 				});
 
+				myContentTypeBox = new TextBox();
+				grid.addRow("Content Type", myContentTypeBox);
+
 				mySendMessageTextArea = new TextArea();
 				mySendMessageTextArea.setText(myInitialMessage);
 				mySendMessageTextArea.setHeight("200px");
@@ -193,9 +216,9 @@ public abstract class BaseServiceVersionTestPanel extends FlowPanel {
 				});
 				controlsPanel.add(mySendButton);
 
-				Long domainPid=null;
-				Long servicePid=null;
-				if (myServiceVersionPid!=null) {
+				Long domainPid = null;
+				Long servicePid = null;
+				if (myServiceVersionPid != null) {
 					domainPid = theDomainList.getDomainPidWithServiceVersion(myServiceVersionPid);
 					servicePid = theDomainList.getServicePidWithServiceVersion(myServiceVersionPid);
 				}

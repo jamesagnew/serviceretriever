@@ -45,15 +45,15 @@ public abstract class BaseDashModel implements IDashModel {
 
 		Date lastInvoc = myModel.getLastSuccessfulInvocation();
 		String text = DateUtil.formatTimeElapsedForLastInvocation(lastInvoc);
-		
+
 		Label label = new Label(text);
 
 		if (lastInvoc != null && lastInvoc.getTime() > (System.currentTimeMillis() - DateUtil.MILLIS_PER_HOUR)) {
 			label.addStyleName(CssConstants.DASHBOARD_LAST_USAGE_RECENT);
-		}else {
+		} else {
 			label.addStyleName(CssConstants.DASHBOARD_LAST_USAGE);
 		}
-		
+
 		return label;
 
 	}
@@ -96,24 +96,28 @@ public abstract class BaseDashModel implements IDashModel {
 
 		ImageResource image = null;
 		String text = null;
+		String clazz = null;
 
 		BaseGDashboardObjectWithUrls<?> obj = (BaseGDashboardObjectWithUrls<?>) myModel;
 		switch (obj.getServerSecured()) {
 		case FULLY:
 			image = AdminPortal.IMAGES.dashSecure();
 			text = AdminPortal.MSGS.dashboard_SecuredFully();
+			clazz = CssConstants.DASHBOARD_SECURITY_PANEL;
 			break;
 		case PARTIALLY:
 			image = AdminPortal.IMAGES.dashSecure();
 			text = AdminPortal.MSGS.dashboard_SecuredPartial();
+			clazz = CssConstants.DASHBOARD_SECURITY_PANEL;
 			break;
 		case NONE:
-			text = AdminPortal.MSGS.dashboard_NotSecured();
+			text = AdminPortal.MSGS.dashboard_SecuredNot();
+			clazz = CssConstants.DASHBOARD_SECURITY_PANEL_NOTSECURED;
 			break;
 		}
 
 		FlowPanel retVal = new FlowPanel();
-		retVal.setStyleName(CssConstants.DASHBOARD_SECURITY_PANEL);
+		retVal.setStyleName(clazz);
 
 		if (image != null) {
 			Image img = new Image(image);
@@ -145,7 +149,7 @@ public abstract class BaseDashModel implements IDashModel {
 			GWT.log(new Date() + " - No 60 minutes data");
 			return null;
 		}
-		String text = "Avg:" + theAvgValue + " Max:"+theMaxValue +" "+ theUnitDesc;
+		String text = "Avg:" + theAvgValue + " Max:" + theMaxValue + " " + theUnitDesc;
 
 		List<Long> dates = new ArrayList<Long>();
 		long nextDate = theStatsInitialized.getTime() - (60 * 60 * 1000L);
@@ -164,18 +168,23 @@ public abstract class BaseDashModel implements IDashModel {
 	public static Widget returnImageForStatus(BaseGDashboardObjectWithUrls<?> theObject) {
 		String text;
 		ImageResource image;
+		String clazz;
 		if (theObject.getFailingApplicableRulePids().size() > 0) {
 			image = AdminPortal.IMAGES.dashMonitorAlert();
 			text = theObject.getFailingApplicableRulePids().size() + " failures!";
+			clazz=CssConstants.DASHBOARD_MONITOR_FAILURES;
 		} else if (theObject.getMonitorRulePids().size() > 0) {
 			image = AdminPortal.IMAGES.dashMonitorOk();
 			text = theObject.getMonitorRulePids().size() + " rules ok";
+			clazz=CssConstants.DASHBOARD_MONITOR;
 		} else {
 			image = AdminPortal.IMAGES.dashMonitorNorules();
 			text = "No rules";
+			clazz=CssConstants.DASHBOARD_MONITOR_NORULES;
 		}
 
 		FlowPanel flowPanel = new FlowPanel();
+		flowPanel.setStylePrimaryName(clazz);
 
 		Image w = new Image(image);
 		w.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
@@ -210,10 +219,10 @@ public abstract class BaseDashModel implements IDashModel {
 			return null;
 		}
 
-		if (theMaxValue==0.0) {
+		if (theMaxValue == 0.0) {
 			return null;
 		}
-		
+
 		String text = "Avg:" + theAvgValue + " Max:" + theMaxValue + " " + theUnitDesc;
 
 		List<Long> dates = new ArrayList<Long>();
@@ -234,10 +243,10 @@ public abstract class BaseDashModel implements IDashModel {
 			Label retVal = new Label("No usage");
 			retVal.addStyleName(CssConstants.DASHBOARD_SPARKLINE_NOUSAGE);
 			return retVal;
-		}else if (averagePerMin < 0.1||theMaxPerMin<0.1) {
-			return returnBarSparklineFor60mins(list, theStatsInitialized, formatDouble(averagePerMin * 60), formatDouble(theMaxPerMin * 60),"/hr");
+		} else if (averagePerMin < 0.1 || theMaxPerMin < 0.1) {
+			return returnBarSparklineFor60mins(list, theStatsInitialized, formatDouble(averagePerMin * 60), formatDouble(theMaxPerMin * 60), "/hr");
 		} else {
-			return returnBarSparklineFor60mins(list, theStatsInitialized, formatDouble(averagePerMin),formatDouble(theMaxPerMin),  "/min");
+			return returnBarSparklineFor60mins(list, theStatsInitialized, formatDouble(averagePerMin), formatDouble(theMaxPerMin), "/min");
 		}
 	}
 

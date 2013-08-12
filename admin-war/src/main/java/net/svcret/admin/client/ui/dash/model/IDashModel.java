@@ -1,5 +1,6 @@
 package net.svcret.admin.client.ui.dash.model;
 
+import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.HierarchyEnum;
 
@@ -23,7 +24,7 @@ public interface IDashModel {
 
 	Widget renderUrls();
 	
-	Widget renderActions();
+	PButton renderActions();
 
 	String getCellStyle();
 

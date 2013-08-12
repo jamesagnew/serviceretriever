@@ -8,7 +8,7 @@ public class GMonitorRuleFiringProblem extends BaseGObject<GMonitorRuleFiringPro
 	private Long myFailedLatencyAverageOverMinutes;
 	private Long myFailedLatencyThreshold;
 	private String myFailedUrlMessage;
-	private Long myFailedUrlPid;
+	private Long myUrlPid;
 	private long myServiceVersionPid;
 	
 	public Long getFailedLatencyAverageMillisPerCall() {
@@ -26,8 +26,8 @@ public class GMonitorRuleFiringProblem extends BaseGObject<GMonitorRuleFiringPro
 		return myFailedUrlMessage;
 	}
 
-	public Long getFailedUrlPid() {
-		return myFailedUrlPid;
+	public Long getUrlPid() {
+		return myUrlPid;
 	}
 
 	public long getServiceVersionPid() {
@@ -54,8 +54,8 @@ public class GMonitorRuleFiringProblem extends BaseGObject<GMonitorRuleFiringPro
 	public void setFailedUrlMessage(String theFailedUrlMessage) {
 		myFailedUrlMessage = theFailedUrlMessage;
 	}
-	public void setFailedUrlPid(Long theFailedUrlPid) {
-		myFailedUrlPid = theFailedUrlPid;
+	public void setUrlPid(Long theUrlPid) {
+		myUrlPid = theUrlPid;
 	}
 
 	public void setServiceVersionPid(long theServiceVersionPid) {

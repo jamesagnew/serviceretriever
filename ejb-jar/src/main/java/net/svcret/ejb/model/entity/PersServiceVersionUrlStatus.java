@@ -34,7 +34,6 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	public static final int MAX_LENGTH_BODY = 2000;
 
 	public static final int MAX_LENGTH_CONTENT_TYPE = 100;
-	public static final int MAX_LENGTH_MSG = 500;
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(PersServiceVersionUrlStatus.class);
 
 	private static final long serialVersionUID = 1L;
@@ -52,7 +51,7 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	@Column(name = "LAST_FAIL_CTYPE", nullable = true, length = MAX_LENGTH_CONTENT_TYPE)
 	private volatile String myLastFailContentType;
 
-	@Column(name = "LAST_FAIL_MSG", nullable = true, length = MAX_LENGTH_MSG)
+	@Column(name = "LAST_FAIL_MSG", nullable = true, length = EntityConstants.MAXLEN_INVOC_OUTCOME_MSG)
 	private volatile String myLastFailMessage;
 
 	@Column(name = "LAST_FAIL_STATUS", nullable = true)
@@ -68,7 +67,7 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	@Column(name = "LAST_FAULT_CTYPE", nullable = true, length = MAX_LENGTH_CONTENT_TYPE)
 	private volatile String myLastFaultContentType;
 
-	@Column(name = "LAST_FAULT_MSG", nullable = true, length = MAX_LENGTH_MSG)
+	@Column(name = "LAST_FAULT_MSG", nullable = true, length = EntityConstants.MAXLEN_INVOC_OUTCOME_MSG)
 	private volatile String myLastFaultMessage;
 
 	@Column(name = "LAST_FAULT_STATUS", nullable = true)
@@ -81,7 +80,7 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	@Column(name = "LAST_SUCCESS")
 	private volatile Date myLastSuccess;
 
-	@Column(name = "LAST_SUCCESS_MSG", nullable = true, length = MAX_LENGTH_MSG)
+	@Column(name = "LAST_SUCCESS_MSG", nullable = true, length = EntityConstants.MAXLEN_INVOC_OUTCOME_MSG)
 	private String myLastSuccessMessage;
 
 	@Column(name = "NEXT_CB_RESET", nullable = true)
@@ -308,7 +307,7 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	 *            the lastFailMessage to set
 	 */
 	public void setLastFailMessage(String theLastFailMessage) {
-		myLastFailMessage = left(theLastFailMessage, MAX_LENGTH_MSG);
+		myLastFailMessage = left(theLastFailMessage, EntityConstants.MAXLEN_INVOC_OUTCOME_MSG);
 	}
 
 	/**
@@ -351,7 +350,7 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	 *            the lastFaultMessage to set
 	 */
 	public void setLastFaultMessage(String theLastFaultMessage) {
-		myLastFaultMessage = left(theLastFaultMessage, MAX_LENGTH_MSG);
+		myLastFaultMessage = left(theLastFaultMessage, EntityConstants.MAXLEN_INVOC_OUTCOME_MSG);
 	}
 
 	/**
@@ -383,7 +382,7 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	}
 
 	public void setLastSuccessMessage(String theMessage) {
-		myLastSuccessMessage = left(theMessage, MAX_LENGTH_MSG);
+		myLastSuccessMessage = left(theMessage, EntityConstants.MAXLEN_INVOC_OUTCOME_MSG);
 	}
 
 	/**

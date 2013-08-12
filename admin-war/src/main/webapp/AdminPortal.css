@@ -77,15 +77,15 @@
 	border-left:   1px #A5D1F3 solid;
 }
 
-.dashboardActionButton {
-	cursor: pointer;
-}
-
 .dashboardActionHeader {
 	background: #E0E0E0;
 	padding: 5px;
 	font-size: 1.1em;
 	font-weight: bold;
+}
+
+.dashboardActionPanel {
+	width: 250px;
 }
 
 .dashboardLastUsage, .dashboardLastUsageRecent {
@@ -114,15 +114,41 @@
 	font-size: 0.9em;
 }
 
-.dashboardSecurityPanel {
-	white-space: pre;
+.dashboardMonitorPanel DIV, .dashboardMonitorPanelFailures DIV, .dashboardMonitorPanelNoRules DIV {
+	vertical-align: super;
 }
+
+.dashboardMonitorPanel, .dashboardMonitorPanelNoRules {
+	font-size: 0.8em;
+	color: #808080;
+}
+
+.dashboardMonitorPanelFailures {
+	font-size: 0.8em;
+	color: #000000;
+}
+
+.dashboardSecurityPanel, .dashboardSecurityPanelNotSecured {
+	white-space: pre;
+	font-size: 0.8em;
+	vertical-align: super;
+}
+
+.dashboardSecurityPanelNotSecured {
+	color: #808080;
+}
+
+.dashboardSecurityPanel DIV, .dashboardSecurityPanelNotSecured DIV {
+	vertical-align: super;
+}
+
 
 TABLE.unstyledTable, TABLE.unstyledTable TBODY, TABLE.unstyledTable TBODY TR {
 	background: transparent !important;
 }
 
 TABLE.dashboardTable {
+	width: 100%;
 }
 
 .dashboardSparkline {
@@ -186,7 +212,9 @@ TABLE.dashboardTable TBODY TR:hover {
 
 .editableLabel {
 	background: #E0E0E0;
-	border: 1px solid #FFFFFF; 	
+	border: 1px solid #FFFFFF;
+	min-width: 40px;
+	display: inline-block;	 	
 }
 
 .editableLabelTransparent {
@@ -215,7 +243,7 @@ LABEL.formLabel {
 }
 
 .gwt-PopupPanel {
-	border: 2px solid #808080 !important;
+	border: 1px solid #808080 !important;
 	padding: 2px !important;
 }
 
@@ -242,6 +270,7 @@ LABEL.formLabel {
 	display: inline-block;
 	color: #303060;
 	font-weight: bold;
+	text-overflow:ellipsis;
 }
 
 .pushButton:DISABLED, .pushButtonText:DISABLED {
@@ -417,20 +446,26 @@ TABLE.listTable TBODY TR:nth-child(odd) {
 	color: #004040;
 }
 
+.pCellTableActionColumn {
+	padding: 0px !important;
+	border: 0px !important;
+}
+
 TABLE.propertyTable {
 	border-collapse: separate;
 	border-spacing: 0px;
+	margin-bottom: 3px;
 }
 
 TABLE.propertyTable TBODY TR TD {
 	padding: 5px;
 }
 	
-TABLE.propertyTable TBODY TR:nth-child(odd) {
+TABLE.propertyTable TBODY TR:nth-child(odd), .propertyTableOddRow {
 	background: #D0D0D0;
 }
 
-TABLE.propertyTable TBODY TR:nth-child(even) {
+TABLE.propertyTable TBODY TR:nth-child(even), .propertyTableEvenRow {
 	background: #FFF;
 }
 
@@ -459,6 +494,11 @@ TABLE.propertyTable TBODY TR TD TABLE TBODY TR {
 	background: inherit !important;
 }
 
+.recentTransactionsActionButton {
+	width: 75px;
+	margin: 2px;	
+}
+
 .recentTransactionsInheritCheckbox, .recentTransactionsInheritCheckbox LABEL {
 	font-size: 0.8em;
 	white-space: nowrap;
@@ -481,6 +521,7 @@ TABLE.propertyTable TBODY TR TD TABLE TBODY TR {
 .transactionGraphHeader {
 	font-size: 0.8em;
 	color: #888;
+	white-space: nowrap;
 }
 
 .twoColumnPropertyGrid TBODY TR {

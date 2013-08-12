@@ -20,8 +20,8 @@ import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IResponseValidator;
-import net.svcret.ejb.api.IThrottlingService;
 import net.svcret.ejb.api.IServiceOrchestrator.OrchestratorResponseBean;
+import net.svcret.ejb.api.IThrottlingService;
 import net.svcret.ejb.api.ITransactionLogger;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.UrlPoolBean;
@@ -40,7 +40,6 @@ import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
 
-import org.apache.http.client.ClientProtocolException;
 import org.junit.Before;
 import org.junit.Test;
 

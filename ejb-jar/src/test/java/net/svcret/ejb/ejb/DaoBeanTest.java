@@ -14,11 +14,13 @@ import java.util.Iterator;
 import java.util.List;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
+import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
-import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
+import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
+import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
@@ -31,10 +33,13 @@ import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
-import net.svcret.ejb.model.entity.PersMonitorRule;
+import net.svcret.ejb.model.entity.PersLibraryMessage;
+import net.svcret.ejb.model.entity.PersMonitorRuleActive;
+import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem;
 import net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact;
+import net.svcret.ejb.model.entity.PersMonitorRulePassive;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
@@ -70,11 +75,11 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		PersMonitorRule rule = new PersMonitorRule();
+		PersMonitorRulePassive rule = new PersMonitorRulePassive();
 		rule.setRuleName("rule0");
 		rule.setRuleActive(true);
-		rule.setFireIfAllBackingUrlsAreUnavailable(true);
-		rule.setFireIfSingleBackingUrlIsUnavailable(true);
+		rule.setPassiveFireIfAllBackingUrlsAreUnavailable(true);
+		rule.setPassiveFireIfSingleBackingUrlIsUnavailable(true);
 
 		rule.setAppliesToItems(ver);
 
@@ -82,7 +87,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		ctact.setEmail("foo@example.com");
 		rule.getNotifyContact().add(ctact);
 
-		rule= mySvc.saveOrCreateMonitorRule(rule);
+		rule = mySvc.saveOrCreateMonitorRule(rule);
 
 		newEntityManager();
 
@@ -96,19 +101,20 @@ public class DaoBeanTest extends BaseJpaTest {
 
 			PersMonitorRuleFiringProblem prob = new PersMonitorRuleFiringProblem();
 			prob.setServiceVersion(ver);
-//			prob.setFiring(firing);
+			// prob.setFiring(firing);
 			prob.setLatencyAverageMillisPerCall(100L);
+			prob.setLatencyThreshold(50L);
 			prob.setLatencyExceededThreshold(true);
 			firing.getProblems().add(prob);
 
 			mySvc.saveMonitorRuleFiring(firing);
 			newEntityManager();
 		}
-		
+
 		List<PersMonitorRuleFiring> gotFirings = mySvc.loadMonitorRuleFirings(Collections.singleton(ver), 0);
 		assertEquals(10, gotFirings.size());
 		assertEquals(firings.get(99).getStartDate(), gotFirings.get(0).getStartDate());
-		
+
 		gotFirings = mySvc.loadMonitorRuleFirings(Collections.singleton(ver), 10);
 		assertEquals(10, gotFirings.size());
 		assertEquals(firings.get(89).getStartDate(), gotFirings.get(0).getStartDate());
@@ -123,16 +129,31 @@ public class DaoBeanTest extends BaseJpaTest {
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
 		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
 
-		Collection<PersMonitorRule> rules = mySvc.getMonitorRules();
+		Collection<BasePersMonitorRule> rules = mySvc.getMonitorRules();
 		assertEquals(0, rules.size());
 
 		newEntityManager();
 
-		PersMonitorRule rule = new PersMonitorRule();
+		PersLibraryMessage msg0 = new PersLibraryMessage();
+		msg0.setAppliesTo(ver);
+		msg0.setContentType("text/xml");
+		msg0.setDescription("desc");
+		msg0.setMessage("message body");
+		msg0 = mySvc.saveLibraryMessage(msg0);
+		PersLibraryMessage msg1 = new PersLibraryMessage();
+		msg1.setAppliesTo(ver);
+		msg1.setContentType("text/xml");
+		msg1.setDescription("desc1");
+		msg1.setMessage("message body1");
+		msg1 = mySvc.saveLibraryMessage(msg1);
+
+		newEntityManager();
+		
+		PersMonitorRulePassive rule = new PersMonitorRulePassive();
 		rule.setRuleName("rule0");
 		rule.setRuleActive(true);
-		rule.setFireIfAllBackingUrlsAreUnavailable(true);
-		rule.setFireIfSingleBackingUrlIsUnavailable(true);
+		rule.setPassiveFireIfAllBackingUrlsAreUnavailable(true);
+		rule.setPassiveFireIfSingleBackingUrlIsUnavailable(true);
 
 		rule.setAppliesToItems(ver);
 
@@ -146,12 +167,50 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		rules = mySvc.getMonitorRules();
 		assertEquals(1, rules.size());
-		PersMonitorRule gotRule = rules.iterator().next();
+		PersMonitorRulePassive gotRule = (PersMonitorRulePassive) rules.iterator().next();
 		assertEquals(1, gotRule.getNotifyContact().size());
 		assertEquals(1, gotRule.getAppliesTo().size());
 		assertEquals(ver, gotRule.getAppliesTo().iterator().next().getItem());
 		assertEquals("foo@example.com", gotRule.getNotifyContact().iterator().next().getEmail());
 
+		/*
+		 * Active rule
+		 */
+	
+		PersMonitorRuleActive rule2 = new PersMonitorRuleActive();
+		rule2.setRuleName("rule2");
+		rule2.setRuleActive(true);
+
+		// Create active check
+		
+		PersMonitorRuleActiveCheck ac = new PersMonitorRuleActiveCheck();
+		ac.setMessage(msg0);
+		ac.setExpectResponseType(ResponseTypeEnum.SUCCESS);
+		ac.setRule(rule2);
+		ac.setServiceVersion(ver);
+		ac.setCheckFrequencyNum(1);
+		ac.setCheckFrequencyUnit(ThrottlePeriodEnum.MINUTE);
+		rule2.getActiveChecks().add(ac);
+
+		PersMonitorRuleNotifyContact ctact2 = new PersMonitorRuleNotifyContact();
+		ctact2.setEmail("foo2@example.com");
+		rule2.getNotifyContact().add(ctact2);
+
+		mySvc.saveOrCreateMonitorRule(rule2);
+
+		newEntityManager();
+
+		rules = mySvc.getMonitorRules();
+		assertEquals(2, rules.size());
+		Iterator<BasePersMonitorRule> iterator = rules.iterator();
+		iterator.next();
+		PersMonitorRuleActive gotRule2 = (PersMonitorRuleActive) iterator.next();
+		assertEquals(1, gotRule2.getNotifyContact().size());
+		assertEquals("foo2@example.com", gotRule2.getNotifyContact().iterator().next().getEmail());
+		assertEquals(1, gotRule2.getActiveChecks().size());
+		assertEquals(msg0, gotRule2.getActiveChecks().iterator().next().getMessage());
+
+	
 	}
 
 	@Test
@@ -1019,6 +1078,71 @@ public class DaoBeanTest extends BaseJpaTest {
 		PersBaseServerAuth<?, ?> serverAuth = ver.getServerAuths().get(0);
 		assertEquals(PersWsSecUsernameTokenServerAuth.class, serverAuth.getClass());
 		assertEquals(ldap, serverAuth.getAuthenticationHost());
+	}
+
+	@Test
+	public void testLibrary() throws ProcessingException {
+
+		newEntityManager();
+
+		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
+		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
+		PersServiceVersionSoap11 version0 = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
+		PersServiceVersionSoap11 version1 = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId1", ServiceProtocolEnum.SOAP11);
+
+		newEntityManager();
+
+		PersLibraryMessage m0 = new PersLibraryMessage();
+		m0.setAppliesTo(version0);
+		m0.setContentType("ct0");
+		m0.setDescription("desc0");
+		m0.setMessage("m0");
+		mySvc.saveLibraryMessage(m0);
+
+		PersLibraryMessage m1 = new PersLibraryMessage();
+		m1.setAppliesTo(version1);
+		m1.setContentType("ct1");
+		m1.setDescription("desc1");
+		m1.setMessage("m1");
+		mySvc.saveLibraryMessage(m1);
+
+		newEntityManager();
+
+		Collection<PersLibraryMessage> msgs = mySvc.getLibraryMessagesWhichApplyToServiceVersion(version0.getPid());
+		assertEquals(1, msgs.size());
+
+		PersLibraryMessage message = msgs.iterator().next();
+		assertEquals("ct0", message.getContentType());
+		assertEquals("desc0", message.getDescription());
+		assertEquals("m0", message.getMessage());
+
+		msgs = mySvc.getLibraryMessagesWhichApplyToServiceVersion(version1.getPid());
+		assertEquals(1, msgs.size());
+
+		message.setAppliesTo(version0, version1);
+
+		mySvc.saveLibraryMessage(message);
+
+		newEntityManager();
+
+		msgs = mySvc.getLibraryMessagesWhichApplyToServiceVersion(version1.getPid());
+		assertEquals(2, msgs.size());
+		msgs = mySvc.getLibraryMessagesWhichApplyToService(service.getPid());
+		assertEquals(2, msgs.size());
+
+		message.setAppliesTo(version1);
+
+		mySvc.saveLibraryMessage(message);
+
+		newEntityManager();
+
+		msgs = mySvc.getLibraryMessagesWhichApplyToServiceVersion(version0.getPid());
+		assertEquals(0, msgs.size());
+		msgs = mySvc.getLibraryMessagesWhichApplyToServiceVersion(version1.getPid());
+		assertEquals(2, msgs.size());
+		msgs = mySvc.getLibraryMessagesWhichApplyToService(service.getPid());
+		assertEquals(2, msgs.size());
+
 	}
 
 	@Test

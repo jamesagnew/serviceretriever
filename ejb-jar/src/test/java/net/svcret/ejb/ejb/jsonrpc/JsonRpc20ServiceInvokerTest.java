@@ -3,7 +3,6 @@ package net.svcret.ejb.ejb.jsonrpc;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -30,8 +29,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.gson.stream.MalformedJsonException;
 
 public class JsonRpc20ServiceInvokerTest {
 

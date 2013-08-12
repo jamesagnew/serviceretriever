@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
+
 public class GRecentMessage extends BaseGObject<GRecentMessage> {
 
 	private static final long serialVersionUID = 1L;
@@ -15,6 +17,7 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 	private String myImplementationUrlId;
 	private long myImplementationUrlPid;
 	private String myOutcomeDescription;
+	private RecentMessageTypeEnum myRecentMessageType;
 	private String myRequestContentType;
 	private List<Pair<String>> myRequestHeaders;
 	private String myRequestHostIp;
@@ -29,14 +32,14 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 	private String myServiceVersionId;
 	private long myServiceVersionPid;
 	private long myTransactionMillis;
+
 	private Date myTransactionTime;
 
 	public GRecentMessage() {
 		super();
 	}
 
-	public GRecentMessage(long thePid, Date theDate, String theRequestHostIp, String theRequestMessage, String theResponseMessage, List<Pair<String>> theRequestHeaders,
-			List<Pair<String>> theResponseHeaders, String theRequestContentType, String theResponseContentType) {
+	public GRecentMessage(long thePid, Date theDate, String theRequestHostIp, String theRequestMessage, String theResponseMessage, List<Pair<String>> theRequestHeaders, List<Pair<String>> theResponseHeaders, String theRequestContentType, String theResponseContentType) {
 		setPid(thePid);
 		myTransactionTime = theDate;
 		myRequestHostIp = theRequestHostIp;
@@ -79,6 +82,10 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 		return myOutcomeDescription;
 	}
 
+	public RecentMessageTypeEnum getRecentMessageType() {
+		return myRecentMessageType;
+	}
+
 	/**
 	 * @return the requestContentType
 	 */
@@ -90,7 +97,7 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 	 * @return the requestHeaders
 	 */
 	public List<Pair<String>> getRequestHeaders() {
-		if (myRequestHeaders==null) {
+		if (myRequestHeaders == null) {
 			return Collections.emptyList();
 		}
 		return myRequestHeaders;
@@ -132,7 +139,7 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 	 * @return the responseHeaders
 	 */
 	public List<Pair<String>> getResponseHeaders() {
-		if (myResponseHeaders==null) {
+		if (myResponseHeaders == null) {
 			return Collections.emptyList();
 		}
 		return myResponseHeaders;
@@ -206,6 +213,10 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 
 	public void setOutcomeDescription(String theOutcomeDescription) {
 		myOutcomeDescription = theOutcomeDescription;
+	}
+
+	public void setRecentMessageType(RecentMessageTypeEnum theRecentMessageType) {
+		myRecentMessageType = theRecentMessageType;
 	}
 
 	/**

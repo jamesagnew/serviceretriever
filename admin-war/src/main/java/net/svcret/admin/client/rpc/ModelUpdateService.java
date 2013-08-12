@@ -1,19 +1,21 @@
 package net.svcret.admin.client.rpc;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 
 import net.svcret.admin.shared.ServiceFailureException;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
 import net.svcret.admin.shared.model.BaseGAuthHost;
+import net.svcret.admin.shared.model.BaseGMonitorRule;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
-import net.svcret.admin.shared.model.GMonitorRule;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GPartialUserList;
@@ -93,7 +95,7 @@ public interface ModelUpdateService extends RemoteService {
 
 	GHttpClientConfig saveHttpClientConfig(boolean theCreate, GHttpClientConfig theConfig) throws ServiceFailureException;
 
-	GMonitorRuleList saveMonitorRule(GMonitorRule theRule) throws ServiceFailureException;
+	GMonitorRuleList saveMonitorRule(BaseGMonitorRule theRule) throws ServiceFailureException;
 
 	GDomainList saveService(GService theService) throws ServiceFailureException;
 
@@ -101,7 +103,7 @@ public interface ModelUpdateService extends RemoteService {
 
 	void saveUser(GUser theUser) throws ServiceFailureException;
 
-	GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid) throws ServiceFailureException;
+	GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long theServiceVersionPid) throws ServiceFailureException;
 
 	public static class UserAndAuthHost implements Serializable {
 		private static final long serialVersionUID = 1L;
@@ -157,5 +159,11 @@ public interface ModelUpdateService extends RemoteService {
 	}
 
 	List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart);
+
+	DtoLibraryMessage loadLibraryMessage(long theMessagePid) throws ServiceFailureException;
+
+	Collection<DtoLibraryMessage> loadLibraryMessagesForServiveVersion(long thePid) throws ServiceFailureException;
+
+	void saveLibraryMessage(DtoLibraryMessage theMessage) throws ServiceFailureException;
 
 }

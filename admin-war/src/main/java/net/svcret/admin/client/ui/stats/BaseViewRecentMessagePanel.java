@@ -42,13 +42,14 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
 		myTopPanel.add(titleLabel);
 
-		myTopLoadingSpinner = new LoadingSpinner();
-		myTopLoadingSpinner.show();
-		myTopPanel.add(myTopLoadingSpinner);
-
-		myTopGrid = new TwoColumnGrid();
 		FlowPanel topContentPanel = new FlowPanel();
 		topContentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
+		
+		myTopLoadingSpinner = new LoadingSpinner();
+		myTopLoadingSpinner.show();
+		topContentPanel.add(myTopLoadingSpinner);
+
+		myTopGrid = new TwoColumnGrid();
 		myTopPanel.add(topContentPanel);
 		
 		topContentPanel.add(myTopGrid);

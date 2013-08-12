@@ -20,18 +20,28 @@ public class PersMonitorRuleFiringProblem extends BasePersObject {
 	private static final long serialVersionUID = 1L;
 
 	@ManyToOne(optional = true)
-	@JoinColumn(name = "FAILED_URL_PID", nullable = true)
-	private PersServiceVersionUrl myFailedUrl;
+	@JoinColumn(name = "ACTIVE_MESSAGE", nullable = true)
+	private PersMonitorRuleActiveCheck myActiveCheck;
 
-	@Column(name="FAILED_URL_MSG", length=PersServiceVersionUrlStatus.MAX_LENGTH_MSG)
+	@Column(name = "CHECK_FAILURE_MESSAGE", nullable = true, length = EntityConstants.MAXLEN_MONITOR_FIRING_CHECK_FAILURE_MSG)
+	private String myCheckFailureMessage;
+
+	@ManyToOne(optional = true)
+	@JoinColumn(name = "URL_PID", nullable = true)
+	private PersServiceVersionUrl myUrl;
+
+	@Column(name = "FAILED_URL_MSG", length = EntityConstants.MAXLEN_INVOC_OUTCOME_MSG, nullable = true)
 	private String myFailedUrlMessage;
-	
+
 	@ManyToOne()
 	@JoinColumn(name = "FIRING_PID", nullable = false, referencedColumnName = "PID")
 	private PersMonitorRuleFiring myFiring;
 
 	@Column(name = "LATENCY_AVG_CALLMILLIS", nullable = true)
 	private Long myLatencyAverageMillisPerCall;
+
+	@Column(name = "LATENCY_THRESHOLD", nullable = true)
+	private Long myLatencyThreshold;
 
 	@Column(name = "LATENCY_AVG_OVERMINS", nullable = true)
 	private Long myLatencyAverageOverMinutes;
@@ -53,23 +63,31 @@ public class PersMonitorRuleFiringProblem extends BasePersObject {
 		if (!(theObj instanceof PersMonitorRuleFiringProblem)) {
 			return false;
 		}
-		
-		PersMonitorRuleFiringProblem obj = (PersMonitorRuleFiringProblem)theObj;
+
+		PersMonitorRuleFiringProblem obj = (PersMonitorRuleFiringProblem) theObj;
 		boolean retVal = Objects.equal(obj.getServiceVersion(), getServiceVersion());
-		retVal &= Objects.equal(obj.getFailedUrl(), getFailedUrl());
+		retVal &= Objects.equal(obj.getFailedUrlMessage(), getFailedUrlMessage());
 		retVal &= Objects.equal(obj.getLatencyExceededThreshold(), getLatencyExceededThreshold());
-		
+		retVal &= Objects.equal(obj.getCheckFailureMessage(), getCheckFailureMessage());
+
 		return retVal;
-		
+
+	}
+
+	public PersMonitorRuleActiveCheck getActiveCheck() {
+		return myActiveCheck;
+	}
+
+	public String getCheckFailureMessage() {
+		return myCheckFailureMessage;
 	}
 
 	/**
 	 * @return the failedUrl
 	 */
-	public PersServiceVersionUrl getFailedUrl() {
-		return myFailedUrl;
+	public PersServiceVersionUrl getUrl() {
+		return myUrl;
 	}
-
 
 	/**
 	 * @return the failedUrlMessage
@@ -124,26 +142,40 @@ public class PersMonitorRuleFiringProblem extends BasePersObject {
 	public int hashCode() {
 		HashCodeBuilder b = new HashCodeBuilder();
 		b.append(getServiceVersion());
-		b.append(getFailedUrl());
+		b.append(getFailedUrlMessage());
 		b.append(getLatencyExceededThreshold());
+		b.append(getCheckFailureMessage());
 		return b.toHashCode();
+	}
+
+	public void setActiveCheck(PersMonitorRuleActiveCheck theActiveCheck) {
+		myActiveCheck = theActiveCheck;
+	}
+
+	public void setCheckFailureMessage(String theCheckFailureMessage) {
+		if (theCheckFailureMessage.length() > EntityConstants.MAXLEN_MONITOR_FIRING_CHECK_FAILURE_MSG) {
+			myFailedUrlMessage = theCheckFailureMessage.substring(0, EntityConstants.MAXLEN_MONITOR_FIRING_CHECK_FAILURE_MSG);
+		} else {
+			myCheckFailureMessage = theCheckFailureMessage;
+		}
 	}
 
 	/**
 	 * @param theFailedUrl
 	 *            the failedUrl to set
 	 */
-	public void setFailedUrl(PersServiceVersionUrl theFailedUrl) {
-		if (myLatencyExceededThreshold == Boolean.TRUE) {
-			throw new IllegalStateException();
-		}
-		myFailedUrl = theFailedUrl;
+	public void setUrl(PersServiceVersionUrl theUrl) {
+		myUrl = theUrl;
 	}
 
 	/**
-	 * @param theFailedUrlMessage the failedUrlMessage to set
+	 * @param theFailedUrlMessage
+	 *            the failedUrlMessage to set
 	 */
 	public void setFailedUrlMessage(String theFailedUrlMessage) {
+		if (myLatencyExceededThreshold == Boolean.TRUE) {
+			throw new IllegalStateException();
+		}
 		myFailedUrlMessage = theFailedUrlMessage;
 	}
 
@@ -163,6 +195,14 @@ public class PersMonitorRuleFiringProblem extends BasePersObject {
 		myLatencyAverageMillisPerCall = theLatencyAverageMillisPerCall;
 	}
 
+	public Long getLatencyThreshold() {
+		return myLatencyThreshold;
+	}
+
+	public void setLatencyThreshold(Long theLatencyThreshold) {
+		myLatencyThreshold = theLatencyThreshold;
+	}
+
 	/**
 	 * @param theLatencyAverageOverMinutes
 	 *            the latencyAverageOverMinutes to set
@@ -172,10 +212,11 @@ public class PersMonitorRuleFiringProblem extends BasePersObject {
 	}
 
 	/**
-	 * @param theLatencyExceededThreshold the latencyExceededThreshold to set
+	 * @param theLatencyExceededThreshold
+	 *            the latencyExceededThreshold to set
 	 */
 	public void setLatencyExceededThreshold(Boolean theLatencyExceededThreshold) {
-		if (myFailedUrl != null) {
+		if (myFailedUrlMessage != null) {
 			throw new IllegalStateException();
 		}
 		myLatencyExceededThreshold = theLatencyExceededThreshold;
@@ -189,19 +230,28 @@ public class PersMonitorRuleFiringProblem extends BasePersObject {
 		myServiceVersion = theServiceVersion;
 	}
 
-	public static PersMonitorRuleFiringProblem getInstanceForServiceLatency(BasePersServiceVersion theSvcVer, long theAvgLatency, int theAvgLatencyOverMinutes) {
+	public static PersMonitorRuleFiringProblem getInstanceForCheckFailure(BasePersServiceVersion theServiceVersion, String theMessage) {
+		PersMonitorRuleFiringProblem retVal = new PersMonitorRuleFiringProblem();
+		retVal.setServiceVersion(theServiceVersion);
+		retVal.setCheckFailureMessage(theMessage);
+		return retVal;
+	}
+
+	public static PersMonitorRuleFiringProblem getInstanceForServiceLatency(BasePersServiceVersion theSvcVer, long theAvgLatency, long theThreshold, Long theAvgLatencyOverMinutes, PersServiceVersionUrl theUrl) {
 		PersMonitorRuleFiringProblem retVal = new PersMonitorRuleFiringProblem();
 		retVal.setServiceVersion(theSvcVer);
 		retVal.setLatencyAverageMillisPerCall(theAvgLatency);
-		retVal.setLatencyAverageOverMinutes((long)theAvgLatencyOverMinutes);
+		retVal.setLatencyThreshold(theThreshold);
+		retVal.setLatencyAverageOverMinutes(theAvgLatencyOverMinutes);
 		retVal.setLatencyExceededThreshold(true);
+		retVal.setUrl(theUrl);
 		return retVal;
 	}
 
 	public static PersMonitorRuleFiringProblem getInstanceForUrlDown(BasePersServiceVersion theSvcVer, PersServiceVersionUrl theUrl, String theMessage) {
 		PersMonitorRuleFiringProblem retVal = new PersMonitorRuleFiringProblem();
 		retVal.setServiceVersion(theSvcVer);
-		retVal.setFailedUrl(theUrl);
+		retVal.setUrl(theUrl);
 		retVal.setFailedUrlMessage(theMessage);
 		return retVal;
 	}

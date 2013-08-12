@@ -1,16 +1,18 @@
 package net.svcret.ejb.ejb;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.mock;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
+import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
@@ -20,15 +22,21 @@ import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IServiceInvokerSoap11;
+import net.svcret.ejb.api.IServiceOrchestrator;
+import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
+import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
-import net.svcret.ejb.model.entity.PersMonitorRule;
+import net.svcret.ejb.model.entity.PersLibraryMessage;
+import net.svcret.ejb.model.entity.PersMonitorRuleActive;
+import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
+import net.svcret.ejb.model.entity.PersMonitorRulePassive;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -48,10 +56,10 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 	private PersServiceVersionMethod myMethod;
 	private PersServiceVersionUrl myUrl1;
 	private PersServiceVersionUrl myUrl2;
-	private Date myNow;
-	private Date my30SecsAgo;
-	private Date my1Min30SecsAgo;
-	private Date my2Min30SecsAgo;
+//	private Date myNow;
+//	private Date my30SecsAgo;
+//	private Date my1Min30SecsAgo;
+//	private Date my2Min30SecsAgo;
 
 	@Before
 	public void before2() throws SQLException, ProcessingException {
@@ -86,13 +94,14 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		mySvc = new MonitorServiceBean();
 		mySvc.setDao(myDao);
 		mySvc.setRuntimeStatus(myStatsSvc);
+		mySvc.setBroadcastSender(mock(IBroadcastSender.class));
 
 		DefaultAnswer.setDesignTime();
 		
-		myNow = new Date();
-		my30SecsAgo = new Date(myNow.getTime() - (30 * DateUtils.MILLIS_PER_SECOND));
-		my1Min30SecsAgo = new Date(myNow.getTime() - (DateUtils.MILLIS_PER_MINUTE) - (30 * DateUtils.MILLIS_PER_SECOND));
-		my2Min30SecsAgo = new Date(myNow.getTime() - (2*DateUtils.MILLIS_PER_MINUTE) - (30 * DateUtils.MILLIS_PER_SECOND));
+//		myNow = new Date();
+//		my30SecsAgo = new Date(myNow.getTime() - (30 * DateUtils.MILLIS_PER_SECOND));
+//		my1Min30SecsAgo = new Date(myNow.getTime() - (DateUtils.MILLIS_PER_MINUTE) - (30 * DateUtils.MILLIS_PER_SECOND));
+//		my2Min30SecsAgo = new Date(myNow.getTime() - (2*DateUtils.MILLIS_PER_MINUTE) - (30 * DateUtils.MILLIS_PER_SECOND));
 		
 		
 	}
@@ -110,10 +119,10 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		PersMonitorRule rule = new PersMonitorRule();
+		PersMonitorRulePassive rule = new PersMonitorRulePassive();
 		rule.setRuleActive(true);
 		rule.setAppliesToItems(mySvcVer);
-		rule.setFireIfSingleBackingUrlIsUnavailable(true);
+		rule.setPassiveFireIfSingleBackingUrlIsUnavailable(true);
 		myDao.saveOrCreateMonitorRule(rule);
 
 		// No calls have happened yet..
@@ -142,7 +151,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		assertNotNull(svcVer.getMostRecentMonitorRuleFiring());
 		assertNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
 		assertEquals(1, svcVer.getMostRecentMonitorRuleFiring().getProblems().size());
-		assertEquals(myUrl2, svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getFailedUrl());
+		assertEquals(myUrl2, svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getUrl());
 		assertEquals("failure explanation", svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getFailedUrlMessage());
 
 		// Succeed the URL again
@@ -171,10 +180,10 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		PersMonitorRule rule = new PersMonitorRule();
+		PersMonitorRulePassive rule = new PersMonitorRulePassive();
 		rule.setRuleActive(true);
 		rule.setAppliesToItems(mySvcVer);
-		rule.setFireIfSingleBackingUrlIsUnavailable(true);
+		rule.setPassiveFireIfSingleBackingUrlIsUnavailable(true);
 		myDao.saveOrCreateMonitorRule(rule);
 
 		// No calls have happened yet..
@@ -223,6 +232,107 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		
 	}
 
+	@Test
+	public void testActiveTest() throws ProcessingException, InternalErrorException, UnknownRequestException {
+		createCatalog();
+
+		IServiceOrchestrator orch = mock(IServiceOrchestrator.class);
+		mySvc.setServiceOrchestratorForUnitTests(orch);
+		
+		newEntityManager();
+
+		PersLibraryMessage msg = new PersLibraryMessage();
+		msg.setAppliesTo(mySvcVer);
+		msg.setContentType("ct");
+		msg.setDescription("desc");
+		msg.setMessage("body");
+		myDao.saveLibraryMessage(msg);
+		
+		newEntityManager();
+
+		PersMonitorRuleActive rule = new PersMonitorRuleActive();
+		rule.setRuleActive(true);
+		
+		PersMonitorRuleActiveCheck check=new PersMonitorRuleActiveCheck();
+		check.setCheckFrequencyNum(1);
+		check.setCheckFrequencyUnit(ThrottlePeriodEnum.SECOND);
+		check.setExpectLatencyUnderMillis(100L);
+		check.setExpectResponseType(ResponseTypeEnum.SUCCESS);
+		check.setMessage(msg);
+		check.setServiceVersion(mySvcVer);
+		
+		rule.getActiveChecks().add(check);
+		mySvc.saveRule(rule);
+
+		// No calls have happened yet..
+		newEntityManager();
+		mySvc.check();
+		newEntityManager();
+		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
+		assertNull(svcVer.getMostRecentMonitorRuleFiring());
+
+		// Fail one of the URLs
+		newEntityManager();
+		
+		check = myDao.getAllMonitorRuleActiveChecks().iterator().next();
+
+		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<IServiceOrchestrator.SidechannelOrchestratorResponseBean>();
+		HttpResponseBean httpResponse=new HttpResponseBean();
+		httpResponse.setSuccessfulUrl(myUrl1);
+		httpResponse.setResponseTime(1000);
+		responses.add(new SidechannelOrchestratorResponseBean("", "", new HashMap<String, List<String>>(), httpResponse, ResponseTypeEnum.SUCCESS));
+		when(orch.handleSidechannelRequestForEachUrl(eq(mySvcVer.getPid()), (String)any(), (String)any(), (String)any())).thenReturn(responses);
+		mySvc.runActiveCheck(check);
+		
+//		HttpResponseBean httpResponse = new HttpResponseBean();
+//		httpResponse.setSuccessfulUrl(myUrl1);
+//		httpResponse.addFailedUrl(myUrl2, "failure explanation", 500, "text/plain", "response body");
+//		httpResponse.setBody("successful response");
+//		InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
+//		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
+//		myStatsSvc.recordInvocationMethod(new Date(), 100, myMethod, null, httpResponse, invocationResponseResultsBean, null);
+//		newEntityManager();
+//		myStatsSvc.flushStatus();
+		newEntityManager();
+
+		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
+		assertNotNull(svcVer.getMostRecentMonitorRuleFiring());
+		assertNull(svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage(),svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage());
+		assertNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
+
+		newEntityManager();
+
+		// Make sure the passive check doesn't overwrite things
+		mySvc.check();
+		
+		newEntityManager();
+		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
+		assertNotNull(svcVer.getMostRecentMonitorRuleFiring());
+		assertNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
+
+		// Succeed the URL again
+		newEntityManager();
+//		httpResponse = new HttpResponseBean();
+//		httpResponse.setSuccessfulUrl(myUrl2);
+//		httpResponse.setBody("successful response");
+//		invocationResponseResultsBean = new InvocationResponseResultsBean();
+//		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
+//		myStatsSvc.recordInvocationMethod(new Date(), 100, myMethod, null, httpResponse, invocationResponseResultsBean, null);
+//		newEntityManager();
+//		myStatsSvc.flushStatus();
+
+		httpResponse.setResponseTime(1);
+		mySvc.runActiveCheck(check);
+
+		newEntityManager();
+		
+		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
+		assertNotNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
+		
+		
+	}
+
+	
 	private void createCatalog() throws ProcessingException {
 		newEntityManager();
 

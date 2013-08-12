@@ -92,7 +92,7 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 		myGrid.setText(0, COL_BACKING_URLS, "Backing URLs");
 		myGrid.setText(0, COL_LAST_INVOC, "Last Invoc");
 		myGrid.setText(0, COL_SECURITY, "Security");
-		myGrid.setText(0, COL_ACTIONS, "Actions");
+		myGrid.setText(0, COL_ACTIONS, null);
 
 		updateView();
 
@@ -162,7 +162,7 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 										addSpinnerToList(newUiList);
 										haveStatsToLoad = true;
 									} else {
-										newUiList.add(new DashModelServiceVersion(nextDomain, nextService, nextServiceVersion));
+										newUiList.add(new DashModelServiceVersion(nextService, nextServiceVersion));
 
 										if (nextServiceVersion.isExpandedOnDashboard()) {
 											haveStatsToLoad = addServiceVersionChildren(newUiList, haveStatsToLoad, nextServiceVersion);

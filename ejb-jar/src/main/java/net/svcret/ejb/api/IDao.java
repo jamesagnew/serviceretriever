@@ -13,8 +13,9 @@ import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.ejb.TransactionLoggerBean.BaseUnflushed;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
-import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
+import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
+import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.BasePersRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceCatalogItem;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -32,7 +33,8 @@ import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
-import net.svcret.ejb.model.entity.PersMonitorRule;
+import net.svcret.ejb.model.entity.PersLibraryMessage;
+import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
@@ -50,7 +52,7 @@ public interface IDao {
 	void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost);
 
 	void deleteHttpClientConfig(PersHttpClientConfig theConfig);
-
+	
 	void deleteService(PersService theService);
 
 	void deleteServiceVersion(BasePersServiceVersion theSv);
@@ -92,9 +94,13 @@ public interface IDao {
 
 	List<PersInvocationUserStats> getInvocationUserStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff);
 
-	PersMonitorRule getMonitorRule(long thePid);
+	Collection<PersLibraryMessage> getLibraryMessagesWhichApplyToService(long thePid);
 
-	Collection<PersMonitorRule> getMonitorRules();
+	Collection<PersLibraryMessage> getLibraryMessagesWhichApplyToServiceVersion(long theServiceVersionPid);
+
+	BasePersMonitorRule getMonitorRule(long thePid);
+
+	Collection<BasePersMonitorRule> getMonitorRules();
 
 	PersAuthenticationHostLdap getOrCreateAuthenticationHostLdap(String theModuleId) throws ProcessingException;
 
@@ -136,6 +142,8 @@ public interface IDao {
 
 	long incrementStateCounter(String theKey);
 
+	List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<? extends BasePersServiceVersion> theAllSvcVers, int theStart);
+
 	BasePersRecentMessage loadRecentMessageForServiceVersion(long thePid);
 
 	BasePersRecentMessage loadRecentMessageForUser(long thePid);
@@ -158,11 +166,11 @@ public interface IDao {
 
 	void saveInvocationStats(Collection<BasePersInvocationStats> theStats, List<BasePersInvocationStats> theStatsToDelete);
 
-	void saveMonitorRule(PersMonitorRule theRule);
+	PersLibraryMessage saveLibraryMessage(PersLibraryMessage theMessage);
+
+	void saveMonitorRule(BasePersMonitorRule theRule);
 
 	PersMonitorRuleFiring saveMonitorRuleFiring(PersMonitorRuleFiring theFiring);
-
-	PersMonitorRule saveOrCreateMonitorRule(PersMonitorRule theRule);
 
 	void saveRecentMessagesAndTrimInNewTransaction(BaseUnflushed<? extends BasePersRecentMessage> theNextTransactions);
 
@@ -187,6 +195,8 @@ public interface IDao {
 	void saveUserStatus(Collection<PersUserStatus> theStatus);
 
 	void trimServiceVersionRecentMessages(BasePersServiceVersion theVersion, ResponseTypeEnum theType, int theNumberToTrimTo);
+
+//	List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int theStart);
 
 	void trimUserRecentMessages(PersUser theUser, ResponseTypeEnum theType, int theNumberToTrimTo);
 
@@ -215,8 +225,10 @@ public interface IDao {
 
 	}
 
-//	List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int theStart);
+	PersLibraryMessage getLibraryMessageByPid(long theMessagePid);
 
-	List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<? extends BasePersServiceVersion> theAllSvcVers, int theStart);
+	Collection<PersMonitorRuleActiveCheck> getAllMonitorRuleActiveChecks();
+
+	<T extends BasePersMonitorRule> T saveOrCreateMonitorRule(T theRule);
 
 }

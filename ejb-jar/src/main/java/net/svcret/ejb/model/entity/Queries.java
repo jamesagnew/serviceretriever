@@ -2,16 +2,25 @@ package net.svcret.ejb.model.entity;
 
 public class Queries {
 
+	public static final String PERSACTIVECHECK_FINDALL = "PersMonitorRuleActiveCheck.findAll";
+	public static final String PERSACTIVECHECK_FINDALL_Q = "SELECT a FROM PersMonitorRuleActiveCheck a";
+	
 	public static final String PERSUSER_FIND = "PersUser.find";
 	public static final String PERSUSER_FIND_Q = "SELECT u FROM PersUser u WHERE " + // -
 			"u.myUsername = :USERNAME AND " + // -
 			"u.myAuthenticationHost = :AUTH_HOST";
 
+	public static final String LIBRARY_FINDBYSVCVER = "PersLibraryMessage.findBySvcVer";
+	public static final String LIBRARY_FINDBYSVCVER_Q = "SELECT m FROM PersLibraryMessage m JOIN m.myAppliesTo a WHERE a.myPk.myServiceVersion IN :SVC_VERS";
+
+	public static final String LIBRARY_FINDBYSVC = "PersLibraryMessage.findBySvc";
+	public static final String LIBRARY_FINDBYSVC_Q = "SELECT m FROM PersLibraryMessage m JOIN m.myAppliesTo a WHERE a.myPk.myServiceVersion.myService IN :SVC";
+
 	public static final String AUTHHOST_FINDALL = "BasePersAuthenticationHost.findAll";
 	public static final String AUTHHOST_FINDALL_Q = "SELECT h FROM BasePersAuthenticationHost h";
 
 	public static final String MONITORRULE_FINDALL = "PersMonitorRule.findAll";
-	public static final String MONITORRULE_FINDALL_Q = "SELECT r FROM PersMonitorRule r";
+	public static final String MONITORRULE_FINDALL_Q = "SELECT r FROM BasePersMonitorRule r";
 
 	public static final String SERVICE_FIND = "PersService.find";
 	public static final String SERVICE_FIND_Q = "SELECT s FROM PersService s WHERE s.myServiceId = :SERVICE_ID AND s.myDomain.myPid = :DOMAIN_PID";

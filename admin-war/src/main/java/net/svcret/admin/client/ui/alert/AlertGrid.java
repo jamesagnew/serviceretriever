@@ -7,6 +7,7 @@ import java.util.Set;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
+import net.svcret.admin.client.ui.components.PCellTable;
 import net.svcret.admin.client.ui.stats.DateUtil;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
@@ -39,7 +40,7 @@ public class AlertGrid extends FlowPanel {
 		myDomainList = theDomainList;
 
 		// DataGrid<GMonitorRuleFiring> grid = new DataGrid<GMonitorRuleFiring>();
-		final CellTable<GMonitorRuleFiring> grid = new CellTable<GMonitorRuleFiring>();
+		final CellTable<GMonitorRuleFiring> grid = new PCellTable<GMonitorRuleFiring>();
 		add(grid);
 
 		grid.setEmptyTableWidget(new Label("No firings"));
@@ -100,34 +101,13 @@ public class AlertGrid extends FlowPanel {
 
 				b.appendHtmlConstant("<ul>");
 
-				for (GDomain nextDomain : myDomainList) {
-					for (GService nextSvc : nextDomain.getServiceList()) {
-						if (nextSvc.anyVersionPidsInThisServiceAreAmongThesePids(affectedSvcVerPids)) {
-							b.appendHtmlConstant("<li>");
-							b.appendHtmlConstant("<a href=\"#" + NavProcessor.getTokenEditDomain(true, nextDomain.getPid()) + "\">");
-							b.appendEscaped(nextDomain.getId());
-							b.appendHtmlConstant("</a> / <a href=\"#" + NavProcessor.getTokenEditService(true, nextDomain.getPid(), nextSvc.getPid()) + "\">");
-							b.appendEscaped(nextSvc.getId());
-							b.appendHtmlConstant("</a>");
-							if (nextSvc.allVersionPidsInThisServiceAreAmongThesePids(affectedSvcVerPids)) {
-								b.appendHtmlConstant(" (all versions)");
-							} else {
-								b.appendHtmlConstant("<ul>");
-								for (BaseGServiceVersion nextSvcVer : nextSvc.getVersionList()) {
-									b.appendHtmlConstant("<li>");
-									b.appendHtmlConstant("<a href=\"#" + NavProcessor.getTokenEditServiceVersion(true, nextSvcVer.getPid()) + "\">");
-									b.appendEscaped(nextSvcVer.getId());
-									b.appendHtmlConstant("</a></li>");
-								}
-								b.appendHtmlConstant("</ul>");
-							}
-						}
-					}
-				}
+				GDomainList domainList = myDomainList;
+				createAppliesToHtml(b, affectedSvcVerPids, domainList);
 
 				b.appendHtmlConstant("</ul>");
 				return b.toSafeHtml();
 			}
+
 
 		};
 		grid.addColumn(affectsColumn, "Affects Services");
@@ -172,8 +152,8 @@ public class AlertGrid extends FlowPanel {
 			}
 		}
 
-		if (theProblem.getFailedUrlPid() != null) {
-			GServiceVersionUrl url = myDomainList.getUrlByPid(theProblem.getFailedUrlPid());
+		if (theProblem.getFailedUrlMessage() != null) {
+			GServiceVersionUrl url = myDomainList.getUrlByPid(theProblem.getUrlPid());
 			theB.appendHtmlConstant("URL ");
 			theB.appendHtmlConstant("<a href=\"");
 			theB.appendHtmlConstant(url.getUrl());
@@ -184,6 +164,34 @@ public class AlertGrid extends FlowPanel {
 			theB.appendHtmlConstant("</i>");
 		}
 
+	}
+
+	
+	public static void createAppliesToHtml(SafeHtmlBuilder theSafeHtmlBuilder, Set<Long> theSvcVerPids, GDomainList theDomainList) {
+		for (GDomain nextDomain : theDomainList) {
+			for (GService nextSvc : nextDomain.getServiceList()) {
+				if (nextSvc.anyVersionPidsInThisServiceAreAmongThesePids(theSvcVerPids)) {
+					theSafeHtmlBuilder.appendHtmlConstant("<li>");
+					theSafeHtmlBuilder.appendHtmlConstant("<a href=\"#" + NavProcessor.getTokenEditDomain(true, nextDomain.getPid()) + "\">");
+					theSafeHtmlBuilder.appendEscaped(nextDomain.getId());
+					theSafeHtmlBuilder.appendHtmlConstant("</a> / <a href=\"#" + NavProcessor.getTokenEditService(true, nextDomain.getPid(), nextSvc.getPid()) + "\">");
+					theSafeHtmlBuilder.appendEscaped(nextSvc.getId());
+					theSafeHtmlBuilder.appendHtmlConstant("</a>");
+					if (nextSvc.allVersionPidsInThisServiceAreAmongThesePids(theSvcVerPids)) {
+						theSafeHtmlBuilder.appendHtmlConstant(" (all versions)");
+					} else {
+						theSafeHtmlBuilder.appendHtmlConstant("<ul>");
+						for (BaseGServiceVersion nextSvcVer : nextSvc.getVersionList()) {
+							theSafeHtmlBuilder.appendHtmlConstant("<li>");
+							theSafeHtmlBuilder.appendHtmlConstant("<a href=\"#" + NavProcessor.getTokenEditServiceVersion(true, nextSvcVer.getPid()) + "\">");
+							theSafeHtmlBuilder.appendEscaped(nextSvcVer.getId());
+							theSafeHtmlBuilder.appendHtmlConstant("</a></li>");
+						}
+						theSafeHtmlBuilder.appendHtmlConstant("</ul>");
+					}
+				}
+			}
+		}
 	}
 
 }

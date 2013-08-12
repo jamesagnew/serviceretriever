@@ -1,6 +1,5 @@
 package net.svcret.admin.client.ui.components;
 
-import com.google.gwt.dom.client.Node;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.InsertPanel;

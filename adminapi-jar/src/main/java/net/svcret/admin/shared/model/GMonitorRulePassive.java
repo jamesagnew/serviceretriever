@@ -3,18 +3,18 @@ package net.svcret.admin.shared.model;
 import java.util.HashSet;
 import java.util.Set;
 
-public class GMonitorRule extends BaseGObject<GMonitorRule> {
+import net.svcret.admin.shared.enm.MonitorRuleTypeEnum;
+
+
+public class GMonitorRulePassive extends BaseGMonitorRule {
 
 	private static final long serialVersionUID = 1L;
 
-	private boolean isActive;
 	private Set<GMonitorRuleAppliesTo> myAppliesTo;
-	private Integer myFireForBackingServiceLatencyIsAboveMillis;
-	private Integer myFireForBackingServiceLatencySustainTimeMins;
-	private boolean myFireIfAllBackingUrlsAreUnavailable;
-	private boolean myFireIfSingleBackingUrlIsUnavailable;
-	private String myName;
-	private Set<String> myNotifyEmailContacts;
+	private Integer myPassiveFireForBackingServiceLatencyIsAboveMillis;
+	private Integer myPassiveFireForBackingServiceLatencySustainTimeMins;
+	private boolean myPassiveFireIfAllBackingUrlsAreUnavailable;
+	private boolean myPassiveFireIfSingleBackingUrlIsUnavailable;
 
 	public boolean appliesTo(BaseGServiceVersion theSvcVer) {
 		return getAppliesToServiceVersion(theSvcVer) != null;
@@ -83,96 +83,71 @@ public class GMonitorRule extends BaseGObject<GMonitorRule> {
 	/**
 	 * @return the fireForBackingServiceLatencyIsAboveMillis
 	 */
-	public Integer getFireForBackingServiceLatencyIsAboveMillis() {
-		return myFireForBackingServiceLatencyIsAboveMillis;
+	public Integer getPassiveFireForBackingServiceLatencyIsAboveMillis() {
+		return myPassiveFireForBackingServiceLatencyIsAboveMillis;
 	}
 
 	/**
 	 * @return the fireForBackingServiceLatencySustainTimeMins
 	 */
-	public Integer getFireForBackingServiceLatencySustainTimeMins() {
-		return myFireForBackingServiceLatencySustainTimeMins;
+	public Integer getPassiveFireForBackingServiceLatencySustainTimeMins() {
+		return myPassiveFireForBackingServiceLatencySustainTimeMins;
 	}
 
-	public String getName() {
-		return myName;
-	}
-
-	/**
-	 * @return the notifyEmailContacts
-	 */
-	public Set<String> getNotifyEmailContacts() {
-		if (myNotifyEmailContacts == null) {
-			myNotifyEmailContacts = new HashSet<String>();
-		}
-		return myNotifyEmailContacts;
-	}
-
-	public boolean isActive() {
-		return isActive;
+	@Override
+	public MonitorRuleTypeEnum getRuleType() {
+		return MonitorRuleTypeEnum.PASSIVE;
 	}
 
 	/**
 	 * @return the fireIfAllBackingUrlsAreUnavailable
 	 */
-	public boolean isFireIfAllBackingUrlsAreUnavailable() {
-		return myFireIfAllBackingUrlsAreUnavailable;
+	public boolean isPassiveFireIfAllBackingUrlsAreUnavailable() {
+		return myPassiveFireIfAllBackingUrlsAreUnavailable;
 	}
 
 	/**
 	 * @return the fireIfSingleBackingUrlIsUnavailable
 	 */
-	public boolean isFireIfSingleBackingUrlIsUnavailable() {
-		return myFireIfSingleBackingUrlIsUnavailable;
+	public boolean isPassiveFireIfSingleBackingUrlIsUnavailable() {
+		return myPassiveFireIfSingleBackingUrlIsUnavailable;
 	}
 
 	@Override
-	public void merge(GMonitorRule theObject) {
+	public void merge(BaseGMonitorRule theObject) {
 
-	}
-
-	public void setActive(boolean theIsActive) {
-		isActive = theIsActive;
 	}
 
 	/**
-	 * @param theFireForBackingServiceLatencyIsAboveMillis
+	 * @param thePassiveFireForBackingServiceLatencyIsAboveMillis
 	 *            the fireForBackingServiceLatencyIsAboveMillis to set
 	 */
-	public void setFireForBackingServiceLatencyIsAboveMillis(Integer theFireForBackingServiceLatencyIsAboveMillis) {
-		myFireForBackingServiceLatencyIsAboveMillis = theFireForBackingServiceLatencyIsAboveMillis;
+	public void setPassiveFireForBackingServiceLatencyIsAboveMillis(Integer thePassiveFireForBackingServiceLatencyIsAboveMillis) {
+		myPassiveFireForBackingServiceLatencyIsAboveMillis = thePassiveFireForBackingServiceLatencyIsAboveMillis;
 	}
 
 	/**
-	 * @param theFireForBackingServiceLatencySustainTimeMins
+	 * @param thePassiveFireForBackingServiceLatencySustainTimeMins
 	 *            the fireForBackingServiceLatencySustainTimeMins to set
 	 */
-	public void setFireForBackingServiceLatencySustainTimeMins(Integer theFireForBackingServiceLatencySustainTimeMins) {
-		myFireForBackingServiceLatencySustainTimeMins = theFireForBackingServiceLatencySustainTimeMins;
+	public void setPassiveFireForBackingServiceLatencySustainTimeMins(Integer thePassiveFireForBackingServiceLatencySustainTimeMins) {
+		myPassiveFireForBackingServiceLatencySustainTimeMins = thePassiveFireForBackingServiceLatencySustainTimeMins;
 	}
 
 	/**
-	 * @param theFireIfAllBackingUrlsAreUnavailable
+	 * @param thePassiveFireIfAllBackingUrlsAreUnavailable
 	 *            the fireIfAllBackingUrlsAreUnavailable to set
 	 */
-	public void setFireIfAllBackingUrlsAreUnavailable(boolean theFireIfAllBackingUrlsAreUnavailable) {
-		myFireIfAllBackingUrlsAreUnavailable = theFireIfAllBackingUrlsAreUnavailable;
+	public void setPassiveFireIfAllBackingUrlsAreUnavailable(boolean thePassiveFireIfAllBackingUrlsAreUnavailable) {
+		myPassiveFireIfAllBackingUrlsAreUnavailable = thePassiveFireIfAllBackingUrlsAreUnavailable;
 	}
 
 	/**
-	 * @param theFireIfSingleBackingUrlIsUnavailable
+	 * @param thePassiveFireIfSingleBackingUrlIsUnavailable
 	 *            the fireIfSingleBackingUrlIsUnavailable to set
 	 */
-	public void setFireIfSingleBackingUrlIsUnavailable(boolean theFireIfSingleBackingUrlIsUnavailable) {
-		myFireIfSingleBackingUrlIsUnavailable = theFireIfSingleBackingUrlIsUnavailable;
-	}
-
-	/**
-	 * @param theName
-	 *            the name to set
-	 */
-	public void setName(String theName) {
-		myName = theName;
+	public void setPassiveFireIfSingleBackingUrlIsUnavailable(boolean thePassiveFireIfSingleBackingUrlIsUnavailable) {
+		myPassiveFireIfSingleBackingUrlIsUnavailable = thePassiveFireIfSingleBackingUrlIsUnavailable;
 	}
 
 	private GMonitorRuleAppliesTo getAppliesToDomain(GDomain theDomain) {

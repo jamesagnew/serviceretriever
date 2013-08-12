@@ -1,7 +1,6 @@
 package net.svcret.admin.client.ui.dash.model;
 
-import static net.svcret.admin.client.AdminPortal.IMAGES;
-import static net.svcret.admin.client.AdminPortal.MSGS;
+import static net.svcret.admin.client.AdminPortal.*;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.PButton;
@@ -11,15 +10,12 @@ import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceVersionList;
 import net.svcret.admin.shared.model.HierarchyEnum;
-import net.svcret.admin.shared.model.StatusEnum;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.Image;
-import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -44,8 +40,6 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 		
 		if (versionList.size() == 0) {
 			postFix = AdminPortal.MSGS.dashboard_ServiceNoServiceVersionsSuffix();
-		} else if (versionList.size() == 1) {
-			name = name + " (" + versionList.get(0).getName() + ")";
 		}
 		
 		return renderName(AdminPortal.MSGS.dashboard_ServicePrefix(), name, postFix);
@@ -88,15 +82,14 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 	}
 
 	@Override
-	public Widget renderActions() {
-		final Image retVal = (new Image("images/tools_16.png"));
-		retVal.addStyleName("dashboardActionButton");
+	public PButton renderActions() {
+		final PButton retVal = new PButton(AdminPortal.IMAGES.iconTools16());
 		retVal.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theClickEvent) {
 
 				if (myActionPopup == null || myActionPopup.isShowing() == false) {
-					myActionPopup = new PopupPanel(true, true);
+					myActionPopup = new DashActionPopupPanel(true, true);
 
 					final GDomain domain = myDomain;
 					final GService service = myService;
@@ -177,7 +170,7 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 				@Override
 				public void onClick(ClickEvent theEvent) {
 					thePopupPanel.remove(content);
-					thePopupPanel.add(DashModelServiceVersion.createActionPanel(thePopupPanel, domain, service, nextVersion, false, content));
+					thePopupPanel.add(DashModelServiceVersion.createActionPanel(thePopupPanel, service, nextVersion, false, content));
 				}
 			});
 			content.add(svcButton.toForwardNavButtonPanel());

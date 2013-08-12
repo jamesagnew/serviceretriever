@@ -22,6 +22,7 @@ import javax.persistence.Temporal;
 
 import org.apache.commons.lang3.Validate;
 
+import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.HttpRequestBean;
@@ -61,7 +62,7 @@ public abstract class BasePersRecentMessage implements Serializable {
 	@Basic(fetch = FetchType.LAZY)
 	private String myResponseBody;
 
-	@Column(name = "RESPONSE_TYPE", nullable = false)
+	@Column(name = "RESPONSE_TYPE", nullable = false, length=EntityConstants.MAXLEN_RESPONSE_TYPE_ENUM)
 	@Enumerated(EnumType.STRING)
 	private ResponseTypeEnum myResponseType;
 
@@ -230,4 +231,6 @@ public abstract class BasePersRecentMessage implements Serializable {
 	}
 
 	public abstract void trimUsingDao(IDao theDaoBean);
+
+	public abstract RecentMessageTypeEnum getRecentMessageType();
 }

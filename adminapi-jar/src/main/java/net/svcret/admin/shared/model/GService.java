@@ -1,5 +1,6 @@
 package net.svcret.admin.shared.model;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -65,6 +66,14 @@ public class GService extends BaseGDashboardObjectWithUrls<GService> {
 			}
 		}
 		return false;
+	}
+
+	public Collection<Long> getAllServiceVersionPids() {
+		HashSet<Long> retVal = new HashSet<Long>();
+		for (BaseGServiceVersion next : getVersionList()) {
+			retVal.add(next.getPid());
+		}
+		return retVal;
 	}
 
 }

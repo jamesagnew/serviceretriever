@@ -1,9 +1,9 @@
 package net.svcret.admin.server.rpc;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.*;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -14,14 +14,16 @@ import net.svcret.admin.client.rpc.ModelUpdateService;
 import net.svcret.admin.shared.ServiceFailureException;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
 import net.svcret.admin.shared.model.BaseGAuthHost;
+import net.svcret.admin.shared.model.BaseGMonitorRule;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
-import net.svcret.admin.shared.model.GMonitorRule;
+import net.svcret.admin.shared.model.GMonitorRulePassive;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GPartialUserList;
@@ -399,7 +401,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		saveServiceVersionResourcesToSession(serviceAndResources);
 
 		retVal.setDetailedStats(loadServiceVersionDetailedStats(theServiceVersionPid));
-		
+
 		return retVal;
 	}
 
@@ -643,7 +645,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
-	public GMonitorRuleList saveMonitorRule(GMonitorRule theRule) throws ServiceFailureException {
+	public GMonitorRuleList saveMonitorRule(BaseGMonitorRule theRule) throws ServiceFailureException {
 		try {
 			if (isMockMode()) {
 				myMock.saveMonitorRule(theRule);
@@ -705,9 +707,9 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
-	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, long thePid) throws ServiceFailureException {
+	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long thePid) throws ServiceFailureException {
 		try {
-			return myAdminSvc.testServiceVersionWithSingleMessage(theMessageText, thePid, "ServiceRetriever Admin Console");
+			return myAdminSvc.testServiceVersionWithSingleMessage(theMessageText, theContentType, thePid, "ServiceRetriever Admin Console");
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to test service version", e);
 			throw new ServiceFailureException(e.getMessage());
@@ -750,6 +752,49 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 			return myMock.loadMonitorRuleFirings(theDomainPid, theServicePid, theServiceVersionPid, theStart);
 		}
 		return myAdminSvc.loadMonitorRuleFirings(theDomainPid, theServicePid, theServiceVersionPid, theStart);
+	}
+
+	@Override
+	public DtoLibraryMessage loadLibraryMessage(long theMessagePid) throws ServiceFailureException {
+		if (isMockMode()) {
+			return myMock.loadLibraryMessage(theMessagePid);
+		}
+		try {
+			return myAdminSvc.getLibraryMessage(theMessagePid);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to load library message", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+	}
+
+	@Override
+	public Collection<DtoLibraryMessage> loadLibraryMessagesForServiveVersion(long thePid) throws ServiceFailureException {
+		if (isMockMode()) {
+			return myMock.loadLibraryMessagesForServiveVersion(thePid);
+		}
+		try {
+			return myAdminSvc.getLibraryMessagesForSvcVer(thePid, false);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to load library messages", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+
+	}
+
+	@Override
+	public void saveLibraryMessage(DtoLibraryMessage theMessage) throws ServiceFailureException {
+		if (isMockMode()) {
+			myMock.saveLibraryMessage(theMessage);
+			return;
+		}
+		
+		
+		try {
+			myAdminSvc.saveLibraryMessage(theMessage);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to save library message", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
 	}
 
 }

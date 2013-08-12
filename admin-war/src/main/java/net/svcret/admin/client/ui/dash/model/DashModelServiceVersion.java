@@ -1,16 +1,14 @@
 package net.svcret.admin.client.ui.dash.model;
 
-import static net.svcret.admin.client.AdminPortal.IMAGES;
-import static net.svcret.admin.client.AdminPortal.MSGS;
+import static net.svcret.admin.client.AdminPortal.*;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
+import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
-import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.model.IProvidesUrlCount;
-import net.svcret.admin.shared.model.StatusEnum;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -28,11 +26,8 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 	private BaseGServiceVersion mySvcVer;
 	private PopupPanel myActionPopup;
 	private GService myService;
-	private GDomain myDomain;
-
-	public DashModelServiceVersion(GDomain theDomain, GService theService, BaseGServiceVersion theServiceVersion) {
+	public DashModelServiceVersion(GService theService, BaseGServiceVersion theServiceVersion) {
 		super(theServiceVersion);
-		myDomain = theDomain;
 		myService = theService;
 		mySvcVer = theServiceVersion;
 	}
@@ -107,9 +102,8 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 	}
 
 	@Override
-	public Widget renderActions() {
-		final Image retVal = (new Image("images/tools_16.png"));
-		retVal.addStyleName("dashboardActionButton");
+	public PButton renderActions() {
+		final PButton retVal = new PButton(AdminPortal.IMAGES.iconTools16());
 		retVal.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
@@ -119,22 +113,22 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		return retVal;
 	}
 
-	private void actionMenu(Image theButton) {
+	private void actionMenu(PButton theRetVal) {
 		if (myActionPopup == null || myActionPopup.isShowing() == false) {
 
-			myActionPopup = new PopupPanel(true, true);
+			myActionPopup = new DashActionPopupPanel(true, true);
 
-			FlowPanel content = createActionPanel(myActionPopup, myDomain, myService, mySvcVer, true, null);
+			FlowPanel content = createActionPanel(myActionPopup, myService, mySvcVer, true, null);
 
 			myActionPopup.add(content);
-			myActionPopup.showRelativeTo(theButton);
+			myActionPopup.showRelativeTo(theRetVal);
 		} else {
 			myActionPopup.hide();
 			myActionPopup = null;
 		}
 	}
 
-	static FlowPanel createActionPanel(final PopupPanel theActionPopup, final GDomain theDomain, final GService theService, final BaseGServiceVersion theSvcVer, boolean addServiceToTitle, final FlowPanel thePreviousContent) {
+	static FlowPanel createActionPanel(final PopupPanel theActionPopup, final GService theService, final BaseGServiceVersion theSvcVer, boolean addServiceToTitle, final FlowPanel thePreviousContent) {
 		final FlowPanel content = new FlowPanel();
 
 		if (thePreviousContent!=null) {
@@ -173,9 +167,20 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		});
 		content.add(viewStatus);
 		
+		// View Recent Transactions
+		
+		ActionPButton viewRecentTransactions = new ActionPButton(AdminPortal.IMAGES.iconTransactions(), AdminPortal.MSGS.actions_RecentTransactions());
+		viewRecentTransactions.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				History.newItem(NavProcessor.getTokenServiceVersionRecentMessages(true, theSvcVer.getPid()));
+			}
+		});
+		content.add(viewRecentTransactions);
+
 		// Test Version
 		
-		ActionPButton testSvcVer = new ActionPButton(IMAGES.iconTest(), MSGS.actions_TestServiceVersion());
+		ActionPButton testSvcVer = new ActionPButton(IMAGES.iconTest16(), MSGS.actions_TestServiceVersion());
 		testSvcVer.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
@@ -183,6 +188,17 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 			}
 		});
 		content.add(testSvcVer);
+
+		// Message Library
+		
+		ActionPButton msgLib = new ActionPButton(AdminPortal.IMAGES.iconLibrary(), AdminPortal.MSGS.actions_MessageLibrary());
+		msgLib.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				History.newItem(NavProcessor.getTokenServiceVersionMessageLibrary(true, theSvcVer.getPid()));
+			}
+		});
+		content.add(msgLib);
 
 		return content;
 	}

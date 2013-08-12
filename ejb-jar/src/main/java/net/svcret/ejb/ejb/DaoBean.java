@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,8 +31,9 @@ import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.ejb.TransactionLoggerBean.BaseUnflushed;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
-import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
+import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
+import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.BasePersRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceCatalogItem;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -49,11 +51,15 @@ import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
+import net.svcret.ejb.model.entity.PersLibraryMessage;
+import net.svcret.ejb.model.entity.PersLibraryMessageAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
-import net.svcret.ejb.model.entity.PersMonitorRule;
+import net.svcret.ejb.model.entity.PersMonitorRuleActive;
+import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem;
 import net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact;
+import net.svcret.ejb.model.entity.PersMonitorRulePassive;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
@@ -111,6 +117,25 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
+	public void deleteServiceVersion(BasePersServiceVersion theSv) {
+		myEntityManager.remove(theSv);
+
+		PersService svc = theSv.getService();
+		svc.removeVersion(theSv);
+		myEntityManager.merge(svc);
+
+	}
+
+	@Override
+	public void deleteUser(PersUser theUser) {
+		Validate.notNull(theUser);
+
+		ourLog.info("Deleting user {}", theUser.getPid());
+
+		myEntityManager.remove(theUser);
+	}
+
+	@Override
 	public Collection<BasePersAuthenticationHost> getAllAuthenticationHosts() {
 		TypedQuery<BasePersAuthenticationHost> q = myEntityManager.createNamedQuery(Queries.AUTHHOST_FINDALL, BasePersAuthenticationHost.class);
 		return q.getResultList();
@@ -134,6 +159,14 @@ public class DaoBean implements IDao {
 
 	@SuppressWarnings("unchecked")
 	@Override
+	public Collection<PersServiceVersionSoap11> getAllServiceVersions() {
+		Query q = myEntityManager.createQuery("SELECT v FROM PersServiceVersionSoap11 v");
+		Collection<PersServiceVersionSoap11> resultList = q.getResultList();
+		return resultList;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
 	public Collection<PersUser> getAllUsersAndInitializeThem() {
 		Query q = myEntityManager.createQuery("SELECT u FROM PersUser u");
 		Collection<PersUser> resultList = q.getResultList();
@@ -147,14 +180,6 @@ public class DaoBean implements IDao {
 				nextUser = myEntityManager.merge(nextUser);
 			}
 		}
-		return resultList;
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public Collection<PersServiceVersionSoap11> getAllServiceVersions() {
-		Query q = myEntityManager.createQuery("SELECT v FROM PersServiceVersionSoap11 v");
-		Collection<PersServiceVersionSoap11> resultList = q.getResultList();
 		return resultList;
 	}
 
@@ -240,10 +265,62 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
+	public BasePersMethodInvocationStats getInvocationUserStats(PersInvocationUserStatsPk thePk) {
+		return myEntityManager.find(PersInvocationUserStats.class, thePk);
+	}
+
+	@Override
 	public List<PersInvocationUserStats> getInvocationUserStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff) {
 		TypedQuery<PersInvocationUserStats> q = myEntityManager.createNamedQuery(Queries.PERSINVOC_USERSTATS, PersInvocationUserStats.class);
 		q.setParameter("INTERVAL", theHour);
 		q.setParameter("BEFORE_DATE", theDaysCutoff, TemporalType.TIMESTAMP);
+		return q.getResultList();
+	}
+
+	@Override
+	public Collection<PersLibraryMessage> getLibraryMessagesWhichApplyToService(long thePid) {
+		PersService svc = myEntityManager.find(PersService.class, thePid);
+		if (svc == null) {
+			throw new IllegalArgumentException("Unknown service: " + thePid);
+		}
+
+//		TypedQuery<PersLibraryMessage> q = myEntityManager.createQuery("SELECT m FROM PersLibraryMessage m ", PersLibraryMessage.class);
+//		List<PersLibraryMessage> l = q.getResultList();
+//		ourLog.info("Entities: {}", l);
+//		ourLog.info("Entities: {}", l.get(0).getAppliesTo());
+		
+		TypedQuery<PersLibraryMessage> query = myEntityManager.createNamedQuery(Queries.LIBRARY_FINDBYSVC, PersLibraryMessage.class);
+		query.setParameter("SVC", svc);
+
+		List<PersLibraryMessage> retVal = query.getResultList();
+		
+//		ourLog.info("Entities: {}", retVal);
+
+		return new HashSet<PersLibraryMessage>(retVal);
+	}
+
+	@Override
+	public Collection<PersLibraryMessage> getLibraryMessagesWhichApplyToServiceVersion(long theServiceVersionPid) {
+
+		BasePersServiceVersion svcVer = myEntityManager.find(BasePersServiceVersion.class, theServiceVersionPid);
+		if (svcVer == null) {
+			throw new IllegalArgumentException("Unknown service version: " + theServiceVersionPid);
+		}
+
+		TypedQuery<PersLibraryMessage> query = myEntityManager.createNamedQuery(Queries.LIBRARY_FINDBYSVCVER, PersLibraryMessage.class);
+		query.setParameter("SVC_VERS", svcVer);
+
+		return query.getResultList();
+	}
+
+	@Override
+	public BasePersMonitorRule getMonitorRule(long thePid) {
+		return myEntityManager.find(BasePersMonitorRule.class, thePid);
+	}
+
+	@Override
+	public List<BasePersMonitorRule> getMonitorRules() {
+		TypedQuery<BasePersMonitorRule> q = myEntityManager.createNamedQuery(Queries.MONITORRULE_FINDALL, BasePersMonitorRule.class);
 		return q.getResultList();
 	}
 
@@ -529,6 +606,15 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
+	public List<PersServiceVersionRecentMessage> getServiceVersionRecentMessages(BasePersServiceVersion theSvcVer, ResponseTypeEnum theResponseType) {
+		TypedQuery<PersServiceVersionRecentMessage> query = myEntityManager.createNamedQuery(Queries.SVCVER_RECENTMSGS, PersServiceVersionRecentMessage.class);
+		query.setParameter("SVC_VER", theSvcVer);
+		query.setParameter("RESP_TYPE", theResponseType);
+
+		return query.getResultList();
+	}
+
+	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public long getStateCounter(String theKey) {
 		Validate.notBlank(theKey, "Key");
@@ -567,6 +653,15 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
+	public List<PersUserRecentMessage> getUserRecentMessages(IThrottleable theUser, ResponseTypeEnum theResponseType) {
+		TypedQuery<PersUserRecentMessage> query = myEntityManager.createNamedQuery(Queries.USER_RECENTMSGS, PersUserRecentMessage.class);
+		query.setParameter("USER", theUser);
+		query.setParameter("RESP_TYPE", theResponseType);
+
+		return query.getResultList();
+	}
+
+	@Override
 	public long incrementStateCounter(String theKey) {
 		Validate.notBlank(theKey, "Key");
 
@@ -581,6 +676,27 @@ public class DaoBean implements IDao {
 		}
 
 		return state.getVersion();
+	}
+
+	@Override
+	public List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<? extends BasePersServiceVersion> theAllSvcVers, int theStart) {
+
+		TypedQuery<PersMonitorRuleFiring> q = myEntityManager.createNamedQuery(Queries.RULEFIRING, PersMonitorRuleFiring.class);
+		q.setParameter("SVC_VERS", theAllSvcVers);
+		q.setFirstResult(theStart);
+		q.setMaxResults(10);
+
+		return q.getResultList();
+	}
+
+	@Override
+	public BasePersRecentMessage loadRecentMessageForServiceVersion(long thePid) {
+		return myEntityManager.find(PersServiceVersionRecentMessage.class, thePid);
+	}
+
+	@Override
+	public BasePersRecentMessage loadRecentMessageForUser(long thePid) {
+		return myEntityManager.find(PersUserRecentMessage.class, thePid);
 	}
 
 	@PostConstruct
@@ -679,24 +795,6 @@ public class DaoBean implements IDao {
 		saveInvocationStats(theStats, emptyList);
 	}
 
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	@Override
-	public void saveUserStatus(Collection<PersUserStatus> theStatus) {
-		ourLog.info("Flushing {} user status entries", theStatus.size());
-
-		for (PersUserStatus persUserStatus : theStatus) {
-
-			PersUserStatus existing = myEntityManager.find(PersUserStatus.class, persUserStatus.getPid());
-			if (existing == null) {
-				ourLog.info("No user status with PID {} so not going to save this one", persUserStatus.getPid());
-				continue;
-			}
-
-			existing.merge(persUserStatus);
-			myEntityManager.merge(existing);
-		}
-	}
-
 	@Override
 	public void saveInvocationStats(Collection<BasePersInvocationStats> theStats, List<BasePersInvocationStats> theStatsToDelete) {
 		Validate.notNull(theStats);
@@ -759,6 +857,101 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
+	public PersLibraryMessage saveLibraryMessage(PersLibraryMessage theMessage) {
+		Validate.notNull(theMessage);
+		if (theMessage.getPid() == null) {
+			myEntityManager.persist(theMessage);
+			for (PersLibraryMessageAppliesTo next : theMessage.getAppliesTo()) {
+				myEntityManager.persist(next);
+			}
+			return theMessage;
+		} else {
+			
+			PersLibraryMessage existing = myEntityManager.find(PersLibraryMessage.class, theMessage.getPid());
+			for (PersLibraryMessageAppliesTo next : existing.getAppliesTo()) {
+				if (!theMessage.getAppliesTo().contains(next)) {
+					myEntityManager.remove(next);
+				}
+			}
+			for (PersLibraryMessageAppliesTo next : theMessage.getAppliesTo()) {
+				PersLibraryMessageAppliesTo existingAt = myEntityManager.find(PersLibraryMessageAppliesTo.class, next.getPk());
+				if (existingAt == null) {
+				myEntityManager.persist(next);
+				}
+			}
+			
+			return myEntityManager.merge(theMessage);
+		}
+	}
+
+	@Override
+	public void saveMonitorRule(BasePersMonitorRule theRule) {
+
+		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
+			next.setRule(theRule);
+		}
+		
+		if (theRule instanceof PersMonitorRuleActive) {
+			for (PersMonitorRuleActiveCheck next : ((PersMonitorRuleActive)theRule).getActiveChecks()) {
+				next.setRule(theRule);
+			}
+		}
+
+		if (theRule instanceof PersMonitorRulePassive) {
+			for (PersMonitorAppliesTo next : ((PersMonitorRulePassive)theRule).getAppliesTo()) {
+				next.setRule(theRule);
+			}
+		}
+		
+		myEntityManager.merge(theRule);
+	}
+
+	@Override
+	public PersMonitorRuleFiring saveMonitorRuleFiring(PersMonitorRuleFiring theFiring) {
+
+		PersMonitorRuleFiring firing = myEntityManager.merge(theFiring);
+
+		List<PersMonitorRuleFiringProblem> newProblems = new ArrayList<PersMonitorRuleFiringProblem>();
+		for (PersMonitorRuleFiringProblem next : theFiring.getProblems()) {
+			next.setFiring(firing);
+			PersMonitorRuleFiringProblem newProblem = myEntityManager.merge(next);
+			newProblems.add(newProblem);
+		}
+
+		firing.getProblems().clear();
+		firing.getProblems().addAll(newProblems);
+
+		return firing;
+	}
+
+	public <T extends BasePersMonitorRule> T saveOrCreateMonitorRule(T theRule) {
+		Validate.notNull(theRule, "theRule");
+
+		if (theRule instanceof PersMonitorRulePassive) {
+			for (PersMonitorAppliesTo next : ((PersMonitorRulePassive)theRule).getAppliesTo()) {
+				next.setRule(theRule);
+			}
+		}
+
+		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
+			next.setRule(theRule);
+		}
+
+		return myEntityManager.merge(theRule);
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	public void saveRecentMessagesAndTrimInNewTransaction(BaseUnflushed<? extends BasePersRecentMessage> theNextTransactions) {
+
+		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getSuccess());
+		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getFail());
+		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getSecurityFail());
+		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getFault());
+
+	}
+
+	@Override
 	public PersBaseServerAuth<?, ?> saveServerAuth(PersBaseServerAuth<?, ?> thePers) {
 		return myEntityManager.merge(thePers);
 	}
@@ -771,6 +964,11 @@ public class DaoBean implements IDao {
 		ourLog.info("Saving service with PID[{}]", theService.getPid());
 
 		myEntityManager.merge(theService);
+	}
+
+	@Override
+	public BasePersServiceCatalogItem saveServiceCatalogItem(BasePersServiceCatalogItem theItem) {
+		return myEntityManager.merge(theItem);
 	}
 
 	@Override
@@ -855,6 +1053,13 @@ public class DaoBean implements IDao {
 		return version;
 	}
 
+	@Override
+	public void saveServiceVersionRecentMessage(PersServiceVersionRecentMessage theMsg) {
+		Validate.notNull(theMsg);
+
+		myEntityManager.merge(theMsg);
+	}
+
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	@Override
 	public void saveServiceVersionStatuses(ArrayList<PersServiceVersionStatus> theStatuses) {
@@ -906,50 +1111,36 @@ public class DaoBean implements IDao {
 		ourLog.info("Persisted {} URL status entries", count);
 	}
 
-	/**
-	 * FOR UNIT TESTS ONLY
-	 */
-	public void setEntityManager(EntityManager theEntityManager) {
-		myEntityManager = theEntityManager;
-	}
-
-	private PersHttpClientConfig addDefaultHttpClientConfig() {
-		PersHttpClientConfig retVal = new PersHttpClientConfig();
-		retVal.setDefaults();
-		retVal.setId(PersHttpClientConfig.DEFAULT_ID);
-
-		retVal = myEntityManager.merge(retVal);
-
-		return retVal;
-	}
-
-	private BasePersInvocationStats getOrCreateInvocationStats(PersStaticResourceStatsPk thePk) {
-		PersStaticResourceStats retVal = myEntityManager.find(PersStaticResourceStats.class, thePk);
-
-		if (retVal == null) {
-			retVal = new PersStaticResourceStats(thePk);
-			ourLog.debug("Adding new static resource stats: {}", thePk);
-			retVal = myEntityManager.merge(retVal);
-			retVal.setNewlyCreated(true);
-		}
-
-		return retVal;
-	}
-
 	@Override
-	public void saveServiceVersionRecentMessage(PersServiceVersionRecentMessage theMsg) {
+	public void saveUserRecentMessage(PersUserRecentMessage theMsg) {
 		Validate.notNull(theMsg);
 
 		myEntityManager.merge(theMsg);
 	}
 
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	@Override
-	public List<PersServiceVersionRecentMessage> getServiceVersionRecentMessages(BasePersServiceVersion theSvcVer, ResponseTypeEnum theResponseType) {
-		TypedQuery<PersServiceVersionRecentMessage> query = myEntityManager.createNamedQuery(Queries.SVCVER_RECENTMSGS, PersServiceVersionRecentMessage.class);
-		query.setParameter("SVC_VER", theSvcVer);
-		query.setParameter("RESP_TYPE", theResponseType);
+	public void saveUserStatus(Collection<PersUserStatus> theStatus) {
+		ourLog.info("Flushing {} user status entries", theStatus.size());
 
-		return query.getResultList();
+		for (PersUserStatus persUserStatus : theStatus) {
+
+			PersUserStatus existing = myEntityManager.find(PersUserStatus.class, persUserStatus.getPid());
+			if (existing == null) {
+				ourLog.info("No user status with PID {} so not going to save this one", persUserStatus.getPid());
+				continue;
+			}
+
+			existing.merge(persUserStatus);
+			myEntityManager.merge(existing);
+		}
+	}
+
+	/**
+	 * FOR UNIT TESTS ONLY
+	 */
+	public void setEntityManager(EntityManager theEntityManager) {
+		myEntityManager = theEntityManager;
 	}
 
 	@Override
@@ -987,22 +1178,6 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	public void saveUserRecentMessage(PersUserRecentMessage theMsg) {
-		Validate.notNull(theMsg);
-
-		myEntityManager.merge(theMsg);
-	}
-
-	@Override
-	public List<PersUserRecentMessage> getUserRecentMessages(IThrottleable theUser, ResponseTypeEnum theResponseType) {
-		TypedQuery<PersUserRecentMessage> query = myEntityManager.createNamedQuery(Queries.USER_RECENTMSGS, PersUserRecentMessage.class);
-		query.setParameter("USER", theUser);
-		query.setParameter("RESP_TYPE", theResponseType);
-
-		return query.getResultList();
-	}
-
-	@Override
 	public void trimUserRecentMessages(PersUser theUser, ResponseTypeEnum theType, int theNumberToTrimTo) {
 		Validate.notNull(theUser);
 		Validate.notNull(theType);
@@ -1036,39 +1211,14 @@ public class DaoBean implements IDao {
 		}
 	}
 
-	@Override
-	public BasePersRecentMessage loadRecentMessageForServiceVersion(long thePid) {
-		return myEntityManager.find(PersServiceVersionRecentMessage.class, thePid);
-	}
+	private PersHttpClientConfig addDefaultHttpClientConfig() {
+		PersHttpClientConfig retVal = new PersHttpClientConfig();
+		retVal.setDefaults();
+		retVal.setId(PersHttpClientConfig.DEFAULT_ID);
 
-	@Override
-	public BasePersRecentMessage loadRecentMessageForUser(long thePid) {
-		return myEntityManager.find(PersUserRecentMessage.class, thePid);
-	}
+		retVal = myEntityManager.merge(retVal);
 
-	@Override
-	public void deleteUser(PersUser theUser) {
-		Validate.notNull(theUser);
-
-		ourLog.info("Deleting user {}", theUser.getPid());
-
-		myEntityManager.remove(theUser);
-	}
-
-	@Override
-	public BasePersMethodInvocationStats getInvocationUserStats(PersInvocationUserStatsPk thePk) {
-		return myEntityManager.find(PersInvocationUserStats.class, thePk);
-	}
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void saveRecentMessagesAndTrimInNewTransaction(BaseUnflushed<? extends BasePersRecentMessage> theNextTransactions) {
-
-		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getSuccess());
-		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getFail());
-		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getSecurityFail());
-		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getFault());
-
+		return retVal;
 	}
 
 	private void doSaveRecentMessagesAndTrimInNewTransaction(LinkedList<? extends BasePersRecentMessage> transactions) {
@@ -1080,86 +1230,27 @@ public class DaoBean implements IDao {
 		}
 	}
 
-	public PersMonitorRule saveOrCreateMonitorRule(PersMonitorRule theRule) {
-		Validate.notNull(theRule, "theRule");
+	private BasePersInvocationStats getOrCreateInvocationStats(PersStaticResourceStatsPk thePk) {
+		PersStaticResourceStats retVal = myEntityManager.find(PersStaticResourceStats.class, thePk);
 
-		for (PersMonitorAppliesTo next : theRule.getAppliesTo()) {
-			next.setRule(theRule);
+		if (retVal == null) {
+			retVal = new PersStaticResourceStats(thePk);
+			ourLog.debug("Adding new static resource stats: {}", thePk);
+			retVal = myEntityManager.merge(retVal);
+			retVal.setNewlyCreated(true);
 		}
 
-		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
-			next.setRule(theRule);
-		}
-
-		return myEntityManager.merge(theRule);
+		return retVal;
 	}
 
 	@Override
-	public List<PersMonitorRule> getMonitorRules() {
-		TypedQuery<PersMonitorRule> q = myEntityManager.createNamedQuery(Queries.MONITORRULE_FINDALL, PersMonitorRule.class);
-		return q.getResultList();
+	public PersLibraryMessage getLibraryMessageByPid(long theMessagePid) {
+		return myEntityManager.find(PersLibraryMessage.class, theMessagePid);
 	}
 
 	@Override
-	public void deleteServiceVersion(BasePersServiceVersion theSv) {
-		myEntityManager.remove(theSv);
-
-		PersService svc = theSv.getService();
-		svc.removeVersion(theSv);
-		myEntityManager.merge(svc);
-
-	}
-
-	@Override
-	public PersMonitorRuleFiring saveMonitorRuleFiring(PersMonitorRuleFiring theFiring) {
-		
-		PersMonitorRuleFiring firing = myEntityManager.merge(theFiring);
-		
-		List<PersMonitorRuleFiringProblem> newProblems = new ArrayList<PersMonitorRuleFiringProblem>();
-		for (PersMonitorRuleFiringProblem next : theFiring.getProblems()) {
-			next.setFiring(firing);
-			PersMonitorRuleFiringProblem newProblem = myEntityManager.merge(next);
-			newProblems.add(newProblem);
-		}
-		
-		firing.getProblems().clear();
-		firing.getProblems().addAll(newProblems);
-		
-		return firing;
-	}
-
-	@Override
-	public BasePersServiceCatalogItem saveServiceCatalogItem(BasePersServiceCatalogItem theItem) {
-		return myEntityManager.merge(theItem);
-	}
-
-	@Override
-	public PersMonitorRule getMonitorRule(long thePid) {
-		return myEntityManager.find(PersMonitorRule.class, thePid);
-	}
-
-	@Override
-	public void saveMonitorRule(PersMonitorRule theRule) {
-
-		for (PersMonitorAppliesTo next : theRule.getAppliesTo()) {
-			next.setRule(theRule);
-		}
-		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
-			next.setRule(theRule);
-		}
-
-		myEntityManager.merge(theRule);
-	}
-
-	@Override
-	public List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<? extends BasePersServiceVersion> theAllSvcVers, int theStart) {
-		
-		TypedQuery<PersMonitorRuleFiring> q = myEntityManager.createNamedQuery(Queries.RULEFIRING, PersMonitorRuleFiring.class);
-		q.setParameter("SVC_VERS", theAllSvcVers);
-		q.setFirstResult(theStart);
-		q.setMaxResults(10);
-		
-		return q.getResultList();
+	public Collection<PersMonitorRuleActiveCheck> getAllMonitorRuleActiveChecks() {
+		return myEntityManager.createNamedQuery(Queries.PERSACTIVECHECK_FINDALL, PersMonitorRuleActiveCheck.class).getResultList();
 	}
 
 }

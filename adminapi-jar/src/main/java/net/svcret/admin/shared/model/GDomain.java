@@ -1,5 +1,9 @@
 package net.svcret.admin.shared.model;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
 public class GDomain extends BaseGDashboardObjectWithUrls<GDomain> {
 
 	private static final long serialVersionUID = 1L;
@@ -23,6 +27,14 @@ public class GDomain extends BaseGDashboardObjectWithUrls<GDomain> {
 
 	public void mergeSimple(GDomain theObject) {
 		super.merge((BaseGDashboardObject<GDomain>) theObject);
+	}
+
+	public Set<Long> getAllServiceVersionPids() {
+		HashSet<Long> retVal = new HashSet<Long>();
+		for (GService next : getServiceList()) {
+			retVal.addAll(next.getAllServiceVersionPids());
+		}
+		return retVal;
 	}
 
 

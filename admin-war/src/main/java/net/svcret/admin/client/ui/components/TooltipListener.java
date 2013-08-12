@@ -58,7 +58,8 @@ public class TooltipListener implements MouseOverHandler, MouseOutHandler {
         public void displayPopup() {
             
             setPopupPositionAndShow(new PositionCallback() {
-                public void setPosition(int theOffsetWidth, int theOffsetHeight) {
+                @Override
+				public void setPosition(int theOffsetWidth, int theOffsetHeight) {
                     int left = mySender.getAbsoluteLeft() + offsetX;
                     int top = mySender.getAbsoluteTop() + offsetY;
                     
@@ -81,8 +82,8 @@ public class TooltipListener implements MouseOverHandler, MouseOutHandler {
             
             
             myTimer = new Timer() {
-
-                public void run() {
+                @Override
+				public void run() {
                     Tooltip.super.hide();
                 }
 
@@ -104,19 +105,17 @@ public class TooltipListener implements MouseOverHandler, MouseOutHandler {
     private Tooltip tooltip;
     private String text;
     private String styleName;
-    private int delay;
     private int offsetX = DEFAULT_OFFSET_X;
     private int offsetY = DEFAULT_OFFSET_Y;
 
 
-    public TooltipListener(String text, int delay) {
-        this(text, delay, DEFAULT_TOOLTIP_STYLE);
+    public TooltipListener(String text) {
+        this(text, DEFAULT_TOOLTIP_STYLE);
     }
 
 
-    public TooltipListener(String text, int delay, String styleName) {
+    public TooltipListener(String text, String styleName) {
         this.text = text;
-        this.delay = delay;
         this.styleName = styleName;
     }
 

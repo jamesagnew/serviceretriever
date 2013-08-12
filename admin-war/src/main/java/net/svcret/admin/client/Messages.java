@@ -37,11 +37,17 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Delete Service")
 	String actions_RemoveService();
 
+	@DefaultMessage("Replay")
+	String actions_Replay();
+
 	@DefaultMessage("Save")
 	String actions_Save();
 
 	@DefaultMessage("Test / Manually Invoke")
 	String actions_TestServiceVersion();
+
+	@DefaultMessage("View")
+	String actions_View();
 
 	@DefaultMessage("View Runtime Status")
 	String actions_ViewRuntimeStatus();
@@ -176,11 +182,11 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("< 1min")
 	String dashboard_LastInvocUnder60Secs();
 
-	@DefaultMessage("Not Secured")
-	String dashboard_NotSecured();
-
 	@DefaultMessage("Secured")
 	String dashboard_SecuredFully();
+
+	@DefaultMessage("Not Secured")
+	String dashboard_SecuredNot();
 
 	@DefaultMessage("Partial")
 	String dashboard_SecuredPartial();
@@ -293,7 +299,7 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Username")
 	String editUser_Username();
 
-	@DefaultMessage("Actions")
+	@DefaultMessage("")
 	String editUsersPanel_ColumnActions();
 
 	@DefaultMessage("Authentication Host")
@@ -302,11 +308,8 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Last Access")
 	String editUsersPanel_ColumnLastServiceAccess();
 
-	@DefaultMessage("Security Failures")
-	String editUsersPanel_ColumnSecurityFailures();
-
-	@DefaultMessage("Successful Transactions")
-	String editUsersPanel_ColumnSuccessfulTransactions();
+	@DefaultMessage("Transactions")
+	String editUsersPanel_ColumnTransactions();
 
 	@DefaultMessage("Username")
 	String editUsersPanel_ColumnUsername();
@@ -507,6 +510,21 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("HTTP Clients")
 	String leftPanel_HttpClients();
 
+	@DefaultMessage("Manually Test Service")
+	String leftPanel_ManuallyTestService();
+
+	@DefaultMessage("Edit Rules")
+	String leftPanel_MonitorRules();
+
+	@DefaultMessage("This version")
+	SafeHtml libraryMessageAppliesToPanel_TreeAllMethodsCheckbox();
+
+	@DefaultMessage("Any service in this domain")
+	SafeHtml libraryMessageAppliesToPanel_TreeAllServicesCheckbox();
+
+	@DefaultMessage("Any version of this service")
+	SafeHtml libraryMessageAppliesToPanel_TreeAllServiceVersionsCheckbox();
+
 	@DefaultMessage("A <b>Local Database</b> Authentication host stores users and their " + "passwords in the ServiceRetriever database. Use this option if you do not have "
 			+ "an external database or LDAP against which users can be authenticated.")
 	String localDatabaseAuthenticationHostEditPanel_description();
@@ -529,6 +547,7 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("This user has the following service permissions. Note that the permission " + "list here applies only to services which are configured to use ServiceProxy host security.")
 	String permissionsPanel_ServicePermissionsDesc();
 
+	
 	@DefaultMessage("Service Permissions")
 	String permissionsPanel_ServicePermissionsTitle();
 
@@ -541,39 +560,28 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Grant access to all {0} methods")
 	SafeHtml permissionsPanel_TreeAllMethodsCheckbox(int count);
 
+	
+
 	@DefaultMessage("Grant access to all {0} services")
 	SafeHtml permissionsPanel_TreeAllServicesCheckbox(int count);
 
 	@DefaultMessage("Grant access to all {0} versions")
 	SafeHtml permissionsPanel_TreeAllServiceVersionsCheckbox(int count);
 
+	
+	
 	@DefaultMessage("Allow Access")
 	SafeHtml permissionsPanel_TreeMethodCheckbox();
 
-	
-	@DefaultMessage("Applies to this version")
-	SafeHtml ruleAppliesToPanel_TreeAllMethodsCheckbox();
-
-	@DefaultMessage("Applies to entire domain ({0} services)")
-	SafeHtml ruleAppliesToPanel_TreeAllServicesCheckbox(int count);
-
-	@DefaultMessage("Applies to all versions of service ({0} versions)")
-	SafeHtml ruleAppliesToPanel_TreeAllServiceVersionsCheckbox(int count);
-
-	@DefaultMessage("Applies")
-	SafeHtml ruleAppliesToPanel_TreeMethodCheckbox();
-
-	
-	
 	@DefaultMessage("ID")
 	String propertyNameId();
 
 	@DefaultMessage("Name")
 	String propertyNameName();
 
+
 	@DefaultMessage("Authorization")
 	String recentMessagesGrid_ColAuthorization();
-
 
 	@DefaultMessage("Implementation URL")
 	String recentMessagesGrid_ColImplementationUrl();
@@ -605,6 +613,27 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("View")
 	String recentMessagesGrid_View();
 
+	@DefaultMessage("Replay")
+	String replayLibraryMessage_Breadcrumb();
+
+	@DefaultMessage("Replay Message")
+	String replayMessage_Breadcrumb();
+
+	@DefaultMessage("Applies to this version")
+	SafeHtml ruleAppliesToPanel_TreeAllMethodsCheckbox();
+
+	@DefaultMessage("Applies to entire domain ({0} services)")
+	SafeHtml ruleAppliesToPanel_TreeAllServicesCheckbox(int count);
+
+	@DefaultMessage("Applies to all versions of service ({0} versions)")
+	SafeHtml ruleAppliesToPanel_TreeAllServiceVersionsCheckbox(int count);
+
+	@DefaultMessage("Applies")
+	SafeHtml ruleAppliesToPanel_TreeMethodCheckbox();
+
+	@DefaultMessage("Save Message to Library")
+	String saveRecentMessageToLibrary_Breadcrumb();
+
 	@DefaultMessage("Service Catalog")
 	String serviceCatalog_Breadcrumb();
 
@@ -613,6 +642,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Dashboard")
 	String serviceDashboard_Breadcrumb();
+
+	@DefaultMessage("Recent Messages")
+	String serviceVersionRecentMessages_Breadcrumb();
 
 	@DefaultMessage("Service Version Status")
 	String serviceVersionStats_Breadcrumb();
@@ -644,6 +676,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Successful Transactions")
 	String serviceVersionStats_RecentSuccessTitle();
 
+	@DefaultMessage("Request Throttling")
+	String serviceVersionStats_ThrottlingTitle();
+
 	@DefaultMessage("Service Version Status: {0}")
 	String serviceVersionStats_Title(String theServiceVersion);
 
@@ -655,13 +690,16 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Test Service Version")
 	String testServiceVersion_Breadcrumb();
-
+	
 	@DefaultMessage("<b>Prefer Local</b> means that the proxy will favour any URLs which are on " + "the same host as the service retriever itself, and will only use remote "
 			+ "implementations if all local URLs are down")
 	String urlSelectionPolicy_Desc_PreferLocal();
 
 	@DefaultMessage("<b>Round Robin</b> means that the proxy will attempt to distribute requests " + "evenly across all URLs")
 	String urlSelectionPolicy_Desc_RoundRobin();
+
+	@DefaultMessage("Request Throttling")
+	String user_requestThrottling();
 
 	@DefaultMessage("View Transaction")
 	String viewRecentMessageServiceVersion_Breadcrumb();
@@ -686,30 +724,21 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Authentication Host")
 	String wsSecServerSecurity_AuthenticationHost();
-	
+
 	@DefaultMessage("WS-Security")
 	String wsSecServerSecurity_Name();
 
 	@DefaultMessage("Using authentication host: {0}")
 	String wsSecServerSecurity_UsesAuthenticationHost(String theModuleId);
 
-	@DefaultMessage("Request Throttling")
-	String serviceVersionStats_ThrottlingTitle();
+	@DefaultMessage("Message Library")
+	String serviceVersionMessageLibrary_Breadcrumb();
 
-	@DefaultMessage("Request Throttling")
-	String user_requestThrottling();
+	@DefaultMessage("Message Library")
+	String actions_MessageLibrary();
 
-	@DefaultMessage("Edit Rules")
-	String leftPanel_MonitorRules();
-
-	@DefaultMessage("Manually Test Service")
-	String leftPanel_ManuallyTestService();
-
-	@DefaultMessage("Recent Messages")
-	String serviceVersionRecentMessages_Breadcrumb();
-
-	@DefaultMessage("Replay Message")
-	String replayMessage_Breadcrumb();
+	@DefaultMessage("Recent Transactions")
+	String actions_RecentTransactions();
 
 	
 	

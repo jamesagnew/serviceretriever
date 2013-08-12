@@ -185,4 +185,24 @@ public class HttpResponseBean {
 		}
 		return retVal;
 	}
+
+	/**
+	 * This method expects to have only one URL (either sucessful or failing) and returns
+	 * that URL. If no URLS, or more than one, throws an exception.
+	 */
+	public PersServiceVersionUrl getSingleUrlOrThrow() {
+		if (getSuccessfulUrl() != null) {
+			if (getFailedUrls().size() > 0) {
+				throw new IllegalStateException("HTTP Response bean contains more than one URL");
+			}
+			return getSuccessfulUrl();
+		}
+		if (getFailedUrls().size() > 1) {
+			throw new IllegalStateException("HTTP Response bean contains more than one URL");
+		}
+		if (getFailedUrls().size() == 0) {
+			throw new IllegalStateException("HTTP Response bean contains no URLs");
+		}
+		return getFailedUrls().keySet().iterator().next();
+	}
 }

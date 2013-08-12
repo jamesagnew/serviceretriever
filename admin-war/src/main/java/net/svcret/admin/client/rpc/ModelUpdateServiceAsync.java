@@ -1,19 +1,20 @@
 package net.svcret.admin.client.rpc;
 
+import java.util.Collection;
 import java.util.List;
 
 import net.svcret.admin.client.rpc.ModelUpdateService.UserAndAuthHost;
-import net.svcret.admin.client.ui.config.domain.EditDomainPanel.MySaveButtonHandler;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
 import net.svcret.admin.shared.model.BaseGAuthHost;
+import net.svcret.admin.shared.model.BaseGMonitorRule;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
-import net.svcret.admin.shared.model.GMonitorRule;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GPartialUserList;
@@ -92,12 +93,18 @@ public interface ModelUpdateServiceAsync {
 
 	void removeServiceVersion(long thePid, AsyncCallback<GDomainList> theAsyncCallback);
 
-	void testServiceVersionWithSingleMessage(String theMessageText, long thePid, AsyncCallback<GServiceVersionSingleFireResponse> theAsyncCallback);
+	void testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long theServiceVersionPid, AsyncCallback<GServiceVersionSingleFireResponse> theAsyncCallback);
 
 	void loadMonitorRuleList(AsyncCallback<GMonitorRuleList> theAsyncCallback);
 
-	void saveMonitorRule(GMonitorRule theRule, AsyncCallback<GMonitorRuleList> theAsyncCallback);
+	void saveMonitorRule(BaseGMonitorRule theRule, AsyncCallback<GMonitorRuleList> theAsyncCallback);
 
 	void loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart, AsyncCallback<List<GMonitorRuleFiring>> theAsyncCallback);
+
+	void loadLibraryMessage(long theMessagePid, AsyncCallback<DtoLibraryMessage> theAsyncCallback);
+
+	void loadLibraryMessagesForServiveVersion(long thePid, AsyncCallback<Collection<DtoLibraryMessage>> theAsyncCallback);
+
+	void saveLibraryMessage(DtoLibraryMessage theMessage, AsyncCallback<Void> theIAsyncLoadCallback);
 
 }

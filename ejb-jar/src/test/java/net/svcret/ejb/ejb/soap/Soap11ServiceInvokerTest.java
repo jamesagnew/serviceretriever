@@ -440,6 +440,27 @@ public class Soap11ServiceInvokerTest {
 	}
 
 	@Test
+	public void testIntrospectServiceWithMultipleBindings() throws IOException, ProcessingException {
+		
+		Soap11ServiceInvoker svc = new Soap11ServiceInvoker();
+		
+		IHttpClient httpClient = mock(IHttpClient.class, DefaultAnswer.INSTANCE);
+		svc.setHttpClient(httpClient);
+
+		String wsdlBody = IOUtils.readClasspathIntoString("/cdyne_weatherws.wsdl");
+		String wsdlUrl = "http://foo/wsdl.wsdl";
+		when(httpClient.get(wsdlUrl)).thenReturn(new HttpResponseBean(null, "text/xml", 200, wsdlBody));
+
+		PersServiceVersionSoap11 def;
+		def = svc.introspectServiceFromUrl(wsdlUrl);
+		
+		assertEquals("GetWeatherInformation", def.getMethods().get(0).getName());
+		assertEquals("http://ws.cdyne.com/WeatherWS/:GetWeatherInformation", def.getMethods().get(0).getRootElements());
+		
+	}
+
+	
+	@Test
 	public void testIntrospectDocumentServiceFromUrl() throws Throwable {
 		
 		Soap11ServiceInvoker svc = new Soap11ServiceInvoker();

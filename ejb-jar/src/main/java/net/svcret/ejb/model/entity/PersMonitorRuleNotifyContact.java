@@ -22,7 +22,7 @@ public class PersMonitorRuleNotifyContact extends BasePersObject {
 
 	@ManyToOne(cascade= {}, optional=false)
 	@JoinColumn(name="RULE_PID", nullable=false)
-	private PersMonitorRule myRule;
+	private BasePersMonitorRule myRule;
 
 	@Column(name = "EMAIL", length=200)
 	private String myEmail;
@@ -34,11 +34,11 @@ public class PersMonitorRuleNotifyContact extends BasePersObject {
 		myEmail = theNext;
 	}
 
-	public PersMonitorRule getRule() {
+	public BasePersMonitorRule getRule() {
 		return myRule;
 	}
 
-	public void setRule(PersMonitorRule theRule) {
+	public void setRule(BasePersMonitorRule theRule) {
 		myRule = theRule;
 	}
 

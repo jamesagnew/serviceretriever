@@ -1,6 +1,7 @@
 package net.svcret.admin.client.ui.dash.model;
 
 import net.svcret.admin.client.ui.components.LoadingSpinner;
+import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.HierarchyEnum;
 
@@ -44,7 +45,7 @@ public class DashModelLoading implements IDashModel {
 	}
 
 	@Override
-	public Widget renderActions() {
+	public PButton renderActions() {
 		return null;
 	}
 	

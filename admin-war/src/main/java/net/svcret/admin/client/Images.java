@@ -14,6 +14,9 @@ public interface Images extends ClientBundle {
 	@Source("net/svcret/images/icon_edit_24.png")
 	ImageResource iconEdit();
 
+	@Source("net/svcret/images/icon_edit_24.png")
+	ImageResource iconTransactions();
+
 	@Source("net/svcret/images/icon_remove_24.png")
 	ImageResource iconRemove();
 
@@ -24,7 +27,7 @@ public interface Images extends ClientBundle {
 	ImageResource iconStatus();
 
 	@Source("net/svcret/images/icon_test_24.png")
-	ImageResource iconTest();
+	ImageResource iconTest24();
 
 	@Source("net/svcret/images/icon_test_16.png")
 	ImageResource iconTest16();
@@ -49,4 +52,16 @@ public interface Images extends ClientBundle {
 	
 	@Source("net/svcret/images/dash_monitor_alert_16.png")
 	ImageResource dashMonitorAlert();
+
+	@Source("net/svcret/images/icon_tools_16.png")
+	ImageResource iconTools16();
+
+	@Source("net/svcret/images/icon_library_16.png")
+	ImageResource iconLibrary();
+
+	@Source("net/svcret/images/icon_next_16.png")
+	ImageResource iconNext16();
+
+	@Source("net/svcret/images/icon_prev_16.png")
+	ImageResource iconPrev16();
 }
