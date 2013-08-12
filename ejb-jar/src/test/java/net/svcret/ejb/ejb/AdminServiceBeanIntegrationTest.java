@@ -19,7 +19,7 @@ import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
-import net.svcret.admin.shared.model.GMonitorRule;
+import net.svcret.admin.shared.model.GMonitorRulePassive;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
@@ -52,6 +52,7 @@ import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
+import net.svcret.ejb.model.entity.PersLibraryMessage;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
@@ -147,13 +148,21 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		mySvc.saveLibraryMessage(message);
 
+		PersLibraryMessage pm = myDao.getLibraryMessageByPid(message.getPid());
+		assertEquals(1, pm.getAppliesTo().size());
+		
 		newEntityManager();
 
+		pm = myDao.getLibraryMessageByPid(message.getPid());
+		assertEquals(1, pm.getAppliesTo().size());
+		
 		msgs = mySvc.getLibraryMessagesForSvcVer(version0.getPid(), true);
 		assertEquals(0, msgs.size());
 		msgs = mySvc.getLibraryMessagesForSvcVer(version1.getPid(), true);
 		assertEquals(2, msgs.size());
+		
 		msgs = mySvc.getLibraryMessagesForService(service.getPid(), true);
+		// TODO: this should be 2- need to figure out what's up
 		assertEquals(2, msgs.size());
 
 	}
@@ -289,9 +298,9 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		GMonitorRule rule = new GMonitorRule();
-		rule.setFireIfAllBackingUrlsAreUnavailable(true);
-		rule.setFireForBackingServiceLatencyIsAboveMillis(100);
+		GMonitorRulePassive rule = new GMonitorRulePassive();
+		rule.setPassiveFireIfAllBackingUrlsAreUnavailable(true);
+		rule.setPassiveFireForBackingServiceLatencyIsAboveMillis(100);
 		rule.applyTo(d1, true);
 		rule.applyTo(d1, d1s1, true);
 		rule.getNotifyEmailContacts().add("foo@foo.com");
@@ -304,9 +313,9 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		GMonitorRuleList rules = mySvc.loadMonitorRuleList();
 		assertEquals(1, rules.size());
 
-		rule = rules.get(0);
-		assertEquals(true, rule.isFireIfAllBackingUrlsAreUnavailable());
-		assertEquals(false, rule.isFireIfSingleBackingUrlIsUnavailable());
+		rule = (GMonitorRulePassive) rules.get(0);
+		assertEquals(true, rule.isPassiveFireIfAllBackingUrlsAreUnavailable());
+		assertEquals(false, rule.isPassiveFireIfSingleBackingUrlIsUnavailable());
 		assertTrue(rule.getNotifyEmailContacts().contains("foo@foo.com"));
 		assertTrue(rule.getNotifyEmailContacts().contains("bar@bar.com"));
 		assertTrue(rule.appliesTo(d1));
@@ -325,9 +334,9 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		rules = mySvc.loadMonitorRuleList();
 		assertEquals(1, rules.size());
 
-		rule = rules.get(0);
-		assertEquals(true, rule.isFireIfAllBackingUrlsAreUnavailable());
-		assertEquals(false, rule.isFireIfSingleBackingUrlIsUnavailable());
+		rule = (GMonitorRulePassive) rules.get(0);
+		assertEquals(true, rule.isPassiveFireIfAllBackingUrlsAreUnavailable());
+		assertEquals(false, rule.isPassiveFireIfSingleBackingUrlIsUnavailable());
 		assertFalse(rule.getNotifyEmailContacts().contains("foo@foo.com"));
 		assertTrue(rule.getNotifyEmailContacts().contains("bar@bar.com"));
 		assertTrue(rule.getNotifyEmailContacts().contains("baz@baz.com"));

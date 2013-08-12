@@ -12,6 +12,7 @@ import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.PButtonCell;
+import net.svcret.admin.client.ui.components.PCellTable;
 import net.svcret.admin.client.ui.config.svcver.BaseDetailPanel;
 import net.svcret.admin.client.ui.config.svcver.NullColumn;
 import net.svcret.admin.client.ui.stats.DateUtil;
@@ -72,7 +73,7 @@ public class EditUsersPanel extends FlowPanel {
 		myLoadingSpinner = new LoadingSpinner();
 		contentPanel.add(myLoadingSpinner);
 
-		myTable = new CellTable<GUser>();
+		myTable = new PCellTable<GUser>();
 		contentPanel.add(myTable);
 
 		// Create a Pager to control the table.
@@ -90,6 +91,7 @@ public class EditUsersPanel extends FlowPanel {
 				editUser(theObject);
 			}
 		});
+		editColumn.setCellStyleNames(CssConstants.PCELLTABLE_ACTION_COLUMN);
 		myTable.addColumn(editColumn, "");
 
 		PButtonCell viewCell = new PButtonCell(AdminPortal.IMAGES.iconStatus(), AdminPortal.MSGS.actions_ViewStats());
@@ -101,6 +103,7 @@ public class EditUsersPanel extends FlowPanel {
 			}
 		});
 		myTable.addColumn(viewColumn, "");
+		viewColumn.setCellStyleNames(CssConstants.PCELLTABLE_ACTION_COLUMN);
 
 		// Auth Host
 		

@@ -31,8 +31,9 @@ import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.ejb.TransactionLoggerBean.BaseUnflushed;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
-import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
+import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
+import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.BasePersRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceCatalogItem;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -53,10 +54,12 @@ import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
 import net.svcret.ejb.model.entity.PersLibraryMessage;
 import net.svcret.ejb.model.entity.PersLibraryMessageAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
-import net.svcret.ejb.model.entity.PersMonitorRule;
+import net.svcret.ejb.model.entity.PersMonitorRuleActive;
+import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem;
 import net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact;
+import net.svcret.ejb.model.entity.PersMonitorRulePassive;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
@@ -281,10 +284,18 @@ public class DaoBean implements IDao {
 			throw new IllegalArgumentException("Unknown service: " + thePid);
 		}
 
+//		TypedQuery<PersLibraryMessage> q = myEntityManager.createQuery("SELECT m FROM PersLibraryMessage m ", PersLibraryMessage.class);
+//		List<PersLibraryMessage> l = q.getResultList();
+//		ourLog.info("Entities: {}", l);
+//		ourLog.info("Entities: {}", l.get(0).getAppliesTo());
+		
 		TypedQuery<PersLibraryMessage> query = myEntityManager.createNamedQuery(Queries.LIBRARY_FINDBYSVC, PersLibraryMessage.class);
 		query.setParameter("SVC", svc);
 
 		List<PersLibraryMessage> retVal = query.getResultList();
+		
+//		ourLog.info("Entities: {}", retVal);
+
 		return new HashSet<PersLibraryMessage>(retVal);
 	}
 
@@ -303,13 +314,13 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	public PersMonitorRule getMonitorRule(long thePid) {
-		return myEntityManager.find(PersMonitorRule.class, thePid);
+	public BasePersMonitorRule getMonitorRule(long thePid) {
+		return myEntityManager.find(BasePersMonitorRule.class, thePid);
 	}
 
 	@Override
-	public List<PersMonitorRule> getMonitorRules() {
-		TypedQuery<PersMonitorRule> q = myEntityManager.createNamedQuery(Queries.MONITORRULE_FINDALL, PersMonitorRule.class);
+	public List<BasePersMonitorRule> getMonitorRules() {
+		TypedQuery<BasePersMonitorRule> q = myEntityManager.createNamedQuery(Queries.MONITORRULE_FINDALL, BasePersMonitorRule.class);
 		return q.getResultList();
 	}
 
@@ -846,13 +857,14 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	public void saveLibraryMessage(PersLibraryMessage theMessage) {
+	public PersLibraryMessage saveLibraryMessage(PersLibraryMessage theMessage) {
 		Validate.notNull(theMessage);
 		if (theMessage.getPid() == null) {
 			myEntityManager.persist(theMessage);
 			for (PersLibraryMessageAppliesTo next : theMessage.getAppliesTo()) {
 				myEntityManager.persist(next);
 			}
+			return theMessage;
 		} else {
 			
 			PersLibraryMessage existing = myEntityManager.find(PersLibraryMessage.class, theMessage.getPid());
@@ -862,23 +874,35 @@ public class DaoBean implements IDao {
 				}
 			}
 			for (PersLibraryMessageAppliesTo next : theMessage.getAppliesTo()) {
-				myEntityManager.merge(next);
+				PersLibraryMessageAppliesTo existingAt = myEntityManager.find(PersLibraryMessageAppliesTo.class, next.getPk());
+				if (existingAt == null) {
+				myEntityManager.persist(next);
+				}
 			}
 			
-			myEntityManager.merge(theMessage);
+			return myEntityManager.merge(theMessage);
 		}
 	}
 
 	@Override
-	public void saveMonitorRule(PersMonitorRule theRule) {
+	public void saveMonitorRule(BasePersMonitorRule theRule) {
 
-		for (PersMonitorAppliesTo next : theRule.getAppliesTo()) {
-			next.setRule(theRule);
-		}
 		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
 			next.setRule(theRule);
 		}
+		
+		if (theRule instanceof PersMonitorRuleActive) {
+			for (PersMonitorRuleActiveCheck next : ((PersMonitorRuleActive)theRule).getActiveChecks()) {
+				next.setRule(theRule);
+			}
+		}
 
+		if (theRule instanceof PersMonitorRulePassive) {
+			for (PersMonitorAppliesTo next : ((PersMonitorRulePassive)theRule).getAppliesTo()) {
+				next.setRule(theRule);
+			}
+		}
+		
 		myEntityManager.merge(theRule);
 	}
 
@@ -900,11 +924,13 @@ public class DaoBean implements IDao {
 		return firing;
 	}
 
-	public PersMonitorRule saveOrCreateMonitorRule(PersMonitorRule theRule) {
+	public <T extends BasePersMonitorRule> T saveOrCreateMonitorRule(T theRule) {
 		Validate.notNull(theRule, "theRule");
 
-		for (PersMonitorAppliesTo next : theRule.getAppliesTo()) {
-			next.setRule(theRule);
+		if (theRule instanceof PersMonitorRulePassive) {
+			for (PersMonitorAppliesTo next : ((PersMonitorRulePassive)theRule).getAppliesTo()) {
+				next.setRule(theRule);
+			}
 		}
 
 		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
@@ -1220,6 +1246,11 @@ public class DaoBean implements IDao {
 	@Override
 	public PersLibraryMessage getLibraryMessageByPid(long theMessagePid) {
 		return myEntityManager.find(PersLibraryMessage.class, theMessagePid);
+	}
+
+	@Override
+	public Collection<PersMonitorRuleActiveCheck> getAllMonitorRuleActiveChecks() {
+		return myEntityManager.createNamedQuery(Queries.PERSACTIVECHECK_FINDALL, PersMonitorRuleActiveCheck.class).getResultList();
 	}
 
 }

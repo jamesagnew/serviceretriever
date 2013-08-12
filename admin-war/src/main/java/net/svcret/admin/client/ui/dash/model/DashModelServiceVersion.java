@@ -116,7 +116,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 	private void actionMenu(PButton theRetVal) {
 		if (myActionPopup == null || myActionPopup.isShowing() == false) {
 
-			myActionPopup = new PopupPanel(true, true);
+			myActionPopup = new DashActionPopupPanel(true, true);
 
 			FlowPanel content = createActionPanel(myActionPopup, myService, mySvcVer, true, null);
 
@@ -167,9 +167,20 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		});
 		content.add(viewStatus);
 		
+		// View Recent Transactions
+		
+		ActionPButton viewRecentTransactions = new ActionPButton(AdminPortal.IMAGES.iconTransactions(), AdminPortal.MSGS.actions_RecentTransactions());
+		viewRecentTransactions.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				History.newItem(NavProcessor.getTokenServiceVersionRecentMessages(true, theSvcVer.getPid()));
+			}
+		});
+		content.add(viewRecentTransactions);
+
 		// Test Version
 		
-		ActionPButton testSvcVer = new ActionPButton(IMAGES.iconTest(), MSGS.actions_TestServiceVersion());
+		ActionPButton testSvcVer = new ActionPButton(IMAGES.iconTest16(), MSGS.actions_TestServiceVersion());
 		testSvcVer.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {

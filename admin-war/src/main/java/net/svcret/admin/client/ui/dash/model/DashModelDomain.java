@@ -3,6 +3,7 @@ package net.svcret.admin.client.ui.dash.model;
 import static net.svcret.admin.client.AdminPortal.*;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
+import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.GDomain;
@@ -29,7 +30,8 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 
 	private void actionMenu(PButton theRetVal) {
 		if (myActionPopup == null || myActionPopup.isShowing() == false) {
-			myActionPopup = new PopupPanel(true, true);
+			myActionPopup = new DashActionPopupPanel(true, true);
+			myActionPopup.addStyleName(CssConstants.DASHBOARD_ACTION_PANEL);
 
 			final FlowPanel content = new FlowPanel();
 

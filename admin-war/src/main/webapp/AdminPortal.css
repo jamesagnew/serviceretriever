@@ -84,6 +84,10 @@
 	font-weight: bold;
 }
 
+.dashboardActionPanel {
+	width: 250px;
+}
+
 .dashboardLastUsage, .dashboardLastUsageRecent {
 	font-size: 0.8em;
 	white-space: nowrap;
@@ -208,7 +212,9 @@ TABLE.dashboardTable TBODY TR:hover {
 
 .editableLabel {
 	background: #E0E0E0;
-	border: 1px solid #FFFFFF; 	
+	border: 1px solid #FFFFFF;
+	min-width: 40px;
+	display: inline-block;	 	
 }
 
 .editableLabelTransparent {
@@ -264,6 +270,7 @@ LABEL.formLabel {
 	display: inline-block;
 	color: #303060;
 	font-weight: bold;
+	text-overflow:ellipsis;
 }
 
 .pushButton:DISABLED, .pushButtonText:DISABLED {
@@ -439,6 +446,11 @@ TABLE.listTable TBODY TR:nth-child(odd) {
 	color: #004040;
 }
 
+.pCellTableActionColumn {
+	padding: 0px !important;
+	border: 0px !important;
+}
+
 TABLE.propertyTable {
 	border-collapse: separate;
 	border-spacing: 0px;
@@ -449,11 +461,11 @@ TABLE.propertyTable TBODY TR TD {
 	padding: 5px;
 }
 	
-TABLE.propertyTable TBODY TR:nth-child(odd) {
+TABLE.propertyTable TBODY TR:nth-child(odd), .propertyTableOddRow {
 	background: #D0D0D0;
 }
 
-TABLE.propertyTable TBODY TR:nth-child(even) {
+TABLE.propertyTable TBODY TR:nth-child(even), .propertyTableEvenRow {
 	background: #FFF;
 }
 

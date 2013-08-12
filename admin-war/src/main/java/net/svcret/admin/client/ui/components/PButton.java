@@ -5,20 +5,20 @@ import net.svcret.admin.client.AdminPortal;
 import com.google.gwt.dom.client.ButtonElement;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.ImageElement;
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Widget;
 
 public class PButton extends Button {
 
 	public PButton(String theText) {
-		setText(theText);
+		super(createButtonElement(null, theText));
 		setStylePrimaryName(CssConstants.PUSHBUTTON);
-		addStyleName(CssConstants.PUSHBUTTON_TEXT);
 	}
 
 	public PButton(ImageResource theIcon, String theText) {
@@ -34,9 +34,11 @@ public class PButton extends Button {
 	private static ButtonElement createButtonElement(ImageResource theIcon, String theText) {
 		ButtonElement retVal = Document.get().createPushButtonElement();
 
-		ImageElement img = Document.get().createImageElement();
-		img.setSrc(theIcon.getSafeUri().asString());
-		retVal.appendChild(img);
+		if (theIcon != null) {
+			ImageElement img = Document.get().createImageElement();
+			img.setSrc(theIcon.getSafeUri().asString());
+			retVal.appendChild(img);
+		}
 
 		if (theText != null) {
 			DivElement div = Document.get().createDivElement();
@@ -59,26 +61,32 @@ public class PButton extends Button {
 	}
 
 	public Widget toForwardNavButtonPanel() {
-		HorizontalPanel retVal = new HorizontalPanel();
-		retVal.setWidth("100%");
-		retVal.add(this);
+		// HorizontalPanel retVal = new HorizontalPanel();
+		// retVal.setWidth("100%");
+		// retVal.add(this);
 
-		Image image = new Image(AdminPortal.IMAGES.arrowSimpleRight());
-		retVal.add(image);
-		retVal.setCellWidth(image, "24px");
+		Element elem = (Element) getElement().getChild(0);
+		elem.getStyle().setWidth(100, Unit.PCT);
+		elem.getStyle().setPaddingRight(16, Unit.PX);
+		
+		Image image = new Image(AdminPortal.IMAGES.iconNext16());
+		image.getElement().getStyle().setMarginLeft(-32, Unit.PX);
+		getElement().appendChild(image.getElement());
 
-		return retVal;
+		// retVal.add(image);
+		// retVal.setCellWidth(image, "24px");
+		//
+		return this;
 	}
 
 	public Widget toBackwardNavButtonPanel() {
-		HorizontalPanel retVal = new HorizontalPanel();
-
-		Image image = new Image(AdminPortal.IMAGES.arrowSimpleLeft());
-		retVal.add(image);
-		retVal.setCellWidth(image, "24px");
-
-		retVal.add(this);
-
-		return retVal;
+//		Element elem = (Element) getElement().getChild(0);
+//		elem.getStyle().setWidth(100, Unit.PCT);
+//		elem.getStyle().setPaddingRight(16, Unit.PX);
+		
+		Image image = new Image(AdminPortal.IMAGES.iconPrev16());
+		getElement().insertFirst(image.getElement());
+		
+		return this;
 	}
 }

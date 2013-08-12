@@ -62,7 +62,7 @@ public abstract class BasePersRecentMessage implements Serializable {
 	@Basic(fetch = FetchType.LAZY)
 	private String myResponseBody;
 
-	@Column(name = "RESPONSE_TYPE", nullable = false)
+	@Column(name = "RESPONSE_TYPE", nullable = false, length=EntityConstants.MAXLEN_RESPONSE_TYPE_ENUM)
 	@Enumerated(EnumType.STRING)
 	private ResponseTypeEnum myResponseType;
 

@@ -11,12 +11,17 @@ import java.util.Set;
 import net.svcret.admin.client.rpc.ModelUpdateService;
 import net.svcret.admin.shared.ServiceFailureException;
 import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
+import net.svcret.admin.shared.enm.ResponseTypeEnum;
+import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
 import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.BaseGDashboardObjectWithUrls;
+import net.svcret.admin.shared.model.BaseGMonitorRule;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
+import net.svcret.admin.shared.model.DtoMonitorRuleActive;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
@@ -24,11 +29,11 @@ import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
-import net.svcret.admin.shared.model.GMonitorRule;
 import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleFiringProblem;
 import net.svcret.admin.shared.model.GMonitorRuleList;
+import net.svcret.admin.shared.model.GMonitorRulePassive;
 import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.admin.shared.model.GRecentMessageLists;
@@ -193,16 +198,40 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		myUserList.add(user);
 
 		myMonitorRuleList = new GMonitorRuleList();
-		myMonitorRuleList.add(new GMonitorRule());
-		myMonitorRuleList.get(0).setName("Demo Rule");
-		myMonitorRuleList.get(0).setFireForBackingServiceLatencyIsAboveMillis(100);
-		myMonitorRuleList.get(0).setFireForBackingServiceLatencySustainTimeMins(5);
-		myMonitorRuleList.get(0).getNotifyEmailContacts().add("foo@example.com");
-		myMonitorRuleList.get(0).getAppliesTo().add(new GMonitorRuleAppliesTo());
-		myMonitorRuleList.get(0).getAppliesTo().iterator().next().setDomainPid(1L);
-		myMonitorRuleList.get(0).getAppliesTo().iterator().next().setDomainName("Service Domain");
-		myMonitorRuleList.get(0).getAppliesTo().iterator().next().setServicePid(2L);
-		myMonitorRuleList.get(0).getAppliesTo().iterator().next().setServiceName("Service Domain");
+		{
+		GMonitorRulePassive newRule = new GMonitorRulePassive();
+		newRule.setPid(ourNextPid++);
+		myMonitorRuleList.add(newRule);
+		newRule.setName("Demo Rule");
+		newRule.setPassiveFireForBackingServiceLatencyIsAboveMillis(100);
+		newRule.setPassiveFireForBackingServiceLatencySustainTimeMins(5);
+		newRule.getNotifyEmailContacts().add("foo@example.com");
+		newRule.getAppliesTo().add(new GMonitorRuleAppliesTo());
+		newRule.getAppliesTo().iterator().next().setDomainPid(1L);
+		newRule.getAppliesTo().iterator().next().setDomainName("Service Domain");
+		newRule.getAppliesTo().iterator().next().setServicePid(2L);
+		newRule.getAppliesTo().iterator().next().setServiceName("Service Domain");
+		}
+		{
+		DtoMonitorRuleActive newRule = new DtoMonitorRuleActive();
+		newRule.setPid(ourNextPid++);
+		myMonitorRuleList.add(newRule);
+		newRule.setName("Demo Rule");
+		newRule.getNotifyEmailContacts().add("foo2@example.com");
+		DtoMonitorRuleActiveCheck check=new DtoMonitorRuleActiveCheck();
+		check.setCheckFrequencyNum(2);
+		check.setCheckFrequencyUnit(ThrottlePeriodEnum.MINUTE);
+		check.setExpectLatencyUnderMillis(100L);
+		check.setExpectResponseContainsText("hello");
+		check.setExpectResponseType(ResponseTypeEnum.SUCCESS);
+		check.setLastTransactionDate(new Date());
+		check.setLastTransactionOutcome(true);
+		check.setMessageDescription("this is the description 1");
+		check.setMessagePid(1L);
+		check.setServiceVersionPid(100L);
+		newRule.getCheckList().add(check);
+		}
+		
 	}
 
 	@Override
@@ -734,7 +763,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	}
 
 	@Override
-	public GMonitorRuleList saveMonitorRule(GMonitorRule theRule) {
+	public GMonitorRuleList saveMonitorRule(BaseGMonitorRule theRule) {
 		if (theRule.getPidOrNull() == null) {
 			myMonitorRuleList.getRuleByPid(theRule.getPidOrNull()).merge(theRule);
 		} else {
@@ -799,7 +828,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		Collection<Long> pids = myDomainList.getAllServiceVersionPids();
 		msg.setAppliesToServiceVersionPids(pids.toArray(new Long[pids.size()]));
 		msg.setContentType("text/xml");
-		msg.setDescription("this is the description");
+		msg.setDescription("this is the description msg "+theMessagePid);
 		msg.setMessage("<tag>this is the message</tag>");
 		msg.setPid(1L);
 		return msg;
@@ -814,7 +843,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 			Collection<Long> pids = myDomainList.getAllServiceVersionPids();
 			msg.setAppliesToServiceVersionPids(pids.toArray(new Long[pids.size()]));
 			msg.setContentType("text/xml");
-			msg.setDescription("this is the description");
+			msg.setDescription("this is the description msg "+i);
 			msg.setMessage("<tag>this is the message</tag>");
 			msg.setPid((long)i);
 			retVal.add(msg);

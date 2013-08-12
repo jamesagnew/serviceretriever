@@ -44,7 +44,9 @@ public class PButtonCell extends ButtonCell {
 	public static void render(SafeHtmlBuilder sb, ImageResource icon, String theText) {
 		sb.appendHtmlConstant("<button type=\"button\" class=\"" + CssConstants.PUSHBUTTON + "\" tabindex=\"-1\">");
 		sb.appendHtmlConstant("<img src=\"" + icon.getSafeUri().asString() + "\"/>");
+		sb.appendHtmlConstant("<span class='"+CssConstants.PUSHBUTTON_TEXT+"'>");
 		sb.appendHtmlConstant(theText);
+		sb.appendHtmlConstant("</span>");
 		sb.appendHtmlConstant("</button>");
 	}
 

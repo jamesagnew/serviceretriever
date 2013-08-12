@@ -2,11 +2,13 @@ package net.svcret.ejb.api;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import javax.ejb.Local;
 
+import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
 import net.svcret.ejb.ejb.ThrottleQueueFullException;
 import net.svcret.ejb.ex.InternalErrorException;
@@ -26,13 +28,17 @@ public interface IServiceOrchestrator {
 	/**
 	 * Process a normal request
 	 */
-	OrchestratorResponseBean handleServiceRequest(HttpRequestBean theRequest) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException, ThrottleException, ThrottleQueueFullException;
+	OrchestratorResponseBean handleServiceRequest(HttpRequestBean theRequest) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException,
+			ThrottleException, ThrottleQueueFullException;
 
 	/**
 	 * Process a request invoked through a means other than the proxy itself (e.g. monitoring, management console, etc.)
 	 */
-	SidechannelOrchestratorResponseBean handleSidechannelRequest(long theServiceVersionPid, String theRequestBody,String theContentType, String theRequestedByString) throws UnknownRequestException, InternalErrorException,
-			ProcessingException, IOException, SecurityFailureException;
+	SidechannelOrchestratorResponseBean handleSidechannelRequest(long theServiceVersionPid, String theRequestBody, String theContentType, String theRequestedByString) throws InternalErrorException,
+			ProcessingException, UnknownRequestException;
+
+	Collection<SidechannelOrchestratorResponseBean> handleSidechannelRequestForEachUrl(long theServiceVersionPid, String theRequestBody, String theContentType, String theRequestedByString)
+			throws InternalErrorException, ProcessingException, UnknownRequestException;
 
 	/**
 	 * Response type for {@link IServiceOrchestrator#handle(RequestType, String, String, Reader)}
@@ -80,8 +86,16 @@ public interface IServiceOrchestrator {
 
 	public static class SidechannelOrchestratorResponseBean extends OrchestratorResponseBean {
 
-		public SidechannelOrchestratorResponseBean(String theResponseBody, String theResponseContentType, Map<String, List<String>> theResponseHeaders, HttpResponseBean theHttpResponse) {
+		private ResponseTypeEnum myResponseType;
+		
+		public SidechannelOrchestratorResponseBean(String theResponseBody, String theResponseContentType, Map<String, List<String>> theResponseHeaders, HttpResponseBean theHttpResponse, ResponseTypeEnum theResponseType) {
 			super(theResponseBody, theResponseContentType, theResponseHeaders, theHttpResponse);
+			
+			myResponseType=theResponseType;
+		}
+
+		public ResponseTypeEnum getResponseType() {
+			return myResponseType;
 		}
 
 	}

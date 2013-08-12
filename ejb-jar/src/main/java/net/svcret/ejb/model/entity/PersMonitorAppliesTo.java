@@ -28,7 +28,7 @@ public class PersMonitorAppliesTo extends BasePersObject {
 
 	@ManyToOne(cascade = {}, optional = false)
 	@JoinColumn(name = "RULE_PID", nullable = false)
-	private PersMonitorRule myRule;
+	private BasePersMonitorRule myRule;
 
 	@ManyToOne(cascade = {}, optional = true)
 	@JoinColumn(name = "SVC_PID", nullable = true)
@@ -41,7 +41,7 @@ public class PersMonitorAppliesTo extends BasePersObject {
 	public PersMonitorAppliesTo() {
 	}
 
-	public PersMonitorAppliesTo(PersMonitorRule theRule, BasePersServiceCatalogItem theItem) {
+	public PersMonitorAppliesTo(BasePersMonitorRule theRule, BasePersServiceCatalogItem theItem) {
 		Validate.notNull(theRule);
 		Validate.notNull(theItem);
 		
@@ -64,7 +64,7 @@ public class PersMonitorAppliesTo extends BasePersObject {
 		return myPid;
 	}
 
-	public PersMonitorRule getRule() {
+	public BasePersMonitorRule getRule() {
 		return myRule;
 	}
 
@@ -81,7 +81,7 @@ public class PersMonitorAppliesTo extends BasePersObject {
 		}
 	}
 
-	public void setRule(PersMonitorRule theRule) {
+	public void setRule(BasePersMonitorRule theRule) {
 		myRule = theRule;
 	}
 

@@ -7,6 +7,7 @@ import java.util.Set;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
+import net.svcret.admin.client.ui.components.PCellTable;
 import net.svcret.admin.client.ui.stats.DateUtil;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
@@ -39,7 +40,7 @@ public class AlertGrid extends FlowPanel {
 		myDomainList = theDomainList;
 
 		// DataGrid<GMonitorRuleFiring> grid = new DataGrid<GMonitorRuleFiring>();
-		final CellTable<GMonitorRuleFiring> grid = new CellTable<GMonitorRuleFiring>();
+		final CellTable<GMonitorRuleFiring> grid = new PCellTable<GMonitorRuleFiring>();
 		add(grid);
 
 		grid.setEmptyTableWidget(new Label("No firings"));
@@ -151,8 +152,8 @@ public class AlertGrid extends FlowPanel {
 			}
 		}
 
-		if (theProblem.getFailedUrlPid() != null) {
-			GServiceVersionUrl url = myDomainList.getUrlByPid(theProblem.getFailedUrlPid());
+		if (theProblem.getFailedUrlMessage() != null) {
+			GServiceVersionUrl url = myDomainList.getUrlByPid(theProblem.getUrlPid());
 			theB.appendHtmlConstant("URL ");
 			theB.appendHtmlConstant("<a href=\"");
 			theB.appendHtmlConstant(url.getUrl());

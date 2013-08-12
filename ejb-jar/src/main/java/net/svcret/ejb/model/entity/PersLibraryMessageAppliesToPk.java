@@ -6,6 +6,8 @@ import javax.persistence.Embeddable;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
+import org.hibernate.annotations.ForeignKey;
+
 @Embeddable
 public class PersLibraryMessageAppliesToPk implements Serializable {
 
@@ -13,10 +15,12 @@ public class PersLibraryMessageAppliesToPk implements Serializable {
 
 	@JoinColumn(name="MESSAGE_PID")
 	@ManyToOne(optional=false, cascade= {})
+	@ForeignKey(name="FK_PERS_LIBMSG_MSGPID")
 	private PersLibraryMessage myMessage;
 
 	@JoinColumn(name="SVCVER_PID")
 	@ManyToOne(optional=false, cascade= {})
+	@ForeignKey(name="FK_PERS_LIBMSG_SVCVERPID")
 	private BasePersServiceVersion myServiceVersion;
 
 	@Override

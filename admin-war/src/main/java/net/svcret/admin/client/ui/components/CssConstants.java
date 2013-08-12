@@ -2,6 +2,8 @@ package net.svcret.admin.client.ui.components;
 
 public class CssConstants {
 
+	public static final String PROPERTY_TABLE_EVEN_ROW="propertyTableEvenRow";
+	public static final String PROPERTY_TABLE_ODD_ROW="propertyTableOddRow";
 	public static final String BREADCRUMB_LINK = "breadcrumbLink";
 	public static final String BREADCRUMB_PANEL = "breadcrumbPanel";
 	public static final String CONTENT_INNER_PANEL = "contentInnerPanel";
@@ -48,5 +50,7 @@ public class CssConstants {
 	public static final String DASHBOARD_MONITOR = "dashboardMonitorPanel";
 	public static final String DASHBOARD_MONITOR_NORULES = "dashboardMonitorPanelNoRules";
 	public static final String RECENT_TRANSACTIONS_ACTION_BUTTON = "recentTransactionsActionButton";
+	public static final String DASHBOARD_ACTION_PANEL = "dashboardActionPanel";
+	public static final String PCELLTABLE_ACTION_COLUMN = "pCellTableActionColumn";
 	
 }

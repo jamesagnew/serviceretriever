@@ -2,14 +2,14 @@ package net.svcret.admin.client.ui.config.monitor;
 
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.GMonitorRule;
+import net.svcret.admin.shared.model.BaseGMonitorRule;
 
 public class EditMonitorRulePanel extends BaseMonitorRulePanel {
 
 	public EditMonitorRulePanel(long theRulePid) {
-		Model.getInstance().loadMonitorRule(theRulePid, new IAsyncLoadCallback<GMonitorRule>(){
+		Model.getInstance().loadMonitorRule(theRulePid, new IAsyncLoadCallback<BaseGMonitorRule>(){
 			@Override
-			public void onSuccess(GMonitorRule theResult) {
+			public void onSuccess(BaseGMonitorRule theResult) {
 				setRule(theResult);
 			}});
 		

@@ -1,153 +1,170 @@
 package net.svcret.admin.client.ui.config.monitor;
 
+import static net.svcret.admin.client.AdminPortal.*;
+
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.CssConstants;
-import net.svcret.admin.client.ui.components.HtmlList;
-import net.svcret.admin.client.ui.components.HtmlList.ListType;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
+import net.svcret.admin.client.ui.components.PButtonCell;
+import net.svcret.admin.client.ui.components.PCellTable;
+import net.svcret.admin.client.ui.config.svcver.NullColumn;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.GMonitorRule;
+import net.svcret.admin.shared.enm.MonitorRuleTypeEnum;
+import net.svcret.admin.shared.model.BaseGMonitorRule;
+import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.DtoMonitorRuleActive;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
+import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
 import net.svcret.admin.shared.model.GMonitorRuleList;
+import net.svcret.admin.shared.model.GMonitorRulePassive;
+import net.svcret.admin.shared.model.GService;
 
+import com.google.gwt.cell.client.FieldUpdater;
+import com.google.gwt.cell.client.SafeHtmlCell;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.safehtml.shared.SafeHtml;
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
+import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.view.client.ListDataProvider;
 
 public class MonitorRulesPanel extends FlowPanel {
 
 	private LoadingSpinner myConfigListLoadingSpinner;
-	private Grid myRulesGrid;
-
-	private static final int COL_ACTIONS = 0;
-	private static final int COL_ACTIVE = 1;
-	private static final int COL_RULE_NAME = 2;
-	private static final int COL_TYPE = 3;
-	private static final int COL_APPLIES_TO = 4;
-	private static final int NUM_COLS = 5;
+	private PCellTable<BaseGMonitorRule> myGrid;
+	private ListDataProvider<BaseGMonitorRule> myDataProvider;
+	private ListBox myAddTypeBox;
+	private GDomainList myDomainList;
 
 	public MonitorRulesPanel() {
 		initListPanel();
 
 		Model.getInstance().loadMonitorRuleList(new IAsyncLoadCallback<GMonitorRuleList>() {
 			@Override
-			public void onSuccess(GMonitorRuleList theResult) {
-				myConfigListLoadingSpinner.hideCompletely();
-				setRuleList(theResult);
+			public void onSuccess(final GMonitorRuleList theResult) {
+				Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+					@Override
+					public void onSuccess(GDomainList theDomainList) {
+						myDomainList = theDomainList;
+						myConfigListLoadingSpinner.hideCompletely();
+						setRuleList(theResult);
+					}
+				});
 			}
 		});
 	}
 
 	private void setRuleList(GMonitorRuleList theResult) {
-		myRulesGrid.resize(theResult.size() + 1, NUM_COLS);
-
-		myRulesGrid.setText(0, COL_ACTIONS, "Actions");
-		myRulesGrid.setText(0, COL_TYPE, "Criteria");
-		myRulesGrid.setText(0, COL_RULE_NAME, "Rule Name");
-		myRulesGrid.setText(0, COL_APPLIES_TO, "Applies To");
-		myRulesGrid.setText(0, COL_ACTIVE, "Active");
-
-		int row = 0;
-		for (final GMonitorRule next : theResult) {
-			row++;
-
-			HorizontalPanel actionsPanel = new HorizontalPanel();
-			
-			PButton editButton = new PButton(AdminPortal.IMAGES.iconEdit(), AdminPortal.MSGS.actions_Edit());
-			editButton.addClickHandler(new ClickHandler() {
-				@Override
-				public void onClick(ClickEvent theEvent) {
-					History.newItem(NavProcessor.getTokenEditMonitorRule(true, next.getPid()));
-				}
-			});
-			actionsPanel.add(editButton);
-			
-			myRulesGrid.setWidget(row, COL_ACTIONS, actionsPanel);
-
-			List<String> typeDescriptions = toTypeDescriptions(next);
-			if (typeDescriptions.size() == 0) {
-				myRulesGrid.setText(row, COL_TYPE, "No triggers defined");
-			} else if (typeDescriptions.size() == 1) {
-				myRulesGrid.setText(row, COL_TYPE, typeDescriptions.get(0));
-			} else {
-				HtmlList list = new HtmlList(ListType.UNORDERED);
-				for (String string : typeDescriptions) {
-					list.addItem(string);
-				}
-				myRulesGrid.setWidget(row, COL_TYPE, list);
-			}
-
-			myRulesGrid.setText(row, COL_RULE_NAME, next.getName());
-
-			List<String> appliesTos = toAppliesTo(next);
-			if (appliesTos.size() == 0) {
-				myRulesGrid.setText(row, COL_APPLIES_TO, "No triggers defined");
-			} else if (appliesTos.size() == 1) {
-				myRulesGrid.setText(row, COL_APPLIES_TO, appliesTos.get(0));
-			} else {
-				HtmlList list = new HtmlList(ListType.UNORDERED);
-				for (String string : appliesTos) {
-					list.addItem(string);
-				}
-				myRulesGrid.setWidget(row, COL_APPLIES_TO, list);
-			}
-			myRulesGrid.setText(row, COL_ACTIVE, next.isActive() ? "Active" : "No");
-		}
-
+		myDataProvider.getList().clear();
+		myDataProvider.getList().addAll(theResult.toCollection());
+		myDataProvider.refresh();
 	}
 
-	private List<String> toAppliesTo(GMonitorRule theNext) {
+	private List<String> toAppliesTo(BaseGMonitorRule theNext) {
 		ArrayList<String> retVal = new ArrayList<String>();
-		for (GMonitorRuleAppliesTo nextApplies : theNext.getAppliesTo()) {
-			StringBuilder b= new StringBuilder();
-			b.append(nextApplies.getDomainName());
-			if (nextApplies.getServiceName() != null) {
-				b.append(" / ").append(nextApplies.getServiceName());
-				if (nextApplies.getVersionId() != null) {
-					b.append(" / ").append(nextApplies.getVersionId());
-				}else {
-					b.append(" - All Versions");
+		switch (theNext.getRuleType()) {
+		case PASSIVE: {
+			for (GMonitorRuleAppliesTo nextApplies : ((GMonitorRulePassive) theNext).getAppliesTo()) {
+				StringBuilder b = new StringBuilder();
+				b.append(nextApplies.getDomainName());
+				if (nextApplies.getServiceName() != null) {
+					b.append(" / ").append(nextApplies.getServiceName());
+					if (nextApplies.getVersionId() != null) {
+						b.append(" / ").append(nextApplies.getVersionId());
+					} else {
+						b.append(" - All Versions");
+					}
+				} else {
+					b.append(" - All Services and Versions");
 				}
-			}else {
-				b.append(" - All Services and Versions");
+
+				retVal.add(b.toString());
 			}
-			
-			retVal.add(b.toString());
+			break;
 		}
-		
+		case ACTIVE: {
+			Set<Long> svcVerPids = new HashSet<Long>();
+			for (DtoMonitorRuleActiveCheck next : ((DtoMonitorRuleActive) theNext).getCheckList()) {
+				svcVerPids.add(next.getServiceVersionPid());
+			}
+
+			for (Long next : svcVerPids) {
+				GService svc = myDomainList.getServiceWithServiceVersion(next);
+				BaseGServiceVersion svcVer = svc.getVersionList().getVersionByPid(next);
+				if (svc.allVersionPidsInThisServiceAreAmongThesePids(svcVerPids)) {
+					retVal.add(svc.getName() + " - All Versions");
+				} else {
+					retVal.add(svc.getName() + " / " + svcVer.getId());
+				}
+			}
+
+			break;
+		}
+		}
+
 		Collections.sort(retVal);
-		
-		return retVal;
-	}
-
-	private List<String> toTypeDescriptions(GMonitorRule theNext) {
-		ArrayList<String> retVal = new ArrayList<String>();
-
-		if (theNext.isFireIfSingleBackingUrlIsUnavailable()) {
-			retVal.add("Fire if any backing URLs unavailable");
-		} else if (!theNext.isFireIfAllBackingUrlsAreUnavailable()) {
-			retVal.add("Fire if all backing URLs unavailable");
-		}
-
-		if (theNext.getFireForBackingServiceLatencyIsAboveMillis() != null) {
-			retVal.add("Fire is backing service latency exceeds " + theNext.getFireForBackingServiceLatencyIsAboveMillis() + "ms");
-		}
 
 		return retVal;
 	}
 
+	private List<SafeHtml> toTypeDescriptions(BaseGMonitorRule theNext) {
+		ArrayList<SafeHtml> retVal = new ArrayList<SafeHtml>();
+
+		switch (theNext.getRuleType()) {
+		case ACTIVE:
+			SafeHtmlBuilder b = new SafeHtmlBuilder();
+			for (DtoMonitorRuleActiveCheck next : ((DtoMonitorRuleActive) theNext).getCheckList()) {
+				b.appendHtmlConstant("Send message every " + next.getCheckFrequencyNum() + " " + next.getCheckFrequencyUnit().getFriendlyName(next.getCheckFrequencyNum()).toLowerCase() + ": \"");
+				b.appendEscaped(next.getMessageDescription());
+				b.appendHtmlConstant("\"");
+				b.appendHtmlConstant("<ul>");
+				b.appendHtmlConstant("<li>Expects response type: " + next.getExpectResponseType().getFriendlyName() + "</li>");
+				if (next.getExpectLatencyUnderMillis() != null) {
+					b.appendHtmlConstant("<li>Expects latency under " + next.getExpectLatencyUnderMillis() + "ms/call</li>");
+				}
+				if (next.getExpectResponseContainsText() != null) {
+					b.appendHtmlConstant("<li>Expects response to contain text: \"");
+					b.appendEscaped(next.getExpectResponseContainsText());
+					b.appendHtmlConstant("\"</li>");
+				}
+				b.appendHtmlConstant("</ul>");
+				retVal.add(b.toSafeHtml());
+			}
+			break;
+		case PASSIVE: {
+			GMonitorRulePassive next = (GMonitorRulePassive) theNext;
+			if (next.isPassiveFireIfSingleBackingUrlIsUnavailable()) {
+				retVal.add(SafeHtmlUtils.fromSafeConstant("Fire if any backing URLs unavailable"));
+			} else if (!next.isPassiveFireIfAllBackingUrlsAreUnavailable()) {
+				retVal.add(SafeHtmlUtils.fromSafeConstant("Fire if all backing URLs unavailable"));
+			}
+
+			if (next.getPassiveFireForBackingServiceLatencyIsAboveMillis() != null) {
+				retVal.add(SafeHtmlUtils.fromSafeConstant("Fire is backing service latency exceeds " + next.getPassiveFireForBackingServiceLatencyIsAboveMillis() + "ms"));
+			}
+			break;
+		}
+		}
+
+		return retVal;
+	}
 
 	private void initListPanel() {
 		FlowPanel listPanel = new FlowPanel();
@@ -168,81 +185,126 @@ public class MonitorRulesPanel extends FlowPanel {
 		myConfigListLoadingSpinner.show();
 		contentPanel.add(myConfigListLoadingSpinner);
 
-		myRulesGrid = new Grid();
-		myRulesGrid.addStyleName(CssConstants.PROPERTY_TABLE);
-		contentPanel.add(myRulesGrid);
+		// myRulesGrid = new Grid();
+		// myRulesGrid.addStyleName(CssConstants.PROPERTY_TABLE);
+		// contentPanel.add(myRulesGrid);
+
+		myGrid = new PCellTable<BaseGMonitorRule>();
+		myGrid.setWidth("100%");
+		contentPanel.add(myGrid);
+
+		myGrid.setEmptyTableWidget(new Label("No rules defined"));
+
+		// Edit
+		Column<BaseGMonitorRule, String> editColumn = new NullColumn<BaseGMonitorRule>(new PButtonCell(IMAGES.iconEdit(), MSGS.actions_Edit()));
+		myGrid.addColumn(editColumn, "");
+		editColumn.setFieldUpdater(new FieldUpdater<BaseGMonitorRule, String>() {
+			@Override
+			public void update(int theIndex, BaseGMonitorRule theObject, String theValue) {
+				History.newItem(NavProcessor.getTokenEditMonitorRule(true, theObject.getPid()));
+			}
+		});
+		editColumn.setCellStyleNames(CssConstants.PCELLTABLE_ACTION_COLUMN);
+
+		// Active
+		Column<BaseGMonitorRule, SafeHtml> enabledColumn = new Column<BaseGMonitorRule, SafeHtml>(new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(BaseGMonitorRule theObject) {
+				if (theObject.isActive()) {
+					return SafeHtmlUtils.fromSafeConstant("Yes");
+				} else {
+					return SafeHtmlUtils.fromSafeConstant("No");
+				}
+			}
+		};
+		myGrid.addColumn(enabledColumn, "Enabled");
+
+		// Active
+		Column<BaseGMonitorRule, SafeHtml> typeColumn = new Column<BaseGMonitorRule, SafeHtml>(new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(BaseGMonitorRule theObject) {
+				return SafeHtmlUtils.fromTrustedString(theObject.getRuleType().getFriendlyName());
+			}
+		};
+		myGrid.addColumn(typeColumn, "Type");
+
+		// Criteria
+		Column<BaseGMonitorRule, SafeHtml> criteriaColumn = new Column<BaseGMonitorRule, SafeHtml>(new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(BaseGMonitorRule theObject) {
+				List<SafeHtml> typeDescriptions = toTypeDescriptions(theObject);
+				if (typeDescriptions.size() == 0) {
+					return SafeHtmlUtils.fromSafeConstant("No triggers defined");
+				} else if (typeDescriptions.size() == 1) {
+					return typeDescriptions.get(0);
+				} else {
+					SafeHtmlBuilder b = new SafeHtmlBuilder();
+					b.appendHtmlConstant("<ul>");
+					for (SafeHtml string : typeDescriptions) {
+						b.appendHtmlConstant("<li>");
+						b.append(string);
+						b.appendHtmlConstant("</li>");
+					}
+					b.appendHtmlConstant("</ul>");
+					return b.toSafeHtml();
+				}
+			}
+		};
+		myGrid.addColumn(criteriaColumn, "Criteria");
+
+		// Rule Name
+		Column<BaseGMonitorRule, SafeHtml> ruleNameColumn = new Column<BaseGMonitorRule, SafeHtml>(new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(BaseGMonitorRule theObject) {
+				return SafeHtmlUtils.fromString(theObject.getName());
+			}
+		};
+		myGrid.addColumn(ruleNameColumn, "Name");
+
+		// Applies To
+		Column<BaseGMonitorRule, SafeHtml> appliesToColumn = new Column<BaseGMonitorRule, SafeHtml>(new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(BaseGMonitorRule theObject) {
+				List<String> appliesTos = toAppliesTo(theObject);
+				if (appliesTos.size() == 0) {
+					return SafeHtmlUtils.fromSafeConstant("No triggers defined");
+				} else if (appliesTos.size() == 1) {
+					return SafeHtmlUtils.fromString(appliesTos.get(0));
+				} else {
+					SafeHtmlBuilder b = new SafeHtmlBuilder();
+					b.appendHtmlConstant("<ul>");
+					for (String string : appliesTos) {
+						b.appendHtmlConstant("<li>");
+						b.appendEscaped(string);
+						b.appendHtmlConstant("</li>");
+					}
+					b.appendHtmlConstant("</ul>");
+					return b.toSafeHtml();
+				}
+			}
+		};
+		myGrid.addColumn(appliesToColumn, "Applies To");
+
+		myDataProvider = new ListDataProvider<BaseGMonitorRule>();
+		myDataProvider.addDataDisplay(myGrid);
+
+		HorizontalPanel controlsPanel = new HorizontalPanel();
+		contentPanel.add(controlsPanel);
 
 		PButton addButton = new PButton(AdminPortal.IMAGES.iconAdd(), AdminPortal.MSGS.actions_Add());
 		addButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
-				History.newItem(NavProcessor.getTokenAddMonitorRule(true));
+				History.newItem(NavProcessor.getTokenAddMonitorRule(true, myAddTypeBox.getSelectedIndex()));
 			}
 		});
-		contentPanel.add(addButton);
+		controlsPanel.add(addButton);
 
-		
-		if (true) {
-			return;
+		myAddTypeBox = new ListBox(false);
+		for (MonitorRuleTypeEnum next : MonitorRuleTypeEnum.values()) {
+			myAddTypeBox.addItem(next.getFriendlyName());
 		}
-
-		HorizontalPanel hPanel = new HorizontalPanel();
-		// contentPanel.add(hPanel);
-		//
-		// VerticalPanel toolbar = new VerticalPanel();
-		//
-		// HorizontalPanel addPanel = new HorizontalPanel();
-		// toolbar.add(addPanel);
-		// myAddButton = new PButton(AdminPortal.IMAGES.iconAdd(),
-		// AdminPortal.MSGS.actions_AddNewDotDotDot());
-		// myAddButton.setEnabled(false);
-		// myAddButton.addClickHandler(new ClickHandler() {
-		// @Override
-		// public void onClick(ClickEvent theEvent) {
-		// addHost();
-		// }
-		// });
-		// addPanel.add(myAddButton);
-		// addPanel.add(new Label("Type:"));
-		// myAddListBox = new ListBox();
-		// for (AuthorizationHostTypeEnum next :
-		// AuthorizationHostTypeEnum.values()) {
-		// myAddListBox.addItem(next.description(), next.name());
-		// }
-		// myAddListBox.setSelectedIndex(0);
-		// addPanel.add(myAddListBox);
-		//
-		// myRemoveButton = new PButton(AdminPortal.IMAGES.iconRemove(),
-		// AdminPortal.MSGS.actions_RemoveSelectedDotDotDot());
-		// myRemoveButton.setEnabled(false);
-		// myRemoveButton.addClickHandler(new ClickHandler() {
-		// @Override
-		// public void onClick(ClickEvent theEvent) {
-		// removeHost();
-		// }
-		// });
-		// toolbar.add(myRemoveButton);
-		//
-		// myHostsListBox = new ListBox(false);
-		// myHostsListBox.setVisibleItemCount(5);
-		// myHostsListBox.addChangeHandler(new ChangeHandler() {
-		// @Override
-		// public void onChange(ChangeEvent theEvent) {
-		// if (myUpdatingConfigsListBox) {
-		// return;
-		// }
-		// mySelectedPid =
-		// Long.parseLong(myHostsListBox.getValue(myHostsListBox.getSelectedIndex()));
-		// updateSelectedHost();
-		// }
-		//
-		// });
-		//
-		// hPanel.add(myHostsListBox);
-		// hPanel.add(toolbar);
-		//
-		// HorizontalPanel buttonsBar = new HorizontalPanel();
-		// contentPanel.add(buttonsBar);
+		myAddTypeBox.setSelectedIndex(0);
 
 	}
 

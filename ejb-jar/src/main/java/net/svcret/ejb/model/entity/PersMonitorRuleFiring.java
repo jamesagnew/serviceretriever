@@ -54,7 +54,7 @@ public class PersMonitorRuleFiring extends BasePersObject {
 
 	@ManyToOne(cascade = {}, optional = false)
 	@JoinColumn(name = "RULE_PID", nullable = false)
-	private PersMonitorRule myRule;
+	private BasePersMonitorRule myRule;
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "START_DATE", nullable = true)
@@ -84,7 +84,7 @@ public class PersMonitorRuleFiring extends BasePersObject {
 	/**
 	 * @return the rule
 	 */
-	public PersMonitorRule getRule() {
+	public BasePersMonitorRule getRule() {
 		return myRule;
 	}
 
@@ -107,7 +107,7 @@ public class PersMonitorRuleFiring extends BasePersObject {
 	 * @param theRule
 	 *            the rule to set
 	 */
-	public void setRule(PersMonitorRule theRule) {
+	public void setRule(BasePersMonitorRule theRule) {
 		myRule = theRule;
 	}
 

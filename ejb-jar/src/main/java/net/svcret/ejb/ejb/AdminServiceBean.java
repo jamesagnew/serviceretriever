@@ -23,9 +23,12 @@ import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.BaseGClientSecurity;
 import net.svcret.admin.shared.model.BaseGDashboardObjectWithUrls;
+import net.svcret.admin.shared.model.BaseGMonitorRule;
 import net.svcret.admin.shared.model.BaseGServerSecurity;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
+import net.svcret.admin.shared.model.DtoMonitorRuleActive;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
@@ -35,11 +38,11 @@ import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GLdapAuthHost;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
-import net.svcret.admin.shared.model.GMonitorRule;
 import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleFiringProblem;
 import net.svcret.admin.shared.model.GMonitorRuleList;
+import net.svcret.admin.shared.model.GMonitorRulePassive;
 import net.svcret.admin.shared.model.GNamedParameterJsonRpcServerAuth;
 import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GRecentMessage;
@@ -83,9 +86,9 @@ import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBe
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
+import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.BasePersRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
@@ -102,10 +105,12 @@ import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
 import net.svcret.ejb.model.entity.PersLibraryMessage;
 import net.svcret.ejb.model.entity.PersLibraryMessageAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
-import net.svcret.ejb.model.entity.PersMonitorRule;
+import net.svcret.ejb.model.entity.PersMonitorRuleActive;
+import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem;
 import net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact;
+import net.svcret.ejb.model.entity.PersMonitorRulePassive;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
@@ -142,7 +147,7 @@ public class AdminServiceBean implements IAdminService {
 	@EJB
 	private IConfigService myConfigSvc;
 
-	@EJB()
+	@EJB
 	private IServiceInvokerSoap11 myInvokerSoap11;
 
 	@EJB
@@ -1627,6 +1632,10 @@ public class AdminServiceBean implements IAdminService {
 				retVal.getMonitorRulePids().add(nextRule.getPid());
 			}
 		}
+		for (PersMonitorRuleActiveCheck next : theSvcVer.getActiveChecks()) {
+			retVal.getMonitorRulePids().add(next.getRule().getPid());
+		}
+		
 		retVal.getFailingApplicableRulePids().addAll(theSvcVer.getActiveMonitorRuleFiringPidsWhichApply());
 	}
 
@@ -2208,42 +2217,60 @@ public class AdminServiceBean implements IAdminService {
 	public GMonitorRuleList loadMonitorRuleList() throws ProcessingException {
 		GMonitorRuleList retVal = new GMonitorRuleList();
 
-		Collection<PersMonitorRule> allRules = myDao.getMonitorRules();
-		for (PersMonitorRule persMonitorRule : allRules) {
+		Collection<BasePersMonitorRule> allRules = myDao.getMonitorRules();
+		for (BasePersMonitorRule persMonitorRule : allRules) {
 			retVal.add(toUi(persMonitorRule));
 		}
 
 		return retVal;
 	}
 
-	private GMonitorRule toUi(PersMonitorRule theRule) throws ProcessingException {
-		GMonitorRule retVal = new GMonitorRule();
+	private BaseGMonitorRule toUi(BasePersMonitorRule theRule) throws ProcessingException {
+		BaseGMonitorRule retVal = null;
+		switch (theRule.getRuleType()) {
+		case PASSIVE: {
+			GMonitorRulePassive ruleDto = new GMonitorRulePassive();
+			PersMonitorRulePassive rule = (PersMonitorRulePassive) theRule;
+			ruleDto.setPassiveFireForBackingServiceLatencyIsAboveMillis(rule.getPassiveFireForBackingServiceLatencyIsAboveMillis());
+			ruleDto.setPassiveFireForBackingServiceLatencySustainTimeMins(rule.getPassiveFireForBackingServiceLatencySustainTimeMins());
+			ruleDto.setPassiveFireIfAllBackingUrlsAreUnavailable(rule.isPassiveFireIfAllBackingUrlsAreUnavailable());
+			ruleDto.setPassiveFireIfSingleBackingUrlIsUnavailable(rule.isPassiveFireIfSingleBackingUrlIsUnavailable());
+			for (PersMonitorAppliesTo next : rule.getAppliesTo()) {
+				if (next.getItem() instanceof PersDomain) {
+					PersDomain domain = (PersDomain) next.getItem();
+					ruleDto.applyTo(toUi(domain, false), true);
+				} else if (next.getItem() instanceof PersService) {
+					PersService service = (PersService) next.getItem();
+					PersDomain domain = service.getDomain();
+					ruleDto.applyTo(toUi(domain, false), toUi(service, false), true);
+				} else if (next.getItem() instanceof BasePersServiceVersion) {
+					BasePersServiceVersion svcVer = (BasePersServiceVersion) next.getItem();
+					PersService service = svcVer.getService();
+					PersDomain domain = service.getDomain();
+					ruleDto.applyTo(toUi(domain, false), toUi(service, false), toUi(svcVer, false), true);
+				}
+			}
 
+			retVal = ruleDto;
+			break;
+		}
+		case ACTIVE:{
+			DtoMonitorRuleActive ruleDto = new DtoMonitorRuleActive();
+			PersMonitorRuleActive rule = (PersMonitorRuleActive) theRule;
+			for (PersMonitorRuleActiveCheck next : rule.getActiveChecks()) {
+				ruleDto.getCheckList().add(toUi(next));
+			}
+			retVal = ruleDto;
+			break;
+		}
+		}
+
+		if (retVal==null) {
+			throw new IllegalStateException("Unknown type: "+theRule.getRuleType());
+		}
 		retVal.setPid(theRule.getPid());
 		retVal.setActive(theRule.isRuleActive());
 		retVal.setName(theRule.getRuleName());
-
-		retVal.setFireForBackingServiceLatencyIsAboveMillis(theRule.getFireForBackingServiceLatencyIsAboveMillis());
-		retVal.setFireForBackingServiceLatencySustainTimeMins(theRule.getFireForBackingServiceLatencySustainTimeMins());
-
-		retVal.setFireIfAllBackingUrlsAreUnavailable(theRule.isFireIfAllBackingUrlsAreUnavailable());
-		retVal.setFireIfSingleBackingUrlIsUnavailable(theRule.isFireIfSingleBackingUrlIsUnavailable());
-
-		for (PersMonitorAppliesTo next : theRule.getAppliesTo()) {
-			if (next.getItem() instanceof PersDomain) {
-				PersDomain domain = (PersDomain) next.getItem();
-				retVal.applyTo(toUi(domain, false), true);
-			} else if (next.getItem() instanceof PersService) {
-				PersService service = (PersService) next.getItem();
-				PersDomain domain = service.getDomain();
-				retVal.applyTo(toUi(domain, false), toUi(service, false), true);
-			} else if (next.getItem() instanceof BasePersServiceVersion) {
-				BasePersServiceVersion svcVer = (BasePersServiceVersion) next.getItem();
-				PersService service = svcVer.getService();
-				PersDomain domain = service.getDomain();
-				retVal.applyTo(toUi(domain, false), toUi(service, false), toUi(svcVer, false), true);
-			}
-		}
 
 		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
 			retVal.getNotifyEmailContacts().add(next.getEmail());
@@ -2276,7 +2303,7 @@ public class AdminServiceBean implements IAdminService {
 
 		GServiceVersionSingleFireResponse retVal = new GServiceVersionSingleFireResponse();
 		try {
-			SidechannelOrchestratorResponseBean response = myOrchestrator.handleSidechannelRequest(thePid,theMessageText,theContentType,  theRequestedByString);
+			SidechannelOrchestratorResponseBean response = myOrchestrator.handleSidechannelRequest(thePid, theMessageText, theContentType, theRequestedByString);
 
 			retVal.setAuthorizationOutcome(AuthorizationOutcomeEnum.AUTHORIZED);
 			retVal.setDomainName(svcVer.getService().getDomain().getDomainName());
@@ -2304,9 +2331,6 @@ public class AdminServiceBean implements IAdminService {
 			retVal.setTransactionMillis(response.getHttpResponse().getResponseTime());
 			retVal.setTransactionTime(transactionTime);
 
-		} catch (SecurityFailureException e) {
-			retVal.setAuthorizationOutcome(e.getAuthorizationOutcomeEnum());
-			retVal.setOutcomeDescription(e.getMessage());
 		} catch (Exception e) {
 			ourLog.error("Failed to invoke service", e);
 			retVal.setOutcomeDescription("Failed with internal exception: " + e.getMessage());
@@ -2316,41 +2340,100 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	@Override
-	public void saveMonitorRule(GMonitorRule theRule) throws ProcessingException {
-		PersMonitorRule rule = fromUi(theRule);
+	public void saveMonitorRule(BaseGMonitorRule theRule) throws ProcessingException {
+		BasePersMonitorRule rule = fromUi(theRule);
 		myMonitorSvc.saveRule(rule);
 	}
 
 	@EJB
 	private IMonitorService myMonitorSvc;
 
-	private PersMonitorRule fromUi(GMonitorRule theRule) {
+	private BasePersMonitorRule fromUi(BaseGMonitorRule theRule) throws ProcessingException {
 
-		PersMonitorRule retVal = new PersMonitorRule();
+		BasePersMonitorRule retVal=null;
+		
+		switch (theRule.getRuleType()) {
+		case PASSIVE:{
+			PersMonitorRulePassive persRule = new PersMonitorRulePassive();
+			GMonitorRulePassive rule = (GMonitorRulePassive)theRule;
+			persRule.setPassiveFireForBackingServiceLatencyIsAboveMillis(rule.getPassiveFireForBackingServiceLatencyIsAboveMillis());
+			persRule.setPassiveFireForBackingServiceLatencySustainTimeMins(rule.getPassiveFireForBackingServiceLatencySustainTimeMins());
+			persRule.setPassiveFireIfAllBackingUrlsAreUnavailable(rule.isPassiveFireIfAllBackingUrlsAreUnavailable());
+			persRule.setPassiveFireIfSingleBackingUrlIsUnavailable(rule.isPassiveFireIfSingleBackingUrlIsUnavailable());
+			for (GMonitorRuleAppliesTo next : rule.getAppliesTo()) {
+				if (next.getServiceVersionPid() != null) {
+					persRule.getAppliesTo().add(new PersMonitorAppliesTo(retVal, myDao.getServiceVersionByPid(next.getServiceVersionPid())));
+				} else if (next.getServicePid() != null) {
+					persRule.getAppliesTo().add(new PersMonitorAppliesTo(retVal, myDao.getServiceByPid(next.getServicePid())));
+				} else {
+					persRule.getAppliesTo().add(new PersMonitorAppliesTo(retVal, myDao.getDomainByPid(next.getDomainPid())));
+				}
+			}
+
+			retVal=persRule;
+			break;
+		}
+		case ACTIVE:{
+			PersMonitorRuleActive persRule = new PersMonitorRuleActive();
+			DtoMonitorRuleActive rule = (DtoMonitorRuleActive)theRule;
+			for (DtoMonitorRuleActiveCheck next : rule.getCheckList()) {
+				persRule.getActiveChecks().add(fromUi(next, persRule));
+			}
+			retVal=persRule;
+			break;
+		}
+		}
+		
+		if (retVal==null) {
+			throw new IllegalStateException("Unknown type: "+theRule.getRuleType());
+		}
+		
 		retVal.setRuleActive(theRule.isActive());
 		retVal.setRuleName(theRule.getName());
 		retVal.setPid(theRule.getPidOrNull());
-
-		retVal.setFireForBackingServiceLatencyIsAboveMillis(theRule.getFireForBackingServiceLatencyIsAboveMillis());
-		retVal.setFireForBackingServiceLatencySustainTimeMins(theRule.getFireForBackingServiceLatencySustainTimeMins());
-
-		retVal.setFireIfAllBackingUrlsAreUnavailable(theRule.isFireIfAllBackingUrlsAreUnavailable());
-		retVal.setFireIfSingleBackingUrlIsUnavailable(theRule.isFireIfSingleBackingUrlIsUnavailable());
-
-		for (GMonitorRuleAppliesTo next : theRule.getAppliesTo()) {
-			if (next.getServiceVersionPid() != null) {
-				retVal.getAppliesTo().add(new PersMonitorAppliesTo(retVal, myDao.getServiceVersionByPid(next.getServiceVersionPid())));
-			} else if (next.getServicePid() != null) {
-				retVal.getAppliesTo().add(new PersMonitorAppliesTo(retVal, myDao.getServiceByPid(next.getServicePid())));
-			} else {
-				retVal.getAppliesTo().add(new PersMonitorAppliesTo(retVal, myDao.getDomainByPid(next.getDomainPid())));
-			}
-		}
 
 		for (String next : theRule.getNotifyEmailContacts()) {
 			retVal.getNotifyContact().add(new PersMonitorRuleNotifyContact(next));
 		}
 
+		return retVal;
+	}
+
+	private PersMonitorRuleActiveCheck fromUi(DtoMonitorRuleActiveCheck theNext, BasePersMonitorRule theRule) throws ProcessingException {
+		PersMonitorRuleActiveCheck retVal=new PersMonitorRuleActiveCheck();
+		retVal.setCheckFrequencyNum(theNext.getCheckFrequencyNum());
+		retVal.setCheckFrequencyUnit(theNext.getCheckFrequencyUnit());
+		retVal.setExpectLatencyUnderMillis(theNext.getExpectLatencyUnderMillis());
+		retVal.setExpectResponseContainsText(theNext.getExpectResponseContainsText());
+		retVal.setExpectResponseType(theNext.getExpectResponseType());
+		retVal.setLastTransactionDate(theNext.getLastTransactionDate());
+		retVal.setLastTransactionOutcome(theNext.getLastTransactionOutcome());
+		retVal.setMessage(myDao.getLibraryMessageByPid(theNext.getMessagePid()));
+		if (retVal.getMessage()==null) {
+			throw new ProcessingException("Unknown message PID: " +theNext.getMessagePid());
+		}
+		retVal.setPid(theNext.getPidOrNull());
+		retVal.setRule(theRule);
+		retVal.setServiceVersion(myDao.getServiceVersionByPid(theNext.getServiceVersionPid()));
+		if (retVal.getServiceVersion()==null) {
+			throw new ProcessingException("Unknown service version PID: " +theNext.getServiceVersionPid());
+		}
+		return retVal;
+	}
+
+	private DtoMonitorRuleActiveCheck toUi(PersMonitorRuleActiveCheck theNext) throws ProcessingException {
+		DtoMonitorRuleActiveCheck retVal=new DtoMonitorRuleActiveCheck();
+		retVal.setCheckFrequencyNum(theNext.getCheckFrequencyNum());
+		retVal.setCheckFrequencyUnit(theNext.getCheckFrequencyUnit());
+		retVal.setExpectLatencyUnderMillis(theNext.getExpectLatencyUnderMillis());
+		retVal.setExpectResponseContainsText(theNext.getExpectResponseContainsText());
+		retVal.setExpectResponseType(theNext.getExpectResponseType());
+		retVal.setLastTransactionDate(theNext.getLastTransactionDate());
+		retVal.setLastTransactionOutcome(theNext.getLastTransactionOutcome());
+		retVal.setMessagePid(theNext.getMessage().getPid());
+		retVal.setMessageDescription(theNext.getMessage().getDescription());
+		retVal.setPid(theNext.getPid());
+		retVal.setServiceVersionPid(theNext.getServiceVersion().getPid());
 		return retVal;
 	}
 
@@ -2408,18 +2491,18 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setPid(theNext.getPid());
 		retVal.setServiceVersionPid(theNext.getServiceVersion().getPid());
 
-		if (theNext.getFailedUrl() != null) {
-			retVal.setFailedUrlPid(theNext.getFailedUrl().getPid());
+		if (theNext.getUrl() != null) {
+			retVal.setUrlPid(theNext.getUrl().getPid());
+		}
+
+		if (theNext.getFailedUrlMessage() != null) {
 			retVal.setFailedUrlMessage(theNext.getFailedUrlMessage());
 		}
 
 		if (theNext.getLatencyAverageMillisPerCall() != null) {
 			retVal.setFailedLatencyAverageMillisPerCall(theNext.getLatencyAverageMillisPerCall());
 			retVal.setFailedLatencyAverageOverMinutes(theNext.getLatencyAverageOverMinutes());
-
-			// TODO: store this in the firing
-			retVal.setFailedLatencyThreshold((long) theNext.getFiring().getRule().getFireForBackingServiceLatencyIsAboveMillis());
-
+			retVal.setFailedLatencyThreshold(theNext.getLatencyThreshold());
 		}
 
 		return retVal;
@@ -2433,13 +2516,13 @@ public class AdminServiceBean implements IAdminService {
 	@Override
 	public Collection<DtoLibraryMessage> getLibraryMessagesForSvcVer(long thePid, boolean theLoadContents) throws ProcessingException {
 		Collection<PersLibraryMessage> msgs = myDao.getLibraryMessagesWhichApplyToServiceVersion(thePid);
-		return toUiCollectionLibraryMessages(msgs,theLoadContents);
+		return toUiCollectionLibraryMessages(msgs, theLoadContents);
 	}
 
 	private Collection<DtoLibraryMessage> toUiCollectionLibraryMessages(Collection<PersLibraryMessage> theMsgs, boolean theLoadContents) throws ProcessingException {
 		ArrayList<DtoLibraryMessage> retVal = new ArrayList<DtoLibraryMessage>();
 		for (PersLibraryMessage next : theMsgs) {
-			retVal.add(toUi(next,theLoadContents));
+			retVal.add(toUi(next, theLoadContents));
 		}
 		return retVal;
 	}
@@ -2456,7 +2539,6 @@ public class AdminServiceBean implements IAdminService {
 
 		PersLibraryMessage msg = fromUi(theMessage);
 		myDao.saveLibraryMessage(msg);
-
 	}
 
 	private PersLibraryMessage fromUi(DtoLibraryMessage theMessage) throws ProcessingException {

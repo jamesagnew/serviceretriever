@@ -13,8 +13,9 @@ import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.ejb.TransactionLoggerBean.BaseUnflushed;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
-import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
+import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
+import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.BasePersRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceCatalogItem;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -33,7 +34,7 @@ import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
 import net.svcret.ejb.model.entity.PersLibraryMessage;
-import net.svcret.ejb.model.entity.PersMonitorRule;
+import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
@@ -97,9 +98,9 @@ public interface IDao {
 
 	Collection<PersLibraryMessage> getLibraryMessagesWhichApplyToServiceVersion(long theServiceVersionPid);
 
-	PersMonitorRule getMonitorRule(long thePid);
+	BasePersMonitorRule getMonitorRule(long thePid);
 
-	Collection<PersMonitorRule> getMonitorRules();
+	Collection<BasePersMonitorRule> getMonitorRules();
 
 	PersAuthenticationHostLdap getOrCreateAuthenticationHostLdap(String theModuleId) throws ProcessingException;
 
@@ -165,13 +166,11 @@ public interface IDao {
 
 	void saveInvocationStats(Collection<BasePersInvocationStats> theStats, List<BasePersInvocationStats> theStatsToDelete);
 
-	void saveLibraryMessage(PersLibraryMessage theMessage);
+	PersLibraryMessage saveLibraryMessage(PersLibraryMessage theMessage);
 
-	void saveMonitorRule(PersMonitorRule theRule);
+	void saveMonitorRule(BasePersMonitorRule theRule);
 
 	PersMonitorRuleFiring saveMonitorRuleFiring(PersMonitorRuleFiring theFiring);
-
-	PersMonitorRule saveOrCreateMonitorRule(PersMonitorRule theRule);
 
 	void saveRecentMessagesAndTrimInNewTransaction(BaseUnflushed<? extends BasePersRecentMessage> theNextTransactions);
 
@@ -227,5 +226,9 @@ public interface IDao {
 	}
 
 	PersLibraryMessage getLibraryMessageByPid(long theMessagePid);
+
+	Collection<PersMonitorRuleActiveCheck> getAllMonitorRuleActiveChecks();
+
+	<T extends BasePersMonitorRule> T saveOrCreateMonitorRule(T theRule);
 
 }

@@ -113,6 +113,19 @@ public class GDomainList extends BaseGList<GDomain> {
 		return null;
 	}
 
+	public GService getServiceWithServiceVersion(long theServiceVersionPid) {
+		for (GDomain nextDomain : this) {
+			for (GService nextSvc : nextDomain.getServiceList()) {
+				for (BaseGServiceVersion nextVer : nextSvc.getVersionList()) {
+					if (nextVer.getPid() == theServiceVersionPid) {
+						return nextSvc;
+					}
+				}
+			}
+		}
+		return null;
+	}
+
 	public Collection<Long> getAllServiceVersionPids() {
 		Set<Long> retVal =new HashSet<Long>();
 		for (GDomain nextDoman : this) {

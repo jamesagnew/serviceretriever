@@ -49,12 +49,15 @@ import org.hibernate.annotations.ForeignKey;
 @DiscriminatorColumn(name = "SVCVER_TYPE", length = 20, discriminatorType = DiscriminatorType.STRING)
 public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem {
 
-	static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(BasePersServiceVersion.class);
-
 	private static final long serialVersionUID = 1L;
+
+	static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(BasePersServiceVersion.class);
 
 	@Column(name = "ISACTIVE")
 	private boolean myActive;
+
+	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myServiceVersion")
+	private Collection<PersMonitorRuleActiveCheck> myActiveChecks;
 
 	@Transient
 	private transient boolean myAssociationsLoaded;
@@ -62,9 +65,6 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("CAUTH_ORDER")
 	private List<PersBaseClientAuth<?>> myClientAuths;
-
-	@OneToMany(fetch=FetchType.LAZY, cascade= {}, orphanRemoval=true, mappedBy="myServiceVersion")
-	private Collection<PersMonitorAppliesTo> myMonitorRules;
 
 	@Column(name = "SVC_DESC", length = 2000, nullable = true)
 	private String myDescription;
@@ -87,6 +87,9 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("METHOD_ORDER")
 	private List<PersServiceVersionMethod> myMethods;
+
+	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myServiceVersion")
+	private Collection<PersMonitorAppliesTo> myMonitorRules;
 
 	@Transient
 	private transient Map<String, PersServiceVersionMethod> myNameToMethod;
@@ -174,13 +177,6 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		return res;
 	}
 
-	public Collection<PersMonitorAppliesTo> getMonitorRules() {
-		if (myMonitorRules==null) {
-			myMonitorRules=new ArrayList<PersMonitorAppliesTo>();
-		}
-		return myMonitorRules;
-	}
-
 	public void addServerAuth(PersBaseServerAuth<?, ?> theAuth) {
 		theAuth.setServiceVersion(this);
 		getServerAuths();
@@ -197,11 +193,41 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	}
 
 	@Override
+	public boolean canInheritKeepNumRecentTransactions() {
+		return true;
+	}
+
+	@Override
+	public Integer determineInheritedKeepNumRecentTransactions(ResponseTypeEnum theResultType) {
+		if (myService == null) {
+			return null;
+		}
+		return myService.determineKeepNumRecentTransactions(theResultType);
+	}
+
+	@Override
 	public Integer determineKeepNumRecentTransactions(ResponseTypeEnum theResultType) {
 		Integer retVal = super.determineKeepNumRecentTransactions(theResultType);
 		if (retVal == null) {
 			retVal = myService.determineKeepNumRecentTransactions(theResultType);
 		}
+		return retVal;
+	}
+
+	public Collection<PersMonitorRuleActiveCheck> getActiveChecks() {
+		if (myActiveChecks == null) {
+			myActiveChecks = new ArrayList<PersMonitorRuleActiveCheck>();
+		}
+		return myActiveChecks;
+	}
+
+	@Override
+	public Set<PersMonitorRuleFiring> getActiveRuleFiringsWhichMightApply() {
+		Set<PersMonitorRuleFiring> retVal = new HashSet<PersMonitorRuleFiring>();
+		if (getMostRecentMonitorRuleFiring() != null && getMostRecentMonitorRuleFiring().getEndDate() == null) {
+			retVal.add(getMostRecentMonitorRuleFiring());
+		}
+		retVal.addAll(myService.getActiveRuleFiringsWhichMightApply());
 		return retVal;
 	}
 
@@ -299,6 +325,13 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		}
 
 		return Collections.unmodifiableList(myMethods);
+	}
+
+	public Collection<PersMonitorAppliesTo> getMonitorRules() {
+		if (myMonitorRules == null) {
+			myMonitorRules = new ArrayList<PersMonitorAppliesTo>();
+		}
+		return myMonitorRules;
 	}
 
 	/**
@@ -680,29 +713,6 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		myIdToUrl = null;
 		myPidToUrl = null;
 		myUrlToUrl = null;
-	}
-
-	@Override
-	public Integer determineInheritedKeepNumRecentTransactions(ResponseTypeEnum theResultType) {
-		if (myService==null) {
-			return null;
-		}
-		return myService.determineKeepNumRecentTransactions(theResultType);
-	}
-
-	@Override
-	public boolean canInheritKeepNumRecentTransactions() {
-		return true;
-	}
-
-	@Override
-	public Set<PersMonitorRuleFiring> getActiveRuleFiringsWhichMightApply() {
-		Set<PersMonitorRuleFiring> retVal = new HashSet<PersMonitorRuleFiring>();
-		if (getMostRecentMonitorRuleFiring() != null && getMostRecentMonitorRuleFiring().getEndDate() == null) {
-			retVal.add(getMostRecentMonitorRuleFiring());
-		}
-		retVal.addAll(myService.getActiveRuleFiringsWhichMightApply());
-		return retVal;
 	}
 
 }

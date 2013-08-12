@@ -1,9 +1,11 @@
 package net.svcret.ejb.api;
 
+import javax.ejb.AsyncResult;
 import javax.ejb.Local;
 
 import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.model.entity.PersMonitorRule;
+import net.svcret.ejb.model.entity.BasePersMonitorRule;
+import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
 
 @Local
 public interface IMonitorService {
@@ -17,6 +19,10 @@ public interface IMonitorService {
 	/**
 	 * Save a rule and notify anyone interested
 	 */
-	void saveRule(PersMonitorRule theRule) throws ProcessingException;
+	void saveRule(BasePersMonitorRule theRule) throws ProcessingException;
+
+	void runActiveChecks();
+
+	AsyncResult<Void> runActiveCheck(PersMonitorRuleActiveCheck theCheck);
 	
 }

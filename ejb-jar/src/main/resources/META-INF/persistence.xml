@@ -22,8 +22,10 @@
 		<class>net.svcret.ejb.model.entity.PersLibraryMessage</class>
 		<class>net.svcret.ejb.model.entity.PersLibraryMessageAppliesTo</class>
 		<class>net.svcret.ejb.model.entity.PersLocks</class>
+		<class>net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorAppliesTo</class>
-		<class>net.svcret.ejb.model.entity.PersMonitorRule</class>
+		<class>net.svcret.ejb.model.entity.PersMonitorRuleActive</class>
+		<class>net.svcret.ejb.model.entity.PersMonitorRulePassive</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorRuleFiring</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact</class>
@@ -101,8 +103,10 @@
 		<class>net.svcret.ejb.model.entity.PersLibraryMessage</class>
 		<class>net.svcret.ejb.model.entity.PersLibraryMessageAppliesTo</class>
 		<class>net.svcret.ejb.model.entity.PersLocks</class>
+		<class>net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorAppliesTo</class>
-		<class>net.svcret.ejb.model.entity.PersMonitorRule</class>
+		<class>net.svcret.ejb.model.entity.PersMonitorRuleActive</class>
+		<class>net.svcret.ejb.model.entity.PersMonitorRulePassive</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorRuleFiring</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact</class>

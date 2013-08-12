@@ -18,6 +18,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.apache.commons.lang3.Validate;
 
@@ -30,7 +31,7 @@ public class PersLibraryMessage extends BasePersObject {
 
 	private static final long serialVersionUID = 1L;
 
-	@OneToMany(mappedBy = "myPk.myServiceVersion", cascade = {}, orphanRemoval = true, fetch = FetchType.LAZY)
+	@OneToMany(mappedBy = "myPk.myMessage", cascade = {}, orphanRemoval = true, fetch = FetchType.LAZY)
 	private Set<PersLibraryMessageAppliesTo> myAppliesTo;
 
 	@Column(name = "CONTENT_TYPE", length = PersServiceVersionUrlStatus.MAX_LENGTH_CONTENT_TYPE, nullable = false)

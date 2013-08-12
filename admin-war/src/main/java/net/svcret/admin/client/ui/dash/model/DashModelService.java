@@ -89,7 +89,7 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 			public void onClick(ClickEvent theClickEvent) {
 
 				if (myActionPopup == null || myActionPopup.isShowing() == false) {
-					myActionPopup = new PopupPanel(true, true);
+					myActionPopup = new DashActionPopupPanel(true, true);
 
 					final GDomain domain = myDomain;
 					final GService service = myService;

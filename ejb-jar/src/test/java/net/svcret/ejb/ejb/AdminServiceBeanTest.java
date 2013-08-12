@@ -13,14 +13,12 @@ import net.svcret.admin.shared.model.TimeRange;
 import net.svcret.admin.shared.model.TimeRangeEnum;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.ejb.AdminServiceBean.IWithStats;
-import net.svcret.ejb.model.entity.BasePersInvocationMethodStatsPk;
-import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStatsPk;
+import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
-import net.svcret.ejb.model.entity.BasePersMethodInvocationStats.StatsTypeEnum;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;

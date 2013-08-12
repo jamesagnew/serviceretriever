@@ -41,6 +41,7 @@ import net.svcret.admin.client.ui.stats.ViewRecentMessageForUserPanel;
 import net.svcret.admin.client.ui.test.ReplayLibraryMessagePanel;
 import net.svcret.admin.client.ui.test.ReplayMessagePanel;
 import net.svcret.admin.client.ui.test.ServiceVersionTestPanel;
+import net.svcret.admin.shared.enm.MonitorRuleTypeEnum;
 import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
 import net.svcret.admin.shared.util.StringUtil;
 
@@ -147,8 +148,8 @@ public class NavProcessor {
 		return token;
 	}
 
-	public static String getTokenAddMonitorRule(boolean theAddToHistory) {
-		return createArgumentToken(theAddToHistory, PagesEnum.AMR);
+	public static String getTokenAddMonitorRule(boolean theAddToHistory, int theAddType) {
+		return createArgumentToken(theAddToHistory, PagesEnum.AMR, theAddType);
 	}
 
 	public static String getTokenAddService(boolean theAddToHistory, long theDomainPid) {
@@ -349,7 +350,7 @@ public class NavProcessor {
 		return token;
 	}
 
-	public static String getTokenViewServiceVersionRecentMessages(boolean theAddToHistory, long thePid) {
+	public static String getTokenServiceVersionRecentMessages(boolean theAddToHistory, long thePid) {
 		String token = "";
 		if (theAddToHistory) {
 			token = getCurrentToken();
@@ -528,7 +529,7 @@ public class NavProcessor {
 			panel = new UserStatsPanel(Long.parseLong(args));
 			break;
 		case AMR:
-			panel = new AddMonitorRulePanel();
+			panel = new AddMonitorRulePanel(MonitorRuleTypeEnum.values()[Integer.parseInt(args)]);
 			break;
 		case EMR:
 			panel = new EditMonitorRulePanel(Long.parseLong(args));

@@ -737,6 +737,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Message Library")
 	String actions_MessageLibrary();
 
+	@DefaultMessage("Recent Transactions")
+	String actions_RecentTransactions();
+
 	
 	
 }

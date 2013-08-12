@@ -7,7 +7,9 @@ import java.util.Set;
 
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.alert.AlertGrid;
+import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.PButtonCell;
+import net.svcret.admin.client.ui.components.PCellTable;
 import net.svcret.admin.client.ui.config.svcver.NullColumn;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.GDomainList;
@@ -35,7 +37,7 @@ public abstract class BaseMessageLibraryTablePanel extends FlowPanel {
 	public BaseMessageLibraryTablePanel(GDomainList theDomainList) {
 		myDomainList = theDomainList;
 
-		myGrid = new CellTable<DtoLibraryMessage>();
+		myGrid = new PCellTable<DtoLibraryMessage>();
 		myGrid.setWidth("100%");
 		add(myGrid);
 
@@ -58,7 +60,8 @@ public abstract class BaseMessageLibraryTablePanel extends FlowPanel {
 				History.newItem(token);
 			}
 		});
-
+		replayColumn.setCellStyleNames(CssConstants.PCELLTABLE_ACTION_COLUMN);
+		
 		Column<DtoLibraryMessage, SafeHtml> descColumn = new Column<DtoLibraryMessage, SafeHtml>(new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(DtoLibraryMessage theObject) {

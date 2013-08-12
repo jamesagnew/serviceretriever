@@ -183,11 +183,11 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 			savePanel.add(testButton);
 
 			// TODO: better icon
-			PButton transactionsButton = new PButton(AdminPortal.IMAGES.iconEdit(), "Recent Transactions");
+			PButton transactionsButton = new PButton(AdminPortal.IMAGES.iconTransactions(), AdminPortal.MSGS.actions_RecentTransactions());
 			transactionsButton.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent theEvent) {
-					History.newItem(NavProcessor.getTokenViewServiceVersionRecentMessages(true, myVersion.getPid()));
+					History.newItem(NavProcessor.getTokenServiceVersionRecentMessages(true, myVersion.getPid()));
 				}
 			});
 			savePanel.add(transactionsButton);
