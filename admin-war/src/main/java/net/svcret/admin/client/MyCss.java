@@ -8,5 +8,7 @@ public interface MyCss extends CssResource {
 	String monitorRuleActiveTargetKey();
 
 	String monitorRuleActiveTargetValue();
+
+	String dashboardReloadButton();
 	
 }

@@ -225,6 +225,10 @@ public abstract class BaseGDashboardObject<T> extends BaseGKeepsRecentMessages<T
 		}
 	}
 
+	public void flushStats() {
+		myStatsInitialized=null;
+	}
+
 	protected void merge(BaseGDashboardObject<T> theObject) {
 		super.merge((BaseGKeepsRecentMessages<?>) theObject);
 		

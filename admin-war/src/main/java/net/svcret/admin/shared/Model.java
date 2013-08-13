@@ -406,4 +406,21 @@ public class Model {
 		});
 	}
 
+	public void flushStats() {
+		if (myDomainList!=null) {
+			for (GDomain nextDomain : myDomainList) {
+				nextDomain.flushStats();
+				for (GService nextSvc : nextDomain.getServiceList()) {
+					nextSvc.flushStats();
+					for (BaseGServiceVersion nextVer : nextSvc.getVersionList()) {
+						nextVer.flushStats();
+						for (GServiceMethod nextMethod : nextVer.getMethodList()) {
+							nextMethod.flushStats();
+						}
+					}
+				}
+			}
+		}
+	}
+
 }

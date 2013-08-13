@@ -1,4 +1,16 @@
 
+.dashboardReloadButton {
+	margin-right: 5px;
+	margin-left: 10px;
+	margin-top: 3px;
+	border: 1px solid transparent;
+	cursor: pointer;
+}
+
+.dashboardReloadButton:HOVER {
+	border: 1px solid white;
+}
+
 .monitorRuleActiveTargetKey {
 	font-size: 0.8em;
 	color: #808080;

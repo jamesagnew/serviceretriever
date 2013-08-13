@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import net.svcret.admin.client.AdminPortal;
+import net.svcret.admin.client.MyResources;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.EmptyCell;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
+import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.dash.model.DashModelDomain;
 import net.svcret.admin.client.ui.dash.model.DashModelLoading;
 import net.svcret.admin.client.ui.dash.model.DashModelService;
@@ -22,6 +25,9 @@ import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.HierarchyEnum;
 
+import com.google.gwt.dom.client.Style.Cursor;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.user.client.Timer;
@@ -30,6 +36,7 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -46,13 +53,15 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 	private static final int NUM_STATUS_COLS = 6;
 
 	private FlexTable myGrid;
-	private LoadingSpinner myLoadingSpinner;
 	private List<IDashModel> myUiList = new ArrayList<IDashModel>();
 	private Label myLastUpdateLabel;
 	private Timer myTimer;
 	private boolean myUpdating;
+	private Image myReloadButton;
 
 	public ServiceDashboardPanel() {
+		Model.getInstance().flushStats();
+		
 		setStylePrimaryName(CssConstants.MAIN_PANEL);
 
 		HorizontalPanel titlePanel = new HorizontalPanel();
@@ -72,10 +81,24 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 		titlePanel.add(myLastUpdateLabel);
 		titlePanel.setCellVerticalAlignment(myLastUpdateLabel, HasVerticalAlignment.ALIGN_MIDDLE);
 
-		myLoadingSpinner = new LoadingSpinner();
-		titlePanel.add(myLoadingSpinner);
-		titlePanel.setCellVerticalAlignment(myLoadingSpinner, HasVerticalAlignment.ALIGN_MIDDLE);
-		titlePanel.setCellWidth(myLoadingSpinner, "16px");
+		myReloadButton = new Image(AdminPortal.IMAGES.iconReload16());
+		myReloadButton.addStyleName(MyResources.CSS.dashboardReloadButton());
+		myReloadButton.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				myReloadButton.setResource(AdminPortal.IMAGES.dashboardSpinner());
+				myUpdating = true;
+				Model.getInstance().loadDomainListAndStats(new IAsyncLoadCallback<GDomainList>() {
+					@Override
+					public void onSuccess(GDomainList theResult) {
+						myUpdating=false;
+						updateView(theResult);
+					}
+				});
+			}
+		});
+		titlePanel.add(myReloadButton);
+		
 		myGrid = new FlexTable();
 		myGrid.setCellPadding(2);
 		myGrid.setCellSpacing(0);
@@ -102,7 +125,7 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 				if (myUpdating) {
 					return;
 				}
-				myLoadingSpinner.showMessage("", true);
+				myReloadButton.setResource(AdminPortal.IMAGES.dashboardSpinner());
 				myUpdating = true;
 				Model.getInstance().loadDomainListAndStats(new IAsyncLoadCallback<GDomainList>() {
 					@Override
@@ -121,7 +144,7 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 		if (myUpdating) {
 			return;
 		}
-		myLoadingSpinner.showMessage("", true);
+		myReloadButton.setResource(AdminPortal.IMAGES.dashboardSpinner());
 		myUpdating = true;
 		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
 			@Override
@@ -133,9 +156,6 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 	}
 
 	public void updateView(GDomainList theDomainList) {
-		myLoadingSpinner.hide();
-		myLastUpdateLabel.setText("Updated " + DateTimeFormat.getFormat(PredefinedFormat.TIME_MEDIUM).format(new Date()));
-
 		ArrayList<IDashModel> newUiList = new ArrayList<IDashModel>();
 
 		boolean haveStatsToLoad = false;
@@ -190,6 +210,9 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 					updateView(theResult);
 				}
 			});
+		} else {
+			myReloadButton.setResource(AdminPortal.IMAGES.iconReload16());
+			myLastUpdateLabel.setText("Updated " + DateTimeFormat.getFormat(PredefinedFormat.TIME_MEDIUM).format(new Date()));
 		}
 	}
 
