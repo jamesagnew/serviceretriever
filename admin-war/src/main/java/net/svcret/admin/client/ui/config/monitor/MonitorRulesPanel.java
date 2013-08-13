@@ -129,8 +129,8 @@ public class MonitorRulesPanel extends FlowPanel {
 
 		switch (theNext.getRuleType()) {
 		case ACTIVE:
-			SafeHtmlBuilder b = new SafeHtmlBuilder();
 			for (DtoMonitorRuleActiveCheck next : ((DtoMonitorRuleActive) theNext).getCheckList()) {
+				SafeHtmlBuilder b = new SafeHtmlBuilder();
 				b.appendHtmlConstant("Send message every " + next.getCheckFrequencyNum() + " " + next.getCheckFrequencyUnit().getFriendlyName(next.getCheckFrequencyNum()).toLowerCase() + ": \"");
 				b.appendEscaped(next.getMessageDescription());
 				b.appendHtmlConstant("\"");

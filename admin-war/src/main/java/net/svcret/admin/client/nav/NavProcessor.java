@@ -19,6 +19,7 @@ import net.svcret.admin.client.ui.config.domain.DeleteDomainPanel;
 import net.svcret.admin.client.ui.config.domain.DeleteServiceVersionPanel;
 import net.svcret.admin.client.ui.config.domain.EditDomainPanel;
 import net.svcret.admin.client.ui.config.lib.CreateLibraryMessageBasedOnRecentTransactionPanel;
+import net.svcret.admin.client.ui.config.lib.EditLibraryMessagePanel;
 import net.svcret.admin.client.ui.config.monitor.AddMonitorRulePanel;
 import net.svcret.admin.client.ui.config.monitor.EditMonitorRulePanel;
 import net.svcret.admin.client.ui.config.monitor.MonitorRulesPanel;
@@ -241,16 +242,11 @@ public class NavProcessor {
 	}
 
 	public static String getTokenEditDomain(boolean theAddToHistory, long theDomainPid) {
-		String token = "";
-		if (theAddToHistory) {
-			token = getCurrentToken();
-			if (!token.isEmpty()) {
-				token = token + SEPARATOR;
-			}
-		}
-		token = token + PagesEnum.EDO + "_" + theDomainPid;
-		token = removeDuplicates(token);
-		return token;
+		return createArgumentToken(theAddToHistory, PagesEnum.EDO, theDomainPid);
+	}
+
+	public static String getTokenEditLibraryMessage(boolean theAddToHistory, long theMessagePid) {
+		return createArgumentToken(theAddToHistory, PagesEnum.ELM, theMessagePid);
 	}
 
 	public static String getTokenEditMonitorRule(boolean theAddToHistory, long theRulePid) {
@@ -498,6 +494,9 @@ public class NavProcessor {
 			break;
 		case EDO:
 			panel = new EditDomainPanel(Long.parseLong(args));
+			break;
+		case ELM:
+			panel = new EditLibraryMessagePanel(Long.parseLong(args));
 			break;
 		case EDU:
 			panel = new EditUserPanel(Long.parseLong(args));

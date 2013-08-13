@@ -35,7 +35,10 @@ public enum PagesEnum {
 	DSH(MSGS.serviceDashboard_Breadcrumb()),
 
 	/** Edit domain */
-	EDO(MSGS.editDomain_Breadcrumb()),
+	EDO(MSGS.name_Domain()),
+
+	/** Edit domain */
+	ELM(MSGS.editLibraryMessage_Breadcrumb()),
 
 	/** Edit user */
 	EDU(MSGS.editUser_Dashboard()),
