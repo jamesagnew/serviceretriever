@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Future;
 
 import javax.ejb.AsyncResult;
 import javax.ejb.Asynchronous;
@@ -71,7 +72,7 @@ public class MonitorServiceBean implements IMonitorService {
 	private IServiceOrchestrator myServiceOrchestrator;
 
 	@EJB
-	private MonitorServiceBean myThis;
+	private IMonitorService myThis;
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -111,7 +112,7 @@ public class MonitorServiceBean implements IMonitorService {
 	@Override
 	@Asynchronous
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public AsyncResult<Void> runActiveCheck(PersMonitorRuleActiveCheck theCheck) {
+	public Future<Void> runActiveCheck(PersMonitorRuleActiveCheck theCheck) {
 		theCheck.setLastTransactionDate(new Date());
 
 		long svcVerPid = theCheck.getServiceVersion().getPid();

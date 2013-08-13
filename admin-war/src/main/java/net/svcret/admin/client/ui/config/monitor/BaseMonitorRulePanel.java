@@ -554,12 +554,11 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 	protected abstract String getPanelTitle();
 
 	protected void save() {
-		myPassiveLatencyBox.removeStyleName(CssConstants.TEXTBOX_WITH_ERR);
-
 		myRule.setActive(myRuleActiveCheckBox.getValue());
 		myRule.setName(myRuleNameTextBox.getValue());
 
 		if (myRule.getRuleType() == MonitorRuleTypeEnum.PASSIVE) {
+			myPassiveLatencyBox.removeStyleName(CssConstants.TEXTBOX_WITH_ERR);
 			applyPassiveValues((GMonitorRulePassive) myRule);
 		}
 

@@ -99,6 +99,9 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	@OneToOne(cascade = {}, fetch = FetchType.LAZY)
 	@JoinColumn(name = "URL_PID", referencedColumnName = "PID", nullable = false, unique = true)
 	private PersServiceVersionUrl myUrl;
+	
+	@Column(name="URL_PID", updatable=false, insertable=false)
+	private long myUrlPid;
 
 	/**
 	 * Constructor
@@ -252,6 +255,10 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 		return myUrl;
 	}
 
+	public long getUrlPid() {
+		return myUrlPid;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -269,6 +276,15 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 
 	public void loadAllAssociations() {
 		// nothing
+	}
+
+	private void resetCurcuitBreaker() {
+		if (myNextCircuitBreakerReset == null) {
+			return;
+		}
+
+		myNextCircuitBreakerReset = null;
+		myDirty = true;
 	}
 
 	public void setDirty(boolean theB) {
@@ -428,15 +444,6 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 		}
 		theUrl.setStatus(this);
 		myUrl = theUrl;
-	}
-
-	private void resetCurcuitBreaker() {
-		if (myNextCircuitBreakerReset == null) {
-			return;
-		}
-
-		myNextCircuitBreakerReset = null;
-		myDirty = true;
 	}
 
 	/**

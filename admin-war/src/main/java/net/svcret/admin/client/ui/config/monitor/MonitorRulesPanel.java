@@ -291,6 +291,13 @@ public class MonitorRulesPanel extends FlowPanel {
 		HorizontalPanel controlsPanel = new HorizontalPanel();
 		contentPanel.add(controlsPanel);
 
+		myAddTypeBox = new ListBox(false);
+		for (MonitorRuleTypeEnum next : MonitorRuleTypeEnum.values()) {
+			myAddTypeBox.addItem(next.getFriendlyName());
+		}
+		myAddTypeBox.setSelectedIndex(0);
+		controlsPanel.add(myAddTypeBox);
+		
 		PButton addButton = new PButton(AdminPortal.IMAGES.iconAdd(), AdminPortal.MSGS.actions_Add());
 		addButton.addClickHandler(new ClickHandler() {
 			@Override
@@ -299,12 +306,6 @@ public class MonitorRulesPanel extends FlowPanel {
 			}
 		});
 		controlsPanel.add(addButton);
-
-		myAddTypeBox = new ListBox(false);
-		for (MonitorRuleTypeEnum next : MonitorRuleTypeEnum.values()) {
-			myAddTypeBox.addItem(next.getFriendlyName());
-		}
-		myAddTypeBox.setSelectedIndex(0);
 
 	}
 

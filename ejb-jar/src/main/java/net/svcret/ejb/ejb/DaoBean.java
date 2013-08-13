@@ -28,6 +28,7 @@ import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.api.IDao;
+import net.svcret.ejb.api.StatusesBean;
 import net.svcret.ejb.ejb.TransactionLoggerBean.BaseUnflushed;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
@@ -1251,6 +1252,23 @@ public class DaoBean implements IDao {
 	@Override
 	public Collection<PersMonitorRuleActiveCheck> getAllMonitorRuleActiveChecks() {
 		return myEntityManager.createNamedQuery(Queries.PERSACTIVECHECK_FINDALL, PersMonitorRuleActiveCheck.class).getResultList();
+	}
+
+	@Override
+	public StatusesBean loadAllStatuses() {
+		StatusesBean statusesBean = new StatusesBean();
+		
+		List<PersServiceVersionUrlStatus> urlStatuses = myEntityManager.createQuery("SELECT c FROM " + PersServiceVersionUrlStatus.class.getSimpleName() + " c", PersServiceVersionUrlStatus.class).getResultList();
+		for (PersServiceVersionUrlStatus next : urlStatuses) {
+			statusesBean.getUrlPidToStatus().put(next.getUrlPid(), next);
+		}
+		
+		List<PersServiceVersionStatus> verStatuses = myEntityManager.createQuery("SELECT c FROM " + PersServiceVersionStatus.class.getSimpleName() + " c", PersServiceVersionStatus.class).getResultList();
+		for (PersServiceVersionStatus next : verStatuses) {
+			statusesBean.getServiceVersionPidToStatus().put(next.getServiceVersionPid(), next);
+		}
+		
+		return statusesBean;
 	}
 
 }

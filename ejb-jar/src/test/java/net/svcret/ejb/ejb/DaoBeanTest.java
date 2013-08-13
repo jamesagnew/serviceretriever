@@ -16,6 +16,7 @@ import java.util.List;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
+import net.svcret.ejb.api.StatusesBean;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
@@ -419,7 +420,7 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		stats = mySvc.getInvocationStatsBefore(DAY, myTimeFormat.parse("03:11"));
 		assertEquals(0, stats.size());
-
+		
 	}
 
 	@Test
@@ -632,6 +633,10 @@ public class DaoBeanTest extends BaseJpaTest {
 		assertEquals(3, loadedStats.getSuccessInvocationCount());
 		assertEquals(166, loadedStats.getSuccessInvocationAvgTime());
 
+		newEntityManager();
+		
+		StatusesBean statuses = mySvc.loadAllStatuses();
+		assertEquals(1, statuses.getServiceVersionPidToStatus().size());
 	}
 
 	@Test

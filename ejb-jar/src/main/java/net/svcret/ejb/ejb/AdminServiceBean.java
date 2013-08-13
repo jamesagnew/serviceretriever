@@ -85,6 +85,7 @@ import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.RequestType;
+import net.svcret.ejb.api.StatusesBean;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
@@ -181,9 +182,9 @@ public class AdminServiceBean implements IAdminService {
 
 		domain.merge(fromUi(theDomain));
 
-		myServiceRegistry.saveDomain(domain);
+		domain = myServiceRegistry.saveDomain(domain);
 
-		return toUi(domain, false);
+		return toUi(domain, false,null);
 	}
 
 	@Override
@@ -207,7 +208,7 @@ public class AdminServiceBean implements IAdminService {
 		service.setActive(theActive);
 		myServiceRegistry.saveService(service);
 
-		return toUi(service, false);
+		return toUi(service, false,null);
 	}
 
 	public GServiceMethod addServiceVersionMethod(long theServiceVersionPid, GServiceMethod theMethod) throws ProcessingException {
@@ -290,7 +291,7 @@ public class AdminServiceBean implements IAdminService {
 		PersDomain domain = myDao.getDomainByPid(theDomain);
 		if (domain != null) {
 			Set<Long> empty = Collections.emptySet();
-			return loadDomain(domain, empty, empty, empty, empty);
+			return loadDomain(domain, empty, empty, empty, empty, null);
 		}
 		return null;
 	}
@@ -308,7 +309,7 @@ public class AdminServiceBean implements IAdminService {
 	public GService getServiceByPid(long theService) throws ProcessingException {
 		PersService service = myDao.getServiceByPid(theService);
 		if (service != null) {
-			return toUi(service, false);
+			return toUi(service, false,null);
 		}
 		return null;
 	}
@@ -342,7 +343,7 @@ public class AdminServiceBean implements IAdminService {
 	@Override
 	public GDomainList loadDomainList() throws ProcessingException {
 		Set<Long> set = Collections.emptySet();
-		return loadDomainList(set, set, set, set);
+		return loadDomainList(set, set, set, set, null);
 	}
 
 	@Override
@@ -368,7 +369,13 @@ public class AdminServiceBean implements IAdminService {
 		Set<Long> loadSvcStats = theRequest.getServicesToLoadStats();
 		Set<Long> loadVerStats = theRequest.getVersionsToLoadStats();
 		Set<Long> loadVerMethodStats = theRequest.getVersionMethodsToLoadStats();
-		GDomainList domainList = loadDomainList(loadDomStats, loadSvcStats, loadVerStats, loadVerMethodStats);
+		
+		StatusesBean statuses=null;
+		if (hasAnything(loadDomStats, loadSvcStats, loadVerStats, loadVerMethodStats)) {
+			statuses = myDao.loadAllStatuses();
+		}
+
+		GDomainList domainList = loadDomainList(loadDomStats, loadSvcStats, loadVerStats, loadVerMethodStats, statuses);
 
 		retVal.setDomainList(domainList);
 
@@ -387,7 +394,9 @@ public class AdminServiceBean implements IAdminService {
 			methodPids.add(next.getPid());
 		}
 
-		BaseGServiceVersion uiService = toUi(svcVer, true, methodPids);
+		StatusesBean statuses=myDao.loadAllStatuses();
+
+		BaseGServiceVersion uiService = toUi(svcVer, true, methodPids, statuses);
 		GSoap11ServiceVersionAndResources retVal = toUi(uiService, svcVer);
 		return retVal;
 	}
@@ -772,12 +781,12 @@ public class AdminServiceBean implements IAdminService {
 		return (int) newValue;
 	}
 
-	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, List<Integer> the60MinInvCount, List<Long> the60minTime, StatusEnum theStatus,
+	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusesBean theStatuses, List<Integer> the60MinInvCount, List<Long> the60minTime, StatusEnum theStatus,
 			BasePersServiceVersion nextVersion) throws ProcessingException {
 		StatusEnum status = theStatus;
 
 		for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
-			PersServiceVersionUrlStatus nextUrlStatus = nextUrl.getStatus();
+			PersServiceVersionUrlStatus nextUrlStatus = theStatuses.getUrlStatus(nextUrl.getPid());
 			if (nextUrlStatus == null) {
 				continue;
 			}
@@ -807,14 +816,14 @@ public class AdminServiceBean implements IAdminService {
 		return status;
 	}
 
-	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Long> the60minTime, PersService theService)
+	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Long> the60minTime, PersService theService, StatusesBean theStatuses)
 			throws ProcessingException {
 
 		// Value will be changed below
 		StatusEnum status = theInitialStatus;
 
 		for (BasePersServiceVersion nextVersion : theService.getVersions()) {
-			status = extractStatus(theDashboardObject, the60MinInvCount, the60minTime, status, nextVersion);
+			status = extractStatus(theDashboardObject, theStatuses, the60MinInvCount, the60minTime, status, nextVersion);
 
 		} // end VERSION
 		return status;
@@ -1198,15 +1207,24 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private GDomain loadDomain(PersDomain nextDomain, Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats) throws ProcessingException {
-		GDomain gDomain = toUi(nextDomain, theLoadDomStats.contains(nextDomain.getPid()));
+	private boolean hasAnything(Set<?>... theSets) {
+		for (Set<?> next : theSets) {
+			if (next != null && next.isEmpty() == false) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private GDomain loadDomain(PersDomain nextDomain, Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, StatusesBean statuses) throws ProcessingException {
+		GDomain gDomain = toUi(nextDomain, theLoadDomStats.contains(nextDomain.getPid()), statuses);
 
 		for (PersService nextService : nextDomain.getServices()) {
-			GService gService = toUi(nextService, theLoadSvcStats.contains(nextService.getPid()));
+			GService gService = toUi(nextService, theLoadSvcStats.contains(nextService.getPid()), statuses);
 			gDomain.getServiceList().add(gService);
 
 			for (BasePersServiceVersion nextVersion : nextService.getVersions()) {
-				BaseGServiceVersion gVersion = toUi(nextVersion, theLoadVerStats.contains(nextVersion.getPid()), theLoadVerMethodStats);
+				BaseGServiceVersion gVersion = toUi(nextVersion, theLoadVerStats.contains(nextVersion.getPid()), theLoadVerMethodStats, statuses);
 				gService.getVersionList().add(gVersion);
 
 			} // for service versions
@@ -1214,11 +1232,11 @@ public class AdminServiceBean implements IAdminService {
 		return gDomain;
 	}
 
-	private GDomainList loadDomainList(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats) throws ProcessingException {
+	private GDomainList loadDomainList(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, StatusesBean statuses) throws ProcessingException {
 		GDomainList domainList = new GDomainList();
 
 		for (PersDomain nextDomain : myServiceRegistry.getAllDomains()) {
-			GDomain gDomain = loadDomain(nextDomain, theLoadDomStats, theLoadSvcStats, theLoadVerStats, theLoadVerMethodStats);
+			GDomain gDomain = loadDomain(nextDomain, theLoadDomStats, theLoadSvcStats, theLoadVerStats, theLoadVerMethodStats, statuses);
 
 			domainList.add(gDomain);
 		} // for domains
@@ -1347,7 +1365,7 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private BaseGServiceVersion toUi(BasePersServiceVersion theVersion, boolean theLoadStats, Set<Long> theLoadMethodStats) throws ProcessingException {
+	private BaseGServiceVersion toUi(BasePersServiceVersion theVersion, boolean theLoadStats, Set<Long> theLoadMethodStats, StatusesBean theStatuses) throws ProcessingException {
 		BaseGServiceVersion retVal = null;
 		switch (theVersion.getProtocol()) {
 		case SOAP11:
@@ -1416,7 +1434,7 @@ public class AdminServiceBean implements IAdminService {
 			ArrayList<Long> t60minTime = new ArrayList<Long>();
 
 			StatusEnum status = StatusEnum.UNKNOWN;
-			extractStatus(retVal, t60minCount, t60minTime, status, theVersion);
+			extractStatus(retVal, theStatuses, t60minCount, t60minTime, status, theVersion);
 
 			retVal.setTransactions60mins(toArray(t60minCount));
 			retVal.setLatency60mins(toLatency(t60minCount, t60minTime));
@@ -1425,7 +1443,13 @@ public class AdminServiceBean implements IAdminService {
 			int urlsDown = 0;
 			int urlsUnknown = 0;
 			for (PersServiceVersionUrl nextUrl : theVersion.getUrls()) {
-				switch (nextUrl.getStatus().getStatus()) {
+
+				PersServiceVersionUrlStatus urlStatus = theStatuses.getUrlStatus(nextUrl.getPid());
+				if (urlStatus == null) {
+					continue;
+				}
+
+				switch (urlStatus.getStatus()) {
 				case ACTIVE:
 					urlsActive++;
 					break;
@@ -1441,8 +1465,12 @@ public class AdminServiceBean implements IAdminService {
 			retVal.setUrlsActive(urlsActive);
 			retVal.setUrlsDown(urlsDown);
 			retVal.setUrlsUnknown(urlsUnknown);
-			retVal.setLastServerSecurityFailure(theVersion.getStatus().getLastServerSecurityFailure());
-			retVal.setLastSuccessfulInvocation(theVersion.getStatus().getLastSuccessfulInvocation());
+
+			PersServiceVersionStatus svcVerStatus = theStatuses.getServiceVersionStatus(theVersion.getPid());
+			if (svcVerStatus != null) {
+				retVal.setLastServerSecurityFailure(svcVerStatus.getLastServerSecurityFailure());
+				retVal.setLastSuccessfulInvocation(svcVerStatus.getLastSuccessfulInvocation());
+			}
 
 			if (urlsDown > 0) {
 				retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.DOWN);
@@ -1539,7 +1567,7 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private GDomain toUi(PersDomain theDomain, boolean theLoadStats) throws ProcessingException {
+	private GDomain toUi(PersDomain theDomain, boolean theLoadStats, StatusesBean theStatuses) throws ProcessingException {
 		GDomain retVal = new GDomain();
 		retVal.setPid(theDomain.getPid());
 		retVal.setId(theDomain.getDomainId());
@@ -1557,7 +1585,7 @@ public class AdminServiceBean implements IAdminService {
 			ArrayList<Long> t60minTime = new ArrayList<Long>();
 
 			for (PersService nextService : theDomain.getServices()) {
-				status = extractStatus(retVal, status, t60minCount, t60minTime, nextService);
+				status = extractStatus(retVal, status, t60minCount, t60minTime, nextService, theStatuses);
 			}
 
 			retVal.setTransactions60mins(toArray(t60minCount));
@@ -1572,7 +1600,11 @@ public class AdminServiceBean implements IAdminService {
 			for (PersService nextService : theDomain.getServices()) {
 				for (BasePersServiceVersion nextVersion : nextService.getVersions()) {
 					for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
-						switch (nextUrl.getStatus().getStatus()) {
+						PersServiceVersionUrlStatus urlStatus = theStatuses.getUrlStatus(nextUrl.getPid());
+						if (urlStatus ==null) {
+							continue;
+						}
+						switch (urlStatus.getStatus()) {
 						case ACTIVE:
 							urlsActive++;
 							break;
@@ -1585,12 +1617,14 @@ public class AdminServiceBean implements IAdminService {
 						}
 					}
 
-					PersServiceVersionStatus svcStatus = nextVersion.getStatus();
-					lastServerSecurityFail = PersServiceVersionStatus.newer(lastServerSecurityFail, svcStatus.getLastServerSecurityFailure());
-					lastSuccess = PersServiceVersionStatus.newer(lastSuccess, svcStatus.getLastSuccessfulInvocation());
-
+					PersServiceVersionStatus svcStatus = theStatuses.getServiceVersionStatus(nextVersion.getPid());
+					if (svcStatus != null) {
+						lastServerSecurityFail = PersServiceVersionStatus.newer(lastServerSecurityFail, svcStatus.getLastServerSecurityFailure());
+						lastSuccess = PersServiceVersionStatus.newer(lastSuccess, svcStatus.getLastSuccessfulInvocation());
+					}
 				}
 			}
+
 			retVal.setUrlsActive(urlsActive);
 			retVal.setUrlsDown(urlsDown);
 			retVal.setUrlsUnknown(urlsUnknown);
@@ -1635,7 +1669,7 @@ public class AdminServiceBean implements IAdminService {
 		for (PersMonitorRuleActiveCheck next : theSvcVer.getActiveChecks()) {
 			retVal.getMonitorRulePids().add(next.getRule().getPid());
 		}
-		
+
 		retVal.getFailingApplicableRulePids().addAll(theSvcVer.getActiveMonitorRuleFiringPidsWhichApply());
 	}
 
@@ -1659,7 +1693,7 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private GService toUi(PersService theService, boolean theLoadStats) throws ProcessingException {
+	private GService toUi(PersService theService, boolean theLoadStats, StatusesBean theStatuses) throws ProcessingException {
 		GService retVal = new GService();
 		retVal.setPid(theService.getPid());
 		retVal.setId(theService.getServiceId());
@@ -1676,7 +1710,7 @@ public class AdminServiceBean implements IAdminService {
 			ArrayList<Integer> t60minCount = new ArrayList<Integer>();
 			ArrayList<Long> t60minTime = new ArrayList<Long>();
 
-			status = extractStatus(retVal, status, t60minCount, t60minTime, theService);
+			status = extractStatus(retVal, status, t60minCount, t60minTime, theService, theStatuses);
 
 			retVal.setTransactions60mins(toArray(t60minCount));
 			retVal.setLatency60mins(toLatency(t60minCount, t60minTime));
@@ -1689,7 +1723,11 @@ public class AdminServiceBean implements IAdminService {
 			Date lastSuccess = null;
 			for (BasePersServiceVersion nextVersion : theService.getVersions()) {
 				for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
-					switch (nextUrl.getStatus().getStatus()) {
+					PersServiceVersionUrlStatus urlStatus = theStatuses.getUrlStatus(nextUrl.getPid());
+					if (urlStatus ==null) {
+						continue;
+					}
+					switch (urlStatus.getStatus()) {
 					case ACTIVE:
 						urlsActive++;
 						break;
@@ -1702,10 +1740,11 @@ public class AdminServiceBean implements IAdminService {
 					}
 				}
 
-				PersServiceVersionStatus svcStatus = nextVersion.getStatus();
-				lastServerSecurityFail = PersServiceVersionStatus.newer(lastServerSecurityFail, svcStatus.getLastServerSecurityFailure());
-				lastSuccess = PersServiceVersionStatus.newer(lastSuccess, svcStatus.getLastSuccessfulInvocation());
-
+				PersServiceVersionStatus svcStatus = theStatuses.getServiceVersionStatus(nextVersion.getPid());
+				if (svcStatus != null) {
+					lastServerSecurityFail = PersServiceVersionStatus.newer(lastServerSecurityFail, svcStatus.getLastServerSecurityFailure());
+					lastSuccess = PersServiceVersionStatus.newer(lastSuccess, svcStatus.getLastSuccessfulInvocation());
+				}
 			}
 
 			retVal.setUrlsActive(urlsActive);
@@ -1916,24 +1955,26 @@ public class AdminServiceBean implements IAdminService {
 
 		List<GUrlStatus> retVal = new ArrayList<GUrlStatus>();
 
+		StatusesBean statuses = myDao.loadAllStatuses();
 		for (PersServiceVersionUrl nextUrl : svcVer.getUrls()) {
-			PersServiceVersionUrlStatus nextUrlStatus = nextUrl.getStatus();
-			retVal.add(toUi(nextUrlStatus, nextUrl));
+			retVal.add(toUi(nextUrl, statuses));
 		}
 
 		return retVal;
 	}
 
-	private GUrlStatus toUi(PersServiceVersionUrlStatus theUrlStatus, PersServiceVersionUrl theUrl) {
+	private GUrlStatus toUi(PersServiceVersionUrl theUrl, StatusesBean theStatuses) {
 		GUrlStatus retVal = new GUrlStatus();
 		retVal.setUrlPid(theUrl.getPid());
-		retVal.setStatus(theUrlStatus.getStatus());
-		retVal.setLastFailure(theUrlStatus.getLastFail());
-		retVal.setLastFailureMessage(theUrlStatus.getLastFailMessage());
-		retVal.setLastSuccess(theUrlStatus.getLastSuccess());
-		retVal.setLastSuccessMessage(theUrlStatus.getLastSuccessMessage());
-		retVal.setLastFault(theUrlStatus.getLastFault());
-		retVal.setLastFaultMessage(theUrlStatus.getLastFaultMessage());
+		
+		PersServiceVersionUrlStatus urlStatus = theStatuses.getUrlStatus(theUrl.getPid());
+		retVal.setStatus(urlStatus.getStatus());
+		retVal.setLastFailure(urlStatus.getLastFail());
+		retVal.setLastFailureMessage(urlStatus.getLastFailMessage());
+		retVal.setLastSuccess(urlStatus.getLastSuccess());
+		retVal.setLastSuccessMessage(urlStatus.getLastSuccessMessage());
+		retVal.setLastFault(urlStatus.getLastFault());
+		retVal.setLastFaultMessage(urlStatus.getLastFaultMessage());
 		return retVal;
 	}
 
@@ -2238,23 +2279,23 @@ public class AdminServiceBean implements IAdminService {
 			for (PersMonitorAppliesTo next : rule.getAppliesTo()) {
 				if (next.getItem() instanceof PersDomain) {
 					PersDomain domain = (PersDomain) next.getItem();
-					ruleDto.applyTo(toUi(domain, false), true);
+					ruleDto.applyTo(toUi(domain, false, null), true);
 				} else if (next.getItem() instanceof PersService) {
 					PersService service = (PersService) next.getItem();
 					PersDomain domain = service.getDomain();
-					ruleDto.applyTo(toUi(domain, false), toUi(service, false), true);
+					ruleDto.applyTo(toUi(domain, false,null), toUi(service, false,null), true);
 				} else if (next.getItem() instanceof BasePersServiceVersion) {
 					BasePersServiceVersion svcVer = (BasePersServiceVersion) next.getItem();
 					PersService service = svcVer.getService();
 					PersDomain domain = service.getDomain();
-					ruleDto.applyTo(toUi(domain, false), toUi(service, false), toUi(svcVer, false), true);
+					ruleDto.applyTo(toUi(domain, false,null), toUi(service, false,null), toUi(svcVer, false,null), true);
 				}
 			}
 
 			retVal = ruleDto;
 			break;
 		}
-		case ACTIVE:{
+		case ACTIVE: {
 			DtoMonitorRuleActive ruleDto = new DtoMonitorRuleActive();
 			PersMonitorRuleActive rule = (PersMonitorRuleActive) theRule;
 			for (PersMonitorRuleActiveCheck next : rule.getActiveChecks()) {
@@ -2265,8 +2306,8 @@ public class AdminServiceBean implements IAdminService {
 		}
 		}
 
-		if (retVal==null) {
-			throw new IllegalStateException("Unknown type: "+theRule.getRuleType());
+		if (retVal == null) {
+			throw new IllegalStateException("Unknown type: " + theRule.getRuleType());
 		}
 		retVal.setPid(theRule.getPid());
 		retVal.setActive(theRule.isRuleActive());
@@ -2279,9 +2320,9 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private BaseGServiceVersion toUi(BasePersServiceVersion theSvcVer, boolean theLoadStats) throws ProcessingException {
+	private BaseGServiceVersion toUi(BasePersServiceVersion theSvcVer, boolean theLoadStats, StatusesBean theStatuses) throws ProcessingException {
 		Set<Long> emptySet = Collections.emptySet();
-		return toUi(theSvcVer, theLoadStats, emptySet);
+		return toUi(theSvcVer, theLoadStats, emptySet, theStatuses);
 	}
 
 	@Override
@@ -2350,44 +2391,44 @@ public class AdminServiceBean implements IAdminService {
 
 	private BasePersMonitorRule fromUi(BaseGMonitorRule theRule) throws ProcessingException {
 
-		BasePersMonitorRule retVal=null;
-		
+		BasePersMonitorRule retVal = null;
+
 		switch (theRule.getRuleType()) {
-		case PASSIVE:{
+		case PASSIVE: {
 			PersMonitorRulePassive persRule = new PersMonitorRulePassive();
-			GMonitorRulePassive rule = (GMonitorRulePassive)theRule;
+			GMonitorRulePassive rule = (GMonitorRulePassive) theRule;
 			persRule.setPassiveFireForBackingServiceLatencyIsAboveMillis(rule.getPassiveFireForBackingServiceLatencyIsAboveMillis());
 			persRule.setPassiveFireForBackingServiceLatencySustainTimeMins(rule.getPassiveFireForBackingServiceLatencySustainTimeMins());
 			persRule.setPassiveFireIfAllBackingUrlsAreUnavailable(rule.isPassiveFireIfAllBackingUrlsAreUnavailable());
 			persRule.setPassiveFireIfSingleBackingUrlIsUnavailable(rule.isPassiveFireIfSingleBackingUrlIsUnavailable());
 			for (GMonitorRuleAppliesTo next : rule.getAppliesTo()) {
 				if (next.getServiceVersionPid() != null) {
-					persRule.getAppliesTo().add(new PersMonitorAppliesTo(retVal, myDao.getServiceVersionByPid(next.getServiceVersionPid())));
+					persRule.getAppliesTo().add(new PersMonitorAppliesTo(persRule, myDao.getServiceVersionByPid(next.getServiceVersionPid())));
 				} else if (next.getServicePid() != null) {
-					persRule.getAppliesTo().add(new PersMonitorAppliesTo(retVal, myDao.getServiceByPid(next.getServicePid())));
+					persRule.getAppliesTo().add(new PersMonitorAppliesTo(persRule, myDao.getServiceByPid(next.getServicePid())));
 				} else {
-					persRule.getAppliesTo().add(new PersMonitorAppliesTo(retVal, myDao.getDomainByPid(next.getDomainPid())));
+					persRule.getAppliesTo().add(new PersMonitorAppliesTo(persRule, myDao.getDomainByPid(next.getDomainPid())));
 				}
 			}
 
-			retVal=persRule;
+			retVal = persRule;
 			break;
 		}
-		case ACTIVE:{
+		case ACTIVE: {
 			PersMonitorRuleActive persRule = new PersMonitorRuleActive();
-			DtoMonitorRuleActive rule = (DtoMonitorRuleActive)theRule;
+			DtoMonitorRuleActive rule = (DtoMonitorRuleActive) theRule;
 			for (DtoMonitorRuleActiveCheck next : rule.getCheckList()) {
 				persRule.getActiveChecks().add(fromUi(next, persRule));
 			}
-			retVal=persRule;
+			retVal = persRule;
 			break;
 		}
 		}
-		
-		if (retVal==null) {
-			throw new IllegalStateException("Unknown type: "+theRule.getRuleType());
+
+		if (retVal == null) {
+			throw new IllegalStateException("Unknown type: " + theRule.getRuleType());
 		}
-		
+
 		retVal.setRuleActive(theRule.isActive());
 		retVal.setRuleName(theRule.getName());
 		retVal.setPid(theRule.getPidOrNull());
@@ -2400,7 +2441,7 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	private PersMonitorRuleActiveCheck fromUi(DtoMonitorRuleActiveCheck theNext, BasePersMonitorRule theRule) throws ProcessingException {
-		PersMonitorRuleActiveCheck retVal=new PersMonitorRuleActiveCheck();
+		PersMonitorRuleActiveCheck retVal = new PersMonitorRuleActiveCheck();
 		retVal.setCheckFrequencyNum(theNext.getCheckFrequencyNum());
 		retVal.setCheckFrequencyUnit(theNext.getCheckFrequencyUnit());
 		retVal.setExpectLatencyUnderMillis(theNext.getExpectLatencyUnderMillis());
@@ -2409,20 +2450,20 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setLastTransactionDate(theNext.getLastTransactionDate());
 		retVal.setLastTransactionOutcome(theNext.getLastTransactionOutcome());
 		retVal.setMessage(myDao.getLibraryMessageByPid(theNext.getMessagePid()));
-		if (retVal.getMessage()==null) {
-			throw new ProcessingException("Unknown message PID: " +theNext.getMessagePid());
+		if (retVal.getMessage() == null) {
+			throw new ProcessingException("Unknown message PID: " + theNext.getMessagePid());
 		}
 		retVal.setPid(theNext.getPidOrNull());
 		retVal.setRule(theRule);
 		retVal.setServiceVersion(myDao.getServiceVersionByPid(theNext.getServiceVersionPid()));
-		if (retVal.getServiceVersion()==null) {
-			throw new ProcessingException("Unknown service version PID: " +theNext.getServiceVersionPid());
+		if (retVal.getServiceVersion() == null) {
+			throw new ProcessingException("Unknown service version PID: " + theNext.getServiceVersionPid());
 		}
 		return retVal;
 	}
 
 	private DtoMonitorRuleActiveCheck toUi(PersMonitorRuleActiveCheck theNext) throws ProcessingException {
-		DtoMonitorRuleActiveCheck retVal=new DtoMonitorRuleActiveCheck();
+		DtoMonitorRuleActiveCheck retVal = new DtoMonitorRuleActiveCheck();
 		retVal.setCheckFrequencyNum(theNext.getCheckFrequencyNum());
 		retVal.setCheckFrequencyUnit(theNext.getCheckFrequencyUnit());
 		retVal.setExpectLatencyUnderMillis(theNext.getExpectLatencyUnderMillis());

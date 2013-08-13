@@ -235,10 +235,11 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	}
 
 	@Override
-	public void saveDomain(PersDomain theDomain) throws ProcessingException {
+	public PersDomain saveDomain(PersDomain theDomain) throws ProcessingException {
 		catalogHasChanged();
-		myDao.saveDomain(theDomain);
+		PersDomain retVal = myDao.saveDomain(theDomain);
 		reloadRegistryFromDatabase();
+		return retVal;
 	}
 
 	@Override

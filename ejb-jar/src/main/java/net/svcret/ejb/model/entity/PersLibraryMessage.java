@@ -37,7 +37,7 @@ public class PersLibraryMessage extends BasePersObject {
 	@Column(name = "CONTENT_TYPE", length = PersServiceVersionUrlStatus.MAX_LENGTH_CONTENT_TYPE, nullable = false)
 	private String myContentType;
 
-	@Column(name = "DESC", nullable = true)
+	@Column(name = "MSG_DESC", nullable = true)
 	private String myDescription;
 
 	@Lob()

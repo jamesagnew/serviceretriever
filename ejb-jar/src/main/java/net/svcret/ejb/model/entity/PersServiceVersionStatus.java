@@ -43,7 +43,7 @@ public class PersServiceVersionStatus extends BasePersObject {
 	@Column(name = "LAST_SEC_FAIL")
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date myLastServerSecurityFailure;
-	
+
 	@Column(name = "LAST_SUCCESS")
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date myLastSuccessfulInvocation;
@@ -61,6 +61,9 @@ public class PersServiceVersionStatus extends BasePersObject {
 	@ForeignKey(name = "PX_SVCVERSTATUS_SVCVER_PID")
 	@JoinColumn(name = "SVC_VERSION_PID", referencedColumnName = "PID", unique = true, nullable = false)
 	private BasePersServiceVersion myServiceVersion;
+
+	@Column(name = "SVC_VERSION_PID", updatable = false, insertable = false)
+	private long myServiceVersionPid;
 
 	public PersServiceVersionStatus() {
 	}
@@ -115,6 +118,10 @@ public class PersServiceVersionStatus extends BasePersObject {
 	 */
 	public BasePersServiceVersion getServiceVersion() {
 		return myServiceVersion;
+	}
+
+	public long getServiceVersionPid() {
+		return myServiceVersionPid;
 	}
 
 	public boolean isDirty() {

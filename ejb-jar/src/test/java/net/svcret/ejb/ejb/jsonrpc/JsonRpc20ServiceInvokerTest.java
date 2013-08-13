@@ -97,37 +97,6 @@ public class JsonRpc20ServiceInvokerTest {
 		Assert.assertEquals(ResultTypeEnum.METHOD, resp.getResultType());
 		Assert.assertSame(method, resp.getMethodDefinition());
 
-		/*
-		 * Another
-		 */
-		
-		request = "{\n" + 
-				"\"jsonrpc\":\"2.0\",\n" + 
-				"\"method\":\"findProvider\",\n" + 
-				"\"params\":{},\n" + 
-				"\"clientId\":\"mock\",\"clientPass\":\"mock\"\n" + 
-				"}"; 
-		ourLog.info("Request:\n{}", request);
-
-		reader = new StringReader(request);
-
-		svc = new JsonRpc20ServiceInvoker();
-		def = mock(PersServiceVersionJsonRpc20.class);
-		reqType = RequestType.POST;
-		path = "/";
-		query = "";
-		method = mock(PersServiceVersionMethod.class);
-
-		when(def.getMethod("findProvider")).thenReturn(method);
-		when(def.getServerAuths()).thenReturn(new ArrayList<PersBaseServerAuth<?, ?>>());
-
-		DefaultAnswer.setRunTime();
-		resp = svc.processInvocation(def, reqType, path, query, reader);
-
-		Assert.assertEquals("application/json", resp.getMethodContentType());
-		Assert.assertEquals(ResultTypeEnum.METHOD, resp.getResultType());
-		Assert.assertSame(method, resp.getMethodDefinition());
-
 		
 	}
 

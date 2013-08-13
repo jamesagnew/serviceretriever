@@ -554,6 +554,10 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 			next.loadAllAssociations();
 		}
 
+		for (PersMonitorRuleActiveCheck next : getActiveChecks()) {
+			next.loadAllAssociations();
+		}
+
 		myHttpClientConfig.loadAllAssociations();
 
 	}

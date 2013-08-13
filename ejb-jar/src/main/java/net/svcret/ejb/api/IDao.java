@@ -231,4 +231,6 @@ public interface IDao {
 
 	<T extends BasePersMonitorRule> T saveOrCreateMonitorRule(T theRule);
 
+	StatusesBean loadAllStatuses();
+
 }

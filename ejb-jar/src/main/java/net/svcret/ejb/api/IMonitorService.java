@@ -1,6 +1,7 @@
 package net.svcret.ejb.api;
 
-import javax.ejb.AsyncResult;
+import java.util.concurrent.Future;
+
 import javax.ejb.Local;
 
 import net.svcret.ejb.ex.ProcessingException;
@@ -23,6 +24,6 @@ public interface IMonitorService {
 
 	void runActiveChecks();
 
-	AsyncResult<Void> runActiveCheck(PersMonitorRuleActiveCheck theCheck);
+	Future<Void> runActiveCheck(PersMonitorRuleActiveCheck theCheck);
 	
 }

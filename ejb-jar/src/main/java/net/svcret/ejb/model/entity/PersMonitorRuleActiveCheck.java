@@ -176,4 +176,9 @@ public class PersMonitorRuleActiveCheck extends BasePersObject {
 		myServiceVersion = theSvcVersion;
 	}
 
+	public void loadAllAssociations() {
+		// nothing yet
+		
+	}
+
 }
