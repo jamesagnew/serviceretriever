@@ -23,11 +23,12 @@ public class TwoColumnGrid extends FlexTable {
 		setWidget(row, 1, theLabel);
 	}
 
-	public void addDescription(String theDescription) {
+	public HTML addDescription(String theDescription) {
 		HTML widget = createDescriptionWidget(theDescription);
 		myNextRow++;
 		int row = myNextRow;
 		setWidget(row, 1, widget);
+		return widget;
 	}
 	
 	public void addDescriptionToRight(String theDescription) {

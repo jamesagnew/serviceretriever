@@ -10,6 +10,7 @@ public class EditMonitorRulePanel extends BaseMonitorRulePanel {
 		Model.getInstance().loadMonitorRule(theRulePid, new IAsyncLoadCallback<BaseGMonitorRule>(){
 			@Override
 			public void onSuccess(BaseGMonitorRule theResult) {
+				// TODO: clone this so that changes don't affect the cached version in memory until we save
 				setRule(theResult);
 			}});
 		

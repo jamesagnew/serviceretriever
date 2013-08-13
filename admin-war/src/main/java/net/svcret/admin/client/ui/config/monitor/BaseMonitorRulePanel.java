@@ -3,10 +3,12 @@ package net.svcret.admin.client.ui.config.monitor;
 import static net.svcret.admin.client.AdminPortal.*;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.MyResources;
+import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.EditableField;
 import net.svcret.admin.client.ui.components.HtmlH1;
@@ -16,6 +18,8 @@ import net.svcret.admin.client.ui.components.PButtonCell;
 import net.svcret.admin.client.ui.components.PCellTable;
 import net.svcret.admin.client.ui.components.PSelectionCell;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
+import net.svcret.admin.client.ui.components.VersionPickerPanel;
+import net.svcret.admin.client.ui.components.VersionPickerPanel.ChangeListener;
 import net.svcret.admin.client.ui.config.auth.DomainTreePanel.ITreeStatusModel;
 import net.svcret.admin.client.ui.config.svcver.NullColumn;
 import net.svcret.admin.shared.HtmlUtil;
@@ -26,6 +30,7 @@ import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.BaseGMonitorRule;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.GDomain;
@@ -54,6 +59,7 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.Label;
@@ -82,6 +88,10 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 	private ListDataProvider<DtoMonitorRuleActiveCheck> myActiveChecksDataProvider;
 	private FlowPanel myPassiveAppliesToOuterPanel;
 	private GDomainList myDomainList;
+	private ListBox myActiveAddMessagePickerBox;
+	private HTML myActiveAddMessagePickerDescription;
+	private PButton myAddActiveCheckButton;
+	private Long myActiveSelectedServiceVersionPid;
 
 	public BaseMonitorRulePanel() {
 		initTopPanel();
@@ -323,9 +333,98 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 
 		contentPanel.add(new HtmlH1("Add Check"));
 		
+		final VersionPickerPanel versionPicker = new VersionPickerPanel(myDomainList);
+		contentPanel.add(versionPicker);
+		
+		myActiveAddMessagePickerBox = new ListBox(false);
+		versionPicker.addRow("Message", myActiveAddMessagePickerBox);
+		myActiveAddMessagePickerDescription = versionPicker.addDescription("");
+		
+		myAddActiveCheckButton = new PButton(AdminPortal.IMAGES.iconAdd(),AdminPortal.MSGS.actions_Add());
+		contentPanel.add(myAddActiveCheckButton);
+		
+		myAddActiveCheckButton.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				long messagePid = Long.parseLong(myActiveAddMessagePickerBox.getValue(myActiveAddMessagePickerBox.getSelectedIndex()));
+				String messageDesc = myActiveAddMessagePickerBox.getItemText(myActiveAddMessagePickerBox.getSelectedIndex());
+				DtoMonitorRuleActiveCheck check = new DtoMonitorRuleActiveCheck();
+				check.setCheckFrequencyNum(1);
+				check.setCheckFrequencyUnit(ThrottlePeriodEnum.MINUTE);
+				check.setExpectResponseType(ResponseTypeEnum.SUCCESS);
+				check.setMessagePid(messagePid);
+				check.setMessageDescription(messageDesc);
+				check.setServiceVersionPid(myActiveSelectedServiceVersionPid);
+				((DtoMonitorRuleActive)myRule).getCheckList().add(check);
+				initActiveValues((DtoMonitorRuleActive) myRule);
+			}
+		});
+		
+		
+		updateActiveAddMessagePickerBox(versionPicker);
+		versionPicker.addVersionChangeHandler(new ChangeListener() {
+			@Override
+			public void onChange(Long theSelectedPid) {
+				updateActiveAddMessagePickerBox(versionPicker);
+			}
+		});
+			
+	}
+
+	private void updateActiveAddMessagePickerBox(final VersionPickerPanel theVersionPicker) {
+		final Long versionPid = theVersionPicker.getSelectedVersionPid();
+		myActiveSelectedServiceVersionPid = versionPid;
+		if (versionPid == null) {
+			myActiveAddMessagePickerDescription.setHTML("Select a service with at least one version, then select a message");
+			myActiveAddMessagePickerBox.clear();
+			myAddActiveCheckButton.setEnabled(false);
+			return;
+		}
+		
+		myActiveAddMessagePickerDescription.setHTML("Loading messages...");
+		AdminPortal.MODEL_SVC.loadLibraryMessagesForServiveVersion(versionPid, new AsyncCallback<Collection<DtoLibraryMessage>>() {
+			@Override
+			public void onFailure(Throwable theCaught) {
+				Model.handleFailure(theCaught);
+			}
+
+			@Override
+			public void onSuccess(Collection<DtoLibraryMessage> theResult) {
+				Long foundVersionPid = theVersionPicker.getSelectedVersionPid();
+				if (!versionPid.equals(foundVersionPid)) {
+					return;
+				}
+				
+				myActiveAddMessagePickerBox.clear();
+				if (theResult.isEmpty()) {
+					handleActiveAddMessagePickerBoxChange(versionPid);
+					return;
+				}
+				
+				for (DtoLibraryMessage next : theResult) {
+					myActiveAddMessagePickerBox.addItem(next.getDescription(), next.getPid().toString());
+				}
+			
+				if (myActiveAddMessagePickerBox.getItemCount()>0) {
+					myActiveAddMessagePickerBox.setSelectedIndex(0);
+				}
+				handleActiveAddMessagePickerBoxChange(versionPid);
+			}
+
+		});
 		
 	}
 
+	private void handleActiveAddMessagePickerBoxChange(long versionPid) {
+		boolean enabled = myActiveAddMessagePickerBox.getItemCount()>0;
+		myAddActiveCheckButton.setEnabled(enabled);
+		if (enabled) {
+			myActiveAddMessagePickerDescription.setHTML("");
+		}else {
+			myActiveAddMessagePickerDescription.setHTML("This version has no messages in the <a href=\"" + NavProcessor.getTokenServiceVersionMessageLibrary(true,versionPid)+"\">message library</a> for this service version. Add a message before adding active monitor checks for this version to this rule.");
+		}
+	}
+	
 	private void initPassiveCriteriaPanel() {
 
 		Label titleLabel = new Label("Passive Rule Criteria");

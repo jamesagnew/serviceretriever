@@ -50,6 +50,16 @@ public abstract class BaseMessageLibraryTablePanel extends FlowPanel {
 		pager.setPageSize(5);
 		add(pager);
 
+		Column<DtoLibraryMessage, String> editColumn = new NullColumn<DtoLibraryMessage>(new PButtonCell(IMAGES.iconEdit(), MSGS.actions_Edit()));
+		myGrid.addColumn(editColumn, "");
+		editColumn.setFieldUpdater(new FieldUpdater<DtoLibraryMessage, String>() {
+			@Override
+			public void update(int theIndex, DtoLibraryMessage theObject, String theValue) {
+				History.newItem(NavProcessor.getTokenEditLibraryMessage(true, theObject.getPid()));
+			}
+		});
+		editColumn.setCellStyleNames(CssConstants.PCELLTABLE_ACTION_COLUMN);
+
 		Column<DtoLibraryMessage, String> replayColumn = new NullColumn<DtoLibraryMessage>(new PButtonCell(IMAGES.iconPlay16(), MSGS.actions_Replay()));
 		myGrid.addColumn(replayColumn, "");
 		replayColumn.setFieldUpdater(new FieldUpdater<DtoLibraryMessage, String>() {

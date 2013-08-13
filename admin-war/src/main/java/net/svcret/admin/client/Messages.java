@@ -248,7 +248,7 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	String deleteServiceVersionPanel_Title();
 
 	@DefaultMessage("Domain")
-	String editDomain_Breadcrumb();
+	String name_Domain();
 
 	@DefaultMessage("Edit Monitor Rule")
 	String EditMonitorRule_Breadcrumb();
@@ -593,7 +593,7 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	String recentMessagesGrid_ColMillis();
 
 	@DefaultMessage("Service")
-	String recentMessagesGrid_ColService();
+	String name_Service();
 
 	@DefaultMessage("Time")
 	String recentMessagesGrid_ColTimestamp();
@@ -646,6 +646,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Recent Messages")
 	String serviceVersionRecentMessages_Breadcrumb();
 
+	@DefaultMessage("Version")
+	String name_ServiceVersion();
+	
 	@DefaultMessage("Service Version Status")
 	String serviceVersionStats_Breadcrumb();
 
@@ -739,6 +742,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Recent Transactions")
 	String actions_RecentTransactions();
+
+	@DefaultMessage("Edit Message")
+	String editLibraryMessage_Breadcrumb();
 
 	
 	

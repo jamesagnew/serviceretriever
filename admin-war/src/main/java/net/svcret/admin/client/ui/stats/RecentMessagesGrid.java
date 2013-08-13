@@ -43,7 +43,7 @@ public class RecentMessagesGrid extends FlowPanel {
 		myGrid.setText(0, COL_MILLIS, MSGS.recentMessagesGrid_ColMillis());
 		myGrid.setText(0, COL_AUTHORIZATION, MSGS.recentMessagesGrid_ColAuthorization());
 		myGrid.setText(0, COL_USER, MSGS.recentMessagesGrid_ColUser());
-		myGrid.setText(0, COL_DOMAIN, MSGS.recentMessagesGrid_ColService());
+		myGrid.setText(0, COL_DOMAIN, MSGS.name_Service());
 
 		for (int row = 1, index = theList.size() - 1; index >= 0; index--, row++) {
 			final GRecentMessage next = theList.get(index);
