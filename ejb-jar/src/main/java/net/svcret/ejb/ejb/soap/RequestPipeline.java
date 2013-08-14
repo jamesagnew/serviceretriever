@@ -130,7 +130,7 @@ class RequestPipeline {
 			}
 
 		} catch (XMLStreamException e) {
-			throw new ProcessingException(e);
+			throw new ProcessingException("Failed to parse input message - XML Stream problem: " + e.getMessage(), e);
 		}
 
 		try {

@@ -9,10 +9,16 @@ public interface IScheduler {
 
 	void collapseStats();
 
-	void monitorCheck();
+	void monitorRunPassiveChecks();
 
 	void flushInMemoryStatisticsAndTransactionsSecondary();
 
 	void flushInMemoryStatisticsAndTransactionsPrimary();
+
+	void monitorActiveChecks();
+
+	void flushInMemoryStatistics();
+
+	void flushInMemoryStatisticsUnlessItHasHappenedVeryRecently();
 
 }

@@ -10,5 +10,7 @@ public interface MyCss extends CssResource {
 	String monitorRuleActiveTargetValue();
 
 	String dashboardReloadButton();
+
+	String dashboardTimeSinceLastUpdateLabel();
 	
 }

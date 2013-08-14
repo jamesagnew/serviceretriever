@@ -8,14 +8,13 @@ import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.MyResources;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.EmptyCell;
-import net.svcret.admin.client.ui.components.LoadingSpinner;
-import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.dash.model.DashModelDomain;
 import net.svcret.admin.client.ui.dash.model.DashModelLoading;
 import net.svcret.admin.client.ui.dash.model.DashModelService;
 import net.svcret.admin.client.ui.dash.model.DashModelServiceMethod;
 import net.svcret.admin.client.ui.dash.model.DashModelServiceVersion;
 import net.svcret.admin.client.ui.dash.model.IDashModel;
+import net.svcret.admin.client.ui.stats.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
@@ -25,7 +24,6 @@ import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.HierarchyEnum;
 
-import com.google.gwt.dom.client.Style.Cursor;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
@@ -58,6 +56,9 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 	private Timer myTimer;
 	private boolean myUpdating;
 	private Image myReloadButton;
+	private Label myTimeSinceLastUpdateLabel;
+	private Date myLastUpdate;
+	private Timer myLastUpdateTimer;
 
 	public ServiceDashboardPanel() {
 		Model.getInstance().flushStats();
@@ -81,6 +82,10 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 		titlePanel.add(myLastUpdateLabel);
 		titlePanel.setCellVerticalAlignment(myLastUpdateLabel, HasVerticalAlignment.ALIGN_MIDDLE);
 
+		myTimeSinceLastUpdateLabel = new Label();
+		myTimeSinceLastUpdateLabel.addStyleName(MyResources.CSS.dashboardTimeSinceLastUpdateLabel());
+		titlePanel.add(myTimeSinceLastUpdateLabel);
+		
 		myReloadButton = new Image(AdminPortal.IMAGES.iconReload16());
 		myReloadButton.addStyleName(MyResources.CSS.dashboardReloadButton());
 		myReloadButton.addClickHandler(new ClickHandler() {
@@ -138,6 +143,16 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 		};
 		myTimer.scheduleRepeating(30 * 1000);
 
+		myLastUpdateTimer = new Timer() {
+
+			@Override
+			public void run() {
+				if (myLastUpdate != null) {
+					myTimeSinceLastUpdateLabel.setText(DateUtil.formatTimeElapsedForLastInvocation(myLastUpdate, true));
+				}
+			}};
+		myLastUpdateTimer.scheduleRepeating(1000);
+		
 	}
 
 	public void updateView() {
@@ -213,6 +228,7 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 		} else {
 			myReloadButton.setResource(AdminPortal.IMAGES.iconReload16());
 			myLastUpdateLabel.setText("Updated " + DateTimeFormat.getFormat(PredefinedFormat.TIME_MEDIUM).format(new Date()));
+			myLastUpdate = new Date();
 		}
 	}
 
@@ -350,6 +366,7 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 	@Override
 	public void destroy() {
 		myTimer.cancel();
+		myLastUpdateTimer.cancel();
 	}
 
 }

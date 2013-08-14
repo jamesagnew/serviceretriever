@@ -32,5 +32,15 @@ public class RuleAppliesToTree extends DomainTreePanel {
 		return false;
 	}
 
+	@Override
+	protected boolean isAllowDomainSelection() {
+		return true;
+	}
+
+	@Override
+	protected boolean isAllowServiceSelection() {
+		return true;
+	}
+
 
 }

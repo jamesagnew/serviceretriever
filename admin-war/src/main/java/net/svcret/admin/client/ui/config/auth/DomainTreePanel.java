@@ -28,12 +28,12 @@ public abstract class DomainTreePanel extends FlowPanel {
 	}
 
 	public void setModel(GDomainList theDomainList, ITreeStatusModel theModel) {
-		if (theDomainList==null) {
+		if (theDomainList == null) {
 			throw new NullPointerException("theDomainList");
 		}
 		myDomainList = theDomainList;
 
-		if (theModel==null) {
+		if (theModel == null) {
 			throw new NullPointerException("theModel");
 		}
 		myModel = theModel;
@@ -41,7 +41,11 @@ public abstract class DomainTreePanel extends FlowPanel {
 	}
 
 	protected abstract boolean isShowMethods();
-	
+
+	protected abstract boolean isAllowDomainSelection();
+
+	protected abstract boolean isAllowServiceSelection();
+
 	protected abstract SafeHtml getTextDomainAllServicesCheckbox(int theCount);
 
 	protected abstract SafeHtml getTextMethodCheckbox();
@@ -66,14 +70,15 @@ public abstract class DomainTreePanel extends FlowPanel {
 		}
 	}
 
-	private void repopulateDomain(final GDomain nextDomain, TreeItem domainItem) {
-		if (myModel.isEntireDomainChecked(nextDomain)) {
+	private boolean repopulateDomain(final GDomain nextDomain, TreeItem domainItem) {
+		boolean retVal = false;
+		if (isAllowDomainSelection() && myModel.isEntireDomainChecked(nextDomain)) {
 			while (domainItem.getChildCount() > 0) {
 				domainItem.removeItem(domainItem.getChild(0));
 			}
 		} else {
 			for (int serviceIdx = 0; serviceIdx < nextDomain.getServiceList().size(); serviceIdx++) {
-				repopulateService(nextDomain, domainItem, serviceIdx);
+				retVal |= repopulateService(nextDomain, domainItem, serviceIdx);
 			} // for service
 
 			while ((domainItem.getChildCount()) > nextDomain.getServiceList().size()) {
@@ -81,9 +86,12 @@ public abstract class DomainTreePanel extends FlowPanel {
 			}
 
 		}
+		return retVal;
 	}
 
-	private void repopulateService(final GDomain nextDomain, TreeItem domainItem, int serviceIdx) {
+	private boolean repopulateService(final GDomain nextDomain, TreeItem domainItem, int serviceIdx) {
+		boolean retVal = false;
+		
 		final GService nextService = nextDomain.getServiceList().get(serviceIdx);
 
 		TreeItem serviceItem;
@@ -97,36 +105,39 @@ public abstract class DomainTreePanel extends FlowPanel {
 			serviceItem.setUserObject(nextService);
 			insert(domainItem, serviceIdx + 1, serviceItem);
 
-			CheckBox allServiceVersionsCheckbox = new CheckBox(getTextServiceAllVersionsCheckbox(nextService.getVersionList().size()));
-			allServiceVersionsCheckbox.setStyleName(CssConstants.PERMISSION_TREE_ENTRY_ALL_CHILD_CHECK);
-			// TreeItem allServiceVersions = new
-			// TreeItem(allServiceVersionsCheckbox);
-			//
-			servicePanel.add(allServiceVersionsCheckbox);
+			if (isAllowServiceSelection()) {
+				CheckBox allServiceVersionsCheckbox = new CheckBox(getTextServiceAllVersionsCheckbox(nextService.getVersionList().size()));
+				allServiceVersionsCheckbox.setStyleName(CssConstants.PERMISSION_TREE_ENTRY_ALL_CHILD_CHECK);
+				// TreeItem allServiceVersions = new
+				// TreeItem(allServiceVersionsCheckbox);
+				//
+				servicePanel.add(allServiceVersionsCheckbox);
 
-			allServiceVersionsCheckbox.setValue(myModel.isEntireServiceChecked(nextDomain, nextService));
+				boolean checked = myModel.isEntireServiceChecked(nextDomain, nextService);
+				retVal |= checked;
+				allServiceVersionsCheckbox.setValue(checked);
 
-			allServiceVersionsCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
-				@Override
-				public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
-					myModel.setEntireServiceChecked(nextDomain, nextService, theEvent.getValue());
-					repopulateTree();
-				}
-			});
+				allServiceVersionsCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+					@Override
+					public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
+						myModel.setEntireServiceChecked(nextDomain, nextService, theEvent.getValue());
+						repopulateTree();
+					}
+				});
+			}
 
 		} else {
 			serviceItem = domainItem.getChild(serviceIdx);
 		}
 
-		boolean allowAllSvcVer = myModel.isEntireServiceChecked(nextDomain, nextService);
-		if (allowAllSvcVer) {
+		if (isAllowServiceSelection() && myModel.isEntireServiceChecked(nextDomain, nextService)) {
 			while (serviceItem.getChildCount() > 0) {
 				serviceItem.removeItem(serviceItem.getChild(0));
 			}
 		} else {
 
 			for (int svcVerIdx = 0; svcVerIdx < nextService.getVersionList().size(); svcVerIdx++) {
-				repopulateServiceVersion(nextDomain,nextService, serviceItem, svcVerIdx);
+				retVal |= repopulateServiceVersion(nextDomain, nextService, serviceItem, svcVerIdx);
 			} // for service version
 
 			while ((serviceItem.getChildCount()) > nextService.getVersionList().size()) {
@@ -134,9 +145,17 @@ public abstract class DomainTreePanel extends FlowPanel {
 			}
 
 		}
+		
+		if (retVal) {
+			serviceItem.setState(true);
+		}
+		
+		return retVal;
 	}
 
-	private void repopulateServiceVersion(final GDomain nextDomain, final GService nextService, TreeItem serviceItem, int svcVerIdx) {
+	private boolean repopulateServiceVersion(final GDomain nextDomain, final GService nextService, TreeItem serviceItem, int svcVerIdx) {
+		boolean retVal = false;
+		
 		final BaseGServiceVersion nextSvcVer = nextService.getVersionList().get(svcVerIdx);
 
 		TreeItem svcVerItem;
@@ -156,7 +175,9 @@ public abstract class DomainTreePanel extends FlowPanel {
 			// TreeItem allsvcVerVersions = new TreeItem(allMethodsCheckbox);
 			// svcVerItem.addItem(allsvcVerVersions);
 
-			allMethodsCheckbox.setValue(myModel.isEntireServiceVersionChecked(nextDomain, nextService, nextSvcVer));
+			boolean checked = myModel.isEntireServiceVersionChecked(nextDomain, nextService, nextSvcVer);
+			retVal |= checked;
+			allMethodsCheckbox.setValue(checked);
 
 			allMethodsCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
 				@Override
@@ -176,7 +197,7 @@ public abstract class DomainTreePanel extends FlowPanel {
 			}
 		} else {
 			for (int verMethodIdx = 0; verMethodIdx < nextSvcVer.getMethodList().size(); verMethodIdx++) {
-				repopulateServiceVersionMethod(nextDomain, nextService, nextSvcVer, svcVerItem, verMethodIdx);
+				retVal |= repopulateServiceVersionMethod(nextDomain, nextService, nextSvcVer, svcVerItem, verMethodIdx);
 			} // for service version method
 
 			while ((svcVerItem.getChildCount()) > nextSvcVer.getMethodList().size()) {
@@ -184,9 +205,16 @@ public abstract class DomainTreePanel extends FlowPanel {
 			}
 
 		}
+		
+		if (retVal) {
+			svcVerItem.setState(true);
+		}
+		
+		return retVal;
 	}
 
-	private void repopulateServiceVersionMethod(final GDomain theDomain, final GService theService, final BaseGServiceVersion nextSvcVer, TreeItem svcVerItem, int verMethodIdx) {
+	private boolean repopulateServiceVersionMethod(final GDomain theDomain, final GService theService, final BaseGServiceVersion nextSvcVer, TreeItem svcVerItem, int verMethodIdx) {
+		boolean retVal = false;
 		final GServiceMethod nextMethod = nextSvcVer.getMethodList().get(verMethodIdx);
 
 		TreeItem methodItem;
@@ -200,12 +228,15 @@ public abstract class DomainTreePanel extends FlowPanel {
 
 			Label tabLabel = new Label("Method: " + nextMethod.getName());
 			tabLabel.setStyleName(CssConstants.PERMISSION_TREE_ENTRY);
-			
+
 			CheckBox nextMethodsCheckbox = new CheckBox(getTextMethodCheckbox());
 			nextMethodsCheckbox.setStyleName(CssConstants.PERMISSION_TREE_ENTRY_ALL_CHILD_CHECK);
 			methodPanel.add(nextMethodsCheckbox);
 
-			nextMethodsCheckbox.setValue(myModel.isMethodChecked(theDomain, theService, nextSvcVer, nextMethod));
+			boolean checked = myModel.isMethodChecked(theDomain, theService, nextSvcVer, nextMethod);
+			retVal |= checked;
+			nextMethodsCheckbox.setValue(checked);
+			
 			nextMethodsCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
 				@Override
 				public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
@@ -215,6 +246,7 @@ public abstract class DomainTreePanel extends FlowPanel {
 			});
 
 		}
+		return retVal;
 	}
 
 	private void repopulateTree() {
@@ -236,36 +268,40 @@ public abstract class DomainTreePanel extends FlowPanel {
 				retVal.setUserObject(nextDomain);
 				insert(theRoot, domainIdx, retVal);
 
-				CheckBox allServicesCheckbox = new CheckBox(getTextDomainAllServicesCheckbox(nextDomain.getServiceList().size()));
-				allServicesCheckbox.setStyleName(CssConstants.PERMISSION_TREE_ENTRY_ALL_CHILD_CHECK);
-				widget.add(allServicesCheckbox);
+				if (isAllowDomainSelection()) {
+					CheckBox allServicesCheckbox = new CheckBox(getTextDomainAllServicesCheckbox(nextDomain.getServiceList().size()));
+					allServicesCheckbox.setStyleName(CssConstants.PERMISSION_TREE_ENTRY_ALL_CHILD_CHECK);
+					widget.add(allServicesCheckbox);
 
-				// TreeItem allServices = new TreeItem(allServicesCheckbox);
-				// retVal.addItem(allServices);
+					// TreeItem allServices = new TreeItem(allServicesCheckbox);
+					// retVal.addItem(allServices);
 
-				allServicesCheckbox.setValue(myModel.isEntireDomainChecked(nextDomain));
+					allServicesCheckbox.setValue(myModel.isEntireDomainChecked(nextDomain));
 
-				allServicesCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
-					@Override
-					public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
-						myModel.setEntireDomainChecked(nextDomain, theEvent.getValue());
-						repopulateTree();
-					}
-				});
+					allServicesCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+						@Override
+						public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
+							myModel.setEntireDomainChecked(nextDomain, theEvent.getValue());
+							repopulateTree();
+						}
+					});
+				}
 
 			} else {
 				// Entry already exists
 				retVal = theRoot.getItem(domainIdx);
 			}
 
-			repopulateDomain(nextDomain, retVal);
+			boolean foundValues = repopulateDomain(nextDomain, retVal);
+			if (foundValues) {
+				retVal.setState(true);
+			}
 
 		}// for domain
 
 		while (theRoot.getItemCount() - 1 > myDomainList.size()) {
 			theRoot.removeItem(theRoot.getItem(myDomainList.size() - 1));
 		}
-
 
 	}
 
@@ -286,7 +322,6 @@ public abstract class DomainTreePanel extends FlowPanel {
 		void setEntireServiceVersionChecked(GDomain theDomain, GService theService, BaseGServiceVersion theServiceVersion, boolean theValue);
 
 		void setMethodChecked(GDomain theDomain, GService theService, BaseGServiceVersion theSvcVer, GServiceMethod theMethod, Boolean theValue);
-
 
 	}
 

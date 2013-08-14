@@ -182,6 +182,10 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("< 1min")
 	String dashboard_LastInvocUnder60Secs();
 
+	@DefaultMessage("{0,number} secs ago")
+	@AlternateMessage({ "one", "1 sec ago" })
+	String dashboard_LastInvocExactUnder60Secs(@PluralCount(DefaultRule_en.class) int theSecs);
+
 	@DefaultMessage("Secured")
 	String dashboard_SecuredFully();
 

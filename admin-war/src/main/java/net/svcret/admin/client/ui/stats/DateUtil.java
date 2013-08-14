@@ -10,25 +10,38 @@ import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 public class DateUtil {
 
 	private static DateTimeFormat ourDateFormat = DateTimeFormat.getFormat(PredefinedFormat.DATE_TIME_LONG);
-	
+
 	public static final long MILLIS_PER_MINUTE = 60 * 1000L;
 	public static final long MILLIS_PER_HOUR = 60 * MILLIS_PER_MINUTE;
 	public static final long MILLIS_PER_DAY = MILLIS_PER_HOUR * 24;
+	public static final long MILLIS_PER_SECOND = 1000L;
 
 	public static String formatTime(Date theTime) {
-		if (theTime==null) {
+		if (theTime == null) {
 			return "";
 		}
 		return ourDateFormat.format(theTime);
 	}
 
 	public static String formatTimeElapsedForLastInvocation(Date theLastInvoc) {
+		return formatTimeElapsedForLastInvocation(theLastInvoc, false);
+	}
+
+	public static String formatTimeElapsedForLastInvocation(Date theLastInvoc, boolean theExactForUnder60Secs) {
 		long age = theLastInvoc != null ? System.currentTimeMillis() - theLastInvoc.getTime() : 0;
 		String text;
 		if (theLastInvoc == null) {
 			text = MSGS.dashboard_LastInvocNever();
 		} else if (age < MILLIS_PER_MINUTE) {
-			text = (MSGS.dashboard_LastInvocUnder60Secs());
+			if (theExactForUnder60Secs) {
+				int ageSecs = (int) (age / MILLIS_PER_SECOND);
+				if (ageSecs < 1) {
+					ageSecs = 1;
+				}
+				text = (MSGS.dashboard_LastInvocExactUnder60Secs(ageSecs));
+			} else {
+				text = (MSGS.dashboard_LastInvocUnder60Secs());
+			}
 		} else if (age < MILLIS_PER_HOUR) {
 			text = (MSGS.dashboard_LastInvocUnder1Hour((int) (age / MILLIS_PER_MINUTE)));
 		} else if (age < MILLIS_PER_DAY) {
@@ -36,7 +49,7 @@ public class DateUtil {
 		} else {
 			text = (MSGS.dashboard_LastInvocOver1Day((int) (age / MILLIS_PER_DAY)));
 		}
-		
+
 		return text;
 	}
 
@@ -54,7 +67,7 @@ public class DateUtil {
 		} else {
 			text = (MSGS.dashboard_TransactionDateOver1Day(theTransactionTime, (int) (age / MILLIS_PER_DAY)));
 		}
-		
+
 		return text;
 
 	}

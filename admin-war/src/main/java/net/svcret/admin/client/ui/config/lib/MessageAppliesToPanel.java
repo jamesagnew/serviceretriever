@@ -47,11 +47,7 @@ public class MessageAppliesToPanel extends DomainTreePanel {
 
 			@Override
 			public void setEntireDomainChecked(GDomain theDomain, boolean theValue) {
-				if (theValue) {
-					theMessage.getAppliesToServiceVersionPids().addAll(theDomain.getAllServiceVersionPids());
-				} else {
-					theMessage.getAppliesToServiceVersionPids().removeAll(theDomain.getAllServiceVersionPids());
-				}
+				throw new UnsupportedOperationException();
 			}
 
 			@Override
@@ -66,12 +62,14 @@ public class MessageAppliesToPanel extends DomainTreePanel {
 
 			@Override
 			public boolean isEntireServiceChecked(GDomain theDomain, GService theService) {
-				return theMessage.getAppliesToServiceVersionPids().containsAll(theService.getAllServiceVersionPids());
+				return false;
+//				return theMessage.getAppliesToServiceVersionPids().containsAll(theService.getAllServiceVersionPids());
 			}
 
 			@Override
 			public boolean isEntireDomainChecked(GDomain theDomain) {
-				return theMessage.getAppliesToServiceVersionPids().containsAll(theDomain.getAllServiceVersionPids());
+				return false;
+//				return theMessage.getAppliesToServiceVersionPids().containsAll(theDomain.getAllServiceVersionPids());
 			}
 		});
 	}
@@ -94,6 +92,16 @@ public class MessageAppliesToPanel extends DomainTreePanel {
 	@Override
 	protected SafeHtml getTextServiceVersionAllMethodsCheckbox(int theCount) {
 		return MSGS.libraryMessageAppliesToPanel_TreeAllMethodsCheckbox();
+	}
+
+	@Override
+	protected boolean isAllowDomainSelection() {
+		return false;
+	}
+
+	@Override
+	protected boolean isAllowServiceSelection() {
+		return false;
 	}
 
 }

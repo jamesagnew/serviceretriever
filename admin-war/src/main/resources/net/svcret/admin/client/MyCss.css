@@ -11,6 +11,13 @@
 	border: 1px solid white;
 }
 
+.dashboardTimeSinceLastUpdateLabel {
+	width: 60px;
+	font-size: 0.7em;	
+	margin-left: 10px;
+	margin-top: 8px;
+}
+
 .monitorRuleActiveTargetKey {
 	font-size: 0.8em;
 	color: #808080;

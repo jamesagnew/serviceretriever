@@ -31,4 +31,14 @@ public class PermissionsPanelTree extends DomainTreePanel {
 		return true;
 	}
 
+	@Override
+	protected boolean isAllowDomainSelection() {
+		return true;
+	}
+
+	@Override
+	protected boolean isAllowServiceSelection() {
+		return true;
+	}
+
 }

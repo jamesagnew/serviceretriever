@@ -42,6 +42,7 @@ import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IRuntimeStatus;
+import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.api.IServiceInvokerSoap11;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.ejb.AdminServiceBean.IWithStats;
@@ -218,6 +219,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		mySvc.setInvokerSoap11(mySoapInvoker);
 		mySvc.setSecuritySvc(mySecSvc);
 		mySvc.setMonitorSvc(myMonitorSvc);
+		mySvc.setSchedulerServiceForTesting(mock(IScheduler.class));
 
 		myTransactionLogSvc = new TransactionLoggerBean();
 		myTransactionLogSvc.setDao(myDao);
@@ -1316,6 +1318,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 				sSvc.setRuntimeStatusSvc(rs);
 
 				RuntimeStatusBean statsSvc = new RuntimeStatusBean();
+				sSvc.setSchedulerServiceForTesting(mock(IScheduler.class));
 				statsSvc.setDao(persSvc);
 
 				sSvc.loadModelUpdate(myReq);

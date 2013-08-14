@@ -25,9 +25,13 @@ public class SchedulerEventListenerServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest theReq, HttpServletResponse theResp) throws ServletException, IOException {
 		long start = System.currentTimeMillis();
 
-		ourLog.debug("Received flush request");
-		
-		myScheduler.flushInMemoryStatisticsAndTransactionsSecondary();
+		if ("1".equals(theReq.getAttribute("statsonly"))) {
+			ourLog.debug("Received flush request for stats");
+			myScheduler.flushInMemoryStatistics();
+		} else {
+			ourLog.debug("Received flush request for everything");
+			myScheduler.flushInMemoryStatisticsAndTransactionsSecondary();
+		}
 
 		long delay = System.currentTimeMillis() - start;
 
