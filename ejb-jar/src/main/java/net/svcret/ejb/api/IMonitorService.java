@@ -25,5 +25,7 @@ public interface IMonitorService {
 	void runActiveChecks();
 
 	Future<Void> runActiveCheck(PersMonitorRuleActiveCheck theCheck);
+
+	Future<Void> runActiveCheckInNewTransaction(PersMonitorRuleActiveCheck theCheck);
 	
 }

@@ -149,7 +149,7 @@ public abstract class BaseDashModel implements IDashModel {
 			GWT.log(new Date() + " - No 60 minutes data");
 			return null;
 		}
-		String text = "Avg:" + theAvgValue + " Max:" + theMaxValue + " " + theUnitDesc;
+		String text = "Avg:" + theAvgValue + " Max:" + theMaxValue + "" + theUnitDesc;
 
 		List<Long> dates = new ArrayList<Long>();
 		long nextDate = theStatsInitialized.getTime() - (60 * 60 * 1000L);
@@ -223,7 +223,7 @@ public abstract class BaseDashModel implements IDashModel {
 			return null;
 		}
 
-		String text = "Avg:" + theAvgValue + " Max:" + theMaxValue + " " + theUnitDesc;
+		String text = "Avg:" + theAvgValue + " Max:" + theMaxValue + "" + theUnitDesc;
 
 		List<Long> dates = new ArrayList<Long>();
 		long nextDate = theStatsInitialized.getTime() - (60 * 60 * 1000L);

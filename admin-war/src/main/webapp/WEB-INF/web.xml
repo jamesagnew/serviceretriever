@@ -8,6 +8,16 @@
     <servlet-class>net.svcret.admin.server.rpc.ModelUpdateServiceImpl</servlet-class>
   </servlet>
 
+  <servlet>
+    <servlet-name>resourceServlet</servlet-name>
+    <servlet-class>net.svcret.admin.server.rpc.ResourceServlet</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>resourceServlet</servlet-name>
+    <url-pattern>/resources/*</url-pattern>
+  </servlet-mapping>
+
   <servlet-mapping>
     <servlet-name>modelUpdateServlet</servlet-name>
     <url-pattern>/AdminPortal/modelupdate</url-pattern>

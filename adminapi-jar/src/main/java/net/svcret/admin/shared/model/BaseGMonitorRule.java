@@ -50,4 +50,13 @@ public abstract class BaseGMonitorRule extends BaseGObject<BaseGMonitorRule> {
 		myName = theName;
 	}
 
+	public void setNotifyEmailContacts(Set<String> theEmails) {
+		if (theEmails==null) {
+			throw new NullPointerException();
+		}
+		
+		getNotifyEmailContacts().clear();
+		getNotifyEmailContacts().addAll(theEmails);
+	}
+
 }

@@ -125,4 +125,29 @@ public class VersionPickerPanel extends TwoColumnGrid {
 	public interface ChangeListener {
 		void onChange(Long theSelectedPid);
 	}
+
+	public void tryToSelectServiceVersion(long theSvcVerPid) {
+		Long domainPid = myDomainList.getDomainPidWithServiceVersion(theSvcVerPid);
+		Long servicePid = myDomainList.getServicePidWithServiceVersion(theSvcVerPid);
+		if (domainPid!=null && servicePid!=null) {
+			for (int i = 0; i < myDomainBox.getItemCount(); i++) {
+				if (myDomainBox.getValue(i).equals(domainPid.toString())) {
+					myDomainBox.setSelectedIndex(i);
+				}
+			}
+			for (int i = 0; i < myServiceBox.getItemCount(); i++) {
+				if (myServiceBox.getValue(i).equals(servicePid.toString())) {
+					myServiceBox.setSelectedIndex(i);
+				}
+			}
+			for (int i = 0; i < myVersionBox.getItemCount(); i++) {
+				if (myVersionBox.getValue(i).equals(Long.toString(theSvcVerPid))) {
+					myVersionBox.setSelectedIndex(i);
+					handleVersionChange();
+				}
+			}
+		}
+		
+		
+	}
 }

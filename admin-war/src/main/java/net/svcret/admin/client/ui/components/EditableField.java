@@ -5,10 +5,18 @@ import java.util.List;
 
 import net.svcret.admin.shared.util.StringUtil;
 
+import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.BlurEvent;
 import com.google.gwt.event.dom.client.BlurHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.DomEvent;
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.dom.client.KeyDownEvent;
+import com.google.gwt.event.dom.client.KeyDownHandler;
+import com.google.gwt.event.dom.client.KeyPressEvent;
+import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -65,6 +73,16 @@ public class EditableField extends FlowPanel implements HasValue<String> {
 				myEditorComponent = new TextBox();
 			}
 
+			myEditorComponent.addKeyDownHandler(new KeyDownHandler() {
+				@Override
+				public void onKeyDown(KeyDownEvent theEvent) {
+					if (!myMultiline && theEvent.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
+						myEditorComponent.setFocus(false);
+						setLabelMode();
+					}
+				}
+			});
+			
 			myEditorComponent.addValueChangeHandler(new ValueChangeHandler<String>() {
 				@Override
 				public void onValueChange(ValueChangeEvent<String> theEvent) {
@@ -122,7 +140,7 @@ public class EditableField extends FlowPanel implements HasValue<String> {
 		}
 
 		this.add(myLabel);
-		if (myValue == null) {
+		if (StringUtil.isBlank(myValue)) {
 			myLabel.setText(myEmptyTextToDisplay);
 			myLabel.addStyleName(CssConstants.EDITABLE_LABEL_NOVALUE);
 		} else {
@@ -198,6 +216,10 @@ public class EditableField extends FlowPanel implements HasValue<String> {
 	@Override
 	protected void onLoad() {
 		setLabelMode();
+	}
+
+	public String getValueOrBlank() {
+		return getValue() != null ? getValue() : "";
 	}
 
 }

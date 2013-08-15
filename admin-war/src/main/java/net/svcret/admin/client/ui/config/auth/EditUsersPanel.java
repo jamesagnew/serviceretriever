@@ -129,6 +129,15 @@ public class EditUsersPanel extends FlowPanel {
 		int usernameColIdx = myTable.getColumnCount();
 		myTable.addColumn(usernameCol, MSGS.editUsersPanel_ColumnUsername());
 
+		// Description
+		
+		Column<GUser, SafeHtml> descriptionCol = new Column<GUser, SafeHtml>(new SafeHtmlCell()){
+			@Override
+			public SafeHtml getValue(GUser theObject) {
+				return SafeHtmlUtils.fromString(StringUtil.defaultString(theObject.getDescription()));
+			}};
+		myTable.addColumn(descriptionCol, MSGS.editUsersPanel_ColumnDescription());
+		
 		// Last Access
 		
 		Column<GUser, SafeHtml> lastAccessCol = new Column<GUser, SafeHtml>(new SafeHtmlCell()){
@@ -172,7 +181,7 @@ public class EditUsersPanel extends FlowPanel {
 			}
 		});
 		myTable.getColumn(usernameColIdx).setSortable(true);
-		columnSortHandler.setComparator(usernameCol, new Comparator<GUser>() {
+		columnSortHandler.setComparator(descriptionCol, new Comparator<GUser>() {
 			@Override
 			public int compare(GUser theO1, GUser theO2) {
 				return StringUtil.compare(theO1.getUsername(), theO2.getUsername());
@@ -219,7 +228,7 @@ public class EditUsersPanel extends FlowPanel {
 		});
 		
 		myTable.addColumnSortHandler(columnSortHandler);
-		myTable.getColumnSortList().push(usernameCol);
+		myTable.getColumnSortList().push(descriptionCol);
 		
 		HorizontalPanel addPanel = new HorizontalPanel();
 		contentPanel.add(addPanel);

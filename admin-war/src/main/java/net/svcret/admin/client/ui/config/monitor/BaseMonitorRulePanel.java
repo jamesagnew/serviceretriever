@@ -4,7 +4,10 @@ import static net.svcret.admin.client.AdminPortal.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.MyResources;
@@ -33,6 +36,7 @@ import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckList;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GMonitorRuleList;
@@ -121,12 +125,39 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		contentPanel.add(grid);
 
 		myNotificationEditor = new EditableField();
+		myNotificationEditor.setMultiline(true);
 		myNotificationEditor.setWidth("200px");
 		myNotificationEditor.setEmptyTextToDisplay("No addresses defined");
+		myNotificationEditor.addValueChangeHandler(new ValueChangeHandler<String>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<String> theEvent) {
+				Set<String> emails = new TreeSet<String>();
+				for (String next : myNotificationEditor.getValueOrBlank().split(",| ")) {
+					if (next.contains("@")) {
+						emails.add(next.trim());
+					}
+				}
+				myRule.setNotifyEmailContacts(emails);
+				updateNotificationEditor();
+			}
+		});
 
 		grid.addRow("Notify Email(s)", myNotificationEditor);
 		grid.addDescription("Enter any emails here to notify when the rule fires");
 
+	}
+
+	private void updateNotificationEditor() {
+		StringBuilder b = new StringBuilder();
+		
+		for (String next : myRule.getNotifyEmailContacts()) {
+			if (b.length() > 0) {
+				b.append("\n");
+			}
+			b.append(next);
+		}
+		
+		myNotificationEditor.setValue(b.toString());
 	}
 
 	private void initAppliesToPanel() {
@@ -168,10 +199,11 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		
 		Column<DtoMonitorRuleActiveCheck, String> removeColumn = new NullColumn<DtoMonitorRuleActiveCheck>(new PButtonCell(IMAGES.iconRemove(), MSGS.actions_Remove()));
 		grid.addColumn(removeColumn, "");
+		final DtoMonitorRuleActiveCheckList checkList = ((DtoMonitorRuleActive)myRule).getCheckList();
 		removeColumn.setFieldUpdater(new FieldUpdater<DtoMonitorRuleActiveCheck, String>() {
 			@Override
 			public void update(int theIndex, DtoMonitorRuleActiveCheck theObject, String theValue) {
-				((DtoMonitorRuleActive)myRule).getCheckList().remove(theObject);
+				checkList.remove(theObject);
 				initActiveValues((DtoMonitorRuleActive) myRule);
 			}
 		});
@@ -355,11 +387,15 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 				check.setMessagePid(messagePid);
 				check.setMessageDescription(messageDesc);
 				check.setServiceVersionPid(myActiveSelectedServiceVersionPid);
-				((DtoMonitorRuleActive)myRule).getCheckList().add(check);
+				checkList.add(check);
 				initActiveValues((DtoMonitorRuleActive) myRule);
 			}
 		});
 		
+		if (checkList.size() > 0) {
+			long svcVerPid=checkList.get(checkList.size()-1).getServiceVersionPid();
+			versionPicker.tryToSelectServiceVersion(svcVerPid);
+		}
 		
 		updateActiveAddMessagePickerBox(versionPicker);
 		versionPicker.addVersionChangeHandler(new ChangeListener() {
@@ -626,6 +662,11 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 				myDomainList = theResult;
 				myRule = theRule;
 
+				myRuleNameTextBox.setText(myRule.getName());
+				myRuleActiveCheckBox.setValue(myRule.isActive());
+				
+				updateNotificationEditor();
+				
 				switch (theRule.getRuleType()) {
 				case PASSIVE:
 					initPassiveCriteriaPanel();
@@ -659,9 +700,6 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 			myPassiveLatencyOverMinsEnabledCheck.setValue(theRule.getPassiveFireForBackingServiceLatencySustainTimeMins() != null);
 		}
 
-		myRuleActiveCheckBox.setValue(theRule.isActive());
-
-		myRuleNameTextBox.setValue(theRule.getName());
 		myPassiveUrlUnavailableCheckbox.setValue(theRule.isPassiveFireIfAllBackingUrlsAreUnavailable() || theRule.isPassiveFireIfSingleBackingUrlIsUnavailable());
 		if (theRule.isPassiveFireIfAllBackingUrlsAreUnavailable()) {
 			myPassiveUrlUnavailableTypeCombo.setSelectedIndex(1);

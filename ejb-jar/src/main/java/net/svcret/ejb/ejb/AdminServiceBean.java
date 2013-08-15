@@ -1,5 +1,6 @@
 package net.svcret.ejb.ejb;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -191,6 +192,24 @@ public class AdminServiceBean implements IAdminService {
 		return toUi(domain, false, null);
 	}
 
+	@Override
+	public byte[] createWsdlBundle(long theServiceVersionPid) throws ProcessingException, IOException {
+		BasePersServiceVersion svcVer = myServiceRegistry.getServiceVersionByPid(theServiceVersionPid);
+		if (svcVer == null) {
+			throw new IllegalArgumentException("Unknown version: " + theServiceVersionPid);
+		}
+		
+		switch (svcVer.getProtocol()) {
+		case  SOAP11:
+			return myInvokerSoap11.createWsdlBundle((PersServiceVersionSoap11) svcVer);
+		case JSONRPC20:
+			break;
+		}
+
+		throw new IllegalArgumentException("Service " + theServiceVersionPid + " is of type " + svcVer.getProtocol() + " which does not support WSDL bundles");
+	}
+	
+	
 	@Override
 	public GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ProcessingException {
 		Validate.notBlank(theId, "ID");
@@ -418,6 +437,18 @@ public class AdminServiceBean implements IAdminService {
 		ourLog.info("Loading service version from URL: {}", theWsdlUrl);
 		PersServiceVersionSoap11 def = myInvokerSoap11.introspectServiceFromUrl(theWsdlUrl);
 
+		theService.getMethodList().clear();
+		for (PersServiceVersionMethod next : def.getMethods()) {
+			theService.getMethodList().add(toUi(next, false));
+		}
+
+		// Only add URLs if there aren't any already defined for this version
+		if (theService.getUrlList().size() == 0) {
+			for (PersServiceVersionUrl next : def.getUrls()) {
+				theService.getUrlList().add(toUi(next));
+			}
+		}
+		
 		GSoap11ServiceVersionAndResources retVal = toUi(theService, def);
 		return retVal;
 	}
@@ -1132,6 +1163,11 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setUsername(theUser.getUsername());
 		retVal.setDomainPermissions(fromUi(theUser.getDomainPermissions(), retVal.getDomainPermissions()));
 		retVal.setAuthenticationHost(myDao.getAuthenticationHostByPid(theUser.getAuthHostPid()));
+		retVal.setDescription(theUser.getDescription());		
+		
+		// Contact Notes
+		retVal.getContact().setNotes(theUser.getContactNotes());
+		retVal.getContact().setEmailAddresses(theUser.getContactEmails());
 
 		if (theUser.getPidOrNull() != null && theUser.getChangePassword() == null) {
 			PersUser existing = myDao.getUser(theUser.getPid());
@@ -1311,12 +1347,6 @@ public class AdminServiceBean implements IAdminService {
 		GSoap11ServiceVersionAndResources retVal = new GSoap11ServiceVersionAndResources();
 
 		retVal.setServiceVersion(theUiService);
-		theSvcVer.populateKeepRecentTransactionsToDto(retVal.getServiceVersion());
-
-		theUiService.getMethodList().clear();
-		for (PersServiceVersionMethod next : theSvcVer.getMethods()) {
-			retVal.getServiceVersion().getMethodList().add(toUi(next, false));
-		}
 
 		theUiService.getResourcePointerList().clear();
 		for (PersServiceVersionResource next : theSvcVer.getUriToResource().values()) {
@@ -1331,20 +1361,17 @@ public class AdminServiceBean implements IAdminService {
 			theUiService.getResourcePointerList().add(res.asPointer());
 		}
 
-		theUiService.getUrlList().clear();
-		for (PersServiceVersionUrl next : theSvcVer.getUrls()) {
-			theUiService.getUrlList().add(toUi(next));
-		}
-
-		theUiService.getClientSecurityList().clear();
-		for (PersBaseClientAuth<?> next : theSvcVer.getClientAuths()) {
-			theUiService.getClientSecurityList().add(toUi(next));
-		}
-
-		theUiService.getServerSecurityList().clear();
-		for (PersBaseServerAuth<?, ?> next : theSvcVer.getServerAuths()) {
-			theUiService.getServerSecurityList().add(toUi(next));
-		}
+		
+//
+//		theUiService.getClientSecurityList().clear();
+//		for (PersBaseClientAuth<?> next : theSvcVer.getClientAuths()) {
+//			theUiService.getClientSecurityList().add(toUi(next));
+//		}
+//
+//		theUiService.getServerSecurityList().clear();
+//		for (PersBaseServerAuth<?, ?> next : theSvcVer.getServerAuths()) {
+//			theUiService.getServerSecurityList().add(toUi(next));
+//		}
 
 		return retVal;
 	}
@@ -1824,6 +1851,8 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setAuthHostPid(thePersUser.getAuthenticationHost().getPid());
 		retVal.setContactNotes(thePersUser.getContact().getNotes());
 		retVal.setAllowableSourceIps(thePersUser.getAllowSourceIpsAsStrings());
+		retVal.setDescription(thePersUser.getDescription());
+		retVal.setContactEmails(thePersUser.getContact().getEmailAddresses());
 
 		if (theLoadStats) {
 			PersUserStatus status = thePersUser.getStatus();

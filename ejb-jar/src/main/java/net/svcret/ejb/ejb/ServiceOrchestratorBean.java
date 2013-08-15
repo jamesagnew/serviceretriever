@@ -451,6 +451,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		myThrottlingService = theMock;
 	}
 
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override
 	public Collection<SidechannelOrchestratorResponseBean> handleSidechannelRequestForEachUrl(long theServiceVersionPid, String theRequestBody, String theContentType, String theRequestedByString)
 			throws InternalErrorException, ProcessingException, UnknownRequestException {

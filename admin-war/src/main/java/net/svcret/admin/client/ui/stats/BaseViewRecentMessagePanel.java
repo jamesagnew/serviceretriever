@@ -6,6 +6,9 @@ import net.svcret.admin.client.ui.components.HtmlPre;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
+import net.svcret.admin.shared.IAsyncLoadCallback;
+import net.svcret.admin.shared.Model;
+import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.admin.shared.model.Pair;
 import net.svcret.admin.shared.util.StringUtil;
@@ -59,6 +62,9 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 	protected abstract String getPanelTitle();
 
 	public void setMessage(final GRecentMessage theResult) {
+		Model.getInstance().loadServiceVersion(theResult.getServiceVersionPid(), new IAsyncLoadCallback<BaseGServiceVersion>() {
+			@Override
+			public void onSuccess(BaseGServiceVersion theSvcVer) {
 		myTopLoadingSpinner.hideCompletely();
 
 		myTopGrid.clear();
@@ -108,7 +114,7 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		myReqPre = new HtmlPre(theResult.getRequestMessage());
 
 		HorizontalPanel reqFunctions = new HorizontalPanel();
-		addResponseFormatButtons(reqFunctions, theResult.getRequestContentType(), myReqPre, theResult.getRequestMessage());
+		addResponseFormatButtons(reqFunctions, theResult.getRequestContentType(), myReqPre, theResult.getRequestMessage(), theSvcVer);
 		reqContentPanel.add(reqFunctions);
 
 		ScrollPanel reqMsgPanel = new ScrollPanel(myReqPre);
@@ -145,7 +151,7 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		myRespPre = new HtmlPre(theResult.getResponseMessage());
 
 		HorizontalPanel respFunctions = new HorizontalPanel();
-		addResponseFormatButtons(respFunctions, theResult.getResponseContentType(), myRespPre, theResult.getResponseMessage());
+		addResponseFormatButtons(respFunctions, theResult.getResponseContentType(), myRespPre, theResult.getResponseMessage(), theSvcVer);
 		
 		respContentPanel.add(respFunctions);
 
@@ -153,10 +159,13 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		respMsgPanel.addStyleName(CssConstants.RECENT_MESSAGE_SCROLLER);
 		respContentPanel.add(respMsgPanel);
 
+			}
+		});
+
 	}
 
-	private void addResponseFormatButtons(HorizontalPanel respFunctions, String contentType, final HtmlPre respPre, final String messageBody) {
-		if (contentType != null && contentType.toLowerCase().contains("xml")) {
+	private void addResponseFormatButtons(HorizontalPanel respFunctions, String contentType, final HtmlPre respPre, final String messageBody, BaseGServiceVersion theSvcVer) {
+		if ((contentType != null && contentType.toLowerCase().contains("xml")) || theSvcVer.getProtocol().getRequestContentType().contains("xml")) {
 			respFunctions.add(new PButton("Format XML", new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent theEvent) {
@@ -164,7 +173,7 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 				}
 			}));
 		}
-		if (contentType != null && contentType.toLowerCase().contains("json")) {
+		if ((contentType != null && contentType.toLowerCase().contains("json")) || theSvcVer.getProtocol().getRequestContentType().contains("json")) {
 			respFunctions.add(new PButton("Format JSON", new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent theEvent) {
@@ -194,7 +203,7 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 	}-*/;
 
 	private native String formatJson(String theExisting) /*-{
-		return $wnd.vkbeautify.xml(theExisting);
+		return $wnd.vkbeautify.json(theExisting);
 	}-*/;
 	
 }

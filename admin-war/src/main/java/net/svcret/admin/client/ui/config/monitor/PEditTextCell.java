@@ -230,6 +230,9 @@ public class PEditTextCell extends AbstractEditableCell<String, PEditTextCell.Vi
 		   * @param value the current value
 		   */
 		  protected void edit(Context context, Element parent, String value) {
+			 if (value.equals(NO_VALUE_STRING)) {
+				 value = "";
+			 }
 		    setValue(context, parent, value);
 		    InputElement input = getInputElement(parent);
 		    input.focus();

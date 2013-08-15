@@ -1,5 +1,6 @@
 package net.svcret.ejb.api;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
@@ -119,5 +120,7 @@ public interface IAdminService {
 	DtoLibraryMessage getLibraryMessage(long theMessagePid) throws ProcessingException;
 
 	void saveMonitorRule(BaseGMonitorRule theRule) throws ProcessingException;
+
+	byte[] createWsdlBundle(long theServiceVersionPid) throws ProcessingException, IOException;
 
 }

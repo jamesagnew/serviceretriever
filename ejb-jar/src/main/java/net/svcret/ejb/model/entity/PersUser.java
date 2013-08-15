@@ -44,6 +44,7 @@ public class PersUser extends BasePersObject implements IThrottleable {
 
 	public static final String DEFAULT_ADMIN_PASSWORD = "admin";
 	public static final String DEFAULT_ADMIN_USERNAME = "admin";
+	private static final int MAXLEN_USER_DESC = 1000;
 	private static final long serialVersionUID = 1L;
 
 	@Transient
@@ -67,6 +68,9 @@ public class PersUser extends BasePersObject implements IThrottleable {
 	@JoinColumn(name = "CONTACT_PID", referencedColumnName = "PID", nullable = true)
 	private PersUserContact myContact;
 
+	@Column(unique = true, name = "USER_DESC", nullable = false, length = MAXLEN_USER_DESC)
+	private String myDescription;
+
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true, mappedBy = "myUser")
 	private Collection<PersUserDomainPermission> myDomainPermissions;
 
@@ -82,10 +86,10 @@ public class PersUser extends BasePersObject implements IThrottleable {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "PID")
 	private Long myPid;
-
+	
 	@OneToMany(fetch=FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myUser")
 	private List<PersServiceVersionRecentMessage> myRecentMessages;
-	
+
 	@OneToOne(cascade = { CascadeType.PERSIST }, orphanRemoval = true, mappedBy = "myUser")
 	private PersUserStatus myStatus;
 
@@ -190,6 +194,10 @@ public class PersUser extends BasePersObject implements IThrottleable {
 	 */
 	public PersUserContact getContact() {
 		return myContact;
+	}
+
+	public String getDescription() {
+		return myDescription;
 	}
 
 	/**
@@ -359,6 +367,10 @@ public class PersUser extends BasePersObject implements IThrottleable {
 	 */
 	public void setContact(PersUserContact theContact) {
 		myContact = theContact;
+	}
+
+	public void setDescription(String theDescription) {
+		myDescription = theDescription;
 	}
 
 	/**

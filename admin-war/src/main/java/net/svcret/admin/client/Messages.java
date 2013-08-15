@@ -6,6 +6,7 @@ import net.svcret.admin.client.ui.components.CssConstants;
 
 import com.google.gwt.i18n.client.impl.plurals.DefaultRule_en;
 import com.google.gwt.safehtml.shared.SafeHtml;
+import com.google.gwt.user.cellview.client.Header;
 
 public interface Messages extends com.google.gwt.i18n.client.Messages {
 
@@ -749,6 +750,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Edit Message")
 	String editLibraryMessage_Breadcrumb();
+
+	@DefaultMessage("Description")
+	String editUsersPanel_ColumnDescription();
 
 	
 	
