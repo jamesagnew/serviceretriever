@@ -21,6 +21,7 @@ import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IBroadcastSender;
+import net.svcret.ejb.api.IMonitorNotifier;
 import net.svcret.ejb.api.IServiceInvokerSoap11;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
@@ -238,6 +239,8 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 
 		IServiceOrchestrator orch = mock(IServiceOrchestrator.class);
 		mySvc.setServiceOrchestratorForUnitTests(orch);
+		mySvc.setMonitorNotifierForUnitTests(mock(IMonitorNotifier.class));
+		mySvc.setThisForUnitTests(mySvc);
 		
 		newEntityManager();
 

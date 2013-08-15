@@ -321,14 +321,14 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 
 	private GRecentMessage createMessage(boolean theIncludeContents, GRecentMessage retVal, RecentMessageTypeEnum theType) {
 		String responseMessage = "<req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req></req>";
-		String requestMessage = "<resp a='qqqqq'><tags/></resp>";
+		String requestMessage = "{\"aaaa\":444, \"bbb\": 555}";
 		List<Pair<String>> reqHeaders = new ArrayList<Pair<String>>();
-		reqHeaders.add(new Pair<String>("Content-Type", "text/xml"));
+		reqHeaders.add(new Pair<String>("Content-Type", "text/json"));
 		reqHeaders.add(new Pair<String>("Content-Encoding", "chunked"));
 		List<Pair<String>> respHeaders = new ArrayList<Pair<String>>();
 		respHeaders.add(new Pair<String>("Content-Type", "text/xml"));
 		respHeaders.add(new Pair<String>("X-Server", "Some Server"));
-		String reqCt = "text/xml";
+		String reqCt = "text/json";
 		String respCt = "text/xml";
 		if (!theIncludeContents) {
 			responseMessage = null;
@@ -356,7 +356,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		retVal.setDomainName("DomainName1");
 		retVal.setServicePid(0l);
 		retVal.setServiceName("ServiceName1");
-		retVal.setServiceVersionPid(0l);
+		retVal.setServiceVersionPid(100l);
 		retVal.setServiceVersionId("1.0");
 
 		retVal.setRecentMessageType(theType);

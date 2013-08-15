@@ -25,6 +25,7 @@ import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.Messages;
 import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IDao;
+import net.svcret.ejb.api.IMonitorNotifier;
 import net.svcret.ejb.api.IMonitorService;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IServiceOrchestrator;
@@ -74,6 +75,9 @@ public class MonitorServiceBean implements IMonitorService {
 	@EJB
 	private IMonitorService myThis;
 
+	@EJB
+	private IMonitorNotifier myMonitorNotifier;
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void runActiveChecks() {
@@ -110,9 +114,10 @@ public class MonitorServiceBean implements IMonitorService {
 	}
 
 	@Override
-	@Asynchronous
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public Future<Void> runActiveCheck(PersMonitorRuleActiveCheck theCheck) {
+	public Future<Void> runActiveCheckInNewTransaction(PersMonitorRuleActiveCheck theCheck) {
+		ourLog.debug("Beginning active check pass for check {}", theCheck.getPid());
+
 		theCheck.setLastTransactionDate(new Date());
 
 		long svcVerPid = theCheck.getServiceVersion().getPid();
@@ -122,8 +127,12 @@ public class MonitorServiceBean implements IMonitorService {
 		PersMonitorRuleFiring outcome;
 		try {
 
+			ourLog.debug("Active check going to invoke each URL for {}", svcVerPid);
 			Collection<SidechannelOrchestratorResponseBean> outcomes = myServiceOrchestrator.handleSidechannelRequestForEachUrl(svcVerPid, requestBody, contentType, requestedByString);
+
+			ourLog.debug("Active check got {} outcomes", outcomes.size());
 			outcome = evaluateRuleForActiveIssues(theCheck, outcomes);
+
 			theCheck.setLastTransactionOutcome(outcome == null);
 
 		} catch (Exception e) {
@@ -139,30 +148,41 @@ public class MonitorServiceBean implements IMonitorService {
 		PersMonitorRuleFiring currentFiring = svcVer.getMostRecentMonitorRuleFiring();
 		if (outcome != null) {
 			if (currentFiring == null || currentFiring.getEndDate() != null) {
+				/*
+				 * We have a new failure
+				 */
 				ourLog.info("Saving active check failure for rule {} which applies to service version {}", theCheck.getRule().getPid(), svcVer.getPid());
 				outcome = myDao.saveMonitorRuleFiring(outcome);
 				svcVer.setMostRecentMonitorRuleFiring(outcome);
 				myDao.saveServiceCatalogItem(svcVer);
+
+				// notify listeners
+				try {
+					myMonitorNotifier.notifyFailingRule(outcome);
+				} catch (ProcessingException e) {
+					ourLog.error("Failed to notify listeners", e);
+				}
+
 			} else {
 				ourLog.info("Active monitor check {} is failing, but not going to save it because service version {} already has a faling rule", theCheck.getPid(), svcVer.getPid());
 			}
-		}else {
+		} else {
 			if (currentFiring != null && currentFiring.getEndDate() == null) {
-				/* Check didn't fail, but the service version it applies to has
-				 * a current rule failure, so let's see if the current pass will
-				 * cancel out that failure */
+				/*
+				 * Check didn't fail, but the service version it applies to has a current rule failure, so let's see if the current pass will cancel out that failure
+				 */
 				if (currentFiring.getRule().equals(theCheck.getRule())) {
 					boolean applies = false;
 					for (PersMonitorRuleFiringProblem nextProblem : currentFiring.getProblems()) {
 						if (theCheck.equals(nextProblem.getActiveCheck())) {
-							applies=true;
+							applies = true;
 						}
 					}
-					
+
 					if (applies) {
 						ourLog.info("Ending monitor failure {} because active check passed", currentFiring.getPid());
 						currentFiring.setEndDate(new Date());
-						
+
 						currentFiring = myDao.saveMonitorRuleFiring(currentFiring);
 						svcVer.setMostRecentMonitorRuleFiring(currentFiring);
 						myDao.saveServiceCatalogItem(svcVer);
@@ -183,17 +203,23 @@ public class MonitorServiceBean implements IMonitorService {
 				long latency = nextOutcome.getHttpResponse().getResponseTime();
 				if (latency > theCheck.getExpectLatencyUnderMillis()) {
 					PersServiceVersionUrl url = nextOutcome.getHttpResponse().getSingleUrlOrThrow();
-					PersMonitorRuleFiringProblem prob = PersMonitorRuleFiringProblem.getInstanceForServiceLatency(theCheck.getServiceVersion(), latency, theCheck.getExpectLatencyUnderMillis(),null, url);
+					PersMonitorRuleFiringProblem prob = PersMonitorRuleFiringProblem.getInstanceForServiceLatency(theCheck.getServiceVersion(), latency, theCheck.getExpectLatencyUnderMillis(), null,
+							url);
 					prob.setActiveCheck(theCheck);
 					problems.add(prob);
 				}
 			}
 
 			if (StringUtils.isNotEmpty(theCheck.getExpectResponseContainsText())) {
-				PersServiceVersionUrl url = nextOutcome.getHttpResponse().getSingleUrlOrThrow();
-				String message = Messages.getString("MonitorServiceBean.failedActiveCheckExpectText", theCheck.getExpectResponseContainsText());
-				PersMonitorRuleFiringProblem prob = PersMonitorRuleFiringProblem.getInstanceForUrlDown(theCheck.getServiceVersion(), url, message);
-				prob.setActiveCheck(theCheck);
+				boolean contains = nextOutcome.getResponseBody().contains(theCheck.getExpectResponseContainsText());
+				ourLog.debug("Active check testing if response contains \"{}\": {}", theCheck.getExpectResponseContainsText(), contains);
+
+				if (!contains) {
+					PersServiceVersionUrl url = nextOutcome.getHttpResponse().getSingleUrlOrThrow();
+					String message = Messages.getString("MonitorServiceBean.failedActiveCheckExpectText", theCheck.getExpectResponseContainsText());
+					PersMonitorRuleFiringProblem prob = PersMonitorRuleFiringProblem.getInstanceForUrlDown(theCheck.getServiceVersion(), url, message);
+					prob.setActiveCheck(theCheck);
+				}
 			}
 
 			if (nextOutcome.getResponseType() != theCheck.getExpectResponseType()) {
@@ -209,6 +235,12 @@ public class MonitorServiceBean implements IMonitorService {
 	}
 
 	@Override
+	@Asynchronous
+	public Future<Void> runActiveCheck(PersMonitorRuleActiveCheck theCheck) {
+		return myThis.runActiveCheckInNewTransaction(theCheck);
+	}
+
+	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void check() {
 		ourLog.debug("Beginning monitor checking pass");
@@ -218,8 +250,8 @@ public class MonitorServiceBean implements IMonitorService {
 			if (!(nextRule instanceof PersMonitorRulePassive)) {
 				continue;
 			}
-			PersMonitorRulePassive rule = (PersMonitorRulePassive)nextRule;
-			
+			PersMonitorRulePassive rule = (PersMonitorRulePassive) nextRule;
+
 			ourLog.debug("Checking monitor rule: {}", rule);
 
 			if (rule.isRuleActive() == false) {
@@ -352,10 +384,10 @@ public class MonitorServiceBean implements IMonitorService {
 			BasePersMonitorRule existing = myDao.getMonitorRule(theRule.getPid());
 			switch (existing.getRuleType()) {
 			case ACTIVE:
-				((PersMonitorRuleActive)existing).merge((PersMonitorRuleActive)theRule);
+				((PersMonitorRuleActive) existing).merge((PersMonitorRuleActive) theRule);
 				break;
 			case PASSIVE:
-				((PersMonitorRulePassive)existing).merge((PersMonitorRulePassive)theRule);
+				((PersMonitorRulePassive) existing).merge((PersMonitorRulePassive) theRule);
 				break;
 			}
 		}
@@ -373,7 +405,17 @@ public class MonitorServiceBean implements IMonitorService {
 
 	@VisibleForTesting
 	void setServiceOrchestratorForUnitTests(IServiceOrchestrator theOrch) {
-		myServiceOrchestrator=theOrch;
+		myServiceOrchestrator = theOrch;
+	}
+
+	@VisibleForTesting
+	void setThisForUnitTests(IMonitorService theThis) {
+		myThis = theThis;
+	}
+
+	@VisibleForTesting
+	void setMonitorNotifierForUnitTests(IMonitorNotifier theMock) {
+		myMonitorNotifier = theMock;
 	}
 
 }

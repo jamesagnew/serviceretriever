@@ -1,5 +1,6 @@
 package net.svcret.ejb.ejb.soap;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -11,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.TreeSet;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -61,19 +65,66 @@ import com.google.common.collect.Maps;
 @Stateless()
 public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 
+	private static XMLEventFactory ourEventFactory;
+
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(Soap11ServiceInvoker.class);
+
+	private static final Set<String> ourValidContentTypes = new HashSet<String>();
+	private static XMLInputFactory ourXmlInputFactory;
+	static {
+		ourValidContentTypes.add("text/xml");
+		ourValidContentTypes.add("application/soap+xml");
+	}
+	@EJB
+	private IConfigService myConfigService;
 
 	@EJB
 	private IHttpClient myHttpClient;
 
 	private Soap11ResponseValidator myInvocationResultsBean;
-	private static XMLEventFactory ourEventFactory;
-	private static XMLInputFactory ourXmlInputFactory;
-	private static final Set<String> ourValidContentTypes = new HashSet<String>();
 
-	static {
-		ourValidContentTypes.add("text/xml");
-		ourValidContentTypes.add("application/soap+xml");
+	public Soap11ServiceInvoker() {
+		myInvocationResultsBean = new Soap11ResponseValidator();
+	}
+
+	@Override
+	public byte[] createWsdlBundle(PersServiceVersionSoap11 theSvcVer) throws ProcessingException, IOException {
+		final String filenamePrefix = (theSvcVer.getService().getServiceId()+ "_" + theSvcVer.getVersionId()).replace(' ', '_');
+
+		final Map<String, String> xsdResources = new HashMap<String, String>();
+		ICreatesImportUrl urlCreator = new ICreatesImportUrl() {
+			@Override
+			public String createImportUrlForSchemaImport(PersServiceVersionResource theResource) throws ProcessingException {
+				String fileName = filenamePrefix + "_schema_" + theResource.getPid() + ".xsd";
+				String resourceText = theResource.getResourceText();
+				if (resourceText == null) {
+					throw new ProcessingException("No content found for XSD resource with PID: " + theResource.getPid() + " and resource URL: "+theResource.getResourceUrl());
+				}
+				
+				xsdResources.put(fileName, resourceText);
+				return fileName;
+			}};
+		String wsdl = renderWsdl(theSvcVer, theSvcVer.getProxyPath(), urlCreator);
+		
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		ZipOutputStream zos = new ZipOutputStream(bos);
+		
+		zos.putNextEntry(new ZipEntry(filenamePrefix + ".wsdl"));
+		zos.write(wsdl.getBytes("UTF-8"));
+		
+		for (String nextFileName : new TreeSet<String>(xsdResources.keySet())) {
+			String nextFile = xsdResources.get(nextFileName);
+
+			zos.putNextEntry(new ZipEntry(nextFileName));
+			zos.write(nextFile.getBytes("UTF-8"));
+			zos.closeEntry();
+			zos.flush();
+		}
+		
+		zos.close();
+		bos.close();
+		
+		return bos.toByteArray();
 	}
 
 	private void doHandleGet(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, String thePath, String theQuery) throws UnknownRequestException, ProcessingException {
@@ -88,83 +139,23 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 
 	}
 
-	private void doHandleGetWsdl(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, String thePath) throws DOMException, ProcessingException {
-		String wsdlUrl = theServiceDefinition.getWsdlUrl();
+	private void doHandleGetWsdl(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, final String thePath) throws DOMException, ProcessingException {
+		
+		ICreatesImportUrl urlCreator = new ICreatesImportUrl() {
+			@Override
+			public String createImportUrlForSchemaImport(PersServiceVersionResource theResource) throws ProcessingException {
+				String pathBase = urlEncode(getUrlBase() + thePath);
+				return pathBase + "?xsd&xsdnum=" + theResource.getPid();
+			}};
+			
 
-		PersServiceVersionResource resource = theServiceDefinition.getResourceForUri(wsdlUrl);
-		if (resource == null || StringUtils.isBlank(resource.getResourceText())) {
-			throw new InternalErrorException("Service Version " + theServiceDefinition.getPid() + " does not have a resource for URL: " + wsdlUrl);
-		}
-		String wsdlResourceText = resource.getResourceText();
-
-		Document wsdlDocument = XMLUtils.parse(wsdlResourceText);
-
-		/*
-		 * Process Schema Imports
-		 */
-		NodeList typesList = wsdlDocument.getElementsByTagNameNS(Constants.NS_WSDL, "types");
-		for (int typesIdx = 0; typesIdx < typesList.getLength(); typesIdx++) {
-			Element typesElem = (Element) typesList.item(typesIdx);
-			NodeList schemaList = typesElem.getElementsByTagNameNS(Constants.NS_XSD, "schema");
-			for (int schemaIdx = 0; schemaIdx < schemaList.getLength(); schemaIdx++) {
-				Element schemaElem = (Element) schemaList.item(schemaIdx);
-				NodeList importList = schemaElem.getElementsByTagNameNS(Constants.NS_XSD, "import");
-				for (int importIdx = 0; importIdx < importList.getLength(); importIdx++) {
-					Element importElem = (Element) importList.item(importIdx);
-
-					String importLocation = importElem.getAttribute("schemaLocation");
-					if (StringUtils.isNotBlank(importLocation)) {
-						PersServiceVersionResource nResource = theServiceDefinition.getResourceForUri(importLocation);
-						String pathBase = urlEncode(getUrlBase() + thePath);
-						importElem.setAttribute("schemaLocation", (pathBase + "?xsd&xsdnum=" + nResource.getPid()));
-					}
-				}
-			}
-		}
-
-		/*
-		 * Process service addresses
-		 */
-
-		NodeList serviceList = wsdlDocument.getElementsByTagNameNS(Constants.NS_WSDL, "service");
-		for (int serviceIdx = 0; serviceIdx < serviceList.getLength(); serviceIdx++) {
-			Element typesElem = (Element) serviceList.item(serviceIdx);
-			NodeList portList = typesElem.getElementsByTagNameNS(Constants.NS_WSDL, "port");
-			for (int portIdx = 0; portIdx < portList.getLength(); portIdx++) {
-				Element schemaElem = (Element) portList.item(portIdx);
-				NodeList addressList = schemaElem.getElementsByTagNameNS(Constants.NS_WSDLSOAP, "address");
-				for (int addressIdx = 0; addressIdx < addressList.getLength(); addressIdx++) {
-					Element importElem = (Element) addressList.item(addressIdx);
-					String location = importElem.getAttribute("location");
-					if (StringUtils.isNotBlank(location)) {
-						String pathBase = urlEncode(getUrlBase() + thePath);
-						importElem.setAttribute("location", pathBase);
-					}
-				}
-			}
-		}
-
-		ourLog.debug("Writing WSDL for ServiceVersion[{}]", theServiceDefinition.getPid());
-		StringWriter writer = new StringWriter();
-		XMLUtils.serialize(wsdlDocument, true, writer);
-
-		String resourceText = writer.toString();
-		String resourceUrl = wsdlUrl;
+		String resourceText = renderWsdl(theServiceDefinition, thePath, urlCreator);
 		String contentType = Constants.CONTENT_TYPE_XML;
 		Map<String, List<String>> headers = new HashMap<String, List<String>>();
-		theResults.setResultStaticResource(resourceUrl, resource, resourceText, contentType, headers);
+		String wsdlUrl = theServiceDefinition.getWsdlUrl();
 
-	}
+		theResults.setResultStaticResource(wsdlUrl, theServiceDefinition.getResourceForUri(wsdlUrl), resourceText, contentType, headers);
 
-	private String urlEncode(String theString) {
-		return theString.replace(" ", "%20");
-	}
-
-	@EJB
-	private IConfigService myConfigService;
-
-	private String getUrlBase() throws ProcessingException {
-		return myConfigService.getConfig().getProxyUrlBases().iterator().next().getUrlBase();
 	}
 
 	private void doHandleGetXsd(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, String thePath, String theQuery) throws UnknownRequestException {
@@ -237,151 +228,96 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 		theResults.setResultMethod(method, request, contentType, headers);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@TransactionAttribute(TransactionAttributeType.NEVER)
-	@Override
-	public InvocationResultsBean processInvocation(PersServiceVersionSoap11 theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, Reader theReader) throws ProcessingException, UnknownRequestException {
-		InvocationResultsBean retVal = new InvocationResultsBean();
-
-		switch (theRequestType) {
-		case GET:
-			doHandleGet(retVal, theServiceDefinition, thePath, theQuery);
-			break;
-		case POST:
-			doHandlePost(retVal, theServiceDefinition, theReader);
-			break;
-		default:
-			throw new InternalErrorException("Unknown request type: " + theRequestType);
+	private Element findWsdlBindingInDocument(Document theWsdlDocument) throws ProcessingException {
+		NodeList bindingList = theWsdlDocument.getElementsByTagNameNS(Constants.NS_WSDL, "binding");
+		if (bindingList.getLength() == 0) {
+			throw new ProcessingException("WSDL contains no bindings. This is not supported");
+		} 
+		
+		for (int i = 0; i < bindingList.getLength(); i++) {
+			Element binding = (Element) bindingList.item(i);
+			
+			if (binding.getElementsByTagNameNS(Constants.NS_WSDLSOAP, "binding").getLength() == 1) {
+				return binding;
+			}
 		}
-
-		return retVal;
+		
+		throw new ProcessingException("WSDL contains no bindings with SOAP 1.1 protocol. This is not supported");
 	}
 
-	@Override
-	public InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws ProcessingException {
-		InvocationResponseResultsBean retVal = new InvocationResponseResultsBean();
-		retVal.setResponseHeaders(theResponse.getHeaders());
+	private String getUrlBase() throws ProcessingException {
+		return myConfigService.getConfig().getProxyUrlBases().iterator().next().getUrlBase();
+	}
 
-		String contentType = theResponse.getContentType();
-		if (StringUtils.isBlank(contentType)) {
-			retVal.setResponseType(ResponseTypeEnum.FAIL);
-			retVal.setResponseStatusMessage("No content type in response");
-			return retVal;
+	private StyleEnum introspectBindingForStyle(Document theWsdlDocument) throws ProcessingException {
+		/*
+		 * Find binding
+		 */
+
+		Element binding = findWsdlBindingInDocument(theWsdlDocument);
+		
+		NodeList bindingChildren = binding.getElementsByTagNameNS(Constants.NS_WSDLSOAP, "binding");
+		if (bindingChildren.getLength() != 1) {
+			throw new ProcessingException("Binding must contain one child named binding, found " + bindingChildren.getLength());
+		}
+		Element binding2 = (Element) bindingChildren.item(0);
+
+		String transport = binding2.getAttribute("transport");
+		if (!"http://schemas.xmlsoap.org/soap/http".equals(transport)) {
+			throw new ProcessingException("Binding contains unsupported transport value: " + transport);
 		}
 
-		if (!ourValidContentTypes.contains(contentType)) {
-			retVal.setResponseType(ResponseTypeEnum.FAIL);
-			retVal.setResponseStatusMessage("Content type in response is not XML: " + contentType);
-			return retVal;
+		String style = binding2.getAttribute("style");
+		if (StringUtils.isBlank(style)) {
+			style= "document"; // according to spec, this is the default
 		}
-
-		XMLEventReader streamReader;
-		initEventFactories();
+		StyleEnum styleEnum;
 		try {
-			streamReader = ourXmlInputFactory.createXMLEventReader(new StringReader(theResponse.getBody()));
-		} catch (XMLStreamException e) {
-			throw new InternalErrorException(e);
-		} catch (FactoryConfigurationError e) {
-			throw new InternalErrorException(e);
+			styleEnum = StyleEnum.valueOf(style.toUpperCase());
+		} catch (Exception e) {
+			throw new ProcessingException("Unknown binding style: " + style);
 		}
 
-		ResponsePositionEnum pos = ResponsePositionEnum.NONE;
-		;
-		while (streamReader.hasNext()) {
+		return styleEnum;
+	}
 
-			XMLEvent next;
-			try {
-				next = streamReader.nextEvent();
+	private void introspectPortType(String theUrl, PersServiceVersionSoap11 retVal, Document wsdlDocument, Element thePortType) throws ProcessingException {
+		/*
+		 * Process Operations
+		 */
 
-				if (next.isStartElement()) {
-					switch (pos) {
-					case NONE:
-					default:
-						if (Constants.SOAPENV11_ENVELOPE_QNAME.equals(next.asStartElement().getName())) {
-							pos = ResponsePositionEnum.IN_DOCUMENT;
-						} else {
-							retVal.setResponseType(ResponseTypeEnum.FAIL);
-							retVal.setResponseStatusMessage("Response is not a SOAP document. First element is: " + next.asStartElement().getName());
-						}
-						break;
-					case IN_DOCUMENT:
-						if (Constants.SOAPENV11_BODY_QNAME.equals(next.asStartElement().getName())) {
-							pos = ResponsePositionEnum.IN_BODY;
-						}
-						break;
-					case IN_BODY:
-						if (Constants.SOAPENV11_FAULT_QNAME.equals(next.asStartElement().getName())) {
-							pos = ResponsePositionEnum.IN_FAULT;
-							retVal.setResponseType(ResponseTypeEnum.FAULT);
-							retVal.setResponseBody(theResponse.getBody());
-							retVal.setResponseContentType(theResponse.getContentType());
-						} else {
-							retVal.setResponseType(ResponseTypeEnum.SUCCESS);
-							retVal.setResponseBody(theResponse.getBody());
-							retVal.setResponseContentType(theResponse.getContentType());
-							// Don't need any headers -
-							// retVal.setResponseHeaders(theResponse.getHeaders());
-							return retVal;
-						}
-						break;
-					case IN_FAULT:
-						if (Constants.TAG_SOAPENV11_FAULTCODE.equals(next.asStartElement().getName().getLocalPart())) {
-							StringBuilder b = new StringBuilder();
-							while (true) {
-								if (next.isEndElement() && Constants.TAG_SOAPENV11_FAULTCODE.equals(next.asEndElement().getName().getLocalPart())) {
-									break;
-								}
-								if (next.isCharacters()) {
-									b.append(next.asCharacters().getData());
-								}
-								next = streamReader.nextEvent();
-							}
-							retVal.setResponseFaultCode(b.toString());
-						} else if (Constants.TAG_SOAPENV11_FAULTSTRING.equals(next.asStartElement().getName().getLocalPart())) {
-							while (true) {
-								if (next.isEndElement() && Constants.TAG_SOAPENV11_FAULTSTRING.equals(next.asEndElement().getName().getLocalPart())) {
-									break;
-								}
-								if (next.isCharacters()) {
-									retVal.setResponseFaultDescription(next.asCharacters().getData());
-								}
-								next = streamReader.nextEvent();
-							}
-						}
-					}
-				} // if start
+		NodeList operations = thePortType.getElementsByTagNameNS(Constants.NS_WSDL, "operation");
 
-			} catch (XMLStreamException e) {
-				throw new ProcessingException("Unable to process XML response. Error was: " + e.getMessage(), e);
+		if (operations.getLength() == 0) {
+			throw new ProcessingException("WSDL \"" + theUrl + "\" has no operations defined");
+		}
+
+		ourLog.info("Parsed WSDL and found {} methods", operations.getLength());
+
+		List<String> operationNames = Lists.newArrayList();
+		for (int i = 0; i < operations.getLength(); i++) {
+
+			Element nextOperationElem = (Element) operations.item(i);
+			String opName = nextOperationElem.getAttribute("name");
+			ourLog.info(" * Found operation: {}", opName);
+
+			StyleEnum styleEnum = introspectBindingForStyle(wsdlDocument);
+
+			PersServiceVersionMethod method=null;
+			switch (styleEnum) {
+			case DOCUMENT:
+				method = introspectWsdlForDocumentOperation(retVal, wsdlDocument, nextOperationElem, opName);
+				break;
+			case RPC:
+				method = introspectWsdlForRpcOperation(wsdlDocument, opName, retVal);
 			}
 
+			retVal.putMethodAtIndex(method, operationNames.size());
+
+			operationNames.add(opName);
 		}
 
-		return retVal;
-	}
-
-	private static enum ResponsePositionEnum {
-		NONE, IN_DOCUMENT, IN_BODY, IN_FAULT
-	}
-
-	private static void initEventFactories() throws FactoryConfigurationError {
-		synchronized (Soap11ServiceInvoker.class) {
-			if (ourEventFactory == null) {
-				ourXmlInputFactory = XMLInputFactory.newInstance();
-				ourEventFactory = XMLEventFactory.newInstance();
-			}
-		}
-	}
-
-	@Override
-	public Soap11ResponseValidator provideInvocationResponseValidator() {
-		return myInvocationResultsBean;
-	}
-
-	public Soap11ServiceInvoker() {
-		myInvocationResultsBean = new Soap11ResponseValidator();
+		retVal.retainOnlyMethodsWithNames(operationNames);
 	}
 
 	@Override
@@ -561,77 +497,6 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 		return retVal;
 	}
 
-	private void introspectPortType(String theUrl, PersServiceVersionSoap11 retVal, Document wsdlDocument, Element thePortType) throws ProcessingException {
-		/*
-		 * Process Operations
-		 */
-
-		NodeList operations = thePortType.getElementsByTagNameNS(Constants.NS_WSDL, "operation");
-
-		if (operations.getLength() == 0) {
-			throw new ProcessingException("WSDL \"" + theUrl + "\" has no operations defined");
-		}
-
-		ourLog.info("Parsed WSDL and found {} methods", operations.getLength());
-
-		List<String> operationNames = Lists.newArrayList();
-		for (int i = 0; i < operations.getLength(); i++) {
-
-			Element nextOperationElem = (Element) operations.item(i);
-			String opName = nextOperationElem.getAttribute("name");
-			ourLog.info(" * Found operation: {}", opName);
-
-			StyleEnum styleEnum = introspectBindingForStyle(wsdlDocument);
-
-			PersServiceVersionMethod method=null;
-			switch (styleEnum) {
-			case DOCUMENT:
-				method = introspectWsdlForDocumentOperation(retVal, wsdlDocument, nextOperationElem, opName);
-				break;
-			case RPC:
-				method = introspectWsdlForRpcOperation(wsdlDocument, opName, retVal);
-			}
-
-			retVal.putMethodAtIndex(method, operationNames.size());
-
-			operationNames.add(opName);
-		}
-
-		retVal.retainOnlyMethodsWithNames(operationNames);
-	}
-
-	private PersServiceVersionMethod introspectWsdlForRpcOperation(Document theWsdlDocument, String theOpName, PersServiceVersionSoap11 retVal) throws ProcessingException {
-		Element binding = findWsdlBindingInDocument(theWsdlDocument);
-		NodeList operationList = binding.getElementsByTagNameNS(Constants.NS_WSDL, "operation");
-		for (int operationIdx = 0; operationIdx < operationList.getLength(); operationIdx++) {
-			Element operation = (Element) operationList.item(operationIdx);
-			if (!theOpName.equals(operation.getAttribute("name"))) {
-				continue;
-			}
-			
-			NodeList inputList = operation.getElementsByTagNameNS(Constants.NS_WSDL, "input");
-			if (inputList.getLength()!=1) {
-				throw new ProcessingException("Binding operation for "+theOpName + " must have 1 input, found " + inputList.getLength());
-			}
-			Element inputElement = (Element) inputList.item(0);
-
-			NodeList bodyElements = inputElement.getElementsByTagNameNS(Constants.NS_WSDLSOAP, "body");
-			if (bodyElements.getLength() != 1) {
-				throw new ProcessingException("Binding operation input must have exactly one body tag, found " + bodyElements.getLength());
-			}
-			Element bodyElement = (Element) bodyElements.item(0);
-
-			String ns = bodyElement.getAttribute("namespace");
-			
-			PersServiceVersionMethod method = retVal.getOrCreateAndAddMethodWithName(theOpName);
-			method.setRootElements(ns + ":" + theOpName);
-			return method;
-			
-		}
-		
-		throw new ProcessingException("Couldn't find operation '" + theOpName+"' in binding");
-	}
-
 	private PersServiceVersionMethod introspectWsdlForDocumentOperation(PersServiceVersionSoap11 retVal, Document wsdlDocument, Element nextOperationElem, String opName) throws ProcessingException {
 		String rootElementNs = null;
 		String rootElementName = null;
@@ -699,53 +564,234 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 		return method;
 	}
 
-	private StyleEnum introspectBindingForStyle(Document theWsdlDocument) throws ProcessingException {
-		/*
-		 * Find binding
-		 */
-
+	private PersServiceVersionMethod introspectWsdlForRpcOperation(Document theWsdlDocument, String theOpName, PersServiceVersionSoap11 retVal) throws ProcessingException {
 		Element binding = findWsdlBindingInDocument(theWsdlDocument);
+		NodeList operationList = binding.getElementsByTagNameNS(Constants.NS_WSDL, "operation");
+		for (int operationIdx = 0; operationIdx < operationList.getLength(); operationIdx++) {
+			Element operation = (Element) operationList.item(operationIdx);
+			if (!theOpName.equals(operation.getAttribute("name"))) {
+				continue;
+			}
+			
+			NodeList inputList = operation.getElementsByTagNameNS(Constants.NS_WSDL, "input");
+			if (inputList.getLength()!=1) {
+				throw new ProcessingException("Binding operation for "+theOpName + " must have 1 input, found " + inputList.getLength());
+			}
+			Element inputElement = (Element) inputList.item(0);
+
+			NodeList bodyElements = inputElement.getElementsByTagNameNS(Constants.NS_WSDLSOAP, "body");
+			if (bodyElements.getLength() != 1) {
+				throw new ProcessingException("Binding operation input must have exactly one body tag, found " + bodyElements.getLength());
+			}
+			Element bodyElement = (Element) bodyElements.item(0);
+
+			String ns = bodyElement.getAttribute("namespace");
+			
+			PersServiceVersionMethod method = retVal.getOrCreateAndAddMethodWithName(theOpName);
+			method.setRootElements(ns + ":" + theOpName);
+			return method;
+			
+		}
 		
-		NodeList bindingChildren = binding.getElementsByTagNameNS(Constants.NS_WSDLSOAP, "binding");
-		if (bindingChildren.getLength() != 1) {
-			throw new ProcessingException("Binding must contain one child named binding, found " + bindingChildren.getLength());
-		}
-		Element binding2 = (Element) bindingChildren.item(0);
-
-		String transport = binding2.getAttribute("transport");
-		if (!"http://schemas.xmlsoap.org/soap/http".equals(transport)) {
-			throw new ProcessingException("Binding contains unsupported transport value: " + transport);
-		}
-
-		String style = binding2.getAttribute("style");
-		if (StringUtils.isBlank(style)) {
-			style= "document"; // according to spec, this is the default
-		}
-		StyleEnum styleEnum;
-		try {
-			styleEnum = StyleEnum.valueOf(style.toUpperCase());
-		} catch (Exception e) {
-			throw new ProcessingException("Unknown binding style: " + style);
-		}
-
-		return styleEnum;
+		throw new ProcessingException("Couldn't find operation '" + theOpName+"' in binding");
 	}
 
-	private Element findWsdlBindingInDocument(Document theWsdlDocument) throws ProcessingException {
-		NodeList bindingList = theWsdlDocument.getElementsByTagNameNS(Constants.NS_WSDL, "binding");
-		if (bindingList.getLength() == 0) {
-			throw new ProcessingException("WSDL contains no bindings. This is not supported");
-		} 
-		
-		for (int i = 0; i < bindingList.getLength(); i++) {
-			Element binding = (Element) bindingList.item(i);
-			
-			if (binding.getElementsByTagNameNS(Constants.NS_WSDLSOAP, "binding").getLength() == 1) {
-				return binding;
+	/**
+	 * {@inheritDoc}
+	 */
+	@TransactionAttribute(TransactionAttributeType.NEVER)
+	@Override
+	public InvocationResultsBean processInvocation(PersServiceVersionSoap11 theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, Reader theReader) throws ProcessingException, UnknownRequestException {
+		InvocationResultsBean retVal = new InvocationResultsBean();
+
+		switch (theRequestType) {
+		case GET:
+			doHandleGet(retVal, theServiceDefinition, thePath, theQuery);
+			break;
+		case POST:
+			doHandlePost(retVal, theServiceDefinition, theReader);
+			break;
+		default:
+			throw new InternalErrorException("Unknown request type: " + theRequestType);
+		}
+
+		return retVal;
+	}
+
+	@Override
+	public InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws ProcessingException {
+		InvocationResponseResultsBean retVal = new InvocationResponseResultsBean();
+		retVal.setResponseHeaders(theResponse.getHeaders());
+
+		String contentType = theResponse.getContentType();
+		if (StringUtils.isBlank(contentType)) {
+			retVal.setResponseType(ResponseTypeEnum.FAIL);
+			retVal.setResponseStatusMessage("No content type in response");
+			return retVal;
+		}
+
+		if (!ourValidContentTypes.contains(contentType)) {
+			retVal.setResponseType(ResponseTypeEnum.FAIL);
+			retVal.setResponseStatusMessage("Content type in response is not XML: " + contentType);
+			return retVal;
+		}
+
+		XMLEventReader streamReader;
+		initEventFactories();
+		try {
+			streamReader = ourXmlInputFactory.createXMLEventReader(new StringReader(theResponse.getBody()));
+		} catch (XMLStreamException e) {
+			throw new InternalErrorException(e);
+		} catch (FactoryConfigurationError e) {
+			throw new InternalErrorException(e);
+		}
+
+		ResponsePositionEnum pos = ResponsePositionEnum.NONE;
+		;
+		while (streamReader.hasNext()) {
+
+			XMLEvent next;
+			try {
+				next = streamReader.nextEvent();
+
+				if (next.isStartElement()) {
+					switch (pos) {
+					case NONE:
+					default:
+						if (Constants.SOAPENV11_ENVELOPE_QNAME.equals(next.asStartElement().getName())) {
+							pos = ResponsePositionEnum.IN_DOCUMENT;
+						} else {
+							retVal.setResponseType(ResponseTypeEnum.FAIL);
+							retVal.setResponseStatusMessage("Response is not a SOAP document. First element is: " + next.asStartElement().getName());
+						}
+						break;
+					case IN_DOCUMENT:
+						if (Constants.SOAPENV11_BODY_QNAME.equals(next.asStartElement().getName())) {
+							pos = ResponsePositionEnum.IN_BODY;
+						}
+						break;
+					case IN_BODY:
+						if (Constants.SOAPENV11_FAULT_QNAME.equals(next.asStartElement().getName())) {
+							pos = ResponsePositionEnum.IN_FAULT;
+							retVal.setResponseType(ResponseTypeEnum.FAULT);
+							retVal.setResponseBody(theResponse.getBody());
+							retVal.setResponseContentType(theResponse.getContentType());
+						} else {
+							retVal.setResponseType(ResponseTypeEnum.SUCCESS);
+							retVal.setResponseBody(theResponse.getBody());
+							retVal.setResponseContentType(theResponse.getContentType());
+							// Don't need any headers -
+							// retVal.setResponseHeaders(theResponse.getHeaders());
+							return retVal;
+						}
+						break;
+					case IN_FAULT:
+						if (Constants.TAG_SOAPENV11_FAULTCODE.equals(next.asStartElement().getName().getLocalPart())) {
+							StringBuilder b = new StringBuilder();
+							while (true) {
+								if (next.isEndElement() && Constants.TAG_SOAPENV11_FAULTCODE.equals(next.asEndElement().getName().getLocalPart())) {
+									break;
+								}
+								if (next.isCharacters()) {
+									b.append(next.asCharacters().getData());
+								}
+								next = streamReader.nextEvent();
+							}
+							retVal.setResponseFaultCode(b.toString());
+						} else if (Constants.TAG_SOAPENV11_FAULTSTRING.equals(next.asStartElement().getName().getLocalPart())) {
+							while (true) {
+								if (next.isEndElement() && Constants.TAG_SOAPENV11_FAULTSTRING.equals(next.asEndElement().getName().getLocalPart())) {
+									break;
+								}
+								if (next.isCharacters()) {
+									retVal.setResponseFaultDescription(next.asCharacters().getData());
+								}
+								next = streamReader.nextEvent();
+							}
+						}
+					}
+				} // if start
+
+			} catch (XMLStreamException e) {
+				throw new ProcessingException("Unable to process XML response. Error was: " + e.getMessage(), e);
+			}
+
+		}
+
+		return retVal;
+	}
+
+	@Override
+	public Soap11ResponseValidator provideInvocationResponseValidator() {
+		return myInvocationResultsBean;
+	}
+
+	private String renderWsdl(PersServiceVersionSoap11 theServiceDefinition, final String thePath, ICreatesImportUrl urlCreator) throws ProcessingException {
+		PersServiceVersionResource resource = theServiceDefinition.getResourceForUri(theServiceDefinition.getWsdlUrl());
+		if (resource == null || StringUtils.isBlank(resource.getResourceText())) {
+			throw new InternalErrorException("Service Version " + theServiceDefinition.getPid() + " does not have a resource for URL: " + theServiceDefinition.getWsdlUrl());
+		}
+		String wsdlResourceText = resource.getResourceText();
+
+		Document wsdlDocument = XMLUtils.parse(wsdlResourceText);
+
+		/*
+		 * Process Schema Imports
+		 */
+		NodeList typesList = wsdlDocument.getElementsByTagNameNS(Constants.NS_WSDL, "types");
+		for (int typesIdx = 0; typesIdx < typesList.getLength(); typesIdx++) {
+			Element typesElem = (Element) typesList.item(typesIdx);
+			NodeList schemaList = typesElem.getElementsByTagNameNS(Constants.NS_XSD, "schema");
+			for (int schemaIdx = 0; schemaIdx < schemaList.getLength(); schemaIdx++) {
+				Element schemaElem = (Element) schemaList.item(schemaIdx);
+				NodeList importList = schemaElem.getElementsByTagNameNS(Constants.NS_XSD, "import");
+				for (int importIdx = 0; importIdx < importList.getLength(); importIdx++) {
+					Element importElem = (Element) importList.item(importIdx);
+
+					String importLocation = importElem.getAttribute("schemaLocation");
+					if (StringUtils.isNotBlank(importLocation)) {
+						PersServiceVersionResource nResource = theServiceDefinition.getResourceForUri(importLocation);
+						importElem.setAttribute("schemaLocation", urlCreator.createImportUrlForSchemaImport(nResource));
+					}
+				}
 			}
 		}
-		
-		throw new ProcessingException("WSDL contains no bindings with SOAP 1.1 protocol. This is not supported");
+
+		/*
+		 * Process service addresses
+		 */
+
+		NodeList serviceList = wsdlDocument.getElementsByTagNameNS(Constants.NS_WSDL, "service");
+		for (int serviceIdx = 0; serviceIdx < serviceList.getLength(); serviceIdx++) {
+			Element typesElem = (Element) serviceList.item(serviceIdx);
+			NodeList portList = typesElem.getElementsByTagNameNS(Constants.NS_WSDL, "port");
+			for (int portIdx = 0; portIdx < portList.getLength(); portIdx++) {
+				Element schemaElem = (Element) portList.item(portIdx);
+				NodeList addressList = schemaElem.getElementsByTagNameNS(Constants.NS_WSDLSOAP, "address");
+				for (int addressIdx = 0; addressIdx < addressList.getLength(); addressIdx++) {
+					Element importElem = (Element) addressList.item(addressIdx);
+					String location = importElem.getAttribute("location");
+					if (StringUtils.isNotBlank(location)) {
+						String pathBase = urlEncode(getUrlBase() + thePath);
+						importElem.setAttribute("location", pathBase);
+					}
+				}
+			}
+		}
+
+		ourLog.debug("Writing WSDL for ServiceVersion[{}]", theServiceDefinition.getPid());
+		StringWriter writer = new StringWriter();
+		XMLUtils.serialize(wsdlDocument, true, writer);
+
+		String resourceText = writer.toString();
+		return resourceText;
+	}
+
+	/**
+	 * UNIT TESTS ONLY
+	 */
+	public void setConfigService(IConfigService theMock) {
+		myConfigService = theMock;
 	}
 
 	/**
@@ -756,11 +802,26 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 		myHttpClient = theHttpClient;
 	}
 
-	/**
-	 * UNIT TESTS ONLY
-	 */
-	public void setConfigService(IConfigService theMock) {
-		myConfigService = theMock;
+	private String urlEncode(String theString) {
+		return theString.replace(" ", "%20");
+	}
+
+	private static void initEventFactories() throws FactoryConfigurationError {
+		synchronized (Soap11ServiceInvoker.class) {
+			if (ourEventFactory == null) {
+				ourXmlInputFactory = XMLInputFactory.newInstance();
+				ourEventFactory = XMLEventFactory.newInstance();
+			}
+		}
+	}
+
+	private interface ICreatesImportUrl
+	{
+		String createImportUrlForSchemaImport(PersServiceVersionResource theResource) throws ProcessingException;
+	}
+
+	private static enum ResponsePositionEnum {
+		IN_BODY, IN_DOCUMENT, IN_FAULT, NONE
 	}
 
 	private enum StyleEnum {

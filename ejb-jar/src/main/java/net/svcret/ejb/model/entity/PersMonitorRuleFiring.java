@@ -28,7 +28,7 @@ import org.hibernate.annotations.Index;
 @org.hibernate.annotations.Table( 
 	indexes = {
 		@Index(columnNames = { "START_DATE" }, name = "IDX_PMRF_START_DATE"),
-	}, appliesTo = "PX_MONITOR_RULE_FIRING")
+		}, appliesTo = "PX_MONITOR_RULE_FIRING")
 @Entity()
 @Table(name = "PX_MONITOR_RULE_FIRING")
 @NamedQueries(value= {

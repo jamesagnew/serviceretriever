@@ -83,6 +83,12 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 		myUrl = theUrl;
 	}
 
+	public PersServiceVersionUrl(Long thePid, String theUrlId, String theUrl) {
+		myPid = thePid;
+		myUrlId=theUrlId;
+		myUrl = theUrl;
+	}
+
 	@Override
 	public int compareTo(PersServiceVersionUrl theUrl) {
 		return myUrlId.compareTo(theUrl.getUrlId());

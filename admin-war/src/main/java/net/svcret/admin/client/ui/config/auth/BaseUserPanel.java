@@ -3,11 +3,16 @@ package net.svcret.admin.client.ui.config.auth;
 import static net.svcret.admin.client.AdminPortal.IMAGES;
 import static net.svcret.admin.client.AdminPortal.MSGS;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.CssConstants;
+import net.svcret.admin.client.ui.components.EditableField;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
@@ -17,7 +22,6 @@ import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.util.StringUtil;
 
-import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -31,7 +35,6 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TextBox;
 
 public abstract class BaseUserPanel extends FlowPanel {
@@ -44,13 +47,14 @@ public abstract class BaseUserPanel extends FlowPanel {
 	private GUser myUser;
 	private TwoColumnGrid myUsernamePasswordGrid;
 	private TextBox myUsernameTextBox;
-	private TextArea myNotesTextBox;
+	private EditableField myNotesTextBox;
 	private Grid myIpsGrid;
 	private CheckBox myThrottleCheckbox;
 	private IntegerBox myThrottleNumberBox;
 	private ListBox myThrottlePeriodCombo;
 	private CheckBox myThrottleQueueCheckbox;
 	private IntegerBox myThrottleQueueMaxLength;
+	private EditableField myContactEmailsEditor;
 
 	public BaseUserPanel() {
 		FlowPanel listPanel = new FlowPanel();
@@ -79,7 +83,7 @@ public abstract class BaseUserPanel extends FlowPanel {
 
 		myUsernamePasswordGrid.clear();
 
-		myNotesTextBox.setText(theResult.getContactNotes());
+		myNotesTextBox.setValue(theResult.getContactNotes());
 
 		myUsernameTextBox = new TextBox();
 		myUsernameTextBox.setValue(myUser.getUsername());
@@ -90,6 +94,16 @@ public abstract class BaseUserPanel extends FlowPanel {
 			}
 		});
 		myUsernamePasswordGrid.addRow(MSGS.editUser_Username(), myUsernameTextBox);
+
+		final EditableField descriptionTextBox = new EditableField();
+		descriptionTextBox.setValue(theResult.getDescription());
+		descriptionTextBox.addValueChangeHandler(new ValueChangeHandler<String>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<String> theEvent) {
+				theResult.setDescription(descriptionTextBox.getValue());
+			}
+		});
+		myUsernamePasswordGrid.addRow("Description", descriptionTextBox);
 
 		if (theAuthHost.isSupportsPasswordChange()) {
 			myPasswordCheckbox = new CheckBox(MSGS.editUser_Password());
@@ -121,6 +135,9 @@ public abstract class BaseUserPanel extends FlowPanel {
 				myPasswordCheckbox.setEnabled(false);
 			}
 			myUsernamePasswordGrid.addRow(myPasswordCheckbox, myPasswordTextbox);
+			
+			updateContactEmailEditor();
+
 		}
 
 		boolean throttle = myUser.getThrottle().getMaxRequests() != null;
@@ -140,6 +157,21 @@ public abstract class BaseUserPanel extends FlowPanel {
 	}
 
 	protected abstract String getPanelTitle();
+
+	private void updateContactEmailEditor() {
+		StringBuilder b = new StringBuilder();
+
+		HashSet<String> contactEmails = myUser.getContactEmails();
+		if (contactEmails != null) {
+			for (String next : contactEmails) {
+				if (b.length() > 0) {
+					b.append("\n");
+				}
+				b.append(next);
+			}
+		}
+		myContactEmailsEditor.setValue(b.toString());
+	}
 
 	protected void initContents() {
 		myUsernamePasswordGrid = new TwoColumnGrid();
@@ -169,16 +201,35 @@ public abstract class BaseUserPanel extends FlowPanel {
 		TwoColumnGrid contactGrid = new TwoColumnGrid();
 		contactPanel.add(contactGrid);
 
-		myNotesTextBox = new TextArea();
-		myNotesTextBox.getElement().getStyle().setWidth(100, Unit.PX);
-		myNotesTextBox.setVisibleLines(8);
+		myNotesTextBox = new EditableField();
+		myNotesTextBox.setMultiline(true);
 		myNotesTextBox.addValueChangeHandler(new ValueChangeHandler<String>() {
 			@Override
 			public void onValueChange(ValueChangeEvent<String> theEvent) {
-				myUser.setContactNotes(myNotesTextBox.getText());
+				myUser.setContactNotes(myNotesTextBox.getValue());
 			}
 		});
 		contactGrid.addRow(MSGS.editUser_ContactNotes(), myNotesTextBox);
+		contactGrid.setMaximizeSecondColumn();
+
+		myContactEmailsEditor = new EditableField();
+		myContactEmailsEditor.setMultiline(true);
+		myContactEmailsEditor.setWidth("200px");
+		myContactEmailsEditor.setEmptyTextToDisplay("No addresses defined");
+		myContactEmailsEditor.addValueChangeHandler(new ValueChangeHandler<String>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<String> theEvent) {
+				Set<String> emails = new TreeSet<String>();
+				for (String next : myContactEmailsEditor.getValueOrBlank().split(",| ")) {
+					if (next.contains("@")) {
+						emails.add(next.trim());
+					}
+				}
+				myUser.setContactEmails(emails);
+				updateContactEmailEditor();
+			}
+		});
+		contactGrid.addRow("Email Addresses", myContactEmailsEditor);
 
 		/*
 		 * Permissions
@@ -349,15 +400,15 @@ public abstract class BaseUserPanel extends FlowPanel {
 			myUser.getThrottle().setPeriod(ThrottlePeriodEnum.valueOf(myThrottlePeriodCombo.getValue(myThrottlePeriodCombo.getSelectedIndex())));
 			if (myThrottleQueueCheckbox.getValue()) {
 				myUser.getThrottle().setQueue(myThrottleQueueMaxLength.getValue());
-			}else {
+			} else {
 				myUser.getThrottle().setQueue(null);
 			}
-		}else {
+		} else {
 			myUser.getThrottle().setMaxRequests(null);
 			myUser.getThrottle().setPeriod(null);
 			myUser.getThrottle().setQueue(null);
 		}
-		
+
 		myLoadingSpinner.show();
 		AdminPortal.MODEL_SVC.saveUser(myUser, new AsyncCallback<Void>() {
 			@Override

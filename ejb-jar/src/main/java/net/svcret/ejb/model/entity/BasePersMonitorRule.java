@@ -3,6 +3,7 @@ package net.svcret.ejb.model.entity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.TreeSet;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -109,5 +110,13 @@ public abstract class BasePersMonitorRule extends BasePersObject {
 	}
 
 	public abstract MonitorRuleTypeEnum getRuleType();
+
+	public Collection<String> getNotifyEmails() {
+		TreeSet<String> retVal=new TreeSet<String>();
+		for (PersMonitorRuleNotifyContact next : getNotifyContact()) {
+			retVal.add(next.getEmail());
+		}
+		return retVal;
+	}
 
 }

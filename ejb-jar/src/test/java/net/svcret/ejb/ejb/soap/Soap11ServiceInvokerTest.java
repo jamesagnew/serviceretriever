@@ -3,12 +3,15 @@ package net.svcret.ejb.ejb.soap;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.HttpResponseBean;
@@ -37,6 +40,7 @@ import net.svcret.ejb.util.IOUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.internal.stubbing.defaultanswers.ReturnsDeepStubs;
 
 
 public class Soap11ServiceInvokerTest {
@@ -94,6 +98,60 @@ public class Soap11ServiceInvokerTest {
 		
 	}
 
+	@Test
+	public void testCreateWsdlBundle() throws InternalErrorException, IOException, UnknownRequestException, ProcessingException {
+
+		PersServiceVersionSoap11 svcVersion = mock(PersServiceVersionSoap11.class, new ReturnsDeepStubs());
+		when(svcVersion.getService().getServiceId()).thenReturn("SVCID");
+		when(svcVersion.getVersionId()).thenReturn("VID");
+		
+		DefaultAnswer.setDesignTime();
+		when(svcVersion.getWsdlUrl()).thenReturn("http://the_wsdl_url");
+		
+		PersServiceVersionResource res = mock(PersServiceVersionResource.class);
+		when(res.getResourceText()).thenReturn(IOUtils.readClasspathIntoString("/test_simple.wsdl"));
+		when(svcVersion.getResourceForUri("http://the_wsdl_url")).thenReturn(res);
+		when(svcVersion.getResourceTextForUri("http://the_wsdl_url")).thenReturn(IOUtils.readClasspathIntoString("/test_simple.wsdl"));
+		
+		when(svcVersion.getResourceTextForUri("bar.xsd")).thenReturn(IOUtils.readClasspathIntoString("/basic_schema.xsd"));
+		when(svcVersion.getPid()).thenReturn(101L);
+
+		PersServiceVersionResource resource = mock(PersServiceVersionResource.class);
+		when(resource.getResourceText()).thenReturn(IOUtils.readClasspathIntoString("/basic_schema.xsd"));
+		when(resource.getPid()).thenReturn(100L);
+		when(svcVersion.getResourceForUri("bar.xsd")).thenReturn(resource);
+
+		PersServiceVersionResource wsdlResource = mock(PersServiceVersionResource.class);
+		when(wsdlResource.getResourceText()).thenReturn(IOUtils.readClasspathIntoString("/test_simple.wsdl"));
+		when(svcVersion.getResourceForUri("http://the_wsdl_url")).thenReturn(wsdlResource);
+
+		IConfigService configService = mock(IConfigService.class);
+		Soap11ServiceInvoker svc = new Soap11ServiceInvoker();
+		svc.setConfigService(configService);
+
+		PersConfig config=new PersConfig();
+		config.setDefaults();
+		config.getProxyUrlBases().iterator().next().setUrlBase("http://foo bar");
+		when(configService.getConfig()).thenReturn(config);
+		
+		DefaultAnswer.setRunTime();
+		
+		byte[] wsdlBundle = svc.createWsdlBundle(svcVersion);
+		ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(wsdlBundle));
+		
+		ourLog.info("ZIPPED BYTES: " + wsdlBundle.length);
+		
+		ZipEntry wsdlEntry = zis.getNextEntry();
+		assertEquals("SVCID_VID.wsdl",wsdlEntry.getName());
+		
+		ZipEntry xsdEntry = zis.getNextEntry();
+		assertEquals("SVCID_VID_schema_100.xsd",xsdEntry.getName());
+		
+//		byte[] bytes = new byte[(int) wsdlEntry.getCompressedSize()];
+//		zis.read(bytes);
+//		assertEquals(IOUtils.readClasspathIntoString("/test_simple.wsdl"), new String(bytes));
+		
+	}
 	@Test
 	public void testGetXsd() throws InternalErrorException, IOException, UnknownRequestException, ProcessingException {
 

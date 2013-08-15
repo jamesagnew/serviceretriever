@@ -1,0 +1,37 @@
+
+<div style="font-size: 1.1em">
+ServiceRetriever Monitor Alert
+</div>
+
+<p>
+An alert has been generated on <b>${firingDate}</b> at <b>${firingTime}</b> for the following ${ruleTypeName} rule:<br/>
+<b><i>${ruleName}</i></b>
+</p>
+
+<p>
+The following issues were detected:
+</p>
+<table>
+	<tr>
+		<td>Domain</td>
+		<td>Service</td>
+		<td>Version</td>
+		<td>URL</td>
+		<td>Issues</td>
+	</tr>
+#foreach ($problem in ${problems})
+	<tr>
+		<td>${problem.domainName}</td>
+		<td>${problem.serviceName}</td>
+		<td>${problem.versionId}</td>
+		<td><a href="${problem.url}">${problem.urlId}</a></td>
+		<td>
+			<ul>
+#foreach ($issue in ${problem.issues})
+				<li>${issue}</li>
+#end			
+			</ul>
+		</td>
+	</tr>
+#end
+</table>
