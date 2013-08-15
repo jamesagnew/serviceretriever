@@ -12,6 +12,7 @@ import net.svcret.admin.client.rpc.ModelUpdateService;
 import net.svcret.admin.shared.ServiceFailureException;
 import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
+import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
 import net.svcret.admin.shared.model.BaseGAuthHost;
@@ -101,6 +102,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		ver.setName("Version 1-A-1");
 		ver.setProxyPath("/some/service");
 		ver.setLastAccess(new Date());
+		ver.setServerSecurityMode(ServerSecurityModeEnum.REQUIRE_ANY);
 		svc.getVersionList().add(ver);
 
 		GServiceVersionUrl url = new GServiceVersionUrl();

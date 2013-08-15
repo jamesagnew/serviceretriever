@@ -10,10 +10,10 @@ import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
-import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
+import net.svcret.ejb.model.entity.PersUser;
 
 
 @Local
@@ -26,11 +26,11 @@ public interface IRuntimeStatus {
 	 * @param theInvocationTime
 	 * @param theRequestLength
 	 * @param theMethod
-	 * @param theUser
+	 * @param theAuthorizedUser
 	 * @param theHttpResponse The response from the actual service implementation, if we got that far. Can be null if no request was ever made (e.g. because of security failure before that point)
 	 * @param theInvocationResponseResultsBean
 	 */
-	void recordInvocationMethod(Date theInvocationTime, int theRequestLength, PersServiceVersionMethod theMethod, PersUser theUser, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, Long theThrottleDelayIfAny);
+	void recordInvocationMethod(Date theInvocationTime, int theRequestLength, PersServiceVersionMethod theMethod, PersUser theAuthorizedUser, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, Long theThrottleDelayIfAny);
 
 	/**
 	 * Records a single invocation requesting a static resource

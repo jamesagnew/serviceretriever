@@ -4,6 +4,7 @@ import static net.svcret.admin.shared.model.AuthorizationOutcomeEnum.*;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.ejb.EJB;
@@ -11,15 +12,13 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
-import org.apache.commons.lang3.Validate;
-
+import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.api.IAuthorizationService;
 import net.svcret.ejb.api.IAuthorizationService.ILdapAuthorizationService;
 import net.svcret.ejb.api.IAuthorizationService.ILocalDatabaseAuthorizationService;
 import net.svcret.ejb.api.IBroadcastSender;
-import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.ISecurityService;
 import net.svcret.ejb.ex.ProcessingException;
@@ -27,6 +26,8 @@ import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersUser;
+
+import org.apache.commons.lang3.Validate;
 
 @Stateless
 public class SecurityServiceBean implements ISecurityService {
@@ -51,53 +52,100 @@ public class SecurityServiceBean implements ISecurityService {
 	@EJB
 	private ILocalDatabaseAuthorizationService myLocalDbAuthService;
 
-	public AuthorizationResultsBean authorizeMethodInvocation(BasePersAuthenticationHost theAuthHost, ICredentialGrabber theCredentialGrabber, PersServiceVersionMethod theMethod, String theRequestHostIp) throws ProcessingException {
-		Validate.notNull(theAuthHost, "AuthHost");
-		
+	public AuthorizationResultsBean authorizeMethodInvocation(List<AuthorizationRequestBean> theAuthRequests, PersServiceVersionMethod theMethod, String theRequestHostIp) throws ProcessingException {
+		Validate.notNull(theAuthRequests, "AuthRequests");
+
 		if (myInMemoryUserCatalog == null) {
 			loadUserCatalogIfNeeded();
 		}
-		
-		BasePersAuthenticationHost authHost = myInMemoryUserCatalog.getAuthHostByPid(theAuthHost.getPid());
 
 		AuthorizationResultsBean retVal = new AuthorizationResultsBean();
-		if (authHost == null) {
-			ourLog.debug("Authorization host not in user roster (possibly because it has been deleted?)");
-			retVal.setAuthorized(FAILED_INTERNAL_ERROR);
-			return retVal;
+		ServerSecurityModeEnum serverSecurityMode = theMethod.getServiceVersion().getServerSecurityMode();
+
+		int failed = 0;
+		int passed = 0;
+		if (serverSecurityMode != ServerSecurityModeEnum.NONE) {
+
+			for (AuthorizationRequestBean next : theAuthRequests) {
+				BasePersAuthenticationHost authHost = myInMemoryUserCatalog.getAuthHostByPid(next.getAuthenticationHost().getPid());
+				if (authHost == null) {
+					ourLog.debug("Authorization host not in user roster (possibly because it has been deleted?)");
+					retVal.setAuthorized(FAILED_INTERNAL_ERROR);
+					return retVal;
+				}
+
+				IAuthorizationService authService = getAuthService(authHost);
+				ourLog.debug("Authorizing call using auth service: {}", authService);
+
+				PersUser authorizedUser = authService.authorize(authHost, myInMemoryUserCatalog, next.getCredentialGrabber());
+
+				if (authorizedUser == null) {
+					failed++;
+				} else {
+					boolean ipAllowed = authorizedUser.determineIfIpIsAllowed(theRequestHostIp);
+					if (ipAllowed == false) {
+						if (ourLog.isDebugEnabled()) {
+							ourLog.debug("IP {} not allowed by user {} with whitelist {}", new Object[] { theRequestHostIp, authorizedUser, authorizedUser.getAllowSourceIpsAsStrings() });
+						}
+						retVal.setAuthorized(AuthorizationOutcomeEnum.FAILED_IP_NOT_IN_WHITELIST);
+					} else {
+
+						boolean authorized = authorizedUser.hasPermission(theMethod);
+
+						ourLog.debug("Authorization results: {}", authorized);
+						if (authorized) {
+							if (retVal.getAuthorizedUser() == null) {
+								retVal.setAuthorizedUser(authorizedUser);
+							}
+						} else {
+							retVal.setAuthorized(FAILED_USER_NO_PERMISSIONS);
+						}
+					}
+
+					passed++;
+				}
+
+				if (serverSecurityMode == ServerSecurityModeEnum.ALLOW_ANY || serverSecurityMode == ServerSecurityModeEnum.REQUIRE_ANY) {
+					if (passed > 0) {
+						break;
+					}
+				}
+
+			}// for server security modules
+
 		}
 
-		IAuthorizationService authService = getAuthService(authHost);
+		switch (serverSecurityMode) {
+		case ALLOW_ANY:
+			retVal.setAuthorized(AUTHORIZED);
+			break;
 
-		ourLog.debug("Authorizing call using auth service: {}", authService);
+		case NONE:
+			retVal.setAuthorized(AUTHORIZED);
+			break;
 
-		PersUser authorizedUser = authService.authorize(authHost, myInMemoryUserCatalog, theCredentialGrabber);
-		if (authorizedUser == null) {
-			ourLog.debug("Auth service did not find authorized user in request");
-			retVal.setAuthorized(FAILED_BAD_CREDENTIALS_IN_REQUEST);
-			// TODO: return the failed user so we can add it to runtimestats
-			return retVal;
-		}
-
-		retVal.setUser(authorizedUser);
-
-		boolean ipAllowed = authorizedUser.determineIfIpIsAllowed(theRequestHostIp);
-		if (ipAllowed == false) {
-			if (ourLog.isDebugEnabled()) {
-				ourLog.debug("IP {} not allowed by user {} with whitelist {}", new Object[] { theRequestHostIp, authorizedUser, authorizedUser.getAllowSourceIpsAsStrings() });
-			}
-			retVal.setAuthorized(AuthorizationOutcomeEnum.FAILED_IP_NOT_IN_WHITELIST);
-		} else {
-
-			boolean authorized = authorizedUser.hasPermission(theMethod);
-
-			ourLog.debug("Authorization results: {}", authorized);
-			if (authorized) {
+		case REQUIRE_ALL:
+			if (passed == 0 && failed == 0) {
 				retVal.setAuthorized(AUTHORIZED);
+			} else if (failed > 0 && retVal.getAuthorized() == null) {
+				retVal.setAuthorized(FAILED_BAD_CREDENTIALS_IN_REQUEST);
 			} else {
-				retVal.setAuthorized(FAILED_USER_NO_PERMISSIONS);
+				retVal.setAuthorized(AUTHORIZED);
 			}
+			break;
+
+		case REQUIRE_ANY:
+			if (passed == 0 && failed == 0) {
+				retVal.setAuthorized(AUTHORIZED);
+			} else if (passed == 0 && retVal.getAuthorized() == null) {
+				retVal.setAuthorized(FAILED_BAD_CREDENTIALS_IN_REQUEST);
+			} else {
+				retVal.setAuthorized(AUTHORIZED);
+			}
+			break;
+
 		}
+
 		return retVal;
 
 	}
@@ -107,9 +155,7 @@ public class SecurityServiceBean implements ISecurityService {
 		ourLog.debug("Checking for updated user catalog");
 
 		/*
-		 * If the state in the DB hasn't ever been incremented, assume we're in
-		 * a completely new installation, and create a default user database
-		 * with an admin user who can begin configuring things
+		 * If the state in the DB hasn't ever been incremented, assume we're in a completely new installation, and create a default user database with an admin user who can begin configuring things
 		 */
 
 		long newVersion = myDao.getStateCounter(STATE_KEY);

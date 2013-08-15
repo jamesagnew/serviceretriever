@@ -17,6 +17,8 @@ import javax.persistence.Column;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -36,6 +38,7 @@ import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
+import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.ServerSecuredEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.ex.ProcessingException;
@@ -115,6 +118,10 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("SAUTH_ORDER")
 	private List<PersBaseServerAuth<?, ?>> myServerAuths;
+
+	@Column(name = "SERVER_SEC_MODE", length = 50, nullable = false)
+	@Enumerated(EnumType.STRING)
+	private ServerSecurityModeEnum myServerSecurityMode;
 
 	@ManyToOne()
 	@ForeignKey(name = "PX_SVCVER_SERVICE_PID")
@@ -430,6 +437,10 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		}
 	}
 
+	public ServerSecurityModeEnum getServerSecurityMode() {
+		return myServerSecurityMode;
+	}
+
 	/**
 	 * @return the service
 	 */
@@ -686,6 +697,10 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	 */
 	public void setPid(Long thePid) {
 		myPid = thePid;
+	}
+
+	public void setServerSecurityMode(ServerSecurityModeEnum theServerSecurityMode) {
+		myServerSecurityMode = theServerSecurityMode;
 	}
 
 	/**

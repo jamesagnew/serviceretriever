@@ -2,6 +2,8 @@ package net.svcret.admin.shared.model;
 
 import java.util.Date;
 
+import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
+
 public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<BaseGServiceVersion> implements IProvidesUrlCount {
 
 	private static final long serialVersionUID = 7886801527330335503L;
@@ -18,6 +20,7 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	private String myProxyPath;
 	private GServiceVersionResourcePointerList myResourcePointerList;
 	private BaseGServerSecurityList myServerSecurityList;
+	private ServerSecurityModeEnum myServerSecurityMode;
 	private GServiceMethodList myServiceMethodList;
 	private GServiceVersionUrlList myServiceUrlList;
 
@@ -103,6 +106,10 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 		return myServerSecurityList;
 	}
 
+	public ServerSecurityModeEnum getServerSecurityMode() {
+		return myServerSecurityMode;
+	}
+
 	public GServiceVersionUrlList getUrlList() {
 		return myServiceUrlList;
 	}
@@ -143,6 +150,7 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 
 		myActive = theObject.myActive;
 		myLastAccess = theObject.myLastAccess;
+		myServerSecurityMode = theObject.myServerSecurityMode;
 
 		if (theObject.getMethodList() != null) {
 			getMethodList().mergeResults(theObject.getMethodList());
@@ -220,6 +228,10 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	 */
 	public void setResourcePointerList(GServiceVersionResourcePointerList theResourcePointerList) {
 		myResourcePointerList = theResourcePointerList;
+	}
+
+	public void setServerSecurityMode(ServerSecurityModeEnum theServerSecurityMode) {
+		myServerSecurityMode = theServerSecurityMode;
 	}
 
 	@Override

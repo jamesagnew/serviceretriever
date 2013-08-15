@@ -730,6 +730,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setVersionId(theVersion.getId());
 		retVal.setExplicitProxyPath(theVersion.getExplicitProxyPath());
 		retVal.setDescription(theVersion.getDescription());
+		retVal.setServerSecurityMode(theVersion.getServerSecurityMode());
 
 		PersHttpClientConfig httpClientConfig = myDao.getHttpClientConfig(theVersion.getHttpClientConfigPid());
 		if (httpClientConfig == null) {
@@ -1403,6 +1404,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setParentServiceName(theVersion.getService().getServiceName());
 		retVal.setParentServicePid(theVersion.getService().getPid());
 		retVal.setDescription(theVersion.getDescription());
+		retVal.setServerSecurityMode(theVersion.getServerSecurityMode());
 
 		theVersion.populateKeepRecentTransactionsToDto(retVal);
 		toUiMonitorRules(theVersion, retVal);

@@ -98,7 +98,7 @@ public class ThrottlingServiceTest {
 		invocationRequest.setResultMethod(null, "", "", null);
 		AuthorizationResultsBean authorization = new AuthorizationResultsBean();
 
-		authorization.setUser(user);
+		authorization.setAuthorizedUser(user);
 
 		mySvc.applyThrottle(httpRequest, invocationRequest, authorization);
 

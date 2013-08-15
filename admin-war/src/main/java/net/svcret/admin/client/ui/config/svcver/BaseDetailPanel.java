@@ -21,6 +21,7 @@ import net.svcret.admin.client.ui.config.sec.IProvidesViewAndEdit.IValueChangeHa
 import net.svcret.admin.client.ui.config.sec.ViewAndEditFactory;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
+import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.BaseGClientSecurity;
 import net.svcret.admin.shared.model.BaseGServerSecurity;
 import net.svcret.admin.shared.model.BaseGServerSecurityList;
@@ -56,6 +57,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.TabPanel;
@@ -83,6 +85,8 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 	private Grid myServerSecurityGrid;
 	private T myServiceVersion;
 	private UrlGrid myUrlGrid;
+	private ListBox myServerSecurityModeBox;
+	private HTML myServerSecurityModeDescription;
 
 	public BaseDetailPanel(AbstractServiceVersionPanel theParent, T theServiceVersion) {
 		myServiceVersion = theServiceVersion;
@@ -429,7 +433,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		Label urlLabel = new Label("Server Security modules verify that the client which is making requests coming " + "in to the proxy are authorized to invoke the particular service they are attempting to "
 				+ "invoke. If no server security modules are defined for this service version, all requests will be " + "allowed to proceed.");
 		thePanel.add(urlLabel);
-
+		
 		myServerSecurityGrid = new Grid(1, 2);
 		myServerSecurityGrid.addStyleName(CssConstants.PROPERTY_TABLE);
 		thePanel.add(myServerSecurityGrid);
@@ -460,12 +464,55 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 				module.setUncommittedSessionId(newUncommittedSessionId());
 				getServiceVersion().getServerSecurityList().add(module);
 				updateServerSercurityPanel();
+				
+				myServerSecurityModeBox.setEnabled(true);
+				if (myServiceVersion.getServerSecurityMode() == ServerSecurityModeEnum.NONE) {
+					myServerSecurityModeBox.setSelectedIndex(ServerSecurityModeEnum.indexOfDefault());
+					handleServerSecurityModeChange();
+				}
 			}
 
 		});
 
+		thePanel.add(new HtmlH1("Server Security Mode"));
+		
+		TwoColumnGrid propsGrid = new TwoColumnGrid();
+		thePanel.add(propsGrid);
+		myServerSecurityModeBox = new ListBox(false);
+		propsGrid.addRow("Mode", myServerSecurityModeBox);
+		myServerSecurityModeDescription = propsGrid.addDescription("");
+		for (ServerSecurityModeEnum next : ServerSecurityModeEnum.values()) {
+			myServerSecurityModeBox.addItem(next.getFriendlyName(), next.name());
+			if (next == ServerSecurityModeEnum.NONE && myServiceVersion.getServerSecurityList().size() == 0) {
+				myServerSecurityModeBox.setSelectedIndex(myServerSecurityModeBox.getItemCount() - 1);
+			} else if (next == myServiceVersion.getServerSecurityMode() && myServiceVersion.getServerSecurityList().size() > 0) {
+				myServerSecurityModeBox.setSelectedIndex(myServerSecurityModeBox.getItemCount() - 1);
+			}
+		}
+		myServerSecurityModeBox.addChangeHandler(new ChangeHandler() {
+			@Override
+			public void onChange(ChangeEvent theEvent) {
+				handleServerSecurityModeChange();
+			}
+		});
+		handleServerSecurityModeChange();
+		if (myServiceVersion.getServerSecurityList().size()==0) {
+			myServerSecurityModeBox.setEnabled(false);
+		}
+		
 		updateServerSercurityPanel();
 
+	}
+
+	private void handleServerSecurityModeChange() {
+		int index = myServerSecurityModeBox.getSelectedIndex();
+		if (index != -1) {
+			ServerSecurityModeEnum mode = ServerSecurityModeEnum.values()[index];
+			myServerSecurityModeDescription.setText(mode.getDescription());
+			if (myServiceVersion!=null) {
+				myServiceVersion.setServerSecurityMode(mode);
+			}
+		}
 	}
 
 	private void initUrlPanel(FlowPanel thePanel) {

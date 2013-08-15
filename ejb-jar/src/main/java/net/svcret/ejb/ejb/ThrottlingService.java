@@ -71,7 +71,7 @@ public class ThrottlingService implements IThrottlingService {
 		if (theAuthorization == null) {
 			return;
 		}
-		PersUser user = theAuthorization.getUser();
+		PersUser user = theAuthorization.getAuthorizedUser();
 		if (user == null) {
 			return;
 		}
@@ -146,7 +146,7 @@ public class ThrottlingService implements IThrottlingService {
 		
 		Integer throttleMaxQueueDepth = theTask.getThrottleKey().getThrottleMaxQueueDepth();
 		if (throttleMaxQueueDepth == null || theTask.getThrottleKey().getThrottleMaxQueueDepth() == 0) {
-			recordInvocationForThrottleQueueFull(theTask.getHttpRequest(), theTask.getInvocationRequest(), theTask.getUser());
+			recordInvocationForThrottleQueueFull(theTask.getHttpRequest(), theTask.getInvocationRequest(), theTask.getAuthorizedUser());
 			throw new ThrottleQueueFullException();
 		}
 
@@ -161,7 +161,7 @@ public class ThrottlingService implements IThrottlingService {
 		try {
 			taskQueue.tryToAddTask(theTask, throttleMaxQueueDepth);
 		} catch (ThrottleQueueFullException e) {
-			recordInvocationForThrottleQueueFull(theTask.getHttpRequest(), theTask.getInvocationRequest(), theTask.getUser());
+			recordInvocationForThrottleQueueFull(theTask.getHttpRequest(), theTask.getInvocationRequest(), theTask.getAuthorizedUser());
 			throw e;
 		}
 		

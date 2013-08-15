@@ -26,6 +26,7 @@ import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.ISecurityService;
+import net.svcret.ejb.api.ISecurityService.AuthorizationRequestBean;
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
 import net.svcret.ejb.api.IServiceInvoker;
 import net.svcret.ejb.api.IServiceInvokerJsonRpc20;
@@ -200,10 +201,10 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 	private void logTransaction(HttpRequestBean theRequest, BasePersServiceVersion serviceVersion, AuthorizationResultsBean authorized, HttpResponseBean httpResponse,
 			InvocationResponseResultsBean invocationResponse) {
-		PersUser user = authorized != null ? authorized.getUser() : null;
+		PersUser user = authorized.getAuthorizedUser();
 		String requestBody = theRequest.getRequestBody();
 		PersServiceVersionUrl successfulUrl = httpResponse != null ? httpResponse.getSuccessfulUrl() : null;
-		AuthorizationOutcomeEnum authorizationOutcome = authorized != null ? authorized.isAuthorized() : AuthorizationOutcomeEnum.AUTHORIZED;
+		AuthorizationOutcomeEnum authorizationOutcome = authorized.isAuthorized();
 		myTransactionLogger.logTransaction(theRequest, serviceVersion, user, requestBody, invocationResponse, successfulUrl, httpResponse, authorizationOutcome);
 	}
 
@@ -214,7 +215,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			invocationResponse.setResponseType(ResponseTypeEnum.SECURITY_FAIL);
 			invocationResponse.setResponseStatusMessage("Failed to authorize credentials");
 			// TODO: also pass authorization outcome to save it
-			myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), 0, results.getMethodDefinition(), theAuthorized.getUser(), null, invocationResponse, theThrottleTimeIfAny);
+			myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), 0, results.getMethodDefinition(), theAuthorized.getAuthorizedUser(), null, invocationResponse, theThrottleTimeIfAny);
 
 			// Log transaction
 			logTransaction(theRequest, results.getMethodDefinition().getServiceVersion(), theAuthorized, null, invocationResponse);
@@ -320,7 +321,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		String responseContentType = invocationResponse.getResponseContentType();
 		Map<String, List<String>> responseHeaders = invocationResponse.getResponseHeaders();
 		int requestLength = contentBody.length();
-		PersUser user = ((authorized != null && authorized.isAuthorized() == AuthorizationOutcomeEnum.AUTHORIZED) ? authorized.getUser() : null);
+		PersUser user = ((authorized != null && authorized.isAuthorized() == AuthorizationOutcomeEnum.AUTHORIZED) ? authorized.getAuthorizedUser() : null);
 
 		if (theRecordOutcome) {
 			myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), requestLength, method, user, httpResponse, invocationResponse, theThrottleDelayIfAny);
@@ -358,6 +359,8 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 				}
 			}
 
+			PersServiceVersionMethod method = results.getMethodDefinition();
+			List<AuthorizationRequestBean> authRequests=new ArrayList<ISecurityService.AuthorizationRequestBean>();
 			for (PersBaseServerAuth<?, ?> nextServerAuth : serviceVersion.getServerAuths()) {
 				ICredentialGrabber credentials;
 				if (nextServerAuth instanceof PersHttpBasicServerAuth) {
@@ -367,25 +370,17 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 					credentials = results.getCredentialsInRequest(grabber);
 				}
 				BasePersAuthenticationHost authHost = nextServerAuth.getAuthenticationHost();
-				PersServiceVersionMethod method = results.getMethodDefinition();
 
 				if (credentials == null) {
-					// This probably shouldn't happen..
-					ourLog.trace("No credential grabber in request (Should invoker have provided one)");
-					InvocationResponseResultsBean invocationResponse = new InvocationResponseResultsBean();
-					invocationResponse.setResponseType(ResponseTypeEnum.SECURITY_FAIL);
-					invocationResponse.setResponseStatusMessage("Internal error: ServiceRetriever failed to extract credentials");
-					myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), 0, method, null, null, invocationResponse, null);
-					throw new SecurityFailureException(AuthorizationOutcomeEnum.FAILED_INTERNAL_ERROR, invocationResponse.getResponseStatusMessage());
+					throw new SecurityFailureException(AuthorizationOutcomeEnum.FAILED_INTERNAL_ERROR, "ServiceRetriever failed to extract credentials.");
 				}
 
+				authRequests.add(new AuthorizationRequestBean(authHost, credentials));
 				ourLog.trace("Checking credentials: {}", credentials);
-				authorized = mySecuritySvc.authorizeMethodInvocation(authHost, credentials, method, theRequest.getRequestHostIp());
-				if (authorized.isAuthorized() == AuthorizationOutcomeEnum.AUTHORIZED) {
-					break;
-				}
-
 			}
+			
+			authorized = mySecuritySvc.authorizeMethodInvocation(authRequests, method, theRequest.getRequestHostIp());
+
 		}
 		return authorized;
 	}

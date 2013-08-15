@@ -73,8 +73,8 @@ public class ThrottleException extends Exception {
 		myAsyncContext = theAsyncContext;
 	}
 
-	public PersUser getUser() {
-		return myAuthorization != null ? myAuthorization.getUser() : null;
+	public PersUser getAuthorizedUser() {
+		return myAuthorization != null ? myAuthorization.getAuthorizedUser() : null;
 	}
 
 }
