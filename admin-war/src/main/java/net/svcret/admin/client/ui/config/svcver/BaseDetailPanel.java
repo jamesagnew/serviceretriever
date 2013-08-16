@@ -768,10 +768,12 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 			mySec = theSec;
 			myRow = theRow;
 
-			myEditButton = new PButton(IMAGES.iconEdit(), MSGS.actions_Edit());
-			myEditButton.addClickHandler(this);
-			add(myEditButton);
-
+			if (!theSec.isEditMode()) {
+				myEditButton = new PButton(IMAGES.iconEdit(), MSGS.actions_Edit());
+				myEditButton.addClickHandler(this);
+				add(myEditButton);
+			}
+			
 			myDeleteButton = new PButton(IMAGES.iconRemove(), MSGS.actions_Remove());
 			myDeleteButton.addClickHandler(this);
 			add(myDeleteButton);

@@ -23,6 +23,7 @@ import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserDomainPermission;
 import net.svcret.ejb.model.entity.PersUserServicePermission;
+import net.svcret.ejb.model.entity.PersUserServiceVersionMethodPermission;
 import net.svcret.ejb.model.entity.PersUserServiceVersionPermission;
 import net.svcret.ejb.model.entity.PersUserStatus;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
@@ -166,7 +167,7 @@ public class SecurityServiceBeanTest {
 		PersUserDomainPermission domainPer = myUser.addPermission(myD0);
 		PersUserServicePermission servicePer = domainPer.addPermission(myD0S0);
 		PersUserServiceVersionPermission versionPer = servicePer.addPermission(myD0S0V0);
-//		PersUserServiceVersionMethodPermission methodPerm = versionPer.addPermission(myD0S0V0M0);
+		PersUserServiceVersionMethodPermission methodPerm = versionPer.addPermission(myD0S0V0M0);
 		
 		myUser.loadAllAssociations();
 		

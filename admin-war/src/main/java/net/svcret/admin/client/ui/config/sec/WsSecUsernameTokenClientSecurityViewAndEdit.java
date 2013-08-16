@@ -16,8 +16,7 @@ public class WsSecUsernameTokenClientSecurityViewAndEdit extends BaseClientSecur
 
 	@Override
 	protected String getUsername(GWsSecUsernameTokenClientSecurity theObject) {
-		return theObject.getUsername()
-				;
+		return theObject.getUsername();
 	}
 
 	@Override

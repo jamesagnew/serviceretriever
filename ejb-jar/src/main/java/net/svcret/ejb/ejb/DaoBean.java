@@ -25,6 +25,7 @@ import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
+import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.api.IDao;
@@ -490,6 +491,7 @@ public class DaoBean implements IDao {
 			retVal.setService(theService);
 			retVal.setVersionId(theId);
 			retVal.setHttpClientConfig(config);
+			retVal.setServerSecurityMode(ServerSecurityModeEnum.NONE);
 
 			// retVal = myEntityManager.merge(retVal);
 

@@ -78,9 +78,10 @@ public class SecurityServiceBean implements ISecurityService {
 				ourLog.debug("Authorizing call using auth service: {}", authService);
 
 				PersUser authorizedUser = authService.authorize(authHost, myInMemoryUserCatalog, next.getCredentialGrabber());
-
+				boolean authFailed;
+				
 				if (authorizedUser == null) {
-					failed++;
+					authFailed=true;
 				} else {
 					boolean ipAllowed = authorizedUser.determineIfIpIsAllowed(theRequestHostIp);
 					if (ipAllowed == false) {
@@ -88,23 +89,31 @@ public class SecurityServiceBean implements ISecurityService {
 							ourLog.debug("IP {} not allowed by user {} with whitelist {}", new Object[] { theRequestHostIp, authorizedUser, authorizedUser.getAllowSourceIpsAsStrings() });
 						}
 						retVal.setAuthorized(AuthorizationOutcomeEnum.FAILED_IP_NOT_IN_WHITELIST);
+						authFailed=true;
 					} else {
 
 						boolean authorized = authorizedUser.hasPermission(theMethod);
 
 						ourLog.debug("Authorization results: {}", authorized);
 						if (authorized) {
+							authFailed=false;
 							if (retVal.getAuthorizedUser() == null) {
 								retVal.setAuthorizedUser(authorizedUser);
 							}
 						} else {
+							authFailed=true;
 							retVal.setAuthorized(FAILED_USER_NO_PERMISSIONS);
 						}
 					}
 
-					passed++;
 				}
 
+				if (authFailed) {
+					failed++;
+				}else {
+					passed++;
+				}
+				
 				if (serverSecurityMode == ServerSecurityModeEnum.ALLOW_ANY || serverSecurityMode == ServerSecurityModeEnum.REQUIRE_ANY) {
 					if (passed > 0) {
 						break;
@@ -127,8 +136,10 @@ public class SecurityServiceBean implements ISecurityService {
 		case REQUIRE_ALL:
 			if (passed == 0 && failed == 0) {
 				retVal.setAuthorized(AUTHORIZED);
-			} else if (failed > 0 && retVal.getAuthorized() == null) {
-				retVal.setAuthorized(FAILED_BAD_CREDENTIALS_IN_REQUEST);
+			} else if (failed > 0) {
+				if (retVal.getAuthorized() == null) {
+					retVal.setAuthorized(FAILED_BAD_CREDENTIALS_IN_REQUEST);
+				}
 			} else {
 				retVal.setAuthorized(AUTHORIZED);
 			}
@@ -137,8 +148,10 @@ public class SecurityServiceBean implements ISecurityService {
 		case REQUIRE_ANY:
 			if (passed == 0 && failed == 0) {
 				retVal.setAuthorized(AUTHORIZED);
-			} else if (passed == 0 && retVal.getAuthorized() == null) {
-				retVal.setAuthorized(FAILED_BAD_CREDENTIALS_IN_REQUEST);
+			} else if (passed == 0) {
+				if (retVal.getAuthorized() == null) {
+					retVal.setAuthorized(FAILED_BAD_CREDENTIALS_IN_REQUEST);
+				}
 			} else {
 				retVal.setAuthorized(AUTHORIZED);
 			}

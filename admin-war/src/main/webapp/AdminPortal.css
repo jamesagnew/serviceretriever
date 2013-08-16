@@ -264,6 +264,10 @@ LABEL.formLabel {
 	white-space: nowrap;
 }
 
+.pushButton:DISABLED IMG, .pushButton:DISABLED DIV {
+	opacity:0.4;	
+}
+
 .pushButtonText {
 	padding-left: 4px;
 	vertical-align: super;
@@ -473,16 +477,16 @@ TABLE.propertyTable TBODY TR:nth-child(even), .propertyTableEvenRow {
 }
 
 TABLE.propertyTable TBODY TR:first-child {
-	/*
-	background: #6194BC;
-	color: #FFFFFF;
-	*/
 	background: #FFF;
 	font-weight: bold;
 	font-size: 1.2em;
-	
-
 }
+TABLE.propertyTableChildTable TBODY TR:first-child {
+	background: inherit !important;
+	font-weight: inherit !important;
+	font-size: inherit !important;
+}
+
 
 TABLE.propertyTable TBODY TR:first-child TD {
 	border-bottom: 2px solid #6f7277;
@@ -490,6 +494,12 @@ TABLE.propertyTable TBODY TR:first-child TD {
 	text-align: left;
 	color: #4b4a4a;
 	text-shadow: #ddf 1px 1px 0;
+	overflow: hidden;
+}
+TABLE.propertyTableChildTable TBODY TR:first-child TD {
+	border-bottom:  inherit !important;
+	color:  inherit !important;
+	text-shadow:  inherit !important;
 	overflow: hidden;
 }
 

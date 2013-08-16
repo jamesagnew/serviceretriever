@@ -12,7 +12,7 @@ public class TwoColumnGrid extends FlexTable {
 	private int myNextRow;
 	
 	public TwoColumnGrid() {
-		setStyleName(CssConstants.TWO_COLUMN_PROPERTY_GRID);
+		setStylePrimaryName(CssConstants.TWO_COLUMN_PROPERTY_GRID);
 		myNextRow = -1;
 	}
 

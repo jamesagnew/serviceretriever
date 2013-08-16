@@ -130,8 +130,8 @@ public class MonitorServiceBean implements IMonitorService {
 			ourLog.debug("Active check going to invoke each URL for {}", svcVerPid);
 			Collection<SidechannelOrchestratorResponseBean> outcomes = myServiceOrchestrator.handleSidechannelRequestForEachUrl(svcVerPid, requestBody, contentType, requestedByString);
 
-			ourLog.debug("Active check got {} outcomes", outcomes.size());
 			outcome = evaluateRuleForActiveIssues(theCheck, outcomes);
+			ourLog.debug("Active check got {} outcomes. Problem: {}", outcomes.size(), outcome);
 
 			theCheck.setLastTransactionOutcome(outcome == null);
 

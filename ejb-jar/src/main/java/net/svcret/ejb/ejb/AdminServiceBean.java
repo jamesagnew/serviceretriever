@@ -20,6 +20,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
+import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.BaseGClientSecurity;
@@ -761,8 +762,16 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setVersionId(theVersion.getId());
 		retVal.setExplicitProxyPath(theVersion.getExplicitProxyPath());
 		retVal.setDescription(theVersion.getDescription());
-		retVal.setServerSecurityMode(theVersion.getServerSecurityMode());
 
+		retVal.setServerSecurityMode(theVersion.getServerSecurityMode());
+		if (retVal.getServerSecurityMode()==null) {
+			if (theVersion.getServerSecurityList().size() > 0) {
+				retVal.setServerSecurityMode(ServerSecurityModeEnum.REQUIRE_ANY);
+			}else {
+				retVal.setServerSecurityMode(ServerSecurityModeEnum.NONE);
+			}
+		}
+		
 		PersHttpClientConfig httpClientConfig = myDao.getHttpClientConfig(theVersion.getHttpClientConfigPid());
 		if (httpClientConfig == null) {
 			throw new ProcessingException("Unknown HTTP client config PID: " + theVersion.getHttpClientConfigPid());

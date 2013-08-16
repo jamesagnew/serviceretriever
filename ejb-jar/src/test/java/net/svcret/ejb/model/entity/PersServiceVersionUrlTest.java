@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.ejb.ejb.BaseJpaTest;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
@@ -76,6 +77,7 @@ public class PersServiceVersionUrlTest extends BaseJpaTest {
 		ver.setHttpClientConfig(cfg);
 		ver.setService(svc);
 		ver.setVersionId("vid");
+		ver.setServerSecurityMode(ServerSecurityModeEnum.NONE);
 				
 		PersServiceVersionUrl urlObj = new PersServiceVersionUrl();
 		urlObj.setUrlId("id");

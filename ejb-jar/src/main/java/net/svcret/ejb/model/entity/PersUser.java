@@ -68,7 +68,7 @@ public class PersUser extends BasePersObject implements IThrottleable {
 	@JoinColumn(name = "CONTACT_PID", referencedColumnName = "PID", nullable = true)
 	private PersUserContact myContact;
 
-	@Column(unique = true, name = "USER_DESC", nullable = false, length = MAXLEN_USER_DESC)
+	@Column(unique = true, name = "USER_DESC", nullable = true, length = MAXLEN_USER_DESC)
 	private String myDescription;
 
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true, mappedBy = "myUser")

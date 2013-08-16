@@ -52,5 +52,6 @@ public class CssConstants {
 	public static final String RECENT_TRANSACTIONS_ACTION_BUTTON = "recentTransactionsActionButton";
 	public static final String DASHBOARD_ACTION_PANEL = "dashboardActionPanel";
 	public static final String PCELLTABLE_ACTION_COLUMN = "pCellTableActionColumn";
+	public static final String PROPERTY_TABLE_CHILDTABLE = "propertyTableChildTable";
 	
 }

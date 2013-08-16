@@ -1,6 +1,7 @@
 package net.svcret.admin.client.ui.config.sec;
 
 import net.svcret.admin.client.AdminPortal;
+import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.shared.IAsyncLoadCallback;
@@ -33,6 +34,7 @@ public abstract class BaseServerSecurityViewAndEdit<T extends BaseGServerSecurit
 				}
 				
 				TwoColumnGrid grid = new TwoColumnGrid();
+				grid.addStyleName(CssConstants.PROPERTY_TABLE_CHILDTABLE);
 				flowPanel.add(grid);
 				
 				initViewPanel(theRow, theObject, grid, theResult);
@@ -54,6 +56,7 @@ public abstract class BaseServerSecurityViewAndEdit<T extends BaseGServerSecurit
 		flowPanel.add(new Label(provideName()));
 		
 		final TwoColumnGrid propertyGrid = new TwoColumnGrid();
+		propertyGrid.addStyleName(CssConstants.PROPERTY_TABLE_CHILDTABLE);
 		flowPanel.add(propertyGrid);
 		
 		final ListBox authHostList = new ListBox(false);
