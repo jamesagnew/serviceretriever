@@ -201,6 +201,7 @@ public class MonitorServiceBean implements IMonitorService {
 		for (SidechannelOrchestratorResponseBean nextOutcome : theOutcomes) {
 			if (theCheck.getExpectLatencyUnderMillis() != null) {
 				long latency = nextOutcome.getHttpResponse().getResponseTime();
+				ourLog.debug("Active check testing if latency of {} exceeds target of {}", latency, theCheck.getExpectLatencyUnderMillis());
 				if (latency > theCheck.getExpectLatencyUnderMillis()) {
 					PersServiceVersionUrl url = nextOutcome.getHttpResponse().getSingleUrlOrThrow();
 					PersMonitorRuleFiringProblem prob = PersMonitorRuleFiringProblem.getInstanceForServiceLatency(theCheck.getServiceVersion(), latency, theCheck.getExpectLatencyUnderMillis(), null,
@@ -222,6 +223,7 @@ public class MonitorServiceBean implements IMonitorService {
 				}
 			}
 
+			ourLog.debug("Active check testing if outcome of {} matches expected {}", nextOutcome.getResponseType(), theCheck.getExpectResponseType());
 			if (nextOutcome.getResponseType() != theCheck.getExpectResponseType()) {
 				PersServiceVersionUrl url = nextOutcome.getHttpResponse().getSingleUrlOrThrow();
 				String message = Messages.getString("MonitorServiceBean.failedActiveCheckExpectResponseType", nextOutcome.getResponseType(), theCheck.getExpectResponseType());

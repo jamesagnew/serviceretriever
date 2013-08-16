@@ -56,7 +56,7 @@ public class AlertGrid extends FlowPanel {
 			@Override
 			public SafeHtml getValue(GMonitorRuleFiring theObject) {
 				Date time = theObject.getStartDate();
-				return SafeHtmlUtils.fromTrustedString(DateUtil.formatTimeElapsedForMessage(time));
+				return (DateUtil.formatTimeElapsedForMessage(time));
 			}
 		};
 		grid.addColumn(startedColumn, "Problem Started");
@@ -68,7 +68,7 @@ public class AlertGrid extends FlowPanel {
 				if (time == null) {
 					return SafeHtmlUtils.fromTrustedString("Still active");
 				}
-				return SafeHtmlUtils.fromTrustedString(DateUtil.formatTimeElapsedForMessage(time));
+				return (DateUtil.formatTimeElapsedForMessage(time));
 			}
 		};
 		grid.addColumn(endedColumn, "Problem Ended");

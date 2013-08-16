@@ -6,7 +6,6 @@ import net.svcret.admin.client.ui.components.CssConstants;
 
 import com.google.gwt.i18n.client.impl.plurals.DefaultRule_en;
 import com.google.gwt.safehtml.shared.SafeHtml;
-import com.google.gwt.user.cellview.client.Header;
 
 public interface Messages extends com.google.gwt.i18n.client.Messages {
 
@@ -206,22 +205,22 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	String dashboard_ServiceVersionPrefix();
 
 	@DefaultMessage("")
-	String dashboard_TransactionDateNever();
+	SafeHtml dashboard_TransactionDateNever();
 
-	@DefaultMessage("{0,localdatetime,MMMdd HHmm} ({1,number} days ago)")
-	@AlternateMessage({ "one", "{0,localdatetime,MMMdd HHmm} (1 day ago)" })
-	String dashboard_TransactionDateOver1Day(Date theDate, @PluralCount(DefaultRule_en.class) int theDay);
+	@DefaultMessage("{0,localdatetime,MMMdd HHmm} <nobr>({1,number} days ago)</nobr>")
+	@AlternateMessage({ "one", "{0,localdatetime,MMMdd HHmm} <nobr>(1 day ago)</nobr>" })
+	SafeHtml dashboard_TransactionDateOver1Day(Date theDate, @PluralCount(DefaultRule_en.class) int theDay);
 
-	@DefaultMessage("{0,localdatetime,HHmm} ({1,number} hrs ago)")
-	@AlternateMessage({ "one", "{0,localdatetime,HHmm} (1 hr ago)" })
-	String dashboard_TransactionDateUnder1Day(Date theDate, @PluralCount(DefaultRule_en.class) int theHour);
+	@DefaultMessage("{0,localdatetime,HHmm} <nobr>({1,number} hrs ago)</nobr>")
+	@AlternateMessage({ "one", "{0,localdatetime,HHmm} <nobr>(1 hr ago)</nobr>" })
+	SafeHtml dashboard_TransactionDateUnder1Day(Date theDate, @PluralCount(DefaultRule_en.class) int theHour);
 
-	@DefaultMessage("{0,localdatetime,HHmmss} ({1,number} mins ago)")
-	@AlternateMessage({ "one", "{0,localdatetime,HHmmss} (1 min ago)" })
-	String dashboard_TransactionDateUnder1Hour(Date theDate, @PluralCount(DefaultRule_en.class) int theMins);
+	@DefaultMessage("{0,localdatetime,HHmmss} <nobr>({1,number} mins ago)</nobr>")
+	@AlternateMessage({ "one", "{0,localdatetime,HHmmss} <nobr>(1 min ago)</nobr>" })
+	SafeHtml dashboard_TransactionDateUnder1Hour(Date theDate, @PluralCount(DefaultRule_en.class) int theMins);
 
-	@DefaultMessage("{0,localdatetime,HHmmss} (< 1min)")
-	String dashboard_TransactionDateUnder60Secs(Date theDate);
+	@DefaultMessage("{0,localdatetime,HHmmss} <nobr>(< 1min)</nobr>")
+	SafeHtml dashboard_TransactionDateUnder60Secs(Date theDate);
 
 	@DefaultMessage("Delete Domain")
 	String deleteDomainPanel_Breadcrumb();

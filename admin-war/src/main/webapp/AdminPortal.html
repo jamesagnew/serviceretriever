@@ -11,8 +11,22 @@
     <script type="text/javascript" src="js/tinymce.min.js"></script>
     <script type="text/javascript" src="js/vkbeautify.0.99.00.beta.js"></script>
     <script type="text/javascript" src="AdminPortal/AdminPortal.nocache.js"></script>
-    
+
+	<!-- SyntaxHighliter -->
+    <script type="text/javascript" src="js/shCore.js"></script>
+	<script type="text/javascript" src="js/shBrushJScript.js"></script>
+	<script type="text/javascript" src="js/shBrushXml.js"></script>
+	<script type="text/javascript" src="js/shAutoloader.js"></script>
+	
+	<link href="css/shCore.css" rel="stylesheet" type="text/css" />
+	<link href="css/shThemeDefault.css" rel="stylesheet" type="text/css" />
+ 
     <script type="text/javascript">
+    
+    	SyntaxHighlighter.autoloader('js js/shBrushJScript.js');
+		SyntaxHighlighter.autoloader('xml js/shBrushXml.js');
+		// SyntaxHighlighter.all();
+    
 		function jsDrawSparkline(theElement, theValues, theHeight, theWidth, theType, theTimelines) {
 			var sparkOptions = new Array();
 			sparkOptions['chartRangeMin'] = 0;

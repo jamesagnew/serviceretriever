@@ -22,6 +22,8 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.hibernate.annotations.Index;
 
 //@formatter:off
@@ -125,6 +127,20 @@ public class PersMonitorRuleFiring extends BasePersObject {
 			retVal.add(next.getServiceVersion().getPid());
 		}
 		return retVal;
+	}
+
+	@Override
+	public String toString() {
+		ToStringBuilder b = new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE);
+		b.append("pid", getPid());
+		b.append("rule", getRule().getPid());
+		b.append("start", getStartDate());
+		b.append("end", getEndDate());
+		int index = 1;
+		for (PersMonitorRuleFiringProblem next : getProblems()) {
+			b.append("problem_" + (index++), next.toStringShort());
+		}
+		return b.toString();
 	}
 
 }

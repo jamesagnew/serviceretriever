@@ -1694,7 +1694,6 @@ public class AdminServiceBean implements IAdminService {
 				retVal.getMonitorRulePids().add(nextRule.getPid());
 			}
 		}
-		retVal.getFailingApplicableRulePids().addAll(theDomain.getActiveMonitorRuleFiringPidsWhichApply());
 	}
 
 	private void toUiMonitorRules(PersService theService, BaseGDashboardObjectWithUrls<?> retVal) {
@@ -1706,7 +1705,6 @@ public class AdminServiceBean implements IAdminService {
 				retVal.getMonitorRulePids().add(nextRule.getPid());
 			}
 		}
-		retVal.getFailingApplicableRulePids().addAll(theService.getActiveMonitorRuleFiringPidsWhichApply());
 	}
 
 	private void toUiMonitorRules(BasePersServiceVersion theSvcVer, BaseGDashboardObjectWithUrls<?> retVal) {
@@ -1719,7 +1717,6 @@ public class AdminServiceBean implements IAdminService {
 			retVal.getMonitorRulePids().add(next.getRule().getPid());
 		}
 
-		retVal.getFailingApplicableRulePids().addAll(theSvcVer.getActiveMonitorRuleFiringPidsWhichApply());
 	}
 
 	private GHttpClientConfig toUi(PersHttpClientConfig theConfig) {

@@ -74,6 +74,7 @@ public class MonitorNotifierService implements IMonitorNotifier {
 
 		try {
 			MimeMessage msg = new MimeMessage(mySession);
+			mySession.setDebug(true);
 
 			Collection<String> notifyEmails = new TreeSet<String>(theFiring.getRule().getNotifyEmails());
 			for (String nextAddress : notifyEmails) {
@@ -89,7 +90,9 @@ public class MonitorNotifierService implements IMonitorNotifier {
 			msg.setContent(emailContent, "text/html");
 			msg.setSentDate(new Date());
 			
+			ourLog.info("Sending email");
 			Transport.send(msg);
+			ourLog.info("Done sending email");
 			
 		} catch (MessagingException e) {
 			throw new ProcessingException("Failed to send email");

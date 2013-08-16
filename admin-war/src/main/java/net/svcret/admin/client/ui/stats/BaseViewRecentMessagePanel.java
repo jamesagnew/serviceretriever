@@ -170,6 +170,8 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 				@Override
 				public void onClick(ClickEvent theEvent) {
 					respPre.setText(formatXml(messageBody));
+					respPre.getElement().setClassName("brush: xml");
+					syntaxHighliter();
 				}
 			}));
 		}
@@ -178,10 +180,17 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 				@Override
 				public void onClick(ClickEvent theEvent) {
 					respPre.setText(formatJson(messageBody));
+					respPre.getElement().setClassName("brush: js");
+					syntaxHighliter();
 				}
 			}));
 		}
 	}
+
+	private native void syntaxHighliter() /*-{
+		$wnd.SyntaxHighlighter.highlight();
+	}-*/;
+
 
 	private SafeHtml formatHeader(Pair<String> theNext) {
 		SafeHtmlBuilder b = new SafeHtmlBuilder();

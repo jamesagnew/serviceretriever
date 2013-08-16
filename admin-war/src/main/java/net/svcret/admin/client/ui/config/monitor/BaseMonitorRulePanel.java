@@ -1,10 +1,10 @@
 package net.svcret.admin.client.ui.config.monitor;
 
-import static net.svcret.admin.client.AdminPortal.*;
+import static net.svcret.admin.client.AdminPortal.IMAGES;
+import static net.svcret.admin.client.AdminPortal.MSGS;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -352,6 +352,8 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 			public void update(int theIndex, DtoMonitorRuleActiveCheck theObject, String theValue) {
 				if (theValue.matches("^[0-9]+$")) {
 					theObject.setExpectLatencyUnderMillis(Long.parseLong(theValue));
+				}else if (StringUtil.isBlank(theValue)) {
+					theObject.setExpectLatencyUnderMillis(null);
 				}
 			}
 		});

@@ -3,7 +3,6 @@ package net.svcret.admin.client.ui.config.auth;
 import static net.svcret.admin.client.AdminPortal.IMAGES;
 import static net.svcret.admin.client.AdminPortal.MSGS;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;

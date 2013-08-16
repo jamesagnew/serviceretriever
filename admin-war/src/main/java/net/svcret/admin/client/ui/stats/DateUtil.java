@@ -6,6 +6,7 @@ import java.util.Date;
 
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
+import com.google.gwt.safehtml.shared.SafeHtml;
 
 public class DateUtil {
 
@@ -53,9 +54,9 @@ public class DateUtil {
 		return text;
 	}
 
-	public static String formatTimeElapsedForMessage(Date theTransactionTime) {
+	public static SafeHtml formatTimeElapsedForMessage(Date theTransactionTime) {
 		long age = theTransactionTime != null ? System.currentTimeMillis() - theTransactionTime.getTime() : 0;
-		String text;
+		SafeHtml text;
 		if (theTransactionTime == null) {
 			text = MSGS.dashboard_TransactionDateNever();
 		} else if (age < MILLIS_PER_MINUTE) {

@@ -105,7 +105,6 @@ public class DaoBeanTest extends BaseJpaTest {
 			// prob.setFiring(firing);
 			prob.setLatencyAverageMillisPerCall(100L);
 			prob.setLatencyThreshold(50L);
-			prob.setLatencyExceededThreshold(true);
 			firing.getProblems().add(prob);
 
 			mySvc.saveMonitorRuleFiring(firing);

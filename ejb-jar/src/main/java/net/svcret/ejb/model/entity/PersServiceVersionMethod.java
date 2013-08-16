@@ -122,6 +122,7 @@ public class PersServiceVersionMethod extends BasePersObject {
 
 	public void merge(PersServiceVersionMethod theObj) {
 		setName(theObj.getName());
+		setRootElements(theObj.getRootElements());
 	}
 
 	/**

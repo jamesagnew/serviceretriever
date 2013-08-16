@@ -18,6 +18,7 @@ import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Hyperlink;
+import com.google.gwt.user.client.ui.Label;
 
 public class RecentMessagesGrid extends FlowPanel {
 
@@ -93,7 +94,7 @@ public class RecentMessagesGrid extends FlowPanel {
 			saveButton.addStyleName(CssConstants.RECENT_TRANSACTIONS_ACTION_BUTTON);
 			viewButton.addStyleName(CssConstants.RECENT_TRANSACTIONS_ACTION_BUTTON);
 			
-			myGrid.setText(row, COL_TIMESTAMP, DateUtil.formatTimeElapsedForMessage(next.getTransactionTime()));
+			myGrid.setHTML(row, COL_TIMESTAMP, DateUtil.formatTimeElapsedForMessage(next.getTransactionTime()));
 			myGrid.setText(row, COL_IP, next.getRequestHostIp());
 			
 			Anchor url = new Anchor();
@@ -104,11 +105,12 @@ public class RecentMessagesGrid extends FlowPanel {
 			myGrid.setText(row, COL_MILLIS, Long.toString(next.getTransactionMillis()));
 
 			FlowPanel servicePanel=new FlowPanel();
-			if (StringUtil.isNotBlank(next.getDomainName())) {
-				servicePanel.add(new Hyperlink(next.getDomainName(), NavProcessor.getTokenEditDomain(true, next.getDomainPid())));
-			}
+//			if (StringUtil.isNotBlank(next.getDomainName())) {
+//				servicePanel.add(new Hyperlink(next.getDomainName(), NavProcessor.getTokenEditDomain(true, next.getDomainPid())));
+//			}
 			if (StringUtil.isNotBlank(next.getServiceName())) {
-				servicePanel.add(new Hyperlink(next.getServiceName(), NavProcessor.getTokenEditService(true, next.getDomainPid(), next.getServicePid())));
+//				servicePanel.add(new Hyperlink(next.getServiceName(), NavProcessor.getTokenEditService(true, next.getDomainPid(), next.getServicePid())));
+				servicePanel.add(new Label(next.getServiceName()));
 			}
 			if (StringUtil.isNotBlank(next.getServiceVersionId())) {
 				servicePanel.add(new Hyperlink(next.getServiceVersionId(), NavProcessor.getTokenEditServiceVersion(true, next.getServiceVersionPid())));

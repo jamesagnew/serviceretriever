@@ -519,7 +519,7 @@ TABLE.propertyTable TBODY TR TD TABLE TBODY TR {
 }
 
 .recentMessageScroller {
-	max-height: 200px;
+	/*max-height: 200px;*/
 	background: #F0F8FF;
 }
 
