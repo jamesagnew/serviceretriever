@@ -23,7 +23,7 @@ public class ReplayLibraryMessagePanel extends BaseServiceVersionTestPanel {
 			public void onSuccess(DtoLibraryMessage theResult) {
 				setInitialMessage(theResult.getMessage());
 				setInitialContentType(theResult.getContentType());
-				initUi();
+				initAllPanels();
 			}});
 	}
 

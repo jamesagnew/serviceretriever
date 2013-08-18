@@ -75,6 +75,10 @@ public abstract class BasePersRecentMessage implements Serializable {
 
 	public abstract void addUsingDao(IDao theDaoBean);
 
+	public abstract BasePersServiceVersion getServiceVersion();
+	
+	public abstract PersServiceVersionMethod getMethod();
+
 	/**
 	 * @return the authorizationOutcome
 	 */

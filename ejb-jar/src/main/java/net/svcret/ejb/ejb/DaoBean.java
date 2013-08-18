@@ -286,18 +286,26 @@ public class DaoBean implements IDao {
 			throw new IllegalArgumentException("Unknown service: " + thePid);
 		}
 
-//		TypedQuery<PersLibraryMessage> q = myEntityManager.createQuery("SELECT m FROM PersLibraryMessage m ", PersLibraryMessage.class);
-//		List<PersLibraryMessage> l = q.getResultList();
-//		ourLog.info("Entities: {}", l);
-//		ourLog.info("Entities: {}", l.get(0).getAppliesTo());
-		
 		TypedQuery<PersLibraryMessage> query = myEntityManager.createNamedQuery(Queries.LIBRARY_FINDBYSVC, PersLibraryMessage.class);
 		query.setParameter("SVC", svc);
 
 		List<PersLibraryMessage> retVal = query.getResultList();
 		
-//		ourLog.info("Entities: {}", retVal);
+		return new HashSet<PersLibraryMessage>(retVal);
+	}
 
+	@Override
+	public Collection<PersLibraryMessage> getLibraryMessagesWhichApplyToDomain(long thePid) {
+		PersDomain domain = myEntityManager.find(PersDomain.class, thePid);
+		if (domain == null) {
+			throw new IllegalArgumentException("Unknown domain: " + thePid);
+		}
+
+		TypedQuery<PersLibraryMessage> query = myEntityManager.createNamedQuery(Queries.LIBRARY_FINDBYDOMAIN, PersLibraryMessage.class);
+		query.setParameter("DOMAIN", domain);
+
+		List<PersLibraryMessage> retVal = query.getResultList();
+		
 		return new HashSet<PersLibraryMessage>(retVal);
 	}
 
@@ -1271,6 +1279,11 @@ public class DaoBean implements IDao {
 		}
 		
 		return statusesBean;
+	}
+
+	@Override
+	public List<PersLibraryMessage> loadLibraryMessages() {
+		return myEntityManager.createNamedQuery(Queries.LIBRARY_FINDALL, PersLibraryMessage.class).getResultList();
 	}
 
 }

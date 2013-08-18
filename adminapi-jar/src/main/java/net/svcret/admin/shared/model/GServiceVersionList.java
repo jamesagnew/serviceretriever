@@ -17,5 +17,12 @@ public class GServiceVersionList extends BaseGList<BaseGServiceVersion> {
 		return null;
 	}
 
+	public BaseGServiceVersion getFirstServiceVersion() {
+		if (size() >0) {
+			return get(0);
+		}
+		return null;
+	}
+
 	
 }

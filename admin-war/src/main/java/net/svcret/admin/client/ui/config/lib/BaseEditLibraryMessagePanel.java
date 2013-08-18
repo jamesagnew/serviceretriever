@@ -1,5 +1,9 @@
 package net.svcret.admin.client.ui.config.lib;
 
+import java.util.TreeSet;
+
+import org.apache.commons.lang3.StringUtils;
+
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.EditableField;
@@ -10,7 +14,11 @@ import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.util.StringUtil;
 
+import com.google.gwt.dom.client.Style.Display;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -19,6 +27,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.TextArea;
 
 public abstract class BaseEditLibraryMessagePanel extends FlowPanel {
@@ -32,6 +41,7 @@ public abstract class BaseEditLibraryMessagePanel extends FlowPanel {
 	private LoadingSpinner mySaveSpinner;
 	private FlowPanel myTopPanel;
 	private FlowPanel myAppliesToPanel;
+	private ListBox myContentTypeSuggestionsBox;
 
 	public BaseEditLibraryMessagePanel() {
 		FlowPanel topPanel = new FlowPanel();
@@ -60,8 +70,29 @@ public abstract class BaseEditLibraryMessagePanel extends FlowPanel {
 			public void onSuccess(GDomainList theDomainList) {
 				myDomainList = theDomainList;
 				initUi();
+				updateContentTypeSuggestions();
 			}
 		});
+	}
+
+	protected void updateContentTypeSuggestions() {
+		TreeSet<String> suggestions = new TreeSet<String>();
+		for (Long next : myMessage.getAppliesToServiceVersionPids()) {
+			suggestions.add(myDomainList.getServiceVersionByPid(next).getProtocol().getRequestContentType());
+		}
+		
+		myContentTypeSuggestionsBox.clear();
+		myContentTypeSuggestionsBox.addItem("Suggestions...");
+		for (String next : suggestions) {
+			myContentTypeSuggestionsBox.addItem(next);
+		}
+		
+		if (StringUtil.isBlank(myContentTypeEditor.getValue())) {
+			if (myContentTypeSuggestionsBox.getItemCount()> 1) {
+				myContentTypeEditor.setValue(myContentTypeSuggestionsBox.getItemText(1));
+			}
+		}
+		
 	}
 
 	private void initUi() {
@@ -81,7 +112,9 @@ public abstract class BaseEditLibraryMessagePanel extends FlowPanel {
 		});
 		grid.addRow("Description", myDescriptionEditor);
 		
+		FlowPanel ctPanel = new FlowPanel();
 		myContentTypeEditor = new EditableField();
+		myContentTypeEditor.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
 		myContentTypeEditor.setValue(myMessage.getContentType());
 		myContentTypeEditor.addValueChangeHandler(new ValueChangeHandler<String>() {
 			@Override
@@ -89,7 +122,18 @@ public abstract class BaseEditLibraryMessagePanel extends FlowPanel {
 				myMessage.setContentType(myContentTypeEditor.getValue());
 			}
 		});
-		grid.addRow("Content Type", myContentTypeEditor);
+		myContentTypeSuggestionsBox = new ListBox(false);
+		myContentTypeSuggestionsBox.addChangeHandler(new ChangeHandler() {
+			@Override
+			public void onChange(ChangeEvent theEvent) {
+				if (myContentTypeSuggestionsBox.getSelectedIndex() > 0) {
+					myContentTypeEditor.setValue(myContentTypeSuggestionsBox.getItemText(myContentTypeSuggestionsBox.getSelectedIndex()));
+				}
+			}
+		});
+		ctPanel.add(myContentTypeEditor);
+		ctPanel.add(myContentTypeSuggestionsBox);
+		grid.addRow("Content Type", ctPanel);
 		
 		myMessageEditor = new TextArea();
 		myMessageEditor.setVisibleLines(10);
@@ -139,10 +183,28 @@ public abstract class BaseEditLibraryMessagePanel extends FlowPanel {
 		MessageAppliesToPanel messageAppliesToPanel = new MessageAppliesToPanel();
 		messageAppliesToPanel.setMessage(myDomainList, myMessage);
 		myAppliesToPanel.add(messageAppliesToPanel);
-		
+		messageAppliesToPanel.addChangeHandler(new ChangeHandler() {
+			@Override
+			public void onChange(ChangeEvent theEvent) {
+				updateContentTypeSuggestions();
+			}
+		});
 	}
 
 	protected void save() {
+		if (StringUtils.isBlank(myMessage.getDescription())) {
+			mySaveSpinner.showMessage("No description provided!", false);
+			return;
+		}
+		if (StringUtils.isBlank(myMessage.getContentType())) {
+			mySaveSpinner.showMessage("No content type provided!", false);
+			return;
+		}
+		if (myMessage.getAppliesToServiceVersionPids().isEmpty()) {
+			mySaveSpinner.showMessage("No services have been selected in 'Applies To' section below!", false);
+			return;
+		}
+		
 		mySaveSpinner.showMessage("Saving...", true);
 		AdminPortal.MODEL_SVC.saveLibraryMessage(myMessage, new AsyncCallback<Void>() {
 

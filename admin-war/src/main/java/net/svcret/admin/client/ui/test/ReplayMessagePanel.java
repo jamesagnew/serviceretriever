@@ -18,7 +18,7 @@ public class ReplayMessagePanel extends BaseServiceVersionTestPanel {
 			public void onSuccess(GRecentMessage theResult) {
 				setInitialMessage(theResult.getRequestMessage());
 				setServiceVersionPid(theResult.getServiceVersionPid());
-				initUi();
+				initAllPanels();
 			}
 			
 			@Override

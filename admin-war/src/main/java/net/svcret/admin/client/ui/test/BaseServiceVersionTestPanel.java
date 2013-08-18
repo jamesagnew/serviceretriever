@@ -5,6 +5,7 @@ import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
+import net.svcret.admin.client.ui.stats.BaseViewRecentMessagePanel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
@@ -17,6 +18,7 @@ import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
@@ -24,6 +26,7 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.Widget;
 
 public abstract class BaseServiceVersionTestPanel extends FlowPanel {
 
@@ -39,6 +42,8 @@ public abstract class BaseServiceVersionTestPanel extends FlowPanel {
 	private ListBox myVersionBox;
 	private String myInitialContentType;
 	private TextBox myContentTypeBox;
+	private FlowPanel myMessageToSendPanel;
+	private LoadingSpinner myInitializationSpinner;
 
 	public BaseServiceVersionTestPanel() {
 		// nothing
@@ -134,22 +139,11 @@ public abstract class BaseServiceVersionTestPanel extends FlowPanel {
 
 	}
 
-	protected void initUi() {
-		final FlowPanel mainPanel = new FlowPanel();
-		mainPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
-		add(mainPanel);
+	protected void initAllPanels() {
+		initPanel1Destination();
+		initPanel2MessageToSend();
 
-		Label titleLabel = new Label("Service Version Tester");
-		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
-		mainPanel.add(titleLabel);
-
-		final FlowPanel contentPanel = new FlowPanel();
-		contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
-		mainPanel.add(contentPanel);
-
-		final LoadingSpinner initSpinner = new LoadingSpinner();
-		contentPanel.add(initSpinner);
-		initSpinner.show();
+		// Response Panel
 
 		myResponsePanel = new ServiceVersionTestResponsePanel();
 		myResponsePanel.setVisible(false);
@@ -160,61 +154,7 @@ public abstract class BaseServiceVersionTestPanel extends FlowPanel {
 			@Override
 			public void onSuccess(final GDomainList theDomainList) {
 				myDomainList = theDomainList;
-				initSpinner.hideCompletely();
-
-				TwoColumnGrid grid = new TwoColumnGrid();
-				grid.setWidth("100%");
-				grid.setMaximizeSecondColumn();
-				contentPanel.add(grid);
-
-				myDomainBox = new ListBox(false);
-				grid.addRow("Domain", myDomainBox);
-				myDomainBox.addChangeHandler(new ChangeHandler() {
-					@Override
-					public void onChange(ChangeEvent theEvent) {
-						handleDomainBoxChange();
-					}
-				});
-
-				myServiceBox = new ListBox(false);
-				grid.addRow("Service", myServiceBox);
-				myServiceBox.addChangeHandler(new ChangeHandler() {
-					@Override
-					public void onChange(ChangeEvent theEvent) {
-						handleServiceBoxChange();
-					}
-				});
-
-				myVersionBox = new ListBox(false);
-				grid.addRow("Version", myVersionBox);
-				myVersionBox.addChangeHandler(new ChangeHandler() {
-					@Override
-					public void onChange(ChangeEvent theEvent) {
-						handleVersionBoxChange();
-					}
-				});
-
-				myContentTypeBox = new TextBox();
-				grid.addRow("Content Type", myContentTypeBox);
-
-				mySendMessageTextArea = new TextArea();
-				mySendMessageTextArea.setText(myInitialMessage);
-				mySendMessageTextArea.setHeight("200px");
-				mySendMessageTextArea.setWidth("100%");
-				grid.addRow("Message", mySendMessageTextArea);
-				grid.addDescription("Enter the raw message to send here");
-
-				HorizontalPanel controlsPanel = new HorizontalPanel();
-				contentPanel.add(controlsPanel);
-
-				mySendButton = new PButton("Send");
-				mySendButton.addClickHandler(new ClickHandler() {
-					@Override
-					public void onClick(ClickEvent theEvent) {
-						send();
-					}
-				});
-				controlsPanel.add(mySendButton);
+				myInitializationSpinner.hideCompletely();
 
 				Long domainPid = null;
 				Long servicePid = null;
@@ -243,12 +183,129 @@ public abstract class BaseServiceVersionTestPanel extends FlowPanel {
 					handleServiceBoxChange();
 				}
 
-				mySendSpinner = new LoadingSpinner("Sending Message...");
-				mySendSpinner.hide();
-				controlsPanel.add(mySendSpinner);
-
 			}
 		});
+	}
+
+	private LoadingSpinner initPanel1Destination() {
+		final FlowPanel mainPanel = new FlowPanel();
+		mainPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
+		add(mainPanel);
+
+		final Label titleLabel = new Label("Service Version Tester");
+		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
+		mainPanel.add(titleLabel);
+
+		final FlowPanel contentPanel = new FlowPanel();
+		contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
+		mainPanel.add(contentPanel);
+
+		myInitializationSpinner = new LoadingSpinner();
+		contentPanel.add(myInitializationSpinner);
+		myInitializationSpinner.show();
+
+		TwoColumnGrid grid = new TwoColumnGrid();
+		grid.setWidth("100%");
+		grid.setMaximizeSecondColumn();
+		contentPanel.add(grid);
+
+		myDomainBox = new ListBox(false);
+		grid.addRow("Domain", myDomainBox);
+		myDomainBox.addChangeHandler(new ChangeHandler() {
+			@Override
+			public void onChange(ChangeEvent theEvent) {
+				handleDomainBoxChange();
+			}
+		});
+
+		myServiceBox = new ListBox(false);
+		grid.addRow("Service", myServiceBox);
+		myServiceBox.addChangeHandler(new ChangeHandler() {
+			@Override
+			public void onChange(ChangeEvent theEvent) {
+				handleServiceBoxChange();
+			}
+		});
+
+		myVersionBox = new ListBox(false);
+		grid.addRow("Version", myVersionBox);
+		myVersionBox.addChangeHandler(new ChangeHandler() {
+			@Override
+			public void onChange(ChangeEvent theEvent) {
+				handleVersionBoxChange();
+			}
+		});
+		return myInitializationSpinner;
+	}
+
+	private void initPanel2MessageToSend() {
+		myMessageToSendPanel = new FlowPanel();
+		add(myMessageToSendPanel);
+		myMessageToSendPanel.addStyleName(CssConstants.MAIN_PANEL);
+
+		Label messageToSendTitle = new Label("Send Message");
+		messageToSendTitle.addStyleName(CssConstants.MAIN_PANEL_TITLE);
+		myMessageToSendPanel.add(messageToSendTitle);
+
+		FlowPanel messageToSendContent = new FlowPanel();
+		messageToSendContent.addStyleName(CssConstants.CONTENT_INNER_PANEL);
+		myMessageToSendPanel.add(messageToSendContent);
+
+		TwoColumnGrid grid = new TwoColumnGrid();
+		myMessageToSendPanel.add(grid);
+
+		myContentTypeBox = new TextBox();
+		grid.addRow("Content Type", myContentTypeBox);
+
+		FlowPanel formattersPanel = new FlowPanel();
+		grid.addRow((Widget) null, formattersPanel);
+
+		// Formatters
+		formattersPanel.add(new PButton(AdminPortal.IMAGES.iconFormat16(), AdminPortal.MSGS.actions_FormatXml(), new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				try {
+					mySendMessageTextArea.setText(BaseViewRecentMessagePanel.formatXml(mySendMessageTextArea.getText()));
+				} catch (Exception e) {
+					Window.alert(e.getMessage());
+				}
+			}
+		}));
+		formattersPanel.add(new PButton(AdminPortal.IMAGES.iconFormat16(), AdminPortal.MSGS.actions_FormatJson(), new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				try {
+					mySendMessageTextArea.setText(BaseViewRecentMessagePanel.formatJson(mySendMessageTextArea.getText()));
+				} catch (Exception e) {
+					Window.alert(e.getMessage());
+				}
+			}
+		}));
+
+		mySendMessageTextArea = new TextArea();
+		mySendMessageTextArea.setText(myInitialMessage);
+		mySendMessageTextArea.setHeight("200px");
+		mySendMessageTextArea.setWidth("90%");
+		grid.addRow("Message", mySendMessageTextArea);
+		grid.addDescription("Enter the raw message to send here");
+		grid.setMaximizeSecondColumn();
+
+		HorizontalPanel controlsPanel = new HorizontalPanel();
+		myMessageToSendPanel.add(controlsPanel);
+
+		mySendButton = new PButton(AdminPortal.IMAGES.iconPlay16(), AdminPortal.MSGS.actions_Send());
+		mySendButton.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				send();
+			}
+		});
+		controlsPanel.add(mySendButton);
+
+		mySendSpinner = new LoadingSpinner("Sending Message...");
+		mySendSpinner.hide();
+		controlsPanel.add(mySendSpinner);
+
 	}
 
 }

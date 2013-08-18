@@ -18,6 +18,7 @@ import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceList;
 import net.svcret.admin.shared.model.GServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
+import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.core.shared.GWT;
@@ -196,7 +197,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 			msgLibButton.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent theEvent) {
-					History.newItem(NavProcessor.getTokenServiceVersionMessageLibrary(true, myVersion.getPid()));
+					History.newItem(NavProcessor.getTokenMessageLibrary(true, HierarchyEnum.VERSION, myVersion.getPid()));
 				}
 			});
 			savePanel.add(msgLibButton);

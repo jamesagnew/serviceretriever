@@ -2,6 +2,7 @@ package net.svcret.ejb.model.entity;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -39,6 +40,12 @@ public class PersServiceVersionMethod extends BasePersObject {
 
 	@Column(name = "ROOT_ELEMENTS", length = 1000, nullable=true)
 	private String myRootElements;
+
+	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myMethod")
+	private List<PersServiceVersionRecentMessage> mySvcVerRecentMessages;
+
+	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myMethod")
+	private List<PersUserRecentMessage> myUserRecentMessages;
 
 	@ManyToOne()
 	@JoinColumn(name = "SVC_VERSION_PID", referencedColumnName = "PID", nullable = false)

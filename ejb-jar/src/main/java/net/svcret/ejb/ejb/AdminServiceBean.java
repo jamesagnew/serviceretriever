@@ -69,6 +69,7 @@ import net.svcret.admin.shared.model.GUserServiceVersionMethodPermission;
 import net.svcret.admin.shared.model.GUserServiceVersionPermission;
 import net.svcret.admin.shared.model.GWsSecServerSecurity;
 import net.svcret.admin.shared.model.GWsSecUsernameTokenClientSecurity;
+import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.Pair;
@@ -149,19 +150,22 @@ public class AdminServiceBean implements IAdminService {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(AdminServiceBean.class);
 
 	@EJB
-	private IScheduler myScheduler;
+	private IConfigService myConfigSvc;
 
 	@EJB
-	private IConfigService myConfigSvc;
+	private IDao myDao;
 
 	@EJB
 	private IServiceInvokerSoap11 myInvokerSoap11;
 
 	@EJB
+	private IMonitorService myMonitorSvc;
+
+	@EJB
 	private IServiceOrchestrator myOrchestrator;
 
 	@EJB
-	private IDao myDao;
+	private IScheduler myScheduler;
 
 	@EJB
 	private ISecurityService mySecurityService;
@@ -194,24 +198,6 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	@Override
-	public byte[] createWsdlBundle(long theServiceVersionPid) throws ProcessingException, IOException {
-		BasePersServiceVersion svcVer = myServiceRegistry.getServiceVersionByPid(theServiceVersionPid);
-		if (svcVer == null) {
-			throw new IllegalArgumentException("Unknown version: " + theServiceVersionPid);
-		}
-		
-		switch (svcVer.getProtocol()) {
-		case  SOAP11:
-			return myInvokerSoap11.createWsdlBundle((PersServiceVersionSoap11) svcVer);
-		case JSONRPC20:
-			break;
-		}
-
-		throw new IllegalArgumentException("Service " + theServiceVersionPid + " is of type " + svcVer.getProtocol() + " which does not support WSDL bundles");
-	}
-	
-	
-	@Override
 	public GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ProcessingException {
 		Validate.notBlank(theId, "ID");
 		Validate.notBlank(theName, "Name");
@@ -243,6 +229,23 @@ public class AdminServiceBean implements IAdminService {
 		sv.addMethod(ui);
 		sv = myServiceRegistry.saveServiceVersion(sv);
 		return toUi(sv.getMethod(theMethod.getName()), false);
+	}
+
+	@Override
+	public byte[] createWsdlBundle(long theServiceVersionPid) throws ProcessingException, IOException {
+		BasePersServiceVersion svcVer = myServiceRegistry.getServiceVersionByPid(theServiceVersionPid);
+		if (svcVer == null) {
+			throw new IllegalArgumentException("Unknown version: " + theServiceVersionPid);
+		}
+
+		switch (svcVer.getProtocol()) {
+		case SOAP11:
+			return myInvokerSoap11.createWsdlBundle((PersServiceVersionSoap11) svcVer);
+		case JSONRPC20:
+			break;
+		}
+
+		throw new IllegalArgumentException("Service " + theServiceVersionPid + " is of type " + svcVer.getProtocol() + " which does not support WSDL bundles");
 	}
 
 	@Override
@@ -306,6 +309,31 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	@Override
+	public GDomainList deleteServiceVersion(long thePid) throws ProcessingException {
+		ourLog.info("Deleting service version {}", thePid);
+
+		BasePersServiceVersion sv = myDao.getServiceVersionByPid(thePid);
+		if (sv == null) {
+			throw new ProcessingException("Unknown service version ID:" + thePid);
+		}
+
+		myDao.deleteServiceVersion(sv);
+
+		return loadDomainList();
+	}
+
+	public void deleteUser(long thePid) throws ProcessingException {
+		ourLog.info("Deleting user {}", thePid);
+
+		PersUser user = myDao.getUser(thePid);
+		if (user == null) {
+			throw new ProcessingException("Unknown user: " + thePid);
+		}
+
+		myDao.deleteUser(user);
+	}
+
+	@Override
 	public long getDefaultHttpClientConfigPid() {
 		return myDao.getHttpClientConfigs().iterator().next().getPid();
 	}
@@ -327,6 +355,42 @@ public class AdminServiceBean implements IAdminService {
 			throw new ProcessingException("Unknown ID: " + theDomainId);
 		}
 		return domain.getPid();
+	}
+
+	@Override
+	public DtoLibraryMessage getLibraryMessage(long theMessagePid) throws ProcessingException {
+		return toUi(myDao.getLibraryMessageByPid(theMessagePid), true);
+	}
+
+	@Override
+	public Collection<DtoLibraryMessage> getLibraryMessages(HierarchyEnum theType, long thePid, boolean theLoadContents) throws ProcessingException {
+
+		Collection<PersLibraryMessage> msgs=null;
+		switch (theType) {
+		case DOMAIN:
+			msgs = myDao.getLibraryMessagesWhichApplyToDomain(thePid);
+			break;
+		case SERVICE:
+			msgs = myDao.getLibraryMessagesWhichApplyToService(thePid);
+			break;
+		case VERSION:
+			msgs = myDao.getLibraryMessagesWhichApplyToServiceVersion(thePid);
+			break;
+		case METHOD:
+			break;
+		}
+
+		if (msgs == null) {
+			throw new IllegalArgumentException("Invalid type: " + theType);
+		}
+
+		return toUiCollectionLibraryMessages(msgs, theLoadContents);
+	}
+
+	@Override
+	public Collection<DtoLibraryMessage> getLibraryMessagesForService(long thePid, boolean theLoadContents) throws ProcessingException {
+		Collection<PersLibraryMessage> msgs = myDao.getLibraryMessagesWhichApplyToService(thePid);
+		return toUiCollectionLibraryMessages(msgs, theLoadContents);
 	}
 
 	@Override
@@ -371,6 +435,15 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	@Override
+	public Collection<DtoLibraryMessage> loadLibraryMessages() throws ProcessingException {
+		ArrayList<DtoLibraryMessage> retVal = new ArrayList<DtoLibraryMessage>();
+		for (PersLibraryMessage next : myDao.loadLibraryMessages()) {
+			retVal.add( toUi(next,false));
+		}
+		return retVal;
+	}
+
+	@Override
 	public ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ProcessingException {
 
 		ourLog.debug("Beginning loadModelUpdate - Going to flush stats");
@@ -412,6 +485,129 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	@Override
+	public List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart) {
+
+		Set<BasePersServiceVersion> allSvcVers;
+		if (theDomainPid != null) {
+			assert theServicePid == null;
+			assert theServiceVersionPid == null;
+			PersDomain domain = myServiceRegistry.getDomainByPid(theDomainPid);
+			allSvcVers = domain.getAllServiceVersions();
+		} else if (theServicePid != null) {
+			assert theDomainPid == null;
+			assert theServiceVersionPid == null;
+			PersService service = myServiceRegistry.getServiceByPid(theServicePid);
+			allSvcVers = service.getAllServiceVersions();
+		} else if (theServiceVersionPid != null) {
+			assert theServicePid == null;
+			assert theDomainPid == null;
+			allSvcVers = Collections.singleton(myServiceRegistry.getServiceVersionByPid(theServiceVersionPid));
+		} else {
+			throw new NullPointerException("No domain/service/svcver pid provided!");
+		}
+
+		List<GMonitorRuleFiring> retVal = new ArrayList<GMonitorRuleFiring>();
+		List<PersMonitorRuleFiring> firings = myDao.loadMonitorRuleFirings(allSvcVers, theStart);
+		for (PersMonitorRuleFiring next : firings) {
+			retVal.add(toUi(next));
+		}
+
+		// Set<Long> svcVerPids = new HashSet<Long>();
+		// for (BasePersServiceVersion basePersServiceVersion : allSvcVers) {
+		//
+		// }
+
+		return retVal;
+	}
+
+	@Override
+	public GMonitorRuleList loadMonitorRuleList() throws ProcessingException {
+		GMonitorRuleList retVal = new GMonitorRuleList();
+
+		Collection<BasePersMonitorRule> allRules = myDao.getMonitorRules();
+		for (BasePersMonitorRule persMonitorRule : allRules) {
+			retVal.add(toUi(persMonitorRule));
+		}
+
+		return retVal;
+	}
+
+	@Override
+	public GRecentMessage loadRecentMessageForServiceVersion(long thePid) {
+		BasePersRecentMessage msg = myDao.loadRecentMessageForServiceVersion(thePid);
+		return toUi(msg, true);
+	}
+
+	@Override
+	public GRecentMessage loadRecentMessageForUser(long thePid) {
+		BasePersRecentMessage msg = myDao.loadRecentMessageForUser(thePid);
+		return toUi(msg, true);
+	}
+
+	@Override
+	public GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid) {
+		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
+
+		GRecentMessageLists retVal = new GRecentMessageLists();
+		retVal.setKeepSuccess(defaultInteger(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.SUCCESS)));
+		retVal.setKeepFail(defaultInteger(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.FAIL)));
+		retVal.setKeepFault(defaultInteger(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.FAULT)));
+		retVal.setKeepSecurityFail(defaultInteger(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.SECURITY_FAIL)));
+
+		if (retVal.getKeepSuccess() > 0) {
+			retVal.setSuccessList(toUi(myDao.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.SUCCESS), true));
+		}
+
+		if (retVal.getKeepFail() > 0) {
+			retVal.setFailList(toUi(myDao.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.FAIL), true));
+		}
+
+		if (retVal.getKeepSecurityFail() > 0) {
+			retVal.setSecurityFailList(toUi(myDao.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.SECURITY_FAIL), true));
+		}
+
+		if (retVal.getKeepFault() > 0) {
+			retVal.setFaultList(toUi(myDao.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.FAULT), true));
+		}
+
+		ourLog.info("Returning recent message list for service version {} - {}", theServiceVersionPid, retVal);
+
+		return retVal;
+	}
+
+	@Override
+	public GRecentMessageLists loadRecentTransactionListForUser(long thePid) {
+		PersUser user = myDao.getUser(thePid);
+		BasePersAuthenticationHost authHost = user.getAuthenticationHost();
+
+		GRecentMessageLists retVal = new GRecentMessageLists();
+		retVal.setKeepSuccess(defaultInteger(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.SUCCESS)));
+		retVal.setKeepFail(defaultInteger(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.FAIL)));
+		retVal.setKeepFault(defaultInteger(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.FAULT)));
+		retVal.setKeepSecurityFail(defaultInteger(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.SECURITY_FAIL)));
+
+		if (retVal.getKeepSuccess() > 0) {
+			retVal.setSuccessList(toUi(myDao.getUserRecentMessages(user, ResponseTypeEnum.SUCCESS), true));
+		}
+
+		if (retVal.getKeepFail() > 0) {
+			retVal.setFailList(toUi(myDao.getUserRecentMessages(user, ResponseTypeEnum.FAIL), true));
+		}
+
+		if (retVal.getKeepSecurityFail() > 0) {
+			retVal.setSecurityFailList(toUi(myDao.getUserRecentMessages(user, ResponseTypeEnum.SECURITY_FAIL), true));
+		}
+
+		if (retVal.getKeepFault() > 0) {
+			retVal.setFaultList(toUi(myDao.getUserRecentMessages(user, ResponseTypeEnum.FAULT), true));
+		}
+
+		ourLog.info("Returning recent message list for service version {} - {}", thePid, retVal);
+
+		return retVal;
+	}
+
+	@Override
 	public GSoap11ServiceVersionAndResources loadServiceVersion(long theServiceVersionPid) throws ProcessingException {
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
 		if (svcVer == null) {
@@ -427,6 +623,77 @@ public class AdminServiceBean implements IAdminService {
 
 		BaseGServiceVersion uiService = toUi(svcVer, true, methodPids, statuses);
 		GSoap11ServiceVersionAndResources retVal = toUi(uiService, svcVer);
+		return retVal;
+	}
+
+	@Override
+	public GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws ProcessingException {
+
+		BasePersServiceVersion ver = myDao.getServiceVersionByPid(theVersionPid);
+
+		final Map<Long, List<Integer>> methodPidToSuccessCount = new HashMap<Long, List<Integer>>();
+		final Map<Long, List<Integer>> methodPidToFailCount = new HashMap<Long, List<Integer>>();
+		final Map<Long, List<Integer>> methodPidToSecurityFailCount = new HashMap<Long, List<Integer>>();
+		final Map<Long, List<Integer>> methodPidToFaultCount = new HashMap<Long, List<Integer>>();
+
+		final List<Long> statsTimestamps = new ArrayList<Long>();
+
+		PersConfig config = myConfigSvc.getConfig();
+		for (final PersServiceVersionMethod nextMethod : ver.getMethods()) {
+			methodPidToSuccessCount.put(nextMethod.getPid(), new ArrayList<Integer>());
+			methodPidToFailCount.put(nextMethod.getPid(), new ArrayList<Integer>());
+			methodPidToSecurityFailCount.put(nextMethod.getPid(), new ArrayList<Integer>());
+			methodPidToFaultCount.put(nextMethod.getPid(), new ArrayList<Integer>());
+
+			doWithStatsByMinute(config, 60, myStatusSvc, nextMethod, new IWithStats() {
+				@Override
+				public void withStats(int theIndex, BasePersMethodInvocationStats theStats) {
+					List<Integer> successCounts = methodPidToSuccessCount.get(nextMethod.getPid());
+					List<Integer> failCounts = methodPidToFailCount.get(nextMethod.getPid());
+					List<Integer> securityFailCounts = methodPidToSecurityFailCount.get(nextMethod.getPid());
+					List<Integer> faultCounts = methodPidToFaultCount.get(nextMethod.getPid());
+					growToSizeInt(successCounts, theIndex);
+					growToSizeInt(failCounts, theIndex);
+					growToSizeInt(securityFailCounts, theIndex);
+					growToSizeInt(faultCounts, theIndex);
+					growToSizeLong(statsTimestamps, theIndex);
+					successCounts.set(theIndex, addToInt(successCounts.get(theIndex), theStats.getSuccessInvocationCount()));
+					failCounts.set(theIndex, addToInt(failCounts.get(theIndex), theStats.getFailInvocationCount()));
+					securityFailCounts.set(theIndex, addToInt(securityFailCounts.get(theIndex), theStats.getServerSecurityFailures()));
+					faultCounts.set(theIndex, addToInt(faultCounts.get(theIndex), theStats.getFaultInvocationCount()));
+					statsTimestamps.set(theIndex, theStats.getPk().getStartTime().getTime());
+				}
+			});
+		}
+
+		GServiceVersionDetailedStats retVal = new GServiceVersionDetailedStats();
+
+		retVal.setMethodPidToSuccessCount(methodPidToSuccessCount);
+		retVal.setMethodPidToFailCount(methodPidToFailCount);
+		retVal.setMethodPidToSecurityFailCount(methodPidToSecurityFailCount);
+		retVal.setMethodPidToFaultCount(methodPidToFaultCount);
+
+		retVal.setStatsTimestamps(statsTimestamps);
+
+		return retVal;
+	}
+
+	@Override
+	public List<GUrlStatus> loadServiceVersionUrlStatuses(long theServiceVersionPid) {
+		ourLog.info("Loading Service Version URL statuses for ServiceVersion {}", theServiceVersionPid);
+
+		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
+		if (svcVer == null) {
+			throw new IllegalArgumentException("Unknown Service Version " + theServiceVersionPid);
+		}
+
+		List<GUrlStatus> retVal = new ArrayList<GUrlStatus>();
+
+		StatusesBean statuses = myDao.loadAllStatuses();
+		for (PersServiceVersionUrl nextUrl : svcVer.getUrls()) {
+			retVal.add(toUi(nextUrl, statuses));
+		}
+
 		return retVal;
 	}
 
@@ -449,7 +716,7 @@ public class AdminServiceBean implements IAdminService {
 				theService.getUrlList().add(toUi(next));
 			}
 		}
-		
+
 		GSoap11ServiceVersionAndResources retVal = toUi(theService, def);
 		return retVal;
 	}
@@ -560,6 +827,20 @@ public class AdminServiceBean implements IAdminService {
 		}
 
 		return toUi(myServiceRegistry.saveHttpClientConfig(config));
+	}
+
+	@Override
+	public void saveLibraryMessage(DtoLibraryMessage theMessage) throws ProcessingException {
+		ourLog.info("Saving library message");
+
+		PersLibraryMessage msg = fromUi(theMessage);
+		myDao.saveLibraryMessage(msg);
+	}
+
+	@Override
+	public void saveMonitorRule(BaseGMonitorRule theRule) throws ProcessingException {
+		BasePersMonitorRule rule = fromUi(theRule);
+		myMonitorSvc.saveRule(rule);
 	}
 
 	@Override
@@ -734,60 +1015,6 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private <T extends BaseGServiceVersion> BasePersServiceVersion fromUi(T theVersion, PersService theService, String theVersionId) throws ProcessingException {
-		Validate.notNull(theVersion);
-		Validate.notNull(theService);
-		Validate.notBlank(theVersionId);
-
-		BasePersServiceVersion retVal;
-		if (theVersion.getPidOrNull() != null) {
-			ourLog.debug("Retrieving existing service version PID[{}]", theVersion.getPidOrNull());
-			retVal = myDao.getServiceVersionByPid(theVersion.getPid());
-		} else {
-			ourLog.debug("Retrieving service version ID[{}]", theVersionId);
-			retVal = myServiceRegistry.getOrCreateServiceVersionWithId(theService, theVersion.getProtocol(), theVersionId);
-			ourLog.debug("Found service version NEW[{}], PID[{}], PROTOCOL[{}]", new Object[] { retVal.isNewlyCreated(), retVal.getPid(), retVal.getProtocol().name() });
-		}
-
-		switch (theVersion.getProtocol()) {
-		case SOAP11:
-			fromUi((PersServiceVersionSoap11) retVal, (GSoap11ServiceVersion) theVersion);
-			break;
-		case JSONRPC20:
-			fromUi((PersServiceVersionJsonRpc20) retVal, (GServiceVersionJsonRpc20) theVersion);
-			break;
-		}
-
-		retVal.setActive(theVersion.isActive());
-		retVal.setVersionId(theVersion.getId());
-		retVal.setExplicitProxyPath(theVersion.getExplicitProxyPath());
-		retVal.setDescription(theVersion.getDescription());
-
-		retVal.setServerSecurityMode(theVersion.getServerSecurityMode());
-		if (retVal.getServerSecurityMode()==null) {
-			if (theVersion.getServerSecurityList().size() > 0) {
-				retVal.setServerSecurityMode(ServerSecurityModeEnum.REQUIRE_ANY);
-			}else {
-				retVal.setServerSecurityMode(ServerSecurityModeEnum.NONE);
-			}
-		}
-		
-		PersHttpClientConfig httpClientConfig = myDao.getHttpClientConfig(theVersion.getHttpClientConfigPid());
-		if (httpClientConfig == null) {
-			throw new ProcessingException("Unknown HTTP client config PID: " + theVersion.getHttpClientConfigPid());
-		}
-		retVal.setHttpClientConfig(httpClientConfig);
-
-		retVal.populateKeepRecentTransactionsFromDto(theVersion);
-
-		return retVal;
-	}
-
-	@SuppressWarnings("unused")
-	private void fromUi(PersServiceVersionJsonRpc20 theRetVal, GServiceVersionJsonRpc20 theVersion) {
-		// nothing in here yet
-	}
-
 	@Override
 	public GUser saveUser(GUser theUser) throws ProcessingException {
 		ourLog.info("Saving user with PID {}", theUser.getPid());
@@ -797,14 +1024,6 @@ public class AdminServiceBean implements IAdminService {
 		user = mySecurityService.saveServiceUser(user);
 
 		return toUi(user, false);
-	}
-
-	/**
-	 * FOR UNIT TESTS ONLY
-	 */
-	@VisibleForTesting
-	void setRuntimeStatusSvc(RuntimeStatusBean theRs) {
-		myStatusSvc = theRs;
 	}
 
 	@Override
@@ -823,12 +1042,76 @@ public class AdminServiceBean implements IAdminService {
 
 	}
 
-	public static int addToInt(int theAddTo, long theNumberToAdd) {
-		long newValue = theAddTo + theNumberToAdd;
-		if (newValue > Integer.MAX_VALUE) {
-			return Integer.MAX_VALUE;
+	@Override
+	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long thePid, String theRequestedByString) throws ProcessingException {
+		ourLog.info("Testing single fire of service version {}", thePid);
+		Date transactionTime = new Date();
+
+		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(thePid);
+		if (svcVer == null) {
+			throw new IllegalArgumentException("Unknown service version: " + thePid);
 		}
-		return (int) newValue;
+
+		HttpRequestBean request = new HttpRequestBean();
+		request.setInputReader(new StringReader(theMessageText));
+		request.setPath(svcVer.getProxyPath());
+		request.setQuery("");
+		request.setRequestHostIp("127.0.0.1");
+		request.setRequestType(RequestType.POST);
+
+		GServiceVersionSingleFireResponse retVal = new GServiceVersionSingleFireResponse();
+		try {
+			SidechannelOrchestratorResponseBean response = myOrchestrator.handleSidechannelRequest(thePid, theMessageText, theContentType, theRequestedByString);
+
+			retVal.setAuthorizationOutcome(AuthorizationOutcomeEnum.AUTHORIZED);
+			retVal.setDomainName(svcVer.getService().getDomain().getDomainName());
+			retVal.setDomainPid(svcVer.getService().getDomain().getPid());
+			if (response.getHttpResponse().getSuccessfulUrl() != null) {
+				retVal.setImplementationUrlHref(response.getHttpResponse().getSuccessfulUrl().getUrl());
+				retVal.setImplementationUrlId(response.getHttpResponse().getSuccessfulUrl().getUrlId());
+				retVal.setImplementationUrlPid(response.getHttpResponse().getSuccessfulUrl().getPid());
+			}
+
+			List<Pair<String>> requestHeaders = new ArrayList<Pair<String>>();
+			requestHeaders.add(new Pair<String>("Content-Type", svcVer.getProtocol().getRequestContentType()));
+
+			retVal.setRequestContentType(svcVer.getProtocol().getRequestContentType());
+			retVal.setRequestHeaders(requestHeaders);
+
+			retVal.setRequestMessage(theMessageText);
+			retVal.setResponseContentType(response.getResponseContentType());
+			retVal.setResponseHeaders(response.getHttpResponse().getResponseHeadersAsPairList());
+			retVal.setResponseMessage(response.getResponseBody());
+			retVal.setServiceName(svcVer.getService().getServiceName());
+			retVal.setServicePid(svcVer.getService().getPid());
+			retVal.setServiceVersionId(svcVer.getVersionId());
+			retVal.setServiceVersionPid(svcVer.getPid());
+			retVal.setTransactionMillis(response.getHttpResponse().getResponseTime());
+			retVal.setTransactionTime(transactionTime);
+
+		} catch (Exception e) {
+			ourLog.error("Failed to invoke service", e);
+			retVal.setOutcomeDescription("Failed with internal exception: " + e.getMessage());
+		}
+
+		return retVal;
+	}
+
+	private int defaultInteger(Integer theInt) {
+		return theInt != null ? theInt : 0;
+	}
+
+	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Long> the60minTime, PersService theService,
+			StatusesBean theStatuses) throws ProcessingException {
+
+		// Value will be changed below
+		StatusEnum status = theInitialStatus;
+
+		for (BasePersServiceVersion nextVersion : theService.getVersions()) {
+			status = extractStatus(theDashboardObject, theStatuses, the60MinInvCount, the60minTime, status, nextVersion);
+
+		} // end VERSION
+		return status;
 	}
 
 	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusesBean theStatuses, List<Integer> the60MinInvCount, List<Long> the60minTime, StatusEnum theStatus,
@@ -866,140 +1149,9 @@ public class AdminServiceBean implements IAdminService {
 		return status;
 	}
 
-	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Long> the60minTime, PersService theService,
-			StatusesBean theStatuses) throws ProcessingException {
-
-		// Value will be changed below
-		StatusEnum status = theInitialStatus;
-
-		for (BasePersServiceVersion nextVersion : theService.getVersions()) {
-			status = extractStatus(theDashboardObject, theStatuses, the60MinInvCount, the60minTime, status, nextVersion);
-
-		} // end VERSION
-		return status;
-	}
-
 	private void extractStatus(int theNumMinsBack, List<Integer> the60MinInvCount, List<Long> the60minTime, PersServiceVersionMethod nextMethod) throws ProcessingException {
 		IRuntimeStatus statusSvc = myStatusSvc;
 		extractSuccessfulInvocationInvocationTimes(myConfigSvc.getConfig(), theNumMinsBack, the60MinInvCount, the60minTime, nextMethod, statusSvc);
-	}
-
-	/**
-	 * @return The start timestamp
-	 */
-	public static void extractSuccessfulInvocationInvocationTimes(PersConfig theConfig, int theNumMinsBack, final List<Integer> the60MinInvCount, final List<Long> the60minTime,
-			PersServiceVersionMethod nextMethod, IRuntimeStatus statusSvc) {
-		doWithStatsByMinute(theConfig, theNumMinsBack, statusSvc, nextMethod, new IWithStats() {
-			@Override
-			public void withStats(int theIndex, BasePersMethodInvocationStats theStats) {
-				growToSizeInt(the60MinInvCount, theIndex);
-				growToSizeLong(the60minTime, theIndex);
-				the60MinInvCount.set(theIndex, addToInt(the60MinInvCount.get(theIndex), theStats.getSuccessInvocationCount()));
-				the60minTime.set(theIndex, the60minTime.get(theIndex) + theStats.getSuccessInvocationTotalTime());
-			}
-		});
-	}
-
-	public static void growToSizeInt(List<Integer> theCountArray, int theIndex) {
-		while (theCountArray.size() <= (theIndex)) {
-			theCountArray.add(0);
-		}
-	}
-
-	public static void growToSizeDouble(List<Double> theCountArray, int theIndex) {
-		while (theCountArray.size() <= (theIndex)) {
-			theCountArray.add(0.0);
-		}
-	}
-
-	public static void growToSizeLong(List<Long> theCountArray, int theIndex) {
-		while (theCountArray.size() <= (theIndex)) {
-			theCountArray.add(0L);
-		}
-	}
-
-	public static void doWithStatsByMinute(PersConfig theConfig, int theNumberOfMinutes, IRuntimeStatus statusSvc, PersServiceVersionMethod theMethod, IWithStats theOperator) {
-		Date start = getDateXMinsAgo(theNumberOfMinutes);
-		Date end = new Date();
-
-		doWithStatsByMinute(theConfig, statusSvc, theMethod, theOperator, start, end);
-	}
-
-	private static void doWithStatsByMinute(PersConfig theConfig, IRuntimeStatus statusSvc, PersServiceVersionMethod theMethod, IWithStats theOperator, Date start, Date end) {
-		Date date = start;
-		for (int min = 0; date.before(end); min++) {
-
-			InvocationStatsIntervalEnum interval = doWithStatsSupportFindInterval(theConfig, date);
-			date = doWithStatsSupportFindDate(date, interval);
-
-			PersInvocationStatsPk pk = new PersInvocationStatsPk(interval, date, theMethod.getPid());
-			BasePersMethodInvocationStats stats = statusSvc.getInvocationStatsSynchronously(pk);
-			theOperator.withStats(min, stats);
-
-			date = doWithStatsSupportIncrement(date, interval);
-
-		}
-	}
-
-	private static Date doWithStatsSupportIncrement(Date date, InvocationStatsIntervalEnum interval) {
-		Date retVal = new Date(date.getTime() + interval.millis());
-		return retVal;
-	}
-
-	private static Date doWithStatsSupportFindDate(Date date, InvocationStatsIntervalEnum interval) {
-		Date retVal = interval.truncate(date);
-		return retVal;
-	}
-
-	public static void doWithUserStatsByMinute(PersConfig theConfig, PersUser theUser, int theNumberOfMinutes, IRuntimeStatus statusSvc, IWithStats theOperator) {
-		Date xMinsAgo = getDateXMinsAgo(theNumberOfMinutes);
-		Date date = xMinsAgo;
-
-		for (int min = 0; date.before(new Date()); min++) {
-
-			InvocationStatsIntervalEnum interval = doWithStatsSupportFindInterval(theConfig, date);
-			date = doWithStatsSupportFindDate(date, interval);
-
-			PersInvocationUserStatsPk pk = new PersInvocationUserStatsPk(interval, date, theUser);
-			BasePersMethodInvocationStats stats = statusSvc.getInvocationUserStatsSynchronously(pk);
-			theOperator.withStats(min, stats);
-
-			date = doWithStatsSupportIncrement(date, interval);
-
-		}
-	}
-
-	private static InvocationStatsIntervalEnum doWithStatsSupportFindInterval(PersConfig theConfig, Date date) {
-		InvocationStatsIntervalEnum interval;
-		Date collapseStatsToDaysCutoff = InvocationStatsIntervalEnum.DAY.truncate(theConfig.getCollapseStatsToDaysCutoff());
-		if (date.before(collapseStatsToDaysCutoff)) {
-			interval = InvocationStatsIntervalEnum.DAY;
-		} else {
-			Date collapseStatsToHoursCutoff = InvocationStatsIntervalEnum.HOUR.truncate(theConfig.getCollapseStatsToHoursCutoff());
-			if (date.before(collapseStatsToHoursCutoff)) {
-				interval = InvocationStatsIntervalEnum.HOUR;
-			} else {
-				Date collapseStatsToTenMinutesCutoff = InvocationStatsIntervalEnum.TEN_MINUTE.truncate(theConfig.getCollapseStatsToTenMinutesCutoff());
-				if (date.before(collapseStatsToTenMinutesCutoff)) {
-					interval = InvocationStatsIntervalEnum.TEN_MINUTE;
-				} else {
-					interval = InvocationStatsIntervalEnum.MINUTE;
-				}
-			}
-		}
-		return interval;
-	}
-
-	public interface IWithStats {
-
-		void withStats(int theIndex, BasePersMethodInvocationStats theStats);
-
-	}
-
-	public static Date getDateXMinsAgo(int theNumberOfMinutes) {
-		Date date60MinsAgo = new Date(System.currentTimeMillis() - (theNumberOfMinutes * DateUtils.MILLIS_PER_MINUTE));
-		Date date = DateUtils.truncate(date60MinsAgo, Calendar.MINUTE);
-		return date;
 	}
 
 	private BasePersAuthenticationHost fromUi(BaseGAuthHost theAuthHost) {
@@ -1050,6 +1202,57 @@ public class AdminServiceBean implements IAdminService {
 		return null;
 	}
 
+	private BasePersMonitorRule fromUi(BaseGMonitorRule theRule) throws ProcessingException {
+
+		BasePersMonitorRule retVal = null;
+
+		switch (theRule.getRuleType()) {
+		case PASSIVE: {
+			PersMonitorRulePassive persRule = new PersMonitorRulePassive();
+			GMonitorRulePassive rule = (GMonitorRulePassive) theRule;
+			persRule.setPassiveFireForBackingServiceLatencyIsAboveMillis(rule.getPassiveFireForBackingServiceLatencyIsAboveMillis());
+			persRule.setPassiveFireForBackingServiceLatencySustainTimeMins(rule.getPassiveFireForBackingServiceLatencySustainTimeMins());
+			persRule.setPassiveFireIfAllBackingUrlsAreUnavailable(rule.isPassiveFireIfAllBackingUrlsAreUnavailable());
+			persRule.setPassiveFireIfSingleBackingUrlIsUnavailable(rule.isPassiveFireIfSingleBackingUrlIsUnavailable());
+			for (GMonitorRuleAppliesTo next : rule.getAppliesTo()) {
+				if (next.getServiceVersionPid() != null) {
+					persRule.getAppliesTo().add(new PersMonitorAppliesTo(persRule, myDao.getServiceVersionByPid(next.getServiceVersionPid())));
+				} else if (next.getServicePid() != null) {
+					persRule.getAppliesTo().add(new PersMonitorAppliesTo(persRule, myDao.getServiceByPid(next.getServicePid())));
+				} else {
+					persRule.getAppliesTo().add(new PersMonitorAppliesTo(persRule, myDao.getDomainByPid(next.getDomainPid())));
+				}
+			}
+
+			retVal = persRule;
+			break;
+		}
+		case ACTIVE: {
+			PersMonitorRuleActive persRule = new PersMonitorRuleActive();
+			DtoMonitorRuleActive rule = (DtoMonitorRuleActive) theRule;
+			for (DtoMonitorRuleActiveCheck next : rule.getCheckList()) {
+				persRule.getActiveChecks().add(fromUi(next, persRule));
+			}
+			retVal = persRule;
+			break;
+		}
+		}
+
+		if (retVal == null) {
+			throw new IllegalStateException("Unknown type: " + theRule.getRuleType());
+		}
+
+		retVal.setRuleActive(theRule.isActive());
+		retVal.setRuleName(theRule.getName());
+		retVal.setPid(theRule.getPidOrNull());
+
+		for (String next : theRule.getNotifyEmailContacts()) {
+			retVal.getNotifyContact().add(new PersMonitorRuleNotifyContact(next));
+		}
+
+		return retVal;
+	}
+
 	private PersBaseServerAuth<?, ?> fromUi(BaseGServerSecurity theObj, BasePersServiceVersion theSvcVer) {
 		switch (theObj.getType()) {
 		case WSSEC_UT: {
@@ -1075,6 +1278,47 @@ public class AdminServiceBean implements IAdminService {
 		}
 		}
 		throw new IllegalArgumentException("Unknown type: " + theObj.getType());
+	}
+
+	private PersLibraryMessage fromUi(DtoLibraryMessage theMessage) throws ProcessingException {
+		PersLibraryMessage retVal = new PersLibraryMessage();
+
+		retVal.setPid(theMessage.getPid());
+		retVal.setContentType(theMessage.getContentType());
+		retVal.setDescription(theMessage.getDescription());
+		retVal.setMessage(theMessage.getMessage());
+
+		for (Long next : theMessage.getAppliesToServiceVersionPids()) {
+			BasePersServiceVersion ver = myDao.getServiceVersionByPid(next);
+			if (ver == null) {
+				throw new ProcessingException("Unknown svcver PID: " + next);
+			}
+			retVal.getAppliesTo().add(new PersLibraryMessageAppliesTo(retVal, ver));
+		}
+
+		return retVal;
+	}
+
+	private PersMonitorRuleActiveCheck fromUi(DtoMonitorRuleActiveCheck theNext, BasePersMonitorRule theRule) throws ProcessingException {
+		PersMonitorRuleActiveCheck retVal = new PersMonitorRuleActiveCheck();
+		retVal.setCheckFrequencyNum(theNext.getCheckFrequencyNum());
+		retVal.setCheckFrequencyUnit(theNext.getCheckFrequencyUnit());
+		retVal.setExpectLatencyUnderMillis(theNext.getExpectLatencyUnderMillis());
+		retVal.setExpectResponseContainsText(theNext.getExpectResponseContainsText());
+		retVal.setExpectResponseType(theNext.getExpectResponseType());
+		retVal.setLastTransactionDate(theNext.getLastTransactionDate());
+		retVal.setLastTransactionOutcome(theNext.getLastTransactionOutcome());
+		retVal.setMessage(myDao.getLibraryMessageByPid(theNext.getMessagePid()));
+		if (retVal.getMessage() == null) {
+			throw new ProcessingException("Unknown message PID: " + theNext.getMessagePid());
+		}
+		retVal.setPid(theNext.getPidOrNull());
+		retVal.setRule(theRule);
+		retVal.setServiceVersion(myDao.getServiceVersionByPid(theNext.getServiceVersionPid()));
+		if (retVal.getServiceVersion() == null) {
+			throw new ProcessingException("Unknown service version PID: " + theNext.getServiceVersionPid());
+		}
+		return retVal;
 	}
 
 	private PersConfig fromUi(GConfig theConfig) {
@@ -1173,8 +1417,8 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setUsername(theUser.getUsername());
 		retVal.setDomainPermissions(fromUi(theUser.getDomainPermissions(), retVal.getDomainPermissions()));
 		retVal.setAuthenticationHost(myDao.getAuthenticationHostByPid(theUser.getAuthHostPid()));
-		retVal.setDescription(theUser.getDescription());		
-		
+		retVal.setDescription(theUser.getDescription());
+
 		// Contact Notes
 		retVal.getContact().setNotes(theUser.getContactNotes());
 		retVal.getContact().setEmailAddresses(theUser.getContactEmails());
@@ -1239,6 +1483,25 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
+	// private GHttpClientConfig toUi(PersHttpClientConfig theConfig) {
+	// GHttpClientConfig retVal = new GHttpClientConfig();
+	//
+	// if (theConfig.getPid() > 0) {
+	// retVal.setPid(theConfig.getPid());
+	// }
+	//
+	// retVal.setId(theConfig.getId());
+	// retVal.setName(theConfig.getName());
+	// retVal.setCircuitBreakerEnabled(theConfig.isCircuitBreakerEnabled());
+	// retVal.setCircuitBreakerTimeBetweenResetAttempts(theConfig.getCircuitBreakerTimeBetweenResetAttempts());
+	// retVal.setConnectTimeoutMillis(theConfig.getConnectTimeoutMillis());
+	// retVal.setFailureRetriesBeforeAborting(theConfig.getFailureRetriesBeforeAborting());
+	// retVal.setReadTimeoutMillis(theConfig.getReadTimeoutMillis());
+	// retVal.setUrlSelectionPolicy(theConfig.getUrlSelectionPolicy());
+	//
+	// return retVal;
+	// }
+
 	private Collection<PersUserDomainPermission> fromUi(List<GUserDomainPermission> theDomainPermissions, Collection<PersUserDomainPermission> theExisting) {
 		Collection<PersUserDomainPermission> retVal = theExisting;
 		retVal.clear();
@@ -1248,17 +1511,62 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
+	@SuppressWarnings("unused")
+	private void fromUi(PersServiceVersionJsonRpc20 theRetVal, GServiceVersionJsonRpc20 theVersion) {
+		// nothing in here yet
+	}
+
 	private PersServiceVersionSoap11 fromUi(PersServiceVersionSoap11 thePersVersion, GSoap11ServiceVersion theVersion) throws ProcessingException {
 		thePersVersion.setWsdlUrl(theVersion.getWsdlLocation());
 		return thePersVersion;
 	}
 
-	private GAuthenticationHostList loadAuthHostList() {
-		GAuthenticationHostList retVal = new GAuthenticationHostList();
-		for (BasePersAuthenticationHost next : myDao.getAllAuthenticationHosts()) {
-			BaseGAuthHost uiObject = toUi(next);
-			retVal.add(uiObject);
+	private <T extends BaseGServiceVersion> BasePersServiceVersion fromUi(T theVersion, PersService theService, String theVersionId) throws ProcessingException {
+		Validate.notNull(theVersion);
+		Validate.notNull(theService);
+		Validate.notBlank(theVersionId);
+
+		BasePersServiceVersion retVal;
+		if (theVersion.getPidOrNull() != null) {
+			ourLog.debug("Retrieving existing service version PID[{}]", theVersion.getPidOrNull());
+			retVal = myDao.getServiceVersionByPid(theVersion.getPid());
+		} else {
+			ourLog.debug("Retrieving service version ID[{}]", theVersionId);
+			retVal = myServiceRegistry.getOrCreateServiceVersionWithId(theService, theVersion.getProtocol(), theVersionId);
+			ourLog.debug("Found service version NEW[{}], PID[{}], PROTOCOL[{}]", new Object[] { retVal.isNewlyCreated(), retVal.getPid(), retVal.getProtocol().name() });
 		}
+
+		switch (theVersion.getProtocol()) {
+		case SOAP11:
+			fromUi((PersServiceVersionSoap11) retVal, (GSoap11ServiceVersion) theVersion);
+			break;
+		case JSONRPC20:
+			fromUi((PersServiceVersionJsonRpc20) retVal, (GServiceVersionJsonRpc20) theVersion);
+			break;
+		}
+
+		retVal.setActive(theVersion.isActive());
+		retVal.setVersionId(theVersion.getId());
+		retVal.setExplicitProxyPath(theVersion.getExplicitProxyPath());
+		retVal.setDescription(theVersion.getDescription());
+
+		retVal.setServerSecurityMode(theVersion.getServerSecurityMode());
+		if (retVal.getServerSecurityMode() == null) {
+			if (theVersion.getServerSecurityList().size() > 0) {
+				retVal.setServerSecurityMode(ServerSecurityModeEnum.REQUIRE_ANY);
+			} else {
+				retVal.setServerSecurityMode(ServerSecurityModeEnum.NONE);
+			}
+		}
+
+		PersHttpClientConfig httpClientConfig = myDao.getHttpClientConfig(theVersion.getHttpClientConfigPid());
+		if (httpClientConfig == null) {
+			throw new ProcessingException("Unknown HTTP client config PID: " + theVersion.getHttpClientConfigPid());
+		}
+		retVal.setHttpClientConfig(httpClientConfig);
+
+		retVal.populateKeepRecentTransactionsFromDto(theVersion);
+
 		return retVal;
 	}
 
@@ -1269,6 +1577,15 @@ public class AdminServiceBean implements IAdminService {
 			}
 		}
 		return false;
+	}
+
+	private GAuthenticationHostList loadAuthHostList() {
+		GAuthenticationHostList retVal = new GAuthenticationHostList();
+		for (BasePersAuthenticationHost next : myDao.getAllAuthenticationHosts()) {
+			BaseGAuthHost uiObject = toUi(next);
+			retVal.add(uiObject);
+		}
+		return retVal;
 	}
 
 	private GDomain loadDomain(PersDomain nextDomain, Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, StatusesBean statuses)
@@ -1300,25 +1617,6 @@ public class AdminServiceBean implements IAdminService {
 		return domainList;
 	}
 
-	// private GHttpClientConfig toUi(PersHttpClientConfig theConfig) {
-	// GHttpClientConfig retVal = new GHttpClientConfig();
-	//
-	// if (theConfig.getPid() > 0) {
-	// retVal.setPid(theConfig.getPid());
-	// }
-	//
-	// retVal.setId(theConfig.getId());
-	// retVal.setName(theConfig.getName());
-	// retVal.setCircuitBreakerEnabled(theConfig.isCircuitBreakerEnabled());
-	// retVal.setCircuitBreakerTimeBetweenResetAttempts(theConfig.getCircuitBreakerTimeBetweenResetAttempts());
-	// retVal.setConnectTimeoutMillis(theConfig.getConnectTimeoutMillis());
-	// retVal.setFailureRetriesBeforeAborting(theConfig.getFailureRetriesBeforeAborting());
-	// retVal.setReadTimeoutMillis(theConfig.getReadTimeoutMillis());
-	// retVal.setUrlSelectionPolicy(theConfig.getUrlSelectionPolicy());
-	//
-	// return retVal;
-	// }
-
 	private GHttpClientConfigList loadHttpClientConfigList() {
 		GHttpClientConfigList configList = new GHttpClientConfigList();
 		for (PersHttpClientConfig next : myDao.getHttpClientConfigs()) {
@@ -1332,6 +1630,24 @@ public class AdminServiceBean implements IAdminService {
 		Collection<PersUser> users = myDao.getAllUsersAndInitializeThem();
 		for (PersUser persUser : users) {
 			retVal.add(toUi(persUser, theLoadStats));
+		}
+		return retVal;
+	}
+
+	private String toHeaderContentType(List<Pair<String>> theResponseHeaders) {
+		for (Pair<String> pair : theResponseHeaders) {
+			if (pair.getFirst().equalsIgnoreCase("content-type")) {
+				return pair.getSecond().split(";")[0].trim();
+			}
+		}
+		return null;
+	}
+
+	private List<Pair<String>> toHeaders(String theHeaders) {
+		ArrayList<Pair<String>> retVal = new ArrayList<Pair<String>>();
+		for (String next : theHeaders.split("\\r\\n")) {
+			int idx = next.indexOf(": ");
+			retVal.add(new Pair<String>(next.substring(0, idx), next.substring(idx + 2)));
 		}
 		return retVal;
 	}
@@ -1371,17 +1687,16 @@ public class AdminServiceBean implements IAdminService {
 			theUiService.getResourcePointerList().add(res.asPointer());
 		}
 
-		
-//
-//		theUiService.getClientSecurityList().clear();
-//		for (PersBaseClientAuth<?> next : theSvcVer.getClientAuths()) {
-//			theUiService.getClientSecurityList().add(toUi(next));
-//		}
-//
-//		theUiService.getServerSecurityList().clear();
-//		for (PersBaseServerAuth<?, ?> next : theSvcVer.getServerAuths()) {
-//			theUiService.getServerSecurityList().add(toUi(next));
-//		}
+		//
+		// theUiService.getClientSecurityList().clear();
+		// for (PersBaseClientAuth<?> next : theSvcVer.getClientAuths()) {
+		// theUiService.getClientSecurityList().add(toUi(next));
+		// }
+		//
+		// theUiService.getServerSecurityList().clear();
+		// for (PersBaseServerAuth<?, ?> next : theSvcVer.getServerAuths()) {
+		// theUiService.getServerSecurityList().add(toUi(next));
+		// }
 
 		return retVal;
 	}
@@ -1409,6 +1724,137 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setSupportsPasswordChange(thePersObj.isSupportsPasswordChange());
 
 		thePersObj.populateKeepRecentTransactionsToDto(retVal);
+
+		return retVal;
+	}
+
+	private BaseGMonitorRule toUi(BasePersMonitorRule theRule) throws ProcessingException {
+		BaseGMonitorRule retVal = null;
+		switch (theRule.getRuleType()) {
+		case PASSIVE: {
+			GMonitorRulePassive ruleDto = new GMonitorRulePassive();
+			PersMonitorRulePassive rule = (PersMonitorRulePassive) theRule;
+			ruleDto.setPassiveFireForBackingServiceLatencyIsAboveMillis(rule.getPassiveFireForBackingServiceLatencyIsAboveMillis());
+			ruleDto.setPassiveFireForBackingServiceLatencySustainTimeMins(rule.getPassiveFireForBackingServiceLatencySustainTimeMins());
+			ruleDto.setPassiveFireIfAllBackingUrlsAreUnavailable(rule.isPassiveFireIfAllBackingUrlsAreUnavailable());
+			ruleDto.setPassiveFireIfSingleBackingUrlIsUnavailable(rule.isPassiveFireIfSingleBackingUrlIsUnavailable());
+			for (PersMonitorAppliesTo next : rule.getAppliesTo()) {
+				if (next.getItem() instanceof PersDomain) {
+					PersDomain domain = (PersDomain) next.getItem();
+					ruleDto.applyTo(toUi(domain, false, null), true);
+				} else if (next.getItem() instanceof PersService) {
+					PersService service = (PersService) next.getItem();
+					PersDomain domain = service.getDomain();
+					ruleDto.applyTo(toUi(domain, false, null), toUi(service, false, null), true);
+				} else if (next.getItem() instanceof BasePersServiceVersion) {
+					BasePersServiceVersion svcVer = (BasePersServiceVersion) next.getItem();
+					PersService service = svcVer.getService();
+					PersDomain domain = service.getDomain();
+					ruleDto.applyTo(toUi(domain, false, null), toUi(service, false, null), toUi(svcVer, false, null), true);
+				}
+			}
+
+			retVal = ruleDto;
+			break;
+		}
+		case ACTIVE: {
+			DtoMonitorRuleActive ruleDto = new DtoMonitorRuleActive();
+			PersMonitorRuleActive rule = (PersMonitorRuleActive) theRule;
+			for (PersMonitorRuleActiveCheck next : rule.getActiveChecks()) {
+				ruleDto.getCheckList().add(toUi(next));
+			}
+			retVal = ruleDto;
+			break;
+		}
+		}
+
+		if (retVal == null) {
+			throw new IllegalStateException("Unknown type: " + theRule.getRuleType());
+		}
+		retVal.setPid(theRule.getPid());
+		retVal.setActive(theRule.isRuleActive());
+		retVal.setName(theRule.getRuleName());
+
+		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
+			retVal.getNotifyEmailContacts().add(next.getEmail());
+		}
+
+		return retVal;
+	}
+
+	private GRecentMessage toUi(BasePersRecentMessage theMsg, boolean theLoadMsgContents) {
+		GRecentMessage retVal = new GRecentMessage();
+
+		retVal.setPid(theMsg.getPid());
+		PersServiceVersionUrl implementationUrl = theMsg.getImplementationUrl();
+		if (implementationUrl != null) {
+			retVal.setImplementationUrlId(implementationUrl.getUrlId());
+			retVal.setImplementationUrlHref(implementationUrl.getUrl());
+			retVal.setImplementationUrlPid(implementationUrl.getPid());
+		}
+
+		BasePersServiceVersion svcVer = theMsg.getServiceVersion();
+		if (svcVer != null) {
+			retVal.setDomainPid(svcVer.getService().getDomain().getPid());
+			retVal.setDomainName(svcVer.getService().getDomain().getDomainNameOrId());
+
+			retVal.setServicePid(svcVer.getService().getPid());
+			retVal.setServiceName(svcVer.getService().getServiceNameOrId());
+
+			retVal.setServiceVersionPid(svcVer.getPid());
+			retVal.setServiceVersionId(svcVer.getVersionId());
+		}
+
+		PersServiceVersionMethod method = theMsg.getMethod();
+		if (method != null) {
+			retVal.setMethodPid(method.getPid());
+			retVal.setMethodName(method.getName());
+		}
+
+		retVal.setRecentMessageType(theMsg.getRecentMessageType());
+		retVal.setRequestHostIp(theMsg.getRequestHostIp());
+		retVal.setTransactionTime(theMsg.getTransactionTime());
+		retVal.setTransactionMillis(theMsg.getTransactionMillis());
+		retVal.setAuthorizationOutcome(theMsg.getAuthorizationOutcome());
+
+		if (theLoadMsgContents) {
+			int bodyIdx = theMsg.getRequestBody().indexOf("\r\n\r\n");
+			if (bodyIdx == -1) {
+				retVal.setRequestMessage(theMsg.getRequestBody());
+				retVal.setRequestHeaders(new ArrayList<Pair<String>>());
+				retVal.setRequestContentType("unknown");
+			} else {
+				retVal.setRequestMessage(theMsg.getRequestBody().substring(bodyIdx + 4));
+				retVal.setRequestHeaders(toHeaders(theMsg.getRequestBody().substring(0, bodyIdx)));
+				retVal.setRequestContentType(toHeaderContentType(retVal.getRequestHeaders()));
+			}
+
+			bodyIdx = theMsg.getResponseBody().indexOf("\r\n\r\n");
+			if (bodyIdx == -1) {
+				retVal.setResponseMessage(theMsg.getResponseBody());
+				retVal.setResponseHeaders(new ArrayList<Pair<String>>());
+				retVal.setResponseContentType("unknown");
+			} else {
+				retVal.setResponseMessage(theMsg.getResponseBody().substring(bodyIdx + 4));
+				retVal.setResponseHeaders(toHeaders(theMsg.getResponseBody().substring(0, bodyIdx)));
+				retVal.setResponseContentType(toHeaderContentType(retVal.getResponseHeaders()));
+			}
+
+		}
+
+		if (theMsg instanceof PersServiceVersionRecentMessage) {
+			PersServiceVersionRecentMessage msg = (PersServiceVersionRecentMessage) theMsg;
+			if (msg.getUser() != null) {
+				retVal.setRequestUserPid(msg.getUser().getPid());
+				retVal.setRequestUsername(msg.getUser().getUsername());
+			}
+		} else if (theMsg instanceof PersUserRecentMessage) {
+			PersUserRecentMessage msg = (PersUserRecentMessage) theMsg;
+			if (msg.getUser() != null) {
+				retVal.setRequestUserPid(msg.getUser().getPid());
+				retVal.setRequestUsername(msg.getUser().getUsername());
+			}
+		}
 
 		return retVal;
 	}
@@ -1533,13 +1979,9 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private static int[] toArray(ArrayList<Integer> theT60minCount) {
-		int[] retVal = new int[theT60minCount.size()];
-		int index = 0;
-		for (Integer integer : theT60minCount) {
-			retVal[index++] = integer;
-		}
-		return retVal;
+	private BaseGServiceVersion toUi(BasePersServiceVersion theSvcVer, boolean theLoadStats, StatusesBean theStatuses) throws ProcessingException {
+		Set<Long> emptySet = Collections.emptySet();
+		return toUi(theSvcVer, theLoadStats, emptySet, theStatuses);
 	}
 
 	private List<GUserDomainPermission> toUi(Collection<PersUserDomainPermission> theDomainPermissions) {
@@ -1547,6 +1989,16 @@ public class AdminServiceBean implements IAdminService {
 		for (PersUserDomainPermission next : theDomainPermissions) {
 			retVal.add(toUi(next));
 		}
+		return retVal;
+	}
+
+	private List<GRecentMessage> toUi(List<? extends BasePersRecentMessage> theServiceVersionRecentMessages, boolean theLoadMessageContents) {
+		List<GRecentMessage> retVal = new ArrayList<GRecentMessage>();
+
+		for (BasePersRecentMessage next : theServiceVersionRecentMessages) {
+			retVal.add(toUi(next, theLoadMessageContents));
+		}
+
 		return retVal;
 	}
 
@@ -1685,40 +2137,6 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private void toUiMonitorRules(PersDomain theDomain, BaseGDashboardObjectWithUrls<?> retVal) {
-		for (PersService nextSvc : theDomain.getServices()) {
-			toUiMonitorRules(nextSvc, retVal);
-		}
-		for (PersMonitorAppliesTo nextRule : theDomain.getMonitorRules()) {
-			if (nextRule.getItem().equals(theDomain)) {
-				retVal.getMonitorRulePids().add(nextRule.getPid());
-			}
-		}
-	}
-
-	private void toUiMonitorRules(PersService theService, BaseGDashboardObjectWithUrls<?> retVal) {
-		for (BasePersServiceVersion nextSvcVer : theService.getVersions()) {
-			toUiMonitorRules(nextSvcVer, retVal);
-		}
-		for (PersMonitorAppliesTo nextRule : theService.getMonitorRules()) {
-			if (nextRule.getItem().equals(theService)) {
-				retVal.getMonitorRulePids().add(nextRule.getPid());
-			}
-		}
-	}
-
-	private void toUiMonitorRules(BasePersServiceVersion theSvcVer, BaseGDashboardObjectWithUrls<?> retVal) {
-		for (PersMonitorAppliesTo nextRule : theSvcVer.getMonitorRules()) {
-			if (nextRule.getItem().equals(theSvcVer)) {
-				retVal.getMonitorRulePids().add(nextRule.getPid());
-			}
-		}
-		for (PersMonitorRuleActiveCheck next : theSvcVer.getActiveChecks()) {
-			retVal.getMonitorRulePids().add(next.getRule().getPid());
-		}
-
-	}
-
 	private GHttpClientConfig toUi(PersHttpClientConfig theConfig) {
 		GHttpClientConfig retVal = new GHttpClientConfig();
 
@@ -1735,6 +2153,76 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setFailureRetriesBeforeAborting(theConfig.getFailureRetriesBeforeAborting());
 
 		retVal.setUrlSelectionPolicy(theConfig.getUrlSelectionPolicy());
+
+		return retVal;
+	}
+
+	private DtoLibraryMessage toUi(PersLibraryMessage theMessage, boolean theLoadContents) throws ProcessingException {
+		DtoLibraryMessage retVal = new DtoLibraryMessage();
+
+		retVal.setContentType(theMessage.getContentType());
+		retVal.setDescription(theMessage.getDescription());
+		retVal.setPid(theMessage.getPid());
+		retVal.setMessageLength(theMessage.getMessageLength());
+
+		for (PersLibraryMessageAppliesTo next : theMessage.getAppliesTo()) {
+			retVal.getAppliesToServiceVersionPids().add(next.getPk().getServiceVersion().getPid());
+		}
+
+		if (theLoadContents) {
+			retVal.setMessage(theMessage.getMessage());
+		}
+
+		return retVal;
+	}
+
+	private DtoMonitorRuleActiveCheck toUi(PersMonitorRuleActiveCheck theNext) throws ProcessingException {
+		DtoMonitorRuleActiveCheck retVal = new DtoMonitorRuleActiveCheck();
+		retVal.setCheckFrequencyNum(theNext.getCheckFrequencyNum());
+		retVal.setCheckFrequencyUnit(theNext.getCheckFrequencyUnit());
+		retVal.setExpectLatencyUnderMillis(theNext.getExpectLatencyUnderMillis());
+		retVal.setExpectResponseContainsText(theNext.getExpectResponseContainsText());
+		retVal.setExpectResponseType(theNext.getExpectResponseType());
+		retVal.setLastTransactionDate(theNext.getLastTransactionDate());
+		retVal.setLastTransactionOutcome(theNext.getLastTransactionOutcome());
+		retVal.setMessagePid(theNext.getMessage().getPid());
+		retVal.setMessageDescription(theNext.getMessage().getDescription());
+		retVal.setPid(theNext.getPid());
+		retVal.setServiceVersionPid(theNext.getServiceVersion().getPid());
+		return retVal;
+	}
+
+	private GMonitorRuleFiring toUi(PersMonitorRuleFiring theNext) {
+		GMonitorRuleFiring retVal = new GMonitorRuleFiring();
+		retVal.setPid(theNext.getPid());
+		retVal.setStartDate(theNext.getStartDate());
+		retVal.setEndDate(theNext.getEndDate());
+
+		for (PersMonitorRuleFiringProblem next : theNext.getProblems()) {
+			retVal.getProblems().add(toUi(next));
+		}
+
+		return retVal;
+	}
+
+	private GMonitorRuleFiringProblem toUi(PersMonitorRuleFiringProblem theNext) {
+		GMonitorRuleFiringProblem retVal = new GMonitorRuleFiringProblem();
+		retVal.setPid(theNext.getPid());
+		retVal.setServiceVersionPid(theNext.getServiceVersion().getPid());
+
+		if (theNext.getUrl() != null) {
+			retVal.setUrlPid(theNext.getUrl().getPid());
+		}
+
+		if (theNext.getFailedUrlMessage() != null) {
+			retVal.setFailedUrlMessage(theNext.getFailedUrlMessage());
+		}
+
+		if (theNext.getLatencyAverageMillisPerCall() != null) {
+			retVal.setFailedLatencyAverageMillisPerCall(theNext.getLatencyAverageMillisPerCall());
+			retVal.setFailedLatencyAverageOverMinutes(theNext.getLatencyAverageOverMinutes());
+			retVal.setFailedLatencyThreshold(theNext.getLatencyThreshold());
+		}
 
 		return retVal;
 	}
@@ -1849,6 +2337,21 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
+	private GUrlStatus toUi(PersServiceVersionUrl theUrl, StatusesBean theStatuses) {
+		GUrlStatus retVal = new GUrlStatus();
+		retVal.setUrlPid(theUrl.getPid());
+
+		PersServiceVersionUrlStatus urlStatus = theStatuses.getUrlStatus(theUrl.getPid());
+		retVal.setStatus(urlStatus.getStatus());
+		retVal.setLastFailure(urlStatus.getLastFail());
+		retVal.setLastFailureMessage(urlStatus.getLastFailMessage());
+		retVal.setLastSuccess(urlStatus.getLastSuccess());
+		retVal.setLastSuccessMessage(urlStatus.getLastSuccessMessage());
+		retVal.setLastFault(urlStatus.getLastFault());
+		retVal.setLastFaultMessage(urlStatus.getLastFaultMessage());
+		return retVal;
+	}
+
 	private GUser toUi(PersUser thePersUser, boolean theLoadStats) throws ProcessingException {
 		GUser retVal = new GUser();
 		retVal.setPid(thePersUser.getPid());
@@ -1904,14 +2407,6 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private static double to60MinAveragePerMin(ArrayList<Integer> theT60minSecurityFailCount) {
-		double total = 0;
-		for (Integer integer : theT60minSecurityFailCount) {
-			total += integer;
-		}
-		return total / theT60minSecurityFailCount.size();
-	}
-
 	private GUserDomainPermission toUi(PersUserDomainPermission theObj) {
 		GUserDomainPermission retVal = new GUserDomainPermission();
 		retVal.setPid(theObj.getPid());
@@ -1955,6 +2450,48 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
+	private Collection<DtoLibraryMessage> toUiCollectionLibraryMessages(Collection<PersLibraryMessage> theMsgs, boolean theLoadContents) throws ProcessingException {
+		ArrayList<DtoLibraryMessage> retVal = new ArrayList<DtoLibraryMessage>();
+		for (PersLibraryMessage next : theMsgs) {
+			retVal.add(toUi(next, theLoadContents));
+		}
+		return retVal;
+	}
+
+	private void toUiMonitorRules(BasePersServiceVersion theSvcVer, BaseGDashboardObjectWithUrls<?> retVal) {
+		for (PersMonitorAppliesTo nextRule : theSvcVer.getMonitorRules()) {
+			if (nextRule.getItem().equals(theSvcVer)) {
+				retVal.getMonitorRulePids().add(nextRule.getPid());
+			}
+		}
+		for (PersMonitorRuleActiveCheck next : theSvcVer.getActiveChecks()) {
+			retVal.getMonitorRulePids().add(next.getRule().getPid());
+		}
+
+	}
+
+	private void toUiMonitorRules(PersDomain theDomain, BaseGDashboardObjectWithUrls<?> retVal) {
+		for (PersService nextSvc : theDomain.getServices()) {
+			toUiMonitorRules(nextSvc, retVal);
+		}
+		for (PersMonitorAppliesTo nextRule : theDomain.getMonitorRules()) {
+			if (nextRule.getItem().equals(theDomain)) {
+				retVal.getMonitorRulePids().add(nextRule.getPid());
+			}
+		}
+	}
+
+	private void toUiMonitorRules(PersService theService, BaseGDashboardObjectWithUrls<?> retVal) {
+		for (BasePersServiceVersion nextSvcVer : theService.getVersions()) {
+			toUiMonitorRules(nextSvcVer, retVal);
+		}
+		for (PersMonitorAppliesTo nextRule : theService.getMonitorRules()) {
+			if (nextRule.getItem().equals(theService)) {
+				retVal.getMonitorRulePids().add(nextRule.getPid());
+			}
+		}
+	}
+
 	/**
 	 * Convenience for Unit Tests
 	 */
@@ -1969,13 +2506,38 @@ public class AdminServiceBean implements IAdminService {
 	/**
 	 * Unit test only
 	 */
+	void setConfigSvc(IConfigService theConfigSvc) {
+		myConfigSvc = theConfigSvc;
+	}
+
+	/**
+	 * Unit test only
+	 */
 	void setInvokerSoap11(IServiceInvokerSoap11 theInvokerSoap11) {
 		myInvokerSoap11 = theInvokerSoap11;
+	}
+
+	@VisibleForTesting
+	void setMonitorSvc(MonitorServiceBean theMonitorSvc) {
+		myMonitorSvc = theMonitorSvc;
 	}
 
 	void setPersSvc(DaoBean thePersSvc) {
 		assert myDao == null;
 		myDao = thePersSvc;
+	}
+
+	/**
+	 * FOR UNIT TESTS ONLY
+	 */
+	@VisibleForTesting
+	void setRuntimeStatusSvc(RuntimeStatusBean theRs) {
+		myStatusSvc = theRs;
+	}
+
+	@VisibleForTesting
+	void setSchedulerServiceForTesting(IScheduler theMock) {
+		myScheduler = theMock;
 	}
 
 	/**
@@ -1992,38 +2554,12 @@ public class AdminServiceBean implements IAdminService {
 		myServiceRegistry = theSvcReg;
 	}
 
-	@Override
-	public List<GUrlStatus> loadServiceVersionUrlStatuses(long theServiceVersionPid) {
-		ourLog.info("Loading Service Version URL statuses for ServiceVersion {}", theServiceVersionPid);
-
-		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
-		if (svcVer == null) {
-			throw new IllegalArgumentException("Unknown Service Version " + theServiceVersionPid);
+	public static int addToInt(int theAddTo, long theNumberToAdd) {
+		long newValue = theAddTo + theNumberToAdd;
+		if (newValue > Integer.MAX_VALUE) {
+			return Integer.MAX_VALUE;
 		}
-
-		List<GUrlStatus> retVal = new ArrayList<GUrlStatus>();
-
-		StatusesBean statuses = myDao.loadAllStatuses();
-		for (PersServiceVersionUrl nextUrl : svcVer.getUrls()) {
-			retVal.add(toUi(nextUrl, statuses));
-		}
-
-		return retVal;
-	}
-
-	private GUrlStatus toUi(PersServiceVersionUrl theUrl, StatusesBean theStatuses) {
-		GUrlStatus retVal = new GUrlStatus();
-		retVal.setUrlPid(theUrl.getPid());
-
-		PersServiceVersionUrlStatus urlStatus = theStatuses.getUrlStatus(theUrl.getPid());
-		retVal.setStatus(urlStatus.getStatus());
-		retVal.setLastFailure(urlStatus.getLastFail());
-		retVal.setLastFailureMessage(urlStatus.getLastFailMessage());
-		retVal.setLastSuccess(urlStatus.getLastSuccess());
-		retVal.setLastSuccessMessage(urlStatus.getLastSuccessMessage());
-		retVal.setLastFault(urlStatus.getLastFault());
-		retVal.setLastFaultMessage(urlStatus.getLastFaultMessage());
-		return retVal;
+		return (int) newValue;
 	}
 
 	public static long addToLong(long theAddTo, long theNumberToAdd) {
@@ -2031,239 +2567,11 @@ public class AdminServiceBean implements IAdminService {
 		return newValue;
 	}
 
-	/**
-	 * Unit test only
-	 */
-	void setConfigSvc(IConfigService theConfigSvc) {
-		myConfigSvc = theConfigSvc;
-	}
+	public static void doWithStatsByMinute(PersConfig theConfig, int theNumberOfMinutes, IRuntimeStatus statusSvc, PersServiceVersionMethod theMethod, IWithStats theOperator) {
+		Date start = getDateXMinsAgo(theNumberOfMinutes);
+		Date end = new Date();
 
-	@Override
-	public GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid) {
-		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
-
-		GRecentMessageLists retVal = new GRecentMessageLists();
-		retVal.setKeepSuccess(defaultInteger(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.SUCCESS)));
-		retVal.setKeepFail(defaultInteger(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.FAIL)));
-		retVal.setKeepFault(defaultInteger(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.FAULT)));
-		retVal.setKeepSecurityFail(defaultInteger(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.SECURITY_FAIL)));
-
-		if (retVal.getKeepSuccess() > 0) {
-			retVal.setSuccessList(toUi(myDao.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.SUCCESS), true));
-		}
-
-		if (retVal.getKeepFail() > 0) {
-			retVal.setFailList(toUi(myDao.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.FAIL), true));
-		}
-
-		if (retVal.getKeepSecurityFail() > 0) {
-			retVal.setSecurityFailList(toUi(myDao.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.SECURITY_FAIL), true));
-		}
-
-		if (retVal.getKeepFault() > 0) {
-			retVal.setFaultList(toUi(myDao.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.FAULT), true));
-		}
-
-		ourLog.info("Returning recent message list for service version {} - {}", theServiceVersionPid, retVal);
-
-		return retVal;
-	}
-
-	private List<GRecentMessage> toUi(List<? extends BasePersRecentMessage> theServiceVersionRecentMessages, boolean theLoadMessageContents) {
-		List<GRecentMessage> retVal = new ArrayList<GRecentMessage>();
-
-		for (BasePersRecentMessage next : theServiceVersionRecentMessages) {
-			retVal.add(toUi(next, theLoadMessageContents));
-		}
-
-		return retVal;
-	}
-
-	@Override
-	public GRecentMessage loadRecentMessageForServiceVersion(long thePid) {
-		BasePersRecentMessage msg = myDao.loadRecentMessageForServiceVersion(thePid);
-		return toUi(msg, true);
-	}
-
-	private GRecentMessage toUi(BasePersRecentMessage theMsg, boolean theLoadMsgContents) {
-		GRecentMessage retVal = new GRecentMessage();
-
-		retVal.setPid(theMsg.getPid());
-		PersServiceVersionUrl implementationUrl = theMsg.getImplementationUrl();
-		if (implementationUrl != null) {
-			retVal.setImplementationUrlId(implementationUrl.getUrlId());
-			retVal.setImplementationUrlHref(implementationUrl.getUrl());
-			retVal.setImplementationUrlPid(implementationUrl.getPid());
-
-			retVal.setDomainPid(implementationUrl.getServiceVersion().getService().getDomain().getPid());
-			retVal.setDomainName(implementationUrl.getServiceVersion().getService().getDomain().getDomainNameOrId());
-
-			retVal.setServicePid(implementationUrl.getServiceVersion().getService().getPid());
-			retVal.setServiceName(implementationUrl.getServiceVersion().getService().getServiceNameOrId());
-
-			retVal.setServiceVersionPid(implementationUrl.getServiceVersion().getPid());
-			retVal.setServiceVersionId(implementationUrl.getServiceVersion().getVersionId());
-
-		}
-
-		retVal.setRecentMessageType(theMsg.getRecentMessageType());
-		retVal.setRequestHostIp(theMsg.getRequestHostIp());
-		retVal.setTransactionTime(theMsg.getTransactionTime());
-		retVal.setTransactionMillis(theMsg.getTransactionMillis());
-		retVal.setAuthorizationOutcome(theMsg.getAuthorizationOutcome());
-
-		if (theLoadMsgContents) {
-			int bodyIdx = theMsg.getRequestBody().indexOf("\r\n\r\n");
-			if (bodyIdx == -1) {
-				retVal.setRequestMessage(theMsg.getRequestBody());
-				retVal.setRequestHeaders(new ArrayList<Pair<String>>());
-				retVal.setRequestContentType("unknown");
-			} else {
-				retVal.setRequestMessage(theMsg.getRequestBody().substring(bodyIdx + 4));
-				retVal.setRequestHeaders(toHeaders(theMsg.getRequestBody().substring(0, bodyIdx)));
-				retVal.setRequestContentType(toHeaderContentType(retVal.getRequestHeaders()));
-			}
-
-			bodyIdx = theMsg.getResponseBody().indexOf("\r\n\r\n");
-			if (bodyIdx == -1) {
-				retVal.setResponseMessage(theMsg.getResponseBody());
-				retVal.setResponseHeaders(new ArrayList<Pair<String>>());
-				retVal.setResponseContentType("unknown");
-			} else {
-				retVal.setResponseMessage(theMsg.getResponseBody().substring(bodyIdx + 4));
-				retVal.setResponseHeaders(toHeaders(theMsg.getResponseBody().substring(0, bodyIdx)));
-				retVal.setResponseContentType(toHeaderContentType(retVal.getResponseHeaders()));
-			}
-
-		}
-
-		if (theMsg instanceof PersServiceVersionRecentMessage) {
-			PersServiceVersionRecentMessage msg = (PersServiceVersionRecentMessage) theMsg;
-			if (msg.getUser() != null) {
-				retVal.setRequestUserPid(msg.getUser().getPid());
-				retVal.setRequestUsername(msg.getUser().getUsername());
-			}
-		} else if (theMsg instanceof PersUserRecentMessage) {
-			PersUserRecentMessage msg = (PersUserRecentMessage) theMsg;
-			if (msg.getUser() != null) {
-				retVal.setRequestUserPid(msg.getUser().getPid());
-				retVal.setRequestUsername(msg.getUser().getUsername());
-			}
-		}
-
-		return retVal;
-	}
-
-	private String toHeaderContentType(List<Pair<String>> theResponseHeaders) {
-		for (Pair<String> pair : theResponseHeaders) {
-			if (pair.getFirst().equalsIgnoreCase("content-type")) {
-				return pair.getSecond().split(";")[0].trim();
-			}
-		}
-		return null;
-	}
-
-	private List<Pair<String>> toHeaders(String theHeaders) {
-		ArrayList<Pair<String>> retVal = new ArrayList<Pair<String>>();
-		for (String next : theHeaders.split("\\r\\n")) {
-			int idx = next.indexOf(": ");
-			retVal.add(new Pair<String>(next.substring(0, idx), next.substring(idx + 2)));
-		}
-		return retVal;
-	}
-
-	@Override
-	public GRecentMessageLists loadRecentTransactionListForUser(long thePid) {
-		PersUser user = myDao.getUser(thePid);
-		BasePersAuthenticationHost authHost = user.getAuthenticationHost();
-
-		GRecentMessageLists retVal = new GRecentMessageLists();
-		retVal.setKeepSuccess(defaultInteger(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.SUCCESS)));
-		retVal.setKeepFail(defaultInteger(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.FAIL)));
-		retVal.setKeepFault(defaultInteger(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.FAULT)));
-		retVal.setKeepSecurityFail(defaultInteger(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.SECURITY_FAIL)));
-
-		if (retVal.getKeepSuccess() > 0) {
-			retVal.setSuccessList(toUi(myDao.getUserRecentMessages(user, ResponseTypeEnum.SUCCESS), true));
-		}
-
-		if (retVal.getKeepFail() > 0) {
-			retVal.setFailList(toUi(myDao.getUserRecentMessages(user, ResponseTypeEnum.FAIL), true));
-		}
-
-		if (retVal.getKeepSecurityFail() > 0) {
-			retVal.setSecurityFailList(toUi(myDao.getUserRecentMessages(user, ResponseTypeEnum.SECURITY_FAIL), true));
-		}
-
-		if (retVal.getKeepFault() > 0) {
-			retVal.setFaultList(toUi(myDao.getUserRecentMessages(user, ResponseTypeEnum.FAULT), true));
-		}
-
-		ourLog.info("Returning recent message list for service version {} - {}", thePid, retVal);
-
-		return retVal;
-	}
-
-	private int defaultInteger(Integer theInt) {
-		return theInt != null ? theInt : 0;
-	}
-
-	@Override
-	public GRecentMessage loadRecentMessageForUser(long thePid) {
-		BasePersRecentMessage msg = myDao.loadRecentMessageForUser(thePid);
-		return toUi(msg, true);
-	}
-
-	@Override
-	public GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws ProcessingException {
-
-		BasePersServiceVersion ver = myDao.getServiceVersionByPid(theVersionPid);
-
-		final Map<Long, List<Integer>> methodPidToSuccessCount = new HashMap<Long, List<Integer>>();
-		final Map<Long, List<Integer>> methodPidToFailCount = new HashMap<Long, List<Integer>>();
-		final Map<Long, List<Integer>> methodPidToSecurityFailCount = new HashMap<Long, List<Integer>>();
-		final Map<Long, List<Integer>> methodPidToFaultCount = new HashMap<Long, List<Integer>>();
-
-		final List<Long> statsTimestamps = new ArrayList<Long>();
-
-		PersConfig config = myConfigSvc.getConfig();
-		for (final PersServiceVersionMethod nextMethod : ver.getMethods()) {
-			methodPidToSuccessCount.put(nextMethod.getPid(), new ArrayList<Integer>());
-			methodPidToFailCount.put(nextMethod.getPid(), new ArrayList<Integer>());
-			methodPidToSecurityFailCount.put(nextMethod.getPid(), new ArrayList<Integer>());
-			methodPidToFaultCount.put(nextMethod.getPid(), new ArrayList<Integer>());
-
-			doWithStatsByMinute(config, 60, myStatusSvc, nextMethod, new IWithStats() {
-				@Override
-				public void withStats(int theIndex, BasePersMethodInvocationStats theStats) {
-					List<Integer> successCounts = methodPidToSuccessCount.get(nextMethod.getPid());
-					List<Integer> failCounts = methodPidToFailCount.get(nextMethod.getPid());
-					List<Integer> securityFailCounts = methodPidToSecurityFailCount.get(nextMethod.getPid());
-					List<Integer> faultCounts = methodPidToFaultCount.get(nextMethod.getPid());
-					growToSizeInt(successCounts, theIndex);
-					growToSizeInt(failCounts, theIndex);
-					growToSizeInt(securityFailCounts, theIndex);
-					growToSizeInt(faultCounts, theIndex);
-					growToSizeLong(statsTimestamps, theIndex);
-					successCounts.set(theIndex, addToInt(successCounts.get(theIndex), theStats.getSuccessInvocationCount()));
-					failCounts.set(theIndex, addToInt(failCounts.get(theIndex), theStats.getFailInvocationCount()));
-					securityFailCounts.set(theIndex, addToInt(securityFailCounts.get(theIndex), theStats.getServerSecurityFailures()));
-					faultCounts.set(theIndex, addToInt(faultCounts.get(theIndex), theStats.getFaultInvocationCount()));
-					statsTimestamps.set(theIndex, theStats.getPk().getStartTime().getTime());
-				}
-			});
-		}
-
-		GServiceVersionDetailedStats retVal = new GServiceVersionDetailedStats();
-
-		retVal.setMethodPidToSuccessCount(methodPidToSuccessCount);
-		retVal.setMethodPidToFailCount(methodPidToFailCount);
-		retVal.setMethodPidToSecurityFailCount(methodPidToSecurityFailCount);
-		retVal.setMethodPidToFaultCount(methodPidToFaultCount);
-
-		retVal.setStatsTimestamps(statsTimestamps);
-
-		return retVal;
+		doWithStatsByMinute(theConfig, statusSvc, theMethod, theOperator, start, end);
 	}
 
 	public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatus theStatus, PersServiceVersionMethod theNextMethod, IWithStats theOperator) {
@@ -2277,405 +2585,132 @@ public class AdminServiceBean implements IAdminService {
 		doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator, start, end);
 	}
 
-	@Override
-	public GDomainList deleteServiceVersion(long thePid) throws ProcessingException {
-		ourLog.info("Deleting service version {}", thePid);
+	public static void doWithUserStatsByMinute(PersConfig theConfig, PersUser theUser, int theNumberOfMinutes, IRuntimeStatus statusSvc, IWithStats theOperator) {
+		Date xMinsAgo = getDateXMinsAgo(theNumberOfMinutes);
+		Date date = xMinsAgo;
 
-		BasePersServiceVersion sv = myDao.getServiceVersionByPid(thePid);
-		if (sv == null) {
-			throw new ProcessingException("Unknown service version ID:" + thePid);
+		for (int min = 0; date.before(new Date()); min++) {
+
+			InvocationStatsIntervalEnum interval = doWithStatsSupportFindInterval(theConfig, date);
+			date = doWithStatsSupportFindDate(date, interval);
+
+			PersInvocationUserStatsPk pk = new PersInvocationUserStatsPk(interval, date, theUser);
+			BasePersMethodInvocationStats stats = statusSvc.getInvocationUserStatsSynchronously(pk);
+			theOperator.withStats(min, stats);
+
+			date = doWithStatsSupportIncrement(date, interval);
+
 		}
-
-		myDao.deleteServiceVersion(sv);
-
-		return loadDomainList();
 	}
 
-	public void deleteUser(long thePid) throws ProcessingException {
-		ourLog.info("Deleting user {}", thePid);
-
-		PersUser user = myDao.getUser(thePid);
-		if (user == null) {
-			throw new ProcessingException("Unknown user: " + thePid);
-		}
-
-		myDao.deleteUser(user);
-	}
-
-	@Override
-	public GMonitorRuleList loadMonitorRuleList() throws ProcessingException {
-		GMonitorRuleList retVal = new GMonitorRuleList();
-
-		Collection<BasePersMonitorRule> allRules = myDao.getMonitorRules();
-		for (BasePersMonitorRule persMonitorRule : allRules) {
-			retVal.add(toUi(persMonitorRule));
-		}
-
-		return retVal;
-	}
-
-	private BaseGMonitorRule toUi(BasePersMonitorRule theRule) throws ProcessingException {
-		BaseGMonitorRule retVal = null;
-		switch (theRule.getRuleType()) {
-		case PASSIVE: {
-			GMonitorRulePassive ruleDto = new GMonitorRulePassive();
-			PersMonitorRulePassive rule = (PersMonitorRulePassive) theRule;
-			ruleDto.setPassiveFireForBackingServiceLatencyIsAboveMillis(rule.getPassiveFireForBackingServiceLatencyIsAboveMillis());
-			ruleDto.setPassiveFireForBackingServiceLatencySustainTimeMins(rule.getPassiveFireForBackingServiceLatencySustainTimeMins());
-			ruleDto.setPassiveFireIfAllBackingUrlsAreUnavailable(rule.isPassiveFireIfAllBackingUrlsAreUnavailable());
-			ruleDto.setPassiveFireIfSingleBackingUrlIsUnavailable(rule.isPassiveFireIfSingleBackingUrlIsUnavailable());
-			for (PersMonitorAppliesTo next : rule.getAppliesTo()) {
-				if (next.getItem() instanceof PersDomain) {
-					PersDomain domain = (PersDomain) next.getItem();
-					ruleDto.applyTo(toUi(domain, false, null), true);
-				} else if (next.getItem() instanceof PersService) {
-					PersService service = (PersService) next.getItem();
-					PersDomain domain = service.getDomain();
-					ruleDto.applyTo(toUi(domain, false, null), toUi(service, false, null), true);
-				} else if (next.getItem() instanceof BasePersServiceVersion) {
-					BasePersServiceVersion svcVer = (BasePersServiceVersion) next.getItem();
-					PersService service = svcVer.getService();
-					PersDomain domain = service.getDomain();
-					ruleDto.applyTo(toUi(domain, false, null), toUi(service, false, null), toUi(svcVer, false, null), true);
-				}
+	/**
+	 * @return The start timestamp
+	 */
+	public static void extractSuccessfulInvocationInvocationTimes(PersConfig theConfig, int theNumMinsBack, final List<Integer> the60MinInvCount, final List<Long> the60minTime,
+			PersServiceVersionMethod nextMethod, IRuntimeStatus statusSvc) {
+		doWithStatsByMinute(theConfig, theNumMinsBack, statusSvc, nextMethod, new IWithStats() {
+			@Override
+			public void withStats(int theIndex, BasePersMethodInvocationStats theStats) {
+				growToSizeInt(the60MinInvCount, theIndex);
+				growToSizeLong(the60minTime, theIndex);
+				the60MinInvCount.set(theIndex, addToInt(the60MinInvCount.get(theIndex), theStats.getSuccessInvocationCount()));
+				the60minTime.set(theIndex, the60minTime.get(theIndex) + theStats.getSuccessInvocationTotalTime());
 			}
+		});
+	}
 
-			retVal = ruleDto;
-			break;
-		}
-		case ACTIVE: {
-			DtoMonitorRuleActive ruleDto = new DtoMonitorRuleActive();
-			PersMonitorRuleActive rule = (PersMonitorRuleActive) theRule;
-			for (PersMonitorRuleActiveCheck next : rule.getActiveChecks()) {
-				ruleDto.getCheckList().add(toUi(next));
-			}
-			retVal = ruleDto;
-			break;
-		}
-		}
+	public static Date getDateXMinsAgo(int theNumberOfMinutes) {
+		Date date60MinsAgo = new Date(System.currentTimeMillis() - (theNumberOfMinutes * DateUtils.MILLIS_PER_MINUTE));
+		Date date = DateUtils.truncate(date60MinsAgo, Calendar.MINUTE);
+		return date;
+	}
 
-		if (retVal == null) {
-			throw new IllegalStateException("Unknown type: " + theRule.getRuleType());
+	public static void growToSizeDouble(List<Double> theCountArray, int theIndex) {
+		while (theCountArray.size() <= (theIndex)) {
+			theCountArray.add(0.0);
 		}
-		retVal.setPid(theRule.getPid());
-		retVal.setActive(theRule.isRuleActive());
-		retVal.setName(theRule.getRuleName());
+	}
 
-		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
-			retVal.getNotifyEmailContacts().add(next.getEmail());
+	public static void growToSizeInt(List<Integer> theCountArray, int theIndex) {
+		while (theCountArray.size() <= (theIndex)) {
+			theCountArray.add(0);
 		}
+	}
 
+	public static void growToSizeLong(List<Long> theCountArray, int theIndex) {
+		while (theCountArray.size() <= (theIndex)) {
+			theCountArray.add(0L);
+		}
+	}
+
+	private static void doWithStatsByMinute(PersConfig theConfig, IRuntimeStatus statusSvc, PersServiceVersionMethod theMethod, IWithStats theOperator, Date start, Date end) {
+		Date date = start;
+		for (int min = 0; date.before(end); min++) {
+
+			InvocationStatsIntervalEnum interval = doWithStatsSupportFindInterval(theConfig, date);
+			date = doWithStatsSupportFindDate(date, interval);
+
+			PersInvocationStatsPk pk = new PersInvocationStatsPk(interval, date, theMethod.getPid());
+			BasePersMethodInvocationStats stats = statusSvc.getInvocationStatsSynchronously(pk);
+			theOperator.withStats(min, stats);
+
+			date = doWithStatsSupportIncrement(date, interval);
+
+		}
+	}
+
+	private static Date doWithStatsSupportFindDate(Date date, InvocationStatsIntervalEnum interval) {
+		Date retVal = interval.truncate(date);
 		return retVal;
 	}
 
-	private BaseGServiceVersion toUi(BasePersServiceVersion theSvcVer, boolean theLoadStats, StatusesBean theStatuses) throws ProcessingException {
-		Set<Long> emptySet = Collections.emptySet();
-		return toUi(theSvcVer, theLoadStats, emptySet, theStatuses);
-	}
-
-	@Override
-	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long thePid, String theRequestedByString) throws ProcessingException {
-		ourLog.info("Testing single fire of service version {}", thePid);
-		Date transactionTime = new Date();
-
-		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(thePid);
-		if (svcVer == null) {
-			throw new IllegalArgumentException("Unknown service version: " + thePid);
-		}
-
-		HttpRequestBean request = new HttpRequestBean();
-		request.setInputReader(new StringReader(theMessageText));
-		request.setPath(svcVer.getProxyPath());
-		request.setQuery("");
-		request.setRequestHostIp("127.0.0.1");
-		request.setRequestType(RequestType.POST);
-
-		GServiceVersionSingleFireResponse retVal = new GServiceVersionSingleFireResponse();
-		try {
-			SidechannelOrchestratorResponseBean response = myOrchestrator.handleSidechannelRequest(thePid, theMessageText, theContentType, theRequestedByString);
-
-			retVal.setAuthorizationOutcome(AuthorizationOutcomeEnum.AUTHORIZED);
-			retVal.setDomainName(svcVer.getService().getDomain().getDomainName());
-			retVal.setDomainPid(svcVer.getService().getDomain().getPid());
-			if (response.getHttpResponse().getSuccessfulUrl() != null) {
-				retVal.setImplementationUrlHref(response.getHttpResponse().getSuccessfulUrl().getUrl());
-				retVal.setImplementationUrlId(response.getHttpResponse().getSuccessfulUrl().getUrlId());
-				retVal.setImplementationUrlPid(response.getHttpResponse().getSuccessfulUrl().getPid());
-			}
-
-			List<Pair<String>> requestHeaders = new ArrayList<Pair<String>>();
-			requestHeaders.add(new Pair<String>("Content-Type", svcVer.getProtocol().getRequestContentType()));
-
-			retVal.setRequestContentType(svcVer.getProtocol().getRequestContentType());
-			retVal.setRequestHeaders(requestHeaders);
-
-			retVal.setRequestMessage(theMessageText);
-			retVal.setResponseContentType(response.getResponseContentType());
-			retVal.setResponseHeaders(response.getHttpResponse().getResponseHeadersAsPairList());
-			retVal.setResponseMessage(response.getResponseBody());
-			retVal.setServiceName(svcVer.getService().getServiceName());
-			retVal.setServicePid(svcVer.getService().getPid());
-			retVal.setServiceVersionId(svcVer.getVersionId());
-			retVal.setServiceVersionPid(svcVer.getPid());
-			retVal.setTransactionMillis(response.getHttpResponse().getResponseTime());
-			retVal.setTransactionTime(transactionTime);
-
-		} catch (Exception e) {
-			ourLog.error("Failed to invoke service", e);
-			retVal.setOutcomeDescription("Failed with internal exception: " + e.getMessage());
-		}
-
-		return retVal;
-	}
-
-	@Override
-	public void saveMonitorRule(BaseGMonitorRule theRule) throws ProcessingException {
-		BasePersMonitorRule rule = fromUi(theRule);
-		myMonitorSvc.saveRule(rule);
-	}
-
-	@EJB
-	private IMonitorService myMonitorSvc;
-
-	private BasePersMonitorRule fromUi(BaseGMonitorRule theRule) throws ProcessingException {
-
-		BasePersMonitorRule retVal = null;
-
-		switch (theRule.getRuleType()) {
-		case PASSIVE: {
-			PersMonitorRulePassive persRule = new PersMonitorRulePassive();
-			GMonitorRulePassive rule = (GMonitorRulePassive) theRule;
-			persRule.setPassiveFireForBackingServiceLatencyIsAboveMillis(rule.getPassiveFireForBackingServiceLatencyIsAboveMillis());
-			persRule.setPassiveFireForBackingServiceLatencySustainTimeMins(rule.getPassiveFireForBackingServiceLatencySustainTimeMins());
-			persRule.setPassiveFireIfAllBackingUrlsAreUnavailable(rule.isPassiveFireIfAllBackingUrlsAreUnavailable());
-			persRule.setPassiveFireIfSingleBackingUrlIsUnavailable(rule.isPassiveFireIfSingleBackingUrlIsUnavailable());
-			for (GMonitorRuleAppliesTo next : rule.getAppliesTo()) {
-				if (next.getServiceVersionPid() != null) {
-					persRule.getAppliesTo().add(new PersMonitorAppliesTo(persRule, myDao.getServiceVersionByPid(next.getServiceVersionPid())));
-				} else if (next.getServicePid() != null) {
-					persRule.getAppliesTo().add(new PersMonitorAppliesTo(persRule, myDao.getServiceByPid(next.getServicePid())));
-				} else {
-					persRule.getAppliesTo().add(new PersMonitorAppliesTo(persRule, myDao.getDomainByPid(next.getDomainPid())));
-				}
-			}
-
-			retVal = persRule;
-			break;
-		}
-		case ACTIVE: {
-			PersMonitorRuleActive persRule = new PersMonitorRuleActive();
-			DtoMonitorRuleActive rule = (DtoMonitorRuleActive) theRule;
-			for (DtoMonitorRuleActiveCheck next : rule.getCheckList()) {
-				persRule.getActiveChecks().add(fromUi(next, persRule));
-			}
-			retVal = persRule;
-			break;
-		}
-		}
-
-		if (retVal == null) {
-			throw new IllegalStateException("Unknown type: " + theRule.getRuleType());
-		}
-
-		retVal.setRuleActive(theRule.isActive());
-		retVal.setRuleName(theRule.getName());
-		retVal.setPid(theRule.getPidOrNull());
-
-		for (String next : theRule.getNotifyEmailContacts()) {
-			retVal.getNotifyContact().add(new PersMonitorRuleNotifyContact(next));
-		}
-
-		return retVal;
-	}
-
-	private PersMonitorRuleActiveCheck fromUi(DtoMonitorRuleActiveCheck theNext, BasePersMonitorRule theRule) throws ProcessingException {
-		PersMonitorRuleActiveCheck retVal = new PersMonitorRuleActiveCheck();
-		retVal.setCheckFrequencyNum(theNext.getCheckFrequencyNum());
-		retVal.setCheckFrequencyUnit(theNext.getCheckFrequencyUnit());
-		retVal.setExpectLatencyUnderMillis(theNext.getExpectLatencyUnderMillis());
-		retVal.setExpectResponseContainsText(theNext.getExpectResponseContainsText());
-		retVal.setExpectResponseType(theNext.getExpectResponseType());
-		retVal.setLastTransactionDate(theNext.getLastTransactionDate());
-		retVal.setLastTransactionOutcome(theNext.getLastTransactionOutcome());
-		retVal.setMessage(myDao.getLibraryMessageByPid(theNext.getMessagePid()));
-		if (retVal.getMessage() == null) {
-			throw new ProcessingException("Unknown message PID: " + theNext.getMessagePid());
-		}
-		retVal.setPid(theNext.getPidOrNull());
-		retVal.setRule(theRule);
-		retVal.setServiceVersion(myDao.getServiceVersionByPid(theNext.getServiceVersionPid()));
-		if (retVal.getServiceVersion() == null) {
-			throw new ProcessingException("Unknown service version PID: " + theNext.getServiceVersionPid());
-		}
-		return retVal;
-	}
-
-	private DtoMonitorRuleActiveCheck toUi(PersMonitorRuleActiveCheck theNext) throws ProcessingException {
-		DtoMonitorRuleActiveCheck retVal = new DtoMonitorRuleActiveCheck();
-		retVal.setCheckFrequencyNum(theNext.getCheckFrequencyNum());
-		retVal.setCheckFrequencyUnit(theNext.getCheckFrequencyUnit());
-		retVal.setExpectLatencyUnderMillis(theNext.getExpectLatencyUnderMillis());
-		retVal.setExpectResponseContainsText(theNext.getExpectResponseContainsText());
-		retVal.setExpectResponseType(theNext.getExpectResponseType());
-		retVal.setLastTransactionDate(theNext.getLastTransactionDate());
-		retVal.setLastTransactionOutcome(theNext.getLastTransactionOutcome());
-		retVal.setMessagePid(theNext.getMessage().getPid());
-		retVal.setMessageDescription(theNext.getMessage().getDescription());
-		retVal.setPid(theNext.getPid());
-		retVal.setServiceVersionPid(theNext.getServiceVersion().getPid());
-		return retVal;
-	}
-
-	@Override
-	public List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart) {
-
-		Set<BasePersServiceVersion> allSvcVers;
-		if (theDomainPid != null) {
-			assert theServicePid == null;
-			assert theServiceVersionPid == null;
-			PersDomain domain = myServiceRegistry.getDomainByPid(theDomainPid);
-			allSvcVers = domain.getAllServiceVersions();
-		} else if (theServicePid != null) {
-			assert theDomainPid == null;
-			assert theServiceVersionPid == null;
-			PersService service = myServiceRegistry.getServiceByPid(theServicePid);
-			allSvcVers = service.getAllServiceVersions();
-		} else if (theServiceVersionPid != null) {
-			assert theServicePid == null;
-			assert theDomainPid == null;
-			allSvcVers = Collections.singleton(myServiceRegistry.getServiceVersionByPid(theServiceVersionPid));
+	private static InvocationStatsIntervalEnum doWithStatsSupportFindInterval(PersConfig theConfig, Date date) {
+		InvocationStatsIntervalEnum interval;
+		Date collapseStatsToDaysCutoff = InvocationStatsIntervalEnum.DAY.truncate(theConfig.getCollapseStatsToDaysCutoff());
+		if (date.before(collapseStatsToDaysCutoff)) {
+			interval = InvocationStatsIntervalEnum.DAY;
 		} else {
-			throw new NullPointerException("No domain/service/svcver pid provided!");
-		}
-
-		List<GMonitorRuleFiring> retVal = new ArrayList<GMonitorRuleFiring>();
-		List<PersMonitorRuleFiring> firings = myDao.loadMonitorRuleFirings(allSvcVers, theStart);
-		for (PersMonitorRuleFiring next : firings) {
-			retVal.add(toUi(next));
-		}
-
-		// Set<Long> svcVerPids = new HashSet<Long>();
-		// for (BasePersServiceVersion basePersServiceVersion : allSvcVers) {
-		//
-		// }
-
-		return retVal;
-	}
-
-	private GMonitorRuleFiring toUi(PersMonitorRuleFiring theNext) {
-		GMonitorRuleFiring retVal = new GMonitorRuleFiring();
-		retVal.setPid(theNext.getPid());
-		retVal.setStartDate(theNext.getStartDate());
-		retVal.setEndDate(theNext.getEndDate());
-
-		for (PersMonitorRuleFiringProblem next : theNext.getProblems()) {
-			retVal.getProblems().add(toUi(next));
-		}
-
-		return retVal;
-	}
-
-	private GMonitorRuleFiringProblem toUi(PersMonitorRuleFiringProblem theNext) {
-		GMonitorRuleFiringProblem retVal = new GMonitorRuleFiringProblem();
-		retVal.setPid(theNext.getPid());
-		retVal.setServiceVersionPid(theNext.getServiceVersion().getPid());
-
-		if (theNext.getUrl() != null) {
-			retVal.setUrlPid(theNext.getUrl().getPid());
-		}
-
-		if (theNext.getFailedUrlMessage() != null) {
-			retVal.setFailedUrlMessage(theNext.getFailedUrlMessage());
-		}
-
-		if (theNext.getLatencyAverageMillisPerCall() != null) {
-			retVal.setFailedLatencyAverageMillisPerCall(theNext.getLatencyAverageMillisPerCall());
-			retVal.setFailedLatencyAverageOverMinutes(theNext.getLatencyAverageOverMinutes());
-			retVal.setFailedLatencyThreshold(theNext.getLatencyThreshold());
-		}
-
-		return retVal;
-	}
-
-	@VisibleForTesting
-	void setMonitorSvc(MonitorServiceBean theMonitorSvc) {
-		myMonitorSvc = theMonitorSvc;
-	}
-
-	@Override
-	public Collection<DtoLibraryMessage> getLibraryMessagesForSvcVer(long thePid, boolean theLoadContents) throws ProcessingException {
-		Collection<PersLibraryMessage> msgs = myDao.getLibraryMessagesWhichApplyToServiceVersion(thePid);
-		return toUiCollectionLibraryMessages(msgs, theLoadContents);
-	}
-
-	private Collection<DtoLibraryMessage> toUiCollectionLibraryMessages(Collection<PersLibraryMessage> theMsgs, boolean theLoadContents) throws ProcessingException {
-		ArrayList<DtoLibraryMessage> retVal = new ArrayList<DtoLibraryMessage>();
-		for (PersLibraryMessage next : theMsgs) {
-			retVal.add(toUi(next, theLoadContents));
-		}
-		return retVal;
-	}
-
-	@Override
-	public Collection<DtoLibraryMessage> getLibraryMessagesForService(long thePid, boolean theLoadContents) throws ProcessingException {
-		Collection<PersLibraryMessage> msgs = myDao.getLibraryMessagesWhichApplyToService(thePid);
-		return toUiCollectionLibraryMessages(msgs, theLoadContents);
-	}
-
-	@Override
-	public void saveLibraryMessage(DtoLibraryMessage theMessage) throws ProcessingException {
-		ourLog.info("Saving library message");
-
-		PersLibraryMessage msg = fromUi(theMessage);
-		myDao.saveLibraryMessage(msg);
-	}
-
-	private PersLibraryMessage fromUi(DtoLibraryMessage theMessage) throws ProcessingException {
-		PersLibraryMessage retVal = new PersLibraryMessage();
-
-		retVal.setPid(theMessage.getPid());
-		retVal.setContentType(theMessage.getContentType());
-		retVal.setDescription(theMessage.getDescription());
-		retVal.setMessage(theMessage.getMessage());
-
-		for (Long next : theMessage.getAppliesToServiceVersionPids()) {
-			BasePersServiceVersion ver = myDao.getServiceVersionByPid(next);
-			if (ver == null) {
-				throw new ProcessingException("Unknown svcver PID: " + next);
+			Date collapseStatsToHoursCutoff = InvocationStatsIntervalEnum.HOUR.truncate(theConfig.getCollapseStatsToHoursCutoff());
+			if (date.before(collapseStatsToHoursCutoff)) {
+				interval = InvocationStatsIntervalEnum.HOUR;
+			} else {
+				Date collapseStatsToTenMinutesCutoff = InvocationStatsIntervalEnum.TEN_MINUTE.truncate(theConfig.getCollapseStatsToTenMinutesCutoff());
+				if (date.before(collapseStatsToTenMinutesCutoff)) {
+					interval = InvocationStatsIntervalEnum.TEN_MINUTE;
+				} else {
+					interval = InvocationStatsIntervalEnum.MINUTE;
+				}
 			}
-			retVal.getAppliesTo().add(new PersLibraryMessageAppliesTo(retVal, ver));
 		}
+		return interval;
+	}
 
+	private static Date doWithStatsSupportIncrement(Date date, InvocationStatsIntervalEnum interval) {
+		Date retVal = new Date(date.getTime() + interval.millis());
 		return retVal;
 	}
 
-	private DtoLibraryMessage toUi(PersLibraryMessage theMessage, boolean theLoadContents) throws ProcessingException {
-		DtoLibraryMessage retVal = new DtoLibraryMessage();
-
-		retVal.setContentType(theMessage.getContentType());
-		retVal.setDescription(theMessage.getDescription());
-		retVal.setPid(theMessage.getPid());
-		retVal.setMessageLength(theMessage.getMessageLength());
-
-		for (PersLibraryMessageAppliesTo next : theMessage.getAppliesTo()) {
-			retVal.getAppliesToServiceVersionPids().add(next.getPk().getServiceVersion().getPid());
+	private static double to60MinAveragePerMin(ArrayList<Integer> theT60minSecurityFailCount) {
+		double total = 0;
+		for (Integer integer : theT60minSecurityFailCount) {
+			total += integer;
 		}
+		return total / theT60minSecurityFailCount.size();
+	}
 
-		if (theLoadContents) {
-			retVal.setMessage(theMessage.getMessage());
+	private static int[] toArray(ArrayList<Integer> theT60minCount) {
+		int[] retVal = new int[theT60minCount.size()];
+		int index = 0;
+		for (Integer integer : theT60minCount) {
+			retVal[index++] = integer;
 		}
-
 		return retVal;
 	}
 
-	@Override
-	public DtoLibraryMessage getLibraryMessage(long theMessagePid) throws ProcessingException {
-		return toUi(myDao.getLibraryMessageByPid(theMessagePid), true);
-	}
+	public interface IWithStats {
 
-	@VisibleForTesting
-	void setSchedulerServiceForTesting(IScheduler theMock) {
-		myScheduler = theMock;
+		void withStats(int theIndex, BasePersMethodInvocationStats theStats);
+
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {

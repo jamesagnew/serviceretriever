@@ -195,7 +195,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		msgLib.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
-				History.newItem(NavProcessor.getTokenServiceVersionMessageLibrary(true, theSvcVer.getPid()));
+				History.newItem(NavProcessor.getTokenMessageLibrary(true, HierarchyEnum.VERSION, theSvcVer.getPid()));
 			}
 		});
 		content.add(msgLib);

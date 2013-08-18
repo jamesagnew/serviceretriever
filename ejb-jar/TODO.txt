@@ -1,13 +1,19 @@
 
-* keep method ref in recent transactions, and display it in the 
-  recent transactions table (also maybe use it in the auto generated
-  title for saved transactions)
- 
 * Allow individual methods to require explicit authorization (make sure this is saved when refreshing WSDLs too)
 
 * In replay existing message dialog, allow save button to update saved message, and maybe "save as new" (also change the title of this dialog to better explain that's it's replaying from liibrary)
 * In manual test dialod, button to save transaction to library
 
-* Need an "add" button in the message library view
+* Message library view: Need an "add" button, should also be able to choose which SVCVER to display, or to display all 
+  messages in the library. Also columns should be sortable
 
-* Save message to library panel should have a button to jump to "replay" once the message is saved 
+* Save message to library panel should have a button to jump to "replay" once the message is saved
+
+
+----
+DONE
+
+* keep method ref in recent transactions, and display it in the 
+  recent transactions table (also maybe use it in the auto generated
+  title for saved transactions)
+  

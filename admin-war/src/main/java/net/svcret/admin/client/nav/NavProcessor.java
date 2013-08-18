@@ -19,7 +19,9 @@ import net.svcret.admin.client.ui.config.domain.DeleteDomainPanel;
 import net.svcret.admin.client.ui.config.domain.DeleteServiceVersionPanel;
 import net.svcret.admin.client.ui.config.domain.EditDomainPanel;
 import net.svcret.admin.client.ui.config.lib.CreateLibraryMessageBasedOnRecentTransactionPanel;
+import net.svcret.admin.client.ui.config.lib.CreateNewLibraryMessagePanel;
 import net.svcret.admin.client.ui.config.lib.EditLibraryMessagePanel;
+import net.svcret.admin.client.ui.config.lib.MessageLibraryPanel;
 import net.svcret.admin.client.ui.config.monitor.AddMonitorRulePanel;
 import net.svcret.admin.client.ui.config.monitor.EditMonitorRulePanel;
 import net.svcret.admin.client.ui.config.monitor.MonitorRulesPanel;
@@ -29,7 +31,6 @@ import net.svcret.admin.client.ui.config.service.EditServicePanel;
 import net.svcret.admin.client.ui.config.svcver.AddServiceVersionPanel;
 import net.svcret.admin.client.ui.config.svcver.AddServiceVersionStep2Panel;
 import net.svcret.admin.client.ui.config.svcver.EditServiceVersionPanel;
-import net.svcret.admin.client.ui.config.svcver.ServiceVersionMessageLibraryPanel;
 import net.svcret.admin.client.ui.config.svcver.ServiceVersionRecentMessagePanel;
 import net.svcret.admin.client.ui.dash.IDestroyable;
 import net.svcret.admin.client.ui.dash.ServiceDashboardPanel;
@@ -44,6 +45,7 @@ import net.svcret.admin.client.ui.test.ReplayMessagePanel;
 import net.svcret.admin.client.ui.test.ServiceVersionTestPanel;
 import net.svcret.admin.shared.enm.MonitorRuleTypeEnum;
 import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
+import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -325,8 +327,20 @@ public class NavProcessor {
 		return createArgumentToken(theAddToHistory, PagesEnum.SVS, theServiceVersionPid);
 	}
 
-	public static String getTokenServiceVersionMessageLibrary(boolean theAddToHistory, long theServiceVersionPid) {
-		return createArgumentToken(theAddToHistory, PagesEnum.SVL, theServiceVersionPid);
+	public static String getTokenMessageLibrary(boolean theAddToHistory) {
+		return createArgumentToken(theAddToHistory, PagesEnum.MLB);
+	}
+
+	public static String getTokenMessageLibrary(boolean theAddToHistory, HierarchyEnum theType, long thePid) {
+		return createArgumentToken(theAddToHistory, PagesEnum.MLB, theType, thePid);
+	}
+
+	public static String getTokenMessageLibraryAdd(boolean theAddToHistory) {
+		return createArgumentToken(theAddToHistory, PagesEnum.CLM);
+	}
+
+	public static String getTokenMessageLibraryAdd(boolean theAddToHistory, HierarchyEnum theType, long thePid) {
+		return createArgumentToken(theAddToHistory, PagesEnum.CLM, theType, thePid);
 	}
 
 	public static String getTokenTestServiceVersion(boolean theAddToHistory, long theServiceVersionPid) {
@@ -403,8 +417,21 @@ public class NavProcessor {
 		case AD2:
 			panel = new AddDomainStep2Panel(Long.parseLong(args));
 			break;
-		case SVL:
-			panel = new ServiceVersionMessageLibraryPanel(Long.parseLong(args));
+		case MLB:
+			String[] argsSplit = args.split("_");
+			if (argsSplit.length != 2) {
+				panel = new MessageLibraryPanel();
+			} else {
+				panel = new MessageLibraryPanel(HierarchyEnum.valueOf(argsSplit[0]), Long.parseLong(argsSplit[1]));
+			}
+			break;
+		case CLM:
+			argsSplit = args.split("_");
+			if (argsSplit.length != 2) {
+				panel = new CreateNewLibraryMessagePanel();
+			} else {
+				panel = new CreateNewLibraryMessagePanel(HierarchyEnum.valueOf(argsSplit[0]), Long.parseLong(argsSplit[1]));
+			}
 			break;
 		case MRL:
 			panel = new MonitorRulesPanel();
@@ -426,7 +453,7 @@ public class NavProcessor {
 			}
 			break;
 		case SML:
-			String[] argsSplit = args.split("_");
+			argsSplit = args.split("_");
 			RecentMessageTypeEnum type = RecentMessageTypeEnum.valueOf(argsSplit[0]);
 			panel = new CreateLibraryMessageBasedOnRecentTransactionPanel(type, Long.parseLong(argsSplit[1]));
 			break;

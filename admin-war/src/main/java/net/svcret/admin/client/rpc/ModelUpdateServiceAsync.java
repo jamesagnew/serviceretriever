@@ -26,6 +26,7 @@ import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GUrlStatus;
 import net.svcret.admin.shared.model.GUser;
+import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.PartialUserListRequest;
@@ -45,9 +46,33 @@ public interface ModelUpdateServiceAsync {
 
 	void deleteHttpClientConfig(long thePid, AsyncCallback<GHttpClientConfigList> theCallback);
 
+	void loadConfig(AsyncCallback<GConfig> theAsyncCallback);
+
+	void loadLibraryMessage(long theMessagePid, AsyncCallback<DtoLibraryMessage> theAsyncCallback);
+
+	void loadLibraryMessages(HierarchyEnum theType, long thePid, AsyncCallback<Collection<DtoLibraryMessage>> theAsyncCallback);
+
+	void loadLibraryMessages(AsyncCallback<Collection<DtoLibraryMessage>> theAsyncCallback);
+
 	void loadModelUpdate(ModelUpdateRequest theRequest, AsyncCallback<ModelUpdateResponse> callback);
 
+	void loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart, AsyncCallback<List<GMonitorRuleFiring>> theAsyncCallback);
+
+	void loadMonitorRuleList(AsyncCallback<GMonitorRuleList> theAsyncCallback);
+
+	void loadRecentMessageForServiceVersion(long thePid, AsyncCallback<GRecentMessage> theAsyncCallback);
+
+	void loadRecentMessageForUser(long thePid, AsyncCallback<GRecentMessage> theAsyncCallback);
+
+	void loadRecentTransactionListForServiceVersion(long theServiceVersionPid, AsyncCallback<GRecentMessageLists> theAsyncCallback);
+
+	void loadRecentTransactionListForuser(long thePid, AsyncCallback<GRecentMessageLists> theAsyncCallback);
+
+	void loadServiceVersionDetailedStats(long theVersionPid, AsyncCallback<GServiceVersionDetailedStats> theAsyncCallback);
+
 	void loadServiceVersionIntoSession(long theServiceVersionPid, AsyncCallback<BaseGServiceVersion> theAsyncCallback);
+
+	void loadServiceVersionUrlStatuses(long theServiceVersionPid, AsyncCallback<List<GUrlStatus>> theAsyncCallback);
 
 	void loadUser(long theUserPid, boolean theLoadStats, AsyncCallback<UserAndAuthHost> callback);
 
@@ -59,52 +84,30 @@ public interface ModelUpdateServiceAsync {
 
 	void removeDomain(long thePid, AsyncCallback<GDomainList> theAsyncCallback);
 
+	void removeService(long theDomainPid, long theServicePid, AsyncCallback<GDomainList> theAsyncCallback);
+
+	void removeServiceVersion(long thePid, AsyncCallback<GDomainList> theAsyncCallback);
+
 	void reportClientError(String theMessage, Throwable theException, AsyncCallback<Void> callback);
 
 	void saveAuthenticationHost(BaseGAuthHost theAuthHost, AsyncCallback<GAuthenticationHostList> theCallback);
+
+	void saveConfig(GConfig theConfig, AsyncCallback<Void> theAsyncCallback);
 
 	void saveDomain(GDomain theDomain, AsyncCallback<GDomainList> theDomainList);
 
 	void saveHttpClientConfig(boolean theCreate, GHttpClientConfig theConfig, AsyncCallback<GHttpClientConfig> theAsyncCallback);
 
+	void saveLibraryMessage(DtoLibraryMessage theMessage, AsyncCallback<Void> theIAsyncLoadCallback);
+
+	void saveMonitorRule(BaseGMonitorRule theRule, AsyncCallback<GMonitorRuleList> theAsyncCallback);
+
+	void saveService(GService theService, AsyncCallback<GDomainList> theMySaveButtonHandler);
+
 	void saveServiceVersionToSession(BaseGServiceVersion theServiceVersion, AsyncCallback<Void> callback);
 
 	void saveUser(GUser theUser, AsyncCallback<Void> theAsyncCallback);
 
-	void removeService(long theDomainPid, long theServicePid, AsyncCallback<GDomainList> theAsyncCallback);
-
-	void saveService(GService theService, AsyncCallback<GDomainList> theMySaveButtonHandler);
-
-	void loadConfig(AsyncCallback<GConfig> theAsyncCallback);
-
-	void saveConfig(GConfig theConfig, AsyncCallback<Void> theAsyncCallback);
-
-	void loadServiceVersionUrlStatuses(long theServiceVersionPid, AsyncCallback<List<GUrlStatus>> theAsyncCallback);
-
-	void loadRecentTransactionListForServiceVersion(long theServiceVersionPid, AsyncCallback<GRecentMessageLists> theAsyncCallback);
-
-	void loadRecentMessageForServiceVersion(long thePid, AsyncCallback<GRecentMessage> theAsyncCallback);
-
-	void loadRecentTransactionListForuser(long thePid, AsyncCallback<GRecentMessageLists> theAsyncCallback);
-
-	void loadRecentMessageForUser(long thePid, AsyncCallback<GRecentMessage> theAsyncCallback);
-
-	void loadServiceVersionDetailedStats(long theVersionPid, AsyncCallback<GServiceVersionDetailedStats> theAsyncCallback);
-
-	void removeServiceVersion(long thePid, AsyncCallback<GDomainList> theAsyncCallback);
-
 	void testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long theServiceVersionPid, AsyncCallback<GServiceVersionSingleFireResponse> theAsyncCallback);
-
-	void loadMonitorRuleList(AsyncCallback<GMonitorRuleList> theAsyncCallback);
-
-	void saveMonitorRule(BaseGMonitorRule theRule, AsyncCallback<GMonitorRuleList> theAsyncCallback);
-
-	void loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart, AsyncCallback<List<GMonitorRuleFiring>> theAsyncCallback);
-
-	void loadLibraryMessage(long theMessagePid, AsyncCallback<DtoLibraryMessage> theAsyncCallback);
-
-	void loadLibraryMessagesForServiveVersion(long thePid, AsyncCallback<Collection<DtoLibraryMessage>> theAsyncCallback);
-
-	void saveLibraryMessage(DtoLibraryMessage theMessage, AsyncCallback<Void> theIAsyncLoadCallback);
 
 }

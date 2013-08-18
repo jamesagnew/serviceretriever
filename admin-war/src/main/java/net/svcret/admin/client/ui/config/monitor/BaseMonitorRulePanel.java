@@ -43,6 +43,7 @@ import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GMonitorRulePassive;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
+import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.cell.client.CompositeCell;
@@ -402,7 +403,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		updateActiveAddMessagePickerBox(versionPicker);
 		versionPicker.addVersionChangeHandler(new ChangeListener() {
 			@Override
-			public void onChange(Long theSelectedPid) {
+			public void onChange(Long theDomainPid, Long theServicePid, Long theServiceVersionPid) {
 				updateActiveAddMessagePickerBox(versionPicker);
 			}
 		});
@@ -420,7 +421,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		}
 		
 		myActiveAddMessagePickerDescription.setHTML("Loading messages...");
-		AdminPortal.MODEL_SVC.loadLibraryMessagesForServiveVersion(versionPid, new AsyncCallback<Collection<DtoLibraryMessage>>() {
+		AdminPortal.MODEL_SVC.loadLibraryMessages(HierarchyEnum.VERSION, versionPid, new AsyncCallback<Collection<DtoLibraryMessage>>() {
 			@Override
 			public void onFailure(Throwable theCaught) {
 				Model.handleFailure(theCaught);
@@ -459,7 +460,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		if (enabled) {
 			myActiveAddMessagePickerDescription.setHTML("");
 		}else {
-			myActiveAddMessagePickerDescription.setHTML("This version has no messages in the <a href=\"" + NavProcessor.getTokenServiceVersionMessageLibrary(true,versionPid)+"\">message library</a> for this service version. Add a message before adding active monitor checks for this version to this rule.");
+			myActiveAddMessagePickerDescription.setHTML("This version has no messages in the <a href=\"" + NavProcessor.getTokenMessageLibrary(true,HierarchyEnum.VERSION, versionPid)+"\">message library</a> for this service version. Add a message before adding active monitor checks for this version to this rule.");
 		}
 	}
 	

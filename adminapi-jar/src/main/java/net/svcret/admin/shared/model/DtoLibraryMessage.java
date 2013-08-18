@@ -13,8 +13,8 @@ public class DtoLibraryMessage implements Serializable {
 	private String myDescription;
 	private String myMessage;
 	private int myMessageLength;
-
 	private Long myPid;
+	private transient String myAppliesToSortText;
 
 	public Set<Long> getAppliesToServiceVersionPids() {
 		if (myAppliesToServiceVersionPids == null) {
@@ -68,6 +68,31 @@ public class DtoLibraryMessage implements Serializable {
 
 	public void setPid(Long thePid) {
 		myPid = thePid;
+	}
+
+	public String getAppliesToSortText(GDomainList theDomainList) {
+		if (myAppliesToSortText == null) {
+
+			String firstString = "";
+			if (getAppliesToServiceVersionPids().isEmpty() == false) {
+				for (Long nextPid : getAppliesToServiceVersionPids()) {
+					Long nextDomainPid = theDomainList.getDomainPidWithServiceVersion(nextPid);
+					GDomain nextDomain = theDomainList.getDomainByPid(nextDomainPid);
+					Long nextServicePid = theDomainList.getServicePidWithServiceVersion(nextPid);
+					GService nextService = nextDomain.getServiceList().getServiceByPid(nextServicePid);
+					BaseGServiceVersion nextSvcVer = theDomainList.getServiceVersionByPid(nextPid);
+
+					String nextString = nextDomain.getName() + " " + nextService.getName() + " " + nextSvcVer.getId();
+					if (firstString.equals("") || firstString.compareTo(nextString) > 0) {
+						firstString = nextString;
+					}
+				}
+
+			}
+			myAppliesToSortText = firstString;
+		}
+
+		return myAppliesToSortText;
 	}
 
 }

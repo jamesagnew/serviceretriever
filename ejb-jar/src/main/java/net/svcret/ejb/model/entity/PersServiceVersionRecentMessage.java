@@ -15,18 +15,17 @@ import org.hibernate.annotations.Index;
 //@formatter:off
 @Table(name = "PX_SVC_VER_RCNT_MSG")
 @Entity()
-@NamedQueries({
-	@NamedQuery(name = Queries.SVCVER_RECENTMSGS, query = Queries.SVCVER_RECENTMSGS_Q),
-	@NamedQuery(name = Queries.SVCVER_RECENTMSGS_COUNT, query = Queries.SVCVER_RECENTMSGS_COUNT_Q)
-})
-@org.hibernate.annotations.Table(appliesTo="PX_SVC_VER_RCNT_MSG", indexes= {
-	@Index(name="PX_SVC_VER_RCNT_MSG_IDX_WT", columnNames= {"SVC_VERSION_PID", "RESPONSE_TYPE", "XACT_TIME"}),
-	@Index(name="PX_SVC_VER_RCNT_MSG_IDX_NT", columnNames= {"SVC_VERSION_PID", "RESPONSE_TYPE"})
-})
-//@formatter:on
+@NamedQueries({ @NamedQuery(name = Queries.SVCVER_RECENTMSGS, query = Queries.SVCVER_RECENTMSGS_Q), @NamedQuery(name = Queries.SVCVER_RECENTMSGS_COUNT, query = Queries.SVCVER_RECENTMSGS_COUNT_Q) })
+@org.hibernate.annotations.Table(appliesTo = "PX_SVC_VER_RCNT_MSG", indexes = { @Index(name = "PX_SVC_VER_RCNT_MSG_IDX_WT", columnNames = { "SVC_VERSION_PID", "RESPONSE_TYPE", "XACT_TIME" }),
+		@Index(name = "PX_SVC_VER_RCNT_MSG_IDX_NT", columnNames = { "SVC_VERSION_PID", "RESPONSE_TYPE" }) })
+// @formatter:on
 public class PersServiceVersionRecentMessage extends BasePersRecentMessage {
 
 	private static final long serialVersionUID = 1L;
+
+	@ManyToOne()
+	@JoinColumn(name = "METHOD_PID", referencedColumnName = "PID", nullable = false)
+	private PersServiceVersionMethod myMethod;
 
 	@ManyToOne()
 	@JoinColumn(name = "SVC_VERSION_PID", referencedColumnName = "PID", nullable = false)
@@ -35,6 +34,24 @@ public class PersServiceVersionRecentMessage extends BasePersRecentMessage {
 	@ManyToOne()
 	@JoinColumn(name = "USER_PID", referencedColumnName = "PID", nullable = true)
 	private PersUser myUser;
+
+	public PersServiceVersionRecentMessage() {
+		super();
+	}
+
+	@Override
+	public void addUsingDao(IDao theDaoBean) {
+		theDaoBean.saveServiceVersionRecentMessage(this);
+	}
+
+	public PersServiceVersionMethod getMethod() {
+		return myMethod;
+	}
+
+	@Override
+	public RecentMessageTypeEnum getRecentMessageType() {
+		return RecentMessageTypeEnum.SVCVER;
+	}
 
 	/**
 	 * @return the serviceVersion
@@ -48,6 +65,10 @@ public class PersServiceVersionRecentMessage extends BasePersRecentMessage {
 	 */
 	public PersUser getUser() {
 		return myUser;
+	}
+
+	public void setMethod(PersServiceVersionMethod theMethod) {
+		myMethod = theMethod;
 	}
 
 	/**
@@ -67,18 +88,8 @@ public class PersServiceVersionRecentMessage extends BasePersRecentMessage {
 	}
 
 	@Override
-	public void addUsingDao(IDao theDaoBean) {
-		theDaoBean.saveServiceVersionRecentMessage(this);
-	}
-
-	@Override
 	public void trimUsingDao(IDao theDaoBean) {
 		theDaoBean.trimServiceVersionRecentMessages(myServiceVersion, getResponseType(), myServiceVersion.determineKeepNumRecentTransactions(getResponseType()));
-	}
-
-	@Override
-	public RecentMessageTypeEnum getRecentMessageType() {
-		return RecentMessageTypeEnum.SVCVER;
 	}
 
 }

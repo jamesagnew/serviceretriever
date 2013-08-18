@@ -753,6 +753,26 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Description")
 	String editUsersPanel_ColumnDescription();
 
+	@DefaultMessage("Send")
+	String actions_Send();
+
+	@DefaultMessage("Format XML")
+	String actions_FormatXml();
+
+	@DefaultMessage("Format JSON")
+	String actions_FormatJson();
+
+	@DefaultMessage("Service")
+	String recentMessagesGrid_ColService();
+
+	@DefaultMessage("Method")
+	String recentMessagesGrid_ColMethod();
+
+	@DefaultMessage("Message Library")
+	String leftPanel_MessageLibrary();
+
+	@DefaultMessage("Create Library Message")
+	String createLibraryMessage_Breadcrumb();
 	
 	
 }

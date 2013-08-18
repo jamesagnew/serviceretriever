@@ -1,5 +1,8 @@
 package net.svcret.admin.client.ui.config.auth;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GDomain;
@@ -7,6 +10,7 @@ import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
 
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.safehtml.shared.SafeHtml;
@@ -21,12 +25,31 @@ public abstract class DomainTreePanel extends FlowPanel {
 	private GDomainList myDomainList;
 	private ITreeStatusModel myModel;
 	private Tree myServicePermissionsTree;
+	private List<ChangeHandler> myChangeHandlers;
 
 	public DomainTreePanel() {
 		myServicePermissionsTree = new Tree();
 		add(myServicePermissionsTree);
 	}
 
+	/**
+	 * NOTE THAT NO CHANGE EVENTS WILL BE SENT WITH THE onChange() call
+	 */
+	public void addChangeHandler(ChangeHandler theHandler) {
+		if (myChangeHandlers==null) {
+			myChangeHandlers = new ArrayList<ChangeHandler>();
+		}
+		myChangeHandlers.add(theHandler);
+	}
+	
+	private void notifyChangeHandlers() {
+		if (myChangeHandlers==null) {
+			for (ChangeHandler next : myChangeHandlers) {
+				next.onChange(null);
+			}
+		}
+	}
+	
 	public void setModel(GDomainList theDomainList, ITreeStatusModel theModel) {
 		if (theDomainList == null) {
 			throw new NullPointerException("theDomainList");
@@ -122,6 +145,7 @@ public abstract class DomainTreePanel extends FlowPanel {
 					public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
 						myModel.setEntireServiceChecked(nextDomain, nextService, theEvent.getValue());
 						repopulateTree();
+						notifyChangeHandlers();
 					}
 				});
 			}
@@ -184,6 +208,7 @@ public abstract class DomainTreePanel extends FlowPanel {
 				public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
 					myModel.setEntireServiceVersionChecked(nextDomain, nextService, nextSvcVer, theEvent.getValue());
 					repopulateTree();
+					notifyChangeHandlers();
 				}
 			});
 
@@ -242,6 +267,7 @@ public abstract class DomainTreePanel extends FlowPanel {
 				public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
 					myModel.setMethodChecked(theDomain, theService, nextSvcVer, nextMethod, theEvent.getValue());
 					repopulateTree();
+					notifyChangeHandlers();
 				}
 			});
 
@@ -283,6 +309,7 @@ public abstract class DomainTreePanel extends FlowPanel {
 						public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
 							myModel.setEntireDomainChecked(nextDomain, theEvent.getValue());
 							repopulateTree();
+							notifyChangeHandlers();
 						}
 					});
 				}

@@ -16,6 +16,8 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 	private String myImplementationUrlHref;
 	private String myImplementationUrlId;
 	private long myImplementationUrlPid;
+	private String myMethodName;
+	private Long myMethodPid;
 	private String myOutcomeDescription;
 	private RecentMessageTypeEnum myRecentMessageType;
 	private String myRequestContentType;
@@ -31,6 +33,7 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 	private long myServicePid;
 	private String myServiceVersionId;
 	private long myServiceVersionPid;
+
 	private long myTransactionMillis;
 
 	private Date myTransactionTime;
@@ -76,6 +79,14 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 
 	public long getImplementationUrlPid() {
 		return myImplementationUrlPid;
+	}
+
+	public String getMethodName() {
+		return myMethodName;
+	}
+
+	public Long getMethodPid() {
+		return myMethodPid;
 	}
 
 	public String getOutcomeDescription() {
@@ -209,6 +220,14 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 
 	public void setImplementationUrlPid(long theImplementationUrlPid) {
 		myImplementationUrlPid = theImplementationUrlPid;
+	}
+
+	public void setMethodName(String theMethodName) {
+		myMethodName = theMethodName;
+	}
+
+	public void setMethodPid(Long thePid) {
+		myMethodPid = thePid;
 	}
 
 	public void setOutcomeDescription(String theOutcomeDescription) {

@@ -5,12 +5,12 @@ public class ServiceVersionTestPanel extends BaseServiceVersionTestPanel {
 
 	public ServiceVersionTestPanel() {
 		super(null, null);
-		initUi();
+		initAllPanels();
 	}
 
 	public ServiceVersionTestPanel(Long theServiceVersionPid) {
 		super(theServiceVersionPid, null);
-		initUi();
+		initAllPanels();
 	}
 
 }

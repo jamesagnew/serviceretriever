@@ -20,7 +20,6 @@ import javax.mail.internet.MimeMessage;
 import net.svcret.admin.shared.enm.MonitorRuleTypeEnum;
 import net.svcret.ejb.api.IMonitorNotifier;
 import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem;
 import net.svcret.ejb.util.SLF4JLogChute;

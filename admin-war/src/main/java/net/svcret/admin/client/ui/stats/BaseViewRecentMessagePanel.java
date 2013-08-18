@@ -1,6 +1,7 @@
 package net.svcret.admin.client.ui.stats;
 
 import static net.svcret.admin.client.AdminPortal.*;
+import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.HtmlPre;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
@@ -166,7 +167,7 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 
 	private void addResponseFormatButtons(HorizontalPanel respFunctions, String contentType, final HtmlPre respPre, final String messageBody, BaseGServiceVersion theSvcVer) {
 		if ((contentType != null && contentType.toLowerCase().contains("xml")) || theSvcVer.getProtocol().getRequestContentType().contains("xml")) {
-			respFunctions.add(new PButton("Format XML", new ClickHandler() {
+			respFunctions.add(new PButton(AdminPortal.IMAGES.iconFormat16(), AdminPortal.MSGS.actions_FormatXml(), new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent theEvent) {
 					respPre.setText(formatXml(messageBody));
@@ -176,7 +177,7 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 			}));
 		}
 		if ((contentType != null && contentType.toLowerCase().contains("json")) || theSvcVer.getProtocol().getRequestContentType().contains("json")) {
-			respFunctions.add(new PButton("Format JSON", new ClickHandler() {
+			respFunctions.add(new PButton(AdminPortal.IMAGES.iconFormat16(), AdminPortal.MSGS.actions_FormatJson(), new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent theEvent) {
 					respPre.setText(formatJson(messageBody));
@@ -187,7 +188,7 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		}
 	}
 
-	private native void syntaxHighliter() /*-{
+	public static native void syntaxHighliter() /*-{
 		$wnd.SyntaxHighlighter.highlight();
 	}-*/;
 
@@ -207,11 +208,11 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		return b.toSafeHtml();
 	}
 
-	private native String formatXml(String theExisting) /*-{
+	public static native String formatXml(String theExisting) /*-{
 		return $wnd.vkbeautify.xml(theExisting);
 	}-*/;
 
-	private native String formatJson(String theExisting) /*-{
+	public static native String formatJson(String theExisting) /*-{
 		return $wnd.vkbeautify.json(theExisting);
 	}-*/;
 	

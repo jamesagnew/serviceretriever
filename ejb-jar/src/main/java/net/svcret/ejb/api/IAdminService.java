@@ -29,6 +29,7 @@ import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
 import net.svcret.admin.shared.model.GUrlStatus;
 import net.svcret.admin.shared.model.GUser;
+import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.PartialUserListRequest;
@@ -37,7 +38,7 @@ import net.svcret.ejb.ex.ProcessingException;
 @Local
 public interface IAdminService {
 
-	Collection<DtoLibraryMessage> getLibraryMessagesForSvcVer(long thePid, boolean theLoadContents) throws ProcessingException;
+	Collection<DtoLibraryMessage> getLibraryMessages(HierarchyEnum theType, long thePid, boolean theLoadContents) throws ProcessingException;
 
 	Collection<DtoLibraryMessage> getLibraryMessagesForService(long thePid, boolean theLoadContents) throws ProcessingException;
 
@@ -122,5 +123,7 @@ public interface IAdminService {
 	void saveMonitorRule(BaseGMonitorRule theRule) throws ProcessingException;
 
 	byte[] createWsdlBundle(long theServiceVersionPid) throws ProcessingException, IOException;
+
+	Collection<DtoLibraryMessage> loadLibraryMessages() throws ProcessingException;
 
 }

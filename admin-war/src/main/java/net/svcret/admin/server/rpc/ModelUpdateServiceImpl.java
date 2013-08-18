@@ -1,7 +1,6 @@
 package net.svcret.admin.server.rpc;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,6 +37,7 @@ import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
 import net.svcret.admin.shared.model.GUrlStatus;
 import net.svcret.admin.shared.model.GUser;
+import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.PartialUserListRequest;
@@ -709,6 +709,9 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	@Override
 	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long thePid) throws ServiceFailureException {
 		try {
+			if (isMockMode()) {
+				return myMock.testServiceVersionWithSingleMessage(theMessageText, theContentType, thePid);
+			}
 			return myAdminSvc.testServiceVersionWithSingleMessage(theMessageText, theContentType, thePid, "ServiceRetriever Admin Console");
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to test service version", e);
@@ -768,12 +771,12 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
-	public Collection<DtoLibraryMessage> loadLibraryMessagesForServiveVersion(long thePid) throws ServiceFailureException {
+	public Collection<DtoLibraryMessage> loadLibraryMessages(HierarchyEnum theType, long thePid) throws ServiceFailureException {
 		if (isMockMode()) {
-			return myMock.loadLibraryMessagesForServiveVersion(thePid);
+			return myMock.loadLibraryMessages(theType, thePid);
 		}
 		try {
-			return myAdminSvc.getLibraryMessagesForSvcVer(thePid, false);
+			return myAdminSvc.getLibraryMessages(theType, thePid, false);
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to load library messages", e);
 			throw new ServiceFailureException(e.getMessage());
@@ -793,6 +796,19 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 			myAdminSvc.saveLibraryMessage(theMessage);
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to save library message", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+	}
+
+	@Override
+	public Collection<DtoLibraryMessage> loadLibraryMessages() throws ServiceFailureException {
+		if (isMockMode()) {
+			return myMock.loadLibraryMessages();
+		}
+		try {
+			return myAdminSvc.loadLibraryMessages();
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to load library messages", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
 	}

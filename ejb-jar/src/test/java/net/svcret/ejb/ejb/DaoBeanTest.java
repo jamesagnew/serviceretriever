@@ -237,6 +237,7 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		ver = (PersServiceVersionSoap11) mySvc.getServiceVersionByPid(ver.getPid());
 		url = ver.getUrls().get(0);
+		method=ver.getMethods().iterator().next();
 
 		newEntityManager();
 
@@ -250,6 +251,7 @@ public class DaoBeanTest extends BaseJpaTest {
 			msg.setRequestHostIp("127.0.0.1");
 			msg.setImplementationUrl(url);
 			msg.setTransactionTime(new Date(System.currentTimeMillis() + (1000 * i)));
+			msg.setMethod(method);
 			mySvc.saveUserRecentMessage(msg);
 		}
 
@@ -274,6 +276,7 @@ public class DaoBeanTest extends BaseJpaTest {
 			msg.setRequestHostIp("127.0.0.1");
 			msg.setImplementationUrl(url);
 			msg.setTransactionTime(new Date(System.currentTimeMillis() + (1000 * i)));
+			msg.setMethod(method);
 			mySvc.saveUserRecentMessage(msg);
 		}
 
@@ -321,6 +324,8 @@ public class DaoBeanTest extends BaseJpaTest {
 		newEntityManager();
 
 		ver = (PersServiceVersionSoap11) mySvc.getServiceVersionByPid(ver.getPid());
+		method=ver.getMethods().iterator().next();
+		
 		url = ver.getUrls().get(0);
 
 		for (int i = 0; i < 10; i++) {
@@ -332,6 +337,7 @@ public class DaoBeanTest extends BaseJpaTest {
 			msg.setRequestHostIp("127.0.0.1");
 			msg.setImplementationUrl(url);
 			msg.setTransactionTime(new Date(System.currentTimeMillis() + (1000 * i)));
+			msg.setMethod(method);
 			mySvc.saveServiceVersionRecentMessage(msg);
 		}
 
@@ -354,6 +360,7 @@ public class DaoBeanTest extends BaseJpaTest {
 			msg.setResponseBody("resp" + i);
 			msg.setRequestHostIp("127.0.0.1");
 			msg.setImplementationUrl(url);
+			msg.setMethod(method);
 			msg.setTransactionTime(new Date(System.currentTimeMillis() + (1000 * i)));
 			mySvc.saveServiceVersionRecentMessage(msg);
 		}

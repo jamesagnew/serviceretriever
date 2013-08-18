@@ -49,6 +49,7 @@ import net.svcret.admin.shared.model.GUrlStatus;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.GUserDomainPermission;
 import net.svcret.admin.shared.model.GUserList;
+import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.Pair;
@@ -65,6 +66,9 @@ import org.apache.commons.lang3.time.DateUtils;
 
 public class ModelUpdateServiceMock implements ModelUpdateService {
 
+	private static final long MET2_PID = 1001L;
+	private static final long MET1_PID = 1000L;
+	private static final long SVCVER_PID = 100L;
 	private static long ourNextPid = 1000000L;
 	private GAuthenticationHostList myAuthHostList;
 	private GHttpClientConfigList myClientConfigList;
@@ -98,7 +102,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		ver.setActive(true);
 		ver.setWsdlLocation("http://foo");
 		ver.setId("Version 1-A-1");
-		ver.setPid(100L);
+		ver.setPid(SVCVER_PID);
 		ver.setName("Version 1-A-1");
 		ver.setProxyPath("/some/service");
 		ver.setLastAccess(new Date());
@@ -118,13 +122,13 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		ver.getUrlList().add(url);
 
 		GServiceMethod met = new GServiceMethod();
-		met.setPid(1000L);
+		met.setPid(MET1_PID);
 		met.setId("Method 1");
 		met.setName("Method 1");
 		ver.getMethodList().add(met);
 
 		met = new GServiceMethod();
-		met.setPid(1001L);
+		met.setPid(MET2_PID);
 		met.setId("Method 2");
 		met.setName("Method 2");
 		ver.getMethodList().add(met);
@@ -201,39 +205,39 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 
 		myMonitorRuleList = new GMonitorRuleList();
 		{
-		GMonitorRulePassive newRule = new GMonitorRulePassive();
-		newRule.setPid(ourNextPid++);
-		myMonitorRuleList.add(newRule);
-		newRule.setName("Demo Rule");
-		newRule.setPassiveFireForBackingServiceLatencyIsAboveMillis(100);
-		newRule.setPassiveFireForBackingServiceLatencySustainTimeMins(5);
-		newRule.getNotifyEmailContacts().add("foo@example.com");
-		newRule.getAppliesTo().add(new GMonitorRuleAppliesTo());
-		newRule.getAppliesTo().iterator().next().setDomainPid(1L);
-		newRule.getAppliesTo().iterator().next().setDomainName("Service Domain");
-		newRule.getAppliesTo().iterator().next().setServicePid(2L);
-		newRule.getAppliesTo().iterator().next().setServiceName("Service Domain");
+			GMonitorRulePassive newRule = new GMonitorRulePassive();
+			newRule.setPid(ourNextPid++);
+			myMonitorRuleList.add(newRule);
+			newRule.setName("Demo Rule");
+			newRule.setPassiveFireForBackingServiceLatencyIsAboveMillis(100);
+			newRule.setPassiveFireForBackingServiceLatencySustainTimeMins(5);
+			newRule.getNotifyEmailContacts().add("foo@example.com");
+			newRule.getAppliesTo().add(new GMonitorRuleAppliesTo());
+			newRule.getAppliesTo().iterator().next().setDomainPid(1L);
+			newRule.getAppliesTo().iterator().next().setDomainName("Service Domain");
+			newRule.getAppliesTo().iterator().next().setServicePid(2L);
+			newRule.getAppliesTo().iterator().next().setServiceName("Service Domain");
 		}
 		{
-		DtoMonitorRuleActive newRule = new DtoMonitorRuleActive();
-		newRule.setPid(ourNextPid++);
-		myMonitorRuleList.add(newRule);
-		newRule.setName("Demo Rule");
-		newRule.getNotifyEmailContacts().add("foo2@example.com");
-		DtoMonitorRuleActiveCheck check=new DtoMonitorRuleActiveCheck();
-		check.setCheckFrequencyNum(2);
-		check.setCheckFrequencyUnit(ThrottlePeriodEnum.MINUTE);
-		check.setExpectLatencyUnderMillis(100L);
-		check.setExpectResponseContainsText("hello");
-		check.setExpectResponseType(ResponseTypeEnum.SUCCESS);
-		check.setLastTransactionDate(new Date());
-		check.setLastTransactionOutcome(true);
-		check.setMessageDescription("this is the description 1");
-		check.setMessagePid(1L);
-		check.setServiceVersionPid(100L);
-		newRule.getCheckList().add(check);
+			DtoMonitorRuleActive newRule = new DtoMonitorRuleActive();
+			newRule.setPid(ourNextPid++);
+			myMonitorRuleList.add(newRule);
+			newRule.setName("Demo Rule");
+			newRule.getNotifyEmailContacts().add("foo2@example.com");
+			DtoMonitorRuleActiveCheck check = new DtoMonitorRuleActiveCheck();
+			check.setCheckFrequencyNum(2);
+			check.setCheckFrequencyUnit(ThrottlePeriodEnum.MINUTE);
+			check.setExpectLatencyUnderMillis(100L);
+			check.setExpectResponseContainsText("hello");
+			check.setExpectResponseType(ResponseTypeEnum.SUCCESS);
+			check.setLastTransactionDate(new Date());
+			check.setLastTransactionOutcome(true);
+			check.setMessageDescription("this is the description 1");
+			check.setMessagePid(1L);
+			check.setServiceVersionPid(100L);
+			newRule.getCheckList().add(check);
 		}
-		
+
 	}
 
 	@Override
@@ -356,11 +360,13 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		retVal.setDomainName("DomainName1");
 		retVal.setServicePid(0l);
 		retVal.setServiceName("ServiceName1");
-		retVal.setServiceVersionPid(100l);
+		retVal.setServiceVersionPid(SVCVER_PID);
+		retVal.setMethodPid(MET1_PID);
+		retVal.setMethodName("SomeMethod");
 		retVal.setServiceVersionId("1.0");
 
 		retVal.setRecentMessageType(theType);
-		
+
 		return retVal;
 	}
 
@@ -830,14 +836,14 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		Collection<Long> pids = myDomainList.getAllServiceVersionPids();
 		msg.setAppliesToServiceVersionPids(pids.toArray(new Long[pids.size()]));
 		msg.setContentType("text/xml");
-		msg.setDescription("this is the description msg "+theMessagePid);
+		msg.setDescription("this is the description msg " + theMessagePid);
 		msg.setMessage("<tag>this is the message</tag>");
 		msg.setPid(1L);
 		return msg;
 	}
 
 	@Override
-	public Collection<DtoLibraryMessage> loadLibraryMessagesForServiveVersion(long thePid) {
+	public Collection<DtoLibraryMessage> loadLibraryMessages(HierarchyEnum theHierarchy, long thePid) throws ServiceFailureException {
 		ArrayList<DtoLibraryMessage> retVal = new ArrayList<DtoLibraryMessage>();
 
 		for (int i = 0; i < 10; i++) {
@@ -845,9 +851,9 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 			Collection<Long> pids = myDomainList.getAllServiceVersionPids();
 			msg.setAppliesToServiceVersionPids(pids.toArray(new Long[pids.size()]));
 			msg.setContentType("text/xml");
-			msg.setDescription("this is the description msg "+i);
+			msg.setDescription("this is the description msg " + i);
 			msg.setMessage("<tag>this is the message</tag>");
-			msg.setPid((long)i);
+			msg.setPid((long) i);
 			retVal.add(msg);
 		}
 
@@ -857,6 +863,11 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	@Override
 	public void saveLibraryMessage(DtoLibraryMessage theMessage) {
 		// nothing
+	}
+
+	@Override
+	public Collection<DtoLibraryMessage> loadLibraryMessages() throws ServiceFailureException {
+		return loadLibraryMessages(null, 0);
 	}
 
 }

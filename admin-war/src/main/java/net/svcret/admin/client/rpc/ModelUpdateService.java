@@ -27,6 +27,7 @@ import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.model.GUrlStatus;
 import net.svcret.admin.shared.model.GUser;
+import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.PartialUserListRequest;
@@ -53,7 +54,14 @@ public interface ModelUpdateService extends RemoteService {
 
 	GConfig loadConfig() throws ServiceFailureException;
 
+	DtoLibraryMessage loadLibraryMessage(long theMessagePid) throws ServiceFailureException;
+
+	Collection<DtoLibraryMessage> loadLibraryMessages(HierarchyEnum theType, long thePid) throws ServiceFailureException;
+
+	Collection<DtoLibraryMessage> loadLibraryMessages() throws ServiceFailureException;
 	ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ServiceFailureException;
+
+	List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart);
 
 	GMonitorRuleList loadMonitorRuleList() throws ServiceFailureException;
 
@@ -94,6 +102,8 @@ public interface ModelUpdateService extends RemoteService {
 	GDomainList saveDomain(GDomain theDomain) throws ServiceFailureException;
 
 	GHttpClientConfig saveHttpClientConfig(boolean theCreate, GHttpClientConfig theConfig) throws ServiceFailureException;
+
+	void saveLibraryMessage(DtoLibraryMessage theMessage) throws ServiceFailureException;
 
 	GMonitorRuleList saveMonitorRule(BaseGMonitorRule theRule) throws ServiceFailureException;
 
@@ -157,13 +167,5 @@ public interface ModelUpdateService extends RemoteService {
 			myUser = theUser;
 		}
 	}
-
-	List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart);
-
-	DtoLibraryMessage loadLibraryMessage(long theMessagePid) throws ServiceFailureException;
-
-	Collection<DtoLibraryMessage> loadLibraryMessagesForServiveVersion(long thePid) throws ServiceFailureException;
-
-	void saveLibraryMessage(DtoLibraryMessage theMessage) throws ServiceFailureException;
 
 }

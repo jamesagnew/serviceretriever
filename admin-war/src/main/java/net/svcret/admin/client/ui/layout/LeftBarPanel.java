@@ -28,6 +28,7 @@ public class LeftBarPanel extends FlowPanel {
 	private Hyperlink myProxyConfigBtn;
 	private Hyperlink myEditRulesBtn;
 	private Hyperlink myManualTestBtn;
+	private Hyperlink myMessageLibraryBtn;
 
 	public LeftBarPanel() {
 		setStylePrimaryName("outerLayoutLeftBar");
@@ -101,7 +102,10 @@ public class LeftBarPanel extends FlowPanel {
 
 		myManualTestBtn = testing.addItem(MSGS.leftPanel_ManuallyTestService(), PagesEnum.TSV);
 		myAllButtons.add(myManualTestBtn);
-		
+
+		myMessageLibraryBtn = testing.addItem(MSGS.leftPanel_MessageLibrary(), PagesEnum.MLB);
+		myAllButtons.add(myMessageLibraryBtn);
+
 		updateStyles();
 		
 		History.addValueChangeHandler(new ValueChangeHandler<String>() {
@@ -166,6 +170,12 @@ public class LeftBarPanel extends FlowPanel {
 			myManualTestBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
 			buttons.remove(myManualTestBtn);
 			break;
+		case CLM:
+		case ELM:
+		case MLB:
+			myMessageLibraryBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
+			buttons.remove(myMessageLibraryBtn);
+			break;
 		case ADU:
 		case DDO:
 		case DSE:
@@ -183,7 +193,6 @@ public class LeftBarPanel extends FlowPanel {
 		case RPM:
 		case SML:
 		case SRM:
-		case SVL:
 			break;
 		}
 		

@@ -40,7 +40,7 @@ public class CreateLibraryMessageBasedOnRecentTransactionPanel extends BaseEditL
 			message.setAppliesToServiceVersionPids(theResult.getServiceVersionPid());
 			message.setContentType(theResult.getRequestContentType());
 			message.setMessage(theResult.getRequestMessage());
-			message.setDescription("Transaction from " + DateUtil.formatTime(theResult.getTransactionTime()));
+			message.setDescription(theResult.getMethodName() + " transaction from " + DateUtil.formatTime(theResult.getTransactionTime()));
 			setContents(message);
 		}
 

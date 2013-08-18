@@ -26,4 +26,11 @@ public class GServiceList extends BaseGList<GService> {
 		return null;
 	}
 
+	public BaseGServiceVersion getFirstServiceVersion() {
+		if (size()>0) {
+			return get(0).getVersionList().getFirstServiceVersion();
+		}
+		return null;
+	}
+
 }

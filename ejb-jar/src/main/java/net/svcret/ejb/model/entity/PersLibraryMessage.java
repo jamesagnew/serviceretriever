@@ -24,8 +24,12 @@ import org.apache.commons.lang3.Validate;
 //@formatter:off
 @Entity
 @Table(name = "PX_LIB_MSG")
-@NamedQueries(value = { @NamedQuery(name = Queries.LIBRARY_FINDBYSVC, query = Queries.LIBRARY_FINDBYSVC_Q), @NamedQuery(name = Queries.LIBRARY_FINDBYSVCVER, query = Queries.LIBRARY_FINDBYSVCVER_Q) })
-// @formatter:on
+@NamedQueries(value = { 
+		@NamedQuery(name = Queries.LIBRARY_FINDALL, query = Queries.LIBRARY_FINDALL_Q),
+		@NamedQuery(name = Queries.LIBRARY_FINDBYDOMAIN, query = Queries.LIBRARY_FINDBYDOMAIN_Q),
+		@NamedQuery(name = Queries.LIBRARY_FINDBYSVC, query = Queries.LIBRARY_FINDBYSVC_Q), 
+		@NamedQuery(name = Queries.LIBRARY_FINDBYSVCVER, query = Queries.LIBRARY_FINDBYSVCVER_Q) })
+//@formatter:on
 public class PersLibraryMessage extends BasePersObject {
 
 	private static final long serialVersionUID = 1L;

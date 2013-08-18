@@ -63,6 +63,8 @@ public interface IDao {
 
 	Collection<PersDomain> getAllDomains();
 
+	Collection<PersMonitorRuleActiveCheck> getAllMonitorRuleActiveChecks();
+
 	Collection<PersService> getAllServices();
 
 	Collection<PersServiceVersionSoap11> getAllServiceVersions();
@@ -93,6 +95,10 @@ public interface IDao {
 	BasePersMethodInvocationStats getInvocationUserStats(PersInvocationUserStatsPk thePk);
 
 	List<PersInvocationUserStats> getInvocationUserStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff);
+
+	PersLibraryMessage getLibraryMessageByPid(long theMessagePid);
+
+	Collection<PersLibraryMessage> getLibraryMessagesWhichApplyToDomain(long thePid);
 
 	Collection<PersLibraryMessage> getLibraryMessagesWhichApplyToService(long thePid);
 
@@ -142,6 +148,8 @@ public interface IDao {
 
 	long incrementStateCounter(String theKey);
 
+	StatusesBean loadAllStatuses();
+
 	List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<? extends BasePersServiceVersion> theAllSvcVers, int theStart);
 
 	BasePersRecentMessage loadRecentMessageForServiceVersion(long thePid);
@@ -172,6 +180,8 @@ public interface IDao {
 
 	PersMonitorRuleFiring saveMonitorRuleFiring(PersMonitorRuleFiring theFiring);
 
+	<T extends BasePersMonitorRule> T saveOrCreateMonitorRule(T theRule);
+
 	void saveRecentMessagesAndTrimInNewTransaction(BaseUnflushed<? extends BasePersRecentMessage> theNextTransactions);
 
 	PersBaseServerAuth<?, ?> saveServerAuth(PersBaseServerAuth<?, ?> theNextPers);
@@ -181,6 +191,8 @@ public interface IDao {
 	BasePersServiceCatalogItem saveServiceCatalogItem(BasePersServiceCatalogItem theItem);
 
 	PersUser saveServiceUser(PersUser theUser);
+
+//	List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int theStart);
 
 	BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theVersion) throws ProcessingException;
 
@@ -195,8 +207,6 @@ public interface IDao {
 	void saveUserStatus(Collection<PersUserStatus> theStatus);
 
 	void trimServiceVersionRecentMessages(BasePersServiceVersion theVersion, ResponseTypeEnum theType, int theNumberToTrimTo);
-
-//	List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int theStart);
 
 	void trimUserRecentMessages(PersUser theUser, ResponseTypeEnum theType, int theNumberToTrimTo);
 
@@ -225,12 +235,6 @@ public interface IDao {
 
 	}
 
-	PersLibraryMessage getLibraryMessageByPid(long theMessagePid);
-
-	Collection<PersMonitorRuleActiveCheck> getAllMonitorRuleActiveChecks();
-
-	<T extends BasePersMonitorRule> T saveOrCreateMonitorRule(T theRule);
-
-	StatusesBean loadAllStatuses();
+	List<PersLibraryMessage> loadLibraryMessages();
 
 }

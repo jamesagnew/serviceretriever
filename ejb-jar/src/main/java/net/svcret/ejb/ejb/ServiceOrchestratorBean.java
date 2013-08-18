@@ -199,13 +199,13 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		return retVal;
 	}
 
-	private void logTransaction(HttpRequestBean theRequest, BasePersServiceVersion serviceVersion, AuthorizationResultsBean authorized, HttpResponseBean httpResponse,
+	private void logTransaction(HttpRequestBean theRequest, PersServiceVersionMethod method, AuthorizationResultsBean authorized, HttpResponseBean httpResponse,
 			InvocationResponseResultsBean invocationResponse) {
 		PersUser user = authorized.getAuthorizedUser();
 		String requestBody = theRequest.getRequestBody();
 		PersServiceVersionUrl successfulUrl = httpResponse != null ? httpResponse.getSuccessfulUrl() : null;
 		AuthorizationOutcomeEnum authorizationOutcome = authorized.isAuthorized();
-		myTransactionLogger.logTransaction(theRequest, serviceVersion, user, requestBody, invocationResponse, successfulUrl, httpResponse, authorizationOutcome);
+		myTransactionLogger.logTransaction(theRequest, method, user, requestBody, invocationResponse, successfulUrl, httpResponse, authorizationOutcome);
 	}
 
 	private OrchestratorResponseBean invokeProxiedService(HttpRequestBean theRequest, InvocationResultsBean results, AuthorizationResultsBean theAuthorized, Long theThrottleTimeIfAny)
@@ -218,7 +218,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), 0, results.getMethodDefinition(), theAuthorized.getAuthorizedUser(), null, invocationResponse, theThrottleTimeIfAny);
 
 			// Log transaction
-			logTransaction(theRequest, results.getMethodDefinition().getServiceVersion(), theAuthorized, null, invocationResponse);
+			logTransaction(theRequest, results.getMethodDefinition(), theAuthorized, null, invocationResponse);
 
 			throw new SecurityFailureException(theAuthorized.isAuthorized(), invocationResponse.getResponseStatusMessage());
 		}
@@ -278,6 +278,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			boolean theRecordOutcome, PersServiceVersionUrl theForceUrl) throws ProcessingException {
 		SidechannelOrchestratorResponseBean retVal;
 		PersServiceVersionMethod method = results.getMethodDefinition();
+		BasePersServiceVersion serviceVersion = method.getServiceVersion();
 		Map<String, String> headers = results.getMethodHeaders();
 		String contentType = results.getMethodContentType();
 		String contentBody = results.getMethodRequestBody();
@@ -297,7 +298,6 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			urlPool.setPreferredUrl(theForceUrl);
 		}
 
-		BasePersServiceVersion serviceVersion = results.getMethodDefinition().getServiceVersion();
 
 		PersHttpClientConfig clientConfig = serviceVersion.getHttpClientConfig();
 		urlPool.setConnectTimeoutMillis(clientConfig.getConnectTimeoutMillis());
@@ -325,7 +325,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 		if (theRecordOutcome) {
 			myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), requestLength, method, user, httpResponse, invocationResponse, theThrottleDelayIfAny);
-			logTransaction(theRequest, serviceVersion, authorized, httpResponse, invocationResponse);
+			logTransaction(theRequest,method, authorized, httpResponse, invocationResponse);
 		}
 
 		ResponseTypeEnum responseType = invocationResponse.getResponseType();

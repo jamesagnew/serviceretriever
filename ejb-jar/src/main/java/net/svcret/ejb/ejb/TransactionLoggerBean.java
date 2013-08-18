@@ -21,6 +21,7 @@ import net.svcret.ejb.api.ITransactionLogger;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.model.entity.BasePersRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
+import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
@@ -98,18 +99,18 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	 * @param theHttpResponse
 	 */
 	@Override
-	public void logTransaction(HttpRequestBean theRequest, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl,
+	public void logTransaction(HttpRequestBean theRequest, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl,
 			HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome) {
-		Validate.notNull(theServiceVersion);
+		Validate.notNull(theMethod);
 
 		{
-			UnflushedServiceVersionRecentMessages newValue = new UnflushedServiceVersionRecentMessages(theServiceVersion);
-			UnflushedServiceVersionRecentMessages existing = myUnflushedMessages.putIfAbsent(theServiceVersion, newValue);
+			UnflushedServiceVersionRecentMessages newValue = new UnflushedServiceVersionRecentMessages(theMethod);
+			UnflushedServiceVersionRecentMessages existing = myUnflushedMessages.putIfAbsent(theMethod.getServiceVersion(), newValue);
 			if (existing == null) {
 				newValue.init();
 				existing = newValue;
 			}
-			existing.recordTransaction(theRequest.getRequestTime(), theServiceVersion, theUser, theRequestBody, theInvocationResponse, theRequest, theImplementationUrl, theHttpResponse, theAuthorizationOutcome);
+			existing.recordTransaction(theRequest.getRequestTime(), theMethod, theUser, theRequestBody, theInvocationResponse, theRequest, theImplementationUrl, theHttpResponse, theAuthorizationOutcome);
 		}
 
 		if (theUser != null) {
@@ -120,7 +121,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 				existing = newValue;
 			}
 
-			existing.recordTransaction(theRequest.getRequestTime(), theRequest, theServiceVersion, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome);
+			existing.recordTransaction(theRequest.getRequestTime(), theRequest, theMethod, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome);
 		}
 	}
 
@@ -182,19 +183,20 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	}
 
 	private static class UnflushedServiceVersionRecentMessages extends BaseUnflushed<PersServiceVersionRecentMessage> {
-		private BasePersServiceVersion mySrvVer;
+		private PersServiceVersionMethod myMethod;
 
-		public UnflushedServiceVersionRecentMessages(BasePersServiceVersion theSrvVer) {
-			mySrvVer = theSrvVer;
+		public UnflushedServiceVersionRecentMessages(PersServiceVersionMethod theMethod) {
+			myMethod = theMethod;
 		}
 
-		public void recordTransaction(Date theTransactionTime, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, HttpRequestBean theRequest, PersServiceVersionUrl theImplementationUrl,
+		public void recordTransaction(Date theTransactionTime, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, HttpRequestBean theRequest, PersServiceVersionUrl theImplementationUrl,
 				HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome) {
 			Validate.notNull(theInvocationResponse);
-			Validate.notNull(theServiceVersion);
+			Validate.notNull(theMethod);
 			Validate.notNull(theTransactionTime);
 
-			Integer keepRecent = theServiceVersion.determineKeepNumRecentTransactions(theInvocationResponse.getResponseType());
+			BasePersServiceVersion svcVer = theMethod.getServiceVersion();
+			Integer keepRecent = svcVer.determineKeepNumRecentTransactions(theInvocationResponse.getResponseType());
 			
 			ourLog.debug("Keeping {} recent SvcVer transactions for response type {}", keepRecent, theInvocationResponse.getResponseType());
 			
@@ -202,7 +204,8 @@ public class TransactionLoggerBean implements ITransactionLogger {
 
 				PersServiceVersionRecentMessage message = new PersServiceVersionRecentMessage();
 				message.populate(theTransactionTime, theRequest, theImplementationUrl, theRequestBody, theInvocationResponse);
-				message.setServiceVersion(theServiceVersion);
+				message.setServiceVersion(svcVer);
+				message.setMethod(theMethod);
 				message.setUser(theUser);
 				message.setTransactionTime(theTransactionTime);
 				message.setAuthorizationOutcome(theAuthorizationOutcome);
@@ -238,7 +241,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 		@Override
 		public String toString() {
 			ToStringBuilder b = new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE);
-			b.append("svcVer", mySrvVer.getPid());
+			b.append("svcVer", myMethod.getPid());
 			b.append("fail", myFail.size());
 			b.append("secfail", mySecurityFail.size());
 			b.append("fault", myFault.size());
@@ -255,7 +258,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 			myUser = theUser;
 		}
 
-		public void recordTransaction(Date theTransactionTime, HttpRequestBean theRequest, BasePersServiceVersion theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl,
+		public void recordTransaction(Date theTransactionTime, HttpRequestBean theRequest, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl,
 				HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome) {
 			Validate.notNull(theInvocationResponse);
 
@@ -268,7 +271,8 @@ public class TransactionLoggerBean implements ITransactionLogger {
 				PersUserRecentMessage userMessage = new PersUserRecentMessage();
 				userMessage.populate(theTransactionTime, theRequest, theImplementationUrl, theRequestBody, theInvocationResponse);
 				userMessage.setUser(theUser);
-				userMessage.setServiceVersion(theServiceVersion);
+				userMessage.setServiceVersion(theMethod.getServiceVersion());
+				userMessage.setMethod(theMethod);
 				userMessage.setTransactionTime(theTransactionTime);
 				userMessage.setAuthorizationOutcome(theAuthorizationOutcome);
 				long responseTime = theHttpResponse != null ? theHttpResponse.getResponseTime() : 0;

@@ -13,6 +13,7 @@ import net.svcret.admin.client.ui.components.HtmlH1;
 import net.svcret.admin.client.ui.components.HtmlLabel;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.PButtonCell;
+import net.svcret.admin.client.ui.components.PCellTable;
 import net.svcret.admin.client.ui.components.Sparkline;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.client.ui.config.KeepRecentTransactionsPanel;
@@ -277,13 +278,14 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 	}
 
 	private void initMethodPanel(FlowPanel theMethodPanel) {
-		final CellTable<GServiceMethod> grid = new CellTable<GServiceMethod>();
+		final CellTable<GServiceMethod> grid = new PCellTable<GServiceMethod>();
 		theMethodPanel.add(grid);
 		grid.setEmptyTableWidget(new Label("No methods defined."));
 
 		// Action
 
 		PButtonCell deleteCell = new PButtonCell(AdminPortal.IMAGES.iconRemove());
+		
 		Column<GServiceMethod, String> action = new NullColumn<GServiceMethod>(deleteCell);
 		grid.addColumn(action, "");
 		action.setFieldUpdater(new FieldUpdater<GServiceMethod, String>() {

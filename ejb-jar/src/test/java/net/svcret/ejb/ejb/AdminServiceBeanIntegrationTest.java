@@ -34,6 +34,7 @@ import net.svcret.admin.shared.model.GUserServicePermission;
 import net.svcret.admin.shared.model.GUserServiceVersionPermission;
 import net.svcret.admin.shared.model.GWsSecServerSecurity;
 import net.svcret.admin.shared.model.GWsSecUsernameTokenClientSecurity;
+import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
@@ -123,7 +124,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		Collection<DtoLibraryMessage> msgs = mySvc.getLibraryMessagesForSvcVer(version0.getPid(), true);
+		Collection<DtoLibraryMessage> msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION,version0.getPid(), true);
 		assertEquals(1, msgs.size());
 
 		DtoLibraryMessage message = msgs.iterator().next();
@@ -131,7 +132,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		assertEquals("desc0", message.getDescription());
 		assertEquals("m0", message.getMessage());
 
-		msgs = mySvc.getLibraryMessagesForSvcVer(version1.getPid(), true);
+		msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION,version1.getPid(), true);
 		assertEquals(1, msgs.size());
 
 		message.setAppliesToServiceVersionPids(version0.getPid(), version1.getPid());
@@ -140,9 +141,9 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		msgs = mySvc.getLibraryMessagesForSvcVer(version1.getPid(), true);
+		msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION, version1.getPid(), true);
 		assertEquals(2, msgs.size());
-		msgs = mySvc.getLibraryMessagesForService(service.getPid(), true);
+		msgs = mySvc.getLibraryMessages(HierarchyEnum.SERVICE, service.getPid(), true);
 		assertEquals(2, msgs.size());
 
 		message.setAppliesToServiceVersionPids(version1.getPid());
@@ -157,13 +158,18 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		pm = myDao.getLibraryMessageByPid(message.getPid());
 		assertEquals(1, pm.getAppliesTo().size());
 		
-		msgs = mySvc.getLibraryMessagesForSvcVer(version0.getPid(), true);
+		msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION,version0.getPid(), true);
 		assertEquals(0, msgs.size());
-		msgs = mySvc.getLibraryMessagesForSvcVer(version1.getPid(), true);
+		msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION,version1.getPid(), true);
 		assertEquals(2, msgs.size());
 		
-		msgs = mySvc.getLibraryMessagesForService(service.getPid(), true);
-		// TODO: this should be 2- need to figure out what's up
+		msgs = mySvc.getLibraryMessages(HierarchyEnum.SERVICE,service.getPid(), true);
+		assertEquals(2, msgs.size());
+
+		msgs = mySvc.getLibraryMessages(HierarchyEnum.DOMAIN,domain.getPid(), true);
+		assertEquals(2, msgs.size());
+
+		msgs = mySvc.loadLibraryMessages();
 		assertEquals(2, msgs.size());
 
 	}
@@ -1010,7 +1016,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		PersServiceVersionUrl implementationUrl = persVer.getUrls().get(0);
 		AuthorizationOutcomeEnum authorizationOutcome = AuthorizationOutcomeEnum.AUTHORIZED;
 		PersUser persUser = myDao.getUser(user.getPidOrNull());
-		myTransactionLogSvc.logTransaction(request, m1.getServiceVersion(), persUser, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome);
+		myTransactionLogSvc.logTransaction(request, m1, persUser, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome);
 
 		newEntityManager();
 

@@ -62,6 +62,17 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 			});
 			content.add(delete);
 
+			// Message Library
+			
+			ActionPButton msgLib = new ActionPButton(AdminPortal.IMAGES.iconLibrary(), AdminPortal.MSGS.actions_MessageLibrary());
+			msgLib.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent theEvent) {
+					History.newItem(NavProcessor.getTokenMessageLibrary(true, HierarchyEnum.DOMAIN, myDomain.getPid()));
+				}
+			});
+			content.add(msgLib);
+
 			// Services
 
 			int serviceCount = myDomain.getServiceList().size();
