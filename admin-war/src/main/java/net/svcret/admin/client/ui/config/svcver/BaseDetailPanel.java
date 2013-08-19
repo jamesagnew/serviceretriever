@@ -6,6 +6,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.HtmlBr;
@@ -367,7 +369,15 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 				return theO1.getSecurityPolicy().ordinal() - theO2.getSecurityPolicy().ordinal();
 			}
 		});
-
+		secPolicyColumn.setFieldUpdater(new FieldUpdater<GServiceMethod, String>() {
+			@Override
+			public void update(int theIndex, GServiceMethod theObject, String theValue) {
+				if (StringUtils.isNotBlank(theValue)) {
+					theObject.setSecurityPolicy(MethodSecurityPolicyEnum.valueOf(theValue));
+				}
+			}
+		});
+		
 		// Usage
 
 		Column<GServiceMethod, SafeHtml> usageColumn = new Column<GServiceMethod, SafeHtml>(new SafeHtmlCell()) {
