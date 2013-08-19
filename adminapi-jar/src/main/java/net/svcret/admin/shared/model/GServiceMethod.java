@@ -11,7 +11,6 @@ public class GServiceMethod extends BaseGDashboardObject<GServiceMethod> {
 	private Date myLastAccess;
 	private String myRootElements;
 	private MethodSecurityPolicyEnum mySecurityPolicy;
-	private transient BaseGServiceVersion myParent;
 
 	public GServiceMethod() {
 		super();
@@ -53,14 +52,6 @@ public class GServiceMethod extends BaseGDashboardObject<GServiceMethod> {
 
 	public void setSecurityPolicy(MethodSecurityPolicyEnum theSecurityPolicy) {
 		mySecurityPolicy = theSecurityPolicy;
-	}
-
-	public void setParent(BaseGServiceVersion theBaseGServiceVersion) {
-		myParent = theBaseGServiceVersion;
-	}
-
-	public BaseGServiceVersion getParent() {
-		return myParent;
 	}
 
 }

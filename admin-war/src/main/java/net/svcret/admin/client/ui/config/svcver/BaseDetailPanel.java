@@ -350,7 +350,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		Column<GServiceMethod, String> secPolicyColumn = new Column<GServiceMethod, String>(secPolicyCell) {
 			@Override
 			public String getValue(GServiceMethod theObject) {
-				if (theObject.getParent().isSecure()) {
+				if (myServiceVersion.isSecure()) {
 					return theObject.getSecurityPolicy().name();
 				} else {
 					return null;

@@ -154,9 +154,6 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 
 		if (theObject.getMethodList() != null) {
 			getMethodList().mergeResults(theObject.getMethodList());
-			for (GServiceMethod next : getMethodList()) {
-				next.setParent(this);
-			}
 		}
 
 		if (theObject.getUrlList() != null) {
