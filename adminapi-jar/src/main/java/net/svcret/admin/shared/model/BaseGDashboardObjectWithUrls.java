@@ -65,7 +65,10 @@ public abstract class BaseGDashboardObjectWithUrls<T> extends BaseGDashboardObje
 		BaseGDashboardObjectWithUrls<T> obj = (BaseGDashboardObjectWithUrls<T>) theObject;
 		myServerSecured = obj.getServerSecured();
 
+		getMonitorRulePids().addAll(obj.getMonitorRulePids());
+		
 		if (theObject.isStatsInitialized()) {
+			getFailingApplicableRulePids().addAll(obj.getFailingApplicableRulePids());
 			setUrlsActive(obj.getUrlsActive());
 			setUrlsDown(obj.getUrlsDown());
 			setUrlsUnknown(obj.getUrlsUnknown());

@@ -171,6 +171,7 @@ public class EditUsersPanel extends FlowPanel {
 
 		// Sorting
 		ListHandler<GUser> columnSortHandler = new ListHandler<GUser>(myMethodDataProvider.getList());
+		
 		myTable.getColumn(authHostColIdx).setSortable(true);
 		columnSortHandler.setComparator(authHostCol, new Comparator<GUser>() {
 			@Override

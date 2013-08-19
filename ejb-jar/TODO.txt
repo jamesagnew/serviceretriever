@@ -8,6 +8,8 @@
 
 * need toggle to disable service (or version, method?). should also keep transactions against disabled service as failures maybe?
 
+* handle failing HTTP gets better and allow non-secure client auth: "Failure was: peer not authenticated"
+
 ----
 DONE
 
@@ -21,4 +23,4 @@ DONE
     Table mods:
    	PX_SVC_VER_RCNT_MSG needs new METHOD_PID column
    	PX_USER_RCNT_MSG needs new METHOD_PID column
-   	All hierarchy needs new SEC_POLICY (len 50) column
+   	PX_SVC_VER_METHOD needs new SEC_POLICY (len 50) column

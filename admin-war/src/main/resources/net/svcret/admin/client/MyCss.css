@@ -18,6 +18,17 @@
 	margin-top: 8px;
 }
 
+.methodRootElementBlock {
+	max-width: 100px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* Has tooltip */
+.methodRootElementBlock {
+	border-bottom: 1px dotted #88F;
+}
+
 .monitorRuleActiveTargetKey {
 	font-size: 0.8em;
 	color: #808080;

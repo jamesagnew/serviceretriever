@@ -32,6 +32,7 @@ import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.PartialUserListRequest;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
+import net.svcret.ejb.ex.ProcessingException;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
@@ -65,9 +66,9 @@ public interface ModelUpdateService extends RemoteService {
 
 	GMonitorRuleList loadMonitorRuleList() throws ServiceFailureException;
 
-	GRecentMessage loadRecentMessageForServiceVersion(long thePid);
+	GRecentMessage loadRecentMessageForServiceVersion(long thePid) throws ProcessingException, ServiceFailureException;
 
-	GRecentMessage loadRecentMessageForUser(long thePid);
+	GRecentMessage loadRecentMessageForUser(long thePid) throws ServiceFailureException;
 
 	GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid);
 

@@ -170,6 +170,9 @@ public class MessageLibraryPanel extends FlowPanel {
 
 		myGrid.setEmptyTableWidget(new Label("No messages found"));
 
+		ListHandler<DtoLibraryMessage> sortHandler = new ListHandler<DtoLibraryMessage>(myDataProvider.getList());
+		myGrid.addColumnSortHandler(sortHandler);
+		
 		myDataProvider = new ListDataProvider<DtoLibraryMessage>();
 		myDataProvider.addDataDisplay(myGrid);
 
@@ -205,8 +208,7 @@ public class MessageLibraryPanel extends FlowPanel {
 		};
 		myGrid.addColumn(descColumn, "Description");
 		myGrid.getColumn(myGrid.getColumnCount() - 1).setSortable(true);
-		ListHandler<DtoLibraryMessage> serviceSortHandler = new ListHandler<DtoLibraryMessage>(myDataProvider.getList());
-		serviceSortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<DtoLibraryMessage>() {
+		sortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<DtoLibraryMessage>() {
 			@Override
 			public int compare(DtoLibraryMessage theO1, DtoLibraryMessage theO2) {
 				return StringUtil.compare(theO1.getDescription(), theO2.getDescription());
@@ -222,8 +224,7 @@ public class MessageLibraryPanel extends FlowPanel {
 		};
 		myGrid.addColumn(ctColumn, "Content Type");
 		myGrid.getColumn(myGrid.getColumnCount() - 1).setSortable(true);
-		ListHandler<DtoLibraryMessage> ctSortHandler = new ListHandler<DtoLibraryMessage>(myDataProvider.getList());
-		ctSortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<DtoLibraryMessage>() {
+		sortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<DtoLibraryMessage>() {
 			@Override
 			public int compare(DtoLibraryMessage theO1, DtoLibraryMessage theO2) {
 				return StringUtil.compare(theO1.getContentType(), theO2.getContentType());
@@ -238,8 +239,7 @@ public class MessageLibraryPanel extends FlowPanel {
 		};
 		myGrid.addColumn(messageColumn, "Message");
 		myGrid.getColumn(myGrid.getColumnCount() - 1).setSortable(true);
-		ListHandler<DtoLibraryMessage> msgSortHandler = new ListHandler<DtoLibraryMessage>(myDataProvider.getList());
-		msgSortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<DtoLibraryMessage>() {
+		sortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<DtoLibraryMessage>() {
 			@Override
 			public int compare(DtoLibraryMessage theO1, DtoLibraryMessage theO2) {
 				return theO1.getMessageLength() - theO2.getMessageLength();
@@ -256,8 +256,7 @@ public class MessageLibraryPanel extends FlowPanel {
 		};
 		myGrid.addColumn(appliesToColumn, "Applies To");
 		myGrid.getColumn(myGrid.getColumnCount() - 1).setSortable(true);
-		ListHandler<DtoLibraryMessage> atSortHandler = new ListHandler<DtoLibraryMessage>(myDataProvider.getList());
-		atSortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<DtoLibraryMessage>() {
+		sortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<DtoLibraryMessage>() {
 			@Override
 			public int compare(DtoLibraryMessage theO1, DtoLibraryMessage theO2) {
 				return StringUtil.compare(theO1.getAppliesToSortText(myDomainList), theO2.getAppliesToSortText(myDomainList));

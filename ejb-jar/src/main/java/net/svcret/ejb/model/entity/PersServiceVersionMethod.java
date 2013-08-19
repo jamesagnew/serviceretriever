@@ -7,6 +7,8 @@ import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -16,6 +18,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Version;
+
+import org.apache.commons.lang3.Validate;
 
 import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 
@@ -43,7 +47,8 @@ public class PersServiceVersionMethod extends BasePersObject {
 	private String myRootElements;
 
 	@Column(name="SEC_POLICY", length=50, nullable=false)
-	private MethodSecurityPolicyEnum mySecurityPolicy=MethodSecurityPolicyEnum.REJECT_UNLESS_ALLOWED;
+	@Enumerated(EnumType.STRING)
+	private MethodSecurityPolicyEnum mySecurityPolicy=MethodSecurityPolicyEnum.getDefault();
 	
 	@ManyToOne()
 	@JoinColumn(name = "SVC_VERSION_PID", referencedColumnName = "PID", nullable = false)
@@ -177,6 +182,7 @@ public class PersServiceVersionMethod extends BasePersObject {
 	}
 
 	public void setSecurityPolicy(MethodSecurityPolicyEnum theSecurityPolicy) {
+		Validate.notNull(theSecurityPolicy);
 		mySecurityPolicy = theSecurityPolicy;
 	}
 

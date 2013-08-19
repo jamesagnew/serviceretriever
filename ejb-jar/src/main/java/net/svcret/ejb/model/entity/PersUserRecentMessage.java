@@ -10,6 +10,7 @@ import javax.persistence.Table;
 import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
 import net.svcret.ejb.api.IDao;
 
+import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Index;
 
 @Table(name = "PX_USER_RCNT_MSG")
@@ -22,7 +23,8 @@ public class PersUserRecentMessage extends BasePersRecentMessage {
 	private static final long serialVersionUID = 1L;
 
 	@ManyToOne()
-	@JoinColumn(name = "METHOD_PID", referencedColumnName = "PID", nullable = false)
+	@JoinColumn(name = "METHOD_PID", referencedColumnName = "PID", nullable = true)// TODO: make false
+	@ForeignKey(name="FK_USER_RCNTMSG_METHOD")
 	private PersServiceVersionMethod myMethod;
 
 	@ManyToOne()

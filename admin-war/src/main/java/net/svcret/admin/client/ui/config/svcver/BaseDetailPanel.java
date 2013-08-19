@@ -1,14 +1,14 @@
 package net.svcret.admin.client.ui.config.svcver;
 
-import static net.svcret.admin.client.AdminPortal.*;
+import static net.svcret.admin.client.AdminPortal.IMAGES;
+import static net.svcret.admin.client.AdminPortal.MSGS;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
-
 import net.svcret.admin.client.AdminPortal;
+import net.svcret.admin.client.MyResources;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.HtmlH1;
@@ -227,8 +227,8 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 
 		thePanel.add(new HtmlH1("Client Security"));
 
-		Label urlLabel = new Label("Client Security modules provide credentials to proxied service implementations. In other words, " + "if the service which is being proxied requires credentials in order to be invoked, a client "
-				+ "security module can be used to provide those credentials.");
+		Label urlLabel = new Label("Client Security modules provide credentials to proxied service implementations. In other words, "
+				+ "if the service which is being proxied requires credentials in order to be invoked, a client " + "security module can be used to provide those credentials.");
 		thePanel.add(urlLabel);
 
 		myClientSecurityGrid = new Grid(1, 2);
@@ -289,6 +289,9 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		myMethodDataProvider = new ListDataProvider<GServiceMethod>();
 		myMethodDataProvider.addDataDisplay(grid);
 
+		ListHandler<GServiceMethod> sortHandler = new ListHandler<GServiceMethod>(myMethodDataProvider.getList());
+		grid.addColumnSortHandler(sortHandler);
+
 		// Action
 
 		PButtonCell deleteCell = new PButtonCell(AdminPortal.IMAGES.iconRemove());
@@ -316,8 +319,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		};
 		grid.addColumn(nameColumn, "Name");
 		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
-		ListHandler<GServiceMethod> columnSortHandler = new ListHandler<GServiceMethod>(myMethodDataProvider.getList());
-		columnSortHandler.setComparator(nameColumn, new Comparator<GServiceMethod>() {
+		sortHandler.setComparator(nameColumn, new Comparator<GServiceMethod>() {
 			@Override
 			public int compare(GServiceMethod theO1, GServiceMethod theO2) {
 				return StringUtil.compare(theO1.getName(), theO2.getName());
@@ -329,14 +331,33 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		Column<GServiceMethod, SafeHtml> rootElementsColumn = new Column<GServiceMethod, SafeHtml>(new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(GServiceMethod theObject) {
-				return SafeHtmlUtils.fromString(StringUtil.defaultString(theObject.getRootElements()));
+				String value = StringUtil.defaultString(theObject.getRootElements());
+				if (StringUtil.isNotBlank(value)) {
+					int index = value.lastIndexOf(':');
+					String namespace = value.substring(0, index);
+					String element = value.substring(index + 1);
+					StringBuilder b = new StringBuilder();
+					b.append("<div title=\"Namespace: ");
+					b.append(namespace);
+					b.append("\\nElement: ");
+					b.append(element);
+					b.append("\" class=\"");
+					b.append(MyResources.CSS.methodRootElementBlock());
+					b.append("\">");
+					b.append(SafeHtmlUtils.htmlEscape(namespace));
+					b.append("<br/>");
+					b.append(SafeHtmlUtils.htmlEscape(element));
+					b.append("</div>");
+					return SafeHtmlUtils.fromTrustedString(b.toString());
+				} else {
+					return SafeHtmlUtils.fromString("");
+				}
 			}
 
 		};
 		grid.addColumn(rootElementsColumn, "Root Elements");
 		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
-		ListHandler<GServiceMethod> rootElementsSortHandler = new ListHandler<GServiceMethod>(myMethodDataProvider.getList());
-		rootElementsSortHandler.setComparator(rootElementsColumn, new Comparator<GServiceMethod>() {
+		sortHandler.setComparator(rootElementsColumn, new Comparator<GServiceMethod>() {
 			@Override
 			public int compare(GServiceMethod theO1, GServiceMethod theO2) {
 				return StringUtil.compare(theO1.getRootElements(), theO2.getRootElements());
@@ -362,8 +383,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		};
 		grid.addColumn(secPolicyColumn, "Security Policy");
 		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
-		ListHandler<GServiceMethod> secPolicySortHandler = new ListHandler<GServiceMethod>(myMethodDataProvider.getList());
-		secPolicySortHandler.setComparator(rootElementsColumn, new Comparator<GServiceMethod>() {
+		sortHandler.setComparator(rootElementsColumn, new Comparator<GServiceMethod>() {
 			@Override
 			public int compare(GServiceMethod theO1, GServiceMethod theO2) {
 				return theO1.getSecurityPolicy().ordinal() - theO2.getSecurityPolicy().ordinal();
@@ -372,12 +392,12 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		secPolicyColumn.setFieldUpdater(new FieldUpdater<GServiceMethod, String>() {
 			@Override
 			public void update(int theIndex, GServiceMethod theObject, String theValue) {
-				if (StringUtils.isNotBlank(theValue)) {
+				if (StringUtil.isNotBlank(theValue)) {
 					theObject.setSecurityPolicy(MethodSecurityPolicyEnum.valueOf(theValue));
 				}
 			}
 		});
-		
+
 		// Usage
 
 		Column<GServiceMethod, SafeHtml> usageColumn = new Column<GServiceMethod, SafeHtml>(new SafeHtmlCell()) {
@@ -400,7 +420,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		};
 		grid.addColumn(usageColumn, "Usage");
 		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
-		secPolicySortHandler.setComparator(usageColumn, new Comparator<GServiceMethod>() {
+		sortHandler.setComparator(usageColumn, new Comparator<GServiceMethod>() {
 			@Override
 			public int compare(GServiceMethod theO1, GServiceMethod theO2) {
 				GServiceVersionDetailedStats detailedStats = myServiceVersion.getDetailedStats();
@@ -435,7 +455,6 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 				return retVal;
 			}
 		});
-		grid.addColumnSortHandler(secPolicySortHandler);
 
 		grid.getColumnSortList().push(nameColumn);
 
@@ -465,6 +484,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 				GServiceMethod method = new GServiceMethod();
 				method.setUncommittedSessionId(newUncommittedSessionId());
 				method.setName(name);
+				method.setSecurityPolicy(MethodSecurityPolicyEnum.getDefault());
 				getServiceVersion().getMethodList().add(method);
 				updateMethodPanel();
 
@@ -488,7 +508,8 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 
 		thePanel.add(new HtmlH1("Server Security"));
 
-		Label urlLabel = new Label("Server Security modules verify that the client which is making requests coming " + "in to the proxy are authorized to invoke the particular service they are attempting to "
+		Label urlLabel = new Label("Server Security modules verify that the client which is making requests coming "
+				+ "in to the proxy are authorized to invoke the particular service they are attempting to "
 				+ "invoke. If no server security modules are defined for this service version, all requests will be " + "allowed to proceed.");
 		thePanel.add(urlLabel);
 
@@ -584,7 +605,8 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		thePanel.add(clientConfigPanel);
 
 		clientConfigPanel.addStyleName(CssConstants.CONTENT_INNER_SUBPANEL);
-		clientConfigPanel.add(new Label("The HTTP client configuration provides the connection details for " + "how the proxy will attempt to invoke proxied service implementations. This includes " + "settings for timeouts, round-robin policies, etc."));
+		clientConfigPanel.add(new Label("The HTTP client configuration provides the connection details for " + "how the proxy will attempt to invoke proxied service implementations. This includes "
+				+ "settings for timeouts, round-robin policies, etc."));
 
 		myHttpConfigList = new ListBox();
 		clientConfigPanel.add(myHttpConfigList);

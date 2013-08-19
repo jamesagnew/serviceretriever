@@ -13,4 +13,6 @@ public interface MyCss extends CssResource {
 
 	String dashboardTimeSinceLastUpdateLabel();
 	
+	String methodRootElementBlock();
+	
 }

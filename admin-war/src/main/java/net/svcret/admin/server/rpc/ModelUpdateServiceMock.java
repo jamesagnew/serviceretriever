@@ -127,6 +127,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		met.setId("Method 1");
 		met.setName("Method 1");
 		met.setSecurityPolicy(MethodSecurityPolicyEnum.REJECT_UNLESS_ALLOWED);
+		met.setRootElements("http://ws.ehr.uhn.ca:getActivePatientsByAttendingPhysicianIdExtended");
 		ver.getMethodList().add(met);
 
 		met = new GServiceMethod();

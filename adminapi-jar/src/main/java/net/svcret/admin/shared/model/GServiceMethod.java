@@ -10,7 +10,7 @@ public class GServiceMethod extends BaseGDashboardObject<GServiceMethod> {
 
 	private Date myLastAccess;
 	private String myRootElements;
-	private MethodSecurityPolicyEnum mySecurityPolicy;
+	private MethodSecurityPolicyEnum mySecurityPolicy = MethodSecurityPolicyEnum.getDefault();
 
 	public GServiceMethod() {
 		super();

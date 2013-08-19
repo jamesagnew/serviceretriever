@@ -47,4 +47,8 @@ public enum MethodSecurityPolicyEnum {
 		return retVal;
 	}
 
+	public static MethodSecurityPolicyEnum getDefault() {
+		return REJECT_UNLESS_ALLOWED;
+	}
+
 }

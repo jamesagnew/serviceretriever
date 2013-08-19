@@ -10,28 +10,28 @@ public class GRecentMessageLists implements Serializable {
 	@Override
 	public String toString() {
 		StringBuilder b = new StringBuilder();
-		if (myKeepFail > 0) {
+		if (myKeepFail > 0 && mySuccessList != null) {
 			b.append("Success ").append(mySuccessList.size()).append('/').append(myKeepSuccess);
 		}
 		if (b.length() > 0) {
 			b.append(", ");
 		}
-		if (myKeepFail > 0) {
+		if (myKeepFail > 0 && myFaultList != null) {
 			b.append("Fault ").append(myFaultList.size()).append('/').append(myKeepFault);
 		}
 		if (b.length() > 0) {
 			b.append(", ");
 		}
-		if (myKeepFail > 0) {
+		if (myKeepFail > 0 && myFailList != null) {
 			b.append("Fail ").append(myFailList.size()).append('/').append(myKeepFail);
 		}
 		if (b.length() > 0) {
 			b.append(", ");
 		}
-		if (myKeepFail > 0) {
+		if (myKeepFail > 0 && mySecurityFailList != null) {
 			b.append("SecurityFail ").append(mySecurityFailList.size()).append('/').append(myKeepSecurityFail);
 		}
-		if (b.length()==0) {
+		if (b.length() == 0) {
 			b.append("None");
 		}
 		return b.toString();

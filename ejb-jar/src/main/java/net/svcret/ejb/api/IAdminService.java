@@ -102,11 +102,11 @@ public interface IAdminService {
 
 	GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid);
 
-	GRecentMessage loadRecentMessageForServiceVersion(long thePid);
+	GRecentMessage loadRecentMessageForServiceVersion(long thePid) throws ProcessingException;
 
 	GRecentMessageLists loadRecentTransactionListForUser(long thePid);
 
-	GRecentMessage loadRecentMessageForUser(long thePid);
+	GRecentMessage loadRecentMessageForUser(long thePid) throws ProcessingException;
 
 	GUser loadUser(long thePid, boolean theLoadStats) throws ProcessingException;
 

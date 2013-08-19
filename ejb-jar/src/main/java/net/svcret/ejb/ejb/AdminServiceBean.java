@@ -533,14 +533,20 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	@Override
-	public GRecentMessage loadRecentMessageForServiceVersion(long thePid) {
+	public GRecentMessage loadRecentMessageForServiceVersion(long thePid) throws ProcessingException {
 		BasePersRecentMessage msg = myDao.loadRecentMessageForServiceVersion(thePid);
+		if (msg == null) {
+			throw new ProcessingException("Unable to find transaction with PID " + thePid + ". Maybe it has been purged?");
+		}
 		return toUi(msg, true);
 	}
 
 	@Override
-	public GRecentMessage loadRecentMessageForUser(long thePid) {
+	public GRecentMessage loadRecentMessageForUser(long thePid) throws ProcessingException {
 		BasePersRecentMessage msg = myDao.loadRecentMessageForUser(thePid);
+		if (msg == null) {
+			throw new ProcessingException("Unable to find transaction with PID " + thePid + ". Maybe it has been purged?");
+		}
 		return toUi(msg, true);
 	}
 
@@ -1144,8 +1150,14 @@ public class AdminServiceBean implements IAdminService {
 
 		for (PersServiceVersionMethod nextMethod : nextVersion.getMethods()) {
 			extractStatus(60, the60MinInvCount, the60minTime, nextMethod);
-
 		}
+		
+		// Failing monitor rules
+		List<PersMonitorRuleFiring> failingRules = theStatuses.getFirings(nextVersion.getPid());
+		for (PersMonitorRuleFiring next : failingRules) {
+			theDashboardObject.getFailingApplicableRulePids().add(next.getPid());
+		}
+		
 		return status;
 	}
 
