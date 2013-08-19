@@ -17,18 +17,19 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
+import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
+
 @Table(name = "PX_SVC_VER_METHOD")
 @Entity
 public class PersServiceVersionMethod extends BasePersObject {
 
 	private static final long serialVersionUID = 1L;
 
+	@OneToMany(fetch=FetchType.LAZY, cascade= {CascadeType.REMOVE}, orphanRemoval=true, mappedBy="myPk.myMethod")
+	private Collection<PersInvocationStats> myInvocationStats;
+
 	@Column(name = "NAME", length = 200, nullable=false)
 	private String myName;
-
-	@Version()
-	@Column(name = "OPTLOCK")
-	protected int myOptLock;
 
 	@Column(name="METHOD_ORDER", nullable=false)
 	private int myOrder;
@@ -41,22 +42,26 @@ public class PersServiceVersionMethod extends BasePersObject {
 	@Column(name = "ROOT_ELEMENTS", length = 1000, nullable=true)
 	private String myRootElements;
 
+	@Column(name="SEC_POLICY", length=50, nullable=false)
+	private MethodSecurityPolicyEnum mySecurityPolicy=MethodSecurityPolicyEnum.REJECT_UNLESS_ALLOWED;
+	
+	@ManyToOne()
+	@JoinColumn(name = "SVC_VERSION_PID", referencedColumnName = "PID", nullable = false)
+	private BasePersServiceVersion myServiceVersion;
+
 	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myMethod")
 	private List<PersServiceVersionRecentMessage> mySvcVerRecentMessages;
+
+	@OneToMany(fetch=FetchType.LAZY, cascade= {CascadeType.REMOVE}, orphanRemoval=true, mappedBy="myServiceVersionMethod")
+	private Collection<PersUserServiceVersionMethodPermission> myUserPermissions;
 
 	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myMethod")
 	private List<PersUserRecentMessage> myUserRecentMessages;
 
-	@ManyToOne()
-	@JoinColumn(name = "SVC_VERSION_PID", referencedColumnName = "PID", nullable = false)
-	private BasePersServiceVersion myServiceVersion;
+	@Version()
+	@Column(name = "OPTLOCK")
+	protected int myOptLock;
 	
-	@OneToMany(fetch=FetchType.LAZY, cascade= {CascadeType.REMOVE}, orphanRemoval=true, mappedBy="myServiceVersionMethod")
-	private Collection<PersUserServiceVersionMethodPermission> myUserPermissions;
-
-	@OneToMany(fetch=FetchType.LAZY, cascade= {CascadeType.REMOVE}, orphanRemoval=true, mappedBy="myPk.myMethod")
-	private Collection<PersInvocationStats> myInvocationStats;
-
 	/**
 	 * Constructor
 	 */
@@ -93,7 +98,7 @@ public class PersServiceVersionMethod extends BasePersObject {
 	public int getOrder() {
 		return myOrder;
 	}
-	
+
 	/**
 	 * @return the id
 	 */
@@ -104,6 +109,10 @@ public class PersServiceVersionMethod extends BasePersObject {
 	public String getRootElements() {
 		return myRootElements;
 	}
+	
+	public MethodSecurityPolicyEnum getSecurityPolicy() {
+		return mySecurityPolicy;
+	}
 
 	/**
 	 * @return the serviceVersion
@@ -112,8 +121,6 @@ public class PersServiceVersionMethod extends BasePersObject {
 		return myServiceVersion;
 	}
 
-	
-	
 	public Collection<PersUserServiceVersionMethodPermission> getUserPermissions() {
 		if (myUserPermissions==null) {
 			myUserPermissions=new ArrayList<PersUserServiceVersionMethodPermission>();
@@ -121,6 +128,8 @@ public class PersServiceVersionMethod extends BasePersObject {
 		return myUserPermissions;
 	}
 
+	
+	
 	public void loadAllAssociations() {
 		for (PersUserServiceVersionMethodPermission next : getUserPermissions()) {
 			next.loadAllAssociations();
@@ -165,6 +174,10 @@ public class PersServiceVersionMethod extends BasePersObject {
 
 	public void setRootElements(String theRootElements) {
 		myRootElements = theRootElements;
+	}
+
+	public void setSecurityPolicy(MethodSecurityPolicyEnum theSecurityPolicy) {
+		mySecurityPolicy = theSecurityPolicy;
 	}
 
 	/**

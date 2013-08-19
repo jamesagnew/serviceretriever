@@ -37,6 +37,7 @@ import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
+import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.ServerSecuredEnum;
@@ -58,6 +59,9 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 
 	@Column(name = "ISACTIVE")
 	private boolean myActive;
+
+	@Column(name="SEC_POLICY", length=50, nullable=false)
+	private MethodSecurityPolicyEnum mySecurityPolicy=MethodSecurityPolicyEnum.REJECT_UNLESS_ALLOWED;
 
 	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myServiceVersion")
 	private Collection<PersMonitorRuleActiveCheck> myActiveChecks;

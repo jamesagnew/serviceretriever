@@ -1384,6 +1384,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setPid(theMethod.getPidOrNull());
 		retVal.setServiceVersion(myDao.getServiceVersionByPid(theServiceVersionPid));
 		retVal.setRootElements(theMethod.getRootElements());
+		retVal.setSecurityPolicy(theMethod.getSecurityPolicy());
 		return retVal;
 	}
 
@@ -2300,6 +2301,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setId(theMethod.getName());
 		retVal.setName(theMethod.getName());
 		retVal.setRootElements(theMethod.getRootElements());
+		retVal.setSecurityPolicy(theMethod.getSecurityPolicy());
 
 		if (theLoadStats) {
 			retVal.setStatsInitialized(new Date());

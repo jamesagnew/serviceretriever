@@ -4,11 +4,9 @@
 * In replay existing message dialog, allow save button to update saved message, and maybe "save as new" (also change the title of this dialog to better explain that's it's replaying from liibrary)
 * In manual test dialod, button to save transaction to library
 
-* Message library view: Need an "add" button, should also be able to choose which SVCVER to display, or to display all 
-  messages in the library. Also columns should be sortable
-
 * Save message to library panel should have a button to jump to "replay" once the message is saved
 
+* need toggle to disable service (or version, method?). should also keep transactions against disabled service as failures maybe?
 
 ----
 DONE
@@ -17,3 +15,10 @@ DONE
   recent transactions table (also maybe use it in the auto generated
   title for saved transactions)
   
+* Message library view: Need an "add" button, should also be able to choose which SVCVER to display, or to display all 
+  messages in the library. Also columns should be sortable
+
+    Table mods:
+   	PX_SVC_VER_RCNT_MSG needs new METHOD_PID column
+   	PX_USER_RCNT_MSG needs new METHOD_PID column
+   	All hierarchy needs new SEC_POLICY (len 50) column

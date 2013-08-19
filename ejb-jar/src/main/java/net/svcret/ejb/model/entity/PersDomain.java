@@ -20,6 +20,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 
+import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.ServerSecuredEnum;
 import net.svcret.admin.shared.model.StatusEnum;
@@ -34,6 +35,9 @@ public class PersDomain extends BasePersServiceCatalogItem {
 
 	@Transient
 	private transient boolean myAllAssociationsLoaded;
+
+	@Column(name="SEC_POLICY", length=50, nullable=false)
+	private MethodSecurityPolicyEnum mySecurityPolicy=MethodSecurityPolicyEnum.REJECT_UNLESS_ALLOWED;
 
 	@Column(name = "DOMAIN_ID", length = 100, nullable = false)
 	private String myDomainId;

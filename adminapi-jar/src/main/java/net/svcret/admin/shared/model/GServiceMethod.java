@@ -2,20 +2,16 @@ package net.svcret.admin.shared.model;
 
 import java.util.Date;
 
+import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
+
 public class GServiceMethod extends BaseGDashboardObject<GServiceMethod> {
 
 	private static final long serialVersionUID = 1L;
 
-	private String myRootElements;
 	private Date myLastAccess;
-
-	public Date getLastAccess() {
-		return myLastAccess;
-	}
-
-	public void setLastAccess(Date theLastAccess) {
-		myLastAccess = theLastAccess;
-	}
+	private String myRootElements;
+	private MethodSecurityPolicyEnum mySecurityPolicy;
+	private transient BaseGServiceVersion myParent;
 
 	public GServiceMethod() {
 		super();
@@ -26,8 +22,16 @@ public class GServiceMethod extends BaseGDashboardObject<GServiceMethod> {
 		setName(theId);
 	}
 
+	public Date getLastAccess() {
+		return myLastAccess;
+	}
+
 	public String getRootElements() {
 		return myRootElements;
+	}
+
+	public MethodSecurityPolicyEnum getSecurityPolicy() {
+		return mySecurityPolicy;
 	}
 
 	@Override
@@ -39,8 +43,24 @@ public class GServiceMethod extends BaseGDashboardObject<GServiceMethod> {
 		super.merge((BaseGDashboardObject<GServiceMethod>) theObject);
 	}
 
+	public void setLastAccess(Date theLastAccess) {
+		myLastAccess = theLastAccess;
+	}
+
 	public void setRootElements(String theRootElements) {
 		myRootElements = theRootElements;
+	}
+
+	public void setSecurityPolicy(MethodSecurityPolicyEnum theSecurityPolicy) {
+		mySecurityPolicy = theSecurityPolicy;
+	}
+
+	public void setParent(BaseGServiceVersion theBaseGServiceVersion) {
+		myParent = theBaseGServiceVersion;
+	}
+
+	public BaseGServiceVersion getParent() {
+		return myParent;
 	}
 
 }

@@ -22,20 +22,13 @@ import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
  */
 public class PSelectionCell extends AbstractInputCell<String, String> {
 
-  interface Template extends SafeHtmlTemplates {
-    @Template("<option value=\"{0}\">{1}</option>")
-    SafeHtml deselected(String optionValue, String optionText);
-
-    @Template("<option value=\"{0}\" selected=\"selected\">{1}</option>")
-    SafeHtml selected(String option, String optionText);
-  }
-
   private static Template template;
 
   private HashMap<String, Integer> indexForOptionValue = new HashMap<String, Integer>();
-  private final List<String> optionValues;
+
+  private  String myDisableWithMessageOnNullValue;
   private final List<String> optionTexts;
-  
+  private final List<String> optionValues;
   /**
    * Construct a new {@link SelectionCell} with the specified options.
    *
@@ -54,7 +47,7 @@ public class PSelectionCell extends AbstractInputCell<String, String> {
       indexForOptionValue.put(option, index++);
     }
   }
-
+  
   @Override
   public void onBrowserEvent(Context context, Element parent, String value,
       NativeEvent event, ValueUpdater<String> valueUpdater) {
@@ -72,7 +65,7 @@ public class PSelectionCell extends AbstractInputCell<String, String> {
     }
   }
 
-  @Override
+@Override
   public void render(Context context, String value, SafeHtmlBuilder sb) {
     // Get the view data.
     Object key = context.getKey();
@@ -82,6 +75,11 @@ public class PSelectionCell extends AbstractInputCell<String, String> {
       viewData = null;
     }
 
+    if (value == null && myDisableWithMessageOnNullValue!=null) {
+    	sb.appendHtmlConstant("<select disabled><option value=\"DIS\" selected>" + myDisableWithMessageOnNullValue + "</option></select>");
+    	return;
+    }
+    
     int selectedIndex = getSelectedIndex(viewData == null ? value : viewData);
     sb.appendHtmlConstant("<select tabindex=\"-1\">");
     int index = 0;
@@ -96,11 +94,23 @@ public class PSelectionCell extends AbstractInputCell<String, String> {
     sb.appendHtmlConstant("</select>");
   }
 
+  public void setDisableWithMessageOnNullValue(String theDisableWithMessageOnNullValue) {
+	myDisableWithMessageOnNullValue = theDisableWithMessageOnNullValue;
+}
+
   private int getSelectedIndex(String value) {
     Integer index = indexForOptionValue.get(value);
     if (index == null) {
       return -1;
     }
     return index.intValue();
+  }
+
+  interface Template extends SafeHtmlTemplates {
+    @Template("<option value=\"{0}\">{1}</option>")
+    SafeHtml deselected(String optionValue, String optionText);
+
+    @Template("<option value=\"{0}\" selected=\"selected\">{1}</option>")
+    SafeHtml selected(String option, String optionText);
   }
 }

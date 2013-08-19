@@ -3,6 +3,9 @@ package net.svcret.ejb.model.entity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -15,6 +18,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
 @Table(name = "PX_USER_PERM_SERVICE", uniqueConstraints = { // -
@@ -41,8 +45,11 @@ public class PersUserServicePermission extends BasePersObject {
 	@JoinColumn(name = "SERVICE_PID", referencedColumnName = "PID", nullable = false)
 	private PersService myService;
 
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy="myServicePermission")
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServicePermission")
 	private Collection<PersUserServiceVersionPermission> myServiceVersionPermissions;
+
+	@Transient
+	private transient Map<Long, PersUserServiceVersionPermission> myServiceVersionPidToServiceVersionPermission;
 
 	/**
 	 * @param theServicePermissions
@@ -59,6 +66,12 @@ public class PersUserServicePermission extends BasePersObject {
 		myServiceVersionPermissions.add(permission);
 
 		return permission;
+	}
+
+	public void addServiceVersionPermission(PersUserServiceVersionPermission thePerm) {
+		getServiceVersionPermissions();
+		myServiceVersionPermissions.add(thePerm);
+		thePerm.setServicePermission(this);
 	}
 
 	public Collection<PersServiceVersionMethod> getAllAllowedMethods() {
@@ -112,6 +125,21 @@ public class PersUserServicePermission extends BasePersObject {
 		return myAllowAllServiceVersions;
 	}
 
+	public void loadAllAssociations() {
+		myServiceVersionPidToServiceVersionPermission = new HashMap<Long, PersUserServiceVersionPermission>();
+		for (PersUserServiceVersionPermission nextPerm : getServiceVersionPermissions()) {
+			myServiceVersionPidToServiceVersionPermission.put(nextPerm.getServiceVersion().getPid(), nextPerm);
+			nextPerm.loadAllAssociations();
+		}
+
+	}
+
+	public void removePermission(BasePersServiceVersion permission) {
+		getServiceVersionPermissions();
+		myServiceVersionPermissions.remove(permission);
+
+	}
+
 	/**
 	 * @param theAllowAllServiceVersions
 	 *            the allowAllServices to set
@@ -155,10 +183,8 @@ public class PersUserServicePermission extends BasePersObject {
 		}
 	}
 
-	public void addServiceVersionPermission(PersUserServiceVersionPermission thePerm) {
-		getServiceVersionPermissions();
-		myServiceVersionPermissions.add(thePerm);
-		thePerm.setServicePermission(this);
+	public Map<Long, PersUserServiceVersionPermission> getServiceVersionPidToServiceVersionPermission() {
+		return myServiceVersionPidToServiceVersionPermission;
 	}
 
 }

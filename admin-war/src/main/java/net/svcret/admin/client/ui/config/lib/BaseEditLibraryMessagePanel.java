@@ -2,8 +2,6 @@ package net.svcret.admin.client.ui.config.lib;
 
 import java.util.TreeSet;
 
-import org.apache.commons.lang3.StringUtils;
-
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.EditableField;
@@ -192,11 +190,11 @@ public abstract class BaseEditLibraryMessagePanel extends FlowPanel {
 	}
 
 	protected void save() {
-		if (StringUtils.isBlank(myMessage.getDescription())) {
+		if (StringUtil.isBlank(myMessage.getDescription())) {
 			mySaveSpinner.showMessage("No description provided!", false);
 			return;
 		}
-		if (StringUtils.isBlank(myMessage.getContentType())) {
+		if (StringUtil.isBlank(myMessage.getContentType())) {
 			mySaveSpinner.showMessage("No content type provided!", false);
 			return;
 		}

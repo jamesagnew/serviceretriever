@@ -3,6 +3,9 @@ package net.svcret.ejb.model.entity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -15,6 +18,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
 @Table(name = "PX_USER_PERM_DOMAIN", uniqueConstraints = { // -
@@ -28,17 +32,20 @@ public class PersUserDomainPermission extends BasePersObject {
 	@Column(name = "ALLOW_ALL_SVCS")
 	private boolean myAllowAllServices;
 
+	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
+	@JoinColumn(name = "SVC_DOMAIN_PID", referencedColumnName = "PID", nullable = false)
+	private PersDomain myDomain;
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "PID")
 	private Long myPid;
 
-	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
-	@JoinColumn(name = "SVC_DOMAIN_PID", referencedColumnName = "PID", nullable = false)
-	private PersDomain myDomain;
-
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy="myDomainPermission")
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myDomainPermission")
 	private Collection<PersUserServicePermission> myServicePermissions;
+
+	@Transient
+	private transient Map<Long, PersUserServicePermission> myServicePidToServicePermission;
 
 	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
 	@JoinColumn(name = "USER_PID", referencedColumnName = "PID", nullable = false)
@@ -59,6 +66,12 @@ public class PersUserDomainPermission extends BasePersObject {
 		myServicePermissions.add(permission);
 
 		return permission;
+	}
+
+	public void addServicePermission(PersUserServicePermission thePerm) {
+		getServicePermissions();
+		myServicePermissions.add(thePerm);
+		thePerm.setDomainPermission(this);
 	}
 
 	public Collection<PersServiceVersionMethod> getAllAllowedMethods() {
@@ -113,6 +126,15 @@ public class PersUserDomainPermission extends BasePersObject {
 		return myAllowAllServices;
 	}
 
+	public void loadAllAssociations() {
+		myServicePidToServicePermission = new HashMap<Long, PersUserServicePermission>();
+		for (PersUserServicePermission nextPerm : getServicePermissions()) {
+			myServicePidToServicePermission.put(nextPerm.getService().getPid(), nextPerm);
+			nextPerm.loadAllAssociations();
+		}
+
+	}
+
 	/**
 	 * @param theAllowAllServices
 	 *            the allowAllServices to set
@@ -156,10 +178,8 @@ public class PersUserDomainPermission extends BasePersObject {
 		myUser = theServiceUser;
 	}
 
-	public void addServicePermission(PersUserServicePermission thePerm) {
-		getServicePermissions();
-		myServicePermissions.add(thePerm);
-		thePerm.setDomainPermission(this);
+	public Map<Long, PersUserServicePermission> getServicePidToServicePermission() {
+		return myServicePidToServicePermission;
 	}
 
 }

@@ -14,6 +14,7 @@ import net.svcret.admin.client.ui.components.HtmlLabel;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.PButtonCell;
 import net.svcret.admin.client.ui.components.PCellTable;
+import net.svcret.admin.client.ui.components.PSelectionCell;
 import net.svcret.admin.client.ui.components.Sparkline;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.client.ui.config.KeepRecentTransactionsPanel;
@@ -22,6 +23,7 @@ import net.svcret.admin.client.ui.config.sec.IProvidesViewAndEdit.IValueChangeHa
 import net.svcret.admin.client.ui.config.sec.ViewAndEditFactory;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
+import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.BaseGClientSecurity;
 import net.svcret.admin.shared.model.BaseGServerSecurity;
@@ -282,10 +284,13 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		theMethodPanel.add(grid);
 		grid.setEmptyTableWidget(new Label("No methods defined."));
 
+		myMethodDataProvider = new ListDataProvider<GServiceMethod>();
+		myMethodDataProvider.addDataDisplay(grid);
+
 		// Action
 
 		PButtonCell deleteCell = new PButtonCell(AdminPortal.IMAGES.iconRemove());
-		
+
 		Column<GServiceMethod, String> action = new NullColumn<GServiceMethod>(deleteCell);
 		grid.addColumn(action, "");
 		action.setFieldUpdater(new FieldUpdater<GServiceMethod, String>() {
@@ -307,8 +312,61 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 				return SafeHtmlUtils.fromString(theObject.getName());
 			}
 		};
-		int nameColumnIdx = grid.getColumnCount();
 		grid.addColumn(nameColumn, "Name");
+		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
+		ListHandler<GServiceMethod> columnSortHandler = new ListHandler<GServiceMethod>(myMethodDataProvider.getList());
+		columnSortHandler.setComparator(nameColumn, new Comparator<GServiceMethod>() {
+			@Override
+			public int compare(GServiceMethod theO1, GServiceMethod theO2) {
+				return StringUtil.compare(theO1.getName(), theO2.getName());
+			}
+		});
+
+		// Root Elements
+
+		Column<GServiceMethod, SafeHtml> rootElementsColumn = new Column<GServiceMethod, SafeHtml>(new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(GServiceMethod theObject) {
+				return SafeHtmlUtils.fromString(StringUtil.defaultString(theObject.getRootElements()));
+			}
+
+		};
+		grid.addColumn(rootElementsColumn, "Root Elements");
+		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
+		ListHandler<GServiceMethod> rootElementsSortHandler = new ListHandler<GServiceMethod>(myMethodDataProvider.getList());
+		rootElementsSortHandler.setComparator(rootElementsColumn, new Comparator<GServiceMethod>() {
+			@Override
+			public int compare(GServiceMethod theO1, GServiceMethod theO2) {
+				return StringUtil.compare(theO1.getRootElements(), theO2.getRootElements());
+			}
+		});
+
+		// Security Policy
+
+		List<String> secValues = MethodSecurityPolicyEnum.valuesAsNameList();
+		List<String> secTexts = MethodSecurityPolicyEnum.valuesAsFriendlyNameList();
+		PSelectionCell secPolicyCell = new PSelectionCell(secValues, secTexts);
+		secPolicyCell.setDisableWithMessageOnNullValue("No security defined");
+		Column<GServiceMethod, String> secPolicyColumn = new Column<GServiceMethod, String>(secPolicyCell) {
+			@Override
+			public String getValue(GServiceMethod theObject) {
+				if (theObject.getParent().isSecure()) {
+					return theObject.getSecurityPolicy().name();
+				} else {
+					return null;
+				}
+			}
+
+		};
+		grid.addColumn(secPolicyColumn, "Security Policy");
+		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
+		ListHandler<GServiceMethod> secPolicySortHandler = new ListHandler<GServiceMethod>(myMethodDataProvider.getList());
+		secPolicySortHandler.setComparator(rootElementsColumn, new Comparator<GServiceMethod>() {
+			@Override
+			public int compare(GServiceMethod theO1, GServiceMethod theO2) {
+				return theO1.getSecurityPolicy().ordinal() - theO2.getSecurityPolicy().ordinal();
+			}
+		});
 
 		// Usage
 
@@ -330,22 +388,9 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 			}
 
 		};
-		int usageColumnIdx = grid.getColumnCount();
 		grid.addColumn(usageColumn, "Usage");
-
-		myMethodDataProvider = new ListDataProvider<GServiceMethod>();
-		myMethodDataProvider.addDataDisplay(grid);
-
-		grid.getColumn(nameColumnIdx).setSortable(true);
-		grid.getColumn(usageColumnIdx).setSortable(true);
-		ListHandler<GServiceMethod> columnSortHandler = new ListHandler<GServiceMethod>(myMethodDataProvider.getList());
-		columnSortHandler.setComparator(nameColumn, new Comparator<GServiceMethod>() {
-			@Override
-			public int compare(GServiceMethod theO1, GServiceMethod theO2) {
-				return StringUtil.compare(theO1.getName(), theO2.getName());
-			}
-		});
-		columnSortHandler.setComparator(usageColumn, new Comparator<GServiceMethod>() {
+		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
+		secPolicySortHandler.setComparator(usageColumn, new Comparator<GServiceMethod>() {
 			@Override
 			public int compare(GServiceMethod theO1, GServiceMethod theO2) {
 				GServiceVersionDetailedStats detailedStats = myServiceVersion.getDetailedStats();
@@ -380,7 +425,8 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 				return retVal;
 			}
 		});
-		grid.addColumnSortHandler(columnSortHandler);
+		grid.addColumnSortHandler(secPolicySortHandler);
+
 		grid.getColumnSortList().push(nameColumn);
 
 		theMethodPanel.add(new HtmlBr());
@@ -435,7 +481,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		Label urlLabel = new Label("Server Security modules verify that the client which is making requests coming " + "in to the proxy are authorized to invoke the particular service they are attempting to "
 				+ "invoke. If no server security modules are defined for this service version, all requests will be " + "allowed to proceed.");
 		thePanel.add(urlLabel);
-		
+
 		myServerSecurityGrid = new Grid(1, 2);
 		myServerSecurityGrid.addStyleName(CssConstants.PROPERTY_TABLE);
 		thePanel.add(myServerSecurityGrid);
@@ -466,7 +512,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 				module.setUncommittedSessionId(newUncommittedSessionId());
 				getServiceVersion().getServerSecurityList().add(module);
 				updateServerSercurityPanel();
-				
+
 				myServerSecurityModeBox.setEnabled(true);
 				if (myServiceVersion.getServerSecurityMode() == ServerSecurityModeEnum.NONE) {
 					myServerSecurityModeBox.setSelectedIndex(ServerSecurityModeEnum.indexOfDefault());
@@ -477,7 +523,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		});
 
 		thePanel.add(new HtmlH1("Server Security Mode"));
-		
+
 		TwoColumnGrid propsGrid = new TwoColumnGrid();
 		thePanel.add(propsGrid);
 		myServerSecurityModeBox = new ListBox(false);
@@ -498,10 +544,10 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 			}
 		});
 		handleServerSecurityModeChange();
-		if (myServiceVersion.getServerSecurityList().size()==0) {
+		if (myServiceVersion.getServerSecurityList().size() == 0) {
 			myServerSecurityModeBox.setEnabled(false);
 		}
-		
+
 		updateServerSercurityPanel();
 
 	}
@@ -511,7 +557,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		if (index != -1) {
 			ServerSecurityModeEnum mode = ServerSecurityModeEnum.values()[index];
 			myServerSecurityModeDescription.setText(mode.getDescription());
-			if (myServiceVersion!=null) {
+			if (myServiceVersion != null) {
 				myServiceVersion.setServerSecurityMode(mode);
 			}
 		}
@@ -775,7 +821,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 				myEditButton.addClickHandler(this);
 				add(myEditButton);
 			}
-			
+
 			myDeleteButton = new PButton(IMAGES.iconRemove(), MSGS.actions_Remove());
 			myDeleteButton.addClickHandler(this);
 			add(myDeleteButton);

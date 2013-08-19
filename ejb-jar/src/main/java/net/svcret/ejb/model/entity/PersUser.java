@@ -3,9 +3,11 @@ package net.svcret.ejb.model.entity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -54,7 +56,7 @@ public class PersUser extends BasePersObject implements IThrottleable {
 	private boolean myAllowAllDomains;
 
 	@Transient
-	private transient Set<PersServiceVersionMethod> myAllowedMethods;
+	private transient Map<Long, PersUserDomainPermission> myDomainPidToDomainPermission;
 	
 	@OneToMany(cascade = {}, fetch = FetchType.LAZY, orphanRemoval = true, mappedBy = "myUser")
 	@OrderBy("IP_ORDER")
@@ -281,16 +283,49 @@ public class PersUser extends BasePersObject implements IThrottleable {
 	/**
 	 * Does this user have access to the specified method
 	 */
-	public boolean hasPermission(PersServiceVersionMethod theMethod) {
-		if (myAllowedMethods == null) {
+	public boolean hasPermission(PersServiceVersionMethod theMethod, boolean theRequireExplicitly) {
+		if (myDomainPidToDomainPermission == null) {
 			throw new IllegalStateException("Associations have not been loaded");
 		}
 
-		if (myAllowAllDomains) {
+		if (myAllowAllDomains && !theRequireExplicitly) {
 			return true;
 		}
-
-		return myAllowedMethods.contains(theMethod);
+		PersDomain domain = theMethod.getServiceVersion().getService().getDomain();
+		PersUserDomainPermission domainPerm = myDomainPidToDomainPermission.get(domain.getPid());
+		if (domainPerm == null) {
+			return false;
+		}
+		
+		if (domainPerm.isAllowAllServices() && !theRequireExplicitly) {
+			return true;
+		}
+		PersService service = theMethod.getServiceVersion().getService();
+		PersUserServicePermission servicePerm = domainPerm.getServicePidToServicePermission().get(service.getPid());
+		if (servicePerm == null) {
+			return false;
+		}
+		
+		if (servicePerm.isAllowAllServiceVersions() && !theRequireExplicitly) {
+			return true;
+		}
+		BasePersServiceVersion serviceVersion = theMethod.getServiceVersion();
+		PersUserServiceVersionPermission serviceVersionPerm = servicePerm.getServiceVersionPidToServiceVersionPermission().get(serviceVersion.getPid());
+		if (serviceVersionPerm == null) {
+			return false;
+		}
+		
+		if (serviceVersionPerm.isAllowAllServiceVersionMethods() && !theRequireExplicitly) {
+			return true;
+		}
+		
+		PersUserServiceVersionMethodPermission methodPerm = serviceVersionPerm.getMethodPidToMethodPermission().get(theMethod.getPid());
+		if (methodPerm==null) {
+			return false;
+		}
+		
+		return true;
+		//return myAllowedMethods.contains(theMethod);
 	}
 
 	/**
@@ -301,17 +336,15 @@ public class PersUser extends BasePersObject implements IThrottleable {
 	}
 
 	public void loadAllAssociations() {
-		Set<PersServiceVersionMethod> allowedMethods = new HashSet<PersServiceVersionMethod>();
-
-		for (PersUserDomainPermission nextDomain : getDomainPermissions()) {
-			allowedMethods.addAll(nextDomain.getAllAllowedMethods());
+		myDomainPidToDomainPermission = new HashMap<Long, PersUserDomainPermission>();
+		for (PersUserDomainPermission nextDomainPerm : getDomainPermissions()) {
+			myDomainPidToDomainPermission.put(nextDomainPerm.getServiceDomain().getPid(), nextDomainPerm);
+			nextDomainPerm.loadAllAssociations();
 		}
 		
 		getStatus().loadAllAssociations();
 
 		getAllowSourceIps().size();
-
-		myAllowedMethods = allowedMethods;
 	}
 
 	/**

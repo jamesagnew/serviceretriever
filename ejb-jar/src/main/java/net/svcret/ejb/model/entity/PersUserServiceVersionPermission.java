@@ -3,7 +3,10 @@ package net.svcret.ejb.model.entity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -16,6 +19,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
 import org.apache.commons.lang3.Validate;
@@ -53,6 +57,9 @@ public class PersUserServiceVersionPermission extends BasePersObject {
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersionPermission")
 	private Collection<PersUserServiceVersionMethodPermission> myServiceVersionMethodPermissions;
 
+	@Transient
+	private transient Map<Long, PersUserServiceVersionMethodPermission> myServiceVersionMethodPidToServiceVersionMethodPermission;
+
 	/**
 	 * @param theServicePermissions
 	 *            the servicePermissions to set
@@ -70,17 +77,10 @@ public class PersUserServiceVersionPermission extends BasePersObject {
 		return permission;
 	}
 
-	Collection<PersServiceVersionMethod> getAllAllowedMethods() {
-		ArrayList<PersServiceVersionMethod> retVal = new ArrayList<PersServiceVersionMethod>();
-
-		if (myAllowAllServiceVersionMethods) {
-			retVal.addAll(getServiceVersion().getMethods());
-		}
-
-		for (PersUserServiceVersionMethodPermission nextMethod : getServiceVersionMethodPermissions()) {
-			retVal.add(nextMethod.getServiceVersionMethod());
-		}
-		return retVal;
+	public void addServiceVersionMethodPermissions(PersUserServiceVersionMethodPermission thePerm) {
+		getServiceVersionMethodPermissions();
+		myServiceVersionMethodPermissions.add(thePerm);
+		thePerm.setServiceVersionPermission(this);
 	}
 
 	/**
@@ -119,6 +119,27 @@ public class PersUserServiceVersionPermission extends BasePersObject {
 	 */
 	public boolean isAllowAllServiceVersionMethods() {
 		return myAllowAllServiceVersionMethods;
+	}
+
+	public void loadAllAssociations() {
+		myServiceVersionMethodPidToServiceVersionMethodPermission = new HashMap<Long, PersUserServiceVersionMethodPermission>();
+		for (PersUserServiceVersionMethodPermission nextPerm : getServiceVersionMethodPermissions()) {
+			myServiceVersionMethodPidToServiceVersionMethodPermission.put(nextPerm.getServiceVersionMethod().getPid(), nextPerm);
+			nextPerm.loadAllAssociations();
+		}
+
+	}
+
+	public void removePermission(PersServiceVersionMethod theMethod) {
+		Validate.notNull(theMethod);
+
+		getServiceVersionMethodPermissions();
+		for (Iterator<PersUserServiceVersionMethodPermission> iter = myServiceVersionMethodPermissions.iterator(); iter.hasNext();) {
+			if (iter.next().getServiceVersionMethod().equals(theMethod)) {
+				iter.remove();
+			}
+		}
+
 	}
 
 	/**
@@ -164,22 +185,21 @@ public class PersUserServiceVersionPermission extends BasePersObject {
 		}
 	}
 
-	public void addServiceVersionMethodPermissions(PersUserServiceVersionMethodPermission thePerm) {
-		getServiceVersionMethodPermissions();
-		myServiceVersionMethodPermissions.add(thePerm);
-		thePerm.setServiceVersionPermission(this);
+	Collection<PersServiceVersionMethod> getAllAllowedMethods() {
+		ArrayList<PersServiceVersionMethod> retVal = new ArrayList<PersServiceVersionMethod>();
+
+		if (myAllowAllServiceVersionMethods) {
+			retVal.addAll(getServiceVersion().getMethods());
+		}
+
+		for (PersUserServiceVersionMethodPermission nextMethod : getServiceVersionMethodPermissions()) {
+			retVal.add(nextMethod.getServiceVersionMethod());
+		}
+		return retVal;
 	}
 
-	public void removePermission(PersServiceVersionMethod theMethod) {
-		Validate.notNull(theMethod);
-		
-		getServiceVersionMethodPermissions();
-		for (Iterator<PersUserServiceVersionMethodPermission> iter = myServiceVersionMethodPermissions.iterator();iter.hasNext();) {
-			if (iter.next().getServiceVersionMethod().equals(theMethod)) {
-				iter.remove();
-			}
-		}
-		
+	public Map<Long, PersUserServiceVersionMethodPermission> getMethodPidToMethodPermission() {
+		return myServiceVersionMethodPidToServiceVersionMethodPermission;
 	}
 
 }

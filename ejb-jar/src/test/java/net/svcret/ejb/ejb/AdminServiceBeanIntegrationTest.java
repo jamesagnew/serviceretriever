@@ -278,7 +278,28 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		assertEquals(1, response.getDomainList().get(0).getServiceList().get(0).getVersionList().size());
 		assertEquals(1, response.getDomainList().get(0).getServiceList().get(0).getVersionList().get(0).getMethodList().size());
 
+		// Make sure we don't replace identical methods
+		
+		GServiceMethod oldMethod = d1s1v1.getMethodList().remove(0);
+		
+		d1s1v1.getMethodList().add(new GServiceMethod());
+		d1s1v1.getMethodList().get(0).setId(oldMethod.getId());
+		d1s1v1.getMethodList().get(0).setName(oldMethod.getName());
+		d1s1v1.getMethodList().get(0).setRootElements(oldMethod.getRootElements());
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+		
+		newEntityManager();
+		
+		response = mySvc.loadModelUpdate(new ModelUpdateRequest());
+		assertEquals(1, response.getDomainList().size());
+		assertEquals(1, response.getDomainList().get(0).getServiceList().size());
+		assertEquals(1, response.getDomainList().get(0).getServiceList().get(0).getVersionList().size());
+		assertEquals(1, response.getDomainList().get(0).getServiceList().get(0).getVersionList().get(0).getMethodList().size());
+		assertEquals(oldMethod.getPid(), response.getDomainList().get(0).getServiceList().get(0).getVersionList().get(0).getMethodList().get(0).getPid());
+
 	}
+	
+	
 
 	@Test
 	public void testAddMonitorRule() throws ProcessingException {

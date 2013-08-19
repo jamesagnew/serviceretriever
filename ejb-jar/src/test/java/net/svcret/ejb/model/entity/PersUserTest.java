@@ -74,8 +74,8 @@ public class PersUserTest extends BaseJpaTest {
 		PersUser user = mySvc.getOrCreateUser(mySvc.getAuthenticationHost("ah0"), "Username");
 		user.loadAllAssociations();
 
-		assertEquals(false, user.hasPermission(d0s0v0m0));
-		assertEquals(false, user.hasPermission(d1s0v0m0));
+		assertEquals(false, user.hasPermission(d0s0v0m0, false));
+		assertEquals(false, user.hasPermission(d1s0v0m0,false));
 
 		user.setAllowAllDomains(true);
 		mySvc.saveServiceUser(user);
@@ -84,8 +84,8 @@ public class PersUserTest extends BaseJpaTest {
 		user = mySvc.getOrCreateUser(mySvc.getAuthenticationHost("ah0"), "Username");
 		user.loadAllAssociations();
 
-		assertEquals(true, user.hasPermission(d0s0v0m0));
-		assertEquals(true, user.hasPermission(d1s0v0m0));
+		assertEquals(true, user.hasPermission(d0s0v0m0,false));
+		assertEquals(true, user.hasPermission(d1s0v0m0,false));
 
 	}
 

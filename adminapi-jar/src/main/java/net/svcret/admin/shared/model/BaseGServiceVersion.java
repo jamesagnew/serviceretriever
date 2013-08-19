@@ -154,6 +154,9 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 
 		if (theObject.getMethodList() != null) {
 			getMethodList().mergeResults(theObject.getMethodList());
+			for (GServiceMethod next : getMethodList()) {
+				next.setParent(this);
+			}
 		}
 
 		if (theObject.getUrlList() != null) {
@@ -242,6 +245,12 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 		b.append("methodCound=").append(getMethodList().size());
 		b.append("]");
 		return b.toString();
+	}
+
+	public boolean isSecure() {
+		boolean secure = myServerSecurityMode.isSecure();
+		boolean hasModules = myServerSecurityList.size() > 0;
+		return secure && hasModules;
 	}
 
 }

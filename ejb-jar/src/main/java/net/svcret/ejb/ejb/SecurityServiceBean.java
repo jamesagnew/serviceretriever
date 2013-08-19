@@ -12,6 +12,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
@@ -79,9 +80,13 @@ public class SecurityServiceBean implements ISecurityService {
 
 				PersUser authorizedUser = authService.authorize(authHost, myInMemoryUserCatalog, next.getCredentialGrabber());
 				boolean authFailed;
-				
+
 				if (authorizedUser == null) {
-					authFailed=true;
+					if (theMethod.getSecurityPolicy() == MethodSecurityPolicyEnum.ALLOW) {
+						authFailed=false;
+					} else {
+						authFailed = true;
+					}
 				} else {
 					boolean ipAllowed = authorizedUser.determineIfIpIsAllowed(theRequestHostIp);
 					if (ipAllowed == false) {
@@ -89,19 +94,32 @@ public class SecurityServiceBean implements ISecurityService {
 							ourLog.debug("IP {} not allowed by user {} with whitelist {}", new Object[] { theRequestHostIp, authorizedUser, authorizedUser.getAllowSourceIpsAsStrings() });
 						}
 						retVal.setAuthorized(AuthorizationOutcomeEnum.FAILED_IP_NOT_IN_WHITELIST);
-						authFailed=true;
+						authFailed = true;
 					} else {
 
-						boolean authorized = authorizedUser.hasPermission(theMethod);
+						boolean authorized;
+						switch (theMethod.getSecurityPolicy()) {
+						case ALLOW:
+							authorized = true;
+							break;
+						case REJECT_UNLESS_ALLOWED:
+							authorized = authorizedUser.hasPermission(theMethod, false);
+							break;
+						case REJECT_UNLESS_SPECIFICALLY_ALLOWED:
+							authorized = authorizedUser.hasPermission(theMethod, true);
+							break;
+						default:
+							throw new IllegalStateException("Unknown security policy: " + theMethod.getSecurityPolicy());
+						}
 
 						ourLog.debug("Authorization results: {}", authorized);
 						if (authorized) {
-							authFailed=false;
+							authFailed = false;
 							if (retVal.getAuthorizedUser() == null) {
 								retVal.setAuthorizedUser(authorizedUser);
 							}
 						} else {
-							authFailed=true;
+							authFailed = true;
 							retVal.setAuthorized(FAILED_USER_NO_PERMISSIONS);
 						}
 					}
@@ -110,10 +128,10 @@ public class SecurityServiceBean implements ISecurityService {
 
 				if (authFailed) {
 					failed++;
-				}else {
+				} else {
 					passed++;
 				}
-				
+
 				if (serverSecurityMode == ServerSecurityModeEnum.ALLOW_ANY || serverSecurityMode == ServerSecurityModeEnum.REQUIRE_ANY) {
 					if (passed > 0) {
 						break;

@@ -10,6 +10,7 @@ import java.util.Set;
 
 import net.svcret.admin.client.rpc.ModelUpdateService;
 import net.svcret.admin.shared.ServiceFailureException;
+import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
@@ -125,12 +126,14 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		met.setPid(MET1_PID);
 		met.setId("Method 1");
 		met.setName("Method 1");
+		met.setSecurityPolicy(MethodSecurityPolicyEnum.REJECT_UNLESS_ALLOWED);
 		ver.getMethodList().add(met);
 
 		met = new GServiceMethod();
 		met.setPid(MET2_PID);
 		met.setId("Method 2");
 		met.setName("Method 2");
+		met.setSecurityPolicy(MethodSecurityPolicyEnum.REJECT_UNLESS_ALLOWED);
 		ver.getMethodList().add(met);
 
 		svc = new GService();
@@ -591,11 +594,13 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		GServiceMethod method = new GServiceMethod();
 		method.setId("method1");
 		method.setName("method1");
+		method.setSecurityPolicy(MethodSecurityPolicyEnum.REJECT_UNLESS_ALLOWED);
 		retVal.getMethodList().add(method);
 
 		method = new GServiceMethod();
 		method.setId("method2");
 		method.setName("method2");
+		method.setSecurityPolicy(MethodSecurityPolicyEnum.REJECT_UNLESS_ALLOWED);
 		retVal.getMethodList().add(method);
 
 		GServiceVersionUrl url = new GServiceVersionUrl();

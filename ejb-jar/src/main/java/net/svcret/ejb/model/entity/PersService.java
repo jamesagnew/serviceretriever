@@ -25,6 +25,7 @@ import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
+import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.ServerSecuredEnum;
 
@@ -42,6 +43,9 @@ public class PersService extends BasePersServiceCatalogItem {
 
 	@Column(name = "SVC_ACTIVE")
 	private boolean myActive;
+
+	@Column(name="SEC_POLICY", length=50, nullable=false)
+	private MethodSecurityPolicyEnum mySecurityPolicy=MethodSecurityPolicyEnum.REJECT_UNLESS_ALLOWED;
 
 	@ManyToOne()
 	@JoinColumn(name = "DOMAIN_PID", referencedColumnName = "PID", nullable = false)

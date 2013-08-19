@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.IAuthorizationService.ILocalDatabaseAuthorizationService;
@@ -163,6 +164,7 @@ public class SecurityServiceBeanTest {
 	public void testAuthorizeAllowMethod() throws ProcessingException {
 				
 		when(dbServiceAuthorizeMethod(myGoodGrabber1)).thenReturn(myUser);
+		when(dbServiceAuthorizeMethod(myBadGrabber)).thenReturn(null);
 		
 		PersUserDomainPermission domainPer = myUser.addPermission(myD0);
 		PersUserServicePermission servicePer = domainPer.addPermission(myD0S0);
@@ -181,6 +183,53 @@ public class SecurityServiceBeanTest {
 		myUser.loadAllAssociations();
 		assertEquals(AuthorizationOutcomeEnum.FAILED_USER_NO_PERMISSIONS, mySvc.authorizeMethodInvocation(toList(myHost, myGoodGrabber1), myD0S0V0M0,"").isAuthorized());
 		assertEquals(AuthorizationOutcomeEnum.FAILED_USER_NO_PERMISSIONS, mySvc.authorizeMethodInvocation(toList(myHost, myGoodGrabber1), myD0S0V0M1,"").isAuthorized());
+		
+		/*
+		 * Check security policies
+		 */
+
+		// reject unless allowed		
+
+		versionPer.addPermission(myD0S0V0M0);
+		myUser.loadAllAssociations();
+		myD0S0V0M0.setSecurityPolicy(MethodSecurityPolicyEnum.REJECT_UNLESS_ALLOWED);
+		assertEquals(AuthorizationOutcomeEnum.AUTHORIZED, mySvc.authorizeMethodInvocation(toList(myHost, myGoodGrabber1), myD0S0V0M0,"").isAuthorized());
+		assertEquals(AuthorizationOutcomeEnum.FAILED_USER_NO_PERMISSIONS, mySvc.authorizeMethodInvocation(toList(myHost, myGoodGrabber1), myD0S0V0M1,"").isAuthorized());
+		assertEquals(AuthorizationOutcomeEnum.FAILED_BAD_CREDENTIALS_IN_REQUEST, mySvc.authorizeMethodInvocation(toList(myHost, myBadGrabber), myD0S0V0M0,"").isAuthorized());
+		assertEquals(AuthorizationOutcomeEnum.FAILED_BAD_CREDENTIALS_IN_REQUEST, mySvc.authorizeMethodInvocation(toList(myHost, myBadGrabber), myD0S0V0M1,"").isAuthorized());
+		versionPer.removePermission(myD0S0V0M0);
+
+		servicePer.addPermission(myD0S0V0).setAllowAllServiceVersionMethods(true);
+		myUser.loadAllAssociations();
+		myD0S0V0M0.setSecurityPolicy(MethodSecurityPolicyEnum.REJECT_UNLESS_ALLOWED);
+		assertEquals(AuthorizationOutcomeEnum.AUTHORIZED, mySvc.authorizeMethodInvocation(toList(myHost, myGoodGrabber1), myD0S0V0M0,"").isAuthorized());
+		assertEquals(AuthorizationOutcomeEnum.AUTHORIZED, mySvc.authorizeMethodInvocation(toList(myHost, myGoodGrabber1), myD0S0V0M1,"").isAuthorized());
+		assertEquals(AuthorizationOutcomeEnum.FAILED_BAD_CREDENTIALS_IN_REQUEST, mySvc.authorizeMethodInvocation(toList(myHost, myBadGrabber), myD0S0V0M0,"").isAuthorized());
+		assertEquals(AuthorizationOutcomeEnum.FAILED_BAD_CREDENTIALS_IN_REQUEST, mySvc.authorizeMethodInvocation(toList(myHost, myBadGrabber), myD0S0V0M1,"").isAuthorized());
+		servicePer.removePermission(myD0S0V0);
+
+		// reject unless specifically allowed
+		
+		servicePer.addPermission(myD0S0V0).setAllowAllServiceVersionMethods(true);
+		myUser.loadAllAssociations();
+		myD0S0V0M0.setSecurityPolicy(MethodSecurityPolicyEnum.REJECT_UNLESS_SPECIFICALLY_ALLOWED);
+		myD0S0V0M1.setSecurityPolicy(MethodSecurityPolicyEnum.REJECT_UNLESS_SPECIFICALLY_ALLOWED);
+		assertEquals(AuthorizationOutcomeEnum.FAILED_USER_NO_PERMISSIONS, mySvc.authorizeMethodInvocation(toList(myHost, myGoodGrabber1), myD0S0V0M0,"").isAuthorized());
+		assertEquals(AuthorizationOutcomeEnum.FAILED_USER_NO_PERMISSIONS, mySvc.authorizeMethodInvocation(toList(myHost, myGoodGrabber1), myD0S0V0M1,"").isAuthorized());
+		assertEquals(AuthorizationOutcomeEnum.FAILED_BAD_CREDENTIALS_IN_REQUEST, mySvc.authorizeMethodInvocation(toList(myHost, myBadGrabber), myD0S0V0M0,"").isAuthorized());
+		assertEquals(AuthorizationOutcomeEnum.FAILED_BAD_CREDENTIALS_IN_REQUEST, mySvc.authorizeMethodInvocation(toList(myHost, myBadGrabber), myD0S0V0M1,"").isAuthorized());
+
+		servicePer.addPermission(myD0S0V0).addPermission(myD0S0V0M0);
+		myUser.loadAllAssociations();
+		myD0S0V0M0.setSecurityPolicy(MethodSecurityPolicyEnum.REJECT_UNLESS_SPECIFICALLY_ALLOWED);
+		myD0S0V0M1.setSecurityPolicy(MethodSecurityPolicyEnum.REJECT_UNLESS_SPECIFICALLY_ALLOWED);
+		assertEquals(AuthorizationOutcomeEnum.AUTHORIZED, mySvc.authorizeMethodInvocation(toList(myHost, myGoodGrabber1), myD0S0V0M0,"").isAuthorized());
+		assertEquals(AuthorizationOutcomeEnum.FAILED_USER_NO_PERMISSIONS, mySvc.authorizeMethodInvocation(toList(myHost, myGoodGrabber1), myD0S0V0M1,"").isAuthorized());
+		assertEquals(AuthorizationOutcomeEnum.FAILED_BAD_CREDENTIALS_IN_REQUEST, mySvc.authorizeMethodInvocation(toList(myHost, myBadGrabber), myD0S0V0M0,"").isAuthorized());
+		assertEquals(AuthorizationOutcomeEnum.FAILED_BAD_CREDENTIALS_IN_REQUEST, mySvc.authorizeMethodInvocation(toList(myHost, myBadGrabber), myD0S0V0M1,"").isAuthorized());
+		servicePer.removePermission(myD0S0V0);
+
+
 	}
 
 	@Test
