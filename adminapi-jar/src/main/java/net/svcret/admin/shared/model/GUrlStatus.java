@@ -14,7 +14,6 @@ public class GUrlStatus implements Serializable {
 	private Date myLastSuccess;
 	private String myLastSuccessMessage;
 	private StatusEnum myStatus;
-	private String myUrl;
 	private long myUrlPid;
 
 	/**

@@ -126,4 +126,6 @@ public interface IAdminService {
 
 	Collection<DtoLibraryMessage> loadLibraryMessages() throws ProcessingException;
 
+	Collection<GMonitorRuleFiring> loadAllActiveRuleFirings()throws ProcessingException;
+
 }

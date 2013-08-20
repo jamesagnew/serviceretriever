@@ -34,7 +34,8 @@ import org.hibernate.annotations.Index;
 @Entity()
 @Table(name = "PX_MONITOR_RULE_FIRING")
 @NamedQueries(value= {
-	@NamedQuery(name=Queries.RULEFIRING, query=Queries.RULEFIRING_Q)
+	@NamedQuery(name=Queries.RULEFIRING, query=Queries.RULEFIRING_Q),
+	@NamedQuery(name=Queries.RULEFIRING_FINDACTIVE, query=Queries.RULEFIRING_FINDACTIVE_Q)
 })
 //@formatter:on
 

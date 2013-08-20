@@ -14,7 +14,10 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
-import net.svcret.ejb.api.ClientAuthTypeEnum;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
+import net.svcret.admin.shared.model.ClientSecurityEnum;
 
 import com.google.common.base.Objects;
 
@@ -58,7 +61,7 @@ public abstract class PersBaseClientAuth<T extends PersBaseClientAuth<?>> extend
 				(Objects.equal(myPid, ((PersBaseClientAuth<?>) theObj).myPid) || (relevantPropertiesEqual((T)theObj)));
 	}
 
-	public abstract ClientAuthTypeEnum getAuthType();
+	public abstract ClientSecurityEnum getAuthType();
 
 	/**
 	 * @return the optLock
@@ -80,14 +83,14 @@ public abstract class PersBaseClientAuth<T extends PersBaseClientAuth<?>> extend
 	public String getPassword() {
 		return myPassword;
 	}
-	
+
 	/**
 	 * @return the pid
 	 */
 	public Long getPid() {
 		return myPid;
 	}
-
+	
 	/**
 	 * @return the serviceVersion
 	 */
@@ -113,6 +116,8 @@ public abstract class PersBaseClientAuth<T extends PersBaseClientAuth<?>> extend
 	public void loadAllAssociations() {
 		// nothing
 	}
+
+	public abstract void merge(PersBaseClientAuth<?> theObj);
 
 	/**
 	 * Subclasses must provide an implementation which compares all
@@ -167,6 +172,11 @@ public abstract class PersBaseClientAuth<T extends PersBaseClientAuth<?>> extend
 		myUsername = theUsername;
 	}
 
-	public abstract void merge(PersBaseClientAuth<?> theObj);
+	@Override
+	public String toString() {
+		ToStringBuilder b = new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE);
+		b.append("pid", getPid());
+		return b.toString();
+	}
 
 }

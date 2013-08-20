@@ -876,4 +876,9 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		return loadLibraryMessages(null, 0);
 	}
 
+	@Override
+	public Map<Long, GMonitorRuleFiring> getLatestFailingMonitorRuleFiringForRulePids() {
+		return new HashMap<Long, GMonitorRuleFiring>();
+	}
+
 }

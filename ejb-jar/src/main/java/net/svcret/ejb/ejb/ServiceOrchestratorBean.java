@@ -2,6 +2,7 @@ package net.svcret.ejb.ejb;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -47,17 +48,22 @@ import net.svcret.ejb.ex.ThrottleException;
 import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
+import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
+import net.svcret.ejb.model.entity.http.PersHttpBasicClientAuth;
 import net.svcret.ejb.model.entity.http.PersHttpBasicCredentialGrabber;
 import net.svcret.ejb.model.entity.http.PersHttpBasicServerAuth;
 import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.util.Validate;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -271,6 +277,20 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 		results.setServiceInvoker(svcInvoker);
 
+		for (PersBaseClientAuth<?> next : serviceVersion.getClientAuths()) {
+			if (next instanceof PersHttpBasicClientAuth) {
+				PersHttpBasicClientAuth clientAuth = (PersHttpBasicClientAuth) next;
+				String authorizationUnescaped = StringUtils.defaultString(clientAuth.getUsername()) + ":" + StringUtils.defaultString(clientAuth.getPassword());
+				String encoded;
+				try {
+					encoded = Base64.encodeBase64String(authorizationUnescaped.getBytes("ISO-8859-1"));
+				} catch (UnsupportedEncodingException e) {
+					throw new Error("Could not find US-ASCII encoding. This shouldn't happen!");
+				}
+				results.getMethodHeaders().put("Authorization", "Basic " + encoded);
+			}
+		}
+
 		return results;
 	}
 
@@ -298,7 +318,6 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			urlPool.setPreferredUrl(theForceUrl);
 		}
 
-
 		PersHttpClientConfig clientConfig = serviceVersion.getHttpClientConfig();
 		urlPool.setConnectTimeoutMillis(clientConfig.getConnectTimeoutMillis());
 		urlPool.setReadTimeoutMillis(clientConfig.getReadTimeoutMillis());
@@ -325,7 +344,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 		if (theRecordOutcome) {
 			myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), requestLength, method, user, httpResponse, invocationResponse, theThrottleDelayIfAny);
-			logTransaction(theRequest,method, authorized, httpResponse, invocationResponse);
+			logTransaction(theRequest, method, authorized, httpResponse, invocationResponse);
 		}
 
 		ResponseTypeEnum responseType = invocationResponse.getResponseType();
@@ -360,7 +379,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			}
 
 			PersServiceVersionMethod method = results.getMethodDefinition();
-			List<AuthorizationRequestBean> authRequests=new ArrayList<ISecurityService.AuthorizationRequestBean>();
+			List<AuthorizationRequestBean> authRequests = new ArrayList<ISecurityService.AuthorizationRequestBean>();
 			for (PersBaseServerAuth<?, ?> nextServerAuth : serviceVersion.getServerAuths()) {
 				ICredentialGrabber credentials;
 				if (nextServerAuth instanceof PersHttpBasicServerAuth) {
@@ -378,7 +397,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 				authRequests.add(new AuthorizationRequestBean(authHost, credentials));
 				ourLog.trace("Checking credentials: {}", credentials);
 			}
-			
+
 			authorized = mySecuritySvc.authorizeMethodInvocation(authRequests, method, theRequest.getRequestHostIp());
 
 		}

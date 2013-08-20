@@ -453,7 +453,7 @@ public class RuntimeStatusBeanTest {
 
 
 	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked", "unused" })
 	@Test
 	public void testRecordThrottleReject() throws ParseException {
 		Date ts1 = myFmt.parse("2013-01-01 10:00:09");

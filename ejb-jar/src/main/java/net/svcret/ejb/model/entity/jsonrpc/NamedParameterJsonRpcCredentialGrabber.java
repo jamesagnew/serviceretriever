@@ -39,6 +39,8 @@ public class NamedParameterJsonRpcCredentialGrabber extends BaseCredentialGrabbe
 
 			private boolean myGrabPasswordNext;
 			private boolean myGrabUsernameNext;
+			
+			@SuppressWarnings("unused")
 			private int myParamLevel; // TODO: should use this
 
 			@Override

@@ -415,11 +415,11 @@ public class ChartingServiceBean implements IChartingServiceBean {
 	public byte[] renderUserMethodGraphForUser(long theUserPid) {
 		ourLog.info("Rendering latency graph for user {}", theUserPid);
 
-		final List<Double> invCount = new ArrayList<Double>();
-		final List<Double> invCountFault = new ArrayList<Double>();
-		final List<Double> invCountFail = new ArrayList<Double>();
-		final List<Double> invCountSecurityFail = new ArrayList<Double>();
-		final List<Long> timestamps = new ArrayList<Long>();
+//		final List<Double> invCount = new ArrayList<Double>();
+//		final List<Double> invCountFault = new ArrayList<Double>();
+//		final List<Double> invCountFail = new ArrayList<Double>();
+//		final List<Double> invCountSecurityFail = new ArrayList<Double>();
+//		final List<Long> timestamps = new ArrayList<Long>();
 
 //		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
 //		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {

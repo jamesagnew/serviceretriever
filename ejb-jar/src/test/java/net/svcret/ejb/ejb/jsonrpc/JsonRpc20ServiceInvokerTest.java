@@ -151,6 +151,8 @@ public class JsonRpc20ServiceInvokerTest {
 		when(def.getServerAuths()).thenReturn(new ArrayList<PersBaseServerAuth<?, ?>>());
 
 		DefaultAnswer.setRunTime();
+		
+		@SuppressWarnings("unused")
 		InvocationResultsBean resp;
 
 		String request = //- 

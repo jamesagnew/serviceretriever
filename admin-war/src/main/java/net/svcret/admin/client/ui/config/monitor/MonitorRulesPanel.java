@@ -1,11 +1,14 @@
 package net.svcret.admin.client.ui.config.monitor;
 
-import static net.svcret.admin.client.AdminPortal.*;
+import static net.svcret.admin.client.AdminPortal.IMAGES;
+import static net.svcret.admin.client.AdminPortal.MSGS;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import net.svcret.admin.client.AdminPortal;
@@ -16,6 +19,7 @@ import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.PButtonCell;
 import net.svcret.admin.client.ui.components.PCellTable;
 import net.svcret.admin.client.ui.config.svcver.NullColumn;
+import net.svcret.admin.client.ui.stats.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.enm.MonitorRuleTypeEnum;
@@ -25,9 +29,11 @@ import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
+import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GMonitorRulePassive;
 import net.svcret.admin.shared.model.GService;
+import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.cell.client.SafeHtmlCell;
@@ -37,7 +43,9 @@ import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.cellview.client.Column;
+import com.google.gwt.user.cellview.client.ColumnSortEvent.ListHandler;
 import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
@@ -52,26 +60,44 @@ public class MonitorRulesPanel extends FlowPanel {
 	private ListDataProvider<BaseGMonitorRule> myDataProvider;
 	private ListBox myAddTypeBox;
 	private GDomainList myDomainList;
+	private Map<Long, GMonitorRuleFiring> myRulePidToLatestMonitorRuleFiring;
 
 	public MonitorRulesPanel() {
 		initListPanel();
 
-		Model.getInstance().loadMonitorRuleList(new IAsyncLoadCallback<GMonitorRuleList>() {
+		AdminPortal.MODEL_SVC.loadMonitorRuleList(new AsyncCallback<GMonitorRuleList>() {
 			@Override
 			public void onSuccess(final GMonitorRuleList theResult) {
 				Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
 					@Override
-					public void onSuccess(GDomainList theDomainList) {
-						myDomainList = theDomainList;
-						myConfigListLoadingSpinner.hideCompletely();
-						setRuleList(theResult);
+					public void onSuccess(final GDomainList theDomainList) {
+						AdminPortal.MODEL_SVC.getLatestFailingMonitorRuleFiringForRulePids(new AsyncCallback<Map<Long, GMonitorRuleFiring>>() {
+							@Override
+							public void onSuccess(Map<Long, GMonitorRuleFiring> theRulePidToLatestMonitorRuleFiring) {
+								myDomainList = theDomainList;
+								myConfigListLoadingSpinner.hideCompletely();
+								setRuleList(theResult, theRulePidToLatestMonitorRuleFiring);
+							}
+
+							@Override
+							public void onFailure(Throwable theCaught) {
+								Model.handleFailure(theCaught);
+							}
+						});
 					}
 				});
+			}
+
+			@Override
+			public void onFailure(Throwable theCaught) {
+				Model.handleFailure(theCaught);
 			}
 		});
 	}
 
-	private void setRuleList(GMonitorRuleList theResult) {
+	private void setRuleList(GMonitorRuleList theResult, Map<Long, GMonitorRuleFiring> theRulePidToLatestMonitorRuleFiring) {
+		myRulePidToLatestMonitorRuleFiring = theRulePidToLatestMonitorRuleFiring;
+
 		myDataProvider.getList().clear();
 		myDataProvider.getList().addAll(theResult.toCollection());
 		myDataProvider.refresh();
@@ -195,6 +221,12 @@ public class MonitorRulesPanel extends FlowPanel {
 
 		myGrid.setEmptyTableWidget(new Label("No rules defined"));
 
+		myDataProvider = new ListDataProvider<BaseGMonitorRule>();
+		myDataProvider.addDataDisplay(myGrid);
+
+		ListHandler<BaseGMonitorRule> sortHandler = new ListHandler<BaseGMonitorRule>(myDataProvider.getList());
+		myGrid.addColumnSortHandler(sortHandler);
+
 		// Edit
 		Column<BaseGMonitorRule, String> editColumn = new NullColumn<BaseGMonitorRule>(new PButtonCell(IMAGES.iconEdit(), MSGS.actions_Edit()));
 		myGrid.addColumn(editColumn, "");
@@ -218,6 +250,20 @@ public class MonitorRulesPanel extends FlowPanel {
 			}
 		};
 		myGrid.addColumn(enabledColumn, "Enabled");
+		myGrid.getColumn(myGrid.getColumnCount() - 1).setSortable(true);
+		sortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<BaseGMonitorRule>() {
+			@Override
+			public int compare(BaseGMonitorRule theO1, BaseGMonitorRule theO2) {
+				if ((theO1.isActive()) == (theO2.isActive())) {
+					return 0;
+				}
+				if (theO1.isActive()) {
+					return 1;
+				} else {
+					return -1;
+				}
+			}
+		});
 
 		// Active
 		Column<BaseGMonitorRule, SafeHtml> typeColumn = new Column<BaseGMonitorRule, SafeHtml>(new SafeHtmlCell()) {
@@ -227,6 +273,13 @@ public class MonitorRulesPanel extends FlowPanel {
 			}
 		};
 		myGrid.addColumn(typeColumn, "Type");
+		myGrid.getColumn(myGrid.getColumnCount() - 1).setSortable(true);
+		sortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<BaseGMonitorRule>() {
+			@Override
+			public int compare(BaseGMonitorRule theO1, BaseGMonitorRule theO2) {
+				return theO1.getRuleType().ordinal()- theO2.getRuleType().ordinal();
+			}
+		});
 
 		// Criteria
 		Column<BaseGMonitorRule, SafeHtml> criteriaColumn = new Column<BaseGMonitorRule, SafeHtml>(new SafeHtmlCell()) {
@@ -260,7 +313,14 @@ public class MonitorRulesPanel extends FlowPanel {
 			}
 		};
 		myGrid.addColumn(ruleNameColumn, "Name");
-
+		myGrid.getColumn(myGrid.getColumnCount() - 1).setSortable(true);
+		sortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<BaseGMonitorRule>() {
+			@Override
+			public int compare(BaseGMonitorRule theO1, BaseGMonitorRule theO2) {
+				return StringUtil.compare(theO1.getName(), theO2.getName());
+			}
+		});
+		
 		// Applies To
 		Column<BaseGMonitorRule, SafeHtml> appliesToColumn = new Column<BaseGMonitorRule, SafeHtml>(new SafeHtmlCell()) {
 			@Override
@@ -285,8 +345,41 @@ public class MonitorRulesPanel extends FlowPanel {
 		};
 		myGrid.addColumn(appliesToColumn, "Applies To");
 
-		myDataProvider = new ListDataProvider<BaseGMonitorRule>();
-		myDataProvider.addDataDisplay(myGrid);
+		// Current Status
+		Column<BaseGMonitorRule, SafeHtml> currentStatusColumn = new Column<BaseGMonitorRule, SafeHtml>(new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(BaseGMonitorRule theObject) {
+				GMonitorRuleFiring latestFiring = myRulePidToLatestMonitorRuleFiring.get(theObject.getPid());
+				if (latestFiring == null) {
+					return SafeHtmlUtils.fromSafeConstant("Ok");
+				}
+
+				// TODO: If the rule isn't currently firing, also include the last time it did fire
+
+				return SafeHtmlUtils.fromTrustedString("Failing since " + DateUtil.formatTimeElapsedForMessage(latestFiring.getStartDate()));
+			}
+		};
+		myGrid.addColumn(currentStatusColumn, "Current Status");
+		myGrid.getColumn(myGrid.getColumnCount() - 1).setSortable(true);
+		sortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<BaseGMonitorRule>() {
+			@Override
+			public int compare(BaseGMonitorRule theO1, BaseGMonitorRule theO2) {
+				GMonitorRuleFiring firing1 = myRulePidToLatestMonitorRuleFiring.get(theO1.getPid());
+				GMonitorRuleFiring firing2 = myRulePidToLatestMonitorRuleFiring.get(theO2.getPid());
+				if (firing1==null&&firing2==null) {
+					return 0;
+				}
+				if (firing1==null) {
+					return -1;
+				}
+				if (firing2==null) {
+					return 1;
+				}
+				return firing1.getStartDate().compareTo(firing2.getStartDate());
+			}
+		});
+
+		myGrid.getColumnSortList().push(ruleNameColumn);
 
 		HorizontalPanel controlsPanel = new HorizontalPanel();
 		contentPanel.add(controlsPanel);
@@ -297,7 +390,7 @@ public class MonitorRulesPanel extends FlowPanel {
 		}
 		myAddTypeBox.setSelectedIndex(0);
 		controlsPanel.add(myAddTypeBox);
-		
+
 		PButton addButton = new PButton(AdminPortal.IMAGES.iconAdd(), AdminPortal.MSGS.actions_Add());
 		addButton.addClickHandler(new ClickHandler() {
 			@Override

@@ -7,6 +7,12 @@ public enum ClientSecurityEnum {
 		@Override
 		public BaseGClientSecurity newInstance() {
 			return new GWsSecUsernameTokenClientSecurity();
+		}}, 
+		
+	HTTP_BASICAUTH("HTTP Basic Auth"){
+		@Override
+		public BaseGClientSecurity newInstance() {
+			return new DtoClientSecurityHttpBasicAuth();
 		}};
 	
 	private String myName;

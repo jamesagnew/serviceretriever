@@ -157,53 +157,60 @@ class RequestPipeline {
 	 */
 	private void processHeader(StartElement theStartElem, String theXmlPrefix, XMLEventReader theStreamReader, XMLEventWriter theStreamWriter) throws ProcessingException {
 
-		boolean haveClientSecurity = myClientAuths.size() > 0;
-
-		if (!haveClientSecurity) {
-			try {
-				if (theStartElem != null) {
-					theStreamWriter.add(theStartElem);
-				}
-			} catch (XMLStreamException e1) {
-				throw new ProcessingException(e1);
+		boolean haveClientSecurity = false;
+		for (PersBaseClientAuth<?> next : myClientAuths) {
+			if (next instanceof PersWsSecUsernameTokenClientAuth) {
+				haveClientSecurity = true;
+				break;
 			}
 		}
 
-		List<XMLEvent> headerEvents = new ArrayList<XMLEvent>();
 		try {
-			while (theStreamReader.hasNext()) {
-				XMLEvent nextEvent = theStreamReader.nextEvent();
+			StartElement headerStart = ourEventFactory.createStartElement(Constants.getSoapenvHeaderQname(theXmlPrefix), null, null);
+			theStreamWriter.add(headerStart);
+		} catch (XMLStreamException e1) {
+			throw new ProcessingException(e1);
+		}
 
-				if (nextEvent.isEndElement()) {
-					EndElement elem = (EndElement) nextEvent;
-					if (Constants.SOAPENV11_HEADER_QNAME.equals(elem.getName())) {
-						if (!haveClientSecurity) {
-							theStreamWriter.add(nextEvent);
+		List<XMLEvent> headerEvents = new ArrayList<XMLEvent>();
+		if (theStartElem != null) {
+			try {
+				while (theStreamReader.hasNext()) {
+					XMLEvent nextEvent = theStreamReader.nextEvent();
+
+					if (nextEvent.isEndElement()) {
+						EndElement elem = (EndElement) nextEvent;
+						if (Constants.SOAPENV11_HEADER_QNAME.equals(elem.getName())) {
+							break;
 						}
-						break;
 					}
+
+					headerEvents.add(nextEvent);
+
+					if (!haveClientSecurity) {
+						theStreamWriter.add(nextEvent);
+					}
+
 				}
-
-				headerEvents.add(nextEvent);
-
-				if (!haveClientSecurity) {
-					theStreamWriter.add(nextEvent);
-				}
-
+			} catch (XMLStreamException e) {
+				throw new ProcessingException(e);
 			}
-		} catch (XMLStreamException e) {
-			throw new ProcessingException(e);
 		}
 
 		/*
 		 * Grab security headers
 		 */
 		for (PersBaseServerAuth<?, ?> next : myServerAuths) {
-			if (next instanceof PersWsSecUsernameTokenServerAuth) {
+			switch (next.getAuthType()) {
+			case HTTP_BASIC_AUTH:
+				// Can ignore these
+				break;
+			case JSONRPC_NAMED_PARAMETER:
+				throw new InternalErrorException("Don't know how to handle server auth of type: " + next);
+			case WSSEC_UT:
 				ICredentialGrabber grabber = ((PersWsSecUsernameTokenServerAuth) next).newCredentialGrabber(headerEvents);
 				myCredentialGrabbers.add(grabber);
-			} else {
-				throw new InternalErrorException("Don't know how to handle server auth of type: " + next);
+				break;
 			}
 		}
 
@@ -213,6 +220,13 @@ class RequestPipeline {
 			} catch (XMLStreamException e) {
 				throw new ProcessingException(e);
 			}
+		}
+		
+		try {
+			EndElement headerEnd = ourEventFactory.createEndElement(Constants.getSoapenvHeaderQname(theXmlPrefix), null);
+			theStreamWriter.add(headerEnd);
+		} catch (XMLStreamException e1) {
+			throw new ProcessingException(e1);
 		}
 
 	}
@@ -226,10 +240,10 @@ class RequestPipeline {
 	}
 
 	private void writeSecurityHeader(String theXmlPrefix, XMLEventWriter theStreamWriter) throws XMLStreamException {
-		StartElement headerStart = ourEventFactory.createStartElement(Constants.getSoapenvHeaderQname(theXmlPrefix), null, null);
-		theStreamWriter.add(headerStart);
-
 		int secIndex = 1;
+		
+		ourLog.debug("Applying client auth modules: {}", myClientAuths);
+		
 		for (PersBaseClientAuth<?> nextAuth : myClientAuths) {
 			if (nextAuth instanceof PersWsSecUsernameTokenClientAuth) {
 				PersWsSecUsernameTokenClientAuth auth = (PersWsSecUsernameTokenClientAuth) nextAuth;
@@ -279,9 +293,6 @@ class RequestPipeline {
 				theStreamWriter.add(secEnd);
 			}
 		}
-
-		EndElement headerEnd = ourEventFactory.createEndElement(Constants.getSoapenvHeaderQname(theXmlPrefix), null);
-		theStreamWriter.add(headerEnd);
 	}
 
 	public String getMethodName() {

@@ -28,6 +28,7 @@ import net.svcret.admin.shared.model.BaseGDashboardObjectWithUrls;
 import net.svcret.admin.shared.model.BaseGMonitorRule;
 import net.svcret.admin.shared.model.BaseGServerSecurity;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.DtoClientSecurityHttpBasicAuth;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
@@ -130,6 +131,7 @@ import net.svcret.ejb.model.entity.PersUserServicePermission;
 import net.svcret.ejb.model.entity.PersUserServiceVersionMethodPermission;
 import net.svcret.ejb.model.entity.PersUserServiceVersionPermission;
 import net.svcret.ejb.model.entity.PersUserStatus;
+import net.svcret.ejb.model.entity.http.PersHttpBasicClientAuth;
 import net.svcret.ejb.model.entity.http.PersHttpBasicServerAuth;
 import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcServerAuth;
 import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
@@ -197,6 +199,16 @@ public class AdminServiceBean implements IAdminService {
 		return toUi(domain, false, null);
 	}
 
+	@Override
+	public Collection<GMonitorRuleFiring> loadAllActiveRuleFirings() {
+		Collection<GMonitorRuleFiring> retVal=new ArrayList<GMonitorRuleFiring>();
+		List<PersMonitorRuleFiring> firings = myDao.loadMonitorRuleFiringsWhichAreActive();
+		for (PersMonitorRuleFiring nextFiring : firings) {
+			retVal.add(toUi(nextFiring));
+		}
+		return retVal;
+	}
+	
 	@Override
 	public GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ProcessingException {
 		Validate.notBlank(theId, "ID");
@@ -860,7 +872,8 @@ public class AdminServiceBean implements IAdminService {
 
 		PersService newService = fromUi(theService);
 		service.merge(newService);
-		myDao.saveService(service);
+		
+		myServiceRegistry.saveService(service);
 
 		// TODO: make this synchronous? (ie don't use a cached version, or force a cache refresh or something?
 		return loadDomainList();
@@ -1202,14 +1215,22 @@ public class AdminServiceBean implements IAdminService {
 
 	private PersBaseClientAuth<?> fromUi(BaseGClientSecurity theObj, BasePersServiceVersion theServiceVersion) {
 		switch (theObj.getType()) {
-		case WSSEC_UT:
+		case WSSEC_UT:{
 			GWsSecUsernameTokenClientSecurity obj = (GWsSecUsernameTokenClientSecurity) theObj;
 			PersWsSecUsernameTokenClientAuth retVal = new PersWsSecUsernameTokenClientAuth();
 			retVal.setPid(obj.getPidOrNull());
 			retVal.setUsername(obj.getUsername());
 			retVal.setPassword(obj.getPassword());
 			retVal.setServiceVersion(theServiceVersion);
-			return retVal;
+			return retVal;}
+		case HTTP_BASICAUTH:{
+			DtoClientSecurityHttpBasicAuth obj = (DtoClientSecurityHttpBasicAuth) theObj;
+			PersHttpBasicClientAuth retVal = new PersHttpBasicClientAuth();
+			retVal.setPid(obj.getPidOrNull());
+			retVal.setUsername(obj.getUsername());
+			retVal.setPassword(obj.getPassword());
+			retVal.setServiceVersion(theServiceVersion);
+			return retVal;}
 		}
 		return null;
 	}
@@ -1780,7 +1801,7 @@ public class AdminServiceBean implements IAdminService {
 			break;
 		}
 		}
-
+		
 		if (retVal == null) {
 			throw new IllegalStateException("Unknown type: " + theRule.getRuleType());
 		}
@@ -2019,13 +2040,20 @@ public class AdminServiceBean implements IAdminService {
 		BaseGClientSecurity retVal = null;
 
 		switch (theAuth.getAuthType()) {
-		case WS_SECURITY_USERNAME_TOKEN:
+		case WSSEC_UT:{
 			PersWsSecUsernameTokenClientAuth obj = (PersWsSecUsernameTokenClientAuth) theAuth;
 			GWsSecUsernameTokenClientSecurity auth = new GWsSecUsernameTokenClientSecurity();
 			auth.setUsername(obj.getUsername());
 			auth.setPassword(obj.getPassword());
 			retVal = auth;
-			break;
+			break;}
+		case HTTP_BASICAUTH:{
+			PersHttpBasicClientAuth obj = (PersHttpBasicClientAuth) theAuth;
+			DtoClientSecurityHttpBasicAuth auth = new DtoClientSecurityHttpBasicAuth();
+			auth.setUsername(obj.getUsername());
+			auth.setPassword(obj.getPassword());
+			retVal = auth;
+			break;}
 		}
 
 		if (retVal == null) {
@@ -2210,11 +2238,12 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setPid(theNext.getPid());
 		retVal.setStartDate(theNext.getStartDate());
 		retVal.setEndDate(theNext.getEndDate());
+		retVal.setRulePid(theNext.getRule().getPid());
 
 		for (PersMonitorRuleFiringProblem next : theNext.getProblems()) {
 			retVal.getProblems().add(toUi(next));
 		}
-
+		
 		return retVal;
 	}
 

@@ -1278,12 +1278,18 @@ public class DaoBean implements IDao {
 			statusesBean.getServiceVersionPidToStatus().put(next.getServiceVersionPid(), next);
 		}
 
-		List<PersMonitorRuleFiring> activeRuleFailures = myEntityManager.createQuery("SELECT f FROM " + PersMonitorRuleFiring.class.getSimpleName() + " f WHERE f.myEndDate IS NULL", PersMonitorRuleFiring.class).getResultList();
+		List<PersMonitorRuleFiring> activeRuleFailures = loadMonitorRuleFiringsWhichAreActive();
 		for (PersMonitorRuleFiring next : activeRuleFailures) {
 			statusesBean.addActiveRuleFiring(next);
 		}
 
 		return statusesBean;
+	}
+
+	@Override
+	public List<PersMonitorRuleFiring> loadMonitorRuleFiringsWhichAreActive() {
+		List<PersMonitorRuleFiring> activeRuleFailures = myEntityManager.createNamedQuery(Queries.RULEFIRING_FINDACTIVE, PersMonitorRuleFiring.class).getResultList();
+		return activeRuleFailures;
 	}
 
 	@Override

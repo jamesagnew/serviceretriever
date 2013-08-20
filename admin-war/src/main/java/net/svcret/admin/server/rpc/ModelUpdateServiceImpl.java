@@ -4,7 +4,9 @@ import static org.apache.commons.lang3.StringUtils.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.ejb.EJB;
@@ -819,6 +821,31 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		}
 		try {
 			return myAdminSvc.loadLibraryMessages();
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to load library messages", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+	}
+
+	@Override
+	public Map<Long, GMonitorRuleFiring> getLatestFailingMonitorRuleFiringForRulePids() throws ServiceFailureException {
+		if (isMockMode()) {
+			return myMock.getLatestFailingMonitorRuleFiringForRulePids();
+		}
+		try {
+			HashMap<Long, GMonitorRuleFiring> retVal = new HashMap<Long, GMonitorRuleFiring>();
+			
+			for (GMonitorRuleFiring next : myAdminSvc.loadAllActiveRuleFirings()) {
+				if (retVal.containsKey(next.getRulePid())) {
+					if (next.getStartDate().after(retVal.get(next.getRulePid()).getStartDate())) {
+						retVal.put(next.getRulePid(), next);
+					}
+				}else {
+					retVal.put(next.getRulePid(), next);
+				}
+			}
+			
+			return retVal;
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to load library messages", e);
 			throw new ServiceFailureException(e.getMessage());

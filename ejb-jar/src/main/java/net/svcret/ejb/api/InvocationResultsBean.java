@@ -59,6 +59,9 @@ public class InvocationResultsBean {
 	 * @return the methodHeaders
 	 */
 	public Map<String, String> getMethodHeaders() {
+		if (myMethodHeaders == null) {
+			myMethodHeaders = new HashMap<String, String>();
+		}
 		return myMethodHeaders;
 	}
 

@@ -237,4 +237,6 @@ public interface IDao {
 
 	List<PersLibraryMessage> loadLibraryMessages();
 
+	List<PersMonitorRuleFiring> loadMonitorRuleFiringsWhichAreActive();
+
 }

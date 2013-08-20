@@ -170,12 +170,12 @@ public class MessageLibraryPanel extends FlowPanel {
 
 		myGrid.setEmptyTableWidget(new Label("No messages found"));
 
-		ListHandler<DtoLibraryMessage> sortHandler = new ListHandler<DtoLibraryMessage>(myDataProvider.getList());
-		myGrid.addColumnSortHandler(sortHandler);
-		
 		myDataProvider = new ListDataProvider<DtoLibraryMessage>();
 		myDataProvider.addDataDisplay(myGrid);
 
+		ListHandler<DtoLibraryMessage> sortHandler = new ListHandler<DtoLibraryMessage>(myDataProvider.getList());
+		myGrid.addColumnSortHandler(sortHandler);
+		
 		Column<DtoLibraryMessage, String> editColumn = new NullColumn<DtoLibraryMessage>(new PButtonCell(IMAGES.iconEdit(), MSGS.actions_Edit()));
 		editColumn.setFieldUpdater(new FieldUpdater<DtoLibraryMessage, String>() {
 			@Override
@@ -200,6 +200,25 @@ public class MessageLibraryPanel extends FlowPanel {
 		IdentityColumn<DtoLibraryMessage> actionsColumn = new IdentityColumn<DtoLibraryMessage>(new CompositeCell<DtoLibraryMessage>(actionsCells));
 		myGrid.addColumn(actionsColumn, "");
 
+		// Applies To
+		Column<DtoLibraryMessage, SafeHtml> appliesToColumn = new Column<DtoLibraryMessage, SafeHtml>(new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(DtoLibraryMessage theObject) {
+				SafeHtmlBuilder safeHtmlBuilder = new SafeHtmlBuilder();
+				AlertGrid.createAppliesToHtml(safeHtmlBuilder, theObject.getAppliesToServiceVersionPids(), myDomainList);
+				return safeHtmlBuilder.toSafeHtml();
+			}
+		};
+		myGrid.addColumn(appliesToColumn, "Applies To");
+		myGrid.getColumn(myGrid.getColumnCount() - 1).setSortable(true);
+		sortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<DtoLibraryMessage>() {
+			@Override
+			public int compare(DtoLibraryMessage theO1, DtoLibraryMessage theO2) {
+				return StringUtil.compare(theO1.getAppliesToSortText(myDomainList), theO2.getAppliesToSortText(myDomainList));
+			}
+		});
+		
+		// Description
 		Column<DtoLibraryMessage, SafeHtml> descColumn = new Column<DtoLibraryMessage, SafeHtml>(new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(DtoLibraryMessage theObject) {
@@ -216,6 +235,7 @@ public class MessageLibraryPanel extends FlowPanel {
 		});
 		myGrid.getColumnSortList().push(descColumn);
 
+		// Content Type
 		Column<DtoLibraryMessage, SafeHtml> ctColumn = new Column<DtoLibraryMessage, SafeHtml>(new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(DtoLibraryMessage theObject) {
@@ -243,23 +263,6 @@ public class MessageLibraryPanel extends FlowPanel {
 			@Override
 			public int compare(DtoLibraryMessage theO1, DtoLibraryMessage theO2) {
 				return theO1.getMessageLength() - theO2.getMessageLength();
-			}
-		});
-
-		Column<DtoLibraryMessage, SafeHtml> appliesToColumn = new Column<DtoLibraryMessage, SafeHtml>(new SafeHtmlCell()) {
-			@Override
-			public SafeHtml getValue(DtoLibraryMessage theObject) {
-				SafeHtmlBuilder safeHtmlBuilder = new SafeHtmlBuilder();
-				AlertGrid.createAppliesToHtml(safeHtmlBuilder, theObject.getAppliesToServiceVersionPids(), myDomainList);
-				return safeHtmlBuilder.toSafeHtml();
-			}
-		};
-		myGrid.addColumn(appliesToColumn, "Applies To");
-		myGrid.getColumn(myGrid.getColumnCount() - 1).setSortable(true);
-		sortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<DtoLibraryMessage>() {
-			@Override
-			public int compare(DtoLibraryMessage theO1, DtoLibraryMessage theO2) {
-				return StringUtil.compare(theO1.getAppliesToSortText(myDomainList), theO2.getAppliesToSortText(myDomainList));
 			}
 		});
 

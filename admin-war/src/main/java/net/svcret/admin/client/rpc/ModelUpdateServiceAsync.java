@@ -2,6 +2,7 @@ package net.svcret.admin.client.rpc;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import net.svcret.admin.client.rpc.ModelUpdateService.UserAndAuthHost;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
@@ -109,5 +110,7 @@ public interface ModelUpdateServiceAsync {
 	void saveUser(GUser theUser, AsyncCallback<Void> theAsyncCallback);
 
 	void testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long theServiceVersionPid, AsyncCallback<GServiceVersionSingleFireResponse> theAsyncCallback);
+
+	void getLatestFailingMonitorRuleFiringForRulePids(AsyncCallback<Map<Long, GMonitorRuleFiring>> theIAsyncLoadCallback);
 
 }

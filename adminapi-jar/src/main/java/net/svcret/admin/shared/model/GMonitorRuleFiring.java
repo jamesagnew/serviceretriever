@@ -7,9 +7,10 @@ import java.util.List;
 public class GMonitorRuleFiring extends BaseGObject<GMonitorRuleFiring> {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	private Date myEndDate;
 	private List<GMonitorRuleFiringProblem> myProblems;
+	private long myRulePid;
 	private Date myStartDate;
 
 	public Date getEndDate() {
@@ -23,6 +24,10 @@ public class GMonitorRuleFiring extends BaseGObject<GMonitorRuleFiring> {
 		return myProblems;
 	}
 
+	public long getRulePid() {
+		return myRulePid;
+	}
+
 	public Date getStartDate() {
 		return myStartDate;
 	}
@@ -34,6 +39,10 @@ public class GMonitorRuleFiring extends BaseGObject<GMonitorRuleFiring> {
 
 	public void setEndDate(Date theEndDate) {
 		myEndDate = theEndDate;
+	}
+
+	public void setRulePid(long theRulePid) {
+		myRulePid = theRulePid;
 	}
 
 	public void setStartDate(Date theStartDate) {
