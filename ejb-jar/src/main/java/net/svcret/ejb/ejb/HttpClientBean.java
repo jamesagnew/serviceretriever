@@ -2,11 +2,14 @@ package net.svcret.ejb.ejb;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.PrePassivate;
@@ -31,10 +34,16 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.conn.scheme.SchemeSocketFactory;
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
+import org.apache.http.impl.conn.SchemeRegistryFactory;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.HttpParams;
@@ -45,8 +54,10 @@ public class HttpClientBean implements IHttpClient {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(HttpClientBean.class);
 
 	private PoolingClientConnectionManager myConMgr;
-	private DefaultHttpClient myDefaultClient;
+	private DefaultHttpClient myDefaultSimpleGetClient;
 	private Charset ourDefaultCharset = Charset.forName("UTF-8");
+
+	private PoolingClientConnectionManager mySimpleClientConMgr;
 
 	public HttpClientBean() {
 	}
@@ -70,7 +81,7 @@ public class HttpClientBean implements IHttpClient {
 		HttpResponseBean retVal = new HttpResponseBean();
 		try {
 			long start = System.currentTimeMillis();
-			HttpResponse httpResp = myDefaultClient.execute(httpReq);
+			HttpResponse httpResp = myDefaultSimpleGetClient.execute(httpReq);
 			entity = httpResp.getEntity();
 
 			retVal.setBody(IOUtils.toString(entity.getContent()));
@@ -102,7 +113,7 @@ public class HttpClientBean implements IHttpClient {
 		HashMap<String, List<String>> retVal = new HashMap<String, List<String>>();
 		for (Header header : theAllHeaders) {
 			List<String> list = retVal.get(header.getName());
-			if (list==null) {
+			if (list == null) {
 				list = new ArrayList<String>(2);
 				retVal.put(header.getName(), list);
 			}
@@ -156,11 +167,12 @@ public class HttpClientBean implements IHttpClient {
 		return retVal;
 	}
 
-	private void doPost(HttpResponseBean theResponse, IResponseValidator theResponseValidator, Map<String, String> theHeaders, HttpEntity postEntity, DefaultHttpClient client, PersServiceVersionUrl theNextUrl, int theFailureRetries) {
+	private void doPost(HttpResponseBean theResponse, IResponseValidator theResponseValidator, Map<String, String> theHeaders, HttpEntity postEntity, DefaultHttpClient client,
+			PersServiceVersionUrl theNextUrl, int theFailureRetries) {
 		int failuresRemaining = theFailureRetries + 1;
 		for (;;) {
 			failuresRemaining--;
-			
+
 			HttpPost post = new HttpPost(theNextUrl.getUrl());
 			post.setEntity(postEntity);
 			for (Entry<String, String> next : theHeaders.entrySet()) {
@@ -178,19 +190,19 @@ public class HttpClientBean implements IHttpClient {
 				int statusCode = resp.getStatusLine().getStatusCode();
 				String contentType;
 				contentType = resp.getEntity() != null && resp.getEntity().getContentType() != null ? resp.getEntity().getContentType().getValue() : "";
-				
+
 				int sep = contentType.indexOf(';');
 				if (sep > -1) {
 					contentType = contentType.substring(0, sep);
 				}
-				
+
 				Map<String, List<String>> headerMap = toHeaderMap(resp.getAllHeaders());
 
 				ValidationResponse validates = theResponseValidator.validate(body, statusCode, contentType);
 				if (validates.isValidates() == false) {
 
 					if (failuresRemaining > 0) {
-						ourLog.debug("Failed to invoke service at URL[{}] with {} retries remaining: {}", new Object[] {theNextUrl, failuresRemaining, validates.getFailureExplanation()});
+						ourLog.debug("Failed to invoke service at URL[{}] with {} retries remaining: {}", new Object[] { theNextUrl, failuresRemaining, validates.getFailureExplanation() });
 						continue;
 					}
 					ourLog.debug("Failed to invoke service at URL[{}]: {}", theNextUrl, validates.getFailureExplanation());
@@ -212,7 +224,7 @@ public class HttpClientBean implements IHttpClient {
 
 			} catch (ClientProtocolException e) {
 				if (failuresRemaining > 0) {
-					ourLog.info("Failed to invoke service at URL[{}] with {} retries remaining: {}", new Object[] {theNextUrl, failuresRemaining, e.toString()});
+					ourLog.info("Failed to invoke service at URL[{}] with {} retries remaining: {}", new Object[] { theNextUrl, failuresRemaining, e.toString() });
 					continue;
 				}
 				ourLog.debug("Exception while invoking remote service", e);
@@ -221,7 +233,7 @@ public class HttpClientBean implements IHttpClient {
 				return;
 			} catch (Exception e) {
 				if (failuresRemaining > 0) {
-					ourLog.info("Failed to invoke service at URL[{}] with {} retries remaining: {}", new Object[] {theNextUrl, failuresRemaining, e.toString()});
+					ourLog.info("Failed to invoke service at URL[{}] with {} retries remaining: {}", new Object[] { theNextUrl, failuresRemaining, e.toString() });
 					continue;
 				}
 				ourLog.debug("Exception while invoking remote service", e);
@@ -244,16 +256,26 @@ public class HttpClientBean implements IHttpClient {
 	}
 
 	@PostConstruct
-	public void setUp() {
+	public void setUp() throws Exception {
 		ourLog.info("Starting new HttpClient instance");
-		myConMgr = new PoolingClientConnectionManager();
+		myConMgr = new PoolingClientConnectionManager(SchemeRegistryFactory.createDefault(), 5000, TimeUnit.MILLISECONDS);
+
 
 		HttpParams params = new BasicHttpParams();
 		params.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, 10 * 1000);
 		params.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, 10 * 1000);
 		params.setBooleanParameter(CoreConnectionPNames.STALE_CONNECTION_CHECK, true);
 
-		myDefaultClient = new DefaultHttpClient(myConMgr, params);
+		SchemeRegistry sr = mySimpleClientConMgr.getSchemeRegistry();
+		SchemeSocketFactory ssf = new SSLSocketFactory(new TrustStrategy() {
+			@Override
+			public boolean isTrusted(X509Certificate[] theChain, String theAuthType) throws CertificateException {
+				return true;
+			}
+		});
+		sr.register(new Scheme("https",443, ssf));
+		
+		myDefaultSimpleGetClient = new DefaultHttpClient(myConMgr, params);
 	}
 
 }

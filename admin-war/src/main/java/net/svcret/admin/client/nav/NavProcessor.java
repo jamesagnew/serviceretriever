@@ -8,7 +8,6 @@ import java.util.List;
 
 import net.svcret.admin.client.ui.catalog.ServiceCatalogPanel;
 import net.svcret.admin.client.ui.config.ConfigPanel;
-import net.svcret.admin.client.ui.config.HttpClientConfigsPanel;
 import net.svcret.admin.client.ui.config.auth.AddUserPanel;
 import net.svcret.admin.client.ui.config.auth.AuthenticationHostsPanel;
 import net.svcret.admin.client.ui.config.auth.EditUserPanel;
@@ -18,6 +17,7 @@ import net.svcret.admin.client.ui.config.domain.AddDomainStep2Panel;
 import net.svcret.admin.client.ui.config.domain.DeleteDomainPanel;
 import net.svcret.admin.client.ui.config.domain.DeleteServiceVersionPanel;
 import net.svcret.admin.client.ui.config.domain.EditDomainPanel;
+import net.svcret.admin.client.ui.config.http.HttpClientConfigsPanel;
 import net.svcret.admin.client.ui.config.lib.CreateLibraryMessageBasedOnRecentTransactionPanel;
 import net.svcret.admin.client.ui.config.lib.CreateNewLibraryMessagePanel;
 import net.svcret.admin.client.ui.config.lib.EditLibraryMessagePanel;

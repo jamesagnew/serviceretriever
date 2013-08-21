@@ -12,6 +12,16 @@
     <servlet-name>resourceServlet</servlet-name>
     <servlet-class>net.svcret.admin.server.rpc.ResourceServlet</servlet-class>
   </servlet>
+  
+  <servlet>
+    <servlet-name>keystoreUploadServlet</servlet-name>
+    <servlet-class>net.svcret.admin.server.rpc.KeystoreUploadServlet</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>modelUpdateServlet</servlet-name>
+    <url-pattern>/AdminPortal/modelupdate</url-pattern>
+  </servlet-mapping>
 
   <servlet-mapping>
     <servlet-name>resourceServlet</servlet-name>
@@ -19,8 +29,8 @@
   </servlet-mapping>
 
   <servlet-mapping>
-    <servlet-name>modelUpdateServlet</servlet-name>
-    <url-pattern>/AdminPortal/modelupdate</url-pattern>
+    <servlet-name>keystoreUploadServlet</servlet-name>
+    <url-pattern>/keystoreUpload/*</url-pattern>
   </servlet-mapping>
 
   <!-- Default page to serve -->

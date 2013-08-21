@@ -84,6 +84,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 
 		myDomainList = new GDomainList();
 
+		{
 		GDomain dom = new GDomain();
 		dom.setPid(ourNextPid++);
 		dom.setId("domain1");
@@ -143,13 +144,36 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		svc.setName("Service 1-B");
 		svc.setPid(11L);
 		dom.getServiceList().add(svc);
-
-		dom = new GDomain();
-		dom.setPid(2L);
+		}
+		{
+		GDomain dom = new GDomain();
+		dom.setPid(ourNextPid++);
 		dom.setId("domain2");
 		dom.setName("Domain 2");
 		myDomainList.add(dom);
 
+		GService svc = new GService();
+		svc.setId("svc1a");
+		svc.setName("Service 2-A");
+		svc.setPid(ourNextPid++);
+		svc.setCanInheritKeepNumRecentTransactions(true);
+		svc.setInheritedKeepNumRecentTransactionsSuccess(23);
+		svc.setInheritedKeepNumRecentTransactionsSecurityFail(22);
+		dom.getServiceList().add(svc);
+
+		GSoap11ServiceVersion ver = new GSoap11ServiceVersion();
+		ver.setActive(true);
+		ver.setWsdlLocation("http://foo");
+		ver.setId("Version 2-A-1");
+		ver.setPid(ourNextPid++);
+		ver.setName("Version 2-A-1");
+		ver.setProxyPath("/some/service");
+		ver.setLastAccess(new Date());
+		ver.setServerSecurityMode(ServerSecurityModeEnum.REQUIRE_ANY);
+		svc.getVersionList().add(ver);
+
+		}
+		
 		myClientConfigList = new GHttpClientConfigList();
 		GHttpClientConfig defCfg = new GHttpClientConfig();
 		defCfg.setPid(ourNextPid++);

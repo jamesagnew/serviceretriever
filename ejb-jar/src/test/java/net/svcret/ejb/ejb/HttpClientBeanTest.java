@@ -43,7 +43,7 @@ public class HttpClientBeanTest {
 	}
 	
 	@Before
-	public void before() {
+	public void before() throws Exception {
 		mySvc = new HttpClientBean();
 		mySvc.setUp();
 

@@ -18,6 +18,8 @@ import com.google.gwt.user.client.ui.ListBox;
 
 public class AddServiceVersionPanel extends AbstractServiceVersionPanel {
 
+	private ListBox myTypeComboBox;
+
 	public AddServiceVersionPanel(Long theDomainPid, Long theServicePid, Long theUncommittedSessionId) {
 		super(theDomainPid, theServicePid, theUncommittedSessionId);
 
@@ -28,51 +30,6 @@ public class AddServiceVersionPanel extends AbstractServiceVersionPanel {
 				handleTypeChange();
 			}
 		});
-	}
-
-	@Override
-	protected String getDialogTitle() {
-		return "Add Service Version";
-	}
-
-	@Override
-	protected String getDialogDescription() {
-		return AdminPortal.MSGS.addServiceVersion_Description();
-	}
-
-
-	void handleTypeChange() {
-		ServiceProtocolEnum protocol = ServiceProtocolEnum.valueOf(myTypeComboBox.getValue(myTypeComboBox.getSelectedIndex()));
-		if (getBottomContents() == null || getBottomContents().getProtocol() != protocol) {
-
-			myLoadingSpinner.show();
-
-			AsyncCallback<BaseGServiceVersion> callback = new AsyncCallback<BaseGServiceVersion>() {
-
-				@Override
-				public void onFailure(Throwable theCaught) {
-					Model.handleFailure(theCaught);
-				}
-
-				@Override
-				public void onSuccess(BaseGServiceVersion theResult) {
-					setServiceVersion(theResult);
-					myUncommittedSessionId = theResult.getUncommittedSessionId();
-					String navToken = NavProcessor.getTokenAddServiceVersion(true, myDomainPid, myServicePid, myUncommittedSessionId);
-					History.newItem(navToken, false);
-				}
-			};
-
-			AdminPortal.MODEL_SVC.createNewServiceVersion(protocol, myDomainPid, myServicePid, myUncommittedSessionId, callback);
-
-		}
-
-	}
-
-	@Override
-	protected void handleDoneSaving(AddServiceVersionResponse theResult) {
-		String token = NavProcessor.getTokenAddServiceVersionStep2(myDomainPid, myServicePid, theResult.getNewServiceVersion().getPid());
-		History.newItem(token);
 	}
 
 	@Override
@@ -88,6 +45,50 @@ public class AddServiceVersionPanel extends AbstractServiceVersionPanel {
 				}
 			});
 		}
+	}
+
+	@Override
+	protected String getDialogDescription() {
+		return AdminPortal.MSGS.addServiceVersion_Description();
+	}
+
+	@Override
+	protected String getDialogTitle() {
+		return "Add Service Version";
+	}
+
+	@Override
+	protected void handleDoneSaving(AddServiceVersionResponse theResult) {
+		String token = NavProcessor.getTokenAddServiceVersionStep2(getDomainPid(), getServicePid(), theResult.getNewServiceVersion().getPid());
+		History.newItem(token);
+	}
+
+	void handleTypeChange() {
+		ServiceProtocolEnum protocol = ServiceProtocolEnum.valueOf(myTypeComboBox.getValue(myTypeComboBox.getSelectedIndex()));
+		if (getBottomContents() == null || getBottomContents().getProtocol() != protocol) {
+
+			getLoadingSpinner().show();
+
+			AsyncCallback<BaseGServiceVersion> callback = new AsyncCallback<BaseGServiceVersion>() {
+
+				@Override
+				public void onFailure(Throwable theCaught) {
+					Model.handleFailure(theCaught);
+				}
+
+				@Override
+				public void onSuccess(BaseGServiceVersion theResult) {
+					setServiceVersion(theResult);
+					setUncommittedSessionId(theResult.getUncommittedSessionId());
+					String navToken = NavProcessor.getTokenAddServiceVersion(true, getDomainPid(), getServicePid(), getUncommittedSessionId());
+					History.newItem(navToken, false);
+				}
+			};
+
+			AdminPortal.MODEL_SVC.createNewServiceVersion(protocol, getDomainPid(), getServicePid(), getUncommittedSessionId(), callback);
+
+		}
+
 	}
 
 }

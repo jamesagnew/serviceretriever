@@ -46,21 +46,37 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 	private FlowPanel myContentPanel;
 	private EditableField myDescriptionEditor;
 	private ListBox myDomainListBox;
+	private Long myDomainPid;
+	private LoadingSpinner myLoadingSpinner;
+
+	public void setDomainPid(Long theDomainPid) {
+		myDomainPid = theDomainPid;
+	}
+
+	public void setServicePid(Long theServicePid) {
+		myServicePid = theServicePid;
+	}
+
+	public void setUncommittedSessionId(Long theUncommittedSessionId) {
+		myUncommittedSessionId = theUncommittedSessionId;
+	}
+
+	public LoadingSpinner getLoadingSpinner() {
+		return myLoadingSpinner;
+	}
+
 	private HtmlLabel myNewDomainLabel;
 	private TextBox myNewDomainNameTextBox;
 	private HtmlLabel myNewServiceLabel;
 	private TextBox myNewServiceNameTextBox;
 	private TwoColumnGrid myParentsGrid2;
 	private ListBox myServiceListBox;
+	private Long myServicePid;
 	private FlowPanel myTopPanel;
+	private Long myUncommittedSessionId;
 	private boolean myUpdating;
-	protected LoadingSpinner myLoadingSpinner;
-	protected ListBox myTypeComboBox;
-	Long myDomainPid;
-	Long myServicePid;
-	Long myUncommittedSessionId;
-	BaseGServiceVersion myVersion;
-	HasValue<String> myVersionTextBox;
+	private BaseGServiceVersion myVersion;
+	private HasValue<String> myVersionTextBox;
 
 	public AbstractServiceVersionPanel() {
 		this(null, null, null);
@@ -228,6 +244,10 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 		return myServicePid;
 	}
 
+	public Long getUncommittedSessionId() {
+		return myUncommittedSessionId;
+	}
+
 	public boolean isAddPanel() {
 		return this instanceof AddServiceVersionPanel;
 	}
@@ -281,13 +301,15 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 		myNewServiceLabel.setVisible(showEdit);
 		myNewServiceNameTextBox.setVisible(showEdit);
 
-		String pidString = myServiceListBox.getValue(myServiceListBox.getSelectedIndex());
-		if (StringUtil.isBlank(pidString)) {
-			myServicePid = null;
-		} else {
-			myServicePid = Long.parseLong(pidString);
+		int selectedIndex = myServiceListBox.getSelectedIndex();
+		if (selectedIndex != -1) {
+			String pidString = myServiceListBox.getValue(selectedIndex);
+			if (StringUtil.isBlank(pidString)) {
+				myServicePid = null;
+			} else {
+				myServicePid = Long.parseLong(pidString);
+			}
 		}
-
 	}
 
 	private void processServiceList(GServiceList theResult) {
@@ -297,7 +319,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 			Long value = nextService.getPid();
 			myServiceListBox.addItem(nextService.getName(), value.toString());
 			if (value.equals(myServicePid)) {
-				myServiceListBox.setSelectedIndex(myServiceListBox.getSelectedIndex() - 1);
+				myServiceListBox.setSelectedIndex(myServiceListBox.getItemCount() - 1);
 			}
 		}
 

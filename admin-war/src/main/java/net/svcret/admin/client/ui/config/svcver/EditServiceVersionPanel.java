@@ -19,10 +19,14 @@ public class EditServiceVersionPanel extends AbstractServiceVersionPanel {
 	public EditServiceVersionPanel(final long theServiceVersionPid) {
 		super();
 
-		myLoadingSpinner.show();
+		getLoadingSpinner().show();
 		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
 			@Override
 			public void onSuccess(GDomainList theResult) {
+				
+				setDomainPid(theResult.getDomainPidWithServiceVersion(theServiceVersionPid));
+				setServicePid(theResult.getServicePidWithServiceVersion(theServiceVersionPid));
+				
 				initParents(theResult);
 
 				AdminPortal.MODEL_SVC.loadServiceVersionIntoSession(theServiceVersionPid, new AsyncCallback<BaseGServiceVersion>() {
@@ -34,7 +38,7 @@ public class EditServiceVersionPanel extends AbstractServiceVersionPanel {
 					@Override
 					public void onSuccess(BaseGServiceVersion theServiceVersion) {
 						setServiceVersion(theServiceVersion);
-						myLoadingSpinner.hide();
+						getLoadingSpinner().hide();
 						myProtocolLabel.setText(theServiceVersion.getProtocol().getNiceName());
 					}
 				});
@@ -56,7 +60,7 @@ public class EditServiceVersionPanel extends AbstractServiceVersionPanel {
 
 	@Override
 	protected void handleDoneSaving(AddServiceVersionResponse theResult) {
-		myLoadingSpinner.showMessage("Saved service version", false);
+		getLoadingSpinner().showMessage("Saved service version", false);
 	}
 
 	@Override
