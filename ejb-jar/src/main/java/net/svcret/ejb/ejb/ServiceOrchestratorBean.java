@@ -319,12 +319,8 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		}
 
 		PersHttpClientConfig clientConfig = serviceVersion.getHttpClientConfig();
-		urlPool.setConnectTimeoutMillis(clientConfig.getConnectTimeoutMillis());
-		urlPool.setReadTimeoutMillis(clientConfig.getReadTimeoutMillis());
-		urlPool.setFailureRetriesBeforeAborting(clientConfig.getFailureRetriesBeforeAborting());
-
 		HttpResponseBean httpResponse;
-		httpResponse = myHttpClient.post(responseValidator, urlPool, contentBody, headers, contentType);
+		httpResponse = myHttpClient.post(clientConfig, responseValidator, urlPool, contentBody, headers, contentType);
 		markUrlsFailed(httpResponse.getFailedUrls());
 
 		if (httpResponse.getSuccessfulUrl() == null) {

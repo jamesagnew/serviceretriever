@@ -5,6 +5,8 @@ import java.util.Map;
 
 import javax.ejb.Local;
 
+import net.svcret.ejb.model.entity.PersHttpClientConfig;
+
 import org.apache.http.client.ClientProtocolException;
 
 
@@ -13,6 +15,6 @@ public interface IHttpClient {
 
 	HttpResponseBean get(String theUrl) throws ClientProtocolException, IOException;
 
-	HttpResponseBean post(IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody, Map<String, String> theHeaders, String theContentType);
+	HttpResponseBean post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody, Map<String, String> theHeaders, String theContentType);
 	
 }

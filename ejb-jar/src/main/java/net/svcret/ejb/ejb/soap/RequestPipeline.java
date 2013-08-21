@@ -249,47 +249,54 @@ class RequestPipeline {
 				PersWsSecUsernameTokenClientAuth auth = (PersWsSecUsernameTokenClientAuth) nextAuth;
 
 				ArrayList<Namespace> namespaces = new ArrayList<Namespace>();
-				namespaces.add(ourEventFactory.createNamespace("wsu", Constants.NS_WSSEC_UTIL));
-				StartElement secStart = ourEventFactory.createStartElement(Constants.getWsseSecurityQname("wsse"), null, namespaces.iterator());
+				Namespace wsuNs = ourEventFactory.createNamespace("svcretwsu", Constants.NS_WSSEC_UTIL);
+				namespaces.add(wsuNs);
+				theStreamWriter.add(wsuNs);
+				
+				Namespace wsseNs = ourEventFactory.createNamespace("svcretwsse", Constants.NS_WSSEC_SECEXT);
+				namespaces.add(wsseNs);
+				theStreamWriter.add(wsseNs);
+
+				StartElement secStart = ourEventFactory.createStartElement(Constants.getWsseSecurityQname(wsseNs.getPrefix()), null, namespaces.iterator());
 				theStreamWriter.add(secStart);
 
 				// UsernameToken
 				{
-					StartElement usernameTokenStart = ourEventFactory.createStartElement(Constants.getWsseUsernameTokenQname("wsse"), null, null);
+					StartElement usernameTokenStart = ourEventFactory.createStartElement(Constants.getWsseUsernameTokenQname(wsseNs.getPrefix()), null, null);
 					theStreamWriter.add(usernameTokenStart);
 
-					Attribute idAttr = ourEventFactory.createAttribute(Constants.getWssuIdQname("wsu"), "UsernameToken-" + secIndex++);
+					Attribute idAttr = ourEventFactory.createAttribute(Constants.getWssuIdQname(wsuNs.getPrefix()), "UsernameToken-" + secIndex++);
 					theStreamWriter.add(idAttr);
 
 					// Username
 					{
-						StartElement usernameStart = ourEventFactory.createStartElement(Constants.getWsseUsernameQname("wsse"), null, null);
+						StartElement usernameStart = ourEventFactory.createStartElement(Constants.getWsseUsernameQname(wsseNs.getPrefix()), null, null);
 						theStreamWriter.add(usernameStart);
 
 						theStreamWriter.add(ourEventFactory.createCharacters(auth.getUsername()));
 
-						EndElement usernameEnd = ourEventFactory.createEndElement(Constants.getWsseUsernameQname("wsse"), null);
+						EndElement usernameEnd = ourEventFactory.createEndElement(Constants.getWsseUsernameQname(wsseNs.getPrefix()), null);
 						theStreamWriter.add(usernameEnd);
 					}
 
 					// Password
 					{
-						StartElement passwordStart = ourEventFactory.createStartElement(Constants.getWssePasswordQname("wsse"), null, null);
+						StartElement passwordStart = ourEventFactory.createStartElement(Constants.getWssePasswordQname(wsseNs.getPrefix()), null, null);
 						theStreamWriter.add(passwordStart);
 
 						theStreamWriter.add(ourEventFactory.createAttribute(Constants.WSSE_TYPE_QNAME, Constants.VALUE_WSSE_PASSWORD_TYPE_TEXT));
 
 						theStreamWriter.add(ourEventFactory.createCharacters(auth.getPassword()));
 
-						EndElement usernameEnd = ourEventFactory.createEndElement(Constants.getWssePasswordQname("wsse"), null);
+						EndElement usernameEnd = ourEventFactory.createEndElement(Constants.getWssePasswordQname(wsseNs.getPrefix()), null);
 						theStreamWriter.add(usernameEnd);
 					}
 
-					EndElement usernameTokenEnd = ourEventFactory.createEndElement(Constants.getWsseUsernameTokenQname("wsse"), null);
+					EndElement usernameTokenEnd = ourEventFactory.createEndElement(Constants.getWsseUsernameTokenQname(wsseNs.getPrefix()), null);
 					theStreamWriter.add(usernameTokenEnd);
 
 				}
-				EndElement secEnd = ourEventFactory.createEndElement(Constants.getWsseSecurityQname("wsse"), null);
+				EndElement secEnd = ourEventFactory.createEndElement(Constants.getWsseSecurityQname(wsseNs.getPrefix()), null);
 				theStreamWriter.add(secEnd);
 			}
 		}

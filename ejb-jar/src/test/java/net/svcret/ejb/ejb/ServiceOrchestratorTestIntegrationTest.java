@@ -34,6 +34,7 @@ import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersDomain;
+import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
@@ -172,7 +173,8 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		respBean.setResponseTime(100);
 		respBean.setSuccessfulUrl(url);
 		respBean.setHeaders(new HashMap<String, List<String>>());
-		when(myHttpClient.post(theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
+		PersHttpClientConfig httpClient=any();
+		when(myHttpClient.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
 
 		ITransactionLogger transactionLogger = mock(ITransactionLogger.class);
 		mySvc.setTransactionLogger(transactionLogger);

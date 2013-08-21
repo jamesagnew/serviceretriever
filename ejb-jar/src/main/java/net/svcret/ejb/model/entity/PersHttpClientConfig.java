@@ -7,6 +7,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
@@ -19,21 +20,21 @@ import com.google.common.base.Objects;
 @Table(name = "PX_HTTP_CLIENT_CONFIG")
 public class PersHttpClientConfig extends BasePersObject {
 
-	private static final long serialVersionUID = 1L;
-	
 	public static final int DEFAULT_CB_TIME_BETWEEN_ATTEMPTS = 60 * 1000;
+	
 	public static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 10 * 1000;
 	public static final int DEFAULT_FAIL_RETRIES_BEFORE_ABORT = 1;
 	/**
 	 * Default ID for config. At least this config will always exist.
 	 */
 	public static final String DEFAULT_ID = GHttpClientConfig.DEFAULT_ID;
-
-	private static final String DEFAULT_NAME = "Default Configuration";
-
 	public static final int DEFAULT_READ_TIMEOUT_MILLIS = 20 * 1000;
 
 	public static final UrlSelectionPolicy DEFAULT_URL_SELECTION_POLICY = UrlSelectionPolicy.PREFER_LOCAL;
+
+	private static final String DEFAULT_NAME = "Default Configuration";
+
+	private static final long serialVersionUID = 1L;
 
 	@Column(name = "CB_ENABLED")
 	private boolean myCircuitBreakerEnabled;
@@ -65,6 +66,20 @@ public class PersHttpClientConfig extends BasePersObject {
 	@Column(name = "READ_TIMEOUT", nullable = false)
 	private int myReadTimeoutMillis;
 
+	@Lob
+	@Column(name="TLS_KEYSTORE")
+	private byte[] myTlsKeystore;
+
+	@Column(name="TLS_KEYSTORE_PASS", length=200)
+	private String myTlsKeystorePassword;
+
+	@Lob
+	@Column(name="TLS_TRUSTSSTORE")
+	private byte[] myTlsTruststore;
+
+	@Column(name="TLS_TRUSTSTORE_PASS", length=200)
+	private String myTlsTruststorePassword;
+
 	@Column(name = "URL_SEL_POLICY", length = 20, nullable = false)
 	@Enumerated(EnumType.STRING)
 	private UrlSelectionPolicy myUrlSelectionPolicy;
@@ -75,13 +90,6 @@ public class PersHttpClientConfig extends BasePersObject {
 	@Override
 	public boolean equals(Object theObj) {
 		return theObj instanceof PersHttpClientConfig && Objects.equal(myPid, ((PersHttpClientConfig) theObj).myPid);
-	}
-
-	/**
-	 * @return the circuitBreakerEnabled
-	 */
-	public boolean isCircuitBreakerEnabled() {
-		return myCircuitBreakerEnabled;
 	}
 
 	/**
@@ -140,6 +148,22 @@ public class PersHttpClientConfig extends BasePersObject {
 		return myReadTimeoutMillis;
 	}
 
+	public byte[] getTlsKeystore() {
+		return myTlsKeystore;
+	}
+
+	public String getTlsKeystorePassword() {
+		return myTlsKeystorePassword;
+	}
+
+	public byte[] getTlsTruststore() {
+		return myTlsTruststore;
+	}
+
+	public String getTlsTruststorePassword() {
+		return myTlsTruststorePassword;
+	}
+
 	/**
 	 * @return the urlSelectionPolicy
 	 */
@@ -153,6 +177,17 @@ public class PersHttpClientConfig extends BasePersObject {
 	@Override
 	public int hashCode() {
 		return Objects.hashCode(myPid);
+	}
+
+	/**
+	 * @return the circuitBreakerEnabled
+	 */
+	public boolean isCircuitBreakerEnabled() {
+		return myCircuitBreakerEnabled;
+	}
+
+	public void loadAllAssociations() {
+		myUrlSelectionPolicy.name();
 	}
 
 	/**
@@ -238,16 +273,28 @@ public class PersHttpClientConfig extends BasePersObject {
 		myReadTimeoutMillis = theReadTimeoutMillis;
 	}
 
+	public void setTlsKeystore(byte[] theTlsKeystore) {
+		myTlsKeystore = theTlsKeystore;
+	}
+
+	public void setTlsKeystorePassword(String theTlsKeystorePassword) {
+		myTlsKeystorePassword = theTlsKeystorePassword;
+	}
+
+	public void setTlsTruststore(byte[] theTlsTruststore) {
+		myTlsTruststore = theTlsTruststore;
+	}
+
+	public void setTlsTruststorePassword(String theTlsTruststorePassword) {
+		myTlsTruststorePassword = theTlsTruststorePassword;
+	}
+
 	/**
 	 * @param theUrlSelectionPolicy
 	 *            the urlSelectionPolicy to set
 	 */
 	public void setUrlSelectionPolicy(UrlSelectionPolicy theUrlSelectionPolicy) {
 		myUrlSelectionPolicy = theUrlSelectionPolicy;
-	}
-
-	public void loadAllAssociations() {
-		myUrlSelectionPolicy.name();
 	}
 
 }

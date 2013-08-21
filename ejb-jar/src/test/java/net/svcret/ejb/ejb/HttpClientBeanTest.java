@@ -17,6 +17,7 @@ import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ejb.soap.Soap11ResponseValidator;
+import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.util.RandomServerPortProvider;
 
@@ -145,12 +146,14 @@ public class HttpClientBeanTest {
 		IResponseValidator validator = new NullResponseValidator();
 		UrlPoolBean urlPool = new UrlPoolBean();
 		urlPool.setPreferredUrl(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port + "/Uri"));
-		urlPool.setConnectTimeoutMillis(1000);
-		urlPool.setReadTimeoutMillis(1000);
+		
+		PersHttpClientConfig clientConfig = createHttpClientConfig();
+		clientConfig.setConnectTimeoutMillis(1000);
+		clientConfig.setReadTimeoutMillis(1000);
 
 		Map<String, String> reqHeaders = new HashMap<String, String>();
 		String reqContentType = "text/xml";
-		HttpResponseBean respBean = mySvc.post(validator, urlPool, reqBody, reqHeaders, reqContentType);
+		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
 		assertEquals(urlPool.getPreferredUrl(), respBean.getSuccessfulUrl());
 		assertEquals(0, respBean.getFailedUrls().size());
@@ -169,12 +172,14 @@ public class HttpClientBeanTest {
 		IResponseValidator validator = new NullResponseValidator();
 		UrlPoolBean urlPool = new UrlPoolBean();
 		urlPool.setPreferredUrl(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port + "/Uri"));
-		urlPool.setConnectTimeoutMillis(1000);
-		urlPool.setReadTimeoutMillis(1000);
+
+		PersHttpClientConfig clientConfig = createHttpClientConfig();
+		clientConfig.setConnectTimeoutMillis(1000);
+		clientConfig.setReadTimeoutMillis(1000);
 
 		Map<String, String> reqHeaders = new HashMap<String, String>();
 		String reqContentType = "text/xml";
-		HttpResponseBean respBean = mySvc.post(validator, urlPool, reqBody, reqHeaders, reqContentType);
+		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
 		assertEquals(null, respBean.getSuccessfulUrl());
 		assertEquals(1, respBean.getFailedUrls().size());
@@ -197,12 +202,14 @@ public class HttpClientBeanTest {
 		
 		UrlPoolBean urlPool = new UrlPoolBean();
 		urlPool.setPreferredUrl(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port + "/Uri"));
-		urlPool.setConnectTimeoutMillis(1000);
-		urlPool.setReadTimeoutMillis(1000);
+
+		PersHttpClientConfig clientConfig = createHttpClientConfig();
+		clientConfig.setConnectTimeoutMillis(1000);
+		clientConfig.setReadTimeoutMillis(1000);
 
 		Map<String, String> reqHeaders = new HashMap<String, String>();
 		String reqContentType = "text/xml";
-		HttpResponseBean respBean = mySvc.post(validator, urlPool, reqBody, reqHeaders, reqContentType);
+		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
 		assertEquals(urlPool.getPreferredUrl(), respBean.getSuccessfulUrl());
 		assertEquals(0, respBean.getFailedUrls().size());
@@ -228,12 +235,14 @@ public class HttpClientBeanTest {
 		IResponseValidator validator = new ResponseContainsTextValidator("EnlightenResponse");
 		UrlPoolBean urlPool = new UrlPoolBean();
 		urlPool.setPreferredUrl(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port + "/Uri"));
-		urlPool.setConnectTimeoutMillis(1000);
-		urlPool.setReadTimeoutMillis(1000);
+
+		PersHttpClientConfig clientConfig = createHttpClientConfig();
+		clientConfig.setConnectTimeoutMillis(1000);
+		clientConfig.setReadTimeoutMillis(1000);
 
 		Map<String, String> reqHeaders = new HashMap<String, String>();
 		String reqContentType = "text/xml";
-		HttpResponseBean respBean = mySvc.post(validator, urlPool, reqBody, reqHeaders, reqContentType);
+		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
 		assertEquals(null, respBean.getSuccessfulUrl());
 		assertEquals(1, respBean.getFailedUrls().size());
@@ -257,14 +266,16 @@ public class HttpClientBeanTest {
 
 		IResponseValidator validator = new ResponseContainsTextValidator("EnlightenResponse");
 		UrlPoolBean urlPool = new UrlPoolBean();
-		urlPool.setFailureRetriesBeforeAborting(1);
 		urlPool.setPreferredUrl(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port + "/Uri"));
-		urlPool.setConnectTimeoutMillis(1000);
-		urlPool.setReadTimeoutMillis(1000);
+
+		PersHttpClientConfig clientConfig = createHttpClientConfig();
+		clientConfig.setConnectTimeoutMillis(1000);
+		clientConfig.setReadTimeoutMillis(1000);
+		clientConfig.setFailureRetriesBeforeAborting(1);
 
 		Map<String, String> reqHeaders = new HashMap<String, String>();
 		String reqContentType = "text/xml";
-		HttpResponseBean respBean = mySvc.post(validator, urlPool, reqBody, reqHeaders, reqContentType);
+		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
 		assertEquals(urlPool.getPreferredUrl(), respBean.getSuccessfulUrl());
 		assertEquals(0, respBean.getFailedUrls().size());
@@ -294,20 +305,28 @@ public class HttpClientBeanTest {
 
 		IResponseValidator validator = new ResponseContainsTextValidator("EnlightenResponse");
 		UrlPoolBean urlPool = new UrlPoolBean();
-		urlPool.setFailureRetriesBeforeAborting(1);
 		urlPool.setPreferredUrl(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port1 + "/Uri"));
 		urlPool.setAlternateUrls(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port2 + "/Uri"));
-		urlPool.setConnectTimeoutMillis(1000);
-		urlPool.setReadTimeoutMillis(1000);
+
+		PersHttpClientConfig clientConfig = createHttpClientConfig();
+		clientConfig.setConnectTimeoutMillis(1000);
+		clientConfig.setReadTimeoutMillis(1000);
+		clientConfig.setFailureRetriesBeforeAborting(1);
 
 		Map<String, String> reqHeaders = new HashMap<String, String>();
 		String reqContentType = "text/xml";
-		HttpResponseBean respBean = mySvc.post(validator, urlPool, reqBody, reqHeaders, reqContentType);
+		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
 		assertEquals(null, respBean.getSuccessfulUrl());
 		assertEquals(2, respBean.getFailedUrls().size());
 		assertThat(respBean.getResponseTime(), greaterThan(1L));
 
+	}
+
+	private PersHttpClientConfig createHttpClientConfig() {
+		PersHttpClientConfig clientConfig=new PersHttpClientConfig();
+		clientConfig.setPid(1L);
+		return clientConfig;
 	}
 
 	private static long ourNextPid = 1;
@@ -332,15 +351,17 @@ public class HttpClientBeanTest {
 
 		IResponseValidator validator = new ResponseContainsTextValidator("EnlightenResponse");
 		UrlPoolBean urlPool = new UrlPoolBean();
-		urlPool.setFailureRetriesBeforeAborting(1);
 		urlPool.setPreferredUrl(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port1 + "/Uri"));
 		urlPool.setAlternateUrls(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port2 + "/Uri"));
-		urlPool.setConnectTimeoutMillis(1000);
-		urlPool.setReadTimeoutMillis(1000);
+
+		PersHttpClientConfig clientConfig = createHttpClientConfig();
+		clientConfig.setConnectTimeoutMillis(1000);
+		clientConfig.setReadTimeoutMillis(1000);
+		clientConfig.setFailureRetriesBeforeAborting(1);
 
 		Map<String, String> reqHeaders = new HashMap<String, String>();
 		String reqContentType = "text/xml";
-		HttpResponseBean respBean = mySvc.post(validator, urlPool, reqBody, reqHeaders, reqContentType);
+		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
 		assertEquals(urlPool.getAlternateUrls().get(0), respBean.getSuccessfulUrl());
 		assertEquals(1, respBean.getFailedUrls().size());
@@ -370,15 +391,17 @@ public class HttpClientBeanTest {
 
 		IResponseValidator validator = new ResponseContainsTextValidator("EnlightenResponse");
 		UrlPoolBean urlPool = new UrlPoolBean();
-		urlPool.setFailureRetriesBeforeAborting(1);
 		urlPool.setPreferredUrl(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port1 + "/Uri"));
 		urlPool.setAlternateUrls(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port2 + "/Uri"));
-		urlPool.setConnectTimeoutMillis(1000);
-		urlPool.setReadTimeoutMillis(1000);
+
+		PersHttpClientConfig clientConfig = createHttpClientConfig();
+		clientConfig.setConnectTimeoutMillis(1000);
+		clientConfig.setReadTimeoutMillis(1000);
+		clientConfig.setFailureRetriesBeforeAborting(1);
 
 		Map<String, String> reqHeaders = new HashMap<String, String>();
 		String reqContentType = "text/xml";
-		HttpResponseBean respBean = mySvc.post(validator, urlPool, reqBody, reqHeaders, reqContentType);
+		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
 		assertEquals(urlPool.getPreferredUrl(), respBean.getSuccessfulUrl());
 		assertEquals(0, respBean.getFailedUrls().size());

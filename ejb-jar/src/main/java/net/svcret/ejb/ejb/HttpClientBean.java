@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
@@ -23,6 +24,7 @@ import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.IResponseValidator.ValidationResponse;
 import net.svcret.ejb.api.UrlPoolBean;
+import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.util.Validate;
 
@@ -53,11 +55,10 @@ public class HttpClientBean implements IHttpClient {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(HttpClientBean.class);
 
-	private PoolingClientConnectionManager myConMgr;
+	private ConcurrentHashMap<Long, HttpClientImpl> myClientConfigPidToClient = new ConcurrentHashMap<Long, HttpClientBean.HttpClientImpl>();
 	private DefaultHttpClient myDefaultSimpleGetClient;
-	private Charset ourDefaultCharset = Charset.forName("UTF-8");
-
 	private PoolingClientConnectionManager mySimpleClientConMgr;
+	private Charset ourDefaultCharset = Charset.forName("UTF-8");
 
 	public HttpClientBean() {
 	}
@@ -65,8 +66,14 @@ public class HttpClientBean implements IHttpClient {
 	@PrePassivate
 	public void cleanUp() {
 		ourLog.info("Shuting down HttpClient");
-		myConMgr.shutdown();
-		myConMgr = null;
+		
+		for (HttpClientImpl next : myClientConfigPidToClient.values()) {
+			next.getConnectionManager().shutdown();
+		}
+		myClientConfigPidToClient.clear();
+		
+		mySimpleClientConMgr.shutdown();
+				mySimpleClientConMgr=null;
 	}
 
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -109,62 +116,58 @@ public class HttpClientBean implements IHttpClient {
 
 	}
 
-	private Map<String, List<String>> toHeaderMap(Header[] theAllHeaders) {
-		HashMap<String, List<String>> retVal = new HashMap<String, List<String>>();
-		for (Header header : theAllHeaders) {
-			List<String> list = retVal.get(header.getName());
-			if (list == null) {
-				list = new ArrayList<String>(2);
-				retVal.put(header.getName(), list);
-			}
-			list.add(header.getValue());
-		}
-		return retVal;
-	}
-
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override
-	public HttpResponseBean post(IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody, Map<String, String> theHeaders, String theContentType) {
-		if (theUrlPool.getConnectTimeoutMillis() <= 0) {
+	public HttpResponseBean post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody, Map<String, String> theHeaders,
+			String theContentType) {
+		if (theClientConfig.getConnectTimeoutMillis() <= 0) {
 			throw new IllegalArgumentException("ConnectTimeout may not be <= 0");
 		}
-		if (theUrlPool.getConnectTimeoutMillis() > Integer.MAX_VALUE) {
+		if (theClientConfig.getConnectTimeoutMillis() > Integer.MAX_VALUE) {
 			throw new IllegalArgumentException("ConnectTimeout may not be > MAX_INT");
 		}
-		if (theUrlPool.getReadTimeoutMillis() <= 0) {
+		if (theClientConfig.getReadTimeoutMillis() <= 0) {
 			throw new IllegalArgumentException("ReadTimeout may not be <= 0");
 		}
-		if (theUrlPool.getReadTimeoutMillis() > Integer.MAX_VALUE) {
+		if (theClientConfig.getReadTimeoutMillis() > Integer.MAX_VALUE) {
 			throw new IllegalArgumentException("ReadTimeout may not be > MAX_INT");
 		}
-
-		HttpParams params = new BasicHttpParams();
-		params.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, theUrlPool.getConnectTimeoutMillis());
-		params.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, theUrlPool.getReadTimeoutMillis());
-		params.setBooleanParameter(CoreConnectionPNames.STALE_CONNECTION_CHECK, true);
-		params.setBooleanParameter(CoreConnectionPNames.SO_KEEPALIVE, true);
-
-		ContentType contentType = ContentType.create(theContentType, ourDefaultCharset);
-		HttpEntity postEntity = new StringEntity(theContentBody, contentType);
-
-		DefaultHttpClient client = new DefaultHttpClient(myConMgr, params);
-		HttpResponseBean retVal = new HttpResponseBean();
-
-		PersServiceVersionUrl url = theUrlPool.getPreferredUrl();
-		int failureRetries = theUrlPool.getFailureRetriesBeforeAborting();
-
-		doPost(retVal, theResponseValidator, theHeaders, postEntity, client, url, failureRetries);
-
-		if (retVal.getSuccessfulUrl() == null) {
-			for (PersServiceVersionUrl nextUrl : theUrlPool.getAlternateUrls()) {
-				doPost(retVal, theResponseValidator, theHeaders, postEntity, client, nextUrl, failureRetries);
-				if (retVal.getSuccessfulUrl() != null) {
-					break;
-				}
-			}
+		
+		/*
+		 * The following block isn't synchronized, which means multiple threads could
+		 * create clients in parallel and overwrite each other. This could probably use
+		 * some thought, but technically there is nothing wrong with having
+		 * a client spin up a short-lived client..
+		 */
+		HttpClientImpl client = myClientConfigPidToClient.get(theClientConfig.getPid());
+		if (client == null || client.getClientConfig().getOptLock() != theClientConfig.getOptLock()) {
+			client = new HttpClientImpl(theClientConfig);
+			myClientConfigPidToClient.put(theClientConfig.getPid(), client);
 		}
 
-		return retVal;
+		return client.post(theClientConfig, theResponseValidator,theUrlPool, theContentBody, theHeaders, theContentType);
+	}
+
+	@PostConstruct
+	public void setUp() throws Exception {
+		ourLog.info("Starting new HttpClient instance");
+		
+		HttpParams params = new BasicHttpParams();
+		params.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, 10 * 1000);
+		params.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, 10 * 1000);
+		params.setBooleanParameter(CoreConnectionPNames.STALE_CONNECTION_CHECK, true);
+
+		mySimpleClientConMgr = new PoolingClientConnectionManager(SchemeRegistryFactory.createDefault(), 5000, TimeUnit.MILLISECONDS);
+		SchemeRegistry sr = mySimpleClientConMgr.getSchemeRegistry();
+		SchemeSocketFactory ssf = new SSLSocketFactory(new TrustStrategy() {
+			@Override
+			public boolean isTrusted(X509Certificate[] theChain, String theAuthType) throws CertificateException {
+				return true;
+			}
+		});
+		sr.register(new Scheme("https", 443, ssf));
+
+		myDefaultSimpleGetClient = new DefaultHttpClient(mySimpleClientConMgr, params);
 	}
 
 	private void doPost(HttpResponseBean theResponse, IResponseValidator theResponseValidator, Map<String, String> theHeaders, HttpEntity postEntity, DefaultHttpClient client,
@@ -255,27 +258,68 @@ public class HttpClientBean implements IHttpClient {
 
 	}
 
-	@PostConstruct
-	public void setUp() throws Exception {
-		ourLog.info("Starting new HttpClient instance");
-		myConMgr = new PoolingClientConnectionManager(SchemeRegistryFactory.createDefault(), 5000, TimeUnit.MILLISECONDS);
-
-
-		HttpParams params = new BasicHttpParams();
-		params.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, 10 * 1000);
-		params.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, 10 * 1000);
-		params.setBooleanParameter(CoreConnectionPNames.STALE_CONNECTION_CHECK, true);
-
-		SchemeRegistry sr = mySimpleClientConMgr.getSchemeRegistry();
-		SchemeSocketFactory ssf = new SSLSocketFactory(new TrustStrategy() {
-			@Override
-			public boolean isTrusted(X509Certificate[] theChain, String theAuthType) throws CertificateException {
-				return true;
+	private Map<String, List<String>> toHeaderMap(Header[] theAllHeaders) {
+		HashMap<String, List<String>> retVal = new HashMap<String, List<String>>();
+		for (Header header : theAllHeaders) {
+			List<String> list = retVal.get(header.getName());
+			if (list == null) {
+				list = new ArrayList<String>(2);
+				retVal.put(header.getName(), list);
 			}
-		});
-		sr.register(new Scheme("https",443, ssf));
+			list.add(header.getValue());
+		}
+		return retVal;
+	}
+
+	public class HttpClientImpl {
+
+		private PersHttpClientConfig myClientConfig;
+		private PoolingClientConnectionManager myConMgr;
+
+		public HttpClientImpl(PersHttpClientConfig theClientConfig) {
+			myClientConfig =theClientConfig;
+			myConMgr = new PoolingClientConnectionManager(SchemeRegistryFactory.createDefault(), 5000, TimeUnit.MILLISECONDS);
+		}
+
+		public PersHttpClientConfig getClientConfig() {
+			return myClientConfig;
+		}
+
+		public HttpResponseBean post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody, Map<String, String> theHeaders,
+				String theContentType) {
+			HttpParams params = new BasicHttpParams();
+			params.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, theClientConfig.getConnectTimeoutMillis());
+			params.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, theClientConfig.getReadTimeoutMillis());
+			params.setBooleanParameter(CoreConnectionPNames.STALE_CONNECTION_CHECK, true);
+			params.setBooleanParameter(CoreConnectionPNames.SO_KEEPALIVE, true);
+
+			ContentType contentType = ContentType.create(theContentType, ourDefaultCharset);
+			HttpEntity postEntity = new StringEntity(theContentBody, contentType);
+
+			DefaultHttpClient client = new DefaultHttpClient(myConMgr, params);
+			HttpResponseBean retVal = new HttpResponseBean();
+
+			PersServiceVersionUrl url = theUrlPool.getPreferredUrl();
+			int failureRetries = theClientConfig.getFailureRetriesBeforeAborting();
+
+			doPost(retVal, theResponseValidator, theHeaders, postEntity, client, url, failureRetries);
+
+			if (retVal.getSuccessfulUrl() == null) {
+				for (PersServiceVersionUrl nextUrl : theUrlPool.getAlternateUrls()) {
+					doPost(retVal, theResponseValidator, theHeaders, postEntity, client, nextUrl, failureRetries);
+					if (retVal.getSuccessfulUrl() != null) {
+						break;
+					}
+				}
+			}
+			
+			return retVal;
+		}
+
+		public PoolingClientConnectionManager getConnectionManager() {
+			return myConMgr;
+		}
 		
-		myDefaultSimpleGetClient = new DefaultHttpClient(myConMgr, params);
 	}
 
 }

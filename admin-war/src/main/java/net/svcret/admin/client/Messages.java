@@ -773,6 +773,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Create Library Message")
 	String createLibraryMessage_Breadcrumb();
+
+	@DefaultMessage("These settings will apply only to encrypted connections (i.e. those using the HTTPS protocol)")
+	String httpClientConfigsPanel_SSLDesc();
 	
 	
 }

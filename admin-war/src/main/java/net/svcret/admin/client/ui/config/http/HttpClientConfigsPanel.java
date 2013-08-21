@@ -28,11 +28,12 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.TabPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
 public class HttpClientConfigsPanel extends FlowPanel {
-	
+
 	private PButton myAddButton;
 	private IntegerBox myCircuitBreakerDelayBox;
 	private CheckBox myCircuitBreakerEnabledCheck;
@@ -51,11 +52,12 @@ public class HttpClientConfigsPanel extends FlowPanel {
 	private HTML myUrlSelectionPolicyDescriptionLabel;
 	private ListBox myUrlSelectionPolicyListBox;
 	private int ourNextUnsavedPid = -1;
-	
+
 	public HttpClientConfigsPanel() {
 		initConfigListPanel();
 		initDetailsPanel();
-		
+		initBottomTabs();
+
 		Model.getInstance().loadHttpClientConfigs(new IAsyncLoadCallback<GHttpClientConfigList>() {
 			@Override
 			public void onSuccess(GHttpClientConfigList theResult) {
@@ -66,13 +68,128 @@ public class HttpClientConfigsPanel extends FlowPanel {
 
 	}
 
+	private void initBottomTabs() {
+
+		TabPanel bottomTabs = new TabPanel();
+		bottomTabs.addStyleName(CssConstants.CONTENT_OUTER_TAB_PANEL);
+		add(bottomTabs);
+
+		{
+			FlowPanel contentPanel = new FlowPanel();
+			bottomTabs.add(contentPanel, "Failover");
+			bottomTabs.selectTab(0);
+			
+			/*
+			 * URL Selection policy
+			 */
+
+			contentPanel.add(new HtmlH1(MSGS.httpClientConfigsPanel_UrlSelectionTitle()));
+			contentPanel.add(new Label(MSGS.httpClientConfigsPanel_UrlSelectionDescription()));
+
+			TwoColumnGrid urlSelGrid = new TwoColumnGrid();
+			contentPanel.add(urlSelGrid);
+
+			myUrlSelectionPolicyListBox = new ListBox(false);
+			urlSelGrid.addRow(MSGS.httpClientConfigsPanel_UrlSelectionPolicyShortName(), myUrlSelectionPolicyListBox);
+
+			myUrlSelectionPolicyDescriptionLabel = new HTML();
+			urlSelGrid.addDescription(myUrlSelectionPolicyDescriptionLabel);
+
+			for (UrlSelectionPolicy next : UrlSelectionPolicy.values()) {
+				myUrlSelectionPolicyListBox.addItem(next.name());
+			}
+			myUrlSelectionPolicyListBox.addChangeHandler(new ChangeHandler() {
+				@Override
+				public void onChange(ChangeEvent theEvent) {
+					updateSelectedUrlSelectionPolicy();
+				}
+			});
+
+			/*
+			 * Circuit Breaker
+			 */
+
+			contentPanel.add(new HtmlH1(MSGS.httpClientConfigsPanel_CircuitBreakerTitle()));
+			contentPanel.add(new HTML(MSGS.httpClientConfigsPanel_CircuitBreakerDescription()));
+
+			TwoColumnGrid circuitBreakerGrid = new TwoColumnGrid();
+			contentPanel.add(circuitBreakerGrid);
+
+			myCircuitBreakerEnabledCheck = new CheckBox();
+			circuitBreakerGrid.addRow(MSGS.httpClientConfigsPanel_CircuitBreakerEnabled(), myCircuitBreakerEnabledCheck);
+
+			myCircuitBreakerDelayBox = new IntegerBox();
+			circuitBreakerGrid.addRow(MSGS.httpClientConfigsPanel_CircuitBreakerDelayBetweenReset(), myCircuitBreakerDelayBox);
+
+		}
+
+		{
+			FlowPanel contentPanel = new FlowPanel();
+			bottomTabs.add(contentPanel, "TCP");
+			/*
+			 * TCP Properties
+			 */
+
+			contentPanel.add(new HtmlH1(MSGS.httpClientConfigsPanel_TcpProperties()));
+			contentPanel.add(new HTML(MSGS.httpClientConfigsPanel_TcpPropertiesDesc()));
+
+			TwoColumnGrid tcpPropsGrid = new TwoColumnGrid();
+			contentPanel.add(tcpPropsGrid);
+
+			myTcpConnectTimeoutTb = new IntegerBox();
+			tcpPropsGrid.addRow(MSGS.httpClientConfigsPanel_TcpConnectMillis(), myTcpConnectTimeoutTb);
+
+			myTcpReadTimeoutTb = new IntegerBox();
+			tcpPropsGrid.addRow(MSGS.httpClientConfigsPanel_TcpReadMillis(), myTcpReadTimeoutTb);
+
+			// myTcpReadTimeoutTb.addKeyPressHandler(ValidatingTextBoxChangeHandlerPositiveInteger.INSTANCE);
+			// myTcpReadTimeoutTb.addValueChangeHandler(ValidatingTextBoxChangeHandlerPositiveInteger.INSTANCE);
+		}
+		{
+			/*
+			 * Retries
+			 */
+			FlowPanel contentPanel = new FlowPanel();
+			bottomTabs.add(contentPanel, "Retry");
+
+			contentPanel.add(new HtmlH1(MSGS.httpClientConfigsPanel_RetriesTitle()));
+			contentPanel.add(new HTML(MSGS.httpClientConfigsPanel_RetriesDesc()));
+
+			TwoColumnGrid retriesGrid = new TwoColumnGrid();
+			contentPanel.add(retriesGrid);
+			myRetriesTextBox = new IntegerBox();
+			retriesGrid.addRow(MSGS.httpClientConfigsPanel_RetriesLabel(), myRetriesTextBox);
+			// myRetriesTextBox.addValueChangeHandler(ValidatingTextBoxChangeHandlerPositiveInteger.INSTANCE_0_OR_ABOVE);
+			// myRetriesTextBox.addKeyPressHandler(ValidatingTextBoxChangeHandlerPositiveInteger.INSTANCE_0_OR_ABOVE);
+			contentPanel.add(myRetriesTextBox);
+		}
+		{
+			/*
+			 * Retries
+			 */
+			FlowPanel contentPanel = new FlowPanel();
+			bottomTabs.add(contentPanel, "SSL/TLS");
+
+//			contentPanel.add(new HtmlH1(MSGS.httpClientConfigsPanel_SSLTitle()));
+			contentPanel.add(new HTML(MSGS.httpClientConfigsPanel_SSLDesc()));
+
+			TwoColumnGrid retriesGrid = new TwoColumnGrid();
+			contentPanel.add(retriesGrid);
+			myRetriesTextBox = new IntegerBox();
+			retriesGrid.addRow(MSGS.httpClientConfigsPanel_RetriesLabel(), myRetriesTextBox);
+			// myRetriesTextBox.addValueChangeHandler(ValidatingTextBoxChangeHandlerPositiveInteger.INSTANCE_0_OR_ABOVE);
+			// myRetriesTextBox.addKeyPressHandler(ValidatingTextBoxChangeHandlerPositiveInteger.INSTANCE_0_OR_ABOVE);
+			contentPanel.add(myRetriesTextBox);
+		}
+	}
+
 	private void addConfig() {
 		GHttpClientConfig newConfig = new GHttpClientConfig();
 		newConfig.setId("NEW");
 		newConfig.setName("New");
 		newConfig.setPid(ourNextUnsavedPid--);
 		myConfigs.add(newConfig);
-		
+
 		mySelectedPid = newConfig.getPid();
 		updateConfigList();
 		updateSelectedConfig();
@@ -124,10 +241,10 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		} else {
 			config.setFailureRetriesBeforeAborting(retries);
 		}
-		
+
 		UrlSelectionPolicy policy = UrlSelectionPolicy.values()[myUrlSelectionPolicyListBox.getSelectedIndex()];
 		config.setUrlSelectionPolicy(policy);
-		
+
 		boolean create = config.getPid() < 0;
 
 		myLoadingSpinner.show();
@@ -143,7 +260,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 				myLoadingSpinner.showMessage("Saved", false);
 				Model.getInstance().addHttpClientConfig(theResult);
 				mySelectedPid = theResult.getPid();
-				
+
 				updateConfigList();
 				updateSelectedConfig();
 			}
@@ -175,7 +292,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 
 		HorizontalPanel hPanel = new HorizontalPanel();
 		contentPanel.add(hPanel);
-		
+
 		VerticalPanel toolbar = new VerticalPanel();
 		myAddButton = new PButton(AdminPortal.IMAGES.iconAdd(), AdminPortal.MSGS.actions_Add());
 		myAddButton.setEnabled(false);
@@ -196,7 +313,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		});
 		toolbar.add(myRemoveButton);
 		hPanel.add(toolbar);
-		
+
 		myConfigsListBox = new ListBox(false);
 		myConfigsListBox.setVisibleItemCount(5);
 		myConfigsListBox.addChangeHandler(new ChangeHandler() {
@@ -249,7 +366,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 
 		TwoColumnGrid idAndNameGrid = new TwoColumnGrid();
 		contentPanel.add(idAndNameGrid);
-		
+
 		// ID
 		myIdTextBox = new TextBox();
 		idAndNameGrid.addRow(MSGS.propertyNameId(), myIdTextBox);
@@ -258,83 +375,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		myNameTextBox = new TextBox();
 		idAndNameGrid.addRow(MSGS.propertyNameName(), myNameTextBox);
 
-		/*
-		 * TCP Properties
-		 */
-
-		contentPanel.add(new HtmlH1(MSGS.httpClientConfigsPanel_TcpProperties()));
-		contentPanel.add(new HTML(MSGS.httpClientConfigsPanel_TcpPropertiesDesc()));
-		
-		TwoColumnGrid tcpPropsGrid = new TwoColumnGrid();
-		contentPanel.add(tcpPropsGrid);
-		
-		myTcpConnectTimeoutTb = new IntegerBox();
-		tcpPropsGrid.addRow(MSGS.httpClientConfigsPanel_TcpConnectMillis(), myTcpConnectTimeoutTb);
-
-		myTcpReadTimeoutTb = new IntegerBox();
-		tcpPropsGrid.addRow(MSGS.httpClientConfigsPanel_TcpReadMillis(), myTcpReadTimeoutTb);
-		
-		// myTcpReadTimeoutTb.addKeyPressHandler(ValidatingTextBoxChangeHandlerPositiveInteger.INSTANCE);
-		// myTcpReadTimeoutTb.addValueChangeHandler(ValidatingTextBoxChangeHandlerPositiveInteger.INSTANCE);
-
-		/*
-		 * URL Selection policy
-		 */
-
-		contentPanel.add(new HtmlH1(MSGS.httpClientConfigsPanel_UrlSelectionTitle()));
-		contentPanel.add(new Label(MSGS.httpClientConfigsPanel_UrlSelectionDescription()));
-		
-		TwoColumnGrid urlSelGrid = new TwoColumnGrid();
-		contentPanel.add(urlSelGrid);
-		
-		myUrlSelectionPolicyListBox = new ListBox(false);
-		urlSelGrid.addRow(MSGS.httpClientConfigsPanel_UrlSelectionPolicyShortName(), myUrlSelectionPolicyListBox);
-		
-		myUrlSelectionPolicyDescriptionLabel = new HTML();
-		urlSelGrid.addDescription(myUrlSelectionPolicyDescriptionLabel);
-
-		for (UrlSelectionPolicy next : UrlSelectionPolicy.values()) {
-			myUrlSelectionPolicyListBox.addItem(next.name());
-		}
-		myUrlSelectionPolicyListBox.addChangeHandler(new ChangeHandler() {
-			@Override
-			public void onChange(ChangeEvent theEvent) {
-				updateSelectedUrlSelectionPolicy();
-			}
-		});
-
-		/*
-		 * Circuit Breaker
-		 */
-
-		contentPanel.add(new HtmlH1(MSGS.httpClientConfigsPanel_CircuitBreakerTitle()));
-		contentPanel.add(new HTML(MSGS.httpClientConfigsPanel_CircuitBreakerDescription()));
-		
-		TwoColumnGrid circuitBreakerGrid = new TwoColumnGrid();
-		contentPanel.add(circuitBreakerGrid);
-		
-		myCircuitBreakerEnabledCheck = new CheckBox();
-		circuitBreakerGrid.addRow(MSGS.httpClientConfigsPanel_CircuitBreakerEnabled(), myCircuitBreakerEnabledCheck);
-
-		myCircuitBreakerDelayBox = new IntegerBox();
-		circuitBreakerGrid.addRow(MSGS.httpClientConfigsPanel_CircuitBreakerDelayBetweenReset(), myCircuitBreakerDelayBox);
-
-		/*
-		 * Retries
-		 */
-		
-		contentPanel.add(new HtmlH1(MSGS.httpClientConfigsPanel_RetriesTitle()));
-		contentPanel.add(new HTML(MSGS.httpClientConfigsPanel_RetriesDesc()));
-		
-		TwoColumnGrid retriesGrid = new TwoColumnGrid();
-		contentPanel.add(retriesGrid);
-		myRetriesTextBox = new IntegerBox();
-		retriesGrid.addRow(MSGS.httpClientConfigsPanel_RetriesLabel(), myRetriesTextBox);
-		// myRetriesTextBox.addValueChangeHandler(ValidatingTextBoxChangeHandlerPositiveInteger.INSTANCE_0_OR_ABOVE);
-		// myRetriesTextBox.addKeyPressHandler(ValidatingTextBoxChangeHandlerPositiveInteger.INSTANCE_0_OR_ABOVE);
-		contentPanel.add(myRetriesTextBox);
 	}
-
 
 	private void removeConfig() {
 		GHttpClientConfig config = myConfigs.get(myConfigsListBox.getSelectedIndex());
@@ -345,11 +386,11 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		if (!Window.confirm(MSGS.httpClientConfigsPanel_ConfirmDelete(config.getId()))) {
 			return;
 		}
-		
+
 		myConfigListLoadingSpinner.show();
-		
+
 		AdminPortal.MODEL_SVC.deleteHttpClientConfig(config.getPid(), new MyHttpClientConfigListHandler());
-		
+
 	}
 
 	private void setConfigList(GHttpClientConfigList theConfigList) {
@@ -360,35 +401,35 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		enableToolbar();
 	}
 
-//	private void updateConfigList() {
-//		myUpdatingConfigsListBox = true;
-//		myConfigsListBox.clear();
-//
-//		int selectedIndex = 0;
-//		for (GHttpClientConfig next : myConfigs) {
-//			String desc = next.getId();
-//			if (StringUtil.isNotBlank(next.getName())) {
-//				desc = desc + " - " + next.getName();
-//			}
-//			if (mySelectedPid != null && mySelectedPid.equals(next.getPid())) {
-//				selectedIndex = myConfigsListBox.getItemCount();
-//			}
-//			myConfigsListBox.addItem(desc, Long.toString(next.getPid()));
-//		}
-//
-//		myConfigsListBox.setSelectedIndex(selectedIndex);
-//
-//		myUpdatingConfigsListBox = false;
-//
-//		String value = myConfigsListBox.getValue(selectedIndex);
-//		Long newSelectedId = Long.parseLong(value);
-//		if (!newSelectedId.equals(mySelectedPid)) {
-//			mySelectedPid = newSelectedId;
-//			updateSelectedConfig();
-//		}
-//
-//	}
-	
+	// private void updateConfigList() {
+	// myUpdatingConfigsListBox = true;
+	// myConfigsListBox.clear();
+	//
+	// int selectedIndex = 0;
+	// for (GHttpClientConfig next : myConfigs) {
+	// String desc = next.getId();
+	// if (StringUtil.isNotBlank(next.getName())) {
+	// desc = desc + " - " + next.getName();
+	// }
+	// if (mySelectedPid != null && mySelectedPid.equals(next.getPid())) {
+	// selectedIndex = myConfigsListBox.getItemCount();
+	// }
+	// myConfigsListBox.addItem(desc, Long.toString(next.getPid()));
+	// }
+	//
+	// myConfigsListBox.setSelectedIndex(selectedIndex);
+	//
+	// myUpdatingConfigsListBox = false;
+	//
+	// String value = myConfigsListBox.getValue(selectedIndex);
+	// Long newSelectedId = Long.parseLong(value);
+	// if (!newSelectedId.equals(mySelectedPid)) {
+	// mySelectedPid = newSelectedId;
+	// updateSelectedConfig();
+	// }
+	//
+	// }
+
 	private void updateConfigList() {
 		myUpdatingConfigsListBox = true;
 		myConfigsListBox.clear();

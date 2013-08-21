@@ -11,10 +11,7 @@ import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 public class UrlPoolBean {
 
 	private List<PersServiceVersionUrl> myAlternateUrls;
-	private int myConnectTimeoutMillis;
-	private int myFailureRetriesBeforeAborting;
 	private PersServiceVersionUrl myPreferredUrl;
-	private int myReadTimeoutMillis;
 
 	public UrlPoolBean() {
 		
@@ -38,20 +35,6 @@ public class UrlPoolBean {
 	}
 
 	/**
-	 * @return the connectTimeoutMillis
-	 */
-	public int getConnectTimeoutMillis() {
-		return myConnectTimeoutMillis;
-	}
-
-	/**
-	 * @return the failureRetriesBeforeAborting
-	 */
-	public int getFailureRetriesBeforeAborting() {
-		return myFailureRetriesBeforeAborting;
-	}
-
-	/**
 	 * @return the preferredUrl
 	 */
 	public PersServiceVersionUrl getPreferredUrl() {
@@ -59,12 +42,6 @@ public class UrlPoolBean {
 		return myPreferredUrl;
 	}
 
-	/**
-	 * @return the readTimeoutMillis
-	 */
-	public int getReadTimeoutMillis() {
-		return myReadTimeoutMillis;
-	}
 
 	/**
 	 * @param theAlternateUrls
@@ -83,17 +60,6 @@ public class UrlPoolBean {
 	}
 
 	
-	/**
-	 * @param theConnectTimeoutMillis
-	 *            the connectTimeoutMillis to set
-	 */
-	public void setConnectTimeoutMillis(int theConnectTimeoutMillis) {
-		myConnectTimeoutMillis = theConnectTimeoutMillis;
-	}
-
-	public void setFailureRetriesBeforeAborting(int theFailureRetriesBeforeAborting) {
-		myFailureRetriesBeforeAborting = theFailureRetriesBeforeAborting;
-	}
 
 	/**
 	 * @param thePreferredUrl
@@ -103,12 +69,5 @@ public class UrlPoolBean {
 		myPreferredUrl = thePreferredUrl;
 	}
 
-	/**
-	 * @param theReadTimeoutMillis
-	 *            the readTimeoutMillis to set
-	 */
-	public void setReadTimeoutMillis(int theReadTimeoutMillis) {
-		myReadTimeoutMillis = theReadTimeoutMillis;
-	}
 
 }
