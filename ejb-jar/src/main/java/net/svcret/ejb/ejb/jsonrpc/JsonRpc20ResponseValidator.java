@@ -29,7 +29,7 @@ public class JsonRpc20ResponseValidator implements IResponseValidator {
 		try {
 			jsonReader.beginObject();
 
-			boolean isFault = false;
+//			boolean isFault = false;
 			while (jsonReader.hasNext()) {
 
 				String nextName = jsonReader.nextName();
@@ -49,7 +49,7 @@ public class JsonRpc20ResponseValidator implements IResponseValidator {
 
 				} else if (JsonRpc20ServiceInvoker.TOKEN_ERROR.equals(nextName)) {
 
-					isFault = true;
+//					isFault = true;
 					break;
 
 				} else if (JsonRpc20ServiceInvoker.TOKEN_ID.equals(nextName)) {

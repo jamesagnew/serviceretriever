@@ -1,4 +1,4 @@
-package ca.uhn.sail.proxy.web;
+package net.svcret.proxyweb;
 
 import static net.svcret.ejb.util.HttpUtil.sendFailure;
 import static net.svcret.ejb.util.HttpUtil.sendSecurityFailure;
@@ -43,7 +43,6 @@ import com.google.common.collect.Iterators;
 @WebServlet(asyncSupported = true, loadOnStartup = 1, urlPatterns = { "/" })
 public class ServiceServlet extends HttpServlet {
 
-
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceServlet.class);
 
 	private static final long serialVersionUID = 1L;
@@ -61,9 +60,20 @@ public class ServiceServlet extends HttpServlet {
 		handle(theReq, theResp, RequestType.POST);
 	}
 
-	private void handle(HttpServletRequest theReq, HttpServletResponse theResp, RequestType get) throws IOException {
+	private void handle(HttpServletRequest theReq, HttpServletResponse theResp, RequestType get) throws IOException, ServletException {
+		try {
+			doHandle(theReq, theResp, get);
+		} catch (IOException e) {
+			throw e;
+		} catch (Throwable e) {
+			ourLog.error("Failed to process service request", e);
+			throw new ServletException(e);
+		}
+	}
+
+	private void doHandle(HttpServletRequest theReq, HttpServletResponse theResp, RequestType get) throws IOException {
 		long start = System.currentTimeMillis();
-		
+
 		String path = theReq.getRequestURI().substring(theReq.getContextPath().length());
 		try {
 			path = new URLCodec().decode(path);
@@ -117,10 +127,10 @@ public class ServiceServlet extends HttpServlet {
 			sendSecurityFailure(theResp);
 			return;
 		} catch (ThrottleException e) {
-			
+
 			AsyncContext asyncContext = theReq.startAsync();
 			e.setAsyncContext(asyncContext);
-			
+
 			try {
 				myOrch.enqueueThrottledRequest(e);
 			} catch (ThrottleQueueFullException e1) {
@@ -128,7 +138,7 @@ public class ServiceServlet extends HttpServlet {
 				sendThrottleQueueFullFailure(theResp);
 			}
 			return;
-			
+
 		} catch (ThrottleQueueFullException e) {
 			ourLog.info("Request was throttled and queue was full for URL: {}", theReq.getRequestURL());
 			sendThrottleQueueFullFailure(theResp);
@@ -142,8 +152,7 @@ public class ServiceServlet extends HttpServlet {
 		sendSuccessfulResponse(theResp, response);
 
 		long delay = System.currentTimeMillis() - start;
-		ourLog.info("Handled {} request at path[{}] with {} byte response in {} ms", new Object[] { get.name(), path,  response.getResponseBody().length(), delay });
-		
+		ourLog.info("Handled {} request at path[{}] with {} byte response in {} ms", new Object[] { get.name(), path, response.getResponseBody().length(), delay });
 	}
 
 	@Override
@@ -157,6 +166,5 @@ public class ServiceServlet extends HttpServlet {
 		int pathStart = requestURL.indexOf('/', hostIndex);
 		return requestURL.substring(0, pathStart) + contextPath;
 	}
-
 
 }

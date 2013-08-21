@@ -1,6 +1,6 @@
 package net.svcret.admin.client.ui.stats;
 
-import static net.svcret.admin.client.AdminPortal.*;
+import static net.svcret.admin.client.AdminPortal.MSGS;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -26,7 +26,6 @@ import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.ColumnSortEvent.ListHandler;
 import com.google.gwt.user.cellview.client.ColumnSortList.ColumnSortInfo;
-import com.google.gwt.user.cellview.client.Header;
 import com.google.gwt.user.cellview.client.IdentityColumn;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.FlowPanel;

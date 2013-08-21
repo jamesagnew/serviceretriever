@@ -1,4 +1,4 @@
-package net.svcret.ejb.model.entity.soap;
+package net.svcret.ejb.model.entity.http;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
@@ -10,34 +10,34 @@ import org.apache.commons.lang3.ObjectUtils;
 
 
 @Entity
-@DiscriminatorValue("SOAP_WSSEC_UT")
-public class PersWsSecUsernameTokenClientAuth extends PersBaseClientAuth<PersWsSecUsernameTokenClientAuth> {
+@DiscriminatorValue("HTTP_BASIC")
+public class PersHttpBasicClientAuth extends PersBaseClientAuth<PersHttpBasicClientAuth> {
 
 	private static final long serialVersionUID = 1L;
 
-	public PersWsSecUsernameTokenClientAuth(String theUsername, String thePassword) {
+	public PersHttpBasicClientAuth(String theUsername, String thePassword) {
 		super();
 		setUsername(theUsername);
 		setPassword(thePassword);
 	}
 
-	public PersWsSecUsernameTokenClientAuth() {
+	public PersHttpBasicClientAuth() {
 		super();
 	}
 
 	@Override
-	protected boolean relevantPropertiesEqual(PersWsSecUsernameTokenClientAuth theT) {
+	protected boolean relevantPropertiesEqual(PersHttpBasicClientAuth theT) {
 		return ObjectUtils.equals(getUsername(), theT.getUsername()) && ObjectUtils.equals(getPassword(), theT.getPassword());
 	}
 
 	@Override
 	public ClientSecurityEnum getAuthType() {
-		return ClientSecurityEnum.WSSEC_UT;
+		return ClientSecurityEnum.HTTP_BASICAUTH;
 	}
 
 	@Override
 	public void merge(PersBaseClientAuth<?> theObj) {
-		PersWsSecUsernameTokenClientAuth obj = (PersWsSecUsernameTokenClientAuth) theObj;
+		PersHttpBasicClientAuth obj = (PersHttpBasicClientAuth) theObj;
 		
 		obj.setUsername(obj.getUsername());
 		obj.setPassword(obj.getPassword());

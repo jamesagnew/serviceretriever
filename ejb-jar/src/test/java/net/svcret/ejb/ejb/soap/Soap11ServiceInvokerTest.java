@@ -193,7 +193,7 @@ public class Soap11ServiceInvokerTest {
 	public void testRequestProcessorBadMethod() throws InternalErrorException, ProcessingException, UnknownRequestException, IOException {
 
 		String methodName = "getPatientByMrnBAD";
-		String msg = RequestPipelineTest.createRequest(methodName);
+		String msg = RequestPipelineTest.createRequest(methodName, true);
 
 		StringReader reader = new StringReader(msg);
 
@@ -231,7 +231,7 @@ public class Soap11ServiceInvokerTest {
 	public void testRequestProcessorGoodMethod() throws InternalErrorException, ProcessingException, UnknownRequestException, IOException {
 
 		String methodName = "getPatientByMrn";
-		String msg = RequestPipelineTest.createRequest(methodName);
+		String msg = RequestPipelineTest.createRequest(methodName, true);
 
 		StringReader reader = new StringReader(msg);
 

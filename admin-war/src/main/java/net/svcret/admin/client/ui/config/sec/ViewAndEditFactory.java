@@ -14,6 +14,8 @@ public class ViewAndEditFactory {
 		switch (theClientSecurity.getType()) {
 		case WSSEC_UT:
 			return (IProvidesViewAndEdit<T>) new WsSecUsernameTokenClientSecurityViewAndEdit();
+		case HTTP_BASICAUTH:
+			return (IProvidesViewAndEdit<T>) new HttpBasicAuthClientSecurityViewAndEdit();
 		}
 		
 		throw new IllegalStateException("Type: " + theClientSecurity.getType());

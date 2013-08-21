@@ -1,8 +1,13 @@
 package net.svcret.ejb.ejb;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.same;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,7 +29,6 @@ import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserDomainPermission;
 import net.svcret.ejb.model.entity.PersUserServicePermission;
-import net.svcret.ejb.model.entity.PersUserServiceVersionMethodPermission;
 import net.svcret.ejb.model.entity.PersUserServiceVersionPermission;
 import net.svcret.ejb.model.entity.PersUserStatus;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
@@ -169,7 +173,7 @@ public class SecurityServiceBeanTest {
 		PersUserDomainPermission domainPer = myUser.addPermission(myD0);
 		PersUserServicePermission servicePer = domainPer.addPermission(myD0S0);
 		PersUserServiceVersionPermission versionPer = servicePer.addPermission(myD0S0V0);
-		PersUserServiceVersionMethodPermission methodPerm = versionPer.addPermission(myD0S0V0M0);
+		versionPer.addPermission(myD0S0V0M0);
 		
 		myUser.loadAllAssociations();
 		

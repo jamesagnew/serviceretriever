@@ -1,4 +1,4 @@
-package ca.uhn.sail.proxy.web;
+package net.svcret.proxyweb;
 
 import java.io.IOException;
 import java.io.PrintWriter;

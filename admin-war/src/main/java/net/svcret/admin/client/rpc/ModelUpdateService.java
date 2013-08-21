@@ -3,6 +3,7 @@ package net.svcret.admin.client.rpc;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import net.svcret.admin.shared.ServiceFailureException;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
@@ -46,19 +47,23 @@ public interface ModelUpdateService extends RemoteService {
 
 	GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ServiceFailureException;
 
-	AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion) throws ServiceFailureException;
+	AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion)
+			throws ServiceFailureException;
 
 	BaseGServiceVersion createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncommittedId);
 
 	GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ServiceFailureException;
 
+	Map<Long, GMonitorRuleFiring> getLatestFailingMonitorRuleFiringForRulePids() throws ServiceFailureException;
+
 	GConfig loadConfig() throws ServiceFailureException;
 
 	DtoLibraryMessage loadLibraryMessage(long theMessagePid) throws ServiceFailureException;
 
+	Collection<DtoLibraryMessage> loadLibraryMessages() throws ServiceFailureException;
+
 	Collection<DtoLibraryMessage> loadLibraryMessages(HierarchyEnum theType, long thePid) throws ServiceFailureException;
 
-	Collection<DtoLibraryMessage> loadLibraryMessages() throws ServiceFailureException;
 	ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ServiceFailureException;
 
 	List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart);

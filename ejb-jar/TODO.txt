@@ -10,6 +10,10 @@
 
 * handle failing HTTP gets better and allow non-secure client auth: "Failure was: peer not authenticated"
 
+* Clicking save a second time on Add user dialog should update the newly created user
+
+* Security column should have an indicator for services with some unsecured methods, or "ALLOW_ANY" status 
+
 ----
 DONE
 
