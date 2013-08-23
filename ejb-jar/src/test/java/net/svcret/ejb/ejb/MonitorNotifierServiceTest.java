@@ -53,4 +53,9 @@ private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger
 		ourLog.info("Email: {}", email);
 		
 	}
+	
+	
+	public static void main(String[] args) {
+		new MonitorNotifierServiceTest().testGenerateEmail();
+	}
 }

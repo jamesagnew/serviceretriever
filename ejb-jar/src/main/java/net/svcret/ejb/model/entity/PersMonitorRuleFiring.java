@@ -21,6 +21,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.UniqueConstraint;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -32,7 +33,9 @@ import org.hibernate.annotations.Index;
 		@Index(columnNames = { "START_DATE" }, name = "IDX_PMRF_START_DATE"),
 		}, appliesTo = "PX_MONITOR_RULE_FIRING")
 @Entity()
-@Table(name = "PX_MONITOR_RULE_FIRING")
+@Table(name = "PX_MONITOR_RULE_FIRING", uniqueConstraints= {
+		@UniqueConstraint(name="IDX_PMRF_RULEEND", columnNames= {"RULE_PID", "END_DATE"})
+})
 @NamedQueries(value= {
 	@NamedQuery(name=Queries.RULEFIRING, query=Queries.RULEFIRING_Q),
 	@NamedQuery(name=Queries.RULEFIRING_FINDACTIVE, query=Queries.RULEFIRING_FINDACTIVE_Q)

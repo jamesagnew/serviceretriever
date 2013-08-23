@@ -114,8 +114,7 @@ public class RecentMessagesGrid extends FlowPanel {
 				}
 			}
 		});
-		
-		grid.getColumnSortList().push(new ColumnSortInfo(timestampColumn, false));
+		grid.getColumnSortList().push(new ColumnSortInfo(timestampColumn, true));
 
 		// Service
 		Column<GRecentMessage, SafeHtml> serviceColumn = new Column<GRecentMessage, SafeHtml>(new SafeHtmlCell()) {

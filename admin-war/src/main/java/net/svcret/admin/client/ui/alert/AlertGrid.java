@@ -10,11 +10,13 @@ import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.PCellTable;
 import net.svcret.admin.client.ui.stats.DateUtil;
 import net.svcret.admin.shared.Model;
+import net.svcret.admin.shared.model.BaseGMonitorRule;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleFiringProblem;
+import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 
@@ -35,10 +37,33 @@ import com.google.gwt.view.client.ListDataProvider;
 public class AlertGrid extends FlowPanel {
 
 	private GDomainList myDomainList;
+	private Long myDomainPid;
+	private Long myServicePid;
+	private Long myServiceVersionPid;
+	private GMonitorRuleList myRuleList;
 
 	public AlertGrid(GDomainList theDomainList, Long theDomainPid, Long theServicePid, Long theServiceVersionPid) {
 		myDomainList = theDomainList;
+		myDomainPid = theDomainPid;
+		myServicePid = theServicePid;
+		myServiceVersionPid = theServiceVersionPid;
 
+		AdminPortal.MODEL_SVC.loadMonitorRuleList(new AsyncCallback<GMonitorRuleList>() {
+			@Override
+			public void onFailure(Throwable theCaught) {
+				Model.handleFailure(theCaught);
+			}
+
+			@Override
+			public void onSuccess(GMonitorRuleList theResult) {
+				myRuleList = theResult;
+				initUi();
+			}
+		});
+		
+	}
+
+	private void initUi() {
 		// DataGrid<GMonitorRuleFiring> grid = new DataGrid<GMonitorRuleFiring>();
 		final CellTable<GMonitorRuleFiring> grid = new PCellTable<GMonitorRuleFiring>();
 		add(grid);
@@ -73,6 +98,22 @@ public class AlertGrid extends FlowPanel {
 		};
 		grid.addColumn(endedColumn, "Problem Ended");
 
+		Column<GMonitorRuleFiring, SafeHtml> ruleColumn = new Column<GMonitorRuleFiring, SafeHtml>(new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(GMonitorRuleFiring theObject) {
+				SafeHtmlBuilder b = new SafeHtmlBuilder();
+				BaseGMonitorRule rule = myRuleList.getRuleByPid(theObject.getRulePid());
+				if (rule!=null) {
+					b.appendHtmlConstant("<a href=\"#" + NavProcessor.getTokenEditMonitorRule(true, theObject.getRulePid()) + "\">");
+					b.appendEscaped(rule.getName());
+					b.appendHtmlConstant("</a> ");
+					b.appendEscaped("(" + rule.getRuleType().getFriendlyName() + ")");
+				}
+				return b.toSafeHtml();
+			}
+		};
+		grid.addColumn(ruleColumn, "Rule");
+
 		Column<GMonitorRuleFiring, SafeHtml> problemsColumn = new Column<GMonitorRuleFiring, SafeHtml>(new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(GMonitorRuleFiring theObject) {
@@ -82,10 +123,20 @@ public class AlertGrid extends FlowPanel {
 					b.appendHtmlConstant("No problems associated with this firing");
 				} else if (theObject.getProblems().size() == 1) {
 					append(b, theObject.getProblems().get(0));
+				} else {
+					b.appendHtmlConstant("<ul>");
+					for (GMonitorRuleFiringProblem next : theObject.getProblems()) {
+						b.appendHtmlConstant("<li>");
+						append(b, next);
+						b.appendHtmlConstant("</li>");
+					}
+					b.appendHtmlConstant("</ul>");
+					
 				}
 
 				return b.toSafeHtml();
 			}
+			
 		};
 		grid.addColumn(problemsColumn, "Issue(s) Detected");
 
@@ -116,7 +167,7 @@ public class AlertGrid extends FlowPanel {
 		dp.addDataDisplay(grid);
 
 		int start = 0;
-		AdminPortal.MODEL_SVC.loadMonitorRuleFirings(theDomainPid, theServicePid, theServiceVersionPid, start, new AsyncCallback<List<GMonitorRuleFiring>>() {
+		AdminPortal.MODEL_SVC.loadMonitorRuleFirings(myDomainPid, myServicePid, myServiceVersionPid, start, new AsyncCallback<List<GMonitorRuleFiring>>() {
 
 			@Override
 			public void onFailure(Throwable theCaught) {
@@ -136,9 +187,10 @@ public class AlertGrid extends FlowPanel {
 
 			}
 		});
+		
 	}
-
-	protected void append(SafeHtmlBuilder theB, GMonitorRuleFiringProblem theProblem) {
+	
+	private void append(SafeHtmlBuilder theB, GMonitorRuleFiringProblem theProblem) {
 		if (theProblem.getFailedLatencyAverageMillisPerCall() != null) {
 			theB.appendHtmlConstant("Latency ");
 			theB.append(theProblem.getFailedLatencyAverageMillisPerCall());
@@ -163,7 +215,6 @@ public class AlertGrid extends FlowPanel {
 			theB.appendHtmlConstant(theProblem.getFailedUrlMessage());
 			theB.appendHtmlConstant("</i>");
 		}
-
 	}
 
 	

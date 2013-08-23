@@ -74,7 +74,7 @@ public class PersHttpClientConfig extends BasePersObject {
 	private String myTlsKeystorePassword;
 
 	@Lob
-	@Column(name="TLS_TRUSTSSTORE")
+	@Column(name="TLS_TRUSTSTORE")
 	private byte[] myTlsTruststore;
 
 	@Column(name="TLS_TRUSTSTORE_PASS", length=200)

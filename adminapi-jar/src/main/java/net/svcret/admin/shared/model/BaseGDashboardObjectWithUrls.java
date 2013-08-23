@@ -1,8 +1,6 @@
 package net.svcret.admin.shared.model;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public abstract class BaseGDashboardObjectWithUrls<T> extends BaseGDashboardObject<T> implements IProvidesUrlCount {
@@ -10,7 +8,7 @@ public abstract class BaseGDashboardObjectWithUrls<T> extends BaseGDashboardObje
 	private static final long serialVersionUID = 1L;
 
 	private Set<Long> myFailingApplicableRulePids;
-	private List<Long> myMonitorRulePids;
+	private Set<Long> myMonitorRulePids;
 	private ServerSecuredEnum myServerSecured;
 	private int myUrlsActive;
 	private int myUrlsDown;
@@ -23,9 +21,9 @@ public abstract class BaseGDashboardObjectWithUrls<T> extends BaseGDashboardObje
 		return myFailingApplicableRulePids;
 	}
 
-	public List<Long> getMonitorRulePids() {
+	public Set<Long> getMonitorRulePids() {
 		if (myMonitorRulePids == null) {
-			myMonitorRulePids = new ArrayList<Long>();
+			myMonitorRulePids = new HashSet<Long>();
 		}
 		return myMonitorRulePids;
 	}
@@ -65,9 +63,11 @@ public abstract class BaseGDashboardObjectWithUrls<T> extends BaseGDashboardObje
 		BaseGDashboardObjectWithUrls<T> obj = (BaseGDashboardObjectWithUrls<T>) theObject;
 		myServerSecured = obj.getServerSecured();
 
+		getMonitorRulePids().clear();
 		getMonitorRulePids().addAll(obj.getMonitorRulePids());
 		
 		if (theObject.isStatsInitialized()) {
+			getFailingApplicableRulePids().clear();
 			getFailingApplicableRulePids().addAll(obj.getFailingApplicableRulePids());
 			setUrlsActive(obj.getUrlsActive());
 			setUrlsDown(obj.getUrlsDown());

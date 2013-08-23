@@ -356,7 +356,10 @@ public class MonitorRulesPanel extends FlowPanel {
 
 				// TODO: If the rule isn't currently firing, also include the last time it did fire
 
-				return SafeHtmlUtils.fromTrustedString("Failing since " + DateUtil.formatTimeElapsedForMessage(latestFiring.getStartDate()));
+				SafeHtmlBuilder b = new SafeHtmlBuilder();
+				b.appendHtmlConstant("Failing since ");
+				b.append(DateUtil.formatTimeElapsedForMessage(latestFiring.getStartDate()));
+				return b.toSafeHtml();
 			}
 		};
 		myGrid.addColumn(currentStatusColumn, "Current Status");

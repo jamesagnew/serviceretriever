@@ -26,11 +26,17 @@ The following issues were detected:
 		<td>${problem.versionId}</td>
 		<td><a href="${problem.url}">${problem.urlId}</a></td>
 		<td>
+#if ( ${problem.issues.size} > 1 )
 			<ul>
 #foreach ($issue in ${problem.issues})
 				<li>${issue}</li>
 #end			
 			</ul>
+#else
+#foreach ($issue in ${problem.issues})
+				${issue}
+#end			
+#end
 		</td>
 	</tr>
 #end
