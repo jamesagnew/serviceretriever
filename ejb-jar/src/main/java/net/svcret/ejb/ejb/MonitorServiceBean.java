@@ -151,10 +151,27 @@ public class MonitorServiceBean implements IMonitorService {
 				/*
 				 * We have a new failure
 				 */
-				ourLog.info("Saving active check failure for rule {} which applies to service version {}", theCheck.getRule().getPid(), svcVer.getPid());
 				outcome = myDao.saveMonitorRuleFiring(outcome);
 				svcVer.setMostRecentMonitorRuleFiring(outcome);
 				myDao.saveServiceCatalogItem(svcVer);
+
+				if (ourLog.isInfoEnabled()) {
+					StringBuilder b = new StringBuilder();
+					b.append("Saving active check failure ");
+					b.append(outcome.getPid());
+					b.append(" for rule ");
+					b.append(theCheck.getRule().getPid());
+					b.append(" which applies to service version ");
+					b.append(svcVer.getPid());
+					b.append(" which currently has {}");
+					if (currentFiring == null) {
+						b.append("no firing");
+					} else {
+						b.append("finished firing ");
+						b.append(currentFiring.getPid());
+					}
+					ourLog.info(b.toString());
+				}
 
 				// notify listeners
 				try {
@@ -186,7 +203,6 @@ public class MonitorServiceBean implements IMonitorService {
 						currentFiring = myDao.saveMonitorRuleFiring(currentFiring);
 						svcVer.setMostRecentMonitorRuleFiring(currentFiring);
 						myDao.saveServiceCatalogItem(svcVer);
-
 					}
 				}
 			}

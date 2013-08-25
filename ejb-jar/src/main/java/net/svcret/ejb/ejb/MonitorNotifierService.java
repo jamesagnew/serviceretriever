@@ -53,6 +53,7 @@ public class MonitorNotifierService implements IMonitorNotifier {
 
 		Context context = new VelocityContext();
 		context.put("ruleName", theFiring.getRule().getRuleName());
+		context.put("ruleTypeName", theFiring.getRule().getRuleType().name());
 		context.put("firingDate", FastDateFormat.getDateInstance(FastDateFormat.MEDIUM).format(theFiring.getStartDate()));
 		context.put("firingTime", FastDateFormat.getTimeInstance(FastDateFormat.MEDIUM).format(theFiring.getStartDate()));
 
@@ -94,7 +95,7 @@ public class MonitorNotifierService implements IMonitorNotifier {
 			ourLog.info("Done sending email");
 			
 		} catch (MessagingException e) {
-			throw new ProcessingException("Failed to send email");
+			throw new ProcessingException("Failed to send email", e);
 		}
 
 	}
