@@ -3,6 +3,7 @@ package net.svcret.ejb.ejb;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
@@ -16,17 +17,22 @@ import java.util.concurrent.CountDownLatch;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.UrlPoolBean;
+import net.svcret.ejb.ejb.HttpClientBean.ClientConfigException;
 import net.svcret.ejb.ejb.soap.Soap11ResponseValidator;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.util.RandomServerPortProvider;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mortbay.jetty.Connector;
+import org.mortbay.jetty.Server;
+import org.mortbay.jetty.security.SslSocketConnector;
 import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.Level;
@@ -42,7 +48,7 @@ public class HttpClientBeanTest {
 	public void after() {
 		mySvc.cleanUp();
 	}
-	
+
 	@Before
 	public void before() throws Exception {
 		mySvc = new HttpClientBean();
@@ -61,6 +67,139 @@ public class HttpClientBeanTest {
 		return reqBody;
 	}
 
+	@Test
+	public void testTlsWithTruststore() throws Exception {
+
+		KeystoreServiceBean kss = new KeystoreServiceBean();
+		mySvc.setKeystoreServiceForUnitTest(kss);
+		
+		int port = RandomServerPortProvider.findFreePort();
+		Server server = new Server();
+		SslSocketConnector sslConnector = new SslSocketConnector();
+		sslConnector.setPort(port);
+		sslConnector.setKeystore("src/test/resources/keystore/keystore.jks");
+		sslConnector.setKeyPassword("changeit");
+		server.addConnector(sslConnector);
+
+		server.start();
+		Thread.sleep(500);
+
+		mySvc.setUp();
+		try {
+
+			PersHttpClientConfig config = new PersHttpClientConfig();
+			config.setConnectTimeoutMillis(1000);
+			config.setReadTimeoutMillis(1000);
+			config.setPid(111L);
+			config.setOptLock(1);
+			
+			IResponseValidator validator = new NullResponseValidator();
+			UrlPoolBean urlPool = new UrlPoolBean();
+			urlPool.setPreferredUrl(new PersServiceVersionUrl(123, "https://127.0.0.1:" + port + "/path"));
+			HashMap<String, String> headers = new HashMap<String, String>();
+			HttpResponseBean resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
+
+			ourLog.info("Resp was: " + resp.getBody());
+			assertEquals(1,resp.getFailedUrls().size());
+			assertNull(resp.getSuccessfulUrl());
+			assertThat(resp.getFailedUrls().values().iterator().next().getExplanation(), containsString("PKIX"));
+			
+			config = new PersHttpClientConfig();
+			config.setConnectTimeoutMillis(1000);
+			config.setReadTimeoutMillis(1000);
+			config.setPid(111L);
+			config.setTlsTruststore(IOUtils.toByteArray(new FileInputStream("src/test/resources/keystore/truststore.jks")));
+			config.setTlsTruststorePassword("changeit");
+			config.setOptLock(2);
+
+			resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
+
+			ourLog.info("Resp was: " + resp.getBody());
+			assertEquals(0,resp.getFailedUrls().size());
+			assertNotNull(resp.getSuccessfulUrl());
+
+		} finally {
+			server.stop();
+		}
+	}
+
+	@Test
+	public void testTlsWithTruststoreAndKeystore() throws Exception {
+
+		KeystoreServiceBean kss = new KeystoreServiceBean();
+		mySvc.setKeystoreServiceForUnitTest(kss);
+		
+		int port = RandomServerPortProvider.findFreePort();
+		Server server = new Server();
+		SslSocketConnector sslConnector = new SslSocketConnector();
+		sslConnector.setPort(port);
+		sslConnector.setKeystore("src/test/resources/keystore/keystore.jks");
+		sslConnector.setKeyPassword("changeit");
+		sslConnector.setTruststore("src/test/resources/keystore/truststore2.jks");
+		sslConnector.setTrustPassword("changeit");
+		sslConnector.setNeedClientAuth(true);
+		server.addConnector(sslConnector);
+
+		server.start();
+		Thread.sleep(500);
+
+		mySvc.setUp();
+		try {
+
+			PersHttpClientConfig config = new PersHttpClientConfig();
+			config.setConnectTimeoutMillis(1000);
+			config.setReadTimeoutMillis(1000);
+			config.setPid(111L);
+			config.setOptLock(1);
+			
+			IResponseValidator validator = new NullResponseValidator();
+			UrlPoolBean urlPool = new UrlPoolBean();
+			urlPool.setPreferredUrl(new PersServiceVersionUrl(123, "https://127.0.0.1:" + port + "/path"));
+			HashMap<String, String> headers = new HashMap<String, String>();
+			HttpResponseBean resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
+
+			ourLog.info("Resp was: " + resp.getBody());
+			assertEquals(1,resp.getFailedUrls().size());
+			assertNull(resp.getSuccessfulUrl());
+			assertThat(resp.getFailedUrls().values().iterator().next().getExplanation(), containsString("PKIX"));
+			
+			config = new PersHttpClientConfig();
+			config.setConnectTimeoutMillis(1000);
+			config.setReadTimeoutMillis(1000);
+			config.setPid(111L);
+			config.setTlsTruststore(IOUtils.toByteArray(new FileInputStream("src/test/resources/keystore/truststore.jks")));
+			config.setTlsTruststorePassword("changeit");
+			config.setOptLock(2);
+
+			resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
+
+			ourLog.info("Resp was: " + resp.getBody());
+			assertEquals(1,resp.getFailedUrls().size());
+			assertNull(resp.getSuccessfulUrl());
+
+			// Now with client keystore
+			
+			config = new PersHttpClientConfig();
+			config.setConnectTimeoutMillis(1000);
+			config.setReadTimeoutMillis(1000);
+			config.setPid(111L);
+			config.setTlsTruststore(IOUtils.toByteArray(new FileInputStream("src/test/resources/keystore/truststore.jks")));
+			config.setTlsTruststorePassword("changeit");
+			config.setTlsKeystore(IOUtils.toByteArray(new FileInputStream("src/test/resources/keystore/keystore2.jks")));
+			config.setTlsKeystorePassword("changeit");
+			config.setOptLock(3);
+
+			resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
+
+			ourLog.info("Resp was: " + resp.getBody());
+			assertEquals(0,resp.getFailedUrls().size());
+			assertNotNull(resp.getSuccessfulUrl());
+
+		} finally {
+			server.stop();
+		}
+	}
+	
 	private String provideXmlRequest() {
 		String reqBody = "<SOAP-ENV:Envelope\n" + // -
 				"  xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n" + // -
@@ -75,7 +214,8 @@ public class HttpClientBeanTest {
 	}
 
 	private String provideXmlResponse() {
-		String body = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" + "<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" + // -
+		String body = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+				+ "<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" + // -
 				"  <soap:Body>\n" + // -
 				"  <EnlightenResponse xmlns=\"http://clearforest.com/\">\n" + // -
 				"  <EnlightenResult>string</EnlightenResult>\n" + // -
@@ -132,7 +272,7 @@ public class HttpClientBeanTest {
 	}
 
 	@Test
-	public void testPost() throws InterruptedException {
+	public void testPost() throws InterruptedException, ClientConfigException {
 
 		int port = RandomServerPortProvider.findFreePort();
 		String respHeaders = provideGoodHeaders();
@@ -146,7 +286,7 @@ public class HttpClientBeanTest {
 		IResponseValidator validator = new NullResponseValidator();
 		UrlPoolBean urlPool = new UrlPoolBean();
 		urlPool.setPreferredUrl(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port + "/Uri"));
-		
+
 		PersHttpClientConfig clientConfig = createHttpClientConfig();
 		clientConfig.setConnectTimeoutMillis(1000);
 		clientConfig.setReadTimeoutMillis(1000);
@@ -164,7 +304,7 @@ public class HttpClientBeanTest {
 	}
 
 	@Test
-	public void testFailingPost() throws InterruptedException {
+	public void testFailingPost() throws InterruptedException, ClientConfigException {
 
 		int port = RandomServerPortProvider.findFreePort();
 		String reqBody = provideXmlRequest();
@@ -187,7 +327,7 @@ public class HttpClientBeanTest {
 	}
 
 	@Test
-	public void testPostWithValidation() throws InterruptedException {
+	public void testPostWithValidation() throws InterruptedException, ClientConfigException {
 
 		int port = RandomServerPortProvider.findFreePort();
 		String respHeaders = provideGoodHeaders();
@@ -199,7 +339,7 @@ public class HttpClientBeanTest {
 		resp.waitToStart();
 
 		IResponseValidator validator = new Soap11ResponseValidator();
-		
+
 		UrlPoolBean urlPool = new UrlPoolBean();
 		urlPool.setPreferredUrl(new PersServiceVersionUrl(ourNextPid++, "http://localhost:" + port + "/Uri"));
 
@@ -220,7 +360,7 @@ public class HttpClientBeanTest {
 	}
 
 	@Test
-	public void testPostOneUrlNoRetry() throws InterruptedException {
+	public void testPostOneUrlNoRetry() throws InterruptedException, ClientConfigException {
 
 		int port = RandomServerPortProvider.findFreePort();
 		String respHeaders = provideGoodHeaders();
@@ -252,7 +392,7 @@ public class HttpClientBeanTest {
 	}
 
 	@Test
-	public void testPostOneUrlWithOneRetry() throws InterruptedException {
+	public void testPostOneUrlWithOneRetry() throws InterruptedException, ClientConfigException {
 
 		int port = RandomServerPortProvider.findFreePort();
 		String respHeaders = provideGoodHeaders();
@@ -286,14 +426,14 @@ public class HttpClientBeanTest {
 	}
 
 	@Test
-	public void testPostTwoUrlsAllFailing() throws InterruptedException {
+	public void testPostTwoUrlsAllFailing() throws InterruptedException, ClientConfigException {
 
 		int port1 = RandomServerPortProvider.findFreePort();
 		int port2 = RandomServerPortProvider.findFreePort();
-		
+
 		String respHeaders = provideGoodHeaders();
 		String respBodyBad = provideTextResponse();
-//		String respBodyGood = provideXmlResponse();
+		// String respBodyGood = provideXmlResponse();
 		String reqBody = provideXmlRequest();
 
 		TcpResponder resp1 = new TcpResponder(port1, respHeaders, respBodyBad, respBodyBad);
@@ -324,19 +464,19 @@ public class HttpClientBeanTest {
 	}
 
 	private PersHttpClientConfig createHttpClientConfig() {
-		PersHttpClientConfig clientConfig=new PersHttpClientConfig();
+		PersHttpClientConfig clientConfig = new PersHttpClientConfig();
 		clientConfig.setPid(1L);
 		return clientConfig;
 	}
 
 	private static long ourNextPid = 1;
-	
+
 	@Test
-	public void testPostTwoUrlsSecondPassing() throws InterruptedException {
+	public void testPostTwoUrlsSecondPassing() throws InterruptedException, ClientConfigException {
 
 		int port1 = RandomServerPortProvider.findFreePort();
 		int port2 = RandomServerPortProvider.findFreePort();
-		
+
 		String respHeaders = provideGoodHeaders();
 		String respBodyBad = provideTextResponse();
 		String respBodyGood = provideXmlResponse();
@@ -372,11 +512,11 @@ public class HttpClientBeanTest {
 	}
 
 	@Test
-	public void testPostTwoUrlsFirstPassingAfterOneRetry() throws InterruptedException {
+	public void testPostTwoUrlsFirstPassingAfterOneRetry() throws InterruptedException, ClientConfigException {
 
 		int port1 = RandomServerPortProvider.findFreePort();
 		int port2 = RandomServerPortProvider.findFreePort();
-		
+
 		String respHeaders = provideGoodHeaders();
 		String respBodyBad = provideTextResponse();
 		String respBodyGood = provideXmlResponse();
@@ -498,7 +638,6 @@ public class HttpClientBeanTest {
 			}
 
 		}
-
 
 		public void waitToStart() throws InterruptedException {
 			ourLog.info("Waiting for responder to start");

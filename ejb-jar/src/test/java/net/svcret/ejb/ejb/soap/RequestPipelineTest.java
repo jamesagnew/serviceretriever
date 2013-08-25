@@ -13,7 +13,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import net.svcret.ejb.ejb.soap.RequestPipeline;
 import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnknownRequestException;
@@ -25,7 +24,6 @@ import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hsqldb.lib.StringInputStream;
 import org.junit.Test;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;

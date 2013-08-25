@@ -195,7 +195,7 @@ public abstract class BasePersRecentMessage implements Serializable {
 	public void setRequestHostIp(String theRequestHostIp) {
 		Validate.notNull(theRequestHostIp);
 		
-		if (theRequestHostIp != null && theRequestHostIp.length() > MAX_REQ_IP_LEN) {
+		if (theRequestHostIp.length() > MAX_REQ_IP_LEN) {
 			myRequestHostIp = theRequestHostIp.substring(0, MAX_REQ_IP_LEN);
 		} else {
 			myRequestHostIp = theRequestHostIp;

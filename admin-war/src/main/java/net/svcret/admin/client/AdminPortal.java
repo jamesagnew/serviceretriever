@@ -1,5 +1,7 @@
 package net.svcret.admin.client;
 
+import net.svcret.admin.client.rpc.HttpClientConfigService;
+import net.svcret.admin.client.rpc.HttpClientConfigServiceAsync;
 import net.svcret.admin.client.rpc.ModelUpdateService;
 import net.svcret.admin.client.rpc.ModelUpdateServiceAsync;
 import net.svcret.admin.client.ui.layout.OuterLayoutPanel;
@@ -16,6 +18,7 @@ import com.google.gwt.user.client.ui.RootLayoutPanel;
  */
 public class AdminPortal implements EntryPoint, UncaughtExceptionHandler {
 
+	public static final Images IMAGES = GWT.create(Images.class);
 
 	/**
 	 * Create a remote service proxy to talk to the server-side Greeting
@@ -28,7 +31,7 @@ public class AdminPortal implements EntryPoint, UncaughtExceptionHandler {
 	 */
 	public static final Messages MSGS = GWT.create(Messages.class);
 
-	public static final Images IMAGES = GWT.create(Images.class);
+	public static final HttpClientConfigServiceAsync SVC_HTTPCLIENTCONFIG = GWT.create(HttpClientConfigService.class);
 
 	/**
 	 * This is the entry point method.
@@ -51,18 +54,18 @@ public class AdminPortal implements EntryPoint, UncaughtExceptionHandler {
 	public static void reportError(String theMessage, Throwable theException) {
 		Throwable exception = theException;
 		if (exception instanceof UmbrellaException) {
-			UmbrellaException ue = (UmbrellaException)exception;
+			UmbrellaException ue = (UmbrellaException) exception;
 			exception = ue.getCause();
 		}
-		
+
 		MODEL_SVC.reportClientError(theMessage, exception, new AsyncCallback<Void>() {
 			@Override
-			public void onSuccess(Void theResult) {
+			public void onFailure(Throwable theCaught) {
 				// nothing
 			}
 
 			@Override
-			public void onFailure(Throwable theCaught) {
+			public void onSuccess(Void theResult) {
 				// nothing
 			}
 		});

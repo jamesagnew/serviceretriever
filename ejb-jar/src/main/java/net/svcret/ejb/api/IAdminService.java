@@ -90,7 +90,7 @@ public interface IAdminService {
 
 	GDomainList saveDomain(GDomain theDomain) throws ProcessingException;
 
-	GHttpClientConfig saveHttpClientConfig(GHttpClientConfig theConfig) throws ProcessingException;
+	GHttpClientConfig saveHttpClientConfig(GHttpClientConfig theConfig, byte[] theNewTruststore, String theNewTruststorePass, byte[] theNewKeystore, String theNewKeystorePass) throws ProcessingException;
 
 	GDomainList saveService(GService theService) throws ProcessingException;
 

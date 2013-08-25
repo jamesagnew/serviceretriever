@@ -1,0 +1,20 @@
+package net.svcret.admin.client.rpc;
+
+import net.svcret.admin.shared.model.DtoKeystoreAnalysis;
+import net.svcret.admin.shared.model.GHttpClientConfig;
+import net.svcret.admin.shared.model.GHttpClientConfigList;
+
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
+public interface HttpClientConfigServiceAsync {
+
+	void deleteHttpClientConfig(long thePid, AsyncCallback<GHttpClientConfigList> theCallback);
+
+	void saveHttpClientConfig(boolean theCreate, boolean theUseNewTruststore, boolean theUseNewKeystore, GHttpClientConfig theConfig, AsyncCallback<GHttpClientConfig> theAsyncCallback);
+
+	void analyzeTransientTrustStore(long theHttpClientConfig, AsyncCallback<DtoKeystoreAnalysis> callback);
+
+	void analyzeTransientKeyStore(long theHttpClientConfig, AsyncCallback<DtoKeystoreAnalysis> callback);
+
+
+}

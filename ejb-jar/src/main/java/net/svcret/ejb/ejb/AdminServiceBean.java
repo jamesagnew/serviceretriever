@@ -81,6 +81,7 @@ import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.IAdminService;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
+import net.svcret.ejb.api.IKeystoreService;
 import net.svcret.ejb.api.IMonitorService;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IScheduler;
@@ -151,6 +152,9 @@ public class AdminServiceBean implements IAdminService {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(AdminServiceBean.class);
 
+	@EJB
+	private IKeystoreService myKeystoreSvc;
+	
 	@EJB
 	private IConfigService myConfigSvc;
 
@@ -819,7 +823,7 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	@Override
-	public GHttpClientConfig saveHttpClientConfig(GHttpClientConfig theConfig) throws ProcessingException {
+	public GHttpClientConfig saveHttpClientConfig(GHttpClientConfig theConfig, byte[] theNewTruststore, String theNewTruststorePass, byte[] theNewKeystore, String theNewKeystorePass) throws ProcessingException {
 		Validate.notNull(theConfig, "HttpClientConfig");
 
 		PersHttpClientConfig existing = null;
@@ -842,6 +846,16 @@ public class AdminServiceBean implements IAdminService {
 		if (isDefault) {
 			config.setId(config.getId());
 			config.setName(config.getName());
+		}
+
+		if (theNewTruststore != null) {
+			config.setTlsTruststore(theNewTruststore);
+			config.setTlsTruststorePassword(theNewTruststorePass);
+		}
+
+		if (theNewKeystore != null) {
+			config.setTlsKeystore(theNewKeystore);
+			config.setTlsKeystorePassword(theNewKeystorePass);
 		}
 
 		return toUi(myServiceRegistry.saveHttpClientConfig(config));
@@ -1388,7 +1402,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setFailureRetriesBeforeAborting(theConfig.getFailureRetriesBeforeAborting());
 		retVal.setReadTimeoutMillis(theConfig.getReadTimeoutMillis());
 		retVal.setUrlSelectionPolicy(theConfig.getUrlSelectionPolicy());
-
+		
 		return retVal;
 	}
 
@@ -1651,7 +1665,7 @@ public class AdminServiceBean implements IAdminService {
 		return domainList;
 	}
 
-	private GHttpClientConfigList loadHttpClientConfigList() {
+	private GHttpClientConfigList loadHttpClientConfigList() throws ProcessingException {
 		GHttpClientConfigList configList = new GHttpClientConfigList();
 		for (PersHttpClientConfig next : myDao.getHttpClientConfigs()) {
 			configList.add(toUi(next));
@@ -2178,7 +2192,7 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private GHttpClientConfig toUi(PersHttpClientConfig theConfig) {
+	private GHttpClientConfig toUi(PersHttpClientConfig theConfig) throws ProcessingException {
 		GHttpClientConfig retVal = new GHttpClientConfig();
 
 		retVal.setPid(theConfig.getPid());
@@ -2194,6 +2208,14 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setFailureRetriesBeforeAborting(theConfig.getFailureRetriesBeforeAborting());
 
 		retVal.setUrlSelectionPolicy(theConfig.getUrlSelectionPolicy());
+
+		if (theConfig.getTlsKeystore()!=null) {
+			retVal.setTlsKeystore(myKeystoreSvc.analyzeKeystore(theConfig.getTlsKeystore(), theConfig.getTlsKeystorePassword()));
+		}
+		
+		if (theConfig.getTlsTruststore()!=null) {
+			retVal.setTlsTruststore(myKeystoreSvc.analyzeKeystore(theConfig.getTlsTruststore(), theConfig.getTlsTruststorePassword()));
+		}
 
 		return retVal;
 	}

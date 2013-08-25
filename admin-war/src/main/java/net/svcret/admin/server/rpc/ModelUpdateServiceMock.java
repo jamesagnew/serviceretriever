@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import net.svcret.admin.client.rpc.HttpClientConfigService;
 import net.svcret.admin.client.rpc.ModelUpdateService;
+import net.svcret.admin.server.rpc.HttpClientConfigServiceImpl.SessionUploadedKeystore;
 import net.svcret.admin.shared.ServiceFailureException;
 import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
@@ -21,6 +23,7 @@ import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.BaseGDashboardObjectWithUrls;
 import net.svcret.admin.shared.model.BaseGMonitorRule;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.DtoKeystoreAnalysis;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
@@ -65,7 +68,7 @@ import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 
 import org.apache.commons.lang3.time.DateUtils;
 
-public class ModelUpdateServiceMock implements ModelUpdateService {
+public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientConfigService {
 
 	private static final long MET2_PID = 1001L;
 	private static final long MET1_PID = 1000L;
@@ -185,6 +188,17 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 		defCfg.setConnectTimeoutMillis(2000);
 		defCfg.setCircuitBreakerEnabled(true);
 		defCfg.setFailureRetriesBeforeAborting(1);
+		defCfg.setTlsKeystore(new DtoKeystoreAnalysis());
+		defCfg.getTlsKeystore().getKeyAliases().add("alias1");
+		defCfg.getTlsKeystore().getKeyAliases().add("alias2");
+		defCfg.getTlsKeystore().getExpiryDate().put("alias1", new Date(System.currentTimeMillis() + 10000L));
+		defCfg.getTlsKeystore().getExpiryDate().put("alias2", new Date(System.currentTimeMillis() + 20000L));
+		defCfg.getTlsKeystore().getIssuer().put("alias1", "CN=Issuer1");
+		defCfg.getTlsKeystore().getIssuer().put("alias2", "CN=Issuer2");
+		defCfg.getTlsKeystore().getSubject().put("alias1", "CN=Subject1");
+		defCfg.getTlsKeystore().getSubject().put("alias2", "CN=Subject2");
+		defCfg.getTlsKeystore().setPasswordAccepted(true);
+		defCfg.getTlsKeystore().setPassword("changeit");
 		myClientConfigList.add(defCfg);
 
 		myAuthHostList = new GAuthenticationHostList();
@@ -761,7 +775,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	}
 
 	@Override
-	public GHttpClientConfig saveHttpClientConfig(boolean theCreate, GHttpClientConfig theConfig) {
+	public GHttpClientConfig saveHttpClientConfig(boolean theCreate, boolean theUseNewTruststore, boolean theUseNewKeystore, GHttpClientConfig theConfig) {
 		if (theCreate) {
 			theConfig.setPid(ourNextPid++);
 			myClientConfigList.add(theConfig);
@@ -903,6 +917,37 @@ public class ModelUpdateServiceMock implements ModelUpdateService {
 	@Override
 	public Map<Long, GMonitorRuleFiring> getLatestFailingMonitorRuleFiringForRulePids() {
 		return new HashMap<Long, GMonitorRuleFiring>();
+	}
+
+	@Override
+	public DtoKeystoreAnalysis analyzeTransientTrustStore(long theHttpClientConfig) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public DtoKeystoreAnalysis analyzeTransientKeyStore(long theHttpClientConfig) {
+		throw new UnsupportedOperationException();
+	}
+
+	public DtoKeystoreAnalysis analyzeKeyStore(SessionUploadedKeystore theKs) {
+		DtoKeystoreAnalysis retVal=new DtoKeystoreAnalysis();
+		if (theKs.getPassword().equals("changeit")) {
+			retVal.getKeyAliases().add("alias1");
+			retVal.getKeyAliases().add("alias2");
+			retVal.getExpiryDate().put("alias1", new Date(System.currentTimeMillis() + 100000L));
+			retVal.getExpiryDate().put("alias2", new Date(System.currentTimeMillis() + 200000L));
+			retVal.getIssuer().put("alias1", "CN=Issuer1");
+			retVal.getIssuer().put("alias2", "CN=Issuer2");
+			retVal.getSubject().put("alias1", "CN=Subject1");
+			retVal.getSubject().put("alias2", "CN=Subject2");
+			retVal.getKeyEntry().put("alias1", true);
+			retVal.getKeyEntry().put("alias2", false);
+			retVal.setPasswordAccepted(true);
+		}else {
+			retVal.setPasswordAccepted(false);
+			retVal.setProblemDescription("Keystore has been tampered with or password is invalid");
+		}
+		return retVal;
 	}
 
 }

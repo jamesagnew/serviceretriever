@@ -45,8 +45,6 @@ public interface ModelUpdateServiceAsync {
 
 	void createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncommittedId, AsyncCallback<BaseGServiceVersion> theCallback);
 
-	void deleteHttpClientConfig(long thePid, AsyncCallback<GHttpClientConfigList> theCallback);
-
 	void loadConfig(AsyncCallback<GConfig> theAsyncCallback);
 
 	void loadLibraryMessage(long theMessagePid, AsyncCallback<DtoLibraryMessage> theAsyncCallback);
@@ -96,8 +94,6 @@ public interface ModelUpdateServiceAsync {
 	void saveConfig(GConfig theConfig, AsyncCallback<Void> theAsyncCallback);
 
 	void saveDomain(GDomain theDomain, AsyncCallback<GDomainList> theDomainList);
-
-	void saveHttpClientConfig(boolean theCreate, GHttpClientConfig theConfig, AsyncCallback<GHttpClientConfig> theAsyncCallback);
 
 	void saveLibraryMessage(DtoLibraryMessage theMessage, AsyncCallback<Void> theIAsyncLoadCallback);
 

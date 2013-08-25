@@ -13,14 +13,9 @@ public class GHttpClientConfig extends BaseGObject<GHttpClientConfig> {
 	private String myId;
 	private String myName;
 	private int myReadTimeoutMillis;
+	private DtoKeystoreAnalysis myTlsKeystore;
+	private DtoKeystoreAnalysis myTlsTruststore;
 	private UrlSelectionPolicy myUrlSelectionPolicy;
-
-	/**
-	 * @return the circuitBreakerEnabled
-	 */
-	public boolean isCircuitBreakerEnabled() {
-		return myCircuitBreakerEnabled;
-	}
 
 	/**
 	 * @return the circuitBreakerTimeBetweenResetAttempts
@@ -64,11 +59,30 @@ public class GHttpClientConfig extends BaseGObject<GHttpClientConfig> {
 		return myReadTimeoutMillis;
 	}
 
+	public DtoKeystoreAnalysis getTlsKeystore() {
+		return myTlsKeystore;
+	}
+
+	public DtoKeystoreAnalysis getTlsTruststore() {
+		return myTlsTruststore;
+	}
+
 	/**
 	 * @return the urlSelectionPolicy
 	 */
 	public UrlSelectionPolicy getUrlSelectionPolicy() {
 		return myUrlSelectionPolicy;
+	}
+
+	/**
+	 * @return the circuitBreakerEnabled
+	 */
+	public boolean isCircuitBreakerEnabled() {
+		return myCircuitBreakerEnabled;
+	}
+
+	public boolean isDefault() {
+		return DEFAULT_ID.equals(myId);
 	}
 
 	@Override
@@ -139,16 +153,20 @@ public class GHttpClientConfig extends BaseGObject<GHttpClientConfig> {
 		myReadTimeoutMillis = theReadTimeoutMillis;
 	}
 
+	public void setTlsKeystore(DtoKeystoreAnalysis theKeystore) {
+		myTlsKeystore = theKeystore;
+	}
+
+	public void setTlsTruststore(DtoKeystoreAnalysis theTruststore) {
+		myTlsTruststore = theTruststore;
+	}
+
 	/**
 	 * @param theUrlSelectionPolicy
 	 *            the urlSelectionPolicy to set
 	 */
 	public void setUrlSelectionPolicy(UrlSelectionPolicy theUrlSelectionPolicy) {
 		myUrlSelectionPolicy = theUrlSelectionPolicy;
-	}
-
-	public boolean isDefault() {
-		return DEFAULT_ID.equals(myId);
 	}
 
 }

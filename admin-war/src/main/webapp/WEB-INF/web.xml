@@ -1,6 +1,7 @@
 <web-app xmlns="http://java.sun.com/xml/ns/javaee"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.5"
-    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="3.0"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://www.oracle.com/webfolder/technetwork/jsc/xml/ns/javaee/web-app_3_0.xsd"
+    >
 
   <!-- Servlets -->
   <servlet>
@@ -15,8 +16,23 @@
   
   <servlet>
     <servlet-name>keystoreUploadServlet</servlet-name>
-    <servlet-class>net.svcret.admin.server.rpc.KeystoreUploadServlet</servlet-class>
+    <servlet-class>net.svcret.admin.server.rpc.HttpClientConfigUploadServlet</servlet-class>
   </servlet>
+
+  <servlet>
+    <servlet-name>httpClientConfigServlet</servlet-name>
+    <servlet-class>net.svcret.admin.server.rpc.HttpClientConfigServiceImpl</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>keystoreUploadServlet</servlet-name>
+    <url-pattern>/AdminPortal/keystoreUpload</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>httpClientConfigServlet</servlet-name>
+    <url-pattern>/AdminPortal/httpclientconfig</url-pattern>
+  </servlet-mapping>
 
   <servlet-mapping>
     <servlet-name>modelUpdateServlet</servlet-name>
@@ -26,11 +42,6 @@
   <servlet-mapping>
     <servlet-name>resourceServlet</servlet-name>
     <url-pattern>/resources/*</url-pattern>
-  </servlet-mapping>
-
-  <servlet-mapping>
-    <servlet-name>keystoreUploadServlet</servlet-name>
-    <url-pattern>/keystoreUpload/*</url-pattern>
   </servlet-mapping>
 
   <!-- Default page to serve -->

@@ -2,6 +2,8 @@ package net.svcret.ejb.ejb;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.security.KeyStore;
+import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -13,17 +15,22 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.EJB;
 import javax.ejb.PrePassivate;
-import javax.ejb.Stateless;
+import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
 import net.svcret.ejb.Messages;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IHttpClient;
+import net.svcret.ejb.api.IKeystoreService;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.IResponseValidator.ValidationResponse;
 import net.svcret.ejb.api.UrlPoolBean;
+import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.util.Validate;
@@ -41,6 +48,7 @@ import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.scheme.SchemeSocketFactory;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
+import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -50,13 +58,18 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.HttpParams;
 
-@Stateless
+import com.google.common.annotations.VisibleForTesting;
+
+@Singleton
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class HttpClientBean implements IHttpClient {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(HttpClientBean.class);
 
 	private ConcurrentHashMap<Long, HttpClientImpl> myClientConfigPidToClient = new ConcurrentHashMap<Long, HttpClientBean.HttpClientImpl>();
 	private DefaultHttpClient myDefaultSimpleGetClient;
+	@EJB
+	private IKeystoreService myKeystoreService;
 	private PoolingClientConnectionManager mySimpleClientConMgr;
 	private Charset ourDefaultCharset = Charset.forName("UTF-8");
 
@@ -66,14 +79,14 @@ public class HttpClientBean implements IHttpClient {
 	@PrePassivate
 	public void cleanUp() {
 		ourLog.info("Shuting down HttpClient");
-		
+
 		for (HttpClientImpl next : myClientConfigPidToClient.values()) {
 			next.getConnectionManager().shutdown();
 		}
 		myClientConfigPidToClient.clear();
-		
+
 		mySimpleClientConMgr.shutdown();
-				mySimpleClientConMgr=null;
+		mySimpleClientConMgr = null;
 	}
 
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -132,26 +145,29 @@ public class HttpClientBean implements IHttpClient {
 		if (theClientConfig.getReadTimeoutMillis() > Integer.MAX_VALUE) {
 			throw new IllegalArgumentException("ReadTimeout may not be > MAX_INT");
 		}
-		
-		/*
-		 * The following block isn't synchronized, which means multiple threads could
-		 * create clients in parallel and overwrite each other. This could probably use
-		 * some thought, but technically there is nothing wrong with having
-		 * a client spin up a short-lived client..
-		 */
+		Validate.notNull(theClientConfig.getPid());
+
 		HttpClientImpl client = myClientConfigPidToClient.get(theClientConfig.getPid());
 		if (client == null || client.getClientConfig().getOptLock() != theClientConfig.getOptLock()) {
-			client = new HttpClientImpl(theClientConfig);
+			ourLog.info("Creating a new HTTP client instance for config PID {} (has version {})", theClientConfig.getPid(), theClientConfig.getOptLock());
+			try {
+				client = new HttpClientImpl(theClientConfig);
+			} catch (ClientConfigException e) {
+				ourLog.error("Failed to initialize HTTP client", e);
+				HttpResponseBean retVal = new HttpResponseBean();
+				retVal.addFailedUrl(theUrlPool.getPreferredUrl(), "ServiceRetriever failed to initialize HTTP client, problem was: " + e.getMessage(), 0, "", "");
+				return retVal;
+			}
 			myClientConfigPidToClient.put(theClientConfig.getPid(), client);
 		}
 
-		return client.post(theClientConfig, theResponseValidator,theUrlPool, theContentBody, theHeaders, theContentType);
+		return client.post(theClientConfig, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType);
 	}
 
 	@PostConstruct
 	public void setUp() throws Exception {
 		ourLog.info("Starting new HttpClient instance");
-		
+
 		HttpParams params = new BasicHttpParams();
 		params.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, 10 * 1000);
 		params.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, 10 * 1000);
@@ -276,13 +292,52 @@ public class HttpClientBean implements IHttpClient {
 		private PersHttpClientConfig myClientConfig;
 		private PoolingClientConnectionManager myConMgr;
 
-		public HttpClientImpl(PersHttpClientConfig theClientConfig) {
-			myClientConfig =theClientConfig;
+		public HttpClientImpl(PersHttpClientConfig theClientConfig) throws ClientConfigException {
+			myClientConfig = theClientConfig;
 			myConMgr = new PoolingClientConnectionManager(SchemeRegistryFactory.createDefault(), 5000, TimeUnit.MILLISECONDS);
+
+			String algorithm="TLS";
+			KeyStore keystore = null;
+			if (myClientConfig.getTlsKeystore() != null) {
+				try {
+					keystore = myKeystoreService.loadKeystore(myClientConfig.getTlsKeystore(), myClientConfig.getTlsKeystorePassword());
+				} catch (ProcessingException e) {
+					throw new ClientConfigException("Failed to initialize keystore", e);
+				}
+			}
+			String keystorePassword = myClientConfig.getTlsKeystorePassword();
+			
+			KeyStore truststore = null;
+			
+			if (myClientConfig.getTlsTruststore()!= null) {
+				try {
+					truststore = myKeystoreService.loadKeystore(myClientConfig.getTlsTruststore(), myClientConfig.getTlsTruststorePassword());
+				} catch (ProcessingException e) {
+					throw new ClientConfigException("Failed to initialize truststore", e);
+				}				
+			}
+			
+			SecureRandom random = null;
+			TrustStrategy trustStrategy = null;
+			X509HostnameVerifier hostnameVerifier = null;
+			SSLSocketFactory ssf;
+			try {
+				ssf = new SSLSocketFactory(algorithm, keystore, keystorePassword, truststore, random, trustStrategy, hostnameVerifier);
+			} catch (Exception e) {
+				throw new ClientConfigException("Failed to initialize SSL/TLS context, check keystore and truststore settings for this client config", e);
+			} 
+			
+			SchemeRegistry sr = myConMgr.getSchemeRegistry();
+			sr.register(new Scheme("https", 443, ssf));
+			
 		}
 
 		public PersHttpClientConfig getClientConfig() {
 			return myClientConfig;
+		}
+
+		public PoolingClientConnectionManager getConnectionManager() {
+			return myConMgr;
 		}
 
 		public HttpResponseBean post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody, Map<String, String> theHeaders,
@@ -312,14 +367,25 @@ public class HttpClientBean implements IHttpClient {
 					}
 				}
 			}
-			
+
 			return retVal;
 		}
 
-		public PoolingClientConnectionManager getConnectionManager() {
-			return myConMgr;
+	}
+
+	public static class ClientConfigException extends Exception {
+
+		public ClientConfigException(String theMessage, Exception theE) {
+			super(theMessage, theE);
 		}
-		
+
+		private static final long serialVersionUID = 5053765957107834824L;
+
+	}
+
+	@VisibleForTesting
+	void setKeystoreServiceForUnitTest(KeystoreServiceBean theKss) {
+		myKeystoreService=theKss;
 	}
 
 }

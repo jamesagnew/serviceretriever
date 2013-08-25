@@ -52,8 +52,6 @@ public interface ModelUpdateService extends RemoteService {
 
 	BaseGServiceVersion createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncommittedId);
 
-	GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ServiceFailureException;
-
 	Map<Long, GMonitorRuleFiring> getLatestFailingMonitorRuleFiringForRulePids() throws ServiceFailureException;
 
 	GConfig loadConfig() throws ServiceFailureException;
@@ -106,7 +104,6 @@ public interface ModelUpdateService extends RemoteService {
 
 	GDomainList saveDomain(GDomain theDomain) throws ServiceFailureException;
 
-	GHttpClientConfig saveHttpClientConfig(boolean theCreate, GHttpClientConfig theConfig) throws ServiceFailureException;
 
 	void saveLibraryMessage(DtoLibraryMessage theMessage) throws ServiceFailureException;
 

@@ -54,7 +54,7 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
  * The server side implementation of the RPC service.
  */
 @SuppressWarnings("serial")
-public class ModelUpdateServiceImpl extends RemoteServiceServlet implements ModelUpdateService {
+public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdateService {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ModelUpdateServiceImpl.class);
 	private static final AtomicLong ourNextId = new AtomicLong(0L);
@@ -64,14 +64,12 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	@EJB
 	private IAdminService myAdminSvc;
 
-	private ModelUpdateServiceMock myMock;
-
 	@Override
 	public GDomain addDomain(GDomain theDomain) throws ServiceFailureException {
 		ourLog.info("Adding domain {}/{}", theDomain.getId(), theDomain.getName());
 
 		if (isMockMode()) {
-			return myMock.addDomain(theDomain);
+			return getMock().addDomain(theDomain);
 		}
 
 		try {
@@ -87,7 +85,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		ourLog.info("Adding new service to domain {} with ID[{}] and name: {}", new Object[] { theDomainPid, theId, theName });
 
 		if (isMockMode()) {
-			return myMock.addService(theDomainPid, theId, theName, theActive);
+			return getMock().addService(theDomainPid, theId, theName, theActive);
 		}
 
 		try {
@@ -122,7 +120,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		}
 
 		if (isMockMode()) {
-			return myMock.addServiceVersion(theExistingDomainPid, theCreateDomainId, theExistingServicePid, theCreateServiceId, theVersion);
+			return getMock().addServiceVersion(theExistingDomainPid, theCreateDomainId, theExistingServicePid, theCreateServiceId, theVersion);
 		}
 
 		Long uncommittedSessionId = theVersion.getUncommittedSessionId();
@@ -214,7 +212,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		}
 
 		if (isMockMode()) {
-			retVal.setHttpClientConfigPid(myMock.getDefaultHttpClientConfigPid());
+			retVal.setHttpClientConfigPid(getMock().getDefaultHttpClientConfigPid());
 			retVal.setId("1.0");
 		} else {
 			retVal.setHttpClientConfigPid(myAdminSvc.getDefaultHttpClientConfigPid());
@@ -236,20 +234,28 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		return retVal;
 	}
 
+
 	@Override
-	public GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ServiceFailureException {
-		if (thePid <= 0) {
-			throw new IllegalArgumentException("Invalid PID: " + thePid);
-		}
-
+	public Map<Long, GMonitorRuleFiring> getLatestFailingMonitorRuleFiringForRulePids() throws ServiceFailureException {
 		if (isMockMode()) {
-			return myMock.deleteHttpClientConfig(thePid);
+			return getMock().getLatestFailingMonitorRuleFiringForRulePids();
 		}
-
 		try {
-			return myAdminSvc.deleteHttpClientConfig(thePid);
+			HashMap<Long, GMonitorRuleFiring> retVal = new HashMap<Long, GMonitorRuleFiring>();
+			
+			for (GMonitorRuleFiring next : myAdminSvc.loadAllActiveRuleFirings()) {
+				if (retVal.containsKey(next.getRulePid())) {
+					if (next.getStartDate().after(retVal.get(next.getRulePid()).getStartDate())) {
+						retVal.put(next.getRulePid(), next);
+					}
+				}else {
+					retVal.put(next.getRulePid(), next);
+				}
+			}
+			
+			return retVal;
 		} catch (ProcessingException e) {
-			ourLog.error("Failed to save config", e);
+			ourLog.error("Failed to load library messages", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
 	}
@@ -257,7 +263,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	@Override
 	public GConfig loadConfig() throws ServiceFailureException {
 		if (isMockMode()) {
-			return myMock.loadConfig();
+			return getMock().loadConfig();
 		}
 
 		try {
@@ -266,6 +272,46 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 			ourLog.error("Failed to load config", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
+	}
+
+	@Override
+	public DtoLibraryMessage loadLibraryMessage(long theMessagePid) throws ServiceFailureException {
+		if (isMockMode()) {
+			return getMock().loadLibraryMessage(theMessagePid);
+		}
+		try {
+			return myAdminSvc.getLibraryMessage(theMessagePid);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to load library message", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+	}
+
+	@Override
+	public Collection<DtoLibraryMessage> loadLibraryMessages() throws ServiceFailureException {
+		if (isMockMode()) {
+			return getMock().loadLibraryMessages();
+		}
+		try {
+			return myAdminSvc.loadLibraryMessages();
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to load library messages", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+	}
+
+	@Override
+	public Collection<DtoLibraryMessage> loadLibraryMessages(HierarchyEnum theType, long thePid) throws ServiceFailureException {
+		if (isMockMode()) {
+			return getMock().loadLibraryMessages(theType, thePid);
+		}
+		try {
+			return myAdminSvc.getLibraryMessages(theType, thePid, false);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to load library messages", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+
 	}
 
 	@Override
@@ -279,7 +325,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		ModelUpdateResponse retVal;
 		try {
 			if (isMockMode()) {
-				retVal = myMock.loadModelUpdate(theRequest);
+				retVal = getMock().loadModelUpdate(theRequest);
 			} else {
 				retVal = myAdminSvc.loadModelUpdate(theRequest);
 			}
@@ -312,11 +358,19 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	}
 
 	@Override
+	public List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart) {
+		if (isMockMode()) {
+			return getMock().loadMonitorRuleFirings(theDomainPid, theServicePid, theServiceVersionPid, theStart);
+		}
+		return myAdminSvc.loadMonitorRuleFirings(theDomainPid, theServicePid, theServiceVersionPid, theStart);
+	}
+
+	@Override
 	public GMonitorRuleList loadMonitorRuleList() throws ServiceFailureException {
 		GMonitorRuleList retVal;
 
 		if (isMockMode()) {
-			retVal = myMock.loadMonitorRuleList();
+			retVal = getMock().loadMonitorRuleList();
 		} else {
 			try {
 				retVal = myAdminSvc.loadMonitorRuleList();
@@ -332,7 +386,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	@Override
 	public GRecentMessage loadRecentMessageForServiceVersion(long thePid) throws ServiceFailureException {
 		if (isMockMode()) {
-			return myMock.loadRecentMessageForServiceVersion(thePid);
+			return getMock().loadRecentMessageForServiceVersion(thePid);
 		}
 		try {
 			return myAdminSvc.loadRecentMessageForServiceVersion(thePid);
@@ -345,7 +399,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	@Override
 	public GRecentMessage loadRecentMessageForUser(long thePid) throws ServiceFailureException {
 		if (isMockMode()) {
-			return myMock.loadRecentMessageForUser(thePid);
+			return getMock().loadRecentMessageForUser(thePid);
 		}
 		try {
 			return myAdminSvc.loadRecentMessageForUser(thePid);
@@ -358,7 +412,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	@Override
 	public GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid) {
 		if (isMockMode()) {
-			return myMock.loadRecentTransactionListForServiceVersion(theServiceVersionPid);
+			return getMock().loadRecentTransactionListForServiceVersion(theServiceVersionPid);
 		}
 
 		return myAdminSvc.loadRecentTransactionListForServiceVersion(theServiceVersionPid);
@@ -367,7 +421,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	@Override
 	public GRecentMessageLists loadRecentTransactionListForuser(long thePid) {
 		if (isMockMode()) {
-			return myMock.loadRecentTransactionListForuser(thePid);
+			return getMock().loadRecentTransactionListForuser(thePid);
 		}
 
 		return myAdminSvc.loadRecentTransactionListForUser(thePid);
@@ -376,7 +430,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	@Override
 	public GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws ServiceFailureException {
 		if (isMockMode()) {
-			return myMock.loadServiceVersionDetailedStats(theVersionPid);
+			return getMock().loadServiceVersionDetailedStats(theVersionPid);
 		}
 
 		try {
@@ -394,7 +448,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		GSoap11ServiceVersionAndResources serviceAndResources;
 		if (isMockMode()) {
 
-			retVal = myMock.loadServiceVersionIntoSession(theServiceVersionPid);
+			retVal = getMock().loadServiceVersionIntoSession(theServiceVersionPid);
 
 			serviceAndResources = new GSoap11ServiceVersionAndResources();
 			serviceAndResources.setServiceVersion(retVal);
@@ -423,7 +477,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	@Override
 	public List<GUrlStatus> loadServiceVersionUrlStatuses(long theServiceVersionPid) {
 		if (isMockMode()) {
-			return myMock.loadServiceVersionUrlStatuses(theServiceVersionPid);
+			return getMock().loadServiceVersionUrlStatuses(theServiceVersionPid);
 		}
 
 		ourLog.info("Loading URL statuses for service version {}", theServiceVersionPid);
@@ -434,7 +488,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	@Override
 	public UserAndAuthHost loadUser(long thePid, boolean theLoadStats) throws ServiceFailureException {
 		if (isMockMode()) {
-			return myMock.loadUser(thePid, theLoadStats);
+			return getMock().loadUser(thePid, theLoadStats);
 		}
 
 		GUser user;
@@ -452,7 +506,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	public GPartialUserList loadUsers(PartialUserListRequest theRequest) throws ServiceFailureException {
 		GPartialUserList retVal;
 		if (isMockMode()) {
-			retVal = myMock.loadUsers(theRequest);
+			retVal = getMock().loadUsers(theRequest);
 			return retVal;
 		} else {
 			try {
@@ -481,7 +535,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 
 		GSoap11ServiceVersion retVal;
 		if (isMockMode()) {
-			retVal = myMock.loadWsdl(theService, theWsdlUrl);
+			retVal = getMock().loadWsdl(theService, theWsdlUrl);
 		} else {
 
 			GSoap11ServiceVersionAndResources serviceAndResources;
@@ -510,7 +564,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	@Override
 	public GAuthenticationHostList removeAuthenticationHost(long thePid) throws ServiceFailureException {
 		if (isMockMode()) {
-			return myMock.removeAuthenticationHost(thePid);
+			return getMock().removeAuthenticationHost(thePid);
 		}
 
 		try {
@@ -526,7 +580,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		ourLog.info("Removing domain: {}", thePid);
 
 		if (isMockMode()) {
-			return myMock.removeDomain(thePid);
+			return getMock().removeDomain(thePid);
 		}
 
 		try {
@@ -547,7 +601,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	@Override
 	public GDomainList removeService(long theDomainPid, long theServicePid) throws ServiceFailureException {
 		if (isMockMode()) {
-			return myMock.removeService(theDomainPid, theServicePid);
+			return getMock().removeService(theDomainPid, theServicePid);
 		}
 
 		ourLog.info("Removing service for DOMAIN {} SERVICE {}", theDomainPid, theServicePid);
@@ -566,7 +620,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		ourLog.info("Removing service version {}", thePid);
 
 		if (isMockMode()) {
-			return myMock.removeServiceVersion(thePid);
+			return getMock().removeServiceVersion(thePid);
 		}
 
 		try {
@@ -586,7 +640,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	@Override
 	public GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) throws ServiceFailureException {
 		if (isMockMode()) {
-			return myMock.saveAuthenticationHost(theAuthHost);
+			return getMock().saveAuthenticationHost(theAuthHost);
 		}
 
 		if (theAuthHost.getPid() <= 0) {
@@ -620,7 +674,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	@Override
 	public GDomainList saveDomain(GDomain theDomain) throws ServiceFailureException {
 		if (isMockMode()) {
-			return myMock.saveDomain(theDomain);
+			return getMock().saveDomain(theDomain);
 		}
 
 		ourLog.info("Saving domain with PID {}", theDomain.getPid());
@@ -633,28 +687,18 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		}
 	}
 
+
 	@Override
-	public GHttpClientConfig saveHttpClientConfig(boolean theCreate, GHttpClientConfig theConfig) throws ServiceFailureException {
-		Validate.notNull(theConfig, "HttpClientConfig");
-
-		if (theCreate) {
-			ourLog.info("Saving new HTTP client config");
-		} else {
-			ourLog.info("Saving HTTP client config ID[{}]", theConfig.getPid());
-		}
-
+	public void saveLibraryMessage(DtoLibraryMessage theMessage) throws ServiceFailureException {
 		if (isMockMode()) {
-			return myMock.saveHttpClientConfig(theCreate, theConfig);
-		}
-
-		if (theCreate) {
-			theConfig.setPid(0);
+			getMock().saveLibraryMessage(theMessage);
+			return;
 		}
 
 		try {
-			return myAdminSvc.saveHttpClientConfig(theConfig);
+			myAdminSvc.saveLibraryMessage(theMessage);
 		} catch (ProcessingException e) {
-			ourLog.error("Failed to save config", e);
+			ourLog.error("Failed to save library message", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
 	}
@@ -663,7 +707,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	public GMonitorRuleList saveMonitorRule(BaseGMonitorRule theRule) throws ServiceFailureException {
 		try {
 			if (isMockMode()) {
-				myMock.saveMonitorRule(theRule);
+				getMock().saveMonitorRule(theRule);
 			} else {
 				myAdminSvc.saveMonitorRule(theRule);
 			}
@@ -680,7 +724,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	@Override
 	public GDomainList saveService(GService theService) throws ServiceFailureException {
 		if (isMockMode()) {
-			return myMock.saveService(theService);
+			return getMock().saveService(theService);
 		}
 
 		try {
@@ -707,7 +751,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		ourLog.info("Saving user {} / {}", theUser.getPid(), theUser.getUsername());
 
 		if (isMockMode()) {
-			myMock.saveUser(theUser);
+			getMock().saveUser(theUser);
 			return;
 		}
 
@@ -725,7 +769,7 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long thePid) throws ServiceFailureException {
 		try {
 			if (isMockMode()) {
-				return myMock.testServiceVersionWithSingleMessage(theMessageText, theContentType, thePid);
+				return getMock().testServiceVersionWithSingleMessage(theMessageText, theContentType, thePid);
 			}
 			return myAdminSvc.testServiceVersionWithSingleMessage(theMessageText, theContentType, thePid, "ServiceRetriever Admin Console");
 		} catch (ProcessingException e) {
@@ -740,15 +784,6 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 		return (List<GResource>) getThreadLocalRequest().getSession(true).getAttribute(key);
 	}
 
-	private boolean isMockMode() {
-		if ("true".equals(System.getProperty("sail.mock"))) {
-			if (myMock == null) {
-				myMock = new ModelUpdateServiceMock();
-			}
-			return true;
-		}
-		return false;
-	}
 
 	private void saveServiceVersionResourcesToSession(GSoap11ServiceVersionAndResources theServiceAndResources) {
 		BaseGServiceVersion serviceVersion = theServiceAndResources.getServiceVersion();
@@ -762,94 +797,6 @@ public class ModelUpdateServiceImpl extends RemoteServiceServlet implements Mode
 	 */
 	void setAdminSvc(IAdminService theAdminSvc) {
 		myAdminSvc = theAdminSvc;
-	}
-
-	@Override
-	public List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart) {
-		if (isMockMode()) {
-			return myMock.loadMonitorRuleFirings(theDomainPid, theServicePid, theServiceVersionPid, theStart);
-		}
-		return myAdminSvc.loadMonitorRuleFirings(theDomainPid, theServicePid, theServiceVersionPid, theStart);
-	}
-
-	@Override
-	public DtoLibraryMessage loadLibraryMessage(long theMessagePid) throws ServiceFailureException {
-		if (isMockMode()) {
-			return myMock.loadLibraryMessage(theMessagePid);
-		}
-		try {
-			return myAdminSvc.getLibraryMessage(theMessagePid);
-		} catch (ProcessingException e) {
-			ourLog.error("Failed to load library message", e);
-			throw new ServiceFailureException(e.getMessage());
-		}
-	}
-
-	@Override
-	public Collection<DtoLibraryMessage> loadLibraryMessages(HierarchyEnum theType, long thePid) throws ServiceFailureException {
-		if (isMockMode()) {
-			return myMock.loadLibraryMessages(theType, thePid);
-		}
-		try {
-			return myAdminSvc.getLibraryMessages(theType, thePid, false);
-		} catch (ProcessingException e) {
-			ourLog.error("Failed to load library messages", e);
-			throw new ServiceFailureException(e.getMessage());
-		}
-
-	}
-
-	@Override
-	public void saveLibraryMessage(DtoLibraryMessage theMessage) throws ServiceFailureException {
-		if (isMockMode()) {
-			myMock.saveLibraryMessage(theMessage);
-			return;
-		}
-
-		try {
-			myAdminSvc.saveLibraryMessage(theMessage);
-		} catch (ProcessingException e) {
-			ourLog.error("Failed to save library message", e);
-			throw new ServiceFailureException(e.getMessage());
-		}
-	}
-
-	@Override
-	public Collection<DtoLibraryMessage> loadLibraryMessages() throws ServiceFailureException {
-		if (isMockMode()) {
-			return myMock.loadLibraryMessages();
-		}
-		try {
-			return myAdminSvc.loadLibraryMessages();
-		} catch (ProcessingException e) {
-			ourLog.error("Failed to load library messages", e);
-			throw new ServiceFailureException(e.getMessage());
-		}
-	}
-
-	@Override
-	public Map<Long, GMonitorRuleFiring> getLatestFailingMonitorRuleFiringForRulePids() throws ServiceFailureException {
-		if (isMockMode()) {
-			return myMock.getLatestFailingMonitorRuleFiringForRulePids();
-		}
-		try {
-			HashMap<Long, GMonitorRuleFiring> retVal = new HashMap<Long, GMonitorRuleFiring>();
-			
-			for (GMonitorRuleFiring next : myAdminSvc.loadAllActiveRuleFirings()) {
-				if (retVal.containsKey(next.getRulePid())) {
-					if (next.getStartDate().after(retVal.get(next.getRulePid()).getStartDate())) {
-						retVal.put(next.getRulePid(), next);
-					}
-				}else {
-					retVal.put(next.getRulePid(), next);
-				}
-			}
-			
-			return retVal;
-		} catch (ProcessingException e) {
-			ourLog.error("Failed to load library messages", e);
-			throw new ServiceFailureException(e.getMessage());
-		}
 	}
 
 }

@@ -21,7 +21,7 @@ import com.google.common.base.Objects;
 public class PersHttpClientConfig extends BasePersObject {
 
 	public static final int DEFAULT_CB_TIME_BETWEEN_ATTEMPTS = 60 * 1000;
-	
+
 	public static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 10 * 1000;
 	public static final int DEFAULT_FAIL_RETRIES_BEFORE_ABORT = 1;
 	/**
@@ -67,17 +67,17 @@ public class PersHttpClientConfig extends BasePersObject {
 	private int myReadTimeoutMillis;
 
 	@Lob
-	@Column(name="TLS_KEYSTORE")
+	@Column(name = "TLS_KEYSTORE")
 	private byte[] myTlsKeystore;
 
-	@Column(name="TLS_KEYSTORE_PASS", length=200)
+	@Column(name = "TLS_KEYSTORE_PASS", length = 200)
 	private String myTlsKeystorePassword;
 
 	@Lob
-	@Column(name="TLS_TRUSTSSTORE")
+	@Column(name = "TLS_TRUSTSSTORE")
 	private byte[] myTlsTruststore;
 
-	@Column(name="TLS_TRUSTSTORE_PASS", length=200)
+	@Column(name = "TLS_TRUSTSTORE_PASS", length = 200)
 	private String myTlsTruststorePassword;
 
 	@Column(name = "URL_SEL_POLICY", length = 20, nullable = false)
@@ -191,7 +191,8 @@ public class PersHttpClientConfig extends BasePersObject {
 	}
 
 	/**
-	 * @param theCircuitBreakerEnabled the circuitBreakerEnabled to set
+	 * @param theCircuitBreakerEnabled
+	 *            the circuitBreakerEnabled to set
 	 */
 	public void setCircuitBreakerEnabled(boolean theCircuitBreakerEnabled) {
 		myCircuitBreakerEnabled = theCircuitBreakerEnabled;
