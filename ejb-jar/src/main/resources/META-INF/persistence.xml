@@ -48,6 +48,7 @@
 		<class>net.svcret.ejb.model.entity.PersServiceVersionUrlStatus</class>
 		<class>net.svcret.ejb.model.entity.PersState</class>
 		<class>net.svcret.ejb.model.entity.PersStaticResourceStats</class>
+		<class>net.svcret.ejb.model.entity.forwarder.PersServiceVersionForwarder</class>
 		<class>net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcServerAuth</class>
 		<class>net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20</class>
 		<class>net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11</class>
@@ -130,6 +131,7 @@
 		<class>net.svcret.ejb.model.entity.PersState</class>
 		<class>net.svcret.ejb.model.entity.PersStaticResourceStats</class>
 		<class>net.svcret.ejb.model.entity.PersUserRecentMessage</class>
+		<class>net.svcret.ejb.model.entity.forwarder.PersServiceVersionForwarder</class>
 		<class>net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcServerAuth</class>
 		<class>net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20</class>
 		<class>net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11</class>

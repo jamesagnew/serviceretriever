@@ -104,7 +104,7 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 				xsdResources.put(fileName, resourceText);
 				return fileName;
 			}};
-		String wsdl = renderWsdl(theSvcVer, theSvcVer.getProxyPath(), urlCreator);
+		String wsdl = renderWsdl(theSvcVer, theSvcVer.determineUsableProxyPath(), urlCreator);
 		
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		ZipOutputStream zos = new ZipOutputStream(bos);

@@ -1089,7 +1089,7 @@ public class AdminServiceBean implements IAdminService {
 
 		HttpRequestBean request = new HttpRequestBean();
 		request.setInputReader(new StringReader(theMessageText));
-		request.setPath(svcVer.getProxyPath());
+		request.setPath(svcVer.getDefaultProxyPath());
 		request.setQuery("");
 		request.setRequestHostIp("127.0.0.1");
 		request.setRequestType(RequestType.POST);
@@ -1601,6 +1601,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setVersionId(theVersion.getId());
 		retVal.setExplicitProxyPath(theVersion.getExplicitProxyPath());
 		retVal.setDescription(theVersion.getDescription());
+		retVal.setUseDefaultProxyPath(theVersion.isUseDefaultProxyPath());
 
 		retVal.setServerSecurityMode(theVersion.getServerSecurityMode());
 		if (retVal.getServerSecurityMode() == null) {
@@ -1933,7 +1934,8 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setId(theVersion.getVersionId());
 		retVal.setName(theVersion.getVersionId());
 		retVal.setServerSecured(theVersion.getServerSecured());
-		retVal.setProxyPath(theVersion.getProxyPath());
+		retVal.setUseDefaultProxyPath(theVersion.isUseDefaultProxyPath());
+		retVal.setDefaultProxyPath(theVersion.getDefaultProxyPath());
 		retVal.setExplicitProxyPath(theVersion.getExplicitProxyPath());
 		retVal.setParentServiceName(theVersion.getService().getServiceName());
 		retVal.setParentServicePid(theVersion.getService().getPid());

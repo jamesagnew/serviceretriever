@@ -109,7 +109,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		ver.setId("Version 1-A-1");
 		ver.setPid(SVCVER_PID);
 		ver.setName("Version 1-A-1");
-		ver.setProxyPath("/some/service");
+		ver.setDefaultProxyPath("/some/service");
 		ver.setLastAccess(new Date());
 		ver.setServerSecurityMode(ServerSecurityModeEnum.REQUIRE_ANY);
 		svc.getVersionList().add(ver);
@@ -170,7 +170,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		ver.setId("Version 2-A-1");
 		ver.setPid(ourNextPid++);
 		ver.setName("Version 2-A-1");
-		ver.setProxyPath("/some/service");
+		ver.setDefaultProxyPath("/some/service");
 		ver.setLastAccess(new Date());
 		ver.setServerSecurityMode(ServerSecurityModeEnum.REQUIRE_ANY);
 		svc.getVersionList().add(ver);

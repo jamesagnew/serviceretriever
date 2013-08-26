@@ -189,7 +189,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		BasePersServiceVersion svcVer = mySvcRegistry.getServiceVersionByPid(theServiceVersionPid);
 
 		StringReader reader = (new StringReader(theRequestBody));
-		String path = svcVer.getProxyPath();
+		String path = svcVer.determineUsableProxyPath();
 
 		HttpRequestBean request = new HttpRequestBean();
 		request.setRequestTime(startTime);

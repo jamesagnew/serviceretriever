@@ -41,9 +41,11 @@ import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.ServerSecuredEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
+import net.svcret.admin.shared.util.ProxyUtil;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.util.Validate;
 
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.ForeignKey;
 
 @Entity
@@ -68,6 +70,9 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("CAUTH_ORDER")
 	private List<PersBaseClientAuth<?>> myClientAuths;
+
+	@Column(name = "DEFAULT_PROXY_PATH")
+	private boolean myUseDefaultProxyPath = true;
 
 	@Column(name = "SVC_DESC", length = 2000, nullable = true)
 	private String myDescription;
@@ -376,13 +381,13 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 
 	public abstract ServiceProtocolEnum getProtocol();
 
-	public String getProxyPath() {
-		if (getExplicitProxyPath() != null) {
-			return getExplicitProxyPath();
-		}
+	public String getDefaultProxyPath() {
 		PersService service = getService();
 		PersDomain domain = service.getDomain();
-		return "/" + domain.getDomainId() + "/" + service.getServiceId() + "/" + getVersionId();
+		String domainId = domain.getDomainId();
+		String serviceId = service.getServiceId();
+		String versionId = getVersionId();
+		return ProxyUtil.createDefaultPath(domainId, serviceId, versionId);
 	}
 
 	public PersServiceVersionResource getResourceForUri(String theUri) {
@@ -535,6 +540,10 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		return myActive;
 	}
 
+	public boolean isUseDefaultProxyPath() {
+		return myUseDefaultProxyPath;
+	}
+
 	public void loadAllAssociations() {
 		if (myAssociationsLoaded) {
 			return;
@@ -573,6 +582,17 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 
 	}
 
+	public String determineUsableProxyPath() {
+		if (isUseDefaultProxyPath()) {
+			return getDefaultProxyPath();
+		}
+		if (StringUtils.isNotBlank(getExplicitProxyPath())) {
+			return getExplicitProxyPath();
+		}
+		return getDefaultProxyPath();
+	}
+
+	
 	public void putMethodAtIndex(PersServiceVersionMethod theMethod, int theIndex) {
 		getMethods();
 
@@ -651,6 +671,10 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	 */
 	public void setActive(boolean theActive) {
 		myActive = theActive;
+	}
+
+	public void setUseDefaultProxyPath(boolean theDefaultProxyPath) {
+		myUseDefaultProxyPath = theDefaultProxyPath;
 	}
 
 	public void setDescription(String theDescription) {

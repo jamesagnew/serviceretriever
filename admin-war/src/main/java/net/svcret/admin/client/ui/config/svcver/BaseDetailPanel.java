@@ -1,7 +1,6 @@
 package net.svcret.admin.client.ui.config.svcver;
 
-import static net.svcret.admin.client.AdminPortal.IMAGES;
-import static net.svcret.admin.client.AdminPortal.MSGS;
+import static net.svcret.admin.client.AdminPortal.*;
 
 import java.util.Comparator;
 import java.util.List;
@@ -49,6 +48,8 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
@@ -92,6 +93,8 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 	private UrlGrid myUrlGrid;
 	private ListBox myServerSecurityModeBox;
 	private HTML myServerSecurityModeDescription;
+	private CheckBox myStandardProxyPathEnabledCheckbox;
+	private Label myStandardProxyPathLabel;
 
 	public BaseDetailPanel(AbstractServiceVersionPanel theParent, T theServiceVersion) {
 		myServiceVersion = theServiceVersion;
@@ -203,19 +206,34 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 	}
 
 	private void initAccessPanel(FlowPanel thePanel) {
-		Label intro = new Label("If specified, the options below define the path at which " + "the service will be deployed. If not specified, a default will be used.");
+		Label intro = new Label("By default, ServiceRetriever publishes your services at a simple "
+				+ "default path. If needed, an alternate path may be used instead, or as well as the "
+				+ "default path.");
 		thePanel.add(intro);
 
 		TwoColumnGrid grid = new TwoColumnGrid();
 		thePanel.add(grid);
 
-		myExplicitProxyPathEnabledCheckbox = new CheckBox("Use Explicit Proxy Path:");
+		myStandardProxyPathEnabledCheckbox = new CheckBox("Use Default Proxy Path:");
+		myStandardProxyPathEnabledCheckbox.setValue(myServiceVersion.isUseDefaultProxyPath());
+		myStandardProxyPathEnabledCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
+				myServiceVersion.setUseDefaultProxyPath(myStandardProxyPathEnabledCheckbox.getValue());
+			}
+		});
+		myStandardProxyPathLabel = new Label(myServiceVersion.getDefaultProxyPath());
+		grid.addRow(myStandardProxyPathEnabledCheckbox, myStandardProxyPathLabel);
+		
+		myExplicitProxyPathEnabledCheckbox = new CheckBox("Use Alternate Proxy Path:");
 		myExplicitProxyPathTextbox = new TextBox();
 		grid.addRow(myExplicitProxyPathEnabledCheckbox, myExplicitProxyPathTextbox);
 
 		myExplicitProxyPathEnabledCheckbox.setValue(myServiceVersion.getExplicitProxyPath() != null);
 		myExplicitProxyPathTextbox.setValue(myServiceVersion.getExplicitProxyPath());
 
+		
+		
 	}
 
 	private void initClientSecurityPanel(FlowPanel thePanel) {
@@ -703,7 +721,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		return myServiceVersion;
 	}
 
-	void updateMethodPanel() {
+	protected void updateMethodPanel() {
 		if (myMethodDataProvider != null) {
 			List<GServiceMethod> list = myMethodDataProvider.getList();
 			list.clear();

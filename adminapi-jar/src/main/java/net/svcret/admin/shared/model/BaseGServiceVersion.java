@@ -10,6 +10,7 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 
 	private boolean myActive;
 	private BaseGClientSecurityList myClientSecurityList;
+	private boolean myUseDefaultProxyPath = true;
 	private String myDescription;
 	private GServiceVersionDetailedStats myDetailedStats;
 	private String myExplicitProxyPath;
@@ -17,7 +18,7 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	private Date myLastAccess;
 	private String myParentServiceName;
 	private long myParentServicePid;
-	private String myProxyPath;
+	private String myDefaultProxyPath;
 	private GServiceVersionResourcePointerList myResourcePointerList;
 	private BaseGServerSecurityList myServerSecurityList;
 	private ServerSecurityModeEnum myServerSecurityMode;
@@ -88,8 +89,8 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	/**
 	 * @return the proxyPath
 	 */
-	public String getProxyPath() {
-		return myProxyPath;
+	public String getDefaultProxyPath() {
+		return myDefaultProxyPath;
 	}
 
 	/**
@@ -144,6 +145,16 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 		return myActive;
 	}
 
+	public boolean isUseDefaultProxyPath() {
+		return myUseDefaultProxyPath;
+	}
+
+	public boolean isSecure() {
+		boolean secure = myServerSecurityMode.isSecure();
+		boolean hasModules = myServerSecurityList.size() > 0;
+		return secure && hasModules;
+	}
+
 	@Override
 	public void merge(BaseGServiceVersion theObject) {
 		super.merge((BaseGDashboardObject<BaseGServiceVersion>) theObject);
@@ -182,6 +193,10 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 		myActive = theActive;
 	}
 
+	public void setUseDefaultProxyPath(boolean theDefaultProxyPath) {
+		myUseDefaultProxyPath = theDefaultProxyPath;
+	}
+
 	public void setDescription(String theDescription) {
 		myDescription = theDescription;
 	}
@@ -218,8 +233,8 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 		myParentServicePid = theParentServicePid;
 	}
 
-	public void setProxyPath(String theProxyPath) {
-		myProxyPath = theProxyPath;
+	public void setDefaultProxyPath(String theProxyPath) {
+		myDefaultProxyPath = theProxyPath;
 	}
 
 	/**
@@ -242,12 +257,6 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 		b.append("methodCound=").append(getMethodList().size());
 		b.append("]");
 		return b.toString();
-	}
-
-	public boolean isSecure() {
-		boolean secure = myServerSecurityMode.isSecure();
-		boolean hasModules = myServerSecurityList.size() > 0;
-		return secure && hasModules;
 	}
 
 }

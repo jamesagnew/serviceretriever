@@ -11,7 +11,9 @@ public enum ServiceProtocolEnum {
 	 */
 	JSONRPC20("JSON-RPC 2.0", "application/json"), 
 	
-	SOAP11("SOAP 1.1", "text/xml");
+	SOAP11("SOAP 1.1", "text/xml"), 
+	
+	FORWARDER("Forwarder", "");
 
 	private static List<ServiceProtocolEnum> ourNaturalOrder;
 

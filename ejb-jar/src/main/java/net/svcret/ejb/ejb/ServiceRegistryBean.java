@@ -87,8 +87,8 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		Map<String, PersDomain> domainMap = new HashMap<String, PersDomain>();
 		Map<String, BasePersServiceVersion> pathToServiceVersions = new HashMap<String, BasePersServiceVersion>();
 		Map<Long, BasePersServiceVersion> pidToServiceVersions = new HashMap<Long, BasePersServiceVersion>();
-		Map<Long, PersDomain> pidToDomains=new HashMap<Long, PersDomain>();
-		Map<Long, PersService> pidToServices=new HashMap<Long, PersService>();
+		Map<Long, PersDomain> pidToDomains = new HashMap<Long, PersDomain>();
+		Map<Long, PersService> pidToServices = new HashMap<Long, PersService>();
 
 		Collection<PersDomain> domains = myDao.getAllDomains();
 		for (PersDomain nextDomain : domains) {
@@ -99,13 +99,15 @@ public class ServiceRegistryBean implements IServiceRegistry {
 			for (PersService nextService : nextDomain.getServices()) {
 				pidToServices.put(nextService.getPid(), nextService);
 				for (BasePersServiceVersion nextVersion : nextService.getVersions()) {
-					String nextProxyPath = nextVersion.getProxyPath();
-					pidToServiceVersions.put(nextVersion.getPid(), nextVersion);
-					if (pathToServiceVersions.containsKey(nextProxyPath)) {
-						ourLog.warn("Service version {} created duplicate proxy path, so it will be ignored!", nextVersion.getPid());
-						continue;
+
+					if (nextVersion.isUseDefaultProxyPath()) {
+						addProxyPath(pathToServiceVersions, pidToServiceVersions, nextVersion, nextVersion.getDefaultProxyPath());
 					}
-					pathToServiceVersions.put(nextProxyPath, nextVersion);
+
+					if (nextVersion.getExplicitProxyPath() != null && nextVersion.getExplicitProxyPath().startsWith("/")) {
+						addProxyPath(pathToServiceVersions, pidToServiceVersions, nextVersion, nextVersion.getExplicitProxyPath());
+					}
+					
 				}
 			}
 
@@ -126,6 +128,15 @@ public class ServiceRegistryBean implements IServiceRegistry {
 			ourPidToServiceVersions = pidToServiceVersions;
 			ourProxyPathToServices = pathToServiceVersions;
 			myCurrentVersion = newVersion;
+		}
+	}
+
+	private void addProxyPath(Map<String, BasePersServiceVersion> pathToServiceVersions, Map<Long, BasePersServiceVersion> pidToServiceVersions, BasePersServiceVersion nextVersion, String nextProxyPath) {
+		pidToServiceVersions.put(nextVersion.getPid(), nextVersion);
+		if (pathToServiceVersions.containsKey(nextProxyPath)) {
+			ourLog.warn("Service version {} created duplicate proxy path, so it will be ignored!", nextVersion.getPid());
+		}else {
+		pathToServiceVersions.put(nextProxyPath, nextVersion);
 		}
 	}
 
@@ -258,7 +269,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	@Override
 	public BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theSv) throws ProcessingException {
 		catalogHasChanged();
-//		reloadRegistryFromDatabase();
+		// reloadRegistryFromDatabase();
 		return myDao.saveServiceVersion(theSv);
 	}
 
