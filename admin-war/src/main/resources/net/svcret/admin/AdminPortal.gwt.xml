@@ -4,8 +4,10 @@
 <module rename-to='AdminPortal'>
 	<inherits name='com.google.gwt.user.User' />
 	<inherits name="com.google.gwt.resources.Resources" />
-
 	<inherits name='com.google.gwt.user.theme.standard.Standard' />
+
+	<inherits name='com.tractionsoftware.gwt.user.UTCDateTime' />
+
 	<entry-point class='net.svcret.admin.client.AdminPortal' />
 
 	<source path='client' />

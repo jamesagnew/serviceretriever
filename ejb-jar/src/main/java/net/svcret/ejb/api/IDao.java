@@ -146,11 +146,17 @@ public interface IDao {
 
 	List<PersUserRecentMessage> getUserRecentMessages(IThrottleable theUser, ResponseTypeEnum theResponseType);
 
+	List<PersInvocationUserStats> getUserStatsWithinTimeRange(PersUser theUser, Date theStart, Date theEnd);
+
 	long incrementStateCounter(String theKey);
 
 	StatusesBean loadAllStatuses();
 
+	List<PersLibraryMessage> loadLibraryMessages();
+
 	List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<? extends BasePersServiceVersion> theAllSvcVers, int theStart);
+
+	List<PersMonitorRuleFiring> loadMonitorRuleFiringsWhichAreActive();
 
 	BasePersRecentMessage loadRecentMessageForServiceVersion(long thePid);
 
@@ -186,13 +192,13 @@ public interface IDao {
 
 	PersBaseServerAuth<?, ?> saveServerAuth(PersBaseServerAuth<?, ?> theNextPers);
 
+//	List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int theStart);
+
 	void saveService(PersService theService);
 
 	BasePersServiceCatalogItem saveServiceCatalogItem(BasePersServiceCatalogItem theItem);
 
 	PersUser saveServiceUser(PersUser theUser);
-
-//	List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int theStart);
 
 	BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theVersion) throws ProcessingException;
 
@@ -234,9 +240,5 @@ public interface IDao {
 		}
 
 	}
-
-	List<PersLibraryMessage> loadLibraryMessages();
-
-	List<PersMonitorRuleFiring> loadMonitorRuleFiringsWhichAreActive();
 
 }

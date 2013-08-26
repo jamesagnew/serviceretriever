@@ -2,6 +2,7 @@ package net.svcret.admin.client.ui.config.auth;
 
 import static net.svcret.admin.client.AdminPortal.*;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -25,7 +26,9 @@ import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.PartialUserListRequest;
 import net.svcret.admin.shared.util.StringUtil;
 
+import com.google.gwt.cell.client.CompositeCell;
 import com.google.gwt.cell.client.FieldUpdater;
+import com.google.gwt.cell.client.HasCell;
 import com.google.gwt.cell.client.SafeHtmlCell;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -35,6 +38,7 @@ import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
+import com.google.gwt.user.cellview.client.IdentityColumn;
 import com.google.gwt.user.cellview.client.ColumnSortEvent.ListHandler;
 import com.google.gwt.user.cellview.client.SimplePager;
 import com.google.gwt.user.cellview.client.SimplePager.TextLocation;
@@ -91,19 +95,34 @@ public class EditUsersPanel extends FlowPanel {
 				editUser(theObject);
 			}
 		});
-		editColumn.setCellStyleNames(CssConstants.PCELLTABLE_ACTION_COLUMN);
-		myTable.addColumn(editColumn, "");
+		editCell.addStyle(CssConstants.USERS_ACTION_BUTTON);
 
-		PButtonCell viewCell = new PButtonCell(AdminPortal.IMAGES.iconStatus(), AdminPortal.MSGS.actions_ViewStats());
-		Column<GUser, String> viewColumn = new NullColumn<GUser>(viewCell);
-		viewColumn.setFieldUpdater(new FieldUpdater<GUser, String>() {
+		PButtonCell viewRecentMessagesCell = new PButtonCell(AdminPortal.IMAGES.iconTransactions(), AdminPortal.MSGS.actions_RecentTransactions());
+		Column<GUser, String> viewRecentMessagesColumn = new NullColumn<GUser>(viewRecentMessagesCell);
+		viewRecentMessagesColumn.setFieldUpdater(new FieldUpdater<GUser, String>() {
+			@Override
+			public void update(int theIndex, GUser theObject, String theValue) {
+				viewUserRecentMessages(theObject);
+			}
+		});
+		viewRecentMessagesCell.addStyle(CssConstants.USERS_ACTION_BUTTON);
+
+		PButtonCell statsCell = new PButtonCell(AdminPortal.IMAGES.iconStatus(), AdminPortal.MSGS.actions_ViewStats());
+		Column<GUser, String> statsColumn = new NullColumn<GUser>(statsCell);
+		statsColumn.setFieldUpdater(new FieldUpdater<GUser, String>() {
 			@Override
 			public void update(int theIndex, GUser theObject, String theValue) {
 				viewUserStats(theObject);
 			}
 		});
-		myTable.addColumn(viewColumn, "");
-		viewColumn.setCellStyleNames(CssConstants.PCELLTABLE_ACTION_COLUMN);
+		statsCell.addStyle(CssConstants.USERS_ACTION_BUTTON);
+
+		List<HasCell<GUser, ?>> actionCells=new ArrayList<HasCell<GUser,?>>();
+		actionCells.add(editColumn);
+		actionCells.add(viewRecentMessagesColumn);
+		actionCells.add(statsColumn);
+		CompositeCell<GUser> actionColumn = new CompositeCell<GUser>(actionCells);
+		myTable.addColumn(new IdentityColumn<GUser>(actionColumn), "");
 
 		// Auth Host
 		
@@ -260,6 +279,11 @@ public class EditUsersPanel extends FlowPanel {
 
 	}
 
+	private void viewUserStats(GUser theObject) {
+		String token = NavProcessor.getTokenUserStats(true, theObject.getPid());
+		History.newItem(token);
+	}
+
 	private void loadUserList() {
 		myLoadingSpinner.show();
 
@@ -295,8 +319,8 @@ public class EditUsersPanel extends FlowPanel {
 		
 	}
 
-	private void viewUserStats(GUser theNextUser) {
-		String token = NavProcessor.getTokenViewUserStats(true, theNextUser.getPid());
+	private void viewUserRecentMessages(GUser theNextUser) {
+		String token = NavProcessor.getTokenUserRecentMessages(true, theNextUser.getPid());
 		History.newItem(token);
 	}
 

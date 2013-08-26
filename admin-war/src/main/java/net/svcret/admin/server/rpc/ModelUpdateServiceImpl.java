@@ -23,8 +23,6 @@ import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
-import net.svcret.admin.shared.model.GHttpClientConfig;
-import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GPartialUserList;
@@ -47,8 +45,6 @@ import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.api.IAdminService;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.util.Validate;
-
-import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 /**
  * The server side implementation of the RPC service.

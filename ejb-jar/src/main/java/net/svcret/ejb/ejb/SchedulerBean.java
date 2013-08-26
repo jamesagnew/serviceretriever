@@ -159,7 +159,7 @@ public class SchedulerBean implements IScheduler {
 
 	@Override
 	@Schedule(second = "0", minute = "*", hour = "*", persistent = false)
-	public void flushInMemoryStatisticsUnlessItHasHappenedVeryRecently() {
+	public synchronized void flushInMemoryStatisticsUnlessItHasHappenedVeryRecently() {
 		if ((myLastStatsFlush + 5000) > System.currentTimeMillis()) {
 			ourLog.debug("Last stats flush was at {}, not going to do another", new Date(myLastStatsFlush));
 			return;

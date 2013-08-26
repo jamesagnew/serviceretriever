@@ -1,24 +1,26 @@
 package net.svcret.admin.server.rpc;
 
 import java.io.IOException;
+import java.util.TimeZone;
 
 import javax.ejb.EJB;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.IOUtils;
+
 import net.svcret.admin.shared.model.TimeRange;
-import net.svcret.admin.shared.model.TimeRangeEnum;
 import net.svcret.admin.shared.util.ChartParams;
 import net.svcret.admin.shared.util.ChartTypeEnum;
 import net.svcret.ejb.api.IChartingServiceBean;
 import net.svcret.ejb.ex.ProcessingException;
 
-@WebServlet(urlPatterns = { "/graph.png" })
+import com.tractionsoftware.gwt.user.server.UTCDateTimeUtils;
+
 public class GraphServlet extends HttpServlet {
-	
+
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(GraphServlet.class);
 
 	private static final long serialVersionUID = 1L;
@@ -28,7 +30,7 @@ public class GraphServlet extends HttpServlet {
 
 	private byte[] renderLatency(HttpServletRequest theReq, TimeRange theRange) throws IOException, ServletException {
 		long pid = getPid(theReq);
-		
+
 		ourLog.info("Rendering latency graph for service version {}", pid);
 
 		byte[] graph;
@@ -53,24 +55,34 @@ public class GraphServlet extends HttpServlet {
 		ChartTypeEnum chartType = ChartTypeEnum.valueOf(chartTypeString);
 
 		String rangeString = theReq.getParameter(ChartParams.RANGE);
-		TimeRangeEnum timeRange = TimeRangeEnum.valueOf(rangeString);
 		TimeRange range = new TimeRange();
-		range.setRange(timeRange);
-		
+		if (range.getWithPresetRange() == null) {
+			range.setNoPresetFrom(UTCDateTimeUtils.getDateValue(TimeZone.getDefault(), range.getNoPresetFromDate(), range.getNoPresetFromTime()));
+			range.setNoPresetTo(UTCDateTimeUtils.getDateValue(TimeZone.getDefault(), range.getNoPresetToDate(), range.getNoPresetToTime()));
+		}
+
+		range.fromUrlValue(rangeString);
+
 		byte[] bytes = null;
-		switch (chartType) {
-		case LATENCY:
-			bytes = renderLatency(theReq, range);
-			break;
-		case USAGE:
-			bytes = renderUsage(theReq, range);
-			break;
-		case PAYLOADSIZE:
-			bytes = renderPayloadSize(theReq, range);
-			break;
-		case THROTTLING:
-			bytes = renderThrottling(theReq, range);
-			break;
+		if (BaseRpcServlet.isMockMode()) {
+			bytes = IOUtils.toByteArray(GraphServlet.class.getResourceAsStream("/net/svcret/images/icon_library_16.png"));
+		} else {
+			switch (chartType) {
+			case LATENCY:
+				bytes = renderLatency(theReq, range);
+				break;
+			case USAGE:
+				bytes = renderUsage(theReq, range);
+				break;
+			case PAYLOADSIZE:
+				bytes = renderPayloadSize(theReq, range);
+				break;
+			case THROTTLING:
+				bytes = renderThrottling(theReq, range);
+				break;
+			case USERMETHODS:
+				bytes = renderUserMethod(theReq, range);
+			}
 		}
 
 		if (bytes == null) {
@@ -84,9 +96,24 @@ public class GraphServlet extends HttpServlet {
 
 	}
 
+	private byte[] renderUserMethod(HttpServletRequest theReq, TimeRange theRange) throws ServletException, IOException {
+		long pid = getPid(theReq);
+
+		ourLog.info("Rendering user method stats graph for user PID {}", pid);
+
+		byte[] graph;
+		try {
+			graph = myChartSvc.renderUserMethodGraphForUser(pid, theRange);
+		} catch (ProcessingException e) {
+			throw new ServletException(e);
+		}
+
+		return graph;
+	}
+
 	private byte[] renderPayloadSize(HttpServletRequest theReq, TimeRange theRange) throws IOException, ServletException {
 		long pid = getPid(theReq);
-		
+
 		ourLog.info("Rendering payload size graph for service version {}", pid);
 
 		byte[] graph;
@@ -101,7 +128,7 @@ public class GraphServlet extends HttpServlet {
 
 	private byte[] renderThrottling(HttpServletRequest theReq, TimeRange theRange) throws IOException, ServletException {
 		long pid = getPid(theReq);
-		
+
 		ourLog.info("Rendering throttling graph for service version {}", pid);
 
 		byte[] graph;
@@ -116,7 +143,7 @@ public class GraphServlet extends HttpServlet {
 
 	private byte[] renderUsage(HttpServletRequest theReq, TimeRange theRange) throws IOException, ServletException {
 		long pid = getPid(theReq);
-		
+
 		ourLog.info("Rendering usage graph for service version {}", pid);
 
 		byte[] graph;

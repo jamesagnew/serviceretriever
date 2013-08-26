@@ -33,6 +33,7 @@ public class Model {
 	private boolean myDomainListInitialized = false;
 	private GHttpClientConfigList myHttpClientConfigList;
 	private GMonitorRuleList myMonitorRuleList;
+	private Long myLocalTimezoneOffsetInMillis;
 
 	private Model() {
 		initLists();
@@ -420,6 +421,25 @@ public class Model {
 					}
 				}
 			}
+		}
+	}
+
+	public void loadLocalTimezoneOffsetInMillis(final IAsyncLoadCallback<Long> theIAsyncLoadCallback) {
+		if (myLocalTimezoneOffsetInMillis == null) {
+			AdminPortal.SVC_MISCCONFIG.loadLocalTimzoneOffsetInMillis(new AsyncCallback<Long>() {
+				@Override
+				public void onFailure(Throwable theCaught) {
+					handleFailure(theCaught);
+				}
+
+				@Override
+				public void onSuccess(Long theResult) {
+					myLocalTimezoneOffsetInMillis=theResult;
+					theIAsyncLoadCallback.onSuccess(theResult);
+				}
+			});
+		}else {
+			theIAsyncLoadCallback.onSuccess(myLocalTimezoneOffsetInMillis);
 		}
 	}
 

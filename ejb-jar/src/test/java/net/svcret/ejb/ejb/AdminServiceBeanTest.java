@@ -5,7 +5,6 @@ import static org.mockito.Mockito.*;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -32,7 +31,7 @@ private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger
 		PersConfig config = new PersConfig();
 		
 		TimeRange range = new TimeRange();
-		range.setRange(TimeRangeEnum.ONE_MONTH);
+		range.setWithPresetRange(TimeRangeEnum.ONE_MONTH);
 		
 		IRuntimeStatus status= mock(IRuntimeStatus.class, DefaultAnswer.INSTANCE);
 		
@@ -64,9 +63,9 @@ private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger
 		}; 
 		
 		SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-		Date end = fmt.parse("2013-07-09 16:04");
+		range.setWithPresetRangeEndForUnitTest(fmt.parse("2013-07-09 16:04"));
 		config.setNow(fmt.parse("2013-07-09 16:02").getTime());
-		AdminServiceBean.doWithStatsByMinute(config, range, status, method, operator, end);
+		AdminServiceBean.doWithStatsByMinute(config, range, status, method, operator);
 
 		ourLog.info(config.getCollapseStatsToTenMinutesCutoff().toString());
 		

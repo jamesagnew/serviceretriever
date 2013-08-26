@@ -1,6 +1,5 @@
 package net.svcret.admin.server.rpc;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;

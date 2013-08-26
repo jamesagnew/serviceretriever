@@ -127,6 +127,7 @@ import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserDomainPermission;
+import net.svcret.ejb.model.entity.PersUserMethodStatus;
 import net.svcret.ejb.model.entity.PersUserRecentMessage;
 import net.svcret.ejb.model.entity.PersUserServicePermission;
 import net.svcret.ejb.model.entity.PersUserServiceVersionMethodPermission;
@@ -154,7 +155,7 @@ public class AdminServiceBean implements IAdminService {
 
 	@EJB
 	private IKeystoreService myKeystoreSvc;
-	
+
 	@EJB
 	private IConfigService myConfigSvc;
 
@@ -205,14 +206,14 @@ public class AdminServiceBean implements IAdminService {
 
 	@Override
 	public Collection<GMonitorRuleFiring> loadAllActiveRuleFirings() {
-		Collection<GMonitorRuleFiring> retVal=new ArrayList<GMonitorRuleFiring>();
+		Collection<GMonitorRuleFiring> retVal = new ArrayList<GMonitorRuleFiring>();
 		List<PersMonitorRuleFiring> firings = myDao.loadMonitorRuleFiringsWhichAreActive();
 		for (PersMonitorRuleFiring nextFiring : firings) {
 			retVal.add(toUi(nextFiring));
 		}
 		return retVal;
 	}
-	
+
 	@Override
 	public GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ProcessingException {
 		Validate.notBlank(theId, "ID");
@@ -381,7 +382,7 @@ public class AdminServiceBean implements IAdminService {
 	@Override
 	public Collection<DtoLibraryMessage> getLibraryMessages(HierarchyEnum theType, long thePid, boolean theLoadContents) throws ProcessingException {
 
-		Collection<PersLibraryMessage> msgs=null;
+		Collection<PersLibraryMessage> msgs = null;
 		switch (theType) {
 		case DOMAIN:
 			msgs = myDao.getLibraryMessagesWhichApplyToDomain(thePid);
@@ -454,7 +455,7 @@ public class AdminServiceBean implements IAdminService {
 	public Collection<DtoLibraryMessage> loadLibraryMessages() throws ProcessingException {
 		ArrayList<DtoLibraryMessage> retVal = new ArrayList<DtoLibraryMessage>();
 		for (PersLibraryMessage next : myDao.loadLibraryMessages()) {
-			retVal.add( toUi(next,false));
+			retVal.add(toUi(next, false));
 		}
 		return retVal;
 	}
@@ -823,7 +824,8 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	@Override
-	public GHttpClientConfig saveHttpClientConfig(GHttpClientConfig theConfig, byte[] theNewTruststore, String theNewTruststorePass, byte[] theNewKeystore, String theNewKeystorePass) throws ProcessingException {
+	public GHttpClientConfig saveHttpClientConfig(GHttpClientConfig theConfig, byte[] theNewTruststore, String theNewTruststorePass, byte[] theNewKeystore, String theNewKeystorePass)
+			throws ProcessingException {
 		Validate.notNull(theConfig, "HttpClientConfig");
 
 		PersHttpClientConfig existing = null;
@@ -886,7 +888,7 @@ public class AdminServiceBean implements IAdminService {
 
 		PersService newService = fromUi(theService);
 		service.merge(newService);
-		
+
 		myServiceRegistry.saveService(service);
 
 		// TODO: make this synchronous? (ie don't use a cached version, or force a cache refresh or something?
@@ -1178,13 +1180,13 @@ public class AdminServiceBean implements IAdminService {
 		for (PersServiceVersionMethod nextMethod : nextVersion.getMethods()) {
 			extractStatus(60, the60MinInvCount, the60minTime, nextMethod);
 		}
-		
+
 		// Failing monitor rules
 		List<PersMonitorRuleFiring> failingRules = theStatuses.getFirings(nextVersion.getPid());
 		for (PersMonitorRuleFiring next : failingRules) {
 			theDashboardObject.getFailingApplicableRulePids().add(next.getPid());
 		}
-		
+
 		return status;
 	}
 
@@ -1229,22 +1231,24 @@ public class AdminServiceBean implements IAdminService {
 
 	private PersBaseClientAuth<?> fromUi(BaseGClientSecurity theObj, BasePersServiceVersion theServiceVersion) {
 		switch (theObj.getType()) {
-		case WSSEC_UT:{
+		case WSSEC_UT: {
 			GWsSecUsernameTokenClientSecurity obj = (GWsSecUsernameTokenClientSecurity) theObj;
 			PersWsSecUsernameTokenClientAuth retVal = new PersWsSecUsernameTokenClientAuth();
 			retVal.setPid(obj.getPidOrNull());
 			retVal.setUsername(obj.getUsername());
 			retVal.setPassword(obj.getPassword());
 			retVal.setServiceVersion(theServiceVersion);
-			return retVal;}
-		case HTTP_BASICAUTH:{
+			return retVal;
+		}
+		case HTTP_BASICAUTH: {
 			DtoClientSecurityHttpBasicAuth obj = (DtoClientSecurityHttpBasicAuth) theObj;
 			PersHttpBasicClientAuth retVal = new PersHttpBasicClientAuth();
 			retVal.setPid(obj.getPidOrNull());
 			retVal.setUsername(obj.getUsername());
 			retVal.setPassword(obj.getPassword());
 			retVal.setServiceVersion(theServiceVersion);
-			return retVal;}
+			return retVal;
+		}
 		}
 		return null;
 	}
@@ -1402,7 +1406,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setFailureRetriesBeforeAborting(theConfig.getFailureRetriesBeforeAborting());
 		retVal.setReadTimeoutMillis(theConfig.getReadTimeoutMillis());
 		retVal.setUrlSelectionPolicy(theConfig.getUrlSelectionPolicy());
-		
+
 		return retVal;
 	}
 
@@ -1815,7 +1819,7 @@ public class AdminServiceBean implements IAdminService {
 			break;
 		}
 		}
-		
+
 		if (retVal == null) {
 			throw new IllegalStateException("Unknown type: " + theRule.getRuleType());
 		}
@@ -2054,20 +2058,22 @@ public class AdminServiceBean implements IAdminService {
 		BaseGClientSecurity retVal = null;
 
 		switch (theAuth.getAuthType()) {
-		case WSSEC_UT:{
+		case WSSEC_UT: {
 			PersWsSecUsernameTokenClientAuth obj = (PersWsSecUsernameTokenClientAuth) theAuth;
 			GWsSecUsernameTokenClientSecurity auth = new GWsSecUsernameTokenClientSecurity();
 			auth.setUsername(obj.getUsername());
 			auth.setPassword(obj.getPassword());
 			retVal = auth;
-			break;}
-		case HTTP_BASICAUTH:{
+			break;
+		}
+		case HTTP_BASICAUTH: {
 			PersHttpBasicClientAuth obj = (PersHttpBasicClientAuth) theAuth;
 			DtoClientSecurityHttpBasicAuth auth = new DtoClientSecurityHttpBasicAuth();
 			auth.setUsername(obj.getUsername());
 			auth.setPassword(obj.getPassword());
 			retVal = auth;
-			break;}
+			break;
+		}
 		}
 
 		if (retVal == null) {
@@ -2209,11 +2215,11 @@ public class AdminServiceBean implements IAdminService {
 
 		retVal.setUrlSelectionPolicy(theConfig.getUrlSelectionPolicy());
 
-		if (theConfig.getTlsKeystore()!=null) {
+		if (theConfig.getTlsKeystore() != null) {
 			retVal.setTlsKeystore(myKeystoreSvc.analyzeKeystore(theConfig.getTlsKeystore(), theConfig.getTlsKeystorePassword()));
 		}
-		
-		if (theConfig.getTlsTruststore()!=null) {
+
+		if (theConfig.getTlsTruststore() != null) {
 			retVal.setTlsTruststore(myKeystoreSvc.analyzeKeystore(theConfig.getTlsTruststore(), theConfig.getTlsTruststorePassword()));
 		}
 
@@ -2265,7 +2271,7 @@ public class AdminServiceBean implements IAdminService {
 		for (PersMonitorRuleFiringProblem next : theNext.getProblems()) {
 			retVal.getProblems().add(toUi(next));
 		}
-		
+
 		return retVal;
 	}
 
@@ -2640,28 +2646,45 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatus theStatus, PersServiceVersionMethod theNextMethod, IWithStats theOperator) {
-
-		Date end = new Date();
-		doWithStatsByMinute(theConfig, theRange, theStatus, theNextMethod, theOperator, end);
-	}
-
-	public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatus theStatus, PersServiceVersionMethod theNextMethod, IWithStats theOperator, Date end) {
-		Date start = new Date(end.getTime() - (theRange.getRange().getNumMins() * 60 * 1000L));
+		Date end;
+		Date start;
+		if (theRange.getWithPresetRange() != null) {
+			if (theRange.getWithPresetRangeEndForUnitTest() != null) {
+				end = theRange.getWithPresetRangeEndForUnitTest();
+			} else {
+				end = new Date();
+			}
+			start = new Date(end.getTime() - (theRange.getWithPresetRange().getNumMins() * 60 * 1000L));
+		} else {
+			end = theRange.getNoPresetTo();
+			start = theRange.getNoPresetFrom();
+		}
 		doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator, start, end);
 	}
 
-	public static void doWithUserStatsByMinute(PersConfig theConfig, PersUser theUser, int theNumberOfMinutes, IRuntimeStatus statusSvc, IWithStats theOperator) {
+	// public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatus theStatus, PersServiceVersionMethod theNextMethod, IWithStats theOperator, Date end) {
+	// Date start = new Date(end.getTime() - (theRange.getWithPresetRange().getNumMins() * 60 * 1000L));
+	// doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator, start, end);
+	// }
+
+	private void doWithUserStatsByMinute(PersConfig theConfig, PersUser theUser, int theNumberOfMinutes, IRuntimeStatus statusSvc, IWithStats theOperator) {
 		Date xMinsAgo = getDateXMinsAgo(theNumberOfMinutes);
 		Date date = xMinsAgo;
+
+		Collection<PersUserMethodStatus> methodStatuses = myDao.getUser(theUser.getPid()).getStatus().getMethodStatuses().values();
 
 		for (int min = 0; date.before(new Date()); min++) {
 
 			InvocationStatsIntervalEnum interval = doWithStatsSupportFindInterval(theConfig, date);
 			date = doWithStatsSupportFindDate(date, interval);
 
-			PersInvocationUserStatsPk pk = new PersInvocationUserStatsPk(interval, date, theUser);
-			BasePersMethodInvocationStats stats = statusSvc.getInvocationUserStatsSynchronously(pk);
-			theOperator.withStats(min, stats);
+			for (PersUserMethodStatus next : methodStatuses) {
+				if (next.doesDateFallWithinAtLeastOneOfMyRanges(date)) {
+					PersInvocationUserStatsPk pk = new PersInvocationUserStatsPk(interval, date, next.getPk().getMethod(), theUser);
+					BasePersMethodInvocationStats stats = statusSvc.getInvocationUserStatsSynchronously(pk);
+					theOperator.withStats(min, stats);
+				}
+			}
 
 			date = doWithStatsSupportIncrement(date, interval);
 
@@ -2729,7 +2752,7 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private static InvocationStatsIntervalEnum doWithStatsSupportFindInterval(PersConfig theConfig, Date date) {
+	static InvocationStatsIntervalEnum doWithStatsSupportFindInterval(PersConfig theConfig, Date date) {
 		InvocationStatsIntervalEnum interval;
 		Date collapseStatsToDaysCutoff = InvocationStatsIntervalEnum.DAY.truncate(theConfig.getCollapseStatsToDaysCutoff());
 		if (date.before(collapseStatsToDaysCutoff)) {
@@ -2750,7 +2773,7 @@ public class AdminServiceBean implements IAdminService {
 		return interval;
 	}
 
-	private static Date doWithStatsSupportIncrement(Date date, InvocationStatsIntervalEnum interval) {
+	static Date doWithStatsSupportIncrement(Date date, InvocationStatsIntervalEnum interval) {
 		Date retVal = new Date(date.getTime() + interval.millis());
 		return retVal;
 	}

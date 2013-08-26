@@ -5,6 +5,11 @@
 
   <!-- Servlets -->
   <servlet>
+    <servlet-name>graphServlet</servlet-name>
+    <servlet-class>net.svcret.admin.server.rpc.GraphServlet</servlet-class>
+  </servlet>
+
+  <servlet>
     <servlet-name>modelUpdateServlet</servlet-name>
     <servlet-class>net.svcret.admin.server.rpc.ModelUpdateServiceImpl</servlet-class>
   </servlet>
@@ -24,6 +29,16 @@
     <servlet-class>net.svcret.admin.server.rpc.HttpClientConfigServiceImpl</servlet-class>
   </servlet>
 
+  <servlet>
+    <servlet-name>miscConfigServlet</servlet-name>
+    <servlet-class>net.svcret.admin.server.rpc.MiscConfigServiceImpl</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>graphServlet</servlet-name>
+    <url-pattern>/graph.png</url-pattern>
+  </servlet-mapping>
+
   <servlet-mapping>
     <servlet-name>keystoreUploadServlet</servlet-name>
     <url-pattern>/AdminPortal/keystoreUpload</url-pattern>
@@ -32,6 +47,11 @@
   <servlet-mapping>
     <servlet-name>httpClientConfigServlet</servlet-name>
     <url-pattern>/AdminPortal/httpclientconfig</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>miscConfigServlet</servlet-name>
+    <url-pattern>/AdminPortal/miscconfig</url-pattern>
   </servlet-mapping>
 
   <servlet-mapping>

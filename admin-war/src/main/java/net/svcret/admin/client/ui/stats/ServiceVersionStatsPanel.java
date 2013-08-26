@@ -7,7 +7,7 @@ import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
-import net.svcret.admin.shared.model.TimeRangeEnum;
+import net.svcret.admin.shared.model.TimeRange;
 import net.svcret.admin.shared.util.ChartParams;
 import net.svcret.admin.shared.util.ChartTypeEnum;
 
@@ -19,7 +19,6 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.ListBox;
 
 public class ServiceVersionStatsPanel extends FlowPanel {
 
@@ -68,52 +67,48 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 		myGraphsTimePanel = new HorizontalPanel();
 
 		// Graphs Time Dropdown
-		final ListBox timeListBox = new ListBox();
-		myGraphsTimePanel.add(timeListBox);
-		for (TimeRangeEnum next : TimeRangeEnum.values()) {
-			timeListBox.addItem(next.getFriendlyName(), next.name());
-		}
-		timeListBox.setSelectedIndex(1);
+		final TimeRangeSelectorPanel timeListBox = new TimeRangeSelectorPanel(true);
 		timeListBox.addChangeHandler(new ChangeHandler() {
 			@Override
 			public void onChange(ChangeEvent theEvent) {
-				redrawCharts(TimeRangeEnum.valueOf(timeListBox.getValue(timeListBox.getSelectedIndex())));
+				redrawCharts(timeListBox.getSelectedRange());
 			}
 		});
-
+		myGraphsTimePanel.add(timeListBox);
+		
 		myChartsPanel = new FlowPanel();
 		myChartsPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
 		myTopContentPanel.add(myChartsPanel);
 
-		redrawCharts(TimeRangeEnum.valueOf(timeListBox.getValue(timeListBox.getSelectedIndex())));
+		redrawCharts(timeListBox.getSelectedRange());
 
 		myTopLoadingSpinner.hideCompletely();
 
 	}
 
-	private void redrawCharts(TimeRangeEnum theTimeRange) {
+	private void redrawCharts(TimeRange theTimeRange) {
 		myChartsPanel.clear();
 		myChartsPanel.add(myGraphsTimePanel);
 		
 		myChartsPanel.add(new HtmlH1(MSGS.serviceVersionStats_UsageTitle()));
-		Image img = new Image("graph.png?ct=" + ChartTypeEnum.USAGE.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.name());
+		Image img = new Image("graph.png?ct=" + ChartTypeEnum.USAGE.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.toUrlValue());
 		addStatsImage(myChartsPanel, img);
 
 		myChartsPanel.add(new HtmlH1(MSGS.serviceVersionStats_LatencyTitle()));
-		img = new Image("graph.png?ct=" + ChartTypeEnum.LATENCY.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.name());
+		img = new Image("graph.png?ct=" + ChartTypeEnum.LATENCY.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.toUrlValue());
 		addStatsImage(myChartsPanel, img);
 
 		myChartsPanel.add(new HtmlH1(MSGS.serviceVersionStats_MessageSizeTitle()));
-		img = new Image("graph.png?ct=" + ChartTypeEnum.PAYLOADSIZE.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.name());
+		img = new Image("graph.png?ct=" + ChartTypeEnum.PAYLOADSIZE.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.toUrlValue());
 		addStatsImage(myChartsPanel, img);
 
 		myChartsPanel.add(new HtmlH1(MSGS.serviceVersionStats_ThrottlingTitle()));
-		img = new Image("graph.png?ct=" + ChartTypeEnum.THROTTLING.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.name());
+		img = new Image("graph.png?ct=" + ChartTypeEnum.THROTTLING.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.toUrlValue());
 		addStatsImage(myChartsPanel, img);
 		
 	}
 
-	private void addStatsImage(FlowPanel graphsPanel, Image img) {
+	public static void addStatsImage(FlowPanel graphsPanel, Image img) {
 		final LoadingSpinner spinner = new LoadingSpinner();
 		spinner.showMessage("Generating Graph...", true);
 		graphsPanel.add(spinner);

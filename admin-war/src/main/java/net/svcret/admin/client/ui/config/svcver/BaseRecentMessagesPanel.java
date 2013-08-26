@@ -30,7 +30,7 @@ public abstract class BaseRecentMessagesPanel extends FlowPanel{
 		myTopPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
 
 		Label titleLabel = new Label(getDialogTitle());
-		titleLabel.setStyleName("mainPanelTitle");
+		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
 		myTopPanel.add(titleLabel);
 
 		myContentPanel = new FlowPanel();

@@ -184,7 +184,7 @@ public class LeftBarPanel extends FlowPanel {
 		case SVS:
 		case RSV:
 		case RUS:
-		case VUS:
+		case URM:
 		case DSV:
 		case EMR:
 		case AMR:
@@ -193,6 +193,7 @@ public class LeftBarPanel extends FlowPanel {
 		case RPM:
 		case SML:
 		case SRM:
+		case UST:
 			break;
 		}
 		

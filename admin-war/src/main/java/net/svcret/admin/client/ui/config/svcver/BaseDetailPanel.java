@@ -128,8 +128,12 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		addSelectionHandler(new SelectionHandler<Integer>() {
 			@Override
 			public void onSelection(SelectionEvent<Integer> theEvent) {
-				if (theEvent.getSelectedItem() == methodsIndex && methodPanel.getWidgetCount() == 0) {
-					initMethodPanel(methodPanel);
+				if (theEvent.getSelectedItem() == methodsIndex) {
+					if (methodPanel.getWidgetCount() == 0) {
+						initMethodPanel(methodPanel);
+					}else {
+						myMethodDataProvider.refresh();
+					}
 				}
 			}
 		});
@@ -369,7 +373,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		List<String> secValues = MethodSecurityPolicyEnum.valuesAsNameList();
 		List<String> secTexts = MethodSecurityPolicyEnum.valuesAsFriendlyNameList();
 		PSelectionCell secPolicyCell = new PSelectionCell(secValues, secTexts);
-		secPolicyCell.setDisableWithMessageOnNullValue("No security defined");
+		secPolicyCell.setDisableWithMessageOnNullValue("No server security");
 		Column<GServiceMethod, String> secPolicyColumn = new Column<GServiceMethod, String>(secPolicyCell) {
 			@Override
 			public String getValue(GServiceMethod theObject) {

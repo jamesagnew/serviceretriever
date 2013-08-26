@@ -17,6 +17,22 @@ public class PersUserMethodStatus implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name = "FIRST_FAIL_INVOC")
+	private Date myFirstFailInvocation;
+
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name = "FIRST_FAULT_INVOC")
+	private Date myFirstFaultInvocation;
+
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name = "FIRST_SECFAIL_INVOC")
+	private Date myFirstSecurityFailInvocation;
+
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name = "FIRST_THROTTLE_REJECT")
+	private Date myFirstThrottleReject;
+
+	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "LAST_FAIL_INVOC")
 	private Date myLastFailInvocation;
 
@@ -29,20 +45,16 @@ public class PersUserMethodStatus implements Serializable {
 	private Date myLastSecurityFailInvocation;
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "LAST_THROTTLE_REJECT")
-	private Date myLastThrottleReject;
-
-	public Date getLastThrottleReject() {
-		return myLastThrottleReject;
-	}
-
-	public void setLastThrottleReject(Date theLastThrottleReject) {
-		myLastThrottleReject = theLastThrottleReject;
-	}
-
-	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "LAST_SUC_INVOC")
 	private Date myLastSuccessfulInvocation;
+
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name = "FIRST_SUC_INVOC")
+	private Date myFirstSuccessfulInvocation;
+
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name = "LAST_THROTTLE_REJECT")
+	private Date myLastThrottleReject;
 
 	@EmbeddedId
 	private PersUserMethodStatusPk myPk;
@@ -104,6 +116,10 @@ public class PersUserMethodStatus implements Serializable {
 		return myLastSuccessfulInvocation;
 	}
 
+	public Date getLastThrottleReject() {
+		return myLastThrottleReject;
+	}
+
 	/**
 	 * @return the pk
 	 */
@@ -119,34 +135,6 @@ public class PersUserMethodStatus implements Serializable {
 		return result;
 	}
 
-	/**
-	 * @param theLastFailInvocation the lastFailInvocation to set
-	 */
-	public void setLastFailInvocation(Date theLastFailInvocation) {
-		myLastFailInvocation = theLastFailInvocation;
-	}
-
-	/**
-	 * @param theLastFaultInvocation the lastFaultInvocation to set
-	 */
-	public void setLastFaultInvocation(Date theLastFaultInvocation) {
-		myLastFaultInvocation = theLastFaultInvocation;
-	}
-
-	/**
-	 * @param theLastSecurityFailInvocation the lastSecurityFailInvocation to set
-	 */
-	public void setLastSecurityFailInvocation(Date theLastSecurityFailInvocation) {
-		myLastSecurityFailInvocation = theLastSecurityFailInvocation;
-	}
-
-	/**
-	 * @param theLastSuccessfulInvocation the lastSuccessfulInvocation to set
-	 */
-	public void setLastSuccessfulInvocation(Date theLastSuccessfulInvocation) {
-		myLastSuccessfulInvocation = theLastSuccessfulInvocation;
-	}
-
 	public void merge(PersUserMethodStatus theStatus) {
 		setLastSuccessfulInvocationIfNewer(theStatus.getLastSuccessfulInvocation());
 		setLastFaultInvocationIfNewer(theStatus.getLastFaultInvocation());
@@ -154,35 +142,89 @@ public class PersUserMethodStatus implements Serializable {
 		setLastSecurityFailInvocationIfNewer(theStatus.getLastSecurityFailInvocation());
 	}
 
-	public void setLastSecurityFailInvocationIfNewer(Date lastSecurityFailInvocation) {
-		if (myLastSecurityFailInvocation == null || (lastSecurityFailInvocation != null && myLastSecurityFailInvocation.before(lastSecurityFailInvocation))) {
-			myLastSecurityFailInvocation = lastSecurityFailInvocation;
+	/**
+	 * @param theLastFailInvocation
+	 *            the lastFailInvocation to set
+	 */
+	public void setLastFailInvocation(Date theLastFailInvocation) {
+		myLastFailInvocation = theLastFailInvocation;
+	}
+
+	public void setLastFailInvocationIfNewer(Date theInvocation) {
+		if (myFirstFailInvocation == null || (theInvocation != null && myFirstFailInvocation.after(theInvocation))) {
+			myFirstFailInvocation = theInvocation;
+		}
+		if (myLastFailInvocation == null || (theInvocation != null && myLastFailInvocation.before(theInvocation))) {
+			myLastFailInvocation = theInvocation;
 		}
 	}
 
-	public void setLastThrottleRejectIfNewer(Date lastReject) {
-		if (myLastThrottleReject == null || (lastReject != null && myLastThrottleReject.before(lastReject))) {
-			myLastThrottleReject = lastReject;
-		}
-	}
-
-	public void setLastFailInvocationIfNewer(Date lastFailInvocation) {
-		if (myLastFailInvocation == null || (lastFailInvocation != null && myLastFailInvocation.before(lastFailInvocation))) {
-			myLastFailInvocation = lastFailInvocation;
-		}
-	}
 
 	public void setLastFaultInvocationIfNewer(Date lastFaultInvocation) {
+		if (myFirstFaultInvocation == null || (lastFaultInvocation != null && myFirstFaultInvocation.after(lastFaultInvocation))) {
+			myFirstFaultInvocation = lastFaultInvocation;
+		}
 		if (myLastFaultInvocation == null || (lastFaultInvocation != null && myLastFaultInvocation.before(lastFaultInvocation))) {
 			myLastFaultInvocation = lastFaultInvocation;
 		}
 	}
 
+
+	public void setLastSecurityFailInvocationIfNewer(Date lastSecurityFailInvocation) {
+		if (myFirstSecurityFailInvocation == null || (lastSecurityFailInvocation != null && myFirstSecurityFailInvocation.after(lastSecurityFailInvocation))) {
+			myFirstSecurityFailInvocation = lastSecurityFailInvocation;
+		}
+		if (myLastSecurityFailInvocation == null || (lastSecurityFailInvocation != null && myLastSecurityFailInvocation.before(lastSecurityFailInvocation))) {
+			myLastSecurityFailInvocation = lastSecurityFailInvocation;
+		}
+	}
+
+
 	public void setLastSuccessfulInvocationIfNewer(Date lastSuccessfulInvocation) {
+		if (myFirstSuccessfulInvocation == null || (lastSuccessfulInvocation != null && myFirstSuccessfulInvocation.after(lastSuccessfulInvocation))) {
+			myFirstSuccessfulInvocation = lastSuccessfulInvocation;
+		}
 		if (myLastSuccessfulInvocation == null || (lastSuccessfulInvocation != null && myLastSuccessfulInvocation.before(lastSuccessfulInvocation))) {
 			myLastSuccessfulInvocation = lastSuccessfulInvocation;
 		}
 	}
 
+	public void setLastThrottleRejectIfNewer(Date lastReject) {
+		if (myFirstThrottleReject == null || (lastReject != null && myFirstThrottleReject.after(lastReject))) {
+			myFirstThrottleReject = lastReject;
+		}
+		if (myLastThrottleReject == null || (lastReject != null && myLastThrottleReject.before(lastReject))) {
+			myLastThrottleReject = lastReject;
+		}
+	}
+
+	public boolean doesDateFallWithinAtLeastOneOfMyRanges(Date theDate) {
+		if (myFirstSuccessfulInvocation != null && myLastSuccessfulInvocation != null) {
+			if (!myFirstSuccessfulInvocation.after(theDate) && !myLastSuccessfulInvocation.before(theDate)) {
+				return true;
+			}
+		}
+		if (myFirstSecurityFailInvocation != null && myLastSecurityFailInvocation != null) {
+			if (!myFirstSecurityFailInvocation.after(theDate) && !myLastSecurityFailInvocation.before(theDate)) {
+				return true;
+			}
+		}
+		if (myFirstFailInvocation != null && myLastFailInvocation != null) {
+			if (!myFirstFailInvocation.after(theDate) && !myLastFailInvocation.before(theDate)) {
+				return true;
+			}
+		}
+		if (myFirstFaultInvocation != null && myLastFaultInvocation != null) {
+			if (!myFirstFaultInvocation.after(theDate) && !myLastFaultInvocation.before(theDate)) {
+				return true;
+			}
+		}
+		if (myFirstThrottleReject != null && myLastThrottleReject != null) {
+			if (!myFirstThrottleReject.after(theDate) && !myLastThrottleReject.before(theDate)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 }

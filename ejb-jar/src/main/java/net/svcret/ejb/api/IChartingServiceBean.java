@@ -16,7 +16,7 @@ public interface IChartingServiceBean {
 
 	byte[] renderPayloadSizeGraphForServiceVersion(long thePid, TimeRange theRange) throws IOException, ProcessingException;
 
-	byte[] renderUserMethodGraphForUser(long theUserPid);
-
 	byte[] renderThrottlingGraphForServiceVersion(long theServiceVersionPid, TimeRange theRange) throws IOException, ProcessingException;
+
+	byte[] renderUserMethodGraphForUser(long theUserPid, TimeRange theRange) throws ProcessingException, IOException;
 }

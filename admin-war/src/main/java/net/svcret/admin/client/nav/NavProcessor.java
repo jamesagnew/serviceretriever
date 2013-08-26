@@ -37,6 +37,7 @@ import net.svcret.admin.client.ui.dash.ServiceDashboardPanel;
 import net.svcret.admin.client.ui.layout.BodyPanel;
 import net.svcret.admin.client.ui.layout.BreadcrumbPanel;
 import net.svcret.admin.client.ui.stats.ServiceVersionStatsPanel;
+import net.svcret.admin.client.ui.stats.UserRecentMessagesPanel;
 import net.svcret.admin.client.ui.stats.UserStatsPanel;
 import net.svcret.admin.client.ui.stats.ViewRecentMessageForServiceVersionPanel;
 import net.svcret.admin.client.ui.stats.ViewRecentMessageForUserPanel;
@@ -386,17 +387,8 @@ public class NavProcessor {
 		return token;
 	}
 
-	public static String getTokenViewUserStats(boolean theAddToHistory, long theUserPid) {
-		String token = "";
-		if (theAddToHistory) {
-			token = getCurrentToken();
-			if (!token.isEmpty()) {
-				token = token + SEPARATOR;
-			}
-		}
-		token = token + PagesEnum.VUS + "_" + theUserPid;
-		token = removeDuplicates(token);
-		return token;
+	public static String getTokenUserRecentMessages(boolean theAddToHistory, long theUserPid) {
+		return createArgumentToken(theAddToHistory, PagesEnum.URM, theUserPid);
 	}
 
 	public static void goHome() {
@@ -416,6 +408,9 @@ public class NavProcessor {
 			break;
 		case AD2:
 			panel = new AddDomainStep2Panel(Long.parseLong(args));
+			break;
+		case UST:
+			panel = new UserStatsPanel(Long.parseLong(args));
 			break;
 		case MLB:
 			String[] argsSplit = args.split("_");
@@ -551,8 +546,8 @@ public class NavProcessor {
 		case SVS:
 			panel = new ServiceVersionStatsPanel(Long.parseLong(args));
 			break;
-		case VUS:
-			panel = new UserStatsPanel(Long.parseLong(args));
+		case URM:
+			panel = new UserRecentMessagesPanel(Long.parseLong(args));
 			break;
 		case AMR:
 			panel = new AddMonitorRulePanel(MonitorRuleTypeEnum.values()[Integer.parseInt(args)]);
@@ -656,6 +651,10 @@ public class NavProcessor {
 
 		return retVal.toString();
 
+	}
+
+	public static String getTokenUserStats(boolean theAddToHistory, long theUserPid) {
+		return createArgumentToken(theAddToHistory, PagesEnum.UST, theUserPid);
 	}
 
 }

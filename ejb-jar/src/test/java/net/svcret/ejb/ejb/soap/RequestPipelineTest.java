@@ -177,6 +177,39 @@ public class RequestPipelineTest {
 		assertEquals("http://ws.ehr.uhn.ca:getPatientByMrn", p.getMethodName());
 
 	}
+	
+	@Test
+	public void testRequestWithoutHeaderElementButCreateOne() throws InternalErrorException, ProcessingException, UnknownRequestException, SAXException, IOException, ParserConfigurationException {
+
+		String methodName = "getPatientByMrn";
+		String msg = createRequest(methodName, false);
+
+		StringReader reader = new StringReader(msg);
+		StringWriter writer = new StringWriter();
+
+		List<PersBaseClientAuth<?>> clientAuths = new ArrayList<PersBaseClientAuth<?>>();
+		clientAuths.add(new PersWsSecUsernameTokenClientAuth("theUsername", "thePassword"));
+
+		List<PersBaseServerAuth<?, ?>> serverAuths = new ArrayList<PersBaseServerAuth<?, ?>>();
+		serverAuths.add(new PersWsSecUsernameTokenServerAuth());
+
+		PersServiceVersionSoap11 serviceVer = mock(PersServiceVersionSoap11.class);
+		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class);
+		when(serviceVer.getMethod("getPatientByMrn")).thenReturn(method);
+
+		RequestPipeline p = new RequestPipeline(serverAuths, clientAuths);
+		p.setPrettyPrint(true);
+		p.process(reader, writer);
+
+		String out = writer.toString();
+		ourLog.info(out);
+
+		validate(out);
+
+		assertFalse(out.contains("<?xml version"));
+		assertEquals("http://ws.ehr.uhn.ca:getPatientByMrn", p.getMethodName());
+
+	}
 
 	static String createRequest(String methodName, boolean theWithHeader) {
 		StringBuilder b = new StringBuilder();

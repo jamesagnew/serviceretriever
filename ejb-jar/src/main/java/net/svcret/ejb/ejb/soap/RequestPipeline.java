@@ -216,7 +216,7 @@ class RequestPipeline {
 
 		if (haveClientSecurity) {
 			try {
-				writeSecurityHeader(theXmlPrefix, theStreamWriter);
+				writeSecurityHeader(theStreamWriter);
 			} catch (XMLStreamException e) {
 				throw new ProcessingException(e);
 			}
@@ -239,7 +239,7 @@ class RequestPipeline {
 		myPrettyPrint = thePrettyPrint;
 	}
 
-	private void writeSecurityHeader(String theXmlPrefix, XMLEventWriter theStreamWriter) throws XMLStreamException {
+	private void writeSecurityHeader(XMLEventWriter theStreamWriter) throws XMLStreamException {
 		int secIndex = 1;
 		
 		ourLog.debug("Applying client auth modules: {}", myClientAuths);

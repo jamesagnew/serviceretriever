@@ -12,7 +12,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
 
 @Embeddable
-public class PersInvocationUserStatsPk extends BasePersInvocationStatsPk {
+public class PersInvocationUserStatsPk extends BasePersInvocationMethodStatsPk {
 
 	private static final long serialVersionUID = 1L;
 
@@ -30,13 +30,13 @@ public class PersInvocationUserStatsPk extends BasePersInvocationStatsPk {
 		super();
 	}
 
-	public PersInvocationUserStatsPk(InvocationStatsIntervalEnum theInterval, Date theStartTime, long theUser) {
-		super(theInterval, theStartTime);
+	public PersInvocationUserStatsPk(InvocationStatsIntervalEnum theInterval, Date theStartTime, long theMethod, long theUser) {
+		super(theInterval, theStartTime, theMethod);
 		myUserPid = theUser;
 	}
 
-	public PersInvocationUserStatsPk(InvocationStatsIntervalEnum theInterval, Date theStartTime, PersUser theUser) {
-		super(theInterval, theStartTime);
+	public PersInvocationUserStatsPk(InvocationStatsIntervalEnum theInterval, Date theStartTime, PersServiceVersionMethod theMethod, PersUser theUser) {
+		super(theInterval, theStartTime, theMethod.getPid());
 		myUserPid = theUser.getPid();
 	}
 

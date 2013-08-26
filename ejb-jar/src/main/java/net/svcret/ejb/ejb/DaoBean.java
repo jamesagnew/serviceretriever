@@ -151,6 +151,11 @@ public class DaoBean implements IDao {
 		return resultList;
 	}
 
+	@Override
+	public Collection<PersMonitorRuleActiveCheck> getAllMonitorRuleActiveChecks() {
+		return myEntityManager.createNamedQuery(Queries.PERSACTIVECHECK_FINDALL, PersMonitorRuleActiveCheck.class).getResultList();
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public Collection<PersService> getAllServices() {
@@ -273,25 +278,15 @@ public class DaoBean implements IDao {
 
 	@Override
 	public List<PersInvocationUserStats> getInvocationUserStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff) {
-		TypedQuery<PersInvocationUserStats> q = myEntityManager.createNamedQuery(Queries.PERSINVOC_USERSTATS, PersInvocationUserStats.class);
+		TypedQuery<PersInvocationUserStats> q = myEntityManager.createNamedQuery(Queries.PERSINVOC_USERSTATS_FINDINTERVAL, PersInvocationUserStats.class);
 		q.setParameter("INTERVAL", theHour);
 		q.setParameter("BEFORE_DATE", theDaysCutoff, TemporalType.TIMESTAMP);
 		return q.getResultList();
 	}
 
 	@Override
-	public Collection<PersLibraryMessage> getLibraryMessagesWhichApplyToService(long thePid) {
-		PersService svc = myEntityManager.find(PersService.class, thePid);
-		if (svc == null) {
-			throw new IllegalArgumentException("Unknown service: " + thePid);
-		}
-
-		TypedQuery<PersLibraryMessage> query = myEntityManager.createNamedQuery(Queries.LIBRARY_FINDBYSVC, PersLibraryMessage.class);
-		query.setParameter("SVC", svc);
-
-		List<PersLibraryMessage> retVal = query.getResultList();
-		
-		return new HashSet<PersLibraryMessage>(retVal);
+	public PersLibraryMessage getLibraryMessageByPid(long theMessagePid) {
+		return myEntityManager.find(PersLibraryMessage.class, theMessagePid);
 	}
 
 	@Override
@@ -305,7 +300,22 @@ public class DaoBean implements IDao {
 		query.setParameter("DOMAIN", domain);
 
 		List<PersLibraryMessage> retVal = query.getResultList();
-		
+
+		return new HashSet<PersLibraryMessage>(retVal);
+	}
+
+	@Override
+	public Collection<PersLibraryMessage> getLibraryMessagesWhichApplyToService(long thePid) {
+		PersService svc = myEntityManager.find(PersService.class, thePid);
+		if (svc == null) {
+			throw new IllegalArgumentException("Unknown service: " + thePid);
+		}
+
+		TypedQuery<PersLibraryMessage> query = myEntityManager.createNamedQuery(Queries.LIBRARY_FINDBYSVC, PersLibraryMessage.class);
+		query.setParameter("SVC", svc);
+
+		List<PersLibraryMessage> retVal = query.getResultList();
+
 		return new HashSet<PersLibraryMessage>(retVal);
 	}
 
@@ -673,6 +683,23 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
+	public List<PersInvocationUserStats> getUserStatsWithinTimeRange(PersUser theUser, Date theStart, Date theEnd) {
+		Validate.notNull(theUser);
+		Validate.notNull(theStart);
+		Validate.notNull(theEnd);
+		if (theEnd.before(theStart)) {
+			throw new IllegalArgumentException();
+		}
+
+		TypedQuery<PersInvocationUserStats> query = myEntityManager.createNamedQuery(Queries.PERSINVOC_USERSTATS_FINDUSER, PersInvocationUserStats.class);
+		query.setParameter("USER_PID", theUser.getPid());
+		query.setParameter("START_TIME", theStart);
+		query.setParameter("END_TIME", theEnd);
+
+		return query.getResultList();
+	}
+
+	@Override
 	public long incrementStateCounter(String theKey) {
 		Validate.notBlank(theKey, "Key");
 
@@ -690,6 +717,35 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
+	public StatusesBean loadAllStatuses() {
+		StatusesBean statusesBean = new StatusesBean();
+
+		List<PersServiceVersionUrlStatus> urlStatuses = myEntityManager.createQuery("SELECT c FROM " + PersServiceVersionUrlStatus.class.getSimpleName() + " c", PersServiceVersionUrlStatus.class)
+				.getResultList();
+		for (PersServiceVersionUrlStatus next : urlStatuses) {
+			statusesBean.getUrlPidToStatus().put(next.getUrlPid(), next);
+		}
+
+		List<PersServiceVersionStatus> verStatuses = myEntityManager.createQuery("SELECT c FROM " + PersServiceVersionStatus.class.getSimpleName() + " c", PersServiceVersionStatus.class)
+				.getResultList();
+		for (PersServiceVersionStatus next : verStatuses) {
+			statusesBean.getServiceVersionPidToStatus().put(next.getServiceVersionPid(), next);
+		}
+
+		List<PersMonitorRuleFiring> activeRuleFailures = loadMonitorRuleFiringsWhichAreActive();
+		for (PersMonitorRuleFiring next : activeRuleFailures) {
+			statusesBean.addActiveRuleFiring(next);
+		}
+
+		return statusesBean;
+	}
+
+	@Override
+	public List<PersLibraryMessage> loadLibraryMessages() {
+		return myEntityManager.createNamedQuery(Queries.LIBRARY_FINDALL, PersLibraryMessage.class).getResultList();
+	}
+
+	@Override
 	public List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<? extends BasePersServiceVersion> theAllSvcVers, int theStart) {
 
 		TypedQuery<PersMonitorRuleFiring> q = myEntityManager.createNamedQuery(Queries.RULEFIRING, PersMonitorRuleFiring.class);
@@ -698,6 +754,12 @@ public class DaoBean implements IDao {
 		q.setMaxResults(10);
 
 		return q.getResultList();
+	}
+
+	@Override
+	public List<PersMonitorRuleFiring> loadMonitorRuleFiringsWhichAreActive() {
+		List<PersMonitorRuleFiring> activeRuleFailures = myEntityManager.createNamedQuery(Queries.RULEFIRING_FINDACTIVE, PersMonitorRuleFiring.class).getResultList();
+		return activeRuleFailures;
 	}
 
 	@Override
@@ -877,7 +939,7 @@ public class DaoBean implements IDao {
 			}
 			return theMessage;
 		} else {
-			
+
 			PersLibraryMessage existing = myEntityManager.find(PersLibraryMessage.class, theMessage.getPid());
 			for (PersLibraryMessageAppliesTo next : existing.getAppliesTo()) {
 				if (!theMessage.getAppliesTo().contains(next)) {
@@ -887,10 +949,10 @@ public class DaoBean implements IDao {
 			for (PersLibraryMessageAppliesTo next : theMessage.getAppliesTo()) {
 				PersLibraryMessageAppliesTo existingAt = myEntityManager.find(PersLibraryMessageAppliesTo.class, next.getPk());
 				if (existingAt == null) {
-				myEntityManager.persist(next);
+					myEntityManager.persist(next);
 				}
 			}
-			
+
 			return myEntityManager.merge(theMessage);
 		}
 	}
@@ -901,19 +963,19 @@ public class DaoBean implements IDao {
 		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
 			next.setRule(theRule);
 		}
-		
+
 		if (theRule instanceof PersMonitorRuleActive) {
-			for (PersMonitorRuleActiveCheck next : ((PersMonitorRuleActive)theRule).getActiveChecks()) {
+			for (PersMonitorRuleActiveCheck next : ((PersMonitorRuleActive) theRule).getActiveChecks()) {
 				next.setRule(theRule);
 			}
 		}
 
 		if (theRule instanceof PersMonitorRulePassive) {
-			for (PersMonitorAppliesTo next : ((PersMonitorRulePassive)theRule).getAppliesTo()) {
+			for (PersMonitorAppliesTo next : ((PersMonitorRulePassive) theRule).getAppliesTo()) {
 				next.setRule(theRule);
 			}
 		}
-		
+
 		myEntityManager.merge(theRule);
 	}
 
@@ -939,7 +1001,7 @@ public class DaoBean implements IDao {
 		Validate.notNull(theRule, "theRule");
 
 		if (theRule instanceof PersMonitorRulePassive) {
-			for (PersMonitorAppliesTo next : ((PersMonitorRulePassive)theRule).getAppliesTo()) {
+			for (PersMonitorAppliesTo next : ((PersMonitorRulePassive) theRule).getAppliesTo()) {
 				next.setRule(theRule);
 			}
 		}
@@ -1252,49 +1314,6 @@ public class DaoBean implements IDao {
 		}
 
 		return retVal;
-	}
-
-	@Override
-	public PersLibraryMessage getLibraryMessageByPid(long theMessagePid) {
-		return myEntityManager.find(PersLibraryMessage.class, theMessagePid);
-	}
-
-	@Override
-	public Collection<PersMonitorRuleActiveCheck> getAllMonitorRuleActiveChecks() {
-		return myEntityManager.createNamedQuery(Queries.PERSACTIVECHECK_FINDALL, PersMonitorRuleActiveCheck.class).getResultList();
-	}
-
-	@Override
-	public StatusesBean loadAllStatuses() {
-		StatusesBean statusesBean = new StatusesBean();
-		
-		List<PersServiceVersionUrlStatus> urlStatuses = myEntityManager.createQuery("SELECT c FROM " + PersServiceVersionUrlStatus.class.getSimpleName() + " c", PersServiceVersionUrlStatus.class).getResultList();
-		for (PersServiceVersionUrlStatus next : urlStatuses) {
-			statusesBean.getUrlPidToStatus().put(next.getUrlPid(), next);
-		}
-		
-		List<PersServiceVersionStatus> verStatuses = myEntityManager.createQuery("SELECT c FROM " + PersServiceVersionStatus.class.getSimpleName() + " c", PersServiceVersionStatus.class).getResultList();
-		for (PersServiceVersionStatus next : verStatuses) {
-			statusesBean.getServiceVersionPidToStatus().put(next.getServiceVersionPid(), next);
-		}
-
-		List<PersMonitorRuleFiring> activeRuleFailures = loadMonitorRuleFiringsWhichAreActive();
-		for (PersMonitorRuleFiring next : activeRuleFailures) {
-			statusesBean.addActiveRuleFiring(next);
-		}
-
-		return statusesBean;
-	}
-
-	@Override
-	public List<PersMonitorRuleFiring> loadMonitorRuleFiringsWhichAreActive() {
-		List<PersMonitorRuleFiring> activeRuleFailures = myEntityManager.createNamedQuery(Queries.RULEFIRING_FINDACTIVE, PersMonitorRuleFiring.class).getResultList();
-		return activeRuleFailures;
-	}
-
-	@Override
-	public List<PersLibraryMessage> loadLibraryMessages() {
-		return myEntityManager.createNamedQuery(Queries.LIBRARY_FINDALL, PersLibraryMessage.class).getResultList();
 	}
 
 }

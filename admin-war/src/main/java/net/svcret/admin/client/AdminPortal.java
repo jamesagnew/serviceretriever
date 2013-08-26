@@ -2,6 +2,8 @@ package net.svcret.admin.client;
 
 import net.svcret.admin.client.rpc.HttpClientConfigService;
 import net.svcret.admin.client.rpc.HttpClientConfigServiceAsync;
+import net.svcret.admin.client.rpc.MiscConfigService;
+import net.svcret.admin.client.rpc.MiscConfigServiceAsync;
 import net.svcret.admin.client.rpc.ModelUpdateService;
 import net.svcret.admin.client.rpc.ModelUpdateServiceAsync;
 import net.svcret.admin.client.ui.layout.OuterLayoutPanel;
@@ -32,6 +34,8 @@ public class AdminPortal implements EntryPoint, UncaughtExceptionHandler {
 	public static final Messages MSGS = GWT.create(Messages.class);
 
 	public static final HttpClientConfigServiceAsync SVC_HTTPCLIENTCONFIG = GWT.create(HttpClientConfigService.class);
+
+	public static final MiscConfigServiceAsync SVC_MISCCONFIG = GWT.create(MiscConfigService.class);
 
 	/**
 	 * This is the entry point method.

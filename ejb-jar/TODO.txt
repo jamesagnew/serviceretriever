@@ -25,6 +25,17 @@ DONE
   messages in the library. Also columns should be sortable
 
     Table mods:
-   	PX_SVC_VER_RCNT_MSG needs new METHOD_PID column
-   	PX_USER_RCNT_MSG needs new METHOD_PID column
-   	PX_SVC_VER_METHOD needs new SEC_POLICY (len 50) column
+	PX_INVOC_STATS_USR remove index with only time in it
+	PX_INVOC_STATS_USR add index IDX_PISU_USER_AND_IVL with USER_PID and START_TIME
+	PX_INVOC_STATS_USR add column METHOD_PID
+	PX_USER_METHOD_STATUS add columns FIRST_SUC_INVOC
+	                                  FIRST_FAIL_INVOC 
+	                                  FIRST_FAULT_INVOC 
+	                                  FIRST_SECFAIL_INVOC 
+	                                  FIRST_THROTTLE_REJECT
+	                                  
+	                                  
+	                                  
+	                                  
+	                                  
+	

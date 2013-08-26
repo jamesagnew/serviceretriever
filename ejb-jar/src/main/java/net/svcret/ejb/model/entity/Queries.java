@@ -40,8 +40,11 @@ public class Queries {
 	public static final String PERSINVOC_STATS = "PersInvocationStats.findBeforeDate";
 	public static final String PERSINVOC_STATS_Q = "SELECT s FROM PersInvocationStats s WHERE s.myPk.myInterval = :INTERVAL AND s.myPk.myStartTime < :BEFORE_DATE";
 
-	public static final String PERSINVOC_USERSTATS = "PersInvocationUserStats.findBeforeDate";
-	public static final String PERSINVOC_USERSTATS_Q = "SELECT s FROM PersInvocationUserStats s WHERE s.myPk.myInterval = :INTERVAL AND s.myPk.myStartTime < :BEFORE_DATE";
+	public static final String PERSINVOC_USERSTATS_FINDUSER = "PersInvocationUserStats.findForUser";
+	public static final String PERSINVOC_USERSTATS_FINDUSER_Q = "SELECT s FROM PersInvocationUserStats s WHERE s.myPk.myUserPid = :USER_PID AND s.myPk.myStartTime >= :START_TIME AND s.myPk.myStartTime <= :END_TIME ORDER BY s.myPk.myStartTime ASC";
+	
+	public static final String PERSINVOC_USERSTATS_FINDINTERVAL = "PersInvocationUserStats.findIntervalBeforeDate";
+	public static final String PERSINVOC_USERSTATS_FINDINTERVAL_Q = "SELECT s FROM PersInvocationUserStats s WHERE s.myPk.myInterval = :INTERVAL AND s.myPk.myStartTime < :BEFORE_DATE";
 
 	public static final String PERSINVOC_ANONSTATS = "PersInvocationAnonStats.findBeforeDate";
 	public static final String PERSINVOC_ANONSTATS_Q = "SELECT s FROM PersInvocationAnonStats s WHERE s.myPk.myInterval = :INTERVAL AND s.myPk.myStartTime < :BEFORE_DATE";

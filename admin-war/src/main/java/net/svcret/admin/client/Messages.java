@@ -726,8 +726,8 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Recent Transactions")
 	String viewRecentMessagUser_Breadcrumb();
 
-	@DefaultMessage("User Statistics and Usage")
-	String viewUserStats_Breadcrumb();
+	@DefaultMessage("Recent Transactions")
+	String userRecentTransactions_Breadcrumb();
 
 	@DefaultMessage("Authentication Host")
 	String wsSecServerSecurity_AuthenticationHost();
@@ -776,6 +776,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("These settings will apply only to encrypted connections (i.e. those using the HTTPS protocol)")
 	String httpClientConfigsPanel_SSLDesc();
+
+	@DefaultMessage("User Stats")
+	String userStats_Breadcrumb();
 	
 	
 }

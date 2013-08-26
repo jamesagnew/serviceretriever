@@ -119,9 +119,14 @@ public enum PagesEnum {
 	TSV(MSGS.testServiceVersion_Breadcrumb()),
 	
 	/**
-	 * View usee stats
+	 * View user recent messages
 	 */
-	VUS(MSGS.viewUserStats_Breadcrumb())
+	URM(MSGS.userRecentTransactions_Breadcrumb()), 
+	
+	/**
+	 * User stats
+	 */
+	UST(MSGS.userStats_Breadcrumb())
 	;
 	
 	private String myBreadcrumb;

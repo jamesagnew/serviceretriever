@@ -4,6 +4,7 @@ public enum ChartTypeEnum {
 	LATENCY, 
 	USAGE, 
 	PAYLOADSIZE, 
-	THROTTLING
+	THROTTLING,
+	USERMETHODS
 
 }

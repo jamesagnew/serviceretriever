@@ -271,8 +271,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 		// Days
 		{
-			Date now = DAY.truncate(getNow());
-			Date daysCutoff = DateUtils.addDays(now, -config.getCollapseStatsToDaysAfterNumDays());
+			Date daysCutoff = config.getCollapseStatsToDaysCutoff(getNow());
 
 			ourLog.debug("Going to truncate any hourly stats before {}", daysCutoff);
 
@@ -282,8 +281,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 		// 10 Minutes -> Hours
 		{
-			Date now = HOUR.truncate(getNow());
-			Date hoursCutoff = DateUtils.addHours(now, -config.getCollapseStatsToHoursAfterNumHours());
+			Date hoursCutoff = config.getCollapseStatsToHoursCutoff(getNow());
 
 			ourLog.debug("Going to truncate any 10 minute stats before {}", hoursCutoff);
 
@@ -293,8 +291,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 		// Minutes -> 10 Minutes
 		{
-			Date now = TEN_MINUTE.truncate(getNow());
-			Date hoursCutoff = DateUtils.addHours(now, -config.getCollapseStatsToTenMinutesAfterNumHours());
+			Date hoursCutoff = config.getCollapseStatsToTenMinutesCutoff(getNow());
 
 			ourLog.debug("Going to truncate any 1 minute stats before {}", hoursCutoff);
 
@@ -319,7 +316,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 					// dayPk));
 				}
 			} else if (invocClass == PersInvocationUserStats.class) {
-				dayPk = new PersInvocationUserStatsPk(toIntervalTyoe, next.getPk().getStartTime(), ((PersInvocationUserStatsPk) next.getPk()).getUserPid());
+				PersInvocationUserStatsPk existingPk = (PersInvocationUserStatsPk) next.getPk();
+				dayPk = new PersInvocationUserStatsPk(toIntervalTyoe, existingPk.getStartTime(), existingPk.getMethod(), existingPk.getUserPid());
 				if (!statsToFlush.containsKey(dayPk)) {
 					statsToFlush.put(dayPk, new PersInvocationUserStats((PersInvocationUserStatsPk) dayPk));
 					// statsToFlush.put(dayPk,
@@ -793,7 +791,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		 * Record user/anon method statistics
 		 */
 		if (theUser != null) {
-			PersInvocationUserStatsPk uStatsPk = new PersInvocationUserStatsPk(interval, theInvocationTime, theUser);
+			PersInvocationUserStatsPk uStatsPk = new PersInvocationUserStatsPk(interval, theInvocationTime, theMethod, theUser);
 			doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, uStatsPk, theThrottleFullIfAny);
 
 			doUpdateUserStatus(theMethod, theInvocationResponseResultsBean, theUser, theInvocationTime);

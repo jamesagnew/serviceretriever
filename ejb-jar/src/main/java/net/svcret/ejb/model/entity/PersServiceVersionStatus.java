@@ -17,8 +17,6 @@ import javax.persistence.Transient;
 
 import org.hibernate.annotations.ForeignKey;
 
-import net.svcret.ejb.util.Validate;
-
 @Table(name = "PX_SVC_VER_STATUS")
 @Entity
 public class PersServiceVersionStatus extends BasePersObject {
@@ -197,14 +195,6 @@ public class PersServiceVersionStatus extends BasePersObject {
 	 */
 	public void setServiceVersion(BasePersServiceVersion theServiceVersion) {
 		myServiceVersion = theServiceVersion;
-	}
-
-	public static PersInvocationUserStatsPk createEntryPk(InvocationStatsIntervalEnum theInterval, Date theTimestamp, PersUser theUser) {
-		Validate.notNull(theInterval, "Interval");
-		Validate.notNull(theTimestamp, "Timestamp");
-
-		PersInvocationUserStatsPk pk = new PersInvocationUserStatsPk(theInterval, theTimestamp, theUser);
-		return pk;
 	}
 
 	public static Date newer(Date theDate1, Date theDate2) {

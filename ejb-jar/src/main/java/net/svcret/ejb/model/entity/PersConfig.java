@@ -1,5 +1,7 @@
 package net.svcret.ejb.model.entity;
 
+import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.*;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,10 +25,10 @@ import com.google.common.annotations.VisibleForTesting;
 @Table(name = "PX_CONFIG")
 public class PersConfig {
 
+	public static final long DEFAULT_ID = 1L;
 	private static final int DEF_STATS_COL_10MIN = 2;
 	private static final int DEF_STATS_COL_DAYS = 90;
 	private static final int DEF_STATS_COL_HOUR = 48;
-	public static final long DEFAULT_ID = 1L;
 
 	@Column(name = "STATS_COL_DAY", nullable = false)
 	private int myCollapseStatsToDaysAfterNumDays;
@@ -70,6 +72,12 @@ public class PersConfig {
 		return new Date(getNow() - (getCollapseStatsToDaysAfterNumDays() * DateUtils.MILLIS_PER_DAY));
 	}
 
+	public Date getCollapseStatsToDaysCutoff(Date theNow) {
+		Date now = DAY.truncate(theNow);
+		Date daysCutoff = DateUtils.addDays(now, -getCollapseStatsToDaysAfterNumDays());
+		return daysCutoff;
+	}
+
 	/**
 	 * @return the collapseStatsToHoursAfterNumHours
 	 */
@@ -82,6 +90,12 @@ public class PersConfig {
 
 	public Date getCollapseStatsToHoursCutoff() {
 		return new Date(getNow() - (getCollapseStatsToHoursAfterNumHours() * DateUtils.MILLIS_PER_HOUR));
+	}
+
+	public Date getCollapseStatsToHoursCutoff(Date theNow) {
+		Date now = HOUR.truncate(theNow);
+		Date hoursCutoff = DateUtils.addHours(now, -getCollapseStatsToHoursAfterNumHours());
+		return hoursCutoff;
 	}
 
 	/**
@@ -98,11 +112,10 @@ public class PersConfig {
 		return new Date(getNow() - (getCollapseStatsToTenMinutesAfterNumHours() * DateUtils.MILLIS_PER_HOUR));
 	}
 
-	private long getNow() {
-		if (myNowForUnitTests > 0) {
-			return myNowForUnitTests;
-		}
-		return System.currentTimeMillis();
+	public Date getCollapseStatsToTenMinutesCutoff(Date theNow) {
+		Date now = TEN_MINUTE.truncate(theNow);
+		Date hoursCutoff = DateUtils.addHours(now, -getCollapseStatsToTenMinutesAfterNumHours());
+		return hoursCutoff;
 	}
 
 	/**
@@ -114,7 +127,7 @@ public class PersConfig {
 		}
 		return Collections.unmodifiableCollection(myProxyUrlBases);
 	}
-
+	
 	public void merge(PersConfig theFromUi) {
 		myCollapseStatsToDaysAfterNumDays = theFromUi.getCollapseStatsToDaysAfterNumDays();
 		myCollapseStatsToHoursAfterNumHours = theFromUi.getCollapseStatsToDaysAfterNumDays();
@@ -133,7 +146,7 @@ public class PersConfig {
 	public void setCollapseStatsToDaysAfterNumDays(int theCollapseStatsToDaysAfterNumDays) {
 		myCollapseStatsToDaysAfterNumDays = theCollapseStatsToDaysAfterNumDays;
 	}
-	
+
 	/**
 	 * @param theCollapseStatsToHoursAfterNumHours the collapseStatsToHoursAfterNumHours to set
 	 */
@@ -159,4 +172,14 @@ public class PersConfig {
 	public void setNow(long theNow) {
 		myNowForUnitTests = theNow;
 	}
+
+	private long getNow() {
+		if (myNowForUnitTests > 0) {
+			return myNowForUnitTests;
+		}
+		return System.currentTimeMillis();
+	}
+	
+	
+	
 }
