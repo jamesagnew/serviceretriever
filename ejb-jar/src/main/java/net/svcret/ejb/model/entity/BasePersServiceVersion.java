@@ -302,6 +302,14 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		return myNameToMethod.get(theName);
 	}
 
+	@Override
+	public boolean determineInheritedAuditLogEnable() {
+		if (getAuditLogEnable() != null) {
+			return getAuditLogEnable();
+		}
+		return getService().determineInheritedAuditLogEnable();
+	}
+
 	public PersServiceVersionMethod getMethodForRootElementName(String theName) {
 		/*
 		 * We avoid synchronization here at the expense of the small chance we'll create the nameToMethod map more than once..

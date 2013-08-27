@@ -11,6 +11,9 @@ public abstract class BasePersKeepsRecentTransactions extends BasePersObject {
 
 	private static final long serialVersionUID = 1L;
 
+	@Column(name = "AUDIT_LOG_ENABLE", nullable = true)
+	private Boolean myAuditLogEnable;
+
 	@Column(name = "KEEP_RCNT_NUM_FAIL", nullable = true)
 	private Integer myKeepNumRecentTransactionsFail;
 
@@ -22,10 +25,12 @@ public abstract class BasePersKeepsRecentTransactions extends BasePersObject {
 
 	@Column(name = "KEEP_RCNT_NUM_SUC", nullable = true)
 	private Integer myKeepNumRecentTransactionsSuccess;
+	
+	public abstract boolean canInheritKeepNumRecentTransactions();
+
+	public abstract boolean determineInheritedAuditLogEnable();
 
 	public abstract Integer determineInheritedKeepNumRecentTransactions(ResponseTypeEnum theResultType);
-
-	public abstract boolean canInheritKeepNumRecentTransactions();
 
 	public Integer determineKeepNumRecentTransactions(ResponseTypeEnum theResultType) {
 		Integer retVal;
@@ -51,6 +56,10 @@ public abstract class BasePersKeepsRecentTransactions extends BasePersObject {
 
 		return retVal;
 
+	}
+
+	public Boolean getAuditLogEnable() {
+		return myAuditLogEnable;
 	}
 
 	/**
@@ -79,6 +88,39 @@ public abstract class BasePersKeepsRecentTransactions extends BasePersObject {
 	 */
 	public Integer getKeepNumRecentTransactionsSuccess() {
 		return myKeepNumRecentTransactionsSuccess;
+	}
+
+	public void merge(BasePersKeepsRecentTransactions theObject) {
+		setKeepNumRecentTransactionsFail(theObject.getKeepNumRecentTransactionsFail());
+		setKeepNumRecentTransactionsSecurityFail(theObject.getKeepNumRecentTransactionsSecurityFail());
+		setKeepNumRecentTransactionsFault(theObject.getKeepNumRecentTransactionsFault());
+		setKeepNumRecentTransactionsSuccess(theObject.getKeepNumRecentTransactionsSuccess());
+	}
+
+	public void populateKeepRecentTransactionsFromDto(BaseGKeepsRecentMessages<?> theDto) {
+		setKeepNumRecentTransactionsFail(theDto.getKeepNumRecentTransactionsFail());
+		setKeepNumRecentTransactionsSecurityFail(theDto.getKeepNumRecentTransactionsSecurityFail());
+		setKeepNumRecentTransactionsFault(theDto.getKeepNumRecentTransactionsFault());
+		setKeepNumRecentTransactionsSuccess(theDto.getKeepNumRecentTransactionsSuccess());
+	}
+
+	public void populateKeepRecentTransactionsToDto(BaseGKeepsRecentMessages<?> theDto) {
+		theDto.setKeepNumRecentTransactionsFail(this.getKeepNumRecentTransactionsFail());
+		theDto.setKeepNumRecentTransactionsSecurityFail(this.getKeepNumRecentTransactionsSecurityFail());
+		theDto.setKeepNumRecentTransactionsFault(this.getKeepNumRecentTransactionsFault());
+		theDto.setKeepNumRecentTransactionsSuccess(this.getKeepNumRecentTransactionsSuccess());
+
+		theDto.setCanInheritKeepNumRecentTransactions(canInheritKeepNumRecentTransactions());
+		if (canInheritKeepNumRecentTransactions()) {
+			theDto.setInheritedKeepNumRecentTransactionsFail(determineInheritedKeepNumRecentTransactions(ResponseTypeEnum.FAIL));
+			theDto.setInheritedKeepNumRecentTransactionsSecurityFail(determineInheritedKeepNumRecentTransactions(ResponseTypeEnum.SECURITY_FAIL));
+			theDto.setInheritedKeepNumRecentTransactionsFault(determineInheritedKeepNumRecentTransactions(ResponseTypeEnum.FAULT));
+			theDto.setInheritedKeepNumRecentTransactionsSuccess(determineInheritedKeepNumRecentTransactions(ResponseTypeEnum.SUCCESS));
+		}
+	}
+
+	public void setAuditLogEnable(Boolean theAuditLogEnable) {
+		myAuditLogEnable = theAuditLogEnable;
 	}
 
 	/**
@@ -111,35 +153,6 @@ public abstract class BasePersKeepsRecentTransactions extends BasePersObject {
 	 */
 	public void setKeepNumRecentTransactionsSuccess(Integer theKeepNumRecentTransactionsSuccess) {
 		myKeepNumRecentTransactionsSuccess = theKeepNumRecentTransactionsSuccess;
-	}
-
-	public void populateKeepRecentTransactionsToDto(BaseGKeepsRecentMessages<?> theDto) {
-		theDto.setKeepNumRecentTransactionsFail(this.getKeepNumRecentTransactionsFail());
-		theDto.setKeepNumRecentTransactionsSecurityFail(this.getKeepNumRecentTransactionsSecurityFail());
-		theDto.setKeepNumRecentTransactionsFault(this.getKeepNumRecentTransactionsFault());
-		theDto.setKeepNumRecentTransactionsSuccess(this.getKeepNumRecentTransactionsSuccess());
-
-		theDto.setCanInheritKeepNumRecentTransactions(canInheritKeepNumRecentTransactions());
-		if (canInheritKeepNumRecentTransactions()) {
-			theDto.setInheritedKeepNumRecentTransactionsFail(determineInheritedKeepNumRecentTransactions(ResponseTypeEnum.FAIL));
-			theDto.setInheritedKeepNumRecentTransactionsSecurityFail(determineInheritedKeepNumRecentTransactions(ResponseTypeEnum.SECURITY_FAIL));
-			theDto.setInheritedKeepNumRecentTransactionsFault(determineInheritedKeepNumRecentTransactions(ResponseTypeEnum.FAULT));
-			theDto.setInheritedKeepNumRecentTransactionsSuccess(determineInheritedKeepNumRecentTransactions(ResponseTypeEnum.SUCCESS));
-		}
-	}
-
-	public void populateKeepRecentTransactionsFromDto(BaseGKeepsRecentMessages<?> theDto) {
-		setKeepNumRecentTransactionsFail(theDto.getKeepNumRecentTransactionsFail());
-		setKeepNumRecentTransactionsSecurityFail(theDto.getKeepNumRecentTransactionsSecurityFail());
-		setKeepNumRecentTransactionsFault(theDto.getKeepNumRecentTransactionsFault());
-		setKeepNumRecentTransactionsSuccess(theDto.getKeepNumRecentTransactionsSuccess());
-	}
-
-	public void merge(BasePersKeepsRecentTransactions theObject) {
-		setKeepNumRecentTransactionsFail(theObject.getKeepNumRecentTransactionsFail());
-		setKeepNumRecentTransactionsSecurityFail(theObject.getKeepNumRecentTransactionsSecurityFail());
-		setKeepNumRecentTransactionsFault(theObject.getKeepNumRecentTransactionsFault());
-		setKeepNumRecentTransactionsSuccess(theObject.getKeepNumRecentTransactionsSuccess());
 	}
 
 }

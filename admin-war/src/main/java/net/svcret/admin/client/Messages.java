@@ -285,7 +285,7 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 			+ "services using this user.")
 	String editUser_IpsDesc();
 
-	@DefaultMessage("Service Firewall")
+	@DefaultMessage("Firewall")
 	String editUser_IpsTitle();
 
 	@DefaultMessage("Change Password")
@@ -705,7 +705,7 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("<b>Round Robin</b> means that the proxy will attempt to distribute requests " + "evenly across all URLs")
 	String urlSelectionPolicy_Desc_RoundRobin();
 
-	@DefaultMessage("Request Throttling")
+	@DefaultMessage("Throttling")
 	String user_requestThrottling();
 
 	@DefaultMessage("View Transaction")

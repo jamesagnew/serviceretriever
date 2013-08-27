@@ -191,4 +191,12 @@ public abstract class BasePersAuthenticationHost extends BasePersKeepsRecentTran
 		mySupportsPasswordChange = theSupportsPasswordChange;
 	}
 
+	@Override
+	public boolean determineInheritedAuditLogEnable() {
+		if (getAuditLogEnable() != null) {
+			return getAuditLogEnable();
+		}
+		return false;
+	}
+
 }

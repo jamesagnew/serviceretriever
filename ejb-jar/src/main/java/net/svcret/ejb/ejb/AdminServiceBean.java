@@ -1489,6 +1489,8 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setThrottlePeriod(theUser.getThrottle().getPeriod());
 		retVal.setThrottleMaxQueueDepth(theUser.getThrottle().getQueue());
 
+		retVal.populateKeepRecentTransactionsFromDto(theUser);
+
 		return retVal;
 	}
 
@@ -2437,7 +2439,8 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setAllowableSourceIps(thePersUser.getAllowSourceIpsAsStrings());
 		retVal.setDescription(thePersUser.getDescription());
 		retVal.setContactEmails(thePersUser.getContact().getEmailAddresses());
-
+		thePersUser.populateKeepRecentTransactionsToDto(retVal);
+		
 		if (theLoadStats) {
 			PersUserStatus status = thePersUser.getStatus();
 			retVal.setStatsInitialized(new Date());

@@ -337,4 +337,12 @@ public class PersService extends BasePersServiceCatalogItem {
 		return retVal;
 	}
 
+	@Override
+	public boolean determineInheritedAuditLogEnable() {
+		if (getAuditLogEnable() != null) {
+			return getAuditLogEnable();
+		}
+		return getDomain().determineInheritedAuditLogEnable();
+	}
+
 }

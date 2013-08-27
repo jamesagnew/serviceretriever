@@ -34,6 +34,10 @@ DONE
 	                                  FIRST_SECFAIL_INVOC 
 	                                  FIRST_THROTTLE_REJECT
     PX_SVC_VER add column DEFAULT_PROXY_PATH (number 1 with all values 1)	                                  
+	PX_AUTH_HOST  add column AUDIT_LOG_ENABLE (number 1 allows null)
+	PX_SVC_VER    add column AUDIT_LOG_ENABLE (number 1 allows null)
+	PX_DOMAIN     add column AUDIT_LOG_ENABLE (number 1 allows null)
+	PX_SVC        add column AUDIT_LOG_ENABLE (number 1 allows null)
 	                                  
 	                                  
 	                                  

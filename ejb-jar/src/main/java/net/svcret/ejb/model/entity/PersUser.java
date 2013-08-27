@@ -31,6 +31,7 @@ import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.ex.ProcessingException;
@@ -42,7 +43,7 @@ import com.google.common.base.Objects;
 @Table(name = "PX_USER")
 @Entity
 @NamedQueries(value = { @NamedQuery(name = Queries.PERSUSER_FIND, query = Queries.PERSUSER_FIND_Q) })
-public class PersUser extends BasePersObject implements IThrottleable {
+public class PersUser extends BasePersKeepsRecentTransactions implements IThrottleable {
 
 	public static final String DEFAULT_ADMIN_PASSWORD = "admin";
 	public static final String DEFAULT_ADMIN_USERNAME = "admin";
@@ -472,6 +473,28 @@ public class PersUser extends BasePersObject implements IThrottleable {
 	 */
 	public void setUsername(String theUsername) {
 		myUsername = theUsername;
+	}
+
+	@Override
+	public boolean canInheritKeepNumRecentTransactions() {
+		return true;
+	}
+
+	@Override
+	public boolean determineInheritedAuditLogEnable() {
+		if (getAuditLogEnable() != null) {
+			return getAuditLogEnable();
+		}
+		return myAuthenticationHost.determineInheritedAuditLogEnable();
+	}
+
+	@Override
+	public Integer determineInheritedKeepNumRecentTransactions(ResponseTypeEnum theResultType) {
+		Integer retVal = determineKeepNumRecentTransactions(theResultType);
+		if (retVal==null){
+			retVal= myAuthenticationHost.determineKeepNumRecentTransactions(theResultType);
+		}
+		return retVal;
 	}
 
 }

@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class GUser extends BaseGObject<GUser> implements IHasPermissions {
+public class GUser extends BaseGKeepsRecentMessages<GUser> implements IHasPermissions {
 
 	private static final long serialVersionUID = 1L;
 
@@ -236,6 +236,7 @@ public class GUser extends BaseGObject<GUser> implements IHasPermissions {
 		setUsername(theUser.getUsername());
 		setAllowableSourceIps(theUser.getAllowableSourceIps());
 		setStatsInitialized(theUser.getStatsInitialized());
+		super.merge((BaseGKeepsRecentMessages<?>)theUser);
 	}
 
 	public void removeDomainPermission(GUserDomainPermission theGUserDomainPermission) {

@@ -260,4 +260,12 @@ public class PersDomain extends BasePersServiceCatalogItem {
 		}
 	}
 
+	@Override
+	public boolean determineInheritedAuditLogEnable() {
+		if (getAuditLogEnable() != null) {
+			return getAuditLogEnable();
+		}
+		return false;
+	}
+
 }

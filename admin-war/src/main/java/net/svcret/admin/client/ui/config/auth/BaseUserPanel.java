@@ -15,6 +15,7 @@ import net.svcret.admin.client.ui.components.EditableField;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
+import net.svcret.admin.client.ui.config.KeepRecentTransactionsPanel;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.BaseGAuthHost;
@@ -34,6 +35,7 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.TabPanel;
 import com.google.gwt.user.client.ui.TextBox;
 
 public abstract class BaseUserPanel extends FlowPanel {
@@ -54,6 +56,10 @@ public abstract class BaseUserPanel extends FlowPanel {
 	private CheckBox myThrottleQueueCheckbox;
 	private IntegerBox myThrottleQueueMaxLength;
 	private EditableField myContactEmailsEditor;
+	private FlowPanel myKeepRecentTransactionsContainerPanel;
+	private KeepRecentTransactionsPanel myKeepRecentTransactionsPanel;
+	private int myKeepRecentTransactionsTabIndex;
+	private TabPanel myBottomTabPanel;
 
 	public BaseUserPanel() {
 		FlowPanel listPanel = new FlowPanel();
@@ -153,6 +159,10 @@ public abstract class BaseUserPanel extends FlowPanel {
 
 		updateIpsGrid();
 
+		myKeepRecentTransactionsPanel = new KeepRecentTransactionsPanel(theResult);
+		myKeepRecentTransactionsContainerPanel.clear();
+		myKeepRecentTransactionsContainerPanel.add(myKeepRecentTransactionsPanel);
+		
 	}
 
 	protected abstract String getPanelTitle();
@@ -186,7 +196,7 @@ public abstract class BaseUserPanel extends FlowPanel {
 		myContentPanel.add(myLoadingSpinner);
 
 		/*
-		 * Contcat
+		 * Contact
 		 */
 
 		FlowPanel contactPanel = new FlowPanel();
@@ -234,29 +244,23 @@ public abstract class BaseUserPanel extends FlowPanel {
 		 * Permissions
 		 */
 
-		FlowPanel permsPanel = new FlowPanel();
-		permsPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
-		add(permsPanel);
-
-		Label titleLabel = new Label(MSGS.editUser_PermissionsTitle());
-		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
-		permsPanel.add(titleLabel);
+		myBottomTabPanel = new TabPanel();
+		myBottomTabPanel.addStyleName(CssConstants.CONTENT_OUTER_TAB_PANEL);
+		add(myBottomTabPanel);
+		
+		FlowPanel permsTabPanel = new FlowPanel();
+		myBottomTabPanel.add(permsTabPanel, MSGS.editUser_PermissionsTitle());
+		myBottomTabPanel.selectTab(0);
 
 		myPermissionsPanel = new PermissionsPanel();
-		permsPanel.add(myPermissionsPanel);
+		permsTabPanel.add(myPermissionsPanel);
 
 		/*
-		 * Allowed IPs
+		 * Firewall
 		 */
 
 		FlowPanel ipsPanel = new FlowPanel();
-		ipsPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
-		add(ipsPanel);
-
-		Label ipsTitleLabel = new Label(MSGS.editUser_IpsTitle());
-		ipsTitleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
-		ipsPanel.add(ipsTitleLabel);
-
+		myBottomTabPanel.add(ipsPanel,MSGS.editUser_IpsTitle());
 		ipsPanel.add(new Label(MSGS.editUser_IpsDesc()));
 
 		myIpsGrid = new Grid();
@@ -266,21 +270,12 @@ public abstract class BaseUserPanel extends FlowPanel {
 		/*
 		 * Throttling
 		 */
-
+		{
 		FlowPanel throttlePanel = new FlowPanel();
-		throttlePanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
-		add(throttlePanel);
-
-		Label throttleTitleLabel = new Label(AdminPortal.MSGS.user_requestThrottling());
-		throttleTitleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
-		throttlePanel.add(throttleTitleLabel);
-
-		FlowPanel throttleContentPanel = new FlowPanel();
-		throttleContentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
-		throttlePanel.add(throttleContentPanel);
+		myBottomTabPanel.add(throttlePanel, AdminPortal.MSGS.user_requestThrottling());
 
 		TwoColumnGrid throttleGrid = new TwoColumnGrid();
-		throttleContentPanel.add(throttleGrid);
+		throttlePanel.add(throttleGrid);
 
 		myThrottleCheckbox = new CheckBox("Enable Throttling");
 		myThrottleNumberBox = new IntegerBox();
@@ -325,7 +320,22 @@ public abstract class BaseUserPanel extends FlowPanel {
 				}
 			}
 		});
+		}
+		
+		/*
+		 * Logging/Auditing
+		 */
+		{
+			FlowPanel logPanel = new FlowPanel();
+			myKeepRecentTransactionsTabIndex = myBottomTabPanel.getWidgetCount();
+			myBottomTabPanel.add(logPanel, "Log/Audit");
 
+			myKeepRecentTransactionsContainerPanel = new FlowPanel();
+			logPanel.add(myKeepRecentTransactionsContainerPanel);
+			
+		}
+		
+		
 	}
 
 	private void updateIpsGrid() {
@@ -408,6 +418,13 @@ public abstract class BaseUserPanel extends FlowPanel {
 			myUser.getThrottle().setQueue(null);
 		}
 
+		if (!myKeepRecentTransactionsPanel.validateAndShowErrorIfNotValid()) {
+			myBottomTabPanel.selectTab(myKeepRecentTransactionsTabIndex);
+			return;
+		}
+		
+		myKeepRecentTransactionsPanel.populateDto(myUser);
+		
 		myLoadingSpinner.show();
 		AdminPortal.MODEL_SVC.saveUser(myUser, new AsyncCallback<Void>() {
 			@Override
