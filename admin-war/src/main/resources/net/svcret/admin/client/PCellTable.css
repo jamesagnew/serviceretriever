@@ -85,12 +85,36 @@
 }
 */
 
+
+.cellTableWidget {
+	width: 100%;
+	border-bottom: 2px solid #6f7277;
+}
+
+.cellTableHeader {
+  border-bottom: 2px solid #6f7277;
+  padding: 3px 2px;
+  text-align: left;
+  color: #4b4a4a;
+  text-shadow: #ddf 1px 1px 0;
+  overflow: hidden;
+}
+
+.cellTableCell {
+  padding: 2px 2px;
+  overflow: hidden;
+}
+
 .cellTableEvenRow {
   background: #ffffff;
 }
 
 .cellTableEvenRowCell {
-  border: selectionBorderWidth solid #ffffff;
+	border-left: 1px solid #AAA;
+	border-right: 0px;
+	border-top: 0px;
+	border-bottom: 0px;
+	/* border: selectionBorderWidth solid #ffffff; */
 }
 
 .cellTableOddRow {
@@ -98,7 +122,12 @@
 }
 
 .cellTableOddRowCell {
-  border: selectionBorderWidth solid #D0D0D0;
+	border-left: 1px solid #AAA;
+	border-right: 0px;
+	border-right: 0px;
+	border-top: 0px;
+	border-bottom: 0px;
+	/* border: selectionBorderWidth solid #D0D0D0; */
 }
 
 /*

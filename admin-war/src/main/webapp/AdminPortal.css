@@ -179,7 +179,7 @@ TABLE.dashboardTable TBODY TR:hover {
 */
 
 .dashboardTableDomainCell, .dashboardTableServiceCell, .dashboardTableServiceVersionCell, .dashboardTableServiceMethodCell {
-	text-align: center;
+	text-align: left;
 }
 
 .dashboardTableDomainCell {
@@ -245,6 +245,20 @@ LABEL.formLabel {
 .gwt-PopupPanel {
 	border: 1px solid #808080 !important;
 	padding: 2px !important;
+}
+
+.gwt-DateBox {
+	background: #E0E0E0;
+	border: 1px solid #FFFFFF;
+	display: inline-block;
+	width: 80px;
+}
+
+.gwt-TimeBox {
+	background: #E0E0E0;
+	border: 1px solid #FFFFFF;
+	display: inline-block;
+	width: 60px;
 }
 
 .pushButton {
@@ -580,6 +594,6 @@ DIV.urlStatusSummaryPanel DIV {
 }
 
 .usersActionButton {
-	width: 150px;
+	width: 75px;
 	margin: 2px;	
 }

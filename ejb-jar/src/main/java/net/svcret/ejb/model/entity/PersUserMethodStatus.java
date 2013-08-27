@@ -116,6 +116,10 @@ public class PersUserMethodStatus implements Serializable {
 		return myLastSuccessfulInvocation;
 	}
 
+	public Date getFirstSuccessfulInvocation() {
+		return myFirstSuccessfulInvocation;
+	}
+
 	public Date getLastThrottleReject() {
 		return myLastThrottleReject;
 	}

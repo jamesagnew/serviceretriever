@@ -141,9 +141,9 @@ public abstract class BaseUserPanel extends FlowPanel {
 			}
 			myUsernamePasswordGrid.addRow(myPasswordCheckbox, myPasswordTextbox);
 			
-			updateContactEmailEditor();
-
 		}
+
+		updateContactEmailEditor();
 
 		boolean throttle = myUser.getThrottle().getMaxRequests() != null;
 		myThrottleCheckbox.setValue(throttle);

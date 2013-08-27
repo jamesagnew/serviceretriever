@@ -1763,7 +1763,14 @@ public class AdminServiceBean implements IAdminService {
 			retVal = new GLocalDatabaseAuthHost();
 			break;
 		case LDAP:
-			retVal = new GLdapAuthHost();
+			GLdapAuthHost dto = new GLdapAuthHost();
+			PersAuthenticationHostLdap uiLdap = (PersAuthenticationHostLdap)thePersObj;
+			retVal = dto;
+			dto.setAuthenticateBaseDn(uiLdap.getAuthenticateBaseDn());
+			dto.setAuthenticateFilter(uiLdap.getAuthenticateFilter());
+			dto.setBindUserPassword(uiLdap.getBindPassword());
+			dto.setBindUserDn(uiLdap.getBindUserDn());
+			dto.setUrl(uiLdap.getUrl());
 			break;
 		}
 
@@ -2464,7 +2471,9 @@ public class AdminServiceBean implements IAdminService {
 					t60minSuccessCount.set(theIndex, addToInt(t60minSuccessCount.get(theIndex), theStats.getSuccessInvocationCount()));
 				}
 			};
+			
 			doWithUserStatsByMinute(myConfigSvc.getConfig(), thePersUser, 60, myStatusSvc, withStats);
+			
 			retVal.setStatsStartTime(t60minStatisticsStart[0]);
 			retVal.setStatsSuccessTransactions((t60minSuccessCount));
 			retVal.setStatsSuccessTransactionsAvgPerMin(to60MinAveragePerMin(t60minSuccessCount));
@@ -2677,23 +2686,27 @@ public class AdminServiceBean implements IAdminService {
 		Date date = xMinsAgo;
 
 		Collection<PersUserMethodStatus> methodStatuses = myDao.getUser(theUser.getPid()).getStatus().getMethodStatuses().values();
-
 		for (int min = 0; date.before(new Date()); min++) {
 
 			InvocationStatsIntervalEnum interval = doWithStatsSupportFindInterval(theConfig, date);
 			date = doWithStatsSupportFindDate(date, interval);
 
-			for (PersUserMethodStatus next : methodStatuses) {
-				if (next.doesDateFallWithinAtLeastOneOfMyRanges(date)) {
+			for (Iterator<PersUserMethodStatus> iterator = methodStatuses.iterator(); iterator.hasNext();) {
+
+				PersUserMethodStatus next = iterator.next();
+				boolean applies = next.doesDateFallWithinAtLeastOneOfMyRanges(date);
+				if (applies) {
 					PersInvocationUserStatsPk pk = new PersInvocationUserStatsPk(interval, date, next.getPk().getMethod(), theUser);
 					BasePersMethodInvocationStats stats = statusSvc.getInvocationUserStatsSynchronously(pk);
 					theOperator.withStats(min, stats);
-				}
+				} 
 			}
 
 			date = doWithStatsSupportIncrement(date, interval);
 
 		}
+		
+		
 	}
 
 	/**

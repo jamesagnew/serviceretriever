@@ -250,7 +250,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 		Reader inputReader;
 
 		String inputMessage = IOUtils.toString(theReader);
-		ourLog.debug("Input message:\n{}", inputMessage);
+		ourLog.trace("Input message:\n{}", inputMessage);
 		inputReader = new StringReader(inputMessage);
 
 		IJsonReader jsonReader = new MyJsonReader(inputReader);
@@ -263,7 +263,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 				NamedParameterJsonRpcCredentialGrabber grabber = ((NamedParameterJsonRpcServerAuth) next).newCredentialGrabber(jsonReader, jsonWriter);
 				jsonWriter = grabber.getWrappedWriter();
 				jsonReader = grabber.getWrappedReader();
-				retVal.addCredentials(grabber);
+				retVal.addCredentials(next, grabber);
 			} else {
 				jsonWriter.close();
 				jsonReader.close();
@@ -341,7 +341,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 		String body = theResponse.getBody();
 		StringReader reader = new StringReader(body);
 
-		ourLog.debug("JSON Response: {}", body);
+		ourLog.trace("JSON Response: {}", body);
 
 		JsonReader jsonReader = new JsonReader(reader);
 		try {

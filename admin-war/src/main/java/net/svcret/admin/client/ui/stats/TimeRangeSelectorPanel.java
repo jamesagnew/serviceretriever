@@ -35,6 +35,18 @@ public class TimeRangeSelectorPanel extends HorizontalPanel {
 	private PButton myApplyButton;
 
 	public TimeRangeSelectorPanel(boolean theAddApplyButton) {
+		setVerticalAlignment(ALIGN_MIDDLE);
+		
+		if (theAddApplyButton) {
+			myApplyButton = new PButton("Refresh");
+			add(myApplyButton);
+			myApplyButton.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent theEvent) {
+					notifyListeners();
+				}
+			});
+		}
 
 		myTimeListBox = new ListBox();
 		myTimeListBox.addChangeHandler(new MyPresetHandler());
@@ -67,17 +79,6 @@ public class TimeRangeSelectorPanel extends HorizontalPanel {
 
 		myTimeListBox.setSelectedIndex(2);
 		handlePresetChange();
-
-		if (theAddApplyButton) {
-			myApplyButton = new PButton("Refresh");
-			add(myApplyButton);
-			myApplyButton.addClickHandler(new ClickHandler() {
-				@Override
-				public void onClick(ClickEvent theEvent) {
-					notifyListeners();
-				}
-			});
-		}
 
 		Model.getInstance().loadLocalTimezoneOffsetInMillis(new IAsyncLoadCallback<Long>() {
 			@Override

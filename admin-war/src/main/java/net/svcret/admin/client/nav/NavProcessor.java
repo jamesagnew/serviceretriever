@@ -344,6 +344,10 @@ public class NavProcessor {
 		return createArgumentToken(theAddToHistory, PagesEnum.CLM, theType, thePid);
 	}
 
+	public static String getTokenEditHttpClientConfig(boolean theAddToHistory, long thePid) {
+		return createArgumentToken(theAddToHistory, PagesEnum.HCC, thePid);
+	}
+
 	public static String getTokenTestServiceVersion(boolean theAddToHistory, long theServiceVersionPid) {
 		return createArgumentToken(theAddToHistory, PagesEnum.TSV, theServiceVersionPid);
 	}
@@ -538,7 +542,11 @@ public class NavProcessor {
 			panel = new EditUsersPanel();
 			break;
 		case HCC:
-			panel = new HttpClientConfigsPanel();
+			if (args.length() == 0) {
+				panel = new HttpClientConfigsPanel();
+			} else {
+				panel = new HttpClientConfigsPanel(Long.parseLong(args));
+			}
 			break;
 		case SEC:
 			panel = new ServiceCatalogPanel();

@@ -7,6 +7,8 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -49,6 +51,12 @@ import org.rrd4j.graph.RrdGraphDef;
 
 import com.google.common.annotations.VisibleForTesting;
 
+/**
+ * Bean which generates graphs with statistics about things relating to SR.
+ * 
+ * Note on testing this class: The unit tests actually generate graph files,
+ * so they can be used to try things out.
+ */
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.CONTAINER)
 public class ChartingServiceBean implements IChartingServiceBean {
@@ -206,7 +214,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 
 	@Override
 	public byte[] renderUserMethodGraphForUser(long theUserPid, TimeRange theRange) throws ProcessingException, IOException {
-		ourLog.info("Rendering latency graph for user {}", theUserPid);
+		ourLog.info("Rendering user method graph for user {}", theUserPid);
 
 		myScheduler.flushInMemoryStatisticsUnlessItHasHappenedVeryRecently();
 
@@ -224,16 +232,32 @@ public class ChartingServiceBean implements IChartingServiceBean {
 
 		InvocationStatsIntervalEnum nextInterval = doWithStatsSupportFindInterval(myConfig.getConfig(), start);
 		Date nextDate = nextInterval.truncate(start);
+		Date nextDateEnd = null;
 
 		List<PersInvocationUserStats> stats = myDao.getUserStatsWithinTimeRange(user, start, end);
 		Validate.notNull(stats);
+		stats = new ArrayList<PersInvocationUserStats>(stats);
+		Collections.sort(stats, new Comparator<PersInvocationUserStats>() {
+			@Override
+			public int compare(PersInvocationUserStats theO1, PersInvocationUserStats theO2) {
+				return theO1.getPk().getStartTime().compareTo(theO2.getPk().getStartTime());
+			}
+		});
+		ourLog.debug("Loaded {} user {} stats for range {} - {}", new Object[] { stats.size(), theUserPid, start, end });
+		if (stats.size() > 0) {
+			ourLog.debug("Found stats with range {} - {}", stats.get(0).getPk().getStartTime(), stats.get(stats.size() - 1).getPk().getStartTime());
+		}
+		ourLog.debug("Looking for stats starting at {}", nextDate);
 
 		Iterator<PersInvocationUserStats> statIter = stats.iterator();
 		PersInvocationUserStats nextStat = null;
 
 		int timesPassed = 0;
+		int foundEntries = 0;
+		double grandTotal = 0;
 		while (nextDate.after(end) == false) {
 			double numMinutes = nextInterval.numMinutes();
+			nextDateEnd = DateUtils.addMinutes(nextDate, (int) nextInterval.numMinutes());
 			timestamps.add(nextDate.getTime());
 			int arrayIndex = timesPassed;
 			timesPassed++;
@@ -245,8 +269,9 @@ public class ChartingServiceBean implements IChartingServiceBean {
 			while (nextStat == null || statIter.hasNext()) {
 				if (nextStat == null && statIter.hasNext()) {
 					nextStat = statIter.next();
+					foundEntries++;
 				}
-				if (nextStat != null && nextStat.getPk().getStartTime().equals(nextDate)) {
+				if (nextStat != null && nextStat.getPk().getStartTime().before(nextDateEnd)) {
 					long methodPid = nextStat.getPk().getMethod();
 					List<Double> newList = methods.get(methodPid);
 					if (newList == null) {
@@ -257,8 +282,13 @@ public class ChartingServiceBean implements IChartingServiceBean {
 						methods.put(methodPid, newList);
 					}
 
+					// TODO: should we have an option to include fails/faults?
 					double total = nextStat.getSuccessInvocationCount();
-					newList.set(arrayIndex, newList.get(arrayIndex) + (total / numMinutes));
+					double minuteTotal = total / numMinutes;
+
+					grandTotal += minuteTotal;
+
+					newList.set(arrayIndex, newList.get(arrayIndex) + minuteTotal);
 					nextStat = null;
 				} else {
 					break;
@@ -271,12 +301,16 @@ public class ChartingServiceBean implements IChartingServiceBean {
 			nextDate = nextInterval.truncate(nextDate);
 		}
 
+		ourLog.debug("Found {} entries for {} methods", new Object[] { foundEntries, methods.size() });
+
 		// Come up with a good order
 		final Map<Long, PersServiceVersionMethod> pidToMethod = new HashMap<Long, PersServiceVersionMethod>();
 		for (long nextPid : methods.keySet()) {
 			PersServiceVersionMethod method = myDao.getServiceVersionMethodByPid(nextPid);
 			if (method != null) {
 				pidToMethod.put(nextPid, method);
+			} else {
+				ourLog.debug("Discarding unknown method: {}", nextPid);
 			}
 		}
 		ArrayList<Long> pids = new ArrayList<Long>(pidToMethod.keySet());
@@ -302,6 +336,13 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		graphDef.setVerticalLabel("Calls / Minute");
 		graphDef.setTextAntiAliasing(true);
 
+		int longestName = 0;
+		for (PersServiceVersionMethod next : pidToMethod.values()) {
+			longestName = Math.max(longestName, next.getName().length());
+		}
+
+		// Draw the methods
+		String previousServiceDesc = null;
 		List<Color> colours = createStackColours(pids.size());
 		for (int i = 0; i < pids.size(); i++) {
 			Long nextPid = pids.get(i);
@@ -311,29 +352,48 @@ public class ChartingServiceBean implements IChartingServiceBean {
 			LinearInterpolator avgPlot = new LinearInterpolator(graphTimestamps, toDoublesFromDoubles(values));
 			String srcName = "inv" + i;
 			graphDef.datasource(srcName, avgPlot);
-			String methodDesc = nextMethod.getServiceVersion().getService().getServiceId() + " " + nextMethod.getServiceVersion().getVersionId() + " " + nextMethod.getName();
-			if (i == 0) {
-				graphDef.area(srcName, colours.get(i), StringUtils.rightPad(methodDesc, 100));
-			} else {
-				graphDef.stack(srcName, colours.get(i), StringUtils.rightPad(methodDesc, 100));
+			String methodDesc = nextMethod.getServiceVersion().getService().getServiceId() + " " + nextMethod.getServiceVersion().getVersionId();
+			if (!StringUtils.equals(previousServiceDesc, methodDesc)) {
+				graphDef.comment(methodDesc + "\\l");
+				previousServiceDesc=methodDesc;
 			}
-			graphDef.gprint(srcName, ConsolFun.AVERAGE, "Average %8.1f   ");
-			graphDef.gprint(srcName, ConsolFun.MIN, "Min %8.1f   ");
-			graphDef.gprint(srcName, ConsolFun.MAX, "Max %8.1f\\l");
+
+			double sumDoubles = sumDoubles(values);
+			double pct = (sumDoubles / grandTotal);
+			
+			if (i == 0) {
+				graphDef.area(srcName, colours.get(i), " "+StringUtils.rightPad(nextMethod.getName(), longestName));
+			} else {
+				graphDef.stack(srcName, colours.get(i), " "+StringUtils.rightPad(nextMethod.getName(), longestName));
+			}
+			graphDef.gprint(srcName, ConsolFun.AVERAGE, "Avg %5.1f ");
+			graphDef.gprint(srcName, ConsolFun.MIN, "Min %5.1f ");
+			graphDef.gprint(srcName, ConsolFun.MAX, "Max %5.1f ");
+			
+			String formattedPct = new DecimalFormat("0.0#%").format(pct);
+			graphDef.comment("Pct: " + formattedPct + "\\l");
 		}
-		
+
 		if (pids.size() == 0) {
 			double[] values = new double[timestamps.size()];
 			for (int j = 0; j < values.length; j++) {
-				values[j]=0.0;
+				values[j] = 0.0;
 			}
 			LinearInterpolator avgPlot = new LinearInterpolator(graphTimestamps, values);
-			String srcName = "inv" ;
+			String srcName = "inv";
 			graphDef.datasource(srcName, avgPlot);
 			graphDef.area(srcName, Color.BLACK, StringUtils.rightPad("No activity during this range", 100));
 		}
 
 		return render(graphDef);
+	}
+
+	private double sumDoubles(List<Double> theValues) {
+		double retVal = 0.0;
+		for (Double next : theValues) {
+			retVal += next;
+		}
+		return retVal;
 	}
 
 	@VisibleForTesting

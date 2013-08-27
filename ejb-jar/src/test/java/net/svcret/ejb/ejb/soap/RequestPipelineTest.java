@@ -48,7 +48,8 @@ public class RequestPipelineTest {
 
 		List<PersBaseServerAuth<?, ?>> serverAuths = new ArrayList<PersBaseServerAuth<?, ?>>();
 		serverAuths.add(new PersWsSecUsernameTokenServerAuth());
-
+		serverAuths.get(0).setPid(123L);
+		
 		PersServiceVersionSoap11 serviceVer = mock(PersServiceVersionSoap11.class);
 		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class);
 		when(serviceVer.getMethod("getPatientByMrn")).thenReturn(method);
@@ -66,9 +67,9 @@ public class RequestPipelineTest {
 		assertTrue(out.contains("<svcretwsse:Username>theUsername</svcretwsse:Username>"));
 		assertTrue(out.contains("<svcretwsse:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">thePassword</svcretwsse:Password>"));
 		assertEquals(1, p.getCredentialGrabbers().size());
-		assertEquals("user", p.getCredentialGrabbers().get(0).getUsername());
+		assertEquals("user", p.getCredentialGrabbers().get(serverAuths.get(0)).getUsername());
 		assertEquals(1, StringUtils.countMatches(out, "</soapenv:Header>"));
-		assertEquals("pass", p.getCredentialGrabbers().get(0).getPassword());
+		assertEquals("pass", p.getCredentialGrabbers().get(serverAuths.get(0)).getPassword());
 		assertEquals("http://ws.ehr.uhn.ca:getPatientByMrn", p.getMethodName());
 
 	}
@@ -87,7 +88,8 @@ public class RequestPipelineTest {
 
 		List<PersBaseServerAuth<?, ?>> serverAuths = new ArrayList<PersBaseServerAuth<?, ?>>();
 		serverAuths.add(new PersWsSecUsernameTokenServerAuth());
-
+		serverAuths.get(0).setPid(123L);
+		
 		PersServiceVersionSoap11 serviceVer = mock(PersServiceVersionSoap11.class);
 		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class);
 		when(serviceVer.getMethod("getPatientByMrn")).thenReturn(method);
@@ -105,9 +107,9 @@ public class RequestPipelineTest {
 		assertTrue(out.contains("<svcretwsse:Username>theUsername</svcretwsse:Username>"));
 		assertTrue(out.contains("<svcretwsse:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">thePassword</svcretwsse:Password>"));
 		assertEquals(1, p.getCredentialGrabbers().size());
-		assertEquals("", p.getCredentialGrabbers().get(0).getUsername());
+		assertEquals("", p.getCredentialGrabbers().get(serverAuths.get(0)).getUsername());
 		assertEquals(1, StringUtils.countMatches(out, "</soapenv:Header>"));
-		assertEquals("", p.getCredentialGrabbers().get(0).getPassword());
+		assertEquals("", p.getCredentialGrabbers().get(serverAuths.get(0)).getPassword());
 		assertEquals("http://ws.ehr.uhn.ca:getPatientByMrn", p.getMethodName());
 
 	}

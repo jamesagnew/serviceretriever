@@ -126,8 +126,14 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		/*
 		 * Process request
 		 */
-		InvocationResultsBean results = processInvokeService(theRequest, path, serviceVersion, theRequest.getRequestType(), theRequest.getQuery());
-
+		InvocationResultsBean results;
+//		try {
+			results = processInvokeService(theRequest, path, serviceVersion, theRequest.getRequestType(), theRequest.getQuery());
+//		} catch (ProcessingException e) {
+//			myTransactionLogger.logTransaction(theRequest, serviceVersion, null, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome);
+//			throw e;
+//		}
+		
 		/*
 		 * Security
 		 * 
@@ -381,8 +387,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 				if (nextServerAuth instanceof PersHttpBasicServerAuth) {
 					credentials = new PersHttpBasicCredentialGrabber(theRequest.getRequestHeaders());
 				} else {
-					Class<? extends ICredentialGrabber> grabber = nextServerAuth.getGrabberClass();
-					credentials = results.getCredentialsInRequest(grabber);
+					credentials = results.getCredentialsInRequest(nextServerAuth);
 				}
 				BasePersAuthenticationHost authHost = nextServerAuth.getAuthenticationHost();
 

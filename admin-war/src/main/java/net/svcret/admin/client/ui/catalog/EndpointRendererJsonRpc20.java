@@ -1,5 +1,6 @@
 package net.svcret.admin.client.ui.catalog;
 
+import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GServiceVersionJsonRpc20;
 import net.svcret.admin.shared.util.StringUtil;
@@ -26,6 +27,9 @@ public class EndpointRendererJsonRpc20 extends BaseEndpointRenderer<GServiceVers
 		}
 
 		if (StringUtil.isNotBlank(theObject.getExplicitProxyPath())) {
+			if (retVal.getWidgetCount()>0) {
+				retVal.add(new HtmlBr());
+			}
 			String url = getUrlBase() + theObject.getExplicitProxyPath();
 			Anchor endpoint = new Anchor("Endpoint");
 			endpoint.setHref(url);

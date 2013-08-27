@@ -3,7 +3,9 @@ package net.svcret.ejb.ejb.soap;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLEventFactory;
@@ -34,7 +36,7 @@ class RequestPipeline {
 	private static XMLInputFactory ourXmlInputFactory;
 	private static XMLOutputFactory ourXmlOutputFactory;
 	private final List<PersBaseClientAuth<?>> myClientAuths;
-	private List<ICredentialGrabber> myCredentialGrabbers = new ArrayList<ICredentialGrabber>();
+	private Map<PersBaseServerAuth<?,?>, ICredentialGrabber> myCredentialGrabbers = new HashMap<PersBaseServerAuth<?,?>, ICredentialGrabber>();
 	private boolean myPrettyPrint;
 	private boolean myUsed = false;
 	private List<PersBaseServerAuth<?, ?>> myServerAuths;
@@ -52,7 +54,7 @@ class RequestPipeline {
 	/**
 	 * @return the credentialGrabbers
 	 */
-	public List<ICredentialGrabber> getCredentialGrabbers() {
+	public Map<PersBaseServerAuth<?, ?>, ICredentialGrabber> getCredentialGrabbers() {
 		return myCredentialGrabbers;
 	}
 
@@ -209,7 +211,7 @@ class RequestPipeline {
 				throw new InternalErrorException("Don't know how to handle server auth of type: " + next);
 			case WSSEC_UT:
 				ICredentialGrabber grabber = ((PersWsSecUsernameTokenServerAuth) next).newCredentialGrabber(headerEvents);
-				myCredentialGrabbers.add(grabber);
+				myCredentialGrabbers.put(next, grabber);
 				break;
 			}
 		}

@@ -1,0 +1,49 @@
+2013-08-26 14:08:05,261 ERROR [errorlog] java.io.FileNotFoundException: http://dl.eviware.com/version-update/versiontracker/notespage-versiontracker-soapui.html
+java.io.FileNotFoundException: http://dl.eviware.com/version-update/versiontracker/notespage-versiontracker-soapui.html
+	at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
+	at sun.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:57)
+	at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)
+	at java.lang.reflect.Constructor.newInstance(Constructor.java:526)
+	at sun.net.www.protocol.http.HttpURLConnection$6.run(HttpURLConnection.java:1674)
+	at sun.net.www.protocol.http.HttpURLConnection$6.run(HttpURLConnection.java:1672)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at sun.net.www.protocol.http.HttpURLConnection.getChainedException(HttpURLConnection.java:1670)
+	at sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1243)
+	at javax.swing.JEditorPane.getStream(JEditorPane.java:769)
+	at javax.swing.JEditorPane.setPage(JEditorPane.java:433)
+	at javax.swing.JEditorPane.setPage(JEditorPane.java:881)
+	at com.eviware.soapui.support.SoapUIVersionUpdate.createReleaseNotesPane(SoapUIVersionUpdate.java:231)
+	at com.eviware.soapui.support.SoapUIVersionUpdate.showNewVersionDownloadDialog(SoapUIVersionUpdate.java:212)
+	at com.eviware.soapui.support.SoapUIVersionUpdate.checkForNewVersion(SoapUIVersionUpdate.java:275)
+	at com.eviware.soapui.SoapUI$SoapUIRunner.run(SoapUI.java:666)
+	at com.eviware.soapui.SoapUI.main(SoapUI.java:761)
+Caused by: java.io.FileNotFoundException: http://dl.eviware.com/version-update/versiontracker/notespage-versiontracker-soapui.html
+	at sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1623)
+	at java.net.HttpURLConnection.getResponseCode(HttpURLConnection.java:468)
+	at javax.swing.JEditorPane.getStream(JEditorPane.java:734)
+	... 7 more
+2013-08-26 14:12:44,827 ERROR [errorlog] java.io.FileNotFoundException: http://dl.eviware.com/version-update/versiontracker/notespage-versiontracker-soapui.html
+java.io.FileNotFoundException: http://dl.eviware.com/version-update/versiontracker/notespage-versiontracker-soapui.html
+	at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
+	at sun.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:57)
+	at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)
+	at java.lang.reflect.Constructor.newInstance(Constructor.java:526)
+	at sun.net.www.protocol.http.HttpURLConnection$6.run(HttpURLConnection.java:1674)
+	at sun.net.www.protocol.http.HttpURLConnection$6.run(HttpURLConnection.java:1672)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at sun.net.www.protocol.http.HttpURLConnection.getChainedException(HttpURLConnection.java:1670)
+	at sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1243)
+	at javax.swing.JEditorPane.getStream(JEditorPane.java:769)
+	at javax.swing.JEditorPane.setPage(JEditorPane.java:433)
+	at javax.swing.JEditorPane.setPage(JEditorPane.java:881)
+	at com.eviware.soapui.support.SoapUIVersionUpdate.createReleaseNotesPane(SoapUIVersionUpdate.java:231)
+	at com.eviware.soapui.support.SoapUIVersionUpdate.showNewVersionDownloadDialog(SoapUIVersionUpdate.java:212)
+	at com.eviware.soapui.support.SoapUIVersionUpdate.checkForNewVersion(SoapUIVersionUpdate.java:275)
+	at com.eviware.soapui.SoapUI$SoapUIRunner.run(SoapUI.java:666)
+	at com.eviware.soapui.SoapUI.main(SoapUI.java:761)
+Caused by: java.io.FileNotFoundException: http://dl.eviware.com/version-update/versiontracker/notespage-versiontracker-soapui.html
+	at sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1623)
+	at java.net.HttpURLConnection.getResponseCode(HttpURLConnection.java:468)
+	at javax.swing.JEditorPane.getStream(JEditorPane.java:734)
+	... 7 more
+2013-08-26 14:12:54,359 WARN  [errorlog] Failed to delete temporary project file; /home/t3903uhn/Documents/SoapUI/project-temp-5167700176537805205.xml

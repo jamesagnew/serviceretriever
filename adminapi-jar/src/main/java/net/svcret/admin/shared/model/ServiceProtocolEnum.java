@@ -13,7 +13,9 @@ public enum ServiceProtocolEnum {
 	
 	SOAP11("SOAP 1.1", "text/xml"), 
 	
-	FORWARDER("Forwarder", "");
+	FORWARDER("Forwarder", ""), 
+	
+	HL7OVERHTTP("HL7 over HTTP", "application/hl7-v2");
 
 	private static List<ServiceProtocolEnum> ourNaturalOrder;
 

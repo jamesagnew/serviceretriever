@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 
@@ -11,7 +12,7 @@ import org.apache.commons.lang3.Validate;
 
 public class InvocationResultsBean {
 
-	private Map<Class<? extends ICredentialGrabber>, ICredentialGrabber> myCredentialsInRequest = new HashMap<Class<? extends ICredentialGrabber>, ICredentialGrabber>();
+	private Map<PersBaseServerAuth<?, ?>, ICredentialGrabber> myCredentialsInRequest = new HashMap<PersBaseServerAuth<?,?>, ICredentialGrabber>();
 	private String myMethodContentType;
 	private PersServiceVersionMethod myMethodDefinition;
 	private Map<String, String> myMethodHeaders;
@@ -24,20 +25,20 @@ public class InvocationResultsBean {
 	private String myStaticResourceText;
 	private String myStaticResourceUrl;
 
-	public void addCredentials(ICredentialGrabber theCredentials) {
+	public void addCredentials(PersBaseServerAuth<?, ?> theServerAuth, ICredentialGrabber theCredentials) {
 		Validate.notNull(theCredentials);
 
-		if (myCredentialsInRequest.containsKey(theCredentials.getClass())) {
-			throw new IllegalArgumentException("Duplicate credential grabber type: " + theCredentials.getClass());
+		if (myCredentialsInRequest.containsKey(theServerAuth)) {
+			throw new IllegalArgumentException("Already have an entry for server auth: " + theServerAuth.getPid());
 		}
 
-		myCredentialsInRequest.put(theCredentials.getClass(), theCredentials);
+		myCredentialsInRequest.put(theServerAuth, theCredentials);
 	}
 
 	/**
 	 * @return the credentialsInRequest
 	 */
-	public ICredentialGrabber getCredentialsInRequest(Class<? extends ICredentialGrabber> theType) {
+	public ICredentialGrabber getCredentialsInRequest(PersBaseServerAuth<?,?> theType) {
 		return myCredentialsInRequest.get(theType);
 	}
 

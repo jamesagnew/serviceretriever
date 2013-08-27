@@ -38,7 +38,7 @@ public class UserStatsPanel extends FlowPanel {
 
 	public UserStatsPanel(Long theInitialUserPid) {
 		myInitialUserPid = theInitialUserPid;
-		
+
 		myTopPanel = new FlowPanel();
 		add(myTopPanel);
 
@@ -58,33 +58,33 @@ public class UserStatsPanel extends FlowPanel {
 
 		PartialUserListRequest request = new PartialUserListRequest();
 		AdminPortal.MODEL_SVC.loadUsers(request, new AsyncCallback<GPartialUserList>() {
-			
+
 			@Override
 			public void onSuccess(GPartialUserList theResult) {
 				initUi(theResult);
 			}
-			
+
 			@Override
 			public void onFailure(Throwable theCaught) {
 				Model.handleFailure(theCaught);
 			}
 		});
-		
+
 	}
 
 	private void initUi(GPartialUserList theUserList) {
-		myUserList=theUserList;
-		
+		myUserList = theUserList;
+
 		myLoadingSpinner.hideCompletely();
-		
+
 		myTopPanel.add(new Label("This page displays usage statistics for the selected user", true));
-		
+
 		myUserPicker = new ListBox(false);
 		myUserPicker.setVisibleItemCount(10);
 		myTopPanel.add(myUserPicker);
-		
+
 		// Stats Panel
-		
+
 		myGraphsPanel = new FlowPanel();
 		add(myGraphsPanel);
 
@@ -104,7 +104,7 @@ public class UserStatsPanel extends FlowPanel {
 				updateGraphsPanel();
 			}
 		});
-		
+
 		myGraphsTimePicker = new TimeRangeSelectorPanel(true);
 		myGraphsTimePicker.addChangeHandler(new ChangeHandler() {
 			@Override
@@ -112,7 +112,7 @@ public class UserStatsPanel extends FlowPanel {
 				updateGraphsPanel();
 			}
 		});
-		
+
 		updateUserPicker();
 		updateGraphsPanel();
 	}
@@ -122,10 +122,10 @@ public class UserStatsPanel extends FlowPanel {
 		if (myUserPicker.getSelectedIndex() == -1) {
 			return;
 		}
-		String selectedUserPid=myUserPicker.getValue(myUserPicker.getSelectedIndex());
-		
+		String selectedUserPid = myUserPicker.getValue(myUserPicker.getSelectedIndex());
+
 		myGraphsContentPanel.add(myGraphsTimePicker);
-		
+
 		myGraphsContentPanel.add(new HtmlH1("User Method Usage"));
 		Image img = new Image("graph.png?ct=" + ChartTypeEnum.USERMETHODS.name() + "&pid=" + selectedUserPid + "&" + ChartParams.RANGE + "=" + myGraphsTimePicker.getSelectedRange().toUrlValue());
 		ServiceVersionStatsPanel.addStatsImage(myGraphsContentPanel, img);
@@ -138,15 +138,18 @@ public class UserStatsPanel extends FlowPanel {
 			@Override
 			public int compare(GUser theO1, GUser theO2) {
 				return theO1.getUsername().compareTo(theO2.getUsername());
-			}});
+			}
+		});
 		myUserPicker.clear();
 		for (GUser next : userList) {
 			myUserPicker.addItem(next.getUsername(), Long.toString(next.getPid()));
-			if (myInitialUserPid!=null && next.getPid() == myInitialUserPid) {
-				myUserPicker.setSelectedIndex(myUserPicker.getItemCount());
+			if (myInitialUserPid != null && next.getPid() == myInitialUserPid) {
+				int itemCount = myUserPicker.getItemCount();
+				myUserPicker.setSelectedIndex(itemCount-1);
 			}
 		}
-		if (myUserPicker.getSelectedIndex()==-1 && myUserPicker.getItemCount()>0) {
+		int selectedIndex = myUserPicker.getSelectedIndex();
+		if (selectedIndex == -1 && myUserPicker.getItemCount() > 0) {
 			myUserPicker.setSelectedIndex(0);
 		}
 	}

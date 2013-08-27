@@ -1,6 +1,7 @@
 package net.svcret.admin.client.ui.config.auth;
 
-import static net.svcret.admin.client.AdminPortal.*;
+import static net.svcret.admin.client.AdminPortal.IMAGES;
+import static net.svcret.admin.client.AdminPortal.MSGS;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -38,8 +39,10 @@ import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
-import com.google.gwt.user.cellview.client.IdentityColumn;
+import com.google.gwt.user.cellview.client.ColumnSortEvent;
 import com.google.gwt.user.cellview.client.ColumnSortEvent.ListHandler;
+import com.google.gwt.user.cellview.client.ColumnSortList.ColumnSortInfo;
+import com.google.gwt.user.cellview.client.IdentityColumn;
 import com.google.gwt.user.cellview.client.SimplePager;
 import com.google.gwt.user.cellview.client.SimplePager.TextLocation;
 import com.google.gwt.user.client.History;
@@ -97,7 +100,7 @@ public class EditUsersPanel extends FlowPanel {
 		});
 		editCell.addStyle(CssConstants.USERS_ACTION_BUTTON);
 
-		PButtonCell viewRecentMessagesCell = new PButtonCell(AdminPortal.IMAGES.iconTransactions(), AdminPortal.MSGS.actions_RecentTransactions());
+		PButtonCell viewRecentMessagesCell = new PButtonCell(AdminPortal.IMAGES.iconTransactions(), "Trans.");
 		Column<GUser, String> viewRecentMessagesColumn = new NullColumn<GUser>(viewRecentMessagesCell);
 		viewRecentMessagesColumn.setFieldUpdater(new FieldUpdater<GUser, String>() {
 			@Override
@@ -107,7 +110,7 @@ public class EditUsersPanel extends FlowPanel {
 		});
 		viewRecentMessagesCell.addStyle(CssConstants.USERS_ACTION_BUTTON);
 
-		PButtonCell statsCell = new PButtonCell(AdminPortal.IMAGES.iconStatus(), AdminPortal.MSGS.actions_ViewStats());
+		PButtonCell statsCell = new PButtonCell(AdminPortal.IMAGES.iconStatus(), "Stats");
 		Column<GUser, String> statsColumn = new NullColumn<GUser>(statsCell);
 		statsColumn.setFieldUpdater(new FieldUpdater<GUser, String>() {
 			@Override
@@ -135,7 +138,6 @@ public class EditUsersPanel extends FlowPanel {
 				}
 				return SafeHtmlUtils.fromString(authHostByPid.getModuleName());
 			}};
-		int authHostColIdx = myTable.getColumnCount();
 		myTable.addColumn(authHostCol, MSGS.editUsersPanel_ColumnAuthHost());
 		
 		// Username
@@ -145,7 +147,6 @@ public class EditUsersPanel extends FlowPanel {
 			public SafeHtml getValue(GUser theObject) {
 				return SafeHtmlUtils.fromString(theObject.getUsername());
 			}};
-		int usernameColIdx = myTable.getColumnCount();
 		myTable.addColumn(usernameCol, MSGS.editUsersPanel_ColumnUsername());
 
 		// Description
@@ -164,7 +165,6 @@ public class EditUsersPanel extends FlowPanel {
 			public SafeHtml getValue(GUser theObject) {
 				return SafeHtmlUtils.fromString(DateUtil.formatTimeElapsedForLastInvocation(theObject.getStatsLastAccess()));
 			}};
-		int lastAccessColIdx = myTable.getColumnCount();
 		myTable.addColumn(lastAccessCol, MSGS.editUsersPanel_ColumnLastServiceAccess());
 
 		// Transactions
@@ -182,7 +182,6 @@ public class EditUsersPanel extends FlowPanel {
 				
 				return b.toSafeHtml();
 			}};
-		int transactionsColIdx = myTable.getColumnCount();
 		myTable.addColumn(transactionsCol, MSGS.editUsersPanel_ColumnTransactions());
 
 		myMethodDataProvider = new ListDataProvider<GUser>();
@@ -191,7 +190,7 @@ public class EditUsersPanel extends FlowPanel {
 		// Sorting
 		ListHandler<GUser> columnSortHandler = new ListHandler<GUser>(myMethodDataProvider.getList());
 		
-		myTable.getColumn(authHostColIdx).setSortable(true);
+		authHostCol.setSortable(true);
 		columnSortHandler.setComparator(authHostCol, new Comparator<GUser>() {
 			@Override
 			public int compare(GUser theO1, GUser theO2) {
@@ -200,14 +199,23 @@ public class EditUsersPanel extends FlowPanel {
 				return StringUtil.compare(ah1,ah2);
 			}
 		});
-		myTable.getColumn(usernameColIdx).setSortable(true);
+		usernameCol.setSortable(true);
+		columnSortHandler.setComparator(usernameCol, new Comparator<GUser>() {
+			@Override
+			public int compare(GUser theO1, GUser theO2) {
+				String ah1 = theO1.getUsername();
+				String ah2 = theO2.getUsername();
+				return StringUtil.compare(ah1,ah2);
+			}
+		});
+		descriptionCol.setSortable(true);
 		columnSortHandler.setComparator(descriptionCol, new Comparator<GUser>() {
 			@Override
 			public int compare(GUser theO1, GUser theO2) {
 				return StringUtil.compare(theO1.getUsername(), theO2.getUsername());
 			}
 		});
-		myTable.getColumn(lastAccessColIdx).setSortable(true);
+		lastAccessCol.setSortable(true);
 		columnSortHandler.setComparator(lastAccessCol, new Comparator<GUser>() {
 			@Override
 			public int compare(GUser theO1, GUser theO2) {
@@ -217,12 +225,12 @@ public class EditUsersPanel extends FlowPanel {
 					return 0;
 				}
 				if (la1==null) {
-					return 1;
-				}
-				if (la2==null) {
 					return -1;
 				}
-				long cmp = (la2.getTime()-la1.getTime());
+				if (la2==null) {
+					return 1;
+				}
+				long cmp = (la1.getTime()-la2.getTime());
 				if (cmp > 0) {
 					return 1;
 				}else if (cmp < 0) {
@@ -232,14 +240,14 @@ public class EditUsersPanel extends FlowPanel {
 				}
 			}
 		});
-		myTable.getColumn(transactionsColIdx).setSortable(true);
-		columnSortHandler.setComparator(lastAccessCol, new Comparator<GUser>() {
+		transactionsCol.setSortable(true);
+		columnSortHandler.setComparator(transactionsCol, new Comparator<GUser>() {
 			@Override
 			public int compare(GUser theO1, GUser theO2) {
-				double cmp = theO2.getStatsTotalAvgPerMin() - theO1.getStatsTotalAvgPerMin();
-				if (cmp > 0) {
+				double cmp = theO1.getStatsTotalAvgPerMin() - theO2.getStatsTotalAvgPerMin();
+				if (cmp > 0.0) {
 					return 1;
-				}else if (cmp < 0) {
+				}else if (cmp < 0.0) {
 					return -1;
 				}else {
 					return 0;
@@ -248,7 +256,8 @@ public class EditUsersPanel extends FlowPanel {
 		});
 		
 		myTable.addColumnSortHandler(columnSortHandler);
-		myTable.getColumnSortList().push(descriptionCol);
+		myTable.getColumnSortList().clear();
+		myTable.getColumnSortList().push(new ColumnSortInfo(usernameCol, true));
 		
 		HorizontalPanel addPanel = new HorizontalPanel();
 		contentPanel.add(addPanel);
@@ -314,6 +323,7 @@ public class EditUsersPanel extends FlowPanel {
 				
 				myMethodDataProvider.getList().addAll(myUserList.toCollection());
 				myMethodDataProvider.refresh();
+		        ColumnSortEvent.fire(myTable, myTable.getColumnSortList());
 			}
 		});
 		

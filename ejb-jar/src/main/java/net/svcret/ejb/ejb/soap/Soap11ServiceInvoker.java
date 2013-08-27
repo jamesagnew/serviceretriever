@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
@@ -204,9 +205,9 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 		StringWriter requestBuffer = new StringWriter();
 		pipeline.process(theReader, requestBuffer);
 
-		List<ICredentialGrabber> credentialGrabbers = pipeline.getCredentialGrabbers();
-		for (ICredentialGrabber nextCredentialGrabber : credentialGrabbers) {
-			theResults.addCredentials(nextCredentialGrabber);
+		Set<Entry<PersBaseServerAuth<?, ?>, ICredentialGrabber>> credentialGrabbers = pipeline.getCredentialGrabbers().entrySet();
+		for (Entry<PersBaseServerAuth<?, ?>, ICredentialGrabber> next : credentialGrabbers) {
+			theResults.addCredentials(next.getKey(), next.getValue());
 		}
 
 		String methodName = pipeline.getMethodName();
