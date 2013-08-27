@@ -70,8 +70,15 @@ public class HttpClientConfigsPanel extends FlowPanel {
 	private HTML myUrlSelectionPolicyDescriptionLabel;
 	private ListBox myUrlSelectionPolicyListBox;
 	private int ourNextUnsavedPid = -1;
+	private Long myDefaultPid;
 
 	public HttpClientConfigsPanel() {
+		this(null);
+	}
+
+	public HttpClientConfigsPanel(Long theDefaultPid) {
+		myDefaultPid = theDefaultPid;
+
 		initConfigListPanel();
 		initDetailsPanel();
 		initBottomTabs();
@@ -79,6 +86,9 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		Model.getInstance().loadHttpClientConfigs(new IAsyncLoadCallback<GHttpClientConfigList>() {
 			@Override
 			public void onSuccess(GHttpClientConfigList theResult) {
+				if (myDefaultPid != null) {
+					mySelectedConfig = theResult.getConfigByPid(myDefaultPid);
+				}
 				setConfigList(theResult);
 			}
 
@@ -98,7 +108,8 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		updateSelectedConfig();
 	}
 
-	private TwoColumnGrid createKeystorePanel(FlowPanel contentPanel, final String titleLabel, String uploadFieldName, final EditableField theTruststorePasswordBox, final HTML theTrustStoreLabel, final boolean theIsKeystore) {
+	private TwoColumnGrid createKeystorePanel(FlowPanel contentPanel, final String titleLabel, String uploadFieldName, final EditableField theTruststorePasswordBox, final HTML theTrustStoreLabel,
+			final boolean theIsKeystore) {
 		contentPanel.add(new HtmlH1(titleLabel));
 
 		TwoColumnGrid sslGrid = new TwoColumnGrid();
@@ -155,7 +166,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 					@Override
 					public void onSuccess(DtoKeystoreAnalysis theResult) {
 						trustStoreLoadingSpinner.hide();
-						if (theIsKeystore ==false) {
+						if (theIsKeystore == false) {
 							myNewTruststore = theResult;
 						} else {
 							myNewKeystore = theResult;
@@ -164,7 +175,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 					}
 				};
 
-				if (theIsKeystore==false) {
+				if (theIsKeystore == false) {
 					AdminPortal.SVC_HTTPCLIENTCONFIG.analyzeTransientTrustStore(mySelectedConfig.getPid(), callback);
 				} else {
 					AdminPortal.SVC_HTTPCLIENTCONFIG.analyzeTransientKeyStore(mySelectedConfig.getPid(), callback);
@@ -250,8 +261,8 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		}
 
 		myLoadingSpinner.show();
-		boolean useNewTruststore=myNewTruststore != null;
-		boolean useNewKeystore = myNewKeystore!=null;
+		boolean useNewTruststore = myNewTruststore != null;
+		boolean useNewKeystore = myNewKeystore != null;
 		AdminPortal.SVC_HTTPCLIENTCONFIG.saveHttpClientConfig(create, useNewTruststore, useNewKeystore, config, new AsyncCallback<GHttpClientConfig>() {
 
 			@Override

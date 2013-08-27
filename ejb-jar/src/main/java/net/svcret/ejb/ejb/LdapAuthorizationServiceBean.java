@@ -128,8 +128,13 @@ public class LdapAuthorizationServiceBean extends BaseAuthorizationServiceBean<P
 				};
 
 				String usernameEncoded = LdapEncoder.filterEncode(theUsername);
-				String filter = myFilterFormat.format(usernameEncoded);
-				return template.authenticate(myLdapHost.getAuthenticateBaseDn(), filter, thePassword, callback);
+				String filter = myFilterFormat.format(new Object[] {usernameEncoded});
+				
+				ourLog.debug("Querying LDAP with filter: {}", filter);
+				boolean authenticate = template.authenticate(myLdapHost.getAuthenticateBaseDn(), filter, thePassword, callback);
+				ourLog.debug("LDAP authentication results: {}", authenticate);
+				
+				return authenticate;
 
 			} catch (Exception e) {
 				throw new ProcessingException(e);

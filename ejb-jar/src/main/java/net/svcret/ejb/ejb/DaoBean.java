@@ -78,6 +78,8 @@ import net.svcret.ejb.model.entity.PersUserRecentMessage;
 import net.svcret.ejb.model.entity.PersUserServiceVersionMethodPermission;
 import net.svcret.ejb.model.entity.PersUserStatus;
 import net.svcret.ejb.model.entity.Queries;
+import net.svcret.ejb.model.entity.forward.PersServiceVersionForwarder;
+import net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp;
 import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.util.Validate;
@@ -500,12 +502,20 @@ public class DaoBean implements IDao {
 			case JSONRPC20:
 				retVal = new PersServiceVersionJsonRpc20();
 				break;
+			case HL7OVERHTTP:
+				retVal = new PersServiceVersionHl7OverHttp();
+				break;
+			case FORWARDER:
+				retVal = new PersServiceVersionForwarder();
+				break;
 			}
 
 			if (retVal == null) {
 				throw new IllegalStateException("Unknown protocol: " + theProtocol);
 			}
 
+			retVal.prePersist();
+			
 			retVal.setService(theService);
 			retVal.setVersionId(theId);
 			retVal.setHttpClientConfig(config);
@@ -1107,6 +1117,8 @@ public class DaoBean implements IDao {
 			next.setServiceVersion(theVersion);
 		}
 
+		theVersion.prePersist();
+		
 		ourLog.info("Merging servicde version {}", theVersion.getVersionId());
 		BasePersServiceVersion version = myEntityManager.merge(theVersion);
 

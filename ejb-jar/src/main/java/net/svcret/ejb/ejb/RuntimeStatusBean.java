@@ -305,6 +305,9 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		List<BasePersInvocationStats> statsToDelete = new ArrayList<BasePersInvocationStats>();
 		for (ListIterator<? extends BasePersInvocationStats> iter = theList.listIterator(); iter.hasNext();) {
 			BasePersInvocationStats next = iter.next();
+			if (next == null) {
+				continue;
+			}
 
 			BasePersInvocationStatsPk dayPk;
 			if (invocClass == PersInvocationStats.class) {
@@ -417,12 +420,12 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		 */
 
 		ArrayList<PersServiceVersionUrlStatus> urlStatuses = new ArrayList<PersServiceVersionUrlStatus>(myUrlStatus.values());
-		ourLog.debug("Going to flush {} URL statuses", urlStatuses.size());
+		ourLog.trace("Going to flush {} URL statuses", urlStatuses.size());
 
 		for (Iterator<PersServiceVersionUrlStatus> iter = urlStatuses.iterator(); iter.hasNext();) {
 			PersServiceVersionUrlStatus next = iter.next();
 			if (!next.isDirty()) {
-				ourLog.debug("Not removing URL status {} because it isn't dirty", next.getPid());
+				ourLog.trace("Not saving URL status {} because it isn't marked dirty", next.getPid());
 				iter.remove();
 			} else {
 				next.setLastStatusSave(new Date());

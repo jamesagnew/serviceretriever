@@ -623,9 +623,10 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	 */
 	public void retainOnlyMethodsWithNames(Collection<String> theIds) {
 		ourLog.debug("Retaining method names: {}", theIds);
-
+		getMethods();
+		
 		HashSet<String> ids = new HashSet<String>(theIds);
-		for (Iterator<PersServiceVersionMethod> iter = getMethods().iterator(); iter.hasNext();) {
+		for (Iterator<PersServiceVersionMethod> iter = myMethods.iterator(); iter.hasNext();) {
 			PersServiceVersionMethod next = iter.next();
 			if (!ids.contains(next.getName())) {
 				ourLog.info("Removing Method with ID[{}] and NAME[{}] from Service Version with ID[{}/{}]", new Object[] { next.getPid(), next.getName(), getPid(), getVersionId() });
@@ -758,4 +759,11 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		myUrlToUrl = null;
 	}
 
+	/**
+	 * Subclasses may override
+	 */
+	public void prePersist() {
+		// nothing
+	}
+	
 }

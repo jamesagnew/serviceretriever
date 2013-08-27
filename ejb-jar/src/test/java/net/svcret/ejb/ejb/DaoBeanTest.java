@@ -50,6 +50,7 @@ import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserAllowableSourceIps;
 import net.svcret.ejb.model.entity.PersUserMethodStatus;
 import net.svcret.ejb.model.entity.PersUserRecentMessage;
+import net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
@@ -1178,6 +1179,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
 		PersServiceVersionSoap11 version0 = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
 		PersServiceVersionSoap11 version1 = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId1", ServiceProtocolEnum.SOAP11);
+		PersServiceVersionHl7OverHttp version2 = (PersServiceVersionHl7OverHttp) mySvc.getOrCreateServiceVersionWithId(service, "VersionId2", ServiceProtocolEnum.HL7OVERHTTP);
 
 		assertTrue(version0.getPid() > 0);
 		assertNotNull(version0.getStatus());
@@ -1192,7 +1194,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		assertTrue(version0.equals(allVersions.iterator().next()));
 
 		Collection<BasePersServiceVersion> versions = service.getVersions();
-		assertEquals(2, versions.size());
+		assertEquals(3, versions.size());
 
 		newEntityManager();
 
@@ -1223,12 +1225,16 @@ public class DaoBeanTest extends BaseJpaTest {
 		assertEquals("http://bar", allVersions.iterator().next().getWsdlUrl());
 
 		service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
-		assertEquals(1, service.getVersions().size());
+		assertEquals(2, service.getVersions().size());
 		PersServiceVersionSoap11 next = (PersServiceVersionSoap11) service.getVersions().iterator().next();
 		assertEquals("http://bar", next.getWsdlUrl());
 
 		assertEquals(PersHttpClientConfig.DEFAULT_ID, service.getVersions().iterator().next().getHttpClientConfig().getId());
 
+		// Ensure the HL7 over HTTP version got it's single method
+		version2 = (PersServiceVersionHl7OverHttp) mySvc.getServiceVersionByPid(version2.getPid());
+		assertEquals(1, version2.getMethods().size());
+		
 	}
 
 }

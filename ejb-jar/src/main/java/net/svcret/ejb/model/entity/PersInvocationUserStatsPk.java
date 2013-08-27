@@ -44,6 +44,7 @@ public class PersInvocationUserStatsPk extends BasePersInvocationMethodStatsPk {
 	protected boolean doEquals(BasePersInvocationStatsPk theObj) {
 		PersInvocationUserStatsPk obj = (PersInvocationUserStatsPk) theObj;
 		return getInterval().equals(obj.getInterval()) // -
+				&& getMethod()== obj.getMethod() // -
 				&& getStartTime().equals(obj.getStartTime()) // -
 				&& getUserPid()== (obj.getUserPid()); // -
 	}
@@ -73,7 +74,7 @@ public class PersInvocationUserStatsPk extends BasePersInvocationMethodStatsPk {
 	@Override
 	public int hashCode() {
 		if (myHashCode == 0) {
-			myHashCode = Objects.hashCode(super.hashCode(), myUserPid);
+			myHashCode = Objects.hashCode(super.hashCode(), myUserPid, getMethod());
 		}
 		return myHashCode;
 	}

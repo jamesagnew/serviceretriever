@@ -220,7 +220,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		user.setStatsSecurityFailTransactions(random60minsList());
 		user.setStatsSuccessTransactions(random60minsList());
 		user.setStatsStartTime(99999999L);
-		user.setStatsSecurityFailTransactionsAvgPerMin(2.0);
+		user.setStatsSecurityFailTransactionsAvgPerMin(1.0);
 		user.setStatsSuccessTransactionsAvgPerMin(0.01);
 		user.setAllowableSourceIps(new ArrayList<String>());
 		myUserList.add(user);
@@ -386,7 +386,10 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		}
 
 		retVal.setPid(ourNextPid++);
-		retVal.setTransactionTime(new Date());
+		
+		long offset = ((long)(1000000.0 * Math.random()));
+		
+		retVal.setTransactionTime(new Date(System.currentTimeMillis() - offset));
 		retVal.setRequestHostIp("http://foo");
 		retVal.setRequestMessage(requestMessage);
 		retVal.setResponseMessage(responseMessage);

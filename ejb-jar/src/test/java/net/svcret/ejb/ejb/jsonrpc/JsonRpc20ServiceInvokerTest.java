@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.List;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.HttpResponseBean;
@@ -56,7 +57,7 @@ public class JsonRpc20ServiceInvokerTest {
 		DefaultAnswer.setRunTime();
 		InvocationResultsBean resp = svc.processInvocation(def, reqType, path, query, reader);
 
-		ICredentialGrabber grabber = resp.getCredentialsInRequest(NamedParameterJsonRpcCredentialGrabber.class);
+		ICredentialGrabber grabber = resp.getCredentialsInRequest(serverAuths.get(0));
 		assertEquals("mockpass", grabber.getPassword());
 		assertEquals("mockuser", grabber.getUsername());
 

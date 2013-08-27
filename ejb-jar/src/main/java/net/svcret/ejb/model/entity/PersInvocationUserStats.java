@@ -14,7 +14,7 @@ import org.hibernate.annotations.Index;
 @org.hibernate.annotations.Table(
 	indexes = { 
 		@Index(columnNames = { "START_TIME", "INTRVL" }, name = "IDX_PISU_TIME_AND_IVL"),
-		@Index(columnNames = { "USER_PID", "START_TIME" }, name = "IDX_PISU_USER_AND_IVL")
+		@Index(columnNames = { "USER_PID", "START_TIME" }, name = "IDX_PISU_USER_AND_TIME")
 	}, appliesTo = "PX_INVOC_STATS_USR")
 @Table(name = "PX_INVOC_STATS_USR")
 @NamedQueries(value= {

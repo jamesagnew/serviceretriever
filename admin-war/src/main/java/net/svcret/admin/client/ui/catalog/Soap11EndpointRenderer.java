@@ -1,9 +1,11 @@
 package net.svcret.admin.client.ui.catalog;
 
+import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GSoap11ServiceVersion;
 import net.svcret.admin.shared.util.StringUtil;
 
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -27,10 +29,15 @@ public class Soap11EndpointRenderer extends BaseEndpointRenderer<GSoap11ServiceV
 			url = getUrlBase() + theObject.getDefaultProxyPath() + "?wsdl";
 			endpoint = new Anchor("WSDL");
 			endpoint.setHref(url);
+			endpoint.getElement().getStyle().setPaddingLeft(4, Unit.PX);
 			retVal.add(endpoint);
 		}
 
 		if (StringUtil.isNotBlank(theObject.getExplicitProxyPath())) {
+			if (retVal.getWidgetCount()>0) {
+				retVal.add(new HtmlBr());
+			}
+
 			String url = getUrlBase() + theObject.getExplicitProxyPath();
 			Anchor endpoint = new Anchor("Endpoint");
 			endpoint.setHref(url);
@@ -39,11 +46,9 @@ public class Soap11EndpointRenderer extends BaseEndpointRenderer<GSoap11ServiceV
 			url = getUrlBase() + theObject.getExplicitProxyPath() + "?wsdl";
 			endpoint = new Anchor("WSDL");
 			endpoint.setHref(url);
+			endpoint.getElement().getStyle().setPaddingLeft(4, Unit.PX);
 			retVal.add(endpoint);
 		}
-		
-//		if (retVal.get)
-//		endpoint.getElement().getStyle().setPaddingLeft(4, Unit.PX);
 		
 		return retVal;
 	}

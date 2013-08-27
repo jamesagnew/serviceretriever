@@ -141,7 +141,7 @@ public class EditServicePanel extends FlowPanel {
 			}
 			myKeepRecentTransactionsPanel.populateDto(myService);
 			if (myEditServiceBasicPropertiesPanel.validateValues()) {
-				myEditServiceBasicPropertiesPanel.showMessage("Saving Domain...", true);
+				myEditServiceBasicPropertiesPanel.showMessage("Saving Service...", true);
 				AdminPortal.MODEL_SVC.saveService(myService, this);
 			}
 		}

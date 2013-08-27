@@ -3,6 +3,7 @@ package net.svcret.admin.client.ui.stats;
 import static net.svcret.admin.client.AdminPortal.MSGS;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -12,6 +13,7 @@ import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.PButtonCell;
 import net.svcret.admin.client.ui.components.PCellTable;
 import net.svcret.admin.client.ui.config.svcver.NullColumn;
+import net.svcret.admin.shared.InverseComparator;
 import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.admin.shared.util.StringUtil;
 
@@ -24,6 +26,7 @@ import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
+import com.google.gwt.user.cellview.client.ColumnSortEvent;
 import com.google.gwt.user.cellview.client.ColumnSortEvent.ListHandler;
 import com.google.gwt.user.cellview.client.ColumnSortList.ColumnSortInfo;
 import com.google.gwt.user.cellview.client.IdentityColumn;
@@ -43,9 +46,6 @@ public class RecentMessagesGrid extends FlowPanel {
 		ListDataProvider<GRecentMessage> dataProvider = new ListDataProvider<GRecentMessage>();
 		dataProvider.addDataDisplay(grid);
 		
-		ListHandler<GRecentMessage> sortHandler = new ListHandler<GRecentMessage>(dataProvider.getList());
-		grid.addColumnSortHandler(sortHandler);
-
 		// Action
 		List<HasCell<GRecentMessage, ?>> actionCells = new ArrayList<HasCell<GRecentMessage, ?>>();
 		// View Button - TODO: better icon (view magnifying glass?)
@@ -101,20 +101,6 @@ public class RecentMessagesGrid extends FlowPanel {
 		};
 		grid.addColumn(timestampColumn, MSGS.recentMessagesGrid_ColTimestamp());
 		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
-		sortHandler.setComparator(timestampColumn, new Comparator<GRecentMessage>() {
-			@Override
-			public int compare(GRecentMessage theO1, GRecentMessage theO2) {
-				long cmp = theO1.getTransactionTime().getTime() - theO2.getTransactionTime().getTime();
-				if (cmp > 0) {
-					return 1;
-				} else if (cmp < 0) {
-					return -1;
-				} else {
-					return 0;
-				}
-			}
-		});
-		grid.getColumnSortList().push(new ColumnSortInfo(timestampColumn, true));
 
 		// Service
 		Column<GRecentMessage, SafeHtml> serviceColumn = new Column<GRecentMessage, SafeHtml>(new SafeHtmlCell()) {
@@ -132,16 +118,6 @@ public class RecentMessagesGrid extends FlowPanel {
 		};
 		grid.addColumn(serviceColumn, MSGS.recentMessagesGrid_ColService());
 		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
-		sortHandler.setComparator(grid.getColumn(grid.getColumnCount() - 1), new Comparator<GRecentMessage>() {
-			@Override
-			public int compare(GRecentMessage theO1, GRecentMessage theO2) {
-				int cmp = StringUtil.defaultString(theO1.getServiceName()).compareTo(StringUtil.defaultString(theO2.getServiceName()));
-				if (cmp == 0) {
-					cmp = StringUtil.defaultString(theO1.getServiceVersionId()).compareTo(StringUtil.defaultString(theO2.getServiceVersionId()));
-				}
-				return cmp;
-			}
-		});
 
 		// Method
 		Column<GRecentMessage, SafeHtml> methodColumn = new Column<GRecentMessage, SafeHtml>(new SafeHtmlCell()) {
@@ -156,13 +132,6 @@ public class RecentMessagesGrid extends FlowPanel {
 		};
 		grid.addColumn(methodColumn, MSGS.recentMessagesGrid_ColMethod());
 		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
-		sortHandler.setComparator(grid.getColumn(grid.getColumnCount() - 1), new Comparator<GRecentMessage>() {
-			@Override
-			public int compare(GRecentMessage theO1, GRecentMessage theO2) {
-				int cmp = StringUtil.defaultString(theO1.getMethodName()).compareTo(StringUtil.defaultString(theO2.getMethodName()));
-				return cmp;
-			}
-		});
 
 		// IP
 		Column<GRecentMessage, SafeHtml> ipColumn = new Column<GRecentMessage, SafeHtml>(new SafeHtmlCell()) {
@@ -173,13 +142,6 @@ public class RecentMessagesGrid extends FlowPanel {
 		};
 		grid.addColumn(ipColumn, MSGS.recentMessagesGrid_ColIp());
 		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
-		sortHandler.setComparator(grid.getColumn(grid.getColumnCount() - 1), new Comparator<GRecentMessage>() {
-			@Override
-			public int compare(GRecentMessage theO1, GRecentMessage theO2) {
-				int cmp = StringUtil.defaultString(theO1.getRequestHostIp()).compareTo(StringUtil.defaultString(theO2.getRequestHostIp()));
-				return cmp;
-			}
-		});
 
 		// URL
 		Column<GRecentMessage, SafeHtml> urlColumn = new Column<GRecentMessage, SafeHtml>(new SafeHtmlCell()) {
@@ -192,13 +154,6 @@ public class RecentMessagesGrid extends FlowPanel {
 		};
 		grid.addColumn(urlColumn, MSGS.recentMessagesGrid_ColImplementationUrl());
 		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
-		sortHandler.setComparator(grid.getColumn(grid.getColumnCount() - 1), new Comparator<GRecentMessage>() {
-			@Override
-			public int compare(GRecentMessage theO1, GRecentMessage theO2) {
-				int cmp = StringUtil.defaultString(theO1.getImplementationUrlId()).compareTo(StringUtil.defaultString(theO2.getImplementationUrlId()));
-				return cmp;
-			}
-		});
 
 		// Millis
 		Column<GRecentMessage, SafeHtml> millisColumn = new Column<GRecentMessage, SafeHtml>(new SafeHtmlCell()) {
@@ -211,19 +166,6 @@ public class RecentMessagesGrid extends FlowPanel {
 		};
 		grid.addColumn(millisColumn, MSGS.recentMessagesGrid_ColMillis());
 		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
-		sortHandler.setComparator(grid.getColumn(grid.getColumnCount() - 1), new Comparator<GRecentMessage>() {
-			@Override
-			public int compare(GRecentMessage theO1, GRecentMessage theO2) {
-				long cmp = (theO1.getTransactionMillis() - theO2.getTransactionMillis());
-				if (cmp<0) {
-					return -1;
-				}else if (cmp > 0) {
-					return 1;
-				}else {
-					return 0;
-				}
-			}
-		});
 
 		// Authorization
 		Column<GRecentMessage, SafeHtml> authorizationColumn = new Column<GRecentMessage, SafeHtml>(new SafeHtmlCell()) {
@@ -238,13 +180,6 @@ public class RecentMessagesGrid extends FlowPanel {
 		};
 		grid.addColumn(authorizationColumn, MSGS.recentMessagesGrid_ColAuthorization());
 		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
-		sortHandler.setComparator(grid.getColumn(grid.getColumnCount() - 1), new Comparator<GRecentMessage>() {
-			@Override
-			public int compare(GRecentMessage theO1, GRecentMessage theO2) {
-				int cmp = StringUtil.defaultString(theO1.getAuthorizationOutcome().getDescription()).compareTo(StringUtil.defaultString(theO2.getAuthorizationOutcome().getDescription()));
-				return cmp;
-			}
-		});
 
 		// User
 		Column<GRecentMessage, SafeHtml> userColumn = new Column<GRecentMessage, SafeHtml>(new SafeHtmlCell()) {
@@ -259,6 +194,73 @@ public class RecentMessagesGrid extends FlowPanel {
 		};
 		grid.addColumn(userColumn, MSGS.recentMessagesGrid_ColUser());
 		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
+
+		ListHandler<GRecentMessage> sortHandler = new ListHandler<GRecentMessage>(dataProvider.getList());
+		grid.addColumnSortHandler(sortHandler);
+		sortHandler.setComparator(timestampColumn, new Comparator<GRecentMessage>() {
+			@Override
+			public int compare(GRecentMessage theO1, GRecentMessage theO2) {
+				long cmp = theO1.getTransactionTime().getTime() - theO2.getTransactionTime().getTime();
+				if (cmp > 0) {
+					return 1;
+				} else if (cmp < 0) {
+					return -1;
+				} else {
+					return 0;
+				}
+			}
+		});
+		sortHandler.setComparator(grid.getColumn(grid.getColumnCount() - 1), new Comparator<GRecentMessage>() {
+			@Override
+			public int compare(GRecentMessage theO1, GRecentMessage theO2) {
+				int cmp = StringUtil.defaultString(theO1.getServiceName()).compareTo(StringUtil.defaultString(theO2.getServiceName()));
+				if (cmp == 0) {
+					cmp = StringUtil.defaultString(theO1.getServiceVersionId()).compareTo(StringUtil.defaultString(theO2.getServiceVersionId()));
+				}
+				return cmp;
+			}
+		});
+		sortHandler.setComparator(grid.getColumn(grid.getColumnCount() - 1), new Comparator<GRecentMessage>() {
+			@Override
+			public int compare(GRecentMessage theO1, GRecentMessage theO2) {
+				int cmp = StringUtil.defaultString(theO1.getMethodName()).compareTo(StringUtil.defaultString(theO2.getMethodName()));
+				return cmp;
+			}
+		});
+		sortHandler.setComparator(grid.getColumn(grid.getColumnCount() - 1), new Comparator<GRecentMessage>() {
+			@Override
+			public int compare(GRecentMessage theO1, GRecentMessage theO2) {
+				int cmp = StringUtil.defaultString(theO1.getRequestHostIp()).compareTo(StringUtil.defaultString(theO2.getRequestHostIp()));
+				return cmp;
+			}
+		});
+		sortHandler.setComparator(grid.getColumn(grid.getColumnCount() - 1), new Comparator<GRecentMessage>() {
+			@Override
+			public int compare(GRecentMessage theO1, GRecentMessage theO2) {
+				int cmp = StringUtil.defaultString(theO1.getImplementationUrlId()).compareTo(StringUtil.defaultString(theO2.getImplementationUrlId()));
+				return cmp;
+			}
+		});
+		sortHandler.setComparator(grid.getColumn(grid.getColumnCount() - 1), new Comparator<GRecentMessage>() {
+			@Override
+			public int compare(GRecentMessage theO1, GRecentMessage theO2) {
+				long cmp = (theO1.getTransactionMillis() - theO2.getTransactionMillis());
+				if (cmp<0) {
+					return -1;
+				}else if (cmp > 0) {
+					return 1;
+				}else {
+					return 0;
+				}
+			}
+		});
+		sortHandler.setComparator(grid.getColumn(grid.getColumnCount() - 1), new Comparator<GRecentMessage>() {
+			@Override
+			public int compare(GRecentMessage theO1, GRecentMessage theO2) {
+				int cmp = StringUtil.defaultString(theO1.getAuthorizationOutcome().getDescription()).compareTo(StringUtil.defaultString(theO2.getAuthorizationOutcome().getDescription()));
+				return cmp;
+			}
+		});
 		sortHandler.setComparator(grid.getColumn(grid.getColumnCount() - 1), new Comparator<GRecentMessage>() {
 			@Override
 			public int compare(GRecentMessage theO1, GRecentMessage theO2) {
@@ -267,9 +269,15 @@ public class RecentMessagesGrid extends FlowPanel {
 			}
 		});
 
+//		grid.getColumnSortList().clear();
+		grid.getColumnSortList().push(new ColumnSortInfo(timestampColumn, false));
+
 		// Add data
+//		Collections.sort(theList, new InverseComparator<GRecentMessage>(sortHandler.getComparator(timestampColumn)));
 		dataProvider.getList().addAll(theList);
-		dataProvider.refresh();
+        ColumnSortEvent.fire(grid, grid.getColumnSortList());
+
+//		dataProvider.refresh();
 
 	}
 }

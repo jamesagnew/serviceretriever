@@ -67,17 +67,17 @@ public class PersHttpClientConfig extends BasePersObject {
 	private int myReadTimeoutMillis;
 
 	@Lob
-	@Column(name = "TLS_KEYSTORE")
+	@Column(name = "TLS_KEYSTORE", nullable=true)
 	private byte[] myTlsKeystore;
 
-	@Column(name = "TLS_KEYSTORE_PASS", length = 200)
+	@Column(name = "TLS_KEYSTORE_PASS", length = 200, nullable=true)
 	private String myTlsKeystorePassword;
 
 	@Lob
-	@Column(name = "TLS_TRUSTSSTORE")
+	@Column(name = "TLS_TRUSTSTORE", nullable=true)
 	private byte[] myTlsTruststore;
 
-	@Column(name = "TLS_TRUSTSTORE_PASS", length = 200)
+	@Column(name = "TLS_TRUSTSTORE_PASS", length = 200, nullable=true)
 	private String myTlsTruststorePassword;
 
 	@Column(name = "URL_SEL_POLICY", length = 20, nullable = false)

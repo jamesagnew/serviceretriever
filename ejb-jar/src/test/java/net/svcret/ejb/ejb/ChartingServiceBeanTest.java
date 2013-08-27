@@ -36,10 +36,12 @@ public class ChartingServiceBeanTest {
 	private IRuntimeStatus myStatus;
 	private SimpleDateFormat myFmt;
 	private PersConfig myConfig;
+	private SimpleDateFormat myFmtSecs;
 
 	@Before
 	public void before() throws ParseException, ProcessingException {
 		myFmt = new SimpleDateFormat("HH:mm");
+		myFmtSecs = new SimpleDateFormat("HH:mm:ss");
 		
 		mySvc = new ChartingServiceBean();
 		
@@ -68,26 +70,26 @@ public class ChartingServiceBeanTest {
 		user.setPid(1L);
 		
 		TimeRange range = new TimeRange();
-		range.setNoPresetFrom(myFmt.parse("04:00"));
-		range.setNoPresetTo(myFmt.parse("14:00"));
+		range.setNoPresetFrom(myFmtSecs.parse("04:00:01"));
+		range.setNoPresetTo(myFmtSecs.parse("14:00:01"));
 		
 		PersServiceVersionMethod m1 = mock(PersServiceVersionMethod.class, new ReturnsDeepStubs());
 		when(m1.getPid()).thenReturn(11L);
-		when(m1.getName()).thenReturn("MethodName1");
+		when(m1.getName()).thenReturn("MethodName123");
 		when(m1.getServiceVersion().getVersionId()).thenReturn("Version1");
 		when(m1.getServiceVersion().getService().getServiceId()).thenReturn("Service1");
 		when(m1.getServiceVersion().getService().getDomain().getDomainId()).thenReturn("Domain1");
 		PersServiceVersionMethod m2 = mock(PersServiceVersionMethod.class, new ReturnsDeepStubs());
 		when(m2.getPid()).thenReturn(21L);
-		when(m2.getName()).thenReturn("MethodName2");
+		when(m2.getName()).thenReturn("MethodName22");
 		when(m2.getServiceVersion().getVersionId()).thenReturn("Version1");
 		when(m2.getServiceVersion().getService().getServiceId()).thenReturn("Service1");
 		when(m2.getServiceVersion().getService().getDomain().getDomainId()).thenReturn("Domain1");
 		PersServiceVersionMethod m3 = mock(PersServiceVersionMethod.class, new ReturnsDeepStubs());
 		when(m3.getPid()).thenReturn(31L);
 		when(m3.getName()).thenReturn("MethodName3");
-		when(m3.getServiceVersion().getVersionId()).thenReturn("Version1");
-		when(m3.getServiceVersion().getService().getServiceId()).thenReturn("Service1");
+		when(m3.getServiceVersion().getVersionId()).thenReturn("Version2");
+		when(m3.getServiceVersion().getService().getServiceId()).thenReturn("Service2");
 		when(m3.getServiceVersion().getService().getDomain().getDomainId()).thenReturn("Domain1");
 	
 		when(myDao.getUser(eq(1L))).thenReturn(user);

@@ -14,6 +14,25 @@
 
 * Security column should have an indicator for services with some unsecured methods, or "ALLOW_ANY" status 
 
+* URL list should show CB status and allow a reset
+
+* Should log transactions where the rerquest type is GET as failed transactions (as well as other reasons to throw ProcessingException?)
+
+* Should store the first HTTP line in the request body  
+
+* Monitor active checks should store URL latency and the last response text and allow you to manually trigger them 
+  and show the results of the last test in the panel
+  
+* Deleting URLs from SvcVers doesn't work if they have failed and have rule checks against them
+
+* client and server auths should know what type of service versions they can apply to
+
+* Active checks should average latency over more than one subsequent call somehow.. This is hard because it's URL specific. The
+  alert email should ideally contain the last few latency checks too, and really it would be nice if the alert email showed 
+  the non-failing URLs too.
+
+* Edit serviceversion dialog shouldn't allow you to change the domain and service on a service once it's saved. 
+
 ----
 DONE
 

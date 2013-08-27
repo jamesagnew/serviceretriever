@@ -56,12 +56,12 @@ public class GraphServlet extends HttpServlet {
 
 		String rangeString = theReq.getParameter(ChartParams.RANGE);
 		TimeRange range = new TimeRange();
+		range.fromUrlValue(rangeString);
+
 		if (range.getWithPresetRange() == null) {
 			range.setNoPresetFrom(UTCDateTimeUtils.getDateValue(TimeZone.getDefault(), range.getNoPresetFromDate(), range.getNoPresetFromTime()));
 			range.setNoPresetTo(UTCDateTimeUtils.getDateValue(TimeZone.getDefault(), range.getNoPresetToDate(), range.getNoPresetToTime()));
 		}
-
-		range.fromUrlValue(rangeString);
 
 		byte[] bytes = null;
 		if (BaseRpcServlet.isMockMode()) {

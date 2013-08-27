@@ -240,7 +240,8 @@ public class Soap11ServiceInvokerTest {
 
 		List<PersBaseServerAuth<?,?>> serverAuths = new ArrayList<PersBaseServerAuth<?,?>>();
 		serverAuths.add(new PersWsSecUsernameTokenServerAuth());
-
+		serverAuths.get(0).setPid(124L);
+		
 		PersServiceVersionSoap11 serviceVer = mock(PersServiceVersionSoap11.class);
 		PersService service = mock(PersService.class);
 		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class);
@@ -251,9 +252,8 @@ public class Soap11ServiceInvokerTest {
 		Soap11ServiceInvoker svc = new Soap11ServiceInvoker();
 		InvocationResultsBean result = svc.processInvocation(serviceVer, RequestType.POST, "/Some/Path", "", reader);
 		
-		Class<? extends ICredentialGrabber> type = WsSecUsernameTokenCredentialGrabber.class;
-		assertEquals("user", result.getCredentialsInRequest(type).getUsername());
-		assertEquals("pass", result.getCredentialsInRequest(type).getPassword());
+		assertEquals("user", result.getCredentialsInRequest(serverAuths.get(0)).getUsername());
+		assertEquals("pass", result.getCredentialsInRequest(serverAuths.get(0)).getPassword());
 		
 		assertEquals(InvocationResultsBean.ResultTypeEnum.METHOD, result.getResultType());
 		

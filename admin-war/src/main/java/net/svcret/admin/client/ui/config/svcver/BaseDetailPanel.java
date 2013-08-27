@@ -8,6 +8,7 @@ import java.util.Map;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.MyResources;
+import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.HtmlH1;
@@ -64,6 +65,8 @@ import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Hyperlink;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.TabPanel;
@@ -95,6 +98,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 	private HTML myServerSecurityModeDescription;
 	private CheckBox myStandardProxyPathEnabledCheckbox;
 	private Label myStandardProxyPathLabel;
+	private Hyperlink myEditHttpClientConfigLink;
 
 	public BaseDetailPanel(AbstractServiceVersionPanel theParent, T theServiceVersion) {
 		myServiceVersion = theServiceVersion;
@@ -134,7 +138,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 				if (theEvent.getSelectedItem() == methodsIndex) {
 					if (methodPanel.getWidgetCount() == 0) {
 						initMethodPanel(methodPanel);
-					}else {
+					} else {
 						myMethodDataProvider.refresh();
 					}
 				}
@@ -206,8 +210,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 	}
 
 	private void initAccessPanel(FlowPanel thePanel) {
-		Label intro = new Label("By default, ServiceRetriever publishes your services at a simple "
-				+ "default path. If needed, an alternate path may be used instead, or as well as the "
+		Label intro = new Label("By default, ServiceRetriever publishes your services at a simple " + "default path. If needed, an alternate path may be used instead, or as well as the "
 				+ "default path.");
 		thePanel.add(intro);
 
@@ -224,7 +227,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		});
 		myStandardProxyPathLabel = new Label(myServiceVersion.getDefaultProxyPath());
 		grid.addRow(myStandardProxyPathEnabledCheckbox, myStandardProxyPathLabel);
-		
+
 		myExplicitProxyPathEnabledCheckbox = new CheckBox("Use Alternate Proxy Path:");
 		myExplicitProxyPathTextbox = new TextBox();
 		grid.addRow(myExplicitProxyPathEnabledCheckbox, myExplicitProxyPathTextbox);
@@ -232,8 +235,6 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		myExplicitProxyPathEnabledCheckbox.setValue(myServiceVersion.getExplicitProxyPath() != null);
 		myExplicitProxyPathTextbox.setValue(myServiceVersion.getExplicitProxyPath());
 
-		
-		
 	}
 
 	private void initClientSecurityPanel(FlowPanel thePanel) {
@@ -359,9 +360,13 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 					String namespace = value.substring(0, index);
 					String element = value.substring(index + 1);
 					StringBuilder b = new StringBuilder();
-					b.append("<div title=\"Namespace: ");
+					b.append("<div onmouseover=\"return overlib('<b>Namespace:</b>&nbsp;");
 					b.append(namespace);
-					b.append("\\nElement: ");
+					b.append("<br/><b>Element:</b>&nbsp;");
+					b.append(element);
+					b.append("');\" onmouseout=\"return nd();\" atitle=\"Namespace: ");
+					b.append(namespace);
+					b.append("<br/>Element: ");
 					b.append(element);
 					b.append("\" class=\"");
 					b.append(MyResources.CSS.methodRootElementBlock());
@@ -631,7 +636,14 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 				+ "settings for timeouts, round-robin policies, etc."));
 
 		myHttpConfigList = new ListBox();
-		clientConfigPanel.add(myHttpConfigList);
+
+		HorizontalPanel listPanel = new HorizontalPanel();
+		listPanel.add(myHttpConfigList);
+		clientConfigPanel.add(listPanel);
+
+		myEditHttpClientConfigLink = new Hyperlink();
+		myEditHttpClientConfigLink.setText("Edit this config");
+		listPanel.add(myEditHttpClientConfigLink);
 
 		Model.getInstance().loadHttpClientConfigs(new IAsyncLoadCallback<GHttpClientConfigList>() {
 
@@ -651,11 +663,21 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 					@Override
 					public void onChange(ChangeEvent theEvent) {
 						getServiceVersion().setHttpClientConfigPid(theResult.get(myHttpConfigList.getSelectedIndex()).getPid());
+						updateEditHttpClientConfigLink();
 					}
+
 				});
+
+				updateEditHttpClientConfigLink();
+
 			}
+
 		});
 
+	}
+
+	private void updateEditHttpClientConfigLink() {
+		myEditHttpClientConfigLink.setTargetHistoryToken(NavProcessor.getTokenEditHttpClientConfig(true, getServiceVersion().getHttpClientConfigPid()));
 	}
 
 	private void updateClientSercurityPanel() {

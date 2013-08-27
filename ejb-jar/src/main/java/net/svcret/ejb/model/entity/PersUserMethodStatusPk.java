@@ -29,6 +29,11 @@ public class PersUserMethodStatusPk implements Serializable {
 		myMethod = theMethod;
 	}
 
+	@Override
+	public String toString() {
+		return "PersUserMethodStatusPk[myMethod=" + myMethod.getPid() + ", myUserStatus=" + myUserStatus.getPid() + "]";
+	}
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
