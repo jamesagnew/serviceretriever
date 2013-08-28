@@ -28,7 +28,7 @@ public class Soap11ResponseValidatorTest {
 				"    </env:Body>\n" + //- 
 				"</env:Envelope>"; //-
 		
-		Soap11ResponseValidator val = new Soap11ResponseValidator();
+		BaseResponseValidator val = new Soap11ResponseValidator();
 		assertEquals(true, val.validate(msg, 200, "text/xml").isValidates());
 		
 		assertEquals(false, val.validate(msg, 201, "text/xml").isValidates());

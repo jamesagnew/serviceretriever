@@ -8,7 +8,7 @@ import javax.persistence.Embeddable;
 public class PersInvocationStatsPk extends BasePersInvocationMethodStatsPk {
 
 	private static final long serialVersionUID = 1L;
-
+	
 	public PersInvocationStatsPk() {
 		super();
 	}
@@ -22,20 +22,12 @@ public class PersInvocationStatsPk extends BasePersInvocationMethodStatsPk {
 		super(theInterval, theStartTime, theMethod.getPid());
 	}
 
-	public PersInvocationStatsPk(InvocationStatsIntervalEnum theInterval, long theStartTime, PersServiceVersionMethod theMethod) {
-		super(theInterval, new Date(theStartTime), theMethod.getPid());
-	}
-
 	public PersInvocationStatsPk(InvocationStatsIntervalEnum theInterval, long theStartTime, long theMethodPid) {
 		super(theInterval, new Date(theStartTime), theMethodPid);
 	}
 
-	@Override
-	protected boolean doEquals(BasePersInvocationStatsPk theObj2) {
-		PersInvocationStatsPk theObj = (PersInvocationStatsPk) theObj2;
-		return getInterval().equals(theObj.getInterval()) // -
-				&& getMethod() == (theObj.getMethod()) // -
-				&& getStartTime().equals(theObj.getStartTime()); // -
+	public PersInvocationStatsPk(InvocationStatsIntervalEnum theInterval, long theStartTime, PersServiceVersionMethod theMethod) {
+		super(theInterval, new Date(theStartTime), theMethod.getPid());
 	}
 
 	/**
@@ -44,6 +36,14 @@ public class PersInvocationStatsPk extends BasePersInvocationMethodStatsPk {
 	@Override
 	public PersInvocationStats newObjectInstance() {
 		return new PersInvocationStats(this);
+	}
+
+	@Override
+	protected boolean doEquals(BasePersInvocationStatsPk theObj2) {
+		PersInvocationStatsPk theObj = (PersInvocationStatsPk) theObj2;
+		return getInterval().equals(theObj.getInterval()) // -
+				&& getMethod() == (theObj.getMethod()) // -
+				&& getStartTime().equals(theObj.getStartTime()); // -
 	}
 
 }

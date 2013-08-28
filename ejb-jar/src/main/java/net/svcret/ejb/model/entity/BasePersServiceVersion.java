@@ -100,7 +100,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	private Collection<PersMonitorAppliesTo> myMonitorRules;
 
 	@Transient
-	private transient Map<String, PersServiceVersionMethod> myNameToMethod;
+	private transient volatile Map<String, PersServiceVersionMethod> myNameToMethod;
 
 	@Version()
 	@Column(name = "OPTLOCK")
@@ -118,7 +118,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	private List<PersServiceVersionRecentMessage> myRecentMessages;
 
 	@Transient
-	private transient HashMap<String, PersServiceVersionMethod> myRootElementNameToMethod;
+	private transient volatile HashMap<String, PersServiceVersionMethod> myRootElementNameToMethod;
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("SAUTH_ORDER")

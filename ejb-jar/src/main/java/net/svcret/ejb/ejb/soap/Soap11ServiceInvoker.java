@@ -82,7 +82,7 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 	@EJB
 	private IHttpClient myHttpClient;
 
-	private Soap11ResponseValidator myInvocationResultsBean;
+	private BaseResponseValidator myInvocationResultsBean;
 
 	public Soap11ServiceInvoker() {
 		myInvocationResultsBean = new Soap11ResponseValidator();
@@ -602,9 +602,11 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 	 */
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public InvocationResultsBean processInvocation(PersServiceVersionSoap11 theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, Reader theReader) throws ProcessingException, UnknownRequestException {
+	public InvocationResultsBean processInvocation(PersServiceVersionSoap11 theServiceDefinition, RequestType theRequestType, String thePath, String theQuery,String theContentType, Reader theReader) throws ProcessingException, UnknownRequestException {
 		InvocationResultsBean retVal = new InvocationResultsBean();
 
+		// TODO: verify that content type is correct
+		
 		switch (theRequestType) {
 		case GET:
 			doHandleGet(retVal, theServiceDefinition, thePath, theQuery);
@@ -723,7 +725,7 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 	}
 
 	@Override
-	public Soap11ResponseValidator provideInvocationResponseValidator() {
+	public BaseResponseValidator provideInvocationResponseValidator() {
 		return myInvocationResultsBean;
 	}
 

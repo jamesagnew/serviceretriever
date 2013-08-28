@@ -16,8 +16,8 @@ import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceList;
-import net.svcret.admin.shared.model.GServiceVersionJsonRpc20;
-import net.svcret.admin.shared.model.GSoap11ServiceVersion;
+import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
+import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.util.StringUtil;
 
@@ -360,10 +360,10 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 
 		switch (theResult.getProtocol()) {
 		case SOAP11:
-			myBottomContents = new SoapDetailPanel(this, (GSoap11ServiceVersion) theResult);
+			myBottomContents = new SoapDetailPanel(this, (DtoServiceVersionSoap11) theResult);
 			break;
 		case JSONRPC20:
-			myBottomContents = new DetailPanelJsonRpc20(this, (GServiceVersionJsonRpc20) theResult);
+			myBottomContents = new DetailPanelJsonRpc20(this, (DtoServiceVersionJsonRpc20) theResult);
 		}
 
 		add(myBottomContents);

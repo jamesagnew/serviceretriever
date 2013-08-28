@@ -24,9 +24,9 @@ import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
-import net.svcret.admin.shared.model.GServiceVersionJsonRpc20;
+import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
-import net.svcret.admin.shared.model.GSoap11ServiceVersion;
+import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.GUserDomainPermission;
@@ -244,7 +244,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
@@ -254,7 +254,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		d1s1v1 = (GSoap11ServiceVersion) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
 		GServiceMethod method = new GServiceMethod();
 		method.setName("123");
 		d1s1v1.getMethodList().add(method);
@@ -263,7 +263,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		d1s1v1 = (GSoap11ServiceVersion) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
 		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
 
 		newEntityManager();
@@ -313,7 +313,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
@@ -387,7 +387,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
@@ -399,7 +399,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		// Add one
 
-		d1s1v1 = (GSoap11ServiceVersion) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
 		GWsSecUsernameTokenClientSecurity cli = new GWsSecUsernameTokenClientSecurity();
 		cli.setUsername("un0");
 		cli.setPassword("pw0");
@@ -409,14 +409,14 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		d1s1v1 = (GSoap11ServiceVersion) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
 		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
 
 		newEntityManager();
 
 		// Add a second
 
-		d1s1v1 = (GSoap11ServiceVersion) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
 		cli = new GWsSecUsernameTokenClientSecurity();
 		cli.setUsername("un1");
 		cli.setPassword("pw1");
@@ -426,7 +426,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		d1s1v1 = (GSoap11ServiceVersion) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
 		assertEquals(2, d1s1v1.getClientSecurityList().size());
 		assertEquals("un0", ((GWsSecUsernameTokenClientSecurity) d1s1v1.getClientSecurityList().get(0)).getUsername());
 		assertEquals("pw0", ((GWsSecUsernameTokenClientSecurity) d1s1v1.getClientSecurityList().get(0)).getPassword());
@@ -440,7 +440,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		d1s1v1 = (GSoap11ServiceVersion) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
 		assertEquals(1, d1s1v1.getClientSecurityList().size());
 		assertEquals("un1", ((GWsSecUsernameTokenClientSecurity) d1s1v1.getClientSecurityList().get(0)).getUsername());
 		assertEquals("pw1", ((GWsSecUsernameTokenClientSecurity) d1s1v1.getClientSecurityList().get(0)).getPassword());
@@ -459,7 +459,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
@@ -471,7 +471,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		// Add one
 
-		d1s1v1 = (GSoap11ServiceVersion) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
 		GWsSecServerSecurity cli = new GWsSecServerSecurity();
 
 		// Don't set the auth host, this should mean an exception is thrown
@@ -494,7 +494,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
@@ -506,7 +506,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		// Add one
 
-		d1s1v1 = (GSoap11ServiceVersion) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
 		GWsSecServerSecurity cli = new GWsSecServerSecurity();
 		cli.setAuthHostPid(auth.getPid());
 		d1s1v1.getServerSecurityList().add(cli);
@@ -515,14 +515,14 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		d1s1v1 = (GSoap11ServiceVersion) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
 		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
 
 		newEntityManager();
 
 		// Add a second
 
-		d1s1v1 = (GSoap11ServiceVersion) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
 		cli = new GWsSecServerSecurity();
 		cli.setAuthHostPid(auth2.getPid());
 		d1s1v1.getServerSecurityList().add(cli);
@@ -531,7 +531,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		d1s1v1 = (GSoap11ServiceVersion) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
 		assertEquals(2, d1s1v1.getServerSecurityList().size());
 		assertEquals(auth.getPid().longValue(), d1s1v1.getServerSecurityList().get(0).getAuthHostPid());
 		assertEquals(auth2.getPid().longValue(), d1s1v1.getServerSecurityList().get(1).getAuthHostPid());
@@ -545,7 +545,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		d1s1v1 = (GSoap11ServiceVersion) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
 		assertEquals(1, d1s1v1.getServerSecurityList().size());
 		assertEquals(auth2.getPid().longValue(), d1s1v1.getServerSecurityList().get(0).getAuthHostPid());
 
@@ -562,7 +562,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
@@ -590,7 +590,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		GSoap11ServiceVersionAndResources copy = mySvc.loadServiceVersion(d1s1v1.getPid());
-		GSoap11ServiceVersion svcVer = (GSoap11ServiceVersion) copy.getServiceVersion();
+		DtoServiceVersionSoap11 svcVer = (DtoServiceVersionSoap11) copy.getServiceVersion();
 		assertEquals("http://bar", svcVer.getWsdlLocation());
 		assertEquals(2, copy.getResource().size());
 
@@ -615,7 +615,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		copy = mySvc.loadServiceVersion(d1s1v1.getPid());
-		svcVer = (GSoap11ServiceVersion) copy.getServiceVersion();
+		svcVer = (DtoServiceVersionSoap11) copy.getServiceVersion();
 		assertEquals("http://baz", svcVer.getWsdlLocation());
 		assertEquals(1, copy.getResource().size());
 
@@ -632,7 +632,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		GServiceVersionJsonRpc20 d1s1v1 = new GServiceVersionJsonRpc20();
+		DtoServiceVersionJsonRpc20 d1s1v1 = new DtoServiceVersionJsonRpc20();
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
@@ -650,7 +650,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		GSoap11ServiceVersionAndResources copy = mySvc.loadServiceVersion(d1s1v1.getPid());
-		GServiceVersionJsonRpc20 svcVer = (GServiceVersionJsonRpc20) copy.getServiceVersion();
+		DtoServiceVersionJsonRpc20 svcVer = (DtoServiceVersionJsonRpc20) copy.getServiceVersion();
 		assertEquals("ASV_SV1", svcVer.getId());
 		assertEquals(2, copy.getResource().size());
 
@@ -663,7 +663,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		copy = mySvc.loadServiceVersion(d1s1v1.getPid());
-		svcVer = (GServiceVersionJsonRpc20) copy.getServiceVersion();
+		svcVer = (DtoServiceVersionJsonRpc20) copy.getServiceVersion();
 		assertEquals("2.0", svcVer.getId());
 		assertEquals(2, copy.getResource().size());
 
@@ -754,7 +754,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
@@ -793,7 +793,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
@@ -839,7 +839,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
@@ -954,7 +954,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
@@ -974,7 +974,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		resources.add(new GResource("http://foo", "text/xml", "contents1"));
 		resources.add(new GResource("http://bar", "text/xml", "contents2"));
 
-		GSoap11ServiceVersion ver = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
+		DtoServiceVersionSoap11 ver = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
 
 		ver.getUrlList().add(new GServiceVersionUrl("url1", "http://foo"));
 		ver = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), ver, resources);
@@ -1074,7 +1074,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	@Test
 	public void testLoadWsdl() throws ProcessingException {
 
-		GSoap11ServiceVersion ver = new GSoap11ServiceVersion();
+		DtoServiceVersionSoap11 ver = new DtoServiceVersionSoap11();
 
 		PersServiceVersionSoap11 persSvcVer = new PersServiceVersionSoap11();
 		persSvcVer.setWsdlUrl("http://wsdlurl");
@@ -1164,7 +1164,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		GService d2s1 = mySvc.addService(d2.getPid(), "d2s1", "d2s1", true);
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 
-		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
 		d1s1v1.setActive(true);
 		d1s1v1.setId("D1S1V1");
 		d1s1v1.setName("D1S1V1");
@@ -1175,7 +1175,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		resources.add(new GResource("http://bar", "text/xml", "contents2"));
 		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
 
-		GSoap11ServiceVersion d2s1v1 = new GSoap11ServiceVersion();
+		DtoServiceVersionSoap11 d2s1v1 = new DtoServiceVersionSoap11();
 		d2s1v1.setActive(true);
 		d2s1v1.setId("D2S1V1");
 		d2s1v1.setName("D2S1V1");

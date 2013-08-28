@@ -22,7 +22,7 @@ import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
 import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
-import net.svcret.admin.shared.model.GSoap11ServiceVersion;
+import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.GUrlStatus;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.HierarchyEnum;
@@ -75,7 +75,7 @@ public interface ModelUpdateServiceAsync {
 
 	void loadUsers(PartialUserListRequest theRequest, AsyncCallback<GPartialUserList> callback);
 
-	void loadWsdl(GSoap11ServiceVersion theService, String theWsdlUrl, AsyncCallback<GSoap11ServiceVersion> callback);
+	void loadWsdl(DtoServiceVersionSoap11 theService, String theWsdlUrl, AsyncCallback<DtoServiceVersionSoap11> callback);
 
 	void removeAuthenticationHost(long thePid, AsyncCallback<GAuthenticationHostList> theAsyncCallback);
 

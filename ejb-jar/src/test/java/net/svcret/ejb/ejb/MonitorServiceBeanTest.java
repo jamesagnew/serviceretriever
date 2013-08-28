@@ -18,7 +18,7 @@ import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
-import net.svcret.admin.shared.model.GSoap11ServiceVersion;
+import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IMonitorNotifier;
@@ -52,7 +52,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 	private SecurityServiceBean mySecSvc;
 	private ServiceRegistryBean mySvcReg;
 	private MonitorServiceBean mySvc;
-	private GSoap11ServiceVersion mySvcVerG;
+	private DtoServiceVersionSoap11 mySvcVerG;
 	private BasePersServiceVersion mySvcVer;
 	private PersServiceVersionMethod myMethod;
 	private PersServiceVersionUrl myUrl1;
@@ -345,7 +345,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		GSoap11ServiceVersion d1s1v1 = new GSoap11ServiceVersion();
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");

@@ -5,14 +5,14 @@ import java.util.Set;
 
 public enum ServerSecurityEnum {
 
-	JSONRPC_NAMED_PARAMETER("JSON-RPC Named Parameter", GServiceVersionJsonRpc20.class) {
+	JSONRPC_NAMED_PARAMETER("JSON-RPC Named Parameter", DtoServiceVersionJsonRpc20.class) {
 		@Override
 		public BaseGServerSecurity newInstance() {
 			return new GNamedParameterJsonRpcServerAuth();
 		}
 	},
 
-	WSSEC_UT("WS-Security UsernameToken", GSoap11ServiceVersion.class) {
+	WSSEC_UT("WS-Security UsernameToken", DtoServiceVersionSoap11.class) {
 		@Override
 		public BaseGServerSecurity newInstance() {
 			return new GWsSecServerSecurity();

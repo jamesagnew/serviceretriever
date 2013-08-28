@@ -16,7 +16,6 @@ import java.util.zip.ZipInputStream;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IConfigService;
-import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
@@ -34,7 +33,6 @@ import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
-import net.svcret.ejb.model.entity.soap.WsSecUsernameTokenCredentialGrabber;
 import net.svcret.ejb.util.IOUtils;
 
 import org.junit.After;
@@ -84,7 +82,7 @@ public class Soap11ServiceInvokerTest {
 		
 		DefaultAnswer.setRunTime();
 		
-		InvocationResultsBean result = svc.processInvocation(svcVersion, RequestType.GET, "/Some/Path", "?wsdl", new StringReader(""));
+		InvocationResultsBean result = svc.processInvocation(svcVersion, RequestType.GET, "/Some/Path", "?wsdl", "text/xml", new StringReader(""));
 
 		assertEquals(InvocationResultsBean.ResultTypeEnum.STATIC_RESOURCE, result.getResultType());
 		assertEquals(Constants.CONTENT_TYPE_XML, result.getStaticResourceContentTyoe());
@@ -172,7 +170,7 @@ public class Soap11ServiceInvokerTest {
 		when(svcVersion.getResourceForUri("http://the_wsdl_url")).thenReturn(wsdlResource);
 
 		Soap11ServiceInvoker svc = new Soap11ServiceInvoker();
-		InvocationResultsBean result = svc.processInvocation(svcVersion, RequestType.GET, "/Some/Path", "?xsd&xsdnum=100", new StringReader(""));
+		InvocationResultsBean result = svc.processInvocation(svcVersion, RequestType.GET, "/Some/Path", "?xsd&xsdnum=100","text/xml",  new StringReader(""));
 
 		assertEquals(InvocationResultsBean.ResultTypeEnum.STATIC_RESOURCE, result.getResultType());
 		assertEquals(Constants.CONTENT_TYPE_XML, result.getStaticResourceContentTyoe());
@@ -213,7 +211,7 @@ public class Soap11ServiceInvokerTest {
 
 		Soap11ServiceInvoker svc = new Soap11ServiceInvoker();
 		try {
-			svc.processInvocation(serviceVer, RequestType.POST, "/Some/Path", "", reader);
+			svc.processInvocation(serviceVer, RequestType.POST, "/Some/Path", "", "text/xml", reader);
 			fail();
 		} catch (UnknownRequestException e) {
 			// good!
@@ -250,7 +248,7 @@ public class Soap11ServiceInvokerTest {
 		when(serviceVer.getServerAuths()).thenReturn(serverAuths);
 
 		Soap11ServiceInvoker svc = new Soap11ServiceInvoker();
-		InvocationResultsBean result = svc.processInvocation(serviceVer, RequestType.POST, "/Some/Path", "", reader);
+		InvocationResultsBean result = svc.processInvocation(serviceVer, RequestType.POST, "/Some/Path", "", "text/xml", reader);
 		
 		assertEquals("user", result.getCredentialsInRequest(serverAuths.get(0)).getUsername());
 		assertEquals("pass", result.getCredentialsInRequest(serverAuths.get(0)).getPassword());

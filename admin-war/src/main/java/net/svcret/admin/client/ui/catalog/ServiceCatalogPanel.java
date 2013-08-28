@@ -9,8 +9,8 @@ import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
-import net.svcret.admin.shared.model.GServiceVersionJsonRpc20;
-import net.svcret.admin.shared.model.GSoap11ServiceVersion;
+import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
+import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.FlexTable;
@@ -94,7 +94,7 @@ public class ServiceCatalogPanel extends FlowPanel {
 					Widget endpoint = null;
 					switch (nextVersion.getProtocol()) {
 					case SOAP11:
-						endpoint = new Soap11EndpointRenderer(myConfig).render((GSoap11ServiceVersion) nextVersion);
+						endpoint = new Soap11EndpointRenderer(myConfig).render((DtoServiceVersionSoap11) nextVersion);
 						Anchor anchor = new Anchor();
 						anchor.setHref("resources/wsdl_bundle_" + nextVersion.getPid() + ".zip");
 						anchor.setText("Download");
@@ -102,7 +102,7 @@ public class ServiceCatalogPanel extends FlowPanel {
 						myGrid.getCellFormatter().setHorizontalAlignment(row, COL_BUNDLE, HasHorizontalAlignment.ALIGN_CENTER);
 						break;
 					case JSONRPC20:
-						endpoint = new EndpointRendererJsonRpc20(myConfig).render((GServiceVersionJsonRpc20) nextVersion);
+						endpoint = new EndpointRendererJsonRpc20(myConfig).render((DtoServiceVersionJsonRpc20) nextVersion);
 						break;
 					}
 					

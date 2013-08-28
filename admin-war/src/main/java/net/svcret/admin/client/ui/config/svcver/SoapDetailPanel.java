@@ -6,7 +6,7 @@ import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.HtmlLabel;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
-import net.svcret.admin.shared.model.GSoap11ServiceVersion;
+import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 
 import com.google.gwt.dom.client.Style.Float;
@@ -21,7 +21,7 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextBox;
 
-public class SoapDetailPanel extends BaseDetailPanel<GSoap11ServiceVersion> {
+public class SoapDetailPanel extends BaseDetailPanel<DtoServiceVersionSoap11> {
 
 	private LoadingSpinner myLoadWsdlSpinner;
 	private TextBox myUrlTextBox;
@@ -29,7 +29,7 @@ public class SoapDetailPanel extends BaseDetailPanel<GSoap11ServiceVersion> {
 	/**
 	 * Constructor
 	 */
-	public SoapDetailPanel(AbstractServiceVersionPanel theParent, GSoap11ServiceVersion theServiceVersion) {
+	public SoapDetailPanel(AbstractServiceVersionPanel theParent, DtoServiceVersionSoap11 theServiceVersion) {
 		super(theParent, theServiceVersion);
 	}
 
@@ -37,14 +37,14 @@ public class SoapDetailPanel extends BaseDetailPanel<GSoap11ServiceVersion> {
 		myLoadWsdlSpinner.show();
 		final long start = System.currentTimeMillis();
 
-		AsyncCallback<GSoap11ServiceVersion> callback = new AsyncCallback<GSoap11ServiceVersion>() {
+		AsyncCallback<DtoServiceVersionSoap11> callback = new AsyncCallback<DtoServiceVersionSoap11>() {
 			@Override
 			public void onFailure(Throwable theCaught) {
 				myLoadWsdlSpinner.showMessage(theCaught.getMessage(), false);
 			}
 
 			@Override
-			public void onSuccess(GSoap11ServiceVersion theResult) {
+			public void onSuccess(DtoServiceVersionSoap11 theResult) {
 				long time = System.currentTimeMillis() - start;
 				myLoadWsdlSpinner.showMessage("Loaded WSDL in " + time + "ms", false);
 

@@ -31,9 +31,9 @@ import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
-import net.svcret.admin.shared.model.GServiceVersionJsonRpc20;
+import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
-import net.svcret.admin.shared.model.GSoap11ServiceVersion;
+import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
 import net.svcret.admin.shared.model.GUrlStatus;
 import net.svcret.admin.shared.model.GUser;
@@ -196,10 +196,10 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 
 		switch (theProtocol) {
 		case JSONRPC20:
-			retVal = new GServiceVersionJsonRpc20();
+			retVal = new DtoServiceVersionJsonRpc20();
 			break;
 		case SOAP11:
-			retVal = new GSoap11ServiceVersion();
+			retVal = new DtoServiceVersionSoap11();
 			break;
 		}
 
@@ -524,12 +524,12 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public GSoap11ServiceVersion loadWsdl(GSoap11ServiceVersion theService, String theWsdlUrl) throws ServiceFailureException {
+	public DtoServiceVersionSoap11 loadWsdl(DtoServiceVersionSoap11 theService, String theWsdlUrl) throws ServiceFailureException {
 		Validate.notNull(theService, "Service");
 		Validate.notNull(theService.getUncommittedSessionId(), "Service#UncommittedSessionId");
 		Validate.notBlank(theWsdlUrl, "Service");
 
-		GSoap11ServiceVersion retVal;
+		DtoServiceVersionSoap11 retVal;
 		if (isMockMode()) {
 			retVal = getMock().loadWsdl(theService, theWsdlUrl);
 		} else {
@@ -544,7 +544,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 
 			saveServiceVersionResourcesToSession(serviceAndResources);
 
-			retVal = (GSoap11ServiceVersion) serviceAndResources.getServiceVersion();
+			retVal = (DtoServiceVersionSoap11) serviceAndResources.getServiceVersion();
 		}
 
 		/*

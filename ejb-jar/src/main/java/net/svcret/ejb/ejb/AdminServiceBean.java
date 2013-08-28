@@ -32,6 +32,7 @@ import net.svcret.admin.shared.model.DtoClientSecurityHttpBasicAuth;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
+import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
@@ -54,11 +55,11 @@ import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
-import net.svcret.admin.shared.model.GServiceVersionJsonRpc20;
+import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.GServiceVersionResourcePointer;
 import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
-import net.svcret.admin.shared.model.GSoap11ServiceVersion;
+import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
 import net.svcret.admin.shared.model.GThrottle;
 import net.svcret.admin.shared.model.GUrlStatus;
@@ -133,6 +134,7 @@ import net.svcret.ejb.model.entity.PersUserServicePermission;
 import net.svcret.ejb.model.entity.PersUserServiceVersionMethodPermission;
 import net.svcret.ejb.model.entity.PersUserServiceVersionPermission;
 import net.svcret.ejb.model.entity.PersUserStatus;
+import net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp;
 import net.svcret.ejb.model.entity.http.PersHttpBasicClientAuth;
 import net.svcret.ejb.model.entity.http.PersHttpBasicServerAuth;
 import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcServerAuth;
@@ -154,9 +156,6 @@ public class AdminServiceBean implements IAdminService {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(AdminServiceBean.class);
 
 	@EJB
-	private IKeystoreService myKeystoreSvc;
-
-	@EJB
 	private IConfigService myConfigSvc;
 
 	@EJB
@@ -164,6 +163,9 @@ public class AdminServiceBean implements IAdminService {
 
 	@EJB
 	private IServiceInvokerSoap11 myInvokerSoap11;
+
+	@EJB
+	private IKeystoreService myKeystoreSvc;
 
 	@EJB
 	private IMonitorService myMonitorSvc;
@@ -202,16 +204,6 @@ public class AdminServiceBean implements IAdminService {
 		domain = myServiceRegistry.saveDomain(domain);
 
 		return toUi(domain, false, null);
-	}
-
-	@Override
-	public Collection<GMonitorRuleFiring> loadAllActiveRuleFirings() {
-		Collection<GMonitorRuleFiring> retVal = new ArrayList<GMonitorRuleFiring>();
-		List<PersMonitorRuleFiring> firings = myDao.loadMonitorRuleFiringsWhichAreActive();
-		for (PersMonitorRuleFiring nextFiring : firings) {
-			retVal.add(toUi(nextFiring));
-		}
-		return retVal;
 	}
 
 	@Override
@@ -259,6 +251,8 @@ public class AdminServiceBean implements IAdminService {
 		case SOAP11:
 			return myInvokerSoap11.createWsdlBundle((PersServiceVersionSoap11) svcVer);
 		case JSONRPC20:
+		case HL7OVERHTTP:
+		case FORWARDER:
 			break;
 		}
 
@@ -426,6 +420,16 @@ public class AdminServiceBean implements IAdminService {
 			throw new ProcessingException("Unknown ID: " + theServiceId);
 		}
 		return service.getPid();
+	}
+
+	@Override
+	public Collection<GMonitorRuleFiring> loadAllActiveRuleFirings() {
+		Collection<GMonitorRuleFiring> retVal = new ArrayList<GMonitorRuleFiring>();
+		List<PersMonitorRuleFiring> firings = myDao.loadMonitorRuleFiringsWhichAreActive();
+		for (PersMonitorRuleFiring nextFiring : firings) {
+			retVal.add(toUi(nextFiring));
+		}
+		return retVal;
 	}
 
 	@Override
@@ -721,7 +725,7 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	@Override
-	public GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(GSoap11ServiceVersion theService, String theWsdlUrl) throws ProcessingException {
+	public GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(DtoServiceVersionSoap11 theService, String theWsdlUrl) throws ProcessingException {
 		Validate.notNull(theService, "Definition");
 		Validate.notBlank(theWsdlUrl, "URL");
 
@@ -1136,6 +1140,34 @@ public class AdminServiceBean implements IAdminService {
 		return theInt != null ? theInt : 0;
 	}
 
+	private void doWithUserStatsByMinute(PersConfig theConfig, PersUser theUser, int theNumberOfMinutes, IRuntimeStatus statusSvc, IWithStats theOperator) {
+		Date xMinsAgo = getDateXMinsAgo(theNumberOfMinutes);
+		Date date = xMinsAgo;
+
+		Collection<PersUserMethodStatus> methodStatuses = myDao.getUser(theUser.getPid()).getStatus().getMethodStatuses().values();
+		for (int min = 0; date.before(new Date()); min++) {
+
+			InvocationStatsIntervalEnum interval = doWithStatsSupportFindInterval(theConfig, date);
+			date = doWithStatsSupportFindDate(date, interval);
+
+			for (Iterator<PersUserMethodStatus> iterator = methodStatuses.iterator(); iterator.hasNext();) {
+
+				PersUserMethodStatus next = iterator.next();
+				boolean applies = next.doesDateFallWithinAtLeastOneOfMyRanges(date);
+				if (applies) {
+					PersInvocationUserStatsPk pk = new PersInvocationUserStatsPk(interval, date, next.getPk().getMethod(), theUser);
+					BasePersMethodInvocationStats stats = statusSvc.getInvocationUserStatsSynchronously(pk);
+					theOperator.withStats(min, stats);
+				} 
+			}
+
+			date = doWithStatsSupportIncrement(date, interval);
+
+		}
+		
+		
+	}
+
 	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Long> the60minTime, PersService theService,
 			StatusesBean theStatuses) throws ProcessingException {
 
@@ -1525,18 +1557,6 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private PersUserServiceVersionPermission fromUi(GUserServiceVersionPermission theObj) {
-		PersUserServiceVersionPermission retVal = new PersUserServiceVersionPermission();
-		retVal.setPid(theObj.getPidOrNull());
-		retVal.setAllowAllServiceVersionMethods(theObj.isAllowAllServiceVersionMethods());
-		retVal.setServiceVersion(myDao.getServiceVersionByPid(theObj.getServiceVersionPid()));
-		retVal.setServiceVersionMethodPermissions(new ArrayList<PersUserServiceVersionMethodPermission>());
-		for (GUserServiceVersionMethodPermission next : theObj.getServiceVersionMethodPermissions()) {
-			retVal.addServiceVersionMethodPermissions(fromUi(next));
-		}
-		return retVal;
-	}
-
 	// private GHttpClientConfig toUi(PersHttpClientConfig theConfig) {
 	// GHttpClientConfig retVal = new GHttpClientConfig();
 	//
@@ -1556,6 +1576,18 @@ public class AdminServiceBean implements IAdminService {
 	// return retVal;
 	// }
 
+	private PersUserServiceVersionPermission fromUi(GUserServiceVersionPermission theObj) {
+		PersUserServiceVersionPermission retVal = new PersUserServiceVersionPermission();
+		retVal.setPid(theObj.getPidOrNull());
+		retVal.setAllowAllServiceVersionMethods(theObj.isAllowAllServiceVersionMethods());
+		retVal.setServiceVersion(myDao.getServiceVersionByPid(theObj.getServiceVersionPid()));
+		retVal.setServiceVersionMethodPermissions(new ArrayList<PersUserServiceVersionMethodPermission>());
+		for (GUserServiceVersionMethodPermission next : theObj.getServiceVersionMethodPermissions()) {
+			retVal.addServiceVersionMethodPermissions(fromUi(next));
+		}
+		return retVal;
+	}
+
 	private Collection<PersUserDomainPermission> fromUi(List<GUserDomainPermission> theDomainPermissions, Collection<PersUserDomainPermission> theExisting) {
 		Collection<PersUserDomainPermission> retVal = theExisting;
 		retVal.clear();
@@ -1566,11 +1598,16 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	@SuppressWarnings("unused")
-	private void fromUi(PersServiceVersionJsonRpc20 theRetVal, GServiceVersionJsonRpc20 theVersion) {
+	private void fromUi(PersServiceVersionHl7OverHttp theRetVal, DtoServiceVersionHl7OverHttp theVersion) {
+		// nothing yet		
+	}
+
+	@SuppressWarnings("unused")
+	private void fromUi(PersServiceVersionJsonRpc20 theRetVal, DtoServiceVersionJsonRpc20 theVersion) {
 		// nothing in here yet
 	}
 
-	private PersServiceVersionSoap11 fromUi(PersServiceVersionSoap11 thePersVersion, GSoap11ServiceVersion theVersion) throws ProcessingException {
+	private PersServiceVersionSoap11 fromUi(PersServiceVersionSoap11 thePersVersion, DtoServiceVersionSoap11 theVersion) throws ProcessingException {
 		thePersVersion.setWsdlUrl(theVersion.getWsdlLocation());
 		return thePersVersion;
 	}
@@ -1592,11 +1629,13 @@ public class AdminServiceBean implements IAdminService {
 
 		switch (theVersion.getProtocol()) {
 		case SOAP11:
-			fromUi((PersServiceVersionSoap11) retVal, (GSoap11ServiceVersion) theVersion);
+			fromUi((PersServiceVersionSoap11) retVal, (DtoServiceVersionSoap11) theVersion);
 			break;
 		case JSONRPC20:
-			fromUi((PersServiceVersionJsonRpc20) retVal, (GServiceVersionJsonRpc20) theVersion);
+			fromUi((PersServiceVersionJsonRpc20) retVal, (DtoServiceVersionJsonRpc20) theVersion);
 			break;
+		case HL7OVERHTTP:
+			fromUi((PersServiceVersionHl7OverHttp) retVal, (DtoServiceVersionHl7OverHttp) theVersion);
 		}
 
 		retVal.setActive(theVersion.isActive());
@@ -1926,12 +1965,18 @@ public class AdminServiceBean implements IAdminService {
 		switch (theVersion.getProtocol()) {
 		case SOAP11:
 			PersServiceVersionSoap11 persSoap11 = (PersServiceVersionSoap11) theVersion;
-			GSoap11ServiceVersion soap11RetVal = new GSoap11ServiceVersion();
+			DtoServiceVersionSoap11 soap11RetVal = new DtoServiceVersionSoap11();
 			soap11RetVal.setWsdlLocation(persSoap11.getWsdlUrl());
 			retVal = soap11RetVal;
 			break;
 		case JSONRPC20:
-			retVal = new GServiceVersionJsonRpc20();
+			retVal = new DtoServiceVersionJsonRpc20();
+			break;
+		case HL7OVERHTTP:
+			PersServiceVersionHl7OverHttp persHl7 = (PersServiceVersionHl7OverHttp)theVersion;
+			DtoServiceVersionHl7OverHttp dto = new DtoServiceVersionHl7OverHttp();
+			dto.setMethodNameTemplate(persHl7.getMethodNameTemplate());
+			retVal = dto;
 			break;
 		}
 
@@ -2659,6 +2704,11 @@ public class AdminServiceBean implements IAdminService {
 		doWithStatsByMinute(theConfig, statusSvc, theMethod, theOperator, start, end);
 	}
 
+	// public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatus theStatus, PersServiceVersionMethod theNextMethod, IWithStats theOperator, Date end) {
+	// Date start = new Date(end.getTime() - (theRange.getWithPresetRange().getNumMins() * 60 * 1000L));
+	// doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator, start, end);
+	// }
+
 	public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatus theStatus, PersServiceVersionMethod theNextMethod, IWithStats theOperator) {
 		Date end;
 		Date start;
@@ -2674,39 +2724,6 @@ public class AdminServiceBean implements IAdminService {
 			start = theRange.getNoPresetFrom();
 		}
 		doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator, start, end);
-	}
-
-	// public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatus theStatus, PersServiceVersionMethod theNextMethod, IWithStats theOperator, Date end) {
-	// Date start = new Date(end.getTime() - (theRange.getWithPresetRange().getNumMins() * 60 * 1000L));
-	// doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator, start, end);
-	// }
-
-	private void doWithUserStatsByMinute(PersConfig theConfig, PersUser theUser, int theNumberOfMinutes, IRuntimeStatus statusSvc, IWithStats theOperator) {
-		Date xMinsAgo = getDateXMinsAgo(theNumberOfMinutes);
-		Date date = xMinsAgo;
-
-		Collection<PersUserMethodStatus> methodStatuses = myDao.getUser(theUser.getPid()).getStatus().getMethodStatuses().values();
-		for (int min = 0; date.before(new Date()); min++) {
-
-			InvocationStatsIntervalEnum interval = doWithStatsSupportFindInterval(theConfig, date);
-			date = doWithStatsSupportFindDate(date, interval);
-
-			for (Iterator<PersUserMethodStatus> iterator = methodStatuses.iterator(); iterator.hasNext();) {
-
-				PersUserMethodStatus next = iterator.next();
-				boolean applies = next.doesDateFallWithinAtLeastOneOfMyRanges(date);
-				if (applies) {
-					PersInvocationUserStatsPk pk = new PersInvocationUserStatsPk(interval, date, next.getPk().getMethod(), theUser);
-					BasePersMethodInvocationStats stats = statusSvc.getInvocationUserStatsSynchronously(pk);
-					theOperator.withStats(min, stats);
-				} 
-			}
-
-			date = doWithStatsSupportIncrement(date, interval);
-
-		}
-		
-		
 	}
 
 	/**
@@ -2770,6 +2787,23 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
+	private static double to60MinAveragePerMin(ArrayList<Integer> theT60minSecurityFailCount) {
+		double total = 0;
+		for (Integer integer : theT60minSecurityFailCount) {
+			total += integer;
+		}
+		return total / theT60minSecurityFailCount.size();
+	}
+
+	private static int[] toArray(ArrayList<Integer> theT60minCount) {
+		int[] retVal = new int[theT60minCount.size()];
+		int index = 0;
+		for (Integer integer : theT60minCount) {
+			retVal[index++] = integer;
+		}
+		return retVal;
+	}
+
 	static InvocationStatsIntervalEnum doWithStatsSupportFindInterval(PersConfig theConfig, Date date) {
 		InvocationStatsIntervalEnum interval;
 		Date collapseStatsToDaysCutoff = InvocationStatsIntervalEnum.DAY.truncate(theConfig.getCollapseStatsToDaysCutoff());
@@ -2793,23 +2827,6 @@ public class AdminServiceBean implements IAdminService {
 
 	static Date doWithStatsSupportIncrement(Date date, InvocationStatsIntervalEnum interval) {
 		Date retVal = new Date(date.getTime() + interval.millis());
-		return retVal;
-	}
-
-	private static double to60MinAveragePerMin(ArrayList<Integer> theT60minSecurityFailCount) {
-		double total = 0;
-		for (Integer integer : theT60minSecurityFailCount) {
-			total += integer;
-		}
-		return total / theT60minSecurityFailCount.size();
-	}
-
-	private static int[] toArray(ArrayList<Integer> theT60minCount) {
-		int[] retVal = new int[theT60minCount.size()];
-		int index = 0;
-		for (Integer integer : theT60minCount) {
-			retVal[index++] = integer;
-		}
 		return retVal;
 	}
 

@@ -48,7 +48,7 @@ import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
 import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
-import net.svcret.admin.shared.model.GSoap11ServiceVersion;
+import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.GUrlStatus;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.GUserDomainPermission;
@@ -103,7 +103,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		svc.setInheritedKeepNumRecentTransactionsSecurityFail(22);
 		dom.getServiceList().add(svc);
 
-		GSoap11ServiceVersion ver = new GSoap11ServiceVersion();
+		DtoServiceVersionSoap11 ver = new DtoServiceVersionSoap11();
 		ver.setActive(true);
 		ver.setWsdlLocation("http://foo");
 		ver.setId("Version 1-A-1");
@@ -164,7 +164,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		svc.setInheritedKeepNumRecentTransactionsSecurityFail(22);
 		dom.getServiceList().add(svc);
 
-		GSoap11ServiceVersion ver = new GSoap11ServiceVersion();
+		DtoServiceVersionSoap11 ver = new DtoServiceVersionSoap11();
 		ver.setActive(true);
 		ver.setWsdlLocation("http://foo");
 		ver.setId("Version 2-A-1");
@@ -416,7 +416,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	}
 
 	@Override
-	public GSoap11ServiceVersion createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncomittedId) {
+	public DtoServiceVersionSoap11 createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncomittedId) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -622,12 +622,12 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	}
 
 	@Override
-	public GSoap11ServiceVersion loadWsdl(GSoap11ServiceVersion theService, String theWsdlUrl) throws ServiceFailureException {
+	public DtoServiceVersionSoap11 loadWsdl(DtoServiceVersionSoap11 theService, String theWsdlUrl) throws ServiceFailureException {
 		if (StringUtil.isBlank(theWsdlUrl)) {
 			throw new ServiceFailureException("Failed to load URL: \"" + theWsdlUrl + '"');
 		}
 
-		GSoap11ServiceVersion retVal = new GSoap11ServiceVersion();
+		DtoServiceVersionSoap11 retVal = new DtoServiceVersionSoap11();
 		retVal.setWsdlLocation(theWsdlUrl);
 
 		retVal.setActive(true);

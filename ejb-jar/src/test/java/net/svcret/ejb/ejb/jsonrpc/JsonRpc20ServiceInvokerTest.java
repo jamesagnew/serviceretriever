@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.List;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.HttpResponseBean;
@@ -21,7 +20,6 @@ import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
-import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcCredentialGrabber;
 import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcServerAuth;
 import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
 
@@ -55,7 +53,7 @@ public class JsonRpc20ServiceInvokerTest {
 		when(def.getMethod("getCanonicalMappings")).thenReturn(method);
 
 		DefaultAnswer.setRunTime();
-		InvocationResultsBean resp = svc.processInvocation(def, reqType, path, query, reader);
+		InvocationResultsBean resp = svc.processInvocation(def, reqType, path, query, "application/json",reader);
 
 		ICredentialGrabber grabber = resp.getCredentialsInRequest(serverAuths.get(0));
 		assertEquals("mockpass", grabber.getPassword());
@@ -92,7 +90,7 @@ public class JsonRpc20ServiceInvokerTest {
 		when(def.getServerAuths()).thenReturn(new ArrayList<PersBaseServerAuth<?, ?>>());
 
 		DefaultAnswer.setRunTime();
-		InvocationResultsBean resp = svc.processInvocation(def, reqType, path, query, reader);
+		InvocationResultsBean resp = svc.processInvocation(def, reqType, path, query, "application/json",reader);
 
 		Assert.assertEquals("application/json", resp.getMethodContentType());
 		Assert.assertEquals(ResultTypeEnum.METHOD, resp.getResultType());
@@ -128,7 +126,7 @@ public class JsonRpc20ServiceInvokerTest {
 			when(def.getServerAuths()).thenReturn(new ArrayList<PersBaseServerAuth<?, ?>>());
 
 			try {
-				svc.processInvocation(def, reqType, path, query, reader);
+				svc.processInvocation(def, reqType, path, query, "application/json",reader);
 			} catch (ProcessingException e) {
 				// this is ok
 			}
@@ -161,35 +159,35 @@ public class JsonRpc20ServiceInvokerTest {
 				"  \"method\": \"someMethod\",\n" + //- 
 				"  \"params\": 123\n" + //-
 				"}"; //-
-		resp = svc.processInvocation(def, reqType, path, query, new StringReader(request));
+		resp = svc.processInvocation(def, reqType, path, query, "application/json",new StringReader(request));
 
 		request = //- 
 				"{ \"jsonrpc\": \"2.0\",\n" + //- 
 				"  \"method\": \"someMethod\",\n" + //- 
 				"  \"params\": -123.456\n" + //-
 				"}"; //-
-		resp = svc.processInvocation(def, reqType, path, query, new StringReader(request));
+		resp = svc.processInvocation(def, reqType, path, query, "application/json",new StringReader(request));
 
 		request = //- 
 				"{ \"jsonrpc\": \"2.0\",\n" + //- 
 				"  \"method\": \"someMethod\",\n" + //- 
 				"  \"params\": [123.456, 876.543] \n" + //-
 				"}"; //-
-		resp = svc.processInvocation(def, reqType, path, query, new StringReader(request));
+		resp = svc.processInvocation(def, reqType, path, query, "application/json",new StringReader(request));
 
 		request = //- 
 				"{ \"jsonrpc\": \"2.0\",\n" + //- 
 				"  \"method\": \"someMethod\",\n" + //- 
 				"  \"params\": [123.456, 876.543, '222.222'] \n" + //-
 				"}"; //-
-		resp = svc.processInvocation(def, reqType, path, query, new StringReader(request));
+		resp = svc.processInvocation(def, reqType, path, query, "application/json",new StringReader(request));
 
 		request = //- 
 				"{ \"jsonrpc\": \"2.0\",\n" + //- 
 				"  \"method\": \"someMethod\",\n" + //- 
 				"  \"params\": { \"hello\" :  876.543 } \n" + //-
 				"}"; //-
-		resp = svc.processInvocation(def, reqType, path, query, new StringReader(request));
+		resp = svc.processInvocation(def, reqType, path, query,"application/json", new StringReader(request));
 
 		
 	}
@@ -214,7 +212,7 @@ public class JsonRpc20ServiceInvokerTest {
 		when(def.getServerAuths()).thenReturn(new ArrayList<PersBaseServerAuth<?, ?>>());
 
 		DefaultAnswer.setRunTime();
-		InvocationResultsBean resp = svc.processInvocation(def, reqType, path, query, reader);
+		InvocationResultsBean resp = svc.processInvocation(def, reqType, path, query, "application/json",reader);
 
 		String actualBody = resp.getMethodRequestBody();
 		Assert.assertEquals(request, actualBody);
@@ -229,7 +227,7 @@ public class JsonRpc20ServiceInvokerTest {
 		request = "{\n" + "  \"jsonrpc\": \"2.0\",\n" + "  \"method\": \"getCanonicalMappings\",\n" + "  \"params\": null\n" + "}";
 		reader = new StringReader(request);
 
-		resp = svc.processInvocation(def, reqType, path, query, reader);
+		resp = svc.processInvocation(def, reqType, path, query, "application/json",reader);
 
 		actualBody = resp.getMethodRequestBody();
 		Assert.assertEquals(request, actualBody);
@@ -242,7 +240,7 @@ public class JsonRpc20ServiceInvokerTest {
 				+ "}";
 		reader = new StringReader(request);
 
-		resp = svc.processInvocation(def, reqType, path, query, reader);
+		resp = svc.processInvocation(def, reqType, path, query,"application/json", reader);
 
 		actualBody = resp.getMethodRequestBody();
 		Assert.assertEquals(request, actualBody);

@@ -21,6 +21,7 @@ public interface IServiceInvoker<T extends BasePersServiceVersion> {
 	 * @param theRequestType The HTTP request type
 	 * @param thePath The request URL portion which is the path
 	 * @param theQuery The request URL portion which comes after the path
+	 * @param theContentType The content type (may be null)
 	 * @param theReader A reader which can be used to stream in any request content
 	 * @param theUrlPool The URL Pool to pass to the HTTP client which will process service requests as they are proxied
 	 * @return
@@ -29,7 +30,7 @@ public interface IServiceInvoker<T extends BasePersServiceVersion> {
 	 * @throws IOException
 	 * @throws ProcessingException
 	 */
-	InvocationResultsBean processInvocation(T theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, Reader theReader) throws ProcessingException, UnknownRequestException; 
+	InvocationResultsBean processInvocation(T theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, String theContentType, Reader theReader) throws ProcessingException, UnknownRequestException; 
 	
 	InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws ProcessingException;
 

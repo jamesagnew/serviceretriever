@@ -1,7 +1,7 @@
 package net.svcret.admin.shared.model;
 
 
-public class GSoap11ServiceVersion extends BaseGServiceVersion {
+public class DtoServiceVersionSoap11 extends BaseGServiceVersion {
 
 	private static final long serialVersionUID = 1L;
 

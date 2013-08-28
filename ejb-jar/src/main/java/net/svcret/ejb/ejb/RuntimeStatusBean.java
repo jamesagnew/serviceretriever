@@ -363,7 +363,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 		List<BasePersInvocationStats> stats = new ArrayList<BasePersInvocationStats>();
 		HashSet<BasePersInvocationStatsPk> keys = new HashSet<BasePersInvocationStatsPk>(myUnflushedInvocationStats.keySet());
-
+		
 		if (keys.isEmpty()) {
 
 			ourLog.debug("No status entries to flush");
@@ -389,8 +389,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			}
 
 			ourLog.info("Going to flush {} stats entries with time range {} - {}", new Object[] { stats.size(), myTimeFormat.format(earliest), myTimeFormat.format(latest) });
-
-			// try {
 
 			ourLog.trace("Flushing stats: {}", stats);
 			for (int index = 0; index < stats.size(); index += MAX_STATS_TO_FLUSH_AT_ONCE) {
@@ -784,7 +782,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		ourLog.trace("Going to record method invocation");
 
 		/*
-		 * Record method statictics
+		 * Record method statistics
 		 */
 		InvocationStatsIntervalEnum interval = MINUTE;
 		BasePersInvocationMethodStatsPk statsPk = new PersInvocationStatsPk(interval, theInvocationTime, theMethod);

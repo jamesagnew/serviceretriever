@@ -115,4 +115,22 @@ public class HttpRequestBean {
 		myRequestType = theRequestType;
 	}
 
+	public String getContentType() {
+		if (myRequestHeaders==null) {
+			return null;
+		}
+		List<String> headerValues = myRequestHeaders.get("Content-Type");
+		if (headerValues==null||headerValues.isEmpty()) {
+			return null;
+		}
+		
+		String retVal = headerValues.get(0);
+		int i = retVal.indexOf(';');
+		if (i < -1) {
+			retVal = retVal.substring(0, i);
+		}
+		retVal = retVal.trim();
+		return retVal;
+	}
+
 }

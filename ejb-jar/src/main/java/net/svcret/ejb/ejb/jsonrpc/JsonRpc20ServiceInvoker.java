@@ -222,7 +222,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 	}
 
 	@Override
-	public InvocationResultsBean processInvocation(PersServiceVersionJsonRpc20 theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, Reader theReader)
+	public InvocationResultsBean processInvocation(PersServiceVersionJsonRpc20 theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, String theContentType,Reader theReader)
 			throws ProcessingException {
 		Validate.notNull(theReader, "Reader");
 		if (theRequestType != RequestType.POST) {

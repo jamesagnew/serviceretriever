@@ -20,8 +20,6 @@ public abstract class BasePersInvocationMethodStatsPk extends BasePersInvocation
 	@Transient
 	private volatile int myHashCode;
 
-	// @JoinColumn(name = "METHOD_PID", nullable = false)
-	// @ManyToOne(fetch = FetchType.LAZY, cascade = {})
 	@Column(name = "METHOD_PID")
 	private long myMethod;
 

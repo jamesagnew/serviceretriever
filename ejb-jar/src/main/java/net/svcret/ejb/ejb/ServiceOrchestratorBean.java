@@ -30,6 +30,7 @@ import net.svcret.ejb.api.ISecurityService;
 import net.svcret.ejb.api.ISecurityService.AuthorizationRequestBean;
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
 import net.svcret.ejb.api.IServiceInvoker;
+import net.svcret.ejb.api.IServiceInvokerHl7OverHttp;
 import net.svcret.ejb.api.IServiceInvokerJsonRpc20;
 import net.svcret.ejb.api.IServiceInvokerSoap11;
 import net.svcret.ejb.api.IServiceOrchestrator;
@@ -55,6 +56,7 @@ import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
+import net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp;
 import net.svcret.ejb.model.entity.http.PersHttpBasicClientAuth;
 import net.svcret.ejb.model.entity.http.PersHttpBasicCredentialGrabber;
 import net.svcret.ejb.model.entity.http.PersHttpBasicServerAuth;
@@ -75,8 +77,11 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	@EJB
 	private IHttpClient myHttpClient;
 
-	@EJB()
+	@EJB
 	private IServiceInvokerJsonRpc20 myJsonRpc20ServiceInvoker;
+
+	@EJB
+	private IServiceInvokerHl7OverHttp myHl7OverHttpServiceInvoker;
 
 	@EJB
 	private IRuntimeStatus myRuntimeStatus;
@@ -261,17 +266,22 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			throws ProcessingException, UnknownRequestException {
 		IServiceInvoker<?> svcInvoker = null;
 		InvocationResultsBean results = null;
+		String contentType = theRequest.getContentType();
 		switch (serviceVersion.getProtocol()) {
 		case SOAP11:
 			svcInvoker = mySoap11ServiceInvoker;
-			ourLog.trace("Handling service with invoker {}", svcInvoker);
-			results = mySoap11ServiceInvoker.processInvocation((PersServiceVersionSoap11) serviceVersion, theRequestType, path, theRequestQuery, theRequest.getInputReader());
+			results = mySoap11ServiceInvoker.processInvocation((PersServiceVersionSoap11) serviceVersion, theRequestType, path, theRequestQuery, contentType, theRequest.getInputReader());
 			break;
 		case JSONRPC20:
 			svcInvoker = myJsonRpc20ServiceInvoker;
-			ourLog.trace("Handling service with invoker {}", svcInvoker);
-			results = myJsonRpc20ServiceInvoker.processInvocation((PersServiceVersionJsonRpc20) serviceVersion, theRequestType, path, theRequestQuery, theRequest.getInputReader());
+			results = myJsonRpc20ServiceInvoker.processInvocation((PersServiceVersionJsonRpc20) serviceVersion, theRequestType, path, theRequestQuery, contentType, theRequest.getInputReader());
+			break;
+		case HL7OVERHTTP:
+			svcInvoker = myHl7OverHttpServiceInvoker;
+			results = myHl7OverHttpServiceInvoker.processInvocation((PersServiceVersionHl7OverHttp) serviceVersion, theRequestType, path, theRequestQuery, contentType, theRequest.getInputReader());
+			break;
 		}
+		ourLog.trace("Handling service with invoker {}", svcInvoker);
 
 		if (svcInvoker == null) {
 			throw new InternalErrorException("Unknown service protocol: " + serviceVersion.getProtocol());
