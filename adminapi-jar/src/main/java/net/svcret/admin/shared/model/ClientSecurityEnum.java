@@ -13,7 +13,14 @@ public enum ClientSecurityEnum {
 		@Override
 		public BaseGClientSecurity newInstance() {
 			return new DtoClientSecurityHttpBasicAuth();
-		}};
+		}},
+		
+	JSONRPC_NAMPARM("JSON-RPC Named Parameter") {
+			@Override
+			public BaseGClientSecurity newInstance() {
+				return new DtoClientSecurityJsonRpcNamedParameter();
+			}	
+		},;
 	
 	private String myName;
 

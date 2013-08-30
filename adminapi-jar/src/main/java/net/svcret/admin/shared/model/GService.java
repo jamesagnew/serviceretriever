@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-public class GService extends BaseGDashboardObjectWithUrls<GService> {
+public class GService extends BaseDtoServiceCatalogItem<GService> {
 
 	private static final long serialVersionUID = 1L;
 	private boolean myActive;

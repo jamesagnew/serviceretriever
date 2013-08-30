@@ -17,28 +17,17 @@ import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
-import javax.persistence.TemporalType;
 import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
-import org.apache.commons.lang3.Validate;
-
-import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
-import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.HttpRequestBean;
-import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 
 @MappedSuperclass()
-public abstract class BasePersRecentMessage implements Serializable {
-
-	private static final int MAX_REQ_IP_LEN = 200;
+public abstract class BasePersSavedTransaction implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-
-	@Column(name = "AUTHN_OUTCOME")
-	@Enumerated(EnumType.STRING)
-	private AuthorizationOutcomeEnum myAuthorizationOutcome;
 
 	@ManyToOne
 	@JoinColumn(name = "URL_PID", referencedColumnName = "PID", nullable = true)
@@ -54,15 +43,12 @@ public abstract class BasePersRecentMessage implements Serializable {
 	@Basic(fetch = FetchType.LAZY)
 	private String myRequestBody;
 
-	@Column(name = "REQ_HOST_IP", nullable = false, length = MAX_REQ_IP_LEN)
-	private String myRequestHostIp;
-
 	@Column(name = "RESP_BODY")
 	@Lob()
 	@Basic(fetch = FetchType.LAZY)
 	private String myResponseBody;
 
-	@Column(name = "RESPONSE_TYPE", nullable = false, length=EntityConstants.MAXLEN_RESPONSE_TYPE_ENUM)
+	@Column(name = "RESPONSE_TYPE", nullable = false, length = EntityConstants.MAXLEN_RESPONSE_TYPE_ENUM)
 	@Enumerated(EnumType.STRING)
 	private ResponseTypeEnum myResponseType;
 
@@ -72,19 +58,6 @@ public abstract class BasePersRecentMessage implements Serializable {
 	@Column(name = "XACT_TIME", nullable = false)
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date myTransactionTime;
-
-	public abstract void addUsingDao(IDao theDaoBean);
-
-	public abstract BasePersServiceVersion getServiceVersion();
-	
-	public abstract PersServiceVersionMethod getMethod();
-
-	/**
-	 * @return the authorizationOutcome
-	 */
-	public AuthorizationOutcomeEnum getAuthorizationOutcome() {
-		return myAuthorizationOutcome;
-	}
 
 	/**
 	 * @return the implementationUrl
@@ -105,13 +78,6 @@ public abstract class BasePersRecentMessage implements Serializable {
 	 */
 	public String getRequestBody() {
 		return myRequestBody;
-	}
-
-	/**
-	 * @return the requestHostIp
-	 */
-	public String getRequestHostIp() {
-		return myRequestHostIp;
 	}
 
 	/**
@@ -142,11 +108,10 @@ public abstract class BasePersRecentMessage implements Serializable {
 		return myTransactionTime;
 	}
 
-	public void populate(Date theTransactionTime, HttpRequestBean theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, InvocationResponseResultsBean theInvocationResult) {
+	public void populate(Date theTransactionTime, HttpRequestBean theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, InvocationResponseResultsBean theInvocationResult, String theResponseBody) {
 		myRequestBody = extractHeadersForBody(theRequest.getRequestHeaders()) + theRequestBody;
 		myImplementationUrl = theImplementationUrl;
-		setRequestHostIp(theRequest.getRequestHostIp());
-		myResponseBody = extractHeadersForBody(theInvocationResult.getResponseHeaders()) + theInvocationResult.getResponseBody();
+		myResponseBody = extractHeadersForBody(theInvocationResult.getResponseHeaders()) + theResponseBody;
 		myResponseType = theInvocationResult.getResponseType();
 		myTransactionTime = theTransactionTime;
 	}
@@ -165,14 +130,6 @@ public abstract class BasePersRecentMessage implements Serializable {
 	}
 
 	/**
-	 * @param theAuthorizationOutcome
-	 *            the authorizationOutcome to set
-	 */
-	public void setAuthorizationOutcome(AuthorizationOutcomeEnum theAuthorizationOutcome) {
-		myAuthorizationOutcome = theAuthorizationOutcome;
-	}
-
-	/**
 	 * @param theImplementationUrl
 	 *            the implementationUrl to set
 	 */
@@ -186,20 +143,6 @@ public abstract class BasePersRecentMessage implements Serializable {
 	 */
 	public void setRequestBody(String theRequestBody) {
 		myRequestBody = theRequestBody;
-	}
-
-	/**
-	 * @param theRequestHostIp
-	 *            the requestHostIp to set
-	 */
-	public void setRequestHostIp(String theRequestHostIp) {
-		Validate.notNull(theRequestHostIp);
-		
-		if (theRequestHostIp.length() > MAX_REQ_IP_LEN) {
-			myRequestHostIp = theRequestHostIp.substring(0, MAX_REQ_IP_LEN);
-		} else {
-			myRequestHostIp = theRequestHostIp;
-		}
 	}
 
 	/**
@@ -234,7 +177,4 @@ public abstract class BasePersRecentMessage implements Serializable {
 		myTransactionTime = theTransactionTime;
 	}
 
-	public abstract void trimUsingDao(IDao theDaoBean);
-
-	public abstract RecentMessageTypeEnum getRecentMessageType();
 }

@@ -206,10 +206,12 @@ public class PersDomain extends BasePersServiceCatalogItem {
 		myIdToServices = null;
 	}
 
-	public void merge(PersDomain theDomain) {
-		super.merge(theDomain);
-		setDomainId(theDomain.getDomainId());
-		setDomainName(theDomain.getDomainName());
+	public void merge(BasePersObject theObj) {
+		super.merge(theObj);
+	
+		PersDomain domain = (PersDomain)theObj;
+		setDomainId(domain.getDomainId());
+		setDomainName(domain.getDomainName());
 	}
 
 	public ServerSecuredEnum getServerSecured() {
@@ -267,5 +269,33 @@ public class PersDomain extends BasePersServiceCatalogItem {
 		}
 		return false;
 	}
+
+	@Override
+	public boolean canInheritObscureElements() {
+		return false;
+	}
+
+	@Override
+	public Set<String> determineInheritedObscureRequestElements() {
+		return null;
+	}
+
+	@Override
+	public Set<String> determineInheritedObscureResponseElements() {
+		return null;
+	}
+
+	@Override
+	public Set<String> determineObscureRequestElements() {
+		Set<String> retVal = getObscureRequestElementsInLog();
+		return retVal;
+	}
+
+	@Override
+	public Set<String> determineObscureResponseElements() {
+		Set<String> retVal = getObscureResponseElementsInLog();
+		return retVal;
+	}
+
 
 }

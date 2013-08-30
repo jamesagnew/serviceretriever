@@ -1,11 +1,18 @@
 package net.svcret.admin.client.ui.config;
 
 import static net.svcret.admin.client.AdminPortal.*;
+
+import java.util.HashSet;
+import java.util.Set;
+
 import net.svcret.admin.client.ui.components.CssConstants;
+import net.svcret.admin.client.ui.components.EditableField;
 import net.svcret.admin.client.ui.components.HtmlH1;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
+import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.BaseGKeepsRecentMessages;
+import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
@@ -22,6 +29,8 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 	private IntegerBox mySecurityFailTextbox;
 	private LoadingSpinner myLoadingSpinner;
 	private TwoColumnGrid myGrid;
+	private EditableField myObscureRequestElementsInLogEditor;
+	private EditableField myObscureResponseElementsInLogEditor;
 
 	public KeepRecentTransactionsPanel(BaseGKeepsRecentMessages<?> theKeepsRecentTransactions) {
 
@@ -85,13 +94,73 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 				addInheritControl(mySecurityFailTextbox, inherited, value);
 			}
 		}
+
+		if (theKeepsRecentTransactions instanceof BaseDtoServiceCatalogItem) {
+			BaseDtoServiceCatalogItem<?> sco = (BaseDtoServiceCatalogItem<?>) theKeepsRecentTransactions;
+
+			{
+				myObscureRequestElementsInLogEditor = new EditableField();
+				myObscureRequestElementsInLogEditor.setMultiline(true);
+				setObscureRequestItems(sco.getObscureRequestElementsInLogCache());
+				myGrid.addRow("Obscure Request Element Values", myObscureRequestElementsInLogEditor);
+				myGrid.addDescriptionToRight("Any element names listed here will be obscured from logs when request messages are saved (including transaction and autit logs)");
+				myObscureRequestElementsInLogEditor.addValueChangeHandler(new ValueChangeHandler<String>() {
+					@Override
+					public void onValueChange(ValueChangeEvent<String> theEvent) {
+						setObscureRequestItems(getObscureRequestItems());
+					}
+				});
+			}
+
+			{
+				myObscureResponseElementsInLogEditor = new EditableField();
+				myObscureResponseElementsInLogEditor.setMultiline(true);
+				setObscureResponseItems(sco.getObscureResponseElementsInLogCache());
+				myGrid.addRow("Obscure Response Element Values", myObscureResponseElementsInLogEditor);
+				myGrid.addDescriptionToRight("Any element names listed here will be obscured from logs when response messages are saved (including transaction and autit logs)");
+				myObscureResponseElementsInLogEditor.addValueChangeHandler(new ValueChangeHandler<String>() {
+					@Override
+					public void onValueChange(ValueChangeEvent<String> theEvent) {
+						setObscureResponseItems(getObscureResponseItems());
+					}
+				});
+			}
+
+		}
+
+	}
+
+	private void setObscureRequestItems(Set<String> items) {
+		StringBuilder b = new StringBuilder();
+		if (items != null) {
+			for (String i : items) {
+				if (b.length() > 0) {
+					b.append('\n');
+				}
+				b.append(i);
+			}
+		}
+		myObscureRequestElementsInLogEditor.setValue(b.toString());
+	}
+
+	private void setObscureResponseItems(Set<String> items) {
+		StringBuilder b = new StringBuilder();
+		if (items != null) {
+			for (String i : items) {
+				if (b.length() > 0) {
+					b.append('\n');
+				}
+				b.append(i);
+			}
+		}
+		myObscureResponseElementsInLogEditor.setValue(b.toString());
 	}
 
 	private void addInheritControl(final IntegerBox textBox, Integer theInheritedValue, Integer theValue) {
 		if (theInheritedValue != null) {
 			final CheckBox inheritCheckbox = new CheckBox("Override inherited value: " + theInheritedValue);
 			inheritCheckbox.addStyleName(CssConstants.RECENT_TRANSACTIONS_INHERIT_CHECKBOX);
-			
+
 			inheritCheckbox.setValue(theValue != null);
 			myGrid.addRow("", inheritCheckbox);
 			inheritCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
@@ -170,6 +239,35 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 		theDto.setKeepNumRecentTransactionsSecurityFail(mySecurityFailTextbox.getValue());
 		theDto.setKeepNumRecentTransactionsFault(myFaultTextbox.getValue());
 
+		if (myObscureRequestElementsInLogEditor != null) {
+			Set<String> values = getObscureRequestItems();
+			((BaseDtoServiceCatalogItem<?>) theDto).setObscureRequestElementsInLogCache(values);
+
+			values = getObscureResponseItems();
+			((BaseDtoServiceCatalogItem<?>) theDto).setObscureResponseElementsInLogCache(values);
+		}
+
+	}
+
+	private Set<String> getObscureResponseItems() {
+		Set<String> values;
+		values = new HashSet<String>();
+		for (String next : myObscureResponseElementsInLogEditor.getValueOrBlank().split("\\n| ")) {
+			if (StringUtil.isNotBlank(next)) {
+				values.add(next);
+			}
+		}
+		return values;
+	}
+
+	private Set<String> getObscureRequestItems() {
+		Set<String> values = new HashSet<String>();
+		for (String next : myObscureRequestElementsInLogEditor.getValueOrBlank().split("\\n| ")) {
+			if (StringUtil.isNotBlank(next)) {
+				values.add(next);
+			}
+		}
+		return values;
 	}
 
 }

@@ -18,6 +18,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import net.svcret.admin.shared.model.ClientSecurityEnum;
+import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 
 import com.google.common.base.Objects;
 
@@ -117,7 +118,13 @@ public abstract class PersBaseClientAuth<T extends PersBaseClientAuth<?>> extend
 		// nothing
 	}
 
-	public abstract void merge(PersBaseClientAuth<?> theObj);
+	public void merge(BasePersObject theObj) {
+		PersWsSecUsernameTokenClientAuth obj = (PersWsSecUsernameTokenClientAuth) theObj;
+		
+		setUsername(obj.getUsername());
+		setPassword(obj.getPassword());
+		setServiceVersion(obj.getServiceVersion());
+	}
 
 	/**
 	 * Subclasses must provide an implementation which compares all

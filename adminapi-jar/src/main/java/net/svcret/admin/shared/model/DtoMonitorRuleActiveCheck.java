@@ -16,15 +16,14 @@ public class DtoMonitorRuleActiveCheck extends BaseGObject<DtoMonitorRuleActiveC
 	private ResponseTypeEnum myExpectResponseType;
 	private Date myLastTransactionDate;
 	private Boolean myLastTransactionOutcome;
+	private String myLastTransactionOutcomeDescription;
 	private String myMessageDescription;
 	private long myMessagePid;
-
 	private long myServiceVersionPid;
-
+	
 	public int getCheckFrequencyNum() {
 		return myCheckFrequencyNum;
 	}
-
 	public ThrottlePeriodEnum getCheckFrequencyUnit() {
 		return myCheckFrequencyUnit;
 	}
@@ -47,6 +46,10 @@ public class DtoMonitorRuleActiveCheck extends BaseGObject<DtoMonitorRuleActiveC
 
 	public Boolean getLastTransactionOutcome() {
 		return myLastTransactionOutcome;
+	}
+
+	public String getLastTransactionOutcomeDescription() {
+		return myLastTransactionOutcomeDescription;
 	}
 
 	public String getMessageDescription() {
@@ -92,6 +95,10 @@ public class DtoMonitorRuleActiveCheck extends BaseGObject<DtoMonitorRuleActiveC
 
 	public void setLastTransactionOutcome(Boolean theLastTransactionOutcome) {
 		myLastTransactionOutcome = theLastTransactionOutcome;
+	}
+
+	public void setLastTransactionOutcomeDescription(String theLastTransactionOutcomeDescription) {
+		myLastTransactionOutcomeDescription = theLastTransactionOutcomeDescription;
 	}
 
 	public void setMessageDescription(String theDescription) {

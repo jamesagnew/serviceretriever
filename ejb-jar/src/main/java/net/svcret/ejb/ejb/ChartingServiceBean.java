@@ -1,6 +1,13 @@
 package net.svcret.ejb.ejb;
 
-import static net.svcret.ejb.ejb.AdminServiceBean.*;
+import static net.svcret.ejb.ejb.AdminServiceBean.addToInt;
+import static net.svcret.ejb.ejb.AdminServiceBean.addToLong;
+import static net.svcret.ejb.ejb.AdminServiceBean.doWithStatsByMinute;
+import static net.svcret.ejb.ejb.AdminServiceBean.doWithStatsSupportFindInterval;
+import static net.svcret.ejb.ejb.AdminServiceBean.doWithStatsSupportIncrement;
+import static net.svcret.ejb.ejb.AdminServiceBean.growToSizeDouble;
+import static net.svcret.ejb.ejb.AdminServiceBean.growToSizeInt;
+import static net.svcret.ejb.ejb.AdminServiceBean.growToSizeLong;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -8,7 +15,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;

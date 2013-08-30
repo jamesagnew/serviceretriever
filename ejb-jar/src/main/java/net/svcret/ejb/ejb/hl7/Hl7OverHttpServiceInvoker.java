@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import javax.ejb.EJB;
+import javax.ejb.Stateless;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -26,6 +28,7 @@ import net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp;
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.preparser.PreParser;
 
+@Stateless
 public class Hl7OverHttpServiceInvoker implements IServiceInvokerHl7OverHttp {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(Hl7OverHttpServiceInvoker.class);
@@ -58,9 +61,10 @@ public class Hl7OverHttpServiceInvoker implements IServiceInvokerHl7OverHttp {
 	}
 
 	@Override
-	public InvocationResultsBean processInvocation(PersServiceVersionHl7OverHttp theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, String theContentType,
+	public InvocationResultsBean processInvocation(BasePersServiceVersion theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, String theContentType,
 			Reader theReader) throws ProcessingException, UnknownRequestException {
-
+		PersServiceVersionHl7OverHttp svc = (PersServiceVersionHl7OverHttp)theServiceDefinition;
+		
 		if (theRequestType != RequestType.POST) {
 			throw new ProcessingException("HL7 over HTTP service at " + thePath + " requires all requests to be of type POST");
 		}
@@ -83,7 +87,7 @@ public class Hl7OverHttpServiceInvoker implements IServiceInvokerHl7OverHttp {
 		String messageType;
 		try {
 			String[] messageTypeParts = PreParser.getFields(message, "MSH-9-1", "MSH-9-2");
-			messageType = theServiceDefinition.getMethodNameTemplate().replace("${messageType}", messageTypeParts[0]).replace("${messageVersion}", messageTypeParts[1]);
+			messageType = svc.getMethodNameTemplate().replace("${messageType}", messageTypeParts[0]).replace("${messageVersion}", messageTypeParts[1]);
 		} catch (HL7Exception e) {
 			throw new ProcessingException("Failed to parse message, error was: " + e.getMessage(), e);
 		}
@@ -136,6 +140,12 @@ public class Hl7OverHttpServiceInvoker implements IServiceInvokerHl7OverHttp {
 	@Override
 	public IResponseValidator provideInvocationResponseValidator() {
 		return new Hl7OverHttpResponseValidator();
+	}
+
+	@Override
+	public String obscureMessageForLogs(String theMessage, Set<String> theElementNamesToRedact) throws ProcessingException {
+		// TODO: implement
+		return theMessage;
 	}
 
 }

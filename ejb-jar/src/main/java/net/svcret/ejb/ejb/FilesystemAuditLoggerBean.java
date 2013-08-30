@@ -22,6 +22,7 @@ import net.svcret.ejb.model.entity.PersUser;
 
 @Singleton()
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+@SuppressWarnings("unused") // TODO: REMOVE THIS
 public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 
 	private ReentrantLock mtAuditRecordFlushLock = new ReentrantLock();

@@ -13,6 +13,6 @@ public interface ITransactionLogger {
 	void flush();
 
 	void logTransaction(HttpRequestBean theRequest, PersServiceVersionMethod theServiceVersion, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse,
-			PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome);
+			PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome,String theResponseBody);
 
 }

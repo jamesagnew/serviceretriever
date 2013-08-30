@@ -2,6 +2,7 @@ package net.svcret.ejb.api;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Set;
 
 import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
@@ -13,7 +14,7 @@ import net.svcret.ejb.model.entity.BasePersServiceVersion;
  * 
  * @param <T> The service definition type
  */
-public interface IServiceInvoker<T extends BasePersServiceVersion> {
+public interface IServiceInvoker {
 
 	/**
 	 * 
@@ -30,11 +31,17 @@ public interface IServiceInvoker<T extends BasePersServiceVersion> {
 	 * @throws IOException
 	 * @throws ProcessingException
 	 */
-	InvocationResultsBean processInvocation(T theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, String theContentType, Reader theReader) throws ProcessingException, UnknownRequestException; 
+	InvocationResultsBean processInvocation(BasePersServiceVersion theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, String theContentType, Reader theReader) throws ProcessingException, UnknownRequestException; 
 	
 	InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws ProcessingException;
 
 	IResponseValidator provideInvocationResponseValidator();
+	
+	/**
+	 * @see BasePersServiceVersion#getObscureRequestElementsInLog()
+	 * @see BasePersServiceVersion#getObscureResponseElementsInLog()
+	 */
+	String obscureMessageForLogs(String theMessage, Set<String> theElementNamesToRedact) throws ProcessingException;
 	
 	/**
 	 * Given a URL to a service definition page (the type of page is dependent on the
@@ -45,7 +52,7 @@ public interface IServiceInvoker<T extends BasePersServiceVersion> {
 	 * @return
 	 * @throws ProcessingException
 	 */
-	T introspectServiceFromUrl(String theUrl) throws ProcessingException;
+	BasePersServiceVersion introspectServiceFromUrl(String theUrl) throws ProcessingException;
 	
 }
 

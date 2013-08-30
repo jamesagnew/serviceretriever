@@ -8,6 +8,7 @@ import javax.xml.stream.events.XMLEvent;
 
 import net.svcret.admin.shared.model.ServerSecurityEnum;
 import net.svcret.ejb.api.ICredentialGrabber;
+import net.svcret.ejb.model.entity.BasePersObject;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 
 
@@ -40,7 +41,7 @@ public class PersWsSecUsernameTokenServerAuth extends PersBaseServerAuth<PersWsS
 	}
 
 	@Override
-	public void merge(PersBaseServerAuth<?, ?> theObj) {
+	public void merge(BasePersObject theObj) {
 		PersWsSecUsernameTokenServerAuth obj = (PersWsSecUsernameTokenServerAuth)theObj;
 		setAuthenticationHost(obj.getAuthenticationHost());
 		setServiceVersion(obj.getServiceVersion());

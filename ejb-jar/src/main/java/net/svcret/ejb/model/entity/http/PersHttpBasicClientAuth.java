@@ -35,14 +35,4 @@ public class PersHttpBasicClientAuth extends PersBaseClientAuth<PersHttpBasicCli
 		return ClientSecurityEnum.HTTP_BASICAUTH;
 	}
 
-	@Override
-	public void merge(PersBaseClientAuth<?> theObj) {
-		PersHttpBasicClientAuth obj = (PersHttpBasicClientAuth) theObj;
-		
-		obj.setUsername(obj.getUsername());
-		obj.setPassword(obj.getPassword());
-		obj.setServiceVersion(obj.getServiceVersion());
-		
-	}
-
 }

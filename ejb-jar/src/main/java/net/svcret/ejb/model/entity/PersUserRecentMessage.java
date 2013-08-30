@@ -13,12 +13,19 @@ import net.svcret.ejb.api.IDao;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Index;
 
+//@formatter:off
 @Table(name = "PX_USER_RCNT_MSG")
 @Entity()
-@NamedQueries({ @NamedQuery(name = Queries.USER_RECENTMSGS, query = Queries.USER_RECENTMSGS_Q), @NamedQuery(name = Queries.USER_RECENTMSGS_COUNT, query = Queries.USER_RECENTMSGS_COUNT_Q) })
-@org.hibernate.annotations.Table(appliesTo = "PX_USER_RCNT_MSG", indexes = { @Index(name = "PX_USER_RCNT_MSG_IDX_WT", columnNames = { "USER_PID", "RESPONSE_TYPE", "XACT_TIME" }),
-		@Index(name = "PX_USER_RCNT_MSG_IDX_NT", columnNames = { "USER_PID", "RESPONSE_TYPE" }) })
-public class PersUserRecentMessage extends BasePersRecentMessage {
+@NamedQueries({ 
+	@NamedQuery(name = Queries.USER_RECENTMSGS, query = Queries.USER_RECENTMSGS_Q), 
+	@NamedQuery(name = Queries.USER_RECENTMSGS_COUNT, query = Queries.USER_RECENTMSGS_COUNT_Q) 
+})
+@org.hibernate.annotations.Table(appliesTo = "PX_USER_RCNT_MSG", indexes = { 
+		@Index(name = "PX_USER_RCNT_MSG_IDX_WT", columnNames = { "USER_PID", "RESPONSE_TYPE", "XACT_TIME" }),
+		@Index(name = "PX_USER_RCNT_MSG_IDX_NT", columnNames = { "USER_PID", "RESPONSE_TYPE" }) 
+	})
+//@formatter:on
+public class PersUserRecentMessage extends BasePersSavedTransactionRecentMessage {
 
 	private static final long serialVersionUID = 1L;
 

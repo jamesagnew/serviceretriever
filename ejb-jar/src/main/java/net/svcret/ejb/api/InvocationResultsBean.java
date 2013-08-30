@@ -18,7 +18,7 @@ public class InvocationResultsBean {
 	private Map<String, String> myMethodHeaders;
 	private String myMethodRequestBody;
 	private ResultTypeEnum myResultType;
-	private IServiceInvoker<?> myServiceInvoker;
+	private IServiceInvoker myServiceInvoker;
 	private String myStaticResourceContentTyoe;
 	private PersServiceVersionResource myStaticResourceDefinition;
 	private Map<String, List<String>> myStaticResourceHeaders;
@@ -80,7 +80,7 @@ public class InvocationResultsBean {
 		return myResultType;
 	}
 
-	public IServiceInvoker<?> getServiceInvoker() {
+	public IServiceInvoker getServiceInvoker() {
 		return myServiceInvoker;
 	}
 
@@ -138,7 +138,7 @@ public class InvocationResultsBean {
 		myStaticResourceText = theResourceText;
 	}
 
-	public void setServiceInvoker(IServiceInvoker<?> theServiceInvoker) {
+	public void setServiceInvoker(IServiceInvoker theServiceInvoker) {
 		myServiceInvoker = theServiceInvoker;
 	}
 

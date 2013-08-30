@@ -36,7 +36,7 @@ import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
-import net.svcret.ejb.model.entity.BasePersRecentMessage;
+import net.svcret.ejb.model.entity.BasePersSavedTransactionRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceCatalogItem;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.IThrottleable;
@@ -773,12 +773,12 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	public BasePersRecentMessage loadRecentMessageForServiceVersion(long thePid) {
+	public PersServiceVersionRecentMessage loadRecentMessageForServiceVersion(long thePid) {
 		return myEntityManager.find(PersServiceVersionRecentMessage.class, thePid);
 	}
 
 	@Override
-	public BasePersRecentMessage loadRecentMessageForUser(long thePid) {
+	public PersUserRecentMessage loadRecentMessageForUser(long thePid) {
 		return myEntityManager.find(PersUserRecentMessage.class, thePid);
 	}
 
@@ -1025,7 +1025,7 @@ public class DaoBean implements IDao {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void saveRecentMessagesAndTrimInNewTransaction(BaseUnflushed<? extends BasePersRecentMessage> theNextTransactions) {
+	public void saveRecentMessagesAndTrimInNewTransaction(BaseUnflushed<? extends BasePersSavedTransactionRecentMessage> theNextTransactions) {
 
 		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getSuccess());
 		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getFail());
@@ -1306,9 +1306,9 @@ public class DaoBean implements IDao {
 		return retVal;
 	}
 
-	private void doSaveRecentMessagesAndTrimInNewTransaction(LinkedList<? extends BasePersRecentMessage> transactions) {
+	private void doSaveRecentMessagesAndTrimInNewTransaction(LinkedList<? extends BasePersSavedTransactionRecentMessage> transactions) {
 		if (transactions.size() > 0) {
-			for (BasePersRecentMessage nextRecentMessage : transactions) {
+			for (BasePersSavedTransactionRecentMessage nextRecentMessage : transactions) {
 				nextRecentMessage.addUsingDao(this);
 			}
 			transactions.get(0).trimUsingDao(this);

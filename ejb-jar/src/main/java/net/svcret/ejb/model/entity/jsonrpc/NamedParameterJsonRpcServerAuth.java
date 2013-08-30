@@ -7,6 +7,7 @@ import javax.persistence.Entity;
 import net.svcret.admin.shared.model.ServerSecurityEnum;
 import net.svcret.ejb.ejb.jsonrpc.IJsonReader;
 import net.svcret.ejb.ejb.jsonrpc.IJsonWriter;
+import net.svcret.ejb.model.entity.BasePersObject;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 
 @Entity
@@ -53,7 +54,7 @@ public class NamedParameterJsonRpcServerAuth extends PersBaseServerAuth<NamedPar
 	}
 
 	@Override
-	public void merge(PersBaseServerAuth<?, ?> theObj) {
+	public void merge(BasePersObject theObj) {
 		NamedParameterJsonRpcServerAuth auth = (NamedParameterJsonRpcServerAuth) theObj;
 		setUsernameParameterName(auth.getUsernameParameterName());
 		setPasswordParameterName(auth.getPasswordParameterName());

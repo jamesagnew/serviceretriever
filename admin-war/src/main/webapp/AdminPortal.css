@@ -555,8 +555,33 @@ TABLE.propertyTable TBODY TR TD TABLE TBODY TR {
 	background: transparent !important;
 }
 
+.twoColumnPropertyGrid TBODY TR TD {
+	padding: 2px !important;
+}
+
 .twoColumnPropertyGrid TBODY TR TD:FIRST-CHILD {
 	white-space: nowrap;
+}
+
+/*
+These next three properties are all about making sure we don't 
+inherit styles if we embed a twoColumnPropertyGrid table inside
+a propertyTable table
+*/
+.twoColumnPropertyGrid TBODY TR:first-child TD {
+	color: inherit !important;
+	text-shadow: inherit !important;
+}
+.twoColumnPropertyGrid TBODY TR:first-child {
+	font-weight: inherit !important;
+	font-size: inherit !important;
+}
+.twoColumnPropertyGrid TBODY TR:first-child TD {
+	border-bottom: inherit !important;
+	text-align: inherit !important;
+	color: inherit !important;
+	text-shadow: inherit !important;
+	overflow: inherit !important;
 }
 
 .twoColumnPropertyGridDesc {

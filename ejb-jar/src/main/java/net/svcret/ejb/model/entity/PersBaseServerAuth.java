@@ -134,6 +134,6 @@ public abstract class PersBaseServerAuth<T extends PersBaseServerAuth<?,?>, G ex
 		myServiceVersion = theServiceVersion;
 	}
 
-	public abstract void merge(PersBaseServerAuth<?, ?> theObj);
+	public abstract void merge(BasePersObject theObj);
 
 }

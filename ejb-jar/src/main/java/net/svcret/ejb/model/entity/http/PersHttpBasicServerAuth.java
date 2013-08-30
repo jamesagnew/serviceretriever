@@ -4,6 +4,7 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
 import net.svcret.admin.shared.model.ServerSecurityEnum;
+import net.svcret.ejb.model.entity.BasePersObject;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 
 @Entity
@@ -23,9 +24,10 @@ public class PersHttpBasicServerAuth  extends PersBaseServerAuth<PersHttpBasicSe
 	}
 
 	@Override
-	public void merge(PersBaseServerAuth<?, ?> theObj) {
-		setAuthenticationHost(theObj.getAuthenticationHost());
-		setServiceVersion(theObj.getServiceVersion());
+	public void merge(BasePersObject theObj) {
+		PersHttpBasicServerAuth obj = (PersHttpBasicServerAuth)theObj;
+		setAuthenticationHost(obj.getAuthenticationHost());
+		setServiceVersion(obj.getServiceVersion());
 	}
 
 }

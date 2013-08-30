@@ -5,7 +5,25 @@ public abstract class BaseGClientSecurity extends BaseGObject<BaseGClientSecurit
 	private static final long serialVersionUID = 1L;
 
 	private transient boolean myEditMode;
-	
+	private String myPassword;
+	private String myUsername;
+
+	/**
+	 * @return the password
+	 */
+	public String getPassword() {
+		return myPassword;
+	}
+
+	public abstract ClientSecurityEnum getType();
+
+	/**
+	 * @return the username
+	 */
+	public String getUsername() {
+		return myUsername;
+	}
+
 	/**
 	 * @return the editMode
 	 */
@@ -13,18 +31,35 @@ public abstract class BaseGClientSecurity extends BaseGObject<BaseGClientSecurit
 		return myEditMode;
 	}
 
+	@Override
+	public void merge(BaseGClientSecurity theObject) {
+		setPid(theObject.getPid());
+		setUsername(theObject.getUsername());
+		setPassword(theObject.getPassword());
+	}
+
 	/**
-	 * @param theEditMode the editMode to set
+	 * @param theEditMode
+	 *            the editMode to set
 	 */
 	public void setEditMode(boolean theEditMode) {
 		myEditMode = theEditMode;
 	}
 
-	@Override
-	public void merge(BaseGClientSecurity theObject) {
-		setPid(theObject.getPid());
+	/**
+	 * @param thePassword
+	 *            the password to set
+	 */
+	public void setPassword(String thePassword) {
+		myPassword = thePassword;
 	}
 
-	public abstract ClientSecurityEnum getType();
+	/**
+	 * @param theUsername
+	 *            the username to set
+	 */
+	public void setUsername(String theUsername) {
+		myUsername = theUsername;
+	}
 
 }

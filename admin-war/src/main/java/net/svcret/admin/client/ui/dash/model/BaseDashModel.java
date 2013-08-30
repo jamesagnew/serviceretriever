@@ -10,7 +10,7 @@ import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.Sparkline;
 import net.svcret.admin.client.ui.stats.DateUtil;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
-import net.svcret.admin.shared.model.BaseGDashboardObjectWithUrls;
+import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.StatusEnum;
 
 import com.google.gwt.core.shared.GWT;
@@ -39,7 +39,7 @@ public abstract class BaseDashModel implements IDashModel {
 
 	@Override
 	public Widget renderLastInvocation() {
-		if (!(myModel instanceof BaseGDashboardObjectWithUrls<?>)) {
+		if (!(myModel instanceof BaseDtoServiceCatalogItem<?>)) {
 			return null;
 		}
 
@@ -90,7 +90,7 @@ public abstract class BaseDashModel implements IDashModel {
 
 	@Override
 	public Widget renderSecurity() {
-		if (!(myModel instanceof BaseGDashboardObjectWithUrls<?>)) {
+		if (!(myModel instanceof BaseDtoServiceCatalogItem<?>)) {
 			return null;
 		}
 
@@ -98,7 +98,7 @@ public abstract class BaseDashModel implements IDashModel {
 		String text = null;
 		String clazz = null;
 
-		BaseGDashboardObjectWithUrls<?> obj = (BaseGDashboardObjectWithUrls<?>) myModel;
+		BaseDtoServiceCatalogItem<?> obj = (BaseDtoServiceCatalogItem<?>) myModel;
 		switch (obj.getServerSecured()) {
 		case FULLY:
 			image = AdminPortal.IMAGES.dashSecure();
@@ -165,7 +165,7 @@ public abstract class BaseDashModel implements IDashModel {
 		return retVal;
 	}
 
-	public static Widget returnImageForStatus(BaseGDashboardObjectWithUrls<?> theObject) {
+	public static Widget returnImageForStatus(BaseDtoServiceCatalogItem<?> theObject) {
 		String text;
 		ImageResource image;
 		String clazz;

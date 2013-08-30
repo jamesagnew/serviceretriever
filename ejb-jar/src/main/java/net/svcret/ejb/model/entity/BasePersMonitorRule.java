@@ -65,11 +65,13 @@ public abstract class BasePersMonitorRule extends BasePersObject {
 		return myRuleActive;
 	}
 
-	protected void merge(BasePersMonitorRule theRule) {
-		setRuleName(theRule.getRuleName());
-		setRuleActive(theRule.isRuleActive());
+	protected void merge(BasePersObject theObject) {
+		
+		BasePersMonitorRule rule = (BasePersMonitorRule) theObject;
+		setRuleName(rule.getRuleName());
+		setRuleActive(rule.isRuleActive());
 
-		for (PersMonitorRuleNotifyContact nextContact : new ArrayList<PersMonitorRuleNotifyContact>(theRule.getNotifyContact())) {
+		for (PersMonitorRuleNotifyContact nextContact : new ArrayList<PersMonitorRuleNotifyContact>(rule.getNotifyContact())) {
 			PersMonitorRuleNotifyContact existing = getContact(nextContact.getEmail());
 			if (existing == null) {
 				getNotifyContact().add(new PersMonitorRuleNotifyContact(nextContact.getEmail()));
@@ -77,7 +79,7 @@ public abstract class BasePersMonitorRule extends BasePersObject {
 		}
 		for (Iterator<PersMonitorRuleNotifyContact> iter = getNotifyContact().iterator(); iter.hasNext();) {
 			PersMonitorRuleNotifyContact nextApplies = iter.next();
-			PersMonitorRuleNotifyContact wanted = theRule.getContact(nextApplies.getEmail());
+			PersMonitorRuleNotifyContact wanted = rule.getContact(nextApplies.getEmail());
 			if (wanted == null) {
 				iter.remove();
 			}

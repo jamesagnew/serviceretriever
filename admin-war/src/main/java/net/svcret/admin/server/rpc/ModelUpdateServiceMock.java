@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,7 +21,7 @@ import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
 import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
-import net.svcret.admin.shared.model.BaseGDashboardObjectWithUrls;
+import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.BaseGMonitorRule;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.DtoKeystoreAnalysis;
@@ -92,6 +93,10 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		dom.setPid(ourNextPid++);
 		dom.setId("domain1");
 		dom.setName("Domain 1");
+		Set<String> obscure=new HashSet<String>();
+		obscure.add("clientId");
+		obscure.add("clientPass");
+		dom.setObscureRequestElementsInLogCache(obscure);
 		myDomainList.add(dom);
 
 		GService svc = new GService();
@@ -660,7 +665,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		obj.setLatency60mins(random60mins());
 	}
 
-	private void populateRandom(BaseGDashboardObjectWithUrls<?> obj) {
+	private void populateRandom(BaseDtoServiceCatalogItem<?> obj) {
 		obj.setStatsInitialized(new Date());
 		obj.setStatus(randomStatus());
 		obj.setTransactions60mins(random60mins());

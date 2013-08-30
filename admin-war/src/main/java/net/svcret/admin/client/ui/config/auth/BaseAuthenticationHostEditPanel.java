@@ -171,6 +171,7 @@ abstract class BaseAuthenticationHostEditPanel<T extends BaseGAuthHost> extends 
 		Model.getInstance().saveAuthenticationHost(myAuthHost, new IAsyncLoadCallback<GAuthenticationHostList>() {
 			@Override
 			public void onSuccess(GAuthenticationHostList theResult) {
+				Model.getInstance().setAuthenticationHostList(theResult);
 				myLoadingSpinner.showMessage(AdminPortal.MSGS.baseAuthenticationHostEditPanel_Saved(), false);
 				myParent.setHostList(theResult);
 			}

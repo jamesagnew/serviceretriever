@@ -32,8 +32,8 @@ public class Model {
 	private GDomainList myDomainList;
 	private boolean myDomainListInitialized = false;
 	private GHttpClientConfigList myHttpClientConfigList;
-	private GMonitorRuleList myMonitorRuleList;
 	private Long myLocalTimezoneOffsetInMillis;
+	private GMonitorRuleList myMonitorRuleList;
 
 	private Model() {
 		initLists();
@@ -93,6 +93,23 @@ public class Model {
 		}
 	}
 
+	public void flushStats() {
+		if (myDomainList != null) {
+			for (GDomain nextDomain : myDomainList) {
+				nextDomain.flushStats();
+				for (GService nextSvc : nextDomain.getServiceList()) {
+					nextSvc.flushStats();
+					for (BaseGServiceVersion nextVer : nextSvc.getVersionList()) {
+						nextVer.flushStats();
+						for (GServiceMethod nextMethod : nextVer.getMethodList()) {
+							nextMethod.flushStats();
+						}
+					}
+				}
+			}
+		}
+	}
+
 	private MyModelUpdateCallbackHandler getCalbackWithHttpClientConfigListCallback(IAsyncLoadCallback<GHttpClientConfigList> theCallback) {
 		MyModelUpdateCallbackHandler retVal = new MyModelUpdateCallbackHandler();
 		retVal.myHttpClientConfigListCallback = theCallback;
@@ -111,16 +128,16 @@ public class Model {
 		return retVal;
 	}
 
-	public void invalidateDomainList() {
-		myDomainListInitialized=false;
-	}
-	
 	private void initLists() {
 		if (myDomainList == null) {
 			myDomainList = new GDomainList();
 			myHttpClientConfigList = new GHttpClientConfigList();
 			myAuthHostList = new GAuthenticationHostList();
 		}
+	}
+
+	public void invalidateDomainList() {
+		myDomainListInitialized = false;
 	}
 
 	public void loadAuthenticationHost(final long theAuthHostPid, final IAsyncLoadCallback<BaseGAuthHost> theIAsyncLoadCallback) {
@@ -219,6 +236,40 @@ public class Model {
 		}
 	}
 
+	public void loadLocalTimezoneOffsetInMillis(final IAsyncLoadCallback<Long> theIAsyncLoadCallback) {
+		if (myLocalTimezoneOffsetInMillis == null) {
+			AdminPortal.SVC_MISCCONFIG.loadLocalTimzoneOffsetInMillis(new AsyncCallback<Long>() {
+				@Override
+				public void onFailure(Throwable theCaught) {
+					handleFailure(theCaught);
+				}
+
+				@Override
+				public void onSuccess(Long theResult) {
+					myLocalTimezoneOffsetInMillis = theResult;
+					theIAsyncLoadCallback.onSuccess(theResult);
+				}
+			});
+		} else {
+			theIAsyncLoadCallback.onSuccess(myLocalTimezoneOffsetInMillis);
+		}
+	}
+
+	public void loadMonitorRule(final long theRulePid, final IAsyncLoadCallback<BaseGMonitorRule> theIAsyncLoadCallback) {
+		loadMonitorRuleList(new IAsyncLoadCallback<GMonitorRuleList>() {
+			@Override
+			public void onSuccess(GMonitorRuleList theResult) {
+				BaseGMonitorRule rule = theResult.getRuleByPid(theRulePid);
+				if (rule == null) {
+					handleFailure(new Exception("Unknown rule: " + theRulePid));
+					return;
+				}
+
+				theIAsyncLoadCallback.onSuccess(rule);
+			}
+		});
+	}
+
 	public void loadMonitorRuleList(final IAsyncLoadCallback<GMonitorRuleList> theIAsyncLoadCallback) {
 		if (myMonitorRuleList == null) {
 			AdminPortal.MODEL_SVC.loadMonitorRuleList(new AsyncCallback<GMonitorRuleList>() {
@@ -258,19 +309,6 @@ public class Model {
 		});
 	}
 
-	public void loadServiceVersion(final long theServiceVersionPid, final IAsyncLoadCallback<BaseGServiceVersion> theCallback) {
-		loadDomainList(new IAsyncLoadCallback<GDomainList>() {
-			@Override
-			public void onSuccess(GDomainList theResult) {
-				BaseGServiceVersion serviceVersion = theResult.getServiceVersionByPid(theServiceVersionPid);
-				if (serviceVersion == null) {
-					throw new Error("Unknown version: " + theServiceVersionPid);
-				}
-				theCallback.onSuccess(serviceVersion);
-			}
-		});
-	}
-
 	public void loadServiceVersion(final long theVersionPid, final boolean theLoadDetailedStats, final IAsyncLoadCallback<BaseGServiceVersion> theCallback) {
 		loadServiceVersion(theVersionPid, new IAsyncLoadCallback<BaseGServiceVersion>() {
 
@@ -303,6 +341,19 @@ public class Model {
 		});
 	}
 
+	public void loadServiceVersion(final long theServiceVersionPid, final IAsyncLoadCallback<BaseGServiceVersion> theCallback) {
+		loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+			@Override
+			public void onSuccess(GDomainList theResult) {
+				BaseGServiceVersion serviceVersion = theResult.getServiceVersionByPid(theServiceVersionPid);
+				if (serviceVersion == null) {
+					throw new Error("Unknown version: " + theServiceVersionPid);
+				}
+				theCallback.onSuccess(serviceVersion);
+			}
+		});
+	}
+
 	public void mergeDomainList(GDomainList theResult) {
 		myDomainListInitialized = true;
 		myDomainList.mergeResults(theResult);
@@ -322,6 +373,10 @@ public class Model {
 		};
 		AdminPortal.MODEL_SVC.saveAuthenticationHost(theAuthHost, callback);
 
+	}
+
+	public void setAuthenticationHostList(GAuthenticationHostList theResult) {
+		myAuthHostList = theResult;
 	}
 
 	public void setMonitorRuleList(GMonitorRuleList theResult) {
@@ -390,57 +445,6 @@ public class Model {
 			}
 		}
 
-	}
-
-	public void loadMonitorRule(final long theRulePid, final IAsyncLoadCallback<BaseGMonitorRule> theIAsyncLoadCallback) {
-		loadMonitorRuleList(new IAsyncLoadCallback<GMonitorRuleList>() {
-			@Override
-			public void onSuccess(GMonitorRuleList theResult) {
-				BaseGMonitorRule rule = theResult.getRuleByPid(theRulePid);
-				if (rule == null) {
-					handleFailure(new Exception("Unknown rule: " + theRulePid));
-					return;
-				}
-				
-				theIAsyncLoadCallback.onSuccess(rule);
-			}
-		});
-	}
-
-	public void flushStats() {
-		if (myDomainList!=null) {
-			for (GDomain nextDomain : myDomainList) {
-				nextDomain.flushStats();
-				for (GService nextSvc : nextDomain.getServiceList()) {
-					nextSvc.flushStats();
-					for (BaseGServiceVersion nextVer : nextSvc.getVersionList()) {
-						nextVer.flushStats();
-						for (GServiceMethod nextMethod : nextVer.getMethodList()) {
-							nextMethod.flushStats();
-						}
-					}
-				}
-			}
-		}
-	}
-
-	public void loadLocalTimezoneOffsetInMillis(final IAsyncLoadCallback<Long> theIAsyncLoadCallback) {
-		if (myLocalTimezoneOffsetInMillis == null) {
-			AdminPortal.SVC_MISCCONFIG.loadLocalTimzoneOffsetInMillis(new AsyncCallback<Long>() {
-				@Override
-				public void onFailure(Throwable theCaught) {
-					handleFailure(theCaught);
-				}
-
-				@Override
-				public void onSuccess(Long theResult) {
-					myLocalTimezoneOffsetInMillis=theResult;
-					theIAsyncLoadCallback.onSuccess(theResult);
-				}
-			});
-		}else {
-			theIAsyncLoadCallback.onSuccess(myLocalTimezoneOffsetInMillis);
-		}
 	}
 
 }

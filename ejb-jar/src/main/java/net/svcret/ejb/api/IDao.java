@@ -16,7 +16,8 @@ import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
-import net.svcret.ejb.model.entity.BasePersRecentMessage;
+import net.svcret.ejb.model.entity.BasePersSavedTransaction;
+import net.svcret.ejb.model.entity.BasePersSavedTransactionRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceCatalogItem;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.IThrottleable;
@@ -158,9 +159,9 @@ public interface IDao {
 
 	List<PersMonitorRuleFiring> loadMonitorRuleFiringsWhichAreActive();
 
-	BasePersRecentMessage loadRecentMessageForServiceVersion(long thePid);
+	PersServiceVersionRecentMessage loadRecentMessageForServiceVersion(long thePid);
 
-	BasePersRecentMessage loadRecentMessageForUser(long thePid);
+	PersUserRecentMessage loadRecentMessageForUser(long thePid);
 
 	void removeDomain(PersDomain theDomain);
 
@@ -188,7 +189,7 @@ public interface IDao {
 
 	<T extends BasePersMonitorRule> T saveOrCreateMonitorRule(T theRule);
 
-	void saveRecentMessagesAndTrimInNewTransaction(BaseUnflushed<? extends BasePersRecentMessage> theNextTransactions);
+	void saveRecentMessagesAndTrimInNewTransaction(BaseUnflushed<? extends BasePersSavedTransactionRecentMessage> theNextTransactions);
 
 	PersBaseServerAuth<?, ?> saveServerAuth(PersBaseServerAuth<?, ?> theNextPers);
 
@@ -217,10 +218,10 @@ public interface IDao {
 	void trimUserRecentMessages(PersUser theUser, ResponseTypeEnum theType, int theNumberToTrimTo);
 
 	public static class RecentMessagesAndMaxToKeep {
-		private List<BasePersRecentMessage> myMessages = new ArrayList<BasePersRecentMessage>();
+		private List<BasePersSavedTransaction> myMessages = new ArrayList<BasePersSavedTransaction>();
 		private int myNumToKeep;
 
-		public void addMessages(Collection<? extends BasePersRecentMessage> theMessages) {
+		public void addMessages(Collection<? extends BasePersSavedTransaction> theMessages) {
 			myMessages.addAll(theMessages);
 		}
 
@@ -241,4 +242,4 @@ public interface IDao {
 
 	}
 
-}
+	}

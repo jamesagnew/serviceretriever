@@ -54,9 +54,9 @@ import org.hibernate.annotations.ForeignKey;
 @DiscriminatorColumn(name = "SVCVER_TYPE", length = 20, discriminatorType = DiscriminatorType.STRING)
 public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem {
 
-	private static final long serialVersionUID = 1L;
-
 	static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(BasePersServiceVersion.class);
+
+	private static final long serialVersionUID = 1L;
 
 	@Column(name = "ISACTIVE")
 	private boolean myActive;
@@ -70,9 +70,6 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("CAUTH_ORDER")
 	private List<PersBaseClientAuth<?>> myClientAuths;
-
-	@Column(name = "DEFAULT_PROXY_PATH")
-	private boolean myUseDefaultProxyPath = true;
 
 	@Column(name = "SVC_DESC", length = 2000, nullable = true)
 	private String myDescription;
@@ -150,6 +147,9 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	@Transient
 	private transient Map<String, PersServiceVersionUrl> myUrlToUrl;
 
+	@Column(name = "DEFAULT_PROXY_PATH")
+	private boolean myUseDefaultProxyPath = true;
+
 	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myServiceVersion")
 	private Collection<PersUserServiceVersionPermission> myUserPermissions;
 
@@ -210,6 +210,14 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	}
 
 	@Override
+	public boolean determineInheritedAuditLogEnable() {
+		if (getAuditLogEnable() != null) {
+			return getAuditLogEnable();
+		}
+		return getService().determineInheritedAuditLogEnable();
+	}
+
+	@Override
 	public Integer determineInheritedKeepNumRecentTransactions(ResponseTypeEnum theResultType) {
 		if (myService == null) {
 			return null;
@@ -224,6 +232,16 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 			retVal = myService.determineKeepNumRecentTransactions(theResultType);
 		}
 		return retVal;
+	}
+
+	public String determineUsableProxyPath() {
+		if (isUseDefaultProxyPath()) {
+			return getDefaultProxyPath();
+		}
+		if (StringUtils.isNotBlank(getExplicitProxyPath())) {
+			return getExplicitProxyPath();
+		}
+		return getDefaultProxyPath();
 	}
 
 	public Collection<PersMonitorRuleActiveCheck> getActiveChecks() {
@@ -267,6 +285,15 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		return null;
 	}
 
+	public String getDefaultProxyPath() {
+		PersService service = getService();
+		PersDomain domain = service.getDomain();
+		String domainId = domain.getDomainId();
+		String serviceId = service.getServiceId();
+		String versionId = getVersionId();
+		return ProxyUtil.createDefaultPath(domainId, serviceId, versionId);
+	}
+
 	public String getDescription() {
 		if (myDescriptionExtended != null) {
 			return myDescriptionExtended;
@@ -300,14 +327,6 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		}
 
 		return myNameToMethod.get(theName);
-	}
-
-	@Override
-	public boolean determineInheritedAuditLogEnable() {
-		if (getAuditLogEnable() != null) {
-			return getAuditLogEnable();
-		}
-		return getService().determineInheritedAuditLogEnable();
 	}
 
 	public PersServiceVersionMethod getMethodForRootElementName(String theName) {
@@ -388,15 +407,6 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	}
 
 	public abstract ServiceProtocolEnum getProtocol();
-
-	public String getDefaultProxyPath() {
-		PersService service = getService();
-		PersDomain domain = service.getDomain();
-		String domainId = domain.getDomainId();
-		String serviceId = service.getServiceId();
-		String versionId = getVersionId();
-		return ProxyUtil.createDefaultPath(domainId, serviceId, versionId);
-	}
 
 	public PersServiceVersionResource getResourceForUri(String theUri) {
 		PersServiceVersionResource res = getUriToResource().get(theUri);
@@ -590,17 +600,13 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 
 	}
 
-	public String determineUsableProxyPath() {
-		if (isUseDefaultProxyPath()) {
-			return getDefaultProxyPath();
-		}
-		if (StringUtils.isNotBlank(getExplicitProxyPath())) {
-			return getExplicitProxyPath();
-		}
-		return getDefaultProxyPath();
+	/**
+	 * Subclasses may override
+	 */
+	public void prePersist() {
+		// nothing
 	}
 
-	
 	public void putMethodAtIndex(PersServiceVersionMethod theMethod, int theIndex) {
 		getMethods();
 
@@ -632,7 +638,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	public void retainOnlyMethodsWithNames(Collection<String> theIds) {
 		ourLog.debug("Retaining method names: {}", theIds);
 		getMethods();
-		
+
 		HashSet<String> ids = new HashSet<String>(theIds);
 		for (Iterator<PersServiceVersionMethod> iter = myMethods.iterator(); iter.hasNext();) {
 			PersServiceVersionMethod next = iter.next();
@@ -680,10 +686,6 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	 */
 	public void setActive(boolean theActive) {
 		myActive = theActive;
-	}
-
-	public void setUseDefaultProxyPath(boolean theDefaultProxyPath) {
-		myUseDefaultProxyPath = theDefaultProxyPath;
 	}
 
 	public void setDescription(String theDescription) {
@@ -752,6 +754,10 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		myStatus = theStatus;
 	}
 
+	public void setUseDefaultProxyPath(boolean theDefaultProxyPath) {
+		myUseDefaultProxyPath = theDefaultProxyPath;
+	}
+
 	/**
 	 * @param theVersionId
 	 *            the versionId to set
@@ -767,11 +773,37 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		myUrlToUrl = null;
 	}
 
-	/**
-	 * Subclasses may override
-	 */
-	public void prePersist() {
-		// nothing
+	@Override
+	public boolean canInheritObscureElements() {
+		return true;
 	}
-	
+
+	@Override
+	public Set<String> determineInheritedObscureRequestElements() {
+		return myService.determineObscureRequestElements();
+	}
+
+	@Override
+	public Set<String> determineInheritedObscureResponseElements() {
+		return myService.determineObscureResponseElements();
+	}
+
+	@Override
+	public Set<String> determineObscureRequestElements() {
+		Set<String> retVal = getObscureRequestElementsInLog();
+		if (retVal.isEmpty()) {
+			retVal = myService.determineObscureRequestElements();
+		}
+		return retVal;
+	}
+
+	@Override
+	public Set<String> determineObscureResponseElements() {
+		Set<String> retVal = getObscureResponseElementsInLog();
+		if (retVal.isEmpty()) {
+			retVal = myService.determineObscureResponseElements();
+		}
+		return retVal;
+	}
+
 }

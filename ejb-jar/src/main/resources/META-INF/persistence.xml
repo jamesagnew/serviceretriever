@@ -23,6 +23,7 @@
 		<class>net.svcret.ejb.model.entity.PersLibraryMessageAppliesTo</class>
 		<class>net.svcret.ejb.model.entity.PersLocks</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck</class>
+		<class>net.svcret.ejb.model.entity.PersMonitorRuleActiveCheckOutcome</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorAppliesTo</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorRuleActive</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorRulePassive</class>
@@ -50,6 +51,7 @@
 		<class>net.svcret.ejb.model.entity.PersStaticResourceStats</class>
 		<class>net.svcret.ejb.model.entity.forward.PersServiceVersionForwarder</class>
 		<class>net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp</class>
+		<class>net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcClientAuth</class>
 		<class>net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcServerAuth</class>
 		<class>net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20</class>
 		<class>net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11</class>
@@ -106,6 +108,7 @@
 		<class>net.svcret.ejb.model.entity.PersLibraryMessageAppliesTo</class>
 		<class>net.svcret.ejb.model.entity.PersLocks</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck</class>
+		<class>net.svcret.ejb.model.entity.PersMonitorRuleActiveCheckOutcome</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorAppliesTo</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorRuleActive</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorRulePassive</class>
@@ -134,6 +137,7 @@
 		<class>net.svcret.ejb.model.entity.PersUserRecentMessage</class>
 		<class>net.svcret.ejb.model.entity.forward.PersServiceVersionForwarder</class>
 		<class>net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp</class>
+		<class>net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcClientAuth</class>
 		<class>net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcServerAuth</class>
 		<class>net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20</class>
 		<class>net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11</class>

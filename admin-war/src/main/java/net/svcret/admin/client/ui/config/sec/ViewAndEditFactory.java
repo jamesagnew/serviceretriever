@@ -16,6 +16,8 @@ public class ViewAndEditFactory {
 			return (IProvidesViewAndEdit<T>) new WsSecUsernameTokenClientSecurityViewAndEdit();
 		case HTTP_BASICAUTH:
 			return (IProvidesViewAndEdit<T>) new HttpBasicAuthClientSecurityViewAndEdit();
+		case JSONRPC_NAMPARM:
+			return (IProvidesViewAndEdit<T>) new ClientSecurityViewAndEditJsonRpcNamedParameter();
 		}
 		
 		throw new IllegalStateException("Type: " + theClientSecurity.getType());

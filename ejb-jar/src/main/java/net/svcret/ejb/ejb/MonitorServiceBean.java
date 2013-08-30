@@ -118,8 +118,6 @@ public class MonitorServiceBean implements IMonitorService {
 	public Future<Void> runActiveCheckInNewTransaction(PersMonitorRuleActiveCheck theCheck) {
 		ourLog.debug("Beginning active check pass for check {}", theCheck.getPid());
 
-		theCheck.setLastTransactionDate(new Date());
-
 		long svcVerPid = theCheck.getServiceVersion().getPid();
 		String requestBody = theCheck.getMessage().getMessage();
 		String contentType = theCheck.getMessage().getContentType();
@@ -132,8 +130,6 @@ public class MonitorServiceBean implements IMonitorService {
 
 			outcome = evaluateRuleForActiveIssues(theCheck, outcomes);
 			ourLog.debug("Active check got {} outcomes. Problem: {}", outcomes.size(), outcome);
-
-			theCheck.setLastTransactionOutcome(outcome == null);
 
 		} catch (Exception e) {
 			ourLog.error("Failed to invoke service", e);
@@ -323,8 +319,12 @@ public class MonitorServiceBean implements IMonitorService {
 			Set<PersMonitorRuleFiringProblem> svcVerProblems = new HashSet<PersMonitorRuleFiringProblem>();
 			if (theRule.isPassiveFireIfAllBackingUrlsAreUnavailable() || theRule.isPassiveFireIfSingleBackingUrlIsUnavailable()) {
 				for (PersServiceVersionUrl nextUrl : nextSvcVer.getUrls()) {
-					if (nextUrl.getStatus().getStatus() == StatusEnum.DOWN) {
-						svcVerProblems.add(PersMonitorRuleFiringProblem.getInstanceForUrlDown(nextSvcVer, nextUrl, nextUrl.getStatus().getLastFailMessage()));
+					if (nextUrl.getStatus() != null) {
+						if (nextUrl.getStatus().getStatus() == StatusEnum.DOWN) {
+							svcVerProblems.add(PersMonitorRuleFiringProblem.getInstanceForUrlDown(nextSvcVer, nextUrl, nextUrl.getStatus().getLastFailMessage()));
+						}
+					}else {
+						ourLog.debug("URL {} has no status entry", nextUrl.getPid());
 					}
 				}
 			}
@@ -402,7 +402,7 @@ public class MonitorServiceBean implements IMonitorService {
 			BasePersMonitorRule existing = myDao.getMonitorRule(theRule.getPid());
 			switch (existing.getRuleType()) {
 			case ACTIVE:
-				((PersMonitorRuleActive) existing).merge((PersMonitorRuleActive) theRule);
+				((PersMonitorRuleActive) existing).merge(theRule);
 				break;
 			case PASSIVE:
 				((PersMonitorRulePassive) existing).merge((PersMonitorRulePassive) theRule);

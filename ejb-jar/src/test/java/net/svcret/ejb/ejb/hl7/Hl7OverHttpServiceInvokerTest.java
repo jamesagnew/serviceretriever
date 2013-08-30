@@ -1,7 +1,13 @@
 package net.svcret.ejb.ejb.hl7;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.StringReader;
 import java.util.HashMap;
@@ -15,7 +21,6 @@ import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnknownRequestException;
-import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp;
 

@@ -49,7 +49,7 @@ public class PersServiceVersionMethod extends BasePersObject {
 	@Column(name="SEC_POLICY", length=50, nullable=false)
 	@Enumerated(EnumType.STRING)
 	private MethodSecurityPolicyEnum mySecurityPolicy=MethodSecurityPolicyEnum.getDefault();
-	
+
 	@ManyToOne()
 	@JoinColumn(name = "SVC_VERSION_PID", referencedColumnName = "PID", nullable = false)
 	private BasePersServiceVersion myServiceVersion;

@@ -1,7 +1,9 @@
 package net.svcret.ejb.model.entity;
 
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -13,9 +15,9 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
@@ -23,10 +25,8 @@ import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 //@formatter:off
 @Entity
 @Table(name = "PX_MONITOR_RULE_ACTIVECHK")
-@NamedQueries(value= {
-		@NamedQuery(name=Queries.PERSACTIVECHECK_FINDALL, query=Queries.PERSACTIVECHECK_FINDALL_Q)
-	})
-//@formatter:on
+@NamedQueries(value = { @NamedQuery(name = Queries.PERSACTIVECHECK_FINDALL, query = Queries.PERSACTIVECHECK_FINDALL_Q) })
+// @formatter:on
 public class PersMonitorRuleActiveCheck extends BasePersObject {
 
 	private static final long serialVersionUID = 1L;
@@ -47,13 +47,6 @@ public class PersMonitorRuleActiveCheck extends BasePersObject {
 	@Column(name = "EXPECT_RESP_TYPE", length = EntityConstants.MAXLEN_RESPONSE_TYPE_ENUM, nullable = false)
 	private ResponseTypeEnum myExpectResponseType;
 
-	@Column(name = "LASTXACT_DATE", nullable = true)
-	@Temporal(TemporalType.TIMESTAMP)
-	private Date myLastTransactionDate;
-
-	@Column(name = "LASTXACT_OUTCOME", nullable = true)
-	private Boolean myLastTransactionOutcome;
-
 	@ManyToOne(cascade = {}, optional = false)
 	@JoinColumn(name = "MSG_PID", nullable = false)
 	private PersLibraryMessage myMessage;
@@ -62,6 +55,10 @@ public class PersMonitorRuleActiveCheck extends BasePersObject {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "PID")
 	private Long myPid;
+
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "myCheck", orphanRemoval = true)
+	@OrderBy("CHK_TIMESTAMP")
+	private List<PersMonitorRuleActiveCheckOutcome> myRecentOutcomes;
 
 	@ManyToOne(cascade = {}, optional = false)
 	@JoinColumn(name = "RULE_PID", nullable = false)
@@ -91,14 +88,6 @@ public class PersMonitorRuleActiveCheck extends BasePersObject {
 		return myExpectResponseType;
 	}
 
-	public Date getLastTransactionDate() {
-		return myLastTransactionDate;
-	}
-
-	public Boolean getLastTransactionOutcome() {
-		return myLastTransactionOutcome;
-	}
-
 	public PersLibraryMessage getMessage() {
 		return myMessage;
 	}
@@ -108,12 +97,24 @@ public class PersMonitorRuleActiveCheck extends BasePersObject {
 		return myPid;
 	}
 
+	public List<PersMonitorRuleActiveCheckOutcome> getRecentOutcomes() {
+		if (myRecentOutcomes==null) {
+			myRecentOutcomes = new ArrayList<PersMonitorRuleActiveCheckOutcome>();
+		}
+		return myRecentOutcomes;
+	}
+
 	public BasePersMonitorRule getRule() {
 		return myRule;
 	}
 
 	public BasePersServiceVersion getServiceVersion() {
 		return myServiceVersion;
+	}
+
+	public void loadAllAssociations() {
+		// nothing yet
+
 	}
 
 	public void loadMessageAndRule() {
@@ -152,14 +153,6 @@ public class PersMonitorRuleActiveCheck extends BasePersObject {
 		myExpectResponseType = theExpectResponseType;
 	}
 
-	public void setLastTransactionDate(Date theLastTransactionDate) {
-		myLastTransactionDate = theLastTransactionDate;
-	}
-
-	public void setLastTransactionOutcome(Boolean theLastTransactionOutcome) {
-		myLastTransactionOutcome = theLastTransactionOutcome;
-	}
-
 	public void setMessage(PersLibraryMessage theMessage) {
 		myMessage = theMessage;
 	}
@@ -174,11 +167,6 @@ public class PersMonitorRuleActiveCheck extends BasePersObject {
 
 	public void setServiceVersion(BasePersServiceVersion theSvcVersion) {
 		myServiceVersion = theSvcVersion;
-	}
-
-	public void loadAllAssociations() {
-		// nothing yet
-		
 	}
 
 }

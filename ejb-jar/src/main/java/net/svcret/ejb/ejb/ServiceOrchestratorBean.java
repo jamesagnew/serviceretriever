@@ -56,12 +56,9 @@ import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
-import net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp;
 import net.svcret.ejb.model.entity.http.PersHttpBasicClientAuth;
 import net.svcret.ejb.model.entity.http.PersHttpBasicCredentialGrabber;
 import net.svcret.ejb.model.entity.http.PersHttpBasicServerAuth;
-import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
-import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.codec.binary.Base64;
@@ -217,12 +214,21 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	}
 
 	private void logTransaction(HttpRequestBean theRequest, PersServiceVersionMethod method, AuthorizationResultsBean authorized, HttpResponseBean httpResponse,
-			InvocationResponseResultsBean invocationResponse) {
+			InvocationResponseResultsBean invocationResponse) throws ProcessingException {
 		PersUser user = authorized.getAuthorizedUser();
+		
 		String requestBody = theRequest.getRequestBody();
+		String responseBody = invocationResponse.getResponseBody();
+		
+		// Obscure
+		IServiceInvoker svcInvoker = getServiceInvoker(method.getServiceVersion());
+		requestBody = svcInvoker.obscureMessageForLogs(requestBody, method.getServiceVersion().determineObscureRequestElements());
+		responseBody = svcInvoker.obscureMessageForLogs(responseBody, method.getServiceVersion().determineObscureResponseElements());
+		
+		// Log
 		PersServiceVersionUrl successfulUrl = httpResponse != null ? httpResponse.getSuccessfulUrl() : null;
 		AuthorizationOutcomeEnum authorizationOutcome = authorized.isAuthorized();
-		myTransactionLogger.logTransaction(theRequest, method, user, requestBody, invocationResponse, successfulUrl, httpResponse, authorizationOutcome);
+		myTransactionLogger.logTransaction(theRequest, method, user, requestBody, invocationResponse, successfulUrl, httpResponse, authorizationOutcome, responseBody);
 	}
 
 	private OrchestratorResponseBean invokeProxiedService(HttpRequestBean theRequest, InvocationResultsBean results, AuthorizationResultsBean theAuthorized, Long theThrottleTimeIfAny)
@@ -264,28 +270,16 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 	private InvocationResultsBean processInvokeService(HttpRequestBean theRequest, String path, BasePersServiceVersion serviceVersion, RequestType theRequestType, String theRequestQuery)
 			throws ProcessingException, UnknownRequestException {
-		IServiceInvoker<?> svcInvoker = null;
 		InvocationResultsBean results = null;
 		String contentType = theRequest.getContentType();
-		switch (serviceVersion.getProtocol()) {
-		case SOAP11:
-			svcInvoker = mySoap11ServiceInvoker;
-			results = mySoap11ServiceInvoker.processInvocation((PersServiceVersionSoap11) serviceVersion, theRequestType, path, theRequestQuery, contentType, theRequest.getInputReader());
-			break;
-		case JSONRPC20:
-			svcInvoker = myJsonRpc20ServiceInvoker;
-			results = myJsonRpc20ServiceInvoker.processInvocation((PersServiceVersionJsonRpc20) serviceVersion, theRequestType, path, theRequestQuery, contentType, theRequest.getInputReader());
-			break;
-		case HL7OVERHTTP:
-			svcInvoker = myHl7OverHttpServiceInvoker;
-			results = myHl7OverHttpServiceInvoker.processInvocation((PersServiceVersionHl7OverHttp) serviceVersion, theRequestType, path, theRequestQuery, contentType, theRequest.getInputReader());
-			break;
-		}
+		IServiceInvoker svcInvoker = getServiceInvoker(serviceVersion);
 		ourLog.trace("Handling service with invoker {}", svcInvoker);
 
 		if (svcInvoker == null) {
 			throw new InternalErrorException("Unknown service protocol: " + serviceVersion.getProtocol());
 		}
+
+		results = svcInvoker.processInvocation( serviceVersion, theRequestType, path, theRequestQuery, contentType, theRequest.getInputReader());
 
 		if (results == null) {
 			throw new InternalErrorException("Invoker " + svcInvoker + " returned null");
@@ -308,6 +302,22 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		}
 
 		return results;
+	}
+
+	private IServiceInvoker getServiceInvoker(BasePersServiceVersion serviceVersion) {
+		IServiceInvoker svcInvoker=null;
+		switch (serviceVersion.getProtocol()) {
+		case SOAP11:
+			svcInvoker = mySoap11ServiceInvoker;
+			break;
+		case JSONRPC20:
+			svcInvoker = myJsonRpc20ServiceInvoker;
+			break;
+		case HL7OVERHTTP:
+			svcInvoker = myHl7OverHttpServiceInvoker;
+			break;
+		}
+		return svcInvoker;
 	}
 
 	private SidechannelOrchestratorResponseBean processRequestMethod(HttpRequestBean theRequest, InvocationResultsBean results, AuthorizationResultsBean authorized, Long theThrottleDelayIfAny,

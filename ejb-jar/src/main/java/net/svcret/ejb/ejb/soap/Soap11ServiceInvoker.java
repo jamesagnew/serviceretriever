@@ -42,6 +42,7 @@ import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.ProcessingRuntimeException;
 import net.svcret.ejb.ex.UnknownRequestException;
+import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
@@ -602,17 +603,17 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 	 */
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public InvocationResultsBean processInvocation(PersServiceVersionSoap11 theServiceDefinition, RequestType theRequestType, String thePath, String theQuery,String theContentType, Reader theReader) throws ProcessingException, UnknownRequestException {
+	public InvocationResultsBean processInvocation(BasePersServiceVersion theServiceDefinition, RequestType theRequestType, String thePath, String theQuery,String theContentType, Reader theReader) throws ProcessingException, UnknownRequestException {
 		InvocationResultsBean retVal = new InvocationResultsBean();
 
 		// TODO: verify that content type is correct
 		
 		switch (theRequestType) {
 		case GET:
-			doHandleGet(retVal, theServiceDefinition, thePath, theQuery);
+			doHandleGet(retVal, (PersServiceVersionSoap11) theServiceDefinition, thePath, theQuery);
 			break;
 		case POST:
-			doHandlePost(retVal, theServiceDefinition, theReader);
+			doHandlePost(retVal, (PersServiceVersionSoap11) theServiceDefinition, theReader);
 			break;
 		default:
 			throw new InternalErrorException("Unknown request type: " + theRequestType);
@@ -829,5 +830,11 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 
 	private enum StyleEnum {
 		DOCUMENT, RPC
+	}
+
+	@Override
+	public String obscureMessageForLogs(String theMessage, Set<String> theElementNamesToRedact) throws ProcessingException {
+		// TODO: implement
+		return theMessage;
 	}
 }

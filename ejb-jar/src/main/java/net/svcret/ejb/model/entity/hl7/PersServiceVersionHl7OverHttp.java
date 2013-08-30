@@ -4,12 +4,11 @@ import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
-import org.apache.commons.lang3.StringUtils;
-
 import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
-import net.svcret.admin.shared.util.StringUtil;
 import net.svcret.ejb.model.entity.BasePersServiceVersionSingleMethod;
+
+import org.apache.commons.lang3.StringUtils;
 
 @Entity
 @DiscriminatorValue("HL7OVERHTTP")

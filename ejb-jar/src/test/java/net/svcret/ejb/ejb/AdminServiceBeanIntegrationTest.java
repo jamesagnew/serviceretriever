@@ -1037,7 +1037,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		PersServiceVersionUrl implementationUrl = persVer.getUrls().get(0);
 		AuthorizationOutcomeEnum authorizationOutcome = AuthorizationOutcomeEnum.AUTHORIZED;
 		PersUser persUser = myDao.getUser(user.getPidOrNull());
-		myTransactionLogSvc.logTransaction(request, m1, persUser, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome);
+		myTransactionLogSvc.logTransaction(request, m1, persUser, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome, "response Body");
 
 		newEntityManager();
 

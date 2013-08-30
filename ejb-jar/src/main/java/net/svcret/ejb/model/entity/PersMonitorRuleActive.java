@@ -27,10 +27,11 @@ public class PersMonitorRuleActive extends BasePersMonitorRule {
 		return myActiveChecks;
 	}
 
-	public void merge(PersMonitorRuleActive theRule) {
-		super.merge(theRule);
+	public void merge(BasePersObject theObject) {
+		super.merge(theObject);
 
-		for (PersMonitorRuleActiveCheck nextApplies : new ArrayList<PersMonitorRuleActiveCheck>(theRule.getActiveChecks())) {
+		PersMonitorRuleActive	 rule = (PersMonitorRuleActive)theObject;
+		for (PersMonitorRuleActiveCheck nextApplies : new ArrayList<PersMonitorRuleActiveCheck>(rule.getActiveChecks())) {
 			PersMonitorRuleActiveCheck existing = getActiveCheck(nextApplies.getPid());
 			if (existing == null) {
 				nextApplies.setRule(this);
@@ -42,7 +43,7 @@ public class PersMonitorRuleActive extends BasePersMonitorRule {
 		
 		for (Iterator<PersMonitorRuleActiveCheck> iter = getActiveChecks().iterator(); iter.hasNext();) {
 			PersMonitorRuleActiveCheck nextCheck = iter.next();
-			PersMonitorRuleActiveCheck wanted = theRule.getActiveCheck(nextCheck.getPid());
+			PersMonitorRuleActiveCheck wanted = rule.getActiveCheck(nextCheck.getPid());
 			if (wanted == null) {
 				iter.remove();
 			}

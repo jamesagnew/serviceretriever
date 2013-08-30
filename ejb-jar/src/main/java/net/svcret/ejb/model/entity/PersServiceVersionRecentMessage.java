@@ -20,7 +20,7 @@ import org.hibernate.annotations.Index;
 @org.hibernate.annotations.Table(appliesTo = "PX_SVC_VER_RCNT_MSG", indexes = { @Index(name = "PX_SVC_VER_RCNT_MSG_IDX_WT", columnNames = { "SVC_VERSION_PID", "RESPONSE_TYPE", "XACT_TIME" }),
 		@Index(name = "PX_SVC_VER_RCNT_MSG_IDX_NT", columnNames = { "SVC_VERSION_PID", "RESPONSE_TYPE" }) })
 // @formatter:on
-public class PersServiceVersionRecentMessage extends BasePersRecentMessage {
+public class PersServiceVersionRecentMessage extends BasePersSavedTransactionRecentMessage {
 
 	private static final long serialVersionUID = 1L;
 

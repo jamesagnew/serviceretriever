@@ -20,7 +20,8 @@ import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IFilesystemAuditLogger;
 import net.svcret.ejb.api.ITransactionLogger;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.model.entity.BasePersRecentMessage;
+import net.svcret.ejb.model.entity.BasePersSavedTransaction;
+import net.svcret.ejb.model.entity.BasePersSavedTransactionRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
@@ -69,10 +70,11 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	 * 
 	 * @param theImplementationUrl
 	 * @param theHttpResponse
+	 * @param theResponseBody 
 	 */
 	@Override
 	public void logTransaction(HttpRequestBean theRequest, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse,
-			PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome) {
+			PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, String theResponseBody) {
 		Validate.notNull(theMethod);
 
 		// Log to database
@@ -84,7 +86,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 				existing = newValue;
 			}
 			existing.recordTransaction(theRequest.getRequestTime(), theMethod, theUser, theRequestBody, theInvocationResponse, theRequest, theImplementationUrl, theHttpResponse,
-					theAuthorizationOutcome);
+					theAuthorizationOutcome, theResponseBody);
 		}
 
 		if (theUser != null) {
@@ -96,7 +98,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 			}
 
 			existing.recordTransaction(theRequest.getRequestTime(), theRequest, theMethod, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse,
-					theAuthorizationOutcome);
+					theAuthorizationOutcome,theResponseBody);
 		}
 
 		// Audit Log
@@ -124,7 +126,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 		doFlush(myUnflushedUserMessages);
 	}
 
-	private void doFlush(ConcurrentHashMap<?, ? extends BaseUnflushed<? extends BasePersRecentMessage>> unflushedMessages) {
+	private void doFlush(ConcurrentHashMap<?, ? extends BaseUnflushed<? extends BasePersSavedTransactionRecentMessage>> unflushedMessages) {
 		if (unflushedMessages.isEmpty()) {
 			return;
 		}
@@ -134,7 +136,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 
 		int saveCount = 0;
 		for (Object next : new HashSet<Object>(unflushedMessages.keySet())) {
-			BaseUnflushed<? extends BasePersRecentMessage> nextTransactions = unflushedMessages.remove(next);
+			BaseUnflushed<? extends BasePersSavedTransactionRecentMessage> nextTransactions = unflushedMessages.remove(next);
 			if (nextTransactions != null) {
 				myDao.saveRecentMessagesAndTrimInNewTransaction(nextTransactions);
 				saveCount += nextTransactions.getCount();
@@ -151,7 +153,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 		}
 	}
 
-	public static abstract class BaseUnflushed<T extends BasePersRecentMessage> {
+	public static abstract class BaseUnflushed<T extends BasePersSavedTransaction> {
 		protected LinkedList<T> myFail;
 		protected LinkedList<T> myFault;
 		protected LinkedList<T> mySecurityFail;
@@ -205,7 +207,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 		}
 
 		public void recordTransaction(Date theTransactionTime, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse,
-				HttpRequestBean theRequest, PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome) {
+				HttpRequestBean theRequest, PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, String theResponseBody) {
 			Validate.notNull(theInvocationResponse);
 			Validate.notNull(theMethod);
 			Validate.notNull(theTransactionTime);
@@ -218,7 +220,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 			if (keepRecent != null && keepRecent > 0) {
 
 				PersServiceVersionRecentMessage message = new PersServiceVersionRecentMessage();
-				message.populate(theTransactionTime, theRequest, theImplementationUrl, theRequestBody, theInvocationResponse);
+				message.populate(theTransactionTime, theRequest, theImplementationUrl, theRequestBody, theInvocationResponse, theResponseBody);
 				message.setServiceVersion(svcVer);
 				message.setMethod(theMethod);
 				message.setUser(theUser);
@@ -274,7 +276,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 		}
 
 		public void recordTransaction(Date theTransactionTime, HttpRequestBean theRequest, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody,
-				InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome) {
+				InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, String theResponseBody) {
 			Validate.notNull(theInvocationResponse);
 
 			Integer keepNum = theUser.determineInheritedKeepNumRecentTransactions(theInvocationResponse.getResponseType());
@@ -284,7 +286,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 			if (keepNum != null && keepNum > 0) {
 
 				PersUserRecentMessage userMessage = new PersUserRecentMessage();
-				userMessage.populate(theTransactionTime, theRequest, theImplementationUrl, theRequestBody, theInvocationResponse);
+				userMessage.populate(theTransactionTime, theRequest, theImplementationUrl, theRequestBody, theInvocationResponse,theResponseBody);
 				userMessage.setUser(theUser);
 				userMessage.setServiceVersion(theMethod.getServiceVersion());
 				userMessage.setMethod(theMethod);

@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.Collection;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -13,6 +14,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.PostLoad;
 import javax.persistence.Table;
@@ -63,6 +65,15 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 
 	@Column(name = "URL_ID", length = 100, nullable = false)
 	private String myUrlId;
+
+	@OneToMany(cascade = {}, mappedBy = "myImplementationUrl", orphanRemoval = true)
+	private Collection<PersMonitorRuleActiveCheckOutcome> myMonitorActiveCheckOutcomes;
+
+	@OneToMany(cascade = {}, mappedBy = "myImplementationUrl", orphanRemoval = true)
+	private Collection<PersServiceVersionRecentMessage> myServiceVersionRecentMessages;
+
+	@OneToMany(cascade = {}, mappedBy = "myImplementationUrl", orphanRemoval = true)
+	private Collection<PersUserRecentMessage> myUserRecentMessages;
 
 	@Transient
 	private transient boolean myUrlIsLocal;

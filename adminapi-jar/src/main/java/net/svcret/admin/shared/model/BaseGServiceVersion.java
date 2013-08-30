@@ -1,29 +1,32 @@
 package net.svcret.admin.shared.model;
 
 import java.util.Date;
+import java.util.Set;
 
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 
-public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<BaseGServiceVersion> implements IProvidesUrlCount {
+public abstract class BaseGServiceVersion extends BaseDtoServiceCatalogItem<BaseGServiceVersion> implements IProvidesUrlCount {
 
 	private static final long serialVersionUID = 7886801527330335503L;
 
 	private boolean myActive;
 	private BaseGClientSecurityList myClientSecurityList;
-	private boolean myUseDefaultProxyPath = true;
+	private String myDefaultProxyPath;
 	private String myDescription;
 	private GServiceVersionDetailedStats myDetailedStats;
 	private String myExplicitProxyPath;
 	private long myHttpClientConfigPid;
 	private Date myLastAccess;
+	private Set<String> myObscureRequestElementsInLog;
+	private Set<String> myObscureResponseElementsInLog;
 	private String myParentServiceName;
 	private long myParentServicePid;
-	private String myDefaultProxyPath;
 	private GServiceVersionResourcePointerList myResourcePointerList;
 	private BaseGServerSecurityList myServerSecurityList;
 	private ServerSecurityModeEnum myServerSecurityMode;
 	private GServiceMethodList myServiceMethodList;
 	private GServiceVersionUrlList myServiceUrlList;
+	private boolean myUseDefaultProxyPath = true;
 
 	public BaseGServiceVersion() {
 		myServiceMethodList = new GServiceMethodList();
@@ -38,6 +41,13 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	 */
 	public BaseGClientSecurityList getClientSecurityList() {
 		return myClientSecurityList;
+	}
+
+	/**
+	 * @return the proxyPath
+	 */
+	public String getDefaultProxyPath() {
+		return myDefaultProxyPath;
 	}
 
 	public String getDescription() {
@@ -76,6 +86,14 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 		return myServiceMethodList;
 	}
 
+	public Set<String> getObscureRequestElementsInLog() {
+		return myObscureRequestElementsInLog;
+	}
+
+	public Set<String> getObscureResponseElementsInLog() {
+		return myObscureResponseElementsInLog;
+	}
+
 	public String getParentServiceName() {
 		return myParentServiceName;
 	}
@@ -85,13 +103,6 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 	}
 
 	public abstract ServiceProtocolEnum getProtocol();
-
-	/**
-	 * @return the proxyPath
-	 */
-	public String getDefaultProxyPath() {
-		return myDefaultProxyPath;
-	}
 
 	/**
 	 * @return the resourcePointerList
@@ -145,14 +156,14 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 		return myActive;
 	}
 
-	public boolean isUseDefaultProxyPath() {
-		return myUseDefaultProxyPath;
-	}
-
 	public boolean isSecure() {
 		boolean secure = myServerSecurityMode.isSecure();
 		boolean hasModules = myServerSecurityList.size() > 0;
 		return secure && hasModules;
+	}
+
+	public boolean isUseDefaultProxyPath() {
+		return myUseDefaultProxyPath;
 	}
 
 	@Override
@@ -193,8 +204,8 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 		myActive = theActive;
 	}
 
-	public void setUseDefaultProxyPath(boolean theDefaultProxyPath) {
-		myUseDefaultProxyPath = theDefaultProxyPath;
+	public void setDefaultProxyPath(String theProxyPath) {
+		myDefaultProxyPath = theProxyPath;
 	}
 
 	public void setDescription(String theDescription) {
@@ -225,16 +236,20 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 		myLastAccess = theLastAccess;
 	}
 
+	public void setObscureRequestElementsInLog(Set<String> theObscureRequestElementsInLog) {
+		myObscureRequestElementsInLog = theObscureRequestElementsInLog;
+	}
+
+	public void setObscureResponseElementsInLog(Set<String> theObscureResponseElementsInLog) {
+		myObscureResponseElementsInLog = theObscureResponseElementsInLog;
+	}
+
 	public void setParentServiceName(String theParentServiceName) {
 		myParentServiceName = theParentServiceName;
 	}
 
 	public void setParentServicePid(long theParentServicePid) {
 		myParentServicePid = theParentServicePid;
-	}
-
-	public void setDefaultProxyPath(String theProxyPath) {
-		myDefaultProxyPath = theProxyPath;
 	}
 
 	/**
@@ -247,6 +262,10 @@ public abstract class BaseGServiceVersion extends BaseGDashboardObjectWithUrls<B
 
 	public void setServerSecurityMode(ServerSecurityModeEnum theServerSecurityMode) {
 		myServerSecurityMode = theServerSecurityMode;
+	}
+
+	public void setUseDefaultProxyPath(boolean theDefaultProxyPath) {
+		myUseDefaultProxyPath = theDefaultProxyPath;
 	}
 
 	@Override

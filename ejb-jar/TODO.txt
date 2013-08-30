@@ -33,6 +33,8 @@
 
 * Edit serviceversion dialog shouldn't allow you to change the domain and service on a service once it's saved. 
 
+* recreate URL statuses if they disappear
+
 ----
 DONE
 

@@ -68,7 +68,7 @@ public class PersAuthenticationHostLdap extends BasePersAuthenticationHost {
 	}
 
 	@Override
-	public void merge(BasePersAuthenticationHost theHost) {
+	public void merge(BasePersObject theHost) {
 		super.merge(theHost);
 		
 		PersAuthenticationHostLdap ldap = (PersAuthenticationHostLdap)theHost;

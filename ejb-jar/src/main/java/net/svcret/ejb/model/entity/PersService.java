@@ -345,4 +345,37 @@ public class PersService extends BasePersServiceCatalogItem {
 		return getDomain().determineInheritedAuditLogEnable();
 	}
 
+	@Override
+	public boolean canInheritObscureElements() {
+		return true;
+	}
+
+	@Override
+	public Set<String> determineInheritedObscureRequestElements() {
+		return myDomain.determineObscureRequestElements();
+	}
+
+	@Override
+	public Set<String> determineInheritedObscureResponseElements() {
+		return myDomain.determineObscureResponseElements();
+	}
+
+	@Override
+	public Set<String> determineObscureRequestElements() {
+		Set<String> retVal = getObscureRequestElementsInLog();
+		if (retVal.isEmpty()) {
+			retVal=myDomain.determineObscureRequestElements();
+		}
+		return retVal;
+	}
+
+	@Override
+	public Set<String> determineObscureResponseElements() {
+		Set<String> retVal = getObscureResponseElementsInLog();
+		if (retVal.isEmpty()) {
+			retVal=myDomain.determineObscureResponseElements();
+		}
+		return retVal;
+	}
+
 }

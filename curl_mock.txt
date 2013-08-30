@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","method":"getVisitMedications","params":{"auth":"UHN","visitId":"281000563","auditSourceId":"FORM_VIEWER","user":{"attributes":{},"clientIp":"0:0:0:0:0:0:0:1%0","uid":"userId","fullName":"John Doe"},"clientId":"mock","clientPass":"mock"}}

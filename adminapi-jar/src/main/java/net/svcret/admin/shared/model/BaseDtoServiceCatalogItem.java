@@ -3,12 +3,16 @@ package net.svcret.admin.shared.model;
 import java.util.HashSet;
 import java.util.Set;
 
-public abstract class BaseGDashboardObjectWithUrls<T> extends BaseGDashboardObject<T> implements IProvidesUrlCount {
+public abstract class BaseDtoServiceCatalogItem<T> extends BaseGDashboardObject<T> implements IProvidesUrlCount {
 
 	private static final long serialVersionUID = 1L;
 
 	private Set<Long> myFailingApplicableRulePids;
+	private Set<String> myInheritedObscureRequestElementsInLogCache;
+	private Set<String> myInheritedObscureResponseElementsInLogCache;
 	private Set<Long> myMonitorRulePids;
+	private Set<String> myObscureRequestElementsInLogCache;
+	private Set<String> myObscureResponseElementsInLogCache;
 	private ServerSecuredEnum myServerSecured;
 	private int myUrlsActive;
 	private int myUrlsDown;
@@ -21,11 +25,27 @@ public abstract class BaseGDashboardObjectWithUrls<T> extends BaseGDashboardObje
 		return myFailingApplicableRulePids;
 	}
 
+	public Set<String> getInheritedObscureRequestElementsInLogCache() {
+		return myInheritedObscureRequestElementsInLogCache;
+	}
+
+	public Set<String> getInheritedObscureResponseElementsInLogCache() {
+		return myInheritedObscureResponseElementsInLogCache;
+	}
+
 	public Set<Long> getMonitorRulePids() {
 		if (myMonitorRulePids == null) {
 			myMonitorRulePids = new HashSet<Long>();
 		}
 		return myMonitorRulePids;
+	}
+
+	public Set<String> getObscureRequestElementsInLogCache() {
+		return myObscureRequestElementsInLogCache;
+	}
+
+	public Set<String> getObscureResponseElementsInLogCache() {
+		return myObscureResponseElementsInLogCache;
 	}
 
 	/**
@@ -60,11 +80,16 @@ public abstract class BaseGDashboardObjectWithUrls<T> extends BaseGDashboardObje
 	public void merge(BaseGDashboardObject<T> theObject) {
 		super.merge((BaseGDashboardObject<T>) theObject);
 
-		BaseGDashboardObjectWithUrls<T> obj = (BaseGDashboardObjectWithUrls<T>) theObject;
+		BaseDtoServiceCatalogItem<T> obj = (BaseDtoServiceCatalogItem<T>) theObject;
 		myServerSecured = obj.getServerSecured();
 
 		getMonitorRulePids().clear();
 		getMonitorRulePids().addAll(obj.getMonitorRulePids());
+
+		setInheritedObscureRequestElementsInLogCache(obj.getInheritedObscureRequestElementsInLogCache());
+		setInheritedObscureResponseElementsInLogCache(obj.getInheritedObscureResponseElementsInLogCache());
+		setObscureRequestElementsInLogCache(obj.getObscureRequestElementsInLogCache());
+		setObscureResponseElementsInLogCache(obj.getObscureResponseElementsInLogCache());
 		
 		if (theObject.isStatsInitialized()) {
 			getFailingApplicableRulePids().clear();
@@ -73,6 +98,22 @@ public abstract class BaseGDashboardObjectWithUrls<T> extends BaseGDashboardObje
 			setUrlsDown(obj.getUrlsDown());
 			setUrlsUnknown(obj.getUrlsUnknown());
 		}
+	}
+
+	public void setInheritedObscureRequestElementsInLogCache(Set<String> theInheritedObscureRequestElementsInLogCache) {
+		myInheritedObscureRequestElementsInLogCache = theInheritedObscureRequestElementsInLogCache;
+	}
+
+	public void setInheritedObscureResponseElementsInLogCache(Set<String> theInheritedObscureResponseElementsInLogCache) {
+		myInheritedObscureResponseElementsInLogCache = theInheritedObscureResponseElementsInLogCache;
+	}
+
+	public void setObscureRequestElementsInLogCache(Set<String> theObscureRequestElementsInLogCache) {
+		myObscureRequestElementsInLogCache = theObscureRequestElementsInLogCache;
+	}
+
+	public void setObscureResponseElementsInLogCache(Set<String> theObscureResponseElementsInLogCache) {
+		myObscureResponseElementsInLogCache = theObscureResponseElementsInLogCache;
 	}
 
 	/**

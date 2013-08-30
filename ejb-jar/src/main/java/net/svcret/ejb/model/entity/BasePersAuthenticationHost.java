@@ -126,14 +126,16 @@ public abstract class BasePersAuthenticationHost extends BasePersKeepsRecentTran
 		return mySupportsPasswordChange;
 	}
 
-	public void merge(BasePersAuthenticationHost theHost) {
+	public void merge(BasePersObject theHost) {
 		super.merge(theHost);
-		setAutoCreateAuthorizedUsers(theHost.isAutoCreateAuthorizedUsers());
-		setAutoCreateAuthorizedUsers(theHost.isAutoCreateAuthorizedUsers());
-		setCacheSuccessfulCredentialsForMillis(theHost.getCacheSuccessfulCredentialsForMillis());
-		setModuleId(theHost.getModuleId());
-		setModuleName(theHost.getModuleName());
-		setSupportsPasswordChange(theHost.isSupportsPasswordChange());
+		
+		BasePersAuthenticationHost obj = (BasePersAuthenticationHost) theHost;
+		setAutoCreateAuthorizedUsers(obj.isAutoCreateAuthorizedUsers());
+		setAutoCreateAuthorizedUsers(obj.isAutoCreateAuthorizedUsers());
+		setCacheSuccessfulCredentialsForMillis(obj.getCacheSuccessfulCredentialsForMillis());
+		setModuleId(obj.getModuleId());
+		setModuleName(obj.getModuleName());
+		setSupportsPasswordChange(obj.isSupportsPasswordChange());
 	}
 
 	/**

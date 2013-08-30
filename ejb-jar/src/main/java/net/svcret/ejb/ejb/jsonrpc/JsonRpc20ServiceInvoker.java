@@ -6,6 +6,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ejb.Stateless;
 
@@ -18,8 +19,11 @@ import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.model.entity.BasePersServiceVersion;
+import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcClientAuth;
 import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcCredentialGrabber;
 import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcServerAuth;
 import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
@@ -31,6 +35,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import com.google.gson.stream.JsonWriter;
 
 @Stateless()
 public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
@@ -44,6 +49,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 	static final String TOKEN_JSONRPC = "jsonrpc";
 	static final String TOKEN_RESULT = "result";
 	static final String TOKEN_ERROR = "error";
+	private boolean myPrettyPrintModeForUnitTest;
 
 	public static void consumeEqually(IJsonReader theJsonReader, IJsonWriter theJsonWriter) throws IOException, ProcessingException {
 		int objectDepth = 0;
@@ -147,6 +153,23 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 		}
 	}
 
+	private static void consumeNumberEqually(JsonReader theJsonReader, JsonWriter theJsonWriter) throws IOException, ProcessingException {
+		String value = theJsonReader.nextString();
+		if (value.contains(".")) {
+			try {
+				theJsonWriter.value(Double.parseDouble(value));
+			} catch (NumberFormatException e) {
+				throw new ProcessingException("Invalid double value found in JSON: " + value);
+			}
+		} else {
+			try {
+				theJsonWriter.value(Long.parseLong(value));
+			} catch (NumberFormatException e) {
+				throw new ProcessingException("Invalid long value found in JSON: " + value);
+			}
+		}
+	}
+
 	public static void consumeEqually(JsonReader theJsonReader) throws IOException, ProcessingException {
 		int objectDepth = 0;
 		int arrayDepth = 0;
@@ -222,7 +245,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 	}
 
 	@Override
-	public InvocationResultsBean processInvocation(PersServiceVersionJsonRpc20 theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, String theContentType,Reader theReader)
+	public InvocationResultsBean processInvocation(BasePersServiceVersion theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, String theContentType,Reader theReader)
 			throws ProcessingException {
 		Validate.notNull(theReader, "Reader");
 		if (theRequestType != RequestType.POST) {
@@ -231,7 +254,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 
 		InvocationResultsBean retVal;
 		try {
-			retVal = doProcessInvocation(theServiceDefinition, theReader);
+			retVal = doProcessInvocation((PersServiceVersionJsonRpc20) theServiceDefinition, theReader);
 		} catch (IOException e) {
 			throw new ProcessingException(e);
 		}
@@ -271,6 +294,15 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 			}
 		}
 
+		/*
+		 * client security
+		 */
+		for (PersBaseClientAuth<?> next : theServiceDefinition.getClientAuths()) {
+			if (next instanceof NamedParameterJsonRpcClientAuth) {
+				jsonWriter = ((NamedParameterJsonRpcClientAuth)next).createWrappedWriter(jsonWriter);
+			}
+		}
+		
 		jsonWriter.setLenient(true);
 		jsonWriter.setSerializeNulls(true);
 		jsonWriter.setIndent("  ");
@@ -405,6 +437,88 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 	@Override
 	public PersServiceVersionJsonRpc20 introspectServiceFromUrl(String theUrl) throws ProcessingException {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String obscureMessageForLogs(String theMessage, Set<String> theElementNamesToRedact) throws ProcessingException {
+		if (theElementNamesToRedact == null || theElementNamesToRedact.isEmpty()) {
+			return theMessage;
+		}
+		
+		StringReader reader = new StringReader(theMessage);
+
+		ourLog.trace("JSON Response: {}", theMessage);
+
+		StringWriter buf = new StringWriter();
+		JsonWriter jsonWriter = new JsonWriter(buf);
+		if (myPrettyPrintModeForUnitTest) {
+			jsonWriter.setIndent("  ");
+		}
+
+		JsonReader jsonReader = new JsonReader(reader);
+		try {
+			jsonReader.beginObject();
+			jsonWriter.beginObject();
+
+			LOOP_JSON:
+			while (true) {
+
+				switch(jsonReader.peek()) {
+				case BEGIN_ARRAY:
+					jsonWriter.beginArray();
+					jsonReader.beginArray();
+					break;
+				case BEGIN_OBJECT:
+					jsonReader.beginObject();
+					jsonWriter.beginObject();
+					break;
+				case BOOLEAN:
+					jsonWriter.value(jsonReader.nextBoolean());
+					break;
+				case END_ARRAY:
+					jsonReader.endArray();
+					jsonWriter.endArray();
+					break;
+				case END_DOCUMENT:
+					break LOOP_JSON;
+				case END_OBJECT:
+					jsonReader.endObject();
+					jsonWriter.endObject();
+					break;
+				case NAME:
+					String nextName = jsonReader.nextName();
+					jsonWriter.name(nextName);
+					if (theElementNamesToRedact.contains(nextName)) {
+						consumeEqually(jsonReader);
+						jsonWriter.value("**REDACTED**");
+					}
+					break;
+				case NULL:
+					jsonReader.nextNull();
+					jsonWriter.nullValue();
+					break;
+				case NUMBER:
+					consumeNumberEqually(jsonReader, jsonWriter);
+					break;
+				case STRING:
+					jsonWriter.value(jsonReader.nextString());
+					break;
+				}
+			
+			}
+
+		} catch (IOException e) {
+			throw new ProcessingException(e);
+		} finally {
+			IOUtils.closeQuietly(jsonReader);
+			IOUtils.closeQuietly(jsonWriter);
+		}
+		
+		return buf.toString();
+	}
+
+	void setPrettyPrintModeForUnitTest(boolean theB) {
+		myPrettyPrintModeForUnitTest=theB;
 	}
 
 }

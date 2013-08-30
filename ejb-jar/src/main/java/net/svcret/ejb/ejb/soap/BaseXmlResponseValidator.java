@@ -44,7 +44,7 @@ public abstract class BaseXmlResponseValidator extends BaseResponseValidator {
 						rNames.remove(name);
 					}
 					if (rNames.isEmpty()) {
-						return new ValidationResponse(true);
+						return super.validate(theBody, theStatusCode, theContentType);
 					}
 				}
 	

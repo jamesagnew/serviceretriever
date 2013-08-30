@@ -24,15 +24,18 @@ import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.BaseGClientSecurity;
-import net.svcret.admin.shared.model.BaseGDashboardObjectWithUrls;
+import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.BaseGMonitorRule;
 import net.svcret.admin.shared.model.BaseGServerSecurity;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.DtoClientSecurityHttpBasicAuth;
+import net.svcret.admin.shared.model.DtoClientSecurityJsonRpcNamedParameter;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
+import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
+import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
@@ -55,11 +58,9 @@ import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
-import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.GServiceVersionResourcePointer;
 import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
-import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
 import net.svcret.admin.shared.model.GThrottle;
 import net.svcret.admin.shared.model.GUrlStatus;
@@ -97,7 +98,7 @@ import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
-import net.svcret.ejb.model.entity.BasePersRecentMessage;
+import net.svcret.ejb.model.entity.BasePersSavedTransactionRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
@@ -137,6 +138,7 @@ import net.svcret.ejb.model.entity.PersUserStatus;
 import net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp;
 import net.svcret.ejb.model.entity.http.PersHttpBasicClientAuth;
 import net.svcret.ejb.model.entity.http.PersHttpBasicServerAuth;
+import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcClientAuth;
 import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcServerAuth;
 import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
@@ -555,7 +557,7 @@ public class AdminServiceBean implements IAdminService {
 
 	@Override
 	public GRecentMessage loadRecentMessageForServiceVersion(long thePid) throws ProcessingException {
-		BasePersRecentMessage msg = myDao.loadRecentMessageForServiceVersion(thePid);
+		PersServiceVersionRecentMessage msg = myDao.loadRecentMessageForServiceVersion(thePid);
 		if (msg == null) {
 			throw new ProcessingException("Unable to find transaction with PID " + thePid + ". Maybe it has been purged?");
 		}
@@ -564,7 +566,7 @@ public class AdminServiceBean implements IAdminService {
 
 	@Override
 	public GRecentMessage loadRecentMessageForUser(long thePid) throws ProcessingException {
-		BasePersRecentMessage msg = myDao.loadRecentMessageForUser(thePid);
+		PersUserRecentMessage msg = myDao.loadRecentMessageForUser(thePid);
 		if (msg == null) {
 			throw new ProcessingException("Unable to find transaction with PID " + thePid + ". Maybe it has been purged?");
 		}
@@ -730,7 +732,7 @@ public class AdminServiceBean implements IAdminService {
 		Validate.notBlank(theWsdlUrl, "URL");
 
 		ourLog.info("Loading service version from URL: {}", theWsdlUrl);
-		PersServiceVersionSoap11 def = myInvokerSoap11.introspectServiceFromUrl(theWsdlUrl);
+		PersServiceVersionSoap11 def = (PersServiceVersionSoap11) myInvokerSoap11.introspectServiceFromUrl(theWsdlUrl);
 
 		theService.getMethodList().clear();
 		for (PersServiceVersionMethod next : def.getMethods()) {
@@ -1158,17 +1160,16 @@ public class AdminServiceBean implements IAdminService {
 					PersInvocationUserStatsPk pk = new PersInvocationUserStatsPk(interval, date, next.getPk().getMethod(), theUser);
 					BasePersMethodInvocationStats stats = statusSvc.getInvocationUserStatsSynchronously(pk);
 					theOperator.withStats(min, stats);
-				} 
+				}
 			}
 
 			date = doWithStatsSupportIncrement(date, interval);
 
 		}
-		
-		
+
 	}
 
-	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Long> the60minTime, PersService theService,
+	private StatusEnum extractStatus(BaseDtoServiceCatalogItem<?> theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Long> the60minTime, PersService theService,
 			StatusesBean theStatuses) throws ProcessingException {
 
 		// Value will be changed below
@@ -1181,7 +1182,7 @@ public class AdminServiceBean implements IAdminService {
 		return status;
 	}
 
-	private StatusEnum extractStatus(BaseGDashboardObjectWithUrls<?> theDashboardObject, StatusesBean theStatuses, List<Integer> the60MinInvCount, List<Long> the60minTime, StatusEnum theStatus,
+	private StatusEnum extractStatus(BaseDtoServiceCatalogItem<?> theDashboardObject, StatusesBean theStatuses, List<Integer> the60MinInvCount, List<Long> the60minTime, StatusEnum theStatus,
 			BasePersServiceVersion nextVersion) throws ProcessingException {
 		StatusEnum status = theStatus;
 
@@ -1262,27 +1263,36 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	private PersBaseClientAuth<?> fromUi(BaseGClientSecurity theObj, BasePersServiceVersion theServiceVersion) {
+
+		PersBaseClientAuth<?> retVal = null;
 		switch (theObj.getType()) {
 		case WSSEC_UT: {
-			GWsSecUsernameTokenClientSecurity obj = (GWsSecUsernameTokenClientSecurity) theObj;
-			PersWsSecUsernameTokenClientAuth retVal = new PersWsSecUsernameTokenClientAuth();
-			retVal.setPid(obj.getPidOrNull());
-			retVal.setUsername(obj.getUsername());
-			retVal.setPassword(obj.getPassword());
-			retVal.setServiceVersion(theServiceVersion);
-			return retVal;
+			retVal = new PersWsSecUsernameTokenClientAuth();
+			break;
 		}
 		case HTTP_BASICAUTH: {
-			DtoClientSecurityHttpBasicAuth obj = (DtoClientSecurityHttpBasicAuth) theObj;
-			PersHttpBasicClientAuth retVal = new PersHttpBasicClientAuth();
-			retVal.setPid(obj.getPidOrNull());
-			retVal.setUsername(obj.getUsername());
-			retVal.setPassword(obj.getPassword());
-			retVal.setServiceVersion(theServiceVersion);
-			return retVal;
+			retVal = new PersHttpBasicClientAuth();
+			break;
+		}
+		case JSONRPC_NAMPARM: {
+			DtoClientSecurityJsonRpcNamedParameter obj = (DtoClientSecurityJsonRpcNamedParameter) theObj;
+			retVal = new NamedParameterJsonRpcClientAuth();
+			((NamedParameterJsonRpcClientAuth) retVal).setUsernameParameterName(obj.getUsernameParameterName());
+			((NamedParameterJsonRpcClientAuth) retVal).setPasswordParameterName(obj.getPasswordParameterName());
+			break;
 		}
 		}
-		return null;
+
+		if (retVal==null) {
+			throw new IllegalArgumentException("Unknown service type: " + theObj.getType());
+		}
+		
+		retVal.setPid(theObj.getPidOrNull());
+		retVal.setUsername(theObj.getUsername());
+		retVal.setPassword(theObj.getPassword());
+		retVal.setServiceVersion(theServiceVersion);
+
+		return retVal;
 	}
 
 	private BasePersMonitorRule fromUi(BaseGMonitorRule theRule) throws ProcessingException {
@@ -1389,8 +1399,6 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setExpectLatencyUnderMillis(theNext.getExpectLatencyUnderMillis());
 		retVal.setExpectResponseContainsText(theNext.getExpectResponseContainsText());
 		retVal.setExpectResponseType(theNext.getExpectResponseType());
-		retVal.setLastTransactionDate(theNext.getLastTransactionDate());
-		retVal.setLastTransactionOutcome(theNext.getLastTransactionOutcome());
 		retVal.setMessage(myDao.getLibraryMessageByPid(theNext.getMessagePid()));
 		if (retVal.getMessage() == null) {
 			throw new ProcessingException("Unknown message PID: " + theNext.getMessagePid());
@@ -1420,6 +1428,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setDomainId(theDomain.getId());
 		retVal.setDomainName(theDomain.getName());
 		retVal.populateKeepRecentTransactionsFromDto(theDomain);
+		retVal.populateServiceCatalogItemFromDto(theDomain);
 		return retVal;
 	}
 
@@ -1458,6 +1467,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setServiceId(theService.getId());
 		retVal.setServiceName(theService.getName());
 		retVal.populateKeepRecentTransactionsFromDto(theService);
+		retVal.populateServiceCatalogItemFromDto(theService);
 		return retVal;
 	}
 
@@ -1599,7 +1609,7 @@ public class AdminServiceBean implements IAdminService {
 
 	@SuppressWarnings("unused")
 	private void fromUi(PersServiceVersionHl7OverHttp theRetVal, DtoServiceVersionHl7OverHttp theVersion) {
-		// nothing yet		
+		// nothing yet
 	}
 
 	@SuppressWarnings("unused")
@@ -1660,6 +1670,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setHttpClientConfig(httpClientConfig);
 
 		retVal.populateKeepRecentTransactionsFromDto(theVersion);
+		retVal.populateServiceCatalogItemFromDto(theVersion);
 
 		return retVal;
 	}
@@ -1803,7 +1814,7 @@ public class AdminServiceBean implements IAdminService {
 			break;
 		case LDAP:
 			GLdapAuthHost dto = new GLdapAuthHost();
-			PersAuthenticationHostLdap uiLdap = (PersAuthenticationHostLdap)thePersObj;
+			PersAuthenticationHostLdap uiLdap = (PersAuthenticationHostLdap) thePersObj;
 			retVal = dto;
 			dto.setAuthenticateBaseDn(uiLdap.getAuthenticateBaseDn());
 			dto.setAuthenticateFilter(uiLdap.getAuthenticateFilter());
@@ -1883,7 +1894,7 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private GRecentMessage toUi(BasePersRecentMessage theMsg, boolean theLoadMsgContents) {
+	private GRecentMessage toUi(BasePersSavedTransactionRecentMessage theMsg, boolean theLoadMsgContents) {
 		GRecentMessage retVal = new GRecentMessage();
 
 		retVal.setPid(theMsg.getPid());
@@ -1973,7 +1984,7 @@ public class AdminServiceBean implements IAdminService {
 			retVal = new DtoServiceVersionJsonRpc20();
 			break;
 		case HL7OVERHTTP:
-			PersServiceVersionHl7OverHttp persHl7 = (PersServiceVersionHl7OverHttp)theVersion;
+			PersServiceVersionHl7OverHttp persHl7 = (PersServiceVersionHl7OverHttp) theVersion;
 			DtoServiceVersionHl7OverHttp dto = new DtoServiceVersionHl7OverHttp();
 			dto.setMethodNameTemplate(persHl7.getMethodNameTemplate());
 			retVal = dto;
@@ -1995,8 +2006,12 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setParentServicePid(theVersion.getService().getPid());
 		retVal.setDescription(theVersion.getDescription());
 		retVal.setServerSecurityMode(theVersion.getServerSecurityMode());
+		retVal.setObscureRequestElementsInLog(theVersion.getObscureRequestElementsInLog());
+		retVal.setObscureResponseElementsInLog(theVersion.getObscureResponseElementsInLog());
 
 		theVersion.populateKeepRecentTransactionsToDto(retVal);
+		theVersion.populateServiceCatalogItemToDto(retVal);
+
 		toUiMonitorRules(theVersion, retVal);
 
 		for (PersServiceVersionMethod nextMethod : theVersion.getMethods()) {
@@ -2100,10 +2115,10 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private List<GRecentMessage> toUi(List<? extends BasePersRecentMessage> theServiceVersionRecentMessages, boolean theLoadMessageContents) {
+	private List<GRecentMessage> toUi(List<? extends BasePersSavedTransactionRecentMessage> theServiceVersionRecentMessages, boolean theLoadMessageContents) {
 		List<GRecentMessage> retVal = new ArrayList<GRecentMessage>();
 
-		for (BasePersRecentMessage next : theServiceVersionRecentMessages) {
+		for (BasePersSavedTransactionRecentMessage next : theServiceVersionRecentMessages) {
 			retVal.add(toUi(next, theLoadMessageContents));
 		}
 
@@ -2115,19 +2130,18 @@ public class AdminServiceBean implements IAdminService {
 
 		switch (theAuth.getAuthType()) {
 		case WSSEC_UT: {
-			PersWsSecUsernameTokenClientAuth obj = (PersWsSecUsernameTokenClientAuth) theAuth;
-			GWsSecUsernameTokenClientSecurity auth = new GWsSecUsernameTokenClientSecurity();
-			auth.setUsername(obj.getUsername());
-			auth.setPassword(obj.getPassword());
-			retVal = auth;
+			retVal = new GWsSecUsernameTokenClientSecurity();
 			break;
 		}
 		case HTTP_BASICAUTH: {
-			PersHttpBasicClientAuth obj = (PersHttpBasicClientAuth) theAuth;
-			DtoClientSecurityHttpBasicAuth auth = new DtoClientSecurityHttpBasicAuth();
-			auth.setUsername(obj.getUsername());
-			auth.setPassword(obj.getPassword());
-			retVal = auth;
+			retVal = new DtoClientSecurityHttpBasicAuth();
+			break;
+		}
+		case JSONRPC_NAMPARM: {
+			NamedParameterJsonRpcClientAuth obj = (NamedParameterJsonRpcClientAuth) theAuth;
+			retVal = new DtoClientSecurityJsonRpcNamedParameter();
+			((DtoClientSecurityJsonRpcNamedParameter)retVal).setUsernameParameterName(obj.getUsernameParameterName());
+			((DtoClientSecurityJsonRpcNamedParameter)retVal).setPasswordParameterName(obj.getPasswordParameterName());
 			break;
 		}
 		}
@@ -2137,6 +2151,8 @@ public class AdminServiceBean implements IAdminService {
 		}
 
 		retVal.setPid(theAuth.getPid());
+		retVal.setUsername(theAuth.getUsername());
+		retVal.setPassword(theAuth.getPassword());
 
 		return retVal;
 	}
@@ -2195,6 +2211,7 @@ public class AdminServiceBean implements IAdminService {
 		toUiMonitorRules(theDomain, retVal);
 
 		theDomain.populateKeepRecentTransactionsToDto(retVal);
+		theDomain.populateServiceCatalogItemToDto(retVal);
 
 		if (theLoadStats) {
 			retVal.setStatsInitialized(new Date());
@@ -2308,8 +2325,6 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setExpectLatencyUnderMillis(theNext.getExpectLatencyUnderMillis());
 		retVal.setExpectResponseContainsText(theNext.getExpectResponseContainsText());
 		retVal.setExpectResponseType(theNext.getExpectResponseType());
-		retVal.setLastTransactionDate(theNext.getLastTransactionDate());
-		retVal.setLastTransactionOutcome(theNext.getLastTransactionOutcome());
 		retVal.setMessagePid(theNext.getMessage().getPid());
 		retVal.setMessageDescription(theNext.getMessage().getDescription());
 		retVal.setPid(theNext.getPid());
@@ -2362,6 +2377,8 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setServerSecured(theService.getServerSecured());
 
 		theService.populateKeepRecentTransactionsToDto(retVal);
+		theService.populateServiceCatalogItemToDto(retVal);
+
 		toUiMonitorRules(theService, retVal);
 
 		if (theLoadStats) {
@@ -2492,7 +2509,7 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setDescription(thePersUser.getDescription());
 		retVal.setContactEmails(thePersUser.getContact().getEmailAddresses());
 		thePersUser.populateKeepRecentTransactionsToDto(retVal);
-		
+
 		if (theLoadStats) {
 			PersUserStatus status = thePersUser.getStatus();
 			retVal.setStatsInitialized(new Date());
@@ -2516,9 +2533,9 @@ public class AdminServiceBean implements IAdminService {
 					t60minSuccessCount.set(theIndex, addToInt(t60minSuccessCount.get(theIndex), theStats.getSuccessInvocationCount()));
 				}
 			};
-			
+
 			doWithUserStatsByMinute(myConfigSvc.getConfig(), thePersUser, 60, myStatusSvc, withStats);
-			
+
 			retVal.setStatsStartTime(t60minStatisticsStart[0]);
 			retVal.setStatsSuccessTransactions((t60minSuccessCount));
 			retVal.setStatsSuccessTransactionsAvgPerMin(to60MinAveragePerMin(t60minSuccessCount));
@@ -2588,7 +2605,7 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private void toUiMonitorRules(BasePersServiceVersion theSvcVer, BaseGDashboardObjectWithUrls<?> retVal) {
+	private void toUiMonitorRules(BasePersServiceVersion theSvcVer, BaseDtoServiceCatalogItem<?> retVal) {
 		for (PersMonitorAppliesTo nextRule : theSvcVer.getMonitorRules()) {
 			if (nextRule.getItem().equals(theSvcVer)) {
 				retVal.getMonitorRulePids().add(nextRule.getPid());
@@ -2600,7 +2617,7 @@ public class AdminServiceBean implements IAdminService {
 
 	}
 
-	private void toUiMonitorRules(PersDomain theDomain, BaseGDashboardObjectWithUrls<?> retVal) {
+	private void toUiMonitorRules(PersDomain theDomain, BaseDtoServiceCatalogItem<?> retVal) {
 		for (PersService nextSvc : theDomain.getServices()) {
 			toUiMonitorRules(nextSvc, retVal);
 		}
@@ -2611,7 +2628,7 @@ public class AdminServiceBean implements IAdminService {
 		}
 	}
 
-	private void toUiMonitorRules(PersService theService, BaseGDashboardObjectWithUrls<?> retVal) {
+	private void toUiMonitorRules(PersService theService, BaseDtoServiceCatalogItem<?> retVal) {
 		for (BasePersServiceVersion nextSvcVer : theService.getVersions()) {
 			toUiMonitorRules(nextSvcVer, retVal);
 		}

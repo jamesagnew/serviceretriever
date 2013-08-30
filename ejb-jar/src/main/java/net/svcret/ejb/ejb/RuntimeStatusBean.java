@@ -146,7 +146,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		for (Iterator<PersServiceVersionUrl> iter = urls.iterator(); iter.hasNext();) {
 			PersServiceVersionUrl next = iter.next();
 			PersServiceVersionUrlStatus status = getUrlStatus(next);
-			if (status.getStatus() == StatusEnum.DOWN) {
+			if (status != null && status.getStatus() == StatusEnum.DOWN) {
 				if (theRetVal.getPreferredUrl() == null) {
 					if (status.attemptToResetCircuitBreaker()) {
 						theRetVal.setPreferredUrl(next);
@@ -180,7 +180,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 		for (Iterator<PersServiceVersionUrl> iter = allUrlsCopy.iterator(); iter.hasNext();) {
 			PersServiceVersionUrl next = iter.next();
-			if (getUrlStatus(next).getStatus() == StatusEnum.DOWN) {
+			PersServiceVersionUrlStatus urlStatus = getUrlStatus(next);
+			if (urlStatus.getStatus() == StatusEnum.DOWN) {
 				urlsWithDownFirstThenLocal.add(next);
 				iter.remove();
 			}
