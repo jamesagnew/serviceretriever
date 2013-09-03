@@ -22,9 +22,9 @@ import javax.ejb.TransactionAttributeType;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
+import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.BaseGClientSecurity;
-import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.BaseGMonitorRule;
 import net.svcret.admin.shared.model.BaseGServerSecurity;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
@@ -63,7 +63,6 @@ import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
 import net.svcret.admin.shared.model.GThrottle;
-import net.svcret.admin.shared.model.GUrlStatus;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.GUserDomainPermission;
 import net.svcret.admin.shared.model.GUserList;
@@ -86,6 +85,7 @@ import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IKeystoreService;
 import net.svcret.ejb.api.IMonitorService;
 import net.svcret.ejb.api.IRuntimeStatus;
+import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.api.ISecurityService;
 import net.svcret.ejb.api.IServiceInvokerSoap11;
@@ -356,7 +356,7 @@ public class AdminServiceBean implements IAdminService {
 		PersDomain domain = myDao.getDomainByPid(theDomain);
 		if (domain != null) {
 			Set<Long> empty = Collections.emptySet();
-			return loadDomain(domain, empty, empty, empty, empty, null);
+			return loadDomain(domain, empty, empty, empty, empty, empty, null);
 		}
 		return null;
 	}
@@ -453,8 +453,8 @@ public class AdminServiceBean implements IAdminService {
 
 	@Override
 	public GDomainList loadDomainList() throws ProcessingException {
-		Set<Long> set = Collections.emptySet();
-		return loadDomainList(set, set, set, set, null);
+		Set<Long> empty = Collections.emptySet();
+		return loadDomainList(empty, empty, empty, empty, empty, null);
 	}
 
 	@Override
@@ -494,13 +494,14 @@ public class AdminServiceBean implements IAdminService {
 		Set<Long> loadSvcStats = theRequest.getServicesToLoadStats();
 		Set<Long> loadVerStats = theRequest.getVersionsToLoadStats();
 		Set<Long> loadVerMethodStats = theRequest.getVersionMethodsToLoadStats();
+		Set<Long> loadUrlStats = theRequest.getUrlsToLoadStats();
 
 		StatusesBean statuses = null;
 		if (hasAnything(loadDomStats, loadSvcStats, loadVerStats, loadVerMethodStats)) {
 			statuses = myDao.loadAllStatuses();
 		}
 
-		GDomainList domainList = loadDomainList(loadDomStats, loadSvcStats, loadVerStats, loadVerMethodStats, statuses);
+		GDomainList domainList = loadDomainList(loadDomStats, loadSvcStats, loadVerStats, loadVerMethodStats, loadUrlStats, statuses);
 
 		retVal.setDomainList(domainList);
 
@@ -648,9 +649,14 @@ public class AdminServiceBean implements IAdminService {
 			methodPids.add(next.getPid());
 		}
 
+		Set<Long> urlPids = new HashSet<Long>();
+		for (PersServiceVersionUrl next : svcVer.getUrls()) {
+			urlPids.add(next.getPid());
+		}
+
 		StatusesBean statuses = myDao.loadAllStatuses();
 
-		BaseGServiceVersion uiService = toUi(svcVer, true, methodPids, statuses);
+		BaseGServiceVersion uiService = toUi(svcVer, true, methodPids, urlPids, statuses);
 		GSoap11ServiceVersionAndResources retVal = toUi(uiService, svcVer);
 		return retVal;
 	}
@@ -708,25 +714,6 @@ public class AdminServiceBean implements IAdminService {
 	}
 
 	@Override
-	public List<GUrlStatus> loadServiceVersionUrlStatuses(long theServiceVersionPid) {
-		ourLog.info("Loading Service Version URL statuses for ServiceVersion {}", theServiceVersionPid);
-
-		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
-		if (svcVer == null) {
-			throw new IllegalArgumentException("Unknown Service Version " + theServiceVersionPid);
-		}
-
-		List<GUrlStatus> retVal = new ArrayList<GUrlStatus>();
-
-		StatusesBean statuses = myDao.loadAllStatuses();
-		for (PersServiceVersionUrl nextUrl : svcVer.getUrls()) {
-			retVal.add(toUi(nextUrl, statuses));
-		}
-
-		return retVal;
-	}
-
-	@Override
 	public GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(DtoServiceVersionSoap11 theService, String theWsdlUrl) throws ProcessingException {
 		Validate.notNull(theService, "Definition");
 		Validate.notBlank(theWsdlUrl, "URL");
@@ -742,7 +729,7 @@ public class AdminServiceBean implements IAdminService {
 		// Only add URLs if there aren't any already defined for this version
 		if (theService.getUrlList().size() == 0) {
 			for (PersServiceVersionUrl next : def.getUrls()) {
-				theService.getUrlList().add(toUi(next));
+				theService.getUrlList().add(toUi(next, false, null));
 			}
 		}
 
@@ -1169,7 +1156,7 @@ public class AdminServiceBean implements IAdminService {
 
 	}
 
-	private StatusEnum extractStatus(BaseDtoServiceCatalogItem<?> theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Long> the60minTime, PersService theService,
+	private StatusEnum extractStatus(BaseDtoServiceCatalogItem theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Long> the60minTime, PersService theService,
 			StatusesBean theStatuses) throws ProcessingException {
 
 		// Value will be changed below
@@ -1182,7 +1169,7 @@ public class AdminServiceBean implements IAdminService {
 		return status;
 	}
 
-	private StatusEnum extractStatus(BaseDtoServiceCatalogItem<?> theDashboardObject, StatusesBean theStatuses, List<Integer> the60MinInvCount, List<Long> the60minTime, StatusEnum theStatus,
+	private StatusEnum extractStatus(BaseDtoServiceCatalogItem theDashboardObject, StatusesBean theStatuses, List<Integer> the60MinInvCount, List<Long> the60minTime, StatusEnum theStatus,
 			BasePersServiceVersion nextVersion) throws ProcessingException {
 		StatusEnum status = theStatus;
 
@@ -1211,7 +1198,7 @@ public class AdminServiceBean implements IAdminService {
 		} // end URL
 
 		for (PersServiceVersionMethod nextMethod : nextVersion.getMethods()) {
-			extractStatus(60, the60MinInvCount, the60minTime, nextMethod);
+			myRuntimeStatusQuerySvc.extract60MinuteMethodStats(nextMethod, the60MinInvCount, the60minTime);
 		}
 
 		// Failing monitor rules
@@ -1223,10 +1210,13 @@ public class AdminServiceBean implements IAdminService {
 		return status;
 	}
 
-	private void extractStatus(int theNumMinsBack, List<Integer> the60MinInvCount, List<Long> the60minTime, PersServiceVersionMethod nextMethod) throws ProcessingException {
-		IRuntimeStatus statusSvc = myStatusSvc;
-		extractSuccessfulInvocationInvocationTimes(myConfigSvc.getConfig(), theNumMinsBack, the60MinInvCount, the60minTime, nextMethod, statusSvc);
-	}
+	@EJB
+	private IRuntimeStatusQueryLocal myRuntimeStatusQuerySvc;
+
+	// private void extractStatus(int theNumMinsBack, List<Integer> the60MinInvCount, List<Long> the60minTime, PersServiceVersionMethod nextMethod) throws ProcessingException {
+	// IRuntimeStatus statusSvc = myStatusSvc;
+	// extractSuccessfulInvocationInvocationTimes(myConfigSvc.getConfig(), theNumMinsBack, the60MinInvCount, the60minTime, nextMethod, statusSvc);
+	// }
 
 	private BasePersAuthenticationHost fromUi(BaseGAuthHost theAuthHost) {
 		BasePersAuthenticationHost retVal = null;
@@ -1283,10 +1273,10 @@ public class AdminServiceBean implements IAdminService {
 		}
 		}
 
-		if (retVal==null) {
+		if (retVal == null) {
 			throw new IllegalArgumentException("Unknown service type: " + theObj.getType());
 		}
-		
+
 		retVal.setPid(theObj.getPidOrNull());
 		retVal.setUsername(theObj.getUsername());
 		retVal.setPassword(theObj.getPassword());
@@ -1693,8 +1683,8 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private GDomain loadDomain(PersDomain nextDomain, Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, StatusesBean statuses)
-			throws ProcessingException {
+	private GDomain loadDomain(PersDomain nextDomain, Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, Set<Long> theLoadUrlStats,
+			StatusesBean statuses) throws ProcessingException {
 		GDomain gDomain = toUi(nextDomain, theLoadDomStats.contains(nextDomain.getPid()), statuses);
 
 		for (PersService nextService : nextDomain.getServices()) {
@@ -1702,7 +1692,7 @@ public class AdminServiceBean implements IAdminService {
 			gDomain.getServiceList().add(gService);
 
 			for (BasePersServiceVersion nextVersion : nextService.getVersions()) {
-				BaseGServiceVersion gVersion = toUi(nextVersion, theLoadVerStats.contains(nextVersion.getPid()), theLoadVerMethodStats, statuses);
+				BaseGServiceVersion gVersion = toUi(nextVersion, theLoadVerStats.contains(nextVersion.getPid()), theLoadVerMethodStats, theLoadUrlStats, statuses);
 				gService.getVersionList().add(gVersion);
 
 			} // for service versions
@@ -1710,12 +1700,12 @@ public class AdminServiceBean implements IAdminService {
 		return gDomain;
 	}
 
-	private GDomainList loadDomainList(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, StatusesBean statuses)
-			throws ProcessingException {
+	private GDomainList loadDomainList(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, Set<Long> theLoadUrlStats,
+			StatusesBean statuses) throws ProcessingException {
 		GDomainList domainList = new GDomainList();
 
 		for (PersDomain nextDomain : myServiceRegistry.getAllDomains()) {
-			GDomain gDomain = loadDomain(nextDomain, theLoadDomStats, theLoadSvcStats, theLoadVerStats, theLoadVerMethodStats, statuses);
+			GDomain gDomain = loadDomain(nextDomain, theLoadDomStats, theLoadSvcStats, theLoadVerStats, theLoadVerMethodStats, theLoadUrlStats, statuses);
 
 			domainList.add(gDomain);
 		} // for domains
@@ -1971,7 +1961,8 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private BaseGServiceVersion toUi(BasePersServiceVersion theVersion, boolean theLoadStats, Set<Long> theLoadMethodStats, StatusesBean theStatuses) throws ProcessingException {
+	private BaseGServiceVersion toUi(BasePersServiceVersion theVersion, boolean theLoadStats, Set<Long> theLoadMethodStats, Set<Long> theLoadUrlStats, StatusesBean theStatuses)
+			throws ProcessingException {
 		BaseGServiceVersion retVal = null;
 		switch (theVersion.getProtocol()) {
 		case SOAP11:
@@ -2021,7 +2012,7 @@ public class AdminServiceBean implements IAdminService {
 		} // for methods
 
 		for (PersServiceVersionUrl nextUrl : theVersion.getUrls()) {
-			GServiceVersionUrl gUrl = toUi(nextUrl);
+			GServiceVersionUrl gUrl = toUi(nextUrl, theLoadUrlStats != null && theLoadUrlStats.contains(nextUrl.getPid()), theStatuses);
 			retVal.getUrlList().add(gUrl);
 		} // for URLs
 
@@ -2104,7 +2095,7 @@ public class AdminServiceBean implements IAdminService {
 
 	private BaseGServiceVersion toUi(BasePersServiceVersion theSvcVer, boolean theLoadStats, StatusesBean theStatuses) throws ProcessingException {
 		Set<Long> emptySet = Collections.emptySet();
-		return toUi(theSvcVer, theLoadStats, emptySet, theStatuses);
+		return toUi(theSvcVer, theLoadStats, emptySet, emptySet, theStatuses);
 	}
 
 	private List<GUserDomainPermission> toUi(Collection<PersUserDomainPermission> theDomainPermissions) {
@@ -2140,8 +2131,8 @@ public class AdminServiceBean implements IAdminService {
 		case JSONRPC_NAMPARM: {
 			NamedParameterJsonRpcClientAuth obj = (NamedParameterJsonRpcClientAuth) theAuth;
 			retVal = new DtoClientSecurityJsonRpcNamedParameter();
-			((DtoClientSecurityJsonRpcNamedParameter)retVal).setUsernameParameterName(obj.getUsernameParameterName());
-			((DtoClientSecurityJsonRpcNamedParameter)retVal).setPasswordParameterName(obj.getPasswordParameterName());
+			((DtoClientSecurityJsonRpcNamedParameter) retVal).setUsernameParameterName(obj.getUsernameParameterName());
+			((DtoClientSecurityJsonRpcNamedParameter) retVal).setPasswordParameterName(obj.getPasswordParameterName());
 			break;
 		}
 		}
@@ -2451,7 +2442,7 @@ public class AdminServiceBean implements IAdminService {
 			ArrayList<Integer> t60minCount = new ArrayList<Integer>();
 			ArrayList<Long> t60minTime = new ArrayList<Long>();
 
-			extractStatus(60, t60minCount, t60minTime, theMethod);
+			myRuntimeStatusQuerySvc.extract60MinuteMethodStats(theMethod, t60minCount, t60minTime);
 
 			retVal.setTransactions60mins(toArray(t60minCount));
 			retVal.setLatency60mins(toLatency(t60minCount, t60minTime));
@@ -2471,28 +2462,26 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private GServiceVersionUrl toUi(PersServiceVersionUrl theUrl) {
+	private GServiceVersionUrl toUi(PersServiceVersionUrl theUrl, boolean theLoadStats, StatusesBean theStatuses) {
 		GServiceVersionUrl retVal = new GServiceVersionUrl();
 		if (theUrl.getPid() != null) {
 			retVal.setPid(theUrl.getPid());
 		}
 		retVal.setId(theUrl.getUrlId());
 		retVal.setUrl(theUrl.getUrl());
-		return retVal;
-	}
 
-	private GUrlStatus toUi(PersServiceVersionUrl theUrl, StatusesBean theStatuses) {
-		GUrlStatus retVal = new GUrlStatus();
-		retVal.setUrlPid(theUrl.getPid());
+		if (theLoadStats) {
+			// TODO: add 60 min stats
+			PersServiceVersionUrlStatus urlStatus = theStatuses.getUrlStatus(theUrl.getPid());
+			retVal.setStatus(urlStatus.getStatus());
+			retVal.setStatsLastFailure(urlStatus.getLastFail());
+			retVal.setStatsLastFailureMessage(urlStatus.getLastFailMessage());
+			retVal.setStatsLastSuccess(urlStatus.getLastSuccess());
+			retVal.setStatsLastSuccessMessage(urlStatus.getLastSuccessMessage());
+			retVal.setStatsLastFault(urlStatus.getLastFault());
+			retVal.setStatsLastFaultMessage(urlStatus.getLastFaultMessage());
+		}
 
-		PersServiceVersionUrlStatus urlStatus = theStatuses.getUrlStatus(theUrl.getPid());
-		retVal.setStatus(urlStatus.getStatus());
-		retVal.setLastFailure(urlStatus.getLastFail());
-		retVal.setLastFailureMessage(urlStatus.getLastFailMessage());
-		retVal.setLastSuccess(urlStatus.getLastSuccess());
-		retVal.setLastSuccessMessage(urlStatus.getLastSuccessMessage());
-		retVal.setLastFault(urlStatus.getLastFault());
-		retVal.setLastFaultMessage(urlStatus.getLastFaultMessage());
 		return retVal;
 	}
 
@@ -2605,7 +2594,7 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private void toUiMonitorRules(BasePersServiceVersion theSvcVer, BaseDtoServiceCatalogItem<?> retVal) {
+	private void toUiMonitorRules(BasePersServiceVersion theSvcVer, BaseDtoServiceCatalogItem retVal) {
 		for (PersMonitorAppliesTo nextRule : theSvcVer.getMonitorRules()) {
 			if (nextRule.getItem().equals(theSvcVer)) {
 				retVal.getMonitorRulePids().add(nextRule.getPid());
@@ -2617,7 +2606,7 @@ public class AdminServiceBean implements IAdminService {
 
 	}
 
-	private void toUiMonitorRules(PersDomain theDomain, BaseDtoServiceCatalogItem<?> retVal) {
+	private void toUiMonitorRules(PersDomain theDomain, BaseDtoServiceCatalogItem retVal) {
 		for (PersService nextSvc : theDomain.getServices()) {
 			toUiMonitorRules(nextSvc, retVal);
 		}
@@ -2628,7 +2617,7 @@ public class AdminServiceBean implements IAdminService {
 		}
 	}
 
-	private void toUiMonitorRules(PersService theService, BaseDtoServiceCatalogItem<?> retVal) {
+	private void toUiMonitorRules(PersService theService, BaseDtoServiceCatalogItem retVal) {
 		for (BasePersServiceVersion nextSvcVer : theService.getVersions()) {
 			toUiMonitorRules(nextSvcVer, retVal);
 		}
@@ -2741,22 +2730,6 @@ public class AdminServiceBean implements IAdminService {
 			start = theRange.getNoPresetFrom();
 		}
 		doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator, start, end);
-	}
-
-	/**
-	 * @return The start timestamp
-	 */
-	public static void extractSuccessfulInvocationInvocationTimes(PersConfig theConfig, int theNumMinsBack, final List<Integer> the60MinInvCount, final List<Long> the60minTime,
-			PersServiceVersionMethod nextMethod, IRuntimeStatus statusSvc) {
-		doWithStatsByMinute(theConfig, theNumMinsBack, statusSvc, nextMethod, new IWithStats() {
-			@Override
-			public void withStats(int theIndex, BasePersMethodInvocationStats theStats) {
-				growToSizeInt(the60MinInvCount, theIndex);
-				growToSizeLong(the60minTime, theIndex);
-				the60MinInvCount.set(theIndex, addToInt(the60MinInvCount.get(theIndex), theStats.getSuccessInvocationCount()));
-				the60minTime.set(theIndex, the60minTime.get(theIndex) + theStats.getSuccessInvocationTotalTime());
-			}
-		});
 	}
 
 	public static Date getDateXMinsAgo(int theNumberOfMinutes) {

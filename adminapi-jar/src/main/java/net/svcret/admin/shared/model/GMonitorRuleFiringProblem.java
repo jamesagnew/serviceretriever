@@ -1,7 +1,7 @@
 package net.svcret.admin.shared.model;
 
 
-public class GMonitorRuleFiringProblem extends BaseGObject<GMonitorRuleFiringProblem> {
+public class GMonitorRuleFiringProblem extends BaseGObject {
 	private static final long serialVersionUID = 1L;
 
 	private Long myFailedLatencyAverageMillisPerCall;
@@ -35,7 +35,7 @@ public class GMonitorRuleFiringProblem extends BaseGObject<GMonitorRuleFiringPro
 	}
 
 	@Override
-	public void merge(GMonitorRuleFiringProblem theObject) {
+	public void merge(BaseGObject theObject) {
 		throw new UnsupportedOperationException();
 	}
 

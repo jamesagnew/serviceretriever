@@ -19,6 +19,8 @@ import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.BaseGMonitorRule;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
+import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
+import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
@@ -31,11 +33,8 @@ import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
-import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
-import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
-import net.svcret.admin.shared.model.GUrlStatus;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
@@ -470,16 +469,6 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		return retVal;
 	}
 
-	@Override
-	public List<GUrlStatus> loadServiceVersionUrlStatuses(long theServiceVersionPid) {
-		if (isMockMode()) {
-			return getMock().loadServiceVersionUrlStatuses(theServiceVersionPid);
-		}
-
-		ourLog.info("Loading URL statuses for service version {}", theServiceVersionPid);
-
-		return myAdminSvc.loadServiceVersionUrlStatuses(theServiceVersionPid);
-	}
 
 	@Override
 	public UserAndAuthHost loadUser(long thePid, boolean theLoadStats) throws ServiceFailureException {

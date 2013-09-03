@@ -66,5 +66,7 @@ public interface IRuntimeStatus {
 	int getMaxCachedNullStatCount();
 
 	int getMaxCachedPopulatedStatCount();
+
+	void recordNodeStatistics();
 	
 }

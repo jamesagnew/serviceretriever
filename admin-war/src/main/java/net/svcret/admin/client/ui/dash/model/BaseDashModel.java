@@ -31,15 +31,15 @@ public abstract class BaseDashModel implements IDashModel {
 
 	private static NumberFormat ourDecimalFormat = NumberFormat.getFormat("0.0");
 
-	private BaseGDashboardObject<?> myModel;
+	private BaseGDashboardObject myModel;
 
-	public BaseDashModel(BaseGDashboardObject<?> theModel) {
+	public BaseDashModel(BaseGDashboardObject theModel) {
 		myModel = theModel;
 	}
 
 	@Override
 	public Widget renderLastInvocation() {
-		if (!(myModel instanceof BaseDtoServiceCatalogItem<?>)) {
+		if (!(myModel instanceof BaseDtoServiceCatalogItem)) {
 			return null;
 		}
 
@@ -90,7 +90,7 @@ public abstract class BaseDashModel implements IDashModel {
 
 	@Override
 	public Widget renderSecurity() {
-		if (!(myModel instanceof BaseDtoServiceCatalogItem<?>)) {
+		if (!(myModel instanceof BaseDtoServiceCatalogItem)) {
 			return null;
 		}
 
@@ -98,7 +98,7 @@ public abstract class BaseDashModel implements IDashModel {
 		String text = null;
 		String clazz = null;
 
-		BaseDtoServiceCatalogItem<?> obj = (BaseDtoServiceCatalogItem<?>) myModel;
+		BaseDtoServiceCatalogItem obj = (BaseDtoServiceCatalogItem) myModel;
 		switch (obj.getServerSecured()) {
 		case FULLY:
 			image = AdminPortal.IMAGES.dashSecure();
@@ -165,7 +165,7 @@ public abstract class BaseDashModel implements IDashModel {
 		return retVal;
 	}
 
-	public static Widget returnImageForStatus(BaseDtoServiceCatalogItem<?> theObject) {
+	public static Widget returnImageForStatus(BaseDtoServiceCatalogItem theObject) {
 		String text;
 		ImageResource image;
 		String clazz;

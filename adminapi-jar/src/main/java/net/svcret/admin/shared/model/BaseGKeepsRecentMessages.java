@@ -1,6 +1,6 @@
 package net.svcret.admin.shared.model;
 
-public abstract class BaseGKeepsRecentMessages<T> extends BaseGObject<T> {
+public abstract class BaseGKeepsRecentMessages extends BaseGObject {
 
 	private static final long serialVersionUID = 1L;
 
@@ -62,11 +62,14 @@ public abstract class BaseGKeepsRecentMessages<T> extends BaseGObject<T> {
 		return myCanInheritKeepNumRecentTransactions;
 	}
 
-	public void merge(BaseGKeepsRecentMessages<?> theObject) {
-		setKeepNumRecentTransactionsSuccess(theObject.getKeepNumRecentTransactionsSuccess());
-		setKeepNumRecentTransactionsFail(theObject.getKeepNumRecentTransactionsFail());
-		setKeepNumRecentTransactionsFault(theObject.getKeepNumRecentTransactionsFault());
-		setKeepNumRecentTransactionsSecurityFail(theObject.getKeepNumRecentTransactionsSecurityFail());
+	public void merge(BaseGObject theObject) {
+		super.merge(theObject);
+		
+		BaseGKeepsRecentMessages obj = (BaseGKeepsRecentMessages) theObject;
+		setKeepNumRecentTransactionsSuccess(obj.getKeepNumRecentTransactionsSuccess());
+		setKeepNumRecentTransactionsFail(obj.getKeepNumRecentTransactionsFail());
+		setKeepNumRecentTransactionsFault(obj.getKeepNumRecentTransactionsFault());
+		setKeepNumRecentTransactionsSecurityFail(obj.getKeepNumRecentTransactionsSecurityFail());
 	}
 
 	public void setCanInheritKeepNumRecentTransactions(boolean theCanInheritKeepNumRecentTransactions) {

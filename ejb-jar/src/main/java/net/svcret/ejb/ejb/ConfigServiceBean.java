@@ -20,6 +20,7 @@ import com.google.common.annotations.VisibleForTesting;
 @Stateless
 public class ConfigServiceBean implements IConfigService {
 
+	private static final String SYSTEM_PROPERTY_NODEID = "net.svcret.nodeid";
 	private static final String SYSTEM_PROPERTY_NODETYPE = "net.svcret.nodetype";
 	private static final String SYSTEM_PROPERTY_SECONDARY_REFRESHURLS = "net.svcret.secondarynodes.refreshurls";
 
@@ -120,5 +121,14 @@ public class ConfigServiceBean implements IConfigService {
 		} catch (IllegalArgumentException e) {
 			throw new IllegalStateException("Invalid value for system property '" + SYSTEM_PROPERTY_NODETYPE + "': " + nodetype);
 		}
+	}
+
+	@Override
+	public String getNodeId() {
+		String retVal = System.getProperty(SYSTEM_PROPERTY_NODEID);
+		if (retVal == null) {
+			throw new IllegalStateException("Missing system property: "+SYSTEM_PROPERTY_NODEID);
+		}
+		return retVal;
 	}
 }

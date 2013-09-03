@@ -61,7 +61,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 	}
 
 	@Override
-	public BaseGDashboardObject<?> getModel() {
+	public BaseGDashboardObject getModel() {
 		return mySvcVer;
 	}
 

@@ -32,7 +32,7 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 	private EditableField myObscureRequestElementsInLogEditor;
 	private EditableField myObscureResponseElementsInLogEditor;
 
-	public KeepRecentTransactionsPanel(BaseGKeepsRecentMessages<?> theKeepsRecentTransactions) {
+	public KeepRecentTransactionsPanel(BaseGKeepsRecentMessages theKeepsRecentTransactions) {
 
 		boolean canInherit = theKeepsRecentTransactions.isCanInheritKeepNumRecentTransactions();
 		int descRows = canInherit ? 2 : 1;
@@ -96,7 +96,7 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 		}
 
 		if (theKeepsRecentTransactions instanceof BaseDtoServiceCatalogItem) {
-			BaseDtoServiceCatalogItem<?> sco = (BaseDtoServiceCatalogItem<?>) theKeepsRecentTransactions;
+			BaseDtoServiceCatalogItem sco = (BaseDtoServiceCatalogItem) theKeepsRecentTransactions;
 
 			{
 				myObscureRequestElementsInLogEditor = new EditableField();
@@ -232,7 +232,7 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 		return true;
 	}
 
-	public void populateDto(BaseGKeepsRecentMessages<?> theDto) {
+	public void populateDto(BaseGKeepsRecentMessages theDto) {
 
 		theDto.setKeepNumRecentTransactionsSuccess(mySuccessTextbox.getValue());
 		theDto.setKeepNumRecentTransactionsFail(myFailTextbox.getValue());
@@ -241,10 +241,10 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 
 		if (myObscureRequestElementsInLogEditor != null) {
 			Set<String> values = getObscureRequestItems();
-			((BaseDtoServiceCatalogItem<?>) theDto).setObscureRequestElementsInLogCache(values);
+			((BaseDtoServiceCatalogItem) theDto).setObscureRequestElementsInLogCache(values);
 
 			values = getObscureResponseItems();
-			((BaseDtoServiceCatalogItem<?>) theDto).setObscureResponseElementsInLogCache(values);
+			((BaseDtoServiceCatalogItem) theDto).setObscureResponseElementsInLogCache(values);
 		}
 
 	}

@@ -1,6 +1,6 @@
 package net.svcret.admin.shared.model;
 
-public class GServiceVersionResourcePointer extends BaseGObject<GServiceVersionResourcePointer> {
+public class GServiceVersionResourcePointer extends BaseGObject {
 
 	private static final long serialVersionUID = 1L;
 
@@ -31,11 +31,13 @@ public class GServiceVersionResourcePointer extends BaseGObject<GServiceVersionR
 	}
 
 	@Override
-	public void merge(GServiceVersionResourcePointer theObject) {
-		setPid(theObject.getPid());
-		setType(theObject.getType());
-		setUrl(theObject.getUrl());
-		setSize(theObject.getSize());
+	public void merge(BaseGObject theObject) {
+		super.merge(theObject);
+		
+		GServiceVersionResourcePointer obj=(GServiceVersionResourcePointer) theObject;
+		setType(obj.getType());
+		setUrl(obj.getUrl());
+		setSize(obj.getSize());
 	}
 
 	public void setSize(int theLength) {

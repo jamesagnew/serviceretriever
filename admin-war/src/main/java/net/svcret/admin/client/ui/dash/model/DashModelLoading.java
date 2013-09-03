@@ -35,7 +35,7 @@ public class DashModelLoading implements IDashModel {
 	}
 
 	@Override
-	public BaseGDashboardObject<?> getModel() {
+	public BaseGDashboardObject getModel() {
 		return null;
 	}
 

@@ -1,6 +1,6 @@
 package net.svcret.admin.shared.model;
 
-public abstract class BaseGServerSecurity extends BaseGObject<BaseGServerSecurity> {
+public abstract class BaseGServerSecurity extends BaseGObject {
 
 	private static final long serialVersionUID = 1L;
 
@@ -22,11 +22,6 @@ public abstract class BaseGServerSecurity extends BaseGObject<BaseGServerSecurit
 	 */
 	public boolean isEditMode() {
 		return myEditMode;
-	}
-
-	@Override
-	public void merge(BaseGServerSecurity theObject) {
-		setPid(theObject.getPid());
 	}
 
 	/**

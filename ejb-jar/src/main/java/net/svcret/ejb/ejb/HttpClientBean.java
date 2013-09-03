@@ -155,7 +155,7 @@ public class HttpClientBean implements IHttpClient {
 			} catch (ClientConfigException e) {
 				ourLog.error("Failed to initialize HTTP client", e);
 				HttpResponseBean retVal = new HttpResponseBean();
-				retVal.addFailedUrl(theUrlPool.getPreferredUrl(), "ServiceRetriever failed to initialize HTTP client, problem was: " + e.getMessage(), 0, "", "");
+				retVal.addFailedUrl(theUrlPool.getPreferredUrl(), "ServiceRetriever failed to initialize HTTP client, problem was: " + e.getMessage(), 0, "", "", 0);
 				return retVal;
 			}
 			myClientConfigPidToClient.put(theClientConfig.getPid(), client);
@@ -200,9 +200,10 @@ public class HttpClientBean implements IHttpClient {
 
 			long start = System.currentTimeMillis();
 			HttpEntity entity = null;
+			long delay = 0;
 			try {
 				HttpResponse resp = client.execute(post);
-				long delay = System.currentTimeMillis() - start;
+				delay = System.currentTimeMillis() - start;
 
 				entity = resp.getEntity();
 				String body = IOUtils.toString(entity.getContent());
@@ -225,7 +226,7 @@ public class HttpClientBean implements IHttpClient {
 						continue;
 					}
 					ourLog.debug("Failed to invoke service at URL[{}]: {}", theNextUrl, validates.getFailureExplanation());
-					theResponse.addFailedUrl(theNextUrl, validates.getFailureExplanation(), statusCode, contentType, body);
+					theResponse.addFailedUrl(theNextUrl, validates.getFailureExplanation(), statusCode, contentType, body, delay);
 					theResponse.setResponseTime(delay);
 					return;
 
@@ -247,7 +248,10 @@ public class HttpClientBean implements IHttpClient {
 					continue;
 				}
 				ourLog.debug("Exception while invoking remote service", e);
-				theResponse.addFailedUrl(theNextUrl, Messages.getString("HttpClientBean.postClientProtocolException", e.toString()), 0, null, null);
+				if (delay == 0) {
+					delay = System.currentTimeMillis() - start;
+				}
+				theResponse.addFailedUrl(theNextUrl, Messages.getString("HttpClientBean.postClientProtocolException", e.toString()), 0, null, null, delay);
 				theResponse.setResponseTime(System.currentTimeMillis() - start);
 				return;
 			} catch (Exception e) {
@@ -256,7 +260,10 @@ public class HttpClientBean implements IHttpClient {
 					continue;
 				}
 				ourLog.debug("Exception while invoking remote service", e);
-				theResponse.addFailedUrl(theNextUrl, Messages.getString("HttpClientBean.postIoException", e.toString()), 0, null, null);
+				if (delay == 0) {
+					delay = System.currentTimeMillis() - start;
+				}
+				theResponse.addFailedUrl(theNextUrl, Messages.getString("HttpClientBean.postIoException", e.toString()), 0, null, null, delay);
 				theResponse.setResponseTime(System.currentTimeMillis() - start);
 				return;
 			} finally {
@@ -296,7 +303,7 @@ public class HttpClientBean implements IHttpClient {
 			myClientConfig = theClientConfig;
 			myConMgr = new PoolingClientConnectionManager(SchemeRegistryFactory.createDefault(), 5000, TimeUnit.MILLISECONDS);
 
-			String algorithm="TLS";
+			String algorithm = "TLS";
 			KeyStore keystore = null;
 			if (myClientConfig.getTlsKeystore() != null) {
 				try {
@@ -306,17 +313,17 @@ public class HttpClientBean implements IHttpClient {
 				}
 			}
 			String keystorePassword = myClientConfig.getTlsKeystorePassword();
-			
+
 			KeyStore truststore = null;
-			
-			if (myClientConfig.getTlsTruststore()!= null) {
+
+			if (myClientConfig.getTlsTruststore() != null) {
 				try {
 					truststore = myKeystoreService.loadKeystore(myClientConfig.getTlsTruststore(), myClientConfig.getTlsTruststorePassword());
 				} catch (ProcessingException e) {
 					throw new ClientConfigException("Failed to initialize truststore", e);
-				}				
+				}
 			}
-			
+
 			SecureRandom random = null;
 			TrustStrategy trustStrategy = null;
 			X509HostnameVerifier hostnameVerifier = null;
@@ -325,11 +332,11 @@ public class HttpClientBean implements IHttpClient {
 				ssf = new SSLSocketFactory(algorithm, keystore, keystorePassword, truststore, random, trustStrategy, hostnameVerifier);
 			} catch (Exception e) {
 				throw new ClientConfigException("Failed to initialize SSL/TLS context, check keystore and truststore settings for this client config", e);
-			} 
-			
+			}
+
 			SchemeRegistry sr = myConMgr.getSchemeRegistry();
 			sr.register(new Scheme("https", 443, ssf));
-			
+
 		}
 
 		public PersHttpClientConfig getClientConfig() {
@@ -385,7 +392,7 @@ public class HttpClientBean implements IHttpClient {
 
 	@VisibleForTesting
 	void setKeystoreServiceForUnitTest(KeystoreServiceBean theKss) {
-		myKeystoreService=theKss;
+		myKeystoreService = theKss;
 	}
 
 }

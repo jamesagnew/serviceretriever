@@ -7,6 +7,7 @@ import javax.ejb.Local;
 import net.svcret.admin.shared.model.RetrieverNodeTypeEnum;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.PersConfig;
+import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 
 @Local
 public interface IConfigService {
@@ -20,5 +21,7 @@ public interface IConfigService {
 	RetrieverNodeTypeEnum getNodeType();
 
 	List<String> getSecondaryNodeRefreshUrls();
+
+	String getNodeId();
 	
 }

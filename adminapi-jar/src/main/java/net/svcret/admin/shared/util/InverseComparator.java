@@ -1,4 +1,4 @@
-package net.svcret.admin.shared;
+package net.svcret.admin.shared.util;
 
 import java.util.Comparator;
 

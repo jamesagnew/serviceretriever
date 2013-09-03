@@ -45,6 +45,12 @@ public class Queries {
 	
 	public static final String PERSINVOC_USERSTATS_FINDINTERVAL = "PersInvocationUserStats.findIntervalBeforeDate";
 	public static final String PERSINVOC_USERSTATS_FINDINTERVAL_Q = "SELECT s FROM PersInvocationUserStats s WHERE s.myPk.myInterval = :INTERVAL AND s.myPk.myStartTime < :BEFORE_DATE";
+	
+	public static final String PERSINVOC_URLSTATS_FINDINTERVAL = "PersInvocationUrlStats.findIntervalBeforeDate";
+	public static final String PERSINVOC_URLSTATS_FINDINTERVAL_Q = "SELECT s FROM PersInvocationUrlStats s WHERE s.myPk.myInterval = :INTERVAL AND s.myPk.myStartTime < :BEFORE_DATE";
+
+	public static final String PERS_NODESTATS_FINDINTERVAL = "PersNodeStats.findIntervalBeforeDate";
+	public static final String PERS_NODESTATS_FINDINTERVAL_Q = "SELECT s FROM PersNodeStats s WHERE s.myPk.myInterval = :INTERVAL AND s.myPk.myStartTime < :BEFORE_DATE";
 
 	public static final String PERSINVOC_ANONSTATS = "PersInvocationAnonStats.findBeforeDate";
 	public static final String PERSINVOC_ANONSTATS_Q = "SELECT s FROM PersInvocationAnonStats s WHERE s.myPk.myInterval = :INTERVAL AND s.myPk.myStartTime < :BEFORE_DATE";
@@ -60,5 +66,6 @@ public class Queries {
 
 	public static final String USER_RECENTMSGS_COUNT = "PersUserRecentMessage.count";
 	public static final String USER_RECENTMSGS_COUNT_Q = "SELECT COUNT(s) FROM PersUserRecentMessage s WHERE s.myUser = :USER AND s.myResponseType = :RESP_TYPE";
+
 
 }

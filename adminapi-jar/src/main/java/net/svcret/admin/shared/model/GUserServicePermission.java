@@ -3,7 +3,7 @@ package net.svcret.admin.shared.model;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GUserServicePermission extends BaseGObject<GUserServicePermission> {
+public class GUserServicePermission extends BaseGObject {
 
 	private static final long serialVersionUID = 1L;
 
@@ -81,11 +81,13 @@ public class GUserServicePermission extends BaseGObject<GUserServicePermission> 
 	}
 
 	@Override
-	public void merge(GUserServicePermission theObject) {
-		setPid(theObject.getPid());
-		setAllowAllServiceVersions(theObject.isAllowAllServiceVersions());
-		setServicePid(theObject.getServicePid());
-		setServiceVersionPermissions(theObject.getServiceVersionPermissions());
+	public void merge(BaseGObject theObject) {
+		super.merge(theObject);
+		
+		GUserServicePermission obj = (GUserServicePermission)theObject;
+		setAllowAllServiceVersions(obj.isAllowAllServiceVersions());
+		setServicePid(obj.getServicePid());
+		setServiceVersionPermissions(obj.getServiceVersionPermissions());
 	}
 
 	public void removeServiceVersionPermission(long thePid) {

@@ -46,21 +46,7 @@ DONE
   messages in the library. Also columns should be sortable
 
     Table mods:
-	PX_INVOC_STATS_USR remove index with only time in it
-	PX_INVOC_STATS_USR add index IDX_PISU_USER_AND_IVL with USER_PID and START_TIME
-	PX_INVOC_STATS_USR add column METHOD_PID
-	PX_USER_METHOD_STATUS add columns FIRST_SUC_INVOC
-	                                  FIRST_FAIL_INVOC 
-	                                  FIRST_FAULT_INVOC 
-	                                  FIRST_SECFAIL_INVOC 
-	                                  FIRST_THROTTLE_REJECT
-    PX_SVC_VER add column DEFAULT_PROXY_PATH (number 1 with all values 1)	                                  
-	PX_AUTH_HOST  add column AUDIT_LOG_ENABLE (number 1 allows null)
-	PX_SVC_VER    add column AUDIT_LOG_ENABLE (number 1 allows null)
-	PX_DOMAIN     add column AUDIT_LOG_ENABLE (number 1 allows null)
-	PX_SVC        add column AUDIT_LOG_ENABLE (number 1 allows null)
-	                                  
-	                                  
+    Add System Property: net.svcret.nodeid	                                  
 	                                  
 	                                  
 	

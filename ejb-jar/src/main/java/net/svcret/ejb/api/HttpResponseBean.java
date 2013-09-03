@@ -47,12 +47,12 @@ public class HttpResponseBean {
 		myContentType = theContentType;
 	}
 
-	public void addFailedUrl(PersServiceVersionUrl theUrl, String theFailureExplanation, int theStatusCode, String theContentType, String theBody) {
+	public void addFailedUrl(PersServiceVersionUrl theUrl, String theFailureExplanation, int theStatusCode, String theContentType, String theBody, long theInvocationMillis) {
 		if (myFailedUrls == null) {
 			myFailedUrls = new HashMap<PersServiceVersionUrl, Failure>();
 		}
 
-		myFailedUrls.put(theUrl, new Failure(theBody, theContentType, theFailureExplanation, theStatusCode));
+		myFailedUrls.put(theUrl, new Failure(theBody, theContentType, theFailureExplanation, theStatusCode, theInvocationMillis));
 	}
 
 	/**
@@ -138,13 +138,19 @@ public class HttpResponseBean {
 		private String myContentType;
 		private String myExplanation;
 		private int myStatusCode;
+		private long myInvocationMillis;
 
-		public Failure(String theBody, String theContentType, String theExplanation, int theStatusCode) {
+		public Failure(String theBody, String theContentType, String theExplanation, int theStatusCode, long theInvocationMillis) {
 			super();
 			myBody = theBody;
 			myContentType = theContentType;
 			myExplanation = theExplanation;
 			myStatusCode = theStatusCode;
+			myInvocationMillis=theInvocationMillis;
+		}
+
+		public long getInvocationMillis() {
+			return myInvocationMillis;
 		}
 
 		/**

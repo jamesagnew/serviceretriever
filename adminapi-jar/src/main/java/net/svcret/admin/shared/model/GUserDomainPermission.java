@@ -3,7 +3,7 @@ package net.svcret.admin.shared.model;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GUserDomainPermission extends BaseGObject<GUserDomainPermission> {
+public class GUserDomainPermission extends BaseGObject {
 
 	private static final long serialVersionUID = 1L;
 	
@@ -51,11 +51,13 @@ public class GUserDomainPermission extends BaseGObject<GUserDomainPermission> {
 	}
 	
 	@Override
-	public void merge(GUserDomainPermission theObject) {
-		setPid(theObject.getPid());
-		setAllowAllServices(theObject.isAllowAllServices());
-		setDomainPid(theObject.getDomainPid());
-		setServicePermissions(theObject.getServicePermissions());
+	public void merge(BaseGObject theObject) {
+		super.merge(theObject);
+		
+		GUserDomainPermission obj = (GUserDomainPermission)theObject;
+		setAllowAllServices(obj.isAllowAllServices());
+		setDomainPid(obj.getDomainPid());
+		setServicePermissions(obj.getServicePermissions());
 	}
 	
 	public GUserServicePermission getServicePermission(long theServicePid) {

@@ -322,7 +322,9 @@ public abstract class BasePersMethodInvocationStats extends BasePersInvocationSt
 	}
 
 	public static enum StatsTypeEnum {
-		INVOCATION, USER
+		INVOCATION, 
+		USER,
+		URL
 
 	}
 

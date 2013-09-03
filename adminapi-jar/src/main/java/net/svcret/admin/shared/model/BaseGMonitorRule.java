@@ -5,7 +5,7 @@ import java.util.Set;
 
 import net.svcret.admin.shared.enm.MonitorRuleTypeEnum;
 
-public abstract class BaseGMonitorRule extends BaseGObject<BaseGMonitorRule> {
+public abstract class BaseGMonitorRule extends BaseGObject {
 
 	private static final long serialVersionUID = 1L;
 
@@ -33,10 +33,6 @@ public abstract class BaseGMonitorRule extends BaseGObject<BaseGMonitorRule> {
 		return isActive;
 	}
 
-	@Override
-	public void merge(BaseGMonitorRule theObject) {
-
-	}
 
 	public void setActive(boolean theIsActive) {
 		isActive = theIsActive;

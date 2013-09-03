@@ -20,7 +20,7 @@ public interface IDashModel {
 
 	HierarchyEnum getType();
 	
-	BaseGDashboardObject<?> getModel();
+	BaseGDashboardObject getModel();
 
 	Widget renderUrls();
 	

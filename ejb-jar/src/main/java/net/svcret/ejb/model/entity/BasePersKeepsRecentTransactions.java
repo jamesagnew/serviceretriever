@@ -98,14 +98,14 @@ public abstract class BasePersKeepsRecentTransactions extends BasePersObject {
 		setKeepNumRecentTransactionsSuccess(obj.getKeepNumRecentTransactionsSuccess());
 	}
 
-	public void populateKeepRecentTransactionsFromDto(BaseGKeepsRecentMessages<?> theDto) {
+	public void populateKeepRecentTransactionsFromDto(BaseGKeepsRecentMessages theDto) {
 		setKeepNumRecentTransactionsFail(theDto.getKeepNumRecentTransactionsFail());
 		setKeepNumRecentTransactionsSecurityFail(theDto.getKeepNumRecentTransactionsSecurityFail());
 		setKeepNumRecentTransactionsFault(theDto.getKeepNumRecentTransactionsFault());
 		setKeepNumRecentTransactionsSuccess(theDto.getKeepNumRecentTransactionsSuccess());
 	}
 
-	public void populateKeepRecentTransactionsToDto(BaseGKeepsRecentMessages<?> theDto) {
+	public void populateKeepRecentTransactionsToDto(BaseGKeepsRecentMessages theDto) {
 		theDto.setKeepNumRecentTransactionsFail(this.getKeepNumRecentTransactionsFail());
 		theDto.setKeepNumRecentTransactionsSecurityFail(this.getKeepNumRecentTransactionsSecurityFail());
 		theDto.setKeepNumRecentTransactionsFault(this.getKeepNumRecentTransactionsFault());

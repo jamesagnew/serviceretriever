@@ -147,7 +147,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		 */
 		DefaultAnswer.setDesignTime();
 		HashMap<PersServiceVersionUrl, Failure> failures = new HashMap<PersServiceVersionUrl, HttpResponseBean.Failure>();
-		failures.put(persUrl1, new Failure("aaa", "", "Excplanation", 400));
+		failures.put(persUrl1, new Failure("aaa", "", "Excplanation", 400,0));
 		when(httpResponse.getFailedUrls()).thenReturn(failures);
 		when(httpResponse.getSuccessfulUrl()).thenReturn(persUrl2);
 
@@ -210,8 +210,8 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		 * Mark a failure
 		 */
 		HashMap<PersServiceVersionUrl, Failure> failures = new HashMap<PersServiceVersionUrl, HttpResponseBean.Failure>();
-		failures.put(persUrl1, new Failure("aaa", "", "Excplanation", 400));
-		failures.put(persUrl2, new Failure("aaa", "", "Excplanation", 400));
+		failures.put(persUrl1, new Failure("aaa", "", "Excplanation", 400,0));
+		failures.put(persUrl2, new Failure("aaa", "", "Excplanation", 400,0));
 		when(httpResponse.getFailedUrls()).thenReturn(failures);
 		when(httpResponse.getSuccessfulUrl()).thenReturn(null);
 
@@ -288,7 +288,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		 */
 		DefaultAnswer.setDesignTime();
 		HashMap<PersServiceVersionUrl, Failure> failures = new HashMap<PersServiceVersionUrl, HttpResponseBean.Failure>();
-		failures.put(persUrl1, new Failure("aaa", "", "Excplanation", 400));
+		failures.put(persUrl1, new Failure("aaa", "", "Excplanation", 400,0));
 		when(httpResponse.getFailedUrls()).thenReturn(failures);
 		when(httpResponse.getSuccessfulUrl()).thenReturn(persUrl2);
 
@@ -352,8 +352,8 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		 * Mark a failure
 		 */
 		HashMap<PersServiceVersionUrl, Failure> failures = new HashMap<PersServiceVersionUrl, HttpResponseBean.Failure>();
-		failures.put(persUrl1, new Failure("aaa", "", "Excplanation", 400));
-		failures.put(persUrl2, new Failure("aaa", "", "Excplanation", 400));
+		failures.put(persUrl1, new Failure("aaa", "", "Excplanation", 400,0));
+		failures.put(persUrl2, new Failure("aaa", "", "Excplanation", 400,0));
 		when(httpResponse.getFailedUrls()).thenReturn(failures);
 		when(httpResponse.getSuccessfulUrl()).thenReturn(null);
 

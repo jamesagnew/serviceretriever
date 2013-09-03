@@ -2,11 +2,8 @@ package net.svcret.admin.client.ui.config.svcver;
 
 import static net.svcret.admin.client.AdminPortal.*;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.CssConstants;
@@ -22,7 +19,8 @@ import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
-import net.svcret.admin.shared.model.GUrlStatus;
+import net.svcret.admin.shared.model.ModelUpdateRequest;
+import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.dom.client.Style.Display;
@@ -38,6 +36,7 @@ import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.Widget;
 
 public class UrlGrid extends FlowPanel {
 	private static final int NUM_COLS = 7;
@@ -117,33 +116,33 @@ public class UrlGrid extends FlowPanel {
 
 	private final class MyPanel extends FlowPanelWithTooltip implements IProvidesTooltip {
 		private ResponseTypeEnum myResponseType;
-		private GUrlStatus myStatus;
+		private GServiceVersionUrl myStatus;
 
-		private MyPanel(GUrlStatus theStatus, ResponseTypeEnum theResponseType) {
+		private MyPanel(GServiceVersionUrl theStatus, ResponseTypeEnum theResponseType) {
 			setTooltipProvider(this);
 			myResponseType = theResponseType;
 			myStatus = theStatus;
-			
-			String message=null;
-			switch(myResponseType) {
+
+			String message = null;
+			switch (myResponseType) {
 			case FAIL:
-				message = "Failed to Invoke: " + DateUtil.formatTimeElapsedForLastInvocation(myStatus.getLastFailure());
+				message = "Failed to Invoke: " + DateUtil.formatTimeElapsedForLastInvocation(myStatus.getStatsLastFailure());
 				break;
 			case FAULT:
-				message = "Fault Response: " + DateUtil.formatTimeElapsedForLastInvocation(myStatus.getLastFault());
+				message = "Fault Response: " + DateUtil.formatTimeElapsedForLastInvocation(myStatus.getStatsLastFault());
 				break;
 			case SECURITY_FAIL:
 			case THROTTLE_REJ:
 				throw new IllegalArgumentException();
 			case SUCCESS:
-				message = "Successful Response: " + DateUtil.formatTimeElapsedForLastInvocation(myStatus.getLastSuccess());
+				message = "Success: " + DateUtil.formatTimeElapsedForLastInvocation(myStatus.getStatsLastSuccess());
 				break;
 			}
 
 			Label label = new Label(message);
 			label.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
 			add(label);
-			
+
 			Image image = new Image(AdminPortal.IMAGES.iconI16());
 			image.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
 			add(image);
@@ -155,34 +154,34 @@ public class UrlGrid extends FlowPanel {
 		public String getTooltip() {
 			String message = null;
 			Date date = null;
-			String desc=null;
-			
-			switch(myResponseType) {
+			String desc = null;
+
+			switch (myResponseType) {
 			case FAIL:
-				message=myStatus.getLastFailureMessage();
-				date=myStatus.getLastFailure();
-				desc ="failure";
+				message = myStatus.getStatsLastFailureMessage();
+				date = myStatus.getStatsLastFailure();
+				desc = "failure";
 				break;
 			case FAULT:
-				message=myStatus.getLastFaultMessage();
-				date=myStatus.getLastFault();
-				desc="fault";
+				message = myStatus.getStatsLastFaultMessage();
+				date = myStatus.getStatsLastFault();
+				desc = "fault";
 				break;
 			case SECURITY_FAIL:
 			case THROTTLE_REJ:
 				// not applicable
 				break;
 			case SUCCESS:
-				message=myStatus.getLastSuccessMessage();
-				date=myStatus.getLastSuccess();
-				desc="success";
+				message = myStatus.getStatsLastSuccessMessage();
+				date = myStatus.getStatsLastSuccess();
+				desc = "success";
 				break;
 			}
-			
-			if (message!=null||date!=null) {
-				return "Last " + desc + "<br/><ul><li>" + "<b>Date:</b> " + DateUtil.formatTime(date) + "</li><li>Message: " + message+"</li></ul>";
+
+			if (message != null || date != null) {
+				return "Last " + desc + "<br/><ul><li>" + "<b>Date:</b> " + DateUtil.formatTime(date) + "</li><li>Message: " + message + "</li></ul>";
 			}
-			
+
 			return null;
 		}
 	}
@@ -214,42 +213,41 @@ public class UrlGrid extends FlowPanel {
 	}
 
 	protected void updateUrlPanel() {
-		if (myServiceVersion.getPidOrNull()==null) {
-			updateUrlPanel(new ArrayList<GUrlStatus>());
+		if (myServiceVersion.getPidOrNull() == null) {
+			doUpdateUrlPanel();
 			return;
 		}
-		
-		AdminPortal.MODEL_SVC.loadServiceVersionUrlStatuses(myServiceVersion.getPid(), new AsyncCallback<List<GUrlStatus>>() {
+
+		ModelUpdateRequest request = new ModelUpdateRequest();
+		for (GServiceVersionUrl next : myServiceVersion.getUrlList()) {
+			if (next.getPidOrNull() != null) {
+				request.addUrlToLoadStats(next.getPidOrNull());
+			}
+		}
+
+		AsyncCallback<ModelUpdateResponse> callback = new AsyncCallback<ModelUpdateResponse>() {
+
+			@Override
+			public void onSuccess(ModelUpdateResponse theResult) {
+				myServiceVersion = theResult.getDomainList().getServiceVersionByPid(myServiceVersion.getPid());
+				doUpdateUrlPanel();
+			}
 
 			@Override
 			public void onFailure(Throwable theCaught) {
 				Model.handleFailure(theCaught);
 			}
-
-			@Override
-			public void onSuccess(List<GUrlStatus> theUrlStatuses) {
-				updateUrlPanel(theUrlStatuses);
-			}
-
-		});
+		};
+		AdminPortal.MODEL_SVC.loadModelUpdate(request, callback);
 
 	}
 
-	private void updateUrlPanel(List<GUrlStatus> theUrlStatuses) {
-		Map<Long, GUrlStatus> urlPidToUrlStatus = new HashMap<Long, GUrlStatus>();
-		for (GUrlStatus gUrlStatus : theUrlStatuses) {
-			urlPidToUrlStatus.put(gUrlStatus.getUrlPid(), gUrlStatus);
-		}
-
+	private void doUpdateUrlPanel() {
 		myUrlGrid.resize(myServiceVersion.getUrlList().size() + 1, NUM_COLS);
 
 		int row = 0;
 
 		for (final GServiceVersionUrl next : myServiceVersion.getUrlList()) {
-			final GUrlStatus status = urlPidToUrlStatus.get(next.getPid());// NB
-																			// may
-																			// be
-																			// null
 			row++;
 
 			myUrlGrid.setWidget(row, 0, new UrlEditButtonPanel(next));
@@ -290,31 +288,43 @@ public class UrlGrid extends FlowPanel {
 			myUrlGrid.setWidget(row, COL_URL_URL, urlField);
 
 			// Status
-			if (status == null) {
+			if (next.isStatsInitialized() == false) {
 				myUrlGrid.setWidget(row, COL_URL_STATUS, null);
 				myUrlGrid.setWidget(row, COL_URL_LAST_TRANSACTION, null);
 			} else {
 				FlowPanel statusPanel = new FlowPanel();
 				statusPanel.setStyleName(CssConstants.UNSTYLED_TABLE);
-				statusPanel.add(BaseDashModel.returnImageForStatus(status.getStatus()));
-				switch (status.getStatus()) {
+				statusPanel.getElement().getStyle().setTextAlign(com.google.gwt.dom.client.Style.TextAlign.CENTER);
+				Widget imageForStatus = BaseDashModel.returnImageForStatus(next.getStatus());
+				imageForStatus.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
+				statusPanel.add(imageForStatus);
+				String text = null;
+				switch (next.getStatus()) {
 				case ACTIVE:
-					statusPanel.add(new Label("Ok"));
+					text = "Ok";
 					break;
 				case DOWN:
-					statusPanel.add(new Label("Down"));
+					text = "Down";
 					break;
 				case UNKNOWN:
-					statusPanel.add(new Label("Unknown (no requests)"));
+					text = "Unknown (no requests)";
 					break;
 				}
+				Label urlStatusLabel = new Label(text);
+				urlStatusLabel.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
+				statusPanel.add(urlStatusLabel);
 				myUrlGrid.setWidget(row, COL_URL_STATUS, statusPanel);
 
 				FlowPanel lastXPanel = new FlowPanel();
 
-				lastXPanel.add(new MyPanel(status,ResponseTypeEnum.SUCCESS));
-				lastXPanel.add(new MyPanel(status,ResponseTypeEnum.FAULT));
-				lastXPanel.add(new MyPanel(status,ResponseTypeEnum.FAIL));
+				List<ResponseTypeEnum> lastResponseTypes = next.getStatsLastResponseTypesFromMostRecentToLeast();
+				if (lastResponseTypes.isEmpty()) {
+					lastXPanel.add(new Label("No usage"));
+				} else {
+					for (ResponseTypeEnum lastResponseType : lastResponseTypes) {
+						lastXPanel.add(new MyPanel(next, lastResponseType));
+					}
+				}
 
 				myUrlGrid.setWidget(row, COL_URL_LAST_TRANSACTION, lastXPanel);
 

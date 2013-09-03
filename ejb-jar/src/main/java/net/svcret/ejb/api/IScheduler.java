@@ -21,4 +21,6 @@ public interface IScheduler {
 
 	void flushInMemoryStatisticsUnlessItHasHappenedVeryRecently();
 
+	void recordNodeStats();
+	
 }

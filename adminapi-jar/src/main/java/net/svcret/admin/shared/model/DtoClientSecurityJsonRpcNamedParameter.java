@@ -5,7 +5,7 @@ public class DtoClientSecurityJsonRpcNamedParameter extends BaseGClientSecurity 
 	private static final long serialVersionUID = 1L;
 
 	@Override
-	public void merge(BaseGClientSecurity theObject) {
+	public void merge(BaseGObject theObject) {
 		super.merge(theObject);
 
 		DtoClientSecurityJsonRpcNamedParameter obj = (DtoClientSecurityJsonRpcNamedParameter) theObject;

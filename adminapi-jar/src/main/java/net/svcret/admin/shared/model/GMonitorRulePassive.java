@@ -113,11 +113,6 @@ public class GMonitorRulePassive extends BaseGMonitorRule {
 		return myPassiveFireIfSingleBackingUrlIsUnavailable;
 	}
 
-	@Override
-	public void merge(BaseGMonitorRule theObject) {
-
-	}
-
 	/**
 	 * @param thePassiveFireForBackingServiceLatencyIsAboveMillis
 	 *            the fireForBackingServiceLatencyIsAboveMillis to set

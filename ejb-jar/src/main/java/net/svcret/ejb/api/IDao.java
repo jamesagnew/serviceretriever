@@ -32,11 +32,15 @@ import net.svcret.ejb.model.entity.PersEnvironment;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
+import net.svcret.ejb.model.entity.PersInvocationUrlStats;
+import net.svcret.ejb.model.entity.PersInvocationUrlStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
 import net.svcret.ejb.model.entity.PersLibraryMessage;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
+import net.svcret.ejb.model.entity.PersNodeStats;
+import net.svcret.ejb.model.entity.PersNodeStatsPk;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
@@ -53,7 +57,7 @@ public interface IDao {
 	void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost);
 
 	void deleteHttpClientConfig(PersHttpClientConfig theConfig);
-	
+
 	void deleteService(PersService theService);
 
 	void deleteServiceVersion(BasePersServiceVersion theSv);
@@ -93,6 +97,8 @@ public interface IDao {
 
 	List<PersInvocationStats> getInvocationStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff);
 
+	List<PersInvocationUrlStats> getInvocationUrlStatsBefore(InvocationStatsIntervalEnum theMinute, Date theHoursCutoff);
+
 	BasePersMethodInvocationStats getInvocationUserStats(PersInvocationUserStatsPk thePk);
 
 	List<PersInvocationUserStats> getInvocationUserStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff);
@@ -109,6 +115,8 @@ public interface IDao {
 
 	Collection<BasePersMonitorRule> getMonitorRules();
 
+	List<PersNodeStats> getNodeStatsBefore(InvocationStatsIntervalEnum theMinute, Date theHoursCutoff);
+
 	PersAuthenticationHostLdap getOrCreateAuthenticationHostLdap(String theModuleId) throws ProcessingException;
 
 	PersAuthenticationHostLocalDatabase getOrCreateAuthenticationHostLocalDatabase(String theModuleIdAdminAuth) throws ProcessingException;
@@ -121,7 +129,11 @@ public interface IDao {
 
 	PersInvocationStats getOrCreateInvocationStats(PersInvocationStatsPk thePk);
 
+	PersInvocationUrlStats getOrCreateInvocationUrlStats(PersInvocationUrlStatsPk thePk);
+
 	PersInvocationUserStats getOrCreateInvocationUserStats(PersInvocationUserStatsPk thePk);
+
+	PersNodeStats getOrCreateNodeStats(PersNodeStatsPk thePk);
 
 	BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, String theVersionId, ServiceProtocolEnum theProtocol) throws ProcessingException;
 
@@ -185,6 +197,8 @@ public interface IDao {
 
 	void saveMonitorRule(BasePersMonitorRule theRule);
 
+	// List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int theStart);
+
 	PersMonitorRuleFiring saveMonitorRuleFiring(PersMonitorRuleFiring theFiring);
 
 	<T extends BasePersMonitorRule> T saveOrCreateMonitorRule(T theRule);
@@ -192,8 +206,6 @@ public interface IDao {
 	void saveRecentMessagesAndTrimInNewTransaction(BaseUnflushed<? extends BasePersSavedTransactionRecentMessage> theNextTransactions);
 
 	PersBaseServerAuth<?, ?> saveServerAuth(PersBaseServerAuth<?, ?> theNextPers);
-
-//	List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int theStart);
 
 	void saveService(PersService theService);
 
@@ -242,4 +254,4 @@ public interface IDao {
 
 	}
 
-	}
+}

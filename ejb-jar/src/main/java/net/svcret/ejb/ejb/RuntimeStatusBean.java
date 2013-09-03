@@ -1,15 +1,13 @@
 package net.svcret.ejb.ejb;
 
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.DAY;
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.HOUR;
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.MINUTE;
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.TEN_MINUTE;
+import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.*;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,18 +40,20 @@ import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.model.entity.BasePersInvocationMethodStatsPk;
-import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
-import net.svcret.ejb.model.entity.BasePersInvocationStatsPk;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
+import net.svcret.ejb.model.entity.BasePersInvocationStatsPk;
+import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.IThrottleable;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
+import net.svcret.ejb.model.entity.PersInvocationUrlStats;
+import net.svcret.ejb.model.entity.PersInvocationUrlStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
+import net.svcret.ejb.model.entity.PersNodeStats;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
@@ -278,6 +278,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 			doCollapseStats(myDao.getInvocationStatsBefore(HOUR, daysCutoff), DAY, PersInvocationStats.class);
 			doCollapseStats(myDao.getInvocationUserStatsBefore(HOUR, daysCutoff), DAY, PersInvocationUserStats.class);
+			doCollapseStats(myDao.getInvocationUrlStatsBefore(HOUR, daysCutoff), DAY, PersInvocationUrlStats.class);
+			doCollapseStats(myDao.getNodeStatsBefore(HOUR, daysCutoff), DAY, PersNodeStats.class);
 		}
 
 		// 10 Minutes -> Hours
@@ -288,6 +290,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 			doCollapseStats(myDao.getInvocationStatsBefore(TEN_MINUTE, hoursCutoff), HOUR, PersInvocationStats.class);
 			doCollapseStats(myDao.getInvocationUserStatsBefore(TEN_MINUTE, hoursCutoff), HOUR, PersInvocationUserStats.class);
+			doCollapseStats(myDao.getInvocationUrlStatsBefore(TEN_MINUTE, hoursCutoff), HOUR, PersInvocationUrlStats.class);
+			doCollapseStats(myDao.getNodeStatsBefore(TEN_MINUTE, hoursCutoff), DAY, PersNodeStats.class);
 		}
 
 		// Minutes -> 10 Minutes
@@ -298,6 +302,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 			doCollapseStats(myDao.getInvocationStatsBefore(MINUTE, hoursCutoff), TEN_MINUTE, PersInvocationStats.class);
 			doCollapseStats(myDao.getInvocationUserStatsBefore(MINUTE, hoursCutoff), TEN_MINUTE, PersInvocationUserStats.class);
+			doCollapseStats(myDao.getInvocationUrlStatsBefore(MINUTE, hoursCutoff), HOUR, PersInvocationUrlStats.class);
+			doCollapseStats(myDao.getNodeStatsBefore(MINUTE, hoursCutoff), DAY, PersNodeStats.class);
 		}
 	}
 
@@ -364,7 +370,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 		List<BasePersInvocationStats> stats = new ArrayList<BasePersInvocationStats>();
 		HashSet<BasePersInvocationStatsPk> keys = new HashSet<BasePersInvocationStatsPk>(myUnflushedInvocationStats.keySet());
-		
+
 		if (keys.isEmpty()) {
 
 			ourLog.debug("No status entries to flush");
@@ -516,6 +522,42 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			stats.addThrottleReject();
 			break;
 		}
+	}
+
+	private void doRecordInvocationForUrls(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, Date theInvocationTime) {
+		if (theHttpResponse == null) {
+			return;
+		}
+
+		PersServiceVersionUrl success = theHttpResponse.getSuccessfulUrl();
+		if (success != null) {
+			PersInvocationUrlStatsPk statsPk = new PersInvocationUrlStatsPk(MINUTE, theInvocationTime, success.getPid());
+			PersInvocationUrlStats stats = (PersInvocationUrlStats) getStatsForPk(statsPk);
+			long responseTime = theHttpResponse.getResponseTime();
+			int responseBytes = theHttpResponse.getBody().length();
+			switch (theInvocationResponseResultsBean.getResponseType()) {
+			case FAULT:
+				stats.addFaultInvocation(responseTime, theRequestLengthChars, responseBytes);
+				break;
+			case SUCCESS:
+				stats.addSuccessInvocation(responseTime, theRequestLengthChars, responseBytes);
+				break;
+			default:
+				break;
+			}
+		}
+
+		for (Entry<PersServiceVersionUrl, Failure> next : theHttpResponse.getFailedUrls().entrySet()) {
+			PersServiceVersionUrl nextUrl = next.getKey();
+			Failure nextFailure = next.getValue();
+
+			PersInvocationUrlStatsPk statsPk = new PersInvocationUrlStatsPk(MINUTE, theInvocationTime, nextUrl.getPid());
+			PersInvocationUrlStats stats = (PersInvocationUrlStats) getStatsForPk(statsPk);
+			long responseTime = nextFailure.getInvocationMillis();
+			int responseBytes = nextFailure.getBody().length();
+			stats.addSuccessInvocation(responseTime, theRequestLengthChars, responseBytes);
+		}
+
 	}
 
 	private void doRecordUrlStatus(boolean theWasSuccess, boolean theWasFault, PersServiceVersionUrlStatus theUrlStatusBean, String theMessage) {
@@ -786,9 +828,9 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		 * Record method statistics
 		 */
 		InvocationStatsIntervalEnum interval = MINUTE;
-		BasePersInvocationMethodStatsPk statsPk = new PersInvocationStatsPk(interval, theInvocationTime, theMethod);
+		BasePersInvocationStatsPk statsPk = new PersInvocationStatsPk(interval, theInvocationTime, theMethod);
 		doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, statsPk, theThrottleFullIfAny);
-
+		
 		/*
 		 * Record user/anon method statistics
 		 */
@@ -817,7 +859,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 					message = Messages.getString("RuntimeStatusBean.successfulUrl", theHttpResponse.getResponseTime());
 				}
 				doRecordUrlStatus(true, wasFault, status, message);
-
 			}
 
 			/*
@@ -830,6 +871,11 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				PersServiceVersionUrlStatus failedStatus = getUrlStatus(nextFailedUrl);
 				doRecordUrlStatus(false, false, failedStatus, failure.getExplanation());
 			}
+			
+			/*
+			 * Record URL stats
+			 */
+			doRecordInvocationForUrls(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, theInvocationTime);
 		}
 
 		/*
@@ -930,6 +976,15 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			throw new UnsupportedOperationException();
 		}
 
+	}
+
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	@Override
+	public void recordNodeStatistics() {
+		ourLog.debug("Recording node statistics");
+		
+		PersNodeStats stats = new PersNodeStats(InvocationStatsIntervalEnum.MINUTE, InvocationStatsIntervalEnum.MINUTE.truncate(new Date()), myConfigSvc.getNodeId());
+		myDao.saveInvocationStats(Collections.singletonList((BasePersInvocationStats)stats));
 	}
 
 }

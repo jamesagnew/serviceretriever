@@ -13,8 +13,8 @@ import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.PButtonCell;
 import net.svcret.admin.client.ui.components.PCellTable;
 import net.svcret.admin.client.ui.config.svcver.NullColumn;
-import net.svcret.admin.shared.InverseComparator;
 import net.svcret.admin.shared.model.GRecentMessage;
+import net.svcret.admin.shared.util.InverseComparator;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.cell.client.CompositeCell;

@@ -3,7 +3,7 @@ package net.svcret.admin.shared.model;
 import java.util.HashSet;
 import java.util.Set;
 
-public class GDomain extends BaseDtoServiceCatalogItem<GDomain> {
+public class GDomain extends BaseDtoServiceCatalogItem {
 
 	private static final long serialVersionUID = 1L;
 
@@ -15,17 +15,14 @@ public class GDomain extends BaseDtoServiceCatalogItem<GDomain> {
 	}
 
 	@Override
-	public void merge(GDomain theObject) {
-		mergeSimple(theObject);
+	public void merge(BaseGObject theObject) {
+		super.merge(theObject);
 
-		if (theObject.getServiceList() != null) {
-			getServiceList().mergeResults(theObject.getServiceList());
+		GDomain obj=(GDomain) theObject;
+		if (obj.getServiceList() != null) {
+			getServiceList().mergeResults(obj.getServiceList());
 		}
 
-	}
-
-	public void mergeSimple(GDomain theObject) {
-		super.merge((BaseGDashboardObject<GDomain>) theObject);
 	}
 
 	public Set<Long> getAllServiceVersionPids() {

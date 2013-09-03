@@ -5,7 +5,7 @@ import java.util.Set;
 
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 
-public abstract class BaseGServiceVersion extends BaseDtoServiceCatalogItem<BaseGServiceVersion> implements IProvidesUrlCount {
+public abstract class BaseGServiceVersion extends BaseDtoServiceCatalogItem implements IProvidesUrlCount {
 
 	private static final long serialVersionUID = 7886801527330335503L;
 
@@ -167,31 +167,32 @@ public abstract class BaseGServiceVersion extends BaseDtoServiceCatalogItem<Base
 	}
 
 	@Override
-	public void merge(BaseGServiceVersion theObject) {
-		super.merge((BaseGDashboardObject<BaseGServiceVersion>) theObject);
+	public void merge(BaseGObject theObject) {
+		super.merge(theObject);
 
-		myActive = theObject.myActive;
-		myLastAccess = theObject.myLastAccess;
-		myServerSecurityMode = theObject.myServerSecurityMode;
+		BaseGServiceVersion obj=(BaseGServiceVersion) theObject;
+		myActive = obj.myActive;
+		myLastAccess = obj.myLastAccess;
+		myServerSecurityMode = obj.myServerSecurityMode;
 
-		if (theObject.getMethodList() != null) {
-			getMethodList().mergeResults(theObject.getMethodList());
+		if (obj.getMethodList() != null) {
+			getMethodList().mergeResults(obj.getMethodList());
 		}
 
-		if (theObject.getUrlList() != null) {
-			getUrlList().mergeResults(theObject.getUrlList());
+		if (obj.getUrlList() != null) {
+			getUrlList().mergeResults(obj.getUrlList());
 		}
 
-		if (theObject.getServerSecurityList() != null) {
-			getServerSecurityList().mergeResults(theObject.getServerSecurityList());
+		if (obj.getServerSecurityList() != null) {
+			getServerSecurityList().mergeResults(obj.getServerSecurityList());
 		}
 
-		if (theObject.getClientSecurityList() != null) {
-			getClientSecurityList().mergeResults(theObject.getClientSecurityList());
+		if (obj.getClientSecurityList() != null) {
+			getClientSecurityList().mergeResults(obj.getClientSecurityList());
 		}
 
-		if (theObject.getResourcePointerList() != null) {
-			getResourcePointerList().mergeResults(theObject.getResourcePointerList());
+		if (obj.getResourcePointerList() != null) {
+			getResourcePointerList().mergeResults(obj.getResourcePointerList());
 		}
 
 	}

@@ -1,6 +1,8 @@
 package net.svcret.admin.shared.model;
 
-public abstract class BaseGObject<T> extends BaseGListenable<T> {
+import java.io.Serializable;
+
+public abstract class BaseGObject implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -20,7 +22,7 @@ public abstract class BaseGObject<T> extends BaseGListenable<T> {
 			return false;
 		}
 		
-		BaseGObject<?> obj = (BaseGObject<?>) theObj;
+		BaseGObject obj = (BaseGObject) theObj;
 		
 		if (myPid != 0 && obj.myPid != 0) {
 			return myPid == obj.myPid;
@@ -59,7 +61,9 @@ public abstract class BaseGObject<T> extends BaseGListenable<T> {
 		return 0;
 	}
 
-	public abstract void merge(T theObject);
+	protected void merge(BaseGObject theObject) {
+		setPid(theObject.getPid());
+	}
 
 	public void setPid(long thePid) {
 		myPid = thePid;

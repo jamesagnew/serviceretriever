@@ -2,7 +2,7 @@ package net.svcret.admin.shared.model;
 
 import java.io.Serializable;
 
-public class GResource extends BaseGObject<GResource> implements Serializable {
+public class GResource extends BaseGObject implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -66,12 +66,15 @@ public class GResource extends BaseGObject<GResource> implements Serializable {
 
 	
 	@Override
-	public void merge(GResource theObject) {
-		setPid(theObject.getPid());
-		setContentType(theObject.getContentType());
-		setText(theObject.getText());
-		setUncommittedSessionId(theObject.getUncommittedSessionId());
-		setUrl(theObject.getUrl());
+	public void merge(BaseGObject theObject) {
+		super.merge(theObject);
+		
+		GResource obj = (GResource)theObject;
+		
+		setContentType(obj.getContentType());
+		setText(obj.getText());
+		setUncommittedSessionId(obj.getUncommittedSessionId());
+		setUrl(obj.getUrl());
 	}
 
 	public GServiceVersionResourcePointer asPointer() {

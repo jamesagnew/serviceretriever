@@ -4,7 +4,7 @@ import java.util.Date;
 
 import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 
-public class GServiceMethod extends BaseGDashboardObject<GServiceMethod> {
+public class GServiceMethod extends BaseGDashboardObject {
 
 	private static final long serialVersionUID = 1L;
 
@@ -34,12 +34,16 @@ public class GServiceMethod extends BaseGDashboardObject<GServiceMethod> {
 	}
 
 	@Override
-	public void merge(GServiceMethod theObject) {
-		myRootElements = theObject.getRootElements();
-		if (theObject.isStatsInitialized()) {
-			myLastAccess = theObject.getLastAccess();
+	public void merge(BaseGObject theObject) {
+		super.merge(theObject);
+
+		GServiceMethod obj = (GServiceMethod) theObject;
+		myRootElements = obj.getRootElements();
+		mySecurityPolicy = obj.getSecurityPolicy();
+
+		if (obj.isStatsInitialized()) {
+			myLastAccess = obj.getLastAccess();
 		}
-		super.merge((BaseGDashboardObject<GServiceMethod>) theObject);
 	}
 
 	public void setLastAccess(Date theLastAccess) {

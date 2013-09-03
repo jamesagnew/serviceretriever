@@ -19,15 +19,16 @@ import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
+import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
-import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.BaseGMonitorRule;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.DtoKeystoreAnalysis;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
+import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
@@ -49,8 +50,6 @@ import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
 import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
-import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
-import net.svcret.admin.shared.model.GUrlStatus;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.GUserDomainPermission;
 import net.svcret.admin.shared.model.GUserList;
@@ -123,14 +122,24 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		url.setPid(1);
 		url.setId("url1");
 		url.setUrl("http://foo");
+		url.setStatsLastFailure(new Date());
+		url.setStatsLastFailureMessage("This is a fail message");
+		url.setStatsLastSuccess(new Date());
+		url.setStatsLastSuccessMessage("This is a success message");
+		url.setStatus(StatusEnum.ACTIVE);
 		ver.getUrlList().add(url);
 
 		url = new GServiceVersionUrl();
 		url.setPid(2);
 		url.setId("url2");
 		url.setUrl("http://bar");
+		url.setStatsLastFailure(new Date());
+		url.setStatsLastFailureMessage("This is a fail message");
+		url.setStatsLastSuccess(new Date());
+		url.setStatsLastSuccessMessage("This is a success message");
+		url.setStatus(StatusEnum.ACTIVE);
 		ver.getUrlList().add(url);
-
+		
 		GServiceMethod met = new GServiceMethod();
 		met.setPid(MET1_PID);
 		met.setId("Method 1");
@@ -474,10 +483,15 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 				for (BaseGServiceVersion nextVersion : nextService.getVersionList()) {
 					if (theRequest.getVersionsToLoadStats().contains(nextVersion.getPid())) {
 						populateRandom(nextVersion);
-						for (GServiceMethod nextMethod : nextVersion.getMethodList()) {
-							if (theRequest.getVersionMethodsToLoadStats().contains(nextMethod.getPid())) {
-								populateRandom(nextMethod);
-							}
+					}
+					for (GServiceMethod nextMethod : nextVersion.getMethodList()) {
+						if (theRequest.getVersionMethodsToLoadStats().contains(nextMethod.getPid())) {
+							populateRandom(nextMethod);
+						}
+					}
+					for (GServiceVersionUrl nextUrl : nextVersion.getUrlList()) {
+						if (theRequest.getUrlsToLoadStats().contains(nextUrl.getPid())) {
+							populateRandom(nextUrl);
 						}
 					}
 				}
@@ -587,31 +601,6 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	}
 
 	@Override
-	public List<GUrlStatus> loadServiceVersionUrlStatuses(long theServiceVersionPid) {
-		ArrayList<GUrlStatus> retVal = new ArrayList<GUrlStatus>();
-
-		GUrlStatus url = new GUrlStatus();
-		url.setUrlPid(1);
-		url.setLastFailure(new Date());
-		url.setLastFailureMessage("This is a fail message");
-		url.setLastSuccess(new Date());
-		url.setLastSuccessMessage("This is a success message");
-		url.setStatus(StatusEnum.ACTIVE);
-		retVal.add(url);
-
-		url = new GUrlStatus();
-		url.setUrlPid(2);
-		url.setLastFailure(new Date());
-		url.setLastFailureMessage("This is a fail message");
-		url.setLastSuccess(new Date());
-		url.setLastSuccessMessage("This is a success message");
-		url.setStatus(StatusEnum.ACTIVE);
-		retVal.add(url);
-
-		return retVal;
-	}
-
-	@Override
 	public UserAndAuthHost loadUser(long thePid, boolean theLoadStats) {
 		GUser user = myUserList.getUserByPid(thePid);
 		BaseGAuthHost authHost = myAuthHostList.getAuthHostByPid(user.getAuthHostPid());
@@ -653,19 +642,26 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		GServiceVersionUrl url = new GServiceVersionUrl();
 		url.setId("url1");
 		url.setUrl("http://something/aaaa.html");
+		url.setStatsLastFailure(new Date());
+		url.setStatsLastFailureMessage("This is a fail message");
+		url.setStatsLastSuccess(new Date());
+		url.setStatsLastSuccessMessage("This is a success message");
+		url.setStatus(StatusEnum.ACTIVE);
 		retVal.getUrlList().add(url);
 
+
+		
 		return retVal;
 	}
 
-	private void populateRandom(BaseGDashboardObject<?> obj) {
+	private void populateRandom(BaseGDashboardObject obj) {
 		obj.setStatsInitialized(new Date());
 		obj.setStatus(randomStatus());
 		obj.setTransactions60mins(random60mins());
 		obj.setLatency60mins(random60mins());
 	}
 
-	private void populateRandom(BaseDtoServiceCatalogItem<?> obj) {
+	private void populateRandom(BaseDtoServiceCatalogItem obj) {
 		obj.setStatsInitialized(new Date());
 		obj.setStatus(randomStatus());
 		obj.setTransactions60mins(random60mins());
@@ -797,10 +793,12 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 
 	@Override
 	public GDomainList saveService(GService theService) {
+		theService.removeVersionList();
+		
 		for (GDomain nextDomain : myDomainList) {
 			for (GService nextService : nextDomain.getServiceList()) {
 				if (nextService.getPid() == theService.getPid()) {
-					nextService.mergeSimple(theService);
+					nextService.merge(theService);
 				}
 			}
 		}
@@ -824,8 +822,9 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 
 	@Override
 	public GMonitorRuleList saveMonitorRule(BaseGMonitorRule theRule) {
-		if (theRule.getPidOrNull() == null) {
-			myMonitorRuleList.getRuleByPid(theRule.getPidOrNull()).merge(theRule);
+		if (theRule.getPidOrNull() != null) {
+			myMonitorRuleList.remove(myMonitorRuleList.getRuleByPid(theRule.getPidOrNull()));
+			myMonitorRuleList.add(theRule);
 		} else {
 			theRule.setPid(ourNextPid++);
 			myMonitorRuleList.add(theRule);

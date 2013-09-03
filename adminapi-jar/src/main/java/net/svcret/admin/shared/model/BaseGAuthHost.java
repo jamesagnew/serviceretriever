@@ -1,6 +1,6 @@
 package net.svcret.admin.shared.model;
 
-public abstract class BaseGAuthHost extends BaseGKeepsRecentMessages<BaseGAuthHost> {
+public abstract class BaseGAuthHost extends BaseGKeepsRecentMessages {
 
 	private static final long serialVersionUID = 1L;
 

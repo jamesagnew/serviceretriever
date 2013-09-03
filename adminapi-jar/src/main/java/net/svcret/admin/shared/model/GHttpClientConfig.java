@@ -1,6 +1,6 @@
 package net.svcret.admin.shared.model;
 
-public class GHttpClientConfig extends BaseGObject<GHttpClientConfig> {
+public class GHttpClientConfig extends BaseGObject {
 
 	public static final String DEFAULT_ID = "DEFAULT";
 
@@ -86,15 +86,18 @@ public class GHttpClientConfig extends BaseGObject<GHttpClientConfig> {
 	}
 
 	@Override
-	public void merge(GHttpClientConfig theObject) {
-		myCircuitBreakerEnabled = theObject.myCircuitBreakerEnabled;
-		myCircuitBreakerTimeBetweenResetAttempts = theObject.myCircuitBreakerTimeBetweenResetAttempts;
-		myConnectTimeoutMillis = theObject.myConnectTimeoutMillis;
-		myFailureRetriesBeforeAborting = theObject.myFailureRetriesBeforeAborting;
-		myId = theObject.myId;
-		myName = theObject.myName;
-		myReadTimeoutMillis = theObject.myReadTimeoutMillis;
-		myUrlSelectionPolicy = theObject.myUrlSelectionPolicy;
+	public void merge(BaseGObject theObject) {
+		super.merge(theObject);
+		
+		GHttpClientConfig obj = (GHttpClientConfig)theObject;
+		myCircuitBreakerEnabled = obj.myCircuitBreakerEnabled;
+		myCircuitBreakerTimeBetweenResetAttempts = obj.myCircuitBreakerTimeBetweenResetAttempts;
+		myConnectTimeoutMillis = obj.myConnectTimeoutMillis;
+		myFailureRetriesBeforeAborting = obj.myFailureRetriesBeforeAborting;
+		myId = obj.myId;
+		myName = obj.myName;
+		myReadTimeoutMillis = obj.myReadTimeoutMillis;
+		myUrlSelectionPolicy = obj.myUrlSelectionPolicy;
 	}
 
 	/**

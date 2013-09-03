@@ -50,7 +50,7 @@ public class DashModelServiceMethod extends BaseDashModel implements IDashModel 
 	}
 
 	@Override
-	public BaseGDashboardObject<?> getModel() {
+	public BaseGDashboardObject getModel() {
 		return myServiceMethod;
 	}
 

@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-public class GService extends BaseDtoServiceCatalogItem<GService> {
+public class GService extends BaseDtoServiceCatalogItem {
 
 	private static final long serialVersionUID = 1L;
 	private boolean myActive;
@@ -23,11 +23,12 @@ public class GService extends BaseDtoServiceCatalogItem<GService> {
 	}
 
 	@Override
-	public void merge(GService theObject) {
-		mergeSimple(theObject);
+	public void merge(BaseGObject theObject) {
+		super.merge(theObject);
 
-		if (theObject.getVersionList() != null) {
-			getVersionList().mergeResults(theObject.getVersionList());
+		GService obj = (GService)theObject;
+		if (obj.getVersionList() != null) {
+			getVersionList().mergeResults(obj.getVersionList());
 		}
 
 		myServiceVersionPids.clear();
@@ -41,9 +42,6 @@ public class GService extends BaseDtoServiceCatalogItem<GService> {
 		myActive = theActive;
 	}
 
-	public void mergeSimple(GService theService) {
-		super.merge((BaseGDashboardObject<GService>) theService);
-	}
 
 	public boolean allVersionPidsInThisServiceAreAmongThesePids(Set<Long> theAffectedSvcVerPids) {
 		populateSvcVerPids();
@@ -74,6 +72,10 @@ public class GService extends BaseDtoServiceCatalogItem<GService> {
 			retVal.add(next.getPid());
 		}
 		return retVal;
+	}
+
+	public void removeVersionList() {
+		myVersionList=null;
 	}
 
 }

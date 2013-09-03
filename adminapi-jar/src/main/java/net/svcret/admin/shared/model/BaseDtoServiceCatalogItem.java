@@ -3,7 +3,7 @@ package net.svcret.admin.shared.model;
 import java.util.HashSet;
 import java.util.Set;
 
-public abstract class BaseDtoServiceCatalogItem<T> extends BaseGDashboardObject<T> implements IProvidesUrlCount {
+public abstract class BaseDtoServiceCatalogItem extends BaseGDashboardObject implements IProvidesUrlCount {
 
 	private static final long serialVersionUID = 1L;
 
@@ -77,10 +77,10 @@ public abstract class BaseDtoServiceCatalogItem<T> extends BaseGDashboardObject<
 	}
 
 	@Override
-	public void merge(BaseGDashboardObject<T> theObject) {
-		super.merge((BaseGDashboardObject<T>) theObject);
+	public void merge(BaseGObject theObject) {
+		super.merge(theObject);
 
-		BaseDtoServiceCatalogItem<T> obj = (BaseDtoServiceCatalogItem<T>) theObject;
+		BaseDtoServiceCatalogItem obj = (BaseDtoServiceCatalogItem) theObject;
 		myServerSecured = obj.getServerSecured();
 
 		getMonitorRulePids().clear();
@@ -91,7 +91,7 @@ public abstract class BaseDtoServiceCatalogItem<T> extends BaseGDashboardObject<
 		setObscureRequestElementsInLogCache(obj.getObscureRequestElementsInLogCache());
 		setObscureResponseElementsInLogCache(obj.getObscureResponseElementsInLogCache());
 		
-		if (theObject.isStatsInitialized()) {
+		if (obj.isStatsInitialized()) {
 			getFailingApplicableRulePids().clear();
 			getFailingApplicableRulePids().addAll(obj.getFailingApplicableRulePids());
 			setUrlsActive(obj.getUrlsActive());

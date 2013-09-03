@@ -2,15 +2,12 @@ package net.svcret.ejb.model.entity;
 
 import java.util.Date;
 
-import javax.persistence.Cacheable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Index;
 
 //@formatter:off
@@ -24,9 +21,6 @@ import org.hibernate.annotations.Index;
 	@NamedQuery(name=Queries.PERSINVOC_STATS, query=Queries.PERSINVOC_STATS_Q)
 })
 @Entity()
-@Cacheable()
-//NB: Using nonstrict here is actually less performant..
-@Cache(usage=CacheConcurrencyStrategy.READ_WRITE)
 //@formatter:on
 public class PersInvocationStats extends BasePersMethodInvocationStats {
 

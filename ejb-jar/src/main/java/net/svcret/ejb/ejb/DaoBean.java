@@ -51,6 +51,8 @@ import net.svcret.ejb.model.entity.PersEnvironment;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersInvocationStats;
 import net.svcret.ejb.model.entity.PersInvocationStatsPk;
+import net.svcret.ejb.model.entity.PersInvocationUrlStats;
+import net.svcret.ejb.model.entity.PersInvocationUrlStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
 import net.svcret.ejb.model.entity.PersLibraryMessage;
@@ -62,6 +64,8 @@ import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem;
 import net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact;
 import net.svcret.ejb.model.entity.PersMonitorRulePassive;
+import net.svcret.ejb.model.entity.PersNodeStats;
+import net.svcret.ejb.model.entity.PersNodeStatsPk;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
@@ -274,6 +278,14 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
+	public List<PersInvocationUrlStats> getInvocationUrlStatsBefore(InvocationStatsIntervalEnum theInterval, Date theCutoff) {
+		TypedQuery<PersInvocationUrlStats> q = myEntityManager.createNamedQuery(Queries.PERSINVOC_URLSTATS_FINDINTERVAL, PersInvocationUrlStats.class);
+		q.setParameter("INTERVAL", theInterval);
+		q.setParameter("BEFORE_DATE", theCutoff, TemporalType.TIMESTAMP);
+		return q.getResultList();
+	}
+
+	@Override
 	public BasePersMethodInvocationStats getInvocationUserStats(PersInvocationUserStatsPk thePk) {
 		return myEntityManager.find(PersInvocationUserStats.class, thePk);
 	}
@@ -343,6 +355,14 @@ public class DaoBean implements IDao {
 	@Override
 	public List<BasePersMonitorRule> getMonitorRules() {
 		TypedQuery<BasePersMonitorRule> q = myEntityManager.createNamedQuery(Queries.MONITORRULE_FINDALL, BasePersMonitorRule.class);
+		return q.getResultList();
+	}
+
+	@Override
+	public List<PersNodeStats> getNodeStatsBefore(InvocationStatsIntervalEnum theInterval, Date theCutoff) {
+		TypedQuery<PersNodeStats> q = myEntityManager.createNamedQuery(Queries.PERS_NODESTATS_FINDINTERVAL, PersNodeStats.class);
+		q.setParameter("INTERVAL", theInterval);
+		q.setParameter("BEFORE_DATE", theCutoff, TemporalType.TIMESTAMP);
 		return q.getResultList();
 	}
 
@@ -462,6 +482,38 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
+	public PersInvocationUrlStats getOrCreateInvocationUrlStats(PersInvocationUrlStatsPk thePk) {
+		PersInvocationUrlStats retVal = myEntityManager.find(PersInvocationUrlStats.class, thePk);
+
+		if (retVal == null) {
+			retVal = new PersInvocationUrlStats(thePk);
+			ourLog.debug("Adding new invocation stats: {}", thePk);
+			retVal = myEntityManager.merge(retVal);
+			retVal.setNewlyCreated(true);
+		} else {
+			ourLog.debug("Returning existing invocation stats: {}", retVal);
+		}
+
+		return retVal;
+	}
+
+	@Override
+	public PersNodeStats getOrCreateNodeStats(PersNodeStatsPk thePk) {
+		PersNodeStats retVal = myEntityManager.find(PersNodeStats.class, thePk);
+
+		if (retVal == null) {
+			retVal = new PersNodeStats(thePk);
+			ourLog.debug("Adding new invocation stats: {}", thePk);
+			retVal = myEntityManager.merge(retVal);
+			retVal.setNewlyCreated(true);
+		} else {
+			ourLog.debug("Returning existing invocation stats: {}", retVal);
+		}
+
+		return retVal;
+	}
+
+	@Override
 	public PersInvocationUserStats getOrCreateInvocationUserStats(PersInvocationUserStatsPk thePk) {
 		PersInvocationUserStats retVal = myEntityManager.find(PersInvocationUserStats.class, thePk);
 
@@ -515,7 +567,7 @@ public class DaoBean implements IDao {
 			}
 
 			retVal.prePersist();
-			
+
 			retVal.setService(theService);
 			retVal.setVersionId(theId);
 			retVal.setHttpClientConfig(config);
@@ -919,6 +971,22 @@ public class DaoBean implements IDao {
 				}
 				persisted.mergeUnsynchronizedEvents(next);
 				count++;
+			} else if (next instanceof PersInvocationUrlStats) {
+				PersInvocationUrlStats cNext = (PersInvocationUrlStats) next;
+				persisted = getOrCreateInvocationUrlStats(cNext.getPk());
+				if (!persisted.isNewlyCreated()) {
+					myEntityManager.refresh(persisted);
+				}
+				persisted.mergeUnsynchronizedEvents(next);
+				count++;
+			} else if (next instanceof PersNodeStats) {
+				PersNodeStats cNext = (PersNodeStats) next;
+				persisted = getOrCreateNodeStats(cNext.getPk());
+				if (!persisted.isNewlyCreated()) {
+					myEntityManager.refresh(persisted);
+				}
+				persisted.mergeUnsynchronizedEvents(next);
+				count++;
 			} else {
 				throw new IllegalArgumentException("Unknown stats type: " + next.getClass());
 			}
@@ -1118,7 +1186,7 @@ public class DaoBean implements IDao {
 		}
 
 		theVersion.prePersist();
-		
+
 		ourLog.info("Merging servicde version {}", theVersion.getVersionId());
 		BasePersServiceVersion version = myEntityManager.merge(theVersion);
 

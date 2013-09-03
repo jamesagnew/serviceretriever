@@ -148,12 +148,12 @@ public abstract class BasePersServiceCatalogItem extends BasePersKeepsRecentTran
 		myObscureRequestElementsInLogCache = null;
 	}
 
-	public void populateServiceCatalogItemFromDto(BaseDtoServiceCatalogItem<?> theDto) {
+	public void populateServiceCatalogItemFromDto(BaseDtoServiceCatalogItem theDto) {
 		setObscureRequestElementsInLog(theDto.getObscureRequestElementsInLogCache());
 		setObscureResponseElementsInLog(theDto.getObscureResponseElementsInLogCache());
 	}
 
-	public void populateServiceCatalogItemToDto(BaseDtoServiceCatalogItem<?> theDto) {
+	public void populateServiceCatalogItemToDto(BaseDtoServiceCatalogItem theDto) {
 		theDto.setObscureRequestElementsInLogCache(getObscureRequestElementsInLog());
 		theDto.setObscureResponseElementsInLogCache(getObscureResponseElementsInLog());
 	}

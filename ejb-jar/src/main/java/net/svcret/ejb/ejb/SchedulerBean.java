@@ -173,4 +173,14 @@ public class SchedulerBean implements IScheduler {
 		flushInMemoryStatistics();
 	}
 
+	@Override
+	@Schedule(second = "0", minute = "*", hour = "*", persistent = false)
+	public void recordNodeStats() {
+		try {
+			myStatsSvc.recordNodeStatistics();
+		} catch (Exception e) {
+			ourLog.error("Failed to load user catalog", e);
+		}
+	}
+
 }

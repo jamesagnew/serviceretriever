@@ -9,7 +9,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-public class BaseGList<T extends BaseGObject<T>> implements Iterable<T>, Serializable {
+public class BaseGList<T extends BaseGObject> implements Iterable<T>, Serializable {
 
 	private static final long serialVersionUID = 1L;
 

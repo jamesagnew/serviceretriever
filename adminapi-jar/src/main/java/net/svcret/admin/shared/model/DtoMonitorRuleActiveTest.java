@@ -5,7 +5,7 @@ import java.util.Date;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 
-public class DtoMonitorRuleActiveTest extends BaseGObject<DtoMonitorRuleActiveTest> {
+public class DtoMonitorRuleActiveTest extends BaseGObject {
 
 	private static final long serialVersionUID = 1L;
 
@@ -58,11 +58,6 @@ public class DtoMonitorRuleActiveTest extends BaseGObject<DtoMonitorRuleActiveTe
 
 	public long getServiceVersionPid() {
 		return myServiceVersionPid;
-	}
-
-	@Override
-	public void merge(DtoMonitorRuleActiveTest theObject) {
-		// not implemented
 	}
 
 	public void setCheckFrequencyNum(int theCheckFrequencyNum) {

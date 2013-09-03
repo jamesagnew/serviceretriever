@@ -1,6 +1,6 @@
 package net.svcret.admin.shared.model;
 
-public abstract class BaseGClientSecurity extends BaseGObject<BaseGClientSecurity> {
+public abstract class BaseGClientSecurity extends BaseGObject {
 
 	private static final long serialVersionUID = 1L;
 
@@ -32,10 +32,11 @@ public abstract class BaseGClientSecurity extends BaseGObject<BaseGClientSecurit
 	}
 
 	@Override
-	public void merge(BaseGClientSecurity theObject) {
+	public void merge(BaseGObject theObject) {
+		BaseGClientSecurity obj = (BaseGClientSecurity)theObject;
 		setPid(theObject.getPid());
-		setUsername(theObject.getUsername());
-		setPassword(theObject.getPassword());
+		setUsername(obj.getUsername());
+		setPassword(obj.getPassword());
 	}
 
 	/**

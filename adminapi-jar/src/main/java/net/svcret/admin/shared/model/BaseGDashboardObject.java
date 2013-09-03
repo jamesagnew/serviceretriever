@@ -2,7 +2,7 @@ package net.svcret.admin.shared.model;
 
 import java.util.Date;
 
-public abstract class BaseGDashboardObject<T> extends BaseGKeepsRecentMessages<T> {
+public abstract class BaseGDashboardObject extends BaseGKeepsRecentMessages {
 
 	private static final long serialVersionUID = 1L;
 	private int myAverageLatency60min;
@@ -229,20 +229,21 @@ public abstract class BaseGDashboardObject<T> extends BaseGKeepsRecentMessages<T
 		myStatsInitialized=null;
 	}
 
-	protected void merge(BaseGDashboardObject<T> theObject) {
-		super.merge((BaseGKeepsRecentMessages<?>) theObject);
+	@Override
+	public void merge(BaseGObject theObject) {
+		super.merge(theObject);
 		
-		setPid(theObject.getPid());
-		setId(theObject.getId());
-		setName(theObject.getName());
-
-		if (theObject.isStatsInitialized()) {
-			setStatsInitialized(theObject.getStatsInitialized());
-			setStatus(theObject.getStatus());
-			setTransactions60mins(theObject.getTransactions60mins());
-			setLatency60mins(theObject.getLatency60mins());
-			setLastServerSecurityFailure(theObject.getLastServerSecurityFailure());
-			setLastSuccessfulInvocation(theObject.getLastSuccessfulInvocation());
+		BaseGDashboardObject obj = (BaseGDashboardObject)theObject;
+		setId(obj.getId());
+		setName(obj.getName());
+		
+		if (obj.isStatsInitialized()) {
+			setStatsInitialized(obj.getStatsInitialized());
+			setStatus(obj.getStatus());
+			setTransactions60mins(obj.getTransactions60mins());
+			setLatency60mins(obj.getLatency60mins());
+			setLastServerSecurityFailure(obj.getLastServerSecurityFailure());
+			setLastSuccessfulInvocation(obj.getLastSuccessfulInvocation());
 		}
 	}
 

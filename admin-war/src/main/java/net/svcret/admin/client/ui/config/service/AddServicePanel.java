@@ -6,11 +6,9 @@ import net.svcret.admin.client.ui.config.EditServiceBasicPropertiesPanel;
 import net.svcret.admin.client.ui.config.domain.EditDomainServicesPanel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.BaseGListenable;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
-import net.svcret.admin.shared.model.IListener;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -113,6 +111,7 @@ public class AddServicePanel extends FlowPanel {
 					@Override
 					public void onSuccess(GService theResult) {
 						Model.getInstance().addService(domainPid, theResult);
+						updateDomains();
 						// TODO: move to a step 2 panel
 					}
 				};
@@ -123,18 +122,5 @@ public class AddServicePanel extends FlowPanel {
 
 	}
 
-	public class MyDomainListListener implements IListener {
-
-		@Override
-		public void changed(BaseGListenable<?> theListenable) {
-			updateDomains();
-		}
-
-		@Override
-		public void loadingStarted(BaseGListenable<?> theListenable) {
-			// ignore
-		}
-
-	}
 	
 }

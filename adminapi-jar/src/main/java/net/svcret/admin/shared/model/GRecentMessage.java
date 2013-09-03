@@ -6,7 +6,7 @@ import java.util.List;
 
 import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
 
-public class GRecentMessage extends BaseGObject<GRecentMessage> {
+public class GRecentMessage extends BaseGObject {
 
 	private static final long serialVersionUID = 1L;
 
@@ -191,11 +191,6 @@ public class GRecentMessage extends BaseGObject<GRecentMessage> {
 	 */
 	public Date getTransactionTime() {
 		return myTransactionTime;
-	}
-
-	@Override
-	public void merge(GRecentMessage theObject) {
-
 	}
 
 	public void setAuthorizationOutcome(AuthorizationOutcomeEnum theAuthorizationOutcome) {
