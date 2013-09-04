@@ -3,6 +3,7 @@ package net.svcret.ejb.ejb;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
+import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.IAuthorizationService.ILocalDatabaseAuthorizationService;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IDao;
@@ -14,16 +15,16 @@ import net.svcret.ejb.model.entity.PersUser;
 public class LocalDatabaseAuthorizationServiceBean extends BaseAuthorizationServiceBean<PersAuthenticationHostLocalDatabase> implements ILocalDatabaseAuthorizationService {
 
 	@Override
-	protected PersUser doAuthorize(PersAuthenticationHostLocalDatabase theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException {
+	protected UserOrFailure doAuthorize(PersAuthenticationHostLocalDatabase theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException {
 		PersUser user = theUserCatalog.findUser(theHost.getPid(), theCredentialGrabber.getUsername());
 		if (user == null) {
-			return null;
+			return new UserOrFailure(AuthorizationOutcomeEnum.FAILED_BAD_CREDENTIALS_IN_REQUEST);
 		}
 		if (!user.checkPassword(theCredentialGrabber.getPassword())) {
-			return null;
+			return new UserOrFailure(AuthorizationOutcomeEnum.FAILED_BAD_CREDENTIALS_IN_REQUEST);
 		}
 		
-		return user;
+		return new UserOrFailure(user);
 	}
 
 	@Override

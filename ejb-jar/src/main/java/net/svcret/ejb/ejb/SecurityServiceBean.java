@@ -19,6 +19,7 @@ import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.api.IAuthorizationService;
 import net.svcret.ejb.api.IAuthorizationService.ILdapAuthorizationService;
 import net.svcret.ejb.api.IAuthorizationService.ILocalDatabaseAuthorizationService;
+import net.svcret.ejb.api.IAuthorizationService.UserOrFailure;
 import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.ISecurityService;
@@ -78,7 +79,14 @@ public class SecurityServiceBean implements ISecurityService {
 				IAuthorizationService authService = getAuthService(authHost);
 				ourLog.debug("Authorizing call using auth service: {}", authService);
 
-				PersUser authorizedUser = authService.authorize(authHost, myInMemoryUserCatalog, next.getCredentialGrabber());
+				UserOrFailure authorize = authService.authorize(authHost, myInMemoryUserCatalog, next.getCredentialGrabber());
+				
+				/* TODO: keep track of the failure reason by authrequest so that we can
+				 * display all of them in the UI (i.e. if the credentials
+				 * fail for different reasons for each service..)
+				 */
+				
+				PersUser authorizedUser = authorize.getUser();
 				boolean authFailed;
 
 				if (authorizedUser == null) {

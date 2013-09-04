@@ -38,11 +38,12 @@ import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.ejb.AdminServiceBean.IWithStats;
 import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersDomain;
-import net.svcret.ejb.model.entity.PersInvocationUserStats;
+import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
+import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
+import net.svcret.ejb.model.entity.PersInvocationMethodUserStats;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersUser;
@@ -95,9 +96,9 @@ public class ChartingServiceBean implements IChartingServiceBean {
 
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
 		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
-			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats() {
+			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats>() {
 				@Override
-				public void withStats(int theIndex, BasePersMethodInvocationStats theStats) {
+				public void withStats(int theIndex, PersInvocationMethodSvcverStats theStats) {
 					growToSizeInt(invCount60Min, theIndex);
 					growToSizeLong(time60min, theIndex);
 					growToSizeLong(timestamps, theIndex);
@@ -124,9 +125,9 @@ public class ChartingServiceBean implements IChartingServiceBean {
 
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
 		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
-			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats() {
+			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats>() {
 				@Override
-				public void withStats(int theIndex, BasePersMethodInvocationStats theStats) {
+				public void withStats(int theIndex, PersInvocationMethodSvcverStats theStats) {
 					growToSizeInt(invCount, theIndex);
 					growToSizeLong(totalSuccessRespBytes, theIndex);
 					growToSizeLong(totalSuccessReqBytes, theIndex);
@@ -162,9 +163,9 @@ public class ChartingServiceBean implements IChartingServiceBean {
 
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
 		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
-			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats() {
+			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats>() {
 				@Override
-				public void withStats(int theIndex, BasePersMethodInvocationStats theStats) {
+				public void withStats(int theIndex, PersInvocationMethodSvcverStats theStats) {
 					growToSizeLong(throttleAcceptCount, theIndex);
 					growToSizeLong(throttleRejectCount, theIndex);
 					growToSizeLong(timestamps, theIndex);
@@ -194,9 +195,9 @@ public class ChartingServiceBean implements IChartingServiceBean {
 
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
 		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
-			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats() {
+			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats>() {
 				@Override
-				public void withStats(int theIndex, BasePersMethodInvocationStats theStats) {
+				public void withStats(int theIndex, PersInvocationMethodSvcverStats theStats) {
 					growToSizeDouble(invCount, theIndex);
 					growToSizeDouble(invCountFault, theIndex);
 					growToSizeDouble(invCountFail, theIndex);
@@ -240,12 +241,12 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		Date nextDate = nextInterval.truncate(start);
 		Date nextDateEnd = null;
 
-		List<PersInvocationUserStats> stats = myDao.getUserStatsWithinTimeRange(user, start, end);
+		List<PersInvocationMethodUserStats> stats = myDao.getUserStatsWithinTimeRange(user, start, end);
 		Validate.notNull(stats);
-		stats = new ArrayList<PersInvocationUserStats>(stats);
-		Collections.sort(stats, new Comparator<PersInvocationUserStats>() {
+		stats = new ArrayList<PersInvocationMethodUserStats>(stats);
+		Collections.sort(stats, new Comparator<PersInvocationMethodUserStats>() {
 			@Override
-			public int compare(PersInvocationUserStats theO1, PersInvocationUserStats theO2) {
+			public int compare(PersInvocationMethodUserStats theO1, PersInvocationMethodUserStats theO2) {
 				return theO1.getPk().getStartTime().compareTo(theO2.getPk().getStartTime());
 			}
 		});
@@ -255,8 +256,8 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		}
 		ourLog.debug("Looking for stats starting at {}", nextDate);
 
-		Iterator<PersInvocationUserStats> statIter = stats.iterator();
-		PersInvocationUserStats nextStat = null;
+		Iterator<PersInvocationMethodUserStats> statIter = stats.iterator();
+		PersInvocationMethodUserStats nextStat = null;
 
 		int timesPassed = 0;
 		int foundEntries = 0;

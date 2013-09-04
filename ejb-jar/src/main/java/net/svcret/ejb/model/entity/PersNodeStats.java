@@ -2,7 +2,6 @@ package net.svcret.ejb.model.entity;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
-import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.ThreadMXBean;
 import java.util.Date;
 
@@ -26,7 +25,7 @@ import org.hibernate.annotations.Index;
 })
 @Entity()
 // @formatter:on
-public class PersNodeStats extends BasePersInvocationStats {
+public class PersNodeStats extends BasePersStats<PersNodeStatsPk, PersNodeStats> {
 
 	private static long ourLastCpuTime;
 	private static long ourLastCpuTimeTotal;
@@ -65,11 +64,11 @@ public class PersNodeStats extends BasePersInvocationStats {
 	}
 
 	public double getCpuTime() {
-		return myCpuTime;
+		return (myCpuTime / 100.0);
 	}
 
 	public void setCpuTime(double theCpuTime) {
-		myCpuTime = theCpuTime;
+		myCpuTime = (int) (theCpuTime*100.0);
 	}
 
 	private static final long serialVersionUID = 1L;
@@ -89,7 +88,8 @@ public class PersNodeStats extends BasePersInvocationStats {
 	@EmbeddedId
 	private PersNodeStatsPk myPk;
 
-	private double myCpuTime;
+	@Column(name = "CPU_TIME")
+	private int myCpuTime;
 
 	public PersNodeStats() {
 		// nothing
@@ -111,10 +111,9 @@ public class PersNodeStats extends BasePersInvocationStats {
 		myMemoryCommitted = mem.getHeapMemoryUsage().getCommitted();
 
 		synchronized (PersNodeStats.class) {
-			OperatingSystemMXBean op = ManagementFactory.getOperatingSystemMXBean();
 			long now = System.nanoTime();
 			if (now + (10 * 1000000000) < ourLastCpuTime && ourLastCpuTimeValue > -1) {
-				myCpuTime = ourLastCpuTimeValue;
+				setCpuTime(ourLastCpuTimeValue);
 			} else {
 				long processCpuTime = 0;
 				final ThreadMXBean bean = ManagementFactory.getThreadMXBean();
@@ -125,7 +124,7 @@ public class PersNodeStats extends BasePersInvocationStats {
 
 				if (ourLastCpuTimeTotal > 0) {
 					long elapsed = now - ourLastCpuTime;
-					myCpuTime = (double) (processCpuTime - ourLastCpuTimeTotal) / (double) elapsed;
+					setCpuTime((double) (processCpuTime - ourLastCpuTimeTotal) / (double) elapsed);
 					ourLastCpuTimeValue = myCpuTime;
 				}
 				ourLastCpuTimeTotal = processCpuTime;
@@ -139,21 +138,20 @@ public class PersNodeStats extends BasePersInvocationStats {
 	}
 
 	@Override
-	public synchronized void mergeUnsynchronizedEvents(BasePersInvocationStats theNext) {
-		PersNodeStats stats = (PersNodeStats) theNext;
-		if (myCpuTime < stats.getCpuTime()) {
-			myCpuTime = stats.getCpuTime();
+	public synchronized void mergeUnsynchronizedEvents(PersNodeStats theNext) {
+		if (getCpuTime() < theNext.getCpuTime()) {
+			setCpuTime(theNext.getCpuTime());
 		}
-		if (myMemoryCommitted < stats.getMemoryCommitted()) {
-			myMemoryCommitted = stats.getMemoryCommitted();
+		if (myMemoryCommitted < theNext.getMemoryCommitted()) {
+			myMemoryCommitted = theNext.getMemoryCommitted();
 		}
-		if (myMemoryUsed < stats.getMemoryUsed()) {
-			myMemoryUsed = stats.getMemoryUsed();
+		if (myMemoryUsed < theNext.getMemoryUsed()) {
+			myMemoryUsed = theNext.getMemoryUsed();
 		}
-		if (myMemoryMax < stats.getMemoryMax()) {
-			myMemoryMax = stats.getMemoryMax();
+		if (myMemoryMax < theNext.getMemoryMax()) {
+			myMemoryMax = theNext.getMemoryMax();
 		}
-		myMethodInvocations += stats.getMethodInvocations();
+		myMethodInvocations += theNext.getMethodInvocations();
 	}
 
 	@Override
@@ -168,6 +166,11 @@ public class PersNodeStats extends BasePersInvocationStats {
 		PersNodeStats s = new PersNodeStats();
 		s.collectMemoryStats();
 		System.out.println(s);
+	}
+
+	@Override
+	public <T> T accept(IStatsVisitor<T> theVisitor) {
+		return theVisitor.visit(this, getPk());
 	}
 
 }

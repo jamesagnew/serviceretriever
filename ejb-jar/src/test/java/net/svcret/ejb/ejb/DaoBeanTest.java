@@ -19,8 +19,8 @@ import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.api.StatusesBean;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
+import net.svcret.ejb.model.entity.BasePersStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
-import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
@@ -30,10 +30,10 @@ import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
-import net.svcret.ejb.model.entity.PersInvocationStats;
-import net.svcret.ejb.model.entity.PersInvocationStatsPk;
-import net.svcret.ejb.model.entity.PersInvocationUserStats;
-import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
+import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
+import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
+import net.svcret.ejb.model.entity.PersInvocationMethodUserStats;
+import net.svcret.ejb.model.entity.PersInvocationMethodUserStatsPk;
 import net.svcret.ejb.model.entity.PersLibraryMessage;
 import net.svcret.ejb.model.entity.PersMonitorRuleActive;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
@@ -407,16 +407,16 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		method = mySvc.getServiceVersionByPid(ver.getPid()).getMethods().iterator().next();
 
-		mySvc.getOrCreateInvocationStats(new PersInvocationStatsPk(HOUR, myTimeFormat.parse("01:10"), method));
-		mySvc.getOrCreateInvocationStats(new PersInvocationStatsPk(MINUTE, myTimeFormat.parse("01:10"), method));
-		mySvc.getOrCreateInvocationStats(new PersInvocationStatsPk(HOUR, myTimeFormat.parse("02:10"), method));
-		mySvc.getOrCreateInvocationStats(new PersInvocationStatsPk(MINUTE, myTimeFormat.parse("01:10"), method));
-		mySvc.getOrCreateInvocationStats(new PersInvocationStatsPk(HOUR, myTimeFormat.parse("03:10"), method));
-		mySvc.getOrCreateInvocationStats(new PersInvocationStatsPk(MINUTE, myTimeFormat.parse("01:10"), method));
+		mySvc.getOrCreateStats(new PersInvocationMethodSvcverStatsPk(HOUR, myTimeFormat.parse("01:10"), method));
+		mySvc.getOrCreateStats(new PersInvocationMethodSvcverStatsPk(MINUTE, myTimeFormat.parse("01:10"), method));
+		mySvc.getOrCreateStats(new PersInvocationMethodSvcverStatsPk(HOUR, myTimeFormat.parse("02:10"), method));
+		mySvc.getOrCreateStats(new PersInvocationMethodSvcverStatsPk(MINUTE, myTimeFormat.parse("01:10"), method));
+		mySvc.getOrCreateStats(new PersInvocationMethodSvcverStatsPk(HOUR, myTimeFormat.parse("03:10"), method));
+		mySvc.getOrCreateStats(new PersInvocationMethodSvcverStatsPk(MINUTE, myTimeFormat.parse("01:10"), method));
 
 		newEntityManager();
 
-		List<PersInvocationStats> stats = mySvc.getInvocationStatsBefore(HOUR, myTimeFormat.parse("03:00"));
+		List<PersInvocationMethodSvcverStats> stats = mySvc.getInvocationStatsBefore(HOUR, myTimeFormat.parse("03:00"));
 		assertEquals(2, stats.size());
 
 		stats = mySvc.getInvocationStatsBefore(HOUR, myTimeFormat.parse("03:10"));
@@ -472,17 +472,17 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(MINUTE, myTimeFormat.parse("01:10"), method, user));
-		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(MINUTE, myTimeFormat.parse("01:10"), method, user));
-		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(MINUTE, myTimeFormat.parse("01:10"), method, user));
-		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(HOUR, myTimeFormat.parse("01:10"), method, user));
-		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(HOUR, myTimeFormat.parse("02:10"), method, user));
-		mySvc.getOrCreateInvocationUserStats(new PersInvocationUserStatsPk(HOUR, myTimeFormat.parse("03:10"), method, user));
+		mySvc.getOrCreateStats(new PersInvocationMethodUserStatsPk(MINUTE, myTimeFormat.parse("01:10"), method, user));
+		mySvc.getOrCreateStats(new PersInvocationMethodUserStatsPk(MINUTE, myTimeFormat.parse("01:10"), method, user));
+		mySvc.getOrCreateStats(new PersInvocationMethodUserStatsPk(MINUTE, myTimeFormat.parse("01:10"), method, user));
+		mySvc.getOrCreateStats(new PersInvocationMethodUserStatsPk(HOUR, myTimeFormat.parse("01:10"), method, user));
+		mySvc.getOrCreateStats(new PersInvocationMethodUserStatsPk(HOUR, myTimeFormat.parse("02:10"), method, user));
+		mySvc.getOrCreateStats(new PersInvocationMethodUserStatsPk(HOUR, myTimeFormat.parse("03:10"), method, user));
 
 		newEntityManager();
 
 		Date cutoff = myTimeFormat.parse("03:00");
-		List<PersInvocationUserStats> stats = mySvc.getInvocationUserStatsBefore(HOUR, cutoff);
+		List<PersInvocationMethodUserStats> stats = mySvc.getInvocationUserStatsBefore(HOUR, cutoff);
 		assertEquals(2, stats.size());
 
 		stats = mySvc.getInvocationUserStatsBefore(HOUR, myTimeFormat.parse("03:11"));
@@ -611,7 +611,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		status = mySvc.getStatusForServiceVersionWithPid(ver.getPid());
 		assertNotNull(status);
 
-		PersInvocationStats stats = new PersInvocationStats(InvocationStatsIntervalEnum.MINUTE, now, method);
+		PersInvocationMethodSvcverStats stats = new PersInvocationMethodSvcverStats(InvocationStatsIntervalEnum.MINUTE, now, method);
 		stats.addSuccessInvocation(100, 0, 0);
 		stats.addSuccessInvocation(200, 0, 0);
 
@@ -621,15 +621,15 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		status = mySvc.getStatusForServiceVersionWithPid(ver.getPid());
 		assertNotNull(status);
-		PersInvocationStatsPk pk = new PersInvocationStatsPk(InvocationStatsIntervalEnum.MINUTE, now, method);
-		BasePersMethodInvocationStats loadedStats = mySvc.getOrCreateInvocationStats(pk);
+		PersInvocationMethodSvcverStatsPk pk = new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.MINUTE, now, method);
+		BasePersInvocationStats<?,?> loadedStats = mySvc.getOrCreateStats(pk);
 
 		assertEquals(2, loadedStats.getSuccessInvocationCount());
 		assertEquals(150, loadedStats.getSuccessInvocationAvgTime());
 
 		newEntityManager();
 
-		stats = new PersInvocationStats(InvocationStatsIntervalEnum.MINUTE, now, method);
+		stats = new PersInvocationMethodSvcverStats(InvocationStatsIntervalEnum.MINUTE, now, method);
 		stats.addSuccessInvocation(200, 0, 0);
 
 		mySvc.saveInvocationStats(sing(stats));
@@ -638,8 +638,8 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		status = mySvc.getStatusForServiceVersionWithPid(ver.getPid());
 		assertNotNull(status);
-		pk = new PersInvocationStatsPk(InvocationStatsIntervalEnum.MINUTE, now, method);
-		loadedStats = mySvc.getOrCreateInvocationStats(pk);
+		pk = new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.MINUTE, now, method);
+		loadedStats = mySvc.getOrCreateStats(pk);
 
 		assertEquals(3, loadedStats.getSuccessInvocationCount());
 		assertEquals(166, loadedStats.getSuccessInvocationAvgTime());
@@ -731,7 +731,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		status = mySvc.getStatusForServiceVersionWithPid(ver.getPid());
 		assertNotNull(status);
 
-		PersInvocationUserStats stats = new PersInvocationUserStats(InvocationStatsIntervalEnum.MINUTE, now, method, user);
+		PersInvocationMethodUserStats stats = new PersInvocationMethodUserStats(InvocationStatsIntervalEnum.MINUTE, now, method, user);
 		stats.addSuccessInvocation(100, 0, 0);
 		stats.addSuccessInvocation(200, 0, 0);
 
@@ -741,15 +741,15 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		status = mySvc.getStatusForServiceVersionWithPid(ver.getPid());
 		assertNotNull(status);
-		PersInvocationUserStatsPk pk = createEntryPk(InvocationStatsIntervalEnum.MINUTE, now, method, user);
-		BasePersMethodInvocationStats loadedStats = mySvc.getOrCreateInvocationUserStats(pk);
+		PersInvocationMethodUserStatsPk pk = createEntryPk(InvocationStatsIntervalEnum.MINUTE, now, method, user);
+		BasePersInvocationStats<?,?> loadedStats = mySvc.getOrCreateStats(pk);
 
 		assertEquals(2, loadedStats.getSuccessInvocationCount());
 		assertEquals(150, loadedStats.getSuccessInvocationAvgTime());
 
 		newEntityManager();
 
-		stats = new PersInvocationUserStats(InvocationStatsIntervalEnum.MINUTE, now, method, user);
+		stats = new PersInvocationMethodUserStats(InvocationStatsIntervalEnum.MINUTE, now, method, user);
 		stats.addSuccessInvocation(200, 0, 0);
 
 		mySvc.saveInvocationStats(sing(stats));
@@ -759,24 +759,24 @@ public class DaoBeanTest extends BaseJpaTest {
 		status = mySvc.getStatusForServiceVersionWithPid(ver.getPid());
 		assertNotNull(status);
 		pk = createEntryPk(InvocationStatsIntervalEnum.MINUTE, now, method, user);
-		loadedStats = mySvc.getOrCreateInvocationUserStats(pk);
+		loadedStats = mySvc.getOrCreateStats(pk);
 
 		assertEquals(3, loadedStats.getSuccessInvocationCount());
 		assertEquals(166, loadedStats.getSuccessInvocationAvgTime());
 
 	}
 
-	private Collection<BasePersInvocationStats> sing(BasePersMethodInvocationStats theStats) {
-		ArrayList<BasePersInvocationStats> retVal = new ArrayList<BasePersInvocationStats>();
+	private Collection<BasePersStats<?,?>> sing(BasePersStats<?,?> theStats) {
+		ArrayList<BasePersStats<?,?>> retVal = new ArrayList<BasePersStats<?,?>>();
 		retVal.add(theStats);
 		return retVal;
 	}
 
-	public static PersInvocationUserStatsPk createEntryPk(InvocationStatsIntervalEnum theInterval, Date theTimestamp, PersServiceVersionMethod theMethod, PersUser theUser) {
+	public static PersInvocationMethodUserStatsPk createEntryPk(InvocationStatsIntervalEnum theInterval, Date theTimestamp, PersServiceVersionMethod theMethod, PersUser theUser) {
 	Validate.notNull(theInterval, "Interval");
 	Validate.notNull(theTimestamp, "Timestamp");
 
-	PersInvocationUserStatsPk pk = new PersInvocationUserStatsPk(theInterval, theTimestamp, theMethod, theUser);
+	PersInvocationMethodUserStatsPk pk = new PersInvocationMethodUserStatsPk(theInterval, theTimestamp, theMethod, theUser);
 	return pk;
 }
 

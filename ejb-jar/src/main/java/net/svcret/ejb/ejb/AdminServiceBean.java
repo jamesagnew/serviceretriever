@@ -96,7 +96,8 @@ import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.StatusesBean;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
-import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
+import net.svcret.ejb.model.entity.BasePersStats;
+import net.svcret.ejb.model.entity.BasePersStatsPk;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.BasePersSavedTransactionRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -109,8 +110,10 @@ import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersConfigProxyUrlBase;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
-import net.svcret.ejb.model.entity.PersInvocationStatsPk;
-import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
+import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
+import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
+import net.svcret.ejb.model.entity.PersInvocationMethodUserStats;
+import net.svcret.ejb.model.entity.PersInvocationMethodUserStatsPk;
 import net.svcret.ejb.model.entity.PersLibraryMessage;
 import net.svcret.ejb.model.entity.PersLibraryMessageAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
@@ -680,9 +683,9 @@ public class AdminServiceBean implements IAdminService {
 			methodPidToSecurityFailCount.put(nextMethod.getPid(), new ArrayList<Integer>());
 			methodPidToFaultCount.put(nextMethod.getPid(), new ArrayList<Integer>());
 
-			doWithStatsByMinute(config, 60, myStatusSvc, nextMethod, new IWithStats() {
+			doWithStatsByMinute(config, 60, myStatusSvc, nextMethod, new IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats>() {
 				@Override
-				public void withStats(int theIndex, BasePersMethodInvocationStats theStats) {
+				public void withStats(int theIndex, PersInvocationMethodSvcverStats theStats) {
 					List<Integer> successCounts = methodPidToSuccessCount.get(nextMethod.getPid());
 					List<Integer> failCounts = methodPidToFailCount.get(nextMethod.getPid());
 					List<Integer> securityFailCounts = methodPidToSecurityFailCount.get(nextMethod.getPid());
@@ -1129,7 +1132,7 @@ public class AdminServiceBean implements IAdminService {
 		return theInt != null ? theInt : 0;
 	}
 
-	private void doWithUserStatsByMinute(PersConfig theConfig, PersUser theUser, int theNumberOfMinutes, IRuntimeStatus statusSvc, IWithStats theOperator) {
+	private void doWithUserStatsByMinute(PersConfig theConfig, PersUser theUser, int theNumberOfMinutes, IRuntimeStatus statusSvc, IWithStats<PersInvocationMethodUserStatsPk, PersInvocationMethodUserStats> theOperator) {
 		Date xMinsAgo = getDateXMinsAgo(theNumberOfMinutes);
 		Date date = xMinsAgo;
 
@@ -1144,8 +1147,8 @@ public class AdminServiceBean implements IAdminService {
 				PersUserMethodStatus next = iterator.next();
 				boolean applies = next.doesDateFallWithinAtLeastOneOfMyRanges(date);
 				if (applies) {
-					PersInvocationUserStatsPk pk = new PersInvocationUserStatsPk(interval, date, next.getPk().getMethod(), theUser);
-					BasePersMethodInvocationStats stats = statusSvc.getInvocationUserStatsSynchronously(pk);
+					PersInvocationMethodUserStatsPk pk = new PersInvocationMethodUserStatsPk(interval, date, next.getPk().getMethod(), theUser);
+					PersInvocationMethodUserStats stats = statusSvc.getInvocationStatsSynchronously(pk);
 					theOperator.withStats(min, stats);
 				}
 			}
@@ -1747,14 +1750,40 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	private int[] toLatency(List<Integer> theCounts, List<Long> theTimes) {
-		assert theCounts.size() == theTimes.size();
+	private int[] toLatency(List<Long> theTimes, List<Integer> theCountsEntry0) {
+		List<List<Integer>> entries = Collections.singletonList(theCountsEntry0);
+		return toLatency2(theTimes, entries);
+	}
 
-		int[] retVal = new int[theCounts.size()];
+	private int[] toLatency(List<Long> theTimes, List<Integer> theCountsEntry0, List<Integer> theCountsEntry1, List<Integer> theCountsEntry2) {
+		List<List<Integer>> entries = new ArrayList<List<Integer>>(3);
+		entries.add(theCountsEntry0);
+		entries.add(theCountsEntry1);
+		entries.add(theCountsEntry2);
+		return toLatency2(theTimes, entries);
+	}
+
+	private int[] toLatency2(List<Long> theTimes, List<List<Integer>> theCountsEntries) {
+		if (theCountsEntries == null || theCountsEntries.size() == 0) {
+			throw new IllegalArgumentException("No counts given");
+		}
+		
+		int[] counts = new int[theTimes.size()];
+		
+		for (List<Integer> nextEntry : theCountsEntries) {
+			assert nextEntry.size() == theTimes.size();
+			int index = 0;
+			for (int next : nextEntry) {
+				counts[index] = counts[index] + next;
+				index++;
+			}
+		}
+
+		int[] retVal = new int[counts.length];
 		int prevValue = -1;
-		for (int i = 0; i < theCounts.size(); i++) {
-			if (theCounts.get(i) > 0) {
-				retVal[i] = (int) Math.min(theTimes.get(i) / theCounts.get(i), Integer.MAX_VALUE);
+		for (int i = 0; i < counts.length; i++) {
+			if (counts[i] > 0) {
+				retVal[i] = (int) Math.min(theTimes.get(i) / counts[i], Integer.MAX_VALUE);
 				prevValue = retVal[i];
 			} else if (prevValue > -1) {
 				retVal[i] = prevValue;
@@ -1763,7 +1792,7 @@ public class AdminServiceBean implements IAdminService {
 
 		return retVal;
 	}
-
+	
 	private GSoap11ServiceVersionAndResources toUi(BaseGServiceVersion theUiService, BasePersServiceVersion theSvcVer) throws ProcessingException {
 		GSoap11ServiceVersionAndResources retVal = new GSoap11ServiceVersionAndResources();
 
@@ -2046,7 +2075,7 @@ public class AdminServiceBean implements IAdminService {
 			extractStatus(retVal, theStatuses, t60minCount, t60minTime, status, theVersion);
 
 			retVal.setTransactions60mins(toArray(t60minCount));
-			retVal.setLatency60mins(toLatency(t60minCount, t60minTime));
+			retVal.setLatency60mins(toLatency(t60minTime, t60minCount));
 
 			int urlsActive = 0;
 			int urlsDown = 0;
@@ -2215,7 +2244,7 @@ public class AdminServiceBean implements IAdminService {
 			}
 
 			retVal.setTransactions60mins(toArray(t60minCount));
-			retVal.setLatency60mins(toLatency(t60minCount, t60minTime));
+			retVal.setLatency60mins(toLatency(t60minTime, t60minCount));
 			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
 
 			int urlsActive = 0;
@@ -2381,7 +2410,7 @@ public class AdminServiceBean implements IAdminService {
 			status = extractStatus(retVal, status, t60minCount, t60minTime, theService, theStatuses);
 
 			retVal.setTransactions60mins(toArray(t60minCount));
-			retVal.setLatency60mins(toLatency(t60minCount, t60minTime));
+			retVal.setLatency60mins(toLatency(t60minTime, t60minCount));
 			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
 
 			int urlsActive = 0;
@@ -2445,7 +2474,7 @@ public class AdminServiceBean implements IAdminService {
 			myRuntimeStatusQuerySvc.extract60MinuteMethodStats(theMethod, t60minCount, t60minTime);
 
 			retVal.setTransactions60mins(toArray(t60minCount));
-			retVal.setLatency60mins(toLatency(t60minCount, t60minTime));
+			retVal.setLatency60mins(toLatency(t60minTime, t60minCount));
 			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
 
 		}
@@ -2471,15 +2500,37 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setUrl(theUrl.getUrl());
 
 		if (theLoadStats) {
-			// TODO: add 60 min stats
 			PersServiceVersionUrlStatus urlStatus = theStatuses.getUrlStatus(theUrl.getPid());
-			retVal.setStatus(urlStatus.getStatus());
+
 			retVal.setStatsLastFailure(urlStatus.getLastFail());
 			retVal.setStatsLastFailureMessage(urlStatus.getLastFailMessage());
+			retVal.setStatsLastFailureStatusCode(urlStatus.getLastFailStatusCode());
+			retVal.setStatsLastFailureContentType(urlStatus.getLastFailContentType());
+
 			retVal.setStatsLastSuccess(urlStatus.getLastSuccess());
 			retVal.setStatsLastSuccessMessage(urlStatus.getLastSuccessMessage());
+			retVal.setStatsLastSuccessStatusCode(urlStatus.getLastSuccessStatusCode());
+			retVal.setStatsLastSuccessContentType(urlStatus.getLastSuccessContentType());
+
 			retVal.setStatsLastFault(urlStatus.getLastFault());
 			retVal.setStatsLastFaultMessage(urlStatus.getLastFaultMessage());
+			retVal.setStatsLastFaultStatusCode(urlStatus.getLastFaultStatusCode());
+			retVal.setStatsLastFaultContentType(urlStatus.getLastFaultContentType());
+
+			retVal.setStatus(urlStatus.getStatus());
+			retVal.setStatsNextCircuitBreakerReset(urlStatus.getNextCircuitBreakerReset());
+
+			final ArrayList<Integer> t60minSuccessCount = new ArrayList<Integer>();
+			final ArrayList<Integer> t60minFailCount = new ArrayList<Integer>();
+			final ArrayList<Integer> t60minFaultCount = new ArrayList<Integer>();
+			final ArrayList<Long> t60minInvTime = new ArrayList<Long>();
+
+			myRuntimeStatusQuerySvc.extract60MinuteServiceVersionUrlStatistics(theUrl, t60minSuccessCount, t60minFaultCount, t60minFailCount, t60minInvTime);
+
+			retVal.setTransactions60mins(toArray(t60minSuccessCount));
+			retVal.setLatency60mins(toLatency(t60minInvTime, t60minSuccessCount, t60minFailCount, t60minFaultCount));
+			retVal.setStatsInitialized(new Date());
+
 		}
 
 		return retVal;
@@ -2508,9 +2559,9 @@ public class AdminServiceBean implements IAdminService {
 			final ArrayList<Integer> t60minSecurityFailCount = new ArrayList<Integer>();
 			final ArrayList<Integer> t60minFaultCount = new ArrayList<Integer>();
 			final long[] t60minStatisticsStart = new long[1];
-			IWithStats withStats = new IWithStats() {
+			IWithStats<PersInvocationMethodUserStatsPk, PersInvocationMethodUserStats> withStats = new IWithStats<PersInvocationMethodUserStatsPk, PersInvocationMethodUserStats>() {
 				@Override
-				public void withStats(int theIndex, BasePersMethodInvocationStats theStats) {
+				public void withStats(int theIndex, PersInvocationMethodUserStats theStats) {
 					if (theIndex == 0) {
 						t60minStatisticsStart[0] = theStats.getPk().getStartTime().getTime();
 					}
@@ -2703,7 +2754,7 @@ public class AdminServiceBean implements IAdminService {
 		return newValue;
 	}
 
-	public static void doWithStatsByMinute(PersConfig theConfig, int theNumberOfMinutes, IRuntimeStatus statusSvc, PersServiceVersionMethod theMethod, IWithStats theOperator) {
+	public static void doWithStatsByMinute(PersConfig theConfig, int theNumberOfMinutes, IRuntimeStatus statusSvc, PersServiceVersionMethod theMethod, IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator) {
 		Date start = getDateXMinsAgo(theNumberOfMinutes);
 		Date end = new Date();
 
@@ -2715,7 +2766,7 @@ public class AdminServiceBean implements IAdminService {
 	// doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator, start, end);
 	// }
 
-	public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatus theStatus, PersServiceVersionMethod theNextMethod, IWithStats theOperator) {
+	public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatus theStatus, PersServiceVersionMethod theNextMethod, IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator) {
 		Date end;
 		Date start;
 		if (theRange.getWithPresetRange() != null) {
@@ -2756,15 +2807,15 @@ public class AdminServiceBean implements IAdminService {
 		}
 	}
 
-	private static void doWithStatsByMinute(PersConfig theConfig, IRuntimeStatus statusSvc, PersServiceVersionMethod theMethod, IWithStats theOperator, Date start, Date end) {
+	public static void doWithStatsByMinute(PersConfig theConfig, IRuntimeStatus statusSvc, PersServiceVersionMethod theMethod, IWithStats<PersInvocationMethodSvcverStatsPk,PersInvocationMethodSvcverStats> theOperator, Date start, Date end) {
 		Date date = start;
 		for (int min = 0; date.before(end); min++) {
 
 			InvocationStatsIntervalEnum interval = doWithStatsSupportFindInterval(theConfig, date);
 			date = doWithStatsSupportFindDate(date, interval);
 
-			PersInvocationStatsPk pk = new PersInvocationStatsPk(interval, date, theMethod.getPid());
-			BasePersMethodInvocationStats stats = statusSvc.getInvocationStatsSynchronously(pk);
+			PersInvocationMethodSvcverStatsPk pk = new PersInvocationMethodSvcverStatsPk(interval, date, theMethod.getPid());
+			PersInvocationMethodSvcverStats stats = statusSvc.getInvocationStatsSynchronously(pk);
 			theOperator.withStats(min, stats);
 
 			date = doWithStatsSupportIncrement(date, interval);
@@ -2820,10 +2871,15 @@ public class AdminServiceBean implements IAdminService {
 		return retVal;
 	}
 
-	public interface IWithStats {
+	public interface IWithStats<P extends BasePersStatsPk<P,O>, O extends BasePersStats<P,O>> {
 
-		void withStats(int theIndex, BasePersMethodInvocationStats theStats);
+		void withStats(int theIndex, O theStats);
 
+	}
+
+	@VisibleForTesting
+	void setRuntimeStatusQuerySvcForUnitTests(IRuntimeStatusQueryLocal theStatsQSvc) {
+		myRuntimeStatusQuerySvc = theStatsQSvc;
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {

@@ -13,13 +13,20 @@ public class GServiceVersionUrl extends BaseGDashboardObject {
 
 	private static final long serialVersionUID = 1L;
 
-	private String myUrl;
 	private Date myStatsLastFailure;
+	private String myStatsLastFailureContentType;
 	private String myStatsLastFailureMessage;
+	private Integer myStatsLastFailureStatusCode;
 	private Date myStatsLastFault;
+	private String myStatsLastFaultContentType;
 	private String myStatsLastFaultMessage;
+	private Integer myStatsLastFaultStatusCode;
 	private Date myStatsLastSuccess;
+	private String myStatsLastSuccessContentType;
 	private String myStatsLastSuccessMessage;
+	private Integer myStatsLastSuccessStatusCode;
+	private Date myStatsNextCircuitBreakerReset;
+	private String myUrl;
 
 	public GServiceVersionUrl() {
 		// nothing
@@ -30,81 +37,36 @@ public class GServiceVersionUrl extends BaseGDashboardObject {
 		myUrl = theUrl;
 	}
 
-
-
-	/**
-	 * @return the url
-	 */
-	public String getUrl() {
-		return myUrl;
-	}
-
-	@Override
-	public void merge(BaseGObject theObject) {
-		super.merge(theObject);
-		
-		setPid(theObject.getPid());
-		
-		GServiceVersionUrl obj = (GServiceVersionUrl)theObject;
-
-		setUrl(obj.getUrl());
-		
-		if (obj.isStatsInitialized()) {
-			setStatsLastSuccess(obj.getStatsLastSuccess());
-			setStatsLastSuccessMessage(obj.getStatsLastSuccessMessage());
-			setStatsLastFailure(obj.getStatsLastFailure());
-			setStatsLastFailureMessage(obj.getStatsLastFailureMessage());
-			setStatsLastFault(obj.getStatsLastFault());
-			setStatsLastFaultMessage(obj.getStatsLastFaultMessage());
-		}
-	}
-
 	public Date getStatsLastFailure() {
 		return myStatsLastFailure;
 	}
 
-	public void setStatsLastFailure(Date theStatsLastFailure) {
-		myStatsLastFailure = theStatsLastFailure;
+	public String getStatsLastFailureContentType() {
+		return myStatsLastFailureContentType;
 	}
 
 	public String getStatsLastFailureMessage() {
 		return myStatsLastFailureMessage;
 	}
 
-	public void setStatsLastFailureMessage(String theStatsLastFailureMessage) {
-		myStatsLastFailureMessage = theStatsLastFailureMessage;
+	public Integer getStatsLastFailureStatusCode() {
+		return myStatsLastFailureStatusCode;
 	}
 
 	public Date getStatsLastFault() {
 		return myStatsLastFault;
 	}
 
-	public void setStatsLastFault(Date theStatsLastFault) {
-		myStatsLastFault = theStatsLastFault;
+	public String getStatsLastFaultContentType() {
+		return myStatsLastFaultContentType;
 	}
 
 	public String getStatsLastFaultMessage() {
 		return myStatsLastFaultMessage;
 	}
 
-	public void setStatsLastFaultMessage(String theStatsLastFaultMessage) {
-		myStatsLastFaultMessage = theStatsLastFaultMessage;
-	}
-
-	public Date getStatsLastSuccess() {
-		return myStatsLastSuccess;
-	}
-
-	public void setStatsLastSuccess(Date theStatsLastSuccess) {
-		myStatsLastSuccess = theStatsLastSuccess;
-	}
-
-	public String getStatsLastSuccessMessage() {
-		return myStatsLastSuccessMessage;
-	}
-
-	public void setStatsLastSuccessMessage(String theStatsLastSuccessMessage) {
-		myStatsLastSuccessMessage = theStatsLastSuccessMessage;
+	public Integer getStatsLastFaultStatusCode() {
+		return myStatsLastFaultStatusCode;
 	}
 
 	public ResponseTypeEnum getStatsLastResponseType() {
@@ -138,7 +100,106 @@ public class GServiceVersionUrl extends BaseGDashboardObject {
 		return new ArrayList<ResponseTypeEnum>(responses.values());
 	}
 
-	
+	public Date getStatsLastSuccess() {
+		return myStatsLastSuccess;
+	}
+
+	public String getStatsLastSuccessContentType() {
+		return myStatsLastSuccessContentType;
+	}
+
+	public String getStatsLastSuccessMessage() {
+		return myStatsLastSuccessMessage;
+	}
+
+	public Integer getStatsLastSuccessStatusCode() {
+		return myStatsLastSuccessStatusCode;
+	}
+
+	public Date getStatsNextCircuitBreakerReset() {
+		return myStatsNextCircuitBreakerReset;
+	}
+
+	/**
+	 * @return the url
+	 */
+	public String getUrl() {
+		return myUrl;
+	}
+
+	@Override
+	public void merge(BaseGObject theObject) {
+		super.merge(theObject);
+
+		setPid(theObject.getPid());
+
+		GServiceVersionUrl obj = (GServiceVersionUrl) theObject;
+
+		setUrl(obj.getUrl());
+
+		if (obj.isStatsInitialized()) {
+			setStatsLastSuccess(obj.getStatsLastSuccess());
+			setStatsLastSuccessMessage(obj.getStatsLastSuccessMessage());
+			setStatsLastFailure(obj.getStatsLastFailure());
+			setStatsLastFailureMessage(obj.getStatsLastFailureMessage());
+			setStatsLastFault(obj.getStatsLastFault());
+			setStatsLastFaultMessage(obj.getStatsLastFaultMessage());
+		}
+	}
+
+	public void setStatsLastFailure(Date theStatsLastFailure) {
+		myStatsLastFailure = theStatsLastFailure;
+	}
+
+	public void setStatsLastFailureContentType(String theStatsLastFailureContentType) {
+		myStatsLastFailureContentType = theStatsLastFailureContentType;
+	}
+
+	public void setStatsLastFailureMessage(String theStatsLastFailureMessage) {
+		myStatsLastFailureMessage = theStatsLastFailureMessage;
+	}
+
+	public void setStatsLastFailureStatusCode(Integer theStatsLastFailureStatusCode) {
+		myStatsLastFailureStatusCode = theStatsLastFailureStatusCode;
+	}
+
+	public void setStatsLastFault(Date theStatsLastFault) {
+		myStatsLastFault = theStatsLastFault;
+	}
+
+	public void setStatsLastFaultContentType(String theStatsLastFaultContentType) {
+		myStatsLastFaultContentType = theStatsLastFaultContentType;
+	}
+
+	public void setStatsLastFaultMessage(String theStatsLastFaultMessage) {
+		myStatsLastFaultMessage = theStatsLastFaultMessage;
+	}
+
+	public void setStatsLastFaultStatusCode(Integer theStatsLastFaultStatusCode) {
+		myStatsLastFaultStatusCode = theStatsLastFaultStatusCode;
+	}
+
+	public void setStatsLastSuccess(Date theStatsLastSuccess) {
+		myStatsLastSuccess = theStatsLastSuccess;
+	}
+
+	public void setStatsLastSuccessContentType(String theStatsLastSuccessContentType) {
+		myStatsLastSuccessContentType = theStatsLastSuccessContentType;
+	}
+
+	public void setStatsLastSuccessMessage(String theStatsLastSuccessMessage) {
+		myStatsLastSuccessMessage = theStatsLastSuccessMessage;
+	}
+
+	public void setStatsLastSuccessStatusCode(Integer theStatsLastSuccessStatusCode) {
+		myStatsLastSuccessStatusCode = theStatsLastSuccessStatusCode;
+	}
+
+	public void setStatsNextCircuitBreakerReset(Date theNextCircuitBreakerReset) {
+		myStatsNextCircuitBreakerReset = theNextCircuitBreakerReset;
+
+	}
+
 	/**
 	 * @param theUrl
 	 *            the url to set

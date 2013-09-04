@@ -17,6 +17,7 @@ import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.IAuthorizationService.ILocalDatabaseAuthorizationService;
+import net.svcret.ejb.api.IAuthorizationService.UserOrFailure;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.ISecurityService.AuthorizationRequestBean;
@@ -55,6 +56,8 @@ public class SecurityServiceBeanTest {
 	private PersUser myUser2;
 	private MyCredentialGrabber myGoodGrabber2;
 	private MyCredentialGrabber myBadGrabber;
+	private UserOrFailure myUserResp;
+	private UserOrFailure myFailResp;
 	private static int ourNextPid;
 
 	@Before
@@ -88,6 +91,9 @@ public class SecurityServiceBeanTest {
 		myUser.setStatus(new PersUserStatus());
 		myUsers.add(myUser);
 
+		myUserResp = new UserOrFailure(myUser);
+		myFailResp = new UserOrFailure(AuthorizationOutcomeEnum.FAILED_BAD_CREDENTIALS_IN_REQUEST);
+		
 		myUser2 = new PersUser();
 		myUser2.setPid(212L);
 		myUser2.setUsername("username123B");
@@ -144,7 +150,7 @@ public class SecurityServiceBeanTest {
 	@Test
 	public void testAuthorizeNone() throws ProcessingException {
 				
-		when(dbServiceAuthorizeMethod(myGoodGrabber1)).thenReturn(myUser);
+		when(dbServiceAuthorizeMethod(myGoodGrabber1)).thenReturn(myUserResp);
 		myUser.loadAllAssociations();
 		
 		DefaultAnswer.setRunTime();
@@ -167,8 +173,8 @@ public class SecurityServiceBeanTest {
 	@Test
 	public void testAuthorizeAllowMethod() throws ProcessingException {
 				
-		when(dbServiceAuthorizeMethod(myGoodGrabber1)).thenReturn(myUser);
-		when(dbServiceAuthorizeMethod(myBadGrabber)).thenReturn(null);
+		when(dbServiceAuthorizeMethod(myGoodGrabber1)).thenReturn(myUserResp);
+		when(dbServiceAuthorizeMethod(myBadGrabber)).thenReturn(myFailResp);
 		
 		PersUserDomainPermission domainPer = myUser.addPermission(myD0);
 		PersUserServicePermission servicePer = domainPer.addPermission(myD0S0);
@@ -239,9 +245,9 @@ public class SecurityServiceBeanTest {
 	@Test
 	public void testAuthorizeRequireAny() throws ProcessingException {
 				
-		when(dbServiceAuthorizeMethod(myGoodGrabber1)).thenReturn(myUser);
-		when(dbServiceAuthorizeMethod(myGoodGrabber2)).thenReturn(myUser);
-		when(dbServiceAuthorizeMethod(myBadGrabber)).thenReturn(null);
+		when(dbServiceAuthorizeMethod(myGoodGrabber1)).thenReturn(myUserResp);
+		when(dbServiceAuthorizeMethod(myGoodGrabber2)).thenReturn(myUserResp);
+		when(dbServiceAuthorizeMethod(myBadGrabber)).thenReturn(myFailResp);
 		
 		myUser.loadAllAssociations();
 		myUser.setAllowAllDomains(true);
@@ -258,9 +264,9 @@ public class SecurityServiceBeanTest {
 
 	@Test
 	public void testAuthorizeRequireAll() throws ProcessingException {
-		when(dbServiceAuthorizeMethod(myGoodGrabber1)).thenReturn(myUser);
-		when(dbServiceAuthorizeMethod(myGoodGrabber2)).thenReturn(myUser);
-		when(dbServiceAuthorizeMethod(myBadGrabber)).thenReturn(null);
+		when(dbServiceAuthorizeMethod(myGoodGrabber1)).thenReturn(myUserResp);
+		when(dbServiceAuthorizeMethod(myGoodGrabber2)).thenReturn(myUserResp);
+		when(dbServiceAuthorizeMethod(myBadGrabber)).thenReturn(myFailResp);
 		
 		myUser.loadAllAssociations();
 		myUser.setAllowAllDomains(true);
@@ -276,9 +282,9 @@ public class SecurityServiceBeanTest {
 	
 	@Test
 	public void testAuthorizeAllowAny() throws ProcessingException {
-		when(dbServiceAuthorizeMethod(myGoodGrabber1)).thenReturn(myUser);
-		when(dbServiceAuthorizeMethod(myGoodGrabber2)).thenReturn(myUser);
-		when(dbServiceAuthorizeMethod(myBadGrabber)).thenReturn(null);
+		when(dbServiceAuthorizeMethod(myGoodGrabber1)).thenReturn(myUserResp);
+		when(dbServiceAuthorizeMethod(myGoodGrabber2)).thenReturn(myUserResp);
+		when(dbServiceAuthorizeMethod(myBadGrabber)).thenReturn(myFailResp);
 		
 		myUser.loadAllAssociations();
 		myUser.setAllowAllDomains(true);
@@ -295,7 +301,7 @@ public class SecurityServiceBeanTest {
 	@Test
 	public void testAuthorizeAllowAllMethods() throws ProcessingException {
 				
-		when(dbServiceAuthorizeMethod(myGoodGrabber1)).thenReturn(myUser);
+		when(dbServiceAuthorizeMethod(myGoodGrabber1)).thenReturn(myUserResp);
 		
 		PersUserDomainPermission domainPer = myUser.addPermission(myD0);
 		PersUserServicePermission servicePer = domainPer.addPermission(myD0S0);
@@ -316,7 +322,7 @@ public class SecurityServiceBeanTest {
 	@Test
 	public void testAuthorizeAllowAllDomains() throws ProcessingException {
 				
-		when(dbServiceAuthorizeMethod(myGoodGrabber1)).thenReturn(myUser);
+		when(dbServiceAuthorizeMethod(myGoodGrabber1)).thenReturn(myUserResp);
 		myUser.loadAllAssociations();
 		myUser.setAllowAllDomains(true);
 		
@@ -326,7 +332,7 @@ public class SecurityServiceBeanTest {
 		assertEquals(AuthorizationOutcomeEnum.AUTHORIZED, mySvc.authorizeMethodInvocation(toList(myHost, myGoodGrabber1), myD0S0V0M0,"").isAuthorized());
 	}
 
-	private PersUser dbServiceAuthorizeMethod(ICredentialGrabber theCredentialGrabber) throws ProcessingException {
+	private UserOrFailure dbServiceAuthorizeMethod(ICredentialGrabber theCredentialGrabber) throws ProcessingException {
 		return myLocalDbAuthService.authorize(any(BasePersAuthenticationHost.class), any(InMemoryUserCatalog.class), same(theCredentialGrabber));
 	}
 	

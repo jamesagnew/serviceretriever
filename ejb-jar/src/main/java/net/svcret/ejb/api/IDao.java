@@ -13,8 +13,8 @@ import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.ejb.TransactionLoggerBean.BaseUnflushed;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
-import net.svcret.ejb.model.entity.BasePersInvocationStats;
-import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
+import net.svcret.ejb.model.entity.BasePersStats;
+import net.svcret.ejb.model.entity.BasePersStatsPk;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.BasePersSavedTransaction;
 import net.svcret.ejb.model.entity.BasePersSavedTransactionRecentMessage;
@@ -30,17 +30,13 @@ import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersEnvironment;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
-import net.svcret.ejb.model.entity.PersInvocationStats;
-import net.svcret.ejb.model.entity.PersInvocationStatsPk;
+import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
 import net.svcret.ejb.model.entity.PersInvocationUrlStats;
-import net.svcret.ejb.model.entity.PersInvocationUrlStatsPk;
-import net.svcret.ejb.model.entity.PersInvocationUserStats;
-import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
+import net.svcret.ejb.model.entity.PersInvocationMethodUserStats;
 import net.svcret.ejb.model.entity.PersLibraryMessage;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersNodeStats;
-import net.svcret.ejb.model.entity.PersNodeStatsPk;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
@@ -93,15 +89,13 @@ public interface IDao {
 
 	Collection<PersHttpClientConfig> getHttpClientConfigs();
 
-	BasePersMethodInvocationStats getInvocationStats(PersInvocationStatsPk thePk);
+	<P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> O getInvocationStats(P thePk);
 
-	List<PersInvocationStats> getInvocationStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff);
+	List<PersInvocationMethodSvcverStats> getInvocationStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff);
 
 	List<PersInvocationUrlStats> getInvocationUrlStatsBefore(InvocationStatsIntervalEnum theMinute, Date theHoursCutoff);
 
-	BasePersMethodInvocationStats getInvocationUserStats(PersInvocationUserStatsPk thePk);
-
-	List<PersInvocationUserStats> getInvocationUserStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff);
+	List<PersInvocationMethodUserStats> getInvocationUserStatsBefore(InvocationStatsIntervalEnum theHour, Date theDaysCutoff);
 
 	PersLibraryMessage getLibraryMessageByPid(long theMessagePid);
 
@@ -127,17 +121,11 @@ public interface IDao {
 
 	PersHttpClientConfig getOrCreateHttpClientConfig(String theId);
 
-	PersInvocationStats getOrCreateInvocationStats(PersInvocationStatsPk thePk);
-
-	PersInvocationUrlStats getOrCreateInvocationUrlStats(PersInvocationUrlStatsPk thePk);
-
-	PersInvocationUserStats getOrCreateInvocationUserStats(PersInvocationUserStatsPk thePk);
-
-	PersNodeStats getOrCreateNodeStats(PersNodeStatsPk thePk);
-
 	BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, String theVersionId, ServiceProtocolEnum theProtocol) throws ProcessingException;
 
 	PersService getOrCreateServiceWithId(PersDomain theDomain, String theServiceId) throws ProcessingException;
+
+	<P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> O getOrCreateStats(P thePk);
 
 	PersUser getOrCreateUser(BasePersAuthenticationHost theAuthHost, String theUsername) throws ProcessingException;
 
@@ -151,6 +139,8 @@ public interface IDao {
 
 	List<PersServiceVersionRecentMessage> getServiceVersionRecentMessages(BasePersServiceVersion theSvcVer, ResponseTypeEnum theResponseType);
 
+	PersServiceVersionUrlStatus getServiceVersionUrlStatusByPid(Long thePid);
+
 	long getStateCounter(String theKey);
 
 	PersServiceVersionStatus getStatusForServiceVersionWithPid(long theServicePid);
@@ -159,7 +149,7 @@ public interface IDao {
 
 	List<PersUserRecentMessage> getUserRecentMessages(IThrottleable theUser, ResponseTypeEnum theResponseType);
 
-	List<PersInvocationUserStats> getUserStatsWithinTimeRange(PersUser theUser, Date theStart, Date theEnd);
+	List<PersInvocationMethodUserStats> getUserStatsWithinTimeRange(PersUser theUser, Date theStart, Date theEnd);
 
 	long incrementStateCounter(String theKey);
 
@@ -189,15 +179,15 @@ public interface IDao {
 
 	PersHttpClientConfig saveHttpClientConfig(PersHttpClientConfig theConfig);
 
-	void saveInvocationStats(Collection<BasePersInvocationStats> theStats);
+	void saveInvocationStats(Collection<? extends BasePersStats<?, ?>> theStats);
 
-	void saveInvocationStats(Collection<BasePersInvocationStats> theStats, List<BasePersInvocationStats> theStatsToDelete);
+	void saveInvocationStats(Collection<? extends BasePersStats<?, ?>> theStats, List<? extends BasePersStats<?, ?>> theStatsToDelete);
+
+	// List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int theStart);
 
 	PersLibraryMessage saveLibraryMessage(PersLibraryMessage theMessage);
 
 	void saveMonitorRule(BasePersMonitorRule theRule);
-
-	// List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int theStart);
 
 	PersMonitorRuleFiring saveMonitorRuleFiring(PersMonitorRuleFiring theFiring);
 

@@ -7,12 +7,14 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 
+import net.svcret.ejb.model.entity.BasePersStats.IStatsVisitor;
+
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import com.google.common.base.Objects.ToStringHelper;
 
 @Embeddable
-public class PersStaticResourceStatsPk extends BasePersInvocationStatsPk {
+public class PersStaticResourceStatsPk extends BasePersStatsPk<PersStaticResourceStatsPk, PersStaticResourceStats> {
 
 	private static final long serialVersionUID = 1L;
 
@@ -33,11 +35,20 @@ public class PersStaticResourceStatsPk extends BasePersInvocationStatsPk {
 	}
 
 	@Override
-	protected boolean doEquals(BasePersInvocationStatsPk theObj) {
-		PersStaticResourceStatsPk obj = (PersStaticResourceStatsPk) theObj;
-		return getInterval().equals(obj.getInterval()) // -
-				&& getResourcePid().equals(obj.getResourcePid()) // -
-				&& getStartTime().equals(obj.getStartTime()); // -
+	protected boolean doEquals(PersStaticResourceStatsPk theObj) {
+		return getInterval().equals(theObj.getInterval()) // -
+				&& getResourcePid().equals(theObj.getResourcePid()) // -
+				&& getStartTime().equals(theObj.getStartTime()); // -
+	}
+
+	@Override
+	public <T> T accept(IStatsVisitor<T> theVisitor) {
+		return theVisitor.visit(null, this);
+	}
+
+	@Override
+	public Class<PersStaticResourceStats> getStatType() {
+		return PersStaticResourceStats.class;
 	}
 
 	@Override
@@ -83,6 +94,11 @@ public class PersStaticResourceStatsPk extends BasePersInvocationStatsPk {
 	@Override
 	public String toString() {
 		return getToStringHelper().toString();
+	}
+
+	@Override
+	public PersStaticResourceStatsPk newPk(InvocationStatsIntervalEnum theInterval, Date theStartTime) {
+		return new PersStaticResourceStatsPk(theInterval, theStartTime, getResource());
 	}
 
 }

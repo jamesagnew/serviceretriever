@@ -7,6 +7,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.naming.directory.DirContext;
 
+import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.IAuthorizationService.ILdapAuthorizationService;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.ISecurityService;
@@ -34,7 +35,7 @@ public class LdapAuthorizationServiceBean extends BaseAuthorizationServiceBean<P
 	private ISecurityService mySecuritySvc;
 
 	@Override
-	protected PersUser doAuthorize(PersAuthenticationHostLdap theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException {
+	protected UserOrFailure doAuthorize(PersAuthenticationHostLdap theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException {
 		Validate.notNull(theHost);
 		Validate.notNull(theUserCatalog);
 		Validate.notNull(theCredentialGrabber);
@@ -54,6 +55,14 @@ public class LdapAuthorizationServiceBean extends BaseAuthorizationServiceBean<P
 			ourLog.debug("Going to do an LDAP validation on user {} and password {}", username, StringUtils.repeat('*', password.length()));
 		}
 
+		if (StringUtils.isBlank(username)) {
+			return new UserOrFailure(AuthorizationOutcomeEnum.FAILED_MISSING_USERNAME);
+		}
+
+		if (StringUtils.isBlank(password)) {
+			return new UserOrFailure(AuthorizationOutcomeEnum.FAILED_MISSING_USERNAME);
+		}
+
 		boolean validates = connection.validate(username, password);
 		if (!validates) {
 			return null;
@@ -64,7 +73,11 @@ public class LdapAuthorizationServiceBean extends BaseAuthorizationServiceBean<P
 		// TODO: auto-create user if needed (mayve refactor into common
 		// superclass or something?)
 
-		return user;
+		if (user == null) {
+			return new UserOrFailure(AuthorizationOutcomeEnum.FAILED_USER_UNKNOWN_TO_SR);
+		}
+		
+		return new UserOrFailure(user);
 	}
 
 	@Override

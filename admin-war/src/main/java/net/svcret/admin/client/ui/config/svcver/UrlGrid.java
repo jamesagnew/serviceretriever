@@ -39,11 +39,12 @@ import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
 public class UrlGrid extends FlowPanel {
-	private static final int NUM_COLS = 7;
+	private static final int NUM_COLS = 6;
 	private static final int COL_URL_ID = 1;
 	private static final int COL_URL_URL = 2;
 	private static final int COL_URL_STATUS = 3;
-	private static final int COL_URL_LAST_TRANSACTION = 4;
+	private static final int COL_URL_USAGE = 4;
+	private static final int COL_URL_LAST_TRANSACTION = 5;
 
 	private Grid myUrlGrid;
 	private BaseGServiceVersion myServiceVersion;
@@ -63,6 +64,7 @@ public class UrlGrid extends FlowPanel {
 		myUrlGrid.setWidget(0, COL_URL_ID, new Label("ID"));
 		myUrlGrid.setWidget(0, COL_URL_URL, new Label("URL"));
 		myUrlGrid.setWidget(0, COL_URL_STATUS, new Label("Status"));
+		myUrlGrid.setWidget(0, COL_URL_USAGE, new Label("60 Min Activity"));
 		myUrlGrid.setWidget(0, COL_URL_LAST_TRANSACTION, new Label("Last Transaction"));
 
 		myNoUrlsLabel = new Label("No URLs Defined");

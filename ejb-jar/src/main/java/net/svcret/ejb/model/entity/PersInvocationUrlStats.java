@@ -21,7 +21,7 @@ import org.hibernate.annotations.Index;
 })
 @Entity()
 //@formatter:on
-public class PersInvocationUrlStats extends BasePersMethodInvocationStats {
+public class PersInvocationUrlStats extends BasePersInvocationStats<PersInvocationUrlStatsPk, PersInvocationUrlStats> {
 
 	private static final long serialVersionUID = 1L;
 
@@ -47,6 +47,11 @@ public class PersInvocationUrlStats extends BasePersMethodInvocationStats {
 	@Override
 	public StatsTypeEnum getStatsType() {
 		return StatsTypeEnum.INVOCATION;
+	}
+
+	@Override
+	public <T> T accept(net.svcret.ejb.model.entity.BasePersStats.IStatsVisitor<T> theVisitor) {
+		return theVisitor.visit(this, getPk());
 	}
 
 

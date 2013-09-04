@@ -18,8 +18,8 @@ import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersConfig;
-import net.svcret.ejb.model.entity.PersInvocationUserStats;
-import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
+import net.svcret.ejb.model.entity.PersInvocationMethodUserStats;
+import net.svcret.ejb.model.entity.PersInvocationMethodUserStatsPk;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersUser;
 
@@ -97,18 +97,18 @@ public class ChartingServiceBeanTest {
 		when(myDao.getServiceVersionMethodByPid(eq(21L))).thenReturn(m2);
 		when(myDao.getServiceVersionMethodByPid(eq(31L))).thenReturn(m3);
 		
-		List<PersInvocationUserStats> statsList=new ArrayList<PersInvocationUserStats>();
-		statsList.add(new PersInvocationUserStats(new PersInvocationUserStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:10"), m1, user)));
+		List<PersInvocationMethodUserStats> statsList=new ArrayList<PersInvocationMethodUserStats>();
+		statsList.add(new PersInvocationMethodUserStats(new PersInvocationMethodUserStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:10"), m1, user)));
 		statsList.get(statsList.size()-1).addSuccessInvocation(100, 200, 300);
-		statsList.add(new PersInvocationUserStats(new PersInvocationUserStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:20"), m1, user)));
+		statsList.add(new PersInvocationMethodUserStats(new PersInvocationMethodUserStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:20"), m1, user)));
 		statsList.get(statsList.size()-1).addSuccessInvocation(100, 200, 300);
-		statsList.add(new PersInvocationUserStats(new PersInvocationUserStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:30"), m1, user)));
+		statsList.add(new PersInvocationMethodUserStats(new PersInvocationMethodUserStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:30"), m1, user)));
 		statsList.get(statsList.size()-1).addSuccessInvocation(100, 200, 300);
-		statsList.add(new PersInvocationUserStats(new PersInvocationUserStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:30"), m2, user)));
+		statsList.add(new PersInvocationMethodUserStats(new PersInvocationMethodUserStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:30"), m2, user)));
 		statsList.get(statsList.size()-1).addSuccessInvocation(100, 200, 300);
-		statsList.add(new PersInvocationUserStats(new PersInvocationUserStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:40"), m2, user)));
+		statsList.add(new PersInvocationMethodUserStats(new PersInvocationMethodUserStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:40"), m2, user)));
 		statsList.get(statsList.size()-1).addSuccessInvocation(100, 200, 300);
-		statsList.add(new PersInvocationUserStats(new PersInvocationUserStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:40"), m3, user)));
+		statsList.add(new PersInvocationMethodUserStats(new PersInvocationMethodUserStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:40"), m3, user)));
 		statsList.get(statsList.size()-1).addSuccessInvocation(100, 200, 300);
 		
 		when(myDao.getUserStatsWithinTimeRange(eq(user), eq(range.getNoPresetFrom()), eq(range.getNoPresetTo()))).thenReturn(statsList);
@@ -134,7 +134,7 @@ public class ChartingServiceBeanTest {
 			
 		when(myDao.getUser(eq(1L))).thenReturn(user);
 		
-		List<PersInvocationUserStats> statsList=new ArrayList<PersInvocationUserStats>();
+		List<PersInvocationMethodUserStats> statsList=new ArrayList<PersInvocationMethodUserStats>();
 		when(myDao.getUserStatsWithinTimeRange(eq(user), eq(range.getNoPresetFrom()), eq(range.getNoPresetTo()))).thenReturn(statsList);
 		
 		byte[] bytes = mySvc.renderUserMethodGraphForUser(user.getPid(), range);

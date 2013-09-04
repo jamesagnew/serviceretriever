@@ -38,13 +38,13 @@ public class Queries {
 	public static final String RULEFIRING_FINDACTIVE_Q = "SELECT f FROM PersMonitorRuleFiring f WHERE f.myEndDate IS NULL";
 
 	public static final String PERSINVOC_STATS = "PersInvocationStats.findBeforeDate";
-	public static final String PERSINVOC_STATS_Q = "SELECT s FROM PersInvocationStats s WHERE s.myPk.myInterval = :INTERVAL AND s.myPk.myStartTime < :BEFORE_DATE";
+	public static final String PERSINVOC_STATS_Q = "SELECT s FROM PersInvocationMethodSvcverStats s WHERE s.myPk.myInterval = :INTERVAL AND s.myPk.myStartTime < :BEFORE_DATE";
 
 	public static final String PERSINVOC_USERSTATS_FINDUSER = "PersInvocationUserStats.findForUser";
-	public static final String PERSINVOC_USERSTATS_FINDUSER_Q = "SELECT s FROM PersInvocationUserStats s WHERE s.myPk.myUserPid = :USER_PID AND s.myPk.myStartTime >= :START_TIME AND s.myPk.myStartTime <= :END_TIME"; // ORDER BY s.myPk.myStartTime ASC
+	public static final String PERSINVOC_USERSTATS_FINDUSER_Q = "SELECT s FROM PersInvocationMethodUserStats s WHERE s.myPk.myUserPid = :USER_PID AND s.myPk.myStartTime >= :START_TIME AND s.myPk.myStartTime <= :END_TIME"; // ORDER BY s.myPk.myStartTime ASC
 	
 	public static final String PERSINVOC_USERSTATS_FINDINTERVAL = "PersInvocationUserStats.findIntervalBeforeDate";
-	public static final String PERSINVOC_USERSTATS_FINDINTERVAL_Q = "SELECT s FROM PersInvocationUserStats s WHERE s.myPk.myInterval = :INTERVAL AND s.myPk.myStartTime < :BEFORE_DATE";
+	public static final String PERSINVOC_USERSTATS_FINDINTERVAL_Q = "SELECT s FROM PersInvocationMethodUserStats s WHERE s.myPk.myInterval = :INTERVAL AND s.myPk.myStartTime < :BEFORE_DATE";
 	
 	public static final String PERSINVOC_URLSTATS_FINDINTERVAL = "PersInvocationUrlStats.findIntervalBeforeDate";
 	public static final String PERSINVOC_URLSTATS_FINDINTERVAL_Q = "SELECT s FROM PersInvocationUrlStats s WHERE s.myPk.myInterval = :INTERVAL AND s.myPk.myStartTime < :BEFORE_DATE";

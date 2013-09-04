@@ -35,6 +35,11 @@
 
 * recreate URL statuses if they disappear
 
+* Replace service version status bean with method status bean and update UI to display the method last
+  invocation time
+
+* Allow recent transactions to be pinned 
+
 ----
 DONE
 

@@ -31,12 +31,12 @@ import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
 import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.BasePersServiceCatalogItem;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
-import net.svcret.ejb.model.entity.PersInvocationStatsPk;
+import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
+import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
 import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorRuleActive;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
@@ -362,8 +362,8 @@ public class MonitorServiceBean implements IMonitorService {
 				long totalInvocations = 0;
 				for (PersServiceVersionMethod nextMethod : nextSvcVer.getMethods()) {
 					for (long nextTime : times) {
-						PersInvocationStatsPk statsPk = new PersInvocationStatsPk(InvocationStatsIntervalEnum.MINUTE, nextTime, nextMethod);
-						BasePersMethodInvocationStats stats = myRuntimeStatus.getInvocationStatsSynchronously(statsPk);
+						PersInvocationMethodSvcverStatsPk statsPk = new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.MINUTE, nextTime, nextMethod);
+						PersInvocationMethodSvcverStats stats = myRuntimeStatus.getInvocationStatsSynchronously(statsPk);
 						totalTime += stats.getSuccessInvocationTotalTime();
 						totalTime += stats.getSuccessInvocationCount();
 					}

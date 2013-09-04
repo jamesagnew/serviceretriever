@@ -24,7 +24,7 @@ public abstract class BaseAuthorizationServiceBean<T extends BasePersAuthenticat
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public PersUser authorize(BasePersAuthenticationHost theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException {
+	public UserOrFailure authorize(BasePersAuthenticationHost theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException {
 		Validate.notNull(theHost, "Host");
 		Validate.notNull(theUserCatalog, "Catalog");
 		Validate.notNull(theCredentialGrabber, "Grabber");
@@ -35,7 +35,7 @@ public abstract class BaseAuthorizationServiceBean<T extends BasePersAuthenticat
 			if (userCache != null) {
 				PersUser user = theUserCatalog.getUser(userCache.getAuthHostPid(), userCache.getUserPid());
 				if (user != null) {
-					return user;
+					return new UserOrFailure(user);
 				}
 			}
 		}
@@ -44,10 +44,10 @@ public abstract class BaseAuthorizationServiceBean<T extends BasePersAuthenticat
 			throw new IllegalArgumentException("Host is not instance of " + getConfigType().getSimpleName() + ": " + theHost.getClass());
 		}
 
-		PersUser retVal = doAuthorize((T) theHost, theUserCatalog, theCredentialGrabber);
+		UserOrFailure retVal = doAuthorize((T) theHost, theUserCatalog, theCredentialGrabber);
 
-		if (retVal != null && cacheForMillis != null) {
-			storeAuthorization(theCredentialGrabber, cacheForMillis, retVal.getPid(), theHost.getPid());
+		if (retVal.getUser() != null && cacheForMillis != null) {
+			storeAuthorization(theCredentialGrabber, cacheForMillis, retVal.getUser().getPid(), theHost.getPid());
 		}
 
 		return retVal;
@@ -95,7 +95,7 @@ public abstract class BaseAuthorizationServiceBean<T extends BasePersAuthenticat
 		}
 	}
 
-	protected abstract PersUser doAuthorize(T theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException;
+	protected abstract UserOrFailure doAuthorize(T theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException;
 
 	protected abstract Class<T> getConfigType();
 

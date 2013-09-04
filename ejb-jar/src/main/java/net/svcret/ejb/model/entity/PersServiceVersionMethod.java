@@ -30,7 +30,7 @@ public class PersServiceVersionMethod extends BasePersObject {
 	private static final long serialVersionUID = 1L;
 
 	@OneToMany(fetch=FetchType.LAZY, cascade= {CascadeType.REMOVE}, orphanRemoval=true, mappedBy="myPk.myMethod")
-	private Collection<PersInvocationStats> myInvocationStats;
+	private Collection<PersInvocationMethodSvcverStats> myInvocationStats;
 
 	@Column(name = "NAME", length = 200, nullable=false)
 	private String myName;

@@ -54,6 +54,8 @@ import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
+import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
+import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
 import net.svcret.ejb.model.entity.PersLibraryMessage;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
@@ -80,8 +82,8 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	private ServiceRegistryBean mySvcReg;
 	private ConfigServiceBean myConfigSvc;
 	private TransactionLoggerBean myTransactionLogSvc;
-
 	private MonitorServiceBean myMonitorSvc;
+	private RuntimeStatusQueryBean myStatsQSvc;
 
 	@After
 	public void after2() {
@@ -174,6 +176,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testDoWithStats() {
 
@@ -185,7 +188,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		PersConfig config = new PersConfig();
 		config.setDefaults();
 		IRuntimeStatus statusSvc = mock(IRuntimeStatus.class, DefaultAnswer.INSTANCE);
-		IWithStats operator = mock(IWithStats.class);
+		IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> operator = mock(IWithStats.class);
 		AdminServiceBean.doWithStatsByMinute(config, 12 * 60, statusSvc, method, operator);
 
 	}
@@ -202,6 +205,10 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		myStatsSvc = new RuntimeStatusBean();
 		myStatsSvc.setDao(myDao);
 		myStatsSvc.setConfigSvc(myConfigSvc);
+
+		myStatsQSvc = new RuntimeStatusQueryBean();
+		myStatsQSvc.setConfigSvcForUnitTest(myConfigSvc);
+		myStatsQSvc.setStatusSvcForUnitTest(myStatsSvc);
 
 		mySoapInvoker = mock(IServiceInvokerSoap11.class, new DefaultAnswer());
 
@@ -221,6 +228,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		mySvc.setPersSvc(myDao);
 		mySvc.setConfigSvc(myConfigSvc);
 		mySvc.setRuntimeStatusSvc(myStatsSvc);
+		mySvc.setRuntimeStatusQuerySvcForUnitTests(myStatsQSvc);
 		mySvc.setServiceRegistry(mySvcReg);
 		mySvc.setInvokerSoap11(mySoapInvoker);
 		mySvc.setSecuritySvc(mySecSvc);
@@ -1113,7 +1121,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 	}
 
-	@Test
+//	@Test
 	public void testMultipleStatsLoadsInParallel() throws Exception {
 		newEntityManager();
 
@@ -1138,7 +1146,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		List<RetrieverThread> ts = new ArrayList<RetrieverThread>();
 		for (int i = 0; i < 3; i++) {
-			RetrieverThread t = new RetrieverThread(req);
+			RetrieverThread t = new RetrieverThread(req, mySvcReg);
 			t.start();
 			ts.add(t);
 		}
@@ -1318,12 +1326,14 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 	}
 
-	private final class RetrieverThread extends Thread {
+	private static final class RetrieverThread extends Thread {
 		private Exception myFailed;
 		private final ModelUpdateRequest myReq;
-
-		private RetrieverThread(ModelUpdateRequest theReq) {
+		private ServiceRegistryBean mySvcReg;
+		
+		private RetrieverThread(ModelUpdateRequest theReq, ServiceRegistryBean theSvcReg) {
 			myReq = theReq;
+			mySvcReg=theSvcReg;
 		}
 
 		@Override
@@ -1332,21 +1342,30 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 				EntityManager entityManager = ourEntityManagerFactory.createEntityManager();
 				entityManager.getTransaction().begin();
-				DaoBean persSvc = new DaoBean();
-				persSvc.setEntityManager(entityManager);
+				DaoBean dao = new DaoBean();
+				dao.setEntityManager(entityManager);
 
 				RuntimeStatusBean rs = new RuntimeStatusBean();
-				rs.setDao(persSvc);
+				rs.setDao(dao);
 
+				ConfigServiceBean cs =new ConfigServiceBean();
+				cs.setBroadcastSender(mock(IBroadcastSender.class));
+				cs.setDao(dao);
+				
+				RuntimeStatusQueryBean rqb  = new RuntimeStatusQueryBean();
+				rqb.setConfigSvcForUnitTest(cs);
+				rqb.setStatusSvcForUnitTest(rs);
+				
 				AdminServiceBean sSvc = new AdminServiceBean();
-				sSvc.setPersSvc(persSvc);
-				sSvc.setConfigSvc(myConfigSvc);
+				sSvc.setPersSvc(dao);
+				sSvc.setConfigSvc(cs);
 				sSvc.setServiceRegistry(mySvcReg);
 				sSvc.setRuntimeStatusSvc(rs);
+				sSvc.setRuntimeStatusQuerySvcForUnitTests(rqb);
 
 				RuntimeStatusBean statsSvc = new RuntimeStatusBean();
 				sSvc.setSchedulerServiceForTesting(mock(IScheduler.class));
-				statsSvc.setDao(persSvc);
+				statsSvc.setDao(dao);
 
 				sSvc.loadModelUpdate(myReq);
 

@@ -6,10 +6,9 @@ import javax.ejb.Local;
 
 import net.svcret.ejb.api.HttpResponseBean.Failure;
 import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
+import net.svcret.ejb.model.entity.BasePersStats;
+import net.svcret.ejb.model.entity.BasePersStatsPk;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
-import net.svcret.ejb.model.entity.PersInvocationStatsPk;
-import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
@@ -47,11 +46,10 @@ public interface IRuntimeStatus {
 	 */
 	void flushStatus();
 
-	BasePersMethodInvocationStats getInvocationStatsSynchronously(PersInvocationStatsPk thePk);
-
 	void collapseStats() throws ProcessingException;
 
-	BasePersMethodInvocationStats getInvocationUserStatsSynchronously(PersInvocationUserStatsPk thePk);
+	<P extends BasePersStatsPk<P,O>, O extends BasePersStats<P,O>>
+	O getInvocationStatsSynchronously(P thePk);
 
 	int getCachedPopulatedKeyCount();
 
@@ -68,5 +66,5 @@ public interface IRuntimeStatus {
 	int getMaxCachedPopulatedStatCount();
 
 	void recordNodeStatistics();
-	
+
 }

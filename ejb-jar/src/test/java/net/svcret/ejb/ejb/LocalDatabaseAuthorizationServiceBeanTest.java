@@ -61,11 +61,11 @@ private PersAuthenticationHostLocalDatabase host2;
 	@Test
 	public void testPasswordCheck() throws ProcessingException {
 		
-		assertNotNull(mySvc.authorize(host, userCatalog, goodCredentialGrabber));
-		assertNull(mySvc.authorize(host, userCatalog, badCredentialGrabber));
+		assertNotNull(mySvc.authorize(host, userCatalog, goodCredentialGrabber).getUser());
+		assertNull(mySvc.authorize(host, userCatalog, badCredentialGrabber).getUser());
 		
-		assertNull( mySvc.authorize(host2, userCatalog, goodCredentialGrabber));
-		assertNull( mySvc.authorize(host2, userCatalog, badCredentialGrabber));
+		assertNull( mySvc.authorize(host2, userCatalog, goodCredentialGrabber).getUser());
+		assertNull( mySvc.authorize(host2, userCatalog, badCredentialGrabber).getUser());
 		
 	}
 	

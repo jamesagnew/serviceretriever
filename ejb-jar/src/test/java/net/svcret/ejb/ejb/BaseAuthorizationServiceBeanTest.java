@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
@@ -48,18 +49,18 @@ public class BaseAuthorizationServiceBeanTest {
 		MyCredentialGrabber bad = new MyCredentialGrabber("username321", "password321");
 
 		assertEquals(0, mySvc.getInvocationCount());
-		assertNotNull(mySvc.authorize(myConfig, myUserCatalog, good));
+		assertNotNull(mySvc.authorize(myConfig, myUserCatalog, good).getUser());
 		assertEquals(1, mySvc.getInvocationCount());
-		assertNull(mySvc.authorize(myConfig, myUserCatalog, bad));
+		assertNull(mySvc.authorize(myConfig, myUserCatalog, bad).getUser());
 		assertEquals(2, mySvc.getInvocationCount());
 
 		/*
 		 * Make sure we use the cache
 		 */
 
-		assertNotNull(mySvc.authorize(myConfig, myUserCatalog, good));
+		assertNotNull(mySvc.authorize(myConfig, myUserCatalog, good).getUser());
 		assertEquals(2, mySvc.getInvocationCount());
-		assertNull(mySvc.authorize(myConfig, myUserCatalog, bad));
+		assertNull(mySvc.authorize(myConfig, myUserCatalog, bad).getUser());
 		assertEquals(3, mySvc.getInvocationCount());
 
 		Thread.sleep(200);
@@ -68,9 +69,9 @@ public class BaseAuthorizationServiceBeanTest {
 		 * Make sure we DON'T use the cache
 		 */
 
-		assertNotNull(mySvc.authorize(myConfig, myUserCatalog, good));
+		assertNotNull(mySvc.authorize(myConfig, myUserCatalog, good).getUser());
 		assertEquals(4, mySvc.getInvocationCount());
-		assertNull(mySvc.authorize(myConfig, myUserCatalog, bad));
+		assertNull(mySvc.authorize(myConfig, myUserCatalog, bad).getUser());
 		assertEquals(5, mySvc.getInvocationCount());
 
 	}
@@ -79,18 +80,18 @@ public class BaseAuthorizationServiceBeanTest {
 		private int myInvocationCount = 0;
 
 		@Override
-		protected PersUser doAuthorize(PersAuthenticationHostLdap theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException {
+		protected UserOrFailure doAuthorize(PersAuthenticationHostLdap theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException {
 			myInvocationCount++;
 
 			if (!theCredentialGrabber.getUsername().equals("username123")) {
-				return null;
+				return new UserOrFailure(AuthorizationOutcomeEnum.FAILED_BAD_CREDENTIALS_IN_REQUEST);
 			}
 
 			if (!theCredentialGrabber.getPassword().equals("password123")) {
-				return null;
+				return new UserOrFailure(AuthorizationOutcomeEnum.FAILED_BAD_CREDENTIALS_IN_REQUEST);
 			}
 
-			return myUser;
+			return new UserOrFailure(myUser);
 		}
 
 		/**

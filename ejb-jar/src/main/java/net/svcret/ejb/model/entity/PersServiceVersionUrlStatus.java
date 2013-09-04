@@ -1,6 +1,6 @@
 package net.svcret.ejb.model.entity;
 
-import static org.apache.commons.lang3.StringUtils.*;
+import static org.apache.commons.lang3.StringUtils.left;
 
 import java.util.Date;
 
@@ -23,8 +23,6 @@ import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.util.LogUtil;
 import net.svcret.ejb.util.Validate;
 
-import org.apache.commons.lang3.ObjectUtils;
-
 import com.google.common.base.Objects;
 
 @Table(name = "PX_SVC_VER_URL_STATUS")
@@ -38,15 +36,12 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 
 	private static final long serialVersionUID = 1L;
 
-	@Transient
-	private transient volatile boolean myDirty = false;
-
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "LAST_FAIL")
 	private volatile Date myLastFail;
 
-	@Column(name = "LAST_FAIL_BODY", nullable = true, length = MAX_LENGTH_BODY)
-	private volatile String myLastFailBody;
+	// @Column(name = "LAST_FAIL_BODY", nullable = true, length = MAX_LENGTH_BODY)
+	// private volatile String myLastFailBody;
 
 	@Column(name = "LAST_FAIL_CTYPE", nullable = true, length = MAX_LENGTH_CONTENT_TYPE)
 	private volatile String myLastFailContentType;
@@ -61,8 +56,8 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	@Column(name = "LAST_FAULT")
 	private volatile Date myLastFault;
 
-	@Column(name = "LAST_FAULT_BODY", nullable = true, length = MAX_LENGTH_BODY)
-	private volatile String myLastFaultBody;
+	// @Column(name = "LAST_FAULT_BODY", nullable = true, length = MAX_LENGTH_BODY)
+	// private volatile String myLastFaultBody;
 
 	@Column(name = "LAST_FAULT_CTYPE", nullable = true, length = MAX_LENGTH_CONTENT_TYPE)
 	private volatile String myLastFaultContentType;
@@ -80,12 +75,22 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	@Column(name = "LAST_SUCCESS")
 	private volatile Date myLastSuccess;
 
+	@Column(name = "LAST_SUCCESS_CTYPE", nullable = true, length = MAX_LENGTH_CONTENT_TYPE)
+	private volatile String myLastSuccessContentType;
+
 	@Column(name = "LAST_SUCCESS_MSG", nullable = true, length = EntityConstants.MAXLEN_INVOC_OUTCOME_MSG)
 	private String myLastSuccessMessage;
+
+	@Column(name = "LAST_SUCCESS_STATUS", nullable = true)
+	private volatile Integer myLastSuccessStatusCode;
 
 	@Column(name = "NEXT_CB_RESET", nullable = true)
 	@Temporal(TemporalType.TIMESTAMP)
 	private volatile Date myNextCircuitBreakerReset;
+
+	@Column(name = "NEXT_CB_RESET_TIMESTAMP", nullable = true)
+	@Temporal(TemporalType.TIMESTAMP)
+	private volatile Date myNextCircuitBreakerResetTimestamp;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -96,11 +101,15 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	@Enumerated(EnumType.STRING)
 	private StatusEnum myStatus;
 
+	@Column(name = "URL_STATUS_TIMESTAMP", nullable = true)
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date myStatusTimestamp;
+
 	@OneToOne(cascade = {}, fetch = FetchType.LAZY)
 	@JoinColumn(name = "URL_PID", referencedColumnName = "PID", nullable = false, unique = true)
 	private PersServiceVersionUrl myUrl;
-	
-	@Column(name="URL_PID", updatable=false, insertable=false)
+
+	@Column(name = "URL_PID", updatable = false, insertable = false)
 	private long myUrlPid;
 
 	/**
@@ -165,13 +174,6 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	}
 
 	/**
-	 * @return the lastFailBody
-	 */
-	public String getLastFailBody() {
-		return myLastFailBody;
-	}
-
-	/**
 	 * @return the lastFailContentType
 	 */
 	public String getLastFailContentType() {
@@ -199,11 +201,26 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 		return myLastFault;
 	}
 
+	// /**
+	// * @return the lastFailBody
+	// */
+	// public String getLastFailBody() {
+	// return myLastFailBody;
+	// }
+
+	public String getLastFaultContentType() {
+		return myLastFaultContentType;
+	}
+
 	/**
 	 * @return the lastFaultMessage
 	 */
 	public String getLastFaultMessage() {
 		return myLastFaultMessage;
+	}
+
+	public Integer getLastFaultStatusCode() {
+		return myLastFaultStatusCode;
 	}
 
 	/**
@@ -220,11 +237,19 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 		return myLastSuccess;
 	}
 
+	public String getLastSuccessContentType() {
+		return myLastSuccessContentType;
+	}
+
 	/**
 	 * @return the lastSuccessMessage
 	 */
 	public String getLastSuccessMessage() {
 		return myLastSuccessMessage;
+	}
+
+	public Integer getLastSuccessStatusCode() {
+		return myLastSuccessStatusCode;
 	}
 
 	/**
@@ -267,15 +292,76 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 		return Objects.hashCode(myPid);
 	}
 
-	/**
-	 * @return the dirty
-	 */
-	public boolean isDirty() {
-		return myDirty;
-	}
-
 	public void loadAllAssociations() {
 		// nothing
+	}
+
+	/**
+	 * @return Returns true if this bean has any values that are more recent then the given bean, and therefore
+	 * has values that should presumably be saved back 
+	 */
+	public boolean mergeNewer(PersServiceVersionUrlStatus theExisting) {
+
+		boolean retVal = false;
+
+		if (getLastSuccess() == null || (theExisting.getLastSuccess() != null && theExisting.getLastSuccess().after(getLastSuccess()))) {
+			setLastSuccess(theExisting.getLastSuccess());
+			setLastSuccessContentType(theExisting.getLastSuccessContentType());
+			setLastSuccessMessage(theExisting.getLastSuccessMessage());
+			setLastSuccessStatusCode(theExisting.getLastSuccessStatusCode());
+		} else if (getLastSuccess() != null && (theExisting.getLastSuccess() == null || theExisting.getLastSuccess().before(getLastSuccess()))) {
+			retVal = true;
+		}
+
+		if (getLastFault() == null || (theExisting.getLastFault() != null && theExisting.getLastFault().after(getLastFault()))) {
+			setLastFault(theExisting.getLastFault());
+			setLastFaultContentType(theExisting.getLastFaultContentType());
+			setLastFaultMessage(theExisting.getLastFaultMessage());
+			setLastFaultStatusCode(theExisting.getLastFaultStatusCode());
+		} else if (getLastFault() != null && (theExisting.getLastFault() == null || theExisting.getLastFault().before(getLastFault()))) {
+			retVal = true;
+		}
+
+		if (getLastFail() == null || (theExisting.getLastFail() != null && theExisting.getLastFail().after(getLastFail()))) {
+			setLastFail(theExisting.getLastFail());
+			setLastFailContentType(theExisting.getLastFailContentType());
+			setLastFailMessage(theExisting.getLastFailMessage());
+			setLastFailStatusCode(theExisting.getLastFailStatusCode());
+		} else if (getLastFail() != null && (theExisting.getLastFail() == null || theExisting.getLastFail().before(getLastFail()))) {
+			retVal = true;
+		}
+
+		if (getStatusTimestamp() == null || (theExisting.getStatusTimestamp() != null && theExisting.getStatusTimestamp().after(getStatusTimestamp()))) {
+			myStatus = theExisting.getStatus(); // Setter will trip the CB here!
+			setStatusTimestamp(theExisting.getStatusTimestamp());
+		} else if (getStatusTimestamp() != null && (theExisting.getStatusTimestamp() == null || theExisting.getStatusTimestamp().before(getStatusTimestamp()))) {
+			retVal = true;
+		}
+
+		if (getNextCircuitBreakerResetTimestamp() == null || (theExisting.getNextCircuitBreakerResetTimestamp() != null && theExisting.getNextCircuitBreakerResetTimestamp().after(getNextCircuitBreakerResetTimestamp()))) {
+			myNextCircuitBreakerReset = theExisting.getNextCircuitBreakerReset(); // Setter will trip the CB here!
+			setNextCircuitBreakerResetTimestamp(theExisting.getNextCircuitBreakerResetTimestamp());
+		} else if (getNextCircuitBreakerResetTimestamp() != null && (theExisting.getNextCircuitBreakerResetTimestamp() == null || theExisting.getNextCircuitBreakerResetTimestamp().before(getNextCircuitBreakerResetTimestamp()))) {
+			retVal = true;
+		}
+
+		return retVal;
+	}
+
+	public Date getNextCircuitBreakerResetTimestamp() {
+		return myNextCircuitBreakerResetTimestamp;
+	}
+
+	public void setNextCircuitBreakerResetTimestamp(Date theNextCircuitBreakerResetTimestamp) {
+		myNextCircuitBreakerResetTimestamp = theNextCircuitBreakerResetTimestamp;
+	}
+
+	public Date getStatusTimestamp() {
+		return myStatusTimestamp;
+	}
+
+	public void setStatusTimestamp(Date theStatusTimestamp) {
+		myStatusTimestamp = theStatusTimestamp;
 	}
 
 	private void resetCurcuitBreaker() {
@@ -283,31 +369,23 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 			return;
 		}
 
-		myNextCircuitBreakerReset = null;
-		myDirty = true;
+		setNextCircuitBreakerReset(null);
 	}
 
-	public void setDirty(boolean theB) {
-		myDirty = theB;
-	}
+	// /**
+	// * @param theLastFailBody
+	// * the lastFailBody to set
+	// */
+	// public void setLastFailBody(String theLastFailBody) {
+	// myLastFailBody = left(theLastFailBody, MAX_LENGTH_BODY);
+	// }
 
 	/**
 	 * @param theLastFail
 	 *            the lastFail to set
 	 */
 	public void setLastFail(Date theLastFail) {
-		if (!ObjectUtils.equals(myLastFail, theLastFail)) {
-			myDirty = true;
-		}
 		myLastFail = theLastFail;
-	}
-
-	/**
-	 * @param theLastFailBody
-	 *            the lastFailBody to set
-	 */
-	public void setLastFailBody(String theLastFailBody) {
-		myLastFailBody = left(theLastFailBody, MAX_LENGTH_BODY);
 	}
 
 	/**
@@ -334,23 +412,20 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 		myLastFailStatusCode = theLastFailStatusCode;
 	}
 
+	// /**
+	// * @param theLastFaultBody
+	// * the lastFaultBody to set
+	// */
+	// public void setLastFaultBody(String theLastFaultBody) {
+	// myLastFaultBody = left(theLastFaultBody, MAX_LENGTH_BODY);
+	// }
+
 	/**
 	 * @param theLastFault
 	 *            the lastFail to set
 	 */
 	public void setLastFault(Date theLastFault) {
-		if (!ObjectUtils.equals(myLastFault, theLastFault)) {
-			myDirty = true;
-		}
 		myLastFault = theLastFault;
-	}
-
-	/**
-	 * @param theLastFaultBody
-	 *            the lastFaultBody to set
-	 */
-	public void setLastFaultBody(String theLastFaultBody) {
-		myLastFaultBody = left(theLastFaultBody, MAX_LENGTH_BODY);
 	}
 
 	/**
@@ -390,15 +465,24 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	 *            the lastSuccess to set
 	 */
 	public void setLastSuccess(Date theLastSuccess) {
-		if (!ObjectUtils.equals(myLastSuccess, theLastSuccess)) {
-			ourLog.debug("Marking URL status {} as DIRTY for last success time {}", getPid(), theLastSuccess);
-			myDirty = true;
-		}
 		myLastSuccess = theLastSuccess;
+	}
+
+	public void setLastSuccessContentType(String theLastSuccessContentType) {
+		myLastSuccessContentType = theLastSuccessContentType;
 	}
 
 	public void setLastSuccessMessage(String theMessage) {
 		myLastSuccessMessage = left(theMessage, EntityConstants.MAXLEN_INVOC_OUTCOME_MSG);
+	}
+
+	public void setLastSuccessStatusCode(Integer theLastSuccessStatusCode) {
+		myLastSuccessStatusCode = theLastSuccessStatusCode;
+	}
+
+	public void setNextCircuitBreakerReset(Date theNextCircuitBreakerReset) {
+		myNextCircuitBreakerReset = theNextCircuitBreakerReset;
+		myNextCircuitBreakerResetTimestamp = new Date();
 	}
 
 	/**
@@ -418,8 +502,10 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 		if (theStatus.equals(myStatus)) {
 			return;
 		}
-		myDirty = true;
+
 		myStatus = theStatus;
+		myStatusTimestamp = new Date();
+
 		switch (theStatus) {
 		case ACTIVE:
 		case UNKNOWN:
@@ -462,8 +548,7 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 		long now = new Date().getTime();
 
 		nextReset = new Date(now + timeBetweenResetAttempts);
-		myNextCircuitBreakerReset = nextReset;
-		myDirty = true;
+		setNextCircuitBreakerReset(nextReset);
 
 		return nextReset;
 	}

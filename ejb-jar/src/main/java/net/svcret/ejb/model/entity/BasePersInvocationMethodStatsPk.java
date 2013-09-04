@@ -13,7 +13,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import com.google.common.base.Objects.ToStringHelper;
 
 @MappedSuperclass
-public abstract class BasePersInvocationMethodStatsPk extends BasePersInvocationStatsPk implements Serializable {
+public abstract class BasePersInvocationMethodStatsPk<P extends BasePersInvocationMethodStatsPk<P,O>, O extends BasePersInvocationStats<P,O>> extends BasePersStatsPk<P,O> implements Serializable {
 
 	private static final long serialVersionUID = 417296078781529579L;
 
@@ -53,7 +53,7 @@ public abstract class BasePersInvocationMethodStatsPk extends BasePersInvocation
 	}
 
 	@Override
-	public abstract BasePersMethodInvocationStats newObjectInstance();
+	public abstract O newObjectInstance();
 
 	@Override
 	public String toString() {

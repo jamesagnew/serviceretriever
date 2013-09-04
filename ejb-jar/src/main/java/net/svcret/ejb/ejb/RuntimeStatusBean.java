@@ -1,6 +1,9 @@
 package net.svcret.ejb.ejb;
 
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.*;
+import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.DAY;
+import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.HOUR;
+import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.MINUTE;
+import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.TEN_MINUTE;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -40,19 +43,17 @@ import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.model.entity.BasePersStats;
+import net.svcret.ejb.model.entity.BasePersStatsPk;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
-import net.svcret.ejb.model.entity.BasePersInvocationStatsPk;
-import net.svcret.ejb.model.entity.BasePersMethodInvocationStats;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.IThrottleable;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersConfig;
-import net.svcret.ejb.model.entity.PersInvocationStats;
-import net.svcret.ejb.model.entity.PersInvocationStatsPk;
+import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUrlStats;
 import net.svcret.ejb.model.entity.PersInvocationUrlStatsPk;
-import net.svcret.ejb.model.entity.PersInvocationUserStats;
-import net.svcret.ejb.model.entity.PersInvocationUserStatsPk;
+import net.svcret.ejb.model.entity.PersInvocationMethodUserStatsPk;
 import net.svcret.ejb.model.entity.PersNodeStats;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
@@ -77,7 +78,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private static final int MAX_STATS_TO_FLUSH_AT_ONCE = 100;
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(RuntimeStatusBean.class);
 
-	private static final Placeholder PLACEHOLDER = new Placeholder();
+	private final BasePersStats<?, ?> PLACEHOLDER = new Placeholder();
+
 	private ReentrantLock myCollapseLock = new ReentrantLock();
 	@EJB
 	private IConfigService myConfigSvc;
@@ -86,23 +88,24 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private IDao myDao;
 	private ReentrantLock myFlushLock = new ReentrantLock();
 
-	private final ConcurrentHashMap<BasePersInvocationStatsPk, BasePersMethodInvocationStats> myInvocationStatCache;
-	private final ArrayDeque<BasePersInvocationStatsPk> myInvocationStatEmptyKeys;
-	private final ArrayDeque<BasePersInvocationStatsPk> myInvocationStatPopulatedKeys;
+	private final ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>> myInvocationStatCache;
+	private final ArrayDeque<BasePersStatsPk<?, ?>> myInvocationStatEmptyKeys;
+	private final ArrayDeque<BasePersStatsPk<?, ?>> myInvocationStatPopulatedKeys;
 	private int myMaxNullCachedEntries = INITIAL_CACHED_ENTRIES;
 	private int myMaxPopulatedCachedEntries = INITIAL_CACHED_ENTRIES;
 	private Date myNowForUnitTests;
 	private DateFormat myTimeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
-	private final ConcurrentHashMap<BasePersInvocationStatsPk, BasePersInvocationStats> myUnflushedInvocationStats;
+	private final ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>> myUnflushedInvocationStats;
 	private final ConcurrentHashMap<Long, PersServiceVersionStatus> myUnflushedServiceVersionStatus;
 	private final ConcurrentHashMap<PersUser, PersUserStatus> myUnflushedUserStatus;
 	private final ConcurrentHashMap<Long, PersServiceVersionUrlStatus> myUrlStatus;
+	private Date myNodeStatisticsDate;
 
 	public RuntimeStatusBean() {
-		myInvocationStatCache = new ConcurrentHashMap<BasePersInvocationStatsPk, BasePersMethodInvocationStats>(myMaxNullCachedEntries + myMaxPopulatedCachedEntries);
-		myInvocationStatEmptyKeys = new ArrayDeque<BasePersInvocationStatsPk>(myMaxNullCachedEntries);
-		myInvocationStatPopulatedKeys = new ArrayDeque<BasePersInvocationStatsPk>(myMaxPopulatedCachedEntries);
-		myUnflushedInvocationStats = new ConcurrentHashMap<BasePersInvocationStatsPk, BasePersInvocationStats>();
+		myInvocationStatCache = new ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>>(myMaxNullCachedEntries + myMaxPopulatedCachedEntries);
+		myInvocationStatEmptyKeys = new ArrayDeque<BasePersStatsPk<?, ?>>(myMaxNullCachedEntries);
+		myInvocationStatPopulatedKeys = new ArrayDeque<BasePersStatsPk<?, ?>>(myMaxPopulatedCachedEntries);
+		myUnflushedInvocationStats = new ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>>();
 		myUnflushedServiceVersionStatus = new ConcurrentHashMap<Long, PersServiceVersionStatus>();
 		myUnflushedUserStatus = new ConcurrentHashMap<PersUser, PersUserStatus>();
 		myUrlStatus = new ConcurrentHashMap<Long, PersServiceVersionUrlStatus>();
@@ -276,10 +279,10 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 			ourLog.debug("Going to truncate any hourly stats before {}", daysCutoff);
 
-			doCollapseStats(myDao.getInvocationStatsBefore(HOUR, daysCutoff), DAY, PersInvocationStats.class);
-			doCollapseStats(myDao.getInvocationUserStatsBefore(HOUR, daysCutoff), DAY, PersInvocationUserStats.class);
-			doCollapseStats(myDao.getInvocationUrlStatsBefore(HOUR, daysCutoff), DAY, PersInvocationUrlStats.class);
-			doCollapseStats(myDao.getNodeStatsBefore(HOUR, daysCutoff), DAY, PersNodeStats.class);
+			doCollapseStats(myDao.getInvocationStatsBefore(HOUR, daysCutoff), DAY);
+			doCollapseStats(myDao.getInvocationUserStatsBefore(HOUR, daysCutoff), DAY);
+			doCollapseStats(myDao.getInvocationUrlStatsBefore(HOUR, daysCutoff), DAY);
+			doCollapseStats(myDao.getNodeStatsBefore(HOUR, daysCutoff), DAY);
 		}
 
 		// 10 Minutes -> Hours
@@ -288,10 +291,10 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 			ourLog.debug("Going to truncate any 10 minute stats before {}", hoursCutoff);
 
-			doCollapseStats(myDao.getInvocationStatsBefore(TEN_MINUTE, hoursCutoff), HOUR, PersInvocationStats.class);
-			doCollapseStats(myDao.getInvocationUserStatsBefore(TEN_MINUTE, hoursCutoff), HOUR, PersInvocationUserStats.class);
-			doCollapseStats(myDao.getInvocationUrlStatsBefore(TEN_MINUTE, hoursCutoff), HOUR, PersInvocationUrlStats.class);
-			doCollapseStats(myDao.getNodeStatsBefore(TEN_MINUTE, hoursCutoff), DAY, PersNodeStats.class);
+			doCollapseStats(myDao.getInvocationStatsBefore(TEN_MINUTE, hoursCutoff), HOUR);
+			doCollapseStats(myDao.getInvocationUserStatsBefore(TEN_MINUTE, hoursCutoff), HOUR);
+			doCollapseStats(myDao.getInvocationUrlStatsBefore(TEN_MINUTE, hoursCutoff), HOUR);
+			doCollapseStats(myDao.getNodeStatsBefore(TEN_MINUTE, hoursCutoff), DAY);
 		}
 
 		// Minutes -> 10 Minutes
@@ -300,45 +303,28 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 			ourLog.debug("Going to truncate any 1 minute stats before {}", hoursCutoff);
 
-			doCollapseStats(myDao.getInvocationStatsBefore(MINUTE, hoursCutoff), TEN_MINUTE, PersInvocationStats.class);
-			doCollapseStats(myDao.getInvocationUserStatsBefore(MINUTE, hoursCutoff), TEN_MINUTE, PersInvocationUserStats.class);
-			doCollapseStats(myDao.getInvocationUrlStatsBefore(MINUTE, hoursCutoff), HOUR, PersInvocationUrlStats.class);
-			doCollapseStats(myDao.getNodeStatsBefore(MINUTE, hoursCutoff), DAY, PersNodeStats.class);
+			doCollapseStats(myDao.getInvocationStatsBefore(MINUTE, hoursCutoff), TEN_MINUTE);
+			doCollapseStats(myDao.getInvocationUserStatsBefore(MINUTE, hoursCutoff), TEN_MINUTE);
+			doCollapseStats(myDao.getInvocationUrlStatsBefore(MINUTE, hoursCutoff), HOUR);
+			doCollapseStats(myDao.getNodeStatsBefore(MINUTE, hoursCutoff), DAY);
 		}
 	}
 
-	private void doCollapseStats(List<? extends BasePersInvocationStats> theList, InvocationStatsIntervalEnum toIntervalTyoe, Class<?> invocClass) {
-		Map<BasePersInvocationStatsPk, BasePersInvocationStats> statsToFlush = new HashMap<BasePersInvocationStatsPk, BasePersInvocationStats>();
-		List<BasePersInvocationStats> statsToDelete = new ArrayList<BasePersInvocationStats>();
-		for (ListIterator<? extends BasePersInvocationStats> iter = theList.listIterator(); iter.hasNext();) {
-			BasePersInvocationStats next = iter.next();
+	private <P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> void doCollapseStats(List<O> theList, InvocationStatsIntervalEnum toIntervalTyoe) {
+		Map<P, O> statsToFlush = new HashMap<P, O>();
+		List<BasePersStats<P, O>> statsToDelete = new ArrayList<BasePersStats<P, O>>();
+		for (ListIterator<O> iter = theList.listIterator(); iter.hasNext();) {
+			O next = iter.next();
 			if (next == null) {
 				continue;
 			}
 
-			BasePersInvocationStatsPk dayPk;
-			if (invocClass == PersInvocationStats.class) {
-				dayPk = new PersInvocationStatsPk(toIntervalTyoe, next.getPk().getStartTime(), ((PersInvocationStatsPk) next.getPk()).getMethod());
-				if (!statsToFlush.containsKey(dayPk)) {
-					statsToFlush.put(dayPk, new PersInvocationStats((PersInvocationStatsPk) dayPk));
-					// statsToFlush.put(dayPk,
-					// myDao.getOrCreateInvocationStats((PersInvocationStatsPk)
-					// dayPk));
-				}
-			} else if (invocClass == PersInvocationUserStats.class) {
-				PersInvocationUserStatsPk existingPk = (PersInvocationUserStatsPk) next.getPk();
-				dayPk = new PersInvocationUserStatsPk(toIntervalTyoe, existingPk.getStartTime(), existingPk.getMethod(), existingPk.getUserPid());
-				if (!statsToFlush.containsKey(dayPk)) {
-					statsToFlush.put(dayPk, new PersInvocationUserStats((PersInvocationUserStatsPk) dayPk));
-					// statsToFlush.put(dayPk,
-					// myDao.getOrCreateInvocationUserStats((PersInvocationUserStatsPk)
-					// dayPk));
-				}
-			} else {
-				throw new IllegalStateException("Unknown type: " + invocClass);
+			P dayPk = next.getPk().newPk(toIntervalTyoe, next.getPk().getStartTime());
+			if (!statsToFlush.containsKey(dayPk)) {
+				statsToFlush.put(dayPk, dayPk.newObjectInstance());
 			}
 
-			BasePersInvocationStats target = statsToFlush.get(dayPk);
+			O target = statsToFlush.get(dayPk);
 			target.mergeUnsynchronizedEvents(next);
 			statsToDelete.add(next);
 
@@ -367,9 +353,9 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		/*
 		 * Flush method stats
 		 */
-
-		List<BasePersInvocationStats> stats = new ArrayList<BasePersInvocationStats>();
-		HashSet<BasePersInvocationStatsPk> keys = new HashSet<BasePersInvocationStatsPk>(myUnflushedInvocationStats.keySet());
+		List<BasePersStats<?, ?>> stats = new ArrayList<BasePersStats<?, ?>>();
+		HashSet<BasePersStatsPk<?, ?>> keys = new HashSet<BasePersStatsPk<?, ?>>();
+		keys.addAll(myUnflushedInvocationStats.keySet());
 
 		if (keys.isEmpty()) {
 
@@ -379,8 +365,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 			Date earliest = null;
 			Date latest = null;
-			for (BasePersInvocationStatsPk nextKey : keys) {
-				BasePersInvocationStats nextStats = myUnflushedInvocationStats.remove(nextKey);
+			for (BasePersStatsPk<?, ?> nextKey : keys) {
+				BasePersStats<?, ?> nextStats = myUnflushedInvocationStats.remove(nextKey);
 				if (nextStats == null) {
 					continue;
 				}
@@ -428,16 +414,14 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		ourLog.trace("Going to flush {} URL statuses", urlStatuses.size());
 
 		for (Iterator<PersServiceVersionUrlStatus> iter = urlStatuses.iterator(); iter.hasNext();) {
-			PersServiceVersionUrlStatus next = iter.next();
-			if (!next.isDirty()) {
-				ourLog.trace("Not saving URL status {} because it isn't marked dirty", next.getPid());
+			PersServiceVersionUrlStatus nextToMerge = iter.next();
+			PersServiceVersionUrlStatus nextExisting = myDao.getServiceVersionUrlStatusByPid(nextToMerge.getPid());
+			boolean toSave = nextToMerge.mergeNewer(nextExisting);
+			if (!toSave) {
+				ourLog.trace("Not saving URL status {} because it has no new values", nextToMerge.getPid());
 				iter.remove();
 			} else {
-				next.setLastStatusSave(new Date());
-				/*
-				 * TODO: Maybe use a "last saved" timestamp here instead of a flag to prevent race conditions
-				 */
-				next.setDirty(false);
+				ourLog.trace("Going to save URL status {} to DB", nextToMerge.getPid());
 			}
 		}
 
@@ -450,6 +434,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		 * Flush Service Version Status
 		 */
 
+		// TODO: replace this with method status
 		ArrayList<PersServiceVersionStatus> serviceVersionStatuses = new ArrayList<PersServiceVersionStatus>(myUnflushedServiceVersionStatus.values());
 		for (Iterator<PersServiceVersionStatus> iter = serviceVersionStatuses.iterator(); iter.hasNext();) {
 			PersServiceVersionStatus next = iter.next();
@@ -457,9 +442,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				iter.remove();
 			} else {
 				next.setLastSave(new Date());
-				/*
-				 * TODO: Maybe use a "last saved" timestamp here instead of a flag to prevent race conditions
-				 */
 				next.setDirty(false);
 			}
 		}
@@ -483,11 +465,11 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 	}
 
-	private void doRecordInvocationMethod(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean,
-			BasePersInvocationStatsPk theStatsPk, Long theThrottleFullIfAny) {
+	private <P2 extends BasePersStatsPk<P2, O2>, O2 extends BasePersInvocationStats<P2, O2>> void doRecordInvocationMethod(int theRequestLengthChars, HttpResponseBean theHttpResponse,
+			InvocationResponseResultsBean theInvocationResponseResultsBean, P2 theStatsPk, Long theThrottleFullIfAny) {
 		Validate.notNull(theInvocationResponseResultsBean.getResponseType(), "responseType");
 
-		BasePersMethodInvocationStats stats = (BasePersMethodInvocationStats) getStatsForPk(theStatsPk);
+		O2 stats = getStatsForPk(theStatsPk);
 
 		if (theThrottleFullIfAny != null && theThrottleFullIfAny > 0) {
 			stats.addThrottleAccept(theThrottleFullIfAny);
@@ -524,15 +506,17 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 	}
 
-	private void doRecordInvocationForUrls(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, Date theInvocationTime) {
+	private// <P2 extends BasePersStatsPk<P2,O2>, O2 extends BasePersMethodInvocationStats<P2,O2>>
+	void doRecordInvocationForUrls(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, Date theInvocationTime) {
 		if (theHttpResponse == null) {
 			return;
 		}
 
 		PersServiceVersionUrl success = theHttpResponse.getSuccessfulUrl();
 		if (success != null) {
+
 			PersInvocationUrlStatsPk statsPk = new PersInvocationUrlStatsPk(MINUTE, theInvocationTime, success.getPid());
-			PersInvocationUrlStats stats = (PersInvocationUrlStats) getStatsForPk(statsPk);
+			PersInvocationUrlStats stats = getStatsForPk(statsPk);
 			long responseTime = theHttpResponse.getResponseTime();
 			int responseBytes = theHttpResponse.getBody().length();
 			switch (theInvocationResponseResultsBean.getResponseType()) {
@@ -552,7 +536,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			Failure nextFailure = next.getValue();
 
 			PersInvocationUrlStatsPk statsPk = new PersInvocationUrlStatsPk(MINUTE, theInvocationTime, nextUrl.getPid());
-			PersInvocationUrlStats stats = (PersInvocationUrlStats) getStatsForPk(statsPk);
+			PersInvocationUrlStats stats = getStatsForPk(statsPk);
 			long responseTime = nextFailure.getInvocationMillis();
 			int responseBytes = nextFailure.getBody().length();
 			stats.addSuccessInvocation(responseTime, theRequestLengthChars, responseBytes);
@@ -560,7 +544,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	}
 
-	private void doRecordUrlStatus(boolean theWasSuccess, boolean theWasFault, PersServiceVersionUrlStatus theUrlStatusBean, String theMessage) {
+	private void doRecordUrlStatus(boolean theWasSuccess, boolean theWasFault, PersServiceVersionUrlStatus theUrlStatusBean, String theMessage, String theContentType, int theResponseCode) {
 		if (theUrlStatusBean.getUrl() == null) {
 			throw new IllegalArgumentException("Status has no URL associated with it");
 		}
@@ -581,9 +565,13 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				if (theWasFault) {
 					theUrlStatusBean.setLastFault(now);
 					theUrlStatusBean.setLastFaultMessage(theMessage);
+					theUrlStatusBean.setLastFaultContentType(theContentType);
+					theUrlStatusBean.setLastFaultStatusCode(theResponseCode);
 				} else {
 					theUrlStatusBean.setLastSuccess(now);
 					theUrlStatusBean.setLastSuccessMessage(theMessage);
+					theUrlStatusBean.setLastSuccessContentType(theContentType);
+					theUrlStatusBean.setLastSuccessStatusCode(theResponseCode);
 				}
 
 			} else {
@@ -591,6 +579,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				theUrlStatusBean.setStatus(StatusEnum.DOWN);
 				theUrlStatusBean.setLastFail(now);
 				theUrlStatusBean.setLastFailMessage(theMessage);
+				theUrlStatusBean.setLastFailContentType(theContentType);
+				theUrlStatusBean.setLastFailStatusCode(theResponseCode);
 
 				Date nextReset = theUrlStatusBean.getNextCircuitBreakerReset();
 				if (nextReset != null) {
@@ -663,16 +653,16 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	}
 
 	@Override
-	public BasePersMethodInvocationStats getInvocationStatsSynchronously(PersInvocationStatsPk thePk) {
+	public <P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> O getInvocationStatsSynchronously(P thePk) {
 		Date oneMinuteAgoTruncated = DateUtils.truncate(new Date(System.currentTimeMillis() - DateUtils.MILLIS_PER_MINUTE), Calendar.MINUTE);
 		if (!thePk.getStartTime().before(oneMinuteAgoTruncated)) {
-			BasePersMethodInvocationStats retVal = myDao.getInvocationStats(thePk);
-			if (retVal == null) {
+			O retVal = myDao.getInvocationStats(thePk);
+			if (retVal == PLACEHOLDER) {
 				return thePk.newObjectInstance();
 			}
 		}
 
-		BasePersMethodInvocationStats retVal = myInvocationStatCache.get(thePk);
+		BasePersStats<?, ?> retVal = myInvocationStatCache.get(thePk);
 		if (retVal == PLACEHOLDER) {
 			return thePk.newObjectInstance();
 		} else if (retVal == null) {
@@ -685,7 +675,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 					if (myInvocationStatCache.put(thePk, retVal) == null) {
 						myInvocationStatPopulatedKeys.add(thePk);
 					}
-					return retVal;
 				} else {
 					if (myInvocationStatEmptyKeys.size() + 1 > myMaxNullCachedEntries) {
 						myInvocationStatCache.remove(myInvocationStatEmptyKeys.pollFirst());
@@ -693,51 +682,15 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 					if (myInvocationStatCache.put(thePk, PLACEHOLDER) == null) {
 						myInvocationStatEmptyKeys.add(thePk);
 					}
-					return thePk.newObjectInstance();
+					retVal = thePk.newObjectInstance();
 				}
-			}
-		} else {
-			return retVal;
-		}
-	}
-
-	@Override
-	public BasePersMethodInvocationStats getInvocationUserStatsSynchronously(PersInvocationUserStatsPk thePk) {
-		Date oneMinuteAgoTruncated = DateUtils.truncate(new Date(System.currentTimeMillis() - DateUtils.MILLIS_PER_MINUTE), Calendar.MINUTE);
-		if (!thePk.getStartTime().before(oneMinuteAgoTruncated)) {
-			BasePersMethodInvocationStats retVal = myDao.getInvocationUserStats(thePk);
-			if (retVal == null) {
-				return thePk.newObjectInstance();
 			}
 		}
 
-		BasePersMethodInvocationStats retVal = myInvocationStatCache.get(thePk);
-		if (retVal == PLACEHOLDER) {
-			return thePk.newObjectInstance();
-		} else if (retVal == null) {
-			synchronized (myInvocationStatCache) {
-				retVal = myDao.getInvocationUserStats(thePk);
-				if (retVal != null) {
-					if (myInvocationStatPopulatedKeys.size() + 1 > myMaxPopulatedCachedEntries) {
-						myInvocationStatCache.remove(myInvocationStatPopulatedKeys.pollFirst());
-					}
-					if (myInvocationStatCache.put(thePk, retVal) == null) {
-						myInvocationStatPopulatedKeys.add(thePk);
-					}
-					return retVal;
-				} else {
-					if (myInvocationStatEmptyKeys.size() + 1 > myMaxNullCachedEntries) {
-						myInvocationStatCache.remove(myInvocationStatEmptyKeys.pollFirst());
-					}
-					if (myInvocationStatCache.put(thePk, PLACEHOLDER) == null) {
-						myInvocationStatEmptyKeys.add(thePk);
-					}
-					return thePk.newObjectInstance();
-				}
-			}
-		} else {
-			return retVal;
-		}
+		@SuppressWarnings("unchecked")
+		O temp = (O) retVal;
+		return temp;
+
 	}
 
 	@Override
@@ -757,15 +710,16 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		return new Date();
 	}
 
-	private BasePersInvocationStats getStatsForPk(BasePersInvocationStatsPk statsPk) {
-		BasePersInvocationStats tryNew = statsPk.newObjectInstance();
-		BasePersInvocationStats stats = myUnflushedInvocationStats.putIfAbsent(statsPk, tryNew);
+	private <P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> O getStatsForPk(P statsPk) {
+		O tryNew = statsPk.newObjectInstance();
+		@SuppressWarnings("unchecked")
+		O stats = (O) myUnflushedInvocationStats.putIfAbsent(statsPk, tryNew);
 		if (stats == null) {
 			stats = tryNew;
 		}
 
 		if (ourLog.isTraceEnabled()) {
-			ourLog.trace("Now have the following {} stats: {}", myUnflushedInvocationStats.size(), new ArrayList<BasePersInvocationStatsPk>(myUnflushedInvocationStats.keySet()));
+			ourLog.trace("Now have the following {} stats: {}", myUnflushedInvocationStats.size(), new ArrayList<BasePersStatsPk<?, ?>>(myUnflushedInvocationStats.keySet()));
 		}
 
 		return stats;
@@ -828,14 +782,14 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		 * Record method statistics
 		 */
 		InvocationStatsIntervalEnum interval = MINUTE;
-		BasePersInvocationStatsPk statsPk = new PersInvocationStatsPk(interval, theInvocationTime, theMethod);
+		PersInvocationMethodSvcverStatsPk statsPk = new PersInvocationMethodSvcverStatsPk(interval, theInvocationTime, theMethod);
 		doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, statsPk, theThrottleFullIfAny);
-		
+
 		/*
 		 * Record user/anon method statistics
 		 */
 		if (theUser != null) {
-			PersInvocationUserStatsPk uStatsPk = new PersInvocationUserStatsPk(interval, theInvocationTime, theMethod, theUser);
+			PersInvocationMethodUserStatsPk uStatsPk = new PersInvocationMethodUserStatsPk(interval, theInvocationTime, theMethod, theUser);
 			doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, uStatsPk, theThrottleFullIfAny);
 
 			doUpdateUserStatus(theMethod, theInvocationResponseResultsBean, theUser, theInvocationTime);
@@ -858,7 +812,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				} else {
 					message = Messages.getString("RuntimeStatusBean.successfulUrl", theHttpResponse.getResponseTime());
 				}
-				doRecordUrlStatus(true, wasFault, status, message);
+				doRecordUrlStatus(true, wasFault, status, message, theHttpResponse.getContentType(), theHttpResponse.getCode());
 			}
 
 			/*
@@ -869,9 +823,9 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				PersServiceVersionUrl nextFailedUrl = nextFailedUrlEntry.getKey();
 				Failure failure = nextFailedUrlEntry.getValue();
 				PersServiceVersionUrlStatus failedStatus = getUrlStatus(nextFailedUrl);
-				doRecordUrlStatus(false, false, failedStatus, failure.getExplanation());
+				doRecordUrlStatus(false, false, failedStatus, failure.getExplanation(), failure.getContentType(), failure.getStatusCode());
 			}
-			
+
 			/*
 			 * Record URL stats
 			 */
@@ -913,7 +867,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		InvocationStatsIntervalEnum interval = MINUTE;
 
 		PersStaticResourceStatsPk statsPk = new PersStaticResourceStatsPk(interval, theInvocationTime, theResource);
-		PersStaticResourceStats stats = (PersStaticResourceStats) getStatsForPk(statsPk);
+		PersStaticResourceStats stats = getStatsForPk(statsPk);
 
 		stats.addAccess();
 	}
@@ -925,14 +879,12 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 		PersServiceVersionUrlStatus status = getUrlStatus(theUrl);
 		status.setLastFail(new Date());
-		status.setLastFailBody(theFailure.getBody());
 		status.setLastFailContentType(theFailure.getContentType());
 		status.setLastFailMessage(theFailure.getExplanation());
 		status.setLastFailStatusCode(theFailure.getStatusCode());
 
 		// Do this last since it triggers a state change
 		status.setStatus(StatusEnum.DOWN);
-		status.setDirty(true);
 	}
 
 	void setConfigSvc(IConfigService theConfigSvc) {
@@ -962,29 +914,52 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		myNowForUnitTests = theNow;
 	}
 
-	private static class Placeholder extends BasePersMethodInvocationStats {
+	private class Placeholder extends BasePersStats<BasePersStatsPk<?, ?>, BasePersStats<?, ?>> {
 
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public BasePersInvocationStatsPk getPk() {
+		public <T> T accept(IStatsVisitor<T> theVisitor) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public StatsTypeEnum getStatsType() {
+		public void mergeUnsynchronizedEvents(BasePersStats<?, ?> theNext) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public BasePersStatsPk<?, ?> getPk() {
 			throw new UnsupportedOperationException();
 		}
 
 	}
 
+	private final ReentrantLock myNodeStatisticsLock = new ReentrantLock();
+
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	@Override
 	public void recordNodeStatistics() {
-		ourLog.debug("Recording node statistics");
-		
-		PersNodeStats stats = new PersNodeStats(InvocationStatsIntervalEnum.MINUTE, InvocationStatsIntervalEnum.MINUTE.truncate(new Date()), myConfigSvc.getNodeId());
-		myDao.saveInvocationStats(Collections.singletonList((BasePersInvocationStats)stats));
+		if (!myNodeStatisticsLock.tryLock()) {
+			return;
+		}
+		try {
+			ourLog.debug("Recording node statistics");
+
+			Date date = InvocationStatsIntervalEnum.MINUTE.truncate(new Date());
+			if (date.equals(myNodeStatisticsDate)) {
+				return;
+			}
+
+			PersNodeStats stats = new PersNodeStats(InvocationStatsIntervalEnum.MINUTE, date, myConfigSvc.getNodeId());
+			stats.collectMemoryStats();
+
+			myDao.saveInvocationStats(Collections.singletonList(stats));
+
+			myNodeStatisticsDate = date;
+		} finally {
+			myNodeStatisticsLock.unlock();
+		}
 	}
 
 }

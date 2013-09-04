@@ -21,15 +21,15 @@ import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.UrlPoolBean;
-import net.svcret.ejb.model.entity.BasePersInvocationStats;
+import net.svcret.ejb.model.entity.BasePersStats;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
-import net.svcret.ejb.model.entity.PersInvocationStats;
-import net.svcret.ejb.model.entity.PersInvocationStatsPk;
-import net.svcret.ejb.model.entity.PersInvocationUserStats;
+import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
+import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
+import net.svcret.ejb.model.entity.PersInvocationMethodUserStats;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
@@ -333,7 +333,7 @@ public class RuntimeStatusBeanTest {
 
 	}
 
-	@SuppressWarnings({ "rawtypes", "cast", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Test
 	public void testCollapseStats() throws Exception {
 
@@ -353,21 +353,21 @@ public class RuntimeStatusBeanTest {
 		BasePersServiceVersion version = new PersServiceVersionSoap11(ourNextPid++, service, "1.0");
 		PersServiceVersionMethod method = new PersServiceVersionMethod(ourNextPid++, version, "method1");
 
-		List<PersInvocationStats> minuteStats = new ArrayList<PersInvocationStats>();
-		PersInvocationStats stats = new PersInvocationStats(new PersInvocationStatsPk(InvocationStatsIntervalEnum.MINUTE, myFmt.parse("2013-01-01 00:03:00"), method));
+		List<PersInvocationMethodSvcverStats> minuteStats = new ArrayList<PersInvocationMethodSvcverStats>();
+		PersInvocationMethodSvcverStats stats = new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.MINUTE, myFmt.parse("2013-01-01 00:03:00"), method));
 		stats.addSuccessInvocation(100, 200, 300);
 		minuteStats.add(stats);
 
-		PersInvocationStats stats2 = new PersInvocationStats(new PersInvocationStatsPk(InvocationStatsIntervalEnum.MINUTE, myFmt.parse("2013-01-01 00:03:00"), method));
+		PersInvocationMethodSvcverStats stats2 = new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.MINUTE, myFmt.parse("2013-01-01 00:03:00"), method));
 		stats2.addSuccessInvocation(100, 200, 300);
 		minuteStats.add(stats2);
 
-		when(dao.getInvocationStatsBefore(InvocationStatsIntervalEnum.HOUR, myFmt.parse("2013-07-01 00:00:00"))).thenReturn(new ArrayList<PersInvocationStats>());
-		when(dao.getInvocationStatsBefore(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("2013-01-27 07:00:00"))).thenReturn(new ArrayList<PersInvocationStats>());
+		when(dao.getInvocationStatsBefore(InvocationStatsIntervalEnum.HOUR, myFmt.parse("2013-07-01 00:00:00"))).thenReturn(new ArrayList<PersInvocationMethodSvcverStats>());
+		when(dao.getInvocationStatsBefore(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("2013-01-27 07:00:00"))).thenReturn(new ArrayList<PersInvocationMethodSvcverStats>());
 		when(dao.getInvocationStatsBefore(InvocationStatsIntervalEnum.MINUTE, myFmt.parse("2013-04-29 05:00:00"))).thenReturn(minuteStats);
 
-		PersInvocationStats existingStats = new PersInvocationStats(new PersInvocationStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("2013-01-01 00:00:00"), method));
-		when(dao.getOrCreateInvocationStats(new PersInvocationStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("2013-01-01 00:00:00"), method))).thenReturn(existingStats);
+		PersInvocationMethodSvcverStats existingStats = new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("2013-01-01 00:00:00"), method));
+		when(dao.getOrCreateStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("2013-01-01 00:00:00"), method))).thenReturn(existingStats);
 
 		svc.setNowForUnitTests(myFmt.parse("2013-04-29 07:00:00"));
 		svc.collapseStats();
@@ -375,10 +375,10 @@ public class RuntimeStatusBeanTest {
 		ArgumentCaptor<Collection> createCaptor = ArgumentCaptor.forClass(Collection.class);
 		ArgumentCaptor<List> deleteCaptor = ArgumentCaptor.forClass(List.class);
 
-		verify(dao).saveInvocationStats((Collection<BasePersInvocationStats>) createCaptor.capture(), (List<BasePersInvocationStats>) deleteCaptor.capture());
+		verify(dao).saveInvocationStats(createCaptor.capture(), deleteCaptor.capture());
 
 		assertEquals(1, createCaptor.getAllValues().size());
-		PersInvocationStats obj = (PersInvocationStats) createCaptor.getValue().iterator().next();
+		PersInvocationMethodSvcverStats obj = (PersInvocationMethodSvcverStats) createCaptor.getValue().iterator().next();
 		assertEquals(2, obj.getSuccessInvocationCount());
 		
 		List<List> allValues = deleteCaptor.getAllValues();
@@ -440,11 +440,11 @@ public class RuntimeStatusBeanTest {
 
 		for (int i = 0; i < 2; i++) {
 			Object next = statsIter.next();
-			if (next instanceof PersInvocationUserStats) {
-				PersInvocationUserStats userStats = (PersInvocationUserStats) next;
+			if (next instanceof PersInvocationMethodUserStats) {
+				PersInvocationMethodUserStats userStats = (PersInvocationMethodUserStats) next;
 				assertEquals(2, userStats.getServerSecurityFailures());
 			} else {
-				PersInvocationStats verStats = (PersInvocationStats) next;
+				PersInvocationMethodSvcverStats verStats = (PersInvocationMethodSvcverStats) next;
 				assertEquals(2, verStats.getServerSecurityFailures());
 			}
 		}
@@ -497,11 +497,11 @@ public class RuntimeStatusBeanTest {
 
 		for (int i = 0; i < 2; i++) {
 			Object next = statsIter.next();
-			if (next instanceof PersInvocationUserStats) {
-				PersInvocationUserStats userStats = (PersInvocationUserStats) next;
+			if (next instanceof PersInvocationMethodUserStats) {
+				PersInvocationMethodUserStats userStats = (PersInvocationMethodUserStats) next;
 				assertEquals(1, userStats.getTotalThrottleRejections());
 			} else {
-				PersInvocationStats verStats = (PersInvocationStats) next;
+				PersInvocationMethodSvcverStats verStats = (PersInvocationMethodSvcverStats) next;
 				assertEquals(1, verStats.getTotalThrottleRejections());
 			}
 		}
@@ -546,7 +546,7 @@ public class RuntimeStatusBeanTest {
 		verify(pers, times(1)).saveInvocationStats(capt.capture());
 		verifyNoMoreInteractions(pers);
 
-		List<BasePersInvocationStats> value = capt.getValue();
+		List<BasePersStats> value = capt.getValue();
 		assertEquals(1, value.size());
 
 		PersStaticResourceStats sr = findSr(value);
@@ -557,8 +557,9 @@ public class RuntimeStatusBeanTest {
 
 	}
 
-	private PersStaticResourceStats findSr(List<BasePersInvocationStats> theValue) {
-		for (BasePersInvocationStats next : theValue) {
+	@SuppressWarnings("rawtypes")
+	private PersStaticResourceStats findSr(List<BasePersStats> theValue) {
+		for (BasePersStats next : theValue) {
 			if (next instanceof PersStaticResourceStats) {
 				return (PersStaticResourceStats) next;
 			}
