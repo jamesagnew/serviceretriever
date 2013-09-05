@@ -38,7 +38,7 @@ import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.PartialUserListRequest;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
-import net.svcret.ejb.api.IAdminService;
+import net.svcret.ejb.api.IAdminServiceLocal;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.util.Validate;
 

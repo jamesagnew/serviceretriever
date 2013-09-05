@@ -1,72 +1,122 @@
-<web-app xmlns="http://java.sun.com/xml/ns/javaee"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="3.0"
-    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee ./xsd/web-app_3_0.xsd"
-    >
+<web-app xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="3.0" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee ./xsd/web-app_3_0.xsd">
 
   <!-- Servlets -->
-  <servlet>
-    <servlet-name>graphServlet</servlet-name>
-    <servlet-class>net.svcret.admin.server.rpc.GraphServlet</servlet-class>
-  </servlet>
+	<servlet>
+		<servlet-name>graphServlet</servlet-name>
+		<servlet-class>net.svcret.admin.server.rpc.GraphServlet</servlet-class>
+	</servlet>
 
-  <servlet>
-    <servlet-name>modelUpdateServlet</servlet-name>
-    <servlet-class>net.svcret.admin.server.rpc.ModelUpdateServiceImpl</servlet-class>
-  </servlet>
+	<servlet>
+		<servlet-name>modelUpdateServlet</servlet-name>
+		<servlet-class>net.svcret.admin.server.rpc.ModelUpdateServiceImpl</servlet-class>
+	</servlet>
 
-  <servlet>
-    <servlet-name>resourceServlet</servlet-name>
-    <servlet-class>net.svcret.admin.server.rpc.ResourceServlet</servlet-class>
-  </servlet>
-  
-  <servlet>
-    <servlet-name>keystoreUploadServlet</servlet-name>
-    <servlet-class>net.svcret.admin.server.rpc.HttpClientConfigUploadServlet</servlet-class>
-  </servlet>
+	<servlet>
+		<servlet-name>resourceServlet</servlet-name>
+		<servlet-class>net.svcret.admin.server.rpc.ResourceServlet</servlet-class>
+	</servlet>
 
-  <servlet>
-    <servlet-name>httpClientConfigServlet</servlet-name>
-    <servlet-class>net.svcret.admin.server.rpc.HttpClientConfigServiceImpl</servlet-class>
-  </servlet>
+	<servlet>
+		<servlet-name>keystoreUploadServlet</servlet-name>
+		<servlet-class>net.svcret.admin.server.rpc.HttpClientConfigUploadServlet</servlet-class>
+	</servlet>
 
-  <servlet>
-    <servlet-name>miscConfigServlet</servlet-name>
-    <servlet-class>net.svcret.admin.server.rpc.MiscConfigServiceImpl</servlet-class>
-  </servlet>
+	<servlet>
+		<servlet-name>httpClientConfigServlet</servlet-name>
+		<servlet-class>net.svcret.admin.server.rpc.HttpClientConfigServiceImpl</servlet-class>
+	</servlet>
 
-  <servlet-mapping>
-    <servlet-name>graphServlet</servlet-name>
-    <url-pattern>/graph.png</url-pattern>
-  </servlet-mapping>
+	<servlet>
+		<servlet-name>miscConfigServlet</servlet-name>
+		<servlet-class>net.svcret.admin.server.rpc.MiscConfigServiceImpl</servlet-class>
+	</servlet>
 
-  <servlet-mapping>
-    <servlet-name>keystoreUploadServlet</servlet-name>
-    <url-pattern>/AdminPortal/keystoreUpload</url-pattern>
-  </servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>graphServlet</servlet-name>
+		<url-pattern>/graph.png</url-pattern>
+	</servlet-mapping>
 
-  <servlet-mapping>
-    <servlet-name>httpClientConfigServlet</servlet-name>
-    <url-pattern>/AdminPortal/httpclientconfig</url-pattern>
-  </servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>keystoreUploadServlet</servlet-name>
+		<url-pattern>/AdminPortal/keystoreUpload</url-pattern>
+	</servlet-mapping>
 
-  <servlet-mapping>
-    <servlet-name>miscConfigServlet</servlet-name>
-    <url-pattern>/AdminPortal/miscconfig</url-pattern>
-  </servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>httpClientConfigServlet</servlet-name>
+		<url-pattern>/AdminPortal/httpclientconfig</url-pattern>
+	</servlet-mapping>
 
-  <servlet-mapping>
-    <servlet-name>modelUpdateServlet</servlet-name>
-    <url-pattern>/AdminPortal/modelupdate</url-pattern>
-  </servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>miscConfigServlet</servlet-name>
+		<url-pattern>/AdminPortal/miscconfig</url-pattern>
+	</servlet-mapping>
 
-  <servlet-mapping>
-    <servlet-name>resourceServlet</servlet-name>
-    <url-pattern>/resources/*</url-pattern>
-  </servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>modelUpdateServlet</servlet-name>
+		<url-pattern>/AdminPortal/modelupdate</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>resourceServlet</servlet-name>
+		<url-pattern>/resources/*</url-pattern>
+	</servlet-mapping>
 
   <!-- Default page to serve -->
-  <welcome-file-list>
-    <welcome-file>AdminPortal.html</welcome-file>
-  </welcome-file-list>
+	<welcome-file-list>
+		<welcome-file>AdminPortal.html</welcome-file>
+	</welcome-file-list>
 
+	<login-config>
+		<auth-method>FORM</auth-method>
+		<realm-name>file</realm-name>
+		<form-login-config>
+			<form-login-page>/adminlogin.jsp</form-login-page>
+			<form-error-page>/adminlogin.jsp?auth-error=1</form-error-page>
+		</form-login-config>
+	</login-config>
+
+  <security-constraint>
+  
+    <web-resource-collection>
+      <web-resource-name>Secured Content</web-resource-name>
+      <url-pattern>/admin/*</url-pattern>
+    </web-resource-collection>
+      
+    <!-- only users with at least one of these roles are allowed to access the secured content -->
+    <auth-constraint>
+      <role-name>ADMINISTRATOR</role-name>
+      <role-name>USER</role-name>
+      <role-name>asadmin</role-name>
+    </auth-constraint>
+  
+	<user-data-constraint>
+		<transport-guarantee>NONE</transport-guarantee>
+	</user-data-constraint>
+    <!-- 
+    <user-data-constraint>
+      <description>highest supported transport security level</description>
+      <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+    </user-data-constraint>
+  	-->
+  	
+  </security-constraint>
+  
+  <!-- declare the roles relevant for our webapp -->
+  <security-role>
+    <role-name>ADMINISTRATOR</role-name>
+  </security-role>
+  <security-role>
+    <role-name>USER</role-name>
+  </security-role>
+  <security-role>
+    <role-name>asadmin</role-name>
+  </security-role>
+   
+  <session-config>
+    <session-timeout>30</session-timeout>
+    <cookie-config>
+      <name>SR_SESSIONID</name>
+    </cookie-config>
+  </session-config>
+  
 </web-app>

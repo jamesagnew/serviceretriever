@@ -41,7 +41,7 @@ import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.PartialUserListRequest;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
-import net.svcret.ejb.api.IAdminService;
+import net.svcret.ejb.api.IAdminServiceLocal;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.util.Validate;
 
@@ -57,7 +57,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	private static final String SESSION_PREFIX_UNCOMITTED_SVC_VER_RES = "UNC_SVC_VER_RES_";
 
 	@EJB
-	private IAdminService myAdminSvc;
+	private IAdminServiceLocal myAdminSvc;
 
 	@Override
 	public GDomain addDomain(GDomain theDomain) throws ServiceFailureException {
@@ -780,7 +780,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	/**
 	 * For unit test only
 	 */
-	void setAdminSvc(IAdminService theAdminSvc) {
+	void setAdminSvc(IAdminServiceLocal theAdminSvc) {
 		myAdminSvc = theAdminSvc;
 	}
 

@@ -1,0 +1,64 @@
+.login,
+.register{
+  font-family: Arial,sans-serif;
+  font-size: 13px;
+}
+  
+.login fieldset,
+.register fieldset{
+  padding-top: 1em;
+  padding-bottom: 1em;
+  border: 1px solid #0053A1;
+  width: 380px;
+}
+  
+.login legend,
+.register legend{
+  color: #fff;
+  background: #0053A1;
+  border: 1px solid #0053A1;
+  padding: 1px 5px;
+}
+      
+.login div,
+.register div{
+  margin-bottom: 0.5em;
+  text-align: left;
+}
+      
+.login label,
+.register label{
+  width: 140px;
+  float: left;
+  text-align: left;
+  margin-right: 10px;
+  padding: 2px 0px;
+  display: block;
+}
+  
+.login input[type=text], .login input[type=password],
+.register input[type=text], .register input[type=password]{
+  color: #0053A1;
+  background: #fee3ad;
+  border: 1px solid #0053A1;
+  padding: 2px 5px;
+  width:200px;
+}
+  
+.login .buttonRow,
+.register .buttonRow{
+  text-align: left;
+}
+  
+.login input[type=submit],
+.register input[type=submit]{
+  color: #fff;
+  background: #0053A1;
+  border: 2px outset #0053A1;
+}
+ 
+.login .authError{
+    margin-bottom:20px; 
+    color:red;
+    text-align:center;
+}

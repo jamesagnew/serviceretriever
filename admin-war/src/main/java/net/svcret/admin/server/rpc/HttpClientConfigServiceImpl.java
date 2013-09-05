@@ -11,7 +11,7 @@ import net.svcret.admin.shared.model.DtoKeystoreAnalysis;
 import net.svcret.admin.shared.model.DtoKeystoreToSave;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
-import net.svcret.ejb.api.IAdminService;
+import net.svcret.ejb.api.IAdminServiceLocal;
 import net.svcret.ejb.api.IKeystoreService;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.util.Validate;
@@ -24,7 +24,7 @@ public class HttpClientConfigServiceImpl extends BaseRpcServlet implements HttpC
 	private static final long serialVersionUID = 1L;
 
 	@EJB
-	private IAdminService myAdminSvc;
+	private IAdminServiceLocal myAdminSvc;
 
 	@EJB
 	private IKeystoreService myKeystoreService;

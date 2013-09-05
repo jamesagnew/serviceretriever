@@ -79,7 +79,7 @@ import net.svcret.admin.shared.model.PartialUserListRequest;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.model.TimeRange;
 import net.svcret.ejb.api.HttpRequestBean;
-import net.svcret.ejb.api.IAdminService;
+import net.svcret.ejb.api.IAdminServiceLocal;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IKeystoreService;
@@ -156,7 +156,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
 @Stateless
-public class AdminServiceBean implements IAdminService {
+public class AdminServiceBean implements IAdminServiceLocal {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(AdminServiceBean.class);
 
@@ -500,7 +500,7 @@ public class AdminServiceBean implements IAdminService {
 		Set<Long> loadUrlStats = theRequest.getUrlsToLoadStats();
 
 		StatusesBean statuses = null;
-		if (hasAnything(loadDomStats, loadSvcStats, loadVerStats, loadVerMethodStats)) {
+		if (hasAnything(loadDomStats, loadSvcStats, loadVerStats, loadVerMethodStats, loadUrlStats)) {
 			statuses = myDao.loadAllStatuses();
 		}
 
@@ -2500,7 +2500,8 @@ public class AdminServiceBean implements IAdminService {
 		retVal.setUrl(theUrl.getUrl());
 
 		if (theLoadStats) {
-			PersServiceVersionUrlStatus urlStatus = theStatuses.getUrlStatus(theUrl.getPid());
+			Long urlPid = theUrl.getPid();
+			PersServiceVersionUrlStatus urlStatus = theStatuses.getUrlStatus(urlPid);
 
 			retVal.setStatsLastFailure(urlStatus.getLastFail());
 			retVal.setStatsLastFailureMessage(urlStatus.getLastFailMessage());

@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.svcret.ejb.api.IAdminService;
+import net.svcret.ejb.api.IAdminServiceLocal;
 
 //@WebServlet(urlPatterns = { "/resources/*" })
 public class ResourceServlet extends HttpServlet {
@@ -20,7 +20,7 @@ public class ResourceServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
 	@EJB
-	private IAdminService myAdminSvc;
+	private IAdminServiceLocal myAdminSvc;
 
 	@Override
 	protected void doGet(HttpServletRequest theReq, HttpServletResponse theResp) throws ServletException, IOException {
