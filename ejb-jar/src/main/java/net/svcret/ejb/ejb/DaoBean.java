@@ -31,7 +31,7 @@ import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.util.IntegerHolder;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.StatusesBean;
-import net.svcret.ejb.ejb.TransactionLoggerBean.BaseUnflushed;
+import net.svcret.ejb.ejb.log.BaseUnflushed;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersStats;
@@ -1094,10 +1094,10 @@ public class DaoBean implements IDao {
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void saveRecentMessagesAndTrimInNewTransaction(BaseUnflushed<? extends BasePersSavedTransactionRecentMessage> theNextTransactions) {
 
-		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getSuccess());
-		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getFail());
-		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getSecurityFail());
-		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getFault());
+		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getSuccessAndRemove());
+		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getFailAndRemove());
+		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getSecurityFailAndRemove());
+		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getFaultAndRemove());
 
 	}
 

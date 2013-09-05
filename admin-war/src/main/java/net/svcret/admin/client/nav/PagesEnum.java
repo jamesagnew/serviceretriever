@@ -85,10 +85,15 @@ public enum PagesEnum {
 	RLM(MSGS.replayLibraryMessage_Breadcrumb()), 
 	
 	/**
-	 * Replay Message
+	 * Replay SvcVer Message
 	 */
 	RPM(MSGS.replayMessage_Breadcrumb()), 
-	
+
+	/**
+	 * Replay User Message
+	 */
+	RPU(MSGS.replayUserMessage_Breadcrumb()), 
+
 	/**
 	 * View recent message for Service Version
 	 */

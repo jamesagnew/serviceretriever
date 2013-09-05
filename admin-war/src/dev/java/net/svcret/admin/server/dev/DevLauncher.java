@@ -23,8 +23,6 @@ import org.mortbay.log.Log;
 import com.google.gwt.core.ext.ServletContainer;
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.dev.shell.jetty.JettyLauncher;
-import com.google.gwt.dev.shell.jetty.JettyLauncher.JettyRequestLogger;
-import com.google.gwt.dev.shell.jetty.JettyLauncher.JettyTreeLogger;
 
 public class DevLauncher extends JettyLauncher {
 
@@ -92,7 +90,7 @@ public class DevLauncher extends JettyLauncher {
 	private void initializeServer(Server server) throws Error {
 		UserRealm realm;
 		try {
-			realm = new HashUserRealm("admin-realm", "WEB-INF/testusers.properties");
+			realm = new HashUserRealm("svcret-realm", "WEB-INF/testusers.properties");
 		} catch (IOException e) {
 			throw new Error(e);
 		}

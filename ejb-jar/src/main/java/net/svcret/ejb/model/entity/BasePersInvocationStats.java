@@ -6,7 +6,7 @@ import javax.persistence.MappedSuperclass;
 import com.google.common.base.Objects.ToStringHelper;
 
 @MappedSuperclass
-public abstract class BasePersInvocationStats<P extends BasePersStatsPk<?,?>, O extends BasePersInvocationStats<?,?>> extends BasePersStats<P,O> {
+public abstract class BasePersInvocationStats<P extends BasePersInvocationStatsPk<?,?>, O extends BasePersInvocationStats<?,?>> extends BasePersStats<P,O> {
 
 	private static final long serialVersionUID = 1L;
 

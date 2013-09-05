@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project-modules id="moduleCoreId" project-version="1.5.0">
+<?xml version="1.0" encoding="UTF-8"?><project-modules id="moduleCoreId" project-version="1.5.0">
   <wb-module deploy-name="${module}">
     <wb-resource deploy-path="/" source-path="/src/main/webapp"/>
     <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
@@ -7,6 +6,7 @@
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/resources"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/test/java"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/test/resources"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/dev/java"/>
     <property name="context-root" value="${module}"/>
     <property name="java-output-path" value="/${module}/target/www/WEB-INF/classes"/>
   </wb-module>

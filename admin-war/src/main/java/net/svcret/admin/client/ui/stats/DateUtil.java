@@ -12,16 +12,26 @@ public class DateUtil {
 
 	private static DateTimeFormat ourDateFormat = DateTimeFormat.getFormat(PredefinedFormat.DATE_TIME_LONG);
 
+	private static DateTimeFormat ourTimeFormat = DateTimeFormat.getFormat(PredefinedFormat.TIME_MEDIUM);
+
 	public static final long MILLIS_PER_MINUTE = 60 * 1000L;
 	public static final long MILLIS_PER_HOUR = 60 * MILLIS_PER_MINUTE;
 	public static final long MILLIS_PER_DAY = MILLIS_PER_HOUR * 24;
 	public static final long MILLIS_PER_SECOND = 1000L;
 
+	// TODO: this method should be called formatDateTime I guess?
 	public static String formatTime(Date theTime) {
 		if (theTime == null) {
 			return "";
 		}
 		return ourDateFormat.format(theTime);
+	}
+
+	public static String formatTimeOnly(Date theTime) {
+		if (theTime == null) {
+			return "";
+		}
+		return ourTimeFormat.format(theTime);
 	}
 
 	public static String formatTimeElapsedForLastInvocation(Date theLastInvoc) {

@@ -112,6 +112,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		final FlowPanel methodPanel = new FlowPanel();
 		add(methodPanel, "Methods");
 
+		final int urlsIndex = getWidgetCount();
 		FlowPanel urlsPanel = new FlowPanel();
 		add(urlsPanel, "URLs");
 		initUrlPanel(urlsPanel);
@@ -140,6 +141,10 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 						initMethodPanel(methodPanel);
 					} else {
 						myMethodDataProvider.refresh();
+					}
+				} else if (theEvent.getSelectedItem() == urlsIndex) {
+					if (myUrlGrid.getServiceVersion()==null) {
+						myUrlGrid.init(myServiceVersion);
 					}
 				}
 			}
@@ -623,7 +628,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 
 	private void initUrlPanel(FlowPanel thePanel) {
 
-		myUrlGrid = new UrlGrid(myServiceVersion);
+		myUrlGrid = new UrlGrid();
 		thePanel.add(myUrlGrid);
 
 		thePanel.add(new HtmlBr());

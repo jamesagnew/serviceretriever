@@ -68,7 +68,7 @@
 
 	<login-config>
 		<auth-method>FORM</auth-method>
-		<realm-name>file</realm-name>
+		<realm-name>svcret-realm</realm-name>
 		<form-login-config>
 			<form-login-page>/adminlogin.jsp</form-login-page>
 			<form-error-page>/adminlogin.jsp?auth-error=1</form-error-page>
@@ -84,9 +84,7 @@
       
     <!-- only users with at least one of these roles are allowed to access the secured content -->
     <auth-constraint>
-      <role-name>ADMINISTRATOR</role-name>
       <role-name>USER</role-name>
-      <role-name>asadmin</role-name>
     </auth-constraint>
   
 	<user-data-constraint>

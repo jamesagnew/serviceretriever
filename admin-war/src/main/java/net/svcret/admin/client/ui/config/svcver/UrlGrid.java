@@ -1,6 +1,7 @@
 package net.svcret.admin.client.ui.config.svcver;
 
-import static net.svcret.admin.client.AdminPortal.*;
+import static net.svcret.admin.client.AdminPortal.IMAGES;
+import static net.svcret.admin.client.AdminPortal.MSGS;
 
 import java.util.Date;
 import java.util.List;
@@ -51,10 +52,17 @@ public class UrlGrid extends FlowPanel {
 	private Label myNoUrlsLabel;
 
 	public UrlGrid(BaseGServiceVersion theServiceVersion) {
+		init(theServiceVersion);
+	}
+
+	public UrlGrid() {
+	}
+
+	public void init(BaseGServiceVersion theServiceVersion) {
 		myServiceVersion = theServiceVersion;
 
-		this.add(new Label("Each proxied service will have one or more implementation URLs. " + "When a client attempts to invoke a service that has been proxied, the ServiceProxy will " + "forward this request to one of these implementations. Specifying more than one "
-				+ "implementation URL means that if one is unavailable, another can be tried (i.e. redundancy)."));
+		this.add(new Label("Each proxied service will have one or more implementation URLs. " + "When a client attempts to invoke a service that has been proxied, the ServiceProxy will "
+				+ "forward this request to one of these implementations. Specifying more than one " + "implementation URL means that if one is unavailable, another can be tried (i.e. redundancy)."));
 
 		myUrlGrid = new Grid(1, NUM_COLS);
 		myUrlGrid.addStyleName(CssConstants.PROPERTY_TABLE);
@@ -114,6 +122,10 @@ public class UrlGrid extends FlowPanel {
 		});
 
 		updateUrlPanel();
+	}
+
+	public BaseGServiceVersion getServiceVersion() {
+		return myServiceVersion;
 	}
 
 	private final class MyPanel extends FlowPanelWithTooltip implements IProvidesTooltip {
@@ -294,42 +306,78 @@ public class UrlGrid extends FlowPanel {
 				myUrlGrid.setWidget(row, COL_URL_STATUS, null);
 				myUrlGrid.setWidget(row, COL_URL_LAST_TRANSACTION, null);
 			} else {
-				FlowPanel statusPanel = new FlowPanel();
-				statusPanel.setStyleName(CssConstants.UNSTYLED_TABLE);
-				statusPanel.getElement().getStyle().setTextAlign(com.google.gwt.dom.client.Style.TextAlign.CENTER);
-				Widget imageForStatus = BaseDashModel.returnImageForStatus(next.getStatus());
-				imageForStatus.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
-				statusPanel.add(imageForStatus);
-				String text = null;
-				switch (next.getStatus()) {
-				case ACTIVE:
-					text = "Ok";
-					break;
-				case DOWN:
-					text = "Down";
-					break;
-				case UNKNOWN:
-					text = "Unknown (no requests)";
-					break;
+
+				// Status
+				{
+					FlowPanel statusPanel = new FlowPanel();
+					statusPanel.setStyleName(CssConstants.UNSTYLED_TABLE);
+					statusPanel.getElement().getStyle().setTextAlign(com.google.gwt.dom.client.Style.TextAlign.CENTER);
+					Widget imageForStatus = BaseDashModel.returnImageForStatus(next.getStatus());
+					imageForStatus.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
+					statusPanel.add(imageForStatus);
+					String text = null;
+					PButton cbResetButton = null;
+					switch (next.getStatus()) {
+					case ACTIVE:
+						text = "Ok";
+						break;
+					case DOWN:
+						if (next.getNextCircuitBreakerReset() != null) {
+							text = "Down (next circuit breaker reset at " + DateUtil.formatTimeOnly(next.getNextCircuitBreakerReset()) + ")";
+							cbResetButton = new PButton("Reset CB");
+							cbResetButton.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
+						} else {
+							text = "Down";
+						}
+						break;
+					case UNKNOWN:
+						text = "Unknown (no requests)";
+						break;
+					}
+					Label urlStatusLabel = new Label(text, true);
+					urlStatusLabel.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
+					statusPanel.add(urlStatusLabel);
+
+					if (cbResetButton != null) {
+						statusPanel.add(cbResetButton);
+					}
+
+					myUrlGrid.setWidget(row, COL_URL_STATUS, statusPanel);
 				}
-				Label urlStatusLabel = new Label(text);
-				urlStatusLabel.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
-				statusPanel.add(urlStatusLabel);
-				myUrlGrid.setWidget(row, COL_URL_STATUS, statusPanel);
 
-				FlowPanel lastXPanel = new FlowPanel();
+				// Usage
+				{
+					FlowPanel grid = new FlowPanel();
+					myUrlGrid.setWidget(row, COL_URL_USAGE, grid);
 
-				List<ResponseTypeEnum> lastResponseTypes = next.getStatsLastResponseTypesFromMostRecentToLeast();
-				if (lastResponseTypes.isEmpty()) {
-					lastXPanel.add(new Label("No usage"));
-				} else {
-					for (ResponseTypeEnum lastResponseType : lastResponseTypes) {
-						lastXPanel.add(new MyPanel(next, lastResponseType));
+					Widget transactionsSparkline = BaseDashModel.returnSparklineFor60MinsUsage(next.getTransactions60mins(), next.getStatsInitialized(), next.getAverageTransactionsPerMin60min(),
+							next.getMaxTransactionsPerMin60min());
+					transactionsSparkline.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
+					grid.add(transactionsSparkline);
+
+					Widget latencySparkline = BaseDashModel.returnSparklineFor60minsLatency(next.getLatency60mins(), next.getStatsInitialized(), next.getAverageLatency60min(),
+							next.getMaxLatency60min());
+					if (latencySparkline != null) {
+						latencySparkline.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
+						grid.add(latencySparkline);
 					}
 				}
 
-				myUrlGrid.setWidget(row, COL_URL_LAST_TRANSACTION, lastXPanel);
+				// Last transaction
+				{
+					FlowPanel lastXPanel = new FlowPanel();
 
+					List<ResponseTypeEnum> lastResponseTypes = next.getStatsLastResponseTypesFromMostRecentToLeast();
+					if (lastResponseTypes.isEmpty()) {
+						lastXPanel.add(new Label("No usage"));
+					} else {
+						for (ResponseTypeEnum lastResponseType : lastResponseTypes) {
+							lastXPanel.add(new MyPanel(next, lastResponseType));
+						}
+					}
+
+					myUrlGrid.setWidget(row, COL_URL_LAST_TRANSACTION, lastXPanel);
+				}
 			}
 
 		}

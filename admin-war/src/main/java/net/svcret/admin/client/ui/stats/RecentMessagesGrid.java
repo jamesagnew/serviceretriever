@@ -74,7 +74,14 @@ public class RecentMessagesGrid extends FlowPanel {
 		replayColumn.setFieldUpdater(new FieldUpdater<GRecentMessage, String>() {
 			@Override
 			public void update(int theIndex, GRecentMessage theObject, String theValue) {
-				History.newItem(NavProcessor.getTokenReplayMessage(true, theObject.getPid()));
+				switch (theObject.getRecentMessageType()) {
+				case USER:
+					History.newItem(NavProcessor.getTokenReplayMessageForUser(true, theObject.getPid()));
+					break;
+				case SVCVER:
+					History.newItem(NavProcessor.getTokenReplayMessageForServiceVersion(true, theObject.getPid()));
+					break;
+				}
 			}
 		});
 		// Save Button

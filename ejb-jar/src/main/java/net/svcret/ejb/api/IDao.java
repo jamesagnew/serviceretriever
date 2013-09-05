@@ -10,7 +10,7 @@ import javax.ejb.Local;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
-import net.svcret.ejb.ejb.TransactionLoggerBean.BaseUnflushed;
+import net.svcret.ejb.ejb.log.BaseUnflushed;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersStats;
