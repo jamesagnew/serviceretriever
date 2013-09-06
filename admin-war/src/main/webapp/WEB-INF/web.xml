@@ -33,7 +33,7 @@
 
 	<servlet-mapping>
 		<servlet-name>graphServlet</servlet-name>
-		<url-pattern>/graph.png</url-pattern>
+		<url-pattern>/charts/largegraph.png</url-pattern>
 	</servlet-mapping>
 
 	<servlet-mapping>

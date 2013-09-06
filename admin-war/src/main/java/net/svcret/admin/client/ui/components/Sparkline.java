@@ -215,7 +215,6 @@ public class Sparkline extends Widget {
 	 */
 	@Override
 	protected void onLoad() {
-		
 		String valuesString = createValuesString();
 		String timelines = createEimelinesString();
 		String type = createTypeString();

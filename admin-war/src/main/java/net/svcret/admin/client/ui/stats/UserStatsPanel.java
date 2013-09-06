@@ -127,7 +127,7 @@ public class UserStatsPanel extends FlowPanel {
 		myGraphsContentPanel.add(myGraphsTimePicker);
 
 		myGraphsContentPanel.add(new HtmlH1("User Method Usage"));
-		Image img = new Image("graph.png?ct=" + ChartTypeEnum.USERMETHODS.name() + "&pid=" + selectedUserPid + "&" + ChartParams.RANGE + "=" + myGraphsTimePicker.getSelectedRange().toUrlValue());
+		Image img = new Image(ServiceVersionStatsPanel.GRAPH_FILENAME + "?ct=" + ChartTypeEnum.USERMETHODS.name() + "&pid=" + selectedUserPid + "&" + ChartParams.RANGE + "=" + myGraphsTimePicker.getSelectedRange().toUrlValue());
 		ServiceVersionStatsPanel.addStatsImage(myGraphsContentPanel, img);
 
 	}

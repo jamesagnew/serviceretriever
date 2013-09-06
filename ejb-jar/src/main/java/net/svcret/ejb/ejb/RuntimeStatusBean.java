@@ -541,7 +541,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			PersInvocationUrlStats stats = getStatsForPk(statsPk);
 			long responseTime = nextFailure.getInvocationMillis();
 			int responseBytes = nextFailure.getBody() != null ? nextFailure.getBody().length(): 0;
-			stats.addSuccessInvocation(responseTime, theRequestLengthChars, responseBytes);
+			stats.addFailInvocation(responseTime, theRequestLengthChars, responseBytes);
 		}
 
 	}

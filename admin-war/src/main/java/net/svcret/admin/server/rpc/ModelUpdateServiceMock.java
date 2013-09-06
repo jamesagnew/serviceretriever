@@ -668,6 +668,9 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		obj.setStatsInitialized(new Date());
 		obj.setStatus(randomStatus());
 		obj.setTransactions60mins(random60mins());
+		obj.setTransactionsFail60mins(random60mins());
+		obj.setTransactionsFault60mins(random60mins());
+		obj.setTransactionsSecurityFail60mins(random60mins());
 		obj.setLatency60mins(random60mins());
 		obj.setUrlsActive(randomUrlNumber());
 		obj.setUrlsDown(randomUrlNumber());

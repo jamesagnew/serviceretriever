@@ -22,6 +22,7 @@ import com.google.gwt.user.client.ui.Label;
 
 public class ServiceVersionStatsPanel extends FlowPanel {
 
+	public static final String GRAPH_FILENAME = "../charts/largegraph.png";
 	private LoadingSpinner myTopLoadingSpinner;
 	private long myServiceVersionPid;
 	private Label myTitleLabel;
@@ -91,19 +92,19 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 		myChartsPanel.add(myGraphsTimePanel);
 		
 		myChartsPanel.add(new HtmlH1(MSGS.serviceVersionStats_UsageTitle()));
-		Image img = new Image("graph.png?ct=" + ChartTypeEnum.USAGE.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.toUrlValue());
+		Image img = new Image(ServiceVersionStatsPanel.GRAPH_FILENAME + "?ct=" + ChartTypeEnum.USAGE.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.toUrlValue());
 		addStatsImage(myChartsPanel, img);
 
 		myChartsPanel.add(new HtmlH1(MSGS.serviceVersionStats_LatencyTitle()));
-		img = new Image("graph.png?ct=" + ChartTypeEnum.LATENCY.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.toUrlValue());
+		img = new Image(ServiceVersionStatsPanel.GRAPH_FILENAME + "?ct=" + ChartTypeEnum.LATENCY.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.toUrlValue());
 		addStatsImage(myChartsPanel, img);
 
 		myChartsPanel.add(new HtmlH1(MSGS.serviceVersionStats_MessageSizeTitle()));
-		img = new Image("graph.png?ct=" + ChartTypeEnum.PAYLOADSIZE.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.toUrlValue());
+		img = new Image(ServiceVersionStatsPanel.GRAPH_FILENAME + "?ct=" + ChartTypeEnum.PAYLOADSIZE.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.toUrlValue());
 		addStatsImage(myChartsPanel, img);
 
 		myChartsPanel.add(new HtmlH1(MSGS.serviceVersionStats_ThrottlingTitle()));
-		img = new Image("graph.png?ct=" + ChartTypeEnum.THROTTLING.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.toUrlValue());
+		img = new Image(ServiceVersionStatsPanel.GRAPH_FILENAME + "?ct=" + ChartTypeEnum.THROTTLING.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.toUrlValue());
 		addStatsImage(myChartsPanel, img);
 		
 	}
