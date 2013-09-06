@@ -11,18 +11,22 @@ import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersService;
+import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 
 @Local
 public interface IServiceRegistry {
 
 	/**
-	 * Load a service definition from a String containing an XML Service
-	 * definition
+	 * Load a service definition from a String containing an XML Service definition
 	 */
 	// void loadServiceDefinition(String theXmlContents) throws
 	// InternalErrorException, ProcessingException;
 
 	void deleteHttpClientConfig(PersHttpClientConfig theConfig) throws ProcessingException;
+
+	Collection<PersDomain> getAllDomains();
+
+	PersDomain getDomainByPid(Long theDomainPid);
 
 	PersDomain getOrCreateDomainWithId(String theId) throws ProcessingException;
 
@@ -30,9 +34,12 @@ public interface IServiceRegistry {
 
 	PersService getOrCreateServiceWithId(PersDomain theDomain, String theId) throws ProcessingException;
 
+	PersService getServiceByPid(Long theServicePid);
+
+	BasePersServiceVersion getServiceVersionByPid(long theServiceVersionPid);
+
 	/**
-	 * Retrieves the specific service version definition for the given proxy
-	 * path. Returns null if none exists.
+	 * Retrieves the specific service version definition for the given proxy path. Returns null if none exists.
 	 */
 	BasePersServiceVersion getServiceVersionForPath(String thePath);
 
@@ -42,12 +49,13 @@ public interface IServiceRegistry {
 	List<String> getValidPaths();
 
 	/**
-	 * Directs the service registry to reload a copy of the entire registry from
-	 * the databse and cache it in memory
+	 * Directs the service registry to reload a copy of the entire registry from the databse and cache it in memory
 	 */
 	void reloadRegistryFromDatabase();
 
 	void removeDomain(PersDomain theDomain) throws ProcessingException;
+
+	PersServiceVersionUrl resetCircuitBreaker(long theUrlPid) throws ProcessingException;
 
 	PersDomain saveDomain(PersDomain theDomain) throws ProcessingException;
 
@@ -56,13 +64,5 @@ public interface IServiceRegistry {
 	void saveService(PersService theService) throws ProcessingException;
 
 	BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theSv) throws ProcessingException;
-
-	BasePersServiceVersion getServiceVersionByPid(long theServiceVersionPid);
-
-	Collection<PersDomain> getAllDomains();
-
-	PersDomain getDomainByPid(Long theDomainPid);
-
-	PersService getServiceByPid(Long theServicePid);
 
 }

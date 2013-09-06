@@ -962,4 +962,16 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 	}
 
+	@Override
+	public void reloadUrlStatus(Long thePid) {
+		PersServiceVersionUrl url = myDao.getServiceVersionUrlByPid(thePid);
+		
+		PersServiceVersionUrlStatus inMemory = getUrlStatus(url);
+		PersServiceVersionUrlStatus fromDisk=url.getStatus();
+		
+		inMemory.mergeNewer(fromDisk);
+		
+		
+	}
+
 }

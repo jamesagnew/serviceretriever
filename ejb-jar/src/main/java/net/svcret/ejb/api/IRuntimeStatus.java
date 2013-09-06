@@ -67,4 +67,6 @@ public interface IRuntimeStatus {
 
 	void recordNodeStatistics();
 
+	void reloadUrlStatus(Long thePid);
+
 }

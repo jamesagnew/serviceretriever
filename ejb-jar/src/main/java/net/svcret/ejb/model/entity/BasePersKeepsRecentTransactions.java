@@ -4,7 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
-import net.svcret.admin.shared.model.BaseGKeepsRecentMessages;
+import net.svcret.admin.shared.model.BaseDtoKeepsRecentMessages;
 
 @MappedSuperclass
 public abstract class BasePersKeepsRecentTransactions extends BasePersObject {
@@ -98,14 +98,14 @@ public abstract class BasePersKeepsRecentTransactions extends BasePersObject {
 		setKeepNumRecentTransactionsSuccess(obj.getKeepNumRecentTransactionsSuccess());
 	}
 
-	public void populateKeepRecentTransactionsFromDto(BaseGKeepsRecentMessages theDto) {
+	public void populateKeepRecentTransactionsFromDto(BaseDtoKeepsRecentMessages theDto) {
 		setKeepNumRecentTransactionsFail(theDto.getKeepNumRecentTransactionsFail());
 		setKeepNumRecentTransactionsSecurityFail(theDto.getKeepNumRecentTransactionsSecurityFail());
 		setKeepNumRecentTransactionsFault(theDto.getKeepNumRecentTransactionsFault());
 		setKeepNumRecentTransactionsSuccess(theDto.getKeepNumRecentTransactionsSuccess());
 	}
 
-	public void populateKeepRecentTransactionsToDto(BaseGKeepsRecentMessages theDto) {
+	public void populateKeepRecentTransactionsToDto(BaseDtoKeepsRecentMessages theDto) {
 		theDto.setKeepNumRecentTransactionsFail(this.getKeepNumRecentTransactionsFail());
 		theDto.setKeepNumRecentTransactionsSecurityFail(this.getKeepNumRecentTransactionsSecurityFail());
 		theDto.setKeepNumRecentTransactionsFault(this.getKeepNumRecentTransactionsFault());

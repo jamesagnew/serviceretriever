@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class GDomainList extends BaseGList<GDomain> {
+public class GDomainList extends BaseDtoList<GDomain> {
 
 	private static final long serialVersionUID = 1L;
 

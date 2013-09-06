@@ -3,10 +3,20 @@ package net.svcret.admin.shared.model;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
+
+import net.svcret.admin.shared.util.XmlConstants;
+
+@XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="Domain")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class GDomain extends BaseDtoServiceCatalogItem {
 
 	private static final long serialVersionUID = 1L;
 
+	@XmlElement(name="ServiceList")
 	private GServiceList myServiceList = new GServiceList();
 
 

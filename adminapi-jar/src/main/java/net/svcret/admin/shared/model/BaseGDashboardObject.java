@@ -2,21 +2,50 @@ package net.svcret.admin.shared.model;
 
 import java.util.Date;
 
-public abstract class BaseGDashboardObject extends BaseGKeepsRecentMessages {
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
+
+public abstract class BaseGDashboardObject extends BaseDtoKeepsRecentMessages {
 
 	private static final long serialVersionUID = 1L;
+	
+	@XmlElement(name="runtime_AvgLatencyOverLast60Min")
 	private int myAverageLatency60min;
+	
+	@XmlElement(name="runtime_AvgTransactionsPerMinuteOverLast60Min")
 	private double myAverageTransactionsPerMin60min;
+
+	@XmlTransient
 	private boolean myExpandedOnDashboard;
+	
+	@XmlElement(name="config_Id")
 	private String myId;
+	
+	@XmlElement(name="runtime_LastServerSecurityFailure")
 	private Date myLastServerSecurityFailure;
+	
+	@XmlElement(name="runtime_LastSuccessfulInvocation")
 	private Date myLastSuccessfulInvocation;
-	private int[] myLatency60mins;
+
+	@XmlElement(name="runtime_LatencyInMillisOver60Mins")
+	private DtoIntArray myLatency60mins;
+	
+	@XmlElement(name="config_Name")
 	private String myName;
+
+	@XmlElement(name="runtime_StatsInitialized")
 	private Date myStatsInitialized;
+	
+	@XmlElement(name="runtime_Status")
 	private StatusEnum myStatus;
-	private int[] myTransactions60mins;
+	
+	@XmlElement(name="runtime_TransactionCountOver60Mins")
+	private DtoIntArray myTransactions60mins;
+	
+	@XmlElement(name="runtime_MaxLatencyInMillisOver60Mins")
 	private int myMaxLatency60min;
+
+	@XmlElement(name="runtime_MaxTransactionsPerMinOver60Mins")
 	private double myMaxTransactionsPerMin60min;
 
 	/**
@@ -72,7 +101,7 @@ public abstract class BaseGDashboardObject extends BaseGKeepsRecentMessages {
 	 * @return the latency60mins
 	 */
 	public int[] getLatency60mins() {
-		return myLatency60mins;
+		return DtoIntArray.from(myLatency60mins);
 	}
 
 	/**
@@ -93,7 +122,7 @@ public abstract class BaseGDashboardObject extends BaseGKeepsRecentMessages {
 	 * @return the transactions60mins
 	 */
 	public int[] getTransactions60mins() {
-		return myTransactions60mins;
+		return DtoIntArray.from(myTransactions60mins);
 	}
 
 	/**
@@ -162,7 +191,7 @@ public abstract class BaseGDashboardObject extends BaseGKeepsRecentMessages {
 	 *            the latency60mins to set
 	 */
 	public void setLatency60mins(int[] theLatency60mins) {
-		myLatency60mins = theLatency60mins;
+		myLatency60mins = DtoIntArray.to(theLatency60mins);
 
 		int count = 0;
 		int total = 0;
@@ -212,15 +241,15 @@ public abstract class BaseGDashboardObject extends BaseGKeepsRecentMessages {
 	 *            the transactions60mins to set
 	 */
 	public void setTransactions60mins(int[] theTransactions60mins) {
-		myTransactions60mins = theTransactions60mins;
+		myTransactions60mins = DtoIntArray.to(theTransactions60mins);
 		long total = 0;
 		long max = 0;
 		for (int i : theTransactions60mins) {
 			total += i;
 			max = Math.max(max, i);
 		}
-		if (myTransactions60mins.length > 0) {
-			myAverageTransactionsPerMin60min = ((double)total / (double)myTransactions60mins.length);
+		if (theTransactions60mins.length > 0) {
+			myAverageTransactionsPerMin60min = ((double)total / (double)theTransactions60mins.length);
 			myMaxTransactionsPerMin60min = max;
 		}
 	}

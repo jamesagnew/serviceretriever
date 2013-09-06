@@ -14,5 +14,7 @@ public interface IBroadcastSender {
 	void notifyConfigChanged() throws ProcessingException;
 
 	void monitorRulesChanged() throws ProcessingException;
+
+	void notifyUrlStatusChanged(Long thePid) throws ProcessingException;
 	
 }

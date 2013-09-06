@@ -1,7 +1,7 @@
 package net.svcret.admin.shared.model;
 
 
-public class GServiceMethodList extends BaseGList<GServiceMethod>{
+public class GServiceMethodList extends BaseDtoList<GServiceMethod>{
 
 	private static final long serialVersionUID = 1L;
 

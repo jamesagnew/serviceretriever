@@ -9,30 +9,29 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-public class BaseGList<T extends BaseGObject> implements Iterable<T>, Serializable {
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
+
+public class BaseDtoList<T extends BaseGObject> implements Iterable<T>, Serializable {
 
 	private static final long serialVersionUID = 1L;
 
+	@XmlTransient
 	private Comparator<? super T> myComparator;
+
+	@XmlTransient
 	private Date myLastMerged;
+
+	@XmlElement(name = "Element")
 	private List<T> myList;
 
-	public BaseGList() {
+	public BaseDtoList() {
 		myList = new ArrayList<T>();
 	}
 
 	public void add(T theObject) {
 		myList.add(theObject);
 		sort();
-	}
-
-	public T remove(int theIndex) {
-		return myList.remove(theIndex);
-	}
-
-
-	public List<T> toList() {
-		return Collections.unmodifiableList(myList);
 	}
 
 	public void addAll(Collection<T> theList) {
@@ -59,7 +58,7 @@ public class BaseGList<T extends BaseGObject> implements Iterable<T>, Serializab
 		return myList.iterator();
 	}
 
-	public void mergeResults(BaseGList<T> theResult) {
+	public void mergeResults(BaseDtoList<T> theResult) {
 		for (int i = 0; i < theResult.size(); i++) {
 			T nextSrc = theResult.get(i);
 
@@ -81,17 +80,24 @@ public class BaseGList<T extends BaseGObject> implements Iterable<T>, Serializab
 		myLastMerged = new Date();
 	}
 
+	public T remove(int theIndex) {
+		return myList.remove(theIndex);
+	}
+
 	public void remove(T theObject) {
 		myList.remove(theObject);
 	}
 
-	protected void setComparator(Comparator<? super T> theComparator) {
-		myComparator = theComparator;
-		sort();
-	}
-
 	public int size() {
 		return myList.size();
+	}
+
+	public Collection<T> toCollection() {
+		return Collections.unmodifiableCollection(myList);
+	}
+
+	public List<T> toList() {
+		return Collections.unmodifiableList(myList);
 	}
 
 	private void sort() {
@@ -100,8 +106,9 @@ public class BaseGList<T extends BaseGObject> implements Iterable<T>, Serializab
 		}
 	}
 
-	public Collection<T> toCollection() {
-		return Collections.unmodifiableCollection(myList);
+	protected void setComparator(Comparator<? super T> theComparator) {
+		myComparator = theComparator;
+		sort();
 	}
 
 	// public AbstractDataProvider<T> asDataProvider() {

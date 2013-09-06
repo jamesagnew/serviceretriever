@@ -3,19 +3,43 @@ package net.svcret.admin.shared.model;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+
+@XmlAccessorType(XmlAccessType.FIELD)
 public abstract class BaseDtoServiceCatalogItem extends BaseGDashboardObject implements IProvidesUrlCount {
 
 	private static final long serialVersionUID = 1L;
 
+	@XmlElement(name="runtime_FailingApplicableRulePids")
 	private Set<Long> myFailingApplicableRulePids;
+
+	@XmlElement(name="ro_InheritedObscureRequestElementsInLogCache")
 	private Set<String> myInheritedObscureRequestElementsInLogCache;
+	
+	@XmlElement(name="ro_InheritedObscureResponseElementsInLogCache")
 	private Set<String> myInheritedObscureResponseElementsInLogCache;
+
+	@XmlElement(name="ro_MonitorRulePids")
 	private Set<Long> myMonitorRulePids;
+	
+	@XmlElement(name="config_ObscureRequestElementsInLogCache")
 	private Set<String> myObscureRequestElementsInLogCache;
+	
+	@XmlElement(name="config_ObscureResponseElementsInLogCache")
 	private Set<String> myObscureResponseElementsInLogCache;
+	
+	@XmlElement(name="ro_ServerSecured")
 	private ServerSecuredEnum myServerSecured;
+	
+	@XmlElement(name="runtime_UrlsActive")
 	private int myUrlsActive;
+	
+	@XmlElement(name="runtime_UrlsDown")
 	private int myUrlsDown;
+	
+	@XmlElement(name="runtime_UrlsUnknown")
 	private int myUrlsUnknown;
 
 	public Set<Long> getFailingApplicableRulePids() {

@@ -41,6 +41,7 @@ import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
+import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserRecentMessage;
@@ -209,7 +210,7 @@ public interface IDao {
 
 	void saveServiceVersionStatuses(ArrayList<PersServiceVersionStatus> theServiceVersionStatuses);
 
-	void saveServiceVersionUrlStatus(ArrayList<PersServiceVersionUrlStatus> theUrlStatuses);
+	void saveServiceVersionUrlStatus(List<PersServiceVersionUrlStatus> theList);
 
 	void saveUserRecentMessage(PersUserRecentMessage theMsg);
 
@@ -243,5 +244,7 @@ public interface IDao {
 		}
 
 	}
+
+	PersServiceVersionUrl getServiceVersionUrlByPid(long theUrlPid);
 
 }

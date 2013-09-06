@@ -1,6 +1,6 @@
 package net.svcret.admin.shared.model;
 
-public class GMonitorRuleList extends BaseGList<BaseGMonitorRule> {
+public class GMonitorRuleList extends BaseDtoList<BaseGMonitorRule> {
 
 	private static final long serialVersionUID = 1L;
 

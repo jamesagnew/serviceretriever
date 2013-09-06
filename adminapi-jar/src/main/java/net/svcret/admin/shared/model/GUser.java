@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class GUser extends BaseGKeepsRecentMessages implements IHasPermissions {
+public class GUser extends BaseDtoKeepsRecentMessages implements IHasPermissions {
 
 	private static final long serialVersionUID = 1L;
 

@@ -24,6 +24,7 @@ import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
 import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
+import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.HierarchyEnum;
@@ -34,15 +35,11 @@ import net.svcret.ejb.ex.ProcessingException;
 
 public interface IBaseAdminService {
 
-	Collection<DtoLibraryMessage> getLibraryMessages(HierarchyEnum theType, long thePid, boolean theLoadContents) throws ProcessingException;
-
-	Collection<DtoLibraryMessage> getLibraryMessagesForService(long thePid, boolean theLoadContents) throws ProcessingException;
-
-	void saveLibraryMessage(DtoLibraryMessage theMessage) throws ProcessingException;
-
 	GDomain addDomain(GDomain theDomain) throws ProcessingException;
 
 	GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ProcessingException;
+
+	byte[] createWsdlBundle(long theServiceVersionPid) throws ProcessingException, IOException;
 
 	GAuthenticationHostList deleteAuthenticationHost(long thePid) throws ProcessingException;
 
@@ -52,17 +49,25 @@ public interface IBaseAdminService {
 
 	GDomainList deleteService(long theServicePid) throws ProcessingException;
 
-	long getDefaultHttpClientConfigPid();
-
 	GDomainList deleteServiceVersion(long thePid) throws ProcessingException;
+
+	long getDefaultHttpClientConfigPid();
 
 	GDomain getDomainByPid(long theDomain) throws ProcessingException;
 
 	long getDomainPid(String theDomainId) throws ProcessingException;
 
+	DtoLibraryMessage getLibraryMessage(long theMessagePid) throws ProcessingException;
+
+	Collection<DtoLibraryMessage> getLibraryMessages(HierarchyEnum theType, long thePid, boolean theLoadContents) throws ProcessingException;
+
+	Collection<DtoLibraryMessage> getLibraryMessagesForService(long thePid, boolean theLoadContents) throws ProcessingException;
+
 	GService getServiceByPid(long theService) throws ProcessingException;
 
 	long getServicePid(long theDomainPid, String theServiceId) throws ProcessingException;
+
+	Collection<GMonitorRuleFiring> loadAllActiveRuleFirings() throws ProcessingException;
 
 	BaseGAuthHost loadAuthenticationHost(long thePid) throws ProcessingException;
 
@@ -70,13 +75,33 @@ public interface IBaseAdminService {
 
 	GDomainList loadDomainList() throws ProcessingException;
 
+	Collection<DtoLibraryMessage> loadLibraryMessages() throws ProcessingException;
+
 	ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ProcessingException;
+
+	List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart);
+
+	GMonitorRuleList loadMonitorRuleList() throws ProcessingException;
+
+	GRecentMessage loadRecentMessageForServiceVersion(long thePid) throws ProcessingException;
+
+	GRecentMessage loadRecentMessageForUser(long thePid) throws ProcessingException;
+
+	GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid);
+
+	GRecentMessageLists loadRecentTransactionListForUser(long thePid);
 
 	GSoap11ServiceVersionAndResources loadServiceVersion(long theServiceVersionPid) throws ProcessingException;
 
+	GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws ProcessingException;
+
 	GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(DtoServiceVersionSoap11 theService, String theWsdlUrl) throws ProcessingException;
 
+	GUser loadUser(long thePid, boolean theLoadStats) throws ProcessingException;
+
 	GPartialUserList loadUsers(PartialUserListRequest theRequest) throws ProcessingException;
+
+	GServiceVersionUrl resetCircuitBreaker(long theUrlPid) throws ProcessingException;
 
 	GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) throws ProcessingException;
 
@@ -84,7 +109,12 @@ public interface IBaseAdminService {
 
 	GDomainList saveDomain(GDomain theDomain) throws ProcessingException;
 
-	GHttpClientConfig saveHttpClientConfig(GHttpClientConfig theConfig, byte[] theNewTruststore, String theNewTruststorePass, byte[] theNewKeystore, String theNewKeystorePass) throws ProcessingException;
+	GHttpClientConfig saveHttpClientConfig(GHttpClientConfig theConfig, byte[] theNewTruststore, String theNewTruststorePass, byte[] theNewKeystore, String theNewKeystorePass)
+			throws ProcessingException;
+
+	void saveLibraryMessage(DtoLibraryMessage theMessage) throws ProcessingException;
+
+	void saveMonitorRule(BaseGMonitorRule theRule) throws ProcessingException;
 
 	GDomainList saveService(GService theService) throws ProcessingException;
 
@@ -94,32 +124,6 @@ public interface IBaseAdminService {
 
 	String suggestNewVersionNumber(Long theDomainPid, Long theServicePid);
 
-	GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid);
-
-	GRecentMessage loadRecentMessageForServiceVersion(long thePid) throws ProcessingException;
-
-	GRecentMessageLists loadRecentTransactionListForUser(long thePid);
-
-	GRecentMessage loadRecentMessageForUser(long thePid) throws ProcessingException;
-
-	GUser loadUser(long thePid, boolean theLoadStats) throws ProcessingException;
-
-	GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws ProcessingException;
-
-	GMonitorRuleList loadMonitorRuleList() throws ProcessingException;
-
 	GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long thePid, String theRequestedByString) throws ProcessingException;
-
-	List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart);
-
-	DtoLibraryMessage getLibraryMessage(long theMessagePid) throws ProcessingException;
-
-	void saveMonitorRule(BaseGMonitorRule theRule) throws ProcessingException;
-
-	byte[] createWsdlBundle(long theServiceVersionPid) throws ProcessingException, IOException;
-
-	Collection<DtoLibraryMessage> loadLibraryMessages() throws ProcessingException;
-
-	Collection<GMonitorRuleFiring> loadAllActiveRuleFirings()throws ProcessingException;
 
 }

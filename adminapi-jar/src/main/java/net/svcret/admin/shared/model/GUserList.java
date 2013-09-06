@@ -1,7 +1,7 @@
 package net.svcret.admin.shared.model;
 
 
-public class GUserList extends BaseGList<GUser> {
+public class GUserList extends BaseDtoList<GUser> {
 
 	private static final long serialVersionUID = 1L;
 

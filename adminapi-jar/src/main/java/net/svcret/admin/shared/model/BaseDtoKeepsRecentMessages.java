@@ -1,17 +1,39 @@
 package net.svcret.admin.shared.model;
 
-public abstract class BaseGKeepsRecentMessages extends BaseGObject {
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+
+@XmlAccessorType(XmlAccessType.FIELD)
+public abstract class BaseDtoKeepsRecentMessages extends BaseGObject {
 
 	private static final long serialVersionUID = 1L;
 
+	@XmlElement(name="runtime_CanInheritKeepNumRecentTransactions")
 	private boolean myCanInheritKeepNumRecentTransactions;
+	
+	@XmlElement(name="runtime_InheritedKeepNumRecentTransactionsFail")
 	private Integer myInheritedKeepNumRecentTransactionsFail;
+
+	@XmlElement(name="runtime_InheritedKeepNumRecentTransactionsFault")
 	private Integer myInheritedKeepNumRecentTransactionsFault;
+
+	@XmlElement(name="runtime_InheritedKeepNumRecentTransactionsSecurityFail")
 	private Integer myInheritedKeepNumRecentTransactionsSecurityFail;
+	
+	@XmlElement(name="runtime_InheritedKeepNumRecentTransactionsSuccess")
 	private Integer myInheritedKeepNumRecentTransactionsSuccess;
+
+	@XmlElement(name="runtime_KeepNumRecentTransactionsFail")
 	private Integer myKeepNumRecentTransactionsFail;
+
+	@XmlElement(name="runtime_KeepNumRecentTransactionsFault")
 	private Integer myKeepNumRecentTransactionsFault;
+
+	@XmlElement(name="runtime_KeepNumRecentTransactionsSecurityFail")
 	private Integer myKeepNumRecentTransactionsSecurityFail;
+
+	@XmlElement(name="runtime_KeepNumRecentTransactionsSuccess")
 	private Integer myKeepNumRecentTransactionsSuccess;
 
 	public Integer getInheritedKeepNumRecentTransactionsFail() {
@@ -65,7 +87,7 @@ public abstract class BaseGKeepsRecentMessages extends BaseGObject {
 	public void merge(BaseGObject theObject) {
 		super.merge(theObject);
 		
-		BaseGKeepsRecentMessages obj = (BaseGKeepsRecentMessages) theObject;
+		BaseDtoKeepsRecentMessages obj = (BaseDtoKeepsRecentMessages) theObject;
 		setKeepNumRecentTransactionsSuccess(obj.getKeepNumRecentTransactionsSuccess());
 		setKeepNumRecentTransactionsFail(obj.getKeepNumRecentTransactionsFail());
 		setKeepNumRecentTransactionsFault(obj.getKeepNumRecentTransactionsFault());

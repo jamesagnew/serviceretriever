@@ -1237,7 +1237,7 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	public void saveServiceVersionUrlStatus(ArrayList<PersServiceVersionUrlStatus> theStatuses) {
+	public void saveServiceVersionUrlStatus(List<PersServiceVersionUrlStatus> theStatuses) {
 
 		int count = 0;
 		if (theStatuses != null) {
@@ -1361,6 +1361,11 @@ public class DaoBean implements IDao {
 		for (Iterator<PersUserRecentMessage> iter = messages.iterator(); iter.hasNext() && index < toDelete; index++) {
 			myEntityManager.remove(iter.next());
 		}
+	}
+
+	@Override
+	public PersServiceVersionUrl getServiceVersionUrlByPid(long theUrlPid) {
+		return myEntityManager.find(PersServiceVersionUrl.class, theUrlPid);
 	}
 
 }

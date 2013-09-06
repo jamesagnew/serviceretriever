@@ -732,7 +732,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		// Only add URLs if there aren't any already defined for this version
 		if (theService.getUrlList().size() == 0) {
 			for (PersServiceVersionUrl next : def.getUrls()) {
-				theService.getUrlList().add(toUi(next, false, null));
+				theService.getUrlList().add(toUi(next, false, (StatusesBean)null));
 			}
 		}
 
@@ -2492,6 +2492,15 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	private GServiceVersionUrl toUi(PersServiceVersionUrl theUrl, boolean theLoadStats, StatusesBean theStatuses) {
+		PersServiceVersionUrlStatus theUrlStatus=null;
+		if (theLoadStats) {
+			theUrlStatus = theStatuses.getUrlStatus(theUrl.getPid());
+		}
+		
+		return toUi(theUrl, theLoadStats, theUrlStatus);
+	}
+
+	private GServiceVersionUrl toUi(PersServiceVersionUrl theUrl, boolean theLoadStats, PersServiceVersionUrlStatus urlStatus) {
 		GServiceVersionUrl retVal = new GServiceVersionUrl();
 		if (theUrl.getPid() != null) {
 			retVal.setPid(theUrl.getPid());
@@ -2501,7 +2510,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		if (theLoadStats) {
 			Long urlPid = theUrl.getPid();
-			PersServiceVersionUrlStatus urlStatus = theStatuses.getUrlStatus(urlPid);
 
 			retVal.setStatsLastFailure(urlStatus.getLastFail());
 			retVal.setStatsLastFailureMessage(urlStatus.getLastFailMessage());
@@ -2533,7 +2541,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			retVal.setStatsInitialized(new Date());
 
 		}
-
 		return retVal;
 	}
 
@@ -2881,6 +2888,12 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	@VisibleForTesting
 	void setRuntimeStatusQuerySvcForUnitTests(IRuntimeStatusQueryLocal theStatsQSvc) {
 		myRuntimeStatusQuerySvc = theStatsQSvc;
+	}
+
+	@Override
+	public GServiceVersionUrl resetCircuitBreaker(long theUrlPid) throws ProcessingException {
+		PersServiceVersionUrl url = myServiceRegistry.resetCircuitBreaker(theUrlPid);
+		return toUi(url, true, url.getStatus());
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {

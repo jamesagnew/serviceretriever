@@ -4,7 +4,7 @@ import java.util.Comparator;
 
 import net.svcret.admin.shared.util.StringUtil;
 
-public class GHttpClientConfigList extends BaseGList<GHttpClientConfig> implements Comparator<GHttpClientConfig> {
+public class GHttpClientConfigList extends BaseDtoList<GHttpClientConfig> implements Comparator<GHttpClientConfig> {
 
 	private static final long serialVersionUID = 1L;
 

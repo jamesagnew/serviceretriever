@@ -1,6 +1,6 @@
 package net.svcret.admin.shared.model;
 
-public class GAuthenticationHostList extends BaseGList<BaseGAuthHost>{
+public class GAuthenticationHostList extends BaseDtoList<BaseGAuthHost>{
 
 	private static final long serialVersionUID = 1L;
 

@@ -1,8 +1,36 @@
 package net.svcret.admin.shared.model;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
+
+import net.svcret.admin.shared.util.XmlConstants;
+
+@XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="ClientSecurityJsonRpcNamedParameter")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class DtoClientSecurityJsonRpcNamedParameter extends BaseGClientSecurity {
 
 	private static final long serialVersionUID = 1L;
+
+	@XmlElement(name="config_PasswordParameterName")
+	private String myPasswordParameterName;
+
+	@XmlElement(name="config_UsernameParamaterName")
+	private String myUsernameParameterName;
+
+	public String getPasswordParameterName() {
+		return myPasswordParameterName;
+	}
+
+	@Override
+	public ClientSecurityEnum getType() {
+		return ClientSecurityEnum.JSONRPC_NAMPARM;
+	}
+
+	public String getUsernameParameterName() {
+		return myUsernameParameterName;
+	}
 
 	@Override
 	public void merge(BaseGObject theObject) {
@@ -12,29 +40,12 @@ public class DtoClientSecurityJsonRpcNamedParameter extends BaseGClientSecurity 
 		setUsernameParameterName(obj.getUsernameParameterName());
 		setPasswordParameterName(obj.getPasswordParameterName());
 	}
-
-	public String getPasswordParameterName() {
-		return myPasswordParameterName;
-	}
-
 	public void setPasswordParameterName(String thePasswordParameterName) {
 		myPasswordParameterName = thePasswordParameterName;
 	}
 
-	public String getUsernameParameterName() {
-		return myUsernameParameterName;
-	}
-
 	public void setUsernameParameterName(String theUsernameParameterName) {
 		myUsernameParameterName = theUsernameParameterName;
-	}
-
-	private String myPasswordParameterName;
-	private String myUsernameParameterName;
-
-	@Override
-	public ClientSecurityEnum getType() {
-		return ClientSecurityEnum.JSONRPC_NAMPARM;
 	}
 
 }

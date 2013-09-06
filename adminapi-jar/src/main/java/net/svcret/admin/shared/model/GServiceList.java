@@ -1,6 +1,14 @@
 package net.svcret.admin.shared.model;
 
-public class GServiceList extends BaseGList<GService> {
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlType;
+
+import net.svcret.admin.shared.util.XmlConstants;
+
+@XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="ServiceList")
+@XmlAccessorType(XmlAccessType.FIELD)
+public class GServiceList extends BaseDtoList<GService> {
 
 	private static final long serialVersionUID = 1L;
 

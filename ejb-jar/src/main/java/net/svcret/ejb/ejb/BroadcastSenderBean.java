@@ -19,7 +19,7 @@ import org.apache.commons.lang3.Validate;
 @Stateless
 public class BroadcastSenderBean implements IBroadcastSender {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(BroadcastSenderBean.class);
-	
+
 	@Resource(mappedName = "jms/TopicConnectionFactory")
 	private TopicConnectionFactory myConnectionFactory;
 
@@ -27,10 +27,17 @@ public class BroadcastSenderBean implements IBroadcastSender {
 	private Topic myBusinessBroadcastTopic;
 
 	private void sendMessage(String theText) throws ProcessingException {
+		Long theLongArgument = null;
+
+		sendMessage(theText, theLongArgument);
+
+	}
+
+	private void sendMessage(String theText, Long theLongArgument) throws ProcessingException {
 		Validate.notBlank(theText);
 
 		ourLog.info("Sending broadcast message: {}", theText);
-		
+
 		TopicConnection con = null;
 		TopicSession ses = null;
 		TopicPublisher sender = null;
@@ -39,6 +46,11 @@ public class BroadcastSenderBean implements IBroadcastSender {
 			ses = con.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
 			sender = ses.createPublisher(myBusinessBroadcastTopic);
 			TextMessage msg = ses.createTextMessage(theText);
+
+			if (theLongArgument != null) {
+				msg.setLongProperty(BroadcastListenerBean.ARG_LONG, theLongArgument);
+			}
+
 			sender.send(msg);
 		} catch (JMSException e) {
 			throw new ProcessingException(e);
@@ -65,9 +77,8 @@ public class BroadcastSenderBean implements IBroadcastSender {
 				}
 			}
 		}
-		
-		ourLog.info("Done sending broadcast message: {}", theText);
 
+		ourLog.info("Done sending broadcast message: {}", theText);
 	}
 
 	@Override
@@ -88,6 +99,11 @@ public class BroadcastSenderBean implements IBroadcastSender {
 	@Override
 	public void monitorRulesChanged() throws ProcessingException {
 		sendMessage(BroadcastListenerBean.UPDATE_MONITOR_RULES);
+	}
+
+	@Override
+	public void notifyUrlStatusChanged(Long thePid) throws ProcessingException {
+		sendMessage(BroadcastListenerBean.URL_STATUS_CHANGED);
 	}
 
 }

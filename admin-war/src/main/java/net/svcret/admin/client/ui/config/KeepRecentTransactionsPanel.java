@@ -11,7 +11,7 @@ import net.svcret.admin.client.ui.components.HtmlH1;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
-import net.svcret.admin.shared.model.BaseGKeepsRecentMessages;
+import net.svcret.admin.shared.model.BaseDtoKeepsRecentMessages;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -32,7 +32,7 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 	private EditableField myObscureRequestElementsInLogEditor;
 	private EditableField myObscureResponseElementsInLogEditor;
 
-	public KeepRecentTransactionsPanel(BaseGKeepsRecentMessages theKeepsRecentTransactions) {
+	public KeepRecentTransactionsPanel(BaseDtoKeepsRecentMessages theKeepsRecentTransactions) {
 
 		boolean canInherit = theKeepsRecentTransactions.isCanInheritKeepNumRecentTransactions();
 		int descRows = canInherit ? 2 : 1;
@@ -232,7 +232,7 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 		return true;
 	}
 
-	public void populateDto(BaseGKeepsRecentMessages theDto) {
+	public void populateDto(BaseDtoKeepsRecentMessages theDto) {
 
 		theDto.setKeepNumRecentTransactionsSuccess(mySuccessTextbox.getValue());
 		theDto.setKeepNumRecentTransactionsFail(myFailTextbox.getValue());
