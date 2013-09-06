@@ -2,8 +2,10 @@ package net.svcret.ejb.model.entity;
 
 import java.io.Serializable;
 
+import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+@MappedSuperclass
 public abstract class BasePersStats<P extends BasePersStatsPk<?,?>, O extends BasePersStats<?,?>> implements Serializable {
 
 	private static final long serialVersionUID = 1L;

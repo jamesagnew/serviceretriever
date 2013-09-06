@@ -41,5 +41,26 @@
         </form> 
       </div>
   </center>
+  
+  <script type="text/javascript">
+  		
+  		/*
+  		The following preserves the location hash, which is the specific
+  		page the user was trying to access
+  		*/
+  
+		function setCookie(c_name,value,exdays) {
+			var exdate=new Date();
+			exdate.setDate(exdate.getDate() + exdays);
+			var c_value=escape(value) + ((exdays==null) ? "" : "; expires="+exdate.toUTCString());
+			document.cookie=c_name + "=" + c_value;
+		}	
+  
+		if (location.hash.match(/^\#[A-Z]{3}.*/)) {
+			var hash = location.hash.substring(1);
+			setCookie("sr-first-page", hash);
+		}
+  </script>
+  
 </body>
 </html>

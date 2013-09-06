@@ -137,7 +137,8 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		url.setStatsLastFailureMessage("This is a fail message");
 		url.setStatsLastSuccess(new Date());
 		url.setStatsLastSuccessMessage("This is a success message");
-		url.setStatus(StatusEnum.ACTIVE);
+		url.setStatus(StatusEnum.DOWN);
+		url.setNextCircuitBreakerReset(new Date(System.currentTimeMillis()+100000));
 		ver.getUrlList().add(url);
 		
 		GServiceMethod met = new GServiceMethod();
@@ -491,7 +492,9 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 					}
 					for (GServiceVersionUrl nextUrl : nextVersion.getUrlList()) {
 						if (theRequest.getUrlsToLoadStats().contains(nextUrl.getPid())) {
+							StatusEnum status = nextUrl.getStatus();
 							populateRandom(nextUrl);
+							nextUrl.setStatus(status);
 						}
 					}
 				}
@@ -955,6 +958,23 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 			retVal.setProblemDescription("Keystore has been tampered with or password is invalid");
 		}
 		return retVal;
+	}
+
+	@Override
+	public GServiceVersionUrl resetCircuitBreakerForServiceVersionUrl(long theUrlPid) {
+		for (GDomain nextDomain : myDomainList) {
+			for (GService nextSvc : nextDomain.getServiceList()) {
+				for (BaseGServiceVersion nextVer : nextSvc.getVersionList()) {
+					for (GServiceVersionUrl nextUrl : nextVer.getUrlList()) {
+						if (nextUrl.getPid() == theUrlPid) {
+							nextUrl.setNextCircuitBreakerReset(new Date(System.currentTimeMillis() + 10000));
+							return nextUrl;
+						}
+					}
+				}
+			}
+		}
+		throw new IllegalArgumentException("Unknown URL pid " + theUrlPid);
 	}
 
 }

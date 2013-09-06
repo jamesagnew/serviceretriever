@@ -43,6 +43,7 @@ import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.model.entity.BasePersInvocationStatsPk;
 import net.svcret.ejb.model.entity.BasePersStats;
 import net.svcret.ejb.model.entity.BasePersStatsPk;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
@@ -74,18 +75,19 @@ import org.apache.commons.lang3.time.DateUtils;
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class RuntimeStatusBean implements IRuntimeStatus {
 
-	private static final int INITIAL_CACHED_ENTRIES = 20000;
+	private static final int INITIAL_CACHED_ENTRIES = 80000;
 	private static final int MAX_STATS_TO_FLUSH_AT_ONCE = 100;
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(RuntimeStatusBean.class);
 
 	private final BasePersStats<?, ?> PLACEHOLDER = new Placeholder();
-
-	private ReentrantLock myCollapseLock = new ReentrantLock();
+	private final ReentrantLock myCollapseLock = new ReentrantLock();
+	
 	@EJB
 	private IConfigService myConfigSvc;
 
 	@EJB
 	private IDao myDao;
+	
 	private ReentrantLock myFlushLock = new ReentrantLock();
 
 	private final ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>> myInvocationStatCache;
@@ -94,7 +96,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private int myMaxNullCachedEntries = INITIAL_CACHED_ENTRIES;
 	private int myMaxPopulatedCachedEntries = INITIAL_CACHED_ENTRIES;
 	private Date myNowForUnitTests;
-	private DateFormat myTimeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
+	private final DateFormat myTimeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
 	private final ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>> myUnflushedInvocationStats;
 	private final ConcurrentHashMap<Long, PersServiceVersionStatus> myUnflushedServiceVersionStatus;
 	private final ConcurrentHashMap<PersUser, PersUserStatus> myUnflushedUserStatus;
@@ -465,11 +467,11 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 	}
 
-	private <P2 extends BasePersStatsPk<P2, O2>, O2 extends BasePersInvocationStats<P2, O2>> void doRecordInvocationMethod(int theRequestLengthChars, HttpResponseBean theHttpResponse,
-			InvocationResponseResultsBean theInvocationResponseResultsBean, P2 theStatsPk, Long theThrottleFullIfAny) {
+	private <P extends BasePersInvocationStatsPk<P, O>, O extends BasePersInvocationStats<P, O>> void doRecordInvocationMethod(int theRequestLengthChars, HttpResponseBean theHttpResponse,
+			InvocationResponseResultsBean theInvocationResponseResultsBean, P theStatsPk, Long theThrottleFullIfAny) {
 		Validate.notNull(theInvocationResponseResultsBean.getResponseType(), "responseType");
 
-		O2 stats = getStatsForPk(theStatsPk);
+		O stats = getStatsForPk(theStatsPk);
 
 		if (theThrottleFullIfAny != null && theThrottleFullIfAny > 0) {
 			stats.addThrottleAccept(theThrottleFullIfAny);
@@ -538,7 +540,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			PersInvocationUrlStatsPk statsPk = new PersInvocationUrlStatsPk(MINUTE, theInvocationTime, nextUrl.getPid());
 			PersInvocationUrlStats stats = getStatsForPk(statsPk);
 			long responseTime = nextFailure.getInvocationMillis();
-			int responseBytes = nextFailure.getBody().length();
+			int responseBytes = nextFailure.getBody() != null ? nextFailure.getBody().length(): 0;
 			stats.addSuccessInvocation(responseTime, theRequestLengthChars, responseBytes);
 		}
 

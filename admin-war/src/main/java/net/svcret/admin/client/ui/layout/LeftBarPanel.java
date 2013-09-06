@@ -166,6 +166,8 @@ public class LeftBarPanel extends FlowPanel {
 			myEditRulesBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
 			buttons.remove(myEditRulesBtn);
 			break;
+		case RPM:
+		case RPU:
 		case TSV:
 			myManualTestBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
 			buttons.remove(myManualTestBtn);
@@ -190,7 +192,6 @@ public class LeftBarPanel extends FlowPanel {
 		case AMR:
 		case EDO:
 		case RLM:
-		case RPM:
 		case SML:
 		case SRM:
 		case UST:

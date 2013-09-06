@@ -34,6 +34,7 @@ import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
 import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
+import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.HierarchyEnum;
@@ -92,8 +93,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion)
-			throws ServiceFailureException {
+	public AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion) throws ServiceFailureException {
 		if (theExistingDomainPid == null && isBlank(theCreateDomainId)) {
 			throw new IllegalArgumentException("Domain PID and new domain ID are both missing");
 		}
@@ -107,11 +107,9 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 			throw new IllegalArgumentException("Service PID and new domain ID can not both be provided");
 		}
 		if (theVersion.getPid() != 0) {
-			ourLog.info("Saving service version for Domain[{}/create {}] and Service[{}/create {}] with id: {}", new Object[] { theExistingDomainPid, theCreateDomainId, theExistingServicePid,
-					theCreateServiceId, theVersion.getId() });
+			ourLog.info("Saving service version for Domain[{}/create {}] and Service[{}/create {}] with id: {}", new Object[] { theExistingDomainPid, theCreateDomainId, theExistingServicePid, theCreateServiceId, theVersion.getId() });
 		} else {
-			ourLog.info("Adding service version for Domain[{}/create {}] and Service[{}/create {}] with id: {}", new Object[] { theExistingDomainPid, theCreateDomainId, theExistingServicePid,
-					theCreateServiceId, theVersion.getId() });
+			ourLog.info("Adding service version for Domain[{}/create {}] and Service[{}/create {}] with id: {}", new Object[] { theExistingDomainPid, theCreateDomainId, theExistingServicePid, theCreateServiceId, theVersion.getId() });
 		}
 
 		if (isMockMode()) {
@@ -229,7 +227,6 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		return retVal;
 	}
 
-
 	@Override
 	public Map<Long, GMonitorRuleFiring> getLatestFailingMonitorRuleFiringForRulePids() throws ServiceFailureException {
 		if (isMockMode()) {
@@ -237,17 +234,17 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		}
 		try {
 			HashMap<Long, GMonitorRuleFiring> retVal = new HashMap<Long, GMonitorRuleFiring>();
-			
+
 			for (GMonitorRuleFiring next : myAdminSvc.loadAllActiveRuleFirings()) {
 				if (retVal.containsKey(next.getRulePid())) {
 					if (next.getStartDate().after(retVal.get(next.getRulePid()).getStartDate())) {
 						retVal.put(next.getRulePid(), next);
 					}
-				}else {
+				} else {
 					retVal.put(next.getRulePid(), next);
 				}
 			}
-			
+
 			return retVal;
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to load library messages", e);
@@ -469,7 +466,6 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		return retVal;
 	}
 
-
 	@Override
 	public UserAndAuthHost loadUser(long thePid, boolean theLoadStats) throws ServiceFailureException {
 		if (isMockMode()) {
@@ -623,6 +619,19 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
+	public GServiceVersionUrl resetCircuitBreakerForServiceVersionUrl(long theUrlPid) throws ServiceFailureException {
+		try {
+			if (isMockMode()) {
+				return getMock().resetCircuitBreakerForServiceVersionUrl(theUrlPid);
+			}
+			return myAdminSvc.resetCircuitBreaker(theUrlPid);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to reset circuit breaker", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+	}
+
+	@Override
 	public GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) throws ServiceFailureException {
 		if (isMockMode()) {
 			return getMock().saveAuthenticationHost(theAuthHost);
@@ -671,7 +680,6 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 			throw new ServiceFailureException(e.getMessage());
 		}
 	}
-
 
 	@Override
 	public void saveLibraryMessage(DtoLibraryMessage theMessage) throws ServiceFailureException {
@@ -768,7 +776,6 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		String key = SESSION_PREFIX_UNCOMITTED_SVC_VER_RES + theServiceVersionUncommittedSessionId;
 		return (List<GResource>) getThreadLocalRequest().getSession(true).getAttribute(key);
 	}
-
 
 	private void saveServiceVersionResourcesToSession(GSoap11ServiceVersionAndResources theServiceAndResources) {
 		BaseGServiceVersion serviceVersion = theServiceAndResources.getServiceVersion();

@@ -50,7 +50,6 @@ public class SoapDetailPanel extends BaseDetailPanel<DtoServiceVersionSoap11> {
 
 				getServiceVersion().merge(theResult);
 				updateMethodPanel();
-				getUrlGrid().updateUrlPanel();
 
 				String navToken = NavProcessor.getTokenAddServiceVersion(true, getParentPanel().getDomainPid(), getParentPanel().getServicePid(), getServiceVersion().getUncommittedSessionId());
 				History.newItem(navToken, false);

@@ -1,9 +1,8 @@
 package net.svcret.admin.client.ui.stats;
 
-import static net.svcret.admin.client.AdminPortal.MSGS;
+import static net.svcret.admin.client.AdminPortal.*;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -14,7 +13,6 @@ import net.svcret.admin.client.ui.components.PButtonCell;
 import net.svcret.admin.client.ui.components.PCellTable;
 import net.svcret.admin.client.ui.config.svcver.NullColumn;
 import net.svcret.admin.shared.model.GRecentMessage;
-import net.svcret.admin.shared.util.InverseComparator;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.cell.client.CompositeCell;
@@ -74,7 +72,14 @@ public class RecentMessagesGrid extends FlowPanel {
 		replayColumn.setFieldUpdater(new FieldUpdater<GRecentMessage, String>() {
 			@Override
 			public void update(int theIndex, GRecentMessage theObject, String theValue) {
-				History.newItem(NavProcessor.getTokenReplayMessage(true, theObject.getPid()));
+				switch (theObject.getRecentMessageType()) {
+				case USER:
+					History.newItem(NavProcessor.getTokenReplayMessageForUser(true, theObject.getPid()));
+					break;
+				case SVCVER:
+					History.newItem(NavProcessor.getTokenReplayMessageForServiceVersion(true, theObject.getPid()));
+					break;
+				}
 			}
 		});
 		// Save Button

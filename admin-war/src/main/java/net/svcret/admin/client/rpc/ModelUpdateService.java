@@ -24,6 +24,7 @@ import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
 import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
+import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
@@ -44,8 +45,7 @@ public interface ModelUpdateService extends RemoteService {
 
 	GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ServiceFailureException;
 
-	AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion)
-			throws ServiceFailureException;
+	AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion) throws ServiceFailureException;
 
 	BaseGServiceVersion createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncommittedId);
 
@@ -93,12 +93,13 @@ public interface ModelUpdateService extends RemoteService {
 
 	void reportClientError(String theMessage, Throwable theException);
 
+	GServiceVersionUrl resetCircuitBreakerForServiceVersionUrl(long theUrlPid) throws ServiceFailureException;
+
 	GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) throws ServiceFailureException;
 
 	void saveConfig(GConfig theConfig) throws ServiceFailureException;
 
 	GDomainList saveDomain(GDomain theDomain) throws ServiceFailureException;
-
 
 	void saveLibraryMessage(DtoLibraryMessage theMessage) throws ServiceFailureException;
 

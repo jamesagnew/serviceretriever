@@ -99,8 +99,7 @@ public class PersInvocationMethodUserStatsPk extends BasePersInvocationMethodSta
 
 	@Override
 	public PersInvocationMethodUserStatsPk newPk(InvocationStatsIntervalEnum theInterval, Date theStartTime) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PersInvocationMethodUserStatsPk(theInterval, theStartTime, getMethod(), getUserPid());
 	}
 
 	@Override

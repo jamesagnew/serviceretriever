@@ -23,6 +23,7 @@ import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
 import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
+import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
@@ -103,5 +104,7 @@ public interface ModelUpdateServiceAsync {
 	void testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long theServiceVersionPid, AsyncCallback<GServiceVersionSingleFireResponse> theAsyncCallback);
 
 	void getLatestFailingMonitorRuleFiringForRulePids(AsyncCallback<Map<Long, GMonitorRuleFiring>> theIAsyncLoadCallback);
+
+	void resetCircuitBreakerForServiceVersionUrl(long theUrlPid, AsyncCallback<GServiceVersionUrl> theAsyncCallback);
 
 }

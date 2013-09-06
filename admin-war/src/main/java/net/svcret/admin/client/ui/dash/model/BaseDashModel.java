@@ -60,7 +60,7 @@ public abstract class BaseDashModel implements IDashModel {
 
 	@Override
 	public final Widget renderLatency() {
-		return returnSparklineFor60minsLatency(myModel.getLatency60mins(), myModel.getStatsInitialized(), myModel.getAverageLatency60min(), myModel.getMaxLatency60min(), "ms");
+		return returnSparklineFor60minsLatency(myModel.getLatency60mins(), myModel.getStatsInitialized(), myModel.getAverageLatency60min(), myModel.getMaxLatency60min());
 	}
 
 	static void createBackButton(final PopupPanel theActionPopup, final FlowPanel thePreviousContent, final FlowPanel content) {
@@ -213,7 +213,7 @@ public abstract class BaseDashModel implements IDashModel {
 		return null;
 	}
 
-	public static Widget returnSparklineFor60minsLatency(int[] theList, Date theStatsInitialized, int theAvgValue, int theMaxValue, String theUnitDesc) {
+	public static Widget returnSparklineFor60minsLatency(int[] theList, Date theStatsInitialized, int theAvgValue, int theMaxValue) {
 		if (theList == null) {
 			GWT.log(new Date() + " - No 60 minutes data");
 			return null;
@@ -223,7 +223,7 @@ public abstract class BaseDashModel implements IDashModel {
 			return null;
 		}
 
-		String text = "Avg:" + theAvgValue + " Max:" + theMaxValue + "" + theUnitDesc;
+		String text = "Avg:" + theAvgValue + " Max:" + theMaxValue + "ms";
 
 		List<Long> dates = new ArrayList<Long>();
 		long nextDate = theStatsInitialized.getTime() - (60 * 60 * 1000L);

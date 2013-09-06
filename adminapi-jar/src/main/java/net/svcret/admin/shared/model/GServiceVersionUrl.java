@@ -13,6 +13,7 @@ public class GServiceVersionUrl extends BaseGDashboardObject {
 
 	private static final long serialVersionUID = 1L;
 
+	private Date myNextCircuitBreakerReset;
 	private Date myStatsLastFailure;
 	private String myStatsLastFailureContentType;
 	private String myStatsLastFailureMessage;
@@ -26,6 +27,7 @@ public class GServiceVersionUrl extends BaseGDashboardObject {
 	private String myStatsLastSuccessMessage;
 	private Integer myStatsLastSuccessStatusCode;
 	private Date myStatsNextCircuitBreakerReset;
+
 	private String myUrl;
 
 	public GServiceVersionUrl() {
@@ -35,6 +37,10 @@ public class GServiceVersionUrl extends BaseGDashboardObject {
 	public GServiceVersionUrl(String theId, String theUrl) {
 		setId(theId);
 		myUrl = theUrl;
+	}
+
+	public Date getNextCircuitBreakerReset() {
+		return myNextCircuitBreakerReset;
 	}
 
 	public Date getStatsLastFailure() {
@@ -147,6 +153,10 @@ public class GServiceVersionUrl extends BaseGDashboardObject {
 		}
 	}
 
+	public void setNextCircuitBreakerReset(Date theNextCircuitBreakerReset) {
+		myNextCircuitBreakerReset = theNextCircuitBreakerReset;
+	}
+
 	public void setStatsLastFailure(Date theStatsLastFailure) {
 		myStatsLastFailure = theStatsLastFailure;
 	}
@@ -197,7 +207,6 @@ public class GServiceVersionUrl extends BaseGDashboardObject {
 
 	public void setStatsNextCircuitBreakerReset(Date theNextCircuitBreakerReset) {
 		myStatsNextCircuitBreakerReset = theNextCircuitBreakerReset;
-
 	}
 
 	/**

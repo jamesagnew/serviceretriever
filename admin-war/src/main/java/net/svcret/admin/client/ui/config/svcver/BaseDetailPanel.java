@@ -93,7 +93,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 	private AbstractServiceVersionPanel myParent;
 	private Grid myServerSecurityGrid;
 	private T myServiceVersion;
-	private UrlGrid myUrlGrid;
+	private ServiceVersionUrlGrid myUrlGrid;
 	private ListBox myServerSecurityModeBox;
 	private HTML myServerSecurityModeDescription;
 	private CheckBox myStandardProxyPathEnabledCheckbox;
@@ -112,6 +112,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		final FlowPanel methodPanel = new FlowPanel();
 		add(methodPanel, "Methods");
 
+		final int urlsIndex = getWidgetCount();
 		FlowPanel urlsPanel = new FlowPanel();
 		add(urlsPanel, "URLs");
 		initUrlPanel(urlsPanel);
@@ -141,6 +142,12 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 					} else {
 						myMethodDataProvider.refresh();
 					}
+				} else if (theEvent.getSelectedItem() == urlsIndex) {
+					/* 
+					 * Ok to do this even if it's already been done because
+					 * the urls might have changed (ie for a WSDL reload)
+					 */
+					myUrlGrid.setServiceVersion(myServiceVersion);
 				}
 			}
 		});
@@ -177,7 +184,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 
 	public abstract ServiceProtocolEnum getProtocol();
 
-	public UrlGrid getUrlGrid() {
+	public BaseUrlGrid getUrlGrid() {
 		return myUrlGrid;
 	}
 
@@ -623,7 +630,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 
 	private void initUrlPanel(FlowPanel thePanel) {
 
-		myUrlGrid = new UrlGrid(myServiceVersion);
+		myUrlGrid = new ServiceVersionUrlGrid();
 		thePanel.add(myUrlGrid);
 
 		thePanel.add(new HtmlBr());

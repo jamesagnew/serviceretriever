@@ -10,7 +10,7 @@ import net.svcret.ejb.model.entity.BasePersStats.IStatsVisitor;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 @Embeddable
-public class PersInvocationUrlStatsPk extends BasePersStatsPk<PersInvocationUrlStatsPk, PersInvocationUrlStats> {
+public class PersInvocationUrlStatsPk extends BasePersInvocationStatsPk<PersInvocationUrlStatsPk, PersInvocationUrlStats> {
 
 	private static final long serialVersionUID = 1L;
 	

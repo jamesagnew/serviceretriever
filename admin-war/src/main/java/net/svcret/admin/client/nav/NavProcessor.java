@@ -316,7 +316,11 @@ public class NavProcessor {
 		return createArgumentToken(theAddToHistory, PagesEnum.RLM, theServiceVersionPid, theLibraryMessagePid);
 	}
 
-	public static String getTokenReplayMessage(boolean theAddToHistory, long theMessagePid) {
+	public static String getTokenReplayMessageForUser(boolean theAddToHistory, long theMessagePid) {
+		return createArgumentToken(theAddToHistory, PagesEnum.RPU, theMessagePid);
+	}
+
+	public static String getTokenReplayMessageForServiceVersion(boolean theAddToHistory, long theMessagePid) {
 		return createArgumentToken(theAddToHistory, PagesEnum.RPM, theMessagePid);
 	}
 
@@ -498,8 +502,11 @@ public class NavProcessor {
 				panel = new ServiceVersionTestPanel(Long.parseLong(args));
 			}
 			break;
+		case RPU:
+			panel = new ReplayMessagePanel(ReplayMessagePanel.MSGTYPE_USER, Long.parseLong( args));
+			break;
 		case RPM:
-			panel = new ReplayMessagePanel(Long.parseLong(args));
+			panel = new ReplayMessagePanel(ReplayMessagePanel.MSGTYPE_SVCVER, Long.parseLong( args));
 			break;
 		case DSH:
 			panel = new ServiceDashboardPanel();

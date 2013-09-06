@@ -779,6 +779,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("User Stats")
 	String userStats_Breadcrumb();
+
+	@DefaultMessage("Replay Message")
+	String replayUserMessage_Breadcrumb();
 	
 	
 }

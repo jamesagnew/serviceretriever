@@ -1,6 +1,5 @@
 package net.svcret.admin.client.ui.config.sec;
 
-import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.shared.util.StringUtil;

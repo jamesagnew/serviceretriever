@@ -1,5 +1,5 @@
 .breadcrumbPanel {
-	background-image: url(images/sidebar_shadow_top.png);
+	background-image: url(admin/images/sidebar_shadow_top.png);
 	background-repeat: repeat-x;
 	background-position: left top;
 }
@@ -323,13 +323,13 @@ H1 {
 
 .leftMenuButton A:hover {
 	color: #000000 !important;
-	background-image: url(images/left-button-bg.png) !important;
+	background-image: url(admin/images/left-button-bg.png) !important;
 	background-repeat: repeat-y;
 }
 
 .leftMenuButtonSelected A {
 	font-weight: bold;
-	background-image: url(images/left-button-bg-selected.png);
+	background-image: url(admin/images/left-button-bg-selected.png);
 	background-repeat: repeat-y;
 	color: #000000 !important;
 }
@@ -413,7 +413,7 @@ TABLE.listTable TBODY TR:nth-child(odd) {
 
 .outerLayoutBody {
 	background-color: #F0F0F0;
-	background-image: url(images/sidebar_shadow.png);
+	background-image: url(admin/images/sidebar_shadow.png);
 	background-repeat: repeat-y;
 	background-position: left top;
 
