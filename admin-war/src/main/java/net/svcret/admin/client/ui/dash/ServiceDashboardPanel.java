@@ -8,12 +8,14 @@ import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.MyResources;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.EmptyCell;
+import net.svcret.admin.client.ui.components.TooltipListener.Tooltip;
 import net.svcret.admin.client.ui.dash.model.DashModelDomain;
 import net.svcret.admin.client.ui.dash.model.DashModelLoading;
 import net.svcret.admin.client.ui.dash.model.DashModelService;
 import net.svcret.admin.client.ui.dash.model.DashModelServiceMethod;
 import net.svcret.admin.client.ui.dash.model.DashModelServiceVersion;
 import net.svcret.admin.client.ui.dash.model.IDashModel;
+import net.svcret.admin.client.ui.dash.model.IProvidesWidget;
 import net.svcret.admin.client.ui.stats.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
@@ -24,10 +26,14 @@ import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.HierarchyEnum;
 
+import com.google.gwt.core.shared.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
+import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.Element;
+import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -50,7 +56,7 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 
 	private static final int NUM_STATUS_COLS = 6;
 
-	private FlexTable myGrid;
+	private MyTable myGrid;
 	private List<IDashModel> myUiList = new ArrayList<IDashModel>();
 	private Label myLastUpdateLabel;
 	private Timer myTimer;
@@ -62,7 +68,7 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 
 	public ServiceDashboardPanel() {
 		Model.getInstance().flushStats();
-		
+
 		setStylePrimaryName(CssConstants.MAIN_PANEL);
 
 		HorizontalPanel titlePanel = new HorizontalPanel();
@@ -85,7 +91,7 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 		myTimeSinceLastUpdateLabel = new Label();
 		myTimeSinceLastUpdateLabel.addStyleName(MyResources.CSS.dashboardTimeSinceLastUpdateLabel());
 		titlePanel.add(myTimeSinceLastUpdateLabel);
-		
+
 		myReloadButton = new Image(AdminPortal.IMAGES.iconReload16());
 		myReloadButton.addStyleName(MyResources.CSS.dashboardReloadButton());
 		myReloadButton.addClickHandler(new ClickHandler() {
@@ -96,21 +102,21 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 				Model.getInstance().loadDomainListAndStats(new IAsyncLoadCallback<GDomainList>() {
 					@Override
 					public void onSuccess(GDomainList theResult) {
-						myUpdating=false;
+						myUpdating = false;
 						updateView(theResult);
 					}
 				});
 			}
 		});
 		titlePanel.add(myReloadButton);
-		
-		myGrid = new FlexTable();
+
+		myGrid = new MyTable();
 		myGrid.setCellPadding(2);
 		myGrid.setCellSpacing(0);
 		add(myGrid);
 
 		myGrid.addStyleName("dashboardTable");
-		myGrid.getRowFormatter().addStyleName(0,CssConstants.DASHBOARD_TABLE_HEADER);
+		myGrid.getRowFormatter().addStyleName(0, CssConstants.DASHBOARD_TABLE_HEADER);
 
 		myGrid.setText(0, 0, "Name");
 		myGrid.getFlexCellFormatter().setColSpan(0, 0, HierarchyEnum.getHighestOrdinal() + 2);
@@ -150,9 +156,10 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 				if (myLastUpdate != null) {
 					myTimeSinceLastUpdateLabel.setText(DateUtil.formatTimeElapsedForLastInvocation(myLastUpdate, true));
 				}
-			}};
+			}
+		};
 		myLastUpdateTimer.scheduleRepeating(1000);
-		
+
 	}
 
 	public void updateView() {
@@ -270,17 +277,15 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 				}
 			}
 
+			// Clear existing row contents
 			for (int col = 0; col < offset + 1; col++) {
 				myGrid.setWidget(i + rowOffset, col, null);
 			}
+			myGrid.clearTooltipRow(i + rowOffset);
 
 			int colSpan = (HierarchyEnum.getHighestOrdinal() - offset + 1);
-			// boolean expanded = false;
 
-			boolean hideMostOfRow = false; // model.getModel() != null &&
-											// model.getModel().isExpandedOnDashboard()
-											// &&
-											// model.getModel().hideDashboardRowWhenExpanded();
+			boolean hideMostOfRow = false;
 			if (hideMostOfRow) {
 				colSpan += NUM_STATUS_COLS;
 				// expanded = true;
@@ -329,6 +334,7 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 			Widget usage = EmptyCell.defaultWidget(model.renderUsage());
 			myGrid.setWidget(i + rowOffset, offset + COL_USAGE + 1, usage);
 			myGrid.getCellFormatter().setStyleName(i + rowOffset, offset + COL_USAGE + 1, styleName);
+			myGrid.setTooltipProvider(i + rowOffset, offset + COL_USAGE + 1, model.getUsageTooltip());
 
 			Widget urls = EmptyCell.defaultWidget(model.renderUrls());
 			myGrid.setWidget(i + rowOffset, offset + COL_BACKING_URLS + 1, urls);
@@ -367,6 +373,121 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 	public void destroy() {
 		myTimer.cancel();
 		myLastUpdateTimer.cancel();
+	}
+
+	private class MyTable extends FlexTable {
+		public MyTable() {
+			setCellFormatter(new MyCellFormatter());
+			sinkEvents(Event.ONMOUSEOVER | Event.ONMOUSEOUT);
+		}
+
+		private List<List<IProvidesWidget>> myTooltipProviders = new ArrayList<List<IProvidesWidget>>();
+
+		public void setTooltipProvider(int theRow, int theCol, IProvidesWidget theTooltipProvider) {
+			ensureTooltipRow(theRow);
+			ensureTooltipCol(theRow, theCol);
+			myTooltipProviders.get(theRow).set(theCol, theTooltipProvider);
+		}
+
+		public void clearTooltipRow(int theRow) {
+			ensureTooltipRow(theRow);
+			for (int i = 0; i < myTooltipProviders.get(theRow).size(); i++) {
+				myTooltipProviders.get(theRow).set(i, null);
+			}
+		}
+
+		private void ensureTooltipCol(int theRow, int theCol) {
+			while (myTooltipProviders.get(theRow).size() <= theCol) {
+				myTooltipProviders.get(theRow).add(null);
+			}
+		}
+
+		private void ensureTooltipRow(int theRow) {
+			while (myTooltipProviders.size() <= theRow) {
+				myTooltipProviders.add(new ArrayList<IProvidesWidget>());
+			}
+		}
+
+		private int myCurrentTooltipRow;
+		private int myCurrentTooltipCol;
+		private Tooltip myCurrentTooltip;
+
+		@Override
+		public void onBrowserEvent(Event theEvent) {
+			super.onBrowserEvent(theEvent);
+
+			Element td = getEventTargetCell(theEvent);
+			if (td == null) {
+				return;
+			}
+
+			int rowStr = td.getPropertyInt("tablerow");
+			int colStr = td.getPropertyInt("tablecolumn");
+
+			switch (DOM.eventGetType(theEvent)) {
+			case Event.ONMOUSEOVER: {
+				GWT.log("Mouseover row " + rowStr + " col " + colStr);
+				if (rowStr == myCurrentTooltipRow && colStr == myCurrentTooltipCol) {
+					return;
+				}
+				if (myCurrentTooltip != null) {
+					myCurrentTooltip.hideTooltip();
+					myCurrentTooltip = null;
+				}
+
+				if (myTooltipProviders.size() > rowStr) {
+					List<IProvidesWidget> cols = myTooltipProviders.get(rowStr);
+					if (cols.size() > colStr) {
+						IProvidesWidget col = cols.get(colStr);
+						if (col != null) {
+							Widget tooltipContents = col.provideWidget();
+							if (tooltipContents != null) {
+								GWT.log("Showing tooltip for row " + rowStr + " col " + colStr);
+								Tooltip tooltip = new Tooltip(td, tooltipContents);
+								tooltip.displayPopup();
+								myCurrentTooltip = tooltip;
+							}
+						}
+					}
+				}
+
+				myCurrentTooltipCol = colStr;
+				myCurrentTooltipRow = rowStr;
+				break;
+			}
+			case Event.ONMOUSEOUT: {
+				GWT.log("Mouseout  row " + rowStr + " col " + colStr);
+				if (rowStr == myCurrentTooltipRow && colStr == myCurrentTooltipCol) {
+					if (myCurrentTooltip != null) {
+						GWT.log("Hiding tooltip for row " + rowStr + " col " + colStr);
+						myCurrentTooltip.hideTooltip();
+						myCurrentTooltip = null;
+						myCurrentTooltipCol=-1;
+						myCurrentTooltipRow=-1;
+					}
+				}
+				break;
+			}
+			}
+
+		}
+
+		@Override
+		public MyCellFormatter getFlexCellFormatter() {
+			return (MyCellFormatter) super.getFlexCellFormatter();
+		}
+
+		private class MyCellFormatter extends FlexCellFormatter {
+
+			@Override
+			protected Element ensureElement(int theRow, int theColumn) {
+				Element retVal = super.ensureElement(theRow, theColumn);
+				retVal.setPropertyInt("tablerow", (theRow));
+				retVal.setPropertyInt("tablecolumn", (theColumn));
+				return retVal;
+			}
+
+		}
 	}
 
 }

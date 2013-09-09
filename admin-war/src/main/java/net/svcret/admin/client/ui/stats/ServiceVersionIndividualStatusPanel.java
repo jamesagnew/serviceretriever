@@ -1,7 +1,5 @@
 package net.svcret.admin.client.ui.stats;
 
-import java.util.List;
-
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.Sparkline;
 import net.svcret.admin.shared.IAsyncLoadCallback;
@@ -57,26 +55,26 @@ public class ServiceVersionIndividualStatusPanel extends FlowPanel {
 			grid.setText(row, COL_METHOD, nextMethod.getName());
 
 			GServiceVersionDetailedStats detailedStats = myServiceVersion.getDetailedStats();
-			List<Integer> success = detailedStats.getMethodPidToSuccessCount().get(nextMethod.getPid());
+			int[] success = detailedStats.getMethodPidToSuccessCount().get(nextMethod.getPid());
 			grid.setWidget(row, COL_SUCCESS, new Sparkline(success, detailedStats.getStatsTimestamps(), text(success)).withWidth("120px").asBar(true));
-			List<Integer> fault = detailedStats.getMethodPidToFaultCount().get(nextMethod.getPid());
+			int[] fault = detailedStats.getMethodPidToFaultCount().get(nextMethod.getPid());
 			grid.setWidget(row, COL_FAULT, new Sparkline(fault, detailedStats.getStatsTimestamps(), text(fault)).withWidth("120px").asBar(true));
-			List<Integer> fail = detailedStats.getMethodPidToFailCount().get(nextMethod.getPid());
+			int[] fail = detailedStats.getMethodPidToFailCount().get(nextMethod.getPid());
 			grid.setWidget(row, COL_FAIL, new Sparkline(fail, detailedStats.getStatsTimestamps(), text(fail)).withWidth("120px").asBar(true));
-			List<Integer> secFail = detailedStats.getMethodPidToSecurityFailCount().get(nextMethod.getPid());
+			int[] secFail = detailedStats.getMethodPidToSecurityFailCount().get(nextMethod.getPid());
 			grid.setWidget(row, COL_SECFAIL, new Sparkline(secFail, detailedStats.getStatsTimestamps(), text(secFail)).withWidth("120px").asBar(true));
 
 		}
 
 	}
 
-	private String text(List<Integer> theSecFail) {
+	private String text(int[] theValues) {
 		int total = 0;
-		for (int next : theSecFail) {
+		for (int next : theValues) {
 			total += next;
 		}
 
-		double avg = ((double) total) / (double) theSecFail.size();
+		double avg = ((double) total) / (double) theValues.length;
 		return "Avg: " + NumberFormat.getFormat("0.0#").format(avg) + "/min";
 	}
 

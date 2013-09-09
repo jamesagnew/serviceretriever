@@ -29,7 +29,6 @@ public class Sparkline extends Widget {
 		this(toList(theList), theDates, theText);
 	}
 
-	@Deprecated
 	public Sparkline(int[] theList, String theText) {
 		this(toList(theList), theText);
 	}

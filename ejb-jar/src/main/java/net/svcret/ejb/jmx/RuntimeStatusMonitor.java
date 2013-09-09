@@ -12,73 +12,71 @@ import javax.ejb.Startup;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import net.svcret.ejb.api.IRuntimeStatus;
+import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 
 @Singleton
 @Startup
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class RuntimeStatusMonitor implements RuntimeStatusMonitorMBean {
 
-
 	@EJB
-	private IRuntimeStatus myRuntimeStatus;
-	
-    private MBeanServer myPlatformMBeanServer;
-    private ObjectName myObjectName = null;
+	private IRuntimeStatusQueryLocal myRuntimeStatusQuery;
 
-    @Override
-    public int getCachedPopulatedStatCount() {
-    	return myRuntimeStatus.getCachedPopulatedKeyCount();
-    }
-    
-    @Override
-    public int getCachedNullStatCount() {
-    	return myRuntimeStatus.getCachedEmptyKeyCount();
-    }
+	private MBeanServer myPlatformMBeanServer;
+	private ObjectName myObjectName = null;
 
-    
-    @PostConstruct
-    public void registerInJMX() {
-        try {
-            myObjectName = new ObjectName("net.svcret:type=" + this.getClass().getName());
-            myPlatformMBeanServer = ManagementFactory.getPlatformMBeanServer();
-            myPlatformMBeanServer.registerMBean(this, myObjectName);
-        } catch (Exception e) {
-            throw new IllegalStateException("Problem during registration of Monitoring into JMX:" + e);
-        }
-    }
+	@Override
+	public int getCachedPopulatedStatCount() {
+		return myRuntimeStatusQuery.getCachedPopulatedKeyCount();
+	}
 
-    @PreDestroy
-    public void unregisterFromJMX() {
-        try {
-            myPlatformMBeanServer.unregisterMBean(this.myObjectName);
-        } catch (Exception e) {
-            throw new IllegalStateException("Problem during unregistration of Monitoring into JMX:" + e);
-        }
-    }
+	@Override
+	public int getCachedNullStatCount() {
+		return myRuntimeStatusQuery.getCachedEmptyKeyCount();
+	}
+
+	@PostConstruct
+	public void registerInJMX() {
+		try {
+			myObjectName = new ObjectName("net.svcret:type=" + this.getClass().getName());
+			myPlatformMBeanServer = ManagementFactory.getPlatformMBeanServer();
+			myPlatformMBeanServer.registerMBean(this, myObjectName);
+		} catch (Exception e) {
+			throw new IllegalStateException("Problem during registration of Monitoring into JMX:" + e);
+		}
+	}
+
+	@PreDestroy
+	public void unregisterFromJMX() {
+		try {
+			myPlatformMBeanServer.unregisterMBean(this.myObjectName);
+		} catch (Exception e) {
+			throw new IllegalStateException("Problem during unregistration of Monitoring into JMX:" + e);
+		}
+	}
 
 	@Override
 	public int getMaxCachedPopulatedStatCount() {
-		return myRuntimeStatus.getMaxCachedPopulatedStatCount();
+		return myRuntimeStatusQuery.getMaxCachedPopulatedStatCount();
 	}
 
 	@Override
 	public int getMaxCachedNullStatCount() {
-		return myRuntimeStatus.getMaxCachedNullStatCount();
+		return myRuntimeStatusQuery.getMaxCachedNullStatCount();
 	}
 
 	@Override
 	public void setMaxCachedPopulatedStatCount(int theCount) {
-		myRuntimeStatus.setMaxCachedPopulatedStatCount(theCount);
+		myRuntimeStatusQuery.setMaxCachedPopulatedStatCount(theCount);
 	}
 
 	@Override
 	public void setMaxCachedNullStatCount(int theCount) {
-		myRuntimeStatus.setMaxCachedNullStatCount(theCount);
+		myRuntimeStatusQuery.setMaxCachedNullStatCount(theCount);
 	}
 
 	@Override
 	public void purgeCachedStats() {
-		myRuntimeStatus.purgeCachedStats();
+		myRuntimeStatusQuery.purgeCachedStats();
 	}
 }

@@ -94,6 +94,7 @@ import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBe
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.StatusesBean;
+import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
@@ -112,8 +113,6 @@ import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
-import net.svcret.ejb.model.entity.PersInvocationMethodUserStats;
-import net.svcret.ejb.model.entity.PersInvocationMethodUserStatsPk;
 import net.svcret.ejb.model.entity.PersLibraryMessage;
 import net.svcret.ejb.model.entity.PersLibraryMessageAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
@@ -132,7 +131,6 @@ import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserDomainPermission;
-import net.svcret.ejb.model.entity.PersUserMethodStatus;
 import net.svcret.ejb.model.entity.PersUserRecentMessage;
 import net.svcret.ejb.model.entity.PersUserServicePermission;
 import net.svcret.ejb.model.entity.PersUserServiceVersionMethodPermission;
@@ -669,39 +667,22 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		BasePersServiceVersion ver = myDao.getServiceVersionByPid(theVersionPid);
 
-		final Map<Long, List<Integer>> methodPidToSuccessCount = new HashMap<Long, List<Integer>>();
-		final Map<Long, List<Integer>> methodPidToFailCount = new HashMap<Long, List<Integer>>();
-		final Map<Long, List<Integer>> methodPidToSecurityFailCount = new HashMap<Long, List<Integer>>();
-		final Map<Long, List<Integer>> methodPidToFaultCount = new HashMap<Long, List<Integer>>();
+		final Map<Long, int[]> methodPidToSuccessCount = new HashMap<Long, int[]>();
+		final Map<Long, int[]> methodPidToFailCount = new HashMap<Long, int[]>();
+		final Map<Long, int[]> methodPidToSecurityFailCount = new HashMap<Long, int[]>();
+		final Map<Long, int[]> methodPidToFaultCount = new HashMap<Long, int[]>();
 
 		final List<Long> statsTimestamps = new ArrayList<Long>();
 
-		PersConfig config = myConfigSvc.getConfig();
 		for (final PersServiceVersionMethod nextMethod : ver.getMethods()) {
-			methodPidToSuccessCount.put(nextMethod.getPid(), new ArrayList<Integer>());
-			methodPidToFailCount.put(nextMethod.getPid(), new ArrayList<Integer>());
-			methodPidToSecurityFailCount.put(nextMethod.getPid(), new ArrayList<Integer>());
-			methodPidToFaultCount.put(nextMethod.getPid(), new ArrayList<Integer>());
 
-			doWithStatsByMinute(config, 60, myStatusSvc, nextMethod, new IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats>() {
-				@Override
-				public void withStats(int theIndex, PersInvocationMethodSvcverStats theStats) {
-					List<Integer> successCounts = methodPidToSuccessCount.get(nextMethod.getPid());
-					List<Integer> failCounts = methodPidToFailCount.get(nextMethod.getPid());
-					List<Integer> securityFailCounts = methodPidToSecurityFailCount.get(nextMethod.getPid());
-					List<Integer> faultCounts = methodPidToFaultCount.get(nextMethod.getPid());
-					growToSizeInt(successCounts, theIndex);
-					growToSizeInt(failCounts, theIndex);
-					growToSizeInt(securityFailCounts, theIndex);
-					growToSizeInt(faultCounts, theIndex);
-					growToSizeLong(statsTimestamps, theIndex);
-					successCounts.set(theIndex, addToInt(successCounts.get(theIndex), theStats.getSuccessInvocationCount()));
-					failCounts.set(theIndex, addToInt(failCounts.get(theIndex), theStats.getFailInvocationCount()));
-					securityFailCounts.set(theIndex, addToInt(securityFailCounts.get(theIndex), theStats.getServerSecurityFailures()));
-					faultCounts.set(theIndex, addToInt(faultCounts.get(theIndex), theStats.getFaultInvocationCount()));
-					statsTimestamps.set(theIndex, theStats.getPk().getStartTime().getTime());
-				}
-			});
+			StatsAccumulator accumulator = new StatsAccumulator();
+			myRuntimeStatusQuerySvc.extract60MinuteMethodStats(nextMethod, accumulator);
+
+			methodPidToSuccessCount.put(nextMethod.getPid(), toIntArray(accumulator.getSuccessCounts()));
+			methodPidToFailCount.put(nextMethod.getPid(), toIntArray(accumulator.getFailCounts()));
+			methodPidToSecurityFailCount.put(nextMethod.getPid(), toIntArray(accumulator.getSecurityFailCounts()));
+			methodPidToFaultCount.put(nextMethod.getPid(), toIntArray(accumulator.getFaultCounts()));
 		}
 
 		GServiceVersionDetailedStats retVal = new GServiceVersionDetailedStats();
@@ -713,6 +694,16 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		retVal.setStatsTimestamps(statsTimestamps);
 
+		return retVal;
+	}
+
+	private int[] toIntArray(ArrayList<Integer> theList) {
+		int[] retVal = new int[theList.size()];
+		for (int i = 0; i < theList.size(); i++) {
+			if (theList.get(i) != null) {
+				retVal[i] = theList.get(i);
+			}
+		}
 		return retVal;
 	}
 
@@ -841,6 +832,10 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 
 		PersHttpClientConfig config = fromUi(theConfig);
+		if (existing != null) {
+			config.setOptLock(existing.getOptLock());
+		}
+
 		if (isDefault) {
 			config.setId(config.getId());
 			config.setName(config.getName());
@@ -1132,49 +1127,21 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return theInt != null ? theInt : 0;
 	}
 
-	private void doWithUserStatsByMinute(PersConfig theConfig, PersUser theUser, int theNumberOfMinutes, IRuntimeStatus statusSvc,
-			IWithStats<PersInvocationMethodUserStatsPk, PersInvocationMethodUserStats> theOperator) {
-		Date xMinsAgo = getDateXMinsAgo(theNumberOfMinutes);
-		Date date = xMinsAgo;
-
-		Collection<PersUserMethodStatus> methodStatuses = myDao.getUser(theUser.getPid()).getStatus().getMethodStatuses().values();
-		for (int min = 0; date.before(new Date()); min++) {
-
-			InvocationStatsIntervalEnum interval = doWithStatsSupportFindInterval(theConfig, date);
-			date = doWithStatsSupportFindDate(date, interval);
-
-			for (Iterator<PersUserMethodStatus> iterator = methodStatuses.iterator(); iterator.hasNext();) {
-
-				PersUserMethodStatus next = iterator.next();
-				boolean applies = next.doesDateFallWithinAtLeastOneOfMyRanges(date);
-				if (applies) {
-					PersInvocationMethodUserStatsPk pk = new PersInvocationMethodUserStatsPk(interval, date, next.getPk().getMethod(), theUser);
-					PersInvocationMethodUserStats stats = statusSvc.getInvocationStatsSynchronously(pk);
-					theOperator.withStats(min, stats);
-				}
-			}
-
-			date = doWithStatsSupportIncrement(date, interval);
-
-		}
-
-	}
-
-	private StatusEnum extractStatus(BaseDtoServiceCatalogItem theDashboardObject, StatusEnum theInitialStatus, List<Integer> the60MinInvCount, List<Integer> the60MinFaultInvCount,
-			List<Integer> the60MinFailInvCount, List<Long> the60minTime, PersService theService, StatusesBean theStatuses) throws ProcessingException {
+	private StatusEnum extractStatus(BaseDtoServiceCatalogItem theDashboardObject, StatusEnum theInitialStatus, StatsAccumulator theAccumulator, PersService theService, StatusesBean theStatuses)
+			throws ProcessingException {
 
 		// Value will be changed below
 		StatusEnum status = theInitialStatus;
 
 		for (BasePersServiceVersion nextVersion : theService.getVersions()) {
-			status = extractStatus(theDashboardObject, theStatuses, the60MinInvCount, the60MinFaultInvCount, the60MinFailInvCount, the60minTime, status, nextVersion);
+			status = extractStatus(theDashboardObject, theStatuses, theAccumulator, status, nextVersion);
 
 		} // end VERSION
 		return status;
 	}
 
-	private StatusEnum extractStatus(BaseDtoServiceCatalogItem theDashboardObject, StatusesBean theStatuses, List<Integer> the60MinInvCount, List<Integer> the60MinFaultInvCount,
-			List<Integer> the60MinFailInvCount, List<Long> the60minTime, StatusEnum theStatus, BasePersServiceVersion nextVersion) throws ProcessingException {
+	private StatusEnum extractStatus(BaseDtoServiceCatalogItem theDashboardObject, StatusesBean theStatuses, StatsAccumulator theAccumulator, StatusEnum theStatus, BasePersServiceVersion nextVersion)
+			throws ProcessingException {
 		StatusEnum status = theStatus;
 
 		for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
@@ -1202,7 +1169,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		} // end URL
 
 		for (PersServiceVersionMethod nextMethod : nextVersion.getMethods()) {
-			myRuntimeStatusQuerySvc.extract60MinuteMethodStats(nextMethod, the60MinInvCount, the60MinFaultInvCount, the60MinFailInvCount, the60minTime);
+			myRuntimeStatusQuerySvc.extract60MinuteMethodStats(nextMethod, theAccumulator);
 		}
 
 		// Failing monitor rules
@@ -1751,20 +1718,20 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private int[] toLatency(List<Long> theTimes, List<Integer> theCountsEntry0) {
-		List<List<Integer>> entries = Collections.singletonList(theCountsEntry0);
-		return toLatency2(theTimes, entries);
+	static int[] toLatency(List<Long> theTimes, List<Integer> theCountsEntry0, List<Integer> theCountsEntry1, List<Integer> theCountsEntry2) {
+		return toLatency(theTimes, theCountsEntry0, theCountsEntry1, theCountsEntry2, null);
 	}
 
-	private int[] toLatency(List<Long> theTimes, List<Integer> theCountsEntry0, List<Integer> theCountsEntry1, List<Integer> theCountsEntry2) {
+	private static int[] toLatency(List<Long> theTimes, List<Integer> theCountsEntry0, List<Integer> theCountsEntry1, List<Integer> theCountsEntry2, List<Integer> theCountsEntry3) {
 		List<List<Integer>> entries = new ArrayList<List<Integer>>(3);
 		entries.add(theCountsEntry0);
 		entries.add(theCountsEntry1);
 		entries.add(theCountsEntry2);
+		entries.add(theCountsEntry3);
 		return toLatency2(theTimes, entries);
 	}
 
-	private int[] toLatency2(List<Long> theTimes, List<List<Integer>> theCountsEntries) {
+	private static int[] toLatency2(List<Long> theTimes, List<List<Integer>> theCountsEntries) {
 		if (theCountsEntries == null || theCountsEntries.size() == 0) {
 			throw new IllegalArgumentException("No counts given");
 		}
@@ -1772,6 +1739,9 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		int[] counts = new int[theTimes.size()];
 
 		for (List<Integer> nextEntry : theCountsEntries) {
+			if (nextEntry == null) {
+				continue;
+			}
 			assert nextEntry.size() == theTimes.size();
 			int index = 0;
 			for (int next : nextEntry) {
@@ -2068,17 +2038,13 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		retVal.setHttpClientConfigPid(httpClientConfig.getPid());
 
 		if (theLoadStats) {
-			retVal.setStatsInitialized(new Date());
-			ArrayList<Integer> t60minCount = new ArrayList<Integer>();
-			ArrayList<Long> t60minTime = new ArrayList<Long>();
-			ArrayList<Integer> t60minFaultCount = new ArrayList<Integer>();
-			ArrayList<Integer> t60minFailCount = new ArrayList<Integer>();
 
 			StatusEnum status = StatusEnum.UNKNOWN;
-			extractStatus(retVal, theStatuses, t60minCount, t60minFaultCount, t60minFailCount, t60minTime, status, theVersion);
+			StatsAccumulator accumulator = new StatsAccumulator();
+			extractStatus(retVal, theStatuses, accumulator, status, theVersion);
+			accumulator.populateDto(retVal);
 
-			retVal.setTransactions60mins(toArray(t60minCount));
-			retVal.setLatency60mins(toLatency(t60minTime, t60minCount, t60minFaultCount, t60minFailCount));
+			retVal.setStatsInitialized(new Date());
 
 			int urlsActive = 0;
 			int urlsDown = 0;
@@ -2239,17 +2205,13 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		if (theLoadStats) {
 			retVal.setStatsInitialized(new Date());
 			StatusEnum status = StatusEnum.UNKNOWN;
-			ArrayList<Integer> t60minCount = new ArrayList<Integer>();
-			ArrayList<Integer> t60minFaultCount = new ArrayList<Integer>();
-			ArrayList<Integer> t60minFailCount = new ArrayList<Integer>();
-			ArrayList<Long> t60minTime = new ArrayList<Long>();
 
+			StatsAccumulator accumulator = new StatsAccumulator();
 			for (PersService nextService : theDomain.getServices()) {
-				status = extractStatus(retVal, status, t60minCount, t60minFaultCount, t60minFailCount, t60minTime, nextService, theStatuses);
+				status = extractStatus(retVal, status, accumulator, nextService, theStatuses);
 			}
+			accumulator.populateDto(retVal);
 
-			retVal.setTransactions60mins(toArray(t60minCount));
-			retVal.setLatency60mins(toLatency(t60minTime, t60minCount, t60minFaultCount, t60minFailCount));
 			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
 
 			int urlsActive = 0;
@@ -2409,15 +2371,11 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		if (theLoadStats) {
 			retVal.setStatsInitialized(new Date());
 			StatusEnum status = StatusEnum.UNKNOWN;
-			ArrayList<Integer> t60minCount = new ArrayList<Integer>();
-			ArrayList<Integer> t60minFaultCount = new ArrayList<Integer>();
-			ArrayList<Integer> t60minFailCount = new ArrayList<Integer>();
-			ArrayList<Long> t60minTime = new ArrayList<Long>();
 
-			status = extractStatus(retVal, status, t60minCount, t60minFaultCount, t60minFailCount, t60minTime, theService, theStatuses);
+			StatsAccumulator accumulator = new RuntimeStatusQueryBean.StatsAccumulator();
+			status = extractStatus(retVal, status, accumulator, theService, theStatuses);
 
-			retVal.setTransactions60mins(toArray(t60minCount));
-			retVal.setLatency60mins(toLatency(t60minTime, t60minCount, t60minFaultCount, t60minFailCount));
+			accumulator.populateDto(retVal);
 			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
 
 			int urlsActive = 0;
@@ -2475,15 +2433,11 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		if (theLoadStats) {
 			retVal.setStatsInitialized(new Date());
 			StatusEnum status = StatusEnum.UNKNOWN;
-			ArrayList<Integer> successCount = new ArrayList<Integer>();
-			ArrayList<Integer> failCount = new ArrayList<Integer>();
-			ArrayList<Integer> faultCount = new ArrayList<Integer>();
-			ArrayList<Long> t60minTime = new ArrayList<Long>();
 
-			myRuntimeStatusQuerySvc.extract60MinuteMethodStats(theMethod, successCount, faultCount, failCount, t60minTime);
+			StatsAccumulator accumulator = new StatsAccumulator();
+			myRuntimeStatusQuerySvc.extract60MinuteMethodStats(theMethod, accumulator);
+			accumulator.populateDto(retVal);
 
-			retVal.setTransactions60mins(toArray(successCount));
-			retVal.setLatency60mins(toLatency(t60minTime, successCount, faultCount, failCount));
 			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
 
 		}
@@ -2542,15 +2496,10 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			retVal.setStatus(urlStatus.getStatus());
 			retVal.setStatsNextCircuitBreakerReset(urlStatus.getNextCircuitBreakerReset());
 
-			final ArrayList<Integer> t60minSuccessCount = new ArrayList<Integer>();
-			final ArrayList<Integer> t60minFailCount = new ArrayList<Integer>();
-			final ArrayList<Integer> t60minFaultCount = new ArrayList<Integer>();
-			final ArrayList<Long> t60minInvTime = new ArrayList<Long>();
+			StatsAccumulator accumulator = new StatsAccumulator();
+			myRuntimeStatusQuerySvc.extract60MinuteServiceVersionUrlStatistics(theUrl, accumulator);
+			accumulator.populateDto(retVal);
 
-			myRuntimeStatusQuerySvc.extract60MinuteServiceVersionUrlStatistics(theUrl, t60minSuccessCount, t60minFaultCount, t60minFailCount, t60minInvTime);
-
-			retVal.setTransactions60mins(toArray(t60minSuccessCount));
-			retVal.setLatency60mins(toLatency(t60minInvTime, t60minSuccessCount, t60minFailCount, t60minFaultCount));
 			retVal.setStatsInitialized(new Date());
 
 		}
@@ -2576,34 +2525,10 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			retVal.setStatsInitialized(new Date());
 			retVal.setStatsLastAccess(status.getLastAccess());
 
-			final ArrayList<Integer> t60minSuccessCount = new ArrayList<Integer>();
-			final ArrayList<Integer> t60minSecurityFailCount = new ArrayList<Integer>();
-			final ArrayList<Integer> t60minFaultCount = new ArrayList<Integer>();
-			final long[] t60minStatisticsStart = new long[1];
-			IWithStats<PersInvocationMethodUserStatsPk, PersInvocationMethodUserStats> withStats = new IWithStats<PersInvocationMethodUserStatsPk, PersInvocationMethodUserStats>() {
-				@Override
-				public void withStats(int theIndex, PersInvocationMethodUserStats theStats) {
-					if (theIndex == 0) {
-						t60minStatisticsStart[0] = theStats.getPk().getStartTime().getTime();
-					}
-					growToSizeInt(t60minSuccessCount, theIndex);
-					growToSizeInt(t60minSecurityFailCount, theIndex);
-					growToSizeInt(t60minFaultCount, theIndex);
-					t60minFaultCount.set(theIndex, addToInt(t60minFaultCount.get(theIndex), theStats.getFaultInvocationCount()));
-					t60minSecurityFailCount.set(theIndex, addToInt(t60minSecurityFailCount.get(theIndex), theStats.getServerSecurityFailures()));
-					t60minSuccessCount.set(theIndex, addToInt(t60minSuccessCount.get(theIndex), theStats.getSuccessInvocationCount()));
-				}
-			};
+			StatsAccumulator accumulator = new StatsAccumulator();
+			myRuntimeStatusQuerySvc.extract60MinuteUserStats(thePersUser, accumulator);
 
-			doWithUserStatsByMinute(myConfigSvc.getConfig(), thePersUser, 60, myStatusSvc, withStats);
-
-			retVal.setStatsStartTime(t60minStatisticsStart[0]);
-			retVal.setStatsSuccessTransactions((t60minSuccessCount));
-			retVal.setStatsSuccessTransactionsAvgPerMin(to60MinAveragePerMin(t60minSuccessCount));
-			retVal.setStatsSecurityFailTransactions((t60minSecurityFailCount));
-			retVal.setStatsSecurityFailTransactionsAvgPerMin(to60MinAveragePerMin(t60minSecurityFailCount));
-			retVal.setStatsFaultTransactions((t60minSecurityFailCount));
-			retVal.setStatsFaultTransactionsAvgPerMin(to60MinAveragePerMin(t60minSecurityFailCount));
+			accumulator.populateDto(retVal);
 
 			retVal.setThrottle(new GThrottle());
 			retVal.getThrottle().setMaxRequests(thePersUser.getThrottleMaxRequests());
@@ -2775,7 +2700,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return newValue;
 	}
 
-	public static void doWithStatsByMinute(PersConfig theConfig, int theNumberOfMinutes, IRuntimeStatus statusSvc, PersServiceVersionMethod theMethod,
+	public static void doWithStatsByMinute(PersConfig theConfig, int theNumberOfMinutes, IRuntimeStatusQueryLocal statusSvc, PersServiceVersionMethod theMethod,
 			IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator) {
 		Date start = getDateXMinsAgo(theNumberOfMinutes);
 		Date end = new Date();
@@ -2788,7 +2713,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	// doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator, start, end);
 	// }
 
-	public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatus theStatus, PersServiceVersionMethod theNextMethod,
+	public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatusQueryLocal theStatus, PersServiceVersionMethod theNextMethod,
 			IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator) {
 		Date end;
 		Date start;
@@ -2830,7 +2755,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 	}
 
-	public static void doWithStatsByMinute(PersConfig theConfig, IRuntimeStatus statusSvc, PersServiceVersionMethod theMethod,
+	public static void doWithStatsByMinute(PersConfig theConfig, IRuntimeStatusQueryLocal statusSvc, PersServiceVersionMethod theMethod,
 			IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator, Date start, Date end) {
 		Date date = start;
 		for (int min = 0; date.before(end); min++) {
@@ -2852,15 +2777,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private static double to60MinAveragePerMin(ArrayList<Integer> theT60minSecurityFailCount) {
-		double total = 0;
-		for (Integer integer : theT60minSecurityFailCount) {
-			total += integer;
-		}
-		return total / theT60minSecurityFailCount.size();
-	}
-
-	private static int[] toArray(ArrayList<Integer> theT60minCount) {
+	static int[] toArray(ArrayList<Integer> theT60minCount) {
 		int[] retVal = new int[theT60minCount.size()];
 		int index = 0;
 		for (Integer integer : theT60minCount) {

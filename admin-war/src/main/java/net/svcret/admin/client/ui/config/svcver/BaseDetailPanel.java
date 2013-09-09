@@ -3,6 +3,7 @@ package net.svcret.admin.client.ui.config.svcver;
 import static net.svcret.admin.client.AdminPortal.*;
 
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -17,12 +18,13 @@ import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.PButtonCell;
 import net.svcret.admin.client.ui.components.PCellTable;
 import net.svcret.admin.client.ui.components.PSelectionCell;
-import net.svcret.admin.client.ui.components.Sparkline;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
+import net.svcret.admin.client.ui.components.UsageSparkline;
 import net.svcret.admin.client.ui.config.KeepRecentTransactionsPanel;
 import net.svcret.admin.client.ui.config.sec.IProvidesViewAndEdit;
 import net.svcret.admin.client.ui.config.sec.IProvidesViewAndEdit.IValueChangeHandler;
 import net.svcret.admin.client.ui.config.sec.ViewAndEditFactory;
+import net.svcret.admin.client.ui.stats.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
@@ -143,9 +145,9 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 						myMethodDataProvider.refresh();
 					}
 				} else if (theEvent.getSelectedItem() == urlsIndex) {
-					/* 
-					 * Ok to do this even if it's already been done because
-					 * the urls might have changed (ie for a WSDL reload)
+					/*
+					 * Ok to do this even if it's already been done because the
+					 * urls might have changed (ie for a WSDL reload)
 					 */
 					myUrlGrid.setServiceVersion(myServiceVersion);
 				}
@@ -217,8 +219,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 	}
 
 	private void initAccessPanel(FlowPanel thePanel) {
-		Label intro = new Label("By default, ServiceRetriever publishes your services at a simple " + "default path. If needed, an alternate path may be used instead, or as well as the "
-				+ "default path.");
+		Label intro = new Label("By default, ServiceRetriever publishes your services at a simple " + "default path. If needed, an alternate path may be used instead, or as well as the " + "default path.");
 		thePanel.add(intro);
 
 		TwoColumnGrid grid = new TwoColumnGrid();
@@ -257,8 +258,8 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 
 		thePanel.add(new HtmlH1("Client Security"));
 
-		Label urlLabel = new Label("Client Security modules provide credentials to proxied service implementations. In other words, "
-				+ "if the service which is being proxied requires credentials in order to be invoked, a client " + "security module can be used to provide those credentials.");
+		Label urlLabel = new Label("Client Security modules provide credentials to proxied service implementations. In other words, " + "if the service which is being proxied requires credentials in order to be invoked, a client "
+				+ "security module can be used to provide those credentials.");
 		thePanel.add(urlLabel);
 
 		myClientSecurityGrid = new Grid(1, 2);
@@ -441,12 +442,13 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 
 				GServiceVersionDetailedStats detailedStats = myServiceVersion.getDetailedStats();
 				if (detailedStats != null) {
-					Map<Long, List<Integer>> methodPidToSuccessCount = detailedStats.getMethodPidToSuccessCount();
-					List<Integer> success = methodPidToSuccessCount.get(theObject.getPid());
-					List<Integer> fault = detailedStats.getMethodPidToFaultCount().get(theObject.getPid());
-					List<Integer> fail = detailedStats.getMethodPidToFailCount().get(theObject.getPid());
-					List<Integer> secFail = detailedStats.getMethodPidToSecurityFailCount().get(theObject.getPid());
-					renderTransactionGraphsAsHtml(b, success, fault, fail, secFail, detailedStats.getStatsTimestamps());
+					Map<Long, int[]> methodPidToSuccessCount = detailedStats.getMethodPidToSuccessCount();
+					int[] success = methodPidToSuccessCount.get(theObject.getPid());
+					int[] fault = detailedStats.getMethodPidToFaultCount().get(theObject.getPid());
+					int[] fail = detailedStats.getMethodPidToFailCount().get(theObject.getPid());
+					int[] secFail = detailedStats.getMethodPidToSecurityFailCount().get(theObject.getPid());
+
+					renderTransactionGraphsAsHtml(b, success, fault, fail, secFail, new Date(detailedStats.getStatsTimestamps().get(0)),false,null);
 				}
 				return b.toSafeHtml();
 			}
@@ -464,10 +466,10 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 				long o1 = theO1.getPid();
 				long o2 = theO2.getPid();
 
-				Map<Long, List<Integer>> successCount = detailedStats.getMethodPidToSuccessCount();
-				Map<Long, List<Integer>> faultCount = detailedStats.getMethodPidToFaultCount();
-				Map<Long, List<Integer>> failCount = detailedStats.getMethodPidToFailCount();
-				Map<Long, List<Integer>> secFailCount = detailedStats.getMethodPidToSecurityFailCount();
+				Map<Long, int[]> successCount = detailedStats.getMethodPidToSuccessCount();
+				Map<Long, int[]> faultCount = detailedStats.getMethodPidToFaultCount();
+				Map<Long, int[]> failCount = detailedStats.getMethodPidToFailCount();
+				Map<Long, int[]> secFailCount = detailedStats.getMethodPidToSecurityFailCount();
 				@SuppressWarnings("unchecked")
 				int total1 = addToTotal(successCount.get(o1), faultCount.get(o1), failCount.get(o1), secFailCount.get(o1));
 				@SuppressWarnings("unchecked")
@@ -475,14 +477,12 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 				return total2 - total1;
 			}
 
-			private int addToTotal(List<Integer>... theLists) {
+			private int addToTotal(int[]... theLists) {
 				int retVal = 0;
-				for (List<Integer> next : theLists) {
+				for (int[] next : theLists) {
 					if (next != null) {
-						for (Integer nextInteger : next) {
-							if (nextInteger != null) {
-								retVal += nextInteger;
-							}
+						for (int nextInteger : next) {
+							retVal += nextInteger;
 						}
 					}
 				}
@@ -542,8 +542,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 
 		thePanel.add(new HtmlH1("Server Security"));
 
-		Label urlLabel = new Label("Server Security modules verify that the client which is making requests coming "
-				+ "in to the proxy are authorized to invoke the particular service they are attempting to "
+		Label urlLabel = new Label("Server Security modules verify that the client which is making requests coming " + "in to the proxy are authorized to invoke the particular service they are attempting to "
 				+ "invoke. If no server security modules are defined for this service version, all requests will be " + "allowed to proceed.");
 		thePanel.add(urlLabel);
 
@@ -639,8 +638,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		thePanel.add(clientConfigPanel);
 
 		clientConfigPanel.addStyleName(CssConstants.CONTENT_INNER_SUBPANEL);
-		clientConfigPanel.add(new Label("The HTTP client configuration provides the connection details for " + "how the proxy will attempt to invoke proxied service implementations. This includes "
-				+ "settings for timeouts, round-robin policies, etc."));
+		clientConfigPanel.add(new Label("The HTTP client configuration provides the connection details for " + "how the proxy will attempt to invoke proxied service implementations. This includes " + "settings for timeouts, round-robin policies, etc."));
 
 		myHttpConfigList = new ListBox();
 
@@ -759,61 +757,25 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		}
 	}
 
-	public static void renderTransactionGraphsAsHtml(SafeHtmlBuilder b, List<Integer> success, List<Integer> fault, List<Integer> fail, List<Integer> secFail, List<Long> theStatsTimestamps) {
-		boolean hasAnything = false;
-		if (hasValues(success)) {
-			hasAnything = true;
-			b.appendHtmlConstant("<span class='" + CssConstants.TRANSACTION_GRAPH_HEADER + "'>");
-			b.appendHtmlConstant("Success (" + toMethodStatDesc(success) + ")</span>");
-			Sparkline sparkline = new Sparkline(success, theStatsTimestamps).withWidth("120px").asBar(true);
-			b.appendHtmlConstant("<br/>");
+	public static void renderTransactionGraphsAsHtml(SafeHtmlBuilder b, int[] success, int[] fault, int[] fail, int[] secFail, Date theFirstDate, boolean theLastUsageProvidedIfKnown, Date theLastUsage) {
+		if (hasValues(success) || hasValues(fault) || hasValues(fail) || hasValues(secFail)) {
+			UsageSparkline sparkline = new UsageSparkline(success, fault, fail, secFail, "");
 			b.appendHtmlConstant("<span id='" + sparkline.getId() + "' onmouseover=\"" + sparkline.getNativeInvocation(sparkline.getId()) + "\">AAAA</span>");
 			b.appendHtmlConstant("<img src='images/empty.png' onload=\"" + sparkline.getNativeInvocation(sparkline.getId()) + "\" />");
-		}
-		if (hasValues(fault)) {
-			hasAnything = true;
-			if (hasAnything) {
-				b.appendHtmlConstant("<br/>");
+		} else {
+			if (!theLastUsageProvidedIfKnown) {
+				b.appendHtmlConstant("No usage within timeframe");
+			} else if (theLastUsage == null) {
+				b.appendHtmlConstant("Never used");
+			} else {
+				b.appendHtmlConstant("No Usage since " + DateUtil.formatTime(theLastUsage));
 			}
-			b.appendHtmlConstant("<span class='" + CssConstants.TRANSACTION_GRAPH_HEADER + "'>");
-			b.appendHtmlConstant("Fault (" + toMethodStatDesc(fault) + ")</span>");
-			Sparkline sparkline = new Sparkline(fault, theStatsTimestamps).withWidth("120px").asBar(true);
-			b.appendHtmlConstant("<br/>");
-			b.appendHtmlConstant("<span id='" + sparkline.getId() + "'></span>");
-			b.appendHtmlConstant("<img src='images/empty.png' onload=\"" + sparkline.getNativeInvocation(sparkline.getId()) + "\" />");
-		}
-		if (hasValues(fail)) {
-			hasAnything = true;
-			if (hasAnything) {
-				b.appendHtmlConstant("<br/>");
-			}
-			b.appendHtmlConstant("<span class='" + CssConstants.TRANSACTION_GRAPH_HEADER + "'>");
-			b.appendHtmlConstant("Fail (" + toMethodStatDesc(fail) + ")</span>");
-			Sparkline sparkline = new Sparkline(fail, theStatsTimestamps).withWidth("120px").asBar(true);
-			b.appendHtmlConstant("<br/>");
-			b.appendHtmlConstant("<span id='" + sparkline.getId() + "'></span>");
-			b.appendHtmlConstant("<img src='images/empty.png' onload=\"" + sparkline.getNativeInvocation(sparkline.getId()) + "\" />");
-		}
-		if (hasValues(secFail)) {
-			hasAnything = true;
-			if (hasAnything) {
-				b.appendHtmlConstant("<br/>");
-			}
-			b.appendHtmlConstant("<span class='" + CssConstants.TRANSACTION_GRAPH_HEADER + "'>");
-			b.appendHtmlConstant("Security Failure (" + toMethodStatDesc(secFail) + ")</span>");
-			Sparkline sparkline = new Sparkline(secFail, theStatsTimestamps).withWidth("120px").asBar(true);
-			b.appendHtmlConstant("<br/>");
-			b.appendHtmlConstant("<span id='" + sparkline.getId() + "'></span>");
-			b.appendHtmlConstant("<img src='images/empty.png' onload=\"" + sparkline.getNativeInvocation(sparkline.getId()) + "\" />");
-		}
-		if (!hasAnything) {
-			b.appendHtmlConstant("No Usage");
 		}
 	}
 
-	private static boolean hasValues(List<Integer> theSuccess) {
+	private static boolean hasValues(int[] theSuccess) {
 		if (theSuccess != null) {
-			for (Integer integer : theSuccess) {
+			for (int integer : theSuccess) {
 				if (integer != 0) {
 					return true;
 				}
@@ -822,7 +784,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		return false;
 	}
 
-	private static String toMethodStatDesc(List<Integer> theSecFail) {
+	private static String toMethodStatDesc(int[] theSecFail) {
 		int total = 0;
 		int max = 0;
 		for (int next : theSecFail) {
@@ -830,7 +792,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 			max = Math.max(max, next);
 		}
 
-		double avg = ((double) total) / (double) theSecFail.size();
+		double avg = ((double) total) / (double) theSecFail.length;
 		return "Avg:" + TRANSACTION_FORMAT.format(avg) + " Max:" + TRANSACTION_FORMAT.format(max) + "/min";
 	}
 

@@ -537,13 +537,6 @@ TABLE.propertyTable TBODY TR TD TABLE TBODY TR {
 	background: #F0F8FF;
 }
 
-.tooltipPopup {
-	background: rgba(0, 0, 0, 0.8);
-	color: #FFF;
-	border: 1px solid #333;
-	max-width: 400px;
-	box-shadow: 4px 4px 3px -1px #bbb;
-}
 
 .transactionGraphHeader {
 	font-size: 0.8em;

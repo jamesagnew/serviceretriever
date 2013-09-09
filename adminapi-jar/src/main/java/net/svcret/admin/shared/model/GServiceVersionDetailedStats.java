@@ -8,38 +8,37 @@ public class GServiceVersionDetailedStats implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private Map<Long, List<Integer>> myMethodPidToFailCount;
-	private Map<Long, List<Integer>> myMethodPidToFaultCount;
-	private Map<Long, List<Integer>> myMethodPidToSecurityFailCount;
-	private Map<Long, List<Integer>> myMethodPidToSuccessCount;
-
+	private Map<Long, int[]> myMethodPidToFailCount;
+	private Map<Long, int[]> myMethodPidToFaultCount;
+	private Map<Long, int[]> myMethodPidToSecurityFailCount;
+	private Map<Long, int[]> myMethodPidToSuccessCount;
 	private List<Long> myStatsTimestamps;
 
 	/**
 	 * @return the methodPidToFailCount
 	 */
-	public Map<Long, List<Integer>> getMethodPidToFailCount() {
+	public Map<Long, int[]> getMethodPidToFailCount() {
 		return myMethodPidToFailCount;
 	}
 
 	/**
 	 * @return the methodPidToFaultCount
 	 */
-	public Map<Long, List<Integer>> getMethodPidToFaultCount() {
+	public Map<Long, int[]> getMethodPidToFaultCount() {
 		return myMethodPidToFaultCount;
 	}
 
 	/**
 	 * @return the methodPidToSecurityFailCount
 	 */
-	public Map<Long, List<Integer>> getMethodPidToSecurityFailCount() {
+	public Map<Long, int[]> getMethodPidToSecurityFailCount() {
 		return myMethodPidToSecurityFailCount;
 	}
 
 	/**
 	 * @return the methodPidToSuccessCount
 	 */
-	public Map<Long, List<Integer>> getMethodPidToSuccessCount() {
+	public Map<Long, int[]> getMethodPidToSuccessCount() {
 		return myMethodPidToSuccessCount;
 	}
 
@@ -50,20 +49,20 @@ public class GServiceVersionDetailedStats implements Serializable {
 		return myStatsTimestamps;
 	}
 
-	public void setMethodPidToFailCount(Map<Long, List<Integer>> theMethodPidToFailCount) {
+	public void setMethodPidToFailCount(Map<Long, int[]> theMethodPidToFailCount) {
 		myMethodPidToFailCount = theMethodPidToFailCount;
 	}
 
-	public void setMethodPidToFaultCount(Map<Long, List<Integer>> theMethodPidToFaultCount) {
+	public void setMethodPidToFaultCount(Map<Long, int[]> theMethodPidToFaultCount) {
 		myMethodPidToFaultCount = theMethodPidToFaultCount;
 	}
 
-	public void setMethodPidToSecurityFailCount(Map<Long, List<Integer>> theMethodPidToSecurityFailCount) {
+	public void setMethodPidToSecurityFailCount(Map<Long, int[]> theMethodPidToSecurityFailCount) {
 		myMethodPidToSecurityFailCount = theMethodPidToSecurityFailCount;
 
 	}
 
-	public void setMethodPidToSuccessCount(Map<Long, List<Integer>> theMethodPidToSuccessCount) {
+	public void setMethodPidToSuccessCount(Map<Long, int[]> theMethodPidToSuccessCount) {
 		myMethodPidToSuccessCount = theMethodPidToSuccessCount;
 	}
 

@@ -1,13 +1,6 @@
 package net.svcret.ejb.ejb;
 
-import static net.svcret.ejb.ejb.AdminServiceBean.addToInt;
-import static net.svcret.ejb.ejb.AdminServiceBean.addToLong;
-import static net.svcret.ejb.ejb.AdminServiceBean.doWithStatsByMinute;
-import static net.svcret.ejb.ejb.AdminServiceBean.doWithStatsSupportFindInterval;
-import static net.svcret.ejb.ejb.AdminServiceBean.doWithStatsSupportIncrement;
-import static net.svcret.ejb.ejb.AdminServiceBean.growToSizeDouble;
-import static net.svcret.ejb.ejb.AdminServiceBean.growToSizeInt;
-import static net.svcret.ejb.ejb.AdminServiceBean.growToSizeLong;
+import static net.svcret.ejb.ejb.AdminServiceBean.*;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -34,9 +27,10 @@ import net.svcret.admin.shared.model.TimeRange;
 import net.svcret.ejb.api.IChartingServiceBean;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
-import net.svcret.ejb.api.IRuntimeStatus;
+import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.ejb.AdminServiceBean.IWithStats;
+import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
@@ -82,7 +76,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 	private IScheduler myScheduler;
 
 	@EJB
-	private IRuntimeStatus myStatus;
+	private IRuntimeStatusQueryLocal myStatus;
 
 	@Override
 	public byte[] renderLatencyGraphForServiceVersion(long theServiceVersionPid, TimeRange theRange) throws IOException, ProcessingException {
@@ -95,7 +89,10 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		final ArrayList<Long> timestamps = new ArrayList<Long>();
 
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
+		StatsAccumulator accumulator = new StatsAccumulator();
+		
 		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
+			
 			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats>() {
 				@Override
 				public void withStats(int theIndex, PersInvocationMethodSvcverStats theStats) {
@@ -419,7 +416,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 	}
 
 	@VisibleForTesting
-	void setStatusForUnitTest(IRuntimeStatus theStatus) {
+	void setStatusForUnitTest(IRuntimeStatusQueryLocal theStatus) {
 		myStatus = theStatus;
 	}
 

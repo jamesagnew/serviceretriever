@@ -156,7 +156,7 @@ public class PersDomain extends BasePersServiceCatalogItem {
 	 *            the domainId to set
 	 */
 	public void setDomainId(String theDomainId) {
-		// TODO: validate characters
+		validateId(theDomainId);
 		myDomainId = theDomainId;
 	}
 

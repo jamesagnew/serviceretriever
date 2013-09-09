@@ -12,6 +12,7 @@ import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
 import com.google.gwt.event.shared.UmbrellaException;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
 
@@ -42,7 +43,7 @@ public class AdminPortal implements EntryPoint, UncaughtExceptionHandler {
 	 */
 	@Override
 	public void onModuleLoad() {
-		GWT.setUncaughtExceptionHandler(this);
+//		GWT.setUncaughtExceptionHandler(this);
 
 		RootLayoutPanel rootPanel = RootLayoutPanel.get();
 		rootPanel.add(new OuterLayoutPanel());
@@ -52,6 +53,7 @@ public class AdminPortal implements EntryPoint, UncaughtExceptionHandler {
 	@Override
 	public void onUncaughtException(Throwable theE) {
 		GWT.log("Uncaught exception", theE);
+		Window.alert("Uncaught exception: " + theE.toString());
 		reportError("Uncaught exception", theE);
 	}
 

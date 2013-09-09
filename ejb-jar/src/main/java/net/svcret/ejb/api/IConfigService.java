@@ -22,5 +22,7 @@ public interface IConfigService {
 	List<String> getSecondaryNodeRefreshUrls();
 
 	String getNodeId();
+
+	String getFilesystemAuditLoggerPath();
 	
 }

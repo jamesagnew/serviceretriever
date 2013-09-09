@@ -9,18 +9,24 @@ public abstract class BaseDtoKeepsRecentMessages extends BaseGObject {
 
 	private static final long serialVersionUID = 1L;
 
+	@XmlElement(name="config_AuditLogEnabled")
+	private Boolean myAuditLogEnable;
+	
 	@XmlElement(name="runtime_CanInheritKeepNumRecentTransactions")
 	private boolean myCanInheritKeepNumRecentTransactions;
-	
+
+	@XmlElement(name="runtime_InheritedAuditLogEnabled")
+	private Boolean myInheritedAuditLogEnable;
+
 	@XmlElement(name="runtime_InheritedKeepNumRecentTransactionsFail")
 	private Integer myInheritedKeepNumRecentTransactionsFail;
-
+	
 	@XmlElement(name="runtime_InheritedKeepNumRecentTransactionsFault")
 	private Integer myInheritedKeepNumRecentTransactionsFault;
 
 	@XmlElement(name="runtime_InheritedKeepNumRecentTransactionsSecurityFail")
 	private Integer myInheritedKeepNumRecentTransactionsSecurityFail;
-	
+
 	@XmlElement(name="runtime_InheritedKeepNumRecentTransactionsSuccess")
 	private Integer myInheritedKeepNumRecentTransactionsSuccess;
 
@@ -35,6 +41,14 @@ public abstract class BaseDtoKeepsRecentMessages extends BaseGObject {
 
 	@XmlElement(name="runtime_KeepNumRecentTransactionsSuccess")
 	private Integer myKeepNumRecentTransactionsSuccess;
+
+	public Boolean getAuditLogEnable() {
+		return myAuditLogEnable;
+	}
+
+	public Boolean getInheritedAuditLogEnable() {
+		return myInheritedAuditLogEnable;
+	}
 
 	public Integer getInheritedKeepNumRecentTransactionsFail() {
 		return myInheritedKeepNumRecentTransactionsFail;
@@ -94,8 +108,16 @@ public abstract class BaseDtoKeepsRecentMessages extends BaseGObject {
 		setKeepNumRecentTransactionsSecurityFail(obj.getKeepNumRecentTransactionsSecurityFail());
 	}
 
+	public void setAuditLogEnable(Boolean theAuditLogEnable) {
+		myAuditLogEnable = theAuditLogEnable;
+	}
+
 	public void setCanInheritKeepNumRecentTransactions(boolean theCanInheritKeepNumRecentTransactions) {
 		myCanInheritKeepNumRecentTransactions = theCanInheritKeepNumRecentTransactions;
+	}
+
+	public void setInheritedAuditLogEnable(boolean theInheritedAuditLogEnable) {
+		myInheritedAuditLogEnable=theInheritedAuditLogEnable;
 	}
 
 	public void setInheritedKeepNumRecentTransactionsFail(Integer theInheritedKeepNumRecentTransactionsFail) {

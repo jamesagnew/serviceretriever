@@ -57,6 +57,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 	private PersServiceVersionMethod myMethod;
 	private PersServiceVersionUrl myUrl1;
 	private PersServiceVersionUrl myUrl2;
+	private RuntimeStatusQueryBean myQuerySvc;
 //	private Date myNow;
 //	private Date my30SecsAgo;
 //	private Date my1Min30SecsAgo;
@@ -79,6 +80,10 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		myStatsSvc.setDao(myDao);
 		myStatsSvc.setConfigSvc(myConfigSvc);
 
+		myQuerySvc = new RuntimeStatusQueryBean();
+		myQuerySvc.setConfigSvcForUnitTest(myConfigSvc);
+		myQuerySvc.setStatusSvcForUnitTest(myStatsSvc);
+		
 		mySoapInvoker = mock(IServiceInvokerSoap11.class, new DefaultAnswer());
 		myOrchSvc.setInvokerSoap11(mySoapInvoker);
 
@@ -94,7 +99,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 
 		mySvc = new MonitorServiceBean();
 		mySvc.setDao(myDao);
-		mySvc.setRuntimeStatus(myStatsSvc);
+		mySvc.setRuntimeStatus(myQuerySvc);
 		mySvc.setBroadcastSender(mock(IBroadcastSender.class));
 
 		DefaultAnswer.setDesignTime();

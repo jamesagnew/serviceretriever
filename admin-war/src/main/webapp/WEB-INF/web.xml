@@ -1,5 +1,6 @@
 <web-app xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="3.0" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee ./xsd/web-app_3_0.xsd">
 
+
   <!-- Servlets -->
 	<servlet>
 		<servlet-name>graphServlet</servlet-name>
@@ -31,6 +32,15 @@
 		<servlet-class>net.svcret.admin.server.rpc.MiscConfigServiceImpl</servlet-class>
 	</servlet>
 
+	<servlet>
+		<servlet-name>remoteLogging</servlet-name>
+		<servlet-class>com.google.gwt.logging.server.RemoteLoggingServiceImpl</servlet-class>
+		<init-param>  
+			<param-name>symbolMaps</param-name>  
+			<param-value>AdminPortal/symbolMaps</param-value>  
+		</init-param>  
+	</servlet>
+
 	<servlet-mapping>
 		<servlet-name>graphServlet</servlet-name>
 		<url-pattern>/charts/largegraph.png</url-pattern>
@@ -56,6 +66,11 @@
 		<url-pattern>/AdminPortal/modelupdate</url-pattern>
 	</servlet-mapping>
 
+	<servlet-mapping>  
+		<servlet-name>remoteLogging</servlet-name>  
+		<url-pattern>/AdminPortal/remote_logging</url-pattern>  
+	</servlet-mapping>  
+
 	<servlet-mapping>
 		<servlet-name>resourceServlet</servlet-name>
 		<url-pattern>/resources/*</url-pattern>
@@ -75,46 +90,46 @@
 		</form-login-config>
 	</login-config>
 
-  <security-constraint>
-  
-    <web-resource-collection>
-      <web-resource-name>Secured Content</web-resource-name>
-      <url-pattern>/admin/*</url-pattern>
-    </web-resource-collection>
+	<security-constraint>
+
+		<web-resource-collection>
+			<web-resource-name>Secured Content</web-resource-name>
+			<url-pattern>/admin/*</url-pattern>
+		</web-resource-collection>
       
     <!-- only users with at least one of these roles are allowed to access the secured content -->
-    <auth-constraint>
-      <role-name>USER</role-name>
-    </auth-constraint>
-  
-	<user-data-constraint>
-		<transport-guarantee>NONE</transport-guarantee>
-	</user-data-constraint>
+		<auth-constraint>
+			<role-name>USER</role-name>
+		</auth-constraint>
+
+		<user-data-constraint>
+			<transport-guarantee>NONE</transport-guarantee>
+		</user-data-constraint>
     <!-- 
     <user-data-constraint>
       <description>highest supported transport security level</description>
       <transport-guarantee>CONFIDENTIAL</transport-guarantee>
     </user-data-constraint>
   	-->
-  	
-  </security-constraint>
+
+	</security-constraint>
   
   <!-- declare the roles relevant for our webapp -->
-  <security-role>
-    <role-name>ADMINISTRATOR</role-name>
-  </security-role>
-  <security-role>
-    <role-name>USER</role-name>
-  </security-role>
-  <security-role>
-    <role-name>asadmin</role-name>
-  </security-role>
-   
-  <session-config>
-    <session-timeout>30</session-timeout>
-    <cookie-config>
-      <name>SR_SESSIONID</name>
-    </cookie-config>
-  </session-config>
-  
+	<security-role>
+		<role-name>ADMINISTRATOR</role-name>
+	</security-role>
+	<security-role>
+		<role-name>USER</role-name>
+	</security-role>
+	<security-role>
+		<role-name>asadmin</role-name>
+	</security-role>
+
+	<session-config>
+		<session-timeout>30</session-timeout>
+		<cookie-config>
+			<name>SR_SESSIONID</name>
+		</cookie-config>
+	</session-config>
+
 </web-app>

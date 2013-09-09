@@ -158,4 +158,18 @@ public abstract class BasePersServiceCatalogItem extends BasePersKeepsRecentTran
 		theDto.setObscureResponseElementsInLogCache(getObscureResponseElementsInLog());
 	}
 
+	public static void validateId(String theId) {
+		if (StringUtils.isBlank(theId)) {
+			throw new IllegalArgumentException("ID must not be blank");
+		}
+		
+		if (theId.contains(" ")) {
+			throw new IllegalArgumentException("ID must not contain spaces: "  + theId);
+		}
+		
+		if (theId.contains("__")) {
+			throw new IllegalArgumentException("ID must not contain the character saequence: '__': " + theId);
+		}
+	}
+
 }

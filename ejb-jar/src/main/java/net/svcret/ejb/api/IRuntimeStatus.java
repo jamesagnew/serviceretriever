@@ -6,8 +6,6 @@ import javax.ejb.Local;
 
 import net.svcret.ejb.api.HttpResponseBean.Failure;
 import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.model.entity.BasePersStats;
-import net.svcret.ejb.model.entity.BasePersStatsPk;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
@@ -48,22 +46,6 @@ public interface IRuntimeStatus {
 
 	void collapseStats() throws ProcessingException;
 
-	<P extends BasePersStatsPk<P,O>, O extends BasePersStats<P,O>>
-	O getInvocationStatsSynchronously(P thePk);
-
-	int getCachedPopulatedKeyCount();
-
-	int getCachedEmptyKeyCount();
-
-	void purgeCachedStats();
-
-	void setMaxCachedPopulatedStatCount(int theCount);
-
-	void setMaxCachedNullStatCount(int theCount);
-
-	int getMaxCachedNullStatCount();
-
-	int getMaxCachedPopulatedStatCount();
 
 	void recordNodeStatistics();
 

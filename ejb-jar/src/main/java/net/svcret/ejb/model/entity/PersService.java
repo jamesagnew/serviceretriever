@@ -296,7 +296,7 @@ public class PersService extends BasePersServiceCatalogItem {
 	 *            the serviceId to set
 	 */
 	public void setServiceId(String theServiceId) {
-		// TODO: validate characters
+		validateId(theServiceId);
 		myServiceId = theServiceId;
 	}
 

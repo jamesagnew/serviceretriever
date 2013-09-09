@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class GUser extends BaseDtoKeepsRecentMessages implements IHasPermissions {
+public class GUser extends BaseGDashboardObject implements IHasPermissions {
 
 	private static final long serialVersionUID = 1L;
 
@@ -20,15 +20,7 @@ public class GUser extends BaseDtoKeepsRecentMessages implements IHasPermissions
 	private String myDescription;
 	private ArrayList<GUserDomainPermission> myDomainPermissions;
 	private HashSet<UserGlobalPermissionEnum> myGlobalPermissions;
-	private List<Integer> myStatsFaultTransactions;
-	private double myStatsFaultTransactionsAvgPerMin;
-	private Date myStatsInitialized;
 	private Date myStatsLastAccess;
-	private List<Integer> myStatsSecurityFailTransactions;
-	private double myStatsSecurityFailTransactionsAvgPerMin;
-	private long myStatsStartTime;
-	private List<Integer> myStatsSuccessTransactions;
-	private double myStatsSuccessTransactionsAvgPerMin;
 	private GThrottle myThrottle = new GThrottle();
 	private String myUsername;
 
@@ -73,8 +65,8 @@ public class GUser extends BaseDtoKeepsRecentMessages implements IHasPermissions
 	}
 
 	public HashSet<String> getContactEmails() {
-		if (myContactEmails==null) {
-			myContactEmails=new HashSet<String>();
+		if (myContactEmails == null) {
+			myContactEmails = new HashSet<String>();
 		}
 		return myContactEmails;
 	}
@@ -132,68 +124,11 @@ public class GUser extends BaseDtoKeepsRecentMessages implements IHasPermissions
 		return permission;
 	}
 
-	public List<Long> getStats60MinsTimestamps() {
-		ArrayList<Long> retVal = new ArrayList<Long>();
-		long next = myStatsStartTime;
-		for (int i = 0; i < 60; i++) {
-			retVal.add(next);
-			next += (60 * 1000);
-		}
-		return retVal;
-	}
-
-	public List<Integer> getStatsFaultTransactions() {
-		return myStatsFaultTransactions;
-	}
-
-	public double getStatsFaultTransactionsAvgPerMin() {
-		return myStatsFaultTransactionsAvgPerMin;
-	}
-
-	/**
-	 * @return the statsInitialized
-	 */
-	public Date getStatsInitialized() {
-		return myStatsInitialized;
-	}
-
 	/**
 	 * @return the statsLastAccess
 	 */
 	public Date getStatsLastAccess() {
 		return myStatsLastAccess;
-	}
-
-	/**
-	 * @return the statsSecurityFailTransactions
-	 */
-	public List<Integer> getStatsSecurityFailTransactions() {
-		return myStatsSecurityFailTransactions;
-	}
-
-	/**
-	 * @return the statsSecurityFailTransactionsAvgPerMin
-	 */
-	public double getStatsSecurityFailTransactionsAvgPerMin() {
-		return myStatsSecurityFailTransactionsAvgPerMin;
-	}
-
-	/**
-	 * @return the statsTransactions
-	 */
-	public List<Integer> getStatsSuccessTransactions() {
-		return myStatsSuccessTransactions;
-	}
-
-	/**
-	 * @return the statsSuccessTransactionsAvgPerMin
-	 */
-	public double getStatsSuccessTransactionsAvgPerMin() {
-		return myStatsSuccessTransactionsAvgPerMin;
-	}
-
-	public double getStatsTotalAvgPerMin() {
-		return getStatsFaultTransactionsAvgPerMin() + getStatsSecurityFailTransactionsAvgPerMin() + getStatsSuccessTransactionsAvgPerMin();
 	}
 
 	public GThrottle getThrottle() {
@@ -223,18 +158,11 @@ public class GUser extends BaseDtoKeepsRecentMessages implements IHasPermissions
 		return myAllowAllDomains;
 	}
 
-	/**
-	 * @return the isStatsInitialized
-	 */
-	public boolean isStatsInitialized() {
-		return myStatsInitialized != null;
-	}
-
 	@Override
 	public void merge(BaseGObject theObject) {
 		super.merge(theObject);
 
-		GUser obj = (GUser)theObject;
+		GUser obj = (GUser) theObject;
 		setUsername(obj.getUsername());
 		setAllowableSourceIps(obj.getAllowableSourceIps());
 		setStatsInitialized(obj.getStatsInitialized());
@@ -267,7 +195,8 @@ public class GUser extends BaseDtoKeepsRecentMessages implements IHasPermissions
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see net.svcret.admin.shared.model.IHasPermissions#setAllowAllDomains(boolean)
+	 * @see
+	 * net.svcret.admin.shared.model.IHasPermissions#setAllowAllDomains(boolean)
 	 */
 	@Override
 	public void setAllowAllDomains(boolean theAllowAllDomains) {
@@ -291,7 +220,7 @@ public class GUser extends BaseDtoKeepsRecentMessages implements IHasPermissions
 	}
 
 	public void setContactEmails(Set<String> theContactEmails) {
-		if (theContactEmails==null) {
+		if (theContactEmails == null) {
 			throw new NullPointerException();
 		}
 		myContactEmails = new HashSet<String>(theContactEmails);
@@ -308,7 +237,9 @@ public class GUser extends BaseDtoKeepsRecentMessages implements IHasPermissions
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see net.svcret.admin.shared.model.IHasPermissions#setDomainPermissions(java .util.List)
+	 * @see
+	 * net.svcret.admin.shared.model.IHasPermissions#setDomainPermissions(java
+	 * .util.List)
 	 */
 	@Override
 	public void setDomainPermissions(List<GUserDomainPermission> theDomainPermissions) {
@@ -318,7 +249,9 @@ public class GUser extends BaseDtoKeepsRecentMessages implements IHasPermissions
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see net.svcret.admin.shared.model.IHasPermissions#setGlobalPermissions(java .util.Set)
+	 * @see
+	 * net.svcret.admin.shared.model.IHasPermissions#setGlobalPermissions(java
+	 * .util.Set)
 	 */
 	@Override
 	public void setGlobalPermissions(Set<UserGlobalPermissionEnum> theGlobalPermissions) {
@@ -329,64 +262,12 @@ public class GUser extends BaseDtoKeepsRecentMessages implements IHasPermissions
 		}
 	}
 
-	public void setStatsFaultTransactions(List<Integer> theStatsFaultTransactions) {
-		myStatsFaultTransactions = theStatsFaultTransactions;
-	}
-
-	public void setStatsFaultTransactionsAvgPerMin(double theTo60MinAveragePerMin) {
-		myStatsFaultTransactionsAvgPerMin = theTo60MinAveragePerMin;
-	}
-
-	/**
-	 * @param theStatsInitialized
-	 *            the isStatsInitialized to set
-	 */
-	public void setStatsInitialized(Date theStatsInitialized) {
-		myStatsInitialized = theStatsInitialized;
-	}
-
 	/**
 	 * @param theStatsLastAccess
 	 *            the statsLastAccess to set
 	 */
 	public void setStatsLastAccess(Date theStatsLastAccess) {
 		myStatsLastAccess = theStatsLastAccess;
-	}
-
-	/**
-	 * @param theStatsSecurityFailTransactions
-	 *            the statsSecurityFailTransactions to set
-	 */
-	public void setStatsSecurityFailTransactions(List<Integer> theStatsSecurityFailTransactions) {
-		myStatsSecurityFailTransactions = theStatsSecurityFailTransactions;
-	}
-
-	/**
-	 * @param theStatsSecurityFailTransactionsAvgPerMin
-	 *            the statsSecurityFailTransactionsAvgPerMin to set
-	 */
-	public void setStatsSecurityFailTransactionsAvgPerMin(double theStatsSecurityFailTransactionsAvgPerMin) {
-		myStatsSecurityFailTransactionsAvgPerMin = theStatsSecurityFailTransactionsAvgPerMin;
-	}
-
-	public void setStatsStartTime(long theStartTime) {
-		myStatsStartTime = theStartTime;
-	}
-
-	/**
-	 * @param theStatsSuccessTransactions
-	 *            the statsTransactions to set
-	 */
-	public void setStatsSuccessTransactions(List<Integer> theStatsSuccessTransactions) {
-		myStatsSuccessTransactions = theStatsSuccessTransactions;
-	}
-
-	/**
-	 * @param theStatsSuccessTransactionsAvgPerMin
-	 *            the statsSuccessTransactionsAvgPerMin to set
-	 */
-	public void setStatsSuccessTransactionsAvgPerMin(double theStatsSuccessTransactionsAvgPerMin) {
-		myStatsSuccessTransactionsAvgPerMin = theStatsSuccessTransactionsAvgPerMin;
 	}
 
 	public void setThrottle(GThrottle theThrottle) {

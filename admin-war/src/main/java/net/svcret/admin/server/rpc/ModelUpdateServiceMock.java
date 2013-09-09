@@ -65,6 +65,7 @@ import net.svcret.admin.shared.model.UrlSelectionPolicy;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.admin.shared.util.StringUtil;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
+import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 
 import org.apache.commons.lang3.time.DateUtils;
 
@@ -232,11 +233,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		user.addGlobalPermission(UserGlobalPermissionEnum.SUPERUSER);
 		user.setStatsLastAccess(new Date());
 		user.setStatsInitialized(new Date());
-		user.setStatsSecurityFailTransactions(random60minsList());
-		user.setStatsSuccessTransactions(random60minsList());
-		user.setStatsStartTime(99999999L);
-		user.setStatsSecurityFailTransactionsAvgPerMin(1.0);
-		user.setStatsSuccessTransactionsAvgPerMin(0.01);
+		populateRandom(user);
 		user.setAllowableSourceIps(new ArrayList<String>());
 		myUserList.add(user);
 
@@ -250,11 +247,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		user.setAuthHostPid(hostList.getPid());
 		user.addGlobalPermission(UserGlobalPermissionEnum.SUPERUSER);
 		user.setStatsInitialized(new Date());
-		user.setStatsSecurityFailTransactions(random60minsList());
-		user.setStatsSuccessTransactions(random60minsList());
-		user.setStatsStartTime(99999999L);
-		user.setStatsSecurityFailTransactionsAvgPerMin(2.0);
-		user.setStatsSuccessTransactionsAvgPerMin(0.01);
+		populateRandom(user);
 		user.setAllowableSourceIps(new ArrayList<String>());
 		user.getAllowableSourceIps().add("127.0.0.1");
 		user.getAllowableSourceIps().add("192.168.1.1");
@@ -575,15 +568,15 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 				for (BaseGServiceVersion nextVersion : nextService.getVersionList()) {
 					if (nextVersion.getPid() == theVersionPid) {
 						GServiceVersionDetailedStats retVal = new GServiceVersionDetailedStats();
-						Map<Long, List<Integer>> fail = new HashMap<Long, List<Integer>>();
-						Map<Long, List<Integer>> fault = new HashMap<Long, List<Integer>>();
-						Map<Long, List<Integer>> securityFail = new HashMap<Long, List<Integer>>();
-						Map<Long, List<Integer>> success = new HashMap<Long, List<Integer>>();
+						Map<Long, int[]> fail = new HashMap<Long, int[]>();
+						Map<Long, int[]> fault = new HashMap<Long, int[]>();
+						Map<Long, int[]> securityFail = new HashMap<Long, int[]>();
+						Map<Long, int[]> success = new HashMap<Long, int[]>();
 						for (GServiceMethod nextMethod : nextVersion.getMethodList()) {
-							success.put(nextMethod.getPid(), random60minsList());
-							fail.put(nextMethod.getPid(), random60minsList());
-							securityFail.put(nextMethod.getPid(), random60minsList());
-							fault.put(nextMethod.getPid(), random60minsList());
+							success.put(nextMethod.getPid(), random60mins());
+							fail.put(nextMethod.getPid(), random60mins());
+							securityFail.put(nextMethod.getPid(), random60mins());
+							fault.put(nextMethod.getPid(), random60mins());
 						}
 						retVal.setMethodPidToSuccessCount(success);
 						retVal.setMethodPidToFailCount(fail);
@@ -661,7 +654,11 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		obj.setStatsInitialized(new Date());
 		obj.setStatus(randomStatus());
 		obj.setTransactions60mins(random60mins());
+		obj.setTransactionsFail60mins(random60mins());
+		obj.setTransactionsFault60mins(random60mins());
+		obj.setTransactionsSecurityFail60mins(random60mins());
 		obj.setLatency60mins(random60mins());
+		obj.setStatistics60MinuteFirstDate(InvocationStatsIntervalEnum.MINUTE.truncate(new Date(System.currentTimeMillis() - (59 * DateUtils.MILLIS_PER_MINUTE))));
 	}
 
 	private void populateRandom(BaseDtoServiceCatalogItem obj) {
@@ -678,6 +675,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		obj.setLastSuccessfulInvocation(randomRecentDate());
 		obj.setLastServerSecurityFailure(randomRecentDate());
 		obj.setServerSecured(ServerSecuredEnum.FULLY);
+		obj.setStatistics60MinuteFirstDate(InvocationStatsIntervalEnum.MINUTE.truncate(new Date(System.currentTimeMillis() - (59 * DateUtils.MILLIS_PER_MINUTE))));
 	}
 
 	private int[] random60mins() {

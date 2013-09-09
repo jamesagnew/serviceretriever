@@ -22,13 +22,13 @@ import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.ejb.log.BaseUnflushed;
 import net.svcret.ejb.ejb.log.UnflushedServiceVersionRecentMessages;
 import net.svcret.ejb.ejb.log.UnflushedUserRecentMessages;
+import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersSavedTransactionRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.util.Validate;
-
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -40,8 +40,11 @@ public class TransactionLoggerBean implements ITransactionLogger {
 
 	@EJB
 	private IDao myDao;
+	@EJB
+	private IFilesystemAuditLogger myFilesystemAuditLogger;
 	private final ReentrantLock myFlushLock = new ReentrantLock();
 	private final ConcurrentHashMap<BasePersServiceVersion, UnflushedServiceVersionRecentMessages> myUnflushedMessages = new ConcurrentHashMap<BasePersServiceVersion, UnflushedServiceVersionRecentMessages>();
+
 	private final ConcurrentHashMap<PersUser, UnflushedUserRecentMessages> myUnflushedUserMessages = new ConcurrentHashMap<PersUser, UnflushedUserRecentMessages>();
 
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -68,10 +71,11 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	 * @param theImplementationUrl
 	 * @param theHttpResponse
 	 * @param theResponseBody
+	 * @throws ProcessingException 
 	 */
 	@Override
 	public void logTransaction(HttpRequestBean theRequest, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse,
-			PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, String theResponseBody) {
+			PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, String theResponseBody) throws ProcessingException {
 		Validate.notNull(theMethod);
 
 		// Log to database
@@ -94,20 +98,21 @@ public class TransactionLoggerBean implements ITransactionLogger {
 
 			existing.recordTransaction(theRequest.getRequestTime(), theRequest, theMethod, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse,
 					theAuthorizationOutcome, theResponseBody);
+
+			// Audit log
+			if (theUser.determineInheritedAuditLogEnable()) {
+				myFilesystemAuditLogger.recordUserTransaction(theRequest, theMethod, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome);
+			}
+
 		}
 
 		// Audit Log
-		{
-			BasePersServiceVersion svcVer = theMethod.getServiceVersion();
-			if (svcVer.determineInheritedAuditLogEnable() == true) {
-				myFilesystemAuditLogger.recordServiceTransaction(theRequest, theMethod, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome);
-			}
+		BasePersServiceVersion svcVer = theMethod.getServiceVersion();
+		if (svcVer.determineInheritedAuditLogEnable() == true) {
+			myFilesystemAuditLogger.recordServiceTransaction(theRequest, theMethod, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome);
 		}
 
 	}
-
-	@EJB
-	private IFilesystemAuditLogger myFilesystemAuditLogger;
 
 	@VisibleForTesting
 	public void setDao(IDao theDao) {

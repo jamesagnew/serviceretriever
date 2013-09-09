@@ -74,4 +74,9 @@ public class DashModelLoading implements IDashModel {
 		return null;
 	}
 
+	@Override
+	public IProvidesWidget getUsageTooltip() {
+		return null;
+	}
+
 }

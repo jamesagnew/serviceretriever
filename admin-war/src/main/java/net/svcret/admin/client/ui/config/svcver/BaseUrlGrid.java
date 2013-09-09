@@ -1,47 +1,33 @@
 package net.svcret.admin.client.ui.config.svcver;
 
-import static net.svcret.admin.client.AdminPortal.IMAGES;
-import static net.svcret.admin.client.AdminPortal.MSGS;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import javax.xml.ws.AsyncHandler;
-import javax.xml.ws.Response;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.EditableField;
 import net.svcret.admin.client.ui.components.FlowPanelWithTooltip;
-import net.svcret.admin.client.ui.components.HtmlBr;
-import net.svcret.admin.client.ui.components.HtmlLabel;
 import net.svcret.admin.client.ui.components.IProvidesTooltip;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.dash.model.BaseDashModel;
 import net.svcret.admin.client.ui.stats.DateUtil;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
-import net.svcret.admin.shared.model.ModelUpdateRequest;
-import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.util.StringUtil;
 
-import com.google.gwt.core.client.AsyncProvider;
 import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Style.WhiteSpace;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
 public abstract class BaseUrlGrid extends FlowPanel {
@@ -159,7 +145,7 @@ public abstract class BaseUrlGrid extends FlowPanel {
 					FlowPanel grid = new FlowPanel();
 					myUrlGrid.setWidget(row, COL_URL_USAGE, grid);
 
-					Widget transactionsSparkline = BaseDashModel.returnSparklineFor60MinsUsage(next.getTransactions60mins(), next.getStatsInitialized(), next.getAverageTransactionsPerMin60min(), next.getMaxTransactionsPerMin60min());
+					Widget transactionsSparkline = BaseDashModel.returnSparklineFor60MinsUsage(next);
 					transactionsSparkline.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
 					grid.add(transactionsSparkline);
 
@@ -218,7 +204,7 @@ public abstract class BaseUrlGrid extends FlowPanel {
 
 		public CircuitBreakerResetActionHandler(PButton theButton, long theUrlPid) {
 			myUrlPid = theUrlPid;
-			myButton=theButton;
+			myButton = theButton;
 		}
 
 		@Override
@@ -287,16 +273,22 @@ public abstract class BaseUrlGrid extends FlowPanel {
 			String message = null;
 			Date date = null;
 			String desc = null;
+			String ct = null;
+			Integer code = 0;
 
 			switch (myResponseType) {
 			case FAIL:
 				message = myStatus.getStatsLastFailureMessage();
 				date = myStatus.getStatsLastFailure();
+				ct = myStatus.getStatsLastFailureContentType();
+				code = myStatus.getStatsLastFailureStatusCode();
 				desc = "failure";
 				break;
 			case FAULT:
 				message = myStatus.getStatsLastFaultMessage();
 				date = myStatus.getStatsLastFault();
+				ct = myStatus.getStatsLastFaultContentType();
+				code = myStatus.getStatsLastFaultStatusCode();
 				desc = "fault";
 				break;
 			case SECURITY_FAIL:
@@ -306,12 +298,39 @@ public abstract class BaseUrlGrid extends FlowPanel {
 			case SUCCESS:
 				message = myStatus.getStatsLastSuccessMessage();
 				date = myStatus.getStatsLastSuccess();
+				ct = myStatus.getStatsLastSuccessContentType();
+				code = myStatus.getStatsLastSuccessStatusCode();
 				desc = "success";
 				break;
 			}
 
 			if (message != null || date != null) {
-				return "Last " + desc + "<br/><ul><li>" + "<b>Date:</b> " + DateUtil.formatTime(date) + "</li><li>Message: " + message + "</li></ul>";
+				StringBuilder b = new StringBuilder();
+				b.append("Last ");
+				b.append(desc);
+				b.append("<br/><ul>");
+
+				b.append("<li>");
+				b.append("<b>Date:</b> ");
+				b.append(DateUtil.formatTime(date));
+				b.append("</li>");
+
+				b.append("<li>");
+				b.append("<b>Content-Type:</b> ");
+				b.append(ct);
+				b.append("</li>");
+
+				if (code != null) {
+					b.append("<li>");
+					b.append("<b>HTTP Code:</b> ");
+					b.append(code);
+					b.append("</li>");
+				}
+
+				b.append("<li>Message: ");
+				b.append(message);
+				b.append("</li></ul>");
+				return b.toString();
 			}
 
 			return null;

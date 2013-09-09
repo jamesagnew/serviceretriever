@@ -120,7 +120,7 @@ public class EditUsersPanel extends FlowPanel {
 		});
 		statsCell.addStyle(CssConstants.USERS_ACTION_BUTTON);
 
-		List<HasCell<GUser, ?>> actionCells=new ArrayList<HasCell<GUser,?>>();
+		List<HasCell<GUser, ?>> actionCells = new ArrayList<HasCell<GUser, ?>>();
 		actionCells.add(editColumn);
 		actionCells.add(viewRecentMessagesColumn);
 		actionCells.add(statsColumn);
@@ -128,60 +128,66 @@ public class EditUsersPanel extends FlowPanel {
 		myTable.addColumn(new IdentityColumn<GUser>(actionColumn), "");
 
 		// Auth Host
-		
-		Column<GUser, SafeHtml> authHostCol = new Column<GUser, SafeHtml>(new SafeHtmlCell()){
+
+		Column<GUser, SafeHtml> authHostCol = new Column<GUser, SafeHtml>(new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(GUser theObject) {
 				BaseGAuthHost authHostByPid = myAuthenticationHostList.getAuthHostByPid(theObject.getAuthHostPid());
-				if (authHostByPid==null) {
+				if (authHostByPid == null) {
 					return SafeHtmlUtils.fromString("ERROR");
 				}
 				return SafeHtmlUtils.fromString(authHostByPid.getModuleName());
-			}};
+			}
+		};
 		myTable.addColumn(authHostCol, MSGS.editUsersPanel_ColumnAuthHost());
-		
+
 		// Username
-		
-		Column<GUser, SafeHtml> usernameCol = new Column<GUser, SafeHtml>(new SafeHtmlCell()){
+
+		Column<GUser, SafeHtml> usernameCol = new Column<GUser, SafeHtml>(new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(GUser theObject) {
 				return SafeHtmlUtils.fromString(theObject.getUsername());
-			}};
+			}
+		};
 		myTable.addColumn(usernameCol, MSGS.editUsersPanel_ColumnUsername());
 
 		// Description
-		
-		Column<GUser, SafeHtml> descriptionCol = new Column<GUser, SafeHtml>(new SafeHtmlCell()){
+
+		Column<GUser, SafeHtml> descriptionCol = new Column<GUser, SafeHtml>(new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(GUser theObject) {
 				return SafeHtmlUtils.fromString(StringUtil.defaultString(theObject.getDescription()));
-			}};
+			}
+		};
 		myTable.addColumn(descriptionCol, MSGS.editUsersPanel_ColumnDescription());
-		
+
 		// Last Access
-		
-		Column<GUser, SafeHtml> lastAccessCol = new Column<GUser, SafeHtml>(new SafeHtmlCell()){
+
+		Column<GUser, SafeHtml> lastAccessCol = new Column<GUser, SafeHtml>(new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(GUser theObject) {
 				return SafeHtmlUtils.fromString(DateUtil.formatTimeElapsedForLastInvocation(theObject.getStatsLastAccess()));
-			}};
+			}
+		};
 		myTable.addColumn(lastAccessCol, MSGS.editUsersPanel_ColumnLastServiceAccess());
 
 		// Transactions
-		
-		Column<GUser, SafeHtml> transactionsCol = new Column<GUser, SafeHtml>(new SafeHtmlCell()){
+
+		Column<GUser, SafeHtml> transactionsCol = new Column<GUser, SafeHtml>(new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(GUser theObject) {
 				SafeHtmlBuilder b = new SafeHtmlBuilder();
-				List<Integer> success=theObject.getStatsSuccessTransactions();
-				List<Integer> fault=theObject.getStatsFaultTransactions();
-				List<Integer> fail=null;
-				List<Integer> secFail=theObject.getStatsSecurityFailTransactions();
-				List<Long> statsTimestamps=theObject.getStats60MinsTimestamps();
-				BaseDetailPanel.renderTransactionGraphsAsHtml(b, success, fault, fail, secFail, statsTimestamps);
-				
+				int[] success = theObject.getTransactions60mins();
+				int[] fault = theObject.getTransactionsFault60mins();
+				int[] fail = theObject.getTransactionsFail60mins();
+				int[] secFail = theObject.getTransactionsSecurityFail60mins();
+				Date firstDate = theObject.getStatistics60MinuteFirstDate();
+				Date lastAccess = theObject.getStatsLastAccess();
+				BaseDetailPanel.renderTransactionGraphsAsHtml(b, success, fault, fail, secFail, firstDate, true,lastAccess);
+
 				return b.toSafeHtml();
-			}};
+			}
+		};
 		myTable.addColumn(transactionsCol, MSGS.editUsersPanel_ColumnTransactions());
 
 		myMethodDataProvider = new ListDataProvider<GUser>();
@@ -189,14 +195,14 @@ public class EditUsersPanel extends FlowPanel {
 
 		// Sorting
 		ListHandler<GUser> columnSortHandler = new ListHandler<GUser>(myMethodDataProvider.getList());
-		
+
 		authHostCol.setSortable(true);
 		columnSortHandler.setComparator(authHostCol, new Comparator<GUser>() {
 			@Override
 			public int compare(GUser theO1, GUser theO2) {
 				String ah1 = myAuthenticationHostList.getAuthHostByPid(theO1.getAuthHostPid()).getModuleName();
 				String ah2 = myAuthenticationHostList.getAuthHostByPid(theO2.getAuthHostPid()).getModuleName();
-				return StringUtil.compare(ah1,ah2);
+				return StringUtil.compare(ah1, ah2);
 			}
 		});
 		usernameCol.setSortable(true);
@@ -205,7 +211,7 @@ public class EditUsersPanel extends FlowPanel {
 			public int compare(GUser theO1, GUser theO2) {
 				String ah1 = theO1.getUsername();
 				String ah2 = theO2.getUsername();
-				return StringUtil.compare(ah1,ah2);
+				return StringUtil.compare(ah1, ah2);
 			}
 		});
 		descriptionCol.setSortable(true);
@@ -221,21 +227,21 @@ public class EditUsersPanel extends FlowPanel {
 			public int compare(GUser theO1, GUser theO2) {
 				Date la1 = theO1.getStatsLastAccess();
 				Date la2 = theO2.getStatsLastAccess();
-				if (la1==null && la2==null) {
+				if (la1 == null && la2 == null) {
 					return 0;
 				}
-				if (la1==null) {
+				if (la1 == null) {
 					return -1;
 				}
-				if (la2==null) {
+				if (la2 == null) {
 					return 1;
 				}
-				long cmp = (la1.getTime()-la2.getTime());
+				long cmp = (la1.getTime() - la2.getTime());
 				if (cmp > 0) {
 					return 1;
-				}else if (cmp < 0) {
+				} else if (cmp < 0) {
 					return -1;
-				}else {
+				} else {
 					return 0;
 				}
 			}
@@ -244,21 +250,21 @@ public class EditUsersPanel extends FlowPanel {
 		columnSortHandler.setComparator(transactionsCol, new Comparator<GUser>() {
 			@Override
 			public int compare(GUser theO1, GUser theO2) {
-				double cmp = theO1.getStatsTotalAvgPerMin() - theO2.getStatsTotalAvgPerMin();
+				double cmp = theO1.getMaxTotalTransactionsPerMin() - theO2.getMaxTotalTransactionsPerMin();
 				if (cmp > 0.0) {
 					return 1;
-				}else if (cmp < 0.0) {
+				} else if (cmp < 0.0) {
 					return -1;
-				}else {
+				} else {
 					return 0;
 				}
 			}
 		});
-		
+
 		myTable.addColumnSortHandler(columnSortHandler);
 		myTable.getColumnSortList().clear();
 		myTable.getColumnSortList().push(new ColumnSortInfo(usernameCol, true));
-		
+
 		HorizontalPanel addPanel = new HorizontalPanel();
 		contentPanel.add(addPanel);
 
@@ -298,7 +304,7 @@ public class EditUsersPanel extends FlowPanel {
 
 		PartialUserListRequest request = new PartialUserListRequest();
 		request.setLoadStats(true);
-		
+
 		AsyncCallback<GPartialUserList> callback = new AsyncCallback<GPartialUserList>() {
 			@Override
 			public void onFailure(Throwable theCaught) {
@@ -318,15 +324,15 @@ public class EditUsersPanel extends FlowPanel {
 		Model.getInstance().loadAuthenticationHosts(new IAsyncLoadCallback<GAuthenticationHostList>() {
 			@Override
 			public void onSuccess(GAuthenticationHostList theResult) {
-				myAuthenticationHostList=theResult;
+				myAuthenticationHostList = theResult;
 				myUserList = theUserList;
-				
+
 				myMethodDataProvider.getList().addAll(myUserList.toCollection());
 				myMethodDataProvider.refresh();
-		        ColumnSortEvent.fire(myTable, myTable.getColumnSortList());
+				ColumnSortEvent.fire(myTable, myTable.getColumnSortList());
 			}
 		});
-		
+
 	}
 
 	private void viewUserRecentMessages(GUser theNextUser) {

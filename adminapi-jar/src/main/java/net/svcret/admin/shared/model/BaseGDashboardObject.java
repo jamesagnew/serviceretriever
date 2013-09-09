@@ -29,25 +29,25 @@ public abstract class BaseGDashboardObject extends BaseDtoKeepsRecentMessages {
 
 	@XmlElement(name="config_Id")
 	private String myId;
-	
+
 	@XmlElement(name="runtime_LastServerSecurityFailure")
 	private Date myLastServerSecurityFailure;
-
+	
 	@XmlElement(name="runtime_LastSuccessfulInvocation")
 	private Date myLastSuccessfulInvocation;
-	
+
 	@XmlElement(name="runtime_LatencyInMillisOver60Mins")
 	private DtoIntArray myLatency60mins;
-	
+
 	@XmlElement(name="runtime_MaxFailLatencyOverLast60Min")
 	private long myMaxFailTransactionsPerMin60min;
 
 	@XmlElement(name="runtime_MaxFaultLatencyOverLast60Min")
 	private long myMaxFaultTransactionsPerMin60min;
-
+	
 	@XmlElement(name="runtime_MaxLatencyInMillisOver60Mins")
 	private int myMaxLatency60min;
-
+	
 	@XmlElement(name="runtime_MaxSecurityFailLatencyOverLast60Min")
 	private long myMaxSecurityFailTransactionsPerMin60min;
 
@@ -56,6 +56,9 @@ public abstract class BaseGDashboardObject extends BaseDtoKeepsRecentMessages {
 
 	@XmlElement(name="config_Name")
 	private String myName;
+
+	@XmlElement(name="runtime_Stats60MinutesFirstDate")
+	private Date myStatistics60MinuteFirstDate ;
 
 	@XmlElement(name="runtime_StatsInitialized")
 	private Date myStatsInitialized;
@@ -96,6 +99,10 @@ public abstract class BaseGDashboardObject extends BaseDtoKeepsRecentMessages {
 
 	public double getAverageSecurityFailTransactionsPerMin60min() {
 		return myAverageSecurityFailTransactionsPerMin60min;
+	}
+
+	public double getAverageTotalTransactions() {
+		return getAverageTransactionsPerMin60min() + getAverageFaultTransactionsPerMin60min() + getAverageFailTransactionsPerMin60min() + getAverageSecurityFailTransactionsPerMin60min();
 	}
 
 	/**
@@ -152,6 +159,10 @@ public abstract class BaseGDashboardObject extends BaseDtoKeepsRecentMessages {
 		return myMaxSecurityFailTransactionsPerMin60min;
 	}
 
+	public double getMaxTotalTransactionsPerMin() {
+		return getMaxTransactionsPerMin60min() + getMaxFaultTransactionsPerMin60min() + getMaxFailTransactionsPerMin60min() + getMaxSecurityFailTransactionsPerMin60min();
+	}
+
 	/**
 	 * @return the averageTransactionsPerMin
 	 */
@@ -164,6 +175,10 @@ public abstract class BaseGDashboardObject extends BaseDtoKeepsRecentMessages {
 	 */
 	public String getName() {
 		return myName;
+	}
+
+	public Date getStatistics60MinuteFirstDate() {
+		return myStatistics60MinuteFirstDate;
 	}
 
 	/**
@@ -186,12 +201,12 @@ public abstract class BaseGDashboardObject extends BaseDtoKeepsRecentMessages {
 	public int[] getTransactions60mins() {
 		return DtoIntArray.from(myTransactions60mins);
 	}
-
+	
+	
 	public int[] getTransactionsFail60mins() {
 		return DtoIntArray.from(myTransactionsFail60mins);
 	}
-	
-	
+
 	public int[] getTransactionsFault60mins() {
 		return DtoIntArray.from(myTransactionsFault60mins);
 	}
@@ -233,9 +248,13 @@ public abstract class BaseGDashboardObject extends BaseDtoKeepsRecentMessages {
 			setStatsInitialized(obj.getStatsInitialized());
 			setStatus(obj.getStatus());
 			setTransactions60mins(obj.getTransactions60mins());
+			setTransactionsFault60mins(obj.getTransactionsFault60mins());
+			setTransactionsFail60mins(obj.getTransactionsFail60mins());
+			setTransactionsSecurityFail60mins(obj.getTransactionsSecurityFail60mins());
 			setLatency60mins(obj.getLatency60mins());
 			setLastServerSecurityFailure(obj.getLastServerSecurityFailure());
 			setLastSuccessfulInvocation(obj.getLastSuccessfulInvocation());
+			setStatistics60MinuteFirstDate(obj.getStatistics60MinuteFirstDate());
 		}
 	}
 
@@ -300,6 +319,10 @@ public abstract class BaseGDashboardObject extends BaseDtoKeepsRecentMessages {
 	 */
 	public void setName(String theName) {
 		myName = theName;
+	}
+
+	public void setStatistics60MinuteFirstDate(Date theFirstDate) {
+		myStatistics60MinuteFirstDate =theFirstDate;
 	}
 
 	/**

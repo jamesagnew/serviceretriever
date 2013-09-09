@@ -31,4 +31,6 @@ public interface IDashModel {
 	Widget renderLatency();
 
 	Widget renderSecurity();
+
+	IProvidesWidget getUsageTooltip();
 }

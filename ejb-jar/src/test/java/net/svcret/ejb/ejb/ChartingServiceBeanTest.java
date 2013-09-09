@@ -14,6 +14,7 @@ import net.svcret.admin.shared.model.TimeRange;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatus;
+import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
@@ -33,7 +34,7 @@ public class ChartingServiceBeanTest {
 	private IConfigService myConfigSvc;
 	private IDao myDao;
 	private IScheduler myScheduler;
-	private IRuntimeStatus myStatus;
+	private IRuntimeStatusQueryLocal myStatus;
 	private SimpleDateFormat myFmt;
 	private PersConfig myConfig;
 	private SimpleDateFormat myFmtSecs;
@@ -58,7 +59,7 @@ public class ChartingServiceBeanTest {
 		myScheduler =mock(IScheduler.class);
 		mySvc.setSchedulerForUnitTest(myScheduler);
 		
-		myStatus=mock(IRuntimeStatus.class);
+		myStatus=mock(IRuntimeStatusQueryLocal.class);
 		mySvc.setStatusForUnitTest(myStatus);
 		
 	}

@@ -312,7 +312,7 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Last Access")
 	String editUsersPanel_ColumnLastServiceAccess();
 
-	@DefaultMessage("Transactions")
+	@DefaultMessage("60 Min Usage")
 	String editUsersPanel_ColumnTransactions();
 
 	@DefaultMessage("Username")

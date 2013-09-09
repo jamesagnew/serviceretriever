@@ -14,6 +14,7 @@ import javax.ejb.TransactionAttributeType;
 
 import net.svcret.admin.shared.model.RetrieverNodeTypeEnum;
 import net.svcret.ejb.api.IConfigService;
+import net.svcret.ejb.api.IFilesystemAuditLogger;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IMonitorService;
 import net.svcret.ejb.api.IRuntimeStatus;
@@ -46,6 +47,9 @@ public class SchedulerBean implements IScheduler {
 	@EJB
 	private IHttpClient myHttpClient;
 
+	@EJB
+	private IFilesystemAuditLogger myFilesystemAuditLogger;
+	
 	private long myLastStatsFlush;
 
 	@Override
@@ -58,6 +62,17 @@ public class SchedulerBean implements IScheduler {
 
 			ourLog.debug("collapseStats()");
 			myStatsSvc.collapseStats();
+		} catch (Exception e) {
+			ourLog.error("Failed to collapse stats", e);
+		}
+	}
+
+	@Override
+	@Schedule(second = "0", minute = "*", hour = "*", persistent = false)
+	public void flushFilesystemAuditEvents() {
+		try {
+			ourLog.debug("flushFilesystemAuditEvents()");
+			myFilesystemAuditLogger.flushAuditEventsIfNeeded();
 		} catch (Exception e) {
 			ourLog.error("Failed to collapse stats", e);
 		}

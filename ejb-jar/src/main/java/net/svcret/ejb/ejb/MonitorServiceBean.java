@@ -27,7 +27,7 @@ import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IMonitorNotifier;
 import net.svcret.ejb.api.IMonitorService;
-import net.svcret.ejb.api.IRuntimeStatus;
+import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
 import net.svcret.ejb.ex.ProcessingException;
@@ -64,7 +64,7 @@ public class MonitorServiceBean implements IMonitorService {
 	private IDao myDao;
 
 	@EJB
-	private IRuntimeStatus myRuntimeStatus;
+	private IRuntimeStatusQueryLocal myRuntimeStatus;
 
 	@EJB
 	private IBroadcastSender myBroadcastSender;
@@ -306,7 +306,7 @@ public class MonitorServiceBean implements IMonitorService {
 	}
 
 	@VisibleForTesting
-	void setRuntimeStatus(IRuntimeStatus theRuntimeStatus) {
+	void setRuntimeStatus(IRuntimeStatusQueryLocal theRuntimeStatus) {
 		myRuntimeStatus = theRuntimeStatus;
 	}
 

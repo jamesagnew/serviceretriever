@@ -15,18 +15,21 @@ import javax.persistence.EntityManager;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
+import net.svcret.admin.shared.model.BaseGDashboardObject;
+import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
+import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
+import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
-import net.svcret.admin.shared.model.GMonitorRulePassive;
 import net.svcret.admin.shared.model.GMonitorRuleList;
+import net.svcret.admin.shared.model.GMonitorRulePassive;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
-import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
-import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.GUserDomainPermission;
@@ -42,20 +45,16 @@ import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IBroadcastSender;
-import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.api.IServiceInvokerSoap11;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.ejb.AdminServiceBean.IWithStats;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
+import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
-import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
-import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
-import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
 import net.svcret.ejb.model.entity.PersLibraryMessage;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
@@ -64,6 +63,7 @@ import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 
+import org.apache.commons.lang3.time.DateUtils;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
@@ -84,6 +84,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	private TransactionLoggerBean myTransactionLogSvc;
 	private MonitorServiceBean myMonitorSvc;
 	private RuntimeStatusQueryBean myStatsQSvc;
+	private Date myEverythingInvocationTime;
 
 	@After
 	public void after2() {
@@ -97,6 +98,90 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	private static long ourNextPid;
+
+	@Test
+	public void testSaveHttpClientConfig() throws ProcessingException {
+		createEverything();
+		newEntityManager();
+
+		ModelUpdateRequest req = new ModelUpdateRequest();
+		req.setLoadHttpClientConfigs(true);
+		ModelUpdateResponse resp = mySvc.loadModelUpdate(req);
+
+		GHttpClientConfig cfg = resp.getHttpClientConfigList().get(0);
+
+		newEntityManager();
+
+		int cb1 = 1111;
+		int cb2 = 1112;
+		int cb3 = 1113;
+		int cb4 = 1114;
+		cfg.setCircuitBreakerEnabled(true);
+		cfg.setCircuitBreakerTimeBetweenResetAttempts(cb1);
+		cfg.setConnectTimeoutMillis(cb2);
+		cfg.setFailureRetriesBeforeAborting(cb3);
+		cfg.setReadTimeoutMillis(cb4);
+		mySvc.saveHttpClientConfig(cfg, null, null, null, null);
+
+		newEntityManager();
+		req = new ModelUpdateRequest();
+		req.setLoadHttpClientConfigs(true);
+		resp = mySvc.loadModelUpdate(req);
+		cfg = resp.getHttpClientConfigList().get(0);
+		assertEquals(cb1, cfg.getCircuitBreakerTimeBetweenResetAttempts());
+		assertEquals(cb2, cfg.getConnectTimeoutMillis());
+		assertEquals(cb3, cfg.getFailureRetriesBeforeAborting());
+		assertEquals(cb4, cfg.getReadTimeoutMillis());
+		
+		newEntityManager();
+
+		cb1 = 2111;
+		cb2 = 2112;
+		cb3 = 2113;
+		 cb4 = 2114;
+		cfg.setCircuitBreakerEnabled(true);
+		cfg.setCircuitBreakerTimeBetweenResetAttempts(cb1);
+		cfg.setConnectTimeoutMillis(cb2);
+		cfg.setFailureRetriesBeforeAborting(cb3);
+		cfg.setReadTimeoutMillis(cb4);
+		mySvc.saveHttpClientConfig(cfg, null, null, null, null);
+
+		newEntityManager();
+		req = new ModelUpdateRequest();
+		req.setLoadHttpClientConfigs(true);
+		resp = mySvc.loadModelUpdate(req);
+		cfg = resp.getHttpClientConfigList().get(0);
+		assertEquals(cb1, cfg.getCircuitBreakerTimeBetweenResetAttempts());
+		assertEquals(cb2, cfg.getConnectTimeoutMillis());
+		assertEquals(cb3, cfg.getFailureRetriesBeforeAborting());
+		assertEquals(cb4, cfg.getReadTimeoutMillis());
+		
+		newEntityManager();
+
+		cb1 = 3111;
+		cb2 = 3112;
+		cb3 = 3113;
+		cb4 = 3114;
+		cfg.setCircuitBreakerEnabled(true);
+		cfg.setCircuitBreakerTimeBetweenResetAttempts(cb1);
+		cfg.setConnectTimeoutMillis(cb2);
+		cfg.setFailureRetriesBeforeAborting(cb3);
+		cfg.setReadTimeoutMillis(cb4);
+		mySvc.saveHttpClientConfig(cfg, null, null, null, null);
+
+		newEntityManager();
+		req = new ModelUpdateRequest();
+		req.setLoadHttpClientConfigs(true);
+		resp = mySvc.loadModelUpdate(req);
+		cfg = resp.getHttpClientConfigList().get(0);
+		assertEquals(cb1, cfg.getCircuitBreakerTimeBetweenResetAttempts());
+		assertEquals(cb2, cfg.getConnectTimeoutMillis());
+		assertEquals(cb3, cfg.getFailureRetriesBeforeAborting());
+		assertEquals(cb4, cfg.getReadTimeoutMillis());
+		
+		newEntityManager();
+
+	}
 
 	@Test
 	public void testLibrary() throws ProcessingException {
@@ -126,7 +211,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		Collection<DtoLibraryMessage> msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION,version0.getPid(), true);
+		Collection<DtoLibraryMessage> msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION, version0.getPid(), true);
 		assertEquals(1, msgs.size());
 
 		DtoLibraryMessage message = msgs.iterator().next();
@@ -134,7 +219,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		assertEquals("desc0", message.getDescription());
 		assertEquals("m0", message.getMessage());
 
-		msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION,version1.getPid(), true);
+		msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION, version1.getPid(), true);
 		assertEquals(1, msgs.size());
 
 		message.setAppliesToServiceVersionPids(version0.getPid(), version1.getPid());
@@ -154,42 +239,25 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		PersLibraryMessage pm = myDao.getLibraryMessageByPid(message.getPid());
 		assertEquals(1, pm.getAppliesTo().size());
-		
+
 		newEntityManager();
 
 		pm = myDao.getLibraryMessageByPid(message.getPid());
 		assertEquals(1, pm.getAppliesTo().size());
-		
-		msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION,version0.getPid(), true);
+
+		msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION, version0.getPid(), true);
 		assertEquals(0, msgs.size());
-		msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION,version1.getPid(), true);
-		assertEquals(2, msgs.size());
-		
-		msgs = mySvc.getLibraryMessages(HierarchyEnum.SERVICE,service.getPid(), true);
+		msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION, version1.getPid(), true);
 		assertEquals(2, msgs.size());
 
-		msgs = mySvc.getLibraryMessages(HierarchyEnum.DOMAIN,domain.getPid(), true);
+		msgs = mySvc.getLibraryMessages(HierarchyEnum.SERVICE, service.getPid(), true);
+		assertEquals(2, msgs.size());
+
+		msgs = mySvc.getLibraryMessages(HierarchyEnum.DOMAIN, domain.getPid(), true);
 		assertEquals(2, msgs.size());
 
 		msgs = mySvc.loadLibraryMessages();
 		assertEquals(2, msgs.size());
-
-	}
-
-	@SuppressWarnings("unchecked")
-	@Test
-	public void testDoWithStats() {
-
-		PersDomain domain = new PersDomain(ourNextPid++, "d");
-		PersService service = new PersService(ourNextPid++, domain, "s", "s");
-		PersServiceVersionSoap11 sv = new PersServiceVersionSoap11(ourNextPid++, service, "v");
-		PersServiceVersionMethod method = new PersServiceVersionMethod(ourNextPid++, sv, "m");
-
-		PersConfig config = new PersConfig();
-		config.setDefaults();
-		IRuntimeStatus statusSvc = mock(IRuntimeStatus.class, DefaultAnswer.INSTANCE);
-		IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> operator = mock(IWithStats.class);
-		AdminServiceBean.doWithStatsByMinute(config, 12 * 60, statusSvc, method, operator);
 
 	}
 
@@ -209,6 +277,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		myStatsQSvc = new RuntimeStatusQueryBean();
 		myStatsQSvc.setConfigSvcForUnitTest(myConfigSvc);
 		myStatsQSvc.setStatusSvcForUnitTest(myStatsSvc);
+		myStatsQSvc.setDaoForUnitTests(myDao);
 
 		mySoapInvoker = mock(IServiceInvokerSoap11.class, new DefaultAnswer());
 
@@ -287,17 +356,17 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		assertEquals(1, response.getDomainList().get(0).getServiceList().get(0).getVersionList().get(0).getMethodList().size());
 
 		// Make sure we don't replace identical methods
-		
+
 		GServiceMethod oldMethod = d1s1v1.getMethodList().remove(0);
-		
+
 		d1s1v1.getMethodList().add(new GServiceMethod());
 		d1s1v1.getMethodList().get(0).setId(oldMethod.getId());
 		d1s1v1.getMethodList().get(0).setName(oldMethod.getName());
 		d1s1v1.getMethodList().get(0).setRootElements(oldMethod.getRootElements());
 		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-		
+
 		newEntityManager();
-		
+
 		response = mySvc.loadModelUpdate(new ModelUpdateRequest());
 		assertEquals(1, response.getDomainList().size());
 		assertEquals(1, response.getDomainList().get(0).getServiceList().size());
@@ -306,8 +375,6 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		assertEquals(oldMethod.getPid(), response.getDomainList().get(0).getServiceList().get(0).getVersionList().get(0).getMethodList().get(0).getPid());
 
 	}
-	
-	
 
 	@Test
 	public void testAddMonitorRule() throws ProcessingException {
@@ -1024,7 +1091,9 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		httpResponse.setResponseTime(123);
 		InvocationResponseResultsBean bean = new InvocationResponseResultsBean();
 		bean.setResponseType(ResponseTypeEnum.SUCCESS);
-		myStatsSvc.recordInvocationMethod(new Date(), 100, m1, null, httpResponse, bean, null);
+
+		myEverythingInvocationTime = new Date();
+		myStatsSvc.recordInvocationMethod(myEverythingInvocationTime, 100, m1, null, httpResponse, bean, null);
 
 		newEntityManager();
 
@@ -1052,7 +1121,12 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		myTransactionLogSvc.flush();
 
 		newEntityManager();
-		return d1;
+
+		mySvcReg.reloadRegistryFromDatabase();
+
+		newEntityManager();
+
+		return mySvc.getDomainByPid(d1.getPid());
 	}
 
 	@Test
@@ -1121,7 +1195,41 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 	}
 
-//	@Test
+	@Test
+	public void testLoad60MinuteStats() throws ProcessingException {
+		GDomain domain = createEverything();
+		GService svc = domain.getServiceList().get(0);
+		BaseGServiceVersion svcVer = svc.getVersionList().get(0);
+
+		newEntityManager();
+
+		ModelUpdateRequest request = new ModelUpdateRequest();
+		request.addDomainToLoadStats(domain.getPid());
+		request.addServiceToLoadStats(svc.getPid());
+		request.addVersionToLoadStats(svcVer.getPid());
+		ModelUpdateResponse modelResp = mySvc.loadModelUpdate(request);
+
+		domain = modelResp.getDomainList().get(0);
+		svc = domain.getServiceList().get(0);
+		svcVer = svc.getVersionList().get(0);
+
+		testLoad60MinuteStats_CheckStats(domain);
+		testLoad60MinuteStats_CheckStats(svc);
+		testLoad60MinuteStats_CheckStats(svcVer);
+
+	}
+
+	private void testLoad60MinuteStats_CheckStats(BaseGDashboardObject obj) {
+		int[] trans = obj.getTransactions60mins();
+		Date firstDate = obj.getStatistics60MinuteFirstDate();
+		Date expected = InvocationStatsIntervalEnum.MINUTE.truncate(new Date(System.currentTimeMillis() - (59 * DateUtils.MILLIS_PER_MINUTE)));
+		assertEquals(expected, firstDate);
+		assertEquals(60, trans.length);
+		assertEquals(1, trans[59]);
+		assertEquals(0, trans[58]);
+	}
+
+	// @Test
 	public void testMultipleStatsLoadsInParallel() throws Exception {
 		newEntityManager();
 
@@ -1330,10 +1438,10 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		private Exception myFailed;
 		private final ModelUpdateRequest myReq;
 		private ServiceRegistryBean mySvcReg;
-		
+
 		private RetrieverThread(ModelUpdateRequest theReq, ServiceRegistryBean theSvcReg) {
 			myReq = theReq;
-			mySvcReg=theSvcReg;
+			mySvcReg = theSvcReg;
 		}
 
 		@Override
@@ -1348,14 +1456,14 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 				RuntimeStatusBean rs = new RuntimeStatusBean();
 				rs.setDao(dao);
 
-				ConfigServiceBean cs =new ConfigServiceBean();
+				ConfigServiceBean cs = new ConfigServiceBean();
 				cs.setBroadcastSender(mock(IBroadcastSender.class));
 				cs.setDao(dao);
-				
-				RuntimeStatusQueryBean rqb  = new RuntimeStatusQueryBean();
+
+				RuntimeStatusQueryBean rqb = new RuntimeStatusQueryBean();
 				rqb.setConfigSvcForUnitTest(cs);
 				rqb.setStatusSvcForUnitTest(rs);
-				
+
 				AdminServiceBean sSvc = new AdminServiceBean();
 				sSvc.setPersSvc(dao);
 				sSvc.setConfigSvc(cs);

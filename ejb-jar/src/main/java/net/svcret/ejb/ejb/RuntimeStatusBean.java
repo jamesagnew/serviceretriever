@@ -1,15 +1,10 @@
 package net.svcret.ejb.ejb;
 
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.DAY;
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.HOUR;
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.MINUTE;
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.TEN_MINUTE;
+import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.*;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -43,18 +38,18 @@ import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStatsPk;
+import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.BasePersStats;
 import net.svcret.ejb.model.entity.BasePersStatsPk;
-import net.svcret.ejb.model.entity.BasePersInvocationStats;
-import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.IThrottleable;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
+import net.svcret.ejb.model.entity.PersInvocationMethodUserStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUrlStats;
 import net.svcret.ejb.model.entity.PersInvocationUrlStatsPk;
-import net.svcret.ejb.model.entity.PersInvocationMethodUserStatsPk;
 import net.svcret.ejb.model.entity.PersNodeStats;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
@@ -68,45 +63,35 @@ import net.svcret.ejb.model.entity.PersUserMethodStatus;
 import net.svcret.ejb.model.entity.PersUserStatus;
 import net.svcret.ejb.util.Validate;
 
-import org.apache.commons.lang3.time.DateUtils;
-
 @Singleton
 @Startup
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class RuntimeStatusBean implements IRuntimeStatus {
 
-	private static final int INITIAL_CACHED_ENTRIES = 80000;
 	private static final int MAX_STATS_TO_FLUSH_AT_ONCE = 100;
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(RuntimeStatusBean.class);
 
-	private final BasePersStats<?, ?> PLACEHOLDER = new Placeholder();
 	private final ReentrantLock myCollapseLock = new ReentrantLock();
-	
+
 	@EJB
 	private IConfigService myConfigSvc;
 
 	@EJB
 	private IDao myDao;
-	
+
 	private ReentrantLock myFlushLock = new ReentrantLock();
 
-	private final ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>> myInvocationStatCache;
-	private final ArrayDeque<BasePersStatsPk<?, ?>> myInvocationStatEmptyKeys;
-	private final ArrayDeque<BasePersStatsPk<?, ?>> myInvocationStatPopulatedKeys;
-	private int myMaxNullCachedEntries = INITIAL_CACHED_ENTRIES;
-	private int myMaxPopulatedCachedEntries = INITIAL_CACHED_ENTRIES;
+	private Date myNodeStatisticsDate;
+	private final ReentrantLock myNodeStatisticsLock = new ReentrantLock();
 	private Date myNowForUnitTests;
 	private final DateFormat myTimeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
 	private final ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>> myUnflushedInvocationStats;
 	private final ConcurrentHashMap<Long, PersServiceVersionStatus> myUnflushedServiceVersionStatus;
 	private final ConcurrentHashMap<PersUser, PersUserStatus> myUnflushedUserStatus;
+
 	private final ConcurrentHashMap<Long, PersServiceVersionUrlStatus> myUrlStatus;
-	private Date myNodeStatisticsDate;
 
 	public RuntimeStatusBean() {
-		myInvocationStatCache = new ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>>(myMaxNullCachedEntries + myMaxPopulatedCachedEntries);
-		myInvocationStatEmptyKeys = new ArrayDeque<BasePersStatsPk<?, ?>>(myMaxNullCachedEntries);
-		myInvocationStatPopulatedKeys = new ArrayDeque<BasePersStatsPk<?, ?>>(myMaxPopulatedCachedEntries);
 		myUnflushedInvocationStats = new ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>>();
 		myUnflushedServiceVersionStatus = new ConcurrentHashMap<Long, PersServiceVersionStatus>();
 		myUnflushedUserStatus = new ConcurrentHashMap<PersUser, PersUserStatus>();
@@ -127,6 +112,196 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 
 		return retVal;
+	}
+
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	@Override
+	public void collapseStats() throws ProcessingException {
+		/*
+		 * Make sure the flush only happens once per minute
+		 */
+		if (!myCollapseLock.tryLock()) {
+			return;
+		}
+		try {
+			doCollapseStats();
+		} finally {
+			myCollapseLock.unlock();
+		}
+
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	public void flushStatus() {
+
+		/*
+		 * Make sure the flush only happens once at a time
+		 */
+		if (!myFlushLock.tryLock()) {
+			return;
+		}
+		try {
+			doFlushStatus();
+		} finally {
+			myFlushLock.unlock();
+		}
+
+	}
+
+	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	@Override
+	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, PersServiceVersionMethod theMethod, PersUser theUser, HttpResponseBean theHttpResponse,
+			InvocationResponseResultsBean theInvocationResponseResultsBean, Long theThrottleFullIfAny) {
+		Validate.notNull(theInvocationTime, "InvocationTime");
+		Validate.notNull(theMethod, "Method");
+		Validate.notNull(theInvocationResponseResultsBean, "InvocationResponseResults");
+
+		ourLog.trace("Going to record method invocation");
+
+		/*
+		 * Record method statistics
+		 */
+		InvocationStatsIntervalEnum interval = MINUTE;
+		PersInvocationMethodSvcverStatsPk statsPk = new PersInvocationMethodSvcverStatsPk(interval, theInvocationTime, theMethod);
+		doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, statsPk, theThrottleFullIfAny);
+
+		/*
+		 * Record user/anon method statistics
+		 */
+		if (theUser != null) {
+			PersInvocationMethodUserStatsPk uStatsPk = new PersInvocationMethodUserStatsPk(interval, theInvocationTime, theMethod, theUser);
+			doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, uStatsPk, theThrottleFullIfAny);
+
+			doUpdateUserStatus(theMethod, theInvocationResponseResultsBean, theUser, theInvocationTime);
+		}
+
+		if (theHttpResponse != null) {
+			/*
+			 * Record URL status for successful URLs
+			 */
+			PersServiceVersionUrl successfulUrl = theHttpResponse.getSuccessfulUrl();
+			if (successfulUrl != null) {
+				PersServiceVersionUrlStatus status = getUrlStatus(successfulUrl);
+				boolean wasFault = theInvocationResponseResultsBean.getResponseType() == ResponseTypeEnum.FAULT;
+				ourLog.debug("Recording successful invocation (fault={}) for URL {}/{}", new Object[] { wasFault, successfulUrl.getPid(), successfulUrl.getUrlId() });
+
+				String message;
+				if (wasFault) {
+					message = Messages.getString("RuntimeStatusBean.faultUrl", theHttpResponse.getResponseTime(), theInvocationResponseResultsBean.getResponseFaultCode(),
+							theInvocationResponseResultsBean.getResponseFaultDescription());
+				} else {
+					message = Messages.getString("RuntimeStatusBean.successfulUrl", theHttpResponse.getResponseTime());
+				}
+				doRecordUrlStatus(true, wasFault, status, message, theHttpResponse.getContentType(), theHttpResponse.getCode());
+			}
+
+			/*
+			 * Recurd URL status for any failed URLs
+			 */
+			Map<PersServiceVersionUrl, Failure> failedUrlsMap = theHttpResponse.getFailedUrls();
+			for (Entry<PersServiceVersionUrl, Failure> nextFailedUrlEntry : failedUrlsMap.entrySet()) {
+				PersServiceVersionUrl nextFailedUrl = nextFailedUrlEntry.getKey();
+				Failure failure = nextFailedUrlEntry.getValue();
+				PersServiceVersionUrlStatus failedStatus = getUrlStatus(nextFailedUrl);
+				doRecordUrlStatus(false, false, failedStatus, failure.getExplanation(), failure.getContentType(), failure.getStatusCode());
+			}
+
+			/*
+			 * Record URL stats
+			 */
+			doRecordInvocationForUrls(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, theInvocationTime);
+		}
+
+		/*
+		 * Record Service Version status
+		 */
+		PersServiceVersionStatus serviceVersionStatus = theMethod.getServiceVersion().getStatus();
+		serviceVersionStatus = getStatusForPk(serviceVersionStatus, serviceVersionStatus.getPid());
+
+		switch (theInvocationResponseResultsBean.getResponseType()) {
+		case SUCCESS:
+			serviceVersionStatus.setLastSuccessfulInvocation(theInvocationTime);
+			break;
+		case SECURITY_FAIL:
+			serviceVersionStatus.setLastServerSecurityFailure(theInvocationTime);
+			break;
+		case FAIL:
+			serviceVersionStatus.setLastFailInvocation(theInvocationTime);
+			break;
+		case FAULT:
+			serviceVersionStatus.setLastFaultInvocation(theInvocationTime);
+			break;
+		case THROTTLE_REJ:
+			serviceVersionStatus.setLastThrottleReject(theInvocationTime);
+			break;
+		}
+
+	}
+
+	@TransactionAttribute(TransactionAttributeType.NEVER)
+	@Override
+	public void recordInvocationStaticResource(Date theInvocationTime, PersServiceVersionResource theResource) {
+		Validate.notNull(theInvocationTime, "InvocationTime");
+		Validate.notNull(theResource, "ServiceVersionResource");
+
+		InvocationStatsIntervalEnum interval = MINUTE;
+
+		PersStaticResourceStatsPk statsPk = new PersStaticResourceStatsPk(interval, theInvocationTime, theResource);
+		PersStaticResourceStats stats = getStatsForPk(statsPk);
+
+		stats.addAccess();
+	}
+
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	@Override
+	public void recordNodeStatistics() {
+		if (!myNodeStatisticsLock.tryLock()) {
+			return;
+		}
+		try {
+			ourLog.debug("Recording node statistics");
+
+			Date date = InvocationStatsIntervalEnum.MINUTE.truncate(new Date());
+			if (date.equals(myNodeStatisticsDate)) {
+				return;
+			}
+
+			PersNodeStats stats = new PersNodeStats(InvocationStatsIntervalEnum.MINUTE, date, myConfigSvc.getNodeId());
+			stats.collectMemoryStats();
+
+			myDao.saveInvocationStats(Collections.singletonList(stats));
+
+			myNodeStatisticsDate = date;
+		} finally {
+			myNodeStatisticsLock.unlock();
+		}
+	}
+
+	@Override
+	public void recordUrlFailure(PersServiceVersionUrl theUrl, Failure theFailure) {
+		Validate.notNull(theUrl, "Url");
+		Validate.notNull(theFailure, "Failure");
+
+		PersServiceVersionUrlStatus status = getUrlStatus(theUrl);
+		status.setLastFail(new Date());
+		status.setLastFailContentType(theFailure.getContentType());
+		status.setLastFailMessage(theFailure.getExplanation());
+		status.setLastFailStatusCode(theFailure.getStatusCode());
+
+		// Do this last since it triggers a state change
+		status.setStatus(StatusEnum.DOWN);
+	}
+
+	@Override
+	public void reloadUrlStatus(Long thePid) {
+		PersServiceVersionUrl url = myDao.getServiceVersionUrlByPid(thePid);
+
+		PersServiceVersionUrlStatus inMemory = getUrlStatus(url);
+		PersServiceVersionUrlStatus fromDisk = url.getStatus();
+
+		inMemory.mergeNewer(fromDisk);
+
 	}
 
 	private void chooseUrlRoundRobin(BasePersServiceVersion theServiceVersion, UrlPoolBean theRetVal) {
@@ -249,23 +424,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		if (retVal.getPreferredUrl() == null && urls.size() > 0) {
 			retVal.setPreferredUrl(urls.remove(0));
 		}
-	}
-
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-	@Override
-	public void collapseStats() throws ProcessingException {
-		/*
-		 * Make sure the flush only happens once per minute
-		 */
-		if (!myCollapseLock.tryLock()) {
-			return;
-		}
-		try {
-			doCollapseStats();
-		} finally {
-			myCollapseLock.unlock();
-		}
-
 	}
 
 	private void doCollapseStats() throws ProcessingException {
@@ -467,6 +625,44 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 	}
 
+	private// <P2 extends BasePersStatsPk<P2,O2>, O2 extends BasePersMethodInvocationStats<P2,O2>>
+	void doRecordInvocationForUrls(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, Date theInvocationTime) {
+		if (theHttpResponse == null) {
+			return;
+		}
+
+		PersServiceVersionUrl success = theHttpResponse.getSuccessfulUrl();
+		if (success != null) {
+
+			PersInvocationUrlStatsPk statsPk = new PersInvocationUrlStatsPk(MINUTE, theInvocationTime, success.getPid());
+			PersInvocationUrlStats stats = getStatsForPk(statsPk);
+			long responseTime = theHttpResponse.getResponseTime();
+			int responseBytes = theHttpResponse.getBody().length();
+			switch (theInvocationResponseResultsBean.getResponseType()) {
+			case FAULT:
+				stats.addFaultInvocation(responseTime, theRequestLengthChars, responseBytes);
+				break;
+			case SUCCESS:
+				stats.addSuccessInvocation(responseTime, theRequestLengthChars, responseBytes);
+				break;
+			default:
+				break;
+			}
+		}
+
+		for (Entry<PersServiceVersionUrl, Failure> next : theHttpResponse.getFailedUrls().entrySet()) {
+			PersServiceVersionUrl nextUrl = next.getKey();
+			Failure nextFailure = next.getValue();
+
+			PersInvocationUrlStatsPk statsPk = new PersInvocationUrlStatsPk(MINUTE, theInvocationTime, nextUrl.getPid());
+			PersInvocationUrlStats stats = getStatsForPk(statsPk);
+			long responseTime = nextFailure.getInvocationMillis();
+			int responseBytes = nextFailure.getBody() != null ? nextFailure.getBody().length() : 0;
+			stats.addFailInvocation(responseTime, theRequestLengthChars, responseBytes);
+		}
+
+	}
+
 	private <P extends BasePersInvocationStatsPk<P, O>, O extends BasePersInvocationStats<P, O>> void doRecordInvocationMethod(int theRequestLengthChars, HttpResponseBean theHttpResponse,
 			InvocationResponseResultsBean theInvocationResponseResultsBean, P theStatsPk, Long theThrottleFullIfAny) {
 		Validate.notNull(theInvocationResponseResultsBean.getResponseType(), "responseType");
@@ -506,44 +702,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			stats.addThrottleReject();
 			break;
 		}
-	}
-
-	private// <P2 extends BasePersStatsPk<P2,O2>, O2 extends BasePersMethodInvocationStats<P2,O2>>
-	void doRecordInvocationForUrls(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, Date theInvocationTime) {
-		if (theHttpResponse == null) {
-			return;
-		}
-
-		PersServiceVersionUrl success = theHttpResponse.getSuccessfulUrl();
-		if (success != null) {
-
-			PersInvocationUrlStatsPk statsPk = new PersInvocationUrlStatsPk(MINUTE, theInvocationTime, success.getPid());
-			PersInvocationUrlStats stats = getStatsForPk(statsPk);
-			long responseTime = theHttpResponse.getResponseTime();
-			int responseBytes = theHttpResponse.getBody().length();
-			switch (theInvocationResponseResultsBean.getResponseType()) {
-			case FAULT:
-				stats.addFaultInvocation(responseTime, theRequestLengthChars, responseBytes);
-				break;
-			case SUCCESS:
-				stats.addSuccessInvocation(responseTime, theRequestLengthChars, responseBytes);
-				break;
-			default:
-				break;
-			}
-		}
-
-		for (Entry<PersServiceVersionUrl, Failure> next : theHttpResponse.getFailedUrls().entrySet()) {
-			PersServiceVersionUrl nextUrl = next.getKey();
-			Failure nextFailure = next.getValue();
-
-			PersInvocationUrlStatsPk statsPk = new PersInvocationUrlStatsPk(MINUTE, theInvocationTime, nextUrl.getPid());
-			PersInvocationUrlStats stats = getStatsForPk(statsPk);
-			long responseTime = nextFailure.getInvocationMillis();
-			int responseBytes = nextFailure.getBody() != null ? nextFailure.getBody().length(): 0;
-			stats.addFailInvocation(responseTime, theRequestLengthChars, responseBytes);
-		}
-
 	}
 
 	private void doRecordUrlStatus(boolean theWasSuccess, boolean theWasFault, PersServiceVersionUrlStatus theUrlStatusBean, String theMessage, String theContentType, int theResponseCode) {
@@ -626,85 +784,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	}
 
-	@Override
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-	public void flushStatus() {
-
-		/*
-		 * Make sure the flush only happens once at a time
-		 */
-		if (!myFlushLock.tryLock()) {
-			return;
-		}
-		try {
-			doFlushStatus();
-		} finally {
-			myFlushLock.unlock();
-		}
-
-	}
-
-	@Override
-	public int getCachedEmptyKeyCount() {
-		return myInvocationStatEmptyKeys.size();
-	}
-
-	@Override
-	public int getCachedPopulatedKeyCount() {
-		return myInvocationStatPopulatedKeys.size();
-	}
-
-	@Override
-	public <P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> O getInvocationStatsSynchronously(P thePk) {
-		Date oneMinuteAgoTruncated = DateUtils.truncate(new Date(System.currentTimeMillis() - DateUtils.MILLIS_PER_MINUTE), Calendar.MINUTE);
-		if (!thePk.getStartTime().before(oneMinuteAgoTruncated)) {
-			O retVal = myDao.getInvocationStats(thePk);
-			if (retVal == PLACEHOLDER) {
-				return thePk.newObjectInstance();
-			}
-		}
-
-		BasePersStats<?, ?> retVal = myInvocationStatCache.get(thePk);
-		if (retVal == PLACEHOLDER) {
-			return thePk.newObjectInstance();
-		} else if (retVal == null) {
-			synchronized (myInvocationStatCache) {
-				retVal = myDao.getInvocationStats(thePk);
-				if (retVal != null) {
-					if (myInvocationStatPopulatedKeys.size() + 1 > myMaxPopulatedCachedEntries) {
-						myInvocationStatCache.remove(myInvocationStatPopulatedKeys.pollFirst());
-					}
-					if (myInvocationStatCache.put(thePk, retVal) == null) {
-						myInvocationStatPopulatedKeys.add(thePk);
-					}
-				} else {
-					if (myInvocationStatEmptyKeys.size() + 1 > myMaxNullCachedEntries) {
-						myInvocationStatCache.remove(myInvocationStatEmptyKeys.pollFirst());
-					}
-					if (myInvocationStatCache.put(thePk, PLACEHOLDER) == null) {
-						myInvocationStatEmptyKeys.add(thePk);
-					}
-					retVal = thePk.newObjectInstance();
-				}
-			}
-		}
-
-		@SuppressWarnings("unchecked")
-		O temp = (O) retVal;
-		return temp;
-
-	}
-
-	@Override
-	public int getMaxCachedNullStatCount() {
-		return myMaxNullCachedEntries;
-	}
-
-	@Override
-	public int getMaxCachedPopulatedStatCount() {
-		return myMaxPopulatedCachedEntries;
-	}
-
 	private Date getNow() {
 		if (myNowForUnitTests != null) {
 			return myNowForUnitTests;
@@ -761,134 +840,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		return status;
 	}
 
-	@Override
-	public void purgeCachedStats() {
-		synchronized (myInvocationStatCache) {
-			myInvocationStatCache.clear();
-			myInvocationStatEmptyKeys.clear();
-			myInvocationStatPopulatedKeys.clear();
-		}
-	}
-
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-	@Override
-	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, PersServiceVersionMethod theMethod, PersUser theUser, HttpResponseBean theHttpResponse,
-			InvocationResponseResultsBean theInvocationResponseResultsBean, Long theThrottleFullIfAny) {
-		Validate.notNull(theInvocationTime, "InvocationTime");
-		Validate.notNull(theMethod, "Method");
-		Validate.notNull(theInvocationResponseResultsBean, "InvocationResponseResults");
-
-		ourLog.trace("Going to record method invocation");
-
-		/*
-		 * Record method statistics
-		 */
-		InvocationStatsIntervalEnum interval = MINUTE;
-		PersInvocationMethodSvcverStatsPk statsPk = new PersInvocationMethodSvcverStatsPk(interval, theInvocationTime, theMethod);
-		doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, statsPk, theThrottleFullIfAny);
-
-		/*
-		 * Record user/anon method statistics
-		 */
-		if (theUser != null) {
-			PersInvocationMethodUserStatsPk uStatsPk = new PersInvocationMethodUserStatsPk(interval, theInvocationTime, theMethod, theUser);
-			doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, uStatsPk, theThrottleFullIfAny);
-
-			doUpdateUserStatus(theMethod, theInvocationResponseResultsBean, theUser, theInvocationTime);
-		}
-
-		if (theHttpResponse != null) {
-			/*
-			 * Record URL status for successful URLs
-			 */
-			PersServiceVersionUrl successfulUrl = theHttpResponse.getSuccessfulUrl();
-			if (successfulUrl != null) {
-				PersServiceVersionUrlStatus status = getUrlStatus(successfulUrl);
-				boolean wasFault = theInvocationResponseResultsBean.getResponseType() == ResponseTypeEnum.FAULT;
-				ourLog.debug("Recording successful invocation (fault={}) for URL {}/{}", new Object[] { wasFault, successfulUrl.getPid(), successfulUrl.getUrlId() });
-
-				String message;
-				if (wasFault) {
-					message = Messages.getString("RuntimeStatusBean.faultUrl", theHttpResponse.getResponseTime(), theInvocationResponseResultsBean.getResponseFaultCode(),
-							theInvocationResponseResultsBean.getResponseFaultDescription());
-				} else {
-					message = Messages.getString("RuntimeStatusBean.successfulUrl", theHttpResponse.getResponseTime());
-				}
-				doRecordUrlStatus(true, wasFault, status, message, theHttpResponse.getContentType(), theHttpResponse.getCode());
-			}
-
-			/*
-			 * Recurd URL status for any failed URLs
-			 */
-			Map<PersServiceVersionUrl, Failure> failedUrlsMap = theHttpResponse.getFailedUrls();
-			for (Entry<PersServiceVersionUrl, Failure> nextFailedUrlEntry : failedUrlsMap.entrySet()) {
-				PersServiceVersionUrl nextFailedUrl = nextFailedUrlEntry.getKey();
-				Failure failure = nextFailedUrlEntry.getValue();
-				PersServiceVersionUrlStatus failedStatus = getUrlStatus(nextFailedUrl);
-				doRecordUrlStatus(false, false, failedStatus, failure.getExplanation(), failure.getContentType(), failure.getStatusCode());
-			}
-
-			/*
-			 * Record URL stats
-			 */
-			doRecordInvocationForUrls(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, theInvocationTime);
-		}
-
-		/*
-		 * Record Service Version status
-		 */
-		PersServiceVersionStatus serviceVersionStatus = theMethod.getServiceVersion().getStatus();
-		serviceVersionStatus = getStatusForPk(serviceVersionStatus, serviceVersionStatus.getPid());
-
-		switch (theInvocationResponseResultsBean.getResponseType()) {
-		case SUCCESS:
-			serviceVersionStatus.setLastSuccessfulInvocation(theInvocationTime);
-			break;
-		case SECURITY_FAIL:
-			serviceVersionStatus.setLastServerSecurityFailure(theInvocationTime);
-			break;
-		case FAIL:
-			serviceVersionStatus.setLastFailInvocation(theInvocationTime);
-			break;
-		case FAULT:
-			serviceVersionStatus.setLastFaultInvocation(theInvocationTime);
-			break;
-		case THROTTLE_REJ:
-			serviceVersionStatus.setLastThrottleReject(theInvocationTime);
-			break;
-		}
-
-	}
-
-	@TransactionAttribute(TransactionAttributeType.NEVER)
-	@Override
-	public void recordInvocationStaticResource(Date theInvocationTime, PersServiceVersionResource theResource) {
-		Validate.notNull(theInvocationTime, "InvocationTime");
-		Validate.notNull(theResource, "ServiceVersionResource");
-
-		InvocationStatsIntervalEnum interval = MINUTE;
-
-		PersStaticResourceStatsPk statsPk = new PersStaticResourceStatsPk(interval, theInvocationTime, theResource);
-		PersStaticResourceStats stats = getStatsForPk(statsPk);
-
-		stats.addAccess();
-	}
-
-	@Override
-	public void recordUrlFailure(PersServiceVersionUrl theUrl, Failure theFailure) {
-		Validate.notNull(theUrl, "Url");
-		Validate.notNull(theFailure, "Failure");
-
-		PersServiceVersionUrlStatus status = getUrlStatus(theUrl);
-		status.setLastFail(new Date());
-		status.setLastFailContentType(theFailure.getContentType());
-		status.setLastFailMessage(theFailure.getExplanation());
-		status.setLastFailStatusCode(theFailure.getStatusCode());
-
-		// Do this last since it triggers a state change
-		status.setStatus(StatusEnum.DOWN);
-	}
-
 	void setConfigSvc(IConfigService theConfigSvc) {
 		myConfigSvc = theConfigSvc;
 	}
@@ -900,80 +851,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		myDao = thePersistence;
 	}
 
-	@Override
-	public void setMaxCachedNullStatCount(int theCount) {
-		Validate.greaterThanZero(theCount, "Count");
-		myMaxNullCachedEntries = theCount;
-	}
-
-	@Override
-	public void setMaxCachedPopulatedStatCount(int theCount) {
-		Validate.greaterThanZero(theCount, "Count");
-		myMaxPopulatedCachedEntries = theCount;
-	}
-
 	void setNowForUnitTests(Date theNow) {
 		myNowForUnitTests = theNow;
-	}
-
-	private class Placeholder extends BasePersStats<BasePersStatsPk<?, ?>, BasePersStats<?, ?>> {
-
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public <T> T accept(IStatsVisitor<T> theVisitor) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void mergeUnsynchronizedEvents(BasePersStats<?, ?> theNext) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public BasePersStatsPk<?, ?> getPk() {
-			throw new UnsupportedOperationException();
-		}
-
-	}
-
-	private final ReentrantLock myNodeStatisticsLock = new ReentrantLock();
-
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	@Override
-	public void recordNodeStatistics() {
-		if (!myNodeStatisticsLock.tryLock()) {
-			return;
-		}
-		try {
-			ourLog.debug("Recording node statistics");
-
-			Date date = InvocationStatsIntervalEnum.MINUTE.truncate(new Date());
-			if (date.equals(myNodeStatisticsDate)) {
-				return;
-			}
-
-			PersNodeStats stats = new PersNodeStats(InvocationStatsIntervalEnum.MINUTE, date, myConfigSvc.getNodeId());
-			stats.collectMemoryStats();
-
-			myDao.saveInvocationStats(Collections.singletonList(stats));
-
-			myNodeStatisticsDate = date;
-		} finally {
-			myNodeStatisticsLock.unlock();
-		}
-	}
-
-	@Override
-	public void reloadUrlStatus(Long thePid) {
-		PersServiceVersionUrl url = myDao.getServiceVersionUrlByPid(thePid);
-		
-		PersServiceVersionUrlStatus inMemory = getUrlStatus(url);
-		PersServiceVersionUrlStatus fromDisk=url.getStatus();
-		
-		inMemory.mergeNewer(fromDisk);
-		
-		
 	}
 
 }

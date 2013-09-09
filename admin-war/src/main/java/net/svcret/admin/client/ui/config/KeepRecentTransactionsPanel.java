@@ -31,6 +31,7 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 	private TwoColumnGrid myGrid;
 	private EditableField myObscureRequestElementsInLogEditor;
 	private EditableField myObscureResponseElementsInLogEditor;
+	private CheckBox myAuditLogEnabledCheckbox;
 
 	public KeepRecentTransactionsPanel(BaseDtoKeepsRecentMessages theKeepsRecentTransactions) {
 
@@ -128,6 +129,18 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 
 		}
 
+		// Audit logging
+		{
+			add(new HtmlH1("Audit Log"));
+			add(new Label("If enabled, Service Retriever will enable audit logging for this item. Audit logging means that " + "every transaction will be written to a special file on disk."));
+
+			TwoColumnGrid grid = new TwoColumnGrid();
+			add(grid);
+			
+			myAuditLogEnabledCheckbox = new CheckBox();
+			myAuditLogEnabledCheckbox.setValue(theKeepsRecentTransactions.getAuditLogEnable());
+			grid.addRow("Enable Audit Logging", myAuditLogEnabledCheckbox);
+		}
 	}
 
 	private void setObscureRequestItems(Set<String> items) {
@@ -238,7 +251,8 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 		theDto.setKeepNumRecentTransactionsFail(myFailTextbox.getValue());
 		theDto.setKeepNumRecentTransactionsSecurityFail(mySecurityFailTextbox.getValue());
 		theDto.setKeepNumRecentTransactionsFault(myFaultTextbox.getValue());
-
+		theDto.setAuditLogEnable(myAuditLogEnabledCheckbox.getValue());
+		
 		if (myObscureRequestElementsInLogEditor != null) {
 			Set<String> values = getObscureRequestItems();
 			((BaseDtoServiceCatalogItem) theDto).setObscureRequestElementsInLogCache(values);

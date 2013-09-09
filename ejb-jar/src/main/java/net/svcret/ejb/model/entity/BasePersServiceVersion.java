@@ -763,7 +763,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	 *            the versionId to set
 	 */
 	public void setVersionId(String theVersionId) {
-		// TODO: validate characters
+		validateId(theVersionId);
 		myVersionId = theVersionId;
 	}
 

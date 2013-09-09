@@ -22,6 +22,7 @@ public class ConfigServiceBean implements IConfigService {
 
 	private static final String SYSTEM_PROPERTY_NODEID = "net.svcret.nodeid";
 	private static final String SYSTEM_PROPERTY_NODETYPE = "net.svcret.nodetype";
+	private static final String SYSTEM_PROPERTY_AUDITLOG_PATH = "net.svcret.auditlog.path";
 	private static final String SYSTEM_PROPERTY_SECONDARY_REFRESHURLS = "net.svcret.secondarynodes.refreshurls";
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ConfigServiceBean.class);
@@ -41,17 +42,17 @@ public class ConfigServiceBean implements IConfigService {
 	@Override
 	public List<String> getSecondaryNodeRefreshUrls() {
 		ArrayList<String> retVal = new ArrayList<String>();
-		
-		String[] allUrls= System.getProperty(SYSTEM_PROPERTY_SECONDARY_REFRESHURLS, "").split(",");
+
+		String[] allUrls = System.getProperty(SYSTEM_PROPERTY_SECONDARY_REFRESHURLS, "").split(",");
 		for (String next : allUrls) {
 			if (StringUtils.isNotBlank(next)) {
 				retVal.add(next.trim());
 			}
 		}
-		
+
 		return retVal;
 	}
-	
+
 	@Override
 	public PersConfig getConfig() throws ProcessingException {
 		if (myConfig != null) {
@@ -127,8 +128,13 @@ public class ConfigServiceBean implements IConfigService {
 	public String getNodeId() {
 		String retVal = System.getProperty(SYSTEM_PROPERTY_NODEID);
 		if (retVal == null) {
-			throw new IllegalStateException("Missing system property: "+SYSTEM_PROPERTY_NODEID);
+			throw new IllegalStateException("Missing system property: " + SYSTEM_PROPERTY_NODEID);
 		}
 		return retVal;
+	}
+
+	@Override
+	public String getFilesystemAuditLoggerPath() {
+		return System.getProperty(SYSTEM_PROPERTY_AUDITLOG_PATH);
 	}
 }

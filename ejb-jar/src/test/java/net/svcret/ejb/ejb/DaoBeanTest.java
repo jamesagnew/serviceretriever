@@ -622,7 +622,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		status = mySvc.getStatusForServiceVersionWithPid(ver.getPid());
 		assertNotNull(status);
 		PersInvocationMethodSvcverStatsPk pk = new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.MINUTE, now, method);
-		BasePersInvocationStats<?,?> loadedStats = mySvc.getOrCreateStats(pk);
+		BasePersInvocationStats<?, ?> loadedStats = mySvc.getOrCreateStats(pk);
 
 		assertEquals(2, loadedStats.getSuccessInvocationCount());
 		assertEquals(150, loadedStats.getSuccessInvocationAvgTime());
@@ -742,7 +742,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		status = mySvc.getStatusForServiceVersionWithPid(ver.getPid());
 		assertNotNull(status);
 		PersInvocationMethodUserStatsPk pk = createEntryPk(InvocationStatsIntervalEnum.MINUTE, now, method, user);
-		BasePersInvocationStats<?,?> loadedStats = mySvc.getOrCreateStats(pk);
+		BasePersInvocationStats<?, ?> loadedStats = mySvc.getOrCreateStats(pk);
 
 		assertEquals(2, loadedStats.getSuccessInvocationCount());
 		assertEquals(150, loadedStats.getSuccessInvocationAvgTime());
@@ -766,19 +766,19 @@ public class DaoBeanTest extends BaseJpaTest {
 
 	}
 
-	private Collection<BasePersStats<?,?>> sing(BasePersStats<?,?> theStats) {
-		ArrayList<BasePersStats<?,?>> retVal = new ArrayList<BasePersStats<?,?>>();
+	private Collection<BasePersStats<?, ?>> sing(BasePersStats<?, ?> theStats) {
+		ArrayList<BasePersStats<?, ?>> retVal = new ArrayList<BasePersStats<?, ?>>();
 		retVal.add(theStats);
 		return retVal;
 	}
 
 	public static PersInvocationMethodUserStatsPk createEntryPk(InvocationStatsIntervalEnum theInterval, Date theTimestamp, PersServiceVersionMethod theMethod, PersUser theUser) {
-	Validate.notNull(theInterval, "Interval");
-	Validate.notNull(theTimestamp, "Timestamp");
+		Validate.notNull(theInterval, "Interval");
+		Validate.notNull(theTimestamp, "Timestamp");
 
-	PersInvocationMethodUserStatsPk pk = new PersInvocationMethodUserStatsPk(theInterval, theTimestamp, theMethod, theUser);
-	return pk;
-}
+		PersInvocationMethodUserStatsPk pk = new PersInvocationMethodUserStatsPk(theInterval, theTimestamp, theMethod, theUser);
+		return pk;
+	}
 
 	@Before
 	public void before2() throws SQLException {
@@ -860,6 +860,30 @@ public class DaoBeanTest extends BaseJpaTest {
 		PersDomain domain2 = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		assertFalse(domain2.isNewlyCreated());
 		assertEquals(domain.getPid(), domain2.getPid());
+
+	}
+
+	@Test
+	public void testIdNamesEnforced() throws ProcessingException {
+		newEntityManager();
+		mySvc.getOrCreateDomainWithId("DOMAIN_ID");
+		newEntityManager();
+
+		try {
+			mySvc.getOrCreateDomainWithId("DOMAIN__ID");
+			newEntityManager();
+			fail();
+		} catch (Exception e) {
+			// expected
+		}
+
+		try {
+			mySvc.getOrCreateDomainWithId("DOMAIN ID");
+			newEntityManager();
+			fail();
+		} catch (Exception e) {
+			// expected
+		}
 
 	}
 
@@ -1234,7 +1258,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		// Ensure the HL7 over HTTP version got it's single method
 		version2 = (PersServiceVersionHl7OverHttp) mySvc.getServiceVersionByPid(version2.getPid());
 		assertEquals(1, version2.getMethods().size());
-		
+
 	}
 
 }

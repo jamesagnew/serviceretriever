@@ -96,6 +96,7 @@ public abstract class BasePersKeepsRecentTransactions extends BasePersObject {
 		setKeepNumRecentTransactionsSecurityFail(obj.getKeepNumRecentTransactionsSecurityFail());
 		setKeepNumRecentTransactionsFault(obj.getKeepNumRecentTransactionsFault());
 		setKeepNumRecentTransactionsSuccess(obj.getKeepNumRecentTransactionsSuccess());
+		setAuditLogEnable(obj.getAuditLogEnable());
 	}
 
 	public void populateKeepRecentTransactionsFromDto(BaseDtoKeepsRecentMessages theDto) {
@@ -103,6 +104,7 @@ public abstract class BasePersKeepsRecentTransactions extends BasePersObject {
 		setKeepNumRecentTransactionsSecurityFail(theDto.getKeepNumRecentTransactionsSecurityFail());
 		setKeepNumRecentTransactionsFault(theDto.getKeepNumRecentTransactionsFault());
 		setKeepNumRecentTransactionsSuccess(theDto.getKeepNumRecentTransactionsSuccess());
+		setAuditLogEnable(theDto.getAuditLogEnable());
 	}
 
 	public void populateKeepRecentTransactionsToDto(BaseDtoKeepsRecentMessages theDto) {
@@ -110,6 +112,7 @@ public abstract class BasePersKeepsRecentTransactions extends BasePersObject {
 		theDto.setKeepNumRecentTransactionsSecurityFail(this.getKeepNumRecentTransactionsSecurityFail());
 		theDto.setKeepNumRecentTransactionsFault(this.getKeepNumRecentTransactionsFault());
 		theDto.setKeepNumRecentTransactionsSuccess(this.getKeepNumRecentTransactionsSuccess());
+		theDto.setAuditLogEnable(this.getAuditLogEnable());
 
 		theDto.setCanInheritKeepNumRecentTransactions(canInheritKeepNumRecentTransactions());
 		if (canInheritKeepNumRecentTransactions()) {
@@ -117,6 +120,7 @@ public abstract class BasePersKeepsRecentTransactions extends BasePersObject {
 			theDto.setInheritedKeepNumRecentTransactionsSecurityFail(determineInheritedKeepNumRecentTransactions(ResponseTypeEnum.SECURITY_FAIL));
 			theDto.setInheritedKeepNumRecentTransactionsFault(determineInheritedKeepNumRecentTransactions(ResponseTypeEnum.FAULT));
 			theDto.setInheritedKeepNumRecentTransactionsSuccess(determineInheritedKeepNumRecentTransactions(ResponseTypeEnum.SUCCESS));
+			theDto.setInheritedAuditLogEnable(determineInheritedAuditLogEnable());
 		}
 	}
 
