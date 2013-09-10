@@ -21,9 +21,7 @@ import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 
 import net.svcret.ejb.api.ICredentialGrabber;
-import net.svcret.ejb.ex.InternalErrorException;
-import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnknownRequestException;
+import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
@@ -58,7 +56,7 @@ class RequestPipeline {
 		return myCredentialGrabbers;
 	}
 
-	public void process(Reader theReader, Writer theWriter) throws UnknownRequestException, XMLStreamException {
+	public void process(Reader theReader, Writer theWriter) throws InvocationFailedDueToInternalErrorException, XMLStreamException {
 		if (myUsed) {
 			throw new IllegalStateException("Pipeline instance is already used");
 		}
@@ -76,9 +74,9 @@ class RequestPipeline {
 				streamReader = ourXmlInputFactory.createXMLEventReader(theReader);
 				streamWriter = ourXmlOutputFactory.createXMLEventWriter(theWriter);
 			} catch (XMLStreamException e) {
-				throw new InternalErrorException(e);
+				throw new InvocationFailedDueToInternalErrorException(e);
 			} catch (FactoryConfigurationError e) {
-				throw new InternalErrorException(e);
+				throw new InvocationFailedDueToInternalErrorException(e);
 			}
 		}
 
@@ -134,20 +132,16 @@ class RequestPipeline {
 
 	}
 
-	private void setMethodName(String theMethodName) throws UnknownRequestException {
+	private void setMethodName(String theMethodName) {
 		myMethodName = theMethodName;
 	}
 
 	/**
 	 * 
-	 * @param theStartElem
 	 * @param theXmlPrefix
 	 *            The element prefix. E.g. if the header element is &lt;soapenv:Header&gt; this string is "soapenv"
-	 * @param theStreamReader
-	 * @param theStreamWriter
-	 * @throws ProcessingException
 	 */
-	private void processHeader(StartElement theStartElem, String theXmlPrefix, XMLEventReader theStreamReader, XMLEventWriter theStreamWriter) throws XMLStreamException {
+	private void processHeader(StartElement theStartElem, String theXmlPrefix, XMLEventReader theStreamReader, XMLEventWriter theStreamWriter) throws XMLStreamException, InvocationFailedDueToInternalErrorException {
 
 		boolean haveClientSecurity = false;
 		for (PersBaseClientAuth<?> next : myClientAuths) {
@@ -190,7 +184,7 @@ class RequestPipeline {
 				// Can ignore these
 				break;
 			case JSONRPC_NAMED_PARAMETER:
-				throw new InternalErrorException("Don't know how to handle server auth of type: " + next);
+				throw new InvocationFailedDueToInternalErrorException("Don't know how to handle server auth of type: " + next);
 			case WSSEC_UT:
 				ICredentialGrabber grabber = ((PersWsSecUsernameTokenServerAuth) next).newCredentialGrabber(headerEvents);
 				myCredentialGrabbers.put(next, grabber);

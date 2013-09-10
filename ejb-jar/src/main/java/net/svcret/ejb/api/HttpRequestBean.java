@@ -1,11 +1,13 @@
 package net.svcret.ejb.api;
 
+import java.io.IOException;
 import java.io.Reader;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import net.svcret.ejb.ejb.CapturingReader;
+import net.svcret.ejb.util.IOUtils;
 
 public class HttpRequestBean {
 
@@ -38,6 +40,14 @@ public class HttpRequestBean {
 		return myQuery;
 	}
 
+	public void drainInputMessage() {
+		try {
+			org.apache.commons.io.IOUtils.toString(myInputReader);
+		} catch (IOException e) {
+			// ignore
+		}
+	}
+	
 	public String getRequestBody() {
 		return myInputReader.getCapturedString();
 	}

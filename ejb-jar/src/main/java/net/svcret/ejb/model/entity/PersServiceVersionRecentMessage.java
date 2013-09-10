@@ -25,7 +25,7 @@ public class PersServiceVersionRecentMessage extends BasePersSavedTransactionRec
 	private static final long serialVersionUID = 1L;
 
 	@ManyToOne()
-	@JoinColumn(name = "METHOD_PID", referencedColumnName = "PID", nullable = true)// TODO: make false
+	@JoinColumn(name = "METHOD_PID", referencedColumnName = "PID", nullable = true)
 	@ForeignKey(name="FK_SVCVER_RCNTMSG_METHOD")
 	private PersServiceVersionMethod myMethod;
 

@@ -6,6 +6,7 @@ import java.util.List;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.CssConstants;
+import net.svcret.admin.client.ui.components.IProvidesTooltip;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.Sparkline;
 import net.svcret.admin.client.ui.components.UsageSparkline;
@@ -39,8 +40,8 @@ public abstract class BaseDashModel implements IDashModel {
 	}
 
 	@Override
-	public IProvidesWidget getUsageTooltip() {
-		return new UsageSparklineTooltipProvider(myModel);
+	public IProvidesTooltip<BaseGDashboardObject> getUsageTooltip() {
+		return new UsageSparklineTooltipProvider<BaseGDashboardObject>();
 	}
 
 	@Override

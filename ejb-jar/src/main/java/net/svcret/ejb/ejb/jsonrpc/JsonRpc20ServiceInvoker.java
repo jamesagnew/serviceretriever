@@ -17,8 +17,11 @@ import net.svcret.ejb.api.IServiceInvokerJsonRpc20;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.RequestType;
-import net.svcret.ejb.ex.InternalErrorException;
+import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
+import net.svcret.ejb.ex.InvocationRequestFailedException;
+import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
@@ -245,24 +248,24 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 	}
 
 	@Override
-	public InvocationResultsBean processInvocation(BasePersServiceVersion theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, String theContentType,Reader theReader)
-			throws ProcessingException {
+	public InvocationResultsBean processInvocation(BasePersServiceVersion theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, String theContentType, Reader theReader)
+			throws UnknownRequestException, InvocationRequestFailedException {
 		Validate.notNull(theReader, "Reader");
 		if (theRequestType != RequestType.POST) {
-			throw new ProcessingException("This service requires all requests to be of type HTTP POST");
+			throw new UnknownRequestException(thePath, "This service requires all requests to be of type HTTP POST");
 		}
 
 		InvocationResultsBean retVal;
 		try {
 			retVal = doProcessInvocation((PersServiceVersionJsonRpc20) theServiceDefinition, theReader);
 		} catch (IOException e) {
-			throw new ProcessingException(e);
+			throw new InvocationRequestFailedException(e);
 		}
 
 		return retVal;
 	}
 
-	private InvocationResultsBean doProcessInvocation(PersServiceVersionJsonRpc20 theServiceDefinition, Reader theReader) throws IOException, ProcessingException {
+	private InvocationResultsBean doProcessInvocation(PersServiceVersionJsonRpc20 theServiceDefinition, Reader theReader) throws IOException, InvocationRequestFailedException {
 		InvocationResultsBean retVal = new InvocationResultsBean();
 
 		// Writer
@@ -290,7 +293,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 			} else {
 				jsonWriter.close();
 				jsonReader.close();
-				throw new InternalErrorException("Don't know how to handle server auth of type: " + next);
+				throw new InvocationRequestFailedException("Don't know how to handle server auth of type: " + next);
 			}
 		}
 
@@ -299,10 +302,10 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 		 */
 		for (PersBaseClientAuth<?> next : theServiceDefinition.getClientAuths()) {
 			if (next instanceof NamedParameterJsonRpcClientAuth) {
-				jsonWriter = ((NamedParameterJsonRpcClientAuth)next).createWrappedWriter(jsonWriter);
+				jsonWriter = ((NamedParameterJsonRpcClientAuth) next).createWrappedWriter(jsonWriter);
 			}
 		}
-		
+
 		jsonWriter.setLenient(true);
 		jsonWriter.setSerializeNulls(true);
 		jsonWriter.setIndent("  ");
@@ -334,7 +337,11 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 			} else if (TOKEN_PARAMS.equals(nextName)) {
 
 				jsonReader.beginJsonRpcParams();
-				consumeEqually(jsonReader, jsonWriter);
+				try {
+					consumeEqually(jsonReader, jsonWriter);
+				} catch (ProcessingException e) {
+					throw new InvocationRequestFailedException(e);
+				}
 				jsonReader.endJsonRpcParams();
 
 			} else if (TOKEN_ID.equals(nextName)) {
@@ -358,7 +365,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 		Map<String, String> headers = new HashMap<String, String>();
 		PersServiceVersionMethod methodDef = theServiceDefinition.getMethod(method);
 		if (methodDef == null) {
-			throw new ProcessingException("Unknown method \"" + method + "\" for Service \"" + theServiceDefinition.getService().getServiceName() + "\"");
+			throw new InvocationRequestFailedException("Unknown method \"" + method + "\" for Service \"" + theServiceDefinition.getService().getServiceName() + "\"");
 		}
 
 		retVal.setResultMethod(methodDef, requestBody, contentType, headers);
@@ -366,7 +373,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 	}
 
 	@Override
-	public InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws ProcessingException {
+	public InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws InvocationResponseFailedException {
 		InvocationResponseResultsBean retVal = new InvocationResponseResultsBean();
 		retVal.setResponseHeaders(theResponse.getHeaders());
 
@@ -390,7 +397,11 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 
 				} else if (JsonRpc20ServiceInvoker.TOKEN_RESULT.equals(nextName)) {
 
-					JsonRpc20ServiceInvoker.consumeEqually(jsonReader);
+					try {
+						JsonRpc20ServiceInvoker.consumeEqually(jsonReader);
+					} catch (ProcessingException e) {
+						throw new InvocationResponseFailedException(e, "Failed to parse response, error was: " + e.getMessage(), theResponse);
+					}
 
 				} else if (JsonRpc20ServiceInvoker.TOKEN_ERROR.equals(nextName)) {
 
@@ -414,7 +425,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 			}
 
 		} catch (IOException e) {
-			throw new ProcessingException(e);
+			throw new InvocationResponseFailedException(e, "IO Error while processing response", theResponse);
 		} finally {
 			IOUtils.closeQuietly(jsonReader);
 		}
@@ -440,11 +451,11 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 	}
 
 	@Override
-	public String obscureMessageForLogs(String theMessage, Set<String> theElementNamesToRedact) throws ProcessingException {
+	public String obscureMessageForLogs(String theMessage, Set<String> theElementNamesToRedact) throws InvocationFailedDueToInternalErrorException {
 		if (theElementNamesToRedact == null || theElementNamesToRedact.isEmpty()) {
 			return theMessage;
 		}
-		
+
 		StringReader reader = new StringReader(theMessage);
 
 		ourLog.trace("JSON Response: {}", theMessage);
@@ -460,10 +471,9 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 			jsonReader.beginObject();
 			jsonWriter.beginObject();
 
-			LOOP_JSON:
-			while (true) {
+			LOOP_JSON: while (true) {
 
-				switch(jsonReader.peek()) {
+				switch (jsonReader.peek()) {
 				case BEGIN_ARRAY:
 					jsonWriter.beginArray();
 					jsonReader.beginArray();
@@ -504,21 +514,23 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 					jsonWriter.value(jsonReader.nextString());
 					break;
 				}
-			
+
 			}
 
 		} catch (IOException e) {
-			throw new ProcessingException(e);
+			throw new InvocationFailedDueToInternalErrorException(e);
+		} catch (ProcessingException e) {
+			throw new InvocationFailedDueToInternalErrorException(e);
 		} finally {
 			IOUtils.closeQuietly(jsonReader);
 			IOUtils.closeQuietly(jsonWriter);
 		}
-		
+
 		return buf.toString();
 	}
 
 	void setPrettyPrintModeForUnitTest(boolean theB) {
-		myPrettyPrintModeForUnitTest=theB;
+		myPrettyPrintModeForUnitTest = theB;
 	}
 
 }

@@ -29,7 +29,6 @@ import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.OrchestratorResponseBean;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.ejb.ThrottleQueueFullException;
-import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.ex.ThrottleException;
@@ -110,17 +109,13 @@ public class ServiceServlet extends HttpServlet {
 			request.setRequestHeaders(requestHeaders);
 
 			response = myOrch.handleServiceRequest(request);
-		} catch (InternalErrorException e) {
-			ourLog.info("Processing Failure", e);
-			sendFailure(theResp, e.getMessage());
-			return;
 		} catch (UnknownRequestException e) {
 			ourLog.info("Unknown request location: {} - Message {}", path, e.getMessage());
 			sendUnknownLocation(theResp, e);
 			return;
 		} catch (ProcessingException e) {
 			ourLog.info("Processing Failure", e);
-			sendFailure(theResp, e.getMessage());
+			sendFailure(theResp, e.toString());
 			return;
 		} catch (SecurityFailureException e) {
 			ourLog.info("Security Failure accessing URL: {}", theReq.getRequestURL());

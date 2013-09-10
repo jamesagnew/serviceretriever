@@ -23,7 +23,6 @@ import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IServiceRegistry;
-import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersDomain;
@@ -67,7 +66,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	/**
 	 * Constructor
 	 */
-	public ServiceRegistryBean() throws InternalErrorException {
+	public ServiceRegistryBean()  {
 		super();
 	}
 

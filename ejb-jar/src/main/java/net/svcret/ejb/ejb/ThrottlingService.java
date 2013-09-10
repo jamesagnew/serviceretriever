@@ -1,6 +1,8 @@
 package net.svcret.ejb.ejb;
 
-import static net.svcret.ejb.util.HttpUtil.*;
+import static net.svcret.ejb.util.HttpUtil.sendFailure;
+import static net.svcret.ejb.util.HttpUtil.sendSecurityFailure;
+import static net.svcret.ejb.util.HttpUtil.sendSuccessfulResponse;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
@@ -34,7 +36,7 @@ import net.svcret.ejb.api.IServiceOrchestrator.OrchestratorResponseBean;
 import net.svcret.ejb.api.IThrottlingService;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
-import net.svcret.ejb.ex.InternalErrorException;
+import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.ex.ThrottleException;
@@ -212,15 +214,15 @@ public class ThrottlingService implements IThrottlingService {
 								ourLog.info("Handled throttled {} request at path[{}] with {} byte response in {}ms ({}ms throttle time)",
 										new Object[] { request.getRequestType().name(), request.getPath(), response.getResponseBody().length(), delay, throttleTime });
 
-							} catch (InternalErrorException e) {
-								ourLog.info("Processing Failure", e);
-								sendFailure(theResp, e.getMessage());
 							} catch (ProcessingException e) {
 								ourLog.info("Processing Failure", e);
 								sendFailure(theResp, e.getMessage());
 							} catch (SecurityFailureException e) {
 								ourLog.info("Security Failure accessing URL: {}", theReq.getRequestURL());
 								sendSecurityFailure(theResp);
+							} catch (InvocationFailedDueToInternalErrorException e) {
+								ourLog.info("Processing Failure", e);
+								sendFailure(theResp, e.getMessage());
 							}
 						} catch (IOException e) {
 							ourLog.error("Failed to respond to throttled request due to IOException: ", e);

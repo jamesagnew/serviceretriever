@@ -1,19 +1,12 @@
 package net.svcret.ejb.ejb;
 
-import static org.mockito.Mockito.*;
-
-import java.io.IOException;
-
-import javax.xml.bind.JAXBException;
-
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.validateMockitoUsage;
+import static org.mockito.Mockito.when;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.api.HttpResponseBean;
-import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IDao;
-import net.svcret.ejb.ejb.ServiceRegistryBean;
-import net.svcret.ejb.ex.HttpFailureException;
-import net.svcret.ejb.ex.InternalErrorException;
-import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
@@ -34,7 +27,7 @@ public class ServiceRegistryBeanTest {
 	private IDao myPersistence;
 
 	@Before
-	public void before() throws InternalErrorException {
+	public void before()  throws Exception {
 
 		mySvc = new ServiceRegistryBean();
 
@@ -48,7 +41,7 @@ public class ServiceRegistryBeanTest {
 	}
 	
 	@Test
-	public void testParseSimple() throws JAXBException, ProcessingException, HttpFailureException, IOException {
+	public void testParseSimple()  throws Exception {
 
 		Services svcs = new Services();
 		Service def = svcs.addService();

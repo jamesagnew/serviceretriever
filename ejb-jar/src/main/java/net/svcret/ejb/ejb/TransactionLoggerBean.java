@@ -43,6 +43,12 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	private IDao myDao;
 	@EJB
 	private IFilesystemAuditLogger myFilesystemAuditLogger;
+	
+	@VisibleForTesting
+	void setFilesystemAuditLoggerForUnitTests(IFilesystemAuditLogger theFilesystemAuditLogger) {
+		myFilesystemAuditLogger = theFilesystemAuditLogger;
+	}
+
 	private final ReentrantLock myFlushLock = new ReentrantLock();
 	private final ConcurrentHashMap<BasePersServiceVersion, UnflushedServiceVersionRecentMessages> myUnflushedMessages = new ConcurrentHashMap<BasePersServiceVersion, UnflushedServiceVersionRecentMessages>();
 
@@ -90,7 +96,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 			if (existing == null) {
 				existing = newValue;
 			}
-			existing.recordTransaction(theRequest.getRequestTime(), theMethod, theUser, theRequestBody, theInvocationResponse, theRequest, theImplementationUrl, theHttpResponse,
+			existing.recordTransaction(theRequest.getRequestTime(), theSvcVer, theMethod, theUser, theRequestBody, theInvocationResponse, theRequest, theImplementationUrl, theHttpResponse,
 					theAuthorizationOutcome, theResponseBody);
 		}
 
@@ -101,20 +107,19 @@ public class TransactionLoggerBean implements ITransactionLogger {
 				existing = newValue;
 			}
 
-			existing.recordTransaction(theRequest.getRequestTime(), theRequest, theMethod, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse,
+			existing.recordTransaction(theRequest.getRequestTime(), theRequest, theSvcVer, theMethod, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse,
 					theAuthorizationOutcome, theResponseBody);
 
 			// Audit log
 			if (theUser.determineInheritedAuditLogEnable()) {
-				myFilesystemAuditLogger.recordUserTransaction(theRequest, theMethod, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome);
+				myFilesystemAuditLogger.recordUserTransaction(theRequest, theSvcVer, theMethod, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome);
 			}
 
 		}
 
 		// Audit Log
-		BasePersServiceVersion svcVer = theMethod.getServiceVersion();
-		if (svcVer.determineInheritedAuditLogEnable() == true) {
-			myFilesystemAuditLogger.recordServiceTransaction(theRequest, theMethod, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome);
+		if (theSvcVer.determineInheritedAuditLogEnable() == true) {
+			myFilesystemAuditLogger.recordServiceTransaction(theRequest, theSvcVer, theMethod, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome);
 		}
 
 	}

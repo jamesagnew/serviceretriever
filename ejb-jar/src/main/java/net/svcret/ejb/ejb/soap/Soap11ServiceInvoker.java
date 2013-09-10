@@ -38,14 +38,16 @@ import net.svcret.ejb.api.IServiceInvokerSoap11;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.RequestType;
-import net.svcret.ejb.ejb.CapturingReader;
-import net.svcret.ejb.ex.InternalErrorException;
+import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
+import net.svcret.ejb.ex.InvocationRequestFailedException;
+import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.ProcessingRuntimeException;
 import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
+import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
@@ -56,7 +58,6 @@ import net.svcret.ejb.util.XMLUtils;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.ClientProtocolException;
-import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -91,46 +92,53 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 	}
 
 	@Override
-	public byte[] createWsdlBundle(PersServiceVersionSoap11 theSvcVer) throws ProcessingException, IOException {
-		final String filenamePrefix = (theSvcVer.getService().getServiceId()+ "_" + theSvcVer.getVersionId()).replace(' ', '_');
+	public byte[] createWsdlBundle(PersServiceVersionSoap11 theSvcVer) throws ProcessingException {
+		try {
+			final String filenamePrefix = (theSvcVer.getService().getServiceId() + "_" + theSvcVer.getVersionId()).replace(' ', '_');
 
-		final Map<String, String> xsdResources = new HashMap<String, String>();
-		ICreatesImportUrl urlCreator = new ICreatesImportUrl() {
-			@Override
-			public String createImportUrlForSchemaImport(PersServiceVersionResource theResource) throws ProcessingException {
-				String fileName = filenamePrefix + "_schema_" + theResource.getPid() + ".xsd";
-				String resourceText = theResource.getResourceText();
-				if (resourceText == null) {
-					throw new ProcessingException("No content found for XSD resource with PID: " + theResource.getPid() + " and resource URL: "+theResource.getResourceUrl());
+			final Map<String, String> xsdResources = new HashMap<String, String>();
+			ICreatesImportUrl urlCreator = new ICreatesImportUrl() {
+				@Override
+				public String createImportUrlForSchemaImport(PersServiceVersionResource theResource) throws InvocationFailedDueToInternalErrorException {
+					String fileName = filenamePrefix + "_schema_" + theResource.getPid() + ".xsd";
+					String resourceText = theResource.getResourceText();
+					if (resourceText == null) {
+						throw new InvocationFailedDueToInternalErrorException("No content found for XSD resource with PID: " + theResource.getPid() + " and resource URL: "
+								+ theResource.getResourceUrl());
+					}
+
+					xsdResources.put(fileName, resourceText);
+					return fileName;
 				}
-				
-				xsdResources.put(fileName, resourceText);
-				return fileName;
-			}};
-		String wsdl = renderWsdl(theSvcVer, theSvcVer.determineUsableProxyPath(), urlCreator);
-		
-		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		ZipOutputStream zos = new ZipOutputStream(bos);
-		
-		zos.putNextEntry(new ZipEntry(filenamePrefix + ".wsdl"));
-		zos.write(wsdl.getBytes("UTF-8"));
-		
-		for (String nextFileName : new TreeSet<String>(xsdResources.keySet())) {
-			String nextFile = xsdResources.get(nextFileName);
+			};
+			String wsdl = renderWsdl(theSvcVer, theSvcVer.determineUsableProxyPath(), urlCreator);
 
-			zos.putNextEntry(new ZipEntry(nextFileName));
-			zos.write(nextFile.getBytes("UTF-8"));
-			zos.closeEntry();
-			zos.flush();
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			ZipOutputStream zos = new ZipOutputStream(bos);
+
+			zos.putNextEntry(new ZipEntry(filenamePrefix + ".wsdl"));
+			zos.write(wsdl.getBytes("UTF-8"));
+
+			for (String nextFileName : new TreeSet<String>(xsdResources.keySet())) {
+				String nextFile = xsdResources.get(nextFileName);
+
+				zos.putNextEntry(new ZipEntry(nextFileName));
+				zos.write(nextFile.getBytes("UTF-8"));
+				zos.closeEntry();
+				zos.flush();
+			}
+
+			zos.close();
+			bos.close();
+
+			return bos.toByteArray();
+		} catch (Exception e) {
+			throw new ProcessingException(e);
 		}
-		
-		zos.close();
-		bos.close();
-		
-		return bos.toByteArray();
 	}
 
-	private void doHandleGet(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, String thePath, String theQuery) throws UnknownRequestException, ProcessingException {
+	private void doHandleGet(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, String thePath, String theQuery) throws UnknownRequestException,
+			InvocationRequestFailedException, InvocationFailedDueToInternalErrorException {
 
 		if (theQuery.toLowerCase().equals("?wsdl")) {
 			doHandleGetWsdl(theResults, theServiceDefinition, thePath);
@@ -142,15 +150,16 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 
 	}
 
-	private void doHandleGetWsdl(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, final String thePath) throws DOMException, ProcessingException {
-		
+	private void doHandleGetWsdl(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, final String thePath) throws InvocationRequestFailedException,
+			InvocationFailedDueToInternalErrorException {
+
 		ICreatesImportUrl urlCreator = new ICreatesImportUrl() {
 			@Override
-			public String createImportUrlForSchemaImport(PersServiceVersionResource theResource) throws ProcessingException {
+			public String createImportUrlForSchemaImport(PersServiceVersionResource theResource) throws InvocationFailedDueToInternalErrorException {
 				String pathBase = urlEncode(getUrlBase() + thePath);
 				return pathBase + "?xsd&xsdnum=" + theResource.getPid();
-			}};
-			
+			}
+		};
 
 		String resourceText = renderWsdl(theServiceDefinition, thePath, urlCreator);
 		String contentType = Constants.CONTENT_TYPE_XML;
@@ -197,7 +206,8 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 
 	}
 
-	private void doHandlePost(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, Reader theReader) throws UnknownRequestException, InvocationFailedException {
+	private void doHandlePost(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, Reader theReader) throws UnknownRequestException, InvocationRequestFailedException,
+			InvocationFailedDueToInternalErrorException {
 		// TODO: should we check for SOAPAction header?
 
 		List<PersBaseClientAuth<?>> clientAuths = theServiceDefinition.getClientAuths();
@@ -205,14 +215,11 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 		RequestPipeline pipeline = new RequestPipeline(serverAuths, clientAuths);
 
 		StringWriter requestBuffer = new StringWriter();
-		
-		CapturingReader reader = new CapturingReader(theReader);
+
 		try {
-			pipeline.process(reader, requestBuffer);
+			pipeline.process(theReader, requestBuffer);
 		} catch (XMLStreamException e) {
-			InvocationResponseResultsBean invocationResults = new InvocationResponseResultsBean();
-			invocationResults.setResponseType(ResponseTypeEnum.FAIL);
-			throw new InvocationFailedException(e, null, reader.getCapturedString(), invocationResults);
+			throw new InvocationRequestFailedException(e);
 		}
 
 		Set<Entry<PersBaseServerAuth<?, ?>, ICredentialGrabber>> credentialGrabbers = pipeline.getCredentialGrabbers().entrySet();
@@ -243,21 +250,27 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 		NodeList bindingList = theWsdlDocument.getElementsByTagNameNS(Constants.NS_WSDL, "binding");
 		if (bindingList.getLength() == 0) {
 			throw new ProcessingException("WSDL contains no bindings. This is not supported");
-		} 
-		
+		}
+
 		for (int i = 0; i < bindingList.getLength(); i++) {
 			Element binding = (Element) bindingList.item(i);
-			
+
 			if (binding.getElementsByTagNameNS(Constants.NS_WSDLSOAP, "binding").getLength() == 1) {
 				return binding;
 			}
 		}
-		
+
 		throw new ProcessingException("WSDL contains no bindings with SOAP 1.1 protocol. This is not supported");
 	}
 
-	private String getUrlBase() throws ProcessingException {
-		return myConfigService.getConfig().getProxyUrlBases().iterator().next().getUrlBase();
+	private String getUrlBase() throws InvocationFailedDueToInternalErrorException {
+		PersConfig config;
+		try {
+			config = myConfigService.getConfig();
+		} catch (ProcessingException e) {
+			throw new InvocationFailedDueToInternalErrorException(e);
+		}
+		return config.getProxyUrlBases().iterator().next().getUrlBase();
 	}
 
 	private StyleEnum introspectBindingForStyle(Document theWsdlDocument) throws ProcessingException {
@@ -266,7 +279,7 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 		 */
 
 		Element binding = findWsdlBindingInDocument(theWsdlDocument);
-		
+
 		NodeList bindingChildren = binding.getElementsByTagNameNS(Constants.NS_WSDLSOAP, "binding");
 		if (bindingChildren.getLength() != 1) {
 			throw new ProcessingException("Binding must contain one child named binding, found " + bindingChildren.getLength());
@@ -280,7 +293,7 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 
 		String style = binding2.getAttribute("style");
 		if (StringUtils.isBlank(style)) {
-			style= "document"; // according to spec, this is the default
+			style = "document"; // according to spec, this is the default
 		}
 		StyleEnum styleEnum;
 		try {
@@ -314,7 +327,7 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 
 			StyleEnum styleEnum = introspectBindingForStyle(wsdlDocument);
 
-			PersServiceVersionMethod method=null;
+			PersServiceVersionMethod method = null;
 			switch (styleEnum) {
 			case DOCUMENT:
 				method = introspectWsdlForDocumentOperation(retVal, wsdlDocument, nextOperationElem, opName);
@@ -353,9 +366,9 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 
 		Document wsdlDocument = XMLUtils.parse(wsdlHttpResponse.getBody());
 
-//		if (portTypeElements.getLength() > 1) {
-//			throw new ProcessingException("WSDL \"" + theUrl + "\" has more than one PortType defined (this is not currently supported by ServiceProxy)");
-//		}
+		// if (portTypeElements.getLength() > 1) {
+		// throw new ProcessingException("WSDL \"" + theUrl + "\" has more than one PortType defined (this is not currently supported by ServiceProxy)");
+		// }
 
 		retVal.setWsdlUrl(theUrl);
 		String contentType = wsdlHttpResponse.getContentType();
@@ -411,11 +424,11 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 
 		int idx = 0;
 		NodeList servicesList = wsdlDocument.getElementsByTagNameNS(Constants.NS_WSDL, "service");
-		
-		String bindingNs=null;
-		String bindingLocal=null;
-				
-		for (int svcIdx = 0; svcIdx < servicesList.getLength() && bindingNs==null; svcIdx++) {
+
+		String bindingNs = null;
+		String bindingLocal = null;
+
+		for (int svcIdx = 0; svcIdx < servicesList.getLength() && bindingNs == null; svcIdx++) {
 			Element serviceElem = (Element) servicesList.item(svcIdx);
 			NodeList portList = serviceElem.getElementsByTagNameNS(Constants.NS_WSDL, "port");
 			for (int portIdx = 0; portIdx < portList.getLength(); portIdx++) {
@@ -447,45 +460,45 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 							int colonIndex = bindingNode.indexOf(':');
 							String prefix = bindingNode.substring(0, colonIndex);
 							bindingNs = portElem.getOwnerDocument().lookupNamespaceURI(prefix);
-							bindingLocal = bindingNode.substring(colonIndex+1);
+							bindingLocal = bindingNode.substring(colonIndex + 1);
 						}
-						
+
 					}
 				}
 
 			}
 		}
 
-		if (bindingNs==null||bindingLocal==null) {
+		if (bindingNs == null || bindingLocal == null) {
 			throw new ProcessingException("WSDL \"" + theUrl + "\" does not appear to have a SOAP 1.1 binding");
 		}
-		
+
 		// We found the service, now find the corresponding binding
 		NodeList bindingElements = wsdlDocument.getElementsByTagNameNS(Constants.NS_WSDL, "binding");
-		Element bindingElement= null;
+		Element bindingElement = null;
 		for (int i = 0; i < bindingElements.getLength(); i++) {
 			Element nextBindingElement = (Element) bindingElements.item(i);
 			if (bindingLocal.equals(nextBindingElement.getAttribute("name"))) {
-				bindingElement=nextBindingElement;
+				bindingElement = nextBindingElement;
 			}
 		}
-		
-		if (bindingElement==null) {
+
+		if (bindingElement == null) {
 			throw new ProcessingException("WSDL \"" + theUrl + "\" does not appear to have a SOAP 1.1 binding named '" + bindingLocal + "'");
 		}
-		
+
 		String bindingPortTypeFull = bindingElement.getAttribute("type");
 		if (StringUtils.isBlank(bindingPortTypeFull)) {
 			throw new ProcessingException("WSDL \"" + theUrl + "\" binding named '" + bindingLocal + "' does not have a type attribute");
 		}
-		
+
 		String bindingPortType = bindingPortTypeFull.replaceFirst(".*\\:", "");
 		NodeList portTypeElements = wsdlDocument.getElementsByTagNameNS(Constants.NS_WSDL, "portType");
 
 		if (portTypeElements.getLength() == 0) {
 			throw new ProcessingException("WSDL \"" + theUrl + "\" has no PortType defined");
 		}
-		
+
 		Element portType = null;
 		for (int i = 0; i < portTypeElements.getLength(); i++) {
 			Element next = (Element) portTypeElements.item(i);
@@ -494,21 +507,20 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 				portType = next;
 			}
 		}
-		
-		if (portType==null) {
+
+		if (portType == null) {
 			throw new ProcessingException("WSDL \"" + theUrl + "\" has no PortType named '" + bindingLocal + "'");
 		}
-	
-		introspectPortType(theUrl, retVal, wsdlDocument, portType);
-//		if (portTypeElements.getLength() > 1) {
-//		throw new ProcessingException("WSDL \"" + theUrl + "\" has more than one PortType defined (this is not currently supported by ServiceProxy)");
-//	}
 
-		
+		introspectPortType(theUrl, retVal, wsdlDocument, portType);
+		// if (portTypeElements.getLength() > 1) {
+		// throw new ProcessingException("WSDL \"" + theUrl + "\" has more than one PortType defined (this is not currently supported by ServiceProxy)");
+		// }
+
 		return retVal;
 	}
 
-	private PersServiceVersionMethod introspectWsdlForDocumentOperation(PersServiceVersionSoap11 retVal, Document wsdlDocument, Element nextOperationElem, String opName) throws ProcessingException {
+	private PersServiceVersionMethod introspectWsdlForDocumentOperation(PersServiceVersionSoap11 retVal, Document wsdlDocument, Element nextOperationElem, String opName) {
 		String rootElementNs = null;
 		String rootElementName = null;
 
@@ -583,10 +595,10 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 			if (!theOpName.equals(operation.getAttribute("name"))) {
 				continue;
 			}
-			
+
 			NodeList inputList = operation.getElementsByTagNameNS(Constants.NS_WSDL, "input");
-			if (inputList.getLength()!=1) {
-				throw new ProcessingException("Binding operation for "+theOpName + " must have 1 input, found " + inputList.getLength());
+			if (inputList.getLength() != 1) {
+				throw new ProcessingException("Binding operation for " + theOpName + " must have 1 input, found " + inputList.getLength());
 			}
 			Element inputElement = (Element) inputList.item(0);
 
@@ -597,28 +609,30 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 			Element bodyElement = (Element) bodyElements.item(0);
 
 			String ns = bodyElement.getAttribute("namespace");
-			
+
 			PersServiceVersionMethod method = retVal.getOrCreateAndAddMethodWithName(theOpName);
 			method.setRootElements(ns + ":" + theOpName);
 			return method;
-			
+
 		}
-		
-		throw new ProcessingException("Couldn't find operation '" + theOpName+"' in binding");
+
+		throw new ProcessingException("Couldn't find operation '" + theOpName + "' in binding");
 	}
 
 	/**
 	 * {@inheritDoc}
-	 * @throws InvocationFailedException 
-	 * @throws InternalErrorException 
+	 * 
+	 * @throws InvocationFailedException
+	 * @throws InternalErrorException
 	 */
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public InvocationResultsBean processInvocation(BasePersServiceVersion theServiceDefinition, RequestType theRequestType, String thePath, String theQuery,String theContentType, Reader theReader) throws ProcessingException, UnknownRequestException, InternalErrorException, InvocationFailedException {
+	public InvocationResultsBean processInvocation(BasePersServiceVersion theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, String theContentType, Reader theReader)
+			throws UnknownRequestException, InvocationRequestFailedException, InvocationFailedDueToInternalErrorException {
 		InvocationResultsBean retVal = new InvocationResultsBean();
 
 		// TODO: verify that content type is correct
-		
+
 		switch (theRequestType) {
 		case GET:
 			doHandleGet(retVal, (PersServiceVersionSoap11) theServiceDefinition, thePath, theQuery);
@@ -627,14 +641,14 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 			doHandlePost(retVal, (PersServiceVersionSoap11) theServiceDefinition, theReader);
 			break;
 		default:
-			throw new InternalErrorException("Unknown request type: " + theRequestType);
+			throw new InvocationFailedDueToInternalErrorException("Unsupported request type: " + theRequestType);
 		}
 
 		return retVal;
 	}
 
 	@Override
-	public InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws ProcessingException {
+	public InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws InvocationResponseFailedException, InvocationFailedDueToInternalErrorException {
 		InvocationResponseResultsBean retVal = new InvocationResponseResultsBean();
 		retVal.setResponseHeaders(theResponse.getHeaders());
 
@@ -656,9 +670,9 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 		try {
 			streamReader = ourXmlInputFactory.createXMLEventReader(new StringReader(theResponse.getBody()));
 		} catch (XMLStreamException e) {
-			throw new InternalErrorException(e);
+			throw new InvocationFailedDueToInternalErrorException(e);
 		} catch (FactoryConfigurationError e) {
-			throw new InternalErrorException(e);
+			throw new InvocationFailedDueToInternalErrorException(e);
 		}
 
 		ResponsePositionEnum pos = ResponsePositionEnum.NONE;
@@ -728,7 +742,7 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 				} // if start
 
 			} catch (XMLStreamException e) {
-				throw new ProcessingException("Unable to process XML response. Error was: " + e.getMessage(), e);
+				throw new InvocationResponseFailedException(e, "Unable to process XML response. Error was: " + e.getMessage(), theResponse);
 			}
 
 		}
@@ -741,10 +755,10 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 		return myInvocationResultsBean;
 	}
 
-	private String renderWsdl(PersServiceVersionSoap11 theServiceDefinition, final String thePath, ICreatesImportUrl urlCreator) throws ProcessingException {
+	private String renderWsdl(PersServiceVersionSoap11 theServiceDefinition, final String thePath, ICreatesImportUrl urlCreator) throws InvocationFailedDueToInternalErrorException {
 		PersServiceVersionResource resource = theServiceDefinition.getResourceForUri(theServiceDefinition.getWsdlUrl());
 		if (resource == null || StringUtils.isBlank(resource.getResourceText())) {
-			throw new InternalErrorException("Service Version " + theServiceDefinition.getPid() + " does not have a resource for URL: " + theServiceDefinition.getWsdlUrl());
+			throw new InvocationFailedDueToInternalErrorException("Service Version " + theServiceDefinition.getPid() + " does not have a resource for URL: " + theServiceDefinition.getWsdlUrl());
 		}
 		String wsdlResourceText = resource.getResourceText();
 
@@ -830,9 +844,8 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 		}
 	}
 
-	private interface ICreatesImportUrl
-	{
-		String createImportUrlForSchemaImport(PersServiceVersionResource theResource) throws ProcessingException;
+	private interface ICreatesImportUrl {
+		String createImportUrlForSchemaImport(PersServiceVersionResource theResource) throws InvocationFailedDueToInternalErrorException;
 	}
 
 	private static enum ResponsePositionEnum {
@@ -844,7 +857,7 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 	}
 
 	@Override
-	public String obscureMessageForLogs(String theMessage, Set<String> theElementNamesToRedact) throws ProcessingException {
+	public String obscureMessageForLogs(String theMessage, Set<String> theElementNamesToRedact) {
 		// TODO: implement
 		return theMessage;
 	}

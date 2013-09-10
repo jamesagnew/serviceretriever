@@ -26,17 +26,15 @@ public class UnflushedServiceVersionRecentMessages extends BaseUnflushed<PersSer
 		myServiceVersion = theServiceVersion;
 	}
 
-	public synchronized void recordTransaction(Date theTransactionTime, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody,
+	public synchronized void recordTransaction(Date theTransactionTime, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody,
 			InvocationResponseResultsBean theInvocationResponse, HttpRequestBean theRequest, PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse,
 			AuthorizationOutcomeEnum theAuthorizationOutcome, String theResponseBody) {
 		Validate.notNull(theInvocationResponse);
-		Validate.notNull(theMethod);
 		Validate.notNull(theTransactionTime);
 
 		initIfNeeded();
 
-		BasePersServiceVersion svcVer = theMethod.getServiceVersion();
-		Integer keepRecent = svcVer.determineKeepNumRecentTransactions(theInvocationResponse.getResponseType());
+		Integer keepRecent = theSvcVer.determineKeepNumRecentTransactions(theInvocationResponse.getResponseType());
 
 		ourLog.debug("Keeping {} recent SvcVer transactions for response type {}", keepRecent, theInvocationResponse.getResponseType());
 
@@ -44,7 +42,7 @@ public class UnflushedServiceVersionRecentMessages extends BaseUnflushed<PersSer
 
 			PersServiceVersionRecentMessage message = new PersServiceVersionRecentMessage();
 			message.populate(theTransactionTime, theRequest, theImplementationUrl, theRequestBody, theInvocationResponse, theResponseBody);
-			message.setServiceVersion(svcVer);
+			message.setServiceVersion(theSvcVer);
 			message.setMethod(theMethod);
 			message.setUser(theUser);
 			message.setTransactionTime(theTransactionTime);

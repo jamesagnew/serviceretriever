@@ -1,9 +1,11 @@
 package net.svcret.ejb.ejb.jsonrpc;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -17,9 +19,8 @@ import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean.ResultTypeEnum;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.ejb.DefaultAnswer;
-import net.svcret.ejb.ex.InternalErrorException;
-import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnknownRequestException;
+import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
+import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
@@ -36,7 +37,7 @@ import org.junit.Test;
 public class JsonRpc20ServiceInvokerTest {
 
 	@Test
-	public void testObscureDocument() throws ProcessingException {
+	public void testObscureDocument() throws Exception{
 		String request = "{\n" + "  \"jsonrpc\": \"2.0\",\n" + "  \"method\": \"getCanonicalMappings\",\n" + "  \"params\": {\n" + "    \"request\": {\n"
 				+ "      \"idAuthority\": \"2.16.840.1.113883.3.59.3:736\",\n" + "      \"idExt\": \"87170\"\n" + "    },\n" + "    \"clientId\": \"mockuser\",\n"
 				+ "    \"clientPass\": \"mockpass\"\n" + "  }\n" + "}";
@@ -98,7 +99,7 @@ public class JsonRpc20ServiceInvokerTest {
 	}
 
 	@Test
-	public void testNamedParemeterCredentialGrabber() throws InternalErrorException, UnknownRequestException, IOException, ProcessingException {
+	public void testNamedParemeterCredentialGrabber() throws Exception {
 
 		String request = "{\n" + "  \"jsonrpc\": \"2.0\",\n" + "  \"method\": \"getCanonicalMappings\",\n" + "  \"params\": {\n" + "    \"request\": {\n"
 				+ "      \"idAuthority\": \"2.16.840.1.113883.3.59.3:736\",\n" + "      \"idExt\": \"87170\"\n" + "    },\n" + "    \"clientId\": \"mockuser\",\n"
@@ -128,7 +129,7 @@ public class JsonRpc20ServiceInvokerTest {
 	}
 
 	@Test
-	public void testNamedParemeterCredentialGrabberServerSecurityAndNamedParameterClientSecurity() throws InternalErrorException, UnknownRequestException, IOException, ProcessingException {
+	public void testNamedParemeterCredentialGrabberServerSecurityAndNamedParameterClientSecurity() throws Exception{
 
 		//@formatter:off
 		String request = 
@@ -233,7 +234,7 @@ public class JsonRpc20ServiceInvokerTest {
 	 * A failing message
 	 */
 	@Test
-	public void testNullParameterValues() throws InternalErrorException, UnknownRequestException, IOException, ProcessingException {
+	public void testNullParameterValues() throws Exception{
 
 		String request = "{\"jsonrpc\":\"2.0\",\"method\":\"getActsByVisit\",\"params\":{\"auth\":\"UHN\",\"convertFromAppTerminology\":false,\"clientId\":\"clipdevsvc\",\"auditSourceId\":\"FORM_VIEWER\",\"visitId\":\"26200\n"
 				+ "0218\",\"actToTerminologyLevel\":\"NONE\",\"convertObsToAppTerm\":false,\"statusCodes\":null,\"returnLoadedConcept\":false,\"loaded\":false,\"user\":{\"uid\":\"userId\",\"clientIp\":\"127.0.0.\n"
@@ -268,7 +269,7 @@ public class JsonRpc20ServiceInvokerTest {
 	 * A failing message
 	 */
 	@Test
-	public void testPartialMessage() throws InternalErrorException, UnknownRequestException, IOException, ProcessingException {
+	public void testPartialMessage() throws Exception{
 
 		String request = "{\"jsonrpc\":\"2.0\",\"method\":\"getActsByVisit\",\"params\":{\"auth\":\"UHN\",\"convertFromAppTerminology\":false,\"clientId\":\"clipdevsvc\",\"auditSourceId\":\"FORM_VIEWER\",\"visitId\":\"26200\n"
 				+ "0218\",\"actToTerminologyLevel\":\"NONE\",\"convertObsToAppTerm\":false,\"statusCodes\":null,\"returnLoadedConcept\":false,\"loaded\":false,\"user\":{\"uid\":\"userId\",\"clientIp\":\"127.0.0.\n"
@@ -294,7 +295,7 @@ public class JsonRpc20ServiceInvokerTest {
 			try {
 				svc.processInvocation(def, reqType, path, query, "application/json", reader);
 				svc.obscureMessageForLogs(substring, createObscureRequest());
-			} catch (ProcessingException e) {
+			} catch (InvocationRequestFailedException e) {
 				// this is ok
 			}
 
@@ -312,7 +313,7 @@ public class JsonRpc20ServiceInvokerTest {
 	}
 
 	@Test
-	public void testProcessInvocationWithNumbers() throws InternalErrorException, UnknownRequestException, IOException, ProcessingException {
+	public void testProcessInvocationWithNumbers() throws Exception{
 
 		JsonRpc20ServiceInvoker svc = new JsonRpc20ServiceInvoker();
 		PersServiceVersionJsonRpc20 def = mock(PersServiceVersionJsonRpc20.class);
@@ -393,7 +394,7 @@ public class JsonRpc20ServiceInvokerTest {
 	}
 
 	@Test
-	public void testProcessServiceInvocation() throws InternalErrorException, UnknownRequestException, IOException, ProcessingException {
+	public void testProcessServiceInvocation() throws Exception{
 
 		String request = "{\n" + "  \"jsonrpc\": \"2.0\",\n" + "  \"method\": \"getCanonicalMappings\",\n" + "  \"params\": {\n" + "    \"request\": {\n"
 				+ "      \"idAuthority\": \"2.16.840.1.113883.3.59.3:736\",\n" + "      \"idExt\": \"87170\"\n" + "    },\n" + "    \"clientId\": \"mock\",\n" + "    \"clientPass\": \"mock\"\n"
@@ -456,7 +457,7 @@ public class JsonRpc20ServiceInvokerTest {
 	}
 
 	@Test
-	public void testProcessInvocationResponse() throws ProcessingException {
+	public void testProcessInvocationResponse() throws Exception{
 
 		JsonRpc20ServiceInvoker svc = new JsonRpc20ServiceInvoker();
 		HttpResponseBean respBean = new HttpResponseBean();
@@ -476,7 +477,7 @@ public class JsonRpc20ServiceInvokerTest {
 	}
 
 	@Test
-	public void testProcessInvocationResponseWithNumbers() throws ProcessingException {
+	public void testProcessInvocationResponseWithNumbers() throws Exception{
 
 		JsonRpc20ServiceInvoker svc = new JsonRpc20ServiceInvoker();
 		HttpResponseBean respBean = new HttpResponseBean();
@@ -500,7 +501,7 @@ public class JsonRpc20ServiceInvokerTest {
 	}
 
 	@Test
-	public void testProcessLargeInvocationResponse() throws ProcessingException, IOException {
+	public void testProcessLargeInvocationResponse() throws Exception{
 
 		JsonRpc20ServiceInvoker svc = new JsonRpc20ServiceInvoker();
 		HttpResponseBean respBean = new HttpResponseBean();

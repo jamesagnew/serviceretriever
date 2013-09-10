@@ -12,6 +12,7 @@ public class InvocationResponseResultsBean {
 
 	private String myResponseBody;
 	private String myResponseContentType;
+	private String myResponseFailureDescription;
 	private String myResponseFaultCode;
 	private String myResponseFaultDescription;
 	private Map<String, List<String>> myResponseHeaders;
@@ -24,6 +25,10 @@ public class InvocationResponseResultsBean {
 
 	public String getResponseContentType() {
 		return myResponseContentType;
+	}
+
+	public String getResponseFailureDescription() {
+		return myResponseFailureDescription;
 	}
 
 	/**
@@ -72,6 +77,10 @@ public class InvocationResponseResultsBean {
 	 */
 	public void setResponseContentType(String theResponseContentType) {
 		myResponseContentType = theResponseContentType;
+	}
+
+	public void setResponseFailureDescription(String theString) {
+		myResponseFailureDescription = theString;
 	}
 
 	public void setResponseFaultCode(String theData) {

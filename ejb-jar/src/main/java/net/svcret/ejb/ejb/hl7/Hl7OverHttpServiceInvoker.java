@@ -9,8 +9,6 @@ import java.util.Set;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IDao;
@@ -20,6 +18,8 @@ import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.RequestType;
+import net.svcret.ejb.ex.InvocationRequestFailedException;
+import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -27,6 +27,8 @@ import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp;
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.preparser.PreParser;
+
+import com.google.common.annotations.VisibleForTesting;
 
 @Stateless
 public class Hl7OverHttpServiceInvoker implements IServiceInvokerHl7OverHttp {
@@ -62,11 +64,11 @@ public class Hl7OverHttpServiceInvoker implements IServiceInvokerHl7OverHttp {
 
 	@Override
 	public InvocationResultsBean processInvocation(BasePersServiceVersion theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, String theContentType,
-			Reader theReader) throws ProcessingException, UnknownRequestException {
+			Reader theReader) throws UnknownRequestException, InvocationRequestFailedException {
 		PersServiceVersionHl7OverHttp svc = (PersServiceVersionHl7OverHttp)theServiceDefinition;
 		
 		if (theRequestType != RequestType.POST) {
-			throw new ProcessingException("HL7 over HTTP service at " + thePath + " requires all requests to be of type POST");
+			throw new UnknownRequestException(thePath, "HL7 over HTTP service at " + thePath + " requires all requests to be of type POST");
 		}
 
 		if (theContentType.equals("application/hl7-v2")) {
@@ -74,14 +76,14 @@ public class Hl7OverHttpServiceInvoker implements IServiceInvokerHl7OverHttp {
 		} else if (theContentType.equals("application/hl7-v2+xml")) {
 			ourLog.debug("Content type is {}", theContentType);
 		} else {
-			throw new ProcessingException("HL7 over HTTP service cannot accept content type: " + theContentType);
+			throw new UnknownRequestException(thePath,"HL7 over HTTP service cannot accept content type: " + theContentType);
 		}
 
 		String message;
 		try {
 			message = org.apache.commons.io.IOUtils.toString(theReader);
 		} catch (IOException e) {
-			throw new ProcessingException(e);
+			throw new InvocationRequestFailedException(e);
 		}
 
 		String messageType;
@@ -89,7 +91,7 @@ public class Hl7OverHttpServiceInvoker implements IServiceInvokerHl7OverHttp {
 			String[] messageTypeParts = PreParser.getFields(message, "MSH-9-1", "MSH-9-2");
 			messageType = svc.getMethodNameTemplate().replace("${messageType}", messageTypeParts[0]).replace("${messageVersion}", messageTypeParts[1]);
 		} catch (HL7Exception e) {
-			throw new ProcessingException("Failed to parse message, error was: " + e.getMessage(), e);
+			throw new InvocationRequestFailedException(e,"Failed to parse message, error was: " + e.getMessage());
 		}
 
 		PersServiceVersionMethod method = theServiceDefinition.getMethod(messageType);
@@ -97,7 +99,12 @@ public class Hl7OverHttpServiceInvoker implements IServiceInvokerHl7OverHttp {
 			ourLog.info("Creating new method '{}' for service version {}", messageType, theServiceDefinition.getPid());
 			BasePersServiceVersion dbSvcVer = myDao.getServiceVersionByPid(theServiceDefinition.getPid());
 			dbSvcVer.getOrCreateAndAddMethodWithName(messageType);
-			dbSvcVer = myServiceRegistry.saveServiceVersion(dbSvcVer);
+			try {
+				dbSvcVer = myServiceRegistry.saveServiceVersion(dbSvcVer);
+			} catch (ProcessingException e) {
+				ourLog.error("Failed to auto-create method", e);
+				throw new InvocationRequestFailedException(e, "Failed to auto-create method '" + messageType + "'. Error was: " + e.getMessage());		
+			}
 			method = dbSvcVer.getMethod(messageType);
 			ourLog.info("Created new method '{}' and got PID {}", messageType, method.getPid());
 		}
@@ -109,14 +116,14 @@ public class Hl7OverHttpServiceInvoker implements IServiceInvokerHl7OverHttp {
 	}
 
 	@Override
-	public InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws ProcessingException {
+	public InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws InvocationResponseFailedException  {
 		
 		String responseBody = theResponse.getBody();
 		String responseCode;
 		try {
 			responseCode = PreParser.getFields(responseBody, "MSA-1")[0];
 		} catch (HL7Exception e) {
-			throw new ProcessingException("Failed to parse response: "+e.getMessage(), e);
+			throw new InvocationResponseFailedException(e, "Failed to parse response: "+e.getMessage(), theResponse);
 		}
 		
 		InvocationResponseResultsBean retVal=new InvocationResponseResultsBean();
@@ -143,7 +150,7 @@ public class Hl7OverHttpServiceInvoker implements IServiceInvokerHl7OverHttp {
 	}
 
 	@Override
-	public String obscureMessageForLogs(String theMessage, Set<String> theElementNamesToRedact) throws ProcessingException {
+	public String obscureMessageForLogs(String theMessage, Set<String> theElementNamesToRedact)  {
 		// TODO: implement
 		return theMessage;
 	}

@@ -1,7 +1,11 @@
 package net.svcret.ejb.ejb.soap;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -12,11 +16,7 @@ import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.stream.XMLStreamException;
 
-import net.svcret.ejb.ex.InternalErrorException;
-import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
@@ -36,7 +36,7 @@ public class RequestPipelineTest {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(RequestPipelineTest.class);
 
 	@Test
-	public void testRequestProcessor() throws InternalErrorException, ProcessingException, UnknownRequestException, SAXException, IOException, ParserConfigurationException, InvocationFailedException, XMLStreamException {
+	public void testRequestProcessor() throws Exception{
 
 		String methodName = "getPatientByMrn";
 		String msg = createRequest(methodName, true);
@@ -76,7 +76,7 @@ public class RequestPipelineTest {
 	}
 
 	@Test
-	public void testAddWsSecToMessageWithNoHeader() throws InternalErrorException, ProcessingException, UnknownRequestException, SAXException, IOException, ParserConfigurationException, InvocationFailedException, XMLStreamException {
+	public void testAddWsSecToMessageWithNoHeader() throws Exception{
 
 		String methodName = "getPatientByMrn";
 		String msg = createRequest(methodName, false);
@@ -149,7 +149,7 @@ public class RequestPipelineTest {
 	}
 
 	@Test
-	public void testRequestWithoutHeaderElement() throws InternalErrorException, ProcessingException, UnknownRequestException, SAXException, IOException, ParserConfigurationException, InvocationFailedException, XMLStreamException {
+	public void testRequestWithoutHeaderElement() throws Exception{
 
 		String methodName = "getPatientByMrn";
 		String msg = createRequest(methodName, false);
@@ -182,7 +182,7 @@ public class RequestPipelineTest {
 	}
 	
 	@Test
-	public void testRequestWithoutHeaderElementButCreateOne() throws InternalErrorException, ProcessingException, UnknownRequestException, SAXException, IOException, ParserConfigurationException, InvocationFailedException, XMLStreamException {
+	public void testRequestWithoutHeaderElementButCreateOne() throws Exception{
 
 		String methodName = "getPatientByMrn";
 		String msg = createRequest(methodName, false);

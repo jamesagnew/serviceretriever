@@ -46,7 +46,7 @@ public class Hl7OverHttpServiceInvokerTest {
 	}
 	
 	@Test
-	public void testRequest() throws ProcessingException, UnknownRequestException {
+	public void testRequest() throws Exception {
 		
 		String msgS = "MSH|^~\\&|DATASERVICES|CORPORATE|||20120711120510.2-0500||ADT^A01^ADT_A01|9c906177-dfca-4bbe-9abd-d8eb43df93a0|D|2.6\r" + // -
 				"EVN||20120701000000-0500\r" + // -
@@ -70,7 +70,7 @@ public class Hl7OverHttpServiceInvokerTest {
 	}
 
 	@Test
-	public void testResponse() throws ProcessingException, UnknownRequestException {
+	public void testResponse() throws Exception {
 		
 		String msgS = "MSH|^~\\&|PRECASE||ORSOS|G|20130828075510.601-0400||ACK^S14|5801|P|2.3\r" + 
 				"MSA|AA|38762";
@@ -97,7 +97,7 @@ public class Hl7OverHttpServiceInvokerTest {
 	}
 
 	@Test
-	public void testResponseFault() throws ProcessingException, UnknownRequestException {
+	public void testResponseFault() throws Exception {
 		
 		String msgS = "MSH|^~\\&|PRECASE||ORSOS|G|20130828075510.601-0400||ACK^S14|5801|P|2.3\r" + 
 				"MSA|AE|38762";

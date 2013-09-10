@@ -1,5 +1,7 @@
 package net.svcret.admin.client.ui.components;
 
-public interface IProvidesTooltip {
-	String getTooltip();
+import com.google.gwt.user.client.ui.Widget;
+
+public interface IProvidesTooltip<T> {
+	Widget getTooltip(T theObject);
 }

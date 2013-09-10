@@ -1,10 +1,13 @@
 package net.svcret.ejb.ejb;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -13,12 +16,12 @@ import java.util.List;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
+import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
-import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IMonitorNotifier;
@@ -26,9 +29,7 @@ import net.svcret.ejb.api.IServiceInvokerSoap11;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersLibraryMessage;
@@ -64,7 +65,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 //	private Date my2Min30SecsAgo;
 
 	@Before
-	public void before2() throws SQLException, ProcessingException {
+	public void before2() {
 		myDao = new DaoBean();
 		myBroadcastSender = mock(IBroadcastSender.class);
 
@@ -239,7 +240,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testActiveTest() throws ProcessingException, InternalErrorException, UnknownRequestException {
+	public void testActiveTest() throws Exception{
 		createCatalog();
 
 		IServiceOrchestrator orch = mock(IServiceOrchestrator.class);

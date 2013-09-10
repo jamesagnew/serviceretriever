@@ -5,7 +5,9 @@ import java.io.Reader;
 import java.util.Set;
 
 import net.svcret.ejb.ejb.soap.InvocationFailedException;
-import net.svcret.ejb.ex.InternalErrorException;
+import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
+import net.svcret.ejb.ex.InvocationRequestFailedException;
+import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -33,9 +35,9 @@ public interface IServiceInvoker {
 	 * @throws ProcessingException
 	 * @throws InvocationFailedException 
 	 */
-	InvocationResultsBean processInvocation(BasePersServiceVersion theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, String theContentType, Reader theReader) throws ProcessingException, UnknownRequestException, InternalErrorException, InvocationFailedException; 
+	InvocationResultsBean processInvocation(BasePersServiceVersion theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, String theContentType, Reader theReader) throws UnknownRequestException, InvocationRequestFailedException, InvocationFailedException; 
 	
-	InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws ProcessingException;
+	InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws InvocationResponseFailedException, InvocationFailedDueToInternalErrorException;
 
 	IResponseValidator provideInvocationResponseValidator();
 	
@@ -43,7 +45,7 @@ public interface IServiceInvoker {
 	 * @see BasePersServiceVersion#getObscureRequestElementsInLog()
 	 * @see BasePersServiceVersion#getObscureResponseElementsInLog()
 	 */
-	String obscureMessageForLogs(String theMessage, Set<String> theElementNamesToRedact) throws ProcessingException;
+	String obscureMessageForLogs(String theMessage, Set<String> theElementNamesToRedact) throws InvocationFailedDueToInternalErrorException;
 	
 	/**
 	 * Given a URL to a service definition page (the type of page is dependent on the

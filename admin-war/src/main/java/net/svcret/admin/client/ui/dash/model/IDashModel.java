@@ -1,5 +1,6 @@
 package net.svcret.admin.client.ui.dash.model;
 
+import net.svcret.admin.client.ui.components.IProvidesTooltip;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.HierarchyEnum;
@@ -32,5 +33,5 @@ public interface IDashModel {
 
 	Widget renderSecurity();
 
-	IProvidesWidget getUsageTooltip();
+	IProvidesTooltip<BaseGDashboardObject> getUsageTooltip();
 }

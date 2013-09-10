@@ -6,19 +6,21 @@ import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.FlowPanel;
 
-public class FlowPanelWithTooltip extends FlowPanel {
+public class FlowPanelWithTooltip<T> extends FlowPanel {
 
-	private IProvidesTooltip myTooltipProvider;
+	private IProvidesTooltip<T> myTooltipProvider;
 	private Tooltip myTooltip;
+	private T myObject;
 
-	public FlowPanelWithTooltip() {
-		this(null);
-	}
-
-	public FlowPanelWithTooltip(IProvidesTooltip theTooltipProvider) {
+	public FlowPanelWithTooltip(IProvidesTooltip<T> theTooltipProvider, T theObject) {
 		sinkEvents(Event.ONMOUSEOVER);
 		sinkEvents(Event.ONMOUSEOUT);
 		myTooltipProvider = theTooltipProvider;
+		myObject = theObject;
+	}
+
+	public FlowPanelWithTooltip(T theObject) {
+		this(null, theObject);
 	}
 
 	/**
@@ -38,7 +40,7 @@ public class FlowPanelWithTooltip extends FlowPanel {
 
 		case Event.ONMOUSEOVER:
 			if (myTooltip == null) {
-				myTooltip = new TooltipListener.Tooltip(this, myTooltipProvider.getTooltip());
+				myTooltip = new TooltipListener.Tooltip(this, myTooltipProvider.getTooltip(myObject));
 				myTooltip.displayPopup();
 			}
 			break;
@@ -46,7 +48,7 @@ public class FlowPanelWithTooltip extends FlowPanel {
 		}
 	}
 
-	public void setTooltipProvider(IProvidesTooltip theTooltipProvider) {
+	public void setTooltipProvider(IProvidesTooltip<T> theTooltipProvider) {
 		myTooltipProvider = theTooltipProvider;
 	}
 

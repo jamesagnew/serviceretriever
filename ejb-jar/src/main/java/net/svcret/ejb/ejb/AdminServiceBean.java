@@ -1578,7 +1578,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		// nothing in here yet
 	}
 
-	private PersServiceVersionSoap11 fromUi(PersServiceVersionSoap11 thePersVersion, DtoServiceVersionSoap11 theVersion) throws ProcessingException {
+	private PersServiceVersionSoap11 fromUi(PersServiceVersionSoap11 thePersVersion, DtoServiceVersionSoap11 theVersion) {
 		thePersVersion.setWsdlUrl(theVersion.getWsdlLocation());
 		return thePersVersion;
 	}

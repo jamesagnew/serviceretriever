@@ -1,7 +1,14 @@
 package net.svcret.ejb.ejb.soap;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.validateMockitoUsage;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -21,7 +28,6 @@ import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.ejb.DefaultAnswer;
-import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
@@ -46,7 +52,7 @@ public class Soap11ServiceInvokerTest {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(Soap11ServiceInvokerTest.class);
 
 	@Test
-	public void testGetWsdl() throws InternalErrorException, IOException, UnknownRequestException, ProcessingException, InvocationFailedException {
+	public void testGetWsdl()  throws Exception {
 
 		PersServiceVersionSoap11 svcVersion = mock(PersServiceVersionSoap11.class, new DefaultAnswer());
 		
@@ -97,7 +103,7 @@ public class Soap11ServiceInvokerTest {
 	}
 
 	@Test
-	public void testCreateWsdlBundle() throws InternalErrorException, IOException, UnknownRequestException, ProcessingException {
+	public void testCreateWsdlBundle()  throws Exception {
 
 		PersServiceVersionSoap11 svcVersion = mock(PersServiceVersionSoap11.class, new ReturnsDeepStubs());
 		when(svcVersion.getService().getServiceId()).thenReturn("SVCID");
@@ -151,7 +157,7 @@ public class Soap11ServiceInvokerTest {
 		
 	}
 	@Test
-	public void testGetXsd() throws InternalErrorException, IOException, UnknownRequestException, ProcessingException, InvocationFailedException {
+	public void testGetXsd()  throws Exception {
 
 		PersServiceVersionSoap11 svcVersion = mock(PersServiceVersionSoap11.class);
 		when(svcVersion.getWsdlUrl()).thenReturn("http://the_wsdl_url");
@@ -188,7 +194,7 @@ public class Soap11ServiceInvokerTest {
 	}
 
 	@Test()
-	public void testRequestProcessorBadMethod() throws InternalErrorException, ProcessingException, UnknownRequestException, IOException, InvocationFailedException {
+	public void testRequestProcessorBadMethod()  throws Exception {
 
 		String methodName = "getPatientByMrnBAD";
 		String msg = RequestPipelineTest.createRequest(methodName, true);
@@ -226,7 +232,7 @@ public class Soap11ServiceInvokerTest {
 	}
 
 	@Test()
-	public void testRequestProcessorGoodMethod() throws InternalErrorException, ProcessingException, UnknownRequestException, IOException, InvocationFailedException {
+	public void testRequestProcessorGoodMethod()  throws Exception {
 
 		String methodName = "getPatientByMrn";
 		String msg = RequestPipelineTest.createRequest(methodName, true);
@@ -273,7 +279,7 @@ public class Soap11ServiceInvokerTest {
 	}
 
 	@Test
-	public void testProcessInvocationResponseFault() throws ProcessingException {
+	public void testProcessInvocationResponseFault() throws Exception {
 		
 		String msg = "<?xml version=\"1.0\"?>\n" +  //-
 				"<env:Envelope  xmlns:env=\"http://www.w3.org/2001/12/soap-envelope\" >\n" + //- 
@@ -334,7 +340,7 @@ public class Soap11ServiceInvokerTest {
 	
 	
 	@Test
-	public void testProcessInvocationResponseFaultWithNoCode() throws ProcessingException {
+	public void testProcessInvocationResponseFaultWithNoCode() throws Exception {
 				
 		String msg = "<SOAP-ENV:Envelope\n" +  //-
 				"  xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" + //- 
@@ -376,7 +382,7 @@ public class Soap11ServiceInvokerTest {
 	}
 
 	@Test
-	public void testProcessInvocationResponseFaultWithEmptyCode() throws ProcessingException {
+	public void testProcessInvocationResponseFaultWithEmptyCode() throws Exception {
 				
 		String msg = "<SOAP-ENV:Envelope\n" +  //-
 				"  xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" + //- 
@@ -419,7 +425,7 @@ public class Soap11ServiceInvokerTest {
 	
 
 	@Before
-	public void before() throws InternalErrorException {
+	public void before()  throws Exception {
 		DefaultAnswer.setDesignTime();
 	}
 

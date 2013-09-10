@@ -271,7 +271,7 @@ public class HttpClientBeanTest {
 	}
 
 	@Test
-	public void testPost() throws InterruptedException, ClientConfigException {
+	public void testPost() throws InterruptedException {
 
 		int port = RandomServerPortProvider.findFreePort();
 		String respHeaders = provideGoodHeaders();
@@ -303,7 +303,7 @@ public class HttpClientBeanTest {
 	}
 
 	@Test
-	public void testFailingPost() throws InterruptedException, ClientConfigException {
+	public void testFailingPost() {
 
 		int port = RandomServerPortProvider.findFreePort();
 		String reqBody = provideXmlRequest();
@@ -326,7 +326,7 @@ public class HttpClientBeanTest {
 	}
 
 	@Test
-	public void testPostWithValidation() throws InterruptedException, ClientConfigException {
+	public void testPostWithValidation() throws InterruptedException {
 
 		int port = RandomServerPortProvider.findFreePort();
 		String respHeaders = provideGoodHeaders();
@@ -359,7 +359,7 @@ public class HttpClientBeanTest {
 	}
 
 	@Test
-	public void testPostOneUrlNoRetry() throws InterruptedException, ClientConfigException {
+	public void testPostOneUrlNoRetry() throws InterruptedException {
 
 		int port = RandomServerPortProvider.findFreePort();
 		String respHeaders = provideGoodHeaders();
@@ -391,7 +391,7 @@ public class HttpClientBeanTest {
 	}
 
 	@Test
-	public void testPostOneUrlWithOneRetry() throws InterruptedException, ClientConfigException {
+	public void testPostOneUrlWithOneRetry() throws InterruptedException {
 
 		int port = RandomServerPortProvider.findFreePort();
 		String respHeaders = provideGoodHeaders();
@@ -425,7 +425,7 @@ public class HttpClientBeanTest {
 	}
 
 	@Test
-	public void testPostTwoUrlsAllFailing() throws InterruptedException, ClientConfigException {
+	public void testPostTwoUrlsAllFailing() throws InterruptedException {
 
 		int port1 = RandomServerPortProvider.findFreePort();
 		int port2 = RandomServerPortProvider.findFreePort();

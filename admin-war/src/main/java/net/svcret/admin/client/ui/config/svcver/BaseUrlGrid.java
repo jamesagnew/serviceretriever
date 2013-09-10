@@ -232,11 +232,13 @@ public abstract class BaseUrlGrid extends FlowPanel {
 
 	}
 
-	private final class MyPanel extends FlowPanelWithTooltip implements IProvidesTooltip {
+	private final class MyPanel extends FlowPanelWithTooltip<GServiceVersionUrl> implements IProvidesTooltip<GServiceVersionUrl> {
 		private ResponseTypeEnum myResponseType;
 		private GServiceVersionUrl myStatus;
 
 		private MyPanel(GServiceVersionUrl theStatus, ResponseTypeEnum theResponseType) {
+			super(theStatus);
+			
 			setTooltipProvider(this);
 			myResponseType = theResponseType;
 			myStatus = theStatus;
@@ -269,7 +271,7 @@ public abstract class BaseUrlGrid extends FlowPanel {
 		}
 
 		@Override
-		public String getTooltip() {
+		public Widget getTooltip(GServiceVersionUrl theStatus) {
 			String message = null;
 			Date date = null;
 			String desc = null;
@@ -330,7 +332,7 @@ public abstract class BaseUrlGrid extends FlowPanel {
 				b.append("<li>Message: ");
 				b.append(message);
 				b.append("</li></ul>");
-				return b.toString();
+				return new Label(b.toString());
 			}
 
 			return null;

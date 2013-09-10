@@ -1,5 +1,6 @@
 package net.svcret.admin.client.ui.dash.model;
 
+import net.svcret.admin.client.ui.components.IProvidesTooltip;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
@@ -75,7 +76,7 @@ public class DashModelLoading implements IDashModel {
 	}
 
 	@Override
-	public IProvidesWidget getUsageTooltip() {
+	public IProvidesTooltip<BaseGDashboardObject> getUsageTooltip() {
 		return null;
 	}
 

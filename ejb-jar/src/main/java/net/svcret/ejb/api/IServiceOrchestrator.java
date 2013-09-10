@@ -12,7 +12,7 @@ import javax.ejb.Local;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
 import net.svcret.ejb.ejb.ThrottleQueueFullException;
-import net.svcret.ejb.ex.InternalErrorException;
+import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.ex.ThrottleException;
@@ -24,22 +24,22 @@ public interface IServiceOrchestrator {
 	void enqueueThrottledRequest(ThrottleException theE) throws ThrottleQueueFullException;
 
 	OrchestratorResponseBean handlePreviouslyThrottledRequest(InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization, HttpRequestBean theRequest, long theThrottleTime)
-			throws ProcessingException, SecurityFailureException;
+			throws ProcessingException, SecurityFailureException, InvocationFailedDueToInternalErrorException;
 
 	/**
 	 * Process a normal request
 	 */
-	OrchestratorResponseBean handleServiceRequest(HttpRequestBean theRequest) throws UnknownRequestException, InternalErrorException, ProcessingException, IOException, SecurityFailureException,
-			ThrottleException, ThrottleQueueFullException;
+	OrchestratorResponseBean handleServiceRequest(HttpRequestBean theRequest) throws UnknownRequestException, ProcessingException, IOException, SecurityFailureException, ThrottleException,
+			ThrottleQueueFullException;
 
 	/**
 	 * Process a request invoked through a means other than the proxy itself (e.g. monitoring, management console, etc.)
 	 */
-	SidechannelOrchestratorResponseBean handleSidechannelRequest(long theServiceVersionPid, String theRequestBody, String theContentType, String theRequestedByString) throws InternalErrorException,
-			ProcessingException, UnknownRequestException;
+	SidechannelOrchestratorResponseBean handleSidechannelRequest(long theServiceVersionPid, String theRequestBody, String theContentType, String theRequestedByString) throws ProcessingException,
+			UnknownRequestException;
 
 	Collection<SidechannelOrchestratorResponseBean> handleSidechannelRequestForEachUrl(long theServiceVersionPid, String theRequestBody, String theContentType, String theRequestedByString)
-			throws InternalErrorException, ProcessingException, UnknownRequestException;
+			throws ProcessingException, UnknownRequestException;
 
 	/**
 	 * Response type for {@link IServiceOrchestrator#handle(RequestType, String, String, Reader)}
@@ -89,12 +89,13 @@ public interface IServiceOrchestrator {
 
 		private ResponseTypeEnum myResponseType;
 		private Date myRequestStartedTime;
-		
-		public SidechannelOrchestratorResponseBean(String theResponseBody, String theResponseContentType, Map<String, List<String>> theResponseHeaders, HttpResponseBean theHttpResponse, ResponseTypeEnum theResponseType, Date theRequestStartedTime) {
+
+		public SidechannelOrchestratorResponseBean(String theResponseBody, String theResponseContentType, Map<String, List<String>> theResponseHeaders, HttpResponseBean theHttpResponse,
+				ResponseTypeEnum theResponseType, Date theRequestStartedTime) {
 			super(theResponseBody, theResponseContentType, theResponseHeaders, theHttpResponse);
-			
-			myResponseType=theResponseType;
-			myRequestStartedTime =theRequestStartedTime;
+
+			myResponseType = theResponseType;
+			myRequestStartedTime = theRequestStartedTime;
 		}
 
 		public Date getRequestStartedTime() {

@@ -101,10 +101,10 @@ public class TooltipListener implements MouseOverHandler, MouseOutHandler {
 		private Timer myTimer;
 		private int offsetX = DEFAULT_OFFSET_X;
 		private int offsetY = DEFAULT_OFFSET_Y;
+		private com.google.gwt.dom.client.Element mySender2;
 
 		public Tooltip(Widget sender, final String text) {
-			this(new HTML(text));
-			this.mySender = sender.getElement();
+			this(sender, new HTML(text));
 		}
 
 		public Tooltip(Element sender, Widget theContents) {
@@ -115,10 +115,20 @@ public class TooltipListener implements MouseOverHandler, MouseOutHandler {
 		public Tooltip(Widget theContents) {
 			super(true);
 			this.myDelay = 60000;
-			
+
 			add(theContents);
-			
+
 			setStyleName(MyResources.CSS.tooltipPopup());
+		}
+
+		public Tooltip(Widget theSender, Widget theTooltip) {
+			this(theTooltip);
+			mySender = theSender.getElement();
+		}
+
+		public Tooltip(com.google.gwt.dom.client.Element theSender, Widget theTooltip) {
+			this(theTooltip);
+			mySender2 = theSender;
 		}
 
 		public void displayPopup() {
@@ -126,8 +136,15 @@ public class TooltipListener implements MouseOverHandler, MouseOutHandler {
 			setPopupPositionAndShow(new PositionCallback() {
 				@Override
 				public void setPosition(int theOffsetWidth, int theOffsetHeight) {
-					int left = DOM.getAbsoluteLeft(mySender) + offsetX;
-					int top = DOM.getAbsoluteTop(mySender) + offsetY;
+					int left;
+					int top;
+					if (mySender2 != null) {
+						left = mySender2.getAbsoluteLeft()+offsetX;
+						top = mySender2.getAbsoluteTop()+offsetY;
+					} else {
+						left = DOM.getAbsoluteLeft(mySender) + offsetX;
+						top = DOM.getAbsoluteTop(mySender) + offsetY;
+					}
 
 					int windowClientWidth = Window.getClientWidth();
 					int rightBorder = left + theOffsetWidth + 50;
