@@ -760,7 +760,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 	public static void renderTransactionGraphsAsHtml(SafeHtmlBuilder b, int[] success, int[] fault, int[] fail, int[] secFail, Date theFirstDate, boolean theLastUsageProvidedIfKnown, Date theLastUsage) {
 		if (hasValues(success) || hasValues(fault) || hasValues(fail) || hasValues(secFail)) {
 			UsageSparkline sparkline = new UsageSparkline(success, fault, fail, secFail, "");
-			b.appendHtmlConstant("<span id='" + sparkline.getId() + "' onmouseover=\"" + sparkline.getNativeInvocation(sparkline.getId()) + "\">AAAA</span>");
+			b.appendHtmlConstant("<span id='" + sparkline.getId() + "'></span>");
 			b.appendHtmlConstant("<img src='images/empty.png' onload=\"" + sparkline.getNativeInvocation(sparkline.getId()) + "\" />");
 		} else {
 			if (!theLastUsageProvidedIfKnown) {

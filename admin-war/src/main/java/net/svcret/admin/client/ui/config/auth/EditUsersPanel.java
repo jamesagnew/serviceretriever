@@ -10,6 +10,7 @@ import java.util.List;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
+import net.svcret.admin.client.ui.components.CellWithTooltip;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
@@ -17,6 +18,7 @@ import net.svcret.admin.client.ui.components.PButtonCell;
 import net.svcret.admin.client.ui.components.PCellTable;
 import net.svcret.admin.client.ui.config.svcver.BaseDetailPanel;
 import net.svcret.admin.client.ui.config.svcver.NullColumn;
+import net.svcret.admin.client.ui.dash.model.UsageSparklineTooltipProvider;
 import net.svcret.admin.client.ui.stats.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
@@ -81,6 +83,7 @@ public class EditUsersPanel extends FlowPanel {
 		contentPanel.add(myLoadingSpinner);
 
 		myTable = new PCellTable<GUser>();
+		myMethodDataProvider = new ListDataProvider<GUser>();
 		contentPanel.add(myTable);
 
 		// Create a Pager to control the table.
@@ -173,7 +176,7 @@ public class EditUsersPanel extends FlowPanel {
 
 		// Transactions
 
-		Column<GUser, SafeHtml> transactionsCol = new Column<GUser, SafeHtml>(new SafeHtmlCell()) {
+		Column<GUser, SafeHtml> transactionsCol = new Column<GUser, SafeHtml>(new CellWithTooltip<GUser>(myMethodDataProvider, new UsageSparklineTooltipProvider<GUser>())) {
 			@Override
 			public SafeHtml getValue(GUser theObject) {
 				SafeHtmlBuilder b = new SafeHtmlBuilder();
@@ -190,7 +193,6 @@ public class EditUsersPanel extends FlowPanel {
 		};
 		myTable.addColumn(transactionsCol, MSGS.editUsersPanel_ColumnTransactions());
 
-		myMethodDataProvider = new ListDataProvider<GUser>();
 		myMethodDataProvider.addDataDisplay(myTable);
 
 		// Sorting

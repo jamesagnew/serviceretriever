@@ -8,6 +8,7 @@ import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.MyResources;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.EmptyCell;
+import net.svcret.admin.client.ui.components.IProvidesTooltip;
 import net.svcret.admin.client.ui.components.TooltipListener.Tooltip;
 import net.svcret.admin.client.ui.dash.model.DashModelDomain;
 import net.svcret.admin.client.ui.dash.model.DashModelLoading;
@@ -15,10 +16,10 @@ import net.svcret.admin.client.ui.dash.model.DashModelService;
 import net.svcret.admin.client.ui.dash.model.DashModelServiceMethod;
 import net.svcret.admin.client.ui.dash.model.DashModelServiceVersion;
 import net.svcret.admin.client.ui.dash.model.IDashModel;
-import net.svcret.admin.client.ui.dash.model.IProvidesWidget;
 import net.svcret.admin.client.ui.stats.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
+import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
@@ -381,9 +382,9 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 			sinkEvents(Event.ONMOUSEOVER | Event.ONMOUSEOUT);
 		}
 
-		private List<List<IProvidesWidget>> myTooltipProviders = new ArrayList<List<IProvidesWidget>>();
+		private List<List<IProvidesTooltip<BaseGDashboardObject>>> myTooltipProviders = new ArrayList<List<IProvidesTooltip<BaseGDashboardObject>>>();
 
-		public void setTooltipProvider(int theRow, int theCol, IProvidesWidget theTooltipProvider) {
+		public void setTooltipProvider(int theRow, int theCol, IProvidesTooltip<BaseGDashboardObject> theTooltipProvider) {
 			ensureTooltipRow(theRow);
 			ensureTooltipCol(theRow, theCol);
 			myTooltipProviders.get(theRow).set(theCol, theTooltipProvider);
@@ -404,7 +405,7 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 
 		private void ensureTooltipRow(int theRow) {
 			while (myTooltipProviders.size() <= theRow) {
-				myTooltipProviders.add(new ArrayList<IProvidesWidget>());
+				myTooltipProviders.add(new ArrayList< IProvidesTooltip<BaseGDashboardObject>>());
 			}
 		}
 
@@ -436,11 +437,13 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 				}
 
 				if (myTooltipProviders.size() > rowStr) {
-					List<IProvidesWidget> cols = myTooltipProviders.get(rowStr);
+					List< IProvidesTooltip<BaseGDashboardObject>> cols = myTooltipProviders.get(rowStr);
 					if (cols.size() > colStr) {
-						IProvidesWidget col = cols.get(colStr);
+						 IProvidesTooltip<BaseGDashboardObject> col = cols.get(colStr);
 						if (col != null) {
-							Widget tooltipContents = col.provideWidget();
+							int index = rowStr-1;
+							IDashModel dashModel = myUiList.get(index);
+							Widget tooltipContents = col.getTooltip(dashModel.getModel());
 							if (tooltipContents != null) {
 								GWT.log("Showing tooltip for row " + rowStr + " col " + colStr);
 								Tooltip tooltip = new Tooltip(td, tooltipContents);

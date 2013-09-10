@@ -2,6 +2,7 @@ package net.svcret.admin.client.ui.dash.model;
 
 import java.util.Date;
 
+import net.svcret.admin.client.ui.components.IProvidesTooltip;
 import net.svcret.admin.client.ui.stats.DateUtil;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
 
@@ -10,16 +11,12 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
-public final class UsageSparklineTooltipProvider implements IProvidesWidget {
-	private BaseGDashboardObject myModel;
-	public UsageSparklineTooltipProvider(BaseGDashboardObject theModel) {
-		myModel=theModel;
-	}
+public final class UsageSparklineTooltipProvider<T extends BaseGDashboardObject> implements IProvidesTooltip<T> {
 
 	@Override
-	public Widget provideWidget() {
+	public Widget getTooltip(BaseGDashboardObject theObject) {
 		FlowPanel retVal = new FlowPanel();
-		retVal.add(new Label(myModel.getName()));
+		retVal.add(new Label(theObject.getName()));
 		retVal.add(new Label("Usage in last 60 minutes"));
 		
 		FlexTable grid = new FlexTable();
@@ -31,7 +28,7 @@ public final class UsageSparklineTooltipProvider implements IProvidesWidget {
 		grid.setText(0, 3, "Failed Invocations");
 		grid.setText(0, 4, "Security Failures");
 		
-		Date nextDate = myModel.getStatistics60MinuteFirstDate();
+		Date nextDate = theObject.getStatistics60MinuteFirstDate();
 		int row = 1;
 		int incrementMins = 10;
 		for (int i = 0; i < 60; i += incrementMins, row++) {
@@ -41,10 +38,10 @@ public final class UsageSparklineTooltipProvider implements IProvidesWidget {
 			int fail = 0;
 			int secFail = 0;
 			for (int j = i; j < i + incrementMins; j++) {
-				success += myModel.getTransactions60mins()[j];
-				fault += myModel.getTransactionsFault60mins()[j];
-				fail += myModel.getTransactionsFail60mins()[j];
-				secFail += myModel.getTransactionsSecurityFail60mins()[j];
+				success += theObject.getTransactions60mins()[j];
+				fault += theObject.getTransactionsFault60mins()[j];
+				fail += theObject.getTransactionsFail60mins()[j];
+				secFail += theObject.getTransactionsSecurityFail60mins()[j];
 			}
 
 			Date nextEndDate = new Date(nextDate.getTime() + ((incrementMins-1)*DateUtil.MILLIS_PER_MINUTE));
@@ -59,4 +56,5 @@ public final class UsageSparklineTooltipProvider implements IProvidesWidget {
 		
 		return retVal;
 	}
+
 }
