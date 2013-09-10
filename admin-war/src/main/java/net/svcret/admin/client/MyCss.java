@@ -16,5 +16,21 @@ public interface MyCss extends CssResource {
 	String methodRootElementBlock();
 
 	String tooltipPopup();
+
+	String usageTooltipTable();
+
+	String usageTooltipTableSuccessColumn();
+
+	String usageTooltipTableFaultColumn();
+
+	String usageTooltipTableFailColumn();
+
+	String usageTooltipTableSecFailColumn();
+
+	String usageTooltipTableDateColumn();
+
+	String usageTooltipTableValueColumn();
+
+	String usageTooltipTableHeaderLabel();
 	
 }

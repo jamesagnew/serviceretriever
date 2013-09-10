@@ -36,7 +36,7 @@ class RequestPipeline {
 	private static XMLInputFactory ourXmlInputFactory;
 	private static XMLOutputFactory ourXmlOutputFactory;
 	private final List<PersBaseClientAuth<?>> myClientAuths;
-	private Map<PersBaseServerAuth<?,?>, ICredentialGrabber> myCredentialGrabbers = new HashMap<PersBaseServerAuth<?,?>, ICredentialGrabber>();
+	private Map<PersBaseServerAuth<?, ?>, ICredentialGrabber> myCredentialGrabbers = new HashMap<PersBaseServerAuth<?, ?>, ICredentialGrabber>();
 	private boolean myPrettyPrint;
 	private boolean myUsed = false;
 	private List<PersBaseServerAuth<?, ?>> myServerAuths;
@@ -58,7 +58,7 @@ class RequestPipeline {
 		return myCredentialGrabbers;
 	}
 
-	public void process(Reader theReader, Writer theWriter) throws InternalErrorException, ProcessingException, UnknownRequestException {
+	public void process(Reader theReader, Writer theWriter) throws UnknownRequestException, XMLStreamException {
 		if (myUsed) {
 			throw new IllegalStateException("Pipeline instance is already used");
 		}
@@ -86,61 +86,51 @@ class RequestPipeline {
 			streamWriter = new PrettyPrintWriterWrapper(ourEventFactory, streamWriter);
 		}
 
-		try {
+		boolean haveProcessedHeader = false;
+		boolean haveProcessedBody = false;
+		while (streamReader.hasNext()) {
+			XMLEvent nextEvent = streamReader.nextEvent();
 
-			boolean haveProcessedHeader = false;
-			boolean haveProcessedBody = false;
-			while (streamReader.hasNext()) {
-				XMLEvent nextEvent = streamReader.nextEvent();
+			// Suppress the XML Declaration
+			if (nextEvent.isStartDocument()) {
+				continue;
+			}
 
-				// Suppress the XML Declaration
-				if (nextEvent.isStartDocument()) {
-					continue;
-				}
-
-				if (nextEvent.isStartElement()) {
-					StartElement elem = (StartElement) nextEvent;
-					if (haveProcessedBody) {
-						if (myMethodName == null) {
-							setMethodName(elem.getName().getNamespaceURI() + ":" + elem.getName().getLocalPart());
-						}
-					} else if (Constants.SOAPENV11_HEADER_QNAME.equals(elem.getName())) {
-						processHeader(elem, elem.getName().getPrefix(), streamReader, streamWriter);
-						haveProcessedHeader = true;
-						continue;
-					} else if (Constants.SOAPENV11_BODY_QNAME.equals(elem.getName())) {
-						if (!haveProcessedHeader) {
-							processHeader(null, elem.getName().getPrefix(), streamReader, streamWriter);
-							haveProcessedHeader = true;
-						}
-						haveProcessedBody = true;
+			if (nextEvent.isStartElement()) {
+				StartElement elem = (StartElement) nextEvent;
+				if (haveProcessedBody) {
+					if (myMethodName == null) {
+						setMethodName(elem.getName().getNamespaceURI() + ":" + elem.getName().getLocalPart());
 					}
+				} else if (Constants.SOAPENV11_HEADER_QNAME.equals(elem.getName())) {
+					processHeader(elem, elem.getName().getPrefix(), streamReader, streamWriter);
+					haveProcessedHeader = true;
+					continue;
+				} else if (Constants.SOAPENV11_BODY_QNAME.equals(elem.getName())) {
+					if (!haveProcessedHeader) {
+						processHeader(null, elem.getName().getPrefix(), streamReader, streamWriter);
+						haveProcessedHeader = true;
+					}
+					haveProcessedBody = true;
 				}
-
-				if (ourLog.isTraceEnabled()) {
-					ourLog.trace("Writing elementof type {}: {}", nextEvent.getClass(), nextEvent.getSchemaType());
-				}
-
-				streamWriter.add(nextEvent);
 			}
 
-			/*
-			 * Final sanity check to make sure security isn't bypassed
-			 */
-			if (!haveProcessedHeader) {
-				throw new ProcessingException("No request header was found in request- Not a valid SOAP message!");
+			if (ourLog.isTraceEnabled()) {
+				ourLog.trace("Writing elementof type {}: {}", nextEvent.getClass(), nextEvent.getSchemaType());
 			}
 
-		} catch (XMLStreamException e) {
-			throw new ProcessingException("Failed to parse input message - XML Stream problem: " + e.getMessage(), e);
+			streamWriter.add(nextEvent);
 		}
 
-		try {
-			streamWriter.flush();
-			streamWriter.close();
-		} catch (XMLStreamException e) {
-			throw new ProcessingException(e);
+		/*
+		 * Final sanity check to make sure security isn't bypassed
+		 */
+		if (!haveProcessedHeader) {
+			throw new XMLStreamException("No request header was found in request, and one is required for this service");
 		}
+
+		streamWriter.flush();
+		streamWriter.close();
 
 	}
 
@@ -157,7 +147,7 @@ class RequestPipeline {
 	 * @param theStreamWriter
 	 * @throws ProcessingException
 	 */
-	private void processHeader(StartElement theStartElem, String theXmlPrefix, XMLEventReader theStreamReader, XMLEventWriter theStreamWriter) throws ProcessingException {
+	private void processHeader(StartElement theStartElem, String theXmlPrefix, XMLEventReader theStreamReader, XMLEventWriter theStreamWriter) throws XMLStreamException {
 
 		boolean haveClientSecurity = false;
 		for (PersBaseClientAuth<?> next : myClientAuths) {
@@ -167,35 +157,27 @@ class RequestPipeline {
 			}
 		}
 
-		try {
-			StartElement headerStart = ourEventFactory.createStartElement(Constants.getSoapenvHeaderQname(theXmlPrefix), null, null);
-			theStreamWriter.add(headerStart);
-		} catch (XMLStreamException e1) {
-			throw new ProcessingException(e1);
-		}
+		StartElement headerStart = ourEventFactory.createStartElement(Constants.getSoapenvHeaderQname(theXmlPrefix), null, null);
+		theStreamWriter.add(headerStart);
 
 		List<XMLEvent> headerEvents = new ArrayList<XMLEvent>();
 		if (theStartElem != null) {
-			try {
-				while (theStreamReader.hasNext()) {
-					XMLEvent nextEvent = theStreamReader.nextEvent();
+			while (theStreamReader.hasNext()) {
+				XMLEvent nextEvent = theStreamReader.nextEvent();
 
-					if (nextEvent.isEndElement()) {
-						EndElement elem = (EndElement) nextEvent;
-						if (Constants.SOAPENV11_HEADER_QNAME.equals(elem.getName())) {
-							break;
-						}
+				if (nextEvent.isEndElement()) {
+					EndElement elem = (EndElement) nextEvent;
+					if (Constants.SOAPENV11_HEADER_QNAME.equals(elem.getName())) {
+						break;
 					}
-
-					headerEvents.add(nextEvent);
-
-					if (!haveClientSecurity) {
-						theStreamWriter.add(nextEvent);
-					}
-
 				}
-			} catch (XMLStreamException e) {
-				throw new ProcessingException(e);
+
+				headerEvents.add(nextEvent);
+
+				if (!haveClientSecurity) {
+					theStreamWriter.add(nextEvent);
+				}
+
 			}
 		}
 
@@ -217,19 +199,11 @@ class RequestPipeline {
 		}
 
 		if (haveClientSecurity) {
-			try {
-				writeSecurityHeader(theStreamWriter);
-			} catch (XMLStreamException e) {
-				throw new ProcessingException(e);
-			}
+			writeSecurityHeader(theStreamWriter);
 		}
-		
-		try {
-			EndElement headerEnd = ourEventFactory.createEndElement(Constants.getSoapenvHeaderQname(theXmlPrefix), null);
-			theStreamWriter.add(headerEnd);
-		} catch (XMLStreamException e1) {
-			throw new ProcessingException(e1);
-		}
+
+		EndElement headerEnd = ourEventFactory.createEndElement(Constants.getSoapenvHeaderQname(theXmlPrefix), null);
+		theStreamWriter.add(headerEnd);
 
 	}
 
@@ -243,9 +217,9 @@ class RequestPipeline {
 
 	private void writeSecurityHeader(XMLEventWriter theStreamWriter) throws XMLStreamException {
 		int secIndex = 1;
-		
+
 		ourLog.debug("Applying client auth modules: {}", myClientAuths);
-		
+
 		for (PersBaseClientAuth<?> nextAuth : myClientAuths) {
 			if (nextAuth instanceof PersWsSecUsernameTokenClientAuth) {
 				PersWsSecUsernameTokenClientAuth auth = (PersWsSecUsernameTokenClientAuth) nextAuth;
@@ -254,7 +228,7 @@ class RequestPipeline {
 				Namespace wsuNs = ourEventFactory.createNamespace("svcretwsu", Constants.NS_WSSEC_UTIL);
 				namespaces.add(wsuNs);
 				theStreamWriter.add(wsuNs);
-				
+
 				Namespace wsseNs = ourEventFactory.createNamespace("svcretwsse", Constants.NS_WSSEC_SECEXT);
 				namespaces.add(wsseNs);
 				theStreamWriter.add(wsseNs);

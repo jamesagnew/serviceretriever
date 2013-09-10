@@ -46,7 +46,7 @@ public class Soap11ServiceInvokerTest {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(Soap11ServiceInvokerTest.class);
 
 	@Test
-	public void testGetWsdl() throws InternalErrorException, IOException, UnknownRequestException, ProcessingException {
+	public void testGetWsdl() throws InternalErrorException, IOException, UnknownRequestException, ProcessingException, InvocationFailedException {
 
 		PersServiceVersionSoap11 svcVersion = mock(PersServiceVersionSoap11.class, new DefaultAnswer());
 		
@@ -151,7 +151,7 @@ public class Soap11ServiceInvokerTest {
 		
 	}
 	@Test
-	public void testGetXsd() throws InternalErrorException, IOException, UnknownRequestException, ProcessingException {
+	public void testGetXsd() throws InternalErrorException, IOException, UnknownRequestException, ProcessingException, InvocationFailedException {
 
 		PersServiceVersionSoap11 svcVersion = mock(PersServiceVersionSoap11.class);
 		when(svcVersion.getWsdlUrl()).thenReturn("http://the_wsdl_url");
@@ -188,7 +188,7 @@ public class Soap11ServiceInvokerTest {
 	}
 
 	@Test()
-	public void testRequestProcessorBadMethod() throws InternalErrorException, ProcessingException, UnknownRequestException, IOException {
+	public void testRequestProcessorBadMethod() throws InternalErrorException, ProcessingException, UnknownRequestException, IOException, InvocationFailedException {
 
 		String methodName = "getPatientByMrnBAD";
 		String msg = RequestPipelineTest.createRequest(methodName, true);
@@ -226,7 +226,7 @@ public class Soap11ServiceInvokerTest {
 	}
 
 	@Test()
-	public void testRequestProcessorGoodMethod() throws InternalErrorException, ProcessingException, UnknownRequestException, IOException {
+	public void testRequestProcessorGoodMethod() throws InternalErrorException, ProcessingException, UnknownRequestException, IOException, InvocationFailedException {
 
 		String methodName = "getPatientByMrn";
 		String msg = RequestPipelineTest.createRequest(methodName, true);

@@ -42,6 +42,7 @@ import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean.ResultTypeEnum;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.UrlPoolBean;
+import net.svcret.ejb.ejb.soap.InvocationFailedException;
 import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
@@ -129,13 +130,13 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		 * Process request
 		 */
 		InvocationResultsBean results;
-//		try {
+		try {
 			results = processInvokeService(theRequest, path, serviceVersion, theRequest.getRequestType(), theRequest.getQuery());
-//		} catch (ProcessingException e) {
-//			myTransactionLogger.logTransaction(theRequest, serviceVersion, null, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome);
-//			throw e;
-//		}
-		
+		} catch (InvocationFailedException e) {
+			myTransactionLogger.logTransaction(theRequest, serviceVersion, null, e.getUser(), e.getRequestBody(), e.getInvocationResponse(), null, null, null, null);
+			throw new ProcessingException(e);
+		}
+
 		/*
 		 * Security
 		 * 
@@ -208,27 +209,32 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		request.getRequestHeaders().put("Content-Type", Collections.singletonList(theContentType));
 		AuthorizationResultsBean authorized = null;
 
-		InvocationResultsBean results = processInvokeService(request, path, svcVer, RequestType.POST, "");
-		SidechannelOrchestratorResponseBean retVal = processRequestMethod(request, results, authorized, null, false, theForceUrl);
+		InvocationResultsBean results;
+		try {
+			results = processInvokeService(request, path, svcVer, RequestType.POST, "");
+		} catch (InvocationFailedException e) {
+			throw new ProcessingException(e);
+		}
+		SidechannelOrchestratorResponseBean retVal = processRequestMethod(request, results, authorized, null, false, theForceUrl, new Date());
 		return retVal;
 	}
 
 	private void logTransaction(HttpRequestBean theRequest, PersServiceVersionMethod method, AuthorizationResultsBean authorized, HttpResponseBean httpResponse,
 			InvocationResponseResultsBean invocationResponse) throws ProcessingException {
 		PersUser user = authorized.getAuthorizedUser();
-		
+
 		String requestBody = theRequest.getRequestBody();
 		String responseBody = invocationResponse.getResponseBody();
-		
+
 		// Obscure
 		IServiceInvoker svcInvoker = getServiceInvoker(method.getServiceVersion());
 		requestBody = svcInvoker.obscureMessageForLogs(requestBody, method.getServiceVersion().determineObscureRequestElements());
 		responseBody = svcInvoker.obscureMessageForLogs(responseBody, method.getServiceVersion().determineObscureResponseElements());
-		
+
 		// Log
 		PersServiceVersionUrl successfulUrl = httpResponse != null ? httpResponse.getSuccessfulUrl() : null;
 		AuthorizationOutcomeEnum authorizationOutcome = authorized.isAuthorized();
-		myTransactionLogger.logTransaction(theRequest, method, user, requestBody, invocationResponse, successfulUrl, httpResponse, authorizationOutcome, responseBody);
+		myTransactionLogger.logTransaction(theRequest, method.getServiceVersion(),method, user, requestBody, invocationResponse, successfulUrl, httpResponse, authorizationOutcome, responseBody);
 	}
 
 	private OrchestratorResponseBean invokeProxiedService(HttpRequestBean theRequest, InvocationResultsBean results, AuthorizationResultsBean theAuthorized, Long theThrottleTimeIfAny)
@@ -252,7 +258,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			retVal = processRequestResource(theRequest, results);
 			break;
 		case METHOD:
-			retVal = processRequestMethod(theRequest, results, theAuthorized, theThrottleTimeIfAny, true, null);
+			retVal = processRequestMethod(theRequest, results, theAuthorized, theThrottleTimeIfAny, true, null, theRequest.getRequestTime());
 			break;
 		default:
 			throw new InternalErrorException("Unknown request type: " + results.getResultType());
@@ -269,7 +275,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	}
 
 	private InvocationResultsBean processInvokeService(HttpRequestBean theRequest, String path, BasePersServiceVersion serviceVersion, RequestType theRequestType, String theRequestQuery)
-			throws ProcessingException, UnknownRequestException {
+			throws InvocationFailedException, ProcessingException, UnknownRequestException {
 		InvocationResultsBean results = null;
 		String contentType = theRequest.getContentType();
 		IServiceInvoker svcInvoker = getServiceInvoker(serviceVersion);
@@ -279,7 +285,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			throw new InternalErrorException("Unknown service protocol: " + serviceVersion.getProtocol());
 		}
 
-		results = svcInvoker.processInvocation( serviceVersion, theRequestType, path, theRequestQuery, contentType, theRequest.getInputReader());
+		results = svcInvoker.processInvocation(serviceVersion, theRequestType, path, theRequestQuery, contentType, theRequest.getInputReader());
 
 		if (results == null) {
 			throw new InternalErrorException("Invoker " + svcInvoker + " returned null");
@@ -305,7 +311,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	}
 
 	private IServiceInvoker getServiceInvoker(BasePersServiceVersion serviceVersion) {
-		IServiceInvoker svcInvoker=null;
+		IServiceInvoker svcInvoker = null;
 		switch (serviceVersion.getProtocol()) {
 		case SOAP11:
 			svcInvoker = mySoap11ServiceInvoker;
@@ -321,7 +327,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	}
 
 	private SidechannelOrchestratorResponseBean processRequestMethod(HttpRequestBean theRequest, InvocationResultsBean results, AuthorizationResultsBean authorized, Long theThrottleDelayIfAny,
-			boolean theRecordOutcome, PersServiceVersionUrl theForceUrl) throws ProcessingException {
+			boolean theRecordOutcome, PersServiceVersionUrl theForceUrl, Date theRequestStartedTime) throws ProcessingException {
 		SidechannelOrchestratorResponseBean retVal;
 		PersServiceVersionMethod method = results.getMethodDefinition();
 		BasePersServiceVersion serviceVersion = method.getServiceVersion();
@@ -370,7 +376,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		}
 
 		ResponseTypeEnum responseType = invocationResponse.getResponseType();
-		retVal = new SidechannelOrchestratorResponseBean(responseBody, responseContentType, responseHeaders, httpResponse, responseType);
+		retVal = new SidechannelOrchestratorResponseBean(responseBody, responseContentType, responseHeaders, httpResponse, responseType, theRequestStartedTime);
 		return retVal;
 	}
 

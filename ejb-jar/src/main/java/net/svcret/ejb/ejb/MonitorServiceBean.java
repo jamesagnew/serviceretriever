@@ -40,6 +40,7 @@ import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
 import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorRuleActive;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
+import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheckOutcome;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem;
 import net.svcret.ejb.model.entity.PersMonitorRulePassive;
@@ -119,7 +120,7 @@ public class MonitorServiceBean implements IMonitorService {
 		ourLog.debug("Beginning active check pass for check {}", theCheck.getPid());
 
 		long svcVerPid = theCheck.getServiceVersion().getPid();
-		String requestBody = theCheck.getMessage().getMessage();
+		String requestBody = theCheck.getMessage().getMessageBody();
 		String contentType = theCheck.getMessage().getContentType();
 		String requestedByString = "ActiveCheck";
 		PersMonitorRuleFiring outcome;
@@ -131,6 +132,33 @@ public class MonitorServiceBean implements IMonitorService {
 			outcome = evaluateRuleForActiveIssues(theCheck, outcomes);
 			ourLog.debug("Active check got {} outcomes. Problem: {}", outcomes.size(), outcome);
 
+			/*
+			 * Save the outcome with the check
+			 */
+			for (SidechannelOrchestratorResponseBean nextOutcome : outcomes) {
+				PersMonitorRuleActiveCheckOutcome recentOutcome = new PersMonitorRuleActiveCheckOutcome();
+				recentOutcome.setCheck(theCheck);
+				recentOutcome.setImplementationUrl(nextOutcome.getHttpResponse().getSingleUrlOrThrow());
+				recentOutcome.setRequestBody(theCheck.getMessage().getMessageBody());
+				recentOutcome.setResponseBody(nextOutcome.getResponseBody());
+				recentOutcome.setResponseType(nextOutcome.getResponseType());
+				recentOutcome.setTransactionMillis(nextOutcome.getHttpResponse().getResponseTime());
+				recentOutcome.setTransactionTime(nextOutcome.getRequestStartedTime());
+
+				if (outcome != null) {
+					for (PersMonitorRuleFiringProblem next : outcome.getProblems()) {
+						if (next.getUrl().equals(recentOutcome.getImplementationUrl())) {
+							recentOutcome.setFailed(true);
+						}
+					}
+				}
+
+				myDao.saveMonitorRuleActiveCheckOutcome(recentOutcome);
+			}
+
+			Date cutoff = new Date(System.currentTimeMillis() - (10 * DateUtils.MILLIS_PER_MINUTE));
+			myDao.deleteMonitorRuleActiveCheckOutcomesBeforeCutoff(theCheck, cutoff);
+
 		} catch (Exception e) {
 			ourLog.error("Failed to invoke service", e);
 			PersMonitorRuleFiringProblem problem = new PersMonitorRuleFiringProblem();
@@ -140,6 +168,9 @@ public class MonitorServiceBean implements IMonitorService {
 			outcome = toFiring(theCheck.getRule(), problems);
 		}
 
+		/*
+		 * Check if this outcome either causes a new firing for its target, or cancels out a currently active one
+		 */
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theCheck.getServiceVersion().getPid());
 		PersMonitorRuleFiring currentFiring = svcVer.getMostRecentMonitorRuleFiring();
 		if (outcome != null) {
@@ -323,7 +354,7 @@ public class MonitorServiceBean implements IMonitorService {
 						if (nextUrl.getStatus().getStatus() == StatusEnum.DOWN) {
 							svcVerProblems.add(PersMonitorRuleFiringProblem.getInstanceForUrlDown(nextSvcVer, nextUrl, nextUrl.getStatus().getLastFailMessage()));
 						}
-					}else {
+					} else {
 						ourLog.debug("URL {} has no status entry", nextUrl.getPid());
 					}
 				}
@@ -396,8 +427,9 @@ public class MonitorServiceBean implements IMonitorService {
 	}
 
 	@Override
-	public void saveRule(BasePersMonitorRule theRule) throws ProcessingException {
+	public BasePersMonitorRule saveRule(BasePersMonitorRule theRule) throws ProcessingException {
 
+		BasePersMonitorRule rule;
 		if (theRule.getPid() != null) {
 			BasePersMonitorRule existing = myDao.getMonitorRule(theRule.getPid());
 			switch (existing.getRuleType()) {
@@ -408,11 +440,16 @@ public class MonitorServiceBean implements IMonitorService {
 				((PersMonitorRulePassive) existing).merge((PersMonitorRulePassive) theRule);
 				break;
 			}
+			rule = existing;
+		} else {
+			rule = theRule;
 		}
 
-		myDao.saveMonitorRule(theRule);
+		BasePersMonitorRule retVal = myDao.saveMonitorRule(rule);
 
 		myBroadcastSender.monitorRulesChanged();
+
+		return retVal;
 	}
 
 	@VisibleForTesting

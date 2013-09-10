@@ -2299,7 +2299,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 
 		if (theLoadContents) {
-			retVal.setMessage(theMessage.getMessage());
+			retVal.setMessage(theMessage.getMessageBody());
 		}
 
 		return retVal;

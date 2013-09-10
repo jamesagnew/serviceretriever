@@ -28,13 +28,14 @@ import com.google.gwt.user.client.ui.ScrollPanel;
 
 public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 
-	private LoadingSpinner myTopLoadingSpinner;
-	private FlowPanel myTopPanel;
+	private boolean myHideRequest;
 	private FlowPanel myReqPanel;
-	private FlowPanel myRespPanel;
 	private HtmlPre myReqPre;
+	private FlowPanel myRespPanel;
 	private HtmlPre myRespPre;
 	private TwoColumnGrid myTopGrid;
+	private LoadingSpinner myTopLoadingSpinner;
+	private FlowPanel myTopPanel;
 
 	public BaseViewRecentMessagePanel() {
 		myTopPanel = new FlowPanel();
@@ -48,120 +49,15 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 
 		FlowPanel topContentPanel = new FlowPanel();
 		topContentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
-		
+
 		myTopLoadingSpinner = new LoadingSpinner();
 		myTopLoadingSpinner.show();
 		topContentPanel.add(myTopLoadingSpinner);
 
 		myTopGrid = new TwoColumnGrid();
 		myTopPanel.add(topContentPanel);
-		
+
 		topContentPanel.add(myTopGrid);
-
-	}
-
-	protected abstract String getPanelTitle();
-
-	public void setMessage(final GRecentMessage theResult) {
-		Model.getInstance().loadServiceVersion(theResult.getServiceVersionPid(), new IAsyncLoadCallback<BaseGServiceVersion>() {
-			@Override
-			public void onSuccess(BaseGServiceVersion theSvcVer) {
-		myTopLoadingSpinner.hideCompletely();
-
-		myTopGrid.clear();
-		if (theResult.getOutcomeDescription() != null) {
-			myTopGrid.addRow("Outcome", new Label(theResult.getOutcomeDescription()));
-		}
-		if (theResult.getAuthorizationOutcome() != null) {
-			myTopGrid.addRow("Authorization", new Label(theResult.getAuthorizationOutcome().getDescription()));
-		}
-		myTopGrid.addRow(MSGS.recentMessagesGrid_ColTimestamp(), new Label(DateUtil.formatTime(theResult.getTransactionTime())));
-		
-		if (StringUtil.isNotBlank(theResult.getImplementationUrlId())) {
-			myTopGrid.addRow(MSGS.recentMessagesGrid_ColImplementationUrl(), new Anchor(theResult.getImplementationUrlId(), theResult.getImplementationUrlHref()));
-		}
-		
-		if (StringUtil.isNotBlank(theResult.getRequestHostIp())) {
-			myTopGrid.addRow(MSGS.recentMessagesGrid_ColIp(), new Label(theResult.getRequestHostIp()));
-		}
-
-		/*
-		 * Request Message
-		 */
-
-		if (myReqPanel == null) {
-			myReqPanel = new FlowPanel();
-			add(myReqPanel);
-		} else {
-			myReqPanel.clear();
-		}
-
-		myReqPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
-
-		Label titleLabel = new Label(MSGS.viewRecentMessageServiceVersion_RequestMessage());
-		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
-		myReqPanel.add(titleLabel);
-
-		FlowPanel reqContentPanel = new FlowPanel();
-		reqContentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
-		myReqPanel.add(reqContentPanel);
-		
-		Panel reqHeaderPanel = new FlowPanel();
-		for (Pair<String> next : theResult.getRequestHeaders()) {
-			reqHeaderPanel.add(new HTML(formatHeader(next)));
-		}
-		reqContentPanel.add(reqHeaderPanel);
-
-		myReqPre = new HtmlPre(theResult.getRequestMessage());
-
-		HorizontalPanel reqFunctions = new HorizontalPanel();
-		addResponseFormatButtons(reqFunctions, theResult.getRequestContentType(), myReqPre, theResult.getRequestMessage(), theSvcVer);
-		reqContentPanel.add(reqFunctions);
-
-		ScrollPanel reqMsgPanel = new ScrollPanel(myReqPre);
-		reqMsgPanel.addStyleName(CssConstants.RECENT_MESSAGE_SCROLLER);
-		reqContentPanel.add(reqMsgPanel);
-
-		/*
-		 * Response Message
-		 */
-
-		if (myRespPanel == null) {
-			myRespPanel = new FlowPanel();
-			add(myRespPanel);
-		} else {
-			myRespPanel.clear();
-		}
-
-		myRespPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
-
-		Label respTitleLabel = new Label(MSGS.viewRecentMessageServiceVersion_ResponseMessage());
-		respTitleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
-		myRespPanel.add(respTitleLabel);
-
-		FlowPanel respContentPanel = new FlowPanel();
-		respContentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
-		myRespPanel.add(respContentPanel);
-		
-		Panel respHeaderPanel = new FlowPanel();
-		for (Pair<String> next : theResult.getResponseHeaders()) {
-			respHeaderPanel.add(new HTML(formatHeader(next)));
-		}
-		respContentPanel.add(respHeaderPanel);
-
-		myRespPre = new HtmlPre(theResult.getResponseMessage());
-
-		HorizontalPanel respFunctions = new HorizontalPanel();
-		addResponseFormatButtons(respFunctions, theResult.getResponseContentType(), myRespPre, theResult.getResponseMessage(), theSvcVer);
-		
-		respContentPanel.add(respFunctions);
-
-		ScrollPanel respMsgPanel = new ScrollPanel(myRespPre);
-		respMsgPanel.addStyleName(CssConstants.RECENT_MESSAGE_SCROLLER);
-		respContentPanel.add(respMsgPanel);
-
-			}
-		});
 
 	}
 
@@ -188,11 +84,6 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		}
 	}
 
-	public static native void syntaxHighliter() /*-{
-		$wnd.SyntaxHighlighter.highlight();
-	}-*/;
-
-
 	private SafeHtml formatHeader(Pair<String> theNext) {
 		SafeHtmlBuilder b = new SafeHtmlBuilder();
 
@@ -208,12 +99,134 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		return b.toSafeHtml();
 	}
 
-	public static native String formatXml(String theExisting) /*-{
-		return $wnd.vkbeautify.xml(theExisting);
-	}-*/;
+	protected abstract String getPanelTitle();
+
+	public boolean isHideRequest() {
+		return myHideRequest;
+	}
+
+	public void setHideRequest(boolean theHideRequest) {
+		myHideRequest = theHideRequest;
+	}
+
+	public void setMessage(final GRecentMessage theResult) {
+		Model.getInstance().loadServiceVersion(theResult.getServiceVersionPid(), new IAsyncLoadCallback<BaseGServiceVersion>() {
+			@Override
+			public void onSuccess(BaseGServiceVersion theSvcVer) {
+				myTopLoadingSpinner.hideCompletely();
+
+				while (myTopGrid.getRowCount() > 0) {
+					myTopGrid.removeRow(0);
+				}
+				
+				if (theResult.getOutcomeDescription() != null) {
+					myTopGrid.addRow("Outcome", new Label(theResult.getOutcomeDescription()));
+				}
+				if (theResult.getAuthorizationOutcome() != null) {
+					myTopGrid.addRow("Authorization", new Label(theResult.getAuthorizationOutcome().getDescription()));
+				}
+				myTopGrid.addRow(MSGS.recentMessagesGrid_ColTimestamp(), new Label(DateUtil.formatTime(theResult.getTransactionTime())));
+				myTopGrid.addRow("Latency", theResult.getTransactionMillis()+"ms");
+				if (StringUtil.isNotBlank(theResult.getImplementationUrlId())) {
+					myTopGrid.addRow(MSGS.recentMessagesGrid_ColImplementationUrl(), new Anchor(theResult.getImplementationUrlId(), theResult.getImplementationUrlHref()));
+				}
+				if (StringUtil.isNotBlank(theResult.getRequestHostIp())) {
+					myTopGrid.addRow(MSGS.recentMessagesGrid_ColIp(), new Label(theResult.getRequestHostIp()));
+				}
+				
+
+				/*
+				 * Request Message
+				 */
+
+				if (!isHideRequest()) {
+					if (myReqPanel == null) {
+						myReqPanel = new FlowPanel();
+						add(myReqPanel);
+					} else {
+						myReqPanel.clear();
+					}
+
+					myReqPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
+
+					Label titleLabel = new Label(MSGS.viewRecentMessageServiceVersion_RequestMessage());
+					titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
+					myReqPanel.add(titleLabel);
+
+					FlowPanel reqContentPanel = new FlowPanel();
+					reqContentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
+					myReqPanel.add(reqContentPanel);
+
+					Panel reqHeaderPanel = new FlowPanel();
+					for (Pair<String> next : theResult.getRequestHeaders()) {
+						reqHeaderPanel.add(new HTML(formatHeader(next)));
+					}
+					reqContentPanel.add(reqHeaderPanel);
+
+					myReqPre = new HtmlPre(theResult.getRequestMessage());
+
+					HorizontalPanel reqFunctions = new HorizontalPanel();
+					addResponseFormatButtons(reqFunctions, theResult.getRequestContentType(), myReqPre, theResult.getRequestMessage(), theSvcVer);
+					reqContentPanel.add(reqFunctions);
+
+					ScrollPanel reqMsgPanel = new ScrollPanel(myReqPre);
+					reqMsgPanel.addStyleName(CssConstants.RECENT_MESSAGE_SCROLLER);
+					reqContentPanel.add(reqMsgPanel);
+				}
+
+				/*
+				 * Response Message
+				 */
+
+				if (myRespPanel == null) {
+					myRespPanel = new FlowPanel();
+					add(myRespPanel);
+				} else {
+					myRespPanel.clear();
+				}
+
+				myRespPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
+
+				Label respTitleLabel = new Label(MSGS.viewRecentMessageServiceVersion_ResponseMessage());
+				respTitleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
+				myRespPanel.add(respTitleLabel);
+
+				FlowPanel respContentPanel = new FlowPanel();
+				respContentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
+				myRespPanel.add(respContentPanel);
+
+				Panel respHeaderPanel = new FlowPanel();
+				for (Pair<String> next : theResult.getResponseHeaders()) {
+					respHeaderPanel.add(new HTML(formatHeader(next)));
+				}
+				respContentPanel.add(respHeaderPanel);
+
+				myRespPre = new HtmlPre(theResult.getResponseMessage());
+
+				HorizontalPanel respFunctions = new HorizontalPanel();
+				addResponseFormatButtons(respFunctions, theResult.getResponseContentType(), myRespPre, theResult.getResponseMessage(), theSvcVer);
+
+				respContentPanel.add(respFunctions);
+
+				ScrollPanel respMsgPanel = new ScrollPanel(myRespPre);
+				respMsgPanel.addStyleName(CssConstants.RECENT_MESSAGE_SCROLLER);
+				respContentPanel.add(respMsgPanel);
+
+			}
+		});
+
+	}
 
 	public static native String formatJson(String theExisting) /*-{
 		return $wnd.vkbeautify.json(theExisting);
 	}-*/;
-	
+
+	public static native String formatXml(String theExisting) /*-{
+		return $wnd.vkbeautify.xml(theExisting);
+	}-*/;
+
+	public static native void syntaxHighliter() /*-{
+		$wnd.SyntaxHighlighter.highlight();
+	}-*/;
+
 }

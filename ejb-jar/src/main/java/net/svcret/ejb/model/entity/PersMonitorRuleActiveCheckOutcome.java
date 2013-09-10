@@ -1,7 +1,7 @@
 package net.svcret.ejb.model.entity;
 
-import java.util.Date;
-
+import javax.persistence.Access;
+import javax.persistence.AccessType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -10,9 +10,8 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 
 import org.hibernate.annotations.Index;
 
@@ -20,9 +19,10 @@ import org.hibernate.annotations.Index;
 @Entity
 @Table(name = "PX_MONITOR_RULE_AC_OUTCM")
 @NamedQueries(value= {
+		@NamedQuery(name=Queries.PMRACO_DELETEBEFORE, query=Queries.PMRACO_DELETEBEFORE_Q)
 	})
 @org.hibernate.annotations.Table(appliesTo= "PX_MONITOR_RULE_AC_OUTCM",indexes={
-	@Index(name="IDX_MRAO_CHECK_AND_TS", columnNames= {"ACTIVE_CHECK_PID","CHK_TIMESTAMP"})
+	@Index(name="IDX_MRAO_CHECK_AND_TS", columnNames= {"ACTIVE_CHECK_PID","XACT_TIME"})
 })
 //@formatter:on
 public class PersMonitorRuleActiveCheckOutcome extends BasePersSavedTransaction {
@@ -33,18 +33,24 @@ public class PersMonitorRuleActiveCheckOutcome extends BasePersSavedTransaction 
 	@JoinColumn(name = "ACTIVE_CHECK_PID", nullable = false)
 	private PersMonitorRuleActiveCheck myCheck;
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	@Column(name = "PID")
-	private Long myPid;
+	// TODO: make this not nullable and update DB
+	@Column(name = "CHECK_FAILED", nullable = true)
+	private Boolean myFailed;
 
-	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name="CHK_TIMESTAMP", nullable=false)
-	private Date myTimestamp;
+	public PersMonitorRuleActiveCheck getCheck() {
+		return myCheck;
+	}
 
-	@Override
-	public Long getPid() {
-		return myPid;
+	public Boolean getFailed() {
+		return myFailed;
+	}
+
+	public void setCheck(PersMonitorRuleActiveCheck theCheck) {
+		myCheck = theCheck;
+	}
+
+	public void setFailed(boolean theFailed) {
+		myFailed = theFailed;
 	}
 
 }

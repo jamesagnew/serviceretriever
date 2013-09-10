@@ -12,6 +12,7 @@ import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.XMLStreamException;
 
 import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
@@ -35,7 +36,7 @@ public class RequestPipelineTest {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(RequestPipelineTest.class);
 
 	@Test
-	public void testRequestProcessor() throws InternalErrorException, ProcessingException, UnknownRequestException, SAXException, IOException, ParserConfigurationException {
+	public void testRequestProcessor() throws InternalErrorException, ProcessingException, UnknownRequestException, SAXException, IOException, ParserConfigurationException, InvocationFailedException, XMLStreamException {
 
 		String methodName = "getPatientByMrn";
 		String msg = createRequest(methodName, true);
@@ -75,7 +76,7 @@ public class RequestPipelineTest {
 	}
 
 	@Test
-	public void testAddWsSecToMessageWithNoHeader() throws InternalErrorException, ProcessingException, UnknownRequestException, SAXException, IOException, ParserConfigurationException {
+	public void testAddWsSecToMessageWithNoHeader() throws InternalErrorException, ProcessingException, UnknownRequestException, SAXException, IOException, ParserConfigurationException, InvocationFailedException, XMLStreamException {
 
 		String methodName = "getPatientByMrn";
 		String msg = createRequest(methodName, false);
@@ -148,7 +149,7 @@ public class RequestPipelineTest {
 	}
 
 	@Test
-	public void testRequestWithoutHeaderElement() throws InternalErrorException, ProcessingException, UnknownRequestException, SAXException, IOException, ParserConfigurationException {
+	public void testRequestWithoutHeaderElement() throws InternalErrorException, ProcessingException, UnknownRequestException, SAXException, IOException, ParserConfigurationException, InvocationFailedException, XMLStreamException {
 
 		String methodName = "getPatientByMrn";
 		String msg = createRequest(methodName, false);
@@ -181,7 +182,7 @@ public class RequestPipelineTest {
 	}
 	
 	@Test
-	public void testRequestWithoutHeaderElementButCreateOne() throws InternalErrorException, ProcessingException, UnknownRequestException, SAXException, IOException, ParserConfigurationException {
+	public void testRequestWithoutHeaderElementButCreateOne() throws InternalErrorException, ProcessingException, UnknownRequestException, SAXException, IOException, ParserConfigurationException, InvocationFailedException, XMLStreamException {
 
 		String methodName = "getPatientByMrn";
 		String msg = createRequest(methodName, false);

@@ -1164,7 +1164,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		PersLibraryMessage message = msgs.iterator().next();
 		assertEquals("ct0", message.getContentType());
 		assertEquals("desc0", message.getDescription());
-		assertEquals("m0", message.getMessage());
+		assertEquals("m0", message.getMessageBody());
 
 		msgs = mySvc.getLibraryMessagesWhichApplyToServiceVersion(version1.getPid());
 		assertEquals(1, msgs.size());

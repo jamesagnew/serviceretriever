@@ -3,6 +3,8 @@ package net.svcret.ejb.model.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.Access;
+import javax.persistence.AccessType;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -13,6 +15,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
@@ -54,10 +57,11 @@ public class PersMonitorRuleActiveCheck extends BasePersObject {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "PID")
+	@Access(AccessType.FIELD)
 	private Long myPid;
 
-	@OneToMany(cascade = CascadeType.ALL, mappedBy = "myCheck", orphanRemoval = true)
-	@OrderBy("CHK_TIMESTAMP")
+	@OneToMany(cascade = CascadeType.REMOVE, mappedBy = "myCheck", orphanRemoval = true)
+	@org.hibernate.annotations.OrderBy(clause="XACT_TIME DESC")
 	private List<PersMonitorRuleActiveCheckOutcome> myRecentOutcomes;
 
 	@ManyToOne(cascade = {}, optional = false)
@@ -118,7 +122,7 @@ public class PersMonitorRuleActiveCheck extends BasePersObject {
 	}
 
 	public void loadMessageAndRule() {
-		myMessage.getMessage().toString();
+		myMessage.getMessageBody().toString();
 		myRule.toString();
 	}
 

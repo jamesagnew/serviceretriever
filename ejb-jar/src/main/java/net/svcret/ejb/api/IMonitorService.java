@@ -19,8 +19,9 @@ public interface IMonitorService {
 
 	/**
 	 * Save a rule and notify anyone interested
+	 * @return 
 	 */
-	void saveRule(BasePersMonitorRule theRule) throws ProcessingException;
+	BasePersMonitorRule saveRule(BasePersMonitorRule theRule) throws ProcessingException;
 
 	void runActiveChecks();
 

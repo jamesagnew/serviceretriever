@@ -99,7 +99,7 @@ public class PersLibraryMessage extends BasePersObject {
 		return myDescription;
 	}
 
-	public String getMessage() {
+	public String getMessageBody() {
 		return myMessage;
 	}
 

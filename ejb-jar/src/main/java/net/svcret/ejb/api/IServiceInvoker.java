@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.Set;
 
+import net.svcret.ejb.ejb.soap.InvocationFailedException;
 import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnknownRequestException;
@@ -30,8 +31,9 @@ public interface IServiceInvoker {
 	 * @throws UnknownRequestException
 	 * @throws IOException
 	 * @throws ProcessingException
+	 * @throws InvocationFailedException 
 	 */
-	InvocationResultsBean processInvocation(BasePersServiceVersion theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, String theContentType, Reader theReader) throws ProcessingException, UnknownRequestException; 
+	InvocationResultsBean processInvocation(BasePersServiceVersion theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, String theContentType, Reader theReader) throws ProcessingException, UnknownRequestException, InternalErrorException, InvocationFailedException; 
 	
 	InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws ProcessingException;
 

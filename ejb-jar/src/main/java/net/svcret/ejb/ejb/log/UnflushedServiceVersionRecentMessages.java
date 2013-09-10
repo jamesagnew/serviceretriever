@@ -20,10 +20,10 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 public class UnflushedServiceVersionRecentMessages extends BaseUnflushed<PersServiceVersionRecentMessage> {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(UnflushedServiceVersionRecentMessages.class);
 
-	private PersServiceVersionMethod myMethod;
+	private BasePersServiceVersion myServiceVersion;
 
-	public UnflushedServiceVersionRecentMessages(PersServiceVersionMethod theMethod) {
-		myMethod = theMethod;
+	public UnflushedServiceVersionRecentMessages(BasePersServiceVersion theServiceVersion) {
+		myServiceVersion = theServiceVersion;
 	}
 
 	public synchronized void recordTransaction(Date theTransactionTime, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody,
@@ -81,7 +81,7 @@ public class UnflushedServiceVersionRecentMessages extends BaseUnflushed<PersSer
 	@Override
 	public String toString() {
 		ToStringBuilder b = new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE);
-		b.append("svcVer", myMethod.getPid());
+		b.append("svcVer", myServiceVersion.getPid());
 		b.append("fail", getFail().size());
 		b.append("secfail", getSecurityFail().size());
 		b.append("fault", getFault().size());

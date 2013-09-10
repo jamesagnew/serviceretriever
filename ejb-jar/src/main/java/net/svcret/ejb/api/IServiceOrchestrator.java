@@ -3,6 +3,7 @@ package net.svcret.ejb.api;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -87,11 +88,17 @@ public interface IServiceOrchestrator {
 	public static class SidechannelOrchestratorResponseBean extends OrchestratorResponseBean {
 
 		private ResponseTypeEnum myResponseType;
+		private Date myRequestStartedTime;
 		
-		public SidechannelOrchestratorResponseBean(String theResponseBody, String theResponseContentType, Map<String, List<String>> theResponseHeaders, HttpResponseBean theHttpResponse, ResponseTypeEnum theResponseType) {
+		public SidechannelOrchestratorResponseBean(String theResponseBody, String theResponseContentType, Map<String, List<String>> theResponseHeaders, HttpResponseBean theHttpResponse, ResponseTypeEnum theResponseType, Date theRequestStartedTime) {
 			super(theResponseBody, theResponseContentType, theResponseHeaders, theHttpResponse);
 			
 			myResponseType=theResponseType;
+			myRequestStartedTime =theRequestStartedTime;
+		}
+
+		public Date getRequestStartedTime() {
+			return myRequestStartedTime;
 		}
 
 		public ResponseTypeEnum getResponseType() {

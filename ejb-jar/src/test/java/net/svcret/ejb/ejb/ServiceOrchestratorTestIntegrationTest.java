@@ -58,6 +58,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 	private Soap11ServiceInvoker mySoapInvoker;
 
 	private ServiceOrchestratorBean mySvc;
+	private PersServiceVersionUrl myUrl;
 
 	@Before
 	public void before() {
@@ -67,7 +68,131 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 	@SuppressWarnings("null")
 	@Test
 	public void testSoap11GoodRequest() throws ProcessingException, InternalErrorException, UnknownRequestException, IOException, SecurityFailureException, ThrottleException, ThrottleQueueFullException {
+		setUpSoap11Test();
 
+		/*
+		 * Make request
+		 */
+
+		String request = "<soapenv:Envelope xmlns:net=\"net:svcret:demo\" xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" + "   <soapenv:Header>\n"
+				+ "      <wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\" xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">\n"
+				+ "         <wsse:UsernameToken wsu:Id=\"UsernameToken-1\">\n" + "            <wsse:Username>test</wsse:Username>\n"
+				+ "            <wsse:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">admin</wsse:Password>\n"
+				+ "            <wsse:Nonce EncodingType=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary\">P8ypSWlCHRqR4T1ABYHHbA==</wsse:Nonce>\n" + "            <wsu:Created>2013-04-20T21:18:55.025Z</wsu:Created>\n"
+				+ "         </wsse:UsernameToken>\n" + "      </wsse:Security>\n" + "   </soapenv:Header>\n" + "   <soapenv:Body>\n" + "      <net:d0s0v0m0>\n" + "                 <arg0>FAULT</arg0>\n" + " <arg1>?</arg1>\n" + "      </net:d0s0v0m0>\n" + "   </soapenv:Body>\n"
+				+ "</soapenv:Envelope>";
+
+		String response = "<S:Envelope xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" + "   <S:Body>\n" + "      <ns2:addStringsResponse xmlns:ns2=\"net:svcret:demo\">\n" + "         <return>aFAULT?</return>\n" + "      </ns2:addStringsResponse>\n" + "   </S:Body>\n"
+				+ "</S:Envelope>";
+
+		IResponseValidator theResponseValidator = any();
+		UrlPoolBean theUrlPool = any();
+		String theContentBody = any();
+		Map<String, String> theHeaders = any();
+		String theContentType = any();
+		HttpResponseBean respBean = new HttpResponseBean();
+		respBean.setCode(200);
+		respBean.setBody(response);
+		respBean.setContentType("text/xml");
+		respBean.setResponseTime(100);
+		respBean.setSuccessfulUrl(myUrl);
+		respBean.setHeaders(new HashMap<String, List<String>>());
+		PersHttpClientConfig httpClient=any();
+		when(myHttpClient.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
+
+		ITransactionLogger transactionLogger = mock(ITransactionLogger.class);
+		mySvc.setTransactionLogger(transactionLogger);
+
+		DefaultAnswer.setRunTime();
+
+		OrchestratorResponseBean resp = null;
+		int reps = 100;
+		long start = System.currentTimeMillis();
+		for (int i = 0; i < reps; i++) {
+			String query = "";
+			Reader reader = new StringReader(request);
+			HttpRequestBean req = new HttpRequestBean();
+			req.setRequestType(RequestType.POST);
+			req.setRequestHostIp("127.0.0.1");
+			req.setPath("/d0/d0s0/d0s0v0");
+			req.setQuery(query);
+			req.setInputReader(reader);
+			req.setRequestTime(new Date());
+			req.setRequestHeaders(new HashMap<String, List<String>>());
+			resp = mySvc.handleServiceRequest(req);
+		}
+		long delay = System.currentTimeMillis() - start;
+		assertEquals(response, resp.getResponseBody());
+
+		ourLog.info("Did {} reps in {}ms for {}ms/rep", new Object[] { reps, delay, (delay / reps) });
+
+	}
+
+	@SuppressWarnings("null")
+	@Test
+	public void testSoap11InvalidRequest() throws ProcessingException, InternalErrorException, UnknownRequestException, IOException, SecurityFailureException, ThrottleException, ThrottleQueueFullException {
+		setUpSoap11Test();
+
+		/*
+		 * Make request
+		 */
+
+		String request = "<soapenv2:Envelope xmlns:net=\"net:svcret:demo\" xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" + "   <soapenv:Header>\n"
+				+ "      <wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\" xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">\n"
+				+ "         <wsse:UsernameToken wsu:Id=\"UsernameToken-1\">\n" + "            <wsse:Username>test</wsse:Username>\n"
+				+ "            <wsse:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">admin</wsse:Password>\n"
+				+ "            <wsse:Nonce EncodingType=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary\">P8ypSWlCHRqR4T1ABYHHbA==</wsse:Nonce>\n" + "            <wsu:Created>2013-04-20T21:18:55.025Z</wsu:Created>\n"
+				+ "         </wsse:UsernameToken>\n" + "      </wsse:Security>\n" + "   </soapenv:Header>\n" + "   <soapenv:Body>\n" + "      <net:d0s0v0m0>\n" + "                 <arg0>FAULT</arg0>\n" + " <arg1>?</arg1>\n" + "      </net:d0s0v0m0>\n" + "   </soapenv:Body>\n"
+				+ "</soapenv:Envelope>";
+
+		String response = "<S:Envelope xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" + "   <S:Body>\n" + "      <ns2:addStringsResponse xmlns:ns2=\"net:svcret:demo\">\n" + "         <return>aFAULT?</return>\n" + "      </ns2:addStringsResponse>\n" + "   </S:Body>\n"
+				+ "</S:Envelope>";
+
+		IResponseValidator theResponseValidator = any();
+		UrlPoolBean theUrlPool = any();
+		String theContentBody = any();
+		Map<String, String> theHeaders = any();
+		String theContentType = any();
+		HttpResponseBean respBean = new HttpResponseBean();
+		respBean.setCode(200);
+		respBean.setBody(response);
+		respBean.setContentType("text/xml");
+		respBean.setResponseTime(100);
+		respBean.setSuccessfulUrl(myUrl);
+		respBean.setHeaders(new HashMap<String, List<String>>());
+		PersHttpClientConfig httpClient=any();
+		when(myHttpClient.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
+
+		TransactionLoggerBean logger = new TransactionLoggerBean();
+		logger.setDao(myDao);
+		mySvc.setTransactionLogger(logger);
+
+		DefaultAnswer.setRunTime();
+
+		OrchestratorResponseBean resp = null;
+		int reps = 100;
+		long start = System.currentTimeMillis();
+		for (int i = 0; i < reps; i++) {
+			String query = "";
+			Reader reader = new StringReader(request);
+			HttpRequestBean req = new HttpRequestBean();
+			req.setRequestType(RequestType.POST);
+			req.setRequestHostIp("127.0.0.1");
+			req.setPath("/d0/d0s0/d0s0v0");
+			req.setQuery(query);
+			req.setInputReader(reader);
+			req.setRequestTime(new Date());
+			req.setRequestHeaders(new HashMap<String, List<String>>());
+			resp = mySvc.handleServiceRequest(req);
+		}
+		long delay = System.currentTimeMillis() - start;
+		assertEquals(response, resp.getResponseBody());
+
+		ourLog.info("Did {} reps in {}ms for {}ms/rep", new Object[] { reps, delay, (delay / reps) });
+
+	}
+
+	private void setUpSoap11Test() throws ProcessingException {
 		myHttpClient = mock(IHttpClient.class, DefaultAnswer.INSTANCE);
 		myBroadcastSender = mock(IBroadcastSender.class);
 		myConfigService = mock(IConfigService.class, DefaultAnswer.INSTANCE);
@@ -145,63 +270,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		myDao.setEntityManager(null);
-
-		/*
-		 * Make request
-		 */
-
-		String request = "<soapenv:Envelope xmlns:net=\"net:svcret:demo\" xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" + "   <soapenv:Header>\n"
-				+ "      <wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\" xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">\n"
-				+ "         <wsse:UsernameToken wsu:Id=\"UsernameToken-1\">\n" + "            <wsse:Username>test</wsse:Username>\n"
-				+ "            <wsse:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">admin</wsse:Password>\n"
-				+ "            <wsse:Nonce EncodingType=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary\">P8ypSWlCHRqR4T1ABYHHbA==</wsse:Nonce>\n" + "            <wsu:Created>2013-04-20T21:18:55.025Z</wsu:Created>\n"
-				+ "         </wsse:UsernameToken>\n" + "      </wsse:Security>\n" + "   </soapenv:Header>\n" + "   <soapenv:Body>\n" + "      <net:d0s0v0m0>\n" + "                 <arg0>FAULT</arg0>\n" + " <arg1>?</arg1>\n" + "      </net:d0s0v0m0>\n" + "   </soapenv:Body>\n"
-				+ "</soapenv:Envelope>";
-
-		String response = "<S:Envelope xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" + "   <S:Body>\n" + "      <ns2:addStringsResponse xmlns:ns2=\"net:svcret:demo\">\n" + "         <return>aFAULT?</return>\n" + "      </ns2:addStringsResponse>\n" + "   </S:Body>\n"
-				+ "</S:Envelope>";
-
-		IResponseValidator theResponseValidator = any();
-		UrlPoolBean theUrlPool = any();
-		String theContentBody = any();
-		Map<String, String> theHeaders = any();
-		String theContentType = any();
-		HttpResponseBean respBean = new HttpResponseBean();
-		respBean.setCode(200);
-		respBean.setBody(response);
-		respBean.setContentType("text/xml");
-		respBean.setResponseTime(100);
-		respBean.setSuccessfulUrl(url);
-		respBean.setHeaders(new HashMap<String, List<String>>());
-		PersHttpClientConfig httpClient=any();
-		when(myHttpClient.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
-
-		ITransactionLogger transactionLogger = mock(ITransactionLogger.class);
-		mySvc.setTransactionLogger(transactionLogger);
-
-		DefaultAnswer.setRunTime();
-
-		OrchestratorResponseBean resp = null;
-		int reps = 100;
-		long start = System.currentTimeMillis();
-		for (int i = 0; i < reps; i++) {
-			String query = "";
-			Reader reader = new StringReader(request);
-			HttpRequestBean req = new HttpRequestBean();
-			req.setRequestType(RequestType.POST);
-			req.setRequestHostIp("127.0.0.1");
-			req.setPath("/d0/d0s0/d0s0v0");
-			req.setQuery(query);
-			req.setInputReader(reader);
-			req.setRequestTime(new Date());
-			req.setRequestHeaders(new HashMap<String, List<String>>());
-			resp = mySvc.handleServiceRequest(req);
-		}
-		long delay = System.currentTimeMillis() - start;
-		assertEquals(response, resp.getResponseBody());
-
-		ourLog.info("Did {} reps in {}ms for {}ms/rep", new Object[] { reps, delay, (delay / reps) });
-
+		myUrl = url;
 	}
 
 

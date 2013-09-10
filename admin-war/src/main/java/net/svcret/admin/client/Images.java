@@ -73,4 +73,7 @@ public interface Images extends ClientBundle {
 
 	@Source("net/svcret/images/icon_format_16.png")
 	ImageResource iconFormat16();
+
+	@Source("net/svcret/images/spinner.gif")
+	ImageResource spinner();
 }

@@ -35,6 +35,7 @@ import net.svcret.ejb.model.entity.PersInvocationUrlStats;
 import net.svcret.ejb.model.entity.PersInvocationMethodUserStats;
 import net.svcret.ejb.model.entity.PersLibraryMessage;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
+import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheckOutcome;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersNodeStats;
 import net.svcret.ejb.model.entity.PersService;
@@ -188,7 +189,7 @@ public interface IDao {
 
 	PersLibraryMessage saveLibraryMessage(PersLibraryMessage theMessage);
 
-	void saveMonitorRule(BasePersMonitorRule theRule);
+	BasePersMonitorRule saveMonitorRule(BasePersMonitorRule theRule);
 
 	PersMonitorRuleFiring saveMonitorRuleFiring(PersMonitorRuleFiring theFiring);
 
@@ -246,5 +247,9 @@ public interface IDao {
 	}
 
 	PersServiceVersionUrl getServiceVersionUrlByPid(long theUrlPid);
+
+	PersMonitorRuleActiveCheckOutcome saveMonitorRuleActiveCheckOutcome(PersMonitorRuleActiveCheckOutcome theRecentOutcome);
+
+	void deleteMonitorRuleActiveCheckOutcomesBeforeCutoff(PersMonitorRuleActiveCheck theCheck, Date theCutoff);
 
 }

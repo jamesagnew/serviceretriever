@@ -12,6 +12,7 @@ import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
@@ -74,14 +75,18 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	 * @throws ProcessingException 
 	 */
 	@Override
-	public void logTransaction(HttpRequestBean theRequest, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse,
+	public void logTransaction(HttpRequestBean theRequest,BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse,
 			PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, String theResponseBody) throws ProcessingException {
-		Validate.notNull(theMethod);
+		Validate.notNull(theSvcVer);
+		Validate.notNull(theInvocationResponse);
+		if (theInvocationResponse.getResponseType() != ResponseTypeEnum.FAIL) {
+			Validate.notNull(theMethod);
+		}
 
 		// Log to database
 		{
-			UnflushedServiceVersionRecentMessages newValue = new UnflushedServiceVersionRecentMessages(theMethod);
-			UnflushedServiceVersionRecentMessages existing = myUnflushedMessages.putIfAbsent(theMethod.getServiceVersion(), newValue);
+			UnflushedServiceVersionRecentMessages newValue = new UnflushedServiceVersionRecentMessages(theSvcVer);
+			UnflushedServiceVersionRecentMessages existing = myUnflushedMessages.putIfAbsent(theSvcVer, newValue);
 			if (existing == null) {
 				existing = newValue;
 			}
@@ -152,5 +157,6 @@ public class TransactionLoggerBean implements ITransactionLogger {
 			theList.pop();
 		}
 	}
+
 
 }

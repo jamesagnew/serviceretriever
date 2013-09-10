@@ -61,14 +61,14 @@
 		<class>net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth</class>
 		<exclude-unlisted-classes>false</exclude-unlisted-classes>
 		<properties>
-			<!-- 
 			<property name="hibernate.dialect" value="org.hibernate.dialect.Oracle10gDialect" />
 			<property name="hibernate.hbm2ddl.auto" value="validate" />  
+			<!-- 
 			-->
 			
+            <!-- 
 			<property name="hibernate.hbm2ddl.auto" value="" />  
             <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5Dialect"/>
-            <!-- 
 			<property name="hibernate.hbm2ddl.auto" value="update" />
 			 -->
 

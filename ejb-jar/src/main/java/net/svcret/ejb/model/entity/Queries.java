@@ -16,6 +16,9 @@ public class Queries {
 	public static final String LIBRARY_FINDBYSVC = "PersLibraryMessage.findBySvc";
 	public static final String LIBRARY_FINDBYSVC_Q = "SELECT m FROM PersLibraryMessage m JOIN m.myAppliesTo a WHERE a.myPk.myServiceVersion.myService = :SVC";
 
+	public static final String PMRACO_DELETEBEFORE = "PersMonitorRuleActiveCheckOutcome.deleteBefore";
+	public static final String PMRACO_DELETEBEFORE_Q = "DELETE FROM PersMonitorRuleActiveCheckOutcome o WHERE o.myCheck = :CHECK AND o.myTransactionTime < :CUTOFF";
+	
 	public static final String LIBRARY_FINDBYDOMAIN = "PersLibraryMessage.findByDomain";
 	public static final String LIBRARY_FINDBYDOMAIN_Q = "SELECT m FROM PersLibraryMessage m JOIN m.myAppliesTo a WHERE a.myPk.myServiceVersion.myService.myDomain = :DOMAIN";
 

@@ -1,5 +1,7 @@
 package net.svcret.admin.client.ui.components;
 
+import net.svcret.admin.client.AdminPortal;
+
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Image;
@@ -15,7 +17,7 @@ public class LoadingSpinner extends FlowPanel {
         
         myText = theText;
         
-        myImage = new Image("images/spinner.gif");
+        myImage = new Image(AdminPortal.IMAGES.spinner());
         myImage.setStyleName("spinnerElement");
         this.add(myImage);
         

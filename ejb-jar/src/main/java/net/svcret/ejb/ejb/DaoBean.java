@@ -62,6 +62,7 @@ import net.svcret.ejb.model.entity.PersLibraryMessageAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorRuleActive;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
+import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheckOutcome;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem;
 import net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact;
@@ -1035,7 +1036,7 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	public void saveMonitorRule(BasePersMonitorRule theRule) {
+	public BasePersMonitorRule saveMonitorRule(BasePersMonitorRule theRule) {
 
 		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
 			next.setRule(theRule);
@@ -1053,7 +1054,7 @@ public class DaoBean implements IDao {
 			}
 		}
 
-		myEntityManager.merge(theRule);
+		return myEntityManager.merge(theRule);
 	}
 
 	@Override
@@ -1366,6 +1367,24 @@ public class DaoBean implements IDao {
 	@Override
 	public PersServiceVersionUrl getServiceVersionUrlByPid(long theUrlPid) {
 		return myEntityManager.find(PersServiceVersionUrl.class, theUrlPid);
+	}
+
+	@Override
+	public PersMonitorRuleActiveCheckOutcome saveMonitorRuleActiveCheckOutcome(PersMonitorRuleActiveCheckOutcome theRecentOutcome) {
+		return myEntityManager.merge(theRecentOutcome);
+	}
+
+	@Override
+	public void deleteMonitorRuleActiveCheckOutcomesBeforeCutoff(PersMonitorRuleActiveCheck theCheck, Date theCutoff) {
+		Validate.notNull(theCheck);
+		Validate.notNull(theCutoff);
+		
+		Query q = myEntityManager.createNamedQuery(Queries.PMRACO_DELETEBEFORE);
+		q.setParameter("CHECK", theCheck);
+		q.setParameter("CUTOFF", theCutoff, TemporalType.TIMESTAMP);
+		
+		int results = q.executeUpdate();
+		ourLog.debug("Deleted {} active check outcomes for check {}", results, theCheck.getPid());
 	}
 
 }

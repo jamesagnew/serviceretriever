@@ -5,6 +5,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.Collection;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -59,6 +60,9 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 
 	@OneToOne(cascade = {}, fetch = FetchType.LAZY, mappedBy = "myUrl", orphanRemoval = true)
 	private PersServiceVersionUrlStatus myStatus;
+
+	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myImplementationUrl")
+	private List<PersMonitorRuleActiveCheckOutcome> myMonitorRuleActiveCheckOutcomes;
 
 	@Column(name = "URL", length = MAX_URL_LENGTH, nullable = false)
 	private String myUrl;

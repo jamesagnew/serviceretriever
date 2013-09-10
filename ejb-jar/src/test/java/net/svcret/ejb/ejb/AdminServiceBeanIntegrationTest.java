@@ -1,10 +1,18 @@
 package net.svcret.ejb.ejb;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.isOneOf;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -132,13 +140,13 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		assertEquals(cb2, cfg.getConnectTimeoutMillis());
 		assertEquals(cb3, cfg.getFailureRetriesBeforeAborting());
 		assertEquals(cb4, cfg.getReadTimeoutMillis());
-		
+
 		newEntityManager();
 
 		cb1 = 2111;
 		cb2 = 2112;
 		cb3 = 2113;
-		 cb4 = 2114;
+		cb4 = 2114;
 		cfg.setCircuitBreakerEnabled(true);
 		cfg.setCircuitBreakerTimeBetweenResetAttempts(cb1);
 		cfg.setConnectTimeoutMillis(cb2);
@@ -155,7 +163,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		assertEquals(cb2, cfg.getConnectTimeoutMillis());
 		assertEquals(cb3, cfg.getFailureRetriesBeforeAborting());
 		assertEquals(cb4, cfg.getReadTimeoutMillis());
-		
+
 		newEntityManager();
 
 		cb1 = 3111;
@@ -178,7 +186,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		assertEquals(cb2, cfg.getConnectTimeoutMillis());
 		assertEquals(cb3, cfg.getFailureRetriesBeforeAborting());
 		assertEquals(cb4, cfg.getReadTimeoutMillis());
-		
+
 		newEntityManager();
 
 	}
@@ -262,7 +270,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Before
-	public void before2() throws SQLException, ProcessingException {
+	public void before2() {
 		myDao = new DaoBean();
 		myBroadcastSender = mock(IBroadcastSender.class);
 
@@ -1114,7 +1122,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		PersServiceVersionUrl implementationUrl = persVer.getUrls().get(0);
 		AuthorizationOutcomeEnum authorizationOutcome = AuthorizationOutcomeEnum.AUTHORIZED;
 		PersUser persUser = myDao.getUser(user.getPidOrNull());
-		myTransactionLogSvc.logTransaction(request, m1, persUser, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome, "response Body");
+		myTransactionLogSvc.logTransaction(request, m1.getServiceVersion(), m1, persUser, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome, "response Body");
 
 		newEntityManager();
 

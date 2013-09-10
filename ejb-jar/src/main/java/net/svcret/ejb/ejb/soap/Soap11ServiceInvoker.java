@@ -38,6 +38,7 @@ import net.svcret.ejb.api.IServiceInvokerSoap11;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.RequestType;
+import net.svcret.ejb.ejb.CapturingReader;
 import net.svcret.ejb.ex.InternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.ProcessingRuntimeException;
@@ -196,7 +197,7 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 
 	}
 
-	private void doHandlePost(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, Reader theReader) throws InternalErrorException, ProcessingException, UnknownRequestException {
+	private void doHandlePost(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, Reader theReader) throws UnknownRequestException, InvocationFailedException {
 		// TODO: should we check for SOAPAction header?
 
 		List<PersBaseClientAuth<?>> clientAuths = theServiceDefinition.getClientAuths();
@@ -204,7 +205,15 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 		RequestPipeline pipeline = new RequestPipeline(serverAuths, clientAuths);
 
 		StringWriter requestBuffer = new StringWriter();
-		pipeline.process(theReader, requestBuffer);
+		
+		CapturingReader reader = new CapturingReader(theReader);
+		try {
+			pipeline.process(reader, requestBuffer);
+		} catch (XMLStreamException e) {
+			InvocationResponseResultsBean invocationResults = new InvocationResponseResultsBean();
+			invocationResults.setResponseType(ResponseTypeEnum.FAIL);
+			throw new InvocationFailedException(e, null, reader.getCapturedString(), invocationResults);
+		}
 
 		Set<Entry<PersBaseServerAuth<?, ?>, ICredentialGrabber>> credentialGrabbers = pipeline.getCredentialGrabbers().entrySet();
 		for (Entry<PersBaseServerAuth<?, ?>, ICredentialGrabber> next : credentialGrabbers) {
@@ -600,10 +609,12 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 
 	/**
 	 * {@inheritDoc}
+	 * @throws InvocationFailedException 
+	 * @throws InternalErrorException 
 	 */
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public InvocationResultsBean processInvocation(BasePersServiceVersion theServiceDefinition, RequestType theRequestType, String thePath, String theQuery,String theContentType, Reader theReader) throws ProcessingException, UnknownRequestException {
+	public InvocationResultsBean processInvocation(BasePersServiceVersion theServiceDefinition, RequestType theRequestType, String thePath, String theQuery,String theContentType, Reader theReader) throws ProcessingException, UnknownRequestException, InternalErrorException, InvocationFailedException {
 		InvocationResultsBean retVal = new InvocationResultsBean();
 
 		// TODO: verify that content type is correct

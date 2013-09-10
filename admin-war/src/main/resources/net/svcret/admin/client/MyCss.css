@@ -44,3 +44,46 @@
 	max-width: 400px;
 	box-shadow: 4px 4px 3px -1px #bbb;
 }
+
+TABLE.usageTooltipTable {
+	border-spacing: 2px;
+    font-size: 0.8em !important;	
+}
+
+.usageTooltipTableHeaderLabel {
+	text-align: center;
+}
+
+TD.usageTooltipTableSuccessColumn, TD.usageTooltipTableFaultColumn, TD.usageTooltipTableFailColumn, TD.usageTooltipTableSecFailColumn {
+	background: #444;
+    font-size: 0.8em !important;
+    font-weight: bold !important;	
+}
+
+TD.usageTooltipTableSuccessColumn {
+	color: #0C0;
+}
+
+TD.usageTooltipTableFaultColumn {
+	color: #66C;
+}
+
+TD.usageTooltipTableFailColumn {
+	color: #F00;
+}
+
+TD.usageTooltipTableSecFailColumn {
+	color: #FA0;
+}
+
+.usageTooltipTableDateColumn {
+	white-space: pre;
+    font-size: 0.8em !important;
+	background: #444;
+}
+
+.usageTooltipTableValueColumn {
+    font-size: 0.8em !important;
+	background: #444;
+	text-align: center;
+}

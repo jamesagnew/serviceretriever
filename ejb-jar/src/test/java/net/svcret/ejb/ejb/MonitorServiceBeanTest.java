@@ -270,7 +270,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		check.setServiceVersion(mySvcVer);
 		
 		rule.getActiveChecks().add(check);
-		mySvc.saveRule(rule);
+		rule=(PersMonitorRuleActive) mySvc.saveRule(rule);
 
 		// No calls have happened yet..
 		newEntityManager();
@@ -288,7 +288,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		HttpResponseBean httpResponse=new HttpResponseBean();
 		httpResponse.setSuccessfulUrl(myUrl1);
 		httpResponse.setResponseTime(1000);
-		responses.add(new SidechannelOrchestratorResponseBean("", "", new HashMap<String, List<String>>(), httpResponse, ResponseTypeEnum.SUCCESS));
+		responses.add(new SidechannelOrchestratorResponseBean("", "", new HashMap<String, List<String>>(), httpResponse, ResponseTypeEnum.SUCCESS, new Date()));
 		when(orch.handleSidechannelRequestForEachUrl(eq(mySvcVer.getPid()), (String)any(), (String)any(), (String)any())).thenReturn(responses);
 		mySvc.runActiveCheck(check);
 		
@@ -308,6 +308,9 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		assertNull(svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage(),svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage());
 		assertNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
 
+		rule = (PersMonitorRuleActive) myDao.getMonitorRule(rule.getPid());
+		assertEquals(1, rule.getActiveChecks().iterator().next().getRecentOutcomes().size());
+		
 		newEntityManager();
 
 		// Make sure the passive check doesn't overwrite things
