@@ -1,6 +1,8 @@
 package net.svcret.ejb.api;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 import javax.ejb.Local;
 
@@ -16,7 +18,7 @@ import net.svcret.ejb.model.entity.PersUser;
 @Local
 public interface IRuntimeStatus {
 
-	UrlPoolBean buildUrlPool(BasePersServiceVersion theServiceVersion);
+	UrlPoolBean buildUrlPool(BasePersServiceVersion theServiceVersion, Map<String, List<String>> theRequestHeaders);
 
 	/**
 	 * 

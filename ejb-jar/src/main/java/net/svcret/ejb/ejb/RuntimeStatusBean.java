@@ -2,6 +2,7 @@ package net.svcret.ejb.ejb;
 
 import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.*;
 
+import java.net.HttpCookie;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -27,8 +28,11 @@ import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import org.apache.commons.lang3.StringUtils;
+
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.StatusEnum;
+import net.svcret.admin.shared.model.UrlSelectionPolicy;
 import net.svcret.ejb.Messages;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.HttpResponseBean.Failure;
@@ -46,6 +50,7 @@ import net.svcret.ejb.model.entity.BasePersStatsPk;
 import net.svcret.ejb.model.entity.IThrottleable;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersConfig;
+import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationMethodUserStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUrlStats;
@@ -58,6 +63,8 @@ import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.ejb.model.entity.PersStaticResourceStats;
 import net.svcret.ejb.model.entity.PersStaticResourceStatsPk;
+import net.svcret.ejb.model.entity.PersStickySessionUrlBinding;
+import net.svcret.ejb.model.entity.PersStickySessionUrlBindingPk;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserMethodStatus;
 import net.svcret.ejb.model.entity.PersUserStatus;
@@ -88,7 +95,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private final ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>> myUnflushedInvocationStats;
 	private final ConcurrentHashMap<Long, PersServiceVersionStatus> myUnflushedServiceVersionStatus;
 	private final ConcurrentHashMap<PersUser, PersUserStatus> myUnflushedUserStatus;
-
 	private final ConcurrentHashMap<Long, PersServiceVersionUrlStatus> myUrlStatus;
 
 	public RuntimeStatusBean() {
@@ -100,10 +106,11 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public UrlPoolBean buildUrlPool(BasePersServiceVersion theServiceVersion) {
+	public UrlPoolBean buildUrlPool(BasePersServiceVersion theServiceVersion, Map<String, List<String>> theRequestHeaders) {
 		UrlPoolBean retVal = new UrlPoolBean();
 
-		switch (theServiceVersion.getHttpClientConfig().getUrlSelectionPolicy()) {
+		PersHttpClientConfig clientConfig = theServiceVersion.getHttpClientConfig();
+		switch (clientConfig.getUrlSelectionPolicy()) {
 		case PREFER_LOCAL:
 			choseUrlPreferLocal(theServiceVersion, retVal);
 			break;
@@ -111,8 +118,52 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			chooseUrlRoundRobin(theServiceVersion, retVal);
 		}
 
+		if (clientConfig.getUrlSelectionPolicy() == UrlSelectionPolicy.STICKY_SESSION) {
+			shuffleUrlPoolBasedOnStickySessionPolicy(retVal, theRequestHeaders, theServiceVersion);
+		}
+
 		return retVal;
 	}
+
+	private void shuffleUrlPoolBasedOnStickySessionPolicy(String theSesionId, UrlPoolBean theUrlPool, Map<String, List<String>> theHeaders, BasePersServiceVersion theServiceVersion) {
+		if (StringUtils.isBlank(theSesionId)) {
+			return;
+		}
+
+		PersStickySessionUrlBinding binding = myStickySessionUrlBindings.get(theSesionId);
+		if (binding == null) {
+			PersStickySessionUrlBindingPk bindingPk = new PersStickySessionUrlBindingPk(theSesionId, theServiceVersion);
+			myDao.getOrCreateStickySessionUrlBinding(bindingPk, theUrlPool.getPreferredUrl());
+		}
+
+	}
+
+	private void shuffleUrlPoolBasedOnStickySessionPolicy(UrlPoolBean theUrlPool, Map<String, List<String>> theHeaders, BasePersServiceVersion theSvcVer) {
+		synchronized (myStickySessionUrlBindings) {
+
+			PersHttpClientConfig clientConfig = theSvcVer.getHttpClientConfig();
+			if (StringUtils.isNotBlank(clientConfig.getStickySessionHeaderForSessionId())) {
+				List<String> sessionKeyValues = theHeaders.get(clientConfig.getStickySessionHeaderForSessionId());
+				if (sessionKeyValues.size() > 0) {
+					shuffleUrlPoolBasedOnStickySessionPolicy(sessionKeyValues.get(0), theUrlPool, theHeaders, theSvcVer);
+				}
+			} else if (StringUtils.isNotBlank(clientConfig.getStickySessionCookieForSessionId())) {
+				List<String> cookieHeaders = theHeaders.get("Cookie");
+				for (String nextCookieHeader : cookieHeaders) {
+					List<HttpCookie> cookies = HttpCookie.parse(nextCookieHeader);
+					for (HttpCookie nextCookie : cookies) {
+						if (nextCookie.getName().equals(clientConfig.getStickySessionCookieForSessionId())) {
+							shuffleUrlPoolBasedOnStickySessionPolicy(nextCookie.getValue(), theUrlPool, theHeaders, theSvcVer);
+							break;
+						}
+					}
+				}
+			}
+
+		}
+	}
+
+	private Map<PersStickySessionUrlBindingPk, PersStickySessionUrlBinding> myStickySessionUrlBindings;
 
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override

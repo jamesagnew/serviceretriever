@@ -28,11 +28,11 @@ public class PersHttpClientConfig extends BasePersObject {
 	 * Default ID for config. At least this config will always exist.
 	 */
 	public static final String DEFAULT_ID = GHttpClientConfig.DEFAULT_ID;
+	private static final String DEFAULT_NAME = "Default Configuration";
+
 	public static final int DEFAULT_READ_TIMEOUT_MILLIS = 20 * 1000;
 
 	public static final UrlSelectionPolicy DEFAULT_URL_SELECTION_POLICY = UrlSelectionPolicy.PREFER_LOCAL;
-
-	private static final String DEFAULT_NAME = "Default Configuration";
 
 	private static final long serialVersionUID = 1L;
 
@@ -65,6 +65,12 @@ public class PersHttpClientConfig extends BasePersObject {
 
 	@Column(name = "READ_TIMEOUT", nullable = false)
 	private int myReadTimeoutMillis;
+
+	@Column(name = "SS_SID_COOKIE", nullable = true, length = 200)
+	private String myStickySessionCookieForSessionId;
+
+	@Column(name = "SS_SID_HEADER", nullable = true, length = 200)
+	private String myStickySessionHeaderForSessionId;
 
 	@Lob
 	@Column(name = "TLS_KEYSTORE", nullable=true)
@@ -146,6 +152,14 @@ public class PersHttpClientConfig extends BasePersObject {
 	 */
 	public int getReadTimeoutMillis() {
 		return myReadTimeoutMillis;
+	}
+
+	public String getStickySessionCookieForSessionId() {
+		return myStickySessionCookieForSessionId;
+	}
+
+	public String getStickySessionHeaderForSessionId() {
+		return myStickySessionHeaderForSessionId;
 	}
 
 	public byte[] getTlsKeystore() {
@@ -272,6 +286,14 @@ public class PersHttpClientConfig extends BasePersObject {
 	 */
 	public void setReadTimeoutMillis(int theReadTimeoutMillis) {
 		myReadTimeoutMillis = theReadTimeoutMillis;
+	}
+
+	public void setStickySessionCookieForSessionId(String theStickySessionCookieForSessionId) {
+		myStickySessionCookieForSessionId = theStickySessionCookieForSessionId;
+	}
+
+	public void setStickySessionHeaderForSessionId(String theStickySessionHeaderForSessionId) {
+		myStickySessionHeaderForSessionId = theStickySessionHeaderForSessionId;
 	}
 
 	public void setTlsKeystore(byte[] theTlsKeystore) {

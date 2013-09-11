@@ -131,7 +131,7 @@ public class HttpClientBean implements IHttpClient {
 
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override
-	public HttpResponseBean post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody, Map<String, String> theHeaders,
+	public HttpResponseBean post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody, Map<String, List<String>> theHeaders,
 			String theContentType) {
 		if (theClientConfig.getConnectTimeoutMillis() <= 0) {
 			throw new IllegalArgumentException("ConnectTimeout may not be <= 0");
@@ -186,7 +186,7 @@ public class HttpClientBean implements IHttpClient {
 		myDefaultSimpleGetClient = new DefaultHttpClient(mySimpleClientConMgr, params);
 	}
 
-	private void doPost(HttpResponseBean theResponse, IResponseValidator theResponseValidator, Map<String, String> theHeaders, HttpEntity postEntity, DefaultHttpClient client,
+	private void doPost(HttpResponseBean theResponse, IResponseValidator theResponseValidator, Map<String, List<String>> theHeaders, HttpEntity postEntity, DefaultHttpClient client,
 			PersServiceVersionUrl theNextUrl, int theFailureRetries) {
 		int failuresRemaining = theFailureRetries + 1;
 		for (;;) {
@@ -194,8 +194,10 @@ public class HttpClientBean implements IHttpClient {
 
 			HttpPost post = new HttpPost(theNextUrl.getUrl());
 			post.setEntity(postEntity);
-			for (Entry<String, String> next : theHeaders.entrySet()) {
-				post.addHeader(next.getKey(), next.getValue());
+			for (Entry<String, List<String>> next : theHeaders.entrySet()) {
+				for (String nextValue : next.getValue()) {
+					post.addHeader(next.getKey(), nextValue);
+				}
 			}
 
 			long start = System.currentTimeMillis();
@@ -347,8 +349,8 @@ public class HttpClientBean implements IHttpClient {
 			return myConMgr;
 		}
 
-		public HttpResponseBean post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody, Map<String, String> theHeaders,
-				String theContentType) {
+		public HttpResponseBean post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody,
+				Map<String, List<String>> theHeaders, String theContentType) {
 			HttpParams params = new BasicHttpParams();
 			params.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, theClientConfig.getConnectTimeoutMillis());
 			params.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, theClientConfig.getReadTimeoutMillis());
@@ -379,6 +381,8 @@ public class HttpClientBean implements IHttpClient {
 		}
 
 	}
+
+
 
 	public static class ClientConfigException extends Exception {
 

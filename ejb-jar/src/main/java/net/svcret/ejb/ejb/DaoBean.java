@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -24,6 +25,8 @@ import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 
+import org.apache.commons.lang3.StringUtils;
+
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
@@ -34,13 +37,13 @@ import net.svcret.ejb.api.StatusesBean;
 import net.svcret.ejb.ejb.log.BaseUnflushed;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
-import net.svcret.ejb.model.entity.BasePersStats;
-import net.svcret.ejb.model.entity.BasePersStats.IStatsVisitor;
-import net.svcret.ejb.model.entity.BasePersStatsPk;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.BasePersSavedTransactionRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceCatalogItem;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
+import net.svcret.ejb.model.entity.BasePersStats;
+import net.svcret.ejb.model.entity.BasePersStats.IStatsVisitor;
+import net.svcret.ejb.model.entity.BasePersStatsPk;
 import net.svcret.ejb.model.entity.IThrottleable;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
@@ -53,10 +56,10 @@ import net.svcret.ejb.model.entity.PersEnvironment;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
-import net.svcret.ejb.model.entity.PersInvocationUrlStats;
-import net.svcret.ejb.model.entity.PersInvocationUrlStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationMethodUserStats;
 import net.svcret.ejb.model.entity.PersInvocationMethodUserStatsPk;
+import net.svcret.ejb.model.entity.PersInvocationUrlStats;
+import net.svcret.ejb.model.entity.PersInvocationUrlStatsPk;
 import net.svcret.ejb.model.entity.PersLibraryMessage;
 import net.svcret.ejb.model.entity.PersLibraryMessageAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
@@ -78,6 +81,8 @@ import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.ejb.model.entity.PersState;
 import net.svcret.ejb.model.entity.PersStaticResourceStats;
 import net.svcret.ejb.model.entity.PersStaticResourceStatsPk;
+import net.svcret.ejb.model.entity.PersStickySessionUrlBinding;
+import net.svcret.ejb.model.entity.PersStickySessionUrlBindingPk;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserAllowableSourceIps;
 import net.svcret.ejb.model.entity.PersUserContact;
@@ -100,6 +105,9 @@ public class DaoBean implements IDao {
 	private EntityManager myEntityManager;
 
 	private Map<Long, Long> myServiceVersionPidToStatusPid = new HashMap<Long, Long>();
+
+	@EJB
+	private IDao myThis;
 
 	private PersHttpClientConfig addDefaultHttpClientConfig() {
 		PersHttpClientConfig retVal = new PersHttpClientConfig();
@@ -125,6 +133,19 @@ public class DaoBean implements IDao {
 		ourLog.info("Deleting HTTP client config {} / {}", theConfig.getPid(), theConfig.getId());
 
 		myEntityManager.remove(theConfig);
+	}
+
+	@Override
+	public void deleteMonitorRuleActiveCheckOutcomesBeforeCutoff(PersMonitorRuleActiveCheck theCheck, Date theCutoff) {
+		Validate.notNull(theCheck);
+		Validate.notNull(theCutoff);
+
+		Query q = myEntityManager.createNamedQuery(Queries.PMRACO_DELETEBEFORE);
+		q.setParameter("CHECK", theCheck);
+		q.setParameter("CUTOFF", theCutoff, TemporalType.TIMESTAMP);
+
+		int results = q.executeUpdate();
+		ourLog.debug("Deleted {} active check outcomes for check {}", results, theCheck.getPid());
 	}
 
 	@Override
@@ -297,12 +318,12 @@ public class DaoBean implements IDao {
 			}
 
 			@Override
-			public O visit(PersInvocationUrlStats theStats, PersInvocationUrlStatsPk thePk) {
+			public O visit(PersInvocationMethodUserStats theStats, PersInvocationMethodUserStatsPk thePk) {
 				return doVisit((P) thePk);
 			}
 
 			@Override
-			public O visit(PersInvocationMethodUserStats theStats, PersInvocationMethodUserStatsPk thePk) {
+			public O visit(PersInvocationUrlStats theStats, PersInvocationUrlStatsPk thePk) {
 				return doVisit((P) thePk);
 			}
 
@@ -619,6 +640,38 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
+	public PersStickySessionUrlBinding getOrCreateStickySessionUrlBinding(PersStickySessionUrlBindingPk theBindingPk, PersServiceVersionUrl theUrlToUseIfNoneExists) throws ProcessingException {
+		for (int i = 0; true; i++) {
+			try {
+				return myThis.getOrCreateStickySessionUrlBindingInNewTransaction(theBindingPk, theUrlToUseIfNoneExists);
+			} catch (Exception e) {
+				if (i < 5) {
+					ourLog.debug("Failed to create sticky session, will sleep and try again");
+					try {
+						Thread.sleep(500);
+					} catch (InterruptedException e1) {
+						// ignore
+					}
+					continue;
+				} else {
+					throw new ProcessingException(e);
+				}
+			}
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	public PersStickySessionUrlBinding getOrCreateStickySessionUrlBindingInNewTransaction(PersStickySessionUrlBindingPk theBindingPk, PersServiceVersionUrl theUrlToUseIfNoneExists) {
+		PersStickySessionUrlBinding retVal = myEntityManager.find(PersStickySessionUrlBinding.class, theBindingPk);
+		if (retVal == null) {
+			myEntityManager.persist(new PersStickySessionUrlBinding(theBindingPk, theUrlToUseIfNoneExists));
+			retVal = myEntityManager.find(PersStickySessionUrlBinding.class, theBindingPk);
+		}
+		return retVal;
+	}
+
+	@Override
 	public PersUser getOrCreateUser(BasePersAuthenticationHost theAuthHost, String theUsername) throws ProcessingException {
 		Validate.notNull(theAuthHost, "AuthenticationHost");
 		Validate.notBlank(theUsername, "Username");
@@ -695,6 +748,11 @@ public class DaoBean implements IDao {
 		query.setParameter("RESP_TYPE", theResponseType);
 
 		return query.getResultList();
+	}
+
+	@Override
+	public PersServiceVersionUrl getServiceVersionUrlByPid(long theUrlPid) {
+		return myEntityManager.find(PersServiceVersionUrl.class, theUrlPid);
 	}
 
 	@Override
@@ -919,6 +977,11 @@ public class DaoBean implements IDao {
 			ourLog.info("Saving HTTP client config {} / {}", theConfig.getPid(), theConfig.getId());
 		}
 
+		if (StringUtils.isNotBlank(theConfig.getStickySessionCookieForSessionId()) && 
+				StringUtils.isNotBlank(theConfig.getStickySessionHeaderForSessionId())) {
+			throw new IllegalArgumentException("Must not provide both a sticky session cookie and a sticky session header value");
+		}
+		
 		PersHttpClientConfig retVal = myEntityManager.merge(theConfig);
 
 		if (isNew) {
@@ -951,6 +1014,30 @@ public class DaoBean implements IDao {
 			BasePersStats<?, ?> nextToMerge = iter.next();
 			final BasePersStats<?, ?> existingPersisted = nextToMerge.accept(new IStatsVisitor<BasePersStats<?, ?>>() {
 				@Override
+				public BasePersStats<?, ?> visit(PersInvocationMethodSvcverStats theStats, PersInvocationMethodSvcverStatsPk thePk) {
+					count.increment();
+					PersInvocationMethodSvcverStats retVal = getOrCreateStats(thePk);
+					retVal.mergeUnsynchronizedEvents(theStats);
+					return retVal;
+				}
+
+				@Override
+				public BasePersStats<?, ?> visit(PersInvocationMethodUserStats theStats, PersInvocationMethodUserStatsPk thePk) {
+					ucount.increment();
+					PersInvocationMethodUserStats retVal = getOrCreateStats(thePk);
+					retVal.mergeUnsynchronizedEvents(theStats);
+					return retVal;
+				}
+
+				@Override
+				public BasePersStats<?, ?> visit(PersInvocationUrlStats theStats, PersInvocationUrlStatsPk thePk) {
+					count.increment();
+					PersInvocationUrlStats retVal = getOrCreateStats(thePk);
+					retVal.mergeUnsynchronizedEvents(theStats);
+					return retVal;
+				}
+
+				@Override
 				public BasePersStats<?, ?> visit(PersNodeStats theStats, PersNodeStatsPk thePk) {
 					count.increment();
 					PersNodeStats retVal = getOrCreateStats(thePk);
@@ -965,32 +1052,8 @@ public class DaoBean implements IDao {
 					retVal.mergeUnsynchronizedEvents(theStats);
 					return retVal;
 				}
-
-				@Override
-				public BasePersStats<?, ?> visit(PersInvocationMethodSvcverStats theStats, PersInvocationMethodSvcverStatsPk thePk) {
-					count.increment();
-					PersInvocationMethodSvcverStats retVal = getOrCreateStats(thePk);
-					retVal.mergeUnsynchronizedEvents(theStats);
-					return retVal;
-				}
-
-				@Override
-				public BasePersStats<?, ?> visit(PersInvocationUrlStats theStats, PersInvocationUrlStatsPk thePk) {
-					count.increment();
-					PersInvocationUrlStats retVal = getOrCreateStats(thePk);
-					retVal.mergeUnsynchronizedEvents(theStats);
-					return retVal;
-				}
-
-				@Override
-				public BasePersStats<?, ?> visit(PersInvocationMethodUserStats theStats, PersInvocationMethodUserStatsPk thePk) {
-					ucount.increment();
-					PersInvocationMethodUserStats retVal = getOrCreateStats(thePk);
-					retVal.mergeUnsynchronizedEvents(theStats);
-					return retVal;
-				}
 			});
-			
+
 			ourLog.debug("Merging stats entry: {}", existingPersisted);
 			myEntityManager.merge(existingPersisted);
 		}
@@ -1055,6 +1118,11 @@ public class DaoBean implements IDao {
 		}
 
 		return myEntityManager.merge(theRule);
+	}
+
+	@Override
+	public PersMonitorRuleActiveCheckOutcome saveMonitorRuleActiveCheckOutcome(PersMonitorRuleActiveCheckOutcome theRecentOutcome) {
+		return myEntityManager.merge(theRecentOutcome);
 	}
 
 	@Override
@@ -1289,8 +1357,7 @@ public class DaoBean implements IDao {
 		}
 	}
 
-	/**
-	 * FOR UNIT TESTS ONLY
+	/**	 * FOR UNIT TESTS ONLY
 	 */
 	public void setEntityManager(EntityManager theEntityManager) {
 		myEntityManager = theEntityManager;
@@ -1362,29 +1429,6 @@ public class DaoBean implements IDao {
 		for (Iterator<PersUserRecentMessage> iter = messages.iterator(); iter.hasNext() && index < toDelete; index++) {
 			myEntityManager.remove(iter.next());
 		}
-	}
-
-	@Override
-	public PersServiceVersionUrl getServiceVersionUrlByPid(long theUrlPid) {
-		return myEntityManager.find(PersServiceVersionUrl.class, theUrlPid);
-	}
-
-	@Override
-	public PersMonitorRuleActiveCheckOutcome saveMonitorRuleActiveCheckOutcome(PersMonitorRuleActiveCheckOutcome theRecentOutcome) {
-		return myEntityManager.merge(theRecentOutcome);
-	}
-
-	@Override
-	public void deleteMonitorRuleActiveCheckOutcomesBeforeCutoff(PersMonitorRuleActiveCheck theCheck, Date theCutoff) {
-		Validate.notNull(theCheck);
-		Validate.notNull(theCutoff);
-		
-		Query q = myEntityManager.createNamedQuery(Queries.PMRACO_DELETEBEFORE);
-		q.setParameter("CHECK", theCheck);
-		q.setParameter("CUTOFF", theCutoff, TemporalType.TIMESTAMP);
-		
-		int results = q.executeUpdate();
-		ourLog.debug("Deleted {} active check outcomes for check {}", results, theCheck.getPid());
 	}
 
 }

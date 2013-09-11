@@ -1,6 +1,7 @@
 package net.svcret.ejb.api;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import javax.ejb.Local;
@@ -15,6 +16,6 @@ public interface IHttpClient {
 
 	HttpResponseBean get(String theUrl) throws ClientProtocolException, IOException;
 
-	HttpResponseBean post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody, Map<String, String> theHeaders, String theContentType);
+	HttpResponseBean post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody, Map<String, List<String>> theHeaders, String theContentType);
 	
 }

@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 import javax.ejb.Stateless;
@@ -17,6 +15,7 @@ import net.svcret.ejb.api.IServiceInvokerJsonRpc20;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.RequestType;
+import net.svcret.ejb.ejb.BaseServiceInvoker;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
@@ -41,7 +40,7 @@ import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
 @Stateless()
-public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
+public class JsonRpc20ServiceInvoker extends BaseServiceInvoker implements IServiceInvokerJsonRpc20 {
 
 	static final String TOKEN_ID = "id";
 	static final String TOKEN_PARAMS = "params";
@@ -173,7 +172,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 		}
 	}
 
-	public static void consumeEqually(JsonReader theJsonReader) throws IOException, ProcessingException {
+	public static void consumeEqually(JsonReader theJsonReader) throws IOException {
 		int objectDepth = 0;
 		int arrayDepth = 0;
 
@@ -362,13 +361,12 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 
 		String requestBody = stringWriter.toString();
 		String contentType = "application/json";
-		Map<String, String> headers = new HashMap<String, String>();
 		PersServiceVersionMethod methodDef = theServiceDefinition.getMethod(method);
 		if (methodDef == null) {
 			throw new InvocationRequestFailedException("Unknown method \"" + method + "\" for Service \"" + theServiceDefinition.getService().getServiceName() + "\"");
 		}
 
-		retVal.setResultMethod(methodDef, requestBody, contentType, headers);
+		retVal.setResultMethod(methodDef, requestBody, contentType);
 		return retVal;
 	}
 
@@ -397,11 +395,7 @@ public class JsonRpc20ServiceInvoker implements IServiceInvokerJsonRpc20 {
 
 				} else if (JsonRpc20ServiceInvoker.TOKEN_RESULT.equals(nextName)) {
 
-					try {
-						JsonRpc20ServiceInvoker.consumeEqually(jsonReader);
-					} catch (ProcessingException e) {
-						throw new InvocationResponseFailedException(e, "Failed to parse response, error was: " + e.getMessage(), theResponse);
-					}
+					JsonRpc20ServiceInvoker.consumeEqually(jsonReader);
 
 				} else if (JsonRpc20ServiceInvoker.TOKEN_ERROR.equals(nextName)) {
 

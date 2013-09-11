@@ -97,7 +97,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		IResponseValidator theResponseValidator = any();
 		UrlPoolBean theUrlPool = any();
 		String theContentBody = any();
-		Map<String, String> theHeaders = any();
+		Map<String, List<String>> theHeaders = any();
 		String theContentType = any();
 		HttpResponseBean respBean = new HttpResponseBean();
 		respBean.setCode(200);
@@ -166,7 +166,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		IResponseValidator theResponseValidator = any();
 		UrlPoolBean theUrlPool = any();
 		String theContentBody = any();
-		Map<String, String> theHeaders = any();
+		Map<String, List<String>> theHeaders = any();
 		String theContentType = any();
 		HttpResponseBean respBean = new HttpResponseBean();
 		respBean.setCode(200);

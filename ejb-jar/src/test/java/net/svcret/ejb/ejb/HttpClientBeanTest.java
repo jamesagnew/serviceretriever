@@ -11,6 +11,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
@@ -95,7 +96,7 @@ public class HttpClientBeanTest {
 			IResponseValidator validator = new NullResponseValidator();
 			UrlPoolBean urlPool = new UrlPoolBean();
 			urlPool.setPreferredUrl(new PersServiceVersionUrl(123, "https://127.0.0.1:" + port + "/path"));
-			HashMap<String, String> headers = new HashMap<String, String>();
+			HashMap<String, List<String>> headers = new HashMap<String, List<String>>();
 			HttpResponseBean resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
 
 			ourLog.info("Resp was: " + resp.getBody());
@@ -154,7 +155,7 @@ public class HttpClientBeanTest {
 			IResponseValidator validator = new NullResponseValidator();
 			UrlPoolBean urlPool = new UrlPoolBean();
 			urlPool.setPreferredUrl(new PersServiceVersionUrl(123, "https://127.0.0.1:" + port + "/path"));
-			HashMap<String, String> headers = new HashMap<String, String>();
+			HashMap<String, List<String>> headers = new HashMap<String, List<String>>();
 			HttpResponseBean resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
 
 			ourLog.info("Resp was: " + resp.getBody());
@@ -290,7 +291,7 @@ public class HttpClientBeanTest {
 		clientConfig.setConnectTimeoutMillis(1000);
 		clientConfig.setReadTimeoutMillis(1000);
 
-		Map<String, String> reqHeaders = new HashMap<String, String>();
+		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
 		String reqContentType = "text/xml";
 		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
@@ -316,7 +317,7 @@ public class HttpClientBeanTest {
 		clientConfig.setConnectTimeoutMillis(1000);
 		clientConfig.setReadTimeoutMillis(1000);
 
-		Map<String, String> reqHeaders = new HashMap<String, String>();
+		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
 		String reqContentType = "text/xml";
 		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
@@ -346,7 +347,7 @@ public class HttpClientBeanTest {
 		clientConfig.setConnectTimeoutMillis(1000);
 		clientConfig.setReadTimeoutMillis(1000);
 
-		Map<String, String> reqHeaders = new HashMap<String, String>();
+		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
 		String reqContentType = "text/xml";
 		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
@@ -379,7 +380,7 @@ public class HttpClientBeanTest {
 		clientConfig.setConnectTimeoutMillis(1000);
 		clientConfig.setReadTimeoutMillis(1000);
 
-		Map<String, String> reqHeaders = new HashMap<String, String>();
+		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
 		String reqContentType = "text/xml";
 		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
@@ -412,7 +413,7 @@ public class HttpClientBeanTest {
 		clientConfig.setReadTimeoutMillis(1000);
 		clientConfig.setFailureRetriesBeforeAborting(1);
 
-		Map<String, String> reqHeaders = new HashMap<String, String>();
+		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
 		String reqContentType = "text/xml";
 		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
@@ -452,7 +453,7 @@ public class HttpClientBeanTest {
 		clientConfig.setReadTimeoutMillis(1000);
 		clientConfig.setFailureRetriesBeforeAborting(1);
 
-		Map<String, String> reqHeaders = new HashMap<String, String>();
+		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
 		String reqContentType = "text/xml";
 		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
@@ -498,7 +499,7 @@ public class HttpClientBeanTest {
 		clientConfig.setReadTimeoutMillis(1000);
 		clientConfig.setFailureRetriesBeforeAborting(1);
 
-		Map<String, String> reqHeaders = new HashMap<String, String>();
+		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
 		String reqContentType = "text/xml";
 		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
@@ -538,7 +539,7 @@ public class HttpClientBeanTest {
 		clientConfig.setReadTimeoutMillis(1000);
 		clientConfig.setFailureRetriesBeforeAborting(1);
 
-		Map<String, String> reqHeaders = new HashMap<String, String>();
+		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
 		String reqContentType = "text/xml";
 		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 

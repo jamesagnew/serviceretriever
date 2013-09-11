@@ -12,10 +12,10 @@ import org.apache.commons.lang3.Validate;
 
 public class InvocationResultsBean {
 
-	private Map<PersBaseServerAuth<?, ?>, ICredentialGrabber> myCredentialsInRequest = new HashMap<PersBaseServerAuth<?,?>, ICredentialGrabber>();
+	private Map<PersBaseServerAuth<?, ?>, ICredentialGrabber> myCredentialsInRequest = new HashMap<PersBaseServerAuth<?, ?>, ICredentialGrabber>();
 	private String myMethodContentType;
 	private PersServiceVersionMethod myMethodDefinition;
-	private Map<String, String> myMethodHeaders;
+	private Map<String, List<String>> myMethodHeaders;
 	private String myMethodRequestBody;
 	private ResultTypeEnum myResultType;
 	private IServiceInvoker myServiceInvoker;
@@ -38,7 +38,7 @@ public class InvocationResultsBean {
 	/**
 	 * @return the credentialsInRequest
 	 */
-	public ICredentialGrabber getCredentialsInRequest(PersBaseServerAuth<?,?> theType) {
+	public ICredentialGrabber getCredentialsInRequest(PersBaseServerAuth<?, ?> theType) {
 		return myCredentialsInRequest.get(theType);
 	}
 
@@ -59,9 +59,9 @@ public class InvocationResultsBean {
 	/**
 	 * @return the methodHeaders
 	 */
-	public Map<String, String> getMethodHeaders() {
+	public Map<String, List<String>> getMethodHeaders() {
 		if (myMethodHeaders == null) {
-			myMethodHeaders = new HashMap<String, String>();
+			myMethodHeaders = new HashMap<String, List<String>>();
 		}
 		return myMethodHeaders;
 	}
@@ -119,13 +119,16 @@ public class InvocationResultsBean {
 		return myStaticResourceUrl;
 	}
 
-	public void setResultMethod(PersServiceVersionMethod theMethod, String theRequestBody, String theContentType, Map<String, String> theHeaders) {
+	public void setMethodHeaders(Map<String, List<String>> theMethodHeaders) {
+		myMethodHeaders = theMethodHeaders;
+	}
+
+	public void setResultMethod(PersServiceVersionMethod theMethod, String theRequestBody, String theContentType) {
 		validateResultTypeNotSet();
 		myResultType = ResultTypeEnum.METHOD;
 		myMethodDefinition = theMethod;
 		myMethodRequestBody = theRequestBody;
 		myMethodContentType = theContentType;
-		myMethodHeaders = theHeaders;
 	}
 
 	public void setResultStaticResource(String theResourceUrl, PersServiceVersionResource theResource, String theResourceText, String theContentType, Map<String, List<String>> theHeaders) {

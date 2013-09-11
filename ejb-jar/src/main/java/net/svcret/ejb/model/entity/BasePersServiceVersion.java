@@ -154,7 +154,10 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	private Collection<PersUserServiceVersionPermission> myUserPermissions;
 
 	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myServiceVersion")
-	private List<PersUserRecentMessage> myUserRecentMessages;
+	private Collection<PersUserRecentMessage> myUserRecentMessages;
+
+	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myPk.myServiceVersion")
+	private Collection<PersStickySessionUrlBinding> myStickySessionUrlBindings;
 
 	@Column(name = "VERSION_ID", length = 200, nullable = false)
 	private String myVersionId;

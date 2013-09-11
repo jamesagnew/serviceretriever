@@ -38,6 +38,7 @@ import net.svcret.ejb.api.IServiceInvokerSoap11;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.RequestType;
+import net.svcret.ejb.ejb.BaseServiceInvoker;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
@@ -67,7 +68,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 @Stateless()
-public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
+public class Soap11ServiceInvoker extends BaseServiceInvoker implements IServiceInvokerSoap11 {
 
 	private static XMLEventFactory ourEventFactory;
 
@@ -243,7 +244,7 @@ public class Soap11ServiceInvoker implements IServiceInvokerSoap11 {
 		String request = requestBuffer.toString();
 		String contentType = "text/xml";
 
-		theResults.setResultMethod(method, request, contentType, headers);
+		theResults.setResultMethod(method, request, contentType);
 	}
 
 	private Element findWsdlBindingInDocument(Document theWsdlDocument) throws ProcessingException {

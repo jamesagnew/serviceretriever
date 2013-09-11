@@ -324,6 +324,10 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			throw new InvocationFailedDueToInternalErrorException("Invoker " + svcInvoker + " returned null");
 		}
 
+		if (results.getResultType()==ResultTypeEnum.METHOD) {
+			results.setMethodHeaders(svcInvoker.createRequestHeaders(theRequest.getRequestHeaders()));
+		}
+		
 		results.setServiceInvoker(svcInvoker);
 
 		for (PersBaseClientAuth<?> next : serviceVersion.getClientAuths()) {
@@ -336,7 +340,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 				} catch (UnsupportedEncodingException e) {
 					throw new Error("Could not find US-ASCII encoding. This shouldn't happen!");
 				}
-				results.getMethodHeaders().put("Authorization", "Basic " + encoded);
+				results.getMethodHeaders().put("Authorization", Collections.singletonList("Basic " + encoded));
 			}
 		}
 
@@ -365,7 +369,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		SidechannelOrchestratorResponseBean retVal;
 		PersServiceVersionMethod method = results.getMethodDefinition();
 		BasePersServiceVersion serviceVersion = method.getServiceVersion();
-		Map<String, String> headers = results.getMethodHeaders();
+		Map<String, List<String>> headers = results.getMethodHeaders();
 		String contentType = results.getMethodContentType();
 		String contentBody = results.getMethodRequestBody();
 		IResponseValidator responseValidator = results.getServiceInvoker().provideInvocationResponseValidator();

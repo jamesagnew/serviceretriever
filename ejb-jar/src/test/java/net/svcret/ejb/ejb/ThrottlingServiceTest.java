@@ -47,14 +47,14 @@ public class ThrottlingServiceTest {
 	}
 
 	@Test
-	public void testRecordStatsForQueueFull() throws ThrottleException, ThrottleQueueFullException, InterruptedException {
+	public void testRecordStatsForQueueFull() throws Exception {
 		HttpRequestBean httpRequest=new HttpRequestBean();
 		httpRequest.setInputReader(new StringReader(""));
 		
 		RateLimiter rateLimiter=RateLimiter.create(2);
 		
 		InvocationResultsBean invocationRequest=new InvocationResultsBean();
-		invocationRequest.setResultMethod(null, null, null, null);
+		invocationRequest.setResultMethod(null, null, null);
 		AuthorizationResultsBean authorization=new AuthorizationResultsBean();
 		
 		PersUser throttleKey = new PersUser();
@@ -95,7 +95,7 @@ public class ThrottlingServiceTest {
 		httpRequest.setInputReader(new StringReader(""));
 		
 		InvocationResultsBean invocationRequest = new InvocationResultsBean();
-		invocationRequest.setResultMethod(null, "", "", null);
+		invocationRequest.setResultMethod(null, "", "");
 		AuthorizationResultsBean authorization = new AuthorizationResultsBean();
 
 		authorization.setAuthorizedUser(user);

@@ -63,8 +63,6 @@ public class JsonRpc20ResponseValidator implements IResponseValidator {
 
 		} catch (IOException e) {
 			return new ValidationResponse(false, Messages.getString("JsonRpc20ResponseValidator.parseError", e.getMessage()));
-		} catch (ProcessingException e) {
-			return new ValidationResponse(false, Messages.getString("JsonRpc20ResponseValidator.parseError", e.getMessage()));
 		} finally {
 			IOUtils.closeQuietly(jsonReader);
 		}

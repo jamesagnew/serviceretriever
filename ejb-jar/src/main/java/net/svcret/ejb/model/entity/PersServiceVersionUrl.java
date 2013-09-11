@@ -58,6 +58,9 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 	@JoinColumn(name = "SVC_VERSION_PID", referencedColumnName = "PID", nullable = false)
 	private BasePersServiceVersion myServiceVersion;
 
+	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myUrl")
+	private Collection<PersStickySessionUrlBinding> myStickySessionUrlBindings;
+
 	@OneToOne(cascade = {}, fetch = FetchType.LAZY, mappedBy = "myUrl", orphanRemoval = true)
 	private PersServiceVersionUrlStatus myStatus;
 
@@ -109,12 +112,27 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 		return myUrlId.compareTo(theUrl.getUrlId());
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+
 	@Override
-	public boolean equals(Object theObj) {
-		return theObj instanceof PersServiceVersionUrl && Objects.equal(myPid, ((PersServiceVersionUrl) theObj).myPid);
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (!super.equals(obj))
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		PersServiceVersionUrl other = (PersServiceVersionUrl) obj;
+		if (myPid == null) {
+			if (other.myPid != null)
+				return false;
+		} else if (!myPid.equals(other.myPid))
+			return false;
+		if (myUrlId == null) {
+			if (other.myUrlId != null)
+				return false;
+		} else if (!myUrlId.equals(other.myUrlId))
+			return false;
+		return true;
 	}
 
 	/**
@@ -166,12 +184,13 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 		return myUrlId;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(myPid);
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + ((myPid == null) ? 0 : myPid.hashCode());
+		result = prime * result + ((myUrlId == null) ? 0 : myUrlId.hashCode());
+		return result;
 	}
 
 	@PostLoad

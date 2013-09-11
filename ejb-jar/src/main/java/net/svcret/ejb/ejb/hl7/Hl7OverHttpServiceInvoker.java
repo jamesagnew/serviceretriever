@@ -18,6 +18,7 @@ import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.RequestType;
+import net.svcret.ejb.ejb.BaseServiceInvoker;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
@@ -31,7 +32,7 @@ import ca.uhn.hl7v2.preparser.PreParser;
 import com.google.common.annotations.VisibleForTesting;
 
 @Stateless
-public class Hl7OverHttpServiceInvoker implements IServiceInvokerHl7OverHttp {
+public class Hl7OverHttpServiceInvoker extends BaseServiceInvoker implements IServiceInvokerHl7OverHttp {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(Hl7OverHttpServiceInvoker.class);
 
@@ -110,8 +111,8 @@ public class Hl7OverHttpServiceInvoker implements IServiceInvokerHl7OverHttp {
 		}
 
 		InvocationResultsBean retVal = new InvocationResultsBean();
-		retVal.setResultMethod(method, message, theContentType, new HashMap<String, String>());
-
+		retVal.setResultMethod(method, message, theContentType);
+		
 		return retVal;
 	}
 

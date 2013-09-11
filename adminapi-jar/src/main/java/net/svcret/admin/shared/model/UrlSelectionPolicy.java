@@ -6,7 +6,9 @@ public enum UrlSelectionPolicy {
 
 	PREFER_LOCAL,
 	
-	ROUND_ROBIN;
+	ROUND_ROBIN, 
+	
+	STICKY_SESSION;
 
 	public static int indexOf(UrlSelectionPolicy theUrlSelectionPolicy) {
 		return Arrays.asList(values()).indexOf(theUrlSelectionPolicy);

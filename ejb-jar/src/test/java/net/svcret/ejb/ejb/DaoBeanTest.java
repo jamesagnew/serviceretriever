@@ -13,6 +13,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.persistence.RollbackException;
+
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
@@ -46,6 +48,8 @@ import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
+import net.svcret.ejb.model.entity.PersStickySessionUrlBinding;
+import net.svcret.ejb.model.entity.PersStickySessionUrlBindingPk;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserAllowableSourceIps;
 import net.svcret.ejb.model.entity.PersUserMethodStatus;
@@ -211,6 +215,54 @@ public class DaoBeanTest extends BaseJpaTest {
 		assertEquals("foo2@example.com", gotRule2.getNotifyContact().iterator().next().getEmail());
 		assertEquals(1, gotRule2.getActiveChecks().size());
 		assertEquals(msg0, gotRule2.getActiveChecks().iterator().next().getMessage());
+
+	}
+
+	@Test
+	public void testSaveStickySessions() throws Exception {
+		newEntityManager();
+
+		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
+		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
+		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
+		PersServiceVersionMethod method = new PersServiceVersionMethod();
+		method.setName("method0");
+		ver.addMethod(method);
+
+		PersServiceVersionUrl url1 = new PersServiceVersionUrl();
+		url1.setUrl("http://foo");
+		url1.setUrlId("url1");
+		ver.addUrl(url1);
+		PersServiceVersionUrl url2 = new PersServiceVersionUrl();
+		url2.setUrl("http://bar");
+		url2.setUrlId("url2");
+		ver.addUrl(url2);
+		ver = (PersServiceVersionSoap11) mySvc.saveServiceVersion(ver);
+
+		newEntityManager();
+
+		ver = (PersServiceVersionSoap11) mySvc.getServiceVersionByPid(ver.getPid());
+		url1 = ver.getUrls().get(0);
+		url2 = ver.getUrls().get(1);
+		PersStickySessionUrlBindingPk pk = new PersStickySessionUrlBindingPk("ABC", ver);
+		PersStickySessionUrlBinding newBinding = mySvc.getOrCreateStickySessionUrlBindingInNewTransaction(pk, url1);
+		
+		assertEquals(pk, newBinding.getPk());
+		assertEquals(url1, newBinding.getUrl());
+		assertNotNull(newBinding.getLastAccessed());
+
+		newEntityManager();
+
+		ver = (PersServiceVersionSoap11) mySvc.getServiceVersionByPid(ver.getPid());
+		url1 = ver.getUrls().get(0);
+		PersStickySessionUrlBinding newBinding2 = mySvc.getOrCreateStickySessionUrlBindingInNewTransaction(pk, url2);
+		assertEquals(pk, newBinding2.getPk());
+		assertEquals(url1, newBinding2.getUrl()); // should not have changed
+		assertNotNull(newBinding2.getLastAccessed());
+
+		newEntityManager();
+
+		newEntityManager();
 
 	}
 
