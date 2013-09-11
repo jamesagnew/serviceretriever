@@ -27,7 +27,12 @@ import net.svcret.ejb.api.InvocationResponseResultsBean;
 @MappedSuperclass()
 public abstract class BasePersSavedTransaction implements Serializable {
 
+	private static final int FAIL_DESC_LENGTH = 200;
+
 	private static final long serialVersionUID = 1L;
+
+	@Column(name = "FAIL_DESC", nullable = true, length = FAIL_DESC_LENGTH)
+	private String myFailDescription;
 
 	@ManyToOne
 	@JoinColumn(name = "URL_PID", referencedColumnName = "PID", nullable = true)
@@ -58,6 +63,10 @@ public abstract class BasePersSavedTransaction implements Serializable {
 	@Column(name = "XACT_TIME", nullable = false)
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date myTransactionTime;
+
+	public String getFailDescription() {
+		return myFailDescription;
+	}
 
 	/**
 	 * @return the implementationUrl
@@ -108,25 +117,22 @@ public abstract class BasePersSavedTransaction implements Serializable {
 		return myTransactionTime;
 	}
 
-	public void populate(Date theTransactionTime, HttpRequestBean theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, InvocationResponseResultsBean theInvocationResult, String theResponseBody) {
-		myRequestBody = extractHeadersForBody(theRequest.getRequestHeaders()) + theRequestBody;
-		myImplementationUrl = theImplementationUrl;
-		myResponseBody = extractHeadersForBody(theInvocationResult.getResponseHeaders()) + theResponseBody;
-		myResponseType = theInvocationResult.getResponseType();
-		myTransactionTime = theTransactionTime;
+	public void populate(Date theTransactionTime, HttpRequestBean theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, InvocationResponseResultsBean theInvocationResult,
+			String theResponseBody) {
+		setRequestBody(extractHeadersForBody(theRequest.getRequestHeaders()) + theRequestBody);
+		setImplementationUrl(theImplementationUrl);
+		setResponseBody(extractHeadersForBody(theInvocationResult.getResponseHeaders()) + theResponseBody);
+		setResponseType(theInvocationResult.getResponseType());
+		setTransactionTime(theTransactionTime);
+		setFailDescription(theInvocationResult.getResponseFailureDescription());
 	}
 
-	private String extractHeadersForBody(Map<String, List<String>> headers) {
-		StringBuilder b = new StringBuilder();
-		if (headers != null) {
-			for (String nextHeader : headers.keySet()) {
-				for (String nextValue : headers.get(nextHeader)) {
-					b.append(nextHeader).append(": ").append(nextValue).append("\r\n");
-				}
-			}
+	public void setFailDescription(String theFailDescription) {
+		if (theFailDescription != null && theFailDescription.length() > FAIL_DESC_LENGTH) {
+			myFailDescription = theFailDescription.substring(0, FAIL_DESC_LENGTH - 3) + "...";
+		} else {
+			myFailDescription = theFailDescription;
 		}
-		b.append("\r\n");
-		return b.toString();
 	}
 
 	/**
@@ -175,6 +181,19 @@ public abstract class BasePersSavedTransaction implements Serializable {
 	 */
 	public void setTransactionTime(Date theTransactionTime) {
 		myTransactionTime = theTransactionTime;
+	}
+
+	private String extractHeadersForBody(Map<String, List<String>> headers) {
+		StringBuilder b = new StringBuilder();
+		if (headers != null) {
+			for (String nextHeader : headers.keySet()) {
+				for (String nextValue : headers.get(nextHeader)) {
+					b.append(nextHeader).append(": ").append(nextValue).append("\r\n");
+				}
+			}
+		}
+		b.append("\r\n");
+		return b.toString();
 	}
 
 }

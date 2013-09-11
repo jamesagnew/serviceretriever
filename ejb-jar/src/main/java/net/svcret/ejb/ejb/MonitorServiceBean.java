@@ -138,10 +138,11 @@ public class MonitorServiceBean implements IMonitorService {
 			for (SidechannelOrchestratorResponseBean nextOutcome : outcomes) {
 				PersMonitorRuleActiveCheckOutcome recentOutcome = new PersMonitorRuleActiveCheckOutcome();
 				recentOutcome.setCheck(theCheck);
-				recentOutcome.setImplementationUrl(nextOutcome.getHttpResponse().getSingleUrlOrThrow());
+				recentOutcome.setImplementationUrl(nextOutcome.getApplicableUrl());
 				recentOutcome.setRequestBody(theCheck.getMessage().getMessageBody());
 				recentOutcome.setResponseBody(nextOutcome.getResponseBody());
 				recentOutcome.setResponseType(nextOutcome.getResponseType());
+				recentOutcome.setFailDescription(nextOutcome.getFailureDescription());
 				recentOutcome.setTransactionMillis(nextOutcome.getHttpResponse().getResponseTime());
 				recentOutcome.setTransactionTime(nextOutcome.getRequestStartedTime());
 

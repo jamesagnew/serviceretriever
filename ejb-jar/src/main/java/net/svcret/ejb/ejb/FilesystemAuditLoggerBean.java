@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.ConcurrencyManagement;
@@ -41,6 +42,8 @@ import com.google.common.annotations.VisibleForTesting;
 @Singleton()
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
+
+	private static final Pattern PARAM_VALUE_WHITESPACE = Pattern.compile("\\r|\\n", Pattern.MULTILINE);
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(FilesystemAuditLoggerBean.class);
 
@@ -122,8 +125,12 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 	private void addItem(FileWriter writer, String key, String value) throws IOException {
 		writer.append(key);
 		writer.append(": ");
-		writer.append(value);
+		writer.append(formatParamValue(value));
 		writer.append("\n");
+	}
+
+	private CharSequence formatParamValue(String theValue) {
+		return PARAM_VALUE_WHITESPACE.matcher(theValue).replaceAll(" ");
 	}
 
 	private void flush() throws ProcessingException {
@@ -136,52 +143,59 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 		int count = 0;
 		while (true) {
 
-			UnflushedAuditRecord nextToFlush = myUnflushedAuditRecord.peek();
-			if (nextToFlush == null) {
+			UnflushedAuditRecord next = myUnflushedAuditRecord.peek();
+			if (next == null) {
 				break;
 			}
 
 			try {
-				String fileName = nextToFlush.createLogFile();
+				String fileName = next.createLogFile();
 				if (!writers.containsKey(fileName)) {
 					FileWriter writer = new FileWriter(new File(myAuditPath, fileName), true);
 					writers.put(fileName, writer);
 				}
 
-				if (!lookups.containsKey(nextToFlush.myRequestHostIp)) {
+				if (!lookups.containsKey(next.myRequestHostIp)) {
 					try {
-						InetAddress addr = InetAddress.getByName(nextToFlush.myRequestHostIp);
+						InetAddress addr = InetAddress.getByName(next.myRequestHostIp);
 						String host = addr.getHostName();
-						lookups.put(nextToFlush.myRequestHostIp, host);
+						lookups.put(next.myRequestHostIp, host);
 					} catch (Throwable e) {
 						ourLog.debug("Failed to lookup hostname", e);
-						lookups.put(nextToFlush.myRequestHostIp, null);
+						lookups.put(next.myRequestHostIp, null);
 					}
 				}
 
 				FileWriter writer = writers.get(fileName);
-				addItem(writer, "Date", myItemDateFormat.format(nextToFlush.myRequestTime));
-				addItem(writer, "RequestorIp", nextToFlush.myRequestHostIp + " (" + lookups.get(nextToFlush.myRequestHostIp) + ")");
-				addItem(writer, "DomainId", nextToFlush.myDomainId);
-				addItem(writer, "ServiceId", nextToFlush.myServiceId);
-				addItem(writer, "ServiceVersionId", nextToFlush.myServiceVersionId);
-				addItem(writer, "ServiceVersionPid", Long.toString(nextToFlush.myServiceVersionPid));
-				addItem(writer, "MethodName", nextToFlush.myMethodName);
-				if (nextToFlush.myImplementationUrl != null) {
-					addItem(writer, "HandledByUrl", "[" + nextToFlush.myImplementationUrlId + "] " + nextToFlush.myImplementationUrl);
+				addItem(writer, "Date", myItemDateFormat.format(next.myRequestTime));
+				addItem(writer, "Latency", Long.toString(next.myTransactionMillis));
+				addItem(writer, "ResponseType", next.myResponseType.name());
+				if (StringUtils.isNotBlank(next.myFailureDescription)) {
+					addItem(writer, "FailureDescription", next.myFailureDescription);
 				}
-				if (nextToFlush.myUserPid == null) {
+				addItem(writer, "RequestorIp", next.myRequestHostIp + " (" + lookups.get(next.myRequestHostIp) + ")");
+				addItem(writer, "DomainId", next.myDomainId);
+				addItem(writer, "ServiceId", next.myServiceId);
+				addItem(writer, "ServiceVersionId", next.myServiceVersionId);
+				addItem(writer, "ServiceVersionPid", Long.toString(next.myServiceVersionPid));
+				if (StringUtils.isNotBlank(next.myMethodName)) {
+				addItem(writer, "MethodName", next.myMethodName);
+				}
+				if (next.myImplementationUrl != null) {
+					addItem(writer, "HandledByUrl", "[" + next.myImplementationUrlId + "] " + next.myImplementationUrl);
+				}
+				if (next.myUserPid == null) {
 					addItem(writer, "User", "none");
 				} else {
-					addItem(writer, "User", "[" + nextToFlush.myUserPid + "] " + nextToFlush.myUsername);
+					addItem(writer, "User", "[" + next.myUserPid + "] " + next.myUsername);
 				}
 				writer.append("Request:\n");
-				String formatedRequest = formatMessage(nextToFlush.myRequestBody);
+				String formatedRequest = formatMessage(next.myRequestBody);
 				writer.append(formatedRequest);
 
-				if (nextToFlush.myResponseBody != null) {
+				if (next.myResponseBody != null) {
 					writer.append("\nResponse:\n");
-					String formattedResponse = formatMessage(nextToFlush.myResponseBody);
+					String formattedResponse = formatMessage(next.myResponseBody);
 					writer.append(formattedResponse);
 				}
 
@@ -329,6 +343,7 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 		private Long myTransactionMillis;
 		private String myUsername;
 		private Long myUserPid;
+		private String myFailureDescription;
 
 		public UnflushedAuditRecord(Date theRequestTime, HttpRequestBean theRequest, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody,
 				InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome,
@@ -350,6 +365,7 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 			myResponseHeaders = theInvocationResponse.getResponseHeaders();
 			myResponseBody = theInvocationResponse.getResponseBody();
 			myResponseType = theInvocationResponse.getResponseType();
+			myFailureDescription=theInvocationResponse.getResponseFailureDescription();
 			myMethodName = theMethod != null ? theMethod.getName() : null;
 			if (theUser != null) {
 				myUsername = theUser.getUsername();
@@ -361,10 +377,8 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 			myServiceId = theSvcVer.getService().getServiceId();
 			myDomainId = theSvcVer.getService().getDomain().getDomainId();
 			myServiceVersionPid = theSvcVer.getPid();
-
-			long responseTime = theHttpResponse != null ? theHttpResponse.getResponseTime() : 0;
-			myTransactionMillis = responseTime;
-
+			myTransactionMillis = theHttpResponse != null ? theHttpResponse.getResponseTime() : 0;
+			
 			assert myAuditRecordType != null;
 			assert myRequestTime != null;
 			assert myHeaders != null;
@@ -372,12 +386,12 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 			assert theImplementationUrl == null || StringUtils.isNotBlank(myImplementationUrl);
 			assert theImplementationUrl == null || StringUtils.isNotBlank(myImplementationUrlId);
 			assert myRequestHostIp != null;
-			assert myResponseHeaders != null;
-			assert StringUtils.isNotBlank(myMethodName);
 			assert StringUtils.isNotBlank(myDomainId);
 			assert StringUtils.isNotBlank(myServiceId);
 			assert StringUtils.isNotBlank(myServiceVersionId);
 			assert myServiceVersionPid != null;
+			assert myResponseType != null;
+			assert myTransactionMillis != null;
 		}
 
 		public Long getServiceVersionPid() {

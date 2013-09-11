@@ -44,7 +44,9 @@ import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
 
 import org.apache.commons.io.FileUtils;
+import org.hamcrest.core.IsNot;
 import org.hamcrest.core.StringContains;
+import org.hamcrest.text.IsEmptyString;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -136,21 +138,30 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testSoap11InvalidRequest()  throws Exception {
+	public void testSoap11InvalidRequest() throws Exception {
 		setUpSoap11Test();
 
 		/*
 		 * Make request
 		 */
 
-		String request = "<soapenv2:Envelope xmlns:net=\"net:svcret:demo\" xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
-				+ "   <soapenv:Header>\n"
-				+ "   </soapenv:Header>\n"
-				+ "   <soapenv:Body></soapenv:Body>\n"
-				+ "</soapenv:Envelope>";
+		//@formatter:off
+		String request = 
+				"<soapenv2:Envelope xmlns:net=\"net:svcret:demo\" xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"+
+				"   <soapenv:Header>\n"+
+				"   </soapenv:Header>\n"+
+				"   <soapenv:Body></soapenv:Body>\n"+
+				"</soapenv:Envelope>";
 
-		String response = "<S:Envelope xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" + "   <S:Body>\n" + "      <ns2:addStringsResponse xmlns:ns2=\"net:svcret:demo\">\n"
-				+ "         <return>aFAULT?</return>\n" + "      </ns2:addStringsResponse>\n" + "   </S:Body>\n" + "</S:Envelope>";
+		String response = 
+				"<S:Envelope xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" + 
+				"   <S:Body>\n" + 
+				"      <ns2:addStringsResponse xmlns:ns2=\"net:svcret:demo\">\n" + 
+				"         <return>aFAULT?</return>\n" + 
+				"      </ns2:addStringsResponse>\n" + 
+				"   </S:Body>\n" + 
+				"</S:Envelope>";
+		//@formatter:on
 
 		IResponseValidator theResponseValidator = any();
 		UrlPoolBean theUrlPool = any();
@@ -179,42 +190,106 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		DefaultAnswer.setRunTime();
 
 		OrchestratorResponseBean resp = null;
-		int reps = 10;
-		long start = System.currentTimeMillis();
-		for (int i = 0; i < reps; i++) {
-			String query = "";
-			Reader reader = new StringReader(request);
-			HttpRequestBean req = new HttpRequestBean();
-			req.setRequestType(RequestType.POST);
-			req.setRequestHostIp("127.0.0.1");
-			req.setPath("/d0/d0s0/d0s0v0");
-			req.setQuery(query);
-			req.setInputReader(reader);
-			req.setRequestTime(new Date());
-			req.setRequestHeaders(new HashMap<String, List<String>>());
-			try {
-				resp = mySvc.handleServiceRequest(req);
-				fail();
-			} catch (ProcessingException e) {
-				// expected
-			}
+		String query = "";
+		Reader reader = new StringReader(request);
+		HttpRequestBean req = new HttpRequestBean();
+		req.setRequestType(RequestType.POST);
+		req.setRequestHostIp("127.0.0.1");
+		req.setPath("/d0/d0s0/d0s0v0");
+		req.setQuery(query);
+		req.setInputReader(reader);
+		req.setRequestTime(new Date());
+		req.setRequestHeaders(new HashMap<String, List<String>>());
+		try {
+			resp = mySvc.handleServiceRequest(req);
+			fail();
+		} catch (ProcessingException e) {
+			ourLog.info("Message: "+e.getMessage());
+			assertThat(e.getMessage(), IsNot.not(IsEmptyString.isEmptyOrNullString()));
 		}
-		long delay = System.currentTimeMillis() - start;
 		assertNull(resp);
 
-		ourLog.info("Did {} reps in {}ms for {}ms/rep", new Object[] { reps, delay, (delay / reps) });
-
 		newEntityManager();
-		
+
 		logger.flush();
 		fsAuditLogger.forceFlush();
-		
+
 		newEntityManager();
-		
+
 		FileReader fr = new FileReader(myTempPath + "/svcver_1.log");
 		String entireLog = org.apache.commons.io.IOUtils.toString(fr);
 		ourLog.info("Journal file: {}", entireLog);
+
+		assertThat(entireLog, StringContains.containsString("</soapenv:Envelope>"));
+	}
+
+	/**
+	 * Have the invoker throw an NPE
+	 */
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testSoap11InvokerThrowsException() throws Exception {
+		setUpSoap11Test();
+
+		/*
+		 * Make request
+		 */
+
+		//@formatter:off
+		String request = 
+				"<soapenv:Envelope xmlns:net=\"net:svcret:demo\" xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"+
+				"   <soapenv:Header>\n"+
+				"   </soapenv:Header>\n"+
+				"   <soapenv:Body></soapenv:Body>\n"+
+				"</soapenv:Envelope>";
+		//@formatter:on
+
+		TransactionLoggerBean logger = new TransactionLoggerBean();
+		logger.setDao(myDao);
+		mySvc.setTransactionLogger(logger);
+
+		FilesystemAuditLoggerBean fsAuditLogger = new FilesystemAuditLoggerBean();
+		fsAuditLogger.setConfigServiceForUnitTests(myConfigService);
+		fsAuditLogger.initialize();
+		logger.setFilesystemAuditLoggerForUnitTests(fsAuditLogger);
+
+		DefaultAnswer.setRunTime();
+
+		Soap11ServiceInvoker invoker = mock(Soap11ServiceInvoker.class);
+		mySvc.setSoap11ServiceInvoker(invoker);
+		when(invoker.processInvocation(any(BasePersServiceVersion.class), any(RequestType.class), any(String.class), any(String.class), any(String.class),any(Reader.class))).thenThrow(NullPointerException.class);
 		
+		OrchestratorResponseBean resp = null;
+		String query = "";
+		Reader reader = new StringReader(request);
+		HttpRequestBean req = new HttpRequestBean();
+		req.setRequestType(RequestType.POST);
+		req.setRequestHostIp("127.0.0.1");
+		req.setPath("/d0/d0s0/d0s0v0");
+		req.setQuery(query);
+		req.setInputReader(reader);
+		req.setRequestTime(new Date());
+		req.setRequestHeaders(new HashMap<String, List<String>>());
+		try {
+			resp = mySvc.handleServiceRequest(req);
+			fail();
+		} catch (ProcessingException e) {
+			ourLog.info("Message: "+e.getMessage());
+			assertThat(e.getMessage(), IsNot.not(IsEmptyString.isEmptyOrNullString()));
+		}
+		assertNull(resp);
+
+		newEntityManager();
+
+		logger.flush();
+		fsAuditLogger.forceFlush();
+
+		newEntityManager();
+
+		FileReader fr = new FileReader(myTempPath + "/svcver_1.log");
+		String entireLog = org.apache.commons.io.IOUtils.toString(fr);
+		ourLog.info("Journal file: {}", entireLog);
+
 		assertThat(entireLog, StringContains.containsString("</soapenv:Envelope>"));
 	}
 
