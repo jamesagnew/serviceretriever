@@ -174,10 +174,10 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	private void handleInvocationFailure(HttpRequestBean theRequest, BasePersServiceVersion serviceVersion, InvocationFailedException e) throws ProcessingException {
 		theRequest.drainInputMessage();
 
-		/* TODO: add some kind of statistic recording for svcVer failed requests that
-		 * don't have a method associated
+		/*
+		 * TODO: add some kind of statistic recording for svcVer failed requests that don't have a method associated
 		 */
-		
+
 		myTransactionLogger.logTransaction(theRequest, serviceVersion, null, e.getUser(), theRequest.getRequestBody(), e.toInvocationResponse(), e.getImplementationUrl(), e.getHttpResponse(), null,
 				null);
 	}
@@ -296,6 +296,10 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			} catch (InvocationResponseFailedException e) {
 				handleInvocationFailure(theRequest, results.getMethodDefinition().getServiceVersion(), e);
 				throw new ProcessingException(e);
+			} catch (RuntimeException e) {
+				handleInvocationFailure(theRequest, results.getMethodDefinition().getServiceVersion(), new InvocationResponseFailedException(e,
+						"Invocation failed due to ServiceRetriever internal error: " + e.getMessage(), null));
+				throw new ProcessingException(e);
 			}
 			break;
 		default:
@@ -329,10 +333,10 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			throw new InvocationFailedDueToInternalErrorException("Invoker " + svcInvoker + " returned null");
 		}
 
-		if (results.getResultType()==ResultTypeEnum.METHOD) {
+		if (results.getResultType() == ResultTypeEnum.METHOD) {
 			results.setMethodHeaders(svcInvoker.createRequestHeaders(theRequest.getRequestHeaders()));
 		}
-		
+
 		results.setServiceInvoker(svcInvoker);
 
 		for (PersBaseClientAuth<?> next : serviceVersion.getClientAuths()) {

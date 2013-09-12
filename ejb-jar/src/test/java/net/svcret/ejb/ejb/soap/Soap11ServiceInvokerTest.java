@@ -269,8 +269,8 @@ public class Soap11ServiceInvokerTest {
 		assertEquals(expected, actual);
 		
 		assertEquals(Constants.CONTENT_TYPE_XML, result.getMethodContentType());
-		assertTrue(result.getMethodHeaders().keySet().contains("SOAPAction"));
-		assertEquals("", result.getMethodHeaders().get("SOAPAction"));
+//		assertTrue(result.getMethodHeaders().keySet().contains("SOAPAction"));
+//		assertEquals("", result.getMethodHeaders().get("SOAPAction"));
 		
 		verify(serviceVer, atLeastOnce()).getClientAuths();
 		verify(serviceVer, atLeastOnce()).getServerAuths();

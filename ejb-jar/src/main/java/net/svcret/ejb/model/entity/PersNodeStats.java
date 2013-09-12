@@ -31,47 +31,10 @@ public class PersNodeStats extends BasePersStats<PersNodeStatsPk, PersNodeStats>
 	private static long ourLastCpuTimeTotal;
 	private static double ourLastCpuTimeValue = -1;
 
-	public long getMemoryCommitted() {
-		return myMemoryCommitted;
-	}
-
-	public void setMemoryCommitted(long theMemoryCommitted) {
-		myMemoryCommitted = theMemoryCommitted;
-	}
-
-	public long getMemoryMax() {
-		return myMemoryMax;
-	}
-
-	public void setMemoryMax(long theMemoryMax) {
-		myMemoryMax = theMemoryMax;
-	}
-
-	public long getMemoryUsed() {
-		return myMemoryUsed;
-	}
-
-	public void setMemoryUsed(long theMemoryUsed) {
-		myMemoryUsed = theMemoryUsed;
-	}
-
-	public long getMethodInvocations() {
-		return myMethodInvocations;
-	}
-
-	public void setMethodInvocations(int theMethodInvocations) {
-		myMethodInvocations = theMethodInvocations;
-	}
-
-	public double getCpuTime() {
-		return (myCpuTime / 100.0);
-	}
-
-	public void setCpuTime(double theCpuTime) {
-		myCpuTime = (int) (theCpuTime*100.0);
-	}
-
 	private static final long serialVersionUID = 1L;
+
+	@Column(name = "CPU_TIME")
+	private int myCpuTime;
 
 	@Column(name = "MEM_COMMITTED")
 	private long myMemoryCommitted;
@@ -83,13 +46,19 @@ public class PersNodeStats extends BasePersStats<PersNodeStatsPk, PersNodeStats>
 	private long myMemoryUsed;
 
 	@Column(name = "METHOD_INVOCS")
-	private long myMethodInvocations;
+	private long myMethodSuccessInvocations;
+
+	@Column(name = "FAULT_INVOCS")
+	private long myMethodFaultInvocations;
+
+	@Column(name = "FAIL_INVOCS")
+	private long myMethodFailInvocations;
+
+	@Column(name = "SECFAIL_INVOCS")
+	private long myMethodSecFailInvocations;
 
 	@EmbeddedId
 	private PersNodeStatsPk myPk;
-
-	@Column(name = "CPU_TIME")
-	private int myCpuTime;
 
 	public PersNodeStats() {
 		// nothing
@@ -101,6 +70,18 @@ public class PersNodeStats extends BasePersStats<PersNodeStatsPk, PersNodeStats>
 
 	public PersNodeStats(PersNodeStatsPk thePk) {
 		myPk = thePk;
+	}
+
+	@Override
+	public <T> T accept(IStatsVisitor<T> theVisitor) {
+		return theVisitor.visit(this, getPk());
+	}
+
+	public synchronized void addMethodInvocations(long theInvocs, long theFaultCount, long theFailCount, long theSecFailCount) {
+		myMethodSuccessInvocations += theInvocs;
+		myMethodFaultInvocations += theFaultCount;
+		myMethodFailInvocations += theFailCount;
+		myMethodSecFailInvocations += theSecFailCount;
 	}
 
 	public synchronized void collectMemoryStats() {
@@ -133,6 +114,26 @@ public class PersNodeStats extends BasePersStats<PersNodeStatsPk, PersNodeStats>
 		}
 	}
 
+	public double getCpuTime() {
+		return (myCpuTime / 100.0);
+	}
+
+	public long getMemoryCommitted() {
+		return myMemoryCommitted;
+	}
+
+	public long getMemoryMax() {
+		return myMemoryMax;
+	}
+
+	public long getMemoryUsed() {
+		return myMemoryUsed;
+	}
+
+	public long getMethodInvocations() {
+		return myMethodSuccessInvocations;
+	}
+
 	public PersNodeStatsPk getPk() {
 		return myPk;
 	}
@@ -151,7 +152,42 @@ public class PersNodeStats extends BasePersStats<PersNodeStatsPk, PersNodeStats>
 		if (myMemoryMax < theNext.getMemoryMax()) {
 			myMemoryMax = theNext.getMemoryMax();
 		}
-		myMethodInvocations += theNext.getMethodInvocations();
+		myMethodSuccessInvocations += theNext.getMethodInvocations();
+		myMethodFaultInvocations += theNext.getMethodFaultInvocations();
+		myMethodFailInvocations += theNext.getMethodFailInvocations();
+		myMethodSecFailInvocations += theNext.getMethodSecFailInvocations();
+	}
+
+	public long getMethodFaultInvocations() {
+		return myMethodFaultInvocations;
+	}
+
+	public long getMethodFailInvocations() {
+		return myMethodFailInvocations;
+	}
+
+	public long getMethodSecFailInvocations() {
+		return myMethodSecFailInvocations;
+	}
+
+	public void setCpuTime(double theCpuTime) {
+		myCpuTime = (int) (theCpuTime * 100.0);
+	}
+
+	public void setMemoryCommitted(long theMemoryCommitted) {
+		myMemoryCommitted = theMemoryCommitted;
+	}
+
+	public void setMemoryMax(long theMemoryMax) {
+		myMemoryMax = theMemoryMax;
+	}
+
+	public void setMemoryUsed(long theMemoryUsed) {
+		myMemoryUsed = theMemoryUsed;
+	}
+
+	public void setMethodInvocations(int theMethodInvocations) {
+		myMethodSuccessInvocations = theMethodInvocations;
 	}
 
 	@Override
@@ -166,11 +202,6 @@ public class PersNodeStats extends BasePersStats<PersNodeStatsPk, PersNodeStats>
 		PersNodeStats s = new PersNodeStats();
 		s.collectMemoryStats();
 		System.out.println(s);
-	}
-
-	@Override
-	public <T> T accept(IStatsVisitor<T> theVisitor) {
-		return theVisitor.visit(this, getPk());
 	}
 
 }

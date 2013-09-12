@@ -29,6 +29,7 @@ public class LeftBarPanel extends FlowPanel {
 	private Hyperlink myEditRulesBtn;
 	private Hyperlink myManualTestBtn;
 	private Hyperlink myMessageLibraryBtn;
+	private Hyperlink myStickySessionsBtn;
 
 	public LeftBarPanel() {
 		setStylePrimaryName("outerLayoutLeftBar");
@@ -47,6 +48,9 @@ public class LeftBarPanel extends FlowPanel {
 
 		mySvcCatalogBtn = dashboard.addItem("Service Catalog", PagesEnum.SEC);
 		myAllButtons.add(mySvcCatalogBtn);
+
+		myStickySessionsBtn = dashboard.addItem("Sticky Sessions", PagesEnum.SSL);
+		myAllButtons.add(myStickySessionsBtn);
 
 		/*
 		 * Configure Subment
@@ -152,6 +156,10 @@ public class LeftBarPanel extends FlowPanel {
 		case HCC:
 			myHttpClientConfigsBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
 			buttons.remove(myHttpClientConfigsBtn);
+			break;
+		case SSL:
+			myStickySessionsBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
+			buttons.remove(myStickySessionsBtn);
 			break;
 		case EUL:
 		case EDU:

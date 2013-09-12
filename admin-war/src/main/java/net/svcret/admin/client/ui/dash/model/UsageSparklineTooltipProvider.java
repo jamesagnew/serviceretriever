@@ -19,24 +19,26 @@ public final class UsageSparklineTooltipProvider<T extends BaseGDashboardObject>
 	public Widget getTooltip(BaseGDashboardObject theObject) {
 		FlowPanel retVal = new FlowPanel();
 		SafeHtmlBuilder b = new SafeHtmlBuilder();
-		b.appendEscaped(theObject.getName());
-		b.appendHtmlConstant("<br/>");
+		if (theObject.getName() != null) {
+			b.appendEscaped(theObject.getName());
+			b.appendHtmlConstant("<br/>");
+		}
 		b.appendHtmlConstant("Usage in last 60 minutes");
 		HTML header = new HTML(b.toSafeHtml());
 		header.addStyleName(MyResources.CSS.usageTooltipTableHeaderLabel());
 		retVal.add(header);
-		
+
 		FlexTable grid = new FlexTable();
 		grid.addStyleName(MyResources.CSS.usageTooltipTable());
 		retVal.add(grid);
-		
+
 		grid.setText(0, 0, "");
 		grid.setText(0, 1, "Successful Invocations");
 		grid.getFlexCellFormatter().addStyleName(0, 1, MyResources.CSS.usageTooltipTableSuccessColumn());
-		
+
 		grid.setText(0, 2, "Fault Invocations");
 		grid.getFlexCellFormatter().addStyleName(0, 2, MyResources.CSS.usageTooltipTableFaultColumn());
-		
+
 		grid.setText(0, 3, "Failed Invocations");
 		grid.getFlexCellFormatter().addStyleName(0, 3, MyResources.CSS.usageTooltipTableFailColumn());
 
@@ -47,7 +49,7 @@ public final class UsageSparklineTooltipProvider<T extends BaseGDashboardObject>
 		int row = 1;
 		int incrementMins = 10;
 		for (int i = 0; i < 60; i += incrementMins, row++) {
-		
+
 			int success = 0;
 			int fault = 0;
 			int fail = 0;
@@ -59,13 +61,13 @@ public final class UsageSparklineTooltipProvider<T extends BaseGDashboardObject>
 				secFail += theObject.getTransactionsSecurityFail60mins()[j];
 			}
 
-			Date nextEndDate = new Date(nextDate.getTime() + ((incrementMins-1)*DateUtil.MILLIS_PER_MINUTE));
+			Date nextEndDate = new Date(nextDate.getTime() + ((incrementMins - 1) * DateUtil.MILLIS_PER_MINUTE));
 			grid.setText(row, 0, DateUtil.formatTimeOnly(nextDate) + " - " + DateUtil.formatTimeOnly(nextEndDate));
 			grid.getFlexCellFormatter().addStyleName(row, 0, MyResources.CSS.usageTooltipTableDateColumn());
-			
+
 			grid.setText(row, 1, Integer.toString(success));
 			grid.getFlexCellFormatter().addStyleName(row, 1, MyResources.CSS.usageTooltipTableValueColumn());
-			
+
 			grid.setText(row, 2, Integer.toString(fault));
 			grid.getFlexCellFormatter().addStyleName(row, 2, MyResources.CSS.usageTooltipTableValueColumn());
 
@@ -77,9 +79,7 @@ public final class UsageSparklineTooltipProvider<T extends BaseGDashboardObject>
 
 			nextDate = new Date(nextDate.getTime() + (incrementMins * 60 * 1000L));
 		}
-		
+
 		return retVal;
 	}
 }
-
-

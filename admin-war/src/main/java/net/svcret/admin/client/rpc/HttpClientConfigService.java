@@ -1,7 +1,10 @@
 package net.svcret.admin.client.rpc;
 
+import java.util.Collection;
+
 import net.svcret.admin.shared.ServiceFailureException;
 import net.svcret.admin.shared.model.DtoKeystoreAnalysis;
+import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 
@@ -18,5 +21,7 @@ public interface HttpClientConfigService extends RemoteService {
 	DtoKeystoreAnalysis analyzeTransientKeyStore(long theHttpClientConfig) throws ServiceFailureException;
 
 	GHttpClientConfig saveHttpClientConfig(boolean theCreate, boolean theUseNewTruststore, boolean theUseNewKeystore, GHttpClientConfig theConfig) throws ServiceFailureException;
+
+	Collection<DtoStickySessionUrlBinding> getAllStickySessions();
 
 }

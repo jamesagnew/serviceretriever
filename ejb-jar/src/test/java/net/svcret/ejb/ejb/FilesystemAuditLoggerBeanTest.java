@@ -1,11 +1,12 @@
 package net.svcret.ejb.ejb;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 
+import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
@@ -25,7 +26,6 @@ import org.mockito.internal.stubbing.defaultanswers.ReturnsDeepStubs;
 public class FilesystemAuditLoggerBeanTest {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(FilesystemAuditLoggerBeanTest.class);
-	private SimpleDateFormat myFmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	private FilesystemAuditLoggerBean mySvc;
 
 	private File myTempPath;
@@ -50,14 +50,21 @@ public class FilesystemAuditLoggerBeanTest {
 	}
 
 	@Test
-	public void testRollFilesAsNeeded() throws IOException, ProcessingException {
+	public void testRollFilesAsNeeded() throws Exception {
 
 		HttpRequestBean request = mock(HttpRequestBean.class, new ReturnsDeepStubs());
+		when(request.getRequestHostIp()).thenReturn("127.0.0.2");
 		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class, new ReturnsDeepStubs());
+		when(method.getServiceVersion().getVersionId()).thenReturn("1.2");
+		when(method.getServiceVersion().getService().getServiceId()).thenReturn("service1.0");
+		when(method.getServiceVersion().getService().getDomain().getDomainId()).thenReturn("service1.0");
 		PersUser user = mock(PersUser.class, new ReturnsDeepStubs());
 		String requestBody = "this is the request body\nthis is line 2";
 		InvocationResponseResultsBean invocationResponse = mock(InvocationResponseResultsBean.class, new ReturnsDeepStubs());
+		when(invocationResponse.getResponseType()).thenReturn(ResponseTypeEnum.FAULT);
 		PersServiceVersionUrl implementationUrl = mock(PersServiceVersionUrl.class, new ReturnsDeepStubs());
+		when(implementationUrl.getUrlId()).thenReturn("url1");
+		when(implementationUrl.getUrl()).thenReturn("http://foo");
 		HttpResponseBean httpResponse = mock(HttpResponseBean.class, new ReturnsDeepStubs());
 		AuthorizationOutcomeEnum authorizationOutcome = AuthorizationOutcomeEnum.AUTHORIZED;
 		mySvc.recordServiceTransaction(request, method.getServiceVersion(), method, user, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome);

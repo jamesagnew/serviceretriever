@@ -18,7 +18,7 @@ import net.svcret.ejb.api.InvocationResponseResultsBean;
 @MappedSuperclass()
 public abstract class BasePersSavedTransactionRecentMessage extends BasePersSavedTransaction {
 
-	private static final int MAX_REQ_IP_LEN = 200;
+	static final int MAX_REQ_IP_LEN = 200;
 	private static final long serialVersionUID = 1L;
 
 	@Column(name = "AUTHN_OUTCOME")

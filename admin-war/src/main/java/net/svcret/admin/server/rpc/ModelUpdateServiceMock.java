@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import net.svcret.admin.client.rpc.HttpClientConfigService;
 import net.svcret.admin.client.rpc.ModelUpdateService;
@@ -29,6 +30,7 @@ import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
+import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
@@ -686,14 +688,6 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		return retVal;
 	}
 
-	private List<Integer> random60minsList() {
-		List<Integer> retVal = new ArrayList<Integer>();
-		for (int next : random60mins()) {
-			retVal.add(next);
-		}
-		return retVal;
-	}
-
 	private Date randomRecentDate() {
 		return new Date(System.currentTimeMillis() - (long) (DateUtils.MILLIS_PER_DAY * Math.random()));
 	}
@@ -976,6 +970,21 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 			}
 		}
 		throw new IllegalArgumentException("Unknown URL pid " + theUrlPid);
+	}
+
+	@Override
+	public Collection<DtoStickySessionUrlBinding> getAllStickySessions() {
+		List<DtoStickySessionUrlBinding> retVal=new ArrayList<DtoStickySessionUrlBinding>();
+		retVal.add(new DtoStickySessionUrlBinding());
+		retVal.get(0).setCreated(new Date(System.currentTimeMillis() - 100000));
+		retVal.get(0).setLastAccessed(new Date(System.currentTimeMillis() - 600000));
+		
+		BaseGServiceVersion svcVer = myDomainList.get(0).getServiceList().get(0).getVersionList().get(0);
+		retVal.get(0).setServiceVersionPid(svcVer.getPidOrNull());
+		retVal.get(0).setUrlPid(svcVer.getUrlList().get(0).getPidOrNull());
+		retVal.get(0).setSessionId(UUID.randomUUID().toString());
+		
+		return retVal;
 	}
 
 }

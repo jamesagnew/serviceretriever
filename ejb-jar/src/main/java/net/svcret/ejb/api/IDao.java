@@ -64,6 +64,8 @@ public interface IDao {
 
 	void deleteServiceVersion(BasePersServiceVersion theSv);
 
+	void deleteStickySession(PersStickySessionUrlBinding theStickySession);
+
 	void deleteUser(PersUser theUser);
 
 	Collection<BasePersAuthenticationHost> getAllAuthenticationHosts();
@@ -75,6 +77,8 @@ public interface IDao {
 	Collection<PersService> getAllServices();
 
 	Collection<PersServiceVersionSoap11> getAllServiceVersions();
+
+	Collection<PersStickySessionUrlBinding> getAllStickySessions();
 
 	Collection<PersUser> getAllUsersAndInitializeThem();
 
@@ -181,13 +185,13 @@ public interface IDao {
 
 	void removeServiceVersion(long thePid) throws ProcessingException;
 
+	// List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int theStart);
+
 	void saveAuthenticationHost(BasePersAuthenticationHost theHost);
 
 	PersBaseClientAuth<?> saveClientAuth(PersBaseClientAuth<?> theNextPers);
 
 	PersConfig saveConfig(PersConfig theConfig);
-
-	// List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int theStart);
 
 	PersDomain saveDomain(PersDomain theDomain);
 
@@ -225,6 +229,8 @@ public interface IDao {
 
 	void saveServiceVersionUrlStatus(List<PersServiceVersionUrlStatus> theList);
 
+	void saveStickySessionUrlBinding(PersStickySessionUrlBinding theBinding);
+
 	void saveUserRecentMessage(PersUserRecentMessage theMsg);
 
 	void saveUserStatus(Collection<PersUserStatus> theStatus);
@@ -257,7 +263,5 @@ public interface IDao {
 		}
 
 	}
-
-	void saveStickySessionUrlBinding(PersStickySessionUrlBinding theBinding);
 
 }

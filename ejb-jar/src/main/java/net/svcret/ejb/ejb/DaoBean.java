@@ -96,6 +96,8 @@ import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.google.common.annotations.VisibleForTesting;
+
 @Stateless
 public class DaoBean implements IDao {
 
@@ -1439,6 +1441,23 @@ public class DaoBean implements IDao {
 			}
 			transactions.get(0).trimUsingDao(this);
 		}
+	}
+
+	@Override
+	public Collection<PersStickySessionUrlBinding> getAllStickySessions() {
+		TypedQuery<PersStickySessionUrlBinding> q = myEntityManager.createNamedQuery(Queries.SSURL_FINDALL, PersStickySessionUrlBinding.class);
+		return q.getResultList();
+	}
+
+
+	@Override
+	public void deleteStickySession(PersStickySessionUrlBinding theStickySession) {
+		myEntityManager.remove(theStickySession);
+	}
+
+	@VisibleForTesting
+	void setThisForUnitTest() {
+		myThis = this;
 	}
 
 }

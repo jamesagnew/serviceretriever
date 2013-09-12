@@ -88,6 +88,13 @@ public class Soap11ServiceInvoker extends BaseServiceInvoker implements IService
 
 	private BaseResponseValidator myInvocationResultsBean;
 
+	@Override
+	public Map<String, List<String>> createRequestHeaders(Map<String, List<String>> theIncomingHeaders) {
+		Map<String, List<String>> retVal = super.createRequestHeaders(theIncomingHeaders);
+		retVal.put("SOAPAction", theIncomingHeaders.get("SOAPAction"));
+		return retVal;
+	}
+
 	public Soap11ServiceInvoker() {
 		myInvocationResultsBean = new Soap11ResponseValidator();
 	}

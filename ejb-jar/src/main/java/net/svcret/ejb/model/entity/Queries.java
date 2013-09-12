@@ -2,6 +2,9 @@ package net.svcret.ejb.model.entity;
 
 public class Queries {
 
+	public static final String SSURL_FINDALL = "PersStickySessionUrlBinding.findAll";
+	public static final String SSURL_FINDALL_Q = "SELECT b FROM PersStickySessionUrlBinding b";
+
 	public static final String PERSACTIVECHECK_FINDALL = "PersMonitorRuleActiveCheck.findAll";
 	public static final String PERSACTIVECHECK_FINDALL_Q = "SELECT a FROM PersMonitorRuleActiveCheck a";
 	

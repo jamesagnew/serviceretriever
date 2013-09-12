@@ -8,16 +8,30 @@ import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 import javax.persistence.Version;
 
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.hibernate.annotations.ForeignKey;
+
+//@formatter:off
 @Entity
 @Table(name = "PX_STICKY_SESSION_URL")
+@NamedQueries(value= {
+		@NamedQuery(name=Queries.SSURL_FINDALL, query=Queries.SSURL_FINDALL_Q)
+})
+//@org.hibernate.annotations.Table(appliesTo="PX_STICKY_SESSION_URL", indexes= {
+//		@Index(name="IDX_SSU_TIMESTAMP", columnNames= {"LAST_ACCESS"})
+//})
+//@formatter:on
 public class PersStickySessionUrlBinding implements Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -26,11 +40,12 @@ public class PersStickySessionUrlBinding implements Serializable {
 	@Temporal(TemporalType.TIMESTAMP)
 	private volatile Date myCreated;
 
-	@Column(name = "LAST_ACCESS")
+	@Column(name = "LAST_ACCESS",nullable=false)
 	@Temporal(TemporalType.TIMESTAMP)
 	private volatile Date myLastAccessed;
 
-	private boolean myNewlyCreated;
+	@Transient
+	private transient boolean myNewlyCreated;
 
 	@Version()
 	@Column(name = "OPTLOCK")
@@ -38,6 +53,9 @@ public class PersStickySessionUrlBinding implements Serializable {
 
 	@EmbeddedId
 	private PersStickySessionUrlBindingPk myPk;
+
+	@Column(name = "REQ_IP", length=BasePersSavedTransactionRecentMessage.MAX_REQ_IP_LEN)
+	private volatile String myRequestingIp;
 
 	@ManyToOne()
 	@JoinColumn(name = "URL_PID", referencedColumnName = "PID", nullable = false)
@@ -68,6 +86,10 @@ public class PersStickySessionUrlBinding implements Serializable {
 		return myPk;
 	}
 
+	public String getRequestingIp() {
+		return myRequestingIp;
+	}
+
 	public PersServiceVersionUrl getUrl() {
 		return myUrl;
 	}
@@ -80,6 +102,14 @@ public class PersStickySessionUrlBinding implements Serializable {
 		myCreated = theCreated;
 	}
 
+	public String toString() {
+		ToStringBuilder b = new ToStringBuilder(this);
+		b.append("svcVer", myPk.getServiceVersion().getPid());
+		b.append("sessionId",myPk.getSessionId());
+		b.append("url", getUrl().getPid());
+		return b.build();
+	}
+	
 	public void setLastAccessed(Date theLastAccessed) {
 		myLastAccessed = theLastAccessed;
 	}
@@ -92,6 +122,10 @@ public class PersStickySessionUrlBinding implements Serializable {
 		myPk = thePk;
 	}
 
+	public void setRequestingIp(String theRequestingIp) {
+		myRequestingIp = theRequestingIp;
+	}
+
 	public void setUrl(PersServiceVersionUrl theUrl) {
 		myUrl = theUrl;
 	}
@@ -101,6 +135,9 @@ public class PersStickySessionUrlBinding implements Serializable {
 		retVal.setSessionId(getPk().getSessionId());
 		retVal.setServiceVersionPid(getPk().getServiceVersion().getPid());
 		retVal.setUrlPid(getUrl().getPid());
+		retVal.setRequestingIp(getRequestingIp());
+		retVal.setCreated(getCreated());
+		retVal.setLastAccessed(getLastAccessed());
 		return retVal;
 	}
 

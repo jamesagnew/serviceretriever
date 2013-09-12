@@ -5,7 +5,6 @@ import java.io.StringReader;
 
 import net.svcret.ejb.Messages;
 import net.svcret.ejb.api.IResponseValidator;
-import net.svcret.ejb.ex.ProcessingException;
 
 import org.apache.commons.io.IOUtils;
 

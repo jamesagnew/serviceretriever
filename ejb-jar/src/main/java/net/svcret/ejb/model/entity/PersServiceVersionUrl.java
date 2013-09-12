@@ -28,8 +28,7 @@ import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-
-import com.google.common.base.Objects;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 @Table(name = "PX_SVC_VER_URL", uniqueConstraints = { @UniqueConstraint(name = "PX_URL_CONS_URL", columnNames = { "SVC_VERSION_PID", "URL" }), // -
 		@UniqueConstraint(name = "PX_URL_CONS_URLID", columnNames = { "SVC_VERSION_PID", "URL_ID" }), // -
@@ -309,5 +308,15 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 		setUrl(theObj.getUrl());
 		setUrlId(theObj.getUrlId());
 	}
+
+	@Override
+	public String toString() {
+		ToStringBuilder b = new ToStringBuilder(this);
+		b.append("PID", getPid());
+		b.append("ID", getUrlId());
+		return b.build();
+	}
+	
+	
 
 }

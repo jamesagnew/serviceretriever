@@ -29,7 +29,7 @@
               <input type="text" id="j_username" name="j_username"/>
             </div>
             <div>
-              <label for=j_"password">Password</label> 
+              <label for="j_password">Password</label> 
               <input type="password" id="j_password" name="j_password"/>
             </div>
               

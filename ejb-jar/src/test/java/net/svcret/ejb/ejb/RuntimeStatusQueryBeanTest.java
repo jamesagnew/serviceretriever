@@ -1,7 +1,12 @@
 package net.svcret.ejb.ejb;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -13,10 +18,8 @@ import net.svcret.admin.shared.model.TimeRange;
 import net.svcret.admin.shared.model.TimeRangeEnum;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
-import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.ejb.AdminServiceBean.IWithStats;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersStatsPk;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersConfig;
@@ -25,7 +28,6 @@ import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
-import net.svcret.ejb.model.entity.BasePersInvocationStats.StatsTypeEnum;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 
 import org.apache.commons.lang3.time.DateUtils;
@@ -36,7 +38,6 @@ public class RuntimeStatusQueryBeanTest {
 
 	private static long ourNextPid;
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testDoWithStats() throws Exception {
 

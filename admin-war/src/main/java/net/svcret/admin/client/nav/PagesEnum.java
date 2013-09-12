@@ -107,6 +107,9 @@ public enum PagesEnum {
 	/** Service Catalog */
 	SEC(MSGS.serviceCatalog_Breadcrumb()), 
 	
+	/** Sticky session List */
+	SSL(MSGS.stickySesionList_Breadcrumb()),
+	
 	/** Save recent message to library */
 	SML(MSGS.saveRecentMessageToLibrary_Breadcrumb()), 
 	

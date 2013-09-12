@@ -787,6 +787,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Replay Message")
 	String replayUserMessage_Breadcrumb();
+
+	@DefaultMessage("Sticky Sessions")
+	String stickySesionList_Breadcrumb();
 	
 	
 }

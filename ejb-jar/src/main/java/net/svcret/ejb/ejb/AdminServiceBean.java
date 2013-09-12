@@ -36,6 +36,7 @@ import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
 import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
+import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
@@ -129,6 +130,7 @@ import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
+import net.svcret.ejb.model.entity.PersStickySessionUrlBinding;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserDomainPermission;
 import net.svcret.ejb.model.entity.PersUserRecentMessage;
@@ -209,6 +211,18 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return toUi(domain, false, null);
 	}
 
+	@Override
+	public Collection<DtoStickySessionUrlBinding> getAllStickySessions() {
+		flushOutstandingStats();
+
+		Collection<PersStickySessionUrlBinding> sessions = myDao.getAllStickySessions(); 
+		Collection<DtoStickySessionUrlBinding> retVal=new ArrayList<DtoStickySessionUrlBinding>();
+		for (PersStickySessionUrlBinding next : sessions) {
+			retVal.add(next.toDao());
+		}
+		return retVal;
+	}
+	
 	@Override
 	public GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ProcessingException {
 		Validate.notBlank(theId, "ID");
@@ -469,10 +483,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 	@Override
 	public ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ProcessingException {
-
-		ourLog.debug("Beginning loadModelUpdate - Going to flush stats");
-		myScheduler.flushInMemoryStatisticsUnlessItHasHappenedVeryRecently();
-		ourLog.debug("Done flushing stats");
+		flushOutstandingStats();
 
 		ModelUpdateResponse retVal = new ModelUpdateResponse();
 
@@ -507,6 +518,12 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		retVal.setDomainList(domainList);
 
 		return retVal;
+	}
+
+	private void flushOutstandingStats() {
+		ourLog.debug("Beginning loadModelUpdate - Going to flush stats");
+		myScheduler.flushInMemoryStatisticsUnlessItHasHappenedVeryRecently();
+		ourLog.debug("Done flushing stats");
 	}
 
 	@Override

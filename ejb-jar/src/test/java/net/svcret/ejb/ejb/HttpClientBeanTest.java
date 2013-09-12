@@ -1,7 +1,11 @@
 package net.svcret.ejb.ejb;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -12,13 +16,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.UrlPoolBean;
-import net.svcret.ejb.ejb.HttpClientBean.ClientConfigException;
 import net.svcret.ejb.ejb.soap.Soap11ResponseValidator;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
@@ -472,7 +474,7 @@ public class HttpClientBeanTest {
 	private static long ourNextPid = 1;
 
 	@Test
-	public void testPostTwoUrlsSecondPassing() throws InterruptedException, ClientConfigException {
+	public void testPostTwoUrlsSecondPassing() throws Exception {
 
 		int port1 = RandomServerPortProvider.findFreePort();
 		int port2 = RandomServerPortProvider.findFreePort();
@@ -512,7 +514,7 @@ public class HttpClientBeanTest {
 	}
 
 	@Test
-	public void testPostTwoUrlsFirstPassingAfterOneRetry() throws InterruptedException, ClientConfigException {
+	public void testPostTwoUrlsFirstPassingAfterOneRetry() throws Exception {
 
 		int port1 = RandomServerPortProvider.findFreePort();
 		int port2 = RandomServerPortProvider.findFreePort();

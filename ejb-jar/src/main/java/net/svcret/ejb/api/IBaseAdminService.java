@@ -9,6 +9,7 @@ import net.svcret.admin.shared.model.BaseGMonitorRule;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
+import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
@@ -125,5 +126,7 @@ public interface IBaseAdminService {
 	String suggestNewVersionNumber(Long theDomainPid, Long theServicePid);
 
 	GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long thePid, String theRequestedByString) throws ProcessingException;
+
+	Collection<DtoStickySessionUrlBinding> getAllStickySessions();
 
 }

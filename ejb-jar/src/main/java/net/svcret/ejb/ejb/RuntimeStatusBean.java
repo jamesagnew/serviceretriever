@@ -6,6 +6,7 @@ import java.net.HttpCookie;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.ejb.ConcurrencyManagement;
@@ -71,6 +73,9 @@ import net.svcret.ejb.model.entity.PersUserStatus;
 import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
+
+import com.google.common.annotations.VisibleForTesting;
 
 @Singleton
 @Startup
@@ -89,7 +94,10 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private IDao myDao;
 
 	private ReentrantLock myFlushLock = new ReentrantLock();
-
+	private AtomicLong myUnflushedNodeSuccessMethodInvocations=new AtomicLong();
+	private AtomicLong myUnflushedNodeFaultMethodInvocations=new AtomicLong();
+	private AtomicLong myUnflushedNodeFailMethodInvocations=new AtomicLong();
+	private AtomicLong myUnflushedNodeSecFailMethodInvocations=new AtomicLong();
 	private Date myNodeStatisticsDate;
 	private final ReentrantLock myNodeStatisticsLock = new ReentrantLock();
 	private Date myNowForUnitTests;
@@ -106,6 +114,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		myUnflushedServiceVersionStatus = new ConcurrentHashMap<Long, PersServiceVersionStatus>();
 		myUnflushedUserStatus = new ConcurrentHashMap<PersUser, PersUserStatus>();
 		myUrlStatus = new ConcurrentHashMap<Long, PersServiceVersionUrlStatus>();
+		myStickySessionUrlBindings = new HashMap<PersStickySessionUrlBindingPk, PersStickySessionUrlBinding>();
 	}
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
@@ -175,6 +184,23 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 		ourLog.trace("Going to record method invocation");
 
+		switch (theInvocationResponseResultsBean.getResponseType()) {
+		case FAIL:
+			myUnflushedNodeFailMethodInvocations.incrementAndGet();
+			break;
+		case FAULT:
+			myUnflushedNodeFaultMethodInvocations.incrementAndGet();
+			break;
+		case SECURITY_FAIL:
+			myUnflushedNodeSecFailMethodInvocations.incrementAndGet();
+			break;
+		case SUCCESS:
+			myUnflushedNodeSuccessMethodInvocations.incrementAndGet();
+			break;
+		case THROTTLE_REJ:
+			break;
+		}
+		
 		/*
 		 * Record method statistics
 		 */
@@ -229,13 +255,15 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 								updateStickySession(sessionKeyValues.get(0), svcVer, successfulUrl);
 							}
 						} else if (StringUtils.isNotBlank(clientConfig.getStickySessionCookieForSessionId())) {
-							List<String> cookieHeaders = headers.get("Cookie");
-							for (String nextCookieHeader : cookieHeaders) {
-								List<HttpCookie> cookies = HttpCookie.parse(nextCookieHeader);
-								for (HttpCookie nextCookie : cookies) {
-									if (nextCookie.getName().equals(clientConfig.getStickySessionCookieForSessionId())) {
-										updateStickySession(nextCookie.getValue(), svcVer, successfulUrl);
-										break;
+							List<String> cookieHeaders = headers.get("Set-Cookie");
+							if (cookieHeaders != null) {
+								for (String nextCookieHeader : cookieHeaders) {
+									List<HttpCookie> cookies = HttpCookie.parse(nextCookieHeader);
+									for (HttpCookie nextCookie : cookies) {
+										if (nextCookie.getName().equals(clientConfig.getStickySessionCookieForSessionId())) {
+											updateStickySession(nextCookie.getValue(), svcVer, successfulUrl);
+											break;
+										}
 									}
 								}
 							}
@@ -346,6 +374,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			PersNodeStats stats = new PersNodeStats(InvocationStatsIntervalEnum.MINUTE, date, myConfigSvc.getNodeId());
 			stats.collectMemoryStats();
 
+			stats.addMethodInvocations(myUnflushedNodeSuccessMethodInvocations.getAndSet(0),myUnflushedNodeFaultMethodInvocations.getAndSet(0),myUnflushedNodeFailMethodInvocations.getAndSet(0),myUnflushedNodeSecFailMethodInvocations.getAndSet(0));
+			
 			myDao.saveInvocationStats(Collections.singletonList(stats));
 
 			myNodeStatisticsDate = date;
@@ -530,7 +560,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			doCollapseStats(myDao.getInvocationStatsBefore(TEN_MINUTE, hoursCutoff), HOUR);
 			doCollapseStats(myDao.getInvocationUserStatsBefore(TEN_MINUTE, hoursCutoff), HOUR);
 			doCollapseStats(myDao.getInvocationUrlStatsBefore(TEN_MINUTE, hoursCutoff), HOUR);
-			doCollapseStats(myDao.getNodeStatsBefore(TEN_MINUTE, hoursCutoff), DAY);
+			doCollapseStats(myDao.getNodeStatsBefore(TEN_MINUTE, hoursCutoff), HOUR);
 		}
 
 		// Minutes -> 10 Minutes
@@ -541,8 +571,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 			doCollapseStats(myDao.getInvocationStatsBefore(MINUTE, hoursCutoff), TEN_MINUTE);
 			doCollapseStats(myDao.getInvocationUserStatsBefore(MINUTE, hoursCutoff), TEN_MINUTE);
-			doCollapseStats(myDao.getInvocationUrlStatsBefore(MINUTE, hoursCutoff), HOUR);
-			doCollapseStats(myDao.getNodeStatsBefore(MINUTE, hoursCutoff), DAY);
+			doCollapseStats(myDao.getInvocationUrlStatsBefore(MINUTE, hoursCutoff), TEN_MINUTE);
+			doCollapseStats(myDao.getNodeStatsBefore(MINUTE, hoursCutoff), TEN_MINUTE);
 		}
 	}
 
@@ -699,10 +729,43 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		if (userStatuses.size() > 0) {
 			myDao.saveUserStatus(userStatuses);
 		}
+
+		/*
+		 * Flush sticky sessions
+		 */
+		{
+			Date cutoff = new Date(System.currentTimeMillis() - DateUtils.MILLIS_PER_HOUR);
+			Collection<PersStickySessionUrlBinding> allStickySessions = myDao.getAllStickySessions();
+			for (PersStickySessionUrlBinding nextExisting : allStickySessions) {
+
+				PersStickySessionUrlBinding inMemory = null;
+				synchronized (myStickySessionUrlBindings) {
+					inMemory = myStickySessionUrlBindings.get(nextExisting.getPk());
+				}
+
+				if (inMemory != null) {
+					if (inMemory.getLastAccessed().before(cutoff)) {
+						synchronized (myStickySessionUrlBindings) {
+							myStickySessionUrlBindings.remove(nextExisting.getPk());
+						}
+					} else if (inMemory.getLastAccessed().after(nextExisting.getLastAccessed())) {
+						nextExisting.setLastAccessed(inMemory.getLastAccessed());
+						nextExisting.setUrl(inMemory.getUrl());
+						nextExisting.setRequestingIp(inMemory.getRequestingIp());
+						ourLog.debug("Updating sticky session '{}'", nextExisting);
+						myDao.saveStickySessionUrlBinding(nextExisting);
+					}
+				}
+
+				if (nextExisting.getLastAccessed().before(cutoff)) {
+					ourLog.debug("Deleting expired sticky session '{}'", nextExisting);
+					myDao.deleteStickySession(nextExisting);
+				}
+			}
+		}
 	}
 
-	private// <P2 extends BasePersStatsPk<P2,O2>, O2 extends BasePersMethodInvocationStats<P2,O2>>
-	void doRecordInvocationForUrls(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, Date theInvocationTime) {
+	private void doRecordInvocationForUrls(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, Date theInvocationTime) {
 		if (theHttpResponse == null) {
 			return;
 		}
@@ -959,12 +1022,14 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				}
 			} else if (StringUtils.isNotBlank(clientConfig.getStickySessionCookieForSessionId())) {
 				List<String> cookieHeaders = theHeaders.get("Cookie");
-				for (String nextCookieHeader : cookieHeaders) {
-					List<HttpCookie> cookies = HttpCookie.parse(nextCookieHeader);
-					for (HttpCookie nextCookie : cookies) {
-						if (nextCookie.getName().equals(clientConfig.getStickySessionCookieForSessionId())) {
-							shuffleUrlPoolBasedOnStickySessionPolicy(nextCookie.getValue(), theUrlPool, theHeaders, theSvcVer);
-							break;
+				if (cookieHeaders != null) {
+					for (String nextCookieHeader : cookieHeaders) {
+						List<HttpCookie> cookies = HttpCookie.parse(nextCookieHeader);
+						for (HttpCookie nextCookie : cookies) {
+							if (nextCookie.getName().equals(clientConfig.getStickySessionCookieForSessionId())) {
+								shuffleUrlPoolBasedOnStickySessionPolicy(nextCookie.getValue(), theUrlPool, theHeaders, theSvcVer);
+								break;
+							}
 						}
 					}
 				}
@@ -1014,6 +1079,11 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				myStickySessionUrlBindings.put(pk, new PersStickySessionUrlBinding(pk, url));
 			}
 		}
+	}
+
+	@VisibleForTesting
+	 void setBroadcastSender(IBroadcastSender theBroadcastSender) {
+		myBroadcastSender=theBroadcastSender;
 	}
 
 }

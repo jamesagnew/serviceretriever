@@ -1,6 +1,7 @@
 package net.svcret.admin.server.rpc;
 
 import java.io.Serializable;
+import java.util.Collection;
 
 import javax.ejb.EJB;
 import javax.servlet.http.HttpServletRequest;
@@ -9,6 +10,7 @@ import net.svcret.admin.client.rpc.HttpClientConfigService;
 import net.svcret.admin.shared.ServiceFailureException;
 import net.svcret.admin.shared.model.DtoKeystoreAnalysis;
 import net.svcret.admin.shared.model.DtoKeystoreToSave;
+import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.ejb.api.IAdminServiceLocal;
@@ -167,6 +169,15 @@ public class HttpClientConfigServiceImpl extends BaseRpcServlet implements HttpC
 			ourLog.error("Failed to examine keystore", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
+	}
+
+	@Override
+	public Collection<DtoStickySessionUrlBinding> getAllStickySessions() {
+		if (isMockMode()) {
+			return getMock().getAllStickySessions();
+		}
+		
+		return myAdminSvc.getAllStickySessions();
 	}
 
 }

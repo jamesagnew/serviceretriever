@@ -544,7 +544,9 @@ public class RuntimeStatusBeanTest {
 
 		ArgumentCaptor<List> capt = ArgumentCaptor.forClass(List.class);
 		verify(pers, times(1)).saveInvocationStats(capt.capture());
+		verify(pers,times(1)).getAllStickySessions();
 		verifyNoMoreInteractions(pers);
+		
 
 		List<BasePersStats> value = capt.getValue();
 		assertEquals(1, value.size());

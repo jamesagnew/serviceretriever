@@ -190,13 +190,18 @@ public class HttpClientBean implements IHttpClient {
 			PersServiceVersionUrl theNextUrl, int theFailureRetries) {
 		int failuresRemaining = theFailureRetries + 1;
 		for (;;) {
+			
 			failuresRemaining--;
-
+			
 			HttpPost post = new HttpPost(theNextUrl.getUrl());
 			post.setEntity(postEntity);
-			for (Entry<String, List<String>> next : theHeaders.entrySet()) {
-				for (String nextValue : next.getValue()) {
-					post.addHeader(next.getKey(), nextValue);
+			if (theHeaders != null) {
+				for (Entry<String, List<String>> next : theHeaders.entrySet()) {
+					if (next != null && next.getValue() != null) {
+						for (String nextValue : next.getValue()) {
+							post.addHeader(next.getKey(), nextValue);
+						}
+					}
 				}
 			}
 
@@ -381,8 +386,6 @@ public class HttpClientBean implements IHttpClient {
 		}
 
 	}
-
-
 
 	public static class ClientConfigException extends Exception {
 

@@ -41,6 +41,7 @@ import net.svcret.admin.client.ui.stats.UserRecentMessagesPanel;
 import net.svcret.admin.client.ui.stats.UserStatsPanel;
 import net.svcret.admin.client.ui.stats.ViewRecentMessageForServiceVersionPanel;
 import net.svcret.admin.client.ui.stats.ViewRecentMessageForUserPanel;
+import net.svcret.admin.client.ui.sticky.StickySessionListPanel;
 import net.svcret.admin.client.ui.test.ReplayLibraryMessagePanel;
 import net.svcret.admin.client.ui.test.ReplayMessagePanel;
 import net.svcret.admin.client.ui.test.ServiceVersionTestPanel;
@@ -411,6 +412,9 @@ public class NavProcessor {
 		// try {
 		Panel panel = null;
 		switch (page) {
+		case SSL:
+			panel = new StickySessionListPanel();
+			break;
 		case ADD:
 			panel = new AddDomainPanel();
 			break;

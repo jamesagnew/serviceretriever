@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import net.svcret.ejb.ejb.CapturingReader;
-import net.svcret.ejb.util.IOUtils;
 
 public class HttpRequestBean {
 

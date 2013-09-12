@@ -7,8 +7,8 @@ public class UnknownRequestException extends Exception {
 	private String myPath;
 	private List<String> myValidPaths;
 
-	public UnknownRequestException(String thePath) {
-		this(thePath, (String)null);
+	public UnknownRequestException(String theMessage) {
+		this(null, theMessage);
 	}
 
 	public UnknownRequestException(String thePath, List<String> theValidPaths) {
