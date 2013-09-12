@@ -8,7 +8,7 @@ public enum UrlSelectionPolicy {
 	
 	ROUND_ROBIN, 
 	
-	STICKY_SESSION;
+	RR_STICKY_SESSION;
 
 	public static int indexOf(UrlSelectionPolicy theUrlSelectionPolicy) {
 		return Arrays.asList(values()).indexOf(theUrlSelectionPolicy);

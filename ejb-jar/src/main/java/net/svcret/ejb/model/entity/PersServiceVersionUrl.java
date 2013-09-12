@@ -26,6 +26,7 @@ import javax.persistence.Version;
 import net.svcret.ejb.util.UrlUtils;
 import net.svcret.ejb.util.Validate;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.Objects;
@@ -115,23 +116,31 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (!super.equals(obj))
+		}
+		
+		if (getClass() != obj.getClass()) {
 			return false;
-		if (getClass() != obj.getClass())
-			return false;
+		}
+		
 		PersServiceVersionUrl other = (PersServiceVersionUrl) obj;
-		if (myPid == null) {
-			if (other.myPid != null)
+		if (myPid != null) {
+			return ObjectUtils.equals(myPid, other.myPid);
+		} else {
+			if (other.myPid != null) {
 				return false;
-		} else if (!myPid.equals(other.myPid))
-			return false;
-		if (myUrlId == null) {
-			if (other.myUrlId != null)
-				return false;
-		} else if (!myUrlId.equals(other.myUrlId))
-			return false;
+			}else {
+				// Only compare URL ID if PID is null
+				if (myUrlId == null) {
+					if (other.myUrlId != null) {
+						return false;
+					}
+				} else if (!myUrlId.equals(other.myUrlId)) {
+					return false;
+				}
+			}
+		}
 		return true;
 	}
 

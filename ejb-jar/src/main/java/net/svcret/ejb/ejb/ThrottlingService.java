@@ -87,7 +87,7 @@ public class ThrottlingService implements IThrottlingService {
 		if (rateLimiter == null) {
 
 			ourLog.debug("Creating rate limiter with {} reqs/second", requestsPerSecond);
-			
+
 			RateLimiter newRateLimiter = RateLimiter.create(requestsPerSecond);
 			rateLimiter = myUserRateLimiters.putIfAbsent(user, newRateLimiter);
 			if (rateLimiter == null) {
@@ -126,7 +126,13 @@ public class ThrottlingService implements IThrottlingService {
 			HttpResponseBean httpResponse = null;
 			InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
 			invocationResponseResultsBean.setResponseType(ResponseTypeEnum.THROTTLE_REJ);
-			myRuntimeStatusSvc.recordInvocationMethod(invocationTime, requestLength, method, user, httpResponse, invocationResponseResultsBean, null);
+			try {
+				myRuntimeStatusSvc.recordInvocationMethod(invocationTime, requestLength, method, user, httpResponse, invocationResponseResultsBean, null);
+			} catch (ProcessingException e) {
+				// We'll just log this and end it since we're throwing an error anyhow
+				// by the time this method is called
+				ourLog.error("Failed to log method invocation", e);
+			}
 			break;
 		case STATIC_RESOURCE:
 			throw new UnsupportedOperationException();
@@ -145,7 +151,7 @@ public class ThrottlingService implements IThrottlingService {
 		Validate.isTrue(theTask.getAsyncContext().getResponse() instanceof HttpServletResponse);
 
 		ourLog.debug("Going to try and schedule task for later execution");
-		
+
 		Integer throttleMaxQueueDepth = theTask.getThrottleKey().getThrottleMaxQueueDepth();
 		if (throttleMaxQueueDepth == null || theTask.getThrottleKey().getThrottleMaxQueueDepth() == 0) {
 			recordInvocationForThrottleQueueFull(theTask.getHttpRequest(), theTask.getInvocationRequest(), theTask.getAuthorizedUser());
@@ -166,7 +172,7 @@ public class ThrottlingService implements IThrottlingService {
 			recordInvocationForThrottleQueueFull(theTask.getHttpRequest(), theTask.getInvocationRequest(), theTask.getAuthorizedUser());
 			throw e;
 		}
-		
+
 		myThis.serviceThrottledRequests(taskQueue);
 
 	}
@@ -262,7 +268,7 @@ public class ThrottlingService implements IThrottlingService {
 		private IThrottleable myKey;
 
 		public ThrottledTaskQueue(IThrottleable theThrottleKey) {
-			myKey=theThrottleKey;
+			myKey = theThrottleKey;
 		}
 
 		public Semaphore getExecutionSemaphore() {
@@ -272,7 +278,7 @@ public class ThrottlingService implements IThrottlingService {
 		public synchronized int numTasks() {
 			return myTasks.size();
 		}
-		
+
 		public synchronized boolean hasTasks() {
 			return myTasks.size() > 0;
 		}
@@ -292,16 +298,15 @@ public class ThrottlingService implements IThrottlingService {
 
 			myTasks.add(theTask);
 
-			ourLog.info("Throttle queue for {} now has {} / {} tasks in queue", new Object[] {myKey, myTasks.size(), theThrottleMaxQueueDepth});
+			ourLog.info("Throttle queue for {} now has {} / {} tasks in queue", new Object[] { myKey, myTasks.size(), theThrottleMaxQueueDepth });
 		}
 	}
-	
+
 	public static void main(String[] args) {
-		
+
 		double requestsPerSecond = ThrottlePeriodEnum.MINUTE.toRequestsPerSecond(5);
 		System.out.println(requestsPerSecond);
-		
+
 	}
-	
 
 }

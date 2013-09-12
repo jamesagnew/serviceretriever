@@ -13,6 +13,8 @@ import javax.persistence.Version;
 
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
+import net.svcret.ejb.api.IKeystoreService;
+import net.svcret.ejb.ex.ProcessingException;
 
 import com.google.common.base.Objects;
 
@@ -318,6 +320,54 @@ public class PersHttpClientConfig extends BasePersObject {
 	 */
 	public void setUrlSelectionPolicy(UrlSelectionPolicy theUrlSelectionPolicy) {
 		myUrlSelectionPolicy = theUrlSelectionPolicy;
+	}
+
+	public GHttpClientConfig toDto(IKeystoreService theKeystoreSvc) throws ProcessingException {
+		GHttpClientConfig retVal = new GHttpClientConfig();
+
+		retVal.setPid(this.getPid());
+		retVal.setId(this.getId());
+		retVal.setName(this.getName());
+
+		retVal.setCircuitBreakerEnabled(this.isCircuitBreakerEnabled());
+		retVal.setCircuitBreakerTimeBetweenResetAttempts(this.getCircuitBreakerTimeBetweenResetAttempts());
+
+		retVal.setConnectTimeoutMillis(this.getConnectTimeoutMillis());
+		retVal.setReadTimeoutMillis(this.getReadTimeoutMillis());
+
+		retVal.setFailureRetriesBeforeAborting(this.getFailureRetriesBeforeAborting());
+		retVal.setUrlSelectionPolicy(this.getUrlSelectionPolicy());
+		retVal.setStickySessionCookieForSessionId(getStickySessionCookieForSessionId());
+		
+		if (this.getTlsKeystore() != null) {
+			retVal.setTlsKeystore(theKeystoreSvc.analyzeKeystore(this.getTlsKeystore(), this.getTlsKeystorePassword()));
+		}
+
+		if (this.getTlsTruststore() != null) {
+			retVal.setTlsTruststore(theKeystoreSvc.analyzeKeystore(this.getTlsTruststore(), this.getTlsTruststorePassword()));
+		}
+
+		return retVal;
+	}
+
+	public static PersHttpClientConfig fromDto(GHttpClientConfig theConfig) {
+		PersHttpClientConfig retVal = new PersHttpClientConfig();
+
+		if (theConfig.getPid() > 0) {
+			retVal.setPid(theConfig.getPid());
+		}
+
+		retVal.setId(theConfig.getId());
+		retVal.setName(theConfig.getName());
+		retVal.setCircuitBreakerEnabled(theConfig.isCircuitBreakerEnabled());
+		retVal.setCircuitBreakerTimeBetweenResetAttempts(theConfig.getCircuitBreakerTimeBetweenResetAttempts());
+		retVal.setConnectTimeoutMillis(theConfig.getConnectTimeoutMillis());
+		retVal.setFailureRetriesBeforeAborting(theConfig.getFailureRetriesBeforeAborting());
+		retVal.setReadTimeoutMillis(theConfig.getReadTimeoutMillis());
+		retVal.setUrlSelectionPolicy(theConfig.getUrlSelectionPolicy());
+		retVal.setStickySessionCookieForSessionId(theConfig.getStickySessionCookieForSessionId());
+		
+		return retVal;
 	}
 
 }

@@ -1,5 +1,7 @@
 package net.svcret.ejb.ejb;
 
+import java.io.Serializable;
+
 import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.jms.JMSException;
@@ -13,6 +15,7 @@ import javax.jms.TopicSession;
 
 import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.model.entity.PersStickySessionUrlBinding;
 
 import org.apache.commons.lang3.Validate;
 
@@ -33,7 +36,7 @@ public class BroadcastSenderBean implements IBroadcastSender {
 
 	}
 
-	private void sendMessage(String theText, Long theLongArgument) throws ProcessingException {
+	private void sendMessage(String theText, Serializable theLongArgument) throws ProcessingException {
 		Validate.notBlank(theText);
 
 		ourLog.info("Sending broadcast message: {}", theText);
@@ -48,7 +51,7 @@ public class BroadcastSenderBean implements IBroadcastSender {
 			TextMessage msg = ses.createTextMessage(theText);
 
 			if (theLongArgument != null) {
-				msg.setLongProperty(BroadcastListenerBean.ARG_LONG, theLongArgument);
+				msg.setObjectProperty(BroadcastListenerBean.MSG_ARG0, theLongArgument);
 			}
 
 			sender.send(msg);
@@ -104,6 +107,11 @@ public class BroadcastSenderBean implements IBroadcastSender {
 	@Override
 	public void notifyUrlStatusChanged(Long thePid) throws ProcessingException {
 		sendMessage(BroadcastListenerBean.URL_STATUS_CHANGED);
+	}
+
+	@Override
+	public void notifyNewStickySession(PersStickySessionUrlBinding theExisting) throws ProcessingException {
+		sendMessage(BroadcastListenerBean.STICKY_SESSION_CHANGED, theExisting.toDao());
 	}
 
 }

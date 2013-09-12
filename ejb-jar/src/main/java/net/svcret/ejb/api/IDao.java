@@ -258,4 +258,6 @@ public interface IDao {
 
 	}
 
+	void saveStickySessionUrlBinding(PersStickySessionUrlBinding theBinding);
+
 }

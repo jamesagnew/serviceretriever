@@ -113,7 +113,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 	}
 	
 	@Test
-	public void testCircuitBreakerPreferLocalOneFailing() throws InterruptedException {
+	public void testCircuitBreakerPreferLocalOneFailing() throws Exception {
 		when(httpConfig.getUrlSelectionPolicy()).thenReturn(UrlSelectionPolicy.PREFER_LOCAL);
 
 		when(httpResponse.getSuccessfulUrl()).thenReturn(persUrl1);
@@ -126,7 +126,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		/*
 		 * Normal
 		 */
-		UrlPoolBean pool = myBean.buildUrlPool(svcVersion);
+		UrlPoolBean pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl1, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(1));
 		assertThat(pool.getAlternateUrls(), Matchers.contains(persUrl2));
@@ -135,7 +135,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		 * Mark a success and try again
 		 */
 		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse, null);
-		pool = myBean.buildUrlPool(svcVersion);
+		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl1, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(1));
 		assertThat(pool.getAlternateUrls(), Matchers.contains(persUrl2));
@@ -153,7 +153,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 
 //		DefaultAnswer.setRunTime();
 		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse, null);
-		pool = myBean.buildUrlPool(svcVersion);
+		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl2, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
 		assertEquals(StatusEnum.DOWN, url1status.getStatus());
@@ -162,7 +162,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		/*
 		 * Make sure we keep using the non-tripped URL
 		 */
-		pool = myBean.buildUrlPool(svcVersion);
+		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl2, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
 		assertEquals(StatusEnum.DOWN, url1status.getStatus());
@@ -173,14 +173,14 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		 */
 		Thread.sleep(300);
 		
-		pool = myBean.buildUrlPool(svcVersion);
+		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl1, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(1));
 		assertThat(pool.getAlternateUrls(), Matchers.contains(persUrl2));
 		assertEquals(StatusEnum.DOWN, url1status.getStatus());
 		assertEquals(StatusEnum.ACTIVE, url2status.getStatus());
 
-		pool = myBean.buildUrlPool(svcVersion);
+		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl2, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
 		assertEquals(StatusEnum.DOWN, url1status.getStatus());
@@ -190,7 +190,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 
 
 	@Test
-	public void testCircuitBreakerPreferLocalWithAllFailing() throws InterruptedException {
+	public void testCircuitBreakerPreferLocalWithAllFailing() throws Exception {
 		when(httpConfig.getUrlSelectionPolicy()).thenReturn(UrlSelectionPolicy.PREFER_LOCAL);
 
 		when(httpResponse.getSuccessfulUrl()).thenReturn(persUrl1);
@@ -201,7 +201,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		/*
 		 * Normal
 		 */
-		UrlPoolBean pool = myBean.buildUrlPool(svcVersion);
+		UrlPoolBean pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl1, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(1));
 		assertThat(pool.getAlternateUrls(), Matchers.contains(persUrl2));
@@ -216,7 +216,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		when(httpResponse.getSuccessfulUrl()).thenReturn(null);
 
 		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse, null);
-		pool = myBean.buildUrlPool(svcVersion);
+		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(null, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
 		assertEquals(StatusEnum.DOWN, url1status.getStatus());
@@ -227,18 +227,18 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		 */
 		Thread.sleep(300);
 		
-		pool = myBean.buildUrlPool(svcVersion);
+		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl1, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
 
-		pool = myBean.buildUrlPool(svcVersion);
+		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl2, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
 
 	}
 
 	@Test
-	public void testCircuitBreakerRoundRobinOneFailing() throws InterruptedException {
+	public void testCircuitBreakerRoundRobinOneFailing() throws Exception {
 		when(httpConfig.getUrlSelectionPolicy()).thenReturn(UrlSelectionPolicy.ROUND_ROBIN);
 		when(svcVersion.getUrlCounter()).thenReturn(new AtomicInteger());
 
@@ -252,22 +252,22 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		/*
 		 * Normal
 		 */
-		UrlPoolBean pool = myBean.buildUrlPool(svcVersion);
+		UrlPoolBean pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl1, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(1));
 		assertThat(pool.getAlternateUrls(), Matchers.contains(persUrl2));
 
-		pool = myBean.buildUrlPool(svcVersion);
+		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl2, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(1));
 		assertThat(pool.getAlternateUrls(), Matchers.contains(persUrl1));
 
-		pool = myBean.buildUrlPool(svcVersion);
+		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl1, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(1));
 		assertThat(pool.getAlternateUrls(), Matchers.contains(persUrl2));
 
-		pool = myBean.buildUrlPool(svcVersion);
+		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl2, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(1));
 		assertThat(pool.getAlternateUrls(), Matchers.contains(persUrl1));
@@ -276,7 +276,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		 * Mark a success and try again
 		 */
 		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse, null);
-		pool = myBean.buildUrlPool(svcVersion);
+		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl1, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(1));
 		assertThat(pool.getAlternateUrls(), Matchers.contains(persUrl2));
@@ -294,7 +294,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 
 //		DefaultAnswer.setRunTime();
 		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse, null);
-		pool = myBean.buildUrlPool(svcVersion);
+		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl2, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
 		assertEquals(StatusEnum.DOWN, url1status.getStatus());
@@ -303,7 +303,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		/*
 		 * Make sure we keep using the non-tripped URL
 		 */
-		pool = myBean.buildUrlPool(svcVersion);
+		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl2, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
 		assertEquals(StatusEnum.DOWN, url1status.getStatus());
@@ -314,14 +314,14 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		 */
 		Thread.sleep(200);
 		
-		pool = myBean.buildUrlPool(svcVersion);
+		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl1, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(1));
 		assertThat(pool.getAlternateUrls(), Matchers.contains(persUrl2));
 		assertEquals(StatusEnum.DOWN, url1status.getStatus());
 		assertEquals(StatusEnum.ACTIVE, url2status.getStatus());
 
-		pool = myBean.buildUrlPool(svcVersion);
+		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl2, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
 		assertEquals(StatusEnum.DOWN, url1status.getStatus());
@@ -331,7 +331,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 
 
 	@Test
-	public void testCircuitBreakerRoundRobinWithAllFailing() throws InterruptedException {
+	public void testCircuitBreakerRoundRobinWithAllFailing() throws Exception {
 		when(httpConfig.getUrlSelectionPolicy()).thenReturn(UrlSelectionPolicy.ROUND_ROBIN);
 
 		when(httpResponse.getSuccessfulUrl()).thenReturn(persUrl1);
@@ -343,7 +343,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		/*
 		 * Normal
 		 */
-		UrlPoolBean pool = myBean.buildUrlPool(svcVersion);
+		UrlPoolBean pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl1, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(1));
 		assertThat(pool.getAlternateUrls(), Matchers.contains(persUrl2));
@@ -358,7 +358,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		when(httpResponse.getSuccessfulUrl()).thenReturn(null);
 
 		myBean.recordInvocationMethod(new Date(), 100, myMethod, user, httpResponse, invocationResponse, null);
-		pool = myBean.buildUrlPool(svcVersion);
+		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(null, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
 		assertEquals(StatusEnum.DOWN, url1status.getStatus());
@@ -369,11 +369,11 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		 */
 		Thread.sleep(300);
 		
-		pool = myBean.buildUrlPool(svcVersion);
+		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl1, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
 
-		pool = myBean.buildUrlPool(svcVersion);
+		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl2, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
 

@@ -58,7 +58,7 @@ public class RuntimeStatusBeanTest {
 	}
 
 	@Test
-	public void buildUrlPoolPreferLocal() {
+	public void buildUrlPoolPreferLocal() throws Exception{
 
 		PersServiceVersionUrl urlLocal1 = mock(PersServiceVersionUrl.class, DefaultAnswer.INSTANCE);
 		PersServiceVersionUrl urlLocal2 = mock(PersServiceVersionUrl.class, DefaultAnswer.INSTANCE);
@@ -109,7 +109,7 @@ public class RuntimeStatusBeanTest {
 		when(statusR1.getStatus()).thenReturn(StatusEnum.ACTIVE);
 		when(statusR2.getStatus()).thenReturn(StatusEnum.ACTIVE);
 		DefaultAnswer.setRunTime();
-		UrlPoolBean pool = bean.buildUrlPool(ver);
+		UrlPoolBean pool = bean.buildUrlPool(ver,null);
 		assertEquals(urlLocal1, pool.getPreferredUrl());
 		assertEquals(3, pool.getAlternateUrls().size());
 		assertEquals(urlLocal2, pool.getAlternateUrls().get(0));
@@ -122,7 +122,7 @@ public class RuntimeStatusBeanTest {
 		when(statusR1.getStatus()).thenReturn(StatusEnum.ACTIVE);
 		when(statusR2.getStatus()).thenReturn(StatusEnum.ACTIVE);
 		DefaultAnswer.setRunTime();
-		pool = bean.buildUrlPool(ver);
+		pool = bean.buildUrlPool(ver,null);
 		assertEquals(urlLocal2, pool.getPreferredUrl());
 		assertEquals(2, pool.getAlternateUrls().size());
 		assertEquals(urlRemote1, pool.getAlternateUrls().get(0));
@@ -134,7 +134,7 @@ public class RuntimeStatusBeanTest {
 		when(statusR1.getStatus()).thenReturn(StatusEnum.ACTIVE);
 		when(statusR2.getStatus()).thenReturn(StatusEnum.ACTIVE);
 		DefaultAnswer.setRunTime();
-		pool = bean.buildUrlPool(ver);
+		pool = bean.buildUrlPool(ver,null);
 		assertEquals(urlRemote1, pool.getPreferredUrl());
 		assertEquals(1, pool.getAlternateUrls().size());
 		assertEquals(urlRemote2, pool.getAlternateUrls().get(0));
@@ -145,7 +145,7 @@ public class RuntimeStatusBeanTest {
 		when(statusR1.getStatus()).thenReturn(StatusEnum.DOWN);
 		when(statusR2.getStatus()).thenReturn(StatusEnum.ACTIVE);
 		DefaultAnswer.setRunTime();
-		pool = bean.buildUrlPool(ver);
+		pool = bean.buildUrlPool(ver,null);
 		assertEquals(urlRemote2, pool.getPreferredUrl());
 		assertEquals(0, pool.getAlternateUrls().size());
 		DefaultAnswer.setDesignTime();
@@ -155,7 +155,7 @@ public class RuntimeStatusBeanTest {
 		when(statusR1.getStatus()).thenReturn(StatusEnum.DOWN);
 		when(statusR2.getStatus()).thenReturn(StatusEnum.DOWN);
 		DefaultAnswer.setRunTime();
-		pool = bean.buildUrlPool(ver);
+		pool = bean.buildUrlPool(ver,null);
 		assertEquals(null, pool.getPreferredUrl());
 		assertEquals(0, pool.getAlternateUrls().size());
 		DefaultAnswer.setDesignTime();
@@ -170,7 +170,7 @@ public class RuntimeStatusBeanTest {
 		when(statusR2.getStatus()).thenReturn(StatusEnum.DOWN);
 		when(statusR2.attemptToResetCircuitBreaker()).thenReturn(true);
 		DefaultAnswer.setRunTime();
-		pool = bean.buildUrlPool(ver);
+		pool = bean.buildUrlPool(ver,null);
 		assertEquals(urlRemote2, pool.getPreferredUrl());
 		assertEquals(3, pool.getAlternateUrls().size());
 		assertEquals(urlLocal1, pool.getAlternateUrls().get(0));
@@ -181,7 +181,7 @@ public class RuntimeStatusBeanTest {
 	}
 
 	@Test
-	public void buildUrlPoolRoundRobin() {
+	public void buildUrlPoolRoundRobin() throws Exception{
 
 		PersServiceVersionUrl urlLocal1 = mock(PersServiceVersionUrl.class, DefaultAnswer.INSTANCE);
 		PersServiceVersionUrl urlLocal2 = mock(PersServiceVersionUrl.class, DefaultAnswer.INSTANCE);
@@ -241,19 +241,19 @@ public class RuntimeStatusBeanTest {
 
 		// Rotate through everybody
 
-		UrlPoolBean pool = bean.buildUrlPool(ver);
+		UrlPoolBean pool = bean.buildUrlPool(ver,null);
 		assertEquals(urlLocal1, pool.getPreferredUrl());
 		assertEquals(2, pool.getAlternateUrls().size());
 		assertEquals(urlLocal2, pool.getAlternateUrls().get(0));
 		assertEquals(urlRemote1, pool.getAlternateUrls().get(1));
 
-		pool = bean.buildUrlPool(ver);
+		pool = bean.buildUrlPool(ver,null);
 		assertEquals(urlLocal2, pool.getPreferredUrl());
 		assertEquals(2, pool.getAlternateUrls().size());
 		assertEquals(urlRemote1, pool.getAlternateUrls().get(0));
 		assertEquals(urlLocal1, pool.getAlternateUrls().get(1));
 
-		pool = bean.buildUrlPool(ver);
+		pool = bean.buildUrlPool(ver,null);
 		assertEquals(urlRemote1, pool.getPreferredUrl());
 		assertEquals(2, pool.getAlternateUrls().size());
 		assertEquals(urlLocal1, pool.getAlternateUrls().get(0));
@@ -261,7 +261,7 @@ public class RuntimeStatusBeanTest {
 
 		// Three are active so we reset to the first one now.....
 
-		pool = bean.buildUrlPool(ver);
+		pool = bean.buildUrlPool(ver,null);
 		assertEquals(urlLocal1, pool.getPreferredUrl());
 		assertEquals(2, pool.getAlternateUrls().size());
 		assertEquals(urlLocal2, pool.getAlternateUrls().get(0));
@@ -274,19 +274,19 @@ public class RuntimeStatusBeanTest {
 		 * to 0. This isn't perfect but it doesn't matter... If we ever fix
 		 * that, this unit test will break but it will be ok.
 		 */
-		pool = bean.buildUrlPool(ver);
+		pool = bean.buildUrlPool(ver,null);
 		assertEquals(urlLocal1, pool.getPreferredUrl());
 		assertEquals(2, pool.getAlternateUrls().size());
 		assertEquals(urlLocal2, pool.getAlternateUrls().get(0));
 		assertEquals(urlRemote1, pool.getAlternateUrls().get(1));
 
-		pool = bean.buildUrlPool(ver);
+		pool = bean.buildUrlPool(ver,null);
 		assertEquals(urlLocal2, pool.getPreferredUrl());
 		assertEquals(2, pool.getAlternateUrls().size());
 		assertEquals(urlRemote1, pool.getAlternateUrls().get(0));
 		assertEquals(urlLocal1, pool.getAlternateUrls().get(1));
 
-		pool = bean.buildUrlPool(ver);
+		pool = bean.buildUrlPool(ver,null);
 		assertEquals(urlRemote1, pool.getPreferredUrl());
 		assertEquals(2, pool.getAlternateUrls().size());
 		assertEquals(urlLocal1, pool.getAlternateUrls().get(0));
@@ -302,7 +302,7 @@ public class RuntimeStatusBeanTest {
 		when(statusR2.attemptToResetCircuitBreaker()).thenReturn(true);
 		DefaultAnswer.setRunTime();
 
-		pool = bean.buildUrlPool(ver);
+		pool = bean.buildUrlPool(ver,null);
 		assertEquals(urlRemote2, pool.getPreferredUrl());
 		assertEquals(3, pool.getAlternateUrls().size());
 		assertEquals(urlLocal1, pool.getAlternateUrls().get(0));
@@ -313,19 +313,19 @@ public class RuntimeStatusBeanTest {
 		when(statusR2.attemptToResetCircuitBreaker()).thenReturn(false);
 		DefaultAnswer.setRunTime();
 
-		pool = bean.buildUrlPool(ver);
+		pool = bean.buildUrlPool(ver,null);
 		assertEquals(urlLocal1, pool.getPreferredUrl());
 		assertEquals(2, pool.getAlternateUrls().size());
 		assertEquals(urlLocal2, pool.getAlternateUrls().get(0));
 		assertEquals(urlRemote1, pool.getAlternateUrls().get(1));
 
-		pool = bean.buildUrlPool(ver);
+		pool = bean.buildUrlPool(ver,null);
 		assertEquals(urlLocal2, pool.getPreferredUrl());
 		assertEquals(2, pool.getAlternateUrls().size());
 		assertEquals(urlRemote1, pool.getAlternateUrls().get(0));
 		assertEquals(urlLocal1, pool.getAlternateUrls().get(1));
 
-		pool = bean.buildUrlPool(ver);
+		pool = bean.buildUrlPool(ver,null);
 		assertEquals(urlRemote1, pool.getPreferredUrl());
 		assertEquals(2, pool.getAlternateUrls().size());
 		assertEquals(urlLocal1, pool.getAlternateUrls().get(0));
@@ -386,7 +386,7 @@ public class RuntimeStatusBeanTest {
 	}
 
 	@Test
-	public void testFlushStatsWithNoneQueued() throws ParseException {
+	public void testFlushStatsWithNoneQueued() {
 
 		RuntimeStatusBean svc = new RuntimeStatusBean();
 		IDao pers = mock(IDao.class);
@@ -399,7 +399,7 @@ public class RuntimeStatusBeanTest {
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Test
-	public void testRecordServerSecurityFailure() throws ParseException {
+	public void testRecordServerSecurityFailure() throws Exception {
 		Date ts1 = myFmt.parse("2013-01-01 10:00:09");
 		Date ts2 = myFmt.parse("2013-01-01 10:00:10");
 
@@ -455,7 +455,7 @@ public class RuntimeStatusBeanTest {
 	
 	@SuppressWarnings({ "rawtypes", "unchecked", "unused" })
 	@Test
-	public void testRecordThrottleReject() throws ParseException {
+	public void testRecordThrottleReject() throws Exception {
 		Date ts1 = myFmt.parse("2013-01-01 10:00:09");
 		Date ts2 = myFmt.parse("2013-01-01 10:00:10");
 

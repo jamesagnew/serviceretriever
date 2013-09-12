@@ -51,7 +51,7 @@ public class TwoColumnGrid extends FlexTable {
 		addRow(theLabel, new Label(theComponent));
 	}
 
-	public void addRow(String theLabel, Widget theComponent) {
+	public HtmlLabel addRow(String theLabel, Widget theComponent) {
 		String id= "tcg_" + ourNextId++;
 		HtmlLabel lbl = new HtmlLabel(theLabel, id);
 		
@@ -63,6 +63,7 @@ public class TwoColumnGrid extends FlexTable {
 		setWidget(row, 0, lbl);
 		setWidget(row, 1, theComponent);
 		
+		return lbl;
 	}
 
 	public void addRow(Widget theLabel, Widget theComponent) {

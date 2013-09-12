@@ -1,20 +1,41 @@
 package net.svcret.admin.shared.model;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
+
+import net.svcret.admin.shared.util.XmlConstants;
+
+@XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="HttpClientConfig")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class GHttpClientConfig extends BaseGObject {
 
 	public static final String DEFAULT_ID = "DEFAULT";
 
 	private static final long serialVersionUID = 1L;
 
+	@XmlElement(name="config_CircuitBreakerEnabled")
 	private boolean myCircuitBreakerEnabled;
+	@XmlElement(name="config_CircuitBreakerTimeBetweenResetAttempts")
 	private int myCircuitBreakerTimeBetweenResetAttempts;
+	@XmlElement(name="config_ConnectTimeoutMillis")
 	private int myConnectTimeoutMillis;
+	@XmlElement(name="config_FailureRetriesBeforeAborting")
 	private int myFailureRetriesBeforeAborting;
+	@XmlElement(name="config_Id")
 	private String myId;
+	@XmlElement(name="config_Name")
 	private String myName;
+	@XmlElement(name="config_ReadTimeoutMillis")
 	private int myReadTimeoutMillis;
+	@XmlElement(name="config_StickySessionCookieForSessionId")
+	private String myStickySessionCookieForSessionId;
+	@XmlElement(name="config_TlsKeystore")
 	private DtoKeystoreAnalysis myTlsKeystore;
+	@XmlElement(name="config_TlsTruststore")
 	private DtoKeystoreAnalysis myTlsTruststore;
+	@XmlElement(name="config_UrlSelectionPolicy")
 	private UrlSelectionPolicy myUrlSelectionPolicy;
 
 	/**
@@ -57,6 +78,10 @@ public class GHttpClientConfig extends BaseGObject {
 	 */
 	public int getReadTimeoutMillis() {
 		return myReadTimeoutMillis;
+	}
+
+	public String getStickySessionCookieForSessionId() {
+		return myStickySessionCookieForSessionId;
 	}
 
 	public DtoKeystoreAnalysis getTlsKeystore() {
@@ -154,6 +179,10 @@ public class GHttpClientConfig extends BaseGObject {
 	 */
 	public void setReadTimeoutMillis(int theReadTimeoutMillis) {
 		myReadTimeoutMillis = theReadTimeoutMillis;
+	}
+
+	public void setStickySessionCookieForSessionId(String theStickySessionCookieForSessionId) {
+		myStickySessionCookieForSessionId=theStickySessionCookieForSessionId;
 	}
 
 	public void setTlsKeystore(DtoKeystoreAnalysis theKeystore) {

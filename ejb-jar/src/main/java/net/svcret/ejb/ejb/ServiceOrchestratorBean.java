@@ -173,6 +173,11 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 	private void handleInvocationFailure(HttpRequestBean theRequest, BasePersServiceVersion serviceVersion, InvocationFailedException e) throws ProcessingException {
 		theRequest.drainInputMessage();
+
+		/* TODO: add some kind of statistic recording for svcVer failed requests that
+		 * don't have a method associated
+		 */
+		
 		myTransactionLogger.logTransaction(theRequest, serviceVersion, null, e.getUser(), theRequest.getRequestBody(), e.toInvocationResponse(), e.getImplementationUrl(), e.getHttpResponse(), null,
 				null);
 	}
@@ -376,7 +381,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 		UrlPoolBean urlPool;
 		if (theForceUrl == null) {
-			urlPool = myRuntimeStatus.buildUrlPool(method.getServiceVersion());
+			urlPool = myRuntimeStatus.buildUrlPool(method.getServiceVersion(), headers);
 			if (urlPool.getPreferredUrl() == null) {
 				/*
 				 * TODO: record this failure? ALso should we allow throttled CB reset attempts when all URLs are failing?

@@ -698,12 +698,17 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Test Service Version")
 	String testServiceVersion_Breadcrumb();
 	
-	@DefaultMessage("<b>Prefer Local</b> means that the proxy will favour any URLs which are on " + "the same host as the service retriever itself, and will only use remote "
+	@DefaultMessage("<b>Prefer Local</b> means that the proxy will favour any URLs which are on " + 
+			"the same host as the service retriever itself, and will only use remote "
 			+ "implementations if all local URLs are down")
 	String urlSelectionPolicy_Desc_PreferLocal();
 
 	@DefaultMessage("<b>Round Robin</b> means that the proxy will attempt to distribute requests " + "evenly across all URLs")
 	String urlSelectionPolicy_Desc_RoundRobin();
+
+	@DefaultMessage("<b>Round Robin with Sticky Sessions</b> means that the proxy will attempt to distribute requests " + 
+			"evenly across all URLs, but will use a session cookie to pin individual sessions to a single backing URL.")
+	String urlSelectionPolicy_Desc_RrStickySessions();
 
 	@DefaultMessage("Throttling")
 	String user_requestThrottling();

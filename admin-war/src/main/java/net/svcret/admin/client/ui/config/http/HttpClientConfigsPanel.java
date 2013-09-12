@@ -6,6 +6,7 @@ import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.EditableField;
 import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.HtmlH1;
+import net.svcret.admin.client.ui.components.HtmlLabel;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
@@ -71,6 +72,8 @@ public class HttpClientConfigsPanel extends FlowPanel {
 	private ListBox myUrlSelectionPolicyListBox;
 	private int ourNextUnsavedPid = -1;
 	private Long myDefaultPid;
+	private EditableField myStickySessionCookieNameBox;
+	private HtmlLabel myStickySessionCookieLabel;
 
 	public HttpClientConfigsPanel() {
 		this(null);
@@ -338,6 +341,9 @@ public class HttpClientConfigsPanel extends FlowPanel {
 				}
 			});
 
+			myStickySessionCookieNameBox = new EditableField();
+			myStickySessionCookieLabel = urlSelGrid.addRow("Session Cookie", myStickySessionCookieNameBox);
+			
 			/*
 			 * Circuit Breaker
 			 */
@@ -688,6 +694,10 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		if (selectedIndex == -1) {
 			return;
 		}
+		
+		myStickySessionCookieLabel.setVisible(false);
+		myStickySessionCookieNameBox.setVisible(false);
+		
 		UrlSelectionPolicy policy = UrlSelectionPolicy.values()[selectedIndex];
 		switch (policy) {
 		case PREFER_LOCAL:
@@ -695,6 +705,12 @@ public class HttpClientConfigsPanel extends FlowPanel {
 			break;
 		case ROUND_ROBIN:
 			myUrlSelectionPolicyDescriptionLabel.setHTML(MSGS.urlSelectionPolicy_Desc_RoundRobin());
+			break;
+		case RR_STICKY_SESSION:
+			myUrlSelectionPolicyDescriptionLabel.setHTML(MSGS.urlSelectionPolicy_Desc_RrStickySessions());
+			myStickySessionCookieNameBox.setValue(mySelectedConfig.getStickySessionCookieForSessionId(), false);
+			myStickySessionCookieLabel.setVisible(true);
+			myStickySessionCookieNameBox.setVisible(true);
 			break;
 		}
 	}

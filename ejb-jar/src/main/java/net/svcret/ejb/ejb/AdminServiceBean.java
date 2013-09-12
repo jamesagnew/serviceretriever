@@ -831,7 +831,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			}
 		}
 
-		PersHttpClientConfig config = fromUi(theConfig);
+		PersHttpClientConfig config = PersHttpClientConfig.fromDto(theConfig);
 		if (existing != null) {
 			config.setOptLock(existing.getOptLock());
 		}
@@ -851,7 +851,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			config.setTlsKeystorePassword(theNewKeystorePass);
 		}
 
-		return toUi(myServiceRegistry.saveHttpClientConfig(config));
+		return myServiceRegistry.saveHttpClientConfig(config).toDto(myKeystoreSvc);
 	}
 
 	@Override
@@ -1393,25 +1393,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private PersHttpClientConfig fromUi(GHttpClientConfig theConfig) {
-		PersHttpClientConfig retVal = new PersHttpClientConfig();
-
-		if (theConfig.getPid() > 0) {
-			retVal.setPid(theConfig.getPid());
-		}
-
-		retVal.setId(theConfig.getId());
-		retVal.setName(theConfig.getName());
-		retVal.setCircuitBreakerEnabled(theConfig.isCircuitBreakerEnabled());
-		retVal.setCircuitBreakerTimeBetweenResetAttempts(theConfig.getCircuitBreakerTimeBetweenResetAttempts());
-		retVal.setConnectTimeoutMillis(theConfig.getConnectTimeoutMillis());
-		retVal.setFailureRetriesBeforeAborting(theConfig.getFailureRetriesBeforeAborting());
-		retVal.setReadTimeoutMillis(theConfig.getReadTimeoutMillis());
-		retVal.setUrlSelectionPolicy(theConfig.getUrlSelectionPolicy());
-
-		return retVal;
-	}
-
 	private PersServiceVersionResource fromUi(GResource theRes, BasePersServiceVersion theServiceVersion) {
 		PersServiceVersionResource retVal = new PersServiceVersionResource();
 		retVal.setResourceContentType(theRes.getContentType());
@@ -1686,7 +1667,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	private GHttpClientConfigList loadHttpClientConfigList() throws ProcessingException {
 		GHttpClientConfigList configList = new GHttpClientConfigList();
 		for (PersHttpClientConfig next : myDao.getHttpClientConfigs()) {
-			configList.add(toUi(next));
+			configList.add(next.toDto(myKeystoreSvc));
 		}
 		return configList;
 	}
@@ -2254,34 +2235,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			retVal.setLastSuccessfulInvocation(lastSuccess);
 		}
 		// retVal.get
-
-		return retVal;
-	}
-
-	private GHttpClientConfig toUi(PersHttpClientConfig theConfig) throws ProcessingException {
-		GHttpClientConfig retVal = new GHttpClientConfig();
-
-		retVal.setPid(theConfig.getPid());
-		retVal.setId(theConfig.getId());
-		retVal.setName(theConfig.getName());
-
-		retVal.setCircuitBreakerEnabled(theConfig.isCircuitBreakerEnabled());
-		retVal.setCircuitBreakerTimeBetweenResetAttempts(theConfig.getCircuitBreakerTimeBetweenResetAttempts());
-
-		retVal.setConnectTimeoutMillis(theConfig.getConnectTimeoutMillis());
-		retVal.setReadTimeoutMillis(theConfig.getReadTimeoutMillis());
-
-		retVal.setFailureRetriesBeforeAborting(theConfig.getFailureRetriesBeforeAborting());
-
-		retVal.setUrlSelectionPolicy(theConfig.getUrlSelectionPolicy());
-
-		if (theConfig.getTlsKeystore() != null) {
-			retVal.setTlsKeystore(myKeystoreSvc.analyzeKeystore(theConfig.getTlsKeystore(), theConfig.getTlsKeystorePassword()));
-		}
-
-		if (theConfig.getTlsTruststore() != null) {
-			retVal.setTlsTruststore(myKeystoreSvc.analyzeKeystore(theConfig.getTlsTruststore(), theConfig.getTlsTruststorePassword()));
-		}
 
 		return retVal;
 	}

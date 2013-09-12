@@ -25,8 +25,6 @@ import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 
-import org.apache.commons.lang3.StringUtils;
-
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
@@ -96,6 +94,8 @@ import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.util.Validate;
 
+import org.apache.commons.lang3.StringUtils;
+
 @Stateless
 public class DaoBean implements IDao {
 
@@ -108,16 +108,6 @@ public class DaoBean implements IDao {
 
 	@EJB
 	private IDao myThis;
-
-	private PersHttpClientConfig addDefaultHttpClientConfig() {
-		PersHttpClientConfig retVal = new PersHttpClientConfig();
-		retVal.setDefaults();
-		retVal.setId(PersHttpClientConfig.DEFAULT_ID);
-
-		retVal = myEntityManager.merge(retVal);
-
-		return retVal;
-	}
 
 	@Override
 	public void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost) {
@@ -175,15 +165,6 @@ public class DaoBean implements IDao {
 		ourLog.info("Deleting user {}", theUser.getPid());
 
 		myEntityManager.remove(theUser);
-	}
-
-	private void doSaveRecentMessagesAndTrimInNewTransaction(LinkedList<? extends BasePersSavedTransactionRecentMessage> transactions) {
-		if (transactions.size() > 0) {
-			for (BasePersSavedTransactionRecentMessage nextRecentMessage : transactions) {
-				nextRecentMessage.addUsingDao(this);
-			}
-			transactions.get(0).trimUsingDao(this);
-		}
 	}
 
 	@Override
@@ -308,10 +289,6 @@ public class DaoBean implements IDao {
 	public <P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> O getInvocationStats(P thePk) {
 
 		return (O) thePk.accept(new IStatsVisitor<O>() {
-			private O doVisit(P thePk) {
-				return (O) myEntityManager.find(thePk.getStatType(), thePk);
-			}
-
 			@Override
 			public O visit(PersInvocationMethodSvcverStats theStats, PersInvocationMethodSvcverStatsPk thePk) {
 				return doVisit((P) thePk);
@@ -335,6 +312,10 @@ public class DaoBean implements IDao {
 			@Override
 			public O visit(PersStaticResourceStats theStats, PersStaticResourceStatsPk thePk) {
 				return doVisit((P) thePk);
+			}
+
+			private O doVisit(P thePk) {
+				return (O) myEntityManager.find(thePk.getStatType(), thePk);
 			}
 		});
 	}
@@ -665,8 +646,12 @@ public class DaoBean implements IDao {
 	public PersStickySessionUrlBinding getOrCreateStickySessionUrlBindingInNewTransaction(PersStickySessionUrlBindingPk theBindingPk, PersServiceVersionUrl theUrlToUseIfNoneExists) {
 		PersStickySessionUrlBinding retVal = myEntityManager.find(PersStickySessionUrlBinding.class, theBindingPk);
 		if (retVal == null) {
-			myEntityManager.persist(new PersStickySessionUrlBinding(theBindingPk, theUrlToUseIfNoneExists));
+			ourLog.debug("Creating new sticky session with ID '{}' for URL {}", theBindingPk.getSessionId(), theUrlToUseIfNoneExists.getPid());
+			PersStickySessionUrlBinding newEntity = new PersStickySessionUrlBinding(theBindingPk, theUrlToUseIfNoneExists);
+			newEntity.setCreated(new Date());
+			myEntityManager.persist(newEntity);
 			retVal = myEntityManager.find(PersStickySessionUrlBinding.class, theBindingPk);
+			retVal.setNewlyCreated(true);
 		}
 		return retVal;
 	}
@@ -1333,6 +1318,12 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
+	public void saveStickySessionUrlBinding(PersStickySessionUrlBinding theBinding) {
+		ourLog.debug("Saving sticky session with ID '{}' for URL {}", theBinding.getPk().getSessionId(), theBinding.getUrl().getPid());
+		myEntityManager.merge(theBinding);
+	}
+
+	@Override
 	public void saveUserRecentMessage(PersUserRecentMessage theMsg) {
 		Validate.notNull(theMsg);
 
@@ -1428,6 +1419,25 @@ public class DaoBean implements IDao {
 		int index = 0;
 		for (Iterator<PersUserRecentMessage> iter = messages.iterator(); iter.hasNext() && index < toDelete; index++) {
 			myEntityManager.remove(iter.next());
+		}
+	}
+
+	private PersHttpClientConfig addDefaultHttpClientConfig() {
+		PersHttpClientConfig retVal = new PersHttpClientConfig();
+		retVal.setDefaults();
+		retVal.setId(PersHttpClientConfig.DEFAULT_ID);
+
+		retVal = myEntityManager.merge(retVal);
+
+		return retVal;
+	}
+
+	private void doSaveRecentMessagesAndTrimInNewTransaction(LinkedList<? extends BasePersSavedTransactionRecentMessage> transactions) {
+		if (transactions.size() > 0) {
+			for (BasePersSavedTransactionRecentMessage nextRecentMessage : transactions) {
+				nextRecentMessage.addUsingDao(this);
+			}
+			transactions.get(0).trimUsingDao(this);
 		}
 	}
 
