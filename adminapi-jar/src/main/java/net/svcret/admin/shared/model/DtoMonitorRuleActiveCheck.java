@@ -1,29 +1,51 @@
 package net.svcret.admin.shared.model;
 
-import java.util.Date;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
+import net.svcret.admin.shared.util.XmlConstants;
 
+@XmlType(namespace = XmlConstants.DTO_NAMESPACE, name = "MonitorRuleActiveCheck")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class DtoMonitorRuleActiveCheck extends BaseGObject {
 
 	private static final long serialVersionUID = 1L;
 
+	@XmlElement(name = "config_CheckFrequencyNumber")
 	private int myCheckFrequencyNum;
+	@XmlElement(name = "config_CheckFrequencyUnit")
 	private ThrottlePeriodEnum myCheckFrequencyUnit;
+	@XmlElement(name = "config_ExpectLatencyUnderMillis")
 	private Long myExpectLatencyUnderMillis;
+	@XmlElement(name = "config_ExpectResponseContainsText")
 	private String myExpectResponseContainsText;
+	@XmlElement(name = "config_ExpectResponseType")
 	private ResponseTypeEnum myExpectResponseType;
-	private Date myLastTransactionDate;
-	private Boolean myLastTransactionOutcome;
-	private String myLastTransactionOutcomeDescription;
+	@XmlElement(name = "runtime_MessageDescription")
 	private String myMessageDescription;
+	@XmlElement(name = "config_MessagePid")
 	private long myMessagePid;
+	@XmlElement(name = "runtime_RecentOutcomes")
+	private DtoMonitorRuleActiveCheckOutcomeList myRecentOutcomes;
+	@XmlElement(name = "runtime_ServiceVersionPid")
 	private long myServiceVersionPid;
-	
+
+	public DtoMonitorRuleActiveCheckOutcomeList getRecentOutcomes() {
+		return myRecentOutcomes;
+	}
+
+	public void setRecentOutcomes(DtoMonitorRuleActiveCheckOutcomeList theRecentOutcomes) {
+		myRecentOutcomes = theRecentOutcomes;
+	}
+
 	public int getCheckFrequencyNum() {
 		return myCheckFrequencyNum;
 	}
+
 	public ThrottlePeriodEnum getCheckFrequencyUnit() {
 		return myCheckFrequencyUnit;
 	}
@@ -38,18 +60,6 @@ public class DtoMonitorRuleActiveCheck extends BaseGObject {
 
 	public ResponseTypeEnum getExpectResponseType() {
 		return myExpectResponseType;
-	}
-
-	public Date getLastTransactionDate() {
-		return myLastTransactionDate;
-	}
-
-	public Boolean getLastTransactionOutcome() {
-		return myLastTransactionOutcome;
-	}
-
-	public String getLastTransactionOutcomeDescription() {
-		return myLastTransactionOutcomeDescription;
 	}
 
 	public String getMessageDescription() {
@@ -82,18 +92,6 @@ public class DtoMonitorRuleActiveCheck extends BaseGObject {
 
 	public void setExpectResponseType(ResponseTypeEnum theExpectResponseType) {
 		myExpectResponseType = theExpectResponseType;
-	}
-
-	public void setLastTransactionDate(Date theLastTransactionDate) {
-		myLastTransactionDate = theLastTransactionDate;
-	}
-
-	public void setLastTransactionOutcome(Boolean theLastTransactionOutcome) {
-		myLastTransactionOutcome = theLastTransactionOutcome;
-	}
-
-	public void setLastTransactionOutcomeDescription(String theLastTransactionOutcomeDescription) {
-		myLastTransactionOutcomeDescription = theLastTransactionOutcomeDescription;
 	}
 
 	public void setMessageDescription(String theDescription) {

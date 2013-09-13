@@ -22,6 +22,7 @@ import javax.persistence.Table;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 
 //@formatter:off
 @Entity
@@ -59,7 +60,7 @@ public class PersMonitorRuleActiveCheck extends BasePersObject {
 	private Long myPid;
 
 	@OneToMany(cascade = CascadeType.REMOVE, mappedBy = "myCheck", orphanRemoval = true)
-	@org.hibernate.annotations.OrderBy(clause="XACT_TIME DESC")
+	@org.hibernate.annotations.OrderBy(clause="XACT_TIME ASC")
 	private List<PersMonitorRuleActiveCheckOutcome> myRecentOutcomes;
 
 	@ManyToOne(cascade = {}, optional = false)
@@ -169,6 +170,23 @@ public class PersMonitorRuleActiveCheck extends BasePersObject {
 
 	public void setServiceVersion(BasePersServiceVersion theSvcVersion) {
 		myServiceVersion = theSvcVersion;
+	}
+
+	public DtoMonitorRuleActiveCheck toDto() {
+		DtoMonitorRuleActiveCheck retVal = new DtoMonitorRuleActiveCheck();
+		retVal.setCheckFrequencyNum(getCheckFrequencyNum());
+		retVal.setCheckFrequencyUnit(getCheckFrequencyUnit());
+		retVal.setExpectLatencyUnderMillis(getExpectLatencyUnderMillis());
+		retVal.setExpectResponseContainsText(getExpectResponseContainsText());
+		retVal.setExpectResponseType(getExpectResponseType());
+		retVal.setMessagePid(getMessage().getPid());
+		retVal.setMessageDescription(getMessage().getDescription());
+		retVal.setPid(getPid());
+		retVal.setServiceVersionPid(getServiceVersion().getPid());
+		
+		getRecentOutcomes()
+		
+		return retVal;
 	}
 
 }

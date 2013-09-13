@@ -182,7 +182,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 	}
 
 	private void initActiveCriteriaPanel() {
-		Label titleLabel = new Label("Rule Criteria");
+		Label titleLabel = new Label("Active Checks");
 		titleLabel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
 		myCriteriaPanel.add(titleLabel);
 
@@ -190,7 +190,10 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
 		myCriteriaPanel.add(contentPanel);
 
-		contentPanel.add(new Label("This rule is active, meaning that it manually sends messages to proxied " + "service implementations on a periodic basis and then checks the outcome"));
+		contentPanel.add(new Label("This rule is active, meaning that it manually sends messages to proxied " 
+				+ "service implementations on a periodic basis and then checks the outcome. Each row in the "
+				+ "table below represents one message that will be sent to all backing URLs for one version "
+				+ "of one service. A rule may have multiple active checks."));
 
 		PCellTable<DtoMonitorRuleActiveCheck> grid = new PCellTable<DtoMonitorRuleActiveCheck>();
 		grid.setEmptyTableWidget(new Label("No checks have been defined for this rule."));

@@ -1,0 +1,61 @@
+package net.svcret.admin.shared.model;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
+
+import net.svcret.admin.shared.util.XmlConstants;
+
+@XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="MonitorRuleActiveCheckOutcomeList")
+@XmlAccessorType(XmlAccessType.FIELD)
+public class DtoMonitorRuleActiveCheckOutcomeList extends BaseGObject {
+
+	private static final long serialVersionUID = 1L;
+	
+	@XmlElement(name="Outcome")
+	private List<DtoMonitorRuleActiveCheckOutcome> myOutcomes;
+	
+	@XmlElement(name="Url")
+	private String myUrl;
+
+	@XmlElement(name="UrlId")
+	private String myUrlId;
+
+	@XmlElement(name="UrlPid")	
+	private long myUrlPid;
+
+	public List<DtoMonitorRuleActiveCheckOutcome> getOutcomes() {
+		if (myOutcomes==null) {
+			myOutcomes=new ArrayList<DtoMonitorRuleActiveCheckOutcome>();
+		}
+		return myOutcomes;
+	}
+
+	public String getUrl() {
+		return myUrl;
+	}
+
+	public String getUrlId() {
+		return myUrlId;
+	}
+
+	public long getUrlPid() {
+		return myUrlPid;
+	}
+
+	public void setUrl(String theUrl) {
+		myUrl = theUrl;
+	}
+
+	public void setUrlId(String theUrlId) {
+		myUrlId = theUrlId;
+	}
+
+	public void setUrlPid(long theUrlPid) {
+		myUrlPid = theUrlPid;
+	}
+}
