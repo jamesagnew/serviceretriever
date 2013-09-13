@@ -470,9 +470,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 				Map<Long, int[]> faultCount = detailedStats.getMethodPidToFaultCount();
 				Map<Long, int[]> failCount = detailedStats.getMethodPidToFailCount();
 				Map<Long, int[]> secFailCount = detailedStats.getMethodPidToSecurityFailCount();
-				@SuppressWarnings("unchecked")
 				int total1 = addToTotal(successCount.get(o1), faultCount.get(o1), failCount.get(o1), secFailCount.get(o1));
-				@SuppressWarnings("unchecked")
 				int total2 = addToTotal(successCount.get(o2), faultCount.get(o2), failCount.get(o2), secFailCount.get(o2));
 				return total2 - total1;
 			}

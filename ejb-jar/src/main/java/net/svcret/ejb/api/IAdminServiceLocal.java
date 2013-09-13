@@ -6,5 +6,4 @@ import javax.ejb.Local;
 public interface IAdminServiceLocal extends IBaseAdminService {
 
 
-
 }

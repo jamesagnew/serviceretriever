@@ -6,6 +6,7 @@ import javax.ejb.Local;
 
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersUser;
@@ -17,7 +18,7 @@ public interface ISecurityService {
 
 	void loadUserCatalogIfNeeded();
 
-	PersUser saveServiceUser(PersUser theUser) throws ProcessingException;
+	PersUser saveServiceUser(PersUser theUser) throws UnexpectedFailureException;
 
 	public class AuthorizationRequestBean {
 		private BasePersAuthenticationHost myAuthenticationHost;

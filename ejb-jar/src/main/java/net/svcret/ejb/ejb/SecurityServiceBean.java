@@ -24,6 +24,7 @@ import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.ISecurityService;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
@@ -209,7 +210,7 @@ public class SecurityServiceBean implements ISecurityService {
 	}
 
 	@Override
-	public PersUser saveServiceUser(PersUser theUser) throws ProcessingException {
+	public PersUser saveServiceUser(PersUser theUser) throws  UnexpectedFailureException {
 		incrementStateVersion();
 		myBroadcastSender.notifyUserCatalogChanged();
 		return myDao.saveServiceUser(theUser);

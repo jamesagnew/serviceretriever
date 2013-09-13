@@ -12,6 +12,7 @@ import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.ejb.log.BaseUnflushed;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.BasePersSavedTransaction;
@@ -137,7 +138,7 @@ public interface IDao {
 
 	<P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> O getOrCreateStats(P thePk);
 
-	PersStickySessionUrlBinding getOrCreateStickySessionUrlBinding(PersStickySessionUrlBindingPk theBindingPk, PersServiceVersionUrl theUrlToUseIfNoneExists) throws ProcessingException;
+	PersStickySessionUrlBinding getOrCreateStickySessionUrlBinding(PersStickySessionUrlBindingPk theBindingPk, PersServiceVersionUrl theUrlToUseIfNoneExists) throws UnexpectedFailureException;
 
 	PersStickySessionUrlBinding getOrCreateStickySessionUrlBindingInNewTransaction(PersStickySessionUrlBindingPk theBindingPk, PersServiceVersionUrl theUrlToUseIfNoneExists);
 

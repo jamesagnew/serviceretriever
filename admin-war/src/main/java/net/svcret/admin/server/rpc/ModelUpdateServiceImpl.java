@@ -1,6 +1,7 @@
 package net.svcret.admin.server.rpc;
 
-import static org.apache.commons.lang3.StringUtils.*;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,6 +45,7 @@ import net.svcret.admin.shared.model.PartialUserListRequest;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.api.IAdminServiceLocal;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.util.Validate;
 
 /**
@@ -73,6 +75,9 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		} catch (ProcessingException e) {
 			ourLog.warn("Failed to add domain", e);
 			throw new ServiceFailureException("Failed to add domain: " + e.getMessage());
+		} catch (UnexpectedFailureException e) {
+			ourLog.warn("Failed to add domain", e);
+			throw new ServiceFailureException("Failed to add domain: " + e.getMessage());
 		}
 	}
 
@@ -87,6 +92,9 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		try {
 			return myAdminSvc.addService(theDomainPid, theId, theName, theActive);
 		} catch (ProcessingException e) {
+			ourLog.warn("Failed to add domain", e);
+			throw new ServiceFailureException("Failed to add domain: " + e.getMessage());
+		} catch (UnexpectedFailureException e) {
 			ourLog.warn("Failed to add domain", e);
 			throw new ServiceFailureException("Failed to add domain: " + e.getMessage());
 		}
@@ -133,6 +141,9 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 			} catch (ProcessingException e) {
 				ourLog.error("Failed to create domain " + theCreateDomainId, e);
 				throw new ServiceFailureException("Failed to create domain: " + theCreateDomainId + " - " + e.getMessage());
+			} catch (UnexpectedFailureException e) {
+				ourLog.error("Failed to create domain " + theCreateDomainId, e);
+				throw new ServiceFailureException("Failed to create domain: " + theCreateDomainId + " - " + e.getMessage());
 			}
 		} else {
 			domain = theExistingDomainPid;
@@ -143,6 +154,9 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 			try {
 				service = myAdminSvc.addService(domain, theCreateServiceId, theCreateServiceId, true).getPid();
 			} catch (ProcessingException e) {
+				ourLog.error("Failed to create service " + theCreateServiceId, e);
+				throw new ServiceFailureException("Failed to create service: " + theCreateDomainId + " - " + e.getMessage());
+			} catch (UnexpectedFailureException e) {
 				ourLog.error("Failed to create service " + theCreateServiceId, e);
 				throw new ServiceFailureException("Failed to create service: " + theCreateDomainId + " - " + e.getMessage());
 			}
@@ -156,6 +170,9 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to add service version", e);
 			throw new ServiceFailureException(e.getMessage());
+		} catch (UnexpectedFailureException e) {
+			ourLog.error("Failed to add service version", e);
+			throw new ServiceFailureException(e.getMessage());
 		}
 
 		AddServiceVersionResponse retVal = new AddServiceVersionResponse();
@@ -166,10 +183,16 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		} catch (ProcessingException e) {
 			ourLog.error("Failure when adding a service version", e);
 			throw new ServiceFailureException(e.getMessage());
+		} catch (UnexpectedFailureException e) {
+			ourLog.error("Failure when adding a service version", e);
+			throw new ServiceFailureException(e.getMessage());
 		}
 		try {
 			retVal.setNewService(myAdminSvc.getServiceByPid(service));
 		} catch (ProcessingException e) {
+			ourLog.error("Failed to create service version", e);
+			throw new ServiceFailureException("Failed to create service version - " + e.getMessage());
+		} catch (UnexpectedFailureException e) {
 			ourLog.error("Failed to create service version", e);
 			throw new ServiceFailureException("Failed to create service version - " + e.getMessage());
 		}
@@ -260,7 +283,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 
 		try {
 			return myAdminSvc.loadConfig();
-		} catch (ProcessingException e) {
+		} catch (UnexpectedFailureException e) {
 			ourLog.error("Failed to load config", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
@@ -369,6 +392,9 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 			} catch (ProcessingException e) {
 				ourLog.error("Failed to load monitor rules", e);
 				throw new ServiceFailureException(e.getMessage());
+			} catch (UnexpectedFailureException e) {
+				ourLog.error("Failed to load monitor rules", e);
+				throw new ServiceFailureException(e.getMessage());
 			}
 		}
 
@@ -427,7 +453,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 
 		try {
 			return myAdminSvc.loadServiceVersionDetailedStats(theVersionPid);
-		} catch (ProcessingException e) {
+		} catch (UnexpectedFailureException e) {
 			ourLog.error("Failed to load detailed stats", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
@@ -449,7 +475,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 
 			try {
 				serviceAndResources = myAdminSvc.loadServiceVersion(theServiceVersionPid);
-			} catch (ProcessingException e) {
+			} catch (UnexpectedFailureException e) {
 				ourLog.error("Failed to load service version", e);
 				throw new ServiceFailureException(e.getMessage());
 			}
@@ -480,6 +506,9 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to load user " + thePid, e);
 			throw new ServiceFailureException(e.getMessage());
+		} catch (UnexpectedFailureException e) {
+			ourLog.error("Failed to load user " + thePid, e);
+			throw new ServiceFailureException(e.getMessage());
 		}
 	}
 
@@ -493,6 +522,9 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 			try {
 				retVal = myAdminSvc.loadUsers(theRequest);
 			} catch (ProcessingException e) {
+				ourLog.error("Failed to load users", e);
+				throw new ServiceFailureException(e.getMessage());
+			} catch (UnexpectedFailureException e) {
 				ourLog.error("Failed to load users", e);
 				throw new ServiceFailureException(e.getMessage());
 			}
@@ -523,6 +555,9 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 			try {
 				serviceAndResources = myAdminSvc.loadSoap11ServiceVersionFromWsdl(theService, theWsdlUrl);
 			} catch (ProcessingException e) {
+				ourLog.error("Failed to load service version from WSDL", e);
+				throw new ServiceFailureException(e.getMessage());
+			} catch (UnexpectedFailureException e) {
 				ourLog.error("Failed to load service version from WSDL", e);
 				throw new ServiceFailureException(e.getMessage());
 			}
@@ -569,11 +604,17 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to delete domain", e);
 			throw new ServiceFailureException(e.getMessage());
+		} catch (UnexpectedFailureException e) {
+			ourLog.error("Failed to delete domain", e);
+			throw new ServiceFailureException(e.getMessage());
 		}
 
 		try {
 			return myAdminSvc.loadDomainList();
 		} catch (ProcessingException e) {
+			ourLog.error("Failed to load domain list", e);
+			throw new ServiceFailureException(e.getMessage());
+		} catch (UnexpectedFailureException e) {
 			ourLog.error("Failed to load domain list", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
@@ -590,6 +631,9 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		try {
 			return myAdminSvc.deleteService(theServicePid);
 		} catch (ProcessingException e) {
+			ourLog.error("Failed to delete service", e);
+			throw new ServiceFailureException(e.getMessage());
+		} catch (UnexpectedFailureException e) {
 			ourLog.error("Failed to delete service", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
@@ -609,6 +653,9 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to delete service version", e);
 			throw new ServiceFailureException(e.getMessage());
+		} catch (UnexpectedFailureException e) {
+			ourLog.error("Failed to delete service version", e);
+			throw new ServiceFailureException(e.getMessage());
 		}
 
 	}
@@ -625,7 +672,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 				return getMock().resetCircuitBreakerForServiceVersionUrl(theUrlPid);
 			}
 			return myAdminSvc.resetCircuitBreaker(theUrlPid);
-		} catch (ProcessingException e) {
+		} catch (UnexpectedFailureException e) {
 			ourLog.error("Failed to reset circuit breaker", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
@@ -659,7 +706,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 
 		try {
 			myAdminSvc.saveConfig(theConfig);
-		} catch (ProcessingException e) {
+		} catch (UnexpectedFailureException e) {
 			ourLog.error("Failed to save config", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
@@ -676,6 +723,9 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		try {
 			return myAdminSvc.saveDomain(theDomain);
 		} catch (ProcessingException e) {
+			ourLog.error("Failed to save domain", e);
+			throw new ServiceFailureException(e.getMessage());
+		} catch (UnexpectedFailureException e) {
 			ourLog.error("Failed to save domain", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
@@ -711,6 +761,9 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to save rule", e);
 			throw new ServiceFailureException(e.getMessage());
+		} catch (UnexpectedFailureException e) {
+			ourLog.error("Failed to save rule", e);
+			throw new ServiceFailureException(e.getMessage());
 		}
 	}
 
@@ -723,6 +776,9 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		try {
 			return myAdminSvc.saveService(theService);
 		} catch (ProcessingException e) {
+			ourLog.error("Failed to save service", e);
+			throw new ServiceFailureException(e.getMessage());
+		} catch (UnexpectedFailureException e) {
 			ourLog.error("Failed to save service", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
@@ -751,6 +807,9 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		try {
 			myAdminSvc.saveUser(theUser);
 		} catch (ProcessingException e) {
+			ourLog.error("Failed to save user", e);
+			throw new ServiceFailureException(e.getMessage());
+		} catch (UnexpectedFailureException e) {
 			ourLog.error("Failed to save user", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
@@ -789,6 +848,11 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	 */
 	void setAdminSvc(IAdminServiceLocal theAdminSvc) {
 		myAdminSvc = theAdminSvc;
+	}
+
+	@Override
+	public BaseGMonitorRule loadMonitorRule(long theRulePid) {
+		return myAdminSvc.loadMonitorRuleAndDetailedSatistics(theRulePid);
 	}
 
 }

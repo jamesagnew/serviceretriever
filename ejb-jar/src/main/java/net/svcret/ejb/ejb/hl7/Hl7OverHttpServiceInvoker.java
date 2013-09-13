@@ -22,6 +22,7 @@ import net.svcret.ejb.ejb.BaseServiceInvoker;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
@@ -103,6 +104,9 @@ public class Hl7OverHttpServiceInvoker extends BaseServiceInvoker implements ISe
 			try {
 				dbSvcVer = myServiceRegistry.saveServiceVersion(dbSvcVer);
 			} catch (ProcessingException e) {
+				ourLog.error("Failed to auto-create method", e);
+				throw new InvocationRequestFailedException(e, "Failed to auto-create method '" + messageType + "'. Error was: " + e.getMessage());		
+			} catch (UnexpectedFailureException e) {
 				ourLog.error("Failed to auto-create method", e);
 				throw new InvocationRequestFailedException(e, "Failed to auto-create method '" + messageType + "'. Error was: " + e.getMessage());		
 			}

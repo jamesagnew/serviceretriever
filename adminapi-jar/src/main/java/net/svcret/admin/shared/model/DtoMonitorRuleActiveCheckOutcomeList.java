@@ -58,4 +58,5 @@ public class DtoMonitorRuleActiveCheckOutcomeList extends BaseGObject {
 	public void setUrlPid(long theUrlPid) {
 		myUrlPid = theUrlPid;
 	}
+
 }

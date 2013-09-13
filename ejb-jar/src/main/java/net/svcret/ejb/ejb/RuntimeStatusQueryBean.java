@@ -20,7 +20,7 @@ import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.ejb.AdminServiceBean.IWithStats;
-import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStatsPk;
 import net.svcret.ejb.model.entity.BasePersStats;
@@ -72,7 +72,7 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 	}
 
 	@Override
-	public void extract60MinuteMethodStats(final PersServiceVersionMethod theMethod, StatsAccumulator theAccumulator) throws ProcessingException {
+	public void extract60MinuteMethodStats(final PersServiceVersionMethod theMethod, StatsAccumulator theAccumulator) throws UnexpectedFailureException {
 		IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> operator = new StatsAdderOperator<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats>(
 				theAccumulator);
 		IStatsPkBuilder<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> builder = new IStatsPkBuilder<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats>() {
@@ -86,7 +86,7 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 	}
 
 	@Override
-	public void extract60MinuteServiceVersionUrlStatistics(final PersServiceVersionUrl theUrl, StatsAccumulator theAccumulator) throws ProcessingException {
+	public void extract60MinuteServiceVersionUrlStatistics(final PersServiceVersionUrl theUrl, StatsAccumulator theAccumulator) throws UnexpectedFailureException {
 		StatsAdderOperator<PersInvocationUrlStatsPk, PersInvocationUrlStats> operator = new StatsAdderOperator<PersInvocationUrlStatsPk, PersInvocationUrlStats>(theAccumulator);
 		IStatsPkBuilder<PersInvocationUrlStatsPk, PersInvocationUrlStats> builder = new IStatsPkBuilder<PersInvocationUrlStatsPk, PersInvocationUrlStats>() {
 			@Override
@@ -99,7 +99,7 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 	}
 
 	@Override
-	public void extract60MinuteUserStats(final PersUser theUser, StatsAccumulator theAccumulator) throws ProcessingException {
+	public void extract60MinuteUserStats(final PersUser theUser, StatsAccumulator theAccumulator) throws UnexpectedFailureException {
 		PersUser user = myDao.getUser(theUser.getPid());
 		if (user == null) {
 			throw new IllegalArgumentException("Unknown user PID " + theUser.getPid());
@@ -220,7 +220,7 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 	}
 
 	private <P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> Date doWithStatsByMinute(int theNumberOfMinutes, IWithStats<P, O> theOperator, IStatsPkBuilder<P, O> theBuilder)
-			throws ProcessingException {
+			throws  UnexpectedFailureException {
 		Date start = AdminServiceBean.getDateXMinsAgo(theNumberOfMinutes);
 		Date end = new Date();
 		doWithStatsByMinute(theOperator, theBuilder, start, end);
@@ -229,13 +229,13 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 	}
 
 	private <P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> void doWithStatsByMinute(int theMinutes, StatsAccumulator theAccumulator, IWithStats<P, O> operator,
-			IStatsPkBuilder<P, O> builder) throws ProcessingException {
+			IStatsPkBuilder<P, O> builder) throws UnexpectedFailureException {
 		Date startTime = doWithStatsByMinute(theMinutes, operator, builder);
 		theAccumulator.setFirstDate(startTime);
 	}
 
 	private <P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> void doWithStatsByMinute(IWithStats<P, O> theOperator, IStatsPkBuilder<P, O> thePkBuilder, Date start, Date end)
-			throws ProcessingException {
+			throws UnexpectedFailureException {
 		PersConfig config = myConfigSvc.getConfig();
 
 		Date date = start;
@@ -258,6 +258,11 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 	@VisibleForTesting
 	void setDaoForUnitTests(IDao theDao) {
 		myDao = theDao;
+	}
+
+	@VisibleForTesting
+	void setConfigSvcForUnitTests(IConfigService theSvc) {
+		myConfigSvc = theSvc;
 	}
 
 	public static class StatsAccumulator {

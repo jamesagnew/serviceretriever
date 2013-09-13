@@ -7,6 +7,7 @@ import javax.ejb.Local;
 
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
@@ -18,21 +19,22 @@ public interface IServiceRegistry {
 
 	/**
 	 * Load a service definition from a String containing an XML Service definition
+	 * @throws UnexpectedFailureException 
 	 */
 	// void loadServiceDefinition(String theXmlContents) throws
 	// InternalErrorException, ProcessingException;
 
-	void deleteHttpClientConfig(PersHttpClientConfig theConfig) throws ProcessingException;
+	void deleteHttpClientConfig(PersHttpClientConfig theConfig) throws ProcessingException, UnexpectedFailureException;
 
 	Collection<PersDomain> getAllDomains();
 
 	PersDomain getDomainByPid(Long theDomainPid);
 
-	PersDomain getOrCreateDomainWithId(String theId) throws ProcessingException;
+	PersDomain getOrCreateDomainWithId(String theId) throws ProcessingException, UnexpectedFailureException;
 
-	BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, ServiceProtocolEnum theProtocol, String theVersionId) throws ProcessingException;
+	BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, ServiceProtocolEnum theProtocol, String theVersionId) throws ProcessingException, UnexpectedFailureException;
 
-	PersService getOrCreateServiceWithId(PersDomain theDomain, String theId) throws ProcessingException;
+	PersService getOrCreateServiceWithId(PersDomain theDomain, String theId) throws ProcessingException, UnexpectedFailureException;
 
 	PersService getServiceByPid(Long theServicePid);
 
@@ -53,16 +55,16 @@ public interface IServiceRegistry {
 	 */
 	void reloadRegistryFromDatabase();
 
-	void removeDomain(PersDomain theDomain) throws ProcessingException;
+	void removeDomain(PersDomain theDomain) throws ProcessingException, UnexpectedFailureException;
 
-	PersServiceVersionUrl resetCircuitBreaker(long theUrlPid) throws ProcessingException;
+	PersServiceVersionUrl resetCircuitBreaker(long theUrlPid) throws  UnexpectedFailureException;
 
-	PersDomain saveDomain(PersDomain theDomain) throws ProcessingException;
+	PersDomain saveDomain(PersDomain theDomain) throws ProcessingException, UnexpectedFailureException;
 
-	PersHttpClientConfig saveHttpClientConfig(PersHttpClientConfig theConfig) throws ProcessingException;
+	PersHttpClientConfig saveHttpClientConfig(PersHttpClientConfig theConfig) throws ProcessingException, UnexpectedFailureException;
 
-	void saveService(PersService theService) throws ProcessingException;
+	void saveService(PersService theService) throws ProcessingException, UnexpectedFailureException;
 
-	BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theSv) throws ProcessingException;
+	BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theSv) throws  UnexpectedFailureException, ProcessingException;
 
 }

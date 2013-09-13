@@ -4,7 +4,6 @@ import java.util.Date;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.shared.model.BaseGAuthHost;
-import net.svcret.admin.shared.model.BaseGMonitorRule;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
@@ -255,20 +254,20 @@ public class Model {
 		}
 	}
 
-	public void loadMonitorRule(final long theRulePid, final IAsyncLoadCallback<BaseGMonitorRule> theIAsyncLoadCallback) {
-		loadMonitorRuleList(new IAsyncLoadCallback<GMonitorRuleList>() {
-			@Override
-			public void onSuccess(GMonitorRuleList theResult) {
-				BaseGMonitorRule rule = theResult.getRuleByPid(theRulePid);
-				if (rule == null) {
-					handleFailure(new Exception("Unknown rule: " + theRulePid));
-					return;
-				}
-
-				theIAsyncLoadCallback.onSuccess(rule);
-			}
-		});
-	}
+//	public void loadMonitorRule(final long theRulePid, final IAsyncLoadCallback<BaseGMonitorRule> theIAsyncLoadCallback) {
+//		loadMonitorRuleList(new IAsyncLoadCallback<GMonitorRuleList>() {
+//			@Override
+//			public void onSuccess(GMonitorRuleList theResult) {
+//				BaseGMonitorRule rule = theResult.getRuleByPid(theRulePid);
+//				if (rule == null) {
+//					handleFailure(new Exception("Unknown rule: " + theRulePid));
+//					return;
+//				}
+//
+//				theIAsyncLoadCallback.onSuccess(rule);
+//			}
+//		});
+//	}
 
 	public void loadMonitorRuleList(final IAsyncLoadCallback<GMonitorRuleList> theIAsyncLoadCallback) {
 		if (myMonitorRuleList == null) {

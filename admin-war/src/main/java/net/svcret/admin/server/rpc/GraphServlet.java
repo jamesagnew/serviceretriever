@@ -9,13 +9,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.io.IOUtils;
-
 import net.svcret.admin.shared.model.TimeRange;
 import net.svcret.admin.shared.util.ChartParams;
 import net.svcret.admin.shared.util.ChartTypeEnum;
 import net.svcret.ejb.api.IChartingServiceBean;
-import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
+
+import org.apache.commons.io.IOUtils;
 
 import com.tractionsoftware.gwt.user.server.UTCDateTimeUtils;
 
@@ -36,7 +36,7 @@ public class GraphServlet extends HttpServlet {
 		byte[] graph;
 		try {
 			graph = myChartSvc.renderLatencyGraphForServiceVersion(pid, theRange);
-		} catch (ProcessingException e) {
+		} catch (UnexpectedFailureException e) {
 			throw new ServletException(e);
 		}
 
@@ -104,7 +104,7 @@ public class GraphServlet extends HttpServlet {
 		byte[] graph;
 		try {
 			graph = myChartSvc.renderUserMethodGraphForUser(pid, theRange);
-		} catch (ProcessingException e) {
+		} catch (UnexpectedFailureException e) {
 			throw new ServletException(e);
 		}
 
@@ -119,7 +119,7 @@ public class GraphServlet extends HttpServlet {
 		byte[] graph;
 		try {
 			graph = myChartSvc.renderPayloadSizeGraphForServiceVersion(pid, theRange);
-		} catch (ProcessingException e) {
+		} catch (UnexpectedFailureException e) {
 			throw new ServletException(e);
 		}
 
@@ -134,7 +134,7 @@ public class GraphServlet extends HttpServlet {
 		byte[] graph;
 		try {
 			graph = myChartSvc.renderThrottlingGraphForServiceVersion(pid, theRange);
-		} catch (ProcessingException e) {
+		} catch (UnexpectedFailureException e) {
 			throw new ServletException(e);
 		}
 
@@ -149,7 +149,7 @@ public class GraphServlet extends HttpServlet {
 		byte[] graph;
 		try {
 			graph = myChartSvc.renderUsageGraphForServiceVersion(pid, theRange);
-		} catch (ProcessingException e) {
+		} catch (UnexpectedFailureException e) {
 			throw new ServletException(e);
 		}
 

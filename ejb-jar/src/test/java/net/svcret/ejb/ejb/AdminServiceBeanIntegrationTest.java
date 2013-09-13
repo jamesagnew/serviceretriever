@@ -56,7 +56,6 @@ import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.api.IServiceInvokerSoap11;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
@@ -105,10 +104,8 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		// newEntityManager();
 	}
 
-	private static long ourNextPid;
-
 	@Test
-	public void testSaveHttpClientConfig() throws ProcessingException {
+	public void testSaveHttpClientConfig() throws Exception {
 		createEverything();
 		newEntityManager();
 
@@ -192,7 +189,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testLibrary() throws ProcessingException {
+	public void testLibrary() throws Exception {
 
 		newEntityManager();
 
@@ -319,7 +316,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testLoadAndSaveSvcVerMethods() throws ProcessingException {
+	public void testLoadAndSaveSvcVerMethods() throws Exception {
 
 		newEntityManager();
 
@@ -385,7 +382,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testAddMonitorRule() throws ProcessingException {
+	public void testAddMonitorRule() throws Exception {
 
 		newEntityManager();
 
@@ -459,7 +456,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testLoadAndSaveSvcVerClientSecurity() throws ProcessingException {
+	public void testLoadAndSaveSvcVerClientSecurity() throws Exception {
 
 		newEntityManager();
 
@@ -531,7 +528,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	public void testLoadAndSaveSvcVerServerSecurityNoAuthHost() throws ProcessingException {
+	public void testLoadAndSaveSvcVerServerSecurityNoAuthHost() throws Exception {
 
 		newEntityManager();
 
@@ -565,7 +562,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testLoadAndSaveSvcVerServerSecurity() throws ProcessingException {
+	public void testLoadAndSaveSvcVerServerSecurity() throws Exception {
 
 		newEntityManager();
 
@@ -635,7 +632,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testLoadAndSaveSvcVerSoap11() throws ProcessingException {
+	public void testLoadAndSaveSvcVerSoap11() throws Exception {
 
 		newEntityManager();
 
@@ -705,7 +702,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testLoadAndSaveSvcVerJsonRpc20() throws ProcessingException {
+	public void testLoadAndSaveSvcVerJsonRpc20() throws Exception {
 
 		newEntityManager();
 
@@ -760,7 +757,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testAddDomain() throws ProcessingException {
+	public void testAddDomain() throws Exception {
 		newEntityManager();
 
 		GDomain domain = mySvc.addDomain("domain_id", "domain_name");
@@ -772,7 +769,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testSaveConfigWithUrlBases() throws ProcessingException {
+	public void testSaveConfigWithUrlBases() throws Exception {
 		newEntityManager();
 
 		GConfig config = mySvc.loadConfig();
@@ -793,7 +790,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	public void testAddDomainDuplicate() throws ProcessingException {
+	public void testAddDomainDuplicate() throws Exception {
 		newEntityManager();
 
 		mySvc.addDomain("domain_id2", "domain_name");
@@ -805,7 +802,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testAddAndSaveService() throws ProcessingException {
+	public void testAddAndSaveService() throws Exception {
 		newEntityManager();
 
 		GDomain domain = mySvc.addDomain("domain_id3", "domain_name");
@@ -828,7 +825,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testRenameServiceVersion() throws ProcessingException {
+	public void testRenameServiceVersion() throws Exception {
 		newEntityManager();
 
 		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
@@ -867,7 +864,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testAddServiceVersion() throws ProcessingException {
+	public void testAddServiceVersion() throws Exception {
 		newEntityManager();
 
 		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
@@ -913,7 +910,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testDeleteServiceVersion() throws ProcessingException {
+	public void testDeleteServiceVersion() throws Exception {
 		newEntityManager();
 
 		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
@@ -966,7 +963,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	public void testAddServiceWithDuplicates() throws ProcessingException {
+	public void testAddServiceWithDuplicates() throws Exception {
 		newEntityManager();
 
 		GDomain domain = mySvc.addDomain("domain_id4", "domain_name");
@@ -980,7 +977,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testDeleteDomain() throws ProcessingException {
+	public void testDeleteDomain() throws Exception {
 
 		createEverything();
 
@@ -997,7 +994,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testDeleteUser() throws ProcessingException {
+	public void testDeleteUser() throws Exception {
 
 		createEverything();
 
@@ -1017,7 +1014,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 	}
 
-	private GDomain createEverything() throws ProcessingException {
+	private GDomain createEverything() throws Exception {
 		newEntityManager();
 
 		mySecSvc.loadUserCatalogIfNeeded();
@@ -1138,7 +1135,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testSaveDomain() throws ProcessingException {
+	public void testSaveDomain() throws Exception {
 
 		newEntityManager();
 
@@ -1162,7 +1159,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testLoadWsdl() throws ProcessingException {
+	public void testLoadWsdl() throws Exception {
 
 		DtoServiceVersionSoap11 ver = new DtoServiceVersionSoap11();
 
@@ -1204,7 +1201,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testLoad60MinuteStats() throws ProcessingException {
+	public void testLoad60MinuteStats() throws Exception {
 		GDomain domain = createEverything();
 		GService svc = domain.getServiceList().get(0);
 		BaseGServiceVersion svcVer = svc.getVersionList().get(0);
@@ -1278,7 +1275,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testSaveUser() throws ProcessingException {
+	public void testSaveUser() throws Exception {
 		newEntityManager();
 
 		GDomain d1 = mySvc.addDomain("asv_did1", "asv_did1");

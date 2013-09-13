@@ -26,7 +26,7 @@ public interface IServiceInvoker {
 	 *            The headers which arrived on the incoming request
 	 * @return The headers which should be passed to the backing URL requests
 	 */
-	Map<String, List<String>> createRequestHeaders(Map<String, List<String>> theIncomingHeaders);
+	Map<String, List<String>> createBackingRequestHeadersForMethodInvocation(Map<String, List<String>> theIncomingHeaders);
 
 	/**
 	 * Given a URL to a service definition page (the type of page is dependent on the type of service, but the assumption is that this is something like a SOAP WSDL URL) loads a definition for that

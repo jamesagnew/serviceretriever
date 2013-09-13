@@ -24,6 +24,7 @@ import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
@@ -71,7 +72,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	}
 
 	@Override
-	public void deleteHttpClientConfig(PersHttpClientConfig theConfig) throws ProcessingException {
+	public void deleteHttpClientConfig(PersHttpClientConfig theConfig) throws ProcessingException, UnexpectedFailureException {
 		catalogHasChanged();
 		myDao.deleteHttpClientConfig(theConfig);
 	}
@@ -87,7 +88,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	}
 
 	@Override
-	public PersDomain getOrCreateDomainWithId(String theId) throws ProcessingException {
+	public PersDomain getOrCreateDomainWithId(String theId) throws ProcessingException, UnexpectedFailureException {
 		PersDomain orCreateDomainWithId = myDao.getOrCreateDomainWithId(theId);
 		if (orCreateDomainWithId.isNewlyCreated()) {
 			catalogHasChanged();
@@ -96,7 +97,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	}
 
 	@Override
-	public BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, ServiceProtocolEnum theProtocol, String theVersionId) throws ProcessingException {
+	public BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, ServiceProtocolEnum theProtocol, String theVersionId) throws ProcessingException, UnexpectedFailureException {
 		BasePersServiceVersion retVal = myDao.getOrCreateServiceVersionWithId(theService, theVersionId, theProtocol);
 		if (retVal.isNewlyCreated()) {
 			catalogHasChanged();
@@ -105,7 +106,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	}
 
 	@Override
-	public PersService getOrCreateServiceWithId(PersDomain theDomain, String theId) throws ProcessingException {
+	public PersService getOrCreateServiceWithId(PersDomain theDomain, String theId) throws ProcessingException, UnexpectedFailureException {
 		PersService retVal = myDao.getOrCreateServiceWithId(theDomain, theId);
 		if (retVal.isNewlyCreated()) {
 			catalogHasChanged();
@@ -186,13 +187,13 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	}
 
 	@Override
-	public void removeDomain(PersDomain theDomain) throws ProcessingException {
+	public void removeDomain(PersDomain theDomain) throws ProcessingException, UnexpectedFailureException {
 		catalogHasChanged();
 		myDao.removeDomain(theDomain);
 	}
 
 	@Override
-	public PersServiceVersionUrl resetCircuitBreaker(long theUrlPid) throws ProcessingException {
+	public PersServiceVersionUrl resetCircuitBreaker(long theUrlPid) throws UnexpectedFailureException {
 		PersServiceVersionUrl url = myDao.getServiceVersionUrlByPid(theUrlPid);
 		PersServiceVersionUrlStatus status = url.getStatus();
 
@@ -207,7 +208,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	}
 
 	@Override
-	public PersDomain saveDomain(PersDomain theDomain) throws ProcessingException {
+	public PersDomain saveDomain(PersDomain theDomain) throws ProcessingException, UnexpectedFailureException {
 		catalogHasChanged();
 		PersDomain retVal = myDao.saveDomain(theDomain);
 		reloadRegistryFromDatabase();
@@ -215,20 +216,20 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	}
 
 	@Override
-	public PersHttpClientConfig saveHttpClientConfig(PersHttpClientConfig theConfig) throws ProcessingException {
+	public PersHttpClientConfig saveHttpClientConfig(PersHttpClientConfig theConfig) throws ProcessingException, UnexpectedFailureException {
 		catalogHasChanged();
 		return myDao.saveHttpClientConfig(theConfig);
 	}
 
 	@Override
-	public void saveService(PersService theService) throws ProcessingException {
+	public void saveService(PersService theService) throws ProcessingException, UnexpectedFailureException {
 		catalogHasChanged();
 		myDao.saveService(theService);
 		reloadRegistryFromDatabase();
 	}
 
 	@Override
-	public BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theSv) throws ProcessingException {
+	public BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theSv) throws  UnexpectedFailureException, ProcessingException {
 		catalogHasChanged();
 		// reloadRegistryFromDatabase();
 		return myDao.saveServiceVersion(theSv);
@@ -260,7 +261,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		}
 	}
 
-	private void catalogHasChanged() throws ProcessingException {
+	private void catalogHasChanged() throws UnexpectedFailureException {
 		incrementStateVersion();
 		myBroadcastSender.notifyServiceCatalogChanged();
 	}

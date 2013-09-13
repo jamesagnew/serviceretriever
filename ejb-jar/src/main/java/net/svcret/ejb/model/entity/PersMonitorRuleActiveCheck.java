@@ -23,6 +23,7 @@ import javax.persistence.Table;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcomeList;
 
 //@formatter:off
 @Entity
@@ -172,7 +173,7 @@ public class PersMonitorRuleActiveCheck extends BasePersObject {
 		myServiceVersion = theSvcVersion;
 	}
 
-	public DtoMonitorRuleActiveCheck toDto() {
+	public DtoMonitorRuleActiveCheck toDto(boolean theLoadDetailedStatistics) {
 		DtoMonitorRuleActiveCheck retVal = new DtoMonitorRuleActiveCheck();
 		retVal.setCheckFrequencyNum(getCheckFrequencyNum());
 		retVal.setCheckFrequencyUnit(getCheckFrequencyUnit());
@@ -184,7 +185,13 @@ public class PersMonitorRuleActiveCheck extends BasePersObject {
 		retVal.setPid(getPid());
 		retVal.setServiceVersionPid(getServiceVersion().getPid());
 		
-		getRecentOutcomes()
+		if (theLoadDetailedStatistics) {
+			retVal.setRecentOutcomes(new DtoMonitorRuleActiveCheckOutcomeList());
+			for (PersMonitorRuleActiveCheckOutcome next : getRecentOutcomes()) {
+				retVal.getRecentOutcomes().getOutcomes().add(next.toDto());
+			}
+		}
+//		getRecentOutcomes()
 		
 		return retVal;
 	}

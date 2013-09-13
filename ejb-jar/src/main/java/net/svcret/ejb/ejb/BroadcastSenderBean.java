@@ -14,7 +14,7 @@ import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 
 import net.svcret.ejb.api.IBroadcastSender;
-import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.PersStickySessionUrlBinding;
 
 import org.apache.commons.lang3.Validate;
@@ -29,14 +29,14 @@ public class BroadcastSenderBean implements IBroadcastSender {
 	@Resource(mappedName = BroadcastListenerBean.BUSINESS_BROADCAST_TOPIC)
 	private Topic myBusinessBroadcastTopic;
 
-	private void sendMessage(String theText) throws ProcessingException {
+	private void sendMessage(String theText) throws UnexpectedFailureException {
 		Long theLongArgument = null;
 
 		sendMessage(theText, theLongArgument);
 
 	}
 
-	private void sendMessage(String theText, Serializable theLongArgument) throws ProcessingException {
+	private void sendMessage(String theText, Serializable theLongArgument) throws UnexpectedFailureException {
 		Validate.notBlank(theText);
 
 		ourLog.info("Sending broadcast message: {}", theText);
@@ -56,7 +56,7 @@ public class BroadcastSenderBean implements IBroadcastSender {
 
 			sender.send(msg);
 		} catch (JMSException e) {
-			throw new ProcessingException(e);
+			throw new UnexpectedFailureException(e);
 		} finally {
 			if (sender != null) {
 				try {
@@ -85,32 +85,32 @@ public class BroadcastSenderBean implements IBroadcastSender {
 	}
 
 	@Override
-	public void notifyUserCatalogChanged() throws ProcessingException {
+	public void notifyUserCatalogChanged() throws UnexpectedFailureException {
 		sendMessage(BroadcastListenerBean.UPDATE_USER_CATALOG);
 	}
 
 	@Override
-	public void notifyServiceCatalogChanged() throws ProcessingException {
+	public void notifyServiceCatalogChanged() throws UnexpectedFailureException {
 		sendMessage(BroadcastListenerBean.UPDATE_SERVICE_REGISTRY);
 	}
 
 	@Override
-	public void notifyConfigChanged() throws ProcessingException {
+	public void notifyConfigChanged() throws UnexpectedFailureException {
 		sendMessage(BroadcastListenerBean.UPDATE_CONFIG);
 	}
 
 	@Override
-	public void monitorRulesChanged() throws ProcessingException {
+	public void monitorRulesChanged() throws UnexpectedFailureException {
 		sendMessage(BroadcastListenerBean.UPDATE_MONITOR_RULES);
 	}
 
 	@Override
-	public void notifyUrlStatusChanged(Long thePid) throws ProcessingException {
+	public void notifyUrlStatusChanged(Long thePid) throws UnexpectedFailureException {
 		sendMessage(BroadcastListenerBean.URL_STATUS_CHANGED);
 	}
 
 	@Override
-	public void notifyNewStickySession(PersStickySessionUrlBinding theExisting) throws ProcessingException {
+	public void notifyNewStickySession(PersStickySessionUrlBinding theExisting) throws UnexpectedFailureException {
 		sendMessage(BroadcastListenerBean.STICKY_SESSION_CHANGED, theExisting.toDao());
 	}
 

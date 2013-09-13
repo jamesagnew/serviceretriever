@@ -31,6 +31,7 @@ import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.BasePersServiceCatalogItem;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -428,7 +429,7 @@ public class MonitorServiceBean implements IMonitorService {
 	}
 
 	@Override
-	public BasePersMonitorRule saveRule(BasePersMonitorRule theRule) throws ProcessingException {
+	public BasePersMonitorRule saveRule(BasePersMonitorRule theRule) throws UnexpectedFailureException {
 
 		BasePersMonitorRule rule;
 		if (theRule.getPid() != null) {

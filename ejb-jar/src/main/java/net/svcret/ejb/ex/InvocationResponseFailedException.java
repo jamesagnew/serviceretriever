@@ -9,6 +9,10 @@ public class InvocationResponseFailedException extends InvocationFailedException
 		super(theCause, theMessage, theResponse);
 	}
 
+	public InvocationResponseFailedException(String theMessage) {
+		super(theMessage);
+	}
+
 	private static final long serialVersionUID = 1L;
 
 }

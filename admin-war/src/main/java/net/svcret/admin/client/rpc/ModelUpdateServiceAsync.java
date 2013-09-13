@@ -43,15 +43,19 @@ public interface ModelUpdateServiceAsync {
 
 	void createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncommittedId, AsyncCallback<BaseGServiceVersion> theCallback);
 
+	void getLatestFailingMonitorRuleFiringForRulePids(AsyncCallback<Map<Long, GMonitorRuleFiring>> theIAsyncLoadCallback);
+
 	void loadConfig(AsyncCallback<GConfig> theAsyncCallback);
 
 	void loadLibraryMessage(long theMessagePid, AsyncCallback<DtoLibraryMessage> theAsyncCallback);
 
-	void loadLibraryMessages(HierarchyEnum theType, long thePid, AsyncCallback<Collection<DtoLibraryMessage>> theAsyncCallback);
-
 	void loadLibraryMessages(AsyncCallback<Collection<DtoLibraryMessage>> theAsyncCallback);
 
+	void loadLibraryMessages(HierarchyEnum theType, long thePid, AsyncCallback<Collection<DtoLibraryMessage>> theAsyncCallback);
+
 	void loadModelUpdate(ModelUpdateRequest theRequest, AsyncCallback<ModelUpdateResponse> callback);
+
+	void loadMonitorRule(long theRulePid, AsyncCallback<BaseGMonitorRule> theAsyncCallback);
 
 	void loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart, AsyncCallback<List<GMonitorRuleFiring>> theAsyncCallback);
 
@@ -85,6 +89,8 @@ public interface ModelUpdateServiceAsync {
 
 	void reportClientError(String theMessage, Throwable theException, AsyncCallback<Void> callback);
 
+	void resetCircuitBreakerForServiceVersionUrl(long theUrlPid, AsyncCallback<GServiceVersionUrl> theAsyncCallback);
+
 	void saveAuthenticationHost(BaseGAuthHost theAuthHost, AsyncCallback<GAuthenticationHostList> theCallback);
 
 	void saveConfig(GConfig theConfig, AsyncCallback<Void> theAsyncCallback);
@@ -102,9 +108,5 @@ public interface ModelUpdateServiceAsync {
 	void saveUser(GUser theUser, AsyncCallback<Void> theAsyncCallback);
 
 	void testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long theServiceVersionPid, AsyncCallback<GServiceVersionSingleFireResponse> theAsyncCallback);
-
-	void getLatestFailingMonitorRuleFiringForRulePids(AsyncCallback<Map<Long, GMonitorRuleFiring>> theIAsyncLoadCallback);
-
-	void resetCircuitBreakerForServiceVersionUrl(long theUrlPid, AsyncCallback<GServiceVersionUrl> theAsyncCallback);
 
 }

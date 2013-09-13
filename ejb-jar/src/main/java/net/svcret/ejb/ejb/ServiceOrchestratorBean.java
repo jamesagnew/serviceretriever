@@ -49,6 +49,7 @@ import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.ex.ThrottleException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -135,13 +136,13 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		try {
 			results = processInvokeService(theRequest, path, serviceVersion, theRequest.getRequestType(), theRequest.getQuery());
 		} catch (UnknownRequestException e) {
-			handleInvocationFailure(theRequest, serviceVersion, new InvocationRequestFailedException(e));
+			handleInvocationFailure(theRequest, serviceVersion, null,new InvocationRequestFailedException(e),null,null);
 			throw e;
 		} catch (InvocationFailedException e) {
-			handleInvocationFailure(theRequest, serviceVersion, e);
+			handleInvocationFailure(theRequest, serviceVersion, null,e,null,null);
 			throw new ProcessingException(e);
 		} catch (Exception e) {
-			handleInvocationFailure(theRequest, serviceVersion, new InvocationRequestFailedException(e));
+			handleInvocationFailure(theRequest, serviceVersion, null,new InvocationRequestFailedException(e),null,null);
 			throw new ProcessingException(e);
 		}
 
@@ -171,8 +172,21 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		return retVal;
 	}
 
-	private void handleInvocationFailure(HttpRequestBean theRequest, BasePersServiceVersion serviceVersion, InvocationFailedException e) throws ProcessingException {
+	private void handleInvocationFailure(HttpRequestBean theRequest, BasePersServiceVersion serviceVersion, PersServiceVersionMethod theMethodIfKnown, InvocationFailedException e,
+			PersUser theUserIfKnown, Long theThrottleDelayIfAnyAndKnown) throws ProcessingException{
 		theRequest.drainInputMessage();
+
+		if (theMethodIfKnown != null) {
+			try {
+				InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
+				invocationResponseResultsBean.setResponseType(ResponseTypeEnum.FAIL);
+				myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), theRequest.getRequestBody().length(), theMethodIfKnown, theUserIfKnown, null, invocationResponseResultsBean, theThrottleDelayIfAnyAndKnown);
+			} catch (UnexpectedFailureException e1) {
+				// Don't do anything except log here since we're already handling a failure by the
+				// time we get here so this is pretty much the last resort..
+				ourLog.error("Failed to record method invocation", e);
+			}
+		}
 
 		/*
 		 * TODO: add some kind of statistic recording for svcVer failed requests that don't have a method associated
@@ -272,12 +286,18 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 	private OrchestratorResponseBean invokeProxiedService(HttpRequestBean theRequest, InvocationResultsBean results, AuthorizationResultsBean theAuthorized, Long theThrottleTimeIfAny)
 			throws ProcessingException, SecurityFailureException, InvocationFailedDueToInternalErrorException {
+
 		if (theAuthorized != null && theAuthorized.isAuthorized() != AuthorizationOutcomeEnum.AUTHORIZED) {
 			InvocationResponseResultsBean invocationResponse = new InvocationResponseResultsBean();
 			invocationResponse.setResponseType(ResponseTypeEnum.SECURITY_FAIL);
 			invocationResponse.setResponseStatusMessage("Failed to authorize credentials");
 			// TODO: also pass authorization outcome to save it
-			myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), 0, results.getMethodDefinition(), theAuthorized.getAuthorizedUser(), null, invocationResponse, theThrottleTimeIfAny);
+			try {
+				myRuntimeStatus
+						.recordInvocationMethod(theRequest.getRequestTime(), 0, results.getMethodDefinition(), theAuthorized.getAuthorizedUser(), null, invocationResponse, theThrottleTimeIfAny);
+			} catch (UnexpectedFailureException e) {
+				throw new InvocationFailedDueToInternalErrorException(e);
+			}
 
 			// Log transaction
 			logTransaction(theRequest, results.getMethodDefinition(), theAuthorized, null, invocationResponse);
@@ -291,14 +311,15 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			retVal = processRequestResource(theRequest, results);
 			break;
 		case METHOD:
+			PersUser user = theAuthorized != null ? theAuthorized.getAuthorizedUser() : null;
 			try {
 				retVal = processRequestMethod(theRequest, results, theAuthorized, theThrottleTimeIfAny, true, null, theRequest.getRequestTime());
 			} catch (InvocationResponseFailedException e) {
-				handleInvocationFailure(theRequest, results.getMethodDefinition().getServiceVersion(), e);
+				handleInvocationFailure(theRequest, results.getMethodDefinition().getServiceVersion(), results.getMethodDefinition(), e, user, theThrottleTimeIfAny);
 				throw new ProcessingException(e);
 			} catch (RuntimeException e) {
-				handleInvocationFailure(theRequest, results.getMethodDefinition().getServiceVersion(), new InvocationResponseFailedException(e,
-						"Invocation failed due to ServiceRetriever internal error: " + e.getMessage(), null));
+				handleInvocationFailure(theRequest, results.getMethodDefinition().getServiceVersion(), results.getMethodDefinition(), new InvocationResponseFailedException(e,
+						"Invocation failed due to ServiceRetriever internal error: " + e.getMessage(), null), user, theThrottleTimeIfAny);
 				throw new ProcessingException(e);
 			}
 			break;
@@ -334,7 +355,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		}
 
 		if (results.getResultType() == ResultTypeEnum.METHOD) {
-			results.setMethodHeaders(svcInvoker.createRequestHeaders(theRequest.getRequestHeaders()));
+			results.setMethodHeaders(svcInvoker.createBackingRequestHeadersForMethodInvocation(theRequest.getRequestHeaders()));
 		}
 
 		results.setServiceInvoker(svcInvoker);
@@ -373,8 +394,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	}
 
 	private SidechannelOrchestratorResponseBean processRequestMethod(HttpRequestBean theRequest, InvocationResultsBean results, AuthorizationResultsBean authorized, Long theThrottleDelayIfAny,
-			boolean theRecordOutcome, PersServiceVersionUrl theForceUrl, Date theRequestStartedTime) throws ProcessingException, InvocationResponseFailedException,
-			InvocationFailedDueToInternalErrorException {
+			boolean theRecordOutcome, PersServiceVersionUrl theForceUrl, Date theRequestStartedTime) throws InvocationResponseFailedException, InvocationFailedDueToInternalErrorException {
 		SidechannelOrchestratorResponseBean retVal;
 		PersServiceVersionMethod method = results.getMethodDefinition();
 		BasePersServiceVersion serviceVersion = method.getServiceVersion();
@@ -385,12 +405,13 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 		UrlPoolBean urlPool;
 		if (theForceUrl == null) {
-			urlPool = myRuntimeStatus.buildUrlPool(method.getServiceVersion(), headers);
+			try {
+				urlPool = myRuntimeStatus.buildUrlPool(method.getServiceVersion(), headers);
+			} catch (UnexpectedFailureException e) {
+				throw new InvocationFailedDueToInternalErrorException(e);
+			}
 			if (urlPool.getPreferredUrl() == null) {
-				/*
-				 * TODO: record this failure? ALso should we allow throttled CB reset attempts when all URLs are failing?
-				 */
-				throw new ProcessingException("No URLs available to service this request!");
+				throw new InvocationResponseFailedException("No URLs available to service this request");
 			}
 		} else {
 			urlPool = new UrlPoolBean();
@@ -404,8 +425,17 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 		if (httpResponse.getSuccessfulUrl() == null) {
 			markUrlsFailed(httpResponse.getFailedUrls());
-			Failure exampleFailure = httpResponse.getFailedUrls().values().iterator().next();
-			throw new ProcessingException("All service URLs appear to be failing, unable to successfully invoke method. Example failure: " + exampleFailure.getExplanation());
+			Entry<PersServiceVersionUrl, Failure> entry = httpResponse.getFailedUrls().entrySet().iterator().next();
+			Failure exampleFailure = entry.getValue();
+			PersServiceVersionUrl exampleUrl = entry.getKey();
+			StringBuilder b = new StringBuilder();
+			b.append("All service URLs appear to be failing (");
+			b.append(httpResponse.getFailedUrls().size());
+			b.append(" URL in total), unable to successfully invoke method. URL '");
+			b.append(exampleUrl.getUrlId());
+			b.append("' failed with error: ");
+			b.append(exampleFailure.getExplanation());
+			throw new InvocationResponseFailedException(b.toString());
 		}
 
 		InvocationResponseResultsBean invocationResponse = results.getServiceInvoker().processInvocationResponse(httpResponse);
@@ -418,7 +448,11 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		PersUser user = ((authorized != null && authorized.isAuthorized() == AuthorizationOutcomeEnum.AUTHORIZED) ? authorized.getAuthorizedUser() : null);
 
 		if (theRecordOutcome) {
-			myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), requestLength, method, user, httpResponse, invocationResponse, theThrottleDelayIfAny);
+			try {
+				myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), requestLength, method, user, httpResponse, invocationResponse, theThrottleDelayIfAny);
+			} catch (UnexpectedFailureException e) {
+				throw new InvocationFailedDueToInternalErrorException(e);
+			}
 			logTransaction(theRequest, method, authorized, httpResponse, invocationResponse);
 		}
 

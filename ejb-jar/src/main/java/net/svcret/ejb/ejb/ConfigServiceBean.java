@@ -10,7 +10,7 @@ import net.svcret.admin.shared.model.RetrieverNodeTypeEnum;
 import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
-import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.PersConfig;
 
 import org.apache.commons.lang3.StringUtils;
@@ -54,7 +54,7 @@ public class ConfigServiceBean implements IConfigService {
 	}
 
 	@Override
-	public PersConfig getConfig() throws ProcessingException {
+	public PersConfig getConfig() throws UnexpectedFailureException {
 		if (myConfig != null) {
 			return myConfig;
 		}
@@ -77,7 +77,7 @@ public class ConfigServiceBean implements IConfigService {
 	}
 
 	@Override
-	public PersConfig saveConfig(PersConfig theConfig) throws ProcessingException {
+	public PersConfig saveConfig(PersConfig theConfig) throws UnexpectedFailureException {
 		PersConfig retVal = myDao.saveConfig(theConfig);
 		myBroadcastSender.notifyConfigChanged();
 		incrementStateVersion();

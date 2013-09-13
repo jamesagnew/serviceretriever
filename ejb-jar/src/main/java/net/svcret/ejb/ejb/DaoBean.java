@@ -34,6 +34,7 @@ import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.StatusesBean;
 import net.svcret.ejb.ejb.log.BaseUnflushed;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.BasePersSavedTransactionRecentMessage;
@@ -623,7 +624,7 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	public PersStickySessionUrlBinding getOrCreateStickySessionUrlBinding(PersStickySessionUrlBindingPk theBindingPk, PersServiceVersionUrl theUrlToUseIfNoneExists) throws ProcessingException {
+	public PersStickySessionUrlBinding getOrCreateStickySessionUrlBinding(PersStickySessionUrlBindingPk theBindingPk, PersServiceVersionUrl theUrlToUseIfNoneExists) throws UnexpectedFailureException {
 		for (int i = 0; true; i++) {
 			try {
 				return myThis.getOrCreateStickySessionUrlBindingInNewTransaction(theBindingPk, theUrlToUseIfNoneExists);
@@ -637,7 +638,7 @@ public class DaoBean implements IDao {
 					}
 					continue;
 				} else {
-					throw new ProcessingException(e);
+					throw new UnexpectedFailureException(e);
 				}
 			}
 		}

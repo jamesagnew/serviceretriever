@@ -1,17 +1,23 @@
 package net.svcret.admin.client.ui.config.monitor;
 
-import net.svcret.admin.shared.IAsyncLoadCallback;
+import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGMonitorRule;
+
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class EditMonitorRulePanel extends BaseMonitorRulePanel {
 
 	public EditMonitorRulePanel(long theRulePid) {
-		Model.getInstance().loadMonitorRule(theRulePid, new IAsyncLoadCallback<BaseGMonitorRule>(){
+		AdminPortal.MODEL_SVC.loadMonitorRule(theRulePid, new AsyncCallback<BaseGMonitorRule>(){
 			@Override
 			public void onSuccess(BaseGMonitorRule theResult) {
-				// TODO: clone this so that changes don't affect the cached version in memory until we save
 				setRule(theResult);
+			}
+
+			@Override
+			public void onFailure(Throwable theCaught) {
+				Model.handleFailure(theCaught);
 			}});
 		
 	}

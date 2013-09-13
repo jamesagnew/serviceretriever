@@ -166,4 +166,6 @@ public interface ModelUpdateService extends RemoteService {
 		}
 	}
 
+	BaseGMonitorRule loadMonitorRule(long theRulePid);
+
 }

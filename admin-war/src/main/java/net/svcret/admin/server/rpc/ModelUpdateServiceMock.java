@@ -29,6 +29,8 @@ import net.svcret.admin.shared.model.DtoKeystoreAnalysis;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcomeList;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
@@ -282,11 +284,20 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 			check.setExpectLatencyUnderMillis(100L);
 			check.setExpectResponseContainsText("hello");
 			check.setExpectResponseType(ResponseTypeEnum.SUCCESS);
-			check.setLastTransactionDate(new Date());
-			check.setLastTransactionOutcome(true);
 			check.setMessageDescription("this is the description 1");
 			check.setMessagePid(1L);
 			check.setServiceVersionPid(100L);
+			check.setRecentOutcomes(new DtoMonitorRuleActiveCheckOutcomeList());
+			check.getRecentOutcomes().setUrlPid(1);
+			check.getRecentOutcomes().setUrlId("dev1");
+			check.getRecentOutcomes().setUrl("http://foo");
+			check.getRecentOutcomes().getOutcomes().add(new DtoMonitorRuleActiveCheckOutcome());
+			check.getRecentOutcomes().getOutcomes().add(new DtoMonitorRuleActiveCheckOutcome());
+			check.getRecentOutcomes().getOutcomes().get(0).setSuccess(true);
+			check.getRecentOutcomes().getOutcomes().get(0).setTimestamp(new Date(System.currentTimeMillis() - 10000));
+			check.getRecentOutcomes().getOutcomes().get(1).setSuccess(false);
+			check.getRecentOutcomes().getOutcomes().get(1).setTimestamp(new Date(System.currentTimeMillis() - 5000));
+			check.getRecentOutcomes().getOutcomes().get(1).setFailureMessage("Failed for some reason");
 			newRule.getCheckList().add(check);
 		}
 
@@ -985,6 +996,11 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		retVal.get(0).setSessionId(UUID.randomUUID().toString());
 		
 		return retVal;
+	}
+
+	@Override
+	public BaseGMonitorRule loadMonitorRule(long theRulePid) {
+		return myMonitorRuleList.getRuleByPid(theRulePid);
 	}
 
 }

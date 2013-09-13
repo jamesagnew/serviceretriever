@@ -2,22 +2,22 @@ package net.svcret.ejb.api;
 
 import javax.ejb.Local;
 
-import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.PersStickySessionUrlBinding;
 
 @Local
 public interface IBroadcastSender {
 
-	void notifyUserCatalogChanged() throws ProcessingException;
+	void notifyUserCatalogChanged() throws UnexpectedFailureException;
 	
-	void notifyServiceCatalogChanged() throws ProcessingException;
+	void notifyServiceCatalogChanged() throws UnexpectedFailureException;
 
-	void notifyConfigChanged() throws ProcessingException;
+	void notifyConfigChanged() throws UnexpectedFailureException;
 
-	void monitorRulesChanged() throws ProcessingException;
+	void monitorRulesChanged() throws UnexpectedFailureException;
 
-	void notifyUrlStatusChanged(Long thePid) throws ProcessingException;
+	void notifyUrlStatusChanged(Long thePid) throws UnexpectedFailureException;
 
-	void notifyNewStickySession(PersStickySessionUrlBinding theExisting) throws ProcessingException;
+	void notifyNewStickySession(PersStickySessionUrlBinding theExisting) throws UnexpectedFailureException;
 	
 }

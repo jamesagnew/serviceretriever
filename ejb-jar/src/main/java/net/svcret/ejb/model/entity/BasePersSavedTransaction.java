@@ -20,6 +20,8 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.apache.commons.lang3.StringUtils;
+
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
@@ -148,7 +150,7 @@ public abstract class BasePersSavedTransaction implements Serializable {
 	 *            the requestBody to set
 	 */
 	public void setRequestBody(String theRequestBody) {
-		myRequestBody = theRequestBody;
+		myRequestBody = BasePersObject.trimClobForUnitTest(theRequestBody);
 	}
 
 	/**

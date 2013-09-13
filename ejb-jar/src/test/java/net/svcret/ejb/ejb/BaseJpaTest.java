@@ -9,6 +9,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
+import net.svcret.ejb.model.entity.BasePersObject;
+import net.svcret.ejb.util.Password;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -18,6 +21,11 @@ public abstract class BaseJpaTest {
 	protected EntityManager myEntityManager;
 	protected static EntityManagerFactory ourEntityManagerFactory;
 
+	static {
+		System.setProperty(Password.NET_SVCRET_SECURITY_PASSWORDSALT, "OPIHIOOPYPOIYPOIYPOIYPOIYPOIYPOIYPO");
+		System.setProperty(BasePersObject.NET_SVCRET_UNITTESTMODE, "true");
+	}
+	
 	@After
 	public final void truncateDatabase() throws SQLException {
 		if (myEntityManager == null) {

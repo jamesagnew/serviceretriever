@@ -6,8 +6,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +15,6 @@ import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.IScheduler;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersInvocationMethodUserStats;
@@ -41,7 +38,7 @@ public class ChartingServiceBeanTest {
 	private SimpleDateFormat myFmtSecs;
 
 	@Before
-	public void before() throws ParseException, ProcessingException {
+	public void before() throws Exception {
 		myFmt = new SimpleDateFormat("HH:mm");
 		myFmtSecs = new SimpleDateFormat("HH:mm:ss");
 		
@@ -66,7 +63,7 @@ public class ChartingServiceBeanTest {
 	}
 	
 	@Test
-	public void testGenerateUserMethodGraph() throws ParseException, ProcessingException, IOException {
+	public void testGenerateUserMethodGraph() throws Exception {
 		
 		PersUser user = new PersUser();
 		user.setPid(1L);
@@ -125,7 +122,7 @@ public class ChartingServiceBeanTest {
 	}
 	
 	@Test
-	public void testGenerateUserMethodGraphNoData() throws ParseException, ProcessingException, IOException {
+	public void testGenerateUserMethodGraphNoData() throws Exception {
 		
 		PersUser user = new PersUser();
 		user.setPid(1L);

@@ -37,7 +37,7 @@ import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.ejb.AdminServiceBean.IWithStats;
-import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersDomain;
@@ -85,7 +85,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 	private IRuntimeStatusQueryLocal myStatus;
 
 	@Override
-	public byte[] renderLatencyGraphForServiceVersion(long theServiceVersionPid, TimeRange theRange) throws IOException, ProcessingException {
+	public byte[] renderLatencyGraphForServiceVersion(long theServiceVersionPid, TimeRange theRange) throws IOException, UnexpectedFailureException, UnexpectedFailureException {
 		ourLog.info("Rendering latency graph for service version {}", theServiceVersionPid);
 
 		myScheduler.flushInMemoryStatisticsUnlessItHasHappenedVeryRecently();
@@ -116,7 +116,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 	}
 
 	@Override
-	public byte[] renderPayloadSizeGraphForServiceVersion(long theServiceVersionPid, TimeRange theRange) throws IOException, ProcessingException {
+	public byte[] renderPayloadSizeGraphForServiceVersion(long theServiceVersionPid, TimeRange theRange) throws IOException, UnexpectedFailureException {
 		ourLog.info("Rendering payload size graph for service version {}", theServiceVersionPid);
 
 		myScheduler.flushInMemoryStatisticsUnlessItHasHappenedVeryRecently();
@@ -155,7 +155,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 	}
 
 	@Override
-	public byte[] renderThrottlingGraphForServiceVersion(long theServiceVersionPid, TimeRange theRange) throws IOException, ProcessingException {
+	public byte[] renderThrottlingGraphForServiceVersion(long theServiceVersionPid, TimeRange theRange) throws IOException, UnexpectedFailureException {
 		ourLog.info("Rendering throttling graph for service version {}", theServiceVersionPid);
 
 		myScheduler.flushInMemoryStatisticsUnlessItHasHappenedVeryRecently();
@@ -185,7 +185,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 	}
 
 	@Override
-	public byte[] renderUsageGraphForServiceVersion(long theServiceVersionPid, TimeRange theRange) throws IOException, ProcessingException {
+	public byte[] renderUsageGraphForServiceVersion(long theServiceVersionPid, TimeRange theRange) throws IOException, UnexpectedFailureException {
 		ourLog.info("Rendering latency graph for service version {}", theServiceVersionPid);
 
 		myScheduler.flushInMemoryStatisticsUnlessItHasHappenedVeryRecently();
@@ -223,7 +223,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 	}
 
 	@Override
-	public byte[] renderUserMethodGraphForUser(long theUserPid, TimeRange theRange) throws ProcessingException, IOException {
+	public byte[] renderUserMethodGraphForUser(long theUserPid, TimeRange theRange) throws UnexpectedFailureException, IOException {
 		ourLog.info("Rendering user method graph for user {}", theUserPid);
 
 		myScheduler.flushInMemoryStatisticsUnlessItHasHappenedVeryRecently();

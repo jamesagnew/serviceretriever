@@ -29,7 +29,6 @@ import net.svcret.ejb.api.IServiceInvokerSoap11;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersLibraryMessage;
@@ -121,7 +120,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testUrlUnavailable() throws ProcessingException {
+	public void testUrlUnavailable() throws Exception {
 		createCatalog();
 
 		newEntityManager();
@@ -182,7 +181,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 	}
 
 	@Test
-	public void testLatencyExceedsThreshold() throws ProcessingException {
+	public void testLatencyExceedsThreshold() throws Exception {
 		createCatalog();
 
 		newEntityManager();
@@ -345,7 +344,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 	}
 
 	
-	private void createCatalog() throws ProcessingException {
+	private void createCatalog() throws Exception {
 		newEntityManager();
 
 		GDomain d1 = myOrchSvc.addDomain("asv_did", "asv_did");

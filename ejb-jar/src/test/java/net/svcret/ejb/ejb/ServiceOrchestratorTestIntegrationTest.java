@@ -6,7 +6,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -24,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
 import net.svcret.ejb.api.HttpRequestBean;
@@ -37,14 +37,17 @@ import net.svcret.ejb.api.IThrottlingService;
 import net.svcret.ejb.api.ITransactionLogger;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.UrlPoolBean;
+import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
 import net.svcret.ejb.ejb.soap.Soap11ServiceInvoker;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
+import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersStickySessionUrlBinding;
 import net.svcret.ejb.model.entity.PersUser;
@@ -58,8 +61,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
-import org.mockito.internal.matchers.CapturingMatcher;
 
 public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
@@ -78,6 +79,9 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 	private String myTempPath;
 	private Long mySvcVerPid;
 	private PersServiceVersionUrl myUrl2;
+	private RuntimeStatusQueryBean myRuntimeQuerySvc;
+	private PersServiceVersionMethod myMethod;
+	private BasePersServiceVersion mySvcVer;
 
 	@Before
 	public void before() {
@@ -240,6 +244,112 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		assertThat(entireLog, StringContains.containsString("</soapenv:Envelope>"));
 	}
 
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testSoap11FailingUrl() throws Exception {
+		setUpSoap11Test();
+
+		/*
+		 * Make request
+		 */
+
+		//@formatter:off
+		String request = "<soapenv:Envelope xmlns:net=\"net:svcret:demo\" xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
+				+ "   <soapenv:Header>\n"
+				+ "   </soapenv:Header>\n"
+				+ "   <soapenv:Body>\n" 
+				+ "      <net:d0s0v0m0>\n" 
+				+ "          <arg0>FAULT</arg0>\n" 
+				+ "          <arg1>?</arg1>\n" 
+				+ "      </net:d0s0v0m0>\n" 
+				+ "   </soapenv:Body>\n"
+				+ "</soapenv:Envelope>";
+
+		String response = 
+				"<S:Envelope xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" + 
+				"   <S:Body>\n" + 
+				"      <ns2:addStringsResponse xmlns:ns2=\"net:svcret:demo\">\n" + 
+				"         <return>aFAULT?</return>\n" + 
+				"      </ns2:addStringsResponse>\n" + 
+				"   </S:Body>\n" + 
+				"</S:Envelope>";
+		//@formatter:on
+
+		IResponseValidator theResponseValidator = any();
+		UrlPoolBean theUrlPool = any();
+		String theContentBody = any();
+		Map<String, List<String>> theHeaders = any();
+		String theContentType = any();
+		HttpResponseBean respBean = new HttpResponseBean();
+		respBean.setCode(200);
+		respBean.setBody(response);
+		respBean.setContentType("text/xml");
+		respBean.setResponseTime(100);
+		respBean.addFailedUrl(myUrl, "This is the failure explanation", 200, "text/plain", "This is the failure body", 100);
+		
+		respBean.setHeaders(new HashMap<String, List<String>>());
+		PersHttpClientConfig httpClient = any();
+		when(myHttpClient.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
+
+		TransactionLoggerBean logger = new TransactionLoggerBean();
+		logger.setDao(myDao);
+		mySvc.setTransactionLogger(logger);
+
+		FilesystemAuditLoggerBean fsAuditLogger = new FilesystemAuditLoggerBean();
+		fsAuditLogger.setConfigServiceForUnitTests(myConfigService);
+		fsAuditLogger.initialize();
+		logger.setFilesystemAuditLoggerForUnitTests(fsAuditLogger);
+
+		OrchestratorResponseBean resp = null;
+		String query = "";
+		Reader reader = new StringReader(request);
+		HttpRequestBean req = new HttpRequestBean();
+		req.setRequestType(RequestType.POST);
+		req.setRequestHostIp("127.0.0.1");
+		req.setPath("/d0/d0s0/d0s0v0");
+		req.setQuery(query);
+		req.setInputReader(reader);
+		req.setRequestTime(new Date());
+		req.setRequestHeaders(new HashMap<String, List<String>>());
+		try {
+			resp = mySvc.handleServiceRequest(req);
+			fail();
+		} catch (ProcessingException e) {
+			ourLog.info("Message: "+e.getMessage());
+			assertThat(e.getMessage(), IsNot.not(IsEmptyString.isEmptyOrNullString()));
+		}
+		assertNull(resp);
+
+		newEntityManager();
+
+		myRuntimeStatus.flushStatus();
+		logger.flush();
+		fsAuditLogger.forceFlush();
+
+		newEntityManager();
+
+		StatsAccumulator accumulator=new StatsAccumulator();
+		myRuntimeQuerySvc.extract60MinuteMethodStats(myMethod, accumulator);
+		assertEquals(Integer.valueOf(1), accumulator.getFailCounts().get(59));
+		
+		List<PersServiceVersionRecentMessage> recentMessages = myDao.getServiceVersionRecentMessages(mySvcVer, ResponseTypeEnum.FAIL);
+		assertEquals(1, recentMessages.size());
+		assertThat(recentMessages.get(0).getFailDescription(), StringContains.containsString("All service URLs appear to be failing"));
+		assertThat(recentMessages.get(0).getFailDescription(), StringContains.containsString( "This is the failure explanation"));
+		
+		verify(myHttpClient, times(1)).post(any(PersHttpClientConfig.class), any(IResponseValidator.class), any(UrlPoolBean.class), any(String.class), any(Map.class), any(String.class));
+		
+		FileReader fr = new FileReader(getSvcVerFileName());
+		String entireLog = org.apache.commons.io.IOUtils.toString(fr);
+		ourLog.info("Journal file: {}", entireLog);
+
+		assertThat(entireLog, StringContains.containsString("</soapenv:Envelope>"));
+	}
+
+	
+	
+	
+	
 	/**
 	 * Have the invoker throw an NPE
 	 */
@@ -462,7 +572,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		}
 	}
 
-	private void setUpSoap11Test() throws ProcessingException, IOException {
+	private void setUpSoap11Test() throws Exception {
 		myHttpClient = mock(IHttpClient.class, DefaultAnswer.INSTANCE);
 		myBroadcastSender = mock(IBroadcastSender.class);
 
@@ -471,9 +581,10 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		tempFile.mkdirs();
 		myTempPath = tempFile.getAbsolutePath();
 
-		myConfigService = mock(IConfigService.class, DefaultAnswer.INSTANCE);
+		myConfigService = mock(IConfigService.class);
 		when(myConfigService.getFilesystemAuditLoggerPath()).thenReturn(myTempPath);
-
+		when(myConfigService.getConfig()).thenReturn(new PersConfig());
+		
 		myDao = new DaoBean();
 		myDao.setThisForUnitTest();
 
@@ -481,6 +592,10 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		myRuntimeStatus.setDao(myDao);
 		myRuntimeStatus.setBroadcastSender(myBroadcastSender);
 
+		myRuntimeQuerySvc = new RuntimeStatusQueryBean();
+		myRuntimeQuerySvc.setDaoForUnitTests(myDao);
+		myRuntimeQuerySvc.setConfigSvcForUnitTests(myConfigService);
+		
 		myLocalDbAuthService = new LocalDatabaseAuthorizationServiceBean();
 		myLocalDbAuthService.setDao(myDao);
 
@@ -555,13 +670,14 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		myServiceRegistry.reloadRegistryFromDatabase();
 		mySecurityService.loadUserCatalogIfNeeded();
 
-		d0s0v0 = myDao.getServiceVersionByPid(d0s0v0.getPid());
-
+		mySvcVer = myDao.getServiceVersionByPid(d0s0v0.getPid());
+		
 		newEntityManager();
 
 		myDao.setEntityManager(null);
 		myUrl = d0s0v0.getUrls().get(0);
 		myUrl2 = d0s0v0.getUrls().get(1);
+		myMethod = d0s0v0.getMethods().get(0);
 		
 		mySvcVerPid = d0s0v0.getPid();
 	}

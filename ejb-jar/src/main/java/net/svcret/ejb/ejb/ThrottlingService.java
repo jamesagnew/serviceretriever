@@ -40,6 +40,7 @@ import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.ex.ThrottleException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.IThrottleable;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersUser;
@@ -128,7 +129,7 @@ public class ThrottlingService implements IThrottlingService {
 			invocationResponseResultsBean.setResponseType(ResponseTypeEnum.THROTTLE_REJ);
 			try {
 				myRuntimeStatusSvc.recordInvocationMethod(invocationTime, requestLength, method, user, httpResponse, invocationResponseResultsBean, null);
-			} catch (ProcessingException e) {
+			} catch (UnexpectedFailureException e) {
 				// We'll just log this and end it since we're throwing an error anyhow
 				// by the time this method is called
 				ourLog.error("Failed to log method invocation", e);

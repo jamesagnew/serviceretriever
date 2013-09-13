@@ -13,6 +13,19 @@ public class GMonitorRuleAppliesTo implements Serializable {
 	private Long myServiceVersionPid;
 	private String myVersionId;
 
+	public GMonitorRuleAppliesTo() {
+	}
+
+	public GMonitorRuleAppliesTo(long theDomainPid, String theDomainName, Long theServicePid, String theServiceName, Long theServiceVersionPid, String theVersionId) {
+		super();
+		myDomainPid = theDomainPid;
+		myDomainName = theDomainName;
+		myServicePid = theServicePid;
+		myServiceName = theServiceName;
+		myServiceVersionPid = theServiceVersionPid;
+		myVersionId = theVersionId;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {

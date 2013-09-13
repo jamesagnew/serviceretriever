@@ -97,6 +97,7 @@ import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.StatusesBean;
 import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.BasePersSavedTransactionRecentMessage;
@@ -191,7 +192,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	private IRuntimeStatus myStatusSvc;
 
 	@Override
-	public GDomain addDomain(GDomain theDomain) throws ProcessingException {
+	public GDomain addDomain(GDomain theDomain) throws ProcessingException, UnexpectedFailureException {
 		Validate.notNull(theDomain, "ID");
 		Validate.isNull(theDomain.getPidOrNull(), "PID");
 		Validate.notBlank(theDomain.getId(), "ID");
@@ -224,7 +225,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 	
 	@Override
-	public GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ProcessingException {
+	public GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ProcessingException, UnexpectedFailureException {
 		Validate.notBlank(theId, "ID");
 		Validate.notBlank(theName, "Name");
 
@@ -247,7 +248,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return toUi(service, false, null);
 	}
 
-	public GServiceMethod addServiceVersionMethod(long theServiceVersionPid, GServiceMethod theMethod) throws ProcessingException {
+	public GServiceMethod addServiceVersionMethod(long theServiceVersionPid, GServiceMethod theMethod) throws ProcessingException, UnexpectedFailureException {
 		ourLog.info("Adding method {} to service version {}", theMethod.getName(), theServiceVersionPid);
 
 		BasePersServiceVersion sv = myDao.getServiceVersionByPid(theServiceVersionPid);
@@ -293,7 +294,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public void deleteDomain(long thePid) throws ProcessingException {
+	public void deleteDomain(long thePid) throws ProcessingException, UnexpectedFailureException {
 		PersDomain domain = myDao.getDomainByPid(thePid);
 		if (domain == null) {
 			throw new IllegalArgumentException("Unknown domain PID: " + thePid);
@@ -308,7 +309,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ProcessingException {
+	public GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ProcessingException, UnexpectedFailureException {
 
 		PersHttpClientConfig config = myDao.getHttpClientConfig(thePid);
 		if (config == null) {
@@ -323,7 +324,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GDomainList deleteService(long theServicePid) throws ProcessingException {
+	public GDomainList deleteService(long theServicePid) throws ProcessingException, UnexpectedFailureException {
 		ourLog.info("Deleting service {}", theServicePid);
 
 		PersService service = myDao.getServiceByPid(theServicePid);
@@ -337,7 +338,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GDomainList deleteServiceVersion(long thePid) throws ProcessingException {
+	public GDomainList deleteServiceVersion(long thePid) throws ProcessingException, UnexpectedFailureException {
 		ourLog.info("Deleting service version {}", thePid);
 
 		BasePersServiceVersion sv = myDao.getServiceVersionByPid(thePid);
@@ -367,7 +368,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GDomain getDomainByPid(long theDomain) throws ProcessingException {
+	public GDomain getDomainByPid(long theDomain) throws ProcessingException, UnexpectedFailureException {
 		PersDomain domain = myDao.getDomainByPid(theDomain);
 		if (domain != null) {
 			Set<Long> empty = Collections.emptySet();
@@ -422,7 +423,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GService getServiceByPid(long theService) throws ProcessingException {
+	public GService getServiceByPid(long theService) throws ProcessingException, UnexpectedFailureException {
 		PersService service = myDao.getServiceByPid(theService);
 		if (service != null) {
 			return toUi(service, false, null);
@@ -462,12 +463,12 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GConfig loadConfig() throws ProcessingException {
+	public GConfig loadConfig() throws UnexpectedFailureException {
 		return toUi(myConfigSvc.getConfig());
 	}
 
 	@Override
-	public GDomainList loadDomainList() throws ProcessingException {
+	public GDomainList loadDomainList() throws ProcessingException, UnexpectedFailureException {
 		Set<Long> empty = Collections.emptySet();
 		return loadDomainList(empty, empty, empty, empty, empty, null);
 	}
@@ -482,7 +483,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ProcessingException {
+	public ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ProcessingException, UnexpectedFailureException {
 		flushOutstandingStats();
 
 		ModelUpdateResponse retVal = new ModelUpdateResponse();
@@ -563,12 +564,12 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GMonitorRuleList loadMonitorRuleList() throws ProcessingException {
+	public GMonitorRuleList loadMonitorRuleList() throws ProcessingException, UnexpectedFailureException {
 		GMonitorRuleList retVal = new GMonitorRuleList();
 
 		Collection<BasePersMonitorRule> allRules = myDao.getMonitorRules();
 		for (BasePersMonitorRule persMonitorRule : allRules) {
-			retVal.add(toUi(persMonitorRule));
+			retVal.add(persMonitorRule.toDao(false));
 		}
 
 		return retVal;
@@ -656,10 +657,10 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GSoap11ServiceVersionAndResources loadServiceVersion(long theServiceVersionPid) throws ProcessingException {
+	public GSoap11ServiceVersionAndResources loadServiceVersion(long theServiceVersionPid) throws  UnexpectedFailureException {
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
 		if (svcVer == null) {
-			throw new ProcessingException("Unknown service version PID: " + theServiceVersionPid);
+			throw new IllegalArgumentException("Unknown service version PID: " + theServiceVersionPid);
 		}
 
 		Set<Long> methodPids = new HashSet<Long>();
@@ -680,7 +681,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws ProcessingException {
+	public GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws  UnexpectedFailureException {
 
 		BasePersServiceVersion ver = myDao.getServiceVersionByPid(theVersionPid);
 
@@ -725,7 +726,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(DtoServiceVersionSoap11 theService, String theWsdlUrl) throws ProcessingException {
+	public GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(DtoServiceVersionSoap11 theService, String theWsdlUrl) throws ProcessingException, UnexpectedFailureException {
 		Validate.notNull(theService, "Definition");
 		Validate.notBlank(theWsdlUrl, "URL");
 
@@ -749,7 +750,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GUser loadUser(long thePid, boolean theLoadStats) throws ProcessingException {
+	public GUser loadUser(long thePid, boolean theLoadStats) throws ProcessingException, UnexpectedFailureException {
 		ourLog.info("Loading user {}", thePid);
 
 		PersUser persUser = myDao.getUser(thePid);
@@ -761,7 +762,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GPartialUserList loadUsers(PartialUserListRequest theRequest) throws ProcessingException {
+	public GPartialUserList loadUsers(PartialUserListRequest theRequest) throws ProcessingException, UnexpectedFailureException {
 		GPartialUserList retVal = new GPartialUserList();
 
 		ourLog.info("Loading user list: " + theRequest.toString());
@@ -793,7 +794,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GConfig saveConfig(GConfig theConfig) throws ProcessingException {
+	public GConfig saveConfig(GConfig theConfig) throws UnexpectedFailureException {
 		ourLog.info("Saving config");
 
 		ourLog.info("Proxy config now contains the following URL Bases: {}", theConfig.getProxyUrlBases());
@@ -814,7 +815,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GDomainList saveDomain(GDomain theDomain) throws ProcessingException {
+	public GDomainList saveDomain(GDomain theDomain) throws ProcessingException, UnexpectedFailureException {
 		ourLog.info("Saving domain with PID {}", theDomain.getPid());
 
 		PersDomain domain = myDao.getDomainByPid(theDomain.getPid());
@@ -829,7 +830,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 	@Override
 	public GHttpClientConfig saveHttpClientConfig(GHttpClientConfig theConfig, byte[] theNewTruststore, String theNewTruststorePass, byte[] theNewKeystore, String theNewKeystorePass)
-			throws ProcessingException {
+			throws ProcessingException, UnexpectedFailureException {
 		Validate.notNull(theConfig, "HttpClientConfig");
 
 		PersHttpClientConfig existing = null;
@@ -880,13 +881,13 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public void saveMonitorRule(BaseGMonitorRule theRule) throws ProcessingException {
+	public void saveMonitorRule(BaseGMonitorRule theRule) throws UnexpectedFailureException, ProcessingException {
 		BasePersMonitorRule rule = fromUi(theRule);
 		myMonitorSvc.saveRule(rule);
 	}
 
 	@Override
-	public GDomainList saveService(GService theService) throws ProcessingException {
+	public GDomainList saveService(GService theService) throws ProcessingException, UnexpectedFailureException {
 		ourLog.info("Saving service {}", theService.getPid());
 
 		PersService service = myDao.getServiceByPid(theService.getPid());
@@ -904,7 +905,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public <T extends BaseGServiceVersion> T saveServiceVersion(long theDomain, long theService, T theVersion, List<GResource> theResources) throws ProcessingException {
+	public <T extends BaseGServiceVersion> T saveServiceVersion(long theDomain, long theService, T theVersion, List<GResource> theResources) throws ProcessingException, UnexpectedFailureException {
 		Validate.notBlank(theVersion.getId(), "Version#ID");
 
 		ourLog.info("Adding service version {} to domain {} / service {}", new Object[] { theVersion.getPid(), theDomain, theService });
@@ -1059,7 +1060,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GUser saveUser(GUser theUser) throws ProcessingException {
+	public GUser saveUser(GUser theUser) throws UnexpectedFailureException, ProcessingException {
 		ourLog.info("Saving user with PID {}", theUser.getPid());
 
 		PersUser user = fromUi(theUser);
@@ -1145,7 +1146,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	private StatusEnum extractStatus(BaseDtoServiceCatalogItem theDashboardObject, StatusEnum theInitialStatus, StatsAccumulator theAccumulator, PersService theService, StatusesBean theStatuses)
-			throws ProcessingException {
+			throws UnexpectedFailureException {
 
 		// Value will be changed below
 		StatusEnum status = theInitialStatus;
@@ -1157,8 +1158,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return status;
 	}
 
-	private StatusEnum extractStatus(BaseDtoServiceCatalogItem theDashboardObject, StatusesBean theStatuses, StatsAccumulator theAccumulator, StatusEnum theStatus, BasePersServiceVersion nextVersion)
-			throws ProcessingException {
+	private StatusEnum extractStatus(BaseDtoServiceCatalogItem theDashboardObject, StatusesBean theStatuses, StatsAccumulator theAccumulator, StatusEnum theStatus, BasePersServiceVersion nextVersion) throws UnexpectedFailureException {
 		StatusEnum status = theStatus;
 
 		for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
@@ -1581,7 +1581,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return thePersVersion;
 	}
 
-	private <T extends BaseGServiceVersion> BasePersServiceVersion fromUi(T theVersion, PersService theService, String theVersionId) throws ProcessingException {
+	private <T extends BaseGServiceVersion> BasePersServiceVersion fromUi(T theVersion, PersService theService, String theVersionId) throws ProcessingException, UnexpectedFailureException {
 		Validate.notNull(theVersion);
 		Validate.notNull(theService);
 		Validate.notBlank(theVersionId);
@@ -1653,7 +1653,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	private GDomain loadDomain(PersDomain nextDomain, Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, Set<Long> theLoadUrlStats,
-			StatusesBean statuses) throws ProcessingException {
+			StatusesBean statuses) throws  UnexpectedFailureException {
 		GDomain gDomain = toUi(nextDomain, theLoadDomStats.contains(nextDomain.getPid()), statuses);
 
 		for (PersService nextService : nextDomain.getServices()) {
@@ -1670,7 +1670,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	private GDomainList loadDomainList(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, Set<Long> theLoadUrlStats,
-			StatusesBean statuses) throws ProcessingException {
+			StatusesBean statuses) throws UnexpectedFailureException {
 		GDomainList domainList = new GDomainList();
 
 		for (PersDomain nextDomain : myServiceRegistry.getAllDomains()) {
@@ -1689,7 +1689,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return configList;
 	}
 
-	private GUserList loadUserList(boolean theLoadStats) throws ProcessingException {
+	private GUserList loadUserList(boolean theLoadStats) throws UnexpectedFailureException {
 		GUserList retVal = new GUserList();
 		Collection<PersUser> users = myDao.getAllUsersAndInitializeThem();
 		for (PersUser persUser : users) {
@@ -1762,7 +1762,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private GSoap11ServiceVersionAndResources toUi(BaseGServiceVersion theUiService, BasePersServiceVersion theSvcVer) throws ProcessingException {
+	private GSoap11ServiceVersionAndResources toUi(BaseGServiceVersion theUiService, BasePersServiceVersion theSvcVer) {
 		GSoap11ServiceVersionAndResources retVal = new GSoap11ServiceVersionAndResources();
 
 		retVal.setServiceVersion(theUiService);
@@ -1828,59 +1828,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private BaseGMonitorRule toUi(BasePersMonitorRule theRule) throws ProcessingException {
-		BaseGMonitorRule retVal = null;
-		switch (theRule.getRuleType()) {
-		case PASSIVE: {
-			GMonitorRulePassive ruleDto = new GMonitorRulePassive();
-			PersMonitorRulePassive rule = (PersMonitorRulePassive) theRule;
-			ruleDto.setPassiveFireForBackingServiceLatencyIsAboveMillis(rule.getPassiveFireForBackingServiceLatencyIsAboveMillis());
-			ruleDto.setPassiveFireForBackingServiceLatencySustainTimeMins(rule.getPassiveFireForBackingServiceLatencySustainTimeMins());
-			ruleDto.setPassiveFireIfAllBackingUrlsAreUnavailable(rule.isPassiveFireIfAllBackingUrlsAreUnavailable());
-			ruleDto.setPassiveFireIfSingleBackingUrlIsUnavailable(rule.isPassiveFireIfSingleBackingUrlIsUnavailable());
-			for (PersMonitorAppliesTo next : rule.getAppliesTo()) {
-				if (next.getItem() instanceof PersDomain) {
-					PersDomain domain = (PersDomain) next.getItem();
-					ruleDto.applyTo(toUi(domain, false, null), true);
-				} else if (next.getItem() instanceof PersService) {
-					PersService service = (PersService) next.getItem();
-					PersDomain domain = service.getDomain();
-					ruleDto.applyTo(toUi(domain, false, null), toUi(service, false, null), true);
-				} else if (next.getItem() instanceof BasePersServiceVersion) {
-					BasePersServiceVersion svcVer = (BasePersServiceVersion) next.getItem();
-					PersService service = svcVer.getService();
-					PersDomain domain = service.getDomain();
-					ruleDto.applyTo(toUi(domain, false, null), toUi(service, false, null), toUi(svcVer, false, null), true);
-				}
-			}
-
-			retVal = ruleDto;
-			break;
-		}
-		case ACTIVE: {
-			DtoMonitorRuleActive ruleDto = new DtoMonitorRuleActive();
-			PersMonitorRuleActive rule = (PersMonitorRuleActive) theRule;
-			for (PersMonitorRuleActiveCheck next : rule.getActiveChecks()) {
-				ruleDto.getCheckList().add(toUi(next));
-			}
-			retVal = ruleDto;
-			break;
-		}
-		}
-
-		if (retVal == null) {
-			throw new IllegalStateException("Unknown type: " + theRule.getRuleType());
-		}
-		retVal.setPid(theRule.getPid());
-		retVal.setActive(theRule.isRuleActive());
-		retVal.setName(theRule.getRuleName());
-
-		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
-			retVal.getNotifyEmailContacts().add(next.getEmail());
-		}
-
-		return retVal;
-	}
 
 	private GRecentMessage toUi(BasePersSavedTransactionRecentMessage theMsg, boolean theLoadMsgContents) {
 		GRecentMessage retVal = new GRecentMessage();
@@ -1960,7 +1907,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	private BaseGServiceVersion toUi(BasePersServiceVersion theVersion, boolean theLoadStats, Set<Long> theLoadMethodStats, Set<Long> theLoadUrlStats, StatusesBean theStatuses)
-			throws ProcessingException {
+			throws UnexpectedFailureException {
 		BaseGServiceVersion retVal = null;
 		switch (theVersion.getProtocol()) {
 		case SOAP11:
@@ -1981,7 +1928,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 
 		if (retVal == null) {
-			throw new ProcessingException("Don't know how to handle service of type " + theVersion.getProtocol());
+			throw new UnexpectedFailureException("Don't know how to handle service of type " + theVersion.getProtocol());
 		}
 
 		retVal.setPid(theVersion.getPid());
@@ -2031,7 +1978,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		PersHttpClientConfig httpClientConfig = theVersion.getHttpClientConfig();
 		if (httpClientConfig == null) {
-			throw new ProcessingException("Service version doesn't have an HTTP client config");
+			throw new UnexpectedFailureException("Service version doesn't have an HTTP client config");
 		}
 		retVal.setHttpClientConfigPid(httpClientConfig.getPid());
 
@@ -2089,7 +2036,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private BaseGServiceVersion toUi(BasePersServiceVersion theSvcVer, boolean theLoadStats, StatusesBean theStatuses) throws ProcessingException {
+	private BaseGServiceVersion toUi(BasePersServiceVersion theSvcVer, boolean theLoadStats, StatusesBean theStatuses) throws UnexpectedFailureException {
 		Set<Long> emptySet = Collections.emptySet();
 		return toUi(theSvcVer, theLoadStats, emptySet, emptySet, theStatuses);
 	}
@@ -2112,7 +2059,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private BaseGClientSecurity toUi(PersBaseClientAuth<?> theAuth) throws ProcessingException {
+	private BaseGClientSecurity toUi(PersBaseClientAuth<?> theAuth) throws UnexpectedFailureException {
 		BaseGClientSecurity retVal = null;
 
 		switch (theAuth.getAuthType()) {
@@ -2134,7 +2081,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 
 		if (retVal == null) {
-			throw new ProcessingException("Unknown auth type; " + theAuth.getAuthType());
+			throw new UnexpectedFailureException("Unknown auth type; " + theAuth.getAuthType());
 		}
 
 		retVal.setPid(theAuth.getPid());
@@ -2144,7 +2091,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private BaseGServerSecurity toUi(PersBaseServerAuth<?, ?> theAuth) throws ProcessingException {
+	private BaseGServerSecurity toUi(PersBaseServerAuth<?, ?> theAuth) {
 		BaseGServerSecurity retVal = null;
 
 		switch (theAuth.getAuthType()) {
@@ -2169,7 +2116,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 
 		if (retVal == null) {
-			throw new ProcessingException("Unknown auth type; " + theAuth.getAuthType());
+			throw new IllegalStateException("Unknown auth type; " + theAuth.getAuthType());
 		}
 
 		retVal.setPid(theAuth.getPid());
@@ -2188,7 +2135,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private GDomain toUi(PersDomain theDomain, boolean theLoadStats, StatusesBean theStatuses) throws ProcessingException {
+	private GDomain toUi(PersDomain theDomain, boolean theLoadStats, StatusesBean theStatuses) throws UnexpectedFailureException {
 		GDomain retVal = new GDomain();
 		retVal.setPid(theDomain.getPid());
 		retVal.setId(theDomain.getDomainId());
@@ -2256,7 +2203,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private DtoLibraryMessage toUi(PersLibraryMessage theMessage, boolean theLoadContents) throws ProcessingException {
+	private DtoLibraryMessage toUi(PersLibraryMessage theMessage, boolean theLoadContents) {
 		DtoLibraryMessage retVal = new DtoLibraryMessage();
 
 		retVal.setContentType(theMessage.getContentType());
@@ -2272,20 +2219,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			retVal.setMessage(theMessage.getMessageBody());
 		}
 
-		return retVal;
-	}
-
-	private DtoMonitorRuleActiveCheck toUi(PersMonitorRuleActiveCheck theNext) throws ProcessingException {
-		DtoMonitorRuleActiveCheck retVal = new DtoMonitorRuleActiveCheck();
-		retVal.setCheckFrequencyNum(theNext.getCheckFrequencyNum());
-		retVal.setCheckFrequencyUnit(theNext.getCheckFrequencyUnit());
-		retVal.setExpectLatencyUnderMillis(theNext.getExpectLatencyUnderMillis());
-		retVal.setExpectResponseContainsText(theNext.getExpectResponseContainsText());
-		retVal.setExpectResponseType(theNext.getExpectResponseType());
-		retVal.setMessagePid(theNext.getMessage().getPid());
-		retVal.setMessageDescription(theNext.getMessage().getDescription());
-		retVal.setPid(theNext.getPid());
-		retVal.setServiceVersionPid(theNext.getServiceVersion().getPid());
 		return retVal;
 	}
 
@@ -2325,7 +2258,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private GService toUi(PersService theService, boolean theLoadStats, StatusesBean theStatuses) throws ProcessingException {
+	private GService toUi(PersService theService, boolean theLoadStats, StatusesBean theStatuses) throws UnexpectedFailureException {
 		GService retVal = new GService();
 		retVal.setPid(theService.getPid());
 		retVal.setId(theService.getServiceId());
@@ -2390,7 +2323,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private GServiceMethod toUi(PersServiceVersionMethod theMethod, boolean theLoadStats) throws ProcessingException {
+	private GServiceMethod toUi(PersServiceVersionMethod theMethod, boolean theLoadStats) throws UnexpectedFailureException {
 		GServiceMethod retVal = new GServiceMethod();
 		if (theMethod.getPid() != null) {
 			retVal.setPid(theMethod.getPid());
@@ -2424,7 +2357,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private GServiceVersionUrl toUi(PersServiceVersionUrl theUrl, boolean theLoadStats, StatusesBean theStatuses) throws ProcessingException {
+	private GServiceVersionUrl toUi(PersServiceVersionUrl theUrl, boolean theLoadStats, StatusesBean theStatuses) throws UnexpectedFailureException {
 		PersServiceVersionUrlStatus theUrlStatus = null;
 		if (theLoadStats) {
 			theUrlStatus = theStatuses.getUrlStatus(theUrl.getPid());
@@ -2433,7 +2366,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return toUi(theUrl, theLoadStats, theUrlStatus);
 	}
 
-	private GServiceVersionUrl toUi(PersServiceVersionUrl theUrl, boolean theLoadStats, PersServiceVersionUrlStatus urlStatus) throws ProcessingException {
+	private GServiceVersionUrl toUi(PersServiceVersionUrl theUrl, boolean theLoadStats, PersServiceVersionUrlStatus urlStatus) throws UnexpectedFailureException {
 		GServiceVersionUrl retVal = new GServiceVersionUrl();
 		if (theUrl.getPid() != null) {
 			retVal.setPid(theUrl.getPid());
@@ -2476,7 +2409,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private GUser toUi(PersUser thePersUser, boolean theLoadStats) throws ProcessingException {
+	private GUser toUi(PersUser thePersUser, boolean theLoadStats) throws UnexpectedFailureException {
 		GUser retVal = new GUser();
 		retVal.setPid(thePersUser.getPid());
 		retVal.setAllowAllDomains(thePersUser.isAllowAllDomains());
@@ -2553,7 +2486,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private Collection<DtoLibraryMessage> toUiCollectionLibraryMessages(Collection<PersLibraryMessage> theMsgs, boolean theLoadContents) throws ProcessingException {
+	private Collection<DtoLibraryMessage> toUiCollectionLibraryMessages(Collection<PersLibraryMessage> theMsgs, boolean theLoadContents) {
 		ArrayList<DtoLibraryMessage> retVal = new ArrayList<DtoLibraryMessage>();
 		for (PersLibraryMessage next : theMsgs) {
 			retVal.add(toUi(next, theLoadContents));
@@ -2598,7 +2531,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	/**
 	 * Convenience for Unit Tests
 	 */
-	GDomain addDomain(String theId, String theName) throws ProcessingException {
+	GDomain addDomain(String theId, String theName) throws ProcessingException, UnexpectedFailureException {
 		GDomain domain = new GDomain();
 		domain.setId(theId);
 		domain.setName(theName);
@@ -2794,9 +2727,14 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GServiceVersionUrl resetCircuitBreaker(long theUrlPid) throws ProcessingException {
+	public GServiceVersionUrl resetCircuitBreaker(long theUrlPid) throws UnexpectedFailureException {
 		PersServiceVersionUrl url = myServiceRegistry.resetCircuitBreaker(theUrlPid);
 		return toUi(url, true, url.getStatus());
+	}
+
+	@Override
+	public BaseGMonitorRule loadMonitorRuleAndDetailedSatistics(long theRulePid) {
+		return myDao.getMonitorRule(theRulePid).toDao(true);
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {

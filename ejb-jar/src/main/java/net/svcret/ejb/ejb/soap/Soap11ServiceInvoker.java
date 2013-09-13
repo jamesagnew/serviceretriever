@@ -44,6 +44,7 @@ import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.ProcessingRuntimeException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
@@ -89,8 +90,8 @@ public class Soap11ServiceInvoker extends BaseServiceInvoker implements IService
 	private BaseResponseValidator myInvocationResultsBean;
 
 	@Override
-	public Map<String, List<String>> createRequestHeaders(Map<String, List<String>> theIncomingHeaders) {
-		Map<String, List<String>> retVal = super.createRequestHeaders(theIncomingHeaders);
+	public Map<String, List<String>> createBackingRequestHeadersForMethodInvocation(Map<String, List<String>> theIncomingHeaders) {
+		Map<String, List<String>> retVal = super.createBackingRequestHeadersForMethodInvocation(theIncomingHeaders);
 		retVal.put("SOAPAction", theIncomingHeaders.get("SOAPAction"));
 		return retVal;
 	}
@@ -275,7 +276,7 @@ public class Soap11ServiceInvoker extends BaseServiceInvoker implements IService
 		PersConfig config;
 		try {
 			config = myConfigService.getConfig();
-		} catch (ProcessingException e) {
+		} catch (UnexpectedFailureException e) {
 			throw new InvocationFailedDueToInternalErrorException(e);
 		}
 		return config.getProxyUrlBases().iterator().next().getUrlBase();

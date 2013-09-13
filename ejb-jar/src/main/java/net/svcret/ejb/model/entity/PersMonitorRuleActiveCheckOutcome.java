@@ -8,6 +8,8 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
+
 import org.hibernate.annotations.Index;
 
 //@formatter:off
@@ -46,6 +48,19 @@ public class PersMonitorRuleActiveCheckOutcome extends BasePersSavedTransaction 
 
 	public void setFailed(boolean theFailed) {
 		myFailed = theFailed;
+	}
+
+	public DtoMonitorRuleActiveCheckOutcome toDto() {
+		DtoMonitorRuleActiveCheckOutcome retVal=new DtoMonitorRuleActiveCheckOutcome();
+		retVal.setPid(getPid());
+		retVal.setSuccess(!Boolean.TRUE.equals(myFailed));
+		retVal.setTimestamp(getTransactionTime());
+		
+		// TODO: should we be storing the reason the check failed so that we have
+		// something here even if the call itself doesn't fail (i.e. latency issue)
+		retVal.setFailureMessage(getFailDescription());
+		
+		return retVal;
 	}
 
 }

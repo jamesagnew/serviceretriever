@@ -16,6 +16,7 @@ import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.ejb.api.IAdminServiceLocal;
 import net.svcret.ejb.api.IKeystoreService;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.util.Validate;
 
 public class HttpClientConfigServiceImpl extends BaseRpcServlet implements HttpClientConfigService {
@@ -44,6 +45,9 @@ public class HttpClientConfigServiceImpl extends BaseRpcServlet implements HttpC
 		try {
 			return myAdminSvc.deleteHttpClientConfig(thePid);
 		} catch (ProcessingException e) {
+			ourLog.error("Failed to save config", e);
+			throw new ServiceFailureException(e.getMessage());
+		} catch (UnexpectedFailureException e) {
 			ourLog.error("Failed to save config", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
@@ -88,6 +92,9 @@ public class HttpClientConfigServiceImpl extends BaseRpcServlet implements HttpC
 		try {
 			return myAdminSvc.saveHttpClientConfig(theConfig, newTruststore, newTruststorePass, newKeystore, newKeystorePass);
 		} catch (ProcessingException e) {
+			ourLog.error("Failed to save config", e);
+			throw new ServiceFailureException(e.getMessage());
+		} catch (UnexpectedFailureException e) {
 			ourLog.error("Failed to save config", e);
 			throw new ServiceFailureException(e.getMessage());
 		}

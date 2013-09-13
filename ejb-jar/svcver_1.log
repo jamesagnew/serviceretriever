@@ -7848,4 +7848,284 @@ MethodName: null
 HandledByUrl: [null] null
 User: none
 Request:
-  <soapenv2:Envelope xmlns:net="net:svcret:demo" xmlns:soapenv="http
+  <soapenv2:Envelope xmlns:net="net:svcret:demo" xmlns:soapenv="httpDate: 2013-09-13 14:22:10.0136 -0400
+Latency: 0
+ResponseType: FAIL
+FailureDescription: Undeclared namespace prefix "soapenv2"  at [row,col {unknown-source}]: [1,105]
+RequestorIp: 127.0.0.1 (localhost)
+DomainId: d0
+ServiceId: d0s0
+ServiceVersionId: d0s0v0
+ServiceVersionPid: 1
+User: none
+Request:
+  <soapenv2:Envelope xmlns:net="net:svcret:demo" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+     <soapenv:Header>
+     </soapenv:Header>
+     <soapenv:Body></soapenv:Body>
+  </soapenv:Envelope>
+
+Date: 2013-09-13 16:18:31.0351 -0400
+Latency: 0
+ResponseType: FAIL
+FailureDescription: All service URLs appear to be failing (1 URL in total), unable to successfully invoke method. URL 'url1' failed with error: This is the failure explanation
+RequestorIp: 127.0.0.1 (localhost)
+DomainId: d0
+ServiceId: d0s0
+ServiceVersionId: d0s0v0
+ServiceVersionPid: 1
+User: none
+Request:
+  <soapenv:Envelope xmlns:net="net:svcret:demo" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+     <soapenv:Header>
+     </soapenv:Header>
+     <soapenv:Body>
+        <net:d0s0v0m0>
+            <arg0>FAULT</arg0>
+            <arg1>?</arg1>
+        </net:d0s0v0m0>
+     </soapenv:Body>
+  </soapenv:Envelope>
+
+Date: 2013-09-13 16:29:22.0979 -0400
+Latency: 0
+ResponseType: FAIL
+FailureDescription: All service URLs appear to be failing (1 URL in total), unable to successfully invoke method. URL 'url1' failed with error: This is the failure explanation
+RequestorIp: 127.0.0.1 (localhost)
+DomainId: d0
+ServiceId: d0s0
+ServiceVersionId: d0s0v0
+ServiceVersionPid: 1
+User: none
+Request:
+  <soapenv:Envelope xmlns:net="net:svcret:demo" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+     <soapenv:Header>
+     </soapenv:Header>
+     <soapenv:Body>
+        <net:d0s0v0m0>
+            <arg0>FAULT</arg0>
+            <arg1>?</arg1>
+        </net:d0s0v0m0>
+     </soapenv:Body>
+  </soapenv:Envelope>
+
+Date: 2013-09-13 16:30:06.0635 -0400
+Latency: 0
+ResponseType: FAIL
+FailureDescription: All service URLs appear to be failing (1 URL in total), unable to successfully invoke method. URL 'url1' failed with error: This is the failure explanation
+RequestorIp: 127.0.0.1 (localhost)
+DomainId: d0
+ServiceId: d0s0
+ServiceVersionId: d0s0v0
+ServiceVersionPid: 1
+User: none
+Request:
+  <soapenv:Envelope xmlns:net="net:svcret:demo" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+     <soapenv:Header>
+     </soapenv:Header>
+     <soapenv:Body>
+        <net:d0s0v0m0>
+            <arg0>FAULT</arg0>
+            <arg1>?</arg1>
+        </net:d0s0v0m0>
+     </soapenv:Body>
+  </soapenv:Envelope>
+
+Date: 2013-09-13 16:30:23.0490 -0400
+Latency: 0
+ResponseType: FAIL
+FailureDescription: All service URLs appear to be failing (1 URL in total), unable to successfully invoke method. URL 'url1' failed with error: This is the failure explanation
+RequestorIp: 127.0.0.1 (localhost)
+DomainId: d0
+ServiceId: d0s0
+ServiceVersionId: d0s0v0
+ServiceVersionPid: 1
+User: none
+Request:
+  <soapenv:Envelope xmlns:net="net:svcret:demo" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+     <soapenv:Header>
+     </soapenv:Header>
+     <soapenv:Body>
+        <net:d0s0v0m0>
+            <arg0>FAULT</arg0>
+            <arg1>?</arg1>
+        </net:d0s0v0m0>
+     </soapenv:Body>
+  </soapenv:Envelope>
+
+Date: 2013-09-13 16:31:15.0017 -0400
+Latency: 0
+ResponseType: FAIL
+FailureDescription: All service URLs appear to be failing (1 URL in total), unable to successfully invoke method. URL 'url1' failed with error: This is the failure explanation
+RequestorIp: 127.0.0.1 (localhost)
+DomainId: d0
+ServiceId: d0s0
+ServiceVersionId: d0s0v0
+ServiceVersionPid: 1
+User: none
+Request:
+  <soapenv:Envelope xmlns:net="net:svcret:demo" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+     <soapenv:Header>
+     </soapenv:Header>
+     <soapenv:Body>
+        <net:d0s0v0m0>
+            <arg0>FAULT</arg0>
+            <arg1>?</arg1>
+        </net:d0s0v0m0>
+     </soapenv:Body>
+  </soapenv:Envelope>
+
+Date: 2013-09-13 16:31:26.0757 -0400
+Latency: 0
+ResponseType: FAIL
+FailureDescription: All service URLs appear to be failing (1 URL in total), unable to successfully invoke method. URL 'url1' failed with error: This is the failure explanation
+RequestorIp: 127.0.0.1 (localhost)
+DomainId: d0
+ServiceId: d0s0
+ServiceVersionId: d0s0v0
+ServiceVersionPid: 1
+User: none
+Request:
+  <soapenv:Envelope xmlns:net="net:svcret:demo" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+     <soapenv:Header>
+     </soapenv:Header>
+     <soapenv:Body>
+        <net:d0s0v0m0>
+            <arg0>FAULT</arg0>
+            <arg1>?</arg1>
+        </net:d0s0v0m0>
+     </soapenv:Body>
+  </soapenv:Envelope>
+
+Date: 2013-09-13 16:45:20.0854 -0400
+Latency: 0
+ResponseType: FAIL
+FailureDescription: All service URLs appear to be failing (1 URL in total), unable to successfully invoke method. URL 'url1' failed with error: This is the failure explanation
+RequestorIp: 127.0.0.1 (localhost)
+DomainId: d0
+ServiceId: d0s0
+ServiceVersionId: d0s0v0
+ServiceVersionPid: 1
+User: none
+Request:
+  <soapenv:Envelope xmlns:net="net:svcret:demo" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+     <soapenv:Header>
+     </soapenv:Header>
+     <soapenv:Body>
+        <net:d0s0v0m0>
+            <arg0>FAULT</arg0>
+            <arg1>?</arg1>
+        </net:d0s0v0m0>
+     </soapenv:Body>
+  </soapenv:Envelope>
+
+Date: 2013-09-13 16:45:33.0539 -0400
+Latency: 0
+ResponseType: FAIL
+FailureDescription: All service URLs appear to be failing (1 URL in total), unable to successfully invoke method. URL 'url1' failed with error: This is the failure explanation
+RequestorIp: 127.0.0.1 (localhost)
+DomainId: d0
+ServiceId: d0s0
+ServiceVersionId: d0s0v0
+ServiceVersionPid: 1
+User: none
+Request:
+  <soapenv:Envelope xmlns:net="net:svcret:demo" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+     <soapenv:Header>
+     </soapenv:Header>
+     <soapenv:Body>
+        <net:d0s0v0m0>
+            <arg0>FAULT</arg0>
+            <arg1>?</arg1>
+        </net:d0s0v0m0>
+     </soapenv:Body>
+  </soapenv:Envelope>
+
+Date: 2013-09-13 16:46:09.0034 -0400
+Latency: 0
+ResponseType: FAIL
+FailureDescription: All service URLs appear to be failing (1 URL in total), unable to successfully invoke method. URL 'url1' failed with error: This is the failure explanation
+RequestorIp: 127.0.0.1 (localhost)
+DomainId: d0
+ServiceId: d0s0
+ServiceVersionId: d0s0v0
+ServiceVersionPid: 1
+User: none
+Request:
+  <soapenv:Envelope xmlns:net="net:svcret:demo" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+     <soapenv:Header>
+     </soapenv:Header>
+     <soapenv:Body>
+        <net:d0s0v0m0>
+            <arg0>FAULT</arg0>
+            <arg1>?</arg1>
+        </net:d0s0v0m0>
+     </soapenv:Body>
+  </soapenv:Envelope>
+
+Date: 2013-09-13 16:47:56.0135 -0400
+Latency: 0
+ResponseType: FAIL
+FailureDescription: All service URLs appear to be failing (1 URL in total), unable to successfully invoke method. URL 'url1' failed with error: This is the failure explanation
+RequestorIp: 127.0.0.1 (localhost)
+DomainId: d0
+ServiceId: d0s0
+ServiceVersionId: d0s0v0
+ServiceVersionPid: 1
+User: none
+Request:
+  <soapenv:Envelope xmlns:net="net:svcret:demo" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+     <soapenv:Header>
+     </soapenv:Header>
+     <soapenv:Body>
+        <net:d0s0v0m0>
+            <arg0>FAULT</arg0>
+            <arg1>?</arg1>
+        </net:d0s0v0m0>
+     </soapenv:Body>
+  </soapenv:Envelope>
+
+Date: 2013-09-13 16:48:34.0821 -0400
+Latency: 0
+ResponseType: FAIL
+FailureDescription: All service URLs appear to be failing (1 URL in total), unable to successfully invoke method. URL 'url1' failed with error: This is the failure explanation
+RequestorIp: 127.0.0.1 (localhost)
+DomainId: d0
+ServiceId: d0s0
+ServiceVersionId: d0s0v0
+ServiceVersionPid: 1
+User: none
+Request:
+  <soapenv:Envelope xmlns:net="net:svcret:demo" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+     <soapenv:Header>
+     </soapenv:Header>
+     <soapenv:Body>
+        <net:d0s0v0m0>
+            <arg0>FAULT</arg0>
+            <arg1>?</arg1>
+        </net:d0s0v0m0>
+     </soapenv:Body>
+  </soapenv:Envelope>
+
+Date: 2013-09-13 16:49:21.0215 -0400
+Latency: 0
+ResponseType: FAIL
+FailureDescription: All service URLs appear to be failing (1 URL in total), unable to successfully invoke method. URL 'url1' failed with error: This is the failure explanation
+RequestorIp: 127.0.0.1 (localhost)
+DomainId: d0
+ServiceId: d0s0
+ServiceVersionId: d0s0v0
+ServiceVersionPid: 1
+User: none
+Request:
+  <soapenv:Envelope xmlns:net="net:svcret:demo" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+     <soapenv:Header>
+     </soapenv:Header>
+     <soapenv:Body>
+        <net:d0s0v0m0>
+            <arg0>FAULT</arg0>
+            <arg1>?</arg1>
+        </net:d0s0v0m0>
+     </soapenv:Body>
+  </soapenv:Envelope>
+

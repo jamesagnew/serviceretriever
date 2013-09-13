@@ -33,28 +33,31 @@ import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.PartialUserListRequest;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 
 public interface IBaseAdminService {
 
-	GDomain addDomain(GDomain theDomain) throws ProcessingException;
+	BaseGMonitorRule loadMonitorRuleAndDetailedSatistics(long theRulePid);
 
-	GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ProcessingException;
+	GDomain addDomain(GDomain theDomain) throws ProcessingException, UnexpectedFailureException;
+
+	GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ProcessingException, UnexpectedFailureException;
 
 	byte[] createWsdlBundle(long theServiceVersionPid) throws ProcessingException, IOException;
 
 	GAuthenticationHostList deleteAuthenticationHost(long thePid) throws ProcessingException;
 
-	void deleteDomain(long thePid) throws ProcessingException;
+	void deleteDomain(long thePid) throws ProcessingException, UnexpectedFailureException;
 
-	GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ProcessingException;
+	GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ProcessingException, UnexpectedFailureException;
 
-	GDomainList deleteService(long theServicePid) throws ProcessingException;
+	GDomainList deleteService(long theServicePid) throws ProcessingException, UnexpectedFailureException;
 
-	GDomainList deleteServiceVersion(long thePid) throws ProcessingException;
+	GDomainList deleteServiceVersion(long thePid) throws ProcessingException, UnexpectedFailureException;
 
 	long getDefaultHttpClientConfigPid();
 
-	GDomain getDomainByPid(long theDomain) throws ProcessingException;
+	GDomain getDomainByPid(long theDomain) throws ProcessingException, UnexpectedFailureException;
 
 	long getDomainPid(String theDomainId) throws ProcessingException;
 
@@ -64,7 +67,7 @@ public interface IBaseAdminService {
 
 	Collection<DtoLibraryMessage> getLibraryMessagesForService(long thePid, boolean theLoadContents) throws ProcessingException;
 
-	GService getServiceByPid(long theService) throws ProcessingException;
+	GService getServiceByPid(long theService) throws ProcessingException, UnexpectedFailureException;
 
 	long getServicePid(long theDomainPid, String theServiceId) throws ProcessingException;
 
@@ -72,17 +75,17 @@ public interface IBaseAdminService {
 
 	BaseGAuthHost loadAuthenticationHost(long thePid) throws ProcessingException;
 
-	GConfig loadConfig() throws ProcessingException;
+	GConfig loadConfig() throws UnexpectedFailureException;
 
-	GDomainList loadDomainList() throws ProcessingException;
+	GDomainList loadDomainList() throws ProcessingException, UnexpectedFailureException;
 
 	Collection<DtoLibraryMessage> loadLibraryMessages() throws ProcessingException;
 
-	ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ProcessingException;
+	ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ProcessingException, UnexpectedFailureException;
 
 	List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart);
 
-	GMonitorRuleList loadMonitorRuleList() throws ProcessingException;
+	GMonitorRuleList loadMonitorRuleList() throws ProcessingException, UnexpectedFailureException;
 
 	GRecentMessage loadRecentMessageForServiceVersion(long thePid) throws ProcessingException;
 
@@ -92,36 +95,36 @@ public interface IBaseAdminService {
 
 	GRecentMessageLists loadRecentTransactionListForUser(long thePid);
 
-	GSoap11ServiceVersionAndResources loadServiceVersion(long theServiceVersionPid) throws ProcessingException;
+	GSoap11ServiceVersionAndResources loadServiceVersion(long theServiceVersionPid) throws UnexpectedFailureException;
 
-	GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws ProcessingException;
+	GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws UnexpectedFailureException;
 
-	GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(DtoServiceVersionSoap11 theService, String theWsdlUrl) throws ProcessingException;
+	GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(DtoServiceVersionSoap11 theService, String theWsdlUrl) throws ProcessingException, UnexpectedFailureException;
 
-	GUser loadUser(long thePid, boolean theLoadStats) throws ProcessingException;
+	GUser loadUser(long thePid, boolean theLoadStats) throws ProcessingException, UnexpectedFailureException;
 
-	GPartialUserList loadUsers(PartialUserListRequest theRequest) throws ProcessingException;
+	GPartialUserList loadUsers(PartialUserListRequest theRequest) throws ProcessingException, UnexpectedFailureException;
 
-	GServiceVersionUrl resetCircuitBreaker(long theUrlPid) throws ProcessingException;
+	GServiceVersionUrl resetCircuitBreaker(long theUrlPid) throws  UnexpectedFailureException;
 
 	GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) throws ProcessingException;
 
-	GConfig saveConfig(GConfig theConfig) throws ProcessingException;
+	GConfig saveConfig(GConfig theConfig) throws UnexpectedFailureException;
 
-	GDomainList saveDomain(GDomain theDomain) throws ProcessingException;
+	GDomainList saveDomain(GDomain theDomain) throws ProcessingException, UnexpectedFailureException;
 
 	GHttpClientConfig saveHttpClientConfig(GHttpClientConfig theConfig, byte[] theNewTruststore, String theNewTruststorePass, byte[] theNewKeystore, String theNewKeystorePass)
-			throws ProcessingException;
+			throws ProcessingException, UnexpectedFailureException;
 
 	void saveLibraryMessage(DtoLibraryMessage theMessage) throws ProcessingException;
 
-	void saveMonitorRule(BaseGMonitorRule theRule) throws ProcessingException;
+	void saveMonitorRule(BaseGMonitorRule theRule) throws UnexpectedFailureException, ProcessingException;
 
-	GDomainList saveService(GService theService) throws ProcessingException;
+	GDomainList saveService(GService theService) throws ProcessingException, UnexpectedFailureException;
 
-	<T extends BaseGServiceVersion> T saveServiceVersion(long theDomain, long theService, T theVersion, List<GResource> theResources) throws ProcessingException;
+	<T extends BaseGServiceVersion> T saveServiceVersion(long theDomain, long theService, T theVersion, List<GResource> theResources) throws ProcessingException, UnexpectedFailureException;
 
-	GUser saveUser(GUser theUser) throws ProcessingException;
+	GUser saveUser(GUser theUser) throws  UnexpectedFailureException, ProcessingException;
 
 	String suggestNewVersionNumber(Long theDomainPid, Long theServicePid);
 

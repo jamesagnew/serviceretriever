@@ -4,7 +4,7 @@ import java.util.concurrent.Future;
 
 import javax.ejb.Local;
 
-import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
 
@@ -19,9 +19,8 @@ public interface IMonitorService {
 
 	/**
 	 * Save a rule and notify anyone interested
-	 * @return 
 	 */
-	BasePersMonitorRule saveRule(BasePersMonitorRule theRule) throws ProcessingException;
+	BasePersMonitorRule saveRule(BasePersMonitorRule theRule) throws UnexpectedFailureException;
 
 	void runActiveChecks();
 

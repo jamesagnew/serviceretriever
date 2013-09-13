@@ -19,6 +19,10 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import net.svcret.admin.shared.enm.MonitorRuleTypeEnum;
+import net.svcret.admin.shared.model.BaseGMonitorRule;
+import net.svcret.admin.shared.model.DtoMonitorRuleActive;
+import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
+import net.svcret.admin.shared.model.GMonitorRulePassive;
 
 @Entity
 @Table(name = "PX_MONITOR_RULE")
@@ -118,6 +122,60 @@ public abstract class BasePersMonitorRule extends BasePersObject {
 		for (PersMonitorRuleNotifyContact next : getNotifyContact()) {
 			retVal.add(next.getEmail());
 		}
+		return retVal;
+	}
+
+	public BaseGMonitorRule toDao(boolean theLoadDetailedStatistics) {
+		BaseGMonitorRule retVal = null;
+		switch (this.getRuleType()) {
+		case PASSIVE: {
+			GMonitorRulePassive ruleDto = new GMonitorRulePassive();
+			PersMonitorRulePassive rule = (PersMonitorRulePassive) this;
+			ruleDto.setPassiveFireForBackingServiceLatencyIsAboveMillis(rule.getPassiveFireForBackingServiceLatencyIsAboveMillis());
+			ruleDto.setPassiveFireForBackingServiceLatencySustainTimeMins(rule.getPassiveFireForBackingServiceLatencySustainTimeMins());
+			ruleDto.setPassiveFireIfAllBackingUrlsAreUnavailable(rule.isPassiveFireIfAllBackingUrlsAreUnavailable());
+			ruleDto.setPassiveFireIfSingleBackingUrlIsUnavailable(rule.isPassiveFireIfSingleBackingUrlIsUnavailable());
+			for (PersMonitorAppliesTo next : rule.getAppliesTo()) {
+				if (next.getItem() instanceof PersDomain) {
+					PersDomain domain = (PersDomain) next.getItem();
+					ruleDto.getAppliesTo().add(new GMonitorRuleAppliesTo(domain.getPid(), domain.getDomainId(),null,null,null,null));
+				} else if (next.getItem() instanceof PersService) {
+					PersService service = (PersService) next.getItem();
+					PersDomain domain = service.getDomain();
+					ruleDto.getAppliesTo().add(new GMonitorRuleAppliesTo(domain.getPid(), domain.getDomainId(),service.getPid(),service.getServiceId(),null,null));
+				} else if (next.getItem() instanceof BasePersServiceVersion) {
+					BasePersServiceVersion svcVer = (BasePersServiceVersion) next.getItem();
+					PersService service = svcVer.getService();
+					PersDomain domain = service.getDomain();
+					ruleDto.getAppliesTo().add(new GMonitorRuleAppliesTo(domain.getPid(), domain.getDomainId(),service.getPid(),service.getServiceId(),svcVer.getPid(),svcVer.getVersionId()));
+				}
+			}
+
+			retVal = ruleDto;
+			break;
+		}
+		case ACTIVE: {
+			DtoMonitorRuleActive ruleDto = new DtoMonitorRuleActive();
+			PersMonitorRuleActive rule = (PersMonitorRuleActive) this;
+			for (PersMonitorRuleActiveCheck next : rule.getActiveChecks()) {
+				ruleDto.getCheckList().add(next.toDto(theLoadDetailedStatistics));
+			}
+			retVal = ruleDto;
+			break;
+		}
+		}
+
+		if (retVal == null) {
+			throw new IllegalStateException("Unknown type: " + this.getRuleType());
+		}
+		retVal.setPid(this.getPid());
+		retVal.setActive(this.isRuleActive());
+		retVal.setName(this.getRuleName());
+
+		for (PersMonitorRuleNotifyContact next : this.getNotifyContact()) {
+			retVal.getNotifyEmailContacts().add(next.getEmail());
+		}
+
 		return retVal;
 	}
 

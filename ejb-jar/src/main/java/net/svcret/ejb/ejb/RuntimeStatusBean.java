@@ -1,6 +1,9 @@
 package net.svcret.ejb.ejb;
 
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.*;
+import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.DAY;
+import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.HOUR;
+import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.MINUTE;
+import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.TEN_MINUTE;
 
 import java.net.HttpCookie;
 import java.text.DateFormat;
@@ -44,6 +47,7 @@ import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStatsPk;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -94,10 +98,10 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private IDao myDao;
 
 	private ReentrantLock myFlushLock = new ReentrantLock();
-	private AtomicLong myUnflushedNodeSuccessMethodInvocations=new AtomicLong();
-	private AtomicLong myUnflushedNodeFaultMethodInvocations=new AtomicLong();
-	private AtomicLong myUnflushedNodeFailMethodInvocations=new AtomicLong();
-	private AtomicLong myUnflushedNodeSecFailMethodInvocations=new AtomicLong();
+	private AtomicLong myUnflushedNodeSuccessMethodInvocations = new AtomicLong();
+	private AtomicLong myUnflushedNodeFaultMethodInvocations = new AtomicLong();
+	private AtomicLong myUnflushedNodeFailMethodInvocations = new AtomicLong();
+	private AtomicLong myUnflushedNodeSecFailMethodInvocations = new AtomicLong();
 	private Date myNodeStatisticsDate;
 	private final ReentrantLock myNodeStatisticsLock = new ReentrantLock();
 	private Date myNowForUnitTests;
@@ -119,7 +123,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public UrlPoolBean buildUrlPool(BasePersServiceVersion theServiceVersion, Map<String, List<String>> theRequestHeaders) throws ProcessingException {
+	public UrlPoolBean buildUrlPool(BasePersServiceVersion theServiceVersion, Map<String, List<String>> theRequestHeaders) throws UnexpectedFailureException {
 		UrlPoolBean retVal = new UrlPoolBean();
 
 		PersHttpClientConfig clientConfig = theServiceVersion.getHttpClientConfig();
@@ -141,7 +145,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override
-	public void collapseStats() throws ProcessingException {
+	public void collapseStats() throws UnexpectedFailureException {
 		/*
 		 * Make sure the flush only happens once per minute
 		 */
@@ -177,7 +181,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override
 	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, PersServiceVersionMethod theMethod, PersUser theUser, HttpResponseBean theHttpResponse,
-			InvocationResponseResultsBean theInvocationResponseResultsBean, Long theThrottleFullIfAny) throws ProcessingException {
+			InvocationResponseResultsBean theInvocationResponseResultsBean, Long theThrottleFullIfAny) throws UnexpectedFailureException {
 		Validate.notNull(theInvocationTime, "InvocationTime");
 		Validate.notNull(theMethod, "Method");
 		Validate.notNull(theInvocationResponseResultsBean, "InvocationResponseResults");
@@ -200,7 +204,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		case THROTTLE_REJ:
 			break;
 		}
-		
+
 		/*
 		 * Record method statistics
 		 */
@@ -318,7 +322,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	}
 
-	private void updateStickySession(String theSessionId, BasePersServiceVersion theSvcVer, PersServiceVersionUrl theSuccessfulUrl) throws ProcessingException {
+	private void updateStickySession(String theSessionId, BasePersServiceVersion theSvcVer, PersServiceVersionUrl theSuccessfulUrl) throws UnexpectedFailureException {
 		if (StringUtils.isBlank(theSessionId)) {
 			return;
 		}
@@ -374,8 +378,9 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			PersNodeStats stats = new PersNodeStats(InvocationStatsIntervalEnum.MINUTE, date, myConfigSvc.getNodeId());
 			stats.collectMemoryStats();
 
-			stats.addMethodInvocations(myUnflushedNodeSuccessMethodInvocations.getAndSet(0),myUnflushedNodeFaultMethodInvocations.getAndSet(0),myUnflushedNodeFailMethodInvocations.getAndSet(0),myUnflushedNodeSecFailMethodInvocations.getAndSet(0));
-			
+			stats.addMethodInvocations(myUnflushedNodeSuccessMethodInvocations.getAndSet(0), myUnflushedNodeFaultMethodInvocations.getAndSet(0), myUnflushedNodeFailMethodInvocations.getAndSet(0),
+					myUnflushedNodeSecFailMethodInvocations.getAndSet(0));
+
 			myDao.saveInvocationStats(Collections.singletonList(stats));
 
 			myNodeStatisticsDate = date;
@@ -532,7 +537,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 	}
 
-	private void doCollapseStats() throws ProcessingException {
+	private void doCollapseStats() throws UnexpectedFailureException {
 		ourLog.debug("Doing a stats collapse pass");
 
 		PersConfig config = myConfigSvc.getConfig();
@@ -980,7 +985,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	}
 
 	private void shuffleUrlPoolBasedOnStickySessionPolicy(String theSesionId, UrlPoolBean theUrlPool, Map<String, List<String>> theHeaders, BasePersServiceVersion theServiceVersion)
-			throws ProcessingException {
+			throws UnexpectedFailureException {
 		if (StringUtils.isBlank(theSesionId)) {
 			return;
 		}
@@ -1011,7 +1016,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	}
 
-	private void shuffleUrlPoolBasedOnStickySessionPolicy(UrlPoolBean theUrlPool, Map<String, List<String>> theHeaders, BasePersServiceVersion theSvcVer) throws ProcessingException {
+	private void shuffleUrlPoolBasedOnStickySessionPolicy(UrlPoolBean theUrlPool, Map<String, List<String>> theHeaders, BasePersServiceVersion theSvcVer) throws UnexpectedFailureException {
 		synchronized (myStickySessionUrlBindings) {
 
 			PersHttpClientConfig clientConfig = theSvcVer.getHttpClientConfig();
@@ -1082,8 +1087,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	}
 
 	@VisibleForTesting
-	 void setBroadcastSender(IBroadcastSender theBroadcastSender) {
-		myBroadcastSender=theBroadcastSender;
+	void setBroadcastSender(IBroadcastSender theBroadcastSender) {
+		myBroadcastSender = theBroadcastSender;
 	}
 
 }
