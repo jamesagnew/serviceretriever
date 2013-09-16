@@ -1,11 +1,7 @@
 package net.svcret.ejb.ejb;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -21,7 +17,7 @@ import java.util.concurrent.CountDownLatch;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.UrlPoolBean;
-import net.svcret.ejb.ejb.soap.Soap11ResponseValidator;
+import net.svcret.ejb.invoker.soap.Soap11ResponseValidator;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.util.RandomServerPortProvider;

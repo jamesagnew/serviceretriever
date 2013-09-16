@@ -184,9 +184,8 @@ public class EditUsersPanel extends FlowPanel {
 				int[] fault = theObject.getTransactionsFault60mins();
 				int[] fail = theObject.getTransactionsFail60mins();
 				int[] secFail = theObject.getTransactionsSecurityFail60mins();
-				Date firstDate = theObject.getStatistics60MinuteFirstDate();
 				Date lastAccess = theObject.getStatsLastAccess();
-				BaseDetailPanel.renderTransactionGraphsAsHtml(b, success, fault, fail, secFail, firstDate, true,lastAccess);
+				BaseDetailPanel.renderTransactionGraphsAsHtml(b, success, fault, fail, secFail, true,lastAccess);
 
 				return b.toSafeHtml();
 			}

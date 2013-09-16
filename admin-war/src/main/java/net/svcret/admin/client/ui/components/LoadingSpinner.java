@@ -1,6 +1,7 @@
 package net.svcret.admin.client.ui.components;
 
 import net.svcret.admin.client.AdminPortal;
+import net.svcret.admin.client.MyResources;
 
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
@@ -13,16 +14,16 @@ public class LoadingSpinner extends FlowPanel {
     private Image myImage;
 
     public LoadingSpinner(String theText) {
-        setStyleName("spinnerStatusMessageStyle");
+        setStyleName(MyResources.CSS.spinnerStatusMessageStyle());
         
         myText = theText;
         
         myImage = new Image(AdminPortal.IMAGES.spinner());
-        myImage.setStyleName("spinnerElement");
+        myImage.setStyleName(MyResources.CSS.spinnerElement());
         this.add(myImage);
         
         myLoadingLabel = new HTML();
-        myLoadingLabel.setStyleName("spinnerElement");
+        myLoadingLabel.setStyleName(MyResources.CSS.spinnerElement());
         this.add(myLoadingLabel);
                 
         hide();

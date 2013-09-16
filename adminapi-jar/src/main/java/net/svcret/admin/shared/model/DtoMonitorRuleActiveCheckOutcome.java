@@ -18,6 +18,8 @@ public class DtoMonitorRuleActiveCheckOutcome extends BaseGObject {
 	@XmlElement(name = "FailureMessage", nillable = true)
 	private String myFailureMessage;
 
+	private long myLatency;
+
 	@XmlElement(name = "Success")
 	private boolean mySuccess;
 
@@ -26,6 +28,10 @@ public class DtoMonitorRuleActiveCheckOutcome extends BaseGObject {
 
 	public String getFailureMessage() {
 		return myFailureMessage;
+	}
+
+	public long getLatency() {
+		return myLatency;
 	}
 
 	public Date getTimestamp() {
@@ -38,6 +44,10 @@ public class DtoMonitorRuleActiveCheckOutcome extends BaseGObject {
 
 	public void setFailureMessage(String theFailureMessage) {
 		myFailureMessage = theFailureMessage;
+	}
+
+	public void setLatency(long theLatency) {
+		myLatency = theLatency;
 	}
 
 	public void setSuccess(boolean theSuccess) {

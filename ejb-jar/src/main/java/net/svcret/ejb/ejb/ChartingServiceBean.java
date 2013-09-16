@@ -1,13 +1,6 @@
 package net.svcret.ejb.ejb;
 
-import static net.svcret.ejb.ejb.AdminServiceBean.addToInt;
-import static net.svcret.ejb.ejb.AdminServiceBean.addToLong;
-import static net.svcret.ejb.ejb.AdminServiceBean.doWithStatsByMinute;
-import static net.svcret.ejb.ejb.AdminServiceBean.doWithStatsSupportFindInterval;
-import static net.svcret.ejb.ejb.AdminServiceBean.doWithStatsSupportIncrement;
-import static net.svcret.ejb.ejb.AdminServiceBean.growToSizeDouble;
-import static net.svcret.ejb.ejb.AdminServiceBean.growToSizeInt;
-import static net.svcret.ejb.ejb.AdminServiceBean.growToSizeLong;
+import static net.svcret.ejb.ejb.AdminServiceBean.*;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;

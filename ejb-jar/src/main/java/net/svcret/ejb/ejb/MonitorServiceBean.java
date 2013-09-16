@@ -118,7 +118,16 @@ public class MonitorServiceBean implements IMonitorService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public Future<Void> runActiveCheckInNewTransaction(PersMonitorRuleActiveCheck theCheck) {
+		runActiveCheckInCurrentTransaction(theCheck, true);
+
+		return new AsyncResult<Void>(null);
+	}
+
+	@Override
+	public List<PersMonitorRuleActiveCheckOutcome> runActiveCheckInCurrentTransaction(PersMonitorRuleActiveCheck theCheck, boolean thePersistResults) {
 		ourLog.debug("Beginning active check pass for check {}", theCheck.getPid());
+
+		List<PersMonitorRuleActiveCheckOutcome> retVal = new ArrayList<PersMonitorRuleActiveCheckOutcome>();
 
 		long svcVerPid = theCheck.getServiceVersion().getPid();
 		String requestBody = theCheck.getMessage().getMessageBody();
@@ -146,6 +155,7 @@ public class MonitorServiceBean implements IMonitorService {
 				recentOutcome.setFailDescription(nextOutcome.getFailureDescription());
 				recentOutcome.setTransactionMillis(nextOutcome.getHttpResponse().getResponseTime());
 				recentOutcome.setTransactionTime(nextOutcome.getRequestStartedTime());
+				retVal.add(recentOutcome);
 
 				if (outcome != null) {
 					for (PersMonitorRuleFiringProblem next : outcome.getProblems()) {
@@ -155,11 +165,15 @@ public class MonitorServiceBean implements IMonitorService {
 					}
 				}
 
-				myDao.saveMonitorRuleActiveCheckOutcome(recentOutcome);
+				if (thePersistResults) {
+					myDao.saveMonitorRuleActiveCheckOutcome(recentOutcome);
+				}
 			}
 
-			Date cutoff = new Date(System.currentTimeMillis() - (10 * DateUtils.MILLIS_PER_MINUTE));
-			myDao.deleteMonitorRuleActiveCheckOutcomesBeforeCutoff(theCheck, cutoff);
+			if (thePersistResults) {
+				Date cutoff = new Date(System.currentTimeMillis() - (10 * DateUtils.MILLIS_PER_MINUTE));
+				myDao.deleteMonitorRuleActiveCheckOutcomesBeforeCutoff(theCheck, cutoff);
+			}
 
 		} catch (Exception e) {
 			ourLog.error("Failed to invoke service", e);
@@ -168,6 +182,10 @@ public class MonitorServiceBean implements IMonitorService {
 			problem.setActiveCheck(theCheck);
 			Collection<PersMonitorRuleFiringProblem> problems = Collections.singletonList(problem);
 			outcome = toFiring(theCheck.getRule(), problems);
+		}
+
+		if (!thePersistResults) {
+			return retVal;
 		}
 
 		/*
@@ -237,7 +255,7 @@ public class MonitorServiceBean implements IMonitorService {
 			}
 		}
 
-		return new AsyncResult<Void>(null);
+		return retVal;
 	}
 
 	private PersMonitorRuleFiring evaluateRuleForActiveIssues(PersMonitorRuleActiveCheck theCheck, Collection<SidechannelOrchestratorResponseBean> theOutcomes) {

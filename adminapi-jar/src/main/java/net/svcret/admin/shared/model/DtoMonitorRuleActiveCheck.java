@@ -1,5 +1,8 @@
 package net.svcret.admin.shared.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -29,18 +32,10 @@ public class DtoMonitorRuleActiveCheck extends BaseGObject {
 	private String myMessageDescription;
 	@XmlElement(name = "config_MessagePid")
 	private long myMessagePid;
-	@XmlElement(name = "runtime_RecentOutcomes")
-	private DtoMonitorRuleActiveCheckOutcomeList myRecentOutcomes;
+	@XmlElement(name = "runtime_RecentOutcomesForUrl")
+	private List<DtoMonitorRuleActiveCheckOutcomeList> myRecentOutcomesForUrl;
 	@XmlElement(name = "runtime_ServiceVersionPid")
 	private long myServiceVersionPid;
-
-	public DtoMonitorRuleActiveCheckOutcomeList getRecentOutcomes() {
-		return myRecentOutcomes;
-	}
-
-	public void setRecentOutcomes(DtoMonitorRuleActiveCheckOutcomeList theRecentOutcomes) {
-		myRecentOutcomes = theRecentOutcomes;
-	}
 
 	public int getCheckFrequencyNum() {
 		return myCheckFrequencyNum;
@@ -68,6 +63,13 @@ public class DtoMonitorRuleActiveCheck extends BaseGObject {
 
 	public long getMessagePid() {
 		return myMessagePid;
+	}
+
+	public List<DtoMonitorRuleActiveCheckOutcomeList> getRecentOutcomesForUrl() {
+		if (myRecentOutcomesForUrl == null) {
+			myRecentOutcomesForUrl = new ArrayList<DtoMonitorRuleActiveCheckOutcomeList>();
+		}
+		return myRecentOutcomesForUrl;
 	}
 
 	public long getServiceVersionPid() {

@@ -1,6 +1,6 @@
 package net.svcret.ejb.ex;
 
-import net.svcret.ejb.ejb.soap.InvocationFailedException;
+import net.svcret.ejb.invoker.soap.InvocationFailedException;
 
 public class InvocationFailedDueToInternalErrorException extends InvocationFailedException {
 

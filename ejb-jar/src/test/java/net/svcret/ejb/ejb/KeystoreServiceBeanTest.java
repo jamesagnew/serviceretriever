@@ -47,7 +47,7 @@ public class KeystoreServiceBeanTest {
 	}
 
 	@Test
-	public void testExamineKeystoreBadPassword() throws IOException, ProcessingException, ParseException {
+	public void testExamineKeystoreBadPassword() throws Exception {
 
 		byte[] bytes = IOUtils.toByteArray(KeystoreServiceBean.class.getResourceAsStream("/keystore/keystore.jks"));
 
@@ -61,7 +61,7 @@ public class KeystoreServiceBeanTest {
 	}
 
 	@Test
-	public void testExamineKeystoreBadFile() throws IOException, ProcessingException, ParseException {
+	public void testExamineKeystoreBadFile() throws Exception {
 
 		byte[] bytes = IOUtils.toByteArray(KeystoreServiceBean.class.getResourceAsStream("/logback-test.xml"));
 

@@ -53,7 +53,6 @@ import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
-import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
@@ -78,10 +77,10 @@ import com.google.gwt.view.client.ListDataProvider;
 
 public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends TabPanel {
 
+	private static final int TAB_DOESNT_EXIST = -2;
 	private static final int COL_CLI_SECURITY_MODULE = 1;
 	private static final int COL_METHOD_NAME = 1;
 	private static final int COL_SVR_SECURITY_MODULE = 1;
-	private static final NumberFormat TRANSACTION_FORMAT = NumberFormat.getFormat("0.0#");
 
 	private Grid myClientSecurityGrid;
 	private CheckBox myExplicitProxyPathEnabledCheckbox;
@@ -114,11 +113,16 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		final FlowPanel methodPanel = new FlowPanel();
 		add(methodPanel, "Methods");
 
-		final int urlsIndex = getWidgetCount();
-		FlowPanel urlsPanel = new FlowPanel();
-		add(urlsPanel, "URLs");
-		initUrlPanel(urlsPanel);
-
+		final int urlsIndex;
+		if (isIncludeUrlsTab()) {
+			urlsIndex = getWidgetCount();
+			FlowPanel urlsPanel = new FlowPanel();
+			add(urlsPanel, "URLs");
+			initUrlPanel(urlsPanel);
+		}else {
+			urlsIndex=TAB_DOESNT_EXIST;
+		}
+		
 		FlowPanel accessPanel = new FlowPanel();
 		add(accessPanel, "Access");
 		initAccessPanel(accessPanel);
@@ -126,11 +130,14 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		FlowPanel securityPanel = new FlowPanel();
 		add(securityPanel, "Security");
 		initServerSecurityPanel(securityPanel);
-		FlowPanel csp = new FlowPanel();
-		csp.addStyleName(CssConstants.CONTENT_INNER_SUBPANEL);
-		securityPanel.add(csp);
-		initClientSecurityPanel(csp);
-
+		
+		if (isIncludeClientSecurity()) {
+			FlowPanel csp = new FlowPanel();
+			csp.addStyleName(CssConstants.CONTENT_INNER_SUBPANEL);
+			securityPanel.add(csp);
+			initClientSecurityPanel(csp);
+		}
+		
 		FlowPanel transactionFlowPanel = new FlowPanel();
 		add(transactionFlowPanel, "Config");
 		initJournalPanel(transactionFlowPanel);
@@ -156,6 +163,14 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 
 		selectTab(0);
 
+	}
+
+	protected boolean isIncludeClientSecurity() {
+		return true;
+	}
+
+	protected boolean isIncludeUrlsTab() {
+		return true;
 	}
 
 	public void doBackgroundSave() {
@@ -448,7 +463,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 					int[] fail = detailedStats.getMethodPidToFailCount().get(theObject.getPid());
 					int[] secFail = detailedStats.getMethodPidToSecurityFailCount().get(theObject.getPid());
 
-					renderTransactionGraphsAsHtml(b, success, fault, fail, secFail, new Date(detailedStats.getStatsTimestamps().get(0)),false,null);
+					renderTransactionGraphsAsHtml(b, success, fault, fail, secFail, false,null);
 				}
 				return b.toSafeHtml();
 			}
@@ -490,8 +505,8 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 
 		grid.getColumnSortList().push(nameColumn);
 
+		// Add Method
 		theMethodPanel.add(new HtmlBr());
-
 		PButton addButton = new PButton(IMAGES.iconAdd(), MSGS.actions_Add());
 		theMethodPanel.add(addButton);
 		HtmlLabel addNameLabel = new HtmlLabel("Method Name:", "addMethodTb");
@@ -755,7 +770,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		}
 	}
 
-	public static void renderTransactionGraphsAsHtml(SafeHtmlBuilder b, int[] success, int[] fault, int[] fail, int[] secFail, Date theFirstDate, boolean theLastUsageProvidedIfKnown, Date theLastUsage) {
+	public static void renderTransactionGraphsAsHtml(SafeHtmlBuilder b, int[] success, int[] fault, int[] fail, int[] secFail, boolean theLastUsageProvidedIfKnown, Date theLastUsage) {
 		if (hasValues(success) || hasValues(fault) || hasValues(fail) || hasValues(secFail)) {
 			UsageSparkline sparkline = new UsageSparkline(success, fault, fail, secFail, "");
 			b.appendHtmlConstant("<span id='" + sparkline.getId() + "'></span>");
@@ -780,18 +795,6 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 			}
 		}
 		return false;
-	}
-
-	private static String toMethodStatDesc(int[] theSecFail) {
-		int total = 0;
-		int max = 0;
-		for (int next : theSecFail) {
-			total += next;
-			max = Math.max(max, next);
-		}
-
-		double avg = ((double) total) / (double) theSecFail.length;
-		return "Avg:" + TRANSACTION_FORMAT.format(avg) + " Max:" + TRANSACTION_FORMAT.format(max) + "/min";
 	}
 
 	static long newUncommittedSessionId() {

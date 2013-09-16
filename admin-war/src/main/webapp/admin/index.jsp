@@ -42,6 +42,16 @@
 			$(theElement).sparkline(theValues, sparkOptions);
 		}
 		
+		function jsDrawRecentMonitorTestsSparkline(theElement, theValues, theHeight, theWidth) {
+			var sparkOptions = new Array();
+			sparkOptions['height'] = theHeight;
+			sparkOptions['width'] = theWidth;
+			sparkOptions['type'] = 'tristate';
+			sparkOptions['disableTooltips'] = true;
+			sparkOptions['disableInteraction'] = true;
+			$(theElement).sparkline(theValues, sparkOptions);			
+		}
+		
 		function jsDrawSparkline(theElement, theValues, theHeight, theWidth, theType, theTimelines) {
 			var sparkOptions = new Array();
 			sparkOptions['chartRangeMin'] = 0;

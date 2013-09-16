@@ -55,6 +55,7 @@ public class PersMonitorRuleActiveCheckOutcome extends BasePersSavedTransaction 
 		retVal.setPid(getPid());
 		retVal.setSuccess(!Boolean.TRUE.equals(myFailed));
 		retVal.setTimestamp(getTransactionTime());
+		retVal.setLatency(getTransactionMillis());
 		
 		// TODO: should we be storing the reason the check failed so that we have
 		// something here even if the call itself doesn't fail (i.e. latency issue)

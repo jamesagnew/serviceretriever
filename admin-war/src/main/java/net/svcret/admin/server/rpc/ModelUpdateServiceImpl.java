@@ -1,7 +1,6 @@
 package net.svcret.admin.server.rpc;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,8 +19,11 @@ import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.BaseGMonitorRule;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
+import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
 import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
+import net.svcret.admin.shared.model.DtoServiceVersionVirtual;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
@@ -220,6 +222,12 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 			break;
 		case SOAP11:
 			retVal = new DtoServiceVersionSoap11();
+			break;
+		case HL7OVERHTTP:
+			retVal= new DtoServiceVersionHl7OverHttp();
+			break;
+		case VIRTUAL:
+			retVal= new DtoServiceVersionVirtual();
 			break;
 		}
 
@@ -852,7 +860,23 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 
 	@Override
 	public BaseGMonitorRule loadMonitorRule(long theRulePid) {
+		if (isMockMode()) {
+			return getMock().loadMonitorRule(theRulePid);
+		}
 		return myAdminSvc.loadMonitorRuleAndDetailedSatistics(theRulePid);
+	}
+
+	@Override
+	public DtoMonitorRuleActiveCheck executeMonitorRuleActiveCheck(DtoMonitorRuleActiveCheck theCheck) throws ServiceFailureException {
+		if (isMockMode()) {
+			return getMock().executeMonitorRuleActiveCheck(theCheck);
+		}
+		try {
+			return myAdminSvc.executeMonitorRuleActiveCheck(theCheck);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to execute active check", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
 	}
 
 }

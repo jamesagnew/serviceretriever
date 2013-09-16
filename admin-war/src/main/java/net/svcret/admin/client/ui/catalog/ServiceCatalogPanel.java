@@ -5,6 +5,8 @@ import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
+import net.svcret.admin.shared.model.DtoServiceVersionVirtual;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
@@ -94,7 +96,7 @@ public class ServiceCatalogPanel extends FlowPanel {
 					Widget endpoint = null;
 					switch (nextVersion.getProtocol()) {
 					case SOAP11:
-						endpoint = new Soap11EndpointRenderer(myConfig).render((DtoServiceVersionSoap11) nextVersion);
+						endpoint = new EndpointRendererSoap11(myConfig).render((DtoServiceVersionSoap11) nextVersion);
 						Anchor anchor = new Anchor();
 						anchor.setHref("resources/wsdl_bundle_" + nextVersion.getPid() + ".zip");
 						anchor.setText("Download");
@@ -103,6 +105,12 @@ public class ServiceCatalogPanel extends FlowPanel {
 						break;
 					case JSONRPC20:
 						endpoint = new EndpointRendererJsonRpc20(myConfig).render((DtoServiceVersionJsonRpc20) nextVersion);
+						break;
+					case HL7OVERHTTP:
+						endpoint = new EndpointRendererHl7OverHttp(myConfig).render((DtoServiceVersionHl7OverHttp) nextVersion);
+						break;
+					case VIRTUAL:
+						endpoint = new EndpointRendererVirtual(myConfig).render((DtoServiceVersionVirtual) nextVersion);
 						break;
 					}
 					

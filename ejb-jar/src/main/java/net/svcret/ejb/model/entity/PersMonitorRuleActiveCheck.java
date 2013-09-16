@@ -1,7 +1,10 @@
 package net.svcret.ejb.model.entity;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import javax.persistence.Access;
 import javax.persistence.AccessType;
@@ -23,7 +26,10 @@ import javax.persistence.Table;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcomeList;
+import net.svcret.ejb.api.IDao;
+import net.svcret.ejb.ex.ProcessingException;
 
 //@formatter:off
 @Entity
@@ -186,14 +192,60 @@ public class PersMonitorRuleActiveCheck extends BasePersObject {
 		retVal.setServiceVersionPid(getServiceVersion().getPid());
 		
 		if (theLoadDetailedStatistics) {
-			retVal.setRecentOutcomes(new DtoMonitorRuleActiveCheckOutcomeList());
+
+			// Sort recent outcomes by URL
+			TreeMap<PersServiceVersionUrl, List<PersMonitorRuleActiveCheckOutcome>> outcomes = new TreeMap<PersServiceVersionUrl, List<PersMonitorRuleActiveCheckOutcome>>(new Comparator<PersServiceVersionUrl>() {
+				@Override
+				public int compare(PersServiceVersionUrl theO1, PersServiceVersionUrl theO2) {
+					return theO1.getUrlId().compareTo(theO2.getUrlId());
+				}
+			});
 			for (PersMonitorRuleActiveCheckOutcome next : getRecentOutcomes()) {
-				retVal.getRecentOutcomes().getOutcomes().add(next.toDto());
+				if (!outcomes.containsKey(next.getImplementationUrl())){
+					outcomes.put(next.getImplementationUrl(), new ArrayList<PersMonitorRuleActiveCheckOutcome>());
+				}
+				outcomes.get(next.getImplementationUrl()).add(next);
 			}
+			
+			// .. and add them to the DTO
+			for (Entry<PersServiceVersionUrl, List<PersMonitorRuleActiveCheckOutcome>> nextEntry : outcomes.entrySet()) {
+				DtoMonitorRuleActiveCheckOutcomeList outcomeList = new DtoMonitorRuleActiveCheckOutcomeList();
+				outcomeList.setUrl(nextEntry.getKey().getUrl());
+				outcomeList.setUrlId(nextEntry.getKey().getUrlId());
+				List<DtoMonitorRuleActiveCheckOutcome> outcomesList = new ArrayList<DtoMonitorRuleActiveCheckOutcome>();
+				for (PersMonitorRuleActiveCheckOutcome next : nextEntry.getValue()) {
+					outcomesList.add(next.toDto());
+				}
+				outcomeList.setOutcomes(outcomesList);
+				retVal.getRecentOutcomesForUrl().add(outcomeList);
+			}
+			
 		}
-//		getRecentOutcomes()
 		
 		return retVal;
 	}
 
+	public static PersMonitorRuleActiveCheck fromDto(DtoMonitorRuleActiveCheck theCheck, PersMonitorRuleActive theRule, IDao theDao) throws ProcessingException {
+		PersMonitorRuleActiveCheck retVal = new PersMonitorRuleActiveCheck();
+		
+		retVal.setRule(theRule);
+		retVal.setCheckFrequencyNum(theCheck.getCheckFrequencyNum());
+		retVal.setCheckFrequencyUnit(theCheck.getCheckFrequencyUnit());
+		retVal.setExpectLatencyUnderMillis(theCheck.getExpectLatencyUnderMillis());
+		retVal.setExpectResponseContainsText(theCheck.getExpectResponseContainsText());
+		retVal.setExpectResponseType(theCheck.getExpectResponseType());
+		retVal.setMessage(theDao.getLibraryMessageByPid(theCheck.getMessagePid()));
+		
+		if (retVal.getMessage() == null) {
+			throw new ProcessingException("Unknown message PID: " + theCheck.getMessagePid());
+		}
+		
+		retVal.setPid(theCheck.getPidOrNull());
+		retVal.setServiceVersion(theDao.getServiceVersionByPid(theCheck.getServiceVersionPid()));
+		if (retVal.getServiceVersion() == null) {
+			throw new ProcessingException("Unknown service version PID: " + theCheck.getServiceVersionPid());
+		}
+		return retVal;
+	}
+	
 }

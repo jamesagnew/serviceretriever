@@ -7,13 +7,13 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.MappedSuperclass;
 
-import org.apache.commons.lang3.Validate;
-
 import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
+
+import org.apache.commons.lang3.Validate;
 
 @MappedSuperclass()
 public abstract class BasePersSavedTransactionRecentMessage extends BasePersSavedTransaction {

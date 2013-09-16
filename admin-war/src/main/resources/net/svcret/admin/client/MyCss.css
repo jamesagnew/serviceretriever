@@ -37,6 +37,19 @@
 .monitorRuleActiveTargetValue {
 }
 
+.spinnerElement {
+	display: inline-block;
+	margin-right: 5px;
+	vertical-align: middle;
+}
+
+.spinnerStatusMessageStyle {
+	white-space: nowrap;
+	font-size: 14px;
+	font-family: Arial;
+	color: #FF0000;
+}
+
 .tooltipPopup {
 	background: rgba(0, 0, 0, 0.8);
 	color: #FFF;
@@ -54,7 +67,9 @@ TABLE.usageTooltipTable {
 	text-align: center;
 }
 
-TD.usageTooltipTableSuccessColumn, TD.usageTooltipTableFaultColumn, TD.usageTooltipTableFailColumn, TD.usageTooltipTableSecFailColumn {
+TD.usageTooltipTableSuccessColumn, TD.usageTooltipTableFaultColumn, 
+TD.usageTooltipTableFailColumn, TD.usageTooltipTableSecFailColumn,
+TD.monitorRuleActiveCheckTooltipTableColumnHeader {
 	background: #444;
     font-size: 0.8em !important;
     font-weight: bold !important;	

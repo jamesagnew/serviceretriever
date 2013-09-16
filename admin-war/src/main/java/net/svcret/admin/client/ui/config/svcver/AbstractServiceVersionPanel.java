@@ -12,6 +12,8 @@ import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
+import net.svcret.admin.shared.model.DtoServiceVersionVirtual;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
@@ -360,10 +362,17 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 
 		switch (theResult.getProtocol()) {
 		case SOAP11:
-			myBottomContents = new SoapDetailPanel(this, (DtoServiceVersionSoap11) theResult);
+			myBottomContents = new DetailPanelSoap11(this, (DtoServiceVersionSoap11) theResult);
 			break;
 		case JSONRPC20:
 			myBottomContents = new DetailPanelJsonRpc20(this, (DtoServiceVersionJsonRpc20) theResult);
+			break;
+		case HL7OVERHTTP:
+			myBottomContents = new DetailPanelHl7OverHttp(this, (DtoServiceVersionHl7OverHttp)theResult);
+			break;
+		case VIRTUAL:
+			myBottomContents = new DetailPanelVirtual(this, (DtoServiceVersionVirtual) theResult);
+			break;
 		}
 
 		add(myBottomContents);

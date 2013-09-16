@@ -1,8 +1,6 @@
 package net.svcret.ejb.ejb;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.validateMockitoUsage;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IDao;

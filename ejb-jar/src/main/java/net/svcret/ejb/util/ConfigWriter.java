@@ -8,16 +8,16 @@ import javax.xml.bind.JAXBException;
 
 import net.svcret.ejb.model.registry.ServiceEnvironment;
 import net.svcret.ejb.model.registry.ServiceUsers;
-import net.svcret.ejb.model.registry.ServiceVersion;
-import net.svcret.ejb.model.registry.Services;
-import net.svcret.ejb.model.registry.WsSecUsernameClientAuthentication;
-import net.svcret.ejb.model.registry.WsSecUsernameServerAuthentication;
 import net.svcret.ejb.model.registry.ServiceUsers.ServiceUser;
 import net.svcret.ejb.model.registry.ServiceUsers.ServiceUser.Permissions;
 import net.svcret.ejb.model.registry.ServiceUsers.ServiceUser.Permissions.DomainPermission;
 import net.svcret.ejb.model.registry.ServiceUsers.ServiceUser.Permissions.DomainPermission.ServicePermission;
+import net.svcret.ejb.model.registry.ServiceVersion;
 import net.svcret.ejb.model.registry.ServiceVersion.Url;
+import net.svcret.ejb.model.registry.Services;
 import net.svcret.ejb.model.registry.Services.Service;
+import net.svcret.ejb.model.registry.WsSecUsernameClientAuthentication;
+import net.svcret.ejb.model.registry.WsSecUsernameServerAuthentication;
 
 
 public class ConfigWriter {

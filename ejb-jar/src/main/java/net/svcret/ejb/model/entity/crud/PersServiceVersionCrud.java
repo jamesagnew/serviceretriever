@@ -21,7 +21,7 @@ public class PersServiceVersionCrud extends BasePersServiceVersion {
 
 	@Override
 	public ServiceProtocolEnum getProtocol() {
-		return ServiceProtocolEnum.FORWARDER;
+		return ServiceProtocolEnum.VIRTUAL;
 	}
 
 	

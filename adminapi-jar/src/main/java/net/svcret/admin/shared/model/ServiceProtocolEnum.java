@@ -6,6 +6,8 @@ import java.util.List;
 
 public enum ServiceProtocolEnum {
 
+	HL7OVERHTTP("HL7 over HTTP", "application/hl7-v2"), 
+	
 	/*
 	 * NB: Add new entries to the natural order in the static block below
 	 */
@@ -13,9 +15,7 @@ public enum ServiceProtocolEnum {
 	
 	SOAP11("SOAP 1.1", "text/xml"), 
 	
-	FORWARDER("Forwarder", ""), 
-	
-	HL7OVERHTTP("HL7 over HTTP", "application/hl7-v2");
+	VIRTUAL("Virtual Service", "");
 
 	private static List<ServiceProtocolEnum> ourNaturalOrder;
 
@@ -23,16 +23,14 @@ public enum ServiceProtocolEnum {
 		List<ServiceProtocolEnum> naturalOrder = new ArrayList<ServiceProtocolEnum>();
 		naturalOrder.add(SOAP11);
 		naturalOrder.add(JSONRPC20);
+		naturalOrder.add(HL7OVERHTTP);
+		naturalOrder.add(VIRTUAL);
 		ourNaturalOrder = Collections.unmodifiableList(naturalOrder);
 	}
 
-	public static List<ServiceProtocolEnum> getNaturalOrder() {
-		return ourNaturalOrder;
-	}
-
 	private String myNiceName;
-	private String myRequestContentType;
 
+	private String myRequestContentType;
 	private ServiceProtocolEnum(String theName, String theRequestContentType) {
 		myNiceName = theName;
 		myRequestContentType=theRequestContentType;
@@ -47,6 +45,10 @@ public enum ServiceProtocolEnum {
 
 	public String getRequestContentType() {
 		return myRequestContentType;
+	}
+
+	public static List<ServiceProtocolEnum> getNaturalOrder() {
+		return ourNaturalOrder;
 	}
 
 }

@@ -93,110 +93,110 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		myDomainList = new GDomainList();
 
 		{
-		GDomain dom = new GDomain();
-		dom.setPid(ourNextPid++);
-		dom.setId("domain1");
-		dom.setName("Domain 1");
-		Set<String> obscure=new HashSet<String>();
-		obscure.add("clientId");
-		obscure.add("clientPass");
-		dom.setObscureRequestElementsInLogCache(obscure);
-		myDomainList.add(dom);
+			GDomain dom = new GDomain();
+			dom.setPid(ourNextPid++);
+			dom.setId("domain1");
+			dom.setName("Domain 1");
+			Set<String> obscure = new HashSet<String>();
+			obscure.add("clientId");
+			obscure.add("clientPass");
+			dom.setObscureRequestElementsInLogCache(obscure);
+			myDomainList.add(dom);
 
-		GService svc = new GService();
-		svc.setId("svc1a");
-		svc.setName("Service 1-A");
-		svc.setPid(10L);
-		svc.setCanInheritKeepNumRecentTransactions(true);
-		svc.setInheritedKeepNumRecentTransactionsSuccess(23);
-		svc.setInheritedKeepNumRecentTransactionsSecurityFail(22);
-		dom.getServiceList().add(svc);
+			GService svc = new GService();
+			svc.setId("svc1a");
+			svc.setName("Service 1-A");
+			svc.setPid(10L);
+			svc.setCanInheritKeepNumRecentTransactions(true);
+			svc.setInheritedKeepNumRecentTransactionsSuccess(23);
+			svc.setInheritedKeepNumRecentTransactionsSecurityFail(22);
+			dom.getServiceList().add(svc);
 
-		DtoServiceVersionSoap11 ver = new DtoServiceVersionSoap11();
-		ver.setActive(true);
-		ver.setWsdlLocation("http://foo");
-		ver.setId("Version 1-A-1");
-		ver.setPid(SVCVER_PID);
-		ver.setName("Version 1-A-1");
-		ver.setDefaultProxyPath("/some/service");
-		ver.setLastAccess(new Date());
-		ver.setServerSecurityMode(ServerSecurityModeEnum.REQUIRE_ANY);
-		svc.getVersionList().add(ver);
+			DtoServiceVersionSoap11 ver = new DtoServiceVersionSoap11();
+			ver.setActive(true);
+			ver.setWsdlLocation("http://foo");
+			ver.setId("Version 1-A-1");
+			ver.setPid(SVCVER_PID);
+			ver.setName("Version 1-A-1");
+			ver.setDefaultProxyPath("/some/service");
+			ver.setLastAccess(new Date());
+			ver.setServerSecurityMode(ServerSecurityModeEnum.REQUIRE_ANY);
+			svc.getVersionList().add(ver);
 
-		GServiceVersionUrl url = new GServiceVersionUrl();
-		url.setPid(1);
-		url.setId("url1");
-		url.setUrl("http://foo");
-		url.setStatsLastFailure(new Date());
-		url.setStatsLastFailureMessage("This is a fail message");
-		url.setStatsLastSuccess(new Date());
-		url.setStatsLastSuccessMessage("This is a success message");
-		url.setStatus(StatusEnum.ACTIVE);
-		ver.getUrlList().add(url);
+			GServiceVersionUrl url = new GServiceVersionUrl();
+			url.setPid(1);
+			url.setId("url1");
+			url.setUrl("http://foo");
+			url.setStatsLastFailure(new Date());
+			url.setStatsLastFailureMessage("This is a fail message");
+			url.setStatsLastSuccess(new Date());
+			url.setStatsLastSuccessMessage("This is a success message");
+			url.setStatus(StatusEnum.ACTIVE);
+			ver.getUrlList().add(url);
 
-		url = new GServiceVersionUrl();
-		url.setPid(2);
-		url.setId("url2");
-		url.setUrl("http://bar");
-		url.setStatsLastFailure(new Date());
-		url.setStatsLastFailureMessage("This is a fail message");
-		url.setStatsLastSuccess(new Date());
-		url.setStatsLastSuccessMessage("This is a success message");
-		url.setStatus(StatusEnum.DOWN);
-		url.setNextCircuitBreakerReset(new Date(System.currentTimeMillis()+100000));
-		ver.getUrlList().add(url);
-		
-		GServiceMethod met = new GServiceMethod();
-		met.setPid(MET1_PID);
-		met.setId("Method 1");
-		met.setName("Method 1");
-		met.setSecurityPolicy(MethodSecurityPolicyEnum.REJECT_UNLESS_ALLOWED);
-		met.setRootElements("http://ws.ehr.uhn.ca:getActivePatientsByAttendingPhysicianIdExtended");
-		ver.getMethodList().add(met);
+			url = new GServiceVersionUrl();
+			url.setPid(2);
+			url.setId("url2");
+			url.setUrl("http://bar");
+			url.setStatsLastFailure(new Date());
+			url.setStatsLastFailureMessage("This is a fail message");
+			url.setStatsLastSuccess(new Date());
+			url.setStatsLastSuccessMessage("This is a success message");
+			url.setStatus(StatusEnum.DOWN);
+			url.setNextCircuitBreakerReset(new Date(System.currentTimeMillis() + 100000));
+			ver.getUrlList().add(url);
 
-		met = new GServiceMethod();
-		met.setPid(MET2_PID);
-		met.setId("Method 2");
-		met.setName("Method 2");
-		met.setSecurityPolicy(MethodSecurityPolicyEnum.REJECT_UNLESS_ALLOWED);
-		ver.getMethodList().add(met);
+			GServiceMethod met = new GServiceMethod();
+			met.setPid(MET1_PID);
+			met.setId("Method 1");
+			met.setName("Method 1");
+			met.setSecurityPolicy(MethodSecurityPolicyEnum.REJECT_UNLESS_ALLOWED);
+			met.setRootElements("http://ws.ehr.uhn.ca:getActivePatientsByAttendingPhysicianIdExtended");
+			ver.getMethodList().add(met);
 
-		svc = new GService();
-		svc.setCanInheritKeepNumRecentTransactions(true);
-		svc.setId("svc1b");
-		svc.setName("Service 1-B");
-		svc.setPid(11L);
-		dom.getServiceList().add(svc);
+			met = new GServiceMethod();
+			met.setPid(MET2_PID);
+			met.setId("Method 2");
+			met.setName("Method 2");
+			met.setSecurityPolicy(MethodSecurityPolicyEnum.REJECT_UNLESS_ALLOWED);
+			ver.getMethodList().add(met);
+
+			svc = new GService();
+			svc.setCanInheritKeepNumRecentTransactions(true);
+			svc.setId("svc1b");
+			svc.setName("Service 1-B");
+			svc.setPid(11L);
+			dom.getServiceList().add(svc);
 		}
 		{
-		GDomain dom = new GDomain();
-		dom.setPid(ourNextPid++);
-		dom.setId("domain2");
-		dom.setName("Domain 2");
-		myDomainList.add(dom);
+			GDomain dom = new GDomain();
+			dom.setPid(ourNextPid++);
+			dom.setId("domain2");
+			dom.setName("Domain 2");
+			myDomainList.add(dom);
 
-		GService svc = new GService();
-		svc.setId("svc1a");
-		svc.setName("Service 2-A");
-		svc.setPid(ourNextPid++);
-		svc.setCanInheritKeepNumRecentTransactions(true);
-		svc.setInheritedKeepNumRecentTransactionsSuccess(23);
-		svc.setInheritedKeepNumRecentTransactionsSecurityFail(22);
-		dom.getServiceList().add(svc);
+			GService svc = new GService();
+			svc.setId("svc1a");
+			svc.setName("Service 2-A");
+			svc.setPid(ourNextPid++);
+			svc.setCanInheritKeepNumRecentTransactions(true);
+			svc.setInheritedKeepNumRecentTransactionsSuccess(23);
+			svc.setInheritedKeepNumRecentTransactionsSecurityFail(22);
+			dom.getServiceList().add(svc);
 
-		DtoServiceVersionSoap11 ver = new DtoServiceVersionSoap11();
-		ver.setActive(true);
-		ver.setWsdlLocation("http://foo");
-		ver.setId("Version 2-A-1");
-		ver.setPid(ourNextPid++);
-		ver.setName("Version 2-A-1");
-		ver.setDefaultProxyPath("/some/service");
-		ver.setLastAccess(new Date());
-		ver.setServerSecurityMode(ServerSecurityModeEnum.REQUIRE_ANY);
-		svc.getVersionList().add(ver);
+			DtoServiceVersionSoap11 ver = new DtoServiceVersionSoap11();
+			ver.setActive(true);
+			ver.setWsdlLocation("http://foo");
+			ver.setId("Version 2-A-1");
+			ver.setPid(ourNextPid++);
+			ver.setName("Version 2-A-1");
+			ver.setDefaultProxyPath("/some/service");
+			ver.setLastAccess(new Date());
+			ver.setServerSecurityMode(ServerSecurityModeEnum.REQUIRE_ANY);
+			svc.getVersionList().add(ver);
 
 		}
-		
+
 		myClientConfigList = new GHttpClientConfigList();
 		GHttpClientConfig defCfg = new GHttpClientConfig();
 		defCfg.setPid(ourNextPid++);
@@ -287,20 +287,43 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 			check.setMessageDescription("this is the description 1");
 			check.setMessagePid(1L);
 			check.setServiceVersionPid(100L);
-			check.setRecentOutcomes(new DtoMonitorRuleActiveCheckOutcomeList());
-			check.getRecentOutcomes().setUrlPid(1);
-			check.getRecentOutcomes().setUrlId("dev1");
-			check.getRecentOutcomes().setUrl("http://foo");
-			check.getRecentOutcomes().getOutcomes().add(new DtoMonitorRuleActiveCheckOutcome());
-			check.getRecentOutcomes().getOutcomes().add(new DtoMonitorRuleActiveCheckOutcome());
-			check.getRecentOutcomes().getOutcomes().get(0).setSuccess(true);
-			check.getRecentOutcomes().getOutcomes().get(0).setTimestamp(new Date(System.currentTimeMillis() - 10000));
-			check.getRecentOutcomes().getOutcomes().get(1).setSuccess(false);
-			check.getRecentOutcomes().getOutcomes().get(1).setTimestamp(new Date(System.currentTimeMillis() - 5000));
-			check.getRecentOutcomes().getOutcomes().get(1).setFailureMessage("Failed for some reason");
+			addActiveCheckOutcomes(check);
 			newRule.getCheckList().add(check);
 		}
 
+	}
+
+	private void addActiveCheckOutcomes(DtoMonitorRuleActiveCheck check) {
+		if (check.getRecentOutcomesForUrl().size() == 0) {
+			check.getRecentOutcomesForUrl().add(new DtoMonitorRuleActiveCheckOutcomeList());
+			check.getRecentOutcomesForUrl().get(0).setUrlPid(1);
+			check.getRecentOutcomesForUrl().get(0).setUrlId("dev1");
+			check.getRecentOutcomesForUrl().get(0).setUrl("http://foo");
+			check.getRecentOutcomesForUrl().add(new DtoMonitorRuleActiveCheckOutcomeList());
+			check.getRecentOutcomesForUrl().get(1).setUrlPid(2);
+			check.getRecentOutcomesForUrl().get(1).setUrlId("dev2");
+			check.getRecentOutcomesForUrl().get(1).setUrl("http://bar");
+		}
+
+		List<DtoMonitorRuleActiveCheckOutcome> outcomes = new ArrayList<DtoMonitorRuleActiveCheckOutcome>(check.getRecentOutcomesForUrl().get(0).getOutcomes());
+		outcomes.add(new DtoMonitorRuleActiveCheckOutcome());
+		outcomes.add(new DtoMonitorRuleActiveCheckOutcome());
+		outcomes.get(outcomes.size() - 2).setSuccess(true);
+		outcomes.get(outcomes.size() - 2).setTimestamp(new Date(System.currentTimeMillis() - 10000));
+		outcomes.get(outcomes.size() - 1).setSuccess(false);
+		outcomes.get(outcomes.size() - 1).setTimestamp(new Date(System.currentTimeMillis() - 5000));
+		outcomes.get(outcomes.size() - 1).setFailureMessage("Failed for some reason");
+		check.getRecentOutcomesForUrl().get(0).setOutcomes(outcomes);
+
+		outcomes = new ArrayList<DtoMonitorRuleActiveCheckOutcome>(check.getRecentOutcomesForUrl().get(1).getOutcomes());
+		outcomes.add(new DtoMonitorRuleActiveCheckOutcome());
+		outcomes.add(new DtoMonitorRuleActiveCheckOutcome());
+		outcomes.get(outcomes.size() - 2).setSuccess(false);
+		outcomes.get(outcomes.size() - 2).setTimestamp(new Date(System.currentTimeMillis() - 5000));
+		outcomes.get(outcomes.size() - 2).setFailureMessage("Failed for some reason");
+		outcomes.get(outcomes.size() - 1).setSuccess(true);
+		outcomes.get(outcomes.size() - 1).setTimestamp(new Date(System.currentTimeMillis() - 10000));
+		check.getRecentOutcomesForUrl().get(1).setOutcomes(outcomes);
 	}
 
 	@Override
@@ -407,9 +430,9 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		}
 
 		retVal.setPid(ourNextPid++);
-		
-		long offset = ((long)(1000000.0 * Math.random()));
-		
+
+		long offset = ((long) (1000000.0 * Math.random()));
+
 		retVal.setTransactionTime(new Date(System.currentTimeMillis() - offset));
 		retVal.setRequestHostIp("http://foo");
 		retVal.setRequestMessage(requestMessage);
@@ -658,8 +681,6 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		url.setStatus(StatusEnum.ACTIVE);
 		retVal.getUrlList().add(url);
 
-
-		
 		return retVal;
 	}
 
@@ -803,7 +824,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	@Override
 	public GDomainList saveService(GService theService) {
 		theService.removeVersionList();
-		
+
 		for (GDomain nextDomain : myDomainList) {
 			for (GService nextService : nextDomain.getServiceList()) {
 				if (nextService.getPid() == theService.getPid()) {
@@ -946,7 +967,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	}
 
 	public DtoKeystoreAnalysis analyzeKeyStore(SessionUploadedKeystore theKs) {
-		DtoKeystoreAnalysis retVal=new DtoKeystoreAnalysis();
+		DtoKeystoreAnalysis retVal = new DtoKeystoreAnalysis();
 		if (theKs.getPassword().equals("changeit")) {
 			retVal.getKeyAliases().add("alias1");
 			retVal.getKeyAliases().add("alias2");
@@ -959,7 +980,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 			retVal.getKeyEntry().put("alias1", true);
 			retVal.getKeyEntry().put("alias2", false);
 			retVal.setPasswordAccepted(true);
-		}else {
+		} else {
 			retVal.setPasswordAccepted(false);
 			retVal.setProblemDescription("Keystore has been tampered with or password is invalid");
 		}
@@ -985,22 +1006,33 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 
 	@Override
 	public Collection<DtoStickySessionUrlBinding> getAllStickySessions() {
-		List<DtoStickySessionUrlBinding> retVal=new ArrayList<DtoStickySessionUrlBinding>();
+		List<DtoStickySessionUrlBinding> retVal = new ArrayList<DtoStickySessionUrlBinding>();
 		retVal.add(new DtoStickySessionUrlBinding());
 		retVal.get(0).setCreated(new Date(System.currentTimeMillis() - 100000));
 		retVal.get(0).setLastAccessed(new Date(System.currentTimeMillis() - 600000));
-		
+
 		BaseGServiceVersion svcVer = myDomainList.get(0).getServiceList().get(0).getVersionList().get(0);
 		retVal.get(0).setServiceVersionPid(svcVer.getPidOrNull());
 		retVal.get(0).setUrlPid(svcVer.getUrlList().get(0).getPidOrNull());
 		retVal.get(0).setSessionId(UUID.randomUUID().toString());
-		
+
 		return retVal;
 	}
 
 	@Override
 	public BaseGMonitorRule loadMonitorRule(long theRulePid) {
 		return myMonitorRuleList.getRuleByPid(theRulePid);
+	}
+
+	@Override
+	public DtoMonitorRuleActiveCheck executeMonitorRuleActiveCheck(DtoMonitorRuleActiveCheck check) {
+		addActiveCheckOutcomes(check);
+		try {
+			Thread.sleep(6000);
+		} catch (InterruptedException e) {
+			// ignore
+		}
+		return check;
 	}
 
 }

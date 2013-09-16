@@ -23,5 +23,4 @@ public abstract class BaseRpcServlet extends RemoteServiceServlet{
 	private static ModelUpdateServiceMock ourMock;
 
 
-
 }

@@ -10,6 +10,7 @@ import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.BaseGMonitorRule;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
@@ -108,5 +109,7 @@ public interface ModelUpdateServiceAsync {
 	void saveUser(GUser theUser, AsyncCallback<Void> theAsyncCallback);
 
 	void testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long theServiceVersionPid, AsyncCallback<GServiceVersionSingleFireResponse> theAsyncCallback);
+
+	void executeMonitorRuleActiveCheck(DtoMonitorRuleActiveCheck theCheck, AsyncCallback<DtoMonitorRuleActiveCheck> theAsyncCallback);
 
 }

@@ -3,8 +3,8 @@ package net.svcret.ejb.model.entity.jsonrpc;
 import java.io.IOException;
 
 import net.svcret.ejb.api.ICredentialGrabber;
-import net.svcret.ejb.ejb.jsonrpc.IJsonReader;
-import net.svcret.ejb.ejb.jsonrpc.IJsonWriter;
+import net.svcret.ejb.invoker.jsonrpc.IJsonReader;
+import net.svcret.ejb.invoker.jsonrpc.IJsonWriter;
 import net.svcret.ejb.model.entity.soap.BaseCredentialGrabber;
 
 import com.google.gson.stream.JsonToken;

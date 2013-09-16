@@ -1,6 +1,6 @@
 package net.svcret.ejb.model.entity;
 
-import static org.apache.commons.lang3.StringUtils.left;
+import static org.apache.commons.lang3.StringUtils.*;
 
 import java.util.Date;
 

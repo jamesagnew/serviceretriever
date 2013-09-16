@@ -217,12 +217,11 @@ public abstract class BaseDashModel implements IDashModel {
 			int[] fault = theObject.getTransactionsFault60mins();
 			int[] fail = theObject.getTransactionsFail60mins();
 			int[] secFail = theObject.getTransactionsSecurityFail60mins();
-			Date endTime = theObject.getStatsInitialized();
 			UsageSparkline retVal;
 			if (averagePerMin < 0.1 || maxPerMin < 0.1) {
-				retVal = returnBarSparklineFor60mins(suc, fault, fail, secFail, endTime, formatDouble(averagePerMin * 60), formatDouble(maxPerMin * 60), "/hr");
+				retVal = returnBarSparklineFor60mins(suc, fault, fail, secFail, formatDouble(averagePerMin * 60), formatDouble(maxPerMin * 60), "/hr");
 			} else {
-				retVal = returnBarSparklineFor60mins(suc, fault, fail, secFail, endTime, formatDouble(averagePerMin), formatDouble(maxPerMin), "/min");
+				retVal = returnBarSparklineFor60mins(suc, fault, fail, secFail, formatDouble(averagePerMin), formatDouble(maxPerMin), "/min");
 			}
 
 			return retVal;
@@ -233,7 +232,7 @@ public abstract class BaseDashModel implements IDashModel {
 		return ourDecimalFormat.format(theNumber);
 	}
 
-	private static UsageSparkline returnBarSparklineFor60mins(int[] theSuccessList, int[] theFaultValues, int[] theFailValues, int[] theSecurityFailValues, Date theStatsInitialized, String theAvgValue, String theMaxValue, String theUnitDesc) {
+	private static UsageSparkline returnBarSparklineFor60mins(int[] theSuccessList, int[] theFaultValues, int[] theFailValues, int[] theSecurityFailValues, String theAvgValue, String theMaxValue, String theUnitDesc) {
 		String text = "Avg:" + theAvgValue + " Max:" + theMaxValue + "" + theUnitDesc;
 
 		// List<Long> dates = new ArrayList<Long>();

@@ -1,14 +1,8 @@
 package net.svcret.ejb.ejb;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import java.io.File;
 import java.io.FileReader;
@@ -38,8 +32,8 @@ import net.svcret.ejb.api.ITransactionLogger;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
-import net.svcret.ejb.ejb.soap.Soap11ServiceInvoker;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.invoker.soap.ServiceInvokerSoap11;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersConfig;
@@ -73,7 +67,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 	private RuntimeStatusBean myRuntimeStatus;
 	private SecurityServiceBean mySecurityService;
 	private ServiceRegistryBean myServiceRegistry;
-	private Soap11ServiceInvoker mySoapInvoker;
+	private ServiceInvokerSoap11 mySoapInvoker;
 	private ServiceOrchestratorBean mySvc;
 	private PersServiceVersionUrl myUrl;
 	private String myTempPath;
@@ -382,7 +376,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
 		DefaultAnswer.setRunTime();
 
-		Soap11ServiceInvoker invoker = mock(Soap11ServiceInvoker.class);
+		ServiceInvokerSoap11 invoker = mock(ServiceInvokerSoap11.class);
 		mySvc.setSoap11ServiceInvoker(invoker);
 		when(invoker.processInvocation(any(BasePersServiceVersion.class), any(RequestType.class), any(String.class), any(String.class), any(String.class),any(Reader.class))).thenThrow(NullPointerException.class);
 		
@@ -494,7 +488,6 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		PersHttpClientConfig httpClient = any();
 		when(myHttpClient.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
 		
-		OrchestratorResponseBean resp = null;
 		String query = "";
 		HttpRequestBean req = new HttpRequestBean();
 		req.setRequestType(RequestType.POST);
@@ -510,7 +503,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		req.setRequestTime(new Date());
 		req.setRequestHeaders(new HashMap<String, List<String>>());
 
-		resp = mySvc.handleServiceRequest(req);
+		mySvc.handleServiceRequest(req);
 
 		ArgumentCaptor<UrlPoolBean> urlPool = ArgumentCaptor.forClass(UrlPoolBean.class);
 		ArgumentCaptor<Map> headers = ArgumentCaptor.forClass(Map.class);
@@ -529,7 +522,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		respBean.getHeaders().put("Set-Cookie", Collections.singletonList("JSESSIONID=THE_SESSION_ID"));
 		respBean.setSuccessfulUrl(myUrl2);
 		
-		resp = mySvc.handleServiceRequest(req);
+		mySvc.handleServiceRequest(req);
 
 		urlPool = ArgumentCaptor.forClass(UrlPoolBean.class);
 		headers = ArgumentCaptor.forClass(Map.class);
@@ -550,7 +543,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		req.setRequestTime(new Date());
 		req.getRequestHeaders().put("Cookie", Collections.singletonList("JSESSIONID=THE_SESSION_ID"));
 		
-		resp = mySvc.handleServiceRequest(req);
+		mySvc.handleServiceRequest(req);
 
 		urlPool = ArgumentCaptor.forClass(UrlPoolBean.class);
 		headers = ArgumentCaptor.forClass(Map.class);
@@ -604,7 +597,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		mySecurityService.setLocalDbAuthService(myLocalDbAuthService);
 		mySecurityService.setBroadcastSender(myBroadcastSender);
 
-		mySoapInvoker = new Soap11ServiceInvoker();
+		mySoapInvoker = new ServiceInvokerSoap11();
 		mySoapInvoker.setConfigService(myConfigService);
 		mySoapInvoker.setHttpClient(myHttpClient);
 

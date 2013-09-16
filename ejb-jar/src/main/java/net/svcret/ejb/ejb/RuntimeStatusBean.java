@@ -1,9 +1,6 @@
 package net.svcret.ejb.ejb;
 
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.DAY;
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.HOUR;
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.MINUTE;
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.TEN_MINUTE;
+import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.*;
 
 import java.net.HttpCookie;
 import java.text.DateFormat;
@@ -46,7 +43,6 @@ import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.UrlPoolBean;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStatsPk;
@@ -984,7 +980,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		return status;
 	}
 
-	private void shuffleUrlPoolBasedOnStickySessionPolicy(String theSesionId, UrlPoolBean theUrlPool, Map<String, List<String>> theHeaders, BasePersServiceVersion theServiceVersion)
+	private void shuffleUrlPoolBasedOnStickySessionPolicy(String theSesionId, UrlPoolBean theUrlPool, BasePersServiceVersion theServiceVersion)
 			throws UnexpectedFailureException {
 		if (StringUtils.isBlank(theSesionId)) {
 			return;
@@ -1023,7 +1019,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			if (StringUtils.isNotBlank(clientConfig.getStickySessionHeaderForSessionId())) {
 				List<String> sessionKeyValues = theHeaders.get(clientConfig.getStickySessionHeaderForSessionId());
 				if (sessionKeyValues.size() > 0) {
-					shuffleUrlPoolBasedOnStickySessionPolicy(sessionKeyValues.get(0), theUrlPool, theHeaders, theSvcVer);
+					shuffleUrlPoolBasedOnStickySessionPolicy(sessionKeyValues.get(0), theUrlPool, theSvcVer);
 				}
 			} else if (StringUtils.isNotBlank(clientConfig.getStickySessionCookieForSessionId())) {
 				List<String> cookieHeaders = theHeaders.get("Cookie");
@@ -1032,7 +1028,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 						List<HttpCookie> cookies = HttpCookie.parse(nextCookieHeader);
 						for (HttpCookie nextCookie : cookies) {
 							if (nextCookie.getName().equals(clientConfig.getStickySessionCookieForSessionId())) {
-								shuffleUrlPoolBasedOnStickySessionPolicy(nextCookie.getValue(), theUrlPool, theHeaders, theSvcVer);
+								shuffleUrlPoolBasedOnStickySessionPolicy(nextCookie.getValue(), theUrlPool, theSvcVer);
 								break;
 							}
 						}

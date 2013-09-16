@@ -14,11 +14,11 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
-
 import net.svcret.admin.shared.model.ClientSecurityEnum;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 import com.google.common.base.Objects;
 

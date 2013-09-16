@@ -15,8 +15,7 @@ import javax.xml.stream.events.EndElement;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 
-import net.svcret.ejb.ejb.soap.Constants;
-import net.svcret.ejb.model.entity.soap.WsSecUsernameTokenCredentialGrabber;
+import net.svcret.ejb.invoker.soap.Constants;
 
 import org.junit.Test;
 

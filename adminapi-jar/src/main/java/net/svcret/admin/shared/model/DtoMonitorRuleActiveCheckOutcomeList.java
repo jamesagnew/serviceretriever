@@ -1,6 +1,8 @@
 package net.svcret.admin.shared.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -10,29 +12,29 @@ import javax.xml.bind.annotation.XmlType;
 
 import net.svcret.admin.shared.util.XmlConstants;
 
-@XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="MonitorRuleActiveCheckOutcomeList")
+@XmlType(namespace = XmlConstants.DTO_NAMESPACE, name = "MonitorRuleActiveCheckOutcomeList")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class DtoMonitorRuleActiveCheckOutcomeList extends BaseGObject {
 
 	private static final long serialVersionUID = 1L;
-	
-	@XmlElement(name="Outcome")
+
+	@XmlElement(name = "Outcome")
 	private List<DtoMonitorRuleActiveCheckOutcome> myOutcomes;
-	
-	@XmlElement(name="Url")
+
+	@XmlElement(name = "Url")
 	private String myUrl;
 
-	@XmlElement(name="UrlId")
+	@XmlElement(name = "UrlId")
 	private String myUrlId;
 
-	@XmlElement(name="UrlPid")	
+	@XmlElement(name = "UrlPid")
 	private long myUrlPid;
 
 	public List<DtoMonitorRuleActiveCheckOutcome> getOutcomes() {
-		if (myOutcomes==null) {
-			myOutcomes=new ArrayList<DtoMonitorRuleActiveCheckOutcome>();
+		if (myOutcomes == null) {
+			myOutcomes = new ArrayList<DtoMonitorRuleActiveCheckOutcome>();
 		}
-		return myOutcomes;
+		return Collections.unmodifiableList(myOutcomes);
 	}
 
 	public String getUrl() {
@@ -57,6 +59,16 @@ public class DtoMonitorRuleActiveCheckOutcomeList extends BaseGObject {
 
 	public void setUrlPid(long theUrlPid) {
 		myUrlPid = theUrlPid;
+	}
+
+	public void setOutcomes(List<DtoMonitorRuleActiveCheckOutcome> theOutcomesList) {
+		myOutcomes = theOutcomesList;
+		Collections.sort(myOutcomes, new Comparator<DtoMonitorRuleActiveCheckOutcome>() {
+			@Override
+			public int compare(DtoMonitorRuleActiveCheckOutcome theO1, DtoMonitorRuleActiveCheckOutcome theO2) {
+				return theO1.getTimestamp().compareTo(theO2.getTimestamp());
+			}
+		});
 	}
 
 }

@@ -1,12 +1,12 @@
 package net.svcret.ejb.model.entity;
 
+import static net.svcret.admin.shared.model.GLdapAuthHost.*;
+
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
 import net.svcret.admin.shared.model.AuthorizationHostTypeEnum;
-
-import static net.svcret.admin.shared.model.GLdapAuthHost.*;
 
 /**
  * LDAP authentication host

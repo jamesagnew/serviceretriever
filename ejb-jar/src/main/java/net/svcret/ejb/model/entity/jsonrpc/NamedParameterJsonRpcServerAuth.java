@@ -5,8 +5,8 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
 import net.svcret.admin.shared.model.ServerSecurityEnum;
-import net.svcret.ejb.ejb.jsonrpc.IJsonReader;
-import net.svcret.ejb.ejb.jsonrpc.IJsonWriter;
+import net.svcret.ejb.invoker.jsonrpc.IJsonReader;
+import net.svcret.ejb.invoker.jsonrpc.IJsonWriter;
 import net.svcret.ejb.model.entity.BasePersObject;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 

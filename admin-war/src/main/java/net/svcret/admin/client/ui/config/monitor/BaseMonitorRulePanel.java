@@ -1,10 +1,10 @@
 package net.svcret.admin.client.ui.config.monitor;
 
-import static net.svcret.admin.client.AdminPortal.IMAGES;
-import static net.svcret.admin.client.AdminPortal.MSGS;
+import static net.svcret.admin.client.AdminPortal.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -12,6 +12,7 @@ import java.util.TreeSet;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.MyResources;
 import net.svcret.admin.client.nav.NavProcessor;
+import net.svcret.admin.client.ui.components.CellWithTooltip;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.EditableField;
 import net.svcret.admin.client.ui.components.HtmlH1;
@@ -20,11 +21,13 @@ import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.PButtonCell;
 import net.svcret.admin.client.ui.components.PCellTable;
 import net.svcret.admin.client.ui.components.PSelectionCell;
+import net.svcret.admin.client.ui.components.RecentMonitorTestsSparkline;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.client.ui.components.VersionPickerPanel;
 import net.svcret.admin.client.ui.components.VersionPickerPanel.ChangeListener;
 import net.svcret.admin.client.ui.config.auth.DomainTreePanel.ITreeStatusModel;
 import net.svcret.admin.client.ui.config.svcver.NullColumn;
+import net.svcret.admin.client.ui.stats.DateUtil;
 import net.svcret.admin.shared.HtmlUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
@@ -37,6 +40,8 @@ import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckList;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcomeList;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GMonitorRuleList;
@@ -97,6 +102,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 	private HTML myActiveAddMessagePickerDescription;
 	private PButton myAddActiveCheckButton;
 	private Long myActiveSelectedServiceVersionPid;
+	private HashSet<DtoMonitorRuleActiveCheck> myChecksCurrentlyExecuting;
 
 	public BaseMonitorRulePanel() {
 		initTopPanel();
@@ -150,14 +156,14 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 
 	private void updateNotificationEditor() {
 		StringBuilder b = new StringBuilder();
-		
+
 		for (String next : myRule.getNotifyEmailContacts()) {
 			if (b.length() > 0) {
 				b.append("\n");
 			}
 			b.append(next);
 		}
-		
+
 		myNotificationEditor.setValue(b.toString());
 	}
 
@@ -190,20 +196,20 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		contentPanel.addStyleName(CssConstants.CONTENT_INNER_PANEL);
 		myCriteriaPanel.add(contentPanel);
 
-		contentPanel.add(new Label("This rule is active, meaning that it manually sends messages to proxied " 
-				+ "service implementations on a periodic basis and then checks the outcome. Each row in the "
-				+ "table below represents one message that will be sent to all backing URLs for one version "
-				+ "of one service. A rule may have multiple active checks."));
+		contentPanel.add(new Label("This rule is active, meaning that it manually sends messages to proxied " + "service implementations on a periodic basis and then checks the outcome. Each row in the "
+				+ "table below represents one message that will be sent to all backing URLs for one version " + "of one service. A rule may have multiple active checks."));
 
-		PCellTable<DtoMonitorRuleActiveCheck> grid = new PCellTable<DtoMonitorRuleActiveCheck>();
+		final PCellTable<DtoMonitorRuleActiveCheck> grid = new PCellTable<DtoMonitorRuleActiveCheck>();
 		grid.setEmptyTableWidget(new Label("No checks have been defined for this rule."));
 		contentPanel.add(grid);
 
+		myActiveChecksDataProvider = new ListDataProvider<DtoMonitorRuleActiveCheck>();
+		myChecksCurrentlyExecuting = new HashSet<DtoMonitorRuleActiveCheck>();
+
 		// Remove Button
-		
+
 		Column<DtoMonitorRuleActiveCheck, String> removeColumn = new NullColumn<DtoMonitorRuleActiveCheck>(new PButtonCell(IMAGES.iconRemove(), MSGS.actions_Remove()));
-		grid.addColumn(removeColumn, "");
-		final DtoMonitorRuleActiveCheckList checkList = ((DtoMonitorRuleActive)myRule).getCheckList();
+		final DtoMonitorRuleActiveCheckList checkList = ((DtoMonitorRuleActive) myRule).getCheckList();
 		removeColumn.setFieldUpdater(new FieldUpdater<DtoMonitorRuleActiveCheck, String>() {
 			@Override
 			public void update(int theIndex, DtoMonitorRuleActiveCheck theObject, String theValue) {
@@ -212,6 +218,41 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 			}
 		});
 		removeColumn.setCellStyleNames(CssConstants.PCELLTABLE_ACTION_COLUMN);
+		Column<DtoMonitorRuleActiveCheck, String> tryNowColumn = new Column<DtoMonitorRuleActiveCheck, String>(new PButtonCell(IMAGES.iconPlay16(), "Execute Now").withExecuteSpinnerOnNonNullValue()) {
+			@Override
+			public String getValue(DtoMonitorRuleActiveCheck theObject) {
+				if (myChecksCurrentlyExecuting.contains(theObject)) {
+					return "true";
+				}
+				return null;
+			}
+		};
+		tryNowColumn.setFieldUpdater(new FieldUpdater<DtoMonitorRuleActiveCheck, String>() {
+			@Override
+			public void update(final int theIndex, final DtoMonitorRuleActiveCheck theObject, String theValue) {
+				myChecksCurrentlyExecuting.add(theObject);
+				grid.redrawRow(theIndex);
+				AdminPortal.MODEL_SVC.executeMonitorRuleActiveCheck(theObject, new AsyncCallback<DtoMonitorRuleActiveCheck>() {
+					@Override
+					public void onFailure(Throwable theCaught) {
+						Model.handleFailure(theCaught);
+					}
+
+					@Override
+					public void onSuccess(DtoMonitorRuleActiveCheck theResult) {
+						myChecksCurrentlyExecuting.remove(theObject);
+						myActiveChecksDataProvider.getList().set(theIndex, theResult);
+						myActiveChecksDataProvider.refresh();
+					}
+				});
+			}
+		});
+		tryNowColumn.setCellStyleNames(CssConstants.PCELLTABLE_ACTION_COLUMN);
+
+		List<HasCell<DtoMonitorRuleActiveCheck, ?>> actionCells = new ArrayList<HasCell<DtoMonitorRuleActiveCheck, ?>>();
+		actionCells.add(removeColumn);
+		actionCells.add(tryNowColumn);
+		grid.addColumn(new IdentityColumn<DtoMonitorRuleActiveCheck>(new CompositeCell<DtoMonitorRuleActiveCheck>(actionCells)), "");
 
 		// Frequency
 
@@ -345,7 +386,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 			@Override
 			public String getValue(DtoMonitorRuleActiveCheck theObject) {
 				Long retVal = theObject.getExpectLatencyUnderMillis();
-				if (retVal==null) {
+				if (retVal == null) {
 					return PEditTextCell.NO_VALUE_STRING;
 				}
 				return Long.toString(retVal);
@@ -356,7 +397,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 			public void update(int theIndex, DtoMonitorRuleActiveCheck theObject, String theValue) {
 				if (theValue.matches("^[0-9]+$")) {
 					theObject.setExpectLatencyUnderMillis(Long.parseLong(theValue));
-				}else if (StringUtil.isBlank(theValue)) {
+				} else if (StringUtil.isBlank(theValue)) {
 					theObject.setExpectLatencyUnderMillis(null);
 				}
 			}
@@ -366,21 +407,75 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		Column<DtoMonitorRuleActiveCheck, ?> expectColumn = new IdentityColumn<DtoMonitorRuleActiveCheck>(expectCell);
 		grid.addColumn(expectColumn, "Expect");
 
-		myActiveChecksDataProvider = new ListDataProvider<DtoMonitorRuleActiveCheck>();
+		// Last Outcome
+
+		Column<DtoMonitorRuleActiveCheck, SafeHtml> lastOutcomeColumn = new Column<DtoMonitorRuleActiveCheck, SafeHtml>(new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(DtoMonitorRuleActiveCheck theObject) {
+				SafeHtmlBuilder b = new SafeHtmlBuilder();
+				if (theObject.getRecentOutcomesForUrl().size() == 0) {
+
+				} else {
+					DtoMonitorRuleActiveCheckOutcomeList outcomeList = theObject.getRecentOutcomesForUrl().get(theObject.getRecentOutcomesForUrl().size() - 1);
+					if (outcomeList.getOutcomes().size() == 0) {
+
+					} else {
+						DtoMonitorRuleActiveCheckOutcome outcome = outcomeList.getOutcomes().get(outcomeList.getOutcomes().size() - 1);
+						b.append(DateUtil.formatTimeElapsedForMessage(outcome.getTimestamp()));
+					}
+				}
+				return b.toSafeHtml();
+			}
+		};
+		grid.addColumn(lastOutcomeColumn, "Last Execution");
+
+		// Recent Outcomes
+
+		ActiveChecksRecentOutcomeTooltipProvider recentOutcomesTooltipProvider = new ActiveChecksRecentOutcomeTooltipProvider();
+		CellWithTooltip<DtoMonitorRuleActiveCheck> recentOutcomesCell = new CellWithTooltip<DtoMonitorRuleActiveCheck>(myActiveChecksDataProvider, recentOutcomesTooltipProvider);
+		Column<DtoMonitorRuleActiveCheck, SafeHtml> recentOutcomesColumn = new Column<DtoMonitorRuleActiveCheck, SafeHtml>(recentOutcomesCell) {
+			@Override
+			public SafeHtml getValue(DtoMonitorRuleActiveCheck theObject) {
+				SafeHtmlBuilder b = new SafeHtmlBuilder();
+				b.appendHtmlConstant("<table cellpadding='2' cellspacing='2' border='0'>");
+
+				for (DtoMonitorRuleActiveCheckOutcomeList nextList : theObject.getRecentOutcomesForUrl()) {
+					b.appendHtmlConstant("<tr><td>");
+					b.appendHtmlConstant("<a href=\"" + nextList.getUrl() + "\">");
+					b.appendEscaped(nextList.getUrlId());
+					b.appendHtmlConstant("</a></td><td>");
+
+					int[] values = new int[nextList.getOutcomes().size()];
+					for (int i = 0; i < values.length; i++) {
+						values[i] = nextList.getOutcomes().get(i).isSuccess() ? 1 : -1;
+					}
+
+					RecentMonitorTestsSparkline sparkline = new RecentMonitorTestsSparkline(values, "");
+					b.appendHtmlConstant("<span id='" + sparkline.getId() + "'></span>");
+					b.appendHtmlConstant("<img src='images/empty.png' onload=\"" + sparkline.getNativeInvocation(sparkline.getId()) + "\" />");
+
+					b.appendHtmlConstant("</td></tr>");
+				}
+				b.appendHtmlConstant("</table>");
+				return b.toSafeHtml();
+			}
+		};
+		grid.addColumn(recentOutcomesColumn, "Recent Outcomes");
+
 		myActiveChecksDataProvider.addDataDisplay(grid);
 
 		contentPanel.add(new HtmlH1("Add Check"));
-		
+
 		final VersionPickerPanel versionPicker = new VersionPickerPanel(myDomainList);
 		contentPanel.add(versionPicker);
-		
+
 		myActiveAddMessagePickerBox = new ListBox(false);
 		versionPicker.addRow("Message", myActiveAddMessagePickerBox);
 		myActiveAddMessagePickerDescription = versionPicker.addDescription("");
-		
-		myAddActiveCheckButton = new PButton(AdminPortal.IMAGES.iconAdd(),AdminPortal.MSGS.actions_Add());
+
+		myAddActiveCheckButton = new PButton(AdminPortal.IMAGES.iconAdd(), AdminPortal.MSGS.actions_Add());
 		contentPanel.add(myAddActiveCheckButton);
-		
+
 		myAddActiveCheckButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
@@ -397,12 +492,12 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 				initActiveValues((DtoMonitorRuleActive) myRule);
 			}
 		});
-		
+
 		if (checkList.size() > 0) {
-			long svcVerPid=checkList.get(checkList.size()-1).getServiceVersionPid();
+			long svcVerPid = checkList.get(checkList.size() - 1).getServiceVersionPid();
 			versionPicker.tryToSelectServiceVersion(svcVerPid);
 		}
-		
+
 		updateActiveAddMessagePickerBox(versionPicker);
 		versionPicker.addVersionChangeHandler(new ChangeListener() {
 			@Override
@@ -410,7 +505,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 				updateActiveAddMessagePickerBox(versionPicker);
 			}
 		});
-			
+
 	}
 
 	private void updateActiveAddMessagePickerBox(final VersionPickerPanel theVersionPicker) {
@@ -422,7 +517,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 			myAddActiveCheckButton.setEnabled(false);
 			return;
 		}
-		
+
 		myActiveAddMessagePickerDescription.setHTML("Loading messages...");
 		AdminPortal.MODEL_SVC.loadLibraryMessages(HierarchyEnum.VERSION, versionPid, new AsyncCallback<Collection<DtoLibraryMessage>>() {
 			@Override
@@ -436,37 +531,38 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 				if (!versionPid.equals(foundVersionPid)) {
 					return;
 				}
-				
+
 				myActiveAddMessagePickerBox.clear();
 				if (theResult.isEmpty()) {
 					handleActiveAddMessagePickerBoxChange(versionPid);
 					return;
 				}
-				
+
 				for (DtoLibraryMessage next : theResult) {
 					myActiveAddMessagePickerBox.addItem(next.getDescription(), next.getPid().toString());
 				}
-			
-				if (myActiveAddMessagePickerBox.getItemCount()>0) {
+
+				if (myActiveAddMessagePickerBox.getItemCount() > 0) {
 					myActiveAddMessagePickerBox.setSelectedIndex(0);
 				}
 				handleActiveAddMessagePickerBoxChange(versionPid);
 			}
 
 		});
-		
+
 	}
 
 	private void handleActiveAddMessagePickerBoxChange(long versionPid) {
-		boolean enabled = myActiveAddMessagePickerBox.getItemCount()>0;
+		boolean enabled = myActiveAddMessagePickerBox.getItemCount() > 0;
 		myAddActiveCheckButton.setEnabled(enabled);
 		if (enabled) {
 			myActiveAddMessagePickerDescription.setHTML("");
-		}else {
-			myActiveAddMessagePickerDescription.setHTML("This version has no messages in the <a href=\"" + NavProcessor.getTokenMessageLibrary(true,HierarchyEnum.VERSION, versionPid)+"\">message library</a> for this service version. Add a message before adding active monitor checks for this version to this rule.");
+		} else {
+			myActiveAddMessagePickerDescription.setHTML("This version has no messages in the <a href=\"" + NavProcessor.getTokenMessageLibrary(true, HierarchyEnum.VERSION, versionPid)
+					+ "\">message library</a> for this service version. Add a message before adding active monitor checks for this version to this rule.");
 		}
 	}
-	
+
 	private void initPassiveCriteriaPanel() {
 
 		Label titleLabel = new Label("Passive Rule Criteria");
@@ -670,9 +766,9 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 
 				myRuleNameTextBox.setText(myRule.getName());
 				myRuleActiveCheckBox.setValue(myRule.isActive());
-				
+
 				updateNotificationEditor();
-				
+
 				switch (theRule.getRuleType()) {
 				case PASSIVE:
 					initPassiveCriteriaPanel();

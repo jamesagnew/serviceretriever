@@ -3,6 +3,9 @@ package net.svcret.admin.client.ui.components;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.svcret.admin.client.AdminPortal;
+import net.svcret.admin.client.MyResources;
+
 import com.google.gwt.cell.client.ButtonCell;
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.cell.client.ValueUpdater;
@@ -21,6 +24,7 @@ public class PButtonCell extends ButtonCell {
 	private ImageResource myIcon;
 	private String myText="";
 	private List<String> myStyles;
+	private boolean myExecuteSpinnerOnNonNullValue;
 
 	/**
 	 * Construct a new ButtonCell that will use a {@link SimpleSafeHtmlRenderer}
@@ -41,6 +45,14 @@ public class PButtonCell extends ButtonCell {
 
 	@Override
 	public void render(Context context, SafeHtml data, SafeHtmlBuilder sb) {
+		if (myExecuteSpinnerOnNonNullValue && data != null) {
+			sb.appendHtmlConstant("<span class=\"" + MyResources.CSS.spinnerStatusMessageStyle() + "\">");
+			sb.appendHtmlConstant("<img src=\"" + AdminPortal.IMAGES.spinner().getSafeUri().asString() + "\" />");
+			sb.appendHtmlConstant("Loading...");
+			sb.appendHtmlConstant("</span>");
+			return;
+		}
+		
 		ImageResource icon = myIcon;
 		render(sb, icon, myText, myStyles);
 	}
@@ -74,5 +86,10 @@ public class PButtonCell extends ButtonCell {
 			myStyles=new ArrayList<String>();
 		}
 		myStyles.add(theStyle);
+	}
+
+	public Cell<String> withExecuteSpinnerOnNonNullValue() {
+		myExecuteSpinnerOnNonNullValue=true;
+		return this;
 	}
 }

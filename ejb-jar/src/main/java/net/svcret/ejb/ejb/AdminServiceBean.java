@@ -89,7 +89,6 @@ import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.api.ISecurityService;
-import net.svcret.ejb.api.IServiceInvokerSoap11;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
 import net.svcret.ejb.api.IServiceRegistry;
@@ -98,6 +97,7 @@ import net.svcret.ejb.api.StatusesBean;
 import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
+import net.svcret.ejb.invoker.soap.IServiceInvokerSoap11;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.BasePersSavedTransactionRecentMessage;
@@ -120,6 +120,7 @@ import net.svcret.ejb.model.entity.PersLibraryMessageAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorRuleActive;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
+import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheckOutcome;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem;
 import net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact;
@@ -270,7 +271,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			return myInvokerSoap11.createWsdlBundle((PersServiceVersionSoap11) svcVer);
 		case JSONRPC20:
 		case HL7OVERHTTP:
-		case FORWARDER:
+		case VIRTUAL:
 			break;
 		}
 
@@ -1302,7 +1303,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			PersMonitorRuleActive persRule = new PersMonitorRuleActive();
 			DtoMonitorRuleActive rule = (DtoMonitorRuleActive) theRule;
 			for (DtoMonitorRuleActiveCheck next : rule.getCheckList()) {
-				persRule.getActiveChecks().add(fromUi(next, persRule));
+				persRule.getActiveChecks().add(PersMonitorRuleActiveCheck.fromDto(next, persRule, myDao));
 			}
 			retVal = persRule;
 			break;
@@ -1370,25 +1371,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private PersMonitorRuleActiveCheck fromUi(DtoMonitorRuleActiveCheck theNext, BasePersMonitorRule theRule) throws ProcessingException {
-		PersMonitorRuleActiveCheck retVal = new PersMonitorRuleActiveCheck();
-		retVal.setCheckFrequencyNum(theNext.getCheckFrequencyNum());
-		retVal.setCheckFrequencyUnit(theNext.getCheckFrequencyUnit());
-		retVal.setExpectLatencyUnderMillis(theNext.getExpectLatencyUnderMillis());
-		retVal.setExpectResponseContainsText(theNext.getExpectResponseContainsText());
-		retVal.setExpectResponseType(theNext.getExpectResponseType());
-		retVal.setMessage(myDao.getLibraryMessageByPid(theNext.getMessagePid()));
-		if (retVal.getMessage() == null) {
-			throw new ProcessingException("Unknown message PID: " + theNext.getMessagePid());
-		}
-		retVal.setPid(theNext.getPidOrNull());
-		retVal.setRule(theRule);
-		retVal.setServiceVersion(myDao.getServiceVersionByPid(theNext.getServiceVersionPid()));
-		if (retVal.getServiceVersion() == null) {
-			throw new ProcessingException("Unknown service version PID: " + theNext.getServiceVersionPid());
-		}
-		return retVal;
-	}
 
 	private PersConfig fromUi(GConfig theConfig) {
 		PersConfig retVal = new PersConfig();
@@ -2735,6 +2717,24 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	@Override
 	public BaseGMonitorRule loadMonitorRuleAndDetailedSatistics(long theRulePid) {
 		return myDao.getMonitorRule(theRulePid).toDao(true);
+	}
+
+	@Override
+	public DtoMonitorRuleActiveCheck executeMonitorRuleActiveCheck(DtoMonitorRuleActiveCheck theCheck) throws ProcessingException {
+		
+		PersMonitorRuleActive rule = null;
+		if (theCheck.getPidOrNull() != null) {
+			PersMonitorRuleActiveCheck existing = myDao.getMonitorRuleActiveCheck(theCheck.getPid());
+			rule = (PersMonitorRuleActive) existing.getRule();
+		}
+		
+		PersMonitorRuleActiveCheck check = PersMonitorRuleActiveCheck.fromDto(theCheck, rule, myDao);
+		List<PersMonitorRuleActiveCheckOutcome> outcome = myMonitorSvc.runActiveCheckInCurrentTransaction(check, theCheck.getPidOrNull() != null);
+		
+		check.getRecentOutcomes().clear();
+		check.getRecentOutcomes().addAll(outcome);
+		
+		return check.toDto(true);
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {

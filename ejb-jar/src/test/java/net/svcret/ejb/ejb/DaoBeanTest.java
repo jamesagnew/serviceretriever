@@ -1,18 +1,8 @@
 package net.svcret.ejb.ejb;
 
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.DAY;
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.HOUR;
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.MINUTE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.*;
+import static org.junit.Assert.*;
 
-import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -840,7 +830,7 @@ public class DaoBeanTest extends BaseJpaTest {
 	}
 
 	@Before
-	public void before2() throws SQLException {
+	public void before2() throws Exception {
 		mySvc = new DaoBean();
 	}
 

@@ -179,7 +179,7 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 				addItem(writer, "ServiceVersionId", next.myServiceVersionId);
 				addItem(writer, "ServiceVersionPid", Long.toString(next.myServiceVersionPid));
 				if (StringUtils.isNotBlank(next.myMethodName)) {
-				addItem(writer, "MethodName", next.myMethodName);
+					addItem(writer, "MethodName", next.myMethodName);
 				}
 				if (next.myImplementationUrl != null) {
 					addItem(writer, "HandledByUrl", "[" + next.myImplementationUrlId + "] " + next.myImplementationUrl);
@@ -188,6 +188,9 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 					addItem(writer, "User", "none");
 				} else {
 					addItem(writer, "User", "[" + next.myUserPid + "] " + next.myUsername);
+				}
+				if (next.myAuthorizationOutcome != null) {
+					addItem(writer, "AuthorizationOutcome", next.myAuthorizationOutcome.name());
 				}
 				writer.append("Request:\n");
 				String formatedRequest = formatMessage(next.myRequestBody);
@@ -344,6 +347,7 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 		private String myUsername;
 		private Long myUserPid;
 		private String myFailureDescription;
+		private AuthorizationOutcomeEnum myAuthorizationOutcome;
 
 		public UnflushedAuditRecord(Date theRequestTime, HttpRequestBean theRequest, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody,
 				InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome,
@@ -365,7 +369,8 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 			myResponseHeaders = theInvocationResponse.getResponseHeaders();
 			myResponseBody = theInvocationResponse.getResponseBody();
 			myResponseType = theInvocationResponse.getResponseType();
-			myFailureDescription=theInvocationResponse.getResponseFailureDescription();
+			myFailureDescription = theInvocationResponse.getResponseFailureDescription();
+			myAuthorizationOutcome = theAuthorizationOutcome;
 			myMethodName = theMethod != null ? theMethod.getName() : null;
 			if (theUser != null) {
 				myUsername = theUser.getUsername();
@@ -378,7 +383,7 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 			myDomainId = theSvcVer.getService().getDomain().getDomainId();
 			myServiceVersionPid = theSvcVer.getPid();
 			myTransactionMillis = theHttpResponse != null ? theHttpResponse.getResponseTime() : 0;
-			
+
 			assert myAuditRecordType != null;
 			assert myRequestTime != null;
 			assert myHeaders != null;
@@ -392,6 +397,7 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 			assert myServiceVersionPid != null;
 			assert myResponseType != null;
 			assert myTransactionMillis != null;
+			assert myResponseBody == null || myResponseHeaders != null;
 		}
 
 		public Long getServiceVersionPid() {

@@ -1,8 +1,6 @@
 package net.svcret.ejb.ejb;
 
-import static net.svcret.ejb.util.HttpUtil.sendFailure;
-import static net.svcret.ejb.util.HttpUtil.sendSecurityFailure;
-import static net.svcret.ejb.util.HttpUtil.sendSuccessfulResponse;
+import static net.svcret.ejb.util.HttpUtil.*;
 
 import java.io.IOException;
 import java.util.ArrayDeque;

@@ -1,6 +1,6 @@
 package net.svcret.ejb.ex;
 
-import net.svcret.ejb.ejb.soap.InvocationFailedException;
+import net.svcret.ejb.invoker.soap.InvocationFailedException;
 import net.svcret.ejb.model.entity.PersUser;
 
 public class InvocationRequestFailedException extends InvocationFailedException {

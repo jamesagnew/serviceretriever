@@ -7,10 +7,6 @@ import java.net.UnknownHostException;
 
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.ejb.ejb.BaseJpaTest;
-import net.svcret.ejb.model.entity.PersDomain;
-import net.svcret.ejb.model.entity.PersHttpClientConfig;
-import net.svcret.ejb.model.entity.PersService;
-import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 
 import org.junit.Test;

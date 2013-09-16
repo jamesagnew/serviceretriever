@@ -11,6 +11,7 @@ import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.BaseGMonitorRule;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
@@ -49,6 +50,8 @@ public interface ModelUpdateService extends RemoteService {
 
 	BaseGServiceVersion createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncommittedId);
 
+	DtoMonitorRuleActiveCheck executeMonitorRuleActiveCheck(DtoMonitorRuleActiveCheck theCheck) throws ServiceFailureException;
+
 	Map<Long, GMonitorRuleFiring> getLatestFailingMonitorRuleFiringForRulePids() throws ServiceFailureException;
 
 	GConfig loadConfig() throws ServiceFailureException;
@@ -60,6 +63,8 @@ public interface ModelUpdateService extends RemoteService {
 	Collection<DtoLibraryMessage> loadLibraryMessages(HierarchyEnum theType, long thePid) throws ServiceFailureException;
 
 	ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ServiceFailureException;
+
+	BaseGMonitorRule loadMonitorRule(long theRulePid);
 
 	List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart);
 
@@ -165,7 +170,5 @@ public interface ModelUpdateService extends RemoteService {
 			myUser = theUser;
 		}
 	}
-
-	BaseGMonitorRule loadMonitorRule(long theRulePid);
 
 }

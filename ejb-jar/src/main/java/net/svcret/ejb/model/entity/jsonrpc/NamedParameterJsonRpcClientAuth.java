@@ -7,7 +7,7 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
 import net.svcret.admin.shared.model.ClientSecurityEnum;
-import net.svcret.ejb.ejb.jsonrpc.IJsonWriter;
+import net.svcret.ejb.invoker.jsonrpc.IJsonWriter;
 import net.svcret.ejb.model.entity.BasePersObject;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 

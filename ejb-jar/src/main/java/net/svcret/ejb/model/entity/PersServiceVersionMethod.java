@@ -19,9 +19,9 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
-import org.apache.commons.lang3.Validate;
-
 import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
+
+import org.apache.commons.lang3.Validate;
 
 @Table(name = "PX_SVC_VER_METHOD")
 @Entity

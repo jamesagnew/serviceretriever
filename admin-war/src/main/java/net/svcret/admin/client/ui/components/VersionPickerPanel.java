@@ -16,6 +16,10 @@ import com.google.gwt.user.client.ui.ListBox;
 
 public class VersionPickerPanel extends TwoColumnGrid {
 
+	public void setAllowSelectAll(boolean theAllowSelectAll) {
+		myAllowSelectAll = theAllowSelectAll;
+	}
+
 	public static final long ALL_PID = -1;
 	private static final String ALL_PID_STR = "-1";
 	private boolean myAllowSelectAll;

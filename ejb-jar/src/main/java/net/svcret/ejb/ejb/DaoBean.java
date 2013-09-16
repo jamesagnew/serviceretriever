@@ -547,7 +547,7 @@ public class DaoBean implements IDao {
 			case HL7OVERHTTP:
 				retVal = new PersServiceVersionHl7OverHttp();
 				break;
-			case FORWARDER:
+			case VIRTUAL:
 				retVal = new PersServiceVersionForwarder();
 				break;
 			}
@@ -1459,6 +1459,11 @@ public class DaoBean implements IDao {
 	@VisibleForTesting
 	void setThisForUnitTest() {
 		myThis = this;
+	}
+
+	@Override
+	public PersMonitorRuleActiveCheck getMonitorRuleActiveCheck(long thePid) {
+		return myEntityManager.find(PersMonitorRuleActiveCheck.class, thePid);
 	}
 
 }

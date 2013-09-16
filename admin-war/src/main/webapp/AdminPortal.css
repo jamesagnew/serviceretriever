@@ -582,19 +582,6 @@ a propertyTable table
 	color: #808080;
 }
 
-.spinnerElement {
-	display: inline-block;
-	margin-right: 5px;
-	vertical-align: middle;
-}
-
-.spinnerStatusMessageStyle {
-	white-space: nowrap;
-	font-size: 14px;
-	font-family: Arial;
-	color: #FF0000;
-}
-
 .statusRrdImage {
 	padding-left: 3px;	
 }

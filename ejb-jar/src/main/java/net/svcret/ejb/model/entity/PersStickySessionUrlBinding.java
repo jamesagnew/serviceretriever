@@ -20,7 +20,6 @@ import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.hibernate.annotations.ForeignKey;
 
 //@formatter:off
 @Entity
