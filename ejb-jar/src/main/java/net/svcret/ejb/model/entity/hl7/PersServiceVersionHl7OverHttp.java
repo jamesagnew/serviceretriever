@@ -6,13 +6,13 @@ import javax.persistence.Entity;
 
 import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
-import net.svcret.ejb.model.entity.BasePersServiceVersionSingleMethod;
+import net.svcret.ejb.model.entity.BasePersServiceVersion;
 
 import org.apache.commons.lang3.StringUtils;
 
 @Entity
 @DiscriminatorValue("HL7OVERHTTP")
-public class PersServiceVersionHl7OverHttp extends BasePersServiceVersionSingleMethod {
+public class PersServiceVersionHl7OverHttp extends BasePersServiceVersion {
 
 	private static final long serialVersionUID = 1L;
 

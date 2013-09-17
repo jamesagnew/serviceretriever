@@ -20,15 +20,15 @@ import net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp;
 import org.junit.Before;
 import org.junit.Test;
 
-public class Hl7OverHttpServiceInvokerTest {
+public class ServiceInvokerHl7OverHttpTest {
 
-	private Hl7OverHttpServiceInvoker mySvc;
+	private ServiceInvokerHl7OverHttp mySvc;
 	private IDao myDao;
 	private IServiceRegistry myServiceRegistry;
 
 	@Before
 	public void before() {
-		mySvc = new Hl7OverHttpServiceInvoker();
+		mySvc = new ServiceInvokerHl7OverHttp();
 		
 		myDao = mock(IDao.class);
 		mySvc.setDaoForUnitTest(myDao);

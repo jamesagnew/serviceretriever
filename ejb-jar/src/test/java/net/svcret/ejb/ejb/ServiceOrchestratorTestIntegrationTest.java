@@ -33,6 +33,8 @@ import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
+import net.svcret.ejb.invoker.hl7.ServiceInvokerHl7OverHttp;
 import net.svcret.ejb.invoker.soap.ServiceInvokerSoap11;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
@@ -56,6 +58,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import ca.uhn.hl7v2.parser.PipeParser;
+
 public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceOrchestratorTestIntegrationTest.class);
@@ -76,16 +80,11 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 	private RuntimeStatusQueryBean myRuntimeQuerySvc;
 	private PersServiceVersionMethod myMethod;
 	private BasePersServiceVersion mySvcVer;
-
-	@Before
-	public void before() {
-		DefaultAnswer.setDesignTime();
-	}
+	private ServiceInvokerHl7OverHttp myHl7Invoker;
 
 	@SuppressWarnings("null")
 	@Test
 	public void testSoap11GoodRequest() throws Exception {
-		setUpSoap11Test();
 
 		/*
 		 * Make request
@@ -154,7 +153,6 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
 	@Test
 	public void testSoap11InvalidRequest() throws Exception {
-		setUpSoap11Test();
 
 		/*
 		 * Make request
@@ -241,7 +239,6 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testSoap11FailingUrl() throws Exception {
-		setUpSoap11Test();
 
 		/*
 		 * Make request
@@ -350,7 +347,6 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testSoap11InvokerThrowsException() throws Exception {
-		setUpSoap11Test();
 
 		/*
 		 * Make request
@@ -427,7 +423,6 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testSoap11WithStickySession() throws Exception {
-		setUpSoap11Test();
 
 		/*
 		 * Make request
@@ -455,15 +450,6 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 				"   </S:Body>\n" + 
 				"</S:Envelope>";
 		//@formatter:on
-
-		TransactionLoggerBean logger = new TransactionLoggerBean();
-		logger.setDao(myDao);
-		mySvc.setTransactionLogger(logger);
-
-		FilesystemAuditLoggerBean fsAuditLogger = new FilesystemAuditLoggerBean();
-		fsAuditLogger.setConfigServiceForUnitTests(myConfigService);
-		fsAuditLogger.initialize();
-		logger.setFilesystemAuditLoggerForUnitTests(fsAuditLogger);
 
 		newEntityManager();
 		
@@ -565,7 +551,8 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		}
 	}
 
-	private void setUpSoap11Test() throws Exception {
+	@Before
+	public void before() throws Exception {
 		myHttpClient = mock(IHttpClient.class, DefaultAnswer.INSTANCE);
 		myBroadcastSender = mock(IBroadcastSender.class);
 
@@ -597,14 +584,18 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		mySecurityService.setLocalDbAuthService(myLocalDbAuthService);
 		mySecurityService.setBroadcastSender(myBroadcastSender);
 
-		mySoapInvoker = new ServiceInvokerSoap11();
-		mySoapInvoker.setConfigService(myConfigService);
-		mySoapInvoker.setHttpClient(myHttpClient);
-
 		myServiceRegistry = new ServiceRegistryBean();
 		myServiceRegistry.setBroadcastSender(myBroadcastSender);
 		myServiceRegistry.setDao(myDao);
 		myServiceRegistry.setSvcHttpClient(myHttpClient);
+		
+		mySoapInvoker = new ServiceInvokerSoap11();
+		mySoapInvoker.setConfigService(myConfigService);
+		mySoapInvoker.setHttpClient(myHttpClient);
+
+		myHl7Invoker = new ServiceInvokerHl7OverHttp();
+		myHl7Invoker.setDaoForUnitTest(myDao);
+		myHl7Invoker.setServiceRegistryForUnitTest(myServiceRegistry);
 
 		mySvc = new ServiceOrchestratorBean();
 		mySvc.setHttpClient(myHttpClient);
@@ -612,6 +603,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		mySvc.setSecuritySvc(mySecurityService);
 		mySvc.setSoap11ServiceInvoker(mySoapInvoker);
 		mySvc.setSvcRegistry(myServiceRegistry);
+		mySvc.setServiceInvokerHl7OverhttpForUnitTests(myHl7Invoker);
 		mySvc.setThrottlingService(mock(IThrottlingService.class));
 
 		/*
@@ -673,8 +665,79 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		myMethod = d0s0v0.getMethods().get(0);
 		
 		mySvcVerPid = d0s0v0.getPid();
+		
+		TransactionLoggerBean logger = new TransactionLoggerBean();
+		logger.setDao(myDao);
+		mySvc.setTransactionLogger(logger);
+
+		FilesystemAuditLoggerBean fsAuditLogger = new FilesystemAuditLoggerBean();
+		fsAuditLogger.setConfigServiceForUnitTests(myConfigService);
+		fsAuditLogger.initialize();
+		logger.setFilesystemAuditLoggerForUnitTests(fsAuditLogger);
+		
 	}
 
+	@Test
+	public void testHl7OverHttpGoodRequest() throws Exception {
+		newEntityManager();
+		
+		PersDomain d0 = myServiceRegistry.getOrCreateDomainWithId("d0");
+		PersService d0s0 = myServiceRegistry.getOrCreateServiceWithId(d0, "d0s0");
+		BasePersServiceVersion d0s0v1 = myServiceRegistry.getOrCreateServiceVersionWithId(d0s0, ServiceProtocolEnum.HL7OVERHTTP, "d0s0v1");
+		d0s0v1.addUrl(new PersServiceVersionUrl());
+		d0s0v1.getUrls().get(0).setUrlId("url1");
+		d0s0v1.getUrls().get(0).setUrl("http://foo");
+		myServiceRegistry.saveServiceVersion(d0s0v1);
+		
+		newEntityManager();
+
+		myServiceRegistry.reloadRegistryFromDatabase();
+		
+		newEntityManager();
+		
+		String request = "MSH|^~\\&|DATASERVICES|CORPORATE|||20120711120510.2-0500||ADT^A01^ADT_A01|9c906177-dfca-4bbe-9abd-d8eb43df93a0|D|2.6\r" + // -
+				"EVN||20120701000000-0500\r" + // -
+				"PID|1||397979797^^^SN^SN~4242^^^BKDMDM^PI~1000^^^YARDI^PI||Williams^Rory^H^^^^A||19641028000000-0600|M||||||||||31592^^^YARDI^AN\r";
+		String response = new PipeParser().parse(request).generateACK().encode();
+		
+		Reader reader = new StringReader(request);
+		HttpRequestBean req = new HttpRequestBean();
+		req.setRequestType(RequestType.POST);
+		req.setRequestHostIp("127.0.0.1");
+		req.setPath("/d0/d0s0/d0s0v1");
+		req.setQuery("");
+		req.setInputReader(reader);
+		req.setRequestTime(new Date());
+		req.setRequestHeaders(new HashMap<String, List<String>>());
+		req.getRequestHeaders().put("Content-Type", Collections.singletonList("application/hl7-v2"));
+
+		IResponseValidator theResponseValidator = any();
+		UrlPoolBean theUrlPool = any();
+		String theContentBody = any();
+		Map<String, List<String>> theHeaders = any();
+		String theContentType = any();
+		HttpResponseBean respBean = new HttpResponseBean();
+		respBean.setCode(200);
+		respBean.setBody(response);
+		respBean.setContentType("application/hl7-v2");
+		respBean.setResponseTime(100);
+		respBean.setSuccessfulUrl(d0s0v1.getUrls().get(0));
+		respBean.setHeaders(new HashMap<String, List<String>>());
+		PersHttpClientConfig httpClient = any();
+		when(myHttpClient.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
+		
+		OrchestratorResponseBean resp = mySvc.handleServiceRequest(req);
+
+		newEntityManager();
+		
+		myServiceRegistry.reloadRegistryFromDatabase();
+		
+		d0s0v1 = myServiceRegistry.getOrCreateServiceVersionWithId(d0s0, ServiceProtocolEnum.HL7OVERHTTP, "d0s0v1");
+		assertEquals(1, d0s0v1.getMethods().size());
+		assertEquals("ADT", d0s0v1.getMethods().get(0).getName());
+		
+	}
+	
 	@Override
 	protected void newEntityManager() {
 		super.newEntityManager();

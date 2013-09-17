@@ -3,7 +3,8 @@ package net.svcret.admin.shared.model;
 
 public class DtoServiceVersionHl7OverHttp extends BaseGServiceVersion {
 
-	public static final String DEFAULT_METHOD_NAME_TEMPLATE = "${messageType}^${messageVersion}";
+	public static final String DEFAULT_METHOD_NAME_TEMPLATE = "${messageType}";
+	public static final String FANCY_METHOD_NAME_TEMPLATE = "${messageType}^${messageVersion}";
 	
 	private static final long serialVersionUID = 1L;
 

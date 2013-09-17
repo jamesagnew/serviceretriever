@@ -48,6 +48,7 @@ import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.invoker.IServiceInvoker;
 import net.svcret.ejb.invoker.hl7.IServiceInvokerHl7OverHttp;
+import net.svcret.ejb.invoker.hl7.ServiceInvokerHl7OverHttp;
 import net.svcret.ejb.invoker.jsonrpc.IServiceInvokerJsonRpc20;
 import net.svcret.ejb.invoker.soap.IServiceInvokerSoap11;
 import net.svcret.ejb.invoker.soap.InvocationFailedException;
@@ -79,10 +80,10 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	private IHttpClient myHttpClient;
 
 	@EJB
-	private IServiceInvokerJsonRpc20 myJsonRpc20ServiceInvoker;
+	private IServiceInvokerJsonRpc20 myServiceInvokerJsonRpc20;
 
 	@EJB
-	private IServiceInvokerHl7OverHttp myHl7OverHttpServiceInvoker;
+	private IServiceInvokerHl7OverHttp myServiceInvokerHl7OverHttp;
 
 	@EJB
 	private IRuntimeStatus myRuntimeStatus;
@@ -90,8 +91,8 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	@EJB
 	private ISecurityService mySecuritySvc;
 
-	@EJB()
-	private IServiceInvokerSoap11 mySoap11ServiceInvoker;
+	@EJB
+	private IServiceInvokerSoap11 myServiceInvokerSoap11;
 
 	@EJB
 	private IServiceRegistry mySvcRegistry;
@@ -381,13 +382,13 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		IServiceInvoker svcInvoker = null;
 		switch (serviceVersion.getProtocol()) {
 		case SOAP11:
-			svcInvoker = mySoap11ServiceInvoker;
+			svcInvoker = myServiceInvokerSoap11;
 			break;
 		case JSONRPC20:
-			svcInvoker = myJsonRpc20ServiceInvoker;
+			svcInvoker = myServiceInvokerJsonRpc20;
 			break;
 		case HL7OVERHTTP:
-			svcInvoker = myHl7OverHttpServiceInvoker;
+			svcInvoker = myServiceInvokerHl7OverHttp;
 			break;
 		}
 		return svcInvoker;
@@ -541,7 +542,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	 */
 	@VisibleForTesting
 	void setSoap11ServiceInvoker(IServiceInvokerSoap11 theSoap11ServiceInvoker) {
-		mySoap11ServiceInvoker = theSoap11ServiceInvoker;
+		myServiceInvokerSoap11 = theSoap11ServiceInvoker;
 	}
 
 	/**
@@ -600,5 +601,10 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		}
 
 		return retVal;
+	}
+
+	@VisibleForTesting
+	void setServiceInvokerHl7OverhttpForUnitTests(ServiceInvokerHl7OverHttp theHl7Invoker) {
+		myServiceInvokerHl7OverHttp=theHl7Invoker;
 	}
 }

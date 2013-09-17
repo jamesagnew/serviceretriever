@@ -32,9 +32,9 @@ import ca.uhn.hl7v2.preparser.PreParser;
 import com.google.common.annotations.VisibleForTesting;
 
 @Stateless
-public class Hl7OverHttpServiceInvoker extends BaseServiceInvoker implements IServiceInvokerHl7OverHttp {
+public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements IServiceInvokerHl7OverHttp {
 
-	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(Hl7OverHttpServiceInvoker.class);
+	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceInvokerHl7OverHttp.class);
 
 	@EJB
 	private IDao myDao;
@@ -42,19 +42,19 @@ public class Hl7OverHttpServiceInvoker extends BaseServiceInvoker implements ISe
 	@EJB
 	private IServiceRegistry myServiceRegistry;
 
-	public Hl7OverHttpServiceInvoker() {
+	public ServiceInvokerHl7OverHttp() {
 		// DefaultHapiContext hapiContext = new DefaultHapiContext();
 		// hapiContext.setValidationContext(new ValidationContextImpl());
 		// GenericParser parser = hapiContext.getGenericParser();
 	}
 
 	@VisibleForTesting
-	void setDaoForUnitTest(IDao theDao) {
+	public void setDaoForUnitTest(IDao theDao) {
 		myDao = theDao;
 	}
 
 	@VisibleForTesting
-	void setServiceRegistryForUnitTest(IServiceRegistry theServiceRegistry) {
+	public void setServiceRegistryForUnitTest(IServiceRegistry theServiceRegistry) {
 		myServiceRegistry = theServiceRegistry;
 	}
 
@@ -72,9 +72,9 @@ public class Hl7OverHttpServiceInvoker extends BaseServiceInvoker implements ISe
 			throw new UnknownRequestException(thePath, "HL7 over HTTP service at " + thePath + " requires all requests to be of type POST");
 		}
 
-		if (theContentType.equals("application/hl7-v2")) {
+		if ("application/hl7-v2".equals(theContentType)) {
 			ourLog.debug("Content type is {}", theContentType);
-		} else if (theContentType.equals("application/hl7-v2+xml")) {
+		} else if ("application/hl7-v2+xml".equals(theContentType)) {
 			ourLog.debug("Content type is {}", theContentType);
 		} else {
 			throw new UnknownRequestException(thePath,"HL7 over HTTP service cannot accept content type: " + theContentType);

@@ -82,13 +82,13 @@ public abstract class BaseJpaTest {
 		myEntityManager.getTransaction().begin();
 	}
 
-	// @Before
-	public void before() {
-		if (myEntityManager != null) {
-			myEntityManager.getTransaction().commit();
-			myEntityManager.close();
-		}
-		myEntityManager = null;
-	}
+//	// @Before
+//	public void before() {
+//		if (myEntityManager != null) {
+//			myEntityManager.getTransaction().commit();
+//			myEntityManager.close();
+//		}
+//		myEntityManager = null;
+//	}
 
 }
