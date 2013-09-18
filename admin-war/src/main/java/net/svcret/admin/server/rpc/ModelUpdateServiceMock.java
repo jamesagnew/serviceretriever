@@ -279,6 +279,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 			newRule.setName("Demo Rule");
 			newRule.getNotifyEmailContacts().add("foo2@example.com");
 			DtoMonitorRuleActiveCheck check = new DtoMonitorRuleActiveCheck();
+			check.setPid(999L);
 			check.setCheckFrequencyNum(2);
 			check.setCheckFrequencyUnit(ThrottlePeriodEnum.MINUTE);
 			check.setExpectLatencyUnderMillis(100L);

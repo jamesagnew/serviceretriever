@@ -1,22 +1,35 @@
 package net.svcret.ejb.ejb;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.isOneOf;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.persistence.EntityManager;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
+import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
+import net.svcret.admin.shared.model.DtoMonitorRuleActive;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.GConfig;
@@ -71,18 +84,18 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(AdminServiceBeanIntegrationTest.class);
 
+	private IBroadcastSender myBroadcastSender;
+	private ConfigServiceBean myConfigSvc;
 	private DaoBean myDao;
+	private Date myEverythingInvocationTime;
+	private MonitorServiceBean myMonitorSvc;
+	private SecurityServiceBean mySecSvc;
 	private IServiceInvokerSoap11 mySoapInvoker;
+	private RuntimeStatusQueryBean myStatsQSvc;
 	private RuntimeStatusBean myStatsSvc;
 	private AdminServiceBean mySvc;
-	private SecurityServiceBean mySecSvc;
-	private IBroadcastSender myBroadcastSender;
 	private ServiceRegistryBean mySvcReg;
-	private ConfigServiceBean myConfigSvc;
 	private TransactionLoggerBean myTransactionLogSvc;
-	private MonitorServiceBean myMonitorSvc;
-	private RuntimeStatusQueryBean myStatsQSvc;
-	private Date myEverythingInvocationTime;
 
 	@After
 	public void after2() {
@@ -93,168 +106,6 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		// q.executeUpdate();
 		//
 		// newEntityManager();
-	}
-
-	@Test
-	public void testSaveHttpClientConfig() throws Exception {
-		createEverything();
-		newEntityManager();
-
-		ModelUpdateRequest req = new ModelUpdateRequest();
-		req.setLoadHttpClientConfigs(true);
-		ModelUpdateResponse resp = mySvc.loadModelUpdate(req);
-
-		GHttpClientConfig cfg = resp.getHttpClientConfigList().get(0);
-
-		newEntityManager();
-
-		int cb1 = 1111;
-		int cb2 = 1112;
-		int cb3 = 1113;
-		int cb4 = 1114;
-		cfg.setCircuitBreakerEnabled(true);
-		cfg.setCircuitBreakerTimeBetweenResetAttempts(cb1);
-		cfg.setConnectTimeoutMillis(cb2);
-		cfg.setFailureRetriesBeforeAborting(cb3);
-		cfg.setReadTimeoutMillis(cb4);
-		mySvc.saveHttpClientConfig(cfg, null, null, null, null);
-
-		newEntityManager();
-		req = new ModelUpdateRequest();
-		req.setLoadHttpClientConfigs(true);
-		resp = mySvc.loadModelUpdate(req);
-		cfg = resp.getHttpClientConfigList().get(0);
-		assertEquals(cb1, cfg.getCircuitBreakerTimeBetweenResetAttempts());
-		assertEquals(cb2, cfg.getConnectTimeoutMillis());
-		assertEquals(cb3, cfg.getFailureRetriesBeforeAborting());
-		assertEquals(cb4, cfg.getReadTimeoutMillis());
-
-		newEntityManager();
-
-		cb1 = 2111;
-		cb2 = 2112;
-		cb3 = 2113;
-		cb4 = 2114;
-		cfg.setCircuitBreakerEnabled(true);
-		cfg.setCircuitBreakerTimeBetweenResetAttempts(cb1);
-		cfg.setConnectTimeoutMillis(cb2);
-		cfg.setFailureRetriesBeforeAborting(cb3);
-		cfg.setReadTimeoutMillis(cb4);
-		mySvc.saveHttpClientConfig(cfg, null, null, null, null);
-
-		newEntityManager();
-		req = new ModelUpdateRequest();
-		req.setLoadHttpClientConfigs(true);
-		resp = mySvc.loadModelUpdate(req);
-		cfg = resp.getHttpClientConfigList().get(0);
-		assertEquals(cb1, cfg.getCircuitBreakerTimeBetweenResetAttempts());
-		assertEquals(cb2, cfg.getConnectTimeoutMillis());
-		assertEquals(cb3, cfg.getFailureRetriesBeforeAborting());
-		assertEquals(cb4, cfg.getReadTimeoutMillis());
-
-		newEntityManager();
-
-		cb1 = 3111;
-		cb2 = 3112;
-		cb3 = 3113;
-		cb4 = 3114;
-		cfg.setCircuitBreakerEnabled(true);
-		cfg.setCircuitBreakerTimeBetweenResetAttempts(cb1);
-		cfg.setConnectTimeoutMillis(cb2);
-		cfg.setFailureRetriesBeforeAborting(cb3);
-		cfg.setReadTimeoutMillis(cb4);
-		mySvc.saveHttpClientConfig(cfg, null, null, null, null);
-
-		newEntityManager();
-		req = new ModelUpdateRequest();
-		req.setLoadHttpClientConfigs(true);
-		resp = mySvc.loadModelUpdate(req);
-		cfg = resp.getHttpClientConfigList().get(0);
-		assertEquals(cb1, cfg.getCircuitBreakerTimeBetweenResetAttempts());
-		assertEquals(cb2, cfg.getConnectTimeoutMillis());
-		assertEquals(cb3, cfg.getFailureRetriesBeforeAborting());
-		assertEquals(cb4, cfg.getReadTimeoutMillis());
-
-		newEntityManager();
-
-	}
-
-	@Test
-	public void testLibrary() throws Exception {
-
-		newEntityManager();
-
-		PersDomain domain = myDao.getOrCreateDomainWithId("DOMAIN_ID");
-		PersService service = myDao.getOrCreateServiceWithId(domain, "SERVICE_ID");
-		PersServiceVersionSoap11 version0 = (PersServiceVersionSoap11) myDao.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
-		PersServiceVersionSoap11 version1 = (PersServiceVersionSoap11) myDao.getOrCreateServiceVersionWithId(service, "VersionId1", ServiceProtocolEnum.SOAP11);
-
-		newEntityManager();
-
-		DtoLibraryMessage m0 = new DtoLibraryMessage();
-		m0.setAppliesToServiceVersionPids(version0.getPid());
-		m0.setContentType("ct0");
-		m0.setDescription("desc0");
-		m0.setMessage("m0");
-		mySvc.saveLibraryMessage(m0);
-
-		DtoLibraryMessage m1 = new DtoLibraryMessage();
-		m1.setAppliesToServiceVersionPids(version1.getPid());
-		m1.setContentType("ct1");
-		m1.setDescription("desc1");
-		m1.setMessage("m1");
-		mySvc.saveLibraryMessage(m1);
-
-		newEntityManager();
-
-		Collection<DtoLibraryMessage> msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION, version0.getPid(), true);
-		assertEquals(1, msgs.size());
-
-		DtoLibraryMessage message = msgs.iterator().next();
-		assertEquals("ct0", message.getContentType());
-		assertEquals("desc0", message.getDescription());
-		assertEquals("m0", message.getMessage());
-
-		msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION, version1.getPid(), true);
-		assertEquals(1, msgs.size());
-
-		message.setAppliesToServiceVersionPids(version0.getPid(), version1.getPid());
-
-		mySvc.saveLibraryMessage(message);
-
-		newEntityManager();
-
-		msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION, version1.getPid(), true);
-		assertEquals(2, msgs.size());
-		msgs = mySvc.getLibraryMessages(HierarchyEnum.SERVICE, service.getPid(), true);
-		assertEquals(2, msgs.size());
-
-		message.setAppliesToServiceVersionPids(version1.getPid());
-
-		mySvc.saveLibraryMessage(message);
-
-		PersLibraryMessage pm = myDao.getLibraryMessageByPid(message.getPid());
-		assertEquals(1, pm.getAppliesTo().size());
-
-		newEntityManager();
-
-		pm = myDao.getLibraryMessageByPid(message.getPid());
-		assertEquals(1, pm.getAppliesTo().size());
-
-		msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION, version0.getPid(), true);
-		assertEquals(0, msgs.size());
-		msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION, version1.getPid(), true);
-		assertEquals(2, msgs.size());
-
-		msgs = mySvc.getLibraryMessages(HierarchyEnum.SERVICE, service.getPid(), true);
-		assertEquals(2, msgs.size());
-
-		msgs = mySvc.getLibraryMessages(HierarchyEnum.DOMAIN, domain.getPid(), true);
-		assertEquals(2, msgs.size());
-
-		msgs = mySvc.loadLibraryMessages();
-		assertEquals(2, msgs.size());
-
 	}
 
 	@Before
@@ -304,705 +155,6 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		myTransactionLogSvc.setDao(myDao);
 
 		DefaultAnswer.setDesignTime();
-	}
-
-	@Test
-	public void testLoadAndSaveSvcVerMethods() throws Exception {
-
-		newEntityManager();
-
-		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
-		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
-
-		newEntityManager();
-
-		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
-		d1s1v1.setActive(true);
-		d1s1v1.setId("ASV_SV1");
-		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
-		d1s1v1.setHttpClientConfigPid(hcc.getPid());
-		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		GServiceMethod method = new GServiceMethod();
-		method.setName("123");
-		d1s1v1.getMethodList().add(method);
-
-		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		mySvcReg.reloadRegistryFromDatabase();
-
-		newEntityManager();
-
-		ModelUpdateResponse response = mySvc.loadModelUpdate(new ModelUpdateRequest());
-		assertEquals(1, response.getDomainList().size());
-		assertEquals(1, response.getDomainList().get(0).getServiceList().size());
-		assertEquals(1, response.getDomainList().get(0).getServiceList().get(0).getVersionList().size());
-		assertEquals(1, response.getDomainList().get(0).getServiceList().get(0).getVersionList().get(0).getMethodList().size());
-
-		// Make sure we don't replace identical methods
-
-		GServiceMethod oldMethod = d1s1v1.getMethodList().remove(0);
-
-		d1s1v1.getMethodList().add(new GServiceMethod());
-		d1s1v1.getMethodList().get(0).setId(oldMethod.getId());
-		d1s1v1.getMethodList().get(0).setName(oldMethod.getName());
-		d1s1v1.getMethodList().get(0).setRootElements(oldMethod.getRootElements());
-		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		response = mySvc.loadModelUpdate(new ModelUpdateRequest());
-		assertEquals(1, response.getDomainList().size());
-		assertEquals(1, response.getDomainList().get(0).getServiceList().size());
-		assertEquals(1, response.getDomainList().get(0).getServiceList().get(0).getVersionList().size());
-		assertEquals(1, response.getDomainList().get(0).getServiceList().get(0).getVersionList().get(0).getMethodList().size());
-		assertEquals(oldMethod.getPid(), response.getDomainList().get(0).getServiceList().get(0).getVersionList().get(0).getMethodList().get(0).getPid());
-
-	}
-
-	@Test
-	public void testAddMonitorRule() throws Exception {
-
-		newEntityManager();
-
-		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
-		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
-		myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
-
-		newEntityManager();
-
-		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
-		d1s1v1.setActive(true);
-		d1s1v1.setId("ASV_SV1");
-		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
-		d1s1v1.setHttpClientConfigPid(hcc.getPid());
-		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		assertEquals(0, mySvc.loadMonitorRuleList().size());
-
-		newEntityManager();
-
-		GMonitorRulePassive rule = new GMonitorRulePassive();
-		rule.setPassiveFireIfAllBackingUrlsAreUnavailable(true);
-		rule.setPassiveFireForBackingServiceLatencyIsAboveMillis(100);
-		rule.applyTo(d1, true);
-		rule.applyTo(d1, d1s1, true);
-		rule.getNotifyEmailContacts().add("foo@foo.com");
-		rule.getNotifyEmailContacts().add("bar@bar.com");
-
-		mySvc.saveMonitorRule(rule);
-
-		newEntityManager();
-
-		GMonitorRuleList rules = mySvc.loadMonitorRuleList();
-		assertEquals(1, rules.size());
-
-		rule = (GMonitorRulePassive) rules.get(0);
-		assertEquals(true, rule.isPassiveFireIfAllBackingUrlsAreUnavailable());
-		assertEquals(false, rule.isPassiveFireIfSingleBackingUrlIsUnavailable());
-		assertTrue(rule.getNotifyEmailContacts().contains("foo@foo.com"));
-		assertTrue(rule.getNotifyEmailContacts().contains("bar@bar.com"));
-		assertTrue(rule.appliesTo(d1));
-		assertTrue(rule.appliesTo(d1s1));
-		assertFalse(rule.appliesTo(d1s1v1));
-
-		rule.applyTo(d1, d1s1, false);
-		rule.applyTo(d1, d1s1, d1s1v1, true);
-		rule.getNotifyEmailContacts().remove("foo@foo.com");
-		rule.getNotifyEmailContacts().add("baz@baz.com");
-
-		mySvc.saveMonitorRule(rule);
-
-		newEntityManager();
-
-		rules = mySvc.loadMonitorRuleList();
-		assertEquals(1, rules.size());
-
-		rule = (GMonitorRulePassive) rules.get(0);
-		assertEquals(true, rule.isPassiveFireIfAllBackingUrlsAreUnavailable());
-		assertEquals(false, rule.isPassiveFireIfSingleBackingUrlIsUnavailable());
-		assertFalse(rule.getNotifyEmailContacts().contains("foo@foo.com"));
-		assertTrue(rule.getNotifyEmailContacts().contains("bar@bar.com"));
-		assertTrue(rule.getNotifyEmailContacts().contains("baz@baz.com"));
-		assertTrue(rule.appliesTo(d1));
-		assertFalse(rule.appliesTo(d1s1));
-		assertTrue(rule.appliesTo(d1s1v1));
-
-	}
-
-	@Test
-	public void testLoadAndSaveSvcVerClientSecurity() throws Exception {
-
-		newEntityManager();
-
-		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
-		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
-		myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
-
-		newEntityManager();
-
-		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
-		d1s1v1.setActive(true);
-		d1s1v1.setId("ASV_SV1");
-		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
-		d1s1v1.setHttpClientConfigPid(hcc.getPid());
-		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		// Add one
-
-		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		GWsSecUsernameTokenClientSecurity cli = new GWsSecUsernameTokenClientSecurity();
-		cli.setUsername("un0");
-		cli.setPassword("pw0");
-		d1s1v1.getClientSecurityList().add(cli);
-
-		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		// Add a second
-
-		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		cli = new GWsSecUsernameTokenClientSecurity();
-		cli.setUsername("un1");
-		cli.setPassword("pw1");
-		d1s1v1.getClientSecurityList().add(cli);
-
-		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		assertEquals(2, d1s1v1.getClientSecurityList().size());
-		assertEquals("un0", ((GWsSecUsernameTokenClientSecurity) d1s1v1.getClientSecurityList().get(0)).getUsername());
-		assertEquals("pw0", ((GWsSecUsernameTokenClientSecurity) d1s1v1.getClientSecurityList().get(0)).getPassword());
-		assertEquals("un1", ((GWsSecUsernameTokenClientSecurity) d1s1v1.getClientSecurityList().get(1)).getUsername());
-		assertEquals("pw1", ((GWsSecUsernameTokenClientSecurity) d1s1v1.getClientSecurityList().get(1)).getPassword());
-
-		// Remove one
-
-		d1s1v1.getClientSecurityList().remove(d1s1v1.getClientSecurityList().get(0));
-		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		assertEquals(1, d1s1v1.getClientSecurityList().size());
-		assertEquals("un1", ((GWsSecUsernameTokenClientSecurity) d1s1v1.getClientSecurityList().get(0)).getUsername());
-		assertEquals("pw1", ((GWsSecUsernameTokenClientSecurity) d1s1v1.getClientSecurityList().get(0)).getPassword());
-
-	}
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testLoadAndSaveSvcVerServerSecurityNoAuthHost() throws Exception {
-
-		newEntityManager();
-
-		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
-		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpServer");
-		myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
-
-		newEntityManager();
-
-		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
-		d1s1v1.setActive(true);
-		d1s1v1.setId("ASV_SV1");
-		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
-		d1s1v1.setHttpClientConfigPid(hcc.getPid());
-		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		// Add one
-
-		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		GWsSecServerSecurity cli = new GWsSecServerSecurity();
-
-		// Don't set the auth host, this should mean an exception is thrown
-
-		d1s1v1.getServerSecurityList().add(cli);
-
-		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-	}
-
-	@Test
-	public void testLoadAndSaveSvcVerServerSecurity() throws Exception {
-
-		newEntityManager();
-
-		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
-		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpServer");
-		PersAuthenticationHostLocalDatabase auth = myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
-		PersAuthenticationHostLocalDatabase auth2 = myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST2");
-
-		newEntityManager();
-
-		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
-		d1s1v1.setActive(true);
-		d1s1v1.setId("ASV_SV1");
-		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
-		d1s1v1.setHttpClientConfigPid(hcc.getPid());
-		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		// Add one
-
-		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		GWsSecServerSecurity cli = new GWsSecServerSecurity();
-		cli.setAuthHostPid(auth.getPid());
-		d1s1v1.getServerSecurityList().add(cli);
-
-		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		// Add a second
-
-		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		cli = new GWsSecServerSecurity();
-		cli.setAuthHostPid(auth2.getPid());
-		d1s1v1.getServerSecurityList().add(cli);
-
-		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		assertEquals(2, d1s1v1.getServerSecurityList().size());
-		assertEquals(auth.getPid().longValue(), d1s1v1.getServerSecurityList().get(0).getAuthHostPid());
-		assertEquals(auth2.getPid().longValue(), d1s1v1.getServerSecurityList().get(1).getAuthHostPid());
-
-		// Remove one
-
-		ourLog.info("Removing sec with PID {} but keeping {}", d1s1v1.getServerSecurityList().get(0).getPid(), d1s1v1.getServerSecurityList().get(1).getPid());
-
-		d1s1v1.getServerSecurityList().remove(d1s1v1.getServerSecurityList().get(0));
-		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		assertEquals(1, d1s1v1.getServerSecurityList().size());
-		assertEquals(auth2.getPid().longValue(), d1s1v1.getServerSecurityList().get(0).getAuthHostPid());
-
-	}
-
-	@Test
-	public void testLoadAndSaveSvcVerSoap11() throws Exception {
-
-		newEntityManager();
-
-		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
-		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
-
-		newEntityManager();
-
-		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
-		d1s1v1.setActive(true);
-		d1s1v1.setId("ASV_SV1");
-		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
-		d1s1v1.setHttpClientConfigPid(hcc.getPid());
-
-		List<GResource> resources = new ArrayList<GResource>();
-		resources.add(new GResource("http://foo", "text/xml", "contents1"));
-		resources.add(new GResource("http://bar", "text/xml", "contents2"));
-
-		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", "http://url1"));
-		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", "http://url2"));
-
-		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
-
-		newEntityManager();
-
-		/*
-		 * Putting in the same old resources, but they look new because they don't have IDs
-		 */
-
-		d1s1v1.setWsdlLocation("http://bar");
-		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
-
-		newEntityManager();
-
-		GSoap11ServiceVersionAndResources copy = mySvc.loadServiceVersion(d1s1v1.getPid());
-		DtoServiceVersionSoap11 svcVer = (DtoServiceVersionSoap11) copy.getServiceVersion();
-		assertEquals("http://bar", svcVer.getWsdlLocation());
-		assertEquals(2, copy.getResource().size());
-
-		/*
-		 * Now try saving with the existing resources back in
-		 */
-
-		d1s1v1.setWsdlLocation("http://baz");
-		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, copy.getResource());
-
-		newEntityManager();
-
-		/*
-		 * Now remove a resource
-		 */
-
-		d1s1v1.setWsdlLocation("http://baz");
-		List<GResource> resource = copy.getResource();
-		resource.remove(0);
-		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resource);
-
-		newEntityManager();
-
-		copy = mySvc.loadServiceVersion(d1s1v1.getPid());
-		svcVer = (DtoServiceVersionSoap11) copy.getServiceVersion();
-		assertEquals("http://baz", svcVer.getWsdlLocation());
-		assertEquals(1, copy.getResource().size());
-
-	}
-
-	@Test
-	public void testLoadAndSaveSvcVerJsonRpc20() throws Exception {
-
-		newEntityManager();
-
-		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
-		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
-
-		newEntityManager();
-
-		DtoServiceVersionJsonRpc20 d1s1v1 = new DtoServiceVersionJsonRpc20();
-		d1s1v1.setActive(true);
-		d1s1v1.setId("ASV_SV1");
-		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setHttpClientConfigPid(hcc.getPid());
-
-		List<GResource> resources = new ArrayList<GResource>();
-		resources.add(new GResource("http://foo", "text/xml", "contents1"));
-		resources.add(new GResource("http://bar", "text/xml", "contents2"));
-
-		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", "http://url1"));
-		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", "http://url2"));
-
-		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
-
-		newEntityManager();
-
-		GSoap11ServiceVersionAndResources copy = mySvc.loadServiceVersion(d1s1v1.getPid());
-		DtoServiceVersionJsonRpc20 svcVer = (DtoServiceVersionJsonRpc20) copy.getServiceVersion();
-		assertEquals("ASV_SV1", svcVer.getId());
-		assertEquals(2, copy.getResource().size());
-
-		svcVer.setId("2.0");
-
-		newEntityManager();
-
-		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), svcVer, copy.getResource());
-
-		newEntityManager();
-
-		copy = mySvc.loadServiceVersion(d1s1v1.getPid());
-		svcVer = (DtoServiceVersionJsonRpc20) copy.getServiceVersion();
-		assertEquals("2.0", svcVer.getId());
-		assertEquals(2, copy.getResource().size());
-
-	}
-
-	@Override
-	protected void newEntityManager() {
-		super.newEntityManager();
-
-		myDao.setEntityManager(myEntityManager);
-	}
-
-	@Test
-	public void testAddDomain() throws Exception {
-		newEntityManager();
-
-		GDomain domain = mySvc.addDomain("domain_id", "domain_name");
-		newEntityManager();
-
-		assertEquals("domain_id", domain.getId());
-		assertEquals("domain_name", domain.getName());
-		assertFalse(domain.isStatsInitialized());
-	}
-
-	@Test
-	public void testSaveConfigWithUrlBases() throws Exception {
-		newEntityManager();
-
-		GConfig config = mySvc.loadConfig();
-
-		newEntityManager();
-
-		config.getProxyUrlBases().clear();
-		config.getProxyUrlBases().add("http://foo");
-
-		config = mySvc.saveConfig(config);
-
-		newEntityManager();
-
-		config = mySvc.loadConfig();
-		assertEquals(1, config.getProxyUrlBases().size());
-		assertEquals("http://foo", config.getProxyUrlBases().get(0));
-
-	}
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testAddDomainDuplicate() throws Exception {
-		newEntityManager();
-
-		mySvc.addDomain("domain_id2", "domain_name");
-		newEntityManager();
-
-		mySvc.addDomain("domain_id2", "domain_name");
-		newEntityManager();
-
-	}
-
-	@Test
-	public void testAddAndSaveService() throws Exception {
-		newEntityManager();
-
-		GDomain domain = mySvc.addDomain("domain_id3", "domain_name");
-		newEntityManager();
-
-		GService service = mySvc.addService(domain.getPid(), "svc_id", "svc_name", true);
-
-		newEntityManager();
-
-		assertEquals("svc_id", service.getId());
-		assertEquals("svc_name", service.getName());
-
-		assertFalse(service.isStatsInitialized());
-
-		newEntityManager();
-
-		service.setName("name2");
-		mySvc.saveService(service);
-
-	}
-
-	@Test
-	public void testRenameServiceVersion() throws Exception {
-		newEntityManager();
-
-		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
-		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
-
-		newEntityManager();
-
-		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
-		d1s1v1.setActive(true);
-		d1s1v1.setId("ASV_SV1");
-		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
-		d1s1v1.setHttpClientConfigPid(hcc.getPid());
-
-		List<GResource> resources = new ArrayList<GResource>();
-		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
-
-		newEntityManager();
-
-		PersDomain pDomain = myDao.getDomainByPid(d1.getPid());
-		Collection<BasePersServiceVersion> versions = pDomain.getServices().iterator().next().getVersions();
-
-		assertEquals(1, versions.size());
-
-		d1s1v1.setId("newId");
-		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
-
-		newEntityManager();
-
-		pDomain = myDao.getDomainByPid(d1.getPid());
-		versions = pDomain.getServices().iterator().next().getVersions();
-
-		assertEquals(1, versions.size());
-
-	}
-
-	@Test
-	public void testAddServiceVersion() throws Exception {
-		newEntityManager();
-
-		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
-		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
-
-		newEntityManager();
-
-		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
-		d1s1v1.setActive(true);
-		d1s1v1.setId("ASV_SV1");
-		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
-		d1s1v1.setHttpClientConfigPid(hcc.getPid());
-
-		List<GResource> resources = new ArrayList<GResource>();
-		resources.add(new GResource("http://foo", "text/xml", "contents1"));
-		resources.add(new GResource("http://bar", "text/xml", "contents2"));
-
-		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", "http://url1"));
-		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", "http://url2"));
-
-		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
-
-		newEntityManager();
-
-		PersDomain pDomain = myDao.getDomainByPid(d1.getPid());
-		Collection<BasePersServiceVersion> versions = pDomain.getServices().iterator().next().getVersions();
-
-		assertEquals(1, versions.size());
-
-		PersServiceVersionSoap11 pVersion = (PersServiceVersionSoap11) versions.iterator().next();
-		assertEquals("ASV_SV1", pVersion.getVersionId());
-		assertEquals("http://foo", pVersion.getWsdlUrl());
-		assertEquals(2, pVersion.getUriToResource().size());
-		assertEquals("contents1", pVersion.getUriToResource().get("http://foo").getResourceText());
-		assertEquals("contents2", pVersion.getUriToResource().get("http://bar").getResourceText());
-
-		assertEquals(2, pVersion.getUrls().size());
-		assertEquals("url1", pVersion.getUrls().get(0).getUrlId());
-		assertEquals("url2", pVersion.getUrls().get(1).getUrlId());
-
-	}
-
-	@Test
-	public void testDeleteServiceVersion() throws Exception {
-		newEntityManager();
-
-		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
-		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
-
-		newEntityManager();
-
-		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
-		d1s1v1.setActive(true);
-		d1s1v1.setId("ASV_SV1");
-		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
-		d1s1v1.setHttpClientConfigPid(hcc.getPid());
-
-		List<GResource> resources = new ArrayList<GResource>();
-		resources.add(new GResource("http://foo", "text/xml", "contents1"));
-		resources.add(new GResource("http://bar", "text/xml", "contents2"));
-
-		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", "http://url1"));
-		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", "http://url2"));
-
-		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
-
-		newEntityManager();
-
-		PersDomain pDomain = myDao.getDomainByPid(d1.getPid());
-		Collection<BasePersServiceVersion> versions = pDomain.getServices().iterator().next().getVersions();
-
-		assertEquals(1, versions.size());
-
-		newEntityManager();
-
-		long pid = d1s1v1.getPid();
-		mySvc.deleteServiceVersion(pid);
-
-		newEntityManager();
-
-		BasePersServiceVersion ver = myDao.getServiceVersionByPid(pid);
-		assertNull(ver);
-
-		pDomain = myDao.getDomainByPid(d1.getPid());
-		versions = pDomain.getServices().iterator().next().getVersions();
-
-		if (versions.size() > 0) {
-			ver = versions.iterator().next();
-			fail(ver.toString());
-		}
-
-	}
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testAddServiceWithDuplicates() throws Exception {
-		newEntityManager();
-
-		GDomain domain = mySvc.addDomain("domain_id4", "domain_name");
-		newEntityManager();
-
-		mySvc.addService(domain.getPid(), "svc_id2", "svc_name", true);
-
-		newEntityManager();
-
-		mySvc.addService(domain.getPid(), "svc_id2", "svc_name", true);
-	}
-
-	@Test
-	public void testDeleteDomain() throws Exception {
-
-		createEverything();
-
-		long pid = mySvc.getDomainPid("asv_did");
-		assertTrue(pid > 0);
-
-		mySvc.deleteDomain(pid);
-
-		newEntityManager();
-
-		GDomain domain = mySvc.getDomainByPid(pid);
-		assertNull(domain);
-
-	}
-
-	@Test
-	public void testDeleteUser() throws Exception {
-
-		createEverything();
-
-		BasePersAuthenticationHost authHost = myDao.getAuthenticationHost(BasePersAuthenticationHost.MODULE_ID_ADMIN_AUTH);
-		long pid = myDao.getOrCreateUser(authHost, "username").getPid();
-		assertTrue(pid > 0);
-
-		assertEquals(2, myDao.getAllUsersAndInitializeThem().size());
-
-		newEntityManager();
-
-		mySvc.deleteUser(pid);
-
-		newEntityManager();
-
-		assertEquals(1, myDao.getAllUsersAndInitializeThem().size());
-
 	}
 
 	private GDomain createEverything() throws Exception {
@@ -1125,27 +277,860 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		return mySvc.getDomainByPid(d1.getPid());
 	}
 
+	@Override
+	protected void newEntityManager() {
+		super.newEntityManager();
+
+		myDao.setEntityManager(myEntityManager);
+	}
+
 	@Test
-	public void testSaveDomain() throws Exception {
+	public void testAddAndSaveService() throws Exception {
+		newEntityManager();
+
+		GDomain domain = mySvc.addDomain("domain_id3", "domain_name");
+		newEntityManager();
+
+		GService service = mySvc.addService(domain.getPid(), "svc_id", "svc_name", true);
+
+		newEntityManager();
+
+		assertEquals("svc_id", service.getId());
+		assertEquals("svc_name", service.getName());
+
+		assertFalse(service.isStatsInitialized());
+
+		newEntityManager();
+
+		service.setName("name2");
+		mySvc.saveService(service);
+
+	}
+
+	@Test
+	public void testAddDomain() throws Exception {
+		newEntityManager();
+
+		GDomain domain = mySvc.addDomain("domain_id", "domain_name");
+		newEntityManager();
+
+		assertEquals("domain_id", domain.getId());
+		assertEquals("domain_name", domain.getName());
+		assertFalse(domain.isStatsInitialized());
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testAddDomainDuplicate() throws Exception {
+		newEntityManager();
+
+		mySvc.addDomain("domain_id2", "domain_name");
+		newEntityManager();
+
+		mySvc.addDomain("domain_id2", "domain_name");
+		newEntityManager();
+
+	}
+
+	@Test
+	public void testAddMonitorRuleActive() throws Exception {
+		
+		newEntityManager();
+
+		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpServer");
+		myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
+
+		newEntityManager();
+
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setHttpClientConfigPid(hcc.getPid());
+		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		DtoServiceVersionSoap11 d1s1v2 = new DtoServiceVersionSoap11();
+		d1s1v2.setActive(true);
+		d1s1v2.setId("ASV_SV2");
+		d1s1v2.setName("ASV_SV2_Name");
+		d1s1v2.setWsdlLocation("http://foo");
+		d1s1v2.setHttpClientConfigPid(hcc.getPid());
+		d1s1v2 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v2, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		DtoLibraryMessage msg1 = new DtoLibraryMessage();
+		msg1.setAppliesToServiceVersionPids(d1s1v1.getPid());
+		msg1.setContentType("text/xml");
+		msg1.setDescription("desc1");
+		msg1.setMessage("message text1");
+		mySvc.saveLibraryMessage(msg1);
+
+		DtoLibraryMessage msg2= new DtoLibraryMessage();
+		msg2.setAppliesToServiceVersionPids(d1s1v1.getPid());
+		msg2.setContentType("text/xml");
+		msg2.setDescription("desc2");
+		msg2.setMessage("message text2");
+		mySvc.saveLibraryMessage(msg2);
+
+		newEntityManager();
+		
+		List<DtoLibraryMessage> msgs = new ArrayList<DtoLibraryMessage>(mySvc.getLibraryMessages(HierarchyEnum.VERSION, d1s1v1.getPid(), false));
+		assertEquals(2, msgs.size());
+		
+		DtoMonitorRuleActive rule = new DtoMonitorRuleActive();
+		rule.setName("ruleName");
+		rule.setActive(true);
+		rule.getCheckList().add(new DtoMonitorRuleActiveCheck());
+		rule.getCheckList().get(0).setCheckFrequencyNum(5);
+		rule.getCheckList().get(0).setCheckFrequencyUnit(ThrottlePeriodEnum.MINUTE);
+		rule.getCheckList().get(0).setMessagePid(msgs.get(0).getPid());
+		rule.getCheckList().get(0).setServiceVersionPid(d1s1v1.getPid());
+		rule.getCheckList().get(0).setExpectResponseType(ResponseTypeEnum.SUCCESS);
+		
+		mySvc.saveMonitorRule(rule);
+		
+		newEntityManager();
+		
+		/*
+		 * Add a second active check
+		 */
+		
+		GMonitorRuleList ruleList = mySvc.loadMonitorRuleList();
+		assertEquals(1, ruleList.size());
+		
+		rule = (DtoMonitorRuleActive) ruleList.get(0);
+		assertEquals(1, rule.getCheckList().size());
+		
+		rule.getCheckList().add(new DtoMonitorRuleActiveCheck());
+		rule.getCheckList().get(1).setCheckFrequencyNum(6);
+		rule.getCheckList().get(1).setCheckFrequencyUnit(ThrottlePeriodEnum.MINUTE);
+		rule.getCheckList().get(1).setMessagePid(msgs.get(1).getPid());
+		rule.getCheckList().get(1).setServiceVersionPid(d1s1v2.getPid());
+		rule.getCheckList().get(1).setExpectResponseType(ResponseTypeEnum.SUCCESS);
+
+		mySvc.saveMonitorRule(rule);
+		
+		newEntityManager();
+
+		ruleList = mySvc.loadMonitorRuleList();
+		assertEquals(1, ruleList.size());
+		
+		rule = (DtoMonitorRuleActive) ruleList.get(0);
+		assertEquals(2, rule.getCheckList().size());
+		assertEquals(5, rule.getCheckList().get(0).getCheckFrequencyNum());
+		assertEquals(6, rule.getCheckList().get(1).getCheckFrequencyNum());
+		
+		mySvcReg.reloadRegistryFromDatabase();
+		
+		newEntityManager();
+		
+		Collection<BasePersServiceVersion> svcVerList = mySvcReg.getAllDomains().iterator().next().getServices().iterator().next().getVersions();
+		assertEquals(2, svcVerList.size());
+		Iterator<BasePersServiceVersion> iterator = svcVerList.iterator();
+		BasePersServiceVersion v1 = iterator.next();
+		BasePersServiceVersion v2 = iterator.next();
+		assertEquals(1, v1.getActiveChecks().size());
+		assertEquals(1, v2.getActiveChecks().size());
+		
+	}
+
+	@Test
+	public void testAddMonitorRulePassive() throws Exception {
 
 		newEntityManager();
 
 		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
+		myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
 
 		newEntityManager();
 
-		GDomain domain = mySvc.getDomainByPid(d1.getPid());
-		assertEquals("asv_did", domain.getId());
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setHttpClientConfigPid(hcc.getPid());
+		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
 
 		newEntityManager();
 
-		d1.setId("b");
-		mySvc.saveDomain(d1);
+		assertEquals(0, mySvc.loadMonitorRuleList().size());
 
 		newEntityManager();
 
-		domain = mySvc.getDomainByPid(d1.getPid());
-		assertEquals("b", domain.getId());
+		GMonitorRulePassive rule = new GMonitorRulePassive();
+		rule.setPassiveFireIfAllBackingUrlsAreUnavailable(true);
+		rule.setPassiveFireForBackingServiceLatencyIsAboveMillis(100);
+		rule.applyTo(d1, true);
+		rule.applyTo(d1, d1s1, true);
+		rule.getNotifyEmailContacts().add("foo@foo.com");
+		rule.getNotifyEmailContacts().add("bar@bar.com");
+
+		mySvc.saveMonitorRule(rule);
+
+		newEntityManager();
+
+		GMonitorRuleList rules = mySvc.loadMonitorRuleList();
+		assertEquals(1, rules.size());
+
+		rule = (GMonitorRulePassive) rules.get(0);
+		assertEquals(true, rule.isPassiveFireIfAllBackingUrlsAreUnavailable());
+		assertEquals(false, rule.isPassiveFireIfSingleBackingUrlIsUnavailable());
+		assertTrue(rule.getNotifyEmailContacts().contains("foo@foo.com"));
+		assertTrue(rule.getNotifyEmailContacts().contains("bar@bar.com"));
+		assertTrue(rule.appliesTo(d1));
+		assertTrue(rule.appliesTo(d1s1));
+		assertFalse(rule.appliesTo(d1s1v1));
+
+		rule.applyTo(d1, d1s1, false);
+		rule.applyTo(d1, d1s1, d1s1v1, true);
+		rule.getNotifyEmailContacts().remove("foo@foo.com");
+		rule.getNotifyEmailContacts().add("baz@baz.com");
+
+		mySvc.saveMonitorRule(rule);
+
+		newEntityManager();
+
+		rules = mySvc.loadMonitorRuleList();
+		assertEquals(1, rules.size());
+
+		rule = (GMonitorRulePassive) rules.get(0);
+		assertEquals(true, rule.isPassiveFireIfAllBackingUrlsAreUnavailable());
+		assertEquals(false, rule.isPassiveFireIfSingleBackingUrlIsUnavailable());
+		assertFalse(rule.getNotifyEmailContacts().contains("foo@foo.com"));
+		assertTrue(rule.getNotifyEmailContacts().contains("bar@bar.com"));
+		assertTrue(rule.getNotifyEmailContacts().contains("baz@baz.com"));
+		assertTrue(rule.appliesTo(d1));
+		assertFalse(rule.appliesTo(d1s1));
+		assertTrue(rule.appliesTo(d1s1v1));
+
+	}
+
+	@Test
+	public void testAddServiceVersion() throws Exception {
+		newEntityManager();
+
+		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
+
+		newEntityManager();
+
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setHttpClientConfigPid(hcc.getPid());
+
+		List<GResource> resources = new ArrayList<GResource>();
+		resources.add(new GResource("http://foo", "text/xml", "contents1"));
+		resources.add(new GResource("http://bar", "text/xml", "contents2"));
+
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", "http://url1"));
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", "http://url2"));
+
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
+
+		newEntityManager();
+
+		PersDomain pDomain = myDao.getDomainByPid(d1.getPid());
+		Collection<BasePersServiceVersion> versions = pDomain.getServices().iterator().next().getVersions();
+
+		assertEquals(1, versions.size());
+
+		PersServiceVersionSoap11 pVersion = (PersServiceVersionSoap11) versions.iterator().next();
+		assertEquals("ASV_SV1", pVersion.getVersionId());
+		assertEquals("http://foo", pVersion.getWsdlUrl());
+		assertEquals(2, pVersion.getUriToResource().size());
+		assertEquals("contents1", pVersion.getUriToResource().get("http://foo").getResourceText());
+		assertEquals("contents2", pVersion.getUriToResource().get("http://bar").getResourceText());
+
+		assertEquals(2, pVersion.getUrls().size());
+		assertEquals("url1", pVersion.getUrls().get(0).getUrlId());
+		assertEquals("url2", pVersion.getUrls().get(1).getUrlId());
+
+	}
+	
+	@Test(expected = IllegalArgumentException.class)
+	public void testAddServiceWithDuplicates() throws Exception {
+		newEntityManager();
+
+		GDomain domain = mySvc.addDomain("domain_id4", "domain_name");
+		newEntityManager();
+
+		mySvc.addService(domain.getPid(), "svc_id2", "svc_name", true);
+
+		newEntityManager();
+
+		mySvc.addService(domain.getPid(), "svc_id2", "svc_name", true);
+	}
+
+	@Test
+	public void testDeleteDomain() throws Exception {
+
+		createEverything();
+
+		long pid = mySvc.getDomainPid("asv_did");
+		assertTrue(pid > 0);
+
+		mySvc.deleteDomain(pid);
+
+		newEntityManager();
+
+		GDomain domain = mySvc.getDomainByPid(pid);
+		assertNull(domain);
+
+	}
+
+	@Test
+	public void testDeleteServiceVersion() throws Exception {
+		newEntityManager();
+
+		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
+
+		newEntityManager();
+
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setHttpClientConfigPid(hcc.getPid());
+
+		List<GResource> resources = new ArrayList<GResource>();
+		resources.add(new GResource("http://foo", "text/xml", "contents1"));
+		resources.add(new GResource("http://bar", "text/xml", "contents2"));
+
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", "http://url1"));
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", "http://url2"));
+
+		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
+
+		newEntityManager();
+
+		PersDomain pDomain = myDao.getDomainByPid(d1.getPid());
+		Collection<BasePersServiceVersion> versions = pDomain.getServices().iterator().next().getVersions();
+
+		assertEquals(1, versions.size());
+
+		newEntityManager();
+
+		long pid = d1s1v1.getPid();
+		mySvc.deleteServiceVersion(pid);
+
+		newEntityManager();
+
+		BasePersServiceVersion ver = myDao.getServiceVersionByPid(pid);
+		assertNull(ver);
+
+		pDomain = myDao.getDomainByPid(d1.getPid());
+		versions = pDomain.getServices().iterator().next().getVersions();
+
+		if (versions.size() > 0) {
+			ver = versions.iterator().next();
+			fail(ver.toString());
+		}
+
+	}
+
+	@Test
+	public void testDeleteUser() throws Exception {
+
+		createEverything();
+
+		BasePersAuthenticationHost authHost = myDao.getAuthenticationHost(BasePersAuthenticationHost.MODULE_ID_ADMIN_AUTH);
+		long pid = myDao.getOrCreateUser(authHost, "username").getPid();
+		assertTrue(pid > 0);
+
+		assertEquals(2, myDao.getAllUsersAndInitializeThem().size());
+
+		newEntityManager();
+
+		mySvc.deleteUser(pid);
+
+		newEntityManager();
+
+		assertEquals(1, myDao.getAllUsersAndInitializeThem().size());
+
+	}
+
+	@Test
+	public void testLibrary() throws Exception {
+
+		newEntityManager();
+
+		PersDomain domain = myDao.getOrCreateDomainWithId("DOMAIN_ID");
+		PersService service = myDao.getOrCreateServiceWithId(domain, "SERVICE_ID");
+		PersServiceVersionSoap11 version0 = (PersServiceVersionSoap11) myDao.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
+		PersServiceVersionSoap11 version1 = (PersServiceVersionSoap11) myDao.getOrCreateServiceVersionWithId(service, "VersionId1", ServiceProtocolEnum.SOAP11);
+
+		newEntityManager();
+
+		DtoLibraryMessage m0 = new DtoLibraryMessage();
+		m0.setAppliesToServiceVersionPids(version0.getPid());
+		m0.setContentType("ct0");
+		m0.setDescription("desc0");
+		m0.setMessage("m0");
+		mySvc.saveLibraryMessage(m0);
+
+		DtoLibraryMessage m1 = new DtoLibraryMessage();
+		m1.setAppliesToServiceVersionPids(version1.getPid());
+		m1.setContentType("ct1");
+		m1.setDescription("desc1");
+		m1.setMessage("m1");
+		mySvc.saveLibraryMessage(m1);
+
+		newEntityManager();
+
+		Collection<DtoLibraryMessage> msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION, version0.getPid(), true);
+		assertEquals(1, msgs.size());
+
+		DtoLibraryMessage message = msgs.iterator().next();
+		assertEquals("ct0", message.getContentType());
+		assertEquals("desc0", message.getDescription());
+		assertEquals("m0", message.getMessage());
+
+		msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION, version1.getPid(), true);
+		assertEquals(1, msgs.size());
+
+		message.setAppliesToServiceVersionPids(version0.getPid(), version1.getPid());
+
+		mySvc.saveLibraryMessage(message);
+
+		newEntityManager();
+
+		msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION, version1.getPid(), true);
+		assertEquals(2, msgs.size());
+		msgs = mySvc.getLibraryMessages(HierarchyEnum.SERVICE, service.getPid(), true);
+		assertEquals(2, msgs.size());
+
+		message.setAppliesToServiceVersionPids(version1.getPid());
+
+		mySvc.saveLibraryMessage(message);
+
+		PersLibraryMessage pm = myDao.getLibraryMessageByPid(message.getPid());
+		assertEquals(1, pm.getAppliesTo().size());
+
+		newEntityManager();
+
+		pm = myDao.getLibraryMessageByPid(message.getPid());
+		assertEquals(1, pm.getAppliesTo().size());
+
+		msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION, version0.getPid(), true);
+		assertEquals(0, msgs.size());
+		msgs = mySvc.getLibraryMessages(HierarchyEnum.VERSION, version1.getPid(), true);
+		assertEquals(2, msgs.size());
+
+		msgs = mySvc.getLibraryMessages(HierarchyEnum.SERVICE, service.getPid(), true);
+		assertEquals(2, msgs.size());
+
+		msgs = mySvc.getLibraryMessages(HierarchyEnum.DOMAIN, domain.getPid(), true);
+		assertEquals(2, msgs.size());
+
+		msgs = mySvc.loadLibraryMessages();
+		assertEquals(2, msgs.size());
+
+	}
+
+	@Test
+	public void testLoad60MinuteStats() throws Exception {
+		GDomain domain = createEverything();
+		GService svc = domain.getServiceList().get(0);
+		BaseGServiceVersion svcVer = svc.getVersionList().get(0);
+
+		newEntityManager();
+
+		ModelUpdateRequest request = new ModelUpdateRequest();
+		request.addDomainToLoadStats(domain.getPid());
+		request.addServiceToLoadStats(svc.getPid());
+		request.addVersionToLoadStats(svcVer.getPid());
+		ModelUpdateResponse modelResp = mySvc.loadModelUpdate(request);
+
+		domain = modelResp.getDomainList().get(0);
+		svc = domain.getServiceList().get(0);
+		svcVer = svc.getVersionList().get(0);
+
+		testLoad60MinuteStats_CheckStats(domain);
+		testLoad60MinuteStats_CheckStats(svc);
+		testLoad60MinuteStats_CheckStats(svcVer);
+
+	}
+
+	private void testLoad60MinuteStats_CheckStats(BaseGDashboardObject obj) {
+		int[] trans = obj.getTransactions60mins();
+		Date firstDate = obj.getStatistics60MinuteFirstDate();
+		Date expected = InvocationStatsIntervalEnum.MINUTE.truncate(new Date(System.currentTimeMillis() - (59 * DateUtils.MILLIS_PER_MINUTE)));
+		assertEquals(expected, firstDate);
+		assertEquals(60, trans.length);
+		assertEquals(1, trans[59]);
+		assertEquals(0, trans[58]);
+	}
+
+	@Test
+	public void testLoadAndSaveSvcVerClientSecurity() throws Exception {
+
+		newEntityManager();
+
+		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
+		myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
+
+		newEntityManager();
+
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setHttpClientConfigPid(hcc.getPid());
+		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		// Add one
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		GWsSecUsernameTokenClientSecurity cli = new GWsSecUsernameTokenClientSecurity();
+		cli.setUsername("un0");
+		cli.setPassword("pw0");
+		d1s1v1.getClientSecurityList().add(cli);
+
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		// Add a second
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		cli = new GWsSecUsernameTokenClientSecurity();
+		cli.setUsername("un1");
+		cli.setPassword("pw1");
+		d1s1v1.getClientSecurityList().add(cli);
+
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertEquals(2, d1s1v1.getClientSecurityList().size());
+		assertEquals("un0", ((GWsSecUsernameTokenClientSecurity) d1s1v1.getClientSecurityList().get(0)).getUsername());
+		assertEquals("pw0", ((GWsSecUsernameTokenClientSecurity) d1s1v1.getClientSecurityList().get(0)).getPassword());
+		assertEquals("un1", ((GWsSecUsernameTokenClientSecurity) d1s1v1.getClientSecurityList().get(1)).getUsername());
+		assertEquals("pw1", ((GWsSecUsernameTokenClientSecurity) d1s1v1.getClientSecurityList().get(1)).getPassword());
+
+		// Remove one
+
+		d1s1v1.getClientSecurityList().remove(d1s1v1.getClientSecurityList().get(0));
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertEquals(1, d1s1v1.getClientSecurityList().size());
+		assertEquals("un1", ((GWsSecUsernameTokenClientSecurity) d1s1v1.getClientSecurityList().get(0)).getUsername());
+		assertEquals("pw1", ((GWsSecUsernameTokenClientSecurity) d1s1v1.getClientSecurityList().get(0)).getPassword());
+
+	}
+
+	@Test
+	public void testLoadAndSaveSvcVerJsonRpc20() throws Exception {
+
+		newEntityManager();
+
+		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
+
+		newEntityManager();
+
+		DtoServiceVersionJsonRpc20 d1s1v1 = new DtoServiceVersionJsonRpc20();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setHttpClientConfigPid(hcc.getPid());
+
+		List<GResource> resources = new ArrayList<GResource>();
+		resources.add(new GResource("http://foo", "text/xml", "contents1"));
+		resources.add(new GResource("http://bar", "text/xml", "contents2"));
+
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", "http://url1"));
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", "http://url2"));
+
+		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
+
+		newEntityManager();
+
+		GSoap11ServiceVersionAndResources copy = mySvc.loadServiceVersion(d1s1v1.getPid());
+		DtoServiceVersionJsonRpc20 svcVer = (DtoServiceVersionJsonRpc20) copy.getServiceVersion();
+		assertEquals("ASV_SV1", svcVer.getId());
+		assertEquals(2, copy.getResource().size());
+
+		svcVer.setId("2.0");
+
+		newEntityManager();
+
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), svcVer, copy.getResource());
+
+		newEntityManager();
+
+		copy = mySvc.loadServiceVersion(d1s1v1.getPid());
+		svcVer = (DtoServiceVersionJsonRpc20) copy.getServiceVersion();
+		assertEquals("2.0", svcVer.getId());
+		assertEquals(2, copy.getResource().size());
+
+	}
+
+	@Test
+	public void testLoadAndSaveSvcVerMethods() throws Exception {
+
+		newEntityManager();
+
+		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
+
+		newEntityManager();
+
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setHttpClientConfigPid(hcc.getPid());
+		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		GServiceMethod method = new GServiceMethod();
+		method.setName("123");
+		d1s1v1.getMethodList().add(method);
+
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		mySvcReg.reloadRegistryFromDatabase();
+
+		newEntityManager();
+
+		ModelUpdateResponse response = mySvc.loadModelUpdate(new ModelUpdateRequest());
+		assertEquals(1, response.getDomainList().size());
+		assertEquals(1, response.getDomainList().get(0).getServiceList().size());
+		assertEquals(1, response.getDomainList().get(0).getServiceList().get(0).getVersionList().size());
+		assertEquals(1, response.getDomainList().get(0).getServiceList().get(0).getVersionList().get(0).getMethodList().size());
+
+		// Make sure we don't replace identical methods
+
+		GServiceMethod oldMethod = d1s1v1.getMethodList().remove(0);
+
+		d1s1v1.getMethodList().add(new GServiceMethod());
+		d1s1v1.getMethodList().get(0).setId(oldMethod.getId());
+		d1s1v1.getMethodList().get(0).setName(oldMethod.getName());
+		d1s1v1.getMethodList().get(0).setRootElements(oldMethod.getRootElements());
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		response = mySvc.loadModelUpdate(new ModelUpdateRequest());
+		assertEquals(1, response.getDomainList().size());
+		assertEquals(1, response.getDomainList().get(0).getServiceList().size());
+		assertEquals(1, response.getDomainList().get(0).getServiceList().get(0).getVersionList().size());
+		assertEquals(1, response.getDomainList().get(0).getServiceList().get(0).getVersionList().get(0).getMethodList().size());
+		assertEquals(oldMethod.getPid(), response.getDomainList().get(0).getServiceList().get(0).getVersionList().get(0).getMethodList().get(0).getPid());
+
+	}
+
+	@Test
+	public void testLoadAndSaveSvcVerServerSecurity() throws Exception {
+
+		newEntityManager();
+
+		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpServer");
+		PersAuthenticationHostLocalDatabase auth = myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
+		PersAuthenticationHostLocalDatabase auth2 = myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST2");
+
+		newEntityManager();
+
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setHttpClientConfigPid(hcc.getPid());
+		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		// Add one
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		GWsSecServerSecurity cli = new GWsSecServerSecurity();
+		cli.setAuthHostPid(auth.getPid());
+		d1s1v1.getServerSecurityList().add(cli);
+
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		// Add a second
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		cli = new GWsSecServerSecurity();
+		cli.setAuthHostPid(auth2.getPid());
+		d1s1v1.getServerSecurityList().add(cli);
+
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertEquals(2, d1s1v1.getServerSecurityList().size());
+		assertEquals(auth.getPid().longValue(), d1s1v1.getServerSecurityList().get(0).getAuthHostPid());
+		assertEquals(auth2.getPid().longValue(), d1s1v1.getServerSecurityList().get(1).getAuthHostPid());
+
+		// Remove one
+
+		ourLog.info("Removing sec with PID {} but keeping {}", d1s1v1.getServerSecurityList().get(0).getPid(), d1s1v1.getServerSecurityList().get(1).getPid());
+
+		d1s1v1.getServerSecurityList().remove(d1s1v1.getServerSecurityList().get(0));
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertEquals(1, d1s1v1.getServerSecurityList().size());
+		assertEquals(auth2.getPid().longValue(), d1s1v1.getServerSecurityList().get(0).getAuthHostPid());
+
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testLoadAndSaveSvcVerServerSecurityNoAuthHost() throws Exception {
+
+		newEntityManager();
+
+		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpServer");
+		myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
+
+		newEntityManager();
+
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setHttpClientConfigPid(hcc.getPid());
+		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		// Add one
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		GWsSecServerSecurity cli = new GWsSecServerSecurity();
+
+		// Don't set the auth host, this should mean an exception is thrown
+
+		d1s1v1.getServerSecurityList().add(cli);
+
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+	}
+
+	@Test
+	public void testLoadAndSaveSvcVerSoap11() throws Exception {
+
+		newEntityManager();
+
+		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
+
+		newEntityManager();
+
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setHttpClientConfigPid(hcc.getPid());
+
+		List<GResource> resources = new ArrayList<GResource>();
+		resources.add(new GResource("http://foo", "text/xml", "contents1"));
+		resources.add(new GResource("http://bar", "text/xml", "contents2"));
+
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", "http://url1"));
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", "http://url2"));
+
+		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
+
+		newEntityManager();
+
+		/*
+		 * Putting in the same old resources, but they look new because they don't have IDs
+		 */
+
+		d1s1v1.setWsdlLocation("http://bar");
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
+
+		newEntityManager();
+
+		GSoap11ServiceVersionAndResources copy = mySvc.loadServiceVersion(d1s1v1.getPid());
+		DtoServiceVersionSoap11 svcVer = (DtoServiceVersionSoap11) copy.getServiceVersion();
+		assertEquals("http://bar", svcVer.getWsdlLocation());
+		assertEquals(2, copy.getResource().size());
+
+		/*
+		 * Now try saving with the existing resources back in
+		 */
+
+		d1s1v1.setWsdlLocation("http://baz");
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, copy.getResource());
+
+		newEntityManager();
+
+		/*
+		 * Now remove a resource
+		 */
+
+		d1s1v1.setWsdlLocation("http://baz");
+		List<GResource> resource = copy.getResource();
+		resource.remove(0);
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resource);
+
+		newEntityManager();
+
+		copy = mySvc.loadServiceVersion(d1s1v1.getPid());
+		svcVer = (DtoServiceVersionSoap11) copy.getServiceVersion();
+		assertEquals("http://baz", svcVer.getWsdlLocation());
+		assertEquals(1, copy.getResource().size());
 
 	}
 
@@ -1191,40 +1176,6 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 	}
 
-	@Test
-	public void testLoad60MinuteStats() throws Exception {
-		GDomain domain = createEverything();
-		GService svc = domain.getServiceList().get(0);
-		BaseGServiceVersion svcVer = svc.getVersionList().get(0);
-
-		newEntityManager();
-
-		ModelUpdateRequest request = new ModelUpdateRequest();
-		request.addDomainToLoadStats(domain.getPid());
-		request.addServiceToLoadStats(svc.getPid());
-		request.addVersionToLoadStats(svcVer.getPid());
-		ModelUpdateResponse modelResp = mySvc.loadModelUpdate(request);
-
-		domain = modelResp.getDomainList().get(0);
-		svc = domain.getServiceList().get(0);
-		svcVer = svc.getVersionList().get(0);
-
-		testLoad60MinuteStats_CheckStats(domain);
-		testLoad60MinuteStats_CheckStats(svc);
-		testLoad60MinuteStats_CheckStats(svcVer);
-
-	}
-
-	private void testLoad60MinuteStats_CheckStats(BaseGDashboardObject obj) {
-		int[] trans = obj.getTransactions60mins();
-		Date firstDate = obj.getStatistics60MinuteFirstDate();
-		Date expected = InvocationStatsIntervalEnum.MINUTE.truncate(new Date(System.currentTimeMillis() - (59 * DateUtils.MILLIS_PER_MINUTE)));
-		assertEquals(expected, firstDate);
-		assertEquals(60, trans.length);
-		assertEquals(1, trans[59]);
-		assertEquals(0, trans[58]);
-	}
-
 	// @Test
 	public void testMultipleStatsLoadsInParallel() throws Exception {
 		newEntityManager();
@@ -1263,6 +1214,174 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 			}
 		}
 		ourLog.info("Done");
+	}
+
+	@Test
+	public void testRenameServiceVersion() throws Exception {
+		newEntityManager();
+
+		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
+
+		newEntityManager();
+
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setHttpClientConfigPid(hcc.getPid());
+
+		List<GResource> resources = new ArrayList<GResource>();
+		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
+
+		newEntityManager();
+
+		PersDomain pDomain = myDao.getDomainByPid(d1.getPid());
+		Collection<BasePersServiceVersion> versions = pDomain.getServices().iterator().next().getVersions();
+
+		assertEquals(1, versions.size());
+
+		d1s1v1.setId("newId");
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
+
+		newEntityManager();
+
+		pDomain = myDao.getDomainByPid(d1.getPid());
+		versions = pDomain.getServices().iterator().next().getVersions();
+
+		assertEquals(1, versions.size());
+
+	}
+
+	@Test
+	public void testSaveConfigWithUrlBases() throws Exception {
+		newEntityManager();
+
+		GConfig config = mySvc.loadConfig();
+
+		newEntityManager();
+
+		config.getProxyUrlBases().clear();
+		config.getProxyUrlBases().add("http://foo");
+
+		config = mySvc.saveConfig(config);
+
+		newEntityManager();
+
+		config = mySvc.loadConfig();
+		assertEquals(1, config.getProxyUrlBases().size());
+		assertEquals("http://foo", config.getProxyUrlBases().get(0));
+
+	}
+
+	@Test
+	public void testSaveDomain() throws Exception {
+
+		newEntityManager();
+
+		GDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+
+		newEntityManager();
+
+		GDomain domain = mySvc.getDomainByPid(d1.getPid());
+		assertEquals("asv_did", domain.getId());
+
+		newEntityManager();
+
+		d1.setId("b");
+		mySvc.saveDomain(d1);
+
+		newEntityManager();
+
+		domain = mySvc.getDomainByPid(d1.getPid());
+		assertEquals("b", domain.getId());
+
+	}
+
+	@Test
+	public void testSaveHttpClientConfig() throws Exception {
+		createEverything();
+		newEntityManager();
+
+		ModelUpdateRequest req = new ModelUpdateRequest();
+		req.setLoadHttpClientConfigs(true);
+		ModelUpdateResponse resp = mySvc.loadModelUpdate(req);
+
+		GHttpClientConfig cfg = resp.getHttpClientConfigList().get(0);
+
+		newEntityManager();
+
+		int cb1 = 1111;
+		int cb2 = 1112;
+		int cb3 = 1113;
+		int cb4 = 1114;
+		cfg.setCircuitBreakerEnabled(true);
+		cfg.setCircuitBreakerTimeBetweenResetAttempts(cb1);
+		cfg.setConnectTimeoutMillis(cb2);
+		cfg.setFailureRetriesBeforeAborting(cb3);
+		cfg.setReadTimeoutMillis(cb4);
+		mySvc.saveHttpClientConfig(cfg, null, null, null, null);
+
+		newEntityManager();
+		req = new ModelUpdateRequest();
+		req.setLoadHttpClientConfigs(true);
+		resp = mySvc.loadModelUpdate(req);
+		cfg = resp.getHttpClientConfigList().get(0);
+		assertEquals(cb1, cfg.getCircuitBreakerTimeBetweenResetAttempts());
+		assertEquals(cb2, cfg.getConnectTimeoutMillis());
+		assertEquals(cb3, cfg.getFailureRetriesBeforeAborting());
+		assertEquals(cb4, cfg.getReadTimeoutMillis());
+
+		newEntityManager();
+
+		cb1 = 2111;
+		cb2 = 2112;
+		cb3 = 2113;
+		cb4 = 2114;
+		cfg.setCircuitBreakerEnabled(true);
+		cfg.setCircuitBreakerTimeBetweenResetAttempts(cb1);
+		cfg.setConnectTimeoutMillis(cb2);
+		cfg.setFailureRetriesBeforeAborting(cb3);
+		cfg.setReadTimeoutMillis(cb4);
+		mySvc.saveHttpClientConfig(cfg, null, null, null, null);
+
+		newEntityManager();
+		req = new ModelUpdateRequest();
+		req.setLoadHttpClientConfigs(true);
+		resp = mySvc.loadModelUpdate(req);
+		cfg = resp.getHttpClientConfigList().get(0);
+		assertEquals(cb1, cfg.getCircuitBreakerTimeBetweenResetAttempts());
+		assertEquals(cb2, cfg.getConnectTimeoutMillis());
+		assertEquals(cb3, cfg.getFailureRetriesBeforeAborting());
+		assertEquals(cb4, cfg.getReadTimeoutMillis());
+
+		newEntityManager();
+
+		cb1 = 3111;
+		cb2 = 3112;
+		cb3 = 3113;
+		cb4 = 3114;
+		cfg.setCircuitBreakerEnabled(true);
+		cfg.setCircuitBreakerTimeBetweenResetAttempts(cb1);
+		cfg.setConnectTimeoutMillis(cb2);
+		cfg.setFailureRetriesBeforeAborting(cb3);
+		cfg.setReadTimeoutMillis(cb4);
+		mySvc.saveHttpClientConfig(cfg, null, null, null, null);
+
+		newEntityManager();
+		req = new ModelUpdateRequest();
+		req.setLoadHttpClientConfigs(true);
+		resp = mySvc.loadModelUpdate(req);
+		cfg = resp.getHttpClientConfigList().get(0);
+		assertEquals(cb1, cfg.getCircuitBreakerTimeBetweenResetAttempts());
+		assertEquals(cb2, cfg.getConnectTimeoutMillis());
+		assertEquals(cb3, cfg.getFailureRetriesBeforeAborting());
+		assertEquals(cb4, cfg.getReadTimeoutMillis());
+
+		newEntityManager();
+
 	}
 
 	@Test

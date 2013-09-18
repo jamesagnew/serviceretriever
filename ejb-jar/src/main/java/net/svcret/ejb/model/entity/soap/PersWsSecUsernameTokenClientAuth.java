@@ -34,5 +34,18 @@ public class PersWsSecUsernameTokenClientAuth extends PersBaseClientAuth<PersWsS
 	public ClientSecurityEnum getAuthType() {
 		return ClientSecurityEnum.WSSEC_UT;
 	}
+	
+	@Override
+	protected PersBaseClientAuth<?> doMerge(PersBaseClientAuth<?> theObj) {
+		PersWsSecUsernameTokenClientAuth obj = (PersWsSecUsernameTokenClientAuth) theObj;
+		PersWsSecUsernameTokenClientAuth retVal = new PersWsSecUsernameTokenClientAuth();
+		
+		retVal.setUsername(obj.getUsername());
+		
+		retVal.setPassword(obj.getPassword());
+		
+		return retVal;
+	}
+
 
 }

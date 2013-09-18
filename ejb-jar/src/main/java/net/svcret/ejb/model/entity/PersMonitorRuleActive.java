@@ -32,7 +32,7 @@ public class PersMonitorRuleActive extends BasePersMonitorRule {
 
 		PersMonitorRuleActive	 rule = (PersMonitorRuleActive)theObject;
 		for (PersMonitorRuleActiveCheck nextApplies : new ArrayList<PersMonitorRuleActiveCheck>(rule.getActiveChecks())) {
-			PersMonitorRuleActiveCheck existing = getActiveCheck(nextApplies.getPid());
+			PersMonitorRuleActiveCheck existing = getActiveCheckOrNull(nextApplies.getPid());
 			if (existing == null) {
 				nextApplies.setRule(this);
 				getActiveChecks().add(nextApplies);
@@ -43,21 +43,27 @@ public class PersMonitorRuleActive extends BasePersMonitorRule {
 		
 		for (Iterator<PersMonitorRuleActiveCheck> iter = getActiveChecks().iterator(); iter.hasNext();) {
 			PersMonitorRuleActiveCheck nextCheck = iter.next();
-			PersMonitorRuleActiveCheck wanted = rule.getActiveCheck(nextCheck.getPid());
-			if (wanted == null) {
+			PersMonitorRuleActiveCheck wanted = rule.getActiveCheckOrNull(nextCheck.getPid());
+			if (wanted == null && nextCheck.getPid() != null) {
 				iter.remove();
 			}
 		}
 
-		for (PersMonitorRuleActiveCheck next : getActiveChecks()) {
-			next.setRule(this);
+		for (PersMonitorRuleActiveCheck nextCheck : getActiveChecks()) {
+			if (nextCheck==null) {
+				continue;
+			}
+			nextCheck.setRule(this);
 		}
 
 	}
 
-	private PersMonitorRuleActiveCheck getActiveCheck(long thePid) {
+	private PersMonitorRuleActiveCheck getActiveCheckOrNull(Long thePid) {
+		if (thePid==null) {
+			return null;
+		}
 		for (PersMonitorRuleActiveCheck next : getActiveChecks()) {
-			if (next.getPid() == thePid) {
+			if (next.getPid() != null && next.getPid().equals(thePid)) {
 				return next;
 			}
 		}

@@ -20,20 +20,28 @@ public class DtoMonitorRuleActiveCheck extends BaseGObject {
 
 	@XmlElement(name = "config_CheckFrequencyNumber")
 	private int myCheckFrequencyNum;
+	
 	@XmlElement(name = "config_CheckFrequencyUnit")
 	private ThrottlePeriodEnum myCheckFrequencyUnit;
+	
 	@XmlElement(name = "config_ExpectLatencyUnderMillis")
 	private Long myExpectLatencyUnderMillis;
+	
 	@XmlElement(name = "config_ExpectResponseContainsText")
 	private String myExpectResponseContainsText;
+	
 	@XmlElement(name = "config_ExpectResponseType")
 	private ResponseTypeEnum myExpectResponseType;
+	
 	@XmlElement(name = "runtime_MessageDescription")
 	private String myMessageDescription;
+	
 	@XmlElement(name = "config_MessagePid")
 	private long myMessagePid;
+	
 	@XmlElement(name = "runtime_RecentOutcomesForUrl")
 	private List<DtoMonitorRuleActiveCheckOutcomeList> myRecentOutcomesForUrl;
+	
 	@XmlElement(name = "runtime_ServiceVersionPid")
 	private long myServiceVersionPid;
 

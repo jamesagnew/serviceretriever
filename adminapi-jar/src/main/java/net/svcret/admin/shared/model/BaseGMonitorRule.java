@@ -3,14 +3,21 @@ package net.svcret.admin.shared.model;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.xml.bind.annotation.XmlElement;
+
 import net.svcret.admin.shared.enm.MonitorRuleTypeEnum;
 
 public abstract class BaseGMonitorRule extends BaseGObject {
 
 	private static final long serialVersionUID = 1L;
 
+	@XmlElement(name="config_Active")
 	private boolean isActive;
+	
+	@XmlElement(name="config_Name")
 	private String myName;
+	
+	@XmlElement(name="config_NotifyEmailContacts")
 	private Set<String> myNotifyEmailContacts;
 
 	public String getName() {

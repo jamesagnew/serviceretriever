@@ -268,4 +268,18 @@ public class NamedParameterJsonRpcClientAuth extends PersBaseClientAuth<NamedPar
 		}
 	}
 
+	@Override
+	protected PersBaseClientAuth<?> doMerge(PersBaseClientAuth<?> theObj) {
+		NamedParameterJsonRpcClientAuth obj = (NamedParameterJsonRpcClientAuth) theObj;
+		NamedParameterJsonRpcClientAuth retVal = new NamedParameterJsonRpcClientAuth();
+		
+		retVal.setUsernameParameterName(obj.getUsernameParameterName());
+		retVal.setUsername(obj.getUsername());
+		
+		retVal.setPasswordParameterName(obj.getPasswordParameterName());
+		retVal.setPassword(obj.getPassword());
+		
+		return retVal;
+	}
+
 }

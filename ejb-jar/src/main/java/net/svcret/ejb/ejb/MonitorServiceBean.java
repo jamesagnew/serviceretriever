@@ -468,6 +468,9 @@ public class MonitorServiceBean implements IMonitorService {
 		BasePersMonitorRule retVal = myDao.saveMonitorRule(rule);
 
 		myBroadcastSender.monitorRulesChanged();
+		
+		// In case rules have been added or removed, so that the dashboard shows correctly
+		myBroadcastSender.notifyServiceCatalogChanged();
 
 		return retVal;
 	}

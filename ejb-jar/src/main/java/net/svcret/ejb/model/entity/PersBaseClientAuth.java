@@ -119,12 +119,14 @@ public abstract class PersBaseClientAuth<T extends PersBaseClientAuth<?>> extend
 	}
 
 	public void merge(BasePersObject theObj) {
-		PersWsSecUsernameTokenClientAuth obj = (PersWsSecUsernameTokenClientAuth) theObj;
+		PersBaseClientAuth<?> obj = doMerge((PersBaseClientAuth<?>) theObj);
 		
 		setUsername(obj.getUsername());
 		setPassword(obj.getPassword());
 		setServiceVersion(obj.getServiceVersion());
 	}
+
+	protected abstract PersBaseClientAuth<?> doMerge(PersBaseClientAuth<?> theObj);
 
 	/**
 	 * Subclasses must provide an implementation which compares all

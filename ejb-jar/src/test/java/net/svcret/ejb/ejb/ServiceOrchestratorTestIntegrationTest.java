@@ -1,8 +1,14 @@
 package net.svcret.ejb.ejb;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.FileReader;
@@ -33,7 +39,6 @@ import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
 import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.invoker.hl7.ServiceInvokerHl7OverHttp;
 import net.svcret.ejb.invoker.soap.ServiceInvokerSoap11;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -57,6 +62,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.internal.stubbing.defaultanswers.ReturnsDeepStubs;
 
 import ca.uhn.hl7v2.parser.PipeParser;
 
@@ -125,8 +131,6 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
 		ITransactionLogger transactionLogger = mock(ITransactionLogger.class);
 		mySvc.setTransactionLogger(transactionLogger);
-
-		DefaultAnswer.setRunTime();
 
 		OrchestratorResponseBean resp = null;
 		int reps = 100;
@@ -199,8 +203,6 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		fsAuditLogger.setConfigServiceForUnitTests(myConfigService);
 		fsAuditLogger.initialize();
 		logger.setFilesystemAuditLoggerForUnitTests(fsAuditLogger);
-
-		DefaultAnswer.setRunTime();
 
 		OrchestratorResponseBean resp = null;
 		String query = "";
@@ -369,8 +371,6 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		fsAuditLogger.setConfigServiceForUnitTests(myConfigService);
 		fsAuditLogger.initialize();
 		logger.setFilesystemAuditLoggerForUnitTests(fsAuditLogger);
-
-		DefaultAnswer.setRunTime();
 
 		ServiceInvokerSoap11 invoker = mock(ServiceInvokerSoap11.class);
 		mySvc.setSoap11ServiceInvoker(invoker);
@@ -553,7 +553,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
 	@Before
 	public void before() throws Exception {
-		myHttpClient = mock(IHttpClient.class, DefaultAnswer.INSTANCE);
+		myHttpClient = mock(IHttpClient.class, new ReturnsDeepStubs());
 		myBroadcastSender = mock(IBroadcastSender.class);
 
 		File tempFile = File.createTempFile("st-unittest", "");

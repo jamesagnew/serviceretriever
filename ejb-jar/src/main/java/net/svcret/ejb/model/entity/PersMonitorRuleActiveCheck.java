@@ -188,7 +188,9 @@ public class PersMonitorRuleActiveCheck extends BasePersObject {
 		retVal.setExpectResponseType(getExpectResponseType());
 		retVal.setMessagePid(getMessage().getPid());
 		retVal.setMessageDescription(getMessage().getDescription());
-		retVal.setPid(getPid());
+		if (getPid()!=null) {
+			retVal.setPid(getPid());
+		}
 		retVal.setServiceVersionPid(getServiceVersion().getPid());
 		
 		if (theLoadDetailedStatistics) {

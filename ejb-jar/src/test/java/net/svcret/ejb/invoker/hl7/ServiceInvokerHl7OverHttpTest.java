@@ -57,7 +57,7 @@ public class ServiceInvokerHl7OverHttpTest {
 		InvocationResultsBean result = mySvc.processInvocation(svcVer, RequestType.POST, "/Some/System", "", "application/hl7-v2", new StringReader(msgS));
 		
 		verify(myServiceRegistry).saveServiceVersion(eq(dbSvcVer));
-		PersServiceVersionMethod method = dbSvcVer.getMethod("ADT^A01");
+		PersServiceVersionMethod method = dbSvcVer.getMethod("ADT");
 		assertNotNull(method);
 		assertSame(method, result.getMethodDefinition());
 	}
