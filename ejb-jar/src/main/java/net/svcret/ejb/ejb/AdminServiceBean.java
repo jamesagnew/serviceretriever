@@ -20,7 +20,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
-import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.BaseGAuthHost;
@@ -145,7 +144,6 @@ import net.svcret.ejb.model.entity.http.PersHttpBasicClientAuth;
 import net.svcret.ejb.model.entity.http.PersHttpBasicServerAuth;
 import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcClientAuth;
 import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcServerAuth;
-import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
@@ -925,9 +923,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			throw new ProcessingException("Service with ID " + theService + " is not a part of domain " + theDomain);
 		}
 
-		String versionId = theVersion.getId();
-
-		BasePersServiceVersion version = fromUi(theVersion, service, versionId);
+		BasePersServiceVersion version = BasePersServiceVersion.fromDto(theVersion, service, myDao, myServiceRegistry);
 
 		Map<String, PersServiceVersionResource> uriToResource = version.getUriToResource();
 		Set<String> urls = new HashSet<String>();
@@ -1548,73 +1544,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	@SuppressWarnings("unused")
-	private void fromUi(PersServiceVersionHl7OverHttp theRetVal, DtoServiceVersionHl7OverHttp theVersion) {
-		// nothing yet
-	}
 
-	@SuppressWarnings("unused")
-	private void fromUi(PersServiceVersionJsonRpc20 theRetVal, DtoServiceVersionJsonRpc20 theVersion) {
-		// nothing in here yet
-	}
-
-	private PersServiceVersionSoap11 fromUi(PersServiceVersionSoap11 thePersVersion, DtoServiceVersionSoap11 theVersion) {
-		thePersVersion.setWsdlUrl(theVersion.getWsdlLocation());
-		return thePersVersion;
-	}
-
-	private <T extends BaseGServiceVersion> BasePersServiceVersion fromUi(T theVersion, PersService theService, String theVersionId) throws ProcessingException, UnexpectedFailureException {
-		Validate.notNull(theVersion);
-		Validate.notNull(theService);
-		Validate.notBlank(theVersionId);
-
-		BasePersServiceVersion retVal;
-		if (theVersion.getPidOrNull() != null) {
-			ourLog.debug("Retrieving existing service version PID[{}]", theVersion.getPidOrNull());
-			retVal = myDao.getServiceVersionByPid(theVersion.getPid());
-		} else {
-			ourLog.debug("Retrieving service version ID[{}]", theVersionId);
-			retVal = myServiceRegistry.getOrCreateServiceVersionWithId(theService, theVersion.getProtocol(), theVersionId);
-			ourLog.debug("Found service version NEW[{}], PID[{}], PROTOCOL[{}]", new Object[] { retVal.isNewlyCreated(), retVal.getPid(), retVal.getProtocol().name() });
-		}
-
-		switch (theVersion.getProtocol()) {
-		case SOAP11:
-			fromUi((PersServiceVersionSoap11) retVal, (DtoServiceVersionSoap11) theVersion);
-			break;
-		case JSONRPC20:
-			fromUi((PersServiceVersionJsonRpc20) retVal, (DtoServiceVersionJsonRpc20) theVersion);
-			break;
-		case HL7OVERHTTP:
-			fromUi((PersServiceVersionHl7OverHttp) retVal, (DtoServiceVersionHl7OverHttp) theVersion);
-		}
-
-		retVal.setActive(theVersion.isActive());
-		retVal.setVersionId(theVersion.getId());
-		retVal.setExplicitProxyPath(theVersion.getExplicitProxyPath());
-		retVal.setDescription(theVersion.getDescription());
-		retVal.setUseDefaultProxyPath(theVersion.isUseDefaultProxyPath());
-
-		retVal.setServerSecurityMode(theVersion.getServerSecurityMode());
-		if (retVal.getServerSecurityMode() == null) {
-			if (theVersion.getServerSecurityList().size() > 0) {
-				retVal.setServerSecurityMode(ServerSecurityModeEnum.REQUIRE_ANY);
-			} else {
-				retVal.setServerSecurityMode(ServerSecurityModeEnum.NONE);
-			}
-		}
-
-		PersHttpClientConfig httpClientConfig = myDao.getHttpClientConfig(theVersion.getHttpClientConfigPid());
-		if (httpClientConfig == null) {
-			throw new ProcessingException("Unknown HTTP client config PID: " + theVersion.getHttpClientConfigPid());
-		}
-		retVal.setHttpClientConfig(httpClientConfig);
-
-		retVal.populateKeepRecentTransactionsFromDto(theVersion);
-		retVal.populateServiceCatalogItemFromDto(theVersion);
-
-		return retVal;
-	}
 
 	private boolean hasAnything(Set<?>... theSets) {
 		for (Set<?> next : theSets) {

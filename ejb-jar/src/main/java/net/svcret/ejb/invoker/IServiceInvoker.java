@@ -25,11 +25,12 @@ import net.svcret.ejb.model.entity.BasePersServiceVersion;
 public interface IServiceInvoker {
 
 	/**
+	 * @param theServiceVersion 
 	 * @param theIncomingHeaders
 	 *            The headers which arrived on the incoming request
 	 * @return The headers which should be passed to the backing URL requests
 	 */
-	Map<String, List<String>> createBackingRequestHeadersForMethodInvocation(Map<String, List<String>> theIncomingHeaders);
+	Map<String, List<String>> createBackingRequestHeadersForMethodInvocation(BasePersServiceVersion theServiceVersion, Map<String, List<String>> theIncomingHeaders);
 
 	/**
 	 * Given a URL to a service definition page (the type of page is dependent on the type of service, but the assumption is that this is something like a SOAP WSDL URL) loads a definition for that
@@ -45,7 +46,7 @@ public interface IServiceInvoker {
 	 * @see BasePersServiceVersion#getObscureRequestElementsInLog()
 	 * @see BasePersServiceVersion#getObscureResponseElementsInLog()
 	 */
-	String obscureMessageForLogs(String theMessage, Set<String> theElementNamesToRedact) throws InvocationFailedDueToInternalErrorException;
+	String obscureMessageForLogs(BasePersServiceVersion theServiceDefinition, String theMessage, Set<String> theElementNamesToRedact) throws InvocationFailedDueToInternalErrorException;
 
 	/**
 	 * 
@@ -73,8 +74,8 @@ public interface IServiceInvoker {
 	InvocationResultsBean processInvocation(BasePersServiceVersion theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, String theContentType, Reader theReader)
 			throws UnknownRequestException, InvocationRequestFailedException, InvocationFailedException;
 
-	InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws InvocationResponseFailedException, InvocationFailedDueToInternalErrorException;
+	InvocationResponseResultsBean processInvocationResponse(BasePersServiceVersion theServiceDefinition, HttpResponseBean theResponse) throws InvocationResponseFailedException, InvocationFailedDueToInternalErrorException;
 
-	IResponseValidator provideInvocationResponseValidator();
+	IResponseValidator provideInvocationResponseValidator(BasePersServiceVersion theServiceDefinition);
 
 }

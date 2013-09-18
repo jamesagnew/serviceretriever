@@ -89,8 +89,8 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 	private BaseResponseValidator myInvocationResultsBean;
 
 	@Override
-	public Map<String, List<String>> createBackingRequestHeadersForMethodInvocation(Map<String, List<String>> theIncomingHeaders) {
-		Map<String, List<String>> retVal = super.createBackingRequestHeadersForMethodInvocation(theIncomingHeaders);
+	public Map<String, List<String>> createBackingRequestHeadersForMethodInvocation(BasePersServiceVersion theServiceDefinition, Map<String, List<String>> theIncomingHeaders) {
+		Map<String, List<String>> retVal = super.createBackingRequestHeadersForMethodInvocation(theServiceDefinition, theIncomingHeaders);
 		retVal.put("SOAPAction", theIncomingHeaders.get("SOAPAction"));
 		return retVal;
 	}
@@ -655,7 +655,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 	}
 
 	@Override
-	public InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws InvocationResponseFailedException, InvocationFailedDueToInternalErrorException {
+	public InvocationResponseResultsBean processInvocationResponse(BasePersServiceVersion theServiceDefinition, HttpResponseBean theResponse) throws InvocationResponseFailedException, InvocationFailedDueToInternalErrorException {
 		InvocationResponseResultsBean retVal = new InvocationResponseResultsBean();
 		retVal.setResponseHeaders(theResponse.getHeaders());
 
@@ -758,7 +758,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 	}
 
 	@Override
-	public BaseResponseValidator provideInvocationResponseValidator() {
+	public BaseResponseValidator provideInvocationResponseValidator(BasePersServiceVersion theServiceDefinition) {
 		return myInvocationResultsBean;
 	}
 
@@ -864,7 +864,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 	}
 
 	@Override
-	public String obscureMessageForLogs(String theMessage, Set<String> theElementNamesToRedact) {
+	public String obscureMessageForLogs(BasePersServiceVersion theServiceDefinition, String theMessage, Set<String> theElementNamesToRedact) {
 		// TODO: implement
 		return theMessage;
 	}

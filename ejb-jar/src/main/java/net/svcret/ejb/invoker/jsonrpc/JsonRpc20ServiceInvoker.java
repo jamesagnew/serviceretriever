@@ -370,7 +370,7 @@ public class JsonRpc20ServiceInvoker extends BaseServiceInvoker implements IServ
 	}
 
 	@Override
-	public InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws InvocationResponseFailedException {
+	public InvocationResponseResultsBean processInvocationResponse(BasePersServiceVersion theServiceDefinition, HttpResponseBean theResponse) throws InvocationResponseFailedException {
 		InvocationResponseResultsBean retVal = new InvocationResponseResultsBean();
 		retVal.setResponseHeaders(theResponse.getHeaders());
 
@@ -434,7 +434,7 @@ public class JsonRpc20ServiceInvoker extends BaseServiceInvoker implements IServ
 	}
 
 	@Override
-	public IResponseValidator provideInvocationResponseValidator() {
+	public IResponseValidator provideInvocationResponseValidator(BasePersServiceVersion theServiceDefinition) {
 		return new JsonRpc20ResponseValidator();
 	}
 
@@ -444,7 +444,7 @@ public class JsonRpc20ServiceInvoker extends BaseServiceInvoker implements IServ
 	}
 
 	@Override
-	public String obscureMessageForLogs(String theMessage, Set<String> theElementNamesToRedact) throws InvocationFailedDueToInternalErrorException {
+	public String obscureMessageForLogs(BasePersServiceVersion theServiceDefinition, String theMessage, Set<String> theElementNamesToRedact) throws InvocationFailedDueToInternalErrorException {
 		if (theElementNamesToRedact == null || theElementNamesToRedact.isEmpty()) {
 			return theMessage;
 		}

@@ -1,12 +1,11 @@
 package net.svcret.ejb.invoker.virtual;
 
 import java.io.Reader;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IResponseValidator;
+import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.RequestType;
@@ -15,25 +14,22 @@ import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnknownRequestException;
+import net.svcret.ejb.invoker.BaseServiceInvoker;
 import net.svcret.ejb.invoker.soap.InvocationFailedException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 
-public class ServiceInvokerVirtual implements IServiceInvokerVirtual {
+public class ServiceInvokerVirtual extends BaseServiceInvoker implements IServiceInvokerVirtual {
 
-	@Override
-	public Map<String, List<String>> createBackingRequestHeadersForMethodInvocation(Map<String, List<String>> theIncomingHeaders) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	public IServiceOrchestrator myOrchestrator;
+	
 
 	@Override
 	public BasePersServiceVersion introspectServiceFromUrl(String theUrl) throws ProcessingException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public String obscureMessageForLogs(String theMessage, Set<String> theElementNamesToRedact) throws InvocationFailedDueToInternalErrorException {
+	public String obscureMessageForLogs(BasePersServiceVersion theServiceDefinition, String theMessage, Set<String> theElementNamesToRedact) throws InvocationFailedDueToInternalErrorException {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -46,13 +42,13 @@ public class ServiceInvokerVirtual implements IServiceInvokerVirtual {
 	}
 
 	@Override
-	public InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws InvocationResponseFailedException, InvocationFailedDueToInternalErrorException {
+	public InvocationResponseResultsBean processInvocationResponse(BasePersServiceVersion theServiceDefinition, HttpResponseBean theResponse) throws InvocationResponseFailedException, InvocationFailedDueToInternalErrorException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public IResponseValidator provideInvocationResponseValidator() {
+	public IResponseValidator provideInvocationResponseValidator(BasePersServiceVersion theServiceDefinition) {
 		// TODO Auto-generated method stub
 		return null;
 	}

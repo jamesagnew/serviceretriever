@@ -4,6 +4,8 @@ import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
+import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersService;
@@ -47,6 +49,11 @@ public class PersServiceVersionSoap11 extends BasePersServiceVersion {
 	@Override
 	public ServiceProtocolEnum getProtocol() {
 		return ServiceProtocolEnum.SOAP11;
+	}
+
+	@Override
+	protected void fromDto(BaseGServiceVersion theDto) {
+		setWsdlUrl(((DtoServiceVersionSoap11)theDto).getWsdlLocation());
 	}
 
 

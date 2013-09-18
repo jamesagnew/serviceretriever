@@ -41,18 +41,18 @@ public class JsonRpc20ServiceInvokerTest {
 		JsonRpc20ServiceInvoker svc = new JsonRpc20ServiceInvoker();
 		svc.setPrettyPrintModeForUnitTest(true);
 		Set<String> obscure = new HashSet<String>();
-		String obscured = svc.obscureMessageForLogs(request, obscure);
+		String obscured = svc.obscureMessageForLogs(null, request, obscure);
 		ourLog.info("Not obscured: {}", obscured);
 
 		obscure.clear();
 		obscure.add("idExt");
-		obscured = svc.obscureMessageForLogs(request, obscure);
+		obscured = svc.obscureMessageForLogs(null, request, obscure);
 		ourLog.info("Not obscured: {}", obscured);
 		assertTrue(obscured.contains("\"idExt\": \"**REDACTED**\""));
 
 		obscure.clear();
 		obscure.add("request");
-		obscured = svc.obscureMessageForLogs(request, obscure);
+		obscured = svc.obscureMessageForLogs(null, request, obscure);
 		ourLog.info("Not obscured: {}", obscured);
 		assertTrue(obscured.contains("\"request\": \"**REDACTED**\""));
 		assertFalse(obscured.contains("\"idExt\""));
@@ -87,7 +87,7 @@ public class JsonRpc20ServiceInvokerTest {
 		obscure.clear();
 		obscure.add("password");
 		obscure.add("clientPass");
-		obscured = svc.obscureMessageForLogs(request, obscure);
+		obscured = svc.obscureMessageForLogs(null, request, obscure);
 		ourLog.info("Obscured: {}", obscured);
 		assertTrue(obscured.contains("\"clientPass\": \"**REDACTED**\""));
 		assertTrue(obscured.contains("\"clientId\""));
@@ -257,7 +257,7 @@ public class JsonRpc20ServiceInvokerTest {
 		Assert.assertEquals(ResultTypeEnum.METHOD, resp.getResultType());
 		Assert.assertSame(method, resp.getMethodDefinition());
 
-		svc.obscureMessageForLogs(request, createObscureRequest()); // just to try
+		svc.obscureMessageForLogs(def, request, createObscureRequest()); // just to try
 
 	}
 
@@ -290,7 +290,7 @@ public class JsonRpc20ServiceInvokerTest {
 
 			try {
 				svc.processInvocation(def, reqType, path, query, "application/json", reader);
-				svc.obscureMessageForLogs(substring, createObscureRequest());
+				svc.obscureMessageForLogs(def, substring, createObscureRequest());
 			} catch (InvocationRequestFailedException e) {
 				// this is ok
 			}
@@ -335,8 +335,8 @@ public class JsonRpc20ServiceInvokerTest {
 		//@formatter:on
 
 		resp = svc.processInvocation(def, reqType, path, query, "application/json", new StringReader(request));
-		svc.obscureMessageForLogs(request, createObscureRequest()); // just to try
-		svc.obscureMessageForLogs(request, createObscureRequest("params")); // just to try
+		svc.obscureMessageForLogs(null, request, createObscureRequest()); // just to try
+		svc.obscureMessageForLogs(null, request, createObscureRequest("params")); // just to try
 
 		//@formatter:off
 		request = // -
@@ -347,8 +347,8 @@ public class JsonRpc20ServiceInvokerTest {
 		//@formatter:on
 
 		resp = svc.processInvocation(def, reqType, path, query, "application/json", new StringReader(request));
-		svc.obscureMessageForLogs(request, createObscureRequest()); // just to try
-		svc.obscureMessageForLogs(request, createObscureRequest("params")); // just to try
+		svc.obscureMessageForLogs(null, request, createObscureRequest()); // just to try
+		svc.obscureMessageForLogs(null, request, createObscureRequest("params")); // just to try
 
 		//@formatter:off
 		request = // -
@@ -359,8 +359,8 @@ public class JsonRpc20ServiceInvokerTest {
 		//@formatter:on
 
 		resp = svc.processInvocation(def, reqType, path, query, "application/json", new StringReader(request));
-		svc.obscureMessageForLogs(request, createObscureRequest()); // just to try
-		svc.obscureMessageForLogs(request, createObscureRequest("params")); // just to try
+		svc.obscureMessageForLogs(null, request, createObscureRequest()); // just to try
+		svc.obscureMessageForLogs(null, request, createObscureRequest("params")); // just to try
 
 		//@formatter:off
 		request = // -
@@ -372,8 +372,8 @@ public class JsonRpc20ServiceInvokerTest {
 
 		ourLog.info(request);
 		resp = svc.processInvocation(def, reqType, path, query, "application/json", new StringReader(request));
-		svc.obscureMessageForLogs(request, createObscureRequest()); // just to try
-		svc.obscureMessageForLogs(request, createObscureRequest("params")); // just to try
+		svc.obscureMessageForLogs(null, request, createObscureRequest()); // just to try
+		svc.obscureMessageForLogs(null, request, createObscureRequest("params")); // just to try
 
 		//@formatter:off
 		request = // -
@@ -384,8 +384,8 @@ public class JsonRpc20ServiceInvokerTest {
 		//@formatter:on
 
 		resp = svc.processInvocation(def, reqType, path, query, "application/json", new StringReader(request));
-		svc.obscureMessageForLogs(request, createObscureRequest()); // just to try
-		svc.obscureMessageForLogs(request, createObscureRequest("params")); // just to try
+		svc.obscureMessageForLogs(null, request, createObscureRequest()); // just to try
+		svc.obscureMessageForLogs(null, request, createObscureRequest("params")); // just to try
 
 	}
 
@@ -460,12 +460,12 @@ public class JsonRpc20ServiceInvokerTest {
 
 		String response = "{\"jsonrpc\": \"2.0\", \"result\": -19, \"id\": 2}";
 		respBean.setBody(response);
-		InvocationResponseResultsBean resp = svc.processInvocationResponse(respBean);
+		InvocationResponseResultsBean resp = svc.processInvocationResponse(null, respBean);
 		Assert.assertEquals(ResponseTypeEnum.SUCCESS, resp.getResponseType());
 
 		response = "{\"jsonrpc\": \"2.0\", \"error\": {\"code\": -32601, \"message\": \"Method not found\"}, \"id\": \"1\"}";
 		respBean.setBody(response);
-		resp = svc.processInvocationResponse(respBean);
+		resp = svc.processInvocationResponse(null, respBean);
 		Assert.assertEquals(ResponseTypeEnum.FAULT, resp.getResponseType());
 		Assert.assertEquals("-32601", resp.getResponseFaultCode());
 		Assert.assertEquals("Method not found", resp.getResponseFaultDescription());
@@ -479,19 +479,19 @@ public class JsonRpc20ServiceInvokerTest {
 		HttpResponseBean respBean = new HttpResponseBean();
 
 		respBean.setBody("{\"jsonrpc\": \"2.0\", \"result\": -19, \"id\": 2}");
-		InvocationResponseResultsBean resp = svc.processInvocationResponse(respBean);
+		InvocationResponseResultsBean resp = svc.processInvocationResponse(null, respBean);
 		Assert.assertEquals(ResponseTypeEnum.SUCCESS, resp.getResponseType());
 
 		respBean.setBody("{\"jsonrpc\": \"2.0\", \"result\": -19.9, \"id\": 2}");
-		resp = svc.processInvocationResponse(respBean);
+		resp = svc.processInvocationResponse(null, respBean);
 		Assert.assertEquals(ResponseTypeEnum.SUCCESS, resp.getResponseType());
 
 		respBean.setBody("{\"jsonrpc\": \"2.0\", \"result\": [ -19.1, 22.2 ], \"id\": 2}");
-		resp = svc.processInvocationResponse(respBean);
+		resp = svc.processInvocationResponse(null, respBean);
 		Assert.assertEquals(ResponseTypeEnum.SUCCESS, resp.getResponseType());
 
 		respBean.setBody("{\"jsonrpc\": \"2.0\", \"result\": { \"hello\": 22.2 }, \"id\": 2}");
-		resp = svc.processInvocationResponse(respBean);
+		resp = svc.processInvocationResponse(null, respBean);
 		Assert.assertEquals(ResponseTypeEnum.SUCCESS, resp.getResponseType());
 
 	}
@@ -504,7 +504,7 @@ public class JsonRpc20ServiceInvokerTest {
 
 		String response = IOUtils.toString(JsonRpc20ResponseValidatorTest.class.getResourceAsStream("/badjsonresponse.json"));
 		respBean.setBody(response);
-		InvocationResponseResultsBean resp = svc.processInvocationResponse(respBean);
+		InvocationResponseResultsBean resp = svc.processInvocationResponse(null, respBean);
 		Assert.assertEquals(ResponseTypeEnum.SUCCESS, resp.getResponseType());
 
 		String actual = resp.getResponseBody();

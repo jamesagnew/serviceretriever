@@ -33,7 +33,6 @@ import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
 import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.invoker.hl7.ServiceInvokerHl7OverHttp;
 import net.svcret.ejb.invoker.soap.ServiceInvokerSoap11;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;

@@ -18,12 +18,16 @@ import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.ex.ThrottleException;
 import net.svcret.ejb.ex.UnknownRequestException;
+import net.svcret.ejb.invoker.IServiceInvoker;
+import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 
 @Local
 public interface IServiceOrchestrator {
 
 	void enqueueThrottledRequest(ThrottleException theE) throws ThrottleQueueFullException;
+
+	IServiceInvoker getServiceInvoker(BasePersServiceVersion theServiceVersion);
 
 	OrchestratorResponseBean handlePreviouslyThrottledRequest(InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization, HttpRequestBean theRequest, long theThrottleTime)
 			throws ProcessingException, SecurityFailureException, InvocationFailedDueToInternalErrorException;
@@ -88,14 +92,10 @@ public interface IServiceOrchestrator {
 
 	public static class SidechannelOrchestratorResponseBean extends OrchestratorResponseBean {
 
-		private ResponseTypeEnum myResponseType;
-		private Date myRequestStartedTime;
-		private String myFailureDescription;
 		private PersServiceVersionUrl myApplicableUrl;
-
-		public String getFailureDescription() {
-			return myFailureDescription;
-		}
+		private String myFailureDescription;
+		private Date myRequestStartedTime;
+		private ResponseTypeEnum myResponseType;
 
 		public SidechannelOrchestratorResponseBean(String theResponseBody, String theResponseContentType, Map<String, List<String>> theResponseHeaders, HttpResponseBean theHttpResponse,
 				ResponseTypeEnum theResponseType, Date theRequestStartedTime) {
@@ -103,6 +103,14 @@ public interface IServiceOrchestrator {
 
 			myResponseType = theResponseType;
 			myRequestStartedTime = theRequestStartedTime;
+		}
+
+		public PersServiceVersionUrl getApplicableUrl() {
+			return myApplicableUrl != null ? myApplicableUrl : getHttpResponse().getSingleUrlOrThrow();
+		}
+
+		public String getFailureDescription() {
+			return myFailureDescription;
 		}
 
 		public Date getRequestStartedTime() {
@@ -113,13 +121,6 @@ public interface IServiceOrchestrator {
 			return myResponseType;
 		}
 
-		public static SidechannelOrchestratorResponseBean forFailure(Exception theException, Date theRequestStartedTime, PersServiceVersionUrl theApplicableUrl) {
-			SidechannelOrchestratorResponseBean retVal = new SidechannelOrchestratorResponseBean(null, null, new HashMap<String, List<String>>(), null, null, theRequestStartedTime);
-			retVal.setFailureDescription(theException.getMessage());
-			retVal.setApplicableUrl(theApplicableUrl);
-			return retVal;
-		}
-
 		public void setApplicableUrl(PersServiceVersionUrl theApplicableUrl) {
 			myApplicableUrl = theApplicableUrl;
 		}
@@ -128,8 +129,11 @@ public interface IServiceOrchestrator {
 			myFailureDescription = theFailureDescription;
 		}
 
-		public PersServiceVersionUrl getApplicableUrl() {
-			return myApplicableUrl != null ? myApplicableUrl : getHttpResponse().getSingleUrlOrThrow();
+		public static SidechannelOrchestratorResponseBean forFailure(Exception theException, Date theRequestStartedTime, PersServiceVersionUrl theApplicableUrl) {
+			SidechannelOrchestratorResponseBean retVal = new SidechannelOrchestratorResponseBean(null, null, new HashMap<String, List<String>>(), null, null, theRequestStartedTime);
+			retVal.setFailureDescription(theException.getMessage());
+			retVal.setApplicableUrl(theApplicableUrl);
+			return retVal;
 		}
 
 	}

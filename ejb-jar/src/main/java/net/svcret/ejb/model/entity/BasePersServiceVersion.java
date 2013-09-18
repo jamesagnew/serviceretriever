@@ -39,10 +39,14 @@ import javax.persistence.Version;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
+import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.ServerSecuredEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.util.ProxyUtil;
+import net.svcret.ejb.api.IDao;
+import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.lang3.StringUtils;
@@ -806,6 +810,56 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		if (retVal.isEmpty()) {
 			retVal = myService.determineObscureResponseElements();
 		}
+		return retVal;
+	}
+
+	/**
+	 * Subclasses may override
+	 */
+	protected void fromDto(@SuppressWarnings("unused") BaseGServiceVersion theDto) {};
+	
+	public static <T extends BaseGServiceVersion> BasePersServiceVersion fromDto(T theDto, PersService theService, IDao theDao, IServiceRegistry theServiceRegistry) throws ProcessingException, UnexpectedFailureException {
+		Validate.notNull(theDto);
+		Validate.notNull(theService);
+
+		String versionId=theDto.getId();
+		
+		BasePersServiceVersion retVal;
+		if (theDto.getPidOrNull() != null) {
+			ourLog.debug("Retrieving existing service version PID[{}]", theDto.getPidOrNull());
+			retVal = theDao.getServiceVersionByPid(theDto.getPid());
+		} else {
+			ourLog.debug("Retrieving service version ID[{}]", versionId);
+			retVal = theServiceRegistry.getOrCreateServiceVersionWithId(theService, theDto.getProtocol(), versionId);
+			ourLog.debug("Found service version NEW[{}], PID[{}], PROTOCOL[{}]", new Object[] { retVal.isNewlyCreated(), retVal.getPid(), retVal.getProtocol().name() });
+		}
+
+		retVal.fromDto(theDto);
+
+		retVal.setActive(theDto.isActive());
+		retVal.setVersionId(theDto.getId());
+		retVal.setExplicitProxyPath(theDto.getExplicitProxyPath());
+		retVal.setDescription(theDto.getDescription());
+		retVal.setUseDefaultProxyPath(theDto.isUseDefaultProxyPath());
+
+		retVal.setServerSecurityMode(theDto.getServerSecurityMode());
+		if (retVal.getServerSecurityMode() == null) {
+			if (theDto.getServerSecurityList().size() > 0) {
+				retVal.setServerSecurityMode(ServerSecurityModeEnum.REQUIRE_ANY);
+			} else {
+				retVal.setServerSecurityMode(ServerSecurityModeEnum.NONE);
+			}
+		}
+
+		PersHttpClientConfig httpClientConfig = theDao.getHttpClientConfig(theDto.getHttpClientConfigPid());
+		if (httpClientConfig == null) {
+			throw new ProcessingException("Unknown HTTP client config PID: " + theDto.getHttpClientConfigPid());
+		}
+		retVal.setHttpClientConfig(httpClientConfig);
+
+		retVal.populateKeepRecentTransactionsFromDto(theDto);
+		retVal.populateServiceCatalogItemFromDto(theDto);
+
 		return retVal;
 	}
 
