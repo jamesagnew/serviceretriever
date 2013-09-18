@@ -120,7 +120,7 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 	}
 
 	@Override
-	public InvocationResponseResultsBean processInvocationResponse(HttpResponseBean theResponse) throws InvocationResponseFailedException  {
+	public InvocationResponseResultsBean processInvocationResponse(BasePersServiceVersion theServiceDefinition, HttpResponseBean theResponse) throws InvocationResponseFailedException  {
 		
 		String responseBody = theResponse.getBody();
 		String responseCode;
@@ -149,12 +149,12 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 	}
 
 	@Override
-	public IResponseValidator provideInvocationResponseValidator() {
+	public IResponseValidator provideInvocationResponseValidator(BasePersServiceVersion theServiceDefinition) {
 		return new Hl7OverHttpResponseValidator();
 	}
 
 	@Override
-	public String obscureMessageForLogs(String theMessage, Set<String> theElementNamesToRedact)  {
+	public String obscureMessageForLogs(BasePersServiceVersion theServiceDefinition, String theMessage, Set<String> theElementNamesToRedact)  {
 		// TODO: implement
 		return theMessage;
 	}

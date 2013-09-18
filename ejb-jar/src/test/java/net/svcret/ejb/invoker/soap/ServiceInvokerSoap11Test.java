@@ -320,7 +320,7 @@ public class ServiceInvokerSoap11Test {
 		when(httpResponse.getHeaders()).thenReturn(headers);
 		
 		ServiceInvokerSoap11 svc = new ServiceInvokerSoap11();
-		InvocationResponseResultsBean response = svc.processInvocationResponse(httpResponse);
+		InvocationResponseResultsBean response = svc.processInvocationResponse(null, httpResponse);
 		
 		assertEquals(ResponseTypeEnum.FAULT, response.getResponseType());
 		assertEquals("SOAP-ENV:Server", response.getResponseFaultCode());
@@ -363,7 +363,7 @@ public class ServiceInvokerSoap11Test {
 		when(httpResponse.getHeaders()).thenReturn(headers);
 		
 		ServiceInvokerSoap11 svc = new ServiceInvokerSoap11();
-		InvocationResponseResultsBean response = svc.processInvocationResponse(httpResponse);
+		InvocationResponseResultsBean response = svc.processInvocationResponse(null, httpResponse);
 		
 		assertEquals(ResponseTypeEnum.FAULT, response.getResponseType());
 		assertEquals(null, response.getResponseFaultCode());
@@ -405,7 +405,7 @@ public class ServiceInvokerSoap11Test {
 		when(httpResponse.getHeaders()).thenReturn(headers);
 		
 		ServiceInvokerSoap11 svc = new ServiceInvokerSoap11();
-		InvocationResponseResultsBean response = svc.processInvocationResponse(httpResponse);
+		InvocationResponseResultsBean response = svc.processInvocationResponse(null, httpResponse);
 		
 		assertEquals(ResponseTypeEnum.FAULT, response.getResponseType());
 		assertEquals("", response.getResponseFaultCode());
@@ -480,7 +480,7 @@ public class ServiceInvokerSoap11Test {
 		String xsdUrl = "http://192.168.1.3:8081/DemoServiceSvc/StringConcatService?xsd=1";
 		when(httpClient.get(xsdUrl)).thenReturn(new HttpResponseBean(null, "text/xml", 200, xsdBody));
 		
-		PersServiceVersionSoap11 def;
+		PersServiceVersionSoap11 def=null;
 		def = svc.introspectServiceFromUrl(wsdlUrl);
 		
 		assertEquals(def.getMethodNames().toString(), 2, def.getMethods().size());
@@ -506,7 +506,7 @@ public class ServiceInvokerSoap11Test {
 		String wsdlUrl = "http://foo/wsdl.wsdl";
 		when(httpClient.get(wsdlUrl)).thenReturn(new HttpResponseBean(null, "text/xml", 200, wsdlBody));
 
-		PersServiceVersionSoap11 def;
+		PersServiceVersionSoap11 def=null;
 		def = svc.introspectServiceFromUrl(wsdlUrl);
 		
 		assertEquals("GetWeatherInformation", def.getMethods().get(0).getName());
@@ -536,7 +536,7 @@ public class ServiceInvokerSoap11Test {
 		
 		DefaultAnswer.setRunTime();
 		
-		PersServiceVersionSoap11 def;
+		PersServiceVersionSoap11 def=null;
 		def = svc.introspectServiceFromUrl(wsdlUrl);
 		
 		assertEquals(5, def.getMethods().size());

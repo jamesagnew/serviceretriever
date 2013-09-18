@@ -52,6 +52,7 @@ import net.svcret.ejb.invoker.hl7.ServiceInvokerHl7OverHttp;
 import net.svcret.ejb.invoker.jsonrpc.IServiceInvokerJsonRpc20;
 import net.svcret.ejb.invoker.soap.IServiceInvokerSoap11;
 import net.svcret.ejb.invoker.soap.InvocationFailedException;
+import net.svcret.ejb.invoker.virtual.IServiceInvokerVirtual;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
@@ -102,6 +103,9 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 	@EJB
 	private ITransactionLogger myTransactionLogger;
+
+	@EJB
+	private IServiceInvokerVirtual myServiceInvokerVirtual;
 
 	private OrchestratorResponseBean doHandleServiceRequest(HttpRequestBean theRequest) throws UnknownRequestException, ProcessingException, SecurityFailureException, ThrottleException,
 			ThrottleQueueFullException {
@@ -271,9 +275,10 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		String responseBody = invocationResponse.getResponseBody();
 
 		// Obscure
-		IServiceInvoker svcInvoker = getServiceInvoker(method.getServiceVersion());
-		requestBody = svcInvoker.obscureMessageForLogs(requestBody, method.getServiceVersion().determineObscureRequestElements());
-		responseBody = svcInvoker.obscureMessageForLogs(responseBody, method.getServiceVersion().determineObscureResponseElements());
+		BasePersServiceVersion svcVer = method.getServiceVersion();
+		IServiceInvoker svcInvoker = getServiceInvoker(svcVer);
+		requestBody = svcInvoker.obscureMessageForLogs(svcVer, requestBody, method.getServiceVersion().determineObscureRequestElements());
+		responseBody = svcInvoker.obscureMessageForLogs(svcVer, responseBody, method.getServiceVersion().determineObscureResponseElements());
 
 		// Log
 		PersServiceVersionUrl successfulUrl = httpResponse != null ? httpResponse.getSuccessfulUrl() : null;
@@ -356,7 +361,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		}
 
 		if (results.getResultType() == ResultTypeEnum.METHOD) {
-			results.setMethodHeaders(svcInvoker.createBackingRequestHeadersForMethodInvocation(theRequest.getRequestHeaders()));
+			results.setMethodHeaders(svcInvoker.createBackingRequestHeadersForMethodInvocation(serviceVersion, theRequest.getRequestHeaders()));
 		}
 
 		results.setServiceInvoker(svcInvoker);
@@ -378,7 +383,8 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		return results;
 	}
 
-	private IServiceInvoker getServiceInvoker(BasePersServiceVersion serviceVersion) {
+	@Override
+	public IServiceInvoker getServiceInvoker(BasePersServiceVersion serviceVersion) {
 		IServiceInvoker svcInvoker = null;
 		switch (serviceVersion.getProtocol()) {
 		case SOAP11:
@@ -389,6 +395,9 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			break;
 		case HL7OVERHTTP:
 			svcInvoker = myServiceInvokerHl7OverHttp;
+			break;
+		case VIRTUAL:
+			svcInvoker = myServiceInvokerVirtual;
 			break;
 		}
 		return svcInvoker;
@@ -402,7 +411,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		Map<String, List<String>> headers = results.getMethodHeaders();
 		String contentType = results.getMethodContentType();
 		String contentBody = results.getMethodRequestBody();
-		IResponseValidator responseValidator = results.getServiceInvoker().provideInvocationResponseValidator();
+		IResponseValidator responseValidator = results.getServiceInvoker().provideInvocationResponseValidator(serviceVersion);
 
 		UrlPoolBean urlPool;
 		if (theForceUrl == null) {
@@ -439,7 +448,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			throw new InvocationResponseFailedException(b.toString());
 		}
 
-		InvocationResponseResultsBean invocationResponse = results.getServiceInvoker().processInvocationResponse(httpResponse);
+		InvocationResponseResultsBean invocationResponse = results.getServiceInvoker().processInvocationResponse(serviceVersion, httpResponse);
 		invocationResponse.validate();
 
 		String responseBody = invocationResponse.getResponseBody();
