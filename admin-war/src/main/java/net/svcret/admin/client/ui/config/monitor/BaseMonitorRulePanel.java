@@ -302,21 +302,21 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 			@Override
 			public SafeHtml getValue(DtoMonitorRuleActiveCheck theObject) {
 				SafeHtmlBuilder b = new SafeHtmlBuilder();
-				b.appendHtmlConstant("<div class=\"" + MyResources.CSS.monitorRuleActiveTargetKey() + "\">Message</div>");
-				b.appendHtmlConstant("<div class=\"" + MyResources.CSS.monitorRuleActiveTargetValue() + "\">");
-				b.appendEscaped(theObject.getMessageDescription());
-				b.appendHtmlConstant("</div>");
 
+				// Target
 				b.appendHtmlConstant("<div class=\"" + MyResources.CSS.monitorRuleActiveTargetKey() + "\">Target</div>");
 				b.appendHtmlConstant("<div class=\"" + MyResources.CSS.monitorRuleActiveTargetValue() + "\">");
-
 				GService service = myDomainList.getServiceWithServiceVersion(theObject.getServiceVersionPid());
 				BaseGServiceVersion svcVer = service.getVersionList().getVersionByPid(theObject.getServiceVersionPid());
-
 				b.appendEscaped(service.getName());
 				b.appendHtmlConstant(" / ");
 				b.appendEscaped(svcVer.getId());
+				b.appendHtmlConstant("</div>");
 
+				// Message
+				b.appendHtmlConstant("<div class=\"" + MyResources.CSS.monitorRuleActiveTargetKey() + "\">Message</div>");
+				b.appendHtmlConstant("<div class=\"" + MyResources.CSS.monitorRuleActiveTargetValue() + "\">");
+				b.appendEscaped(theObject.getMessageDescription());
 				b.appendHtmlConstant("</div>");
 
 				return b.toSafeHtml();

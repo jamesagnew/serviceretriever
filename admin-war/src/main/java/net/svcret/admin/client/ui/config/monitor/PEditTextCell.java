@@ -193,6 +193,10 @@ public class PEditTextCell extends AbstractEditableCell<String, PEditTextCell.Vi
 		    if (viewData != null) {
 		      String text = viewData.getText();
 		      if (viewData.isEditing()) {
+		    	  if (NO_VALUE_STRING.equals(text)) {
+		    		  text = "";
+		    	  }
+		    	  
 		        /*
 		         * Do not use the renderer in edit mode because the value of a text
 		         * input element is always treated as text. SafeHtml isn't valid in the

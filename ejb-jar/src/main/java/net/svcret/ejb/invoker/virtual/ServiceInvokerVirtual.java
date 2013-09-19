@@ -3,6 +3,8 @@ package net.svcret.ejb.invoker.virtual;
 import java.io.Reader;
 import java.util.Set;
 
+import javax.ejb.Stateless;
+
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.IServiceOrchestrator;
@@ -18,6 +20,7 @@ import net.svcret.ejb.invoker.BaseServiceInvoker;
 import net.svcret.ejb.invoker.soap.InvocationFailedException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 
+@Stateless
 public class ServiceInvokerVirtual extends BaseServiceInvoker implements IServiceInvokerVirtual {
 
 	public IServiceOrchestrator myOrchestrator;

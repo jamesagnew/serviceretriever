@@ -790,6 +790,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Sticky Sessions")
 	String stickySesionList_Breadcrumb();
+
+	@DefaultMessage("Failure Description")
+	String recentMessagesGrid_ColFailDescription();
 	
 	
 }

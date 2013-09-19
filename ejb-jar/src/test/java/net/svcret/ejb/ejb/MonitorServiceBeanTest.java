@@ -1,8 +1,12 @@
 package net.svcret.ejb.ejb;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,6 +22,7 @@ import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
+import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IMonitorNotifier;
@@ -96,6 +101,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		mySvc = new MonitorServiceBean();
 		mySvc.setDao(myDao);
 		mySvc.setRuntimeStatus(myQuerySvc);
+		mySvc.setRuntimeStatus(myStatsSvc);
 		mySvc.setBroadcastSender(mock(IBroadcastSender.class));
 
 		DefaultAnswer.setDesignTime();
@@ -234,8 +240,240 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		
 	}
 
+
 	@Test
 	public void testActiveTest() throws Exception{
+		createCatalog();
+
+		IServiceOrchestrator orch = mock(IServiceOrchestrator.class);
+		mySvc.setServiceOrchestratorForUnitTests(orch);
+		mySvc.setMonitorNotifierForUnitTests(mock(IMonitorNotifier.class));
+		mySvc.setThisForUnitTests(mySvc);
+		
+		newEntityManager();
+
+		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
+		assertEquals(StatusEnum.UNKNOWN, svcVer.getUrls().get(0).getStatus().getStatus());
+		
+		PersLibraryMessage msg = new PersLibraryMessage();
+		msg.setAppliesTo(mySvcVer);
+		msg.setContentType("ct");
+		msg.setDescription("desc");
+		msg.setMessage("body");
+		myDao.saveLibraryMessage(msg);
+		
+		newEntityManager();
+
+		PersMonitorRuleActive rule = new PersMonitorRuleActive();
+		rule.setRuleActive(true);
+		
+		PersMonitorRuleActiveCheck check=new PersMonitorRuleActiveCheck();
+		check.setCheckFrequencyNum(1);
+		check.setCheckFrequencyUnit(ThrottlePeriodEnum.SECOND);
+		check.setExpectLatencyUnderMillis(100L);
+		check.setExpectResponseType(ResponseTypeEnum.SUCCESS);
+		check.setMessage(msg);
+		check.setServiceVersion(mySvcVer);
+		
+		rule.getActiveChecks().add(check);
+		rule=(PersMonitorRuleActive) mySvc.saveRule(rule);
+
+		// No calls have happened yet..
+		newEntityManager();
+		mySvc.check();
+		newEntityManager();
+		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
+		assertNull(svcVer.getMostRecentMonitorRuleFiring());
+
+		// Fail one of the URLs
+		newEntityManager();
+		
+		check = myDao.getAllMonitorRuleActiveChecks().iterator().next();
+
+		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<IServiceOrchestrator.SidechannelOrchestratorResponseBean>();
+		HttpResponseBean httpResponse=new HttpResponseBean();
+		httpResponse.setSuccessfulUrl(myUrl1);
+		httpResponse.setResponseTime(1000);
+		responses.add(new SidechannelOrchestratorResponseBean("", "", new HashMap<String, List<String>>(), httpResponse, ResponseTypeEnum.SUCCESS, new Date()));
+		when(orch.handleSidechannelRequestForEachUrl(eq(mySvcVer.getPid()), (String)any(), (String)any(), (String)any())).thenReturn(responses);
+		mySvc.runActiveCheck(check);
+		
+//		HttpResponseBean httpResponse = new HttpResponseBean();
+//		httpResponse.setSuccessfulUrl(myUrl1);
+//		httpResponse.addFailedUrl(myUrl2, "failure explanation", 500, "text/plain", "response body");
+//		httpResponse.setBody("successful response");
+//		InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
+//		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
+//		myStatsSvc.recordInvocationMethod(new Date(), 100, myMethod, null, httpResponse, invocationResponseResultsBean, null);
+//		newEntityManager();
+		myStatsSvc.flushStatus();
+		newEntityManager();
+
+		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
+		
+		// This doesn't change because the service didn't fail, just the rule
+		assertEquals(StatusEnum.UNKNOWN, svcVer.getUrls().get(0).getStatus().getStatus());
+
+		assertNotNull(svcVer.getMostRecentMonitorRuleFiring());
+		assertNull(svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage(),svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage());
+		assertNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
+
+		rule = (PersMonitorRuleActive) myDao.getMonitorRule(rule.getPid());
+		assertEquals(1, rule.getActiveChecks().iterator().next().getRecentOutcomes().size());
+		
+		newEntityManager();
+
+		// Make sure the passive check doesn't overwrite things
+		mySvc.check();
+		
+		newEntityManager();
+		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
+		assertNotNull(svcVer.getMostRecentMonitorRuleFiring());
+		assertNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
+
+		// Succeed the URL again
+		newEntityManager();
+//		httpResponse = new HttpResponseBean();
+//		httpResponse.setSuccessfulUrl(myUrl2);
+//		httpResponse.setBody("successful response");
+//		invocationResponseResultsBean = new InvocationResponseResultsBean();
+//		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
+//		myStatsSvc.recordInvocationMethod(new Date(), 100, myMethod, null, httpResponse, invocationResponseResultsBean, null);
+
+		httpResponse.setResponseTime(1);
+		mySvc.runActiveCheck(check);
+
+		newEntityManager();
+
+		myStatsSvc.flushStatus();
+		newEntityManager();
+
+		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
+		assertNotNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
+		assertEquals(StatusEnum.ACTIVE, svcVer.getUrls().get(0).getStatus().getStatus());
+
+		
+	}
+
+
+	@Test
+	public void testActiveTestWithInvocationFailure() throws Exception{
+		createCatalog();
+
+		IServiceOrchestrator orch = mock(IServiceOrchestrator.class);
+		mySvc.setServiceOrchestratorForUnitTests(orch);
+		mySvc.setMonitorNotifierForUnitTests(mock(IMonitorNotifier.class));
+		mySvc.setThisForUnitTests(mySvc);
+		
+		newEntityManager();
+
+		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
+		assertEquals(StatusEnum.UNKNOWN, svcVer.getUrls().get(0).getStatus().getStatus());
+		
+		PersLibraryMessage msg = new PersLibraryMessage();
+		msg.setAppliesTo(mySvcVer);
+		msg.setContentType("ct");
+		msg.setDescription("desc");
+		msg.setMessage("body");
+		myDao.saveLibraryMessage(msg);
+		
+		newEntityManager();
+
+		PersMonitorRuleActive rule = new PersMonitorRuleActive();
+		rule.setRuleActive(true);
+		
+		PersMonitorRuleActiveCheck check=new PersMonitorRuleActiveCheck();
+		check.setCheckFrequencyNum(1);
+		check.setCheckFrequencyUnit(ThrottlePeriodEnum.SECOND);
+		check.setExpectLatencyUnderMillis(100L);
+		check.setExpectResponseType(ResponseTypeEnum.SUCCESS);
+		check.setMessage(msg);
+		check.setServiceVersion(mySvcVer);
+		
+		rule.getActiveChecks().add(check);
+		rule=(PersMonitorRuleActive) mySvc.saveRule(rule);
+
+		// No calls have happened yet..
+		newEntityManager();
+		mySvc.check();
+		newEntityManager();
+		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
+		assertNull(svcVer.getMostRecentMonitorRuleFiring());
+
+		// Fail one of the URLs
+		newEntityManager();
+		
+		check = myDao.getAllMonitorRuleActiveChecks().iterator().next();
+
+		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<IServiceOrchestrator.SidechannelOrchestratorResponseBean>();
+		SidechannelOrchestratorResponseBean rsp = new SidechannelOrchestratorResponseBean("", "", new HashMap<String, List<String>>(), null, ResponseTypeEnum.FAIL, new Date());
+		rsp.setApplicableUrl(myUrl1);
+		responses.add(rsp);
+		when(orch.handleSidechannelRequestForEachUrl(eq(mySvcVer.getPid()), (String)any(), (String)any(), (String)any())).thenReturn(responses);
+		mySvc.runActiveCheck(check);
+		
+//		HttpResponseBean httpResponse = new HttpResponseBean();
+//		httpResponse.setSuccessfulUrl(myUrl1);
+//		httpResponse.addFailedUrl(myUrl2, "failure explanation", 500, "text/plain", "response body");
+//		httpResponse.setBody("successful response");
+//		InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
+//		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
+//		myStatsSvc.recordInvocationMethod(new Date(), 100, myMethod, null, httpResponse, invocationResponseResultsBean, null);
+//		newEntityManager();
+
+		myStatsSvc.flushStatus();
+		newEntityManager();
+
+		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
+		assertEquals(StatusEnum.DOWN, svcVer.getUrls().get(0).getStatus().getStatus());
+
+		assertNotNull(svcVer.getMostRecentMonitorRuleFiring());
+		assertNull(svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage(),svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage());
+		assertNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
+
+		rule = (PersMonitorRuleActive) myDao.getMonitorRule(rule.getPid());
+		assertEquals(1, rule.getActiveChecks().iterator().next().getRecentOutcomes().size());
+		
+		newEntityManager();
+
+		// Make sure the passive check doesn't overwrite things
+		mySvc.check();
+		
+		newEntityManager();
+		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
+		assertNotNull(svcVer.getMostRecentMonitorRuleFiring());
+		assertNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
+
+		// Succeed the URL again
+		newEntityManager();
+//		httpResponse = new HttpResponseBean();
+//		httpResponse.setSuccessfulUrl(myUrl2);
+//		httpResponse.setBody("successful response");
+//		invocationResponseResultsBean = new InvocationResponseResultsBean();
+//		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
+//		myStatsSvc.recordInvocationMethod(new Date(), 100, myMethod, null, httpResponse, invocationResponseResultsBean, null);
+//		newEntityManager();
+//		myStatsSvc.flushStatus();
+
+		HttpResponseBean httpResponse=new HttpResponseBean();
+		httpResponse.setSuccessfulUrl(myUrl1);
+		httpResponse.setResponseTime(1);
+		responses.clear();
+		responses.add(new SidechannelOrchestratorResponseBean("", "", new HashMap<String, List<String>>(), httpResponse, ResponseTypeEnum.SUCCESS, new Date()));
+		mySvc.runActiveCheck(check);
+
+		myStatsSvc.flushStatus();
+		newEntityManager();
+		
+		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
+		assertNotNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
+		assertEquals(StatusEnum.ACTIVE, svcVer.getUrls().get(0).getStatus().getStatus());
+
+		
+	}
+
+	@Test
+	public void testActiveTestWithFailingInvocation() throws Exception{
 		createCatalog();
 
 		IServiceOrchestrator orch = mock(IServiceOrchestrator.class);
@@ -281,10 +519,9 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		check = myDao.getAllMonitorRuleActiveChecks().iterator().next();
 
 		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<IServiceOrchestrator.SidechannelOrchestratorResponseBean>();
-		HttpResponseBean httpResponse=new HttpResponseBean();
-		httpResponse.setSuccessfulUrl(myUrl1);
-		httpResponse.setResponseTime(1000);
-		responses.add(new SidechannelOrchestratorResponseBean("", "", new HashMap<String, List<String>>(), httpResponse, ResponseTypeEnum.SUCCESS, new Date()));
+		SidechannelOrchestratorResponseBean bean = new SidechannelOrchestratorResponseBean("", "", new HashMap<String, List<String>>(), null, ResponseTypeEnum.FAIL, new Date());
+		bean.setApplicableUrl(myUrl1);
+		responses.add(bean);
 		when(orch.handleSidechannelRequestForEachUrl(eq(mySvcVer.getPid()), (String)any(), (String)any(), (String)any())).thenReturn(responses);
 		mySvc.runActiveCheck(check);
 		
@@ -319,22 +556,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 
 		// Succeed the URL again
 		newEntityManager();
-//		httpResponse = new HttpResponseBean();
-//		httpResponse.setSuccessfulUrl(myUrl2);
-//		httpResponse.setBody("successful response");
-//		invocationResponseResultsBean = new InvocationResponseResultsBean();
-//		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
-//		myStatsSvc.recordInvocationMethod(new Date(), 100, myMethod, null, httpResponse, invocationResponseResultsBean, null);
-//		newEntityManager();
-//		myStatsSvc.flushStatus();
-
-		httpResponse.setResponseTime(1);
-		mySvc.runActiveCheck(check);
-
-		newEntityManager();
 		
-		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
-		assertNotNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
 		
 		
 	}

@@ -81,7 +81,11 @@ public class EditableField extends FlowPanel implements HasValue<String> {
 			myEditorComponent.addValueChangeHandler(new ValueChangeHandler<String>() {
 				@Override
 				public void onValueChange(ValueChangeEvent<String> theEvent) {
-					myValue = theEvent.getValue();
+					String newValue = theEvent.getValue();
+					if (StringUtil.equals(newValue, myValue)) {
+						return;
+					}
+					myValue = newValue;
 
 					for (ValueChangeHandler<String> next : myValueChangeHandlers) {
 						next.onValueChange(theEvent);
@@ -92,6 +96,7 @@ public class EditableField extends FlowPanel implements HasValue<String> {
 			myEditorComponent.addBlurHandler(new BlurHandler() {
 				@Override
 				public void onBlur(BlurEvent theEvent) {
+					ValueChangeEvent.fireIfNotEqual(myEditorComponent, myValue, myEditorComponent.getValue());
 					setLabelMode();
 				}
 			});

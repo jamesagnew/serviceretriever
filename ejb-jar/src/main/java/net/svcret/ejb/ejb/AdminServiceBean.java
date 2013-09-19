@@ -580,7 +580,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		if (msg == null) {
 			throw new ProcessingException("Unable to find transaction with PID " + thePid + ". Maybe it has been purged?");
 		}
-		return toUi(msg, true);
+		return msg.toDto(true);
 	}
 
 	@Override
@@ -589,7 +589,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		if (msg == null) {
 			throw new ProcessingException("Unable to find transaction with PID " + thePid + ". Maybe it has been purged?");
 		}
-		return toUi(msg, true);
+		return msg.toDto( true);
 	}
 
 	@Override
@@ -1142,20 +1142,19 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return theInt != null ? theInt : 0;
 	}
 
-	private StatusEnum extractStatus(BaseDtoServiceCatalogItem theDashboardObject, StatusEnum theInitialStatus, StatsAccumulator theAccumulator, PersService theService, StatusesBean theStatuses)
-			throws UnexpectedFailureException {
+	private StatusEnum extractStatus(BaseDtoServiceCatalogItem theDashboardObject, StatusEnum theInitialStatus, PersService theService, StatusesBean theStatuses) {
 
 		// Value will be changed below
 		StatusEnum status = theInitialStatus;
 
 		for (BasePersServiceVersion nextVersion : theService.getVersions()) {
-			status = extractStatus(theDashboardObject, theStatuses, theAccumulator, status, nextVersion);
+			status = extractStatus(theDashboardObject, theStatuses, status, nextVersion);
 
 		} // end VERSION
 		return status;
 	}
 
-	private StatusEnum extractStatus(BaseDtoServiceCatalogItem theDashboardObject, StatusesBean theStatuses, StatsAccumulator theAccumulator, StatusEnum theStatus, BasePersServiceVersion nextVersion) throws UnexpectedFailureException {
+	private StatusEnum extractStatus(BaseDtoServiceCatalogItem theDashboardObject, StatusesBean theStatuses, StatusEnum theStatus, BasePersServiceVersion nextVersion) {
 		StatusEnum status = theStatus;
 
 		for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
@@ -1182,9 +1181,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		} // end URL
 
-		for (PersServiceVersionMethod nextMethod : nextVersion.getMethods()) {
-			myRuntimeStatusQuerySvc.extract60MinuteMethodStats(nextMethod, theAccumulator);
-		}
+//XX		myRuntimeStatusQuerySvc.extract60MinuteStats(nextVersion, theAccumulator);
 
 		// Failing monitor rules
 		List<PersMonitorRuleFiring> failingRules = theStatuses.getFirings(nextVersion.getPid());
@@ -1610,24 +1607,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private String toHeaderContentType(List<Pair<String>> theResponseHeaders) {
-		for (Pair<String> pair : theResponseHeaders) {
-			if (pair.getFirst().equalsIgnoreCase("content-type")) {
-				return pair.getSecond().split(";")[0].trim();
-			}
-		}
-		return null;
-	}
-
-	private List<Pair<String>> toHeaders(String theHeaders) {
-		ArrayList<Pair<String>> retVal = new ArrayList<Pair<String>>();
-		for (String next : theHeaders.split("\\r\\n")) {
-			int idx = next.indexOf(": ");
-			retVal.add(new Pair<String>(next.substring(0, idx), next.substring(idx + 2)));
-		}
-		return retVal;
-	}
-
 	static int[] toLatency(List<Long> theTimes, List<Integer> theCountsEntry0, List<Integer> theCountsEntry1, List<Integer> theCountsEntry2) {
 		return toLatency(theTimes, theCountsEntry0, theCountsEntry1, theCountsEntry2, null);
 	}
@@ -1741,82 +1720,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 
-	private GRecentMessage toUi(BasePersSavedTransactionRecentMessage theMsg, boolean theLoadMsgContents) {
-		GRecentMessage retVal = new GRecentMessage();
-
-		retVal.setPid(theMsg.getPid());
-		PersServiceVersionUrl implementationUrl = theMsg.getImplementationUrl();
-		if (implementationUrl != null) {
-			retVal.setImplementationUrlId(implementationUrl.getUrlId());
-			retVal.setImplementationUrlHref(implementationUrl.getUrl());
-			retVal.setImplementationUrlPid(implementationUrl.getPid());
-		}
-
-		BasePersServiceVersion svcVer = theMsg.getServiceVersion();
-		if (svcVer != null) {
-			retVal.setDomainPid(svcVer.getService().getDomain().getPid());
-			retVal.setDomainName(svcVer.getService().getDomain().getDomainNameOrId());
-
-			retVal.setServicePid(svcVer.getService().getPid());
-			retVal.setServiceName(svcVer.getService().getServiceNameOrId());
-
-			retVal.setServiceVersionPid(svcVer.getPid());
-			retVal.setServiceVersionId(svcVer.getVersionId());
-		}
-
-		PersServiceVersionMethod method = theMsg.getMethod();
-		if (method != null) {
-			retVal.setMethodPid(method.getPid());
-			retVal.setMethodName(method.getName());
-		}
-
-		retVal.setRecentMessageType(theMsg.getRecentMessageType());
-		retVal.setRequestHostIp(theMsg.getRequestHostIp());
-		retVal.setTransactionTime(theMsg.getTransactionTime());
-		retVal.setTransactionMillis(theMsg.getTransactionMillis());
-		retVal.setAuthorizationOutcome(theMsg.getAuthorizationOutcome());
-
-		if (theLoadMsgContents) {
-			int bodyIdx = theMsg.getRequestBody().indexOf("\r\n\r\n");
-			if (bodyIdx == -1) {
-				retVal.setRequestMessage(theMsg.getRequestBody());
-				retVal.setRequestHeaders(new ArrayList<Pair<String>>());
-				retVal.setRequestContentType("unknown");
-			} else {
-				retVal.setRequestMessage(theMsg.getRequestBody().substring(bodyIdx + 4));
-				retVal.setRequestHeaders(toHeaders(theMsg.getRequestBody().substring(0, bodyIdx)));
-				retVal.setRequestContentType(toHeaderContentType(retVal.getRequestHeaders()));
-			}
-
-			bodyIdx = theMsg.getResponseBody().indexOf("\r\n\r\n");
-			if (bodyIdx == -1) {
-				retVal.setResponseMessage(theMsg.getResponseBody());
-				retVal.setResponseHeaders(new ArrayList<Pair<String>>());
-				retVal.setResponseContentType("unknown");
-			} else {
-				retVal.setResponseMessage(theMsg.getResponseBody().substring(bodyIdx + 4));
-				retVal.setResponseHeaders(toHeaders(theMsg.getResponseBody().substring(0, bodyIdx)));
-				retVal.setResponseContentType(toHeaderContentType(retVal.getResponseHeaders()));
-			}
-
-		}
-
-		if (theMsg instanceof PersServiceVersionRecentMessage) {
-			PersServiceVersionRecentMessage msg = (PersServiceVersionRecentMessage) theMsg;
-			if (msg.getUser() != null) {
-				retVal.setRequestUserPid(msg.getUser().getPid());
-				retVal.setRequestUsername(msg.getUser().getUsername());
-			}
-		} else if (theMsg instanceof PersUserRecentMessage) {
-			PersUserRecentMessage msg = (PersUserRecentMessage) theMsg;
-			if (msg.getUser() != null) {
-				retVal.setRequestUserPid(msg.getUser().getPid());
-				retVal.setRequestUsername(msg.getUser().getUsername());
-			}
-		}
-
-		return retVal;
-	}
 
 	private BaseGServiceVersion toUi(BasePersServiceVersion theVersion, boolean theLoadStats, Set<Long> theLoadMethodStats, Set<Long> theLoadUrlStats, StatusesBean theStatuses)
 			throws UnexpectedFailureException {
@@ -1897,8 +1800,10 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		if (theLoadStats) {
 
 			StatusEnum status = StatusEnum.UNKNOWN;
-			StatsAccumulator accumulator = new StatsAccumulator();
-			extractStatus(retVal, theStatuses, accumulator, status, theVersion);
+			StatsAccumulator accumulator = null;
+			extractStatus(retVal, theStatuses, status, theVersion);
+			
+			accumulator = myRuntimeStatusQuerySvc.extract60MinuteStats(theVersion);
 			accumulator.populateDto(retVal);
 
 			retVal.setStatsInitialized(new Date());
@@ -1965,7 +1870,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		List<GRecentMessage> retVal = new ArrayList<GRecentMessage>();
 
 		for (BasePersSavedTransactionRecentMessage next : theServiceVersionRecentMessages) {
-			retVal.add(toUi(next, theLoadMessageContents));
+			retVal.add(next.toDto(theLoadMessageContents));
 		}
 
 		return retVal;
@@ -2063,10 +1968,12 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			retVal.setStatsInitialized(new Date());
 			StatusEnum status = StatusEnum.UNKNOWN;
 
-			StatsAccumulator accumulator = new StatsAccumulator();
+			StatsAccumulator accumulator = null;
 			for (PersService nextService : theDomain.getServices()) {
-				status = extractStatus(retVal, status, accumulator, nextService, theStatuses);
+				status = extractStatus(retVal, status, nextService, theStatuses);
 			}
+			
+			accumulator = myRuntimeStatusQuerySvc.extract60MinuteStats(theDomain);
 			accumulator.populateDto(retVal);
 
 			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
@@ -2187,9 +2094,10 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			retVal.setStatsInitialized(new Date());
 			StatusEnum status = StatusEnum.UNKNOWN;
 
-			StatsAccumulator accumulator = new RuntimeStatusQueryBean.StatsAccumulator();
-			status = extractStatus(retVal, status, accumulator, theService, theStatuses);
+			StatsAccumulator accumulator = null;
+			status = extractStatus(retVal, status, theService, theStatuses);
 
+			accumulator = myRuntimeStatusQuerySvc.extract60MinuteStats(theService);
 			accumulator.populateDto(retVal);
 			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
 
@@ -2517,7 +2425,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 	public static void doWithStatsByMinute(PersConfig theConfig, int theNumberOfMinutes, IRuntimeStatusQueryLocal statusSvc, PersServiceVersionMethod theMethod,
 			IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator) {
-		Date start = getDateXMinsAgo(theNumberOfMinutes);
+		Date start = getDateXMinsAgoTruncatedToMinute(theNumberOfMinutes);
 		Date end = new Date();
 
 		doWithStatsByMinute(theConfig, statusSvc, theMethod, theOperator, start, end);
@@ -2546,7 +2454,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator, start, end);
 	}
 
-	public static Date getDateXMinsAgo(int theNumberOfMinutes) {
+	public static Date getDateXMinsAgoTruncatedToMinute(int theNumberOfMinutes) {
 		Date date60MinsAgo = new Date(System.currentTimeMillis() - (theNumberOfMinutes * DateUtils.MILLIS_PER_MINUTE));
 		Date date = DateUtils.truncate(date60MinsAgo, Calendar.MINUTE);
 		return date;

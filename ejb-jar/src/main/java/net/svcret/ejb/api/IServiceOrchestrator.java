@@ -101,6 +101,10 @@ public interface IServiceOrchestrator {
 				ResponseTypeEnum theResponseType, Date theRequestStartedTime) {
 			super(theResponseBody, theResponseContentType, theResponseHeaders, theHttpResponse);
 
+			if (theResponseType==null) {
+				throw new NullPointerException("Response type must not be null");
+			}
+			
 			myResponseType = theResponseType;
 			myRequestStartedTime = theRequestStartedTime;
 		}
@@ -130,8 +134,8 @@ public interface IServiceOrchestrator {
 		}
 
 		public static SidechannelOrchestratorResponseBean forFailure(Exception theException, Date theRequestStartedTime, PersServiceVersionUrl theApplicableUrl) {
-			SidechannelOrchestratorResponseBean retVal = new SidechannelOrchestratorResponseBean(null, null, new HashMap<String, List<String>>(), null, null, theRequestStartedTime);
-			retVal.setFailureDescription(theException.getMessage());
+			SidechannelOrchestratorResponseBean retVal = new SidechannelOrchestratorResponseBean(null, null, new HashMap<String, List<String>>(), null, ResponseTypeEnum.FAIL, theRequestStartedTime);
+			retVal.setFailureDescription(theException.toString());
 			retVal.setApplicableUrl(theApplicableUrl);
 			return retVal;
 		}

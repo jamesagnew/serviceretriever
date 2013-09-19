@@ -157,7 +157,7 @@ public class PersMonitorRuleFiringProblem extends BasePersObject {
 	}
 
 	public void setCheckFailureMessage(String theCheckFailureMessage) {
-		if (theCheckFailureMessage.length() > EntityConstants.MAXLEN_MONITOR_FIRING_CHECK_FAILURE_MSG) {
+		if (theCheckFailureMessage != null && theCheckFailureMessage.length() > EntityConstants.MAXLEN_MONITOR_FIRING_CHECK_FAILURE_MSG) {
 			myFailedUrlMessage = theCheckFailureMessage.substring(0, EntityConstants.MAXLEN_MONITOR_FIRING_CHECK_FAILURE_MSG);
 		} else {
 			myCheckFailureMessage = theCheckFailureMessage;

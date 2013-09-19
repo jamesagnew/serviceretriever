@@ -27,7 +27,7 @@ import net.svcret.ejb.api.InvocationResponseResultsBean;
 @MappedSuperclass()
 public abstract class BasePersSavedTransaction implements Serializable {
 
-	private static final int FAIL_DESC_LENGTH = 200;
+	private static final int FAIL_DESC_LENGTH = 500;
 
 	private static final long serialVersionUID = 1L;
 
@@ -164,6 +164,9 @@ public abstract class BasePersSavedTransaction implements Serializable {
 	 *            the responseType to set
 	 */
 	public void setResponseType(ResponseTypeEnum theResponseType) {
+		if (theResponseType==null) {
+			throw new NullPointerException();
+		}
 		myResponseType = theResponseType;
 	}
 

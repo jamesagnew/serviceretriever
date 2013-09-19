@@ -21,12 +21,15 @@ import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.Messages;
+import net.svcret.ejb.api.HttpResponseBean.Failure;
 import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IMonitorNotifier;
 import net.svcret.ejb.api.IMonitorService;
+import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
@@ -66,7 +69,10 @@ public class MonitorServiceBean implements IMonitorService {
 	private IDao myDao;
 
 	@EJB
-	private IRuntimeStatusQueryLocal myRuntimeStatus;
+	private IRuntimeStatusQueryLocal myRuntimeStatusQuery;
+
+	@EJB
+	private IRuntimeStatus myRuntimeStatus;
 
 	@EJB
 	private IBroadcastSender myBroadcastSender;
@@ -153,16 +159,27 @@ public class MonitorServiceBean implements IMonitorService {
 				recentOutcome.setResponseBody(nextOutcome.getResponseBody());
 				recentOutcome.setResponseType(nextOutcome.getResponseType());
 				recentOutcome.setFailDescription(nextOutcome.getFailureDescription());
-				recentOutcome.setTransactionMillis(nextOutcome.getHttpResponse().getResponseTime());
+				if (nextOutcome.getHttpResponse() != null) {
+					recentOutcome.setTransactionMillis(nextOutcome.getHttpResponse().getResponseTime());
+				}
 				recentOutcome.setTransactionTime(nextOutcome.getRequestStartedTime());
 				retVal.add(recentOutcome);
 
 				if (outcome != null) {
 					for (PersMonitorRuleFiringProblem next : outcome.getProblems()) {
-						if (next.getUrl().equals(recentOutcome.getImplementationUrl())) {
+						if (next.getUrl() == null || next.getUrl().equals(recentOutcome.getImplementationUrl())) {
 							recentOutcome.setFailed(true);
 						}
 					}
+				}
+
+				if (nextOutcome.getResponseType() == ResponseTypeEnum.FAIL) {
+					int code = nextOutcome.getHttpResponse() != null ? nextOutcome.getHttpResponse().getCode() : 0;
+					long latency = nextOutcome.getHttpResponse() != null ? nextOutcome.getHttpResponse().getResponseTime() : 0;
+					Failure failure = new Failure(nextOutcome.getResponseBody(), nextOutcome.getResponseContentType(), nextOutcome.getFailureDescription(), code, latency);
+					myRuntimeStatus.recordUrlFailure(recentOutcome.getImplementationUrl(), failure);
+				} else if (recentOutcome.getFailed() != Boolean.TRUE) {
+					myRuntimeStatus.recordUrlSuccess(recentOutcome.getImplementationUrl());
 				}
 
 				if (thePersistResults) {
@@ -262,36 +279,44 @@ public class MonitorServiceBean implements IMonitorService {
 		ArrayList<PersMonitorRuleFiringProblem> problems = new ArrayList<PersMonitorRuleFiringProblem>();
 
 		for (SidechannelOrchestratorResponseBean nextOutcome : theOutcomes) {
-			if (theCheck.getExpectLatencyUnderMillis() != null) {
-				long latency = nextOutcome.getHttpResponse().getResponseTime();
-				ourLog.debug("Active check testing if latency of {} exceeds target of {}", latency, theCheck.getExpectLatencyUnderMillis());
-				if (latency > theCheck.getExpectLatencyUnderMillis()) {
-					PersServiceVersionUrl url = nextOutcome.getHttpResponse().getSingleUrlOrThrow();
-					PersMonitorRuleFiringProblem prob = PersMonitorRuleFiringProblem.getInstanceForServiceLatency(theCheck.getServiceVersion(), latency, theCheck.getExpectLatencyUnderMillis(), null,
-							url);
-					prob.setActiveCheck(theCheck);
-					problems.add(prob);
-				}
+			if (nextOutcome.getResponseType() != theCheck.getExpectResponseType()) {
+				PersMonitorRuleFiringProblem prob = PersMonitorRuleFiringProblem.getInstanceForCheckFailure(theCheck.getServiceVersion(), nextOutcome.getFailureDescription());
+				prob.setActiveCheck(theCheck);
+				problems.add(prob);
 			}
 
-			if (StringUtils.isNotEmpty(theCheck.getExpectResponseContainsText())) {
-				boolean contains = nextOutcome.getResponseBody().contains(theCheck.getExpectResponseContainsText());
-				ourLog.debug("Active check testing if response contains \"{}\": {}", theCheck.getExpectResponseContainsText(), contains);
+			if (nextOutcome.getHttpResponse() != null) {
+				if (theCheck.getExpectLatencyUnderMillis() != null) {
+					long latency = nextOutcome.getHttpResponse().getResponseTime();
+					ourLog.debug("Active check testing if latency of {} exceeds target of {}", latency, theCheck.getExpectLatencyUnderMillis());
+					if (latency > theCheck.getExpectLatencyUnderMillis()) {
+						PersServiceVersionUrl url = nextOutcome.getHttpResponse().getSingleUrlOrThrow();
+						PersMonitorRuleFiringProblem prob = PersMonitorRuleFiringProblem.getInstanceForServiceLatency(theCheck.getServiceVersion(), latency, theCheck.getExpectLatencyUnderMillis(),
+								null, url);
+						prob.setActiveCheck(theCheck);
+						problems.add(prob);
+					}
+				}
 
-				if (!contains) {
+				if (StringUtils.isNotEmpty(theCheck.getExpectResponseContainsText())) {
+					boolean contains = nextOutcome.getResponseBody().contains(theCheck.getExpectResponseContainsText());
+					ourLog.debug("Active check testing if response contains \"{}\": {}", theCheck.getExpectResponseContainsText(), contains);
+
+					if (!contains) {
+						PersServiceVersionUrl url = nextOutcome.getHttpResponse().getSingleUrlOrThrow();
+						String message = Messages.getString("MonitorServiceBean.failedActiveCheckExpectText", theCheck.getExpectResponseContainsText());
+						PersMonitorRuleFiringProblem prob = PersMonitorRuleFiringProblem.getInstanceForUrlDown(theCheck.getServiceVersion(), url, message);
+						prob.setActiveCheck(theCheck);
+					}
+				}
+
+				ourLog.debug("Active check testing if outcome of {} matches expected {}", nextOutcome.getResponseType(), theCheck.getExpectResponseType());
+				if (nextOutcome.getResponseType() != theCheck.getExpectResponseType()) {
 					PersServiceVersionUrl url = nextOutcome.getHttpResponse().getSingleUrlOrThrow();
-					String message = Messages.getString("MonitorServiceBean.failedActiveCheckExpectText", theCheck.getExpectResponseContainsText());
+					String message = Messages.getString("MonitorServiceBean.failedActiveCheckExpectResponseType", nextOutcome.getResponseType(), theCheck.getExpectResponseType());
 					PersMonitorRuleFiringProblem prob = PersMonitorRuleFiringProblem.getInstanceForUrlDown(theCheck.getServiceVersion(), url, message);
 					prob.setActiveCheck(theCheck);
 				}
-			}
-
-			ourLog.debug("Active check testing if outcome of {} matches expected {}", nextOutcome.getResponseType(), theCheck.getExpectResponseType());
-			if (nextOutcome.getResponseType() != theCheck.getExpectResponseType()) {
-				PersServiceVersionUrl url = nextOutcome.getHttpResponse().getSingleUrlOrThrow();
-				String message = Messages.getString("MonitorServiceBean.failedActiveCheckExpectResponseType", nextOutcome.getResponseType(), theCheck.getExpectResponseType());
-				PersMonitorRuleFiringProblem prob = PersMonitorRuleFiringProblem.getInstanceForUrlDown(theCheck.getServiceVersion(), url, message);
-				prob.setActiveCheck(theCheck);
 			}
 
 		}
@@ -358,7 +383,7 @@ public class MonitorServiceBean implements IMonitorService {
 
 	@VisibleForTesting
 	void setRuntimeStatus(IRuntimeStatusQueryLocal theRuntimeStatus) {
-		myRuntimeStatus = theRuntimeStatus;
+		myRuntimeStatusQuery = theRuntimeStatus;
 	}
 
 	private PersMonitorRuleFiring evaluateRuleForPassiveIssues(PersMonitorRulePassive theRule) {
@@ -414,7 +439,7 @@ public class MonitorServiceBean implements IMonitorService {
 				for (PersServiceVersionMethod nextMethod : nextSvcVer.getMethods()) {
 					for (long nextTime : times) {
 						PersInvocationMethodSvcverStatsPk statsPk = new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.MINUTE, nextTime, nextMethod);
-						PersInvocationMethodSvcverStats stats = myRuntimeStatus.getInvocationStatsSynchronously(statsPk);
+						PersInvocationMethodSvcverStats stats = myRuntimeStatusQuery.getInvocationStatsSynchronously(statsPk);
 						totalTime += stats.getSuccessInvocationTotalTime();
 						totalTime += stats.getSuccessInvocationCount();
 					}
@@ -468,7 +493,7 @@ public class MonitorServiceBean implements IMonitorService {
 		BasePersMonitorRule retVal = myDao.saveMonitorRule(rule);
 
 		myBroadcastSender.monitorRulesChanged();
-		
+
 		// In case rules have been added or removed, so that the dashboard shows correctly
 		myBroadcastSender.notifyServiceCatalogChanged();
 
@@ -494,6 +519,11 @@ public class MonitorServiceBean implements IMonitorService {
 	@VisibleForTesting
 	void setMonitorNotifierForUnitTests(IMonitorNotifier theMock) {
 		myMonitorNotifier = theMock;
+	}
+
+	@VisibleForTesting
+	void setRuntimeStatus(RuntimeStatusBean theStatsSvc) {
+		myRuntimeStatus = theStatsSvc;
 	}
 
 }

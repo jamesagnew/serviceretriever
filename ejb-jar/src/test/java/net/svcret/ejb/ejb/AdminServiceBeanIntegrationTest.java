@@ -748,19 +748,45 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
+		// Domain
 		ModelUpdateRequest request = new ModelUpdateRequest();
+		request.addDomainToLoadStats(domain.getPid());
+		ModelUpdateResponse modelResp = mySvc.loadModelUpdate(request);
+		domain = modelResp.getDomainList().get(0);
+		testLoad60MinuteStats_CheckStats(domain);
+
+		// Service
+		request = new ModelUpdateRequest();
+		request.addServiceToLoadStats(svc.getPid());
+		modelResp = mySvc.loadModelUpdate(request);
+		domain = modelResp.getDomainList().get(0);
+		svc = domain.getServiceList().get(0);
+		testLoad60MinuteStats_CheckStats(svc);
+
+		// Service Version
+		request = new ModelUpdateRequest();
+		request.addVersionToLoadStats(svcVer.getPid());
+		modelResp = mySvc.loadModelUpdate(request);
+		domain = modelResp.getDomainList().get(0);
+		svc = domain.getServiceList().get(0);
+		svcVer = svc.getVersionList().get(0);
+		testLoad60MinuteStats_CheckStats(svcVer);
+
+		// Try again.. should we clear cache?
+		
+		request = new ModelUpdateRequest();
 		request.addDomainToLoadStats(domain.getPid());
 		request.addServiceToLoadStats(svc.getPid());
 		request.addVersionToLoadStats(svcVer.getPid());
-		ModelUpdateResponse modelResp = mySvc.loadModelUpdate(request);
+		modelResp = mySvc.loadModelUpdate(request);
 
 		domain = modelResp.getDomainList().get(0);
 		svc = domain.getServiceList().get(0);
 		svcVer = svc.getVersionList().get(0);
 
 		testLoad60MinuteStats_CheckStats(domain);
-		testLoad60MinuteStats_CheckStats(svc);
 		testLoad60MinuteStats_CheckStats(svcVer);
+		testLoad60MinuteStats_CheckStats(svc);
 
 	}
 

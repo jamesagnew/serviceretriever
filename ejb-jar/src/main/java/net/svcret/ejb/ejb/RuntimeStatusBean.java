@@ -401,6 +401,13 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	}
 
 	@Override
+	public void recordUrlSuccess(PersServiceVersionUrl theUrl) {
+		Validate.notNull(theUrl, "Url");
+		PersServiceVersionUrlStatus status = getUrlStatus(theUrl);
+		status.setStatus(StatusEnum.ACTIVE);
+	}
+
+	@Override
 	public void reloadUrlStatus(Long thePid) {
 		PersServiceVersionUrl url = myDao.getServiceVersionUrlByPid(thePid);
 

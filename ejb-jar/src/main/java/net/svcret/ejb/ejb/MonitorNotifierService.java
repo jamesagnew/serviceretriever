@@ -123,8 +123,10 @@ public class MonitorNotifierService implements IMonitorNotifier {
 			myService = theProblem.getServiceVersion().getService().getServiceName();
 			myVersion = theProblem.getServiceVersion().getVersionId();
 			
-			myUrlId = theProblem.getUrl().getUrlId();
-			myUrl = theProblem.getUrl().getUrl();
+			if (theProblem.getUrl() != null) {
+				myUrlId = theProblem.getUrl().getUrlId();
+				myUrl = theProblem.getUrl().getUrl();
+			}
 			
 			myRuleType = theProblem.getFiring().getRule().getRuleType();
 			

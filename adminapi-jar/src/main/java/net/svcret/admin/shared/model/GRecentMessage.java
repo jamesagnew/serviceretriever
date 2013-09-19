@@ -13,6 +13,7 @@ public class GRecentMessage extends BaseGObject {
 	private AuthorizationOutcomeEnum myAuthorizationOutcome;
 	private String myDomainName;
 	private long myDomainPid;
+	private String myFailDescription;
 	private String myImplementationUrlHref;
 	private String myImplementationUrlId;
 	private long myImplementationUrlPid;
@@ -32,6 +33,7 @@ public class GRecentMessage extends BaseGObject {
 	private String myServiceName;
 	private long myServicePid;
 	private String myServiceVersionId;
+
 	private long myServiceVersionPid;
 
 	private long myTransactionMillis;
@@ -67,6 +69,10 @@ public class GRecentMessage extends BaseGObject {
 
 	public long getDomainPid() {
 		return myDomainPid;
+	}
+
+	public String getFailDescription() {
+		return myFailDescription;
 	}
 
 	public String getImplementationUrlHref() {
@@ -203,6 +209,10 @@ public class GRecentMessage extends BaseGObject {
 
 	public void setDomainPid(long theDomainPid) {
 		myDomainPid = theDomainPid;
+	}
+
+	public void setFailDescription(String theFailDescription) {
+		myFailDescription=theFailDescription;
 	}
 
 	public void setImplementationUrlHref(String theImplementationUrlHref) {

@@ -26,6 +26,7 @@ import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
@@ -332,7 +333,7 @@ public abstract class BaseUrlGrid extends FlowPanel {
 				b.append("<li>Message: ");
 				b.append(message);
 				b.append("</li></ul>");
-				return new Label(b.toString());
+				return new HTML(b.toString());
 			}
 
 			return null;

@@ -4,6 +4,8 @@ import javax.ejb.Local;
 
 import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
 import net.svcret.ejb.ex.UnexpectedFailureException;
+import net.svcret.ejb.model.entity.BasePersServiceCatalogItem;
+import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.BasePersStats;
 import net.svcret.ejb.model.entity.BasePersStatsPk;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
@@ -35,6 +37,8 @@ public interface IRuntimeStatusQueryLocal {
 	void setMaxCachedNullStatCount(int theCount);
 
 	void setMaxCachedPopulatedStatCount(int theCount);
+
+	StatsAccumulator extract60MinuteStats(BasePersServiceCatalogItem theItem) throws UnexpectedFailureException;
 
 	
 }

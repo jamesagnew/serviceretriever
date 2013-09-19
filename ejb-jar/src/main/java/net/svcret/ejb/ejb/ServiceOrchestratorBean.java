@@ -601,9 +601,11 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 				responseBean = doHandleSideChannelRequest(theServiceVersionPid, theRequestBody, theContentType, theRequestedByString, nextUrl);
 				retVal.add(responseBean);
 			} catch (ProcessingException e) {
+				ourLog.debug("Failed to execute sidechannel request for URL", e);
 				responseBean = SidechannelOrchestratorResponseBean.forFailure(e, startedTime, nextUrl);
 				retVal.add(responseBean);
 			} catch (UnknownRequestException e) {
+				ourLog.debug("Failed to execute sidechannel request for URL", e);
 				responseBean = SidechannelOrchestratorResponseBean.forFailure(e, startedTime, nextUrl);
 				retVal.add(responseBean);
 			}

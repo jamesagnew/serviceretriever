@@ -1,6 +1,8 @@
 package net.svcret.ejb.model.entity;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.EnumType;
@@ -9,6 +11,8 @@ import javax.persistence.MappedSuperclass;
 
 import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
+import net.svcret.admin.shared.model.GRecentMessage;
+import net.svcret.admin.shared.model.Pair;
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
@@ -51,7 +55,8 @@ public abstract class BasePersSavedTransactionRecentMessage extends BasePersSave
 	public abstract BasePersServiceVersion getServiceVersion();
 
 	@Override
-	public void populate(Date theTransactionTime, HttpRequestBean theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, InvocationResponseResultsBean theInvocationResult, String theResponseBody) {
+	public void populate(Date theTransactionTime, HttpRequestBean theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, InvocationResponseResultsBean theInvocationResult,
+			String theResponseBody) {
 		setRequestHostIp(theRequest.getRequestHostIp());
 		super.populate(theTransactionTime, theRequest, theImplementationUrl, theRequestBody, theInvocationResult, theResponseBody);
 	}
@@ -78,6 +83,102 @@ public abstract class BasePersSavedTransactionRecentMessage extends BasePersSave
 		}
 	}
 
+	public GRecentMessage toDto(boolean theLoadMessageContents) {
+		GRecentMessage retVal = new GRecentMessage();
+
+		retVal.setPid(this.getPid());
+		PersServiceVersionUrl implementationUrl = this.getImplementationUrl();
+		if (implementationUrl != null) {
+			retVal.setImplementationUrlId(implementationUrl.getUrlId());
+			retVal.setImplementationUrlHref(implementationUrl.getUrl());
+			retVal.setImplementationUrlPid(implementationUrl.getPid());
+		}
+
+		BasePersServiceVersion svcVer = this.getServiceVersion();
+		if (svcVer != null) {
+			retVal.setDomainPid(svcVer.getService().getDomain().getPid());
+			retVal.setDomainName(svcVer.getService().getDomain().getDomainNameOrId());
+
+			retVal.setServicePid(svcVer.getService().getPid());
+			retVal.setServiceName(svcVer.getService().getServiceNameOrId());
+
+			retVal.setServiceVersionPid(svcVer.getPid());
+			retVal.setServiceVersionId(svcVer.getVersionId());
+		}
+
+		PersServiceVersionMethod method = this.getMethod();
+		if (method != null) {
+			retVal.setMethodPid(method.getPid());
+			retVal.setMethodName(method.getName());
+		}
+
+		retVal.setRecentMessageType(this.getRecentMessageType());
+		retVal.setRequestHostIp(this.getRequestHostIp());
+		retVal.setTransactionTime(this.getTransactionTime());
+		retVal.setTransactionMillis(this.getTransactionMillis());
+		retVal.setAuthorizationOutcome(this.getAuthorizationOutcome());
+		retVal.setFailDescription(this.getFailDescription());
+
+		if (theLoadMessageContents) {
+			int bodyIdx = this.getRequestBody().indexOf("\r\n\r\n");
+			if (bodyIdx == -1) {
+				retVal.setRequestMessage(this.getRequestBody());
+				retVal.setRequestHeaders(new ArrayList<Pair<String>>());
+				retVal.setRequestContentType("unknown");
+			} else {
+				retVal.setRequestMessage(this.getRequestBody().substring(bodyIdx + 4));
+				retVal.setRequestHeaders(toHeaders(this.getRequestBody().substring(0, bodyIdx)));
+				retVal.setRequestContentType(toHeaderContentType(retVal.getRequestHeaders()));
+			}
+
+			bodyIdx = this.getResponseBody().indexOf("\r\n\r\n");
+			if (bodyIdx == -1) {
+				retVal.setResponseMessage(this.getResponseBody());
+				retVal.setResponseHeaders(new ArrayList<Pair<String>>());
+				retVal.setResponseContentType("unknown");
+			} else {
+				retVal.setResponseMessage(this.getResponseBody().substring(bodyIdx + 4));
+				retVal.setResponseHeaders(toHeaders(this.getResponseBody().substring(0, bodyIdx)));
+				retVal.setResponseContentType(toHeaderContentType(retVal.getResponseHeaders()));
+			}
+
+		}
+
+		if (this instanceof PersServiceVersionRecentMessage) {
+			PersServiceVersionRecentMessage msg = (PersServiceVersionRecentMessage) this;
+			if (msg.getUser() != null) {
+				retVal.setRequestUserPid(msg.getUser().getPid());
+				retVal.setRequestUsername(msg.getUser().getUsername());
+			}
+		} else if (this instanceof PersUserRecentMessage) {
+			PersUserRecentMessage msg = (PersUserRecentMessage) this;
+			if (msg.getUser() != null) {
+				retVal.setRequestUserPid(msg.getUser().getPid());
+				retVal.setRequestUsername(msg.getUser().getUsername());
+			}
+		}
+
+		return retVal;
+	}
+
 	public abstract void trimUsingDao(IDao theDaoBean);
+
+	private static String toHeaderContentType(List<Pair<String>> theResponseHeaders) {
+		for (Pair<String> pair : theResponseHeaders) {
+			if (pair.getFirst().equalsIgnoreCase("content-type")) {
+				return pair.getSecond().split(";")[0].trim();
+			}
+		}
+		return null;
+	}
+
+	private static List<Pair<String>> toHeaders(String theHeaders) {
+		ArrayList<Pair<String>> retVal = new ArrayList<Pair<String>>();
+		for (String next : theHeaders.split("\\r\\n")) {
+			int idx = next.indexOf(": ");
+			retVal.add(new Pair<String>(next.substring(0, idx), next.substring(idx + 2)));
+		}
+		return retVal;
+	}
 
 }

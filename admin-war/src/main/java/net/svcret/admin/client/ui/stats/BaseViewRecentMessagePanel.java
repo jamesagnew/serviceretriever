@@ -118,7 +118,7 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 				while (myTopGrid.getRowCount() > 0) {
 					myTopGrid.removeRow(0);
 				}
-				
+
 				if (theResult.getOutcomeDescription() != null) {
 					myTopGrid.addRow("Outcome", new Label(theResult.getOutcomeDescription()));
 				}
@@ -126,14 +126,16 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 					myTopGrid.addRow("Authorization", new Label(theResult.getAuthorizationOutcome().getDescription()));
 				}
 				myTopGrid.addRow(MSGS.recentMessagesGrid_ColTimestamp(), new Label(DateUtil.formatTime(theResult.getTransactionTime())));
-				myTopGrid.addRow("Latency", theResult.getTransactionMillis()+"ms");
+				myTopGrid.addRow("Latency", theResult.getTransactionMillis() + "ms");
 				if (StringUtil.isNotBlank(theResult.getImplementationUrlId())) {
 					myTopGrid.addRow(MSGS.recentMessagesGrid_ColImplementationUrl(), new Anchor(theResult.getImplementationUrlId(), theResult.getImplementationUrlHref()));
 				}
 				if (StringUtil.isNotBlank(theResult.getRequestHostIp())) {
 					myTopGrid.addRow(MSGS.recentMessagesGrid_ColIp(), new Label(theResult.getRequestHostIp()));
 				}
-				
+				if (StringUtil.isNotBlank(theResult.getFailDescription())) {
+					myTopGrid.addRow(MSGS.recentMessagesGrid_ColFailDescription(), new Label(theResult.getFailDescription(), true));
+				}
 
 				/*
 				 * Request Message

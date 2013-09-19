@@ -378,7 +378,6 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 
 	private class MyTable extends FlexTable {
 		public MyTable() {
-			setCellFormatter(new MyCellFormatter());
 			sinkEvents(Event.ONMOUSEOVER | Event.ONMOUSEOUT);
 		}
 
@@ -418,12 +417,17 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 			super.onBrowserEvent(theEvent);
 
 			Element td = getEventTargetCell(theEvent);
-			if (td == null) {
+			if (td == null || !"TD".equalsIgnoreCase(td.getTagName())) {
 				return;
 			}
 
-			int rowStr = td.getPropertyInt("tablerow");
-			int colStr = td.getPropertyInt("tablecolumn");
+			Element tr = (Element) td.getParentNode();
+			if (tr==null || !"TR".equalsIgnoreCase(tr.getTagName())) {
+				return;
+			}
+			
+			int rowStr = indexWithinParent(tr);
+			int colStr = indexWithinParent(td);
 
 			switch (DOM.eventGetType(theEvent)) {
 			case Event.ONMOUSEOVER: {
@@ -475,22 +479,16 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 
 		}
 
-		@Override
-		public MyCellFormatter getFlexCellFormatter() {
-			return (MyCellFormatter) super.getFlexCellFormatter();
-		}
+	}
 
-		private class MyCellFormatter extends FlexCellFormatter {
-
-			@Override
-			protected Element ensureElement(int theRow, int theColumn) {
-				Element retVal = super.ensureElement(theRow, theColumn);
-				retVal.setPropertyInt("tablerow", (theRow));
-				retVal.setPropertyInt("tablecolumn", (theColumn));
-				return retVal;
+	public int indexWithinParent(Element theElement) {
+		Element parent = (Element)theElement.getParentNode();
+		for (int i = 0; i < parent.getChildCount(); i++) {
+			if (parent.getChild(i).equals(theElement)) {
+				return i;
 			}
-
 		}
+		return 0;
 	}
 
 }
