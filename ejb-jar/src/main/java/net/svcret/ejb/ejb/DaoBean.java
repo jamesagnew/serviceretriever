@@ -89,10 +89,10 @@ import net.svcret.ejb.model.entity.PersUserRecentMessage;
 import net.svcret.ejb.model.entity.PersUserServiceVersionMethodPermission;
 import net.svcret.ejb.model.entity.PersUserStatus;
 import net.svcret.ejb.model.entity.Queries;
-import net.svcret.ejb.model.entity.forward.PersServiceVersionForwarder;
 import net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp;
 import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
+import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
 import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.lang3.StringUtils;
@@ -548,7 +548,7 @@ public class DaoBean implements IDao {
 				retVal = new PersServiceVersionHl7OverHttp();
 				break;
 			case VIRTUAL:
-				retVal = new PersServiceVersionForwarder();
+				retVal = new PersServiceVersionVirtual();
 				break;
 			}
 
