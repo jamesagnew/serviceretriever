@@ -1306,8 +1306,14 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		// Ensure the HL7 over HTTP version got it's single method
 		version2 = (PersServiceVersionHl7OverHttp) mySvc.getServiceVersionByPid(version2.getPid());
-		assertEquals(1, version2.getMethods().size());
+		assertEquals(0, version2.getMethods().size());
 
+		newEntityManager();
+
+		BasePersServiceVersion virt = mySvc.getOrCreateServiceVersionWithId(service, "VIRT_ID", ServiceProtocolEnum.VIRTUAL);
+		
+		newEntityManager();
+		
 	}
 
 }
