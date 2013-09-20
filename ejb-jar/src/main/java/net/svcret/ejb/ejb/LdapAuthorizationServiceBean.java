@@ -63,20 +63,22 @@ public class LdapAuthorizationServiceBean extends BaseAuthorizationServiceBean<P
 			return new UserOrFailure(AuthorizationOutcomeEnum.FAILED_MISSING_USERNAME);
 		}
 
-		boolean validates = connection.validate(username, password);
-		if (!validates) {
-			return null;
-		}
-
 		PersUser user = theUserCatalog.findUser(theHost.getPid(), theCredentialGrabber.getUsername());
-
-		// TODO: auto-create user if needed (mayve refactor into common
-		// superclass or something?)
 
 		if (user == null) {
 			return new UserOrFailure(AuthorizationOutcomeEnum.FAILED_USER_UNKNOWN_TO_SR);
+			// TODO: auto-create user if needed (maybe refactor into common
+			// superclass or something?)
 		}
-		
+
+		boolean validates = connection.validate(username, password);
+		if (!validates) {
+			ourLog.debug("LDAP for user {} did not validate", username);
+			return new UserOrFailure(AuthorizationOutcomeEnum.FAILED_BAD_CREDENTIALS_IN_REQUEST);
+		}
+
+		ourLog.debug("LDAP for user {} validated successfully", username);
+
 		return new UserOrFailure(user);
 	}
 

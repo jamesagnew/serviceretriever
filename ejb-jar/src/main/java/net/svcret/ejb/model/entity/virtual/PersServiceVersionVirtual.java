@@ -6,6 +6,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.validation.constraints.NotNull;
 
+import org.hibernate.annotations.ForeignKey;
+
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 
@@ -18,6 +20,7 @@ public class PersServiceVersionVirtual extends BasePersServiceVersion {
 	@ManyToOne(cascade= {})
 	@JoinColumn(name="VIRTUAL_TARGET_PID", nullable=true)
 	@NotNull
+	@ForeignKey(name = "PX_SVCVER_VIRT_TARGET")
 	private BasePersServiceVersion myTarget;
 	
 	@Override

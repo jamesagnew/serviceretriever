@@ -138,30 +138,58 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		 * Process request
 		 */
 		InvocationResultsBean results;
+		AuthorizationResultsBean authorized;
+		PersServiceVersionMethod invokingMethod = null;
 		try {
+
+			/*
+			 * Process the invocation. This is the first part of handling a request, where we examine the request, determine where it's going and prep it for passing to the backend implementation
+			 * (which happens later)
+			 */
 			results = processInvokeService(theRequest, path, serviceVersion, theRequest.getRequestType(), theRequest.getQuery());
+			invokingMethod = results.getMethodDefinition();
+
+			/*
+			 * Security
+			 * 
+			 * Currently only active for method invocations
+			 */
+			authorized = processSecurity(theRequest, serviceVersion, results);
+
+			/*
+			 * Apply throttling if needed (may throw an exception if request is throttled)
+			 */
+			myThrottlingService.applyThrottle(theRequest, results, authorized);
+
 		} catch (UnknownRequestException e) {
-			handleInvocationFailure(theRequest, serviceVersion, null,new InvocationRequestFailedException(e),null,null);
+			ourLog.debug("Exception occurred", e);
+			handleInvocationFailure(theRequest, serviceVersion, invokingMethod, new InvocationRequestFailedException(e), null, null, ResponseTypeEnum.FAIL);
 			throw e;
 		} catch (InvocationFailedException e) {
-			handleInvocationFailure(theRequest, serviceVersion, null,e,null,null);
+			ourLog.debug("Exception occurred", e);
+			handleInvocationFailure(theRequest, serviceVersion, invokingMethod, e, null, null, ResponseTypeEnum.FAIL);
 			throw new ProcessingException(e);
+		} catch (ThrottleException e) {
+			ourLog.debug("Exception occurred", e);
+			/*
+			 * Don't handle this failure, it's the responsibility of the throttling service to do so
+			 */
+			throw e;
+		} catch (ThrottleQueueFullException e) {
+			ourLog.debug("Exception occurred", e);
+			/*
+			 * Don't handle this failure, it's the responsibility of the throttling service to do so
+			 */
+			throw e;
+		} catch (SecurityFailureException e) {
+			ourLog.debug("Exception occurred", e);
+			handleInvocationFailure(theRequest, serviceVersion, invokingMethod, new InvocationRequestFailedException(e), null, null, ResponseTypeEnum.SECURITY_FAIL);
+			throw e;
 		} catch (Exception e) {
-			handleInvocationFailure(theRequest, serviceVersion, null,new InvocationRequestFailedException(e),null,null);
+			ourLog.error("Unexpected failure", e);
+			handleInvocationFailure(theRequest, serviceVersion, invokingMethod, new InvocationRequestFailedException(e), null, null, ResponseTypeEnum.FAIL);
 			throw new ProcessingException(e);
 		}
-
-		/*
-		 * Security
-		 * 
-		 * Currently only active for method invocations
-		 */
-		AuthorizationResultsBean authorized = processSecurity(theRequest, serviceVersion, results);
-
-		/*
-		 * Apply throttling if needed (may throw an exception if request is throttled)
-		 */
-		myThrottlingService.applyThrottle(theRequest, results, authorized);
 
 		/*
 		 * Forward request to backend implementation
@@ -177,19 +205,20 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		return retVal;
 	}
 
-	private void handleInvocationFailure(HttpRequestBean theRequest, BasePersServiceVersion serviceVersion, PersServiceVersionMethod theMethodIfKnown, InvocationFailedException e,
-			PersUser theUserIfKnown, Long theThrottleDelayIfAnyAndKnown) throws ProcessingException{
+	private void handleInvocationFailure(HttpRequestBean theRequest, BasePersServiceVersion serviceVersion, PersServiceVersionMethod theMethodIfKnown, InvocationFailedException theInvocationFailure,
+			PersUser theUserIfKnown, Long theThrottleDelayIfAnyAndKnown, ResponseTypeEnum theResponseType) throws ProcessingException {
 		theRequest.drainInputMessage();
 
 		if (theMethodIfKnown != null) {
 			try {
 				InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
-				invocationResponseResultsBean.setResponseType(ResponseTypeEnum.FAIL);
-				myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), theRequest.getRequestBody().length(), theMethodIfKnown, theUserIfKnown, null, invocationResponseResultsBean, theThrottleDelayIfAnyAndKnown);
+				invocationResponseResultsBean.setResponseType(theResponseType);
+				myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), theRequest.getRequestBody().length(), theMethodIfKnown, theUserIfKnown, null, invocationResponseResultsBean,
+						theThrottleDelayIfAnyAndKnown);
 			} catch (UnexpectedFailureException e1) {
 				// Don't do anything except log here since we're already handling a failure by the
 				// time we get here so this is pretty much the last resort..
-				ourLog.error("Failed to record method invocation", e);
+				ourLog.error("Failed to record method invocation", e1);
 			}
 		}
 
@@ -197,8 +226,8 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		 * TODO: add some kind of statistic recording for svcVer failed requests that don't have a method associated
 		 */
 
-		myTransactionLogger.logTransaction(theRequest, serviceVersion, null, e.getUser(), theRequest.getRequestBody(), e.toInvocationResponse(), e.getImplementationUrl(), e.getHttpResponse(), null,
-				null);
+		myTransactionLogger.logTransaction(theRequest, serviceVersion, null, theUserIfKnown, theRequest.getRequestBody(), theInvocationFailure.toInvocationResponse(),
+				theInvocationFailure.getImplementationUrl(), theInvocationFailure.getHttpResponse(), null, null);
 	}
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
@@ -321,11 +350,11 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			try {
 				retVal = processRequestMethod(theRequest, results, theAuthorized, theThrottleTimeIfAny, true, null, theRequest.getRequestTime());
 			} catch (InvocationResponseFailedException e) {
-				handleInvocationFailure(theRequest, results.getMethodDefinition().getServiceVersion(), results.getMethodDefinition(), e, user, theThrottleTimeIfAny);
+				handleInvocationFailure(theRequest, results.getMethodDefinition().getServiceVersion(), results.getMethodDefinition(), e, user, theThrottleTimeIfAny, ResponseTypeEnum.FAIL);
 				throw new ProcessingException(e);
 			} catch (RuntimeException e) {
 				handleInvocationFailure(theRequest, results.getMethodDefinition().getServiceVersion(), results.getMethodDefinition(), new InvocationResponseFailedException(e,
-						"Invocation failed due to ServiceRetriever internal error: " + e.getMessage(), null), user, theThrottleTimeIfAny);
+						"Invocation failed due to ServiceRetriever internal error: " + e.getMessage(), null), user, theThrottleTimeIfAny, ResponseTypeEnum.FAIL);
 				throw new ProcessingException(e);
 			}
 			break;
@@ -616,6 +645,6 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 	@VisibleForTesting
 	void setServiceInvokerHl7OverhttpForUnitTests(ServiceInvokerHl7OverHttp theHl7Invoker) {
-		myServiceInvokerHl7OverHttp=theHl7Invoker;
+		myServiceInvokerHl7OverHttp = theHl7Invoker;
 	}
 }

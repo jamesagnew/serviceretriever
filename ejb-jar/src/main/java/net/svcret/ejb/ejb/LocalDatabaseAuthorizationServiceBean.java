@@ -18,7 +18,7 @@ public class LocalDatabaseAuthorizationServiceBean extends BaseAuthorizationServ
 	protected UserOrFailure doAuthorize(PersAuthenticationHostLocalDatabase theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException {
 		PersUser user = theUserCatalog.findUser(theHost.getPid(), theCredentialGrabber.getUsername());
 		if (user == null) {
-			return new UserOrFailure(AuthorizationOutcomeEnum.FAILED_BAD_CREDENTIALS_IN_REQUEST);
+			return new UserOrFailure(AuthorizationOutcomeEnum.FAILED_USER_UNKNOWN_TO_SR);
 		}
 		if (!user.checkPassword(theCredentialGrabber.getPassword())) {
 			return new UserOrFailure(AuthorizationOutcomeEnum.FAILED_BAD_CREDENTIALS_IN_REQUEST);

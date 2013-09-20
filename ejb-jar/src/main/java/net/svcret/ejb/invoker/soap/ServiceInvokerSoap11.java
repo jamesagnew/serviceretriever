@@ -76,10 +76,12 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 
 	private static final Set<String> ourValidContentTypes = new HashSet<String>();
 	private static XMLInputFactory ourXmlInputFactory;
+	
 	static {
 		ourValidContentTypes.add("text/xml");
 		ourValidContentTypes.add("application/soap+xml");
 	}
+	
 	@EJB
 	private IConfigService myConfigService;
 

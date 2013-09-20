@@ -584,28 +584,28 @@ public class ChartingServiceBean implements IChartingServiceBean {
 
 		LinearInterpolator avgPlot = new LinearInterpolator(timestamps, toDoublesFromDoubles(theInvCount));
 		graphDef.datasource("inv", avgPlot);
-		graphDef.area("inv", Color.GREEN, StringUtils.rightPad("Successful Calls", 20));
+		graphDef.area("inv", Color.decode("#00C000"), StringUtils.rightPad("Successful Calls", 20));
 		graphDef.gprint("inv", ConsolFun.AVERAGE, "Average %8.1f   ");
 		graphDef.gprint("inv", ConsolFun.MIN, "Min %8.1f   ");
 		graphDef.gprint("inv", ConsolFun.MAX, "Max %8.1f\\l");
 
 		LinearInterpolator avgFaultPlot = new LinearInterpolator(timestamps, toDoublesFromDoubles(theInvCountFault));
 		graphDef.datasource("invfault", avgFaultPlot);
-		graphDef.stack("invfault", Color.BLUE, StringUtils.rightPad("Faults", 20));
+		graphDef.stack("invfault", Color.decode("#6060C0"), StringUtils.rightPad("Faults", 20));
 		graphDef.gprint("invfault", ConsolFun.AVERAGE, "Average %8.1f   ");
 		graphDef.gprint("invfault", ConsolFun.MIN, "Min %8.1f   ");
 		graphDef.gprint("invfault", ConsolFun.MAX, "Max %8.1f\\l");
 
 		LinearInterpolator avgFailPlot = new LinearInterpolator(timestamps, toDoublesFromDoubles(theInvCountFail));
 		graphDef.datasource("invfail", avgFailPlot);
-		graphDef.stack("invfail", Color.GRAY, StringUtils.rightPad("Fails", 20));
+		graphDef.stack("invfail", Color.decode("#F00000"), StringUtils.rightPad("Fails", 20));
 		graphDef.gprint("invfail", ConsolFun.AVERAGE, "Average %8.1f   ");
 		graphDef.gprint("invfail", ConsolFun.MIN, "Min %8.1f   ");
 		graphDef.gprint("invfail", ConsolFun.MAX, "Max %8.1f\\l");
 
 		LinearInterpolator avgSecurityFailPlot = new LinearInterpolator(timestamps, toDoublesFromDoubles(theInvCountSecurityFail));
 		graphDef.datasource("invSecurityFail", avgSecurityFailPlot);
-		graphDef.stack("invSecurityFail", Color.RED, StringUtils.rightPad("Security Fails", 20));
+		graphDef.stack("invSecurityFail", Color.decode("#F0A000"), StringUtils.rightPad("Security Fails", 20));
 		graphDef.gprint("invSecurityFail", ConsolFun.AVERAGE, "Average %8.1f   ");
 		graphDef.gprint("invSecurityFail", ConsolFun.MIN, "Min %8.1f   ");
 		graphDef.gprint("invSecurityFail", ConsolFun.MAX, "Max %8.1f\\l");
