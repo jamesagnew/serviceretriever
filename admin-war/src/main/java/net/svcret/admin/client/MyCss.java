@@ -42,5 +42,12 @@ public interface MyCss extends CssResource {
 	String topPanelNodeStatusLabel();
 
 	String topPanelNodeStatusLabelContents();
+
+	String outerLayoutLeftBar();
+
+	String leftMenuComponent();
+
+	String leftMenuTitle();
+
 	
 }

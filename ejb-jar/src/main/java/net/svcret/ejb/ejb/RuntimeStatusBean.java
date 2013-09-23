@@ -790,6 +790,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		myNodeStatus.setNodeLastTransactionIfNewer(myInMemoryRecentTransactionSuccessCounter.getLastTransaction());
 		myDao.saveNodeStatus(myNodeStatus);
 
+		ourLog.debug("Node status {} successful transactions with {} in bean total. First entries: {}", myInMemoryRecentTransactionSuccessCounter.getTransactionsPerMinute(), myInMemoryRecentTransactionSuccessCounter.getSize(), myInMemoryRecentTransactionSuccessCounter.describeFirstTenEntries());
+		
 	}
 
 

@@ -10,6 +10,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import org.apache.commons.lang3.Validate;
+import org.hibernate.annotations.ForeignKey;
 
 @Entity
 @Table(name = "PX_MONITOR_APPLIES_TO")
@@ -19,6 +20,7 @@ public class PersMonitorAppliesTo extends BasePersObject {
 
 	@ManyToOne(cascade = {}, optional = true)
 	@JoinColumn(name = "DOMAIN_PID", nullable = true)
+	@ForeignKey(name="FK_PMAT_DOMAIN")
 	private PersDomain myDomain;
 
 	@Id
@@ -28,20 +30,23 @@ public class PersMonitorAppliesTo extends BasePersObject {
 
 	@ManyToOne(cascade = {}, optional = false)
 	@JoinColumn(name = "RULE_PID", nullable = false)
-	private BasePersMonitorRule myRule;
+	@ForeignKey(name="FK_PMAT_RULE")
+	private PersMonitorRulePassive myRule;
 
 	@ManyToOne(cascade = {}, optional = true)
 	@JoinColumn(name = "SVC_PID", nullable = true)
+	@ForeignKey(name="FK_PMAT_SVC")
 	private PersService myService;
 
 	@ManyToOne(cascade = {}, optional = true)
 	@JoinColumn(name = "SVCVER_PID", nullable = true)
+	@ForeignKey(name="FK_PMAT_SVCVER")
 	private BasePersServiceVersion myServiceVersion;
 
 	public PersMonitorAppliesTo() {
 	}
 
-	public PersMonitorAppliesTo(BasePersMonitorRule theRule, BasePersServiceCatalogItem theItem) {
+	public PersMonitorAppliesTo(PersMonitorRulePassive theRule, BasePersServiceCatalogItem theItem) {
 		Validate.notNull(theRule);
 		Validate.notNull(theItem);
 		
@@ -81,7 +86,7 @@ public class PersMonitorAppliesTo extends BasePersObject {
 		}
 	}
 
-	public void setRule(BasePersMonitorRule theRule) {
+	public void setRule(PersMonitorRulePassive theRule) {
 		myRule = theRule;
 	}
 

@@ -1,5 +1,6 @@
 package net.svcret.admin.client.ui.layout;
 
+import net.svcret.admin.client.MyResources;
 import net.svcret.admin.client.nav.PagesEnum;
 
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -10,10 +11,10 @@ public class LeftMenuComponent extends FlowPanel {
 
 	public LeftMenuComponent(String theTitle) {
 		
-		setStylePrimaryName("leftMenuComponent");
+		setStylePrimaryName(MyResources.CSS.leftMenuComponent());
 		
 		Label title = new Label(theTitle);
-		title.setStyleName("leftMenuTitle");
+		title.setStyleName(MyResources.CSS.leftMenuTitle());
 		add(title);
 		
 	}

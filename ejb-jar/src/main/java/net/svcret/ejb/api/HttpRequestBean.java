@@ -2,14 +2,21 @@ package net.svcret.ejb.api;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
 
 import net.svcret.ejb.ejb.CapturingReader;
 
 public class HttpRequestBean {
 
+	private String myBase;
+	private transient String myContentType;
+	private String myContextPath;
 	private CapturingReader myInputReader;
 	private String myPath;
 	private String myQuery;
@@ -18,25 +25,14 @@ public class HttpRequestBean {
 	private Date myRequestTime;
 	private RequestType myRequestType;
 
-	/**
-	 * @return the inputReader
-	 */
-	public Reader getInputReader() {
-		return myInputReader;
-	}
-
-	/**
-	 * @return the path
-	 */
-	public String getPath() {
-		return myPath;
-	}
-
-	/**
-	 * @return the query
-	 */
-	public String getQuery() {
-		return myQuery;
+	public void addHeader(String theHeader, String theValue) {
+		if (myRequestHeaders == null) {
+			myRequestHeaders = new HashMap<String, List<String>>();
+		}
+		if (!myRequestHeaders.containsKey(theHeader)) {
+			myRequestHeaders.put(theHeader, new ArrayList<String>());
+		}
+		myRequestHeaders.get(theHeader).add(theValue);
 	}
 
 	public void drainInputMessage() {
@@ -46,7 +42,77 @@ public class HttpRequestBean {
 			// ignore
 		}
 	}
-	
+
+	/**
+	 * Trailing "/" will be trimmed
+	 */
+	public String getBase() {
+		String path = StringUtils.defaultString(myBase);
+		if (path.length() > 0 && path.charAt(path.length() - 1) == '/') {
+			path = path.substring(0, path.length() - 1);
+		}
+		return path;
+	}
+
+	public String getContentType() {
+		if (myRequestHeaders == null) {
+			return null;
+		}
+		if (myContentType != null) {
+			return myContentType;
+		}
+		List<String> headerValues = myRequestHeaders.get("Content-Type");
+		if (headerValues == null || headerValues.isEmpty()) {
+			return null;
+		}
+
+		String retVal = headerValues.get(0);
+		int i = retVal.indexOf(';');
+		if (i < -1) {
+			retVal = retVal.substring(0, i);
+		}
+		myContentType = retVal.trim();
+		return retVal;
+	}
+
+	/**
+	 * Any trailing "/" will be trimmed
+	 */
+	public String getContextPath() {
+		String path = StringUtils.defaultString(myContextPath);
+		if (path.length() > 0 && path.charAt(path.length() - 1) == '/') {
+			path = path.substring(0, path.length() - 1);
+		}
+		return path;
+	}
+
+	/**
+	 * @return the inputReader
+	 */
+	public Reader getInputReader() {
+		return myInputReader;
+	}
+
+	/**
+	 * E.g. "/SAIL_Infrastructure_JournallingService/JournallingWebService"
+	 * 
+	 * Any trailing "/" will be trimmed
+	 */
+	public String getPath() {
+		String path = StringUtils.defaultString(myPath);
+		if (path.length() > 0 && path.charAt(path.length() - 1) == '/') {
+			path = path.substring(0, path.length() - 1);
+		}
+		return path;
+	}
+
+	/**
+	 * @return the query
+	 */
+	public String getQuery() {
+		return myQuery;
+	}
+
 	public String getRequestBody() {
 		return myInputReader.getCapturedString();
 	}
@@ -74,6 +140,14 @@ public class HttpRequestBean {
 	 */
 	public RequestType getRequestType() {
 		return myRequestType;
+	}
+
+	public void setBase(String theBase) {
+		myBase = theBase;
+	}
+
+	public void setContextPath(String theContextPath) {
+		myContextPath = theContextPath;
 	}
 
 	/**
@@ -122,24 +196,6 @@ public class HttpRequestBean {
 	 */
 	public void setRequestType(RequestType theRequestType) {
 		myRequestType = theRequestType;
-	}
-
-	public String getContentType() {
-		if (myRequestHeaders==null) {
-			return null;
-		}
-		List<String> headerValues = myRequestHeaders.get("Content-Type");
-		if (headerValues==null||headerValues.isEmpty()) {
-			return null;
-		}
-		
-		String retVal = headerValues.get(0);
-		int i = retVal.indexOf(';');
-		if (i < -1) {
-			retVal = retVal.substring(0, i);
-		}
-		retVal = retVal.trim();
-		return retVal;
 	}
 
 }

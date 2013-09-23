@@ -1,7 +1,6 @@
 package net.svcret.ejb.invoker.hl7;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -10,6 +9,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
+import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IResponseValidator;
@@ -64,25 +64,24 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 	}
 
 	@Override
-	public InvocationResultsBean processInvocation(BasePersServiceVersion theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, String theContentType,
-			Reader theReader) throws UnknownRequestException, InvocationRequestFailedException {
+	public InvocationResultsBean processInvocation(HttpRequestBean theRequest, BasePersServiceVersion theServiceDefinition) throws UnknownRequestException, InvocationRequestFailedException {
 		PersServiceVersionHl7OverHttp svc = (PersServiceVersionHl7OverHttp)theServiceDefinition;
 		
-		if (theRequestType != RequestType.POST) {
-			throw new UnknownRequestException(thePath, "HL7 over HTTP service at " + thePath + " requires all requests to be of type POST");
+		if (theRequest.getRequestType() != RequestType.POST) {
+			throw new UnknownRequestException(theRequest.getPath(), "HL7 over HTTP service at " + theRequest.getPath() + " requires all requests to be of type POST");
 		}
 
-		if ("application/hl7-v2".equals(theContentType)) {
-			ourLog.debug("Content type is {}", theContentType);
-		} else if ("application/hl7-v2+xml".equals(theContentType)) {
-			ourLog.debug("Content type is {}", theContentType);
+		if ("application/hl7-v2".equals(theRequest.getContentType())) {
+			ourLog.debug("Content type is {}", theRequest.getContentType());
+		} else if ("application/hl7-v2+xml".equals(theRequest.getContentType())) {
+			ourLog.debug("Content type is {}", theRequest.getContentType());
 		} else {
-			throw new UnknownRequestException(thePath,"HL7 over HTTP service cannot accept content type: " + theContentType);
+			throw new UnknownRequestException(theRequest.getPath(),"HL7 over HTTP service cannot accept content type: " + theRequest.getContentType());
 		}
 
 		String message;
 		try {
-			message = org.apache.commons.io.IOUtils.toString(theReader);
+			message = org.apache.commons.io.IOUtils.toString(theRequest.getInputReader());
 		} catch (IOException e) {
 			throw new InvocationRequestFailedException(e);
 		}
@@ -114,7 +113,7 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 		}
 
 		InvocationResultsBean retVal = new InvocationResultsBean();
-		retVal.setResultMethod(method, message, theContentType);
+		retVal.setResultMethod(method, message, theRequest.getContentType());
 		
 		return retVal;
 	}

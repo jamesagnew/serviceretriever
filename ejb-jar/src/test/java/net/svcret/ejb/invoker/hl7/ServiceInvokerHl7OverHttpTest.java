@@ -8,6 +8,7 @@ import java.io.StringReader;
 import java.util.HashMap;
 import java.util.List;
 
+import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IServiceRegistry;
@@ -54,7 +55,14 @@ public class ServiceInvokerHl7OverHttpTest {
 		when(myDao.getServiceVersionByPid(111L)).thenReturn(dbSvcVer);
 		when(myServiceRegistry.saveServiceVersion(dbSvcVer)).thenReturn(dbSvcVer);
 		
-		InvocationResultsBean result = mySvc.processInvocation(svcVer, RequestType.POST, "/Some/System", "", "application/hl7-v2", new StringReader(msgS));
+		HttpRequestBean req = new HttpRequestBean();
+		req.setPath("/Some/System");
+		req.setQuery("");
+		req.addHeader("Content-Type", "application/hl7-v2");
+		req.setRequestType(RequestType.POST);
+		req.setInputReader(new StringReader(msgS));
+		InvocationResultsBean result = mySvc.processInvocation(req,svcVer);
+
 		
 		verify(myServiceRegistry).saveServiceVersion(eq(dbSvcVer));
 		PersServiceVersionMethod method = dbSvcVer.getMethod("ADT");

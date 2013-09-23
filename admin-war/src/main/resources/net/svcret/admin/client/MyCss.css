@@ -18,6 +18,30 @@
 	margin-top: 8px;
 }
 
+.leftMenuComponent {
+	margin-top: 6px;
+	margin-left: 10px;
+	margin-right: 10px;
+	background-color: #FFFFFF;
+	padding: 0px;
+	border: 1px solid #CCE;
+	border-top-right-radius: 10px;
+}
+
+.leftMenuTitle {
+	/* background: #A5D1F3; */
+	background: #D0D0D0;
+	color: #808080;
+	font-size: 1.5em;
+	border-top-right-radius: 10px;
+	padding-left: 5px;
+}
+
+.outerLayoutLeftBar {
+	background-color: #E0E0E0;
+	overflow-y: auto;
+}
+
 .methodRootElementBlock {
 	max-width: 100px;
 	overflow: hidden;

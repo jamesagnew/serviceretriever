@@ -97,6 +97,8 @@ public class ServiceServlet extends HttpServlet {
 			request.setRequestHostIp(requestHostIp);
 			request.setPath(path);
 			request.setQuery(query);
+			request.setBase(base);
+			request.setContextPath(contextPath);
 			request.setInputReader(theReq.getReader());
 			request.setRequestTime(new Date(start));
 

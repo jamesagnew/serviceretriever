@@ -374,7 +374,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
 		ServiceInvokerSoap11 invoker = mock(ServiceInvokerSoap11.class);
 		mySvc.setSoap11ServiceInvoker(invoker);
-		when(invoker.processInvocation(any(BasePersServiceVersion.class), any(RequestType.class), any(String.class), any(String.class), any(String.class),any(Reader.class))).thenThrow(NullPointerException.class);
+		when(invoker.processInvocation(any(HttpRequestBean.class), any(BasePersServiceVersion.class))).thenThrow(NullPointerException.class);
 		
 		OrchestratorResponseBean resp = null;
 		String query = "";

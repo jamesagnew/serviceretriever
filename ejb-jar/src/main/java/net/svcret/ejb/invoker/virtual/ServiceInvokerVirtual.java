@@ -1,16 +1,15 @@
 package net.svcret.ejb.invoker.virtual;
 
-import java.io.Reader;
 import java.util.Set;
 
 import javax.ejb.Stateless;
 
+import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
-import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
@@ -44,9 +43,9 @@ public class ServiceInvokerVirtual extends BaseServiceInvoker implements IServic
 	}
 
 	@Override
-	public InvocationResultsBean processInvocation(BasePersServiceVersion theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, String theContentType, Reader theReader)
+	public InvocationResultsBean processInvocation(HttpRequestBean theRequest, BasePersServiceVersion theServiceDefinition)
 			throws UnknownRequestException, InvocationRequestFailedException, InvocationFailedException {
-		return determineInvoker(theServiceDefinition).processInvocation(theServiceDefinition, theRequestType, thePath, theQuery, theContentType, theReader);
+		return determineInvoker(theServiceDefinition).processInvocation(theRequest,theServiceDefinition);
 	}
 
 	@Override

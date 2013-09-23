@@ -10,6 +10,27 @@ import org.junit.Test;
 public class RecentTransactionQueueTest {
 
 	@Test
+	public void testLotsOfRecent() {
+		Date now = new Date();
+		
+		RecentTransactionQueue q = new RecentTransactionQueue();
+		assertEquals(0.0, q.getTransactionsPerMinute(), 0.0);
+
+		q.addDate(new Date(now.getTime() - (3 * DateUtils.MILLIS_PER_MINUTE)));
+		q.addDate(new Date(now.getTime() - (2 * DateUtils.MILLIS_PER_MINUTE)));
+		q.addDate(new Date(now.getTime() - (1 * DateUtils.MILLIS_PER_MINUTE)));
+		q.addDate(new Date(now.getTime() - (0 * DateUtils.MILLIS_PER_MINUTE)));
+		
+		assertEquals(2.0, q.getTransactionsPerMinute(), 1.0);
+
+		q.addDate(new Date(now.getTime() - (0 * DateUtils.MILLIS_PER_MINUTE)));
+		q.addDate(new Date(now.getTime() - (0 * DateUtils.MILLIS_PER_MINUTE)));
+		
+		assertEquals(4.0, q.getTransactionsPerMinute(), 1.0);
+
+	}
+	
+	@Test
 	public void testIt() {
 		Date now = new Date();
 		

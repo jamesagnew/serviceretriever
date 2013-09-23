@@ -4,6 +4,7 @@ import static net.svcret.admin.client.AdminPortal.*;
 
 import java.util.ArrayList;
 
+import net.svcret.admin.client.MyResources;
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.nav.PagesEnum;
 import net.svcret.admin.client.ui.components.CssConstants;
@@ -32,7 +33,7 @@ public class LeftBarPanel extends FlowPanel {
 	private Hyperlink myStickySessionsBtn;
 
 	public LeftBarPanel() {
-		setStylePrimaryName("outerLayoutLeftBar");
+		setStylePrimaryName(MyResources.CSS.outerLayoutLeftBar());
 		
 		myAllButtons = new ArrayList<Hyperlink>();
 		

@@ -6,31 +6,26 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.XmlType;
+
+import net.svcret.admin.shared.util.XmlConstants;
+
+@XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="DomainList")
+@XmlRootElement(namespace=XmlConstants.DTO_NAMESPACE, name="DomainList")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class GDomainList extends BaseDtoList<GDomain> {
 
 	private static final long serialVersionUID = 1L;
 
+	@XmlTransient
 	private transient Map<Long, BaseGServiceVersion> myPidToServiceVersion;
+
+	@XmlTransient
 	private transient Map<Long, GServiceVersionUrl> myPidToUrl;
-
-	// public GDomain getDomainByPid(String theDomainId) {
-	// if (StringUtil.isBlank(theDomainId)) {
-	// return null;
-	// }
-	//
-	// long pid = -1;
-	// try {
-	// pid = Long.parseLong(theDomainId);
-	// } catch (Exception e) {
-	// GWT.log("Failed to parse value: " + theDomainId, e);
-	// }
-	// return getDomainByPid(pid);
-	// }
-
-	// public void merge(GDomain theResult) {
-	// GDomain original = getDomainByPid(theResult.getPid() + "");
-	// original.merge(theResult);
-	// }
 
 	public GDomainList() {
 		setComparator(new BaseGDashboardObjectComparator());

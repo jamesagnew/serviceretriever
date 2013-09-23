@@ -1,16 +1,15 @@
 package net.svcret.ejb.invoker;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
-import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
@@ -25,7 +24,7 @@ import net.svcret.ejb.model.entity.BasePersServiceVersion;
 public interface IServiceInvoker {
 
 	/**
-	 * @param theServiceVersion 
+	 * @param theServiceVersion
 	 * @param theIncomingHeaders
 	 *            The headers which arrived on the incoming request
 	 * @return The headers which should be passed to the backing URL requests
@@ -71,10 +70,11 @@ public interface IServiceInvoker {
 	 * @throws ProcessingException
 	 * @throws InvocationFailedException
 	 */
-	InvocationResultsBean processInvocation(BasePersServiceVersion theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, String theContentType, Reader theReader)
-			throws UnknownRequestException, InvocationRequestFailedException, InvocationFailedException;
+	InvocationResultsBean processInvocation(HttpRequestBean theRequest, BasePersServiceVersion theServiceDefinition) throws UnknownRequestException, InvocationRequestFailedException,
+			InvocationFailedException;
 
-	InvocationResponseResultsBean processInvocationResponse(BasePersServiceVersion theServiceDefinition, HttpResponseBean theResponse) throws InvocationResponseFailedException, InvocationFailedDueToInternalErrorException;
+	InvocationResponseResultsBean processInvocationResponse(BasePersServiceVersion theServiceDefinition, HttpResponseBean theResponse) throws InvocationResponseFailedException,
+			InvocationFailedDueToInternalErrorException;
 
 	IResponseValidator provideInvocationResponseValidator(BasePersServiceVersion theServiceDefinition);
 

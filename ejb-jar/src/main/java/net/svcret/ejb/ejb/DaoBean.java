@@ -1096,13 +1096,13 @@ public class DaoBean implements IDao {
 
 		if (theRule instanceof PersMonitorRuleActive) {
 			for (PersMonitorRuleActiveCheck next : ((PersMonitorRuleActive) theRule).getActiveChecks()) {
-				next.setRule(theRule);
+				next.setRule((PersMonitorRuleActive) theRule);
 			}
 		}
 
 		if (theRule instanceof PersMonitorRulePassive) {
 			for (PersMonitorAppliesTo next : ((PersMonitorRulePassive) theRule).getAppliesTo()) {
-				next.setRule(theRule);
+				next.setRule((PersMonitorRulePassive) theRule);
 			}
 		}
 
@@ -1137,7 +1137,7 @@ public class DaoBean implements IDao {
 
 		if (theRule instanceof PersMonitorRulePassive) {
 			for (PersMonitorAppliesTo next : ((PersMonitorRulePassive) theRule).getAppliesTo()) {
-				next.setRule(theRule);
+				next.setRule((PersMonitorRulePassive) theRule);
 			}
 		}
 

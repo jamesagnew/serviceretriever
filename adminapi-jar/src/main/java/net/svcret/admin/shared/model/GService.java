@@ -4,11 +4,27 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.XmlType;
+
+import net.svcret.admin.shared.util.XmlConstants;
+
+@XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="Service")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class GService extends BaseDtoServiceCatalogItem {
 
 	private static final long serialVersionUID = 1L;
+	
+	@XmlElement(name="config_Active")
 	private boolean myActive;
+	
+	@XmlElement(name="config_VersionList")
 	private GServiceVersionList myVersionList = new GServiceVersionList();;
+	
+	@XmlTransient
 	private transient Set<Long> myServiceVersionPids = new HashSet<Long>();
 
 	public GServiceVersionList getVersionList() {

@@ -33,7 +33,7 @@ public class TopBarPanel extends DockLayoutPanel {
 		RootPanel.getBodyElement().appendChild(titleBanner.getElement());
 
 		FlowPanel nodesPanel = new FlowPanel();
-		addEast(nodesPanel, 200);
+		addEast(nodesPanel, 275);
 		myNodesContentPanel = new FlowPanel();
 		myNodesContentPanel.addStyleName(MyResources.CSS.topPanelNodeStatusLabelContents());
 		nodesPanel.add(myNodesContentPanel);

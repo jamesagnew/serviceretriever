@@ -1,7 +1,9 @@
 package net.svcret.ejb.runtimestatus;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.ListIterator;
 
 import org.apache.commons.lang3.time.DateUtils;
 
@@ -25,7 +27,7 @@ public class RecentTransactionQueue {
 
 	public double getTransactionsPerMinute() {
 		Date start = new Date();
-		Date nextCutoff = DateUtils.addMinutes(start, 1);
+		Date nextCutoff = DateUtils.addMinutes(start, -1);
 
 		boolean havePassedOneMinute = false;
 		boolean havePassedFiveMinutes = false;
@@ -34,19 +36,19 @@ public class RecentTransactionQueue {
 		for (Date next : myRecentDates) {
 			count++;
 
-			if (next.after(nextCutoff)) {
+			if (next.before(nextCutoff)) {
 				if (!havePassedOneMinute) {
 					if (count > 1) {
 						return ((double) count - 1);
 					}
 					havePassedOneMinute = true;
-					nextCutoff = DateUtils.addMinutes(start, 5);
+					nextCutoff = DateUtils.addMinutes(start, -5);
 				} else if (!havePassedFiveMinutes) {
 					if (count > 1) {
 						return ((double) count - 1) / 5.0;
 					}
 					havePassedFiveMinutes = true;
-					nextCutoff = DateUtils.addMinutes(start, 10);
+					nextCutoff = DateUtils.addMinutes(start, -10);
 				} else if (!havePassedTenMinutes) {
 					if (count > 1) {
 						return ((double) count - 1) / 10.0;
@@ -55,6 +57,7 @@ public class RecentTransactionQueue {
 					}
 				}
 			}
+			
 		}
 
 		if (myRecentDates.size() > 1) {
@@ -71,7 +74,7 @@ public class RecentTransactionQueue {
 				double spanMultiplier = DateUtils.MILLIS_PER_MINUTE / span;
 				spanMultiplier = Math.max(spanMultiplier, 0.0001d);
 				return spanMultiplier * MAX_SIZE;
-			}else {
+			} else {
 				return myRecentDates.size();
 			}
 		}
@@ -81,6 +84,29 @@ public class RecentTransactionQueue {
 
 	public Date getLastTransaction() {
 		return myRecentDates.peekFirst();
+	}
+
+	public int getSize() {
+		return myRecentDates.size();
+	}
+
+	public String describeFirstTenEntries() {
+		SimpleDateFormat fmt = new SimpleDateFormat("HH:mm:ss.SSS");
+		StringBuilder b = new StringBuilder();
+
+		for (ListIterator<Date> iterator = myRecentDates.listIterator(); iterator.hasNext();) {
+			Date next = iterator.next();
+			if (b.length() > 0) {
+				b.append(", ");
+			}
+			b.append(fmt.format(next));
+
+			if (iterator.nextIndex() > 10) {
+				break;
+			}
+		}
+
+		return b.toString();
 	}
 
 }

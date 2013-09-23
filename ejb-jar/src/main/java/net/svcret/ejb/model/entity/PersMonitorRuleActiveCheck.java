@@ -23,6 +23,8 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.ForeignKey;
+
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
@@ -72,7 +74,8 @@ public class PersMonitorRuleActiveCheck extends BasePersObject {
 
 	@ManyToOne(cascade = {}, optional = false)
 	@JoinColumn(name = "RULE_PID", nullable = false)
-	private BasePersMonitorRule myRule;
+	@ForeignKey(name="FK_PMAC_RULE")
+	private PersMonitorRuleActive myRule;
 
 	@ManyToOne(cascade = {}, optional = false)
 	@JoinColumn(name = "SVCVER_PID", nullable = false)
@@ -171,7 +174,7 @@ public class PersMonitorRuleActiveCheck extends BasePersObject {
 		myPid = thePid;
 	}
 
-	public void setRule(BasePersMonitorRule theRule) {
+	public void setRule(PersMonitorRuleActive theRule) {
 		myRule = theRule;
 	}
 

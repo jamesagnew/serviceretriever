@@ -14,6 +14,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
+import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IHttpClient;
@@ -80,18 +81,26 @@ public class ServiceInvokerSoap11Test {
 		when(configService.getConfig()).thenReturn(config);
 		
 		DefaultAnswer.setRunTime();
-		
-		InvocationResultsBean result = svc.processInvocation(svcVersion, RequestType.GET, "/Some/Path", "?wsdl", "text/xml", new StringReader(""));
+
+		HttpRequestBean req = new HttpRequestBean();
+		req.setInputReader(new StringReader(""));
+		req.setRequestType(RequestType.GET);
+		req.setPath("/Some/Path");
+		req.setQuery("?wsdl");
+		req.addHeader("Content-Type", "text/xml");
+		req.setBase("http://localhost:26080");
+		req.setContextPath("");
+		InvocationResultsBean result = svc.processInvocation(req, svcVersion);
 
 		assertEquals(InvocationResultsBean.ResultTypeEnum.STATIC_RESOURCE, result.getResultType());
 		assertEquals(Constants.CONTENT_TYPE_XML, result.getStaticResourceContentTyoe());
 
 		ourLog.info("Wsdl Outputted:\n{}", result.getStaticResourceText());
 
-		assertTrue(result.getStaticResourceText().contains("<xsd:import namespace=\"urn:2\" schemaLocation=\"http://foo%20bar/Some/Path?xsd&amp;xsdnum=100\"/>"));
+		assertTrue(result.getStaticResourceText(), result.getStaticResourceText().contains("<xsd:import namespace=\"urn:2\" schemaLocation=\"http://localhost:26080/Some/Path?xsd&amp;xsdnum=100\"/>"));
 		assertEquals("http://the_wsdl_url", result.getStaticResourceUrl());
 		
-		assertTrue(result.getStaticResourceText().contains("<wsdlsoap:address location=\"http://foo%20bar/Some/Path\"/>"));
+		assertTrue(result.getStaticResourceText().contains("<wsdlsoap:address location=\"http://localhost:26080/Some/Path\"/>"));
 		
 	}
 
@@ -169,8 +178,15 @@ public class ServiceInvokerSoap11Test {
 		when(svcVersion.getResourceForUri("http://the_wsdl_url")).thenReturn(wsdlResource);
 
 		ServiceInvokerSoap11 svc = new ServiceInvokerSoap11();
-		InvocationResultsBean result = svc.processInvocation(svcVersion, RequestType.GET, "/Some/Path", "?xsd&xsdnum=100","text/xml",  new StringReader(""));
 
+		HttpRequestBean req = new HttpRequestBean();
+		req.setInputReader(new StringReader(""));
+		req.setRequestType(RequestType.GET);
+		req.setPath("/Some/Path");
+		req.setQuery("?xsd&xsdnum=100");
+		InvocationResultsBean result = svc.processInvocation(req, svcVersion);
+
+		
 		assertEquals(InvocationResultsBean.ResultTypeEnum.STATIC_RESOURCE, result.getResultType());
 		assertEquals(Constants.CONTENT_TYPE_XML, result.getStaticResourceContentTyoe());
 
@@ -210,7 +226,13 @@ public class ServiceInvokerSoap11Test {
 
 		ServiceInvokerSoap11 svc = new ServiceInvokerSoap11();
 		try {
-			svc.processInvocation(serviceVer, RequestType.POST, "/Some/Path", "", "text/xml", reader);
+			HttpRequestBean req = new HttpRequestBean();
+			req.setInputReader(reader);
+			req.setRequestType(RequestType.POST);
+			req.setPath("/Some/Path");
+			req.setQuery("");
+			svc.processInvocation(req, serviceVer);
+
 			fail();
 		} catch (UnknownRequestException e) {
 			// good!
@@ -247,7 +269,15 @@ public class ServiceInvokerSoap11Test {
 		when(serviceVer.getServerAuths()).thenReturn(serverAuths);
 
 		ServiceInvokerSoap11 svc = new ServiceInvokerSoap11();
-		InvocationResultsBean result = svc.processInvocation(serviceVer, RequestType.POST, "/Some/Path", "", "text/xml", reader);
+		
+		HttpRequestBean req = new HttpRequestBean();
+		req.setInputReader(reader);
+		req.setRequestType(RequestType.POST);
+		req.setPath("/Some/Path");
+		req.setQuery("");
+		req.addHeader("Content-Type", "text/xml");
+		InvocationResultsBean result = svc.processInvocation(req, serviceVer);
+
 		
 		assertEquals("user", result.getCredentialsInRequest(serverAuths.get(0)).getUsername());
 		assertEquals("pass", result.getCredentialsInRequest(serverAuths.get(0)).getPassword());

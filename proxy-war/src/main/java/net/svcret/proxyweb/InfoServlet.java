@@ -50,7 +50,14 @@ public class InfoServlet extends HttpServlet {
     	w.append("QueryString: " + theReq.getQueryString() + "<br/>");
     	w.append("RequestUrl: " + theReq.getRequestURL() + "<br/>");
     	w.append("RequestUri: " + theReq.getRequestURI() + "<br/>");
-    	
+    	w.append("ContextPath: " + theReq.getContextPath() + "<br/>");
+
+    	w.append("PathInfo: " + theReq.getPathInfo() + "<br/>");
+    	w.append("PathTranslated: " + theReq.getPathTranslated() + "<br/>");
+
+    	w.append("ServletPath: " + theReq.getServletPath() + "<br/>");
+    	w.append("ServletPath: " + theReq.getServletPath() + "<br/>");
+
     	w.append("</body>");
     	w.append("</html>");
     	

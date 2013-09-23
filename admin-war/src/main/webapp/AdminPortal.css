@@ -334,25 +334,6 @@ H1 {
 	color: #000000 !important;
 }
 
-.leftMenuComponent {
-	margin-top: 6px;
-	margin-left: 10px;
-	margin-right: 10px;
-	width: 180px;
-	background-color: #FFFFFF;
-	padding: 0px;
-	/* border: 1px solid #6194BC; */
-	border-top-right-radius: 10px;
-}
-
-.leftMenuTitle {
-	/* background: #A5D1F3; */
-	background: #D0D0D0;
-	color: #808080;
-	font-size: 1.5em;
-	border-top-right-radius: 10px;
-	padding-left: 5px;
-}
 
 .listSelectionDesc {
 	font-size: 0.9em;
@@ -432,14 +413,6 @@ TABLE.listTable TBODY TR:nth-child(odd) {
 	*/
 }
 
-.outerLayoutLeftBar {
-	
-}
-
-.outerLayoutLeftBar {
-	background-color: #E0E0E0;
-	/* border-right: 1px solid #FFFFFF; */
-}
 
 .outerLayoutMain {
 	

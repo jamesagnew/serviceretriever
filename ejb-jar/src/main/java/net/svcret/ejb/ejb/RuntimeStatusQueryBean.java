@@ -513,14 +513,6 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 				int theirIndex = theSource.myTimestamps.indexOf(nextDate.getTime());
 				int thisIndex = myTimestamps.indexOf(nextDate.getTime());
 
-				if (theirIndex == -1) {
-					List<Date> theirDates = new ArrayList<Date>();
-					for (long next : theSource.myTimestamps) {
-						theirDates.add(new Date(next));
-					}
-					ourLog.info("Didn't find date {} in list:\n{}", nextDate.getTime(), theirDates);
-				}
-
 				if (thisIndex == -1) {
 					myTimestamps.add(nextDate.getTime());
 				}

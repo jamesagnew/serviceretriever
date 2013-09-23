@@ -9,6 +9,7 @@ import java.util.Set;
 import javax.ejb.Stateless;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
+import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
@@ -28,7 +29,6 @@ import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcClientAuth;
 import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcCredentialGrabber;
 import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcServerAuth;
 import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
-import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.io.IOUtils;
 
@@ -246,16 +246,14 @@ public class JsonRpc20ServiceInvoker extends BaseServiceInvoker implements IServ
 	}
 
 	@Override
-	public InvocationResultsBean processInvocation(BasePersServiceVersion theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, String theContentType, Reader theReader)
-			throws UnknownRequestException, InvocationRequestFailedException {
-		Validate.notNull(theReader, "Reader");
-		if (theRequestType != RequestType.POST) {
-			throw new UnknownRequestException(thePath, "This service requires all requests to be of type HTTP POST");
+	public InvocationResultsBean processInvocation(HttpRequestBean theRequest, BasePersServiceVersion theServiceDefinition)	throws UnknownRequestException, InvocationRequestFailedException {
+		if (theRequest.getRequestType() != RequestType.POST) {
+			throw new UnknownRequestException("This service requires all requests to be of type HTTP POST");
 		}
 
 		InvocationResultsBean retVal;
 		try {
-			retVal = doProcessInvocation((PersServiceVersionJsonRpc20) theServiceDefinition, theReader);
+			retVal = doProcessInvocation((PersServiceVersionJsonRpc20) theServiceDefinition, theRequest.getInputReader());
 		} catch (IOException e) {
 			throw new InvocationRequestFailedException(e);
 		}

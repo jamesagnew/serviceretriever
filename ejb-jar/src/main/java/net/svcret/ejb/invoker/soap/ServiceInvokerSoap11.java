@@ -30,25 +30,23 @@ import javax.xml.stream.events.XMLEvent;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.Messages;
+import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
-import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.ProcessingRuntimeException;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.invoker.BaseServiceInvoker;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
-import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
@@ -147,30 +145,30 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 		}
 	}
 
-	private void doHandleGet(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, String thePath, String theQuery) throws UnknownRequestException,
+	private void doHandleGet(HttpRequestBean theRequest, InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, String thePath, String theQuery) throws UnknownRequestException,
 			InvocationFailedDueToInternalErrorException {
 
 		if (theQuery.toLowerCase().equals("?wsdl")) {
-			doHandleGetWsdl(theResults, theServiceDefinition, thePath);
+			doHandleGetWsdl(theRequest, theResults, theServiceDefinition);
 		} else if (theQuery.startsWith("?xsd")) {
-			doHandleGetXsd(theResults, theServiceDefinition, thePath, theQuery);
+			doHandleGetXsd(theRequest, theResults, theServiceDefinition);
 		} else {
 			throw new UnknownRequestException("Unknown service request: " + thePath + theQuery);
 		}
 
 	}
 
-	private void doHandleGetWsdl(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, final String thePath) throws InvocationFailedDueToInternalErrorException {
-
+	private void doHandleGetWsdl(final HttpRequestBean theRequest, InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition) throws InvocationFailedDueToInternalErrorException {
+		final String pathBase = toPathBase(theRequest);
+		
 		ICreatesImportUrl urlCreator = new ICreatesImportUrl() {
 			@Override
 			public String createImportUrlForSchemaImport(PersServiceVersionResource theResource) throws InvocationFailedDueToInternalErrorException {
-				String pathBase = urlEncode(getUrlBase() + thePath);
 				return pathBase + "?xsd&xsdnum=" + theResource.getPid();
 			}
 		};
 
-		String resourceText = renderWsdl(theServiceDefinition, thePath, urlCreator);
+		String resourceText = renderWsdl(theServiceDefinition, pathBase, urlCreator);
 		String contentType = Constants.CONTENT_TYPE_XML;
 		Map<String, List<String>> headers = new HashMap<String, List<String>>();
 		String wsdlUrl = theServiceDefinition.getWsdlUrl();
@@ -179,8 +177,15 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 
 	}
 
-	private void doHandleGetXsd(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, String thePath, String theQuery) throws UnknownRequestException {
-		StringTokenizer tok = new StringTokenizer(theQuery, "&");
+	private String toPathBase(final HttpRequestBean theRequest) {
+		String base = theRequest.getBase();
+		String contextPath = theRequest.getContextPath();
+		final String pathBase = base + contextPath + urlEncode(theRequest.getPath());
+		return pathBase;
+	}
+
+	private void doHandleGetXsd(HttpRequestBean theRequest, InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition) throws UnknownRequestException {
+		StringTokenizer tok = new StringTokenizer(theRequest.getQuery(), "&");
 		String xsdNumString = null;
 		while (tok.hasMoreElements()) {
 			String nextToken = tok.nextToken();
@@ -204,7 +209,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 		PersServiceVersionResource res = theServiceDefinition.getResourceWithPid(xsdNum);
 
 		if (res == null) {
-			throw new UnknownRequestException(thePath + theQuery, "Invalid XSD query, invalid 'xsdnum' parameter found: " + xsdNumString);
+			throw new UnknownRequestException(theRequest.getPath() + theRequest.getQuery(), "Invalid XSD query, invalid 'xsdnum' parameter found: " + xsdNumString);
 		}
 
 		String resourceText = res.getResourceText();
@@ -270,16 +275,6 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 		}
 
 		throw new ProcessingException("WSDL contains no bindings with SOAP 1.1 protocol. This is not supported");
-	}
-
-	private String getUrlBase() throws InvocationFailedDueToInternalErrorException {
-		PersConfig config;
-		try {
-			config = myConfigService.getConfig();
-		} catch (UnexpectedFailureException e) {
-			throw new InvocationFailedDueToInternalErrorException(e);
-		}
-		return config.getProxyUrlBases().iterator().next().getUrlBase();
 	}
 
 	private StyleEnum introspectBindingForStyle(Document theWsdlDocument) throws ProcessingException {
@@ -636,21 +631,21 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 	 */
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public InvocationResultsBean processInvocation(BasePersServiceVersion theServiceDefinition, RequestType theRequestType, String thePath, String theQuery, String theContentType, Reader theReader)
+	public InvocationResultsBean processInvocation(HttpRequestBean theRequest, BasePersServiceVersion theServiceDefinition)
 			throws UnknownRequestException, InvocationRequestFailedException, InvocationFailedDueToInternalErrorException {
 		InvocationResultsBean retVal = new InvocationResultsBean();
 
 		// TODO: verify that content type is correct
 
-		switch (theRequestType) {
+		switch (theRequest.getRequestType()) {
 		case GET:
-			doHandleGet(retVal, (PersServiceVersionSoap11) theServiceDefinition, thePath, theQuery);
+			doHandleGet(theRequest, retVal, (PersServiceVersionSoap11) theServiceDefinition, theRequest.getPath(), theRequest.getQuery());
 			break;
 		case POST:
-			doHandlePost(retVal, (PersServiceVersionSoap11) theServiceDefinition, theReader);
+			doHandlePost(retVal, (PersServiceVersionSoap11) theServiceDefinition, theRequest.getInputReader());
 			break;
 		default:
-			throw new InvocationFailedDueToInternalErrorException("Unsupported request type: " + theRequestType);
+			throw new InvocationFailedDueToInternalErrorException("Unsupported request type: " + theRequest.getRequestType());
 		}
 
 		return retVal;
@@ -764,7 +759,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 		return myInvocationResultsBean;
 	}
 
-	private String renderWsdl(PersServiceVersionSoap11 theServiceDefinition, final String thePath, ICreatesImportUrl urlCreator) throws InvocationFailedDueToInternalErrorException {
+	private String renderWsdl(PersServiceVersionSoap11 theServiceDefinition, final String thePathBase, ICreatesImportUrl urlCreator) throws InvocationFailedDueToInternalErrorException {
 		PersServiceVersionResource resource = theServiceDefinition.getResourceForUri(theServiceDefinition.getWsdlUrl());
 		if (resource == null || StringUtils.isBlank(resource.getResourceText())) {
 			throw new InvocationFailedDueToInternalErrorException("Service Version " + theServiceDefinition.getPid() + " does not have a resource for URL: " + theServiceDefinition.getWsdlUrl());
@@ -810,8 +805,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 					Element importElem = (Element) addressList.item(addressIdx);
 					String location = importElem.getAttribute("location");
 					if (StringUtils.isNotBlank(location)) {
-						String pathBase = urlEncode(getUrlBase() + thePath);
-						importElem.setAttribute("location", pathBase);
+						importElem.setAttribute("location", thePathBase);
 					}
 				}
 			}

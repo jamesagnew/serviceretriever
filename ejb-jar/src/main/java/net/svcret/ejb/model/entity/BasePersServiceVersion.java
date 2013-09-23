@@ -889,10 +889,10 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 
 	public BaseGServiceVersion toDao(boolean theLoadStats, IRuntimeStatusQueryLocal theQuerySvc, StatusesBean theStatuses) throws UnexpectedFailureException {
 		Set<Long> emptySet = Collections.emptySet();
-		return toDao(theLoadStats, theQuerySvc, theStatuses, emptySet, emptySet);
+		return toDto(theLoadStats, theQuerySvc, theStatuses, emptySet, emptySet);
 	}
 
-	public BaseGServiceVersion toDao(boolean theLoadStats, IRuntimeStatusQueryLocal theQuerySvc, StatusesBean theStatuses, Set<Long> theLoadMethodStats, Set<Long> theLoadUrlStats)
+	public BaseGServiceVersion toDto(boolean theLoadStats, IRuntimeStatusQueryLocal theQuerySvc, StatusesBean theStatuses, Set<Long> theLoadMethodStats, Set<Long> theLoadUrlStats)
 			throws UnexpectedFailureException {
 
 		BaseGServiceVersion retVal = createDtoAndPopulateWithTypeSpecificEntries();

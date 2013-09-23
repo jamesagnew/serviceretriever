@@ -112,12 +112,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		if (theRequest.getQuery().length() > 0 && theRequest.getQuery().charAt(0) != '?') {
 			throw new IllegalArgumentException("Path must be blank or start with '?'");
 		}
-		String path;
-		if (theRequest.getPath().length() > 0 && theRequest.getPath().charAt(theRequest.getPath().length() - 1) == '/') {
-			path = theRequest.getPath().substring(0, theRequest.getPath().length() - 1);
-		} else {
-			path = theRequest.getPath();
-		}
+		String path = theRequest.getPath();
 
 		ourLog.trace("New request of type {} for path: {}", theRequest.getRequestType(), theRequest.getPath());
 
@@ -146,7 +141,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			 * Process the invocation. This is the first part of handling a request, where we examine the request, determine where it's going and prep it for passing to the backend implementation
 			 * (which happens later)
 			 */
-			results = processInvokeService(theRequest, path, serviceVersion, theRequest.getRequestType(), theRequest.getQuery());
+			results = processInvokeService(theRequest, serviceVersion);
 			invokingMethod = results.getMethodDefinition();
 
 			/*
@@ -270,20 +265,21 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		BasePersServiceVersion svcVer = mySvcRegistry.getServiceVersionByPid(theServiceVersionPid);
 
 		StringReader reader = (new StringReader(theRequestBody));
-		String path = svcVer.determineUsableProxyPath();
 
 		HttpRequestBean request = new HttpRequestBean();
 		request.setRequestTime(startTime);
 		request.setInputReader(reader);
 		request.setRequestHostIp("127.0.0.1");
+		request.setPath(svcVer.determineUsableProxyPath());
 		request.setRequestHeaders(new HashMap<String, List<String>>());
 		request.getRequestHeaders().put("X-RequestedBy", Collections.singletonList(theRequestedByString));
 		request.getRequestHeaders().put("Content-Type", Collections.singletonList(theContentType));
+		request.setRequestType(RequestType.POST); // TODO this should be configurable, maybe method specific or something?
 		AuthorizationResultsBean authorized = null;
 
 		InvocationResultsBean results;
 		try {
-			results = processInvokeService(request, path, svcVer, RequestType.POST, "");
+			results = processInvokeService(request, svcVer);
 		} catch (InvocationFailedException e) {
 			throw new ProcessingException(e);
 		}
@@ -372,10 +368,9 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		}
 	}
 
-	private InvocationResultsBean processInvokeService(HttpRequestBean theRequest, String path, BasePersServiceVersion serviceVersion, RequestType theRequestType, String theRequestQuery)
+	private InvocationResultsBean processInvokeService(HttpRequestBean theRequest, BasePersServiceVersion serviceVersion)
 			throws InvocationFailedException, UnknownRequestException {
 		InvocationResultsBean results = null;
-		String contentType = theRequest.getContentType();
 		IServiceInvoker svcInvoker = getServiceInvoker(serviceVersion);
 		ourLog.trace("Handling service with invoker {}", svcInvoker);
 
@@ -383,7 +378,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			throw new InvocationFailedDueToInternalErrorException("Unknown service protocol: " + serviceVersion.getProtocol());
 		}
 
-		results = svcInvoker.processInvocation(serviceVersion, theRequestType, path, theRequestQuery, contentType, theRequest.getInputReader());
+		results = svcInvoker.processInvocation(theRequest, serviceVersion);
 
 		if (results == null) {
 			throw new InvocationFailedDueToInternalErrorException("Invoker " + svcInvoker + " returned null");
