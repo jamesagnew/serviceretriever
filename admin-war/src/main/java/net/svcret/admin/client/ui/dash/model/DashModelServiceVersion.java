@@ -151,7 +151,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 			@Override
 			public void onClick(ClickEvent theEvent) {
 				theActionPopup.hide();
-				History.newItem(NavProcessor.getTokenEditServiceVersion(true, theSvcVer.getPid()));
+				History.newItem(NavProcessor.getTokenEditServiceVersion(theSvcVer.getPid()));
 			}
 		});
 		content.add(editServiceVersion);
@@ -162,7 +162,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		viewStatus.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
-				History.newItem(NavProcessor.getTokenServiceVersionStats(true, theSvcVer.getPid()));
+				History.newItem(NavProcessor.getTokenServiceVersionStats(theSvcVer.getPid()));
 			}
 		});
 		content.add(viewStatus);
@@ -173,7 +173,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		viewRecentTransactions.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
-				History.newItem(NavProcessor.getTokenServiceVersionRecentMessages(true, theSvcVer.getPid()));
+				History.newItem(NavProcessor.getTokenServiceVersionRecentMessages(theSvcVer.getPid()));
 			}
 		});
 		content.add(viewRecentTransactions);
@@ -184,7 +184,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		testSvcVer.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
-				History.newItem(NavProcessor.getTokenTestServiceVersion(true, theSvcVer.getPid()));
+				History.newItem(NavProcessor.getTokenTestServiceVersion(theSvcVer.getPid()));
 			}
 		});
 		content.add(testSvcVer);
@@ -195,7 +195,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		msgLib.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
-				History.newItem(NavProcessor.getTokenMessageLibrary(true, HierarchyEnum.VERSION, theSvcVer.getPid()));
+				History.newItem(NavProcessor.getTokenMessageLibrary(HierarchyEnum.VERSION, theSvcVer.getPid()));
 			}
 		});
 		content.add(msgLib);

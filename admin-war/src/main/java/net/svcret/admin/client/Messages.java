@@ -761,6 +761,12 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Send")
 	String actions_Send();
 
+	@DefaultMessage("Stats")
+	String actions_Stats();
+
+	@DefaultMessage("Clone")
+	String actions_Clone();
+
 	@DefaultMessage("Format XML")
 	String actions_FormatXml();
 
@@ -793,6 +799,24 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Failure Description")
 	String recentMessagesGrid_ColFailDescription();
+
+	@DefaultMessage("Node {0}: Active ({1,number,#.#} tx/min)")
+	String topPanel_NodeActive(String theNodeId, double theMsgsPerMinute);
+
+	@DefaultMessage("Node {0}: Down since {1}")
+	String topPanel_NodeDown(String theNodeId, String theTimeElapsedSinceDown);
+
+	@DefaultMessage("Node {0}: Alive, No tx since {1}")
+	String topPanel_NoRequests(String theNodeId, String theTimeElapsedSinceLastTx);
+
+	@DefaultMessage("Node {0}: Alive, No tx yet")
+	String topPanel_NoRequestsYes(String theNodeId);
+
+	@DefaultMessage("Node {0}: Recently restarted")
+	String topPanel_RecentlyRestarted(String theNodeId);
+
+	@DefaultMessage("Clone Service Version")
+	String cloneServiceVersion_Title();
 	
 	
 }

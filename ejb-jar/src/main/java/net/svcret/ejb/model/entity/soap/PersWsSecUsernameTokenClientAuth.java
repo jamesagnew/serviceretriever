@@ -3,7 +3,9 @@ package net.svcret.ejb.model.entity.soap;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
+import net.svcret.admin.shared.model.BaseGClientSecurity;
 import net.svcret.admin.shared.model.ClientSecurityEnum;
+import net.svcret.admin.shared.model.GWsSecUsernameTokenClientSecurity;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 
 import org.apache.commons.lang3.ObjectUtils;
@@ -44,6 +46,14 @@ public class PersWsSecUsernameTokenClientAuth extends PersBaseClientAuth<PersWsS
 		
 		retVal.setPassword(obj.getPassword());
 		
+		return retVal;
+	}
+
+	@Override
+	protected BaseGClientSecurity createDtoAndPopulateWithTypeSpecificFields() {
+		GWsSecUsernameTokenClientSecurity retVal = new GWsSecUsernameTokenClientSecurity();
+		retVal.setUsername(getUsername());
+		retVal.setPassword(getPassword());
 		return retVal;
 	}
 

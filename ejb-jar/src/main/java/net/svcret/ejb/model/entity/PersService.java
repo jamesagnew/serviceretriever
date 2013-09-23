@@ -26,7 +26,10 @@ import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
+import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.ServerSecuredEnum;
+import net.svcret.admin.shared.model.StatusEnum;
+import net.svcret.ejb.api.StatusesBean;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.ForeignKey;
@@ -364,7 +367,7 @@ public class PersService extends BasePersServiceCatalogItem {
 	public Set<String> determineObscureRequestElements() {
 		Set<String> retVal = getObscureRequestElementsInLog();
 		if (retVal.isEmpty()) {
-			retVal=myDomain.determineObscureRequestElements();
+			retVal = myDomain.determineObscureRequestElements();
 		}
 		return retVal;
 	}
@@ -373,9 +376,34 @@ public class PersService extends BasePersServiceCatalogItem {
 	public Set<String> determineObscureResponseElements() {
 		Set<String> retVal = getObscureResponseElementsInLog();
 		if (retVal.isEmpty()) {
-			retVal=myDomain.determineObscureResponseElements();
+			retVal = myDomain.determineObscureResponseElements();
 		}
 		return retVal;
+	}
+
+	public void populateDtoWithMonitorRules(BaseDtoServiceCatalogItem theDto) {
+		for (BasePersServiceVersion nextSvcVer : getVersions()) {
+			nextSvcVer.populateDtoWithMonitorRules(theDto);
+		}
+		for (PersMonitorAppliesTo nextRule : getMonitorRules()) {
+			if (nextRule.getItem().equals(this)) {
+				theDto.getMonitorRulePids().add(nextRule.getPid());
+			}
+		}
+	}
+
+	public StatusEnum populateDtoWithStatusAndProvideStatusForParent(BaseDtoServiceCatalogItem theDashboardObject, StatusEnum theInitialStatus, StatusesBean theStatuses) {
+
+		// Value will be changed below
+		StatusEnum status = theInitialStatus;
+
+		for (BasePersServiceVersion nextVersion : getVersions()) {
+			status = nextVersion.populateDtoWithStatusAndProvideStatusForParent(theDashboardObject, theStatuses, status);
+		} // end VERSION
+		
+		theDashboardObject.setStatus(status);
+		
+		return status;
 	}
 
 }

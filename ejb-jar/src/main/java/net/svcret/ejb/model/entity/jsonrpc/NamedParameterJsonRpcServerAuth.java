@@ -4,6 +4,8 @@ import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
+import net.svcret.admin.shared.model.BaseGServerSecurity;
+import net.svcret.admin.shared.model.GNamedParameterJsonRpcServerAuth;
 import net.svcret.admin.shared.model.ServerSecurityEnum;
 import net.svcret.ejb.invoker.jsonrpc.IJsonReader;
 import net.svcret.ejb.invoker.jsonrpc.IJsonWriter;
@@ -78,6 +80,14 @@ public class NamedParameterJsonRpcServerAuth extends PersBaseServerAuth<NamedPar
 
 	public NamedParameterJsonRpcCredentialGrabber newCredentialGrabber(IJsonReader theJsonReader, IJsonWriter theJsonWriter) {
 		return new NamedParameterJsonRpcCredentialGrabber(this, theJsonReader, theJsonWriter);
+	}
+
+	@Override
+	protected BaseGServerSecurity createDtoAndPopulateWithTypeSpecificEntries() {
+		GNamedParameterJsonRpcServerAuth auth = new GNamedParameterJsonRpcServerAuth();
+		auth.setUsernameParameterName(getUsernameParameterName());
+		auth.setPasswordParameterName(getPasswordParameterName());
+		return auth;
 	}
 
 }

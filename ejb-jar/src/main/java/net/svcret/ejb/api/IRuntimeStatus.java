@@ -38,7 +38,7 @@ public interface IRuntimeStatus {
 	 *            The response from the actual service implementation, if we got that far. Can be null if no request was ever made (e.g. because of security failure before that point)
 	 * @param theInvocationResponseResultsBean
 	 * @throws ProcessingException
-	 * @throws UnexpectedFailureException 
+	 * @throws UnexpectedFailureException
 	 */
 	void recordInvocationMethod(Date theInvocationTime, int theRequestLength, PersServiceVersionMethod theMethod, PersUser theAuthorizedUser, HttpResponseBean theHttpResponse,
 			InvocationResponseResultsBean theInvocationResponseResultsBean, Long theThrottleDelayIfAny) throws UnexpectedFailureException;

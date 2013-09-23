@@ -144,6 +144,7 @@ public class LeftBarPanel extends FlowPanel {
 			myAddSvcBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
 			buttons.remove(myAddSvcBtn);
 			break;
+		case CSV:
 		case ASV:
 		case AV2:
 			myAddSvcVerBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);

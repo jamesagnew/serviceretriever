@@ -84,5 +84,6 @@ public class GResource extends BaseGObject implements Serializable {
 		retVal.setSize(myText.length());
 		return retVal;
 	}
+
 	
 }

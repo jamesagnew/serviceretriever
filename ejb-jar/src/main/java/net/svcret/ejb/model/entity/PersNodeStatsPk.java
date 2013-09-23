@@ -15,7 +15,7 @@ public class PersNodeStatsPk extends BasePersStatsPk<PersNodeStatsPk, PersNodeSt
 
 	private static final long serialVersionUID = 1L;
 
-	@Column(name="NODE_ID", length=20,nullable=false)
+	@Column(name="NODE_ID", length=PersNodeStatus.NODEID_MAXLENGTH,nullable=false)
 	@NotBlank
 	private String myNodeId;
 	

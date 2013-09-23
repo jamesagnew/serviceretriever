@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -39,12 +40,22 @@ import javax.persistence.Version;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
+import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
+import net.svcret.admin.shared.model.BaseGClientSecurity;
+import net.svcret.admin.shared.model.BaseGServerSecurity;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.GServiceMethod;
+import net.svcret.admin.shared.model.GServiceVersionResourcePointer;
+import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.ServerSecuredEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
+import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.util.ProxyUtil;
 import net.svcret.ejb.api.IDao;
+import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.IServiceRegistry;
+import net.svcret.ejb.api.StatusesBean;
+import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.util.Validate;
@@ -816,14 +827,16 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	/**
 	 * Subclasses may override
 	 */
-	protected void fromDto(@SuppressWarnings("unused") BaseGServiceVersion theDto) {};
-	
-	public static <T extends BaseGServiceVersion> BasePersServiceVersion fromDto(T theDto, PersService theService, IDao theDao, IServiceRegistry theServiceRegistry) throws ProcessingException, UnexpectedFailureException {
+	protected void fromDto(@SuppressWarnings("unused") BaseGServiceVersion theDto) {
+	};
+
+	public static <T extends BaseGServiceVersion> BasePersServiceVersion fromDto(T theDto, PersService theService, IDao theDao, IServiceRegistry theServiceRegistry) throws ProcessingException,
+			UnexpectedFailureException {
 		Validate.notNull(theDto);
 		Validate.notNull(theService);
 
-		String versionId=theDto.getId();
-		
+		String versionId = theDto.getId();
+
 		BasePersServiceVersion retVal;
 		if (theDto.getPidOrNull() != null) {
 			ourLog.debug("Retrieving existing service version PID[{}]", theDto.getPidOrNull());
@@ -859,6 +872,174 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 
 		retVal.populateKeepRecentTransactionsFromDto(theDto);
 		retVal.populateServiceCatalogItemFromDto(theDto);
+
+		return retVal;
+	}
+
+	public void populateDtoWithMonitorRules(BaseDtoServiceCatalogItem theDto) {
+		for (PersMonitorAppliesTo nextRule : this.getMonitorRules()) {
+			if (nextRule.getItem().equals(this)) {
+				theDto.getMonitorRulePids().add(nextRule.getPid());
+			}
+		}
+		for (PersMonitorRuleActiveCheck next : this.getActiveChecks()) {
+			theDto.getMonitorRulePids().add(next.getRule().getPid());
+		}
+	}
+
+	public BaseGServiceVersion toDao(boolean theLoadStats, IRuntimeStatusQueryLocal theQuerySvc, StatusesBean theStatuses) throws UnexpectedFailureException {
+		Set<Long> emptySet = Collections.emptySet();
+		return toDao(theLoadStats, theQuerySvc, theStatuses, emptySet, emptySet);
+	}
+
+	public BaseGServiceVersion toDao(boolean theLoadStats, IRuntimeStatusQueryLocal theQuerySvc, StatusesBean theStatuses, Set<Long> theLoadMethodStats, Set<Long> theLoadUrlStats)
+			throws UnexpectedFailureException {
+
+		BaseGServiceVersion retVal = createDtoAndPopulateWithTypeSpecificEntries();
+
+		retVal.setPid(this.getPid());
+		retVal.setId(this.getVersionId());
+		retVal.setName(this.getVersionId());
+		retVal.setServerSecured(this.getServerSecured());
+		retVal.setUseDefaultProxyPath(this.isUseDefaultProxyPath());
+		retVal.setDefaultProxyPath(this.getDefaultProxyPath());
+		retVal.setExplicitProxyPath(this.getExplicitProxyPath());
+		retVal.setParentServiceName(this.getService().getServiceName());
+		retVal.setParentServicePid(this.getService().getPid());
+		retVal.setDescription(this.getDescription());
+		retVal.setServerSecurityMode(this.getServerSecurityMode());
+		retVal.setObscureRequestElementsInLog(this.getObscureRequestElementsInLog());
+		retVal.setObscureResponseElementsInLog(this.getObscureResponseElementsInLog());
+
+		populateKeepRecentTransactionsToDto(retVal);
+		populateServiceCatalogItemToDto(retVal);
+		populateDtoWithMonitorRules(retVal);
+
+		for (PersServiceVersionMethod nextMethod : this.getMethods()) {
+			boolean loadStats = theLoadMethodStats != null && theLoadMethodStats.contains(nextMethod.getPid());
+			GServiceMethod gMethod = nextMethod.toDao(loadStats, theQuerySvc);
+			retVal.getMethodList().add(gMethod);
+		} // for methods
+
+		for (PersServiceVersionUrl nextUrl : this.getUrls()) {
+			GServiceVersionUrl gUrl = nextUrl.toDao(theLoadUrlStats != null && theLoadUrlStats.contains(nextUrl.getPid()), theStatuses, theQuerySvc);
+			retVal.getUrlList().add(gUrl);
+		} // for URLs
+
+		for (PersServiceVersionResource nextResource : this.getUriToResource().values()) {
+			GServiceVersionResourcePointer gResource = nextResource.toDao();
+			retVal.getResourcePointerList().add(gResource);
+		} // for resources
+
+		for (PersBaseServerAuth<?, ?> nextServerAuth : this.getServerAuths()) {
+			BaseGServerSecurity gServerAuth = nextServerAuth.toDto();
+			retVal.getServerSecurityList().add(gServerAuth);
+		} // server auths
+
+		for (PersBaseClientAuth<?> nextClientAuth : this.getClientAuths()) {
+			BaseGClientSecurity gClientAuth = nextClientAuth.toDao();
+			retVal.getClientSecurityList().add(gClientAuth);
+		} // Client auths
+
+		PersHttpClientConfig httpClientConfig = this.getHttpClientConfig();
+		if (httpClientConfig == null) {
+			throw new UnexpectedFailureException("Service version doesn't have an HTTP client config");
+		}
+		retVal.setHttpClientConfigPid(httpClientConfig.getPid());
+
+		if (theLoadStats) {
+
+			StatusEnum status = StatusEnum.UNKNOWN;
+			StatsAccumulator accumulator = null;
+			populateDtoWithStatusAndProvideStatusForParent(retVal, theStatuses, status);
+
+			accumulator = theQuerySvc.extract60MinuteStats(this);
+			accumulator.populateDto(retVal);
+
+			retVal.setStatsInitialized(new Date());
+
+			int urlsActive = 0;
+			int urlsDown = 0;
+			int urlsUnknown = 0;
+			for (PersServiceVersionUrl nextUrl : this.getUrls()) {
+
+				PersServiceVersionUrlStatus urlStatus = theStatuses.getUrlStatus(nextUrl.getPid());
+				if (urlStatus == null) {
+					continue;
+				}
+
+				switch (urlStatus.getStatus()) {
+				case ACTIVE:
+					urlsActive++;
+					break;
+				case DOWN:
+					urlsDown++;
+					break;
+				case UNKNOWN:
+					urlsUnknown++;
+					break;
+				}
+
+			}
+			retVal.setUrlsActive(urlsActive);
+			retVal.setUrlsDown(urlsDown);
+			retVal.setUrlsUnknown(urlsUnknown);
+
+			PersServiceVersionStatus svcVerStatus = theStatuses.getServiceVersionStatus(this.getPid());
+			if (svcVerStatus != null) {
+				retVal.setLastServerSecurityFailure(svcVerStatus.getLastServerSecurityFailure());
+				retVal.setLastSuccessfulInvocation(svcVerStatus.getLastSuccessfulInvocation());
+			}
+
+			if (urlsDown > 0) {
+				retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.DOWN);
+			} else if (urlsActive > 0) {
+				retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.ACTIVE);
+			} else {
+				retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.UNKNOWN);
+			}
+
+		}
+
+		return retVal;
+	}
+
+	protected abstract BaseGServiceVersion createDtoAndPopulateWithTypeSpecificEntries();
+
+	public StatusEnum populateDtoWithStatusAndProvideStatusForParent(BaseDtoServiceCatalogItem theDashboardObject, StatusesBean theStatuses, StatusEnum theInitialStatus) {
+		StatusEnum retVal = theInitialStatus;
+
+		for (PersServiceVersionUrl nextUrl : this.getUrls()) {
+			PersServiceVersionUrlStatus nextUrlStatus = theStatuses.getUrlStatus(nextUrl.getPid());
+			if (nextUrlStatus == null) {
+				continue;
+			}
+
+			switch (nextUrlStatus.getStatus()) {
+			case ACTIVE:
+				retVal = StatusEnum.ACTIVE;
+				theDashboardObject.setUrlsActive(theDashboardObject.getUrlsActive() + 1);
+				break;
+			case DOWN:
+				if (retVal != StatusEnum.ACTIVE) {
+					retVal = StatusEnum.DOWN;
+				}
+				theDashboardObject.setUrlsDown(theDashboardObject.getUrlsDown() + 1);
+				break;
+			case UNKNOWN:
+				theDashboardObject.setUrlsUnknown(theDashboardObject.getUrlsUnknown() + 1);
+				break;
+			}
+
+		} // end URL
+
+		// XX myRuntimeStatusQuerySvc.extract60MinuteStats(nextVersion, theAccumulator);
+
+		// Failing monitor rules
+		List<PersMonitorRuleFiring> failingRules = theStatuses.getFirings(this.getPid());
+		for (PersMonitorRuleFiring next : failingRules) {
+			theDashboardObject.getFailingApplicableRulePids().add(next.getPid());
+		}
 
 		return retVal;
 	}

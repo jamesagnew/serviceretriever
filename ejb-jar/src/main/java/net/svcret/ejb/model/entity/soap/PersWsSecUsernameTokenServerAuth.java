@@ -6,6 +6,8 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.xml.stream.events.XMLEvent;
 
+import net.svcret.admin.shared.model.BaseGServerSecurity;
+import net.svcret.admin.shared.model.GWsSecServerSecurity;
 import net.svcret.admin.shared.model.ServerSecurityEnum;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.model.entity.BasePersObject;
@@ -45,6 +47,11 @@ public class PersWsSecUsernameTokenServerAuth extends PersBaseServerAuth<PersWsS
 		PersWsSecUsernameTokenServerAuth obj = (PersWsSecUsernameTokenServerAuth)theObj;
 		setAuthenticationHost(obj.getAuthenticationHost());
 		setServiceVersion(obj.getServiceVersion());
+	}
+
+	@Override
+	protected BaseGServerSecurity createDtoAndPopulateWithTypeSpecificEntries() {
+		return new GWsSecServerSecurity();
 	}
 
 }

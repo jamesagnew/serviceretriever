@@ -24,6 +24,7 @@ public abstract class BaseJpaTest {
 	static {
 		System.setProperty(Password.NET_SVCRET_SECURITY_PASSWORDSALT, "OPIHIOOPYPOIYPOIYPOIYPOIYPOIYPOIYPO");
 		System.setProperty(BasePersObject.NET_SVCRET_UNITTESTMODE, "true");
+		System.setProperty(ConfigServiceBean.SYSTEM_PROPERTY_NODEID, "unittest_node");
 	}
 	
 	@After

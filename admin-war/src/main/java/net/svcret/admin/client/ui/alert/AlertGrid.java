@@ -8,7 +8,7 @@ import java.util.Set;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.PCellTable;
-import net.svcret.admin.client.ui.stats.DateUtil;
+import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGMonitorRule;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
@@ -104,7 +104,7 @@ public class AlertGrid extends FlowPanel {
 				SafeHtmlBuilder b = new SafeHtmlBuilder();
 				BaseGMonitorRule rule = myRuleList.getRuleByPid(theObject.getRulePid());
 				if (rule!=null) {
-					b.appendHtmlConstant("<a href=\"#" + NavProcessor.getTokenEditMonitorRule(true, theObject.getRulePid()) + "\">");
+					b.appendHtmlConstant("<a href=\"#" + NavProcessor.getTokenEditMonitorRule(theObject.getRulePid()) + "\">");
 					b.appendEscaped(rule.getName());
 					b.appendHtmlConstant("</a> ");
 					b.appendEscaped("(" + rule.getRuleType().getFriendlyName() + ")");
@@ -223,9 +223,9 @@ public class AlertGrid extends FlowPanel {
 			for (GService nextSvc : nextDomain.getServiceList()) {
 				if (nextSvc.anyVersionPidsInThisServiceAreAmongThesePids(theSvcVerPids)) {
 					theSafeHtmlBuilder.appendHtmlConstant("<li>");
-					theSafeHtmlBuilder.appendHtmlConstant("<a href=\"#" + NavProcessor.getTokenEditDomain(true, nextDomain.getPid()) + "\">");
+					theSafeHtmlBuilder.appendHtmlConstant("<a href=\"#" + NavProcessor.getTokenEditDomain(nextDomain.getPid()) + "\">");
 					theSafeHtmlBuilder.appendEscaped(nextDomain.getId());
-					theSafeHtmlBuilder.appendHtmlConstant("</a> / <a href=\"#" + NavProcessor.getTokenEditService(true, nextDomain.getPid(), nextSvc.getPid()) + "\">");
+					theSafeHtmlBuilder.appendHtmlConstant("</a> / <a href=\"#" + NavProcessor.getTokenEditService(nextDomain.getPid(), nextSvc.getPid()) + "\">");
 					theSafeHtmlBuilder.appendEscaped(nextSvc.getId());
 					theSafeHtmlBuilder.appendHtmlConstant("</a>");
 					if (nextSvc.allVersionPidsInThisServiceAreAmongThesePids(theSvcVerPids)) {
@@ -234,7 +234,7 @@ public class AlertGrid extends FlowPanel {
 						theSafeHtmlBuilder.appendHtmlConstant("<ul>");
 						for (BaseGServiceVersion nextSvcVer : nextSvc.getVersionList()) {
 							theSafeHtmlBuilder.appendHtmlConstant("<li>");
-							theSafeHtmlBuilder.appendHtmlConstant("<a href=\"#" + NavProcessor.getTokenEditServiceVersion(true, nextSvcVer.getPid()) + "\">");
+							theSafeHtmlBuilder.appendHtmlConstant("<a href=\"#" + NavProcessor.getTokenEditServiceVersion(nextSvcVer.getPid()) + "\">");
 							theSafeHtmlBuilder.appendEscaped(nextSvcVer.getId());
 							theSafeHtmlBuilder.appendHtmlConstant("</a></li>");
 						}

@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
@@ -58,6 +59,7 @@ import net.svcret.ejb.model.entity.PersInvocationMethodUserStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUrlStats;
 import net.svcret.ejb.model.entity.PersInvocationUrlStatsPk;
 import net.svcret.ejb.model.entity.PersNodeStats;
+import net.svcret.ejb.model.entity.PersNodeStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
@@ -70,6 +72,7 @@ import net.svcret.ejb.model.entity.PersStickySessionUrlBindingPk;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserMethodStatus;
 import net.svcret.ejb.model.entity.PersUserStatus;
+import net.svcret.ejb.runtimestatus.RecentTransactionQueue;
 import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.lang3.StringUtils;
@@ -93,21 +96,25 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	@EJB
 	private IDao myDao;
 
-	private ReentrantLock myFlushLock = new ReentrantLock();
-	private AtomicLong myUnflushedNodeSuccessMethodInvocations = new AtomicLong();
-	private AtomicLong myUnflushedNodeFaultMethodInvocations = new AtomicLong();
-	private AtomicLong myUnflushedNodeFailMethodInvocations = new AtomicLong();
-	private AtomicLong myUnflushedNodeSecFailMethodInvocations = new AtomicLong();
+	private final RecentTransactionQueue myInMemoryRecentTransactionSuccessCounter = new RecentTransactionQueue();
+	private final RecentTransactionQueue myInMemoryRecentTransactionFaultCounter = new RecentTransactionQueue();
+	private final RecentTransactionQueue myInMemoryRecentTransactionFailCounter = new RecentTransactionQueue();
+	private final RecentTransactionQueue myInMemoryRecentTransactionSecFailCounter = new RecentTransactionQueue();
+	private final ReentrantLock myFlushLock = new ReentrantLock();
+	private final AtomicLong myUnflushedNodeSuccessMethodInvocations = new AtomicLong();
+	private final AtomicLong myUnflushedNodeFaultMethodInvocations = new AtomicLong();
+	private final AtomicLong myUnflushedNodeFailMethodInvocations = new AtomicLong();
+	private final AtomicLong myUnflushedNodeSecFailMethodInvocations = new AtomicLong();
 	private Date myNodeStatisticsDate;
 	private final ReentrantLock myNodeStatisticsLock = new ReentrantLock();
 	private Date myNowForUnitTests;
-	private Map<PersStickySessionUrlBindingPk, PersStickySessionUrlBinding> myStickySessionUrlBindings;
+	private final Map<PersStickySessionUrlBindingPk, PersStickySessionUrlBinding> myStickySessionUrlBindings;
 	private final DateFormat myTimeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
 	private final ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>> myUnflushedInvocationStats;
 	private final ConcurrentHashMap<Long, PersServiceVersionStatus> myUnflushedServiceVersionStatus;
 	private final ConcurrentHashMap<PersUser, PersUserStatus> myUnflushedUserStatus;
-
 	private final ConcurrentHashMap<Long, PersServiceVersionUrlStatus> myUrlStatus;
+	private PersNodeStatus myNodeStatus;
 
 	public RuntimeStatusBean() {
 		myUnflushedInvocationStats = new ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>>();
@@ -115,6 +122,11 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		myUnflushedUserStatus = new ConcurrentHashMap<PersUser, PersUserStatus>();
 		myUrlStatus = new ConcurrentHashMap<Long, PersServiceVersionUrlStatus>();
 		myStickySessionUrlBindings = new HashMap<PersStickySessionUrlBindingPk, PersStickySessionUrlBinding>();
+	}
+
+	@PostConstruct
+	public void initializeNodeStat() {
+		myNodeStatus = myDao.getOrCreateNodeStatus(myConfigSvc.getNodeId());
 	}
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
@@ -185,17 +197,21 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		ourLog.trace("Going to record method invocation");
 
 		switch (theInvocationResponseResultsBean.getResponseType()) {
-		case FAIL:
-			myUnflushedNodeFailMethodInvocations.incrementAndGet();
+		case SUCCESS:
+			myUnflushedNodeSuccessMethodInvocations.incrementAndGet();
+			myInMemoryRecentTransactionSuccessCounter.addDate(new Date());
 			break;
 		case FAULT:
 			myUnflushedNodeFaultMethodInvocations.incrementAndGet();
+			myInMemoryRecentTransactionFaultCounter.addDate(new Date());
+			break;
+		case FAIL:
+			myUnflushedNodeFailMethodInvocations.incrementAndGet();
+			myInMemoryRecentTransactionFailCounter.addDate(new Date());
 			break;
 		case SECURITY_FAIL:
 			myUnflushedNodeSecFailMethodInvocations.incrementAndGet();
-			break;
-		case SUCCESS:
-			myUnflushedNodeSuccessMethodInvocations.incrementAndGet();
+			myInMemoryRecentTransactionSecFailCounter.addDate(new Date());
 			break;
 		case THROTTLE_REJ:
 			break;
@@ -662,21 +678,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				int toIndex = Math.min(index + MAX_STATS_TO_FLUSH_AT_ONCE, stats.size());
 				myDao.saveInvocationStats(stats.subList(index, toIndex));
 			}
-			ourLog.info("Done flushing stats");
 
-			// } catch (PersistenceException e) {
-			// ourLog.error("Failed to flush stats to disk, going to re-queue them",
-			// e);
-			// for (BasePersMethodStats next : stats) {
-			//
-			// BasePersMethodStats savedStats =
-			// myUnflushedInvocationStats.putIfAbsent(next.getPk(), next);
-			// if (savedStats != next) {
-			// savedStats.mergeUnsynchronizedEvents(next);
-			// }
-			//
-			// }
-			// }
+			ourLog.info("Done flushing stats");
 
 		}
 
@@ -771,7 +774,24 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				}
 			}
 		}
+		
+		/*
+		 * Flush Node status
+		 */
+		if (myNodeStatus == null) {
+			myNodeStatus= myDao.getOrCreateNodeStatus(myConfigSvc.getNodeId());
+		}
+		myNodeStatus.setStatusTimestamp(new Date());
+		myNodeStatus.setCurrentTransactionsPerMinuteSuccessful(myInMemoryRecentTransactionSuccessCounter.getTransactionsPerMinute());
+		myNodeStatus.setCurrentTransactionsPerMinuteFault(myInMemoryRecentTransactionFaultCounter.getTransactionsPerMinute());
+		myNodeStatus.setCurrentTransactionsPerMinuteFail(myInMemoryRecentTransactionFailCounter.getTransactionsPerMinute());
+		myNodeStatus.setCurrentTransactionsPerMinuteSecurityFail(myInMemoryRecentTransactionSecFailCounter.getTransactionsPerMinute());
+		myNodeStatus.setNodeActiveSince(myInMemoryRecentTransactionSuccessCounter.getInitialized());
+		myNodeStatus.setNodeLastTransactionIfNewer(myInMemoryRecentTransactionSuccessCounter.getLastTransaction());
+		myDao.saveNodeStatus(myNodeStatus);
+
 	}
+
 
 	private void doRecordInvocationForUrls(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, Date theInvocationTime) {
 		if (theHttpResponse == null) {
@@ -987,8 +1007,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		return status;
 	}
 
-	private void shuffleUrlPoolBasedOnStickySessionPolicy(String theSesionId, UrlPoolBean theUrlPool, BasePersServiceVersion theServiceVersion)
-			throws UnexpectedFailureException {
+	private void shuffleUrlPoolBasedOnStickySessionPolicy(String theSesionId, UrlPoolBean theUrlPool, BasePersServiceVersion theServiceVersion) throws UnexpectedFailureException {
 		if (StringUtils.isBlank(theSesionId)) {
 			return;
 		}

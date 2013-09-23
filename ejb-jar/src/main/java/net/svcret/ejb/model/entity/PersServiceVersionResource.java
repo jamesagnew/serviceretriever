@@ -13,6 +13,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import net.svcret.admin.shared.model.GServiceVersionResourcePointer;
+
 import com.google.common.base.Objects;
 
 @Table(name = "PX_SVC_VER_RES", uniqueConstraints = { @UniqueConstraint(columnNames = { "SVC_VERSION_PID", "RES_URL" }) })
@@ -144,6 +146,15 @@ public class PersServiceVersionResource extends BasePersObject {
 	 */
 	public void setServiceVersion(BasePersServiceVersion theServiceVersion) {
 		myServiceVersion = theServiceVersion;
+	}
+
+	public GServiceVersionResourcePointer toDao() {
+		GServiceVersionResourcePointer retVal = new GServiceVersionResourcePointer();
+		retVal.setPid(this.getPid());
+		retVal.setSize(this.getResourceText().length());
+		retVal.setType(this.getResourceContentType());
+		retVal.setUrl(this.getResourceUrl());
+		return retVal;
 	}
 
 }

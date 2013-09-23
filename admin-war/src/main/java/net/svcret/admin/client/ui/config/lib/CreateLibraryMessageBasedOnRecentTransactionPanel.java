@@ -3,7 +3,7 @@ package net.svcret.admin.client.ui.config.lib;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import net.svcret.admin.client.AdminPortal;
-import net.svcret.admin.client.ui.stats.DateUtil;
+import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
 import net.svcret.admin.shared.model.DtoLibraryMessage;

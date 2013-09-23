@@ -1,13 +1,15 @@
 package net.svcret.ejb.api;
 
+import java.util.Collection;
+
 import javax.ejb.Local;
 
 import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersServiceCatalogItem;
-import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.BasePersStats;
 import net.svcret.ejb.model.entity.BasePersStatsPk;
+import net.svcret.ejb.model.entity.PersNodeStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
@@ -25,8 +27,7 @@ public interface IRuntimeStatusQueryLocal {
 
 	int getCachedPopulatedKeyCount();
 
-	<P extends BasePersStatsPk<P,O>, O extends BasePersStats<P,O>>
-	O getInvocationStatsSynchronously(P thePk);
+	<P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> O getInvocationStatsSynchronously(P thePk);
 
 	int getMaxCachedNullStatCount();
 
@@ -40,5 +41,6 @@ public interface IRuntimeStatusQueryLocal {
 
 	StatsAccumulator extract60MinuteStats(BasePersServiceCatalogItem theItem) throws UnexpectedFailureException;
 
-	
+	Collection<PersNodeStatus> getAllNodeStatuses();
+
 }

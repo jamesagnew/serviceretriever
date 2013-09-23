@@ -14,6 +14,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
+import net.svcret.admin.shared.model.BaseGServerSecurity;
 import net.svcret.admin.shared.model.ServerSecurityEnum;
 import net.svcret.ejb.api.ICredentialGrabber;
 
@@ -135,5 +136,14 @@ public abstract class PersBaseServerAuth<T extends PersBaseServerAuth<?,?>, G ex
 	}
 
 	public abstract void merge(BasePersObject theObj);
+
+	public BaseGServerSecurity toDto() {
+		BaseGServerSecurity retVal=createDtoAndPopulateWithTypeSpecificEntries();
+		retVal.setPid(this.getPid());
+		retVal.setAuthHostPid(this.getAuthenticationHost().getPid());
+		return retVal;
+	}
+
+	protected abstract BaseGServerSecurity createDtoAndPopulateWithTypeSpecificEntries();
 
 }

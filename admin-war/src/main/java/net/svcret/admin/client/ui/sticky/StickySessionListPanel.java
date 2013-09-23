@@ -8,7 +8,7 @@ import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PCellTable;
-import net.svcret.admin.client.ui.stats.DateUtil;
+import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGServiceVersion;

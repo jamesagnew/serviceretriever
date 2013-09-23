@@ -82,4 +82,10 @@ public abstract class BaseGObject implements Serializable {
 	public void setUncommittedSessionId(Long theUncommittedSessionId) {
 		myUncommittedSessionId = theUncommittedSessionId;
 	}
+	
+	public void clearPid() {
+		myPid = 0;
+	}
+	
+	
 }

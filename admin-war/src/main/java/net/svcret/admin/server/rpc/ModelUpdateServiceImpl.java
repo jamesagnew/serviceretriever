@@ -17,6 +17,7 @@ import net.svcret.admin.shared.ServiceFailureException;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
 import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.BaseGMonitorRule;
+import net.svcret.admin.shared.model.BaseGObject;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
@@ -469,6 +470,10 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 
 	@Override
 	public BaseGServiceVersion loadServiceVersionIntoSession(long theServiceVersionPid) throws ServiceFailureException {
+		return loadServiceVersionIntoSession(theServiceVersionPid, false);
+	}
+
+	private BaseGServiceVersion loadServiceVersionIntoSession(long theServiceVersionPid, boolean theClearPids) throws ServiceFailureException {
 		BaseGServiceVersion retVal;
 
 		GSoap11ServiceVersionAndResources serviceAndResources;
@@ -495,7 +500,26 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		saveServiceVersionToSession(retVal);
 		saveServiceVersionResourcesToSession(serviceAndResources);
 
-		retVal.setDetailedStats(loadServiceVersionDetailedStats(theServiceVersionPid));
+		if (theClearPids) {
+			for (GResource next : serviceAndResources.getResource()) {
+				next.clearPid();
+			}
+			retVal.clearPid();
+			for (BaseGObject next : retVal.getMethodList()) {
+				next.clearPid();
+			}
+			for (BaseGObject next : retVal.getClientSecurityList()) {
+				next.clearPid();
+			}
+			for (BaseGObject next : retVal.getServerSecurityList()) {
+				next.clearPid();
+			}
+			for (BaseGObject next : retVal.getUrlList()) {
+				next.clearPid();
+			}
+		}else {
+			retVal.setDetailedStats(loadServiceVersionDetailedStats(theServiceVersionPid));
+		}
 
 		return retVal;
 	}
@@ -877,6 +901,11 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 			ourLog.error("Failed to execute active check", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
+	}
+
+	@Override
+	public BaseGServiceVersion cloneServiceVersion(long thePidToClone) throws ServiceFailureException {
+		return loadServiceVersionIntoSession(thePidToClone,true);
 	}
 
 }

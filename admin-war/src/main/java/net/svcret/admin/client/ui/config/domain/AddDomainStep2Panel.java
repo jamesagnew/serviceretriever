@@ -56,7 +56,7 @@ public class AddDomainStep2Panel  extends FlowPanel implements ClickHandler {
 
 	@Override
 	public void onClick(ClickEvent theEvent) {
-		History.newItem(NavProcessor.getTokenEditDomain(false, myDomainPid));
+		History.newItem(NavProcessor.getTokenEditDomain(myDomainPid));
 	}
 	
 }

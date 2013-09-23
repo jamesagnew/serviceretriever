@@ -4,12 +4,13 @@ import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
+import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 
 @Entity
-@DiscriminatorValue("CRUD")
-public class PersServiceVersionCrud extends BasePersServiceVersion {
+@DiscriminatorValue("REST")
+public class PersServiceVersionRest extends BasePersServiceVersion {
 
 	private static final long serialVersionUID = 1L;
 
@@ -22,6 +23,12 @@ public class PersServiceVersionCrud extends BasePersServiceVersion {
 	@Override
 	public ServiceProtocolEnum getProtocol() {
 		return ServiceProtocolEnum.VIRTUAL;
+	}
+
+	@Override
+	protected BaseGServiceVersion createDtoAndPopulateWithTypeSpecificEntries() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	

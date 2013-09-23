@@ -51,7 +51,6 @@ import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserAllowableSourceIps;
 import net.svcret.ejb.model.entity.PersUserMethodStatus;
 import net.svcret.ejb.model.entity.PersUserRecentMessage;
-import net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
@@ -1252,7 +1251,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
 		PersServiceVersionSoap11 version0 = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
 		PersServiceVersionSoap11 version1 = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId1", ServiceProtocolEnum.SOAP11);
-		PersServiceVersionHl7OverHttp version2 = (PersServiceVersionHl7OverHttp) mySvc.getOrCreateServiceVersionWithId(service, "VersionId2", ServiceProtocolEnum.HL7OVERHTTP);
+		mySvc.getOrCreateServiceVersionWithId(service, "VersionId2", ServiceProtocolEnum.HL7OVERHTTP);
 
 		assertTrue(version0.getPid() > 0);
 		assertNotNull(version0.getStatus());

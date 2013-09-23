@@ -16,7 +16,7 @@ import net.svcret.admin.client.ui.dash.model.DashModelService;
 import net.svcret.admin.client.ui.dash.model.DashModelServiceMethod;
 import net.svcret.admin.client.ui.dash.model.DashModelServiceVersion;
 import net.svcret.admin.client.ui.dash.model.IDashModel;
-import net.svcret.admin.client.ui.stats.DateUtil;
+import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGDashboardObject;

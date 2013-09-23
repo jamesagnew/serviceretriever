@@ -4,6 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
+import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -33,6 +34,13 @@ public class PersServiceVersionHl7OverHttp extends BasePersServiceVersion {
 	@Override
 	public ServiceProtocolEnum getProtocol() {
 		return ServiceProtocolEnum.HL7OVERHTTP;
+	}
+
+	@Override
+	protected BaseGServiceVersion createDtoAndPopulateWithTypeSpecificEntries() {
+		DtoServiceVersionHl7OverHttp dto = new DtoServiceVersionHl7OverHttp();
+		dto.setMethodNameTemplate(getMethodNameTemplate());
+		return dto;
 	}
 
 }

@@ -71,6 +71,7 @@ import net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact;
 import net.svcret.ejb.model.entity.PersMonitorRulePassive;
 import net.svcret.ejb.model.entity.PersNodeStats;
 import net.svcret.ejb.model.entity.PersNodeStatsPk;
+import net.svcret.ejb.model.entity.PersNodeStatus;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
@@ -1464,6 +1465,28 @@ public class DaoBean implements IDao {
 	@Override
 	public PersMonitorRuleActiveCheck getMonitorRuleActiveCheck(long thePid) {
 		return myEntityManager.find(PersMonitorRuleActiveCheck.class, thePid);
+	}
+
+	@Override
+	public PersNodeStatus getOrCreateNodeStatus(String theNodeId) {
+		PersNodeStatus retVal = myEntityManager.find(PersNodeStatus.class, theNodeId);
+		if (retVal == null) {
+			retVal =new PersNodeStatus();
+			retVal.setNodeId(theNodeId);
+			retVal.setStatusTimestamp(new Date());
+			myEntityManager.merge(retVal);
+		}
+		return retVal;
+	}
+
+	@Override
+	public void saveNodeStatus(PersNodeStatus theNodeStatus) {
+		myEntityManager.merge(theNodeStatus);
+	}
+
+	@Override
+	public Collection<PersNodeStatus> getAllNodeStatuses() {
+		return myEntityManager.createNamedQuery(Queries.NODESTATUS_FINDALL, PersNodeStatus.class).getResultList();
 	}
 
 }

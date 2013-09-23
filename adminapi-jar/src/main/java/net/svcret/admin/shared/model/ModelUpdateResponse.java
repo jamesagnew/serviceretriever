@@ -1,6 +1,8 @@
 package net.svcret.admin.shared.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ModelUpdateResponse implements Serializable {
 
@@ -9,6 +11,7 @@ public class ModelUpdateResponse implements Serializable {
 	private GAuthenticationHostList myAuthenticationHostList;
 	private GDomainList myDomainList;
 	private GHttpClientConfigList myHttpClientConfigList;
+	private List<DtoNodeStatus> myNodeStatuses;
 	private GUserList myUserList;
 
 	/**
@@ -30,6 +33,13 @@ public class ModelUpdateResponse implements Serializable {
 	 */
 	public GHttpClientConfigList getHttpClientConfigList() {
 		return myHttpClientConfigList;
+	}
+
+	public List<DtoNodeStatus> getNodeStatuses() {
+		if (myNodeStatuses == null) {
+			myNodeStatuses = new ArrayList<DtoNodeStatus>();
+		}
+		return myNodeStatuses;
 	}
 
 	/**

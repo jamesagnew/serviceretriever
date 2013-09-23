@@ -21,26 +21,21 @@ import javax.ejb.TransactionAttributeType;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
-import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.BaseGClientSecurity;
 import net.svcret.admin.shared.model.BaseGMonitorRule;
 import net.svcret.admin.shared.model.BaseGServerSecurity;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
-import net.svcret.admin.shared.model.DtoClientSecurityHttpBasicAuth;
 import net.svcret.admin.shared.model.DtoClientSecurityJsonRpcNamedParameter;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
-import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
-import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
-import net.svcret.admin.shared.model.GHttpBasicAuthServerSecurity;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GLdapAuthHost;
@@ -58,7 +53,6 @@ import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
-import net.svcret.admin.shared.model.GServiceVersionResourcePointer;
 import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
@@ -69,8 +63,6 @@ import net.svcret.admin.shared.model.GUserList;
 import net.svcret.admin.shared.model.GUserServicePermission;
 import net.svcret.admin.shared.model.GUserServiceVersionMethodPermission;
 import net.svcret.admin.shared.model.GUserServiceVersionPermission;
-import net.svcret.admin.shared.model.GWsSecServerSecurity;
-import net.svcret.admin.shared.model.GWsSecUsernameTokenClientSecurity;
 import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
@@ -124,6 +116,7 @@ import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem;
 import net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact;
 import net.svcret.ejb.model.entity.PersMonitorRulePassive;
+import net.svcret.ejb.model.entity.PersNodeStatus;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
@@ -139,7 +132,6 @@ import net.svcret.ejb.model.entity.PersUserServicePermission;
 import net.svcret.ejb.model.entity.PersUserServiceVersionMethodPermission;
 import net.svcret.ejb.model.entity.PersUserServiceVersionPermission;
 import net.svcret.ejb.model.entity.PersUserStatus;
-import net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp;
 import net.svcret.ejb.model.entity.http.PersHttpBasicClientAuth;
 import net.svcret.ejb.model.entity.http.PersHttpBasicServerAuth;
 import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcClientAuth;
@@ -254,7 +246,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		PersServiceVersionMethod ui = fromUi(theMethod, theServiceVersionPid);
 		sv.addMethod(ui);
 		sv = myServiceRegistry.saveServiceVersion(sv);
-		return toUi(sv.getMethod(theMethod.getName()), false);
+		return sv.getMethod(theMethod.getName()).toDao(false, myRuntimeStatusQuerySvc);
 	}
 
 	@Override
@@ -517,6 +509,10 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		retVal.setDomainList(domainList);
 
+		for (PersNodeStatus next : myRuntimeStatusQuerySvc.getAllNodeStatuses()) {
+			retVal.getNodeStatuses().add(next.toDao());
+		}
+		
 		return retVal;
 	}
 
@@ -674,7 +670,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		StatusesBean statuses = myDao.loadAllStatuses();
 
-		BaseGServiceVersion uiService = toUi(svcVer, true, methodPids, urlPids, statuses);
+		BaseGServiceVersion uiService = svcVer.toDao(true, myRuntimeStatusQuerySvc, statuses, methodPids, urlPids);
 		GSoap11ServiceVersionAndResources retVal = toUi(uiService, svcVer);
 		return retVal;
 	}
@@ -734,13 +730,13 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		theService.getMethodList().clear();
 		for (PersServiceVersionMethod next : def.getMethods()) {
-			theService.getMethodList().add(toUi(next, false));
+			theService.getMethodList().add(next.toDao(false, myRuntimeStatusQuerySvc));
 		}
 
 		// Only add URLs if there aren't any already defined for this version
 		if (theService.getUrlList().size() == 0) {
 			for (PersServiceVersionUrl next : def.getUrls()) {
-				theService.getUrlList().add(toUi(next, false, (StatusesBean) null));
+				theService.getUrlList().add(next.toDao(false, (StatusesBean) null, myRuntimeStatusQuerySvc));
 			}
 		}
 
@@ -1051,7 +1047,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		version = myServiceRegistry.saveServiceVersion(version);
 
 		@SuppressWarnings("unchecked")
-		T retVal = (T) toUi(version, false, null);
+		T retVal = (T) version.toDao(false, myRuntimeStatusQuerySvc, null);
 
 		return retVal;
 	}
@@ -1142,55 +1138,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return theInt != null ? theInt : 0;
 	}
 
-	private StatusEnum extractStatus(BaseDtoServiceCatalogItem theDashboardObject, StatusEnum theInitialStatus, PersService theService, StatusesBean theStatuses) {
 
-		// Value will be changed below
-		StatusEnum status = theInitialStatus;
-
-		for (BasePersServiceVersion nextVersion : theService.getVersions()) {
-			status = extractStatus(theDashboardObject, theStatuses, status, nextVersion);
-
-		} // end VERSION
-		return status;
-	}
-
-	private StatusEnum extractStatus(BaseDtoServiceCatalogItem theDashboardObject, StatusesBean theStatuses, StatusEnum theStatus, BasePersServiceVersion nextVersion) {
-		StatusEnum status = theStatus;
-
-		for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
-			PersServiceVersionUrlStatus nextUrlStatus = theStatuses.getUrlStatus(nextUrl.getPid());
-			if (nextUrlStatus == null) {
-				continue;
-			}
-
-			switch (nextUrlStatus.getStatus()) {
-			case ACTIVE:
-				status = StatusEnum.ACTIVE;
-				theDashboardObject.setUrlsActive(theDashboardObject.getUrlsActive() + 1);
-				break;
-			case DOWN:
-				if (status != StatusEnum.ACTIVE) {
-					status = StatusEnum.DOWN;
-				}
-				theDashboardObject.setUrlsDown(theDashboardObject.getUrlsDown() + 1);
-				break;
-			case UNKNOWN:
-				theDashboardObject.setUrlsUnknown(theDashboardObject.getUrlsUnknown() + 1);
-				break;
-			}
-
-		} // end URL
-
-//XX		myRuntimeStatusQuerySvc.extract60MinuteStats(nextVersion, theAccumulator);
-
-		// Failing monitor rules
-		List<PersMonitorRuleFiring> failingRules = theStatuses.getFirings(nextVersion.getPid());
-		for (PersMonitorRuleFiring next : failingRules) {
-			theDashboardObject.getFailingApplicableRulePids().add(next.getPid());
-		}
-
-		return status;
-	}
 
 	@EJB
 	private IRuntimeStatusQueryLocal myRuntimeStatusQuerySvc;
@@ -1570,7 +1518,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			gDomain.getServiceList().add(gService);
 
 			for (BasePersServiceVersion nextVersion : nextService.getVersions()) {
-				BaseGServiceVersion gVersion = toUi(nextVersion, theLoadVerStats.contains(nextVersion.getPid()), theLoadVerMethodStats, theLoadUrlStats, statuses);
+				BaseGServiceVersion gVersion = nextVersion.toDao(theLoadVerStats.contains(nextVersion.getPid()), myRuntimeStatusQuerySvc, statuses, theLoadVerMethodStats, theLoadUrlStats);
 				gService.getVersionList().add(gVersion);
 
 			} // for service versions
@@ -1721,142 +1669,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 
 
-	private BaseGServiceVersion toUi(BasePersServiceVersion theVersion, boolean theLoadStats, Set<Long> theLoadMethodStats, Set<Long> theLoadUrlStats, StatusesBean theStatuses)
-			throws UnexpectedFailureException {
-		BaseGServiceVersion retVal = null;
-		switch (theVersion.getProtocol()) {
-		case SOAP11:
-			PersServiceVersionSoap11 persSoap11 = (PersServiceVersionSoap11) theVersion;
-			DtoServiceVersionSoap11 soap11RetVal = new DtoServiceVersionSoap11();
-			soap11RetVal.setWsdlLocation(persSoap11.getWsdlUrl());
-			retVal = soap11RetVal;
-			break;
-		case JSONRPC20:
-			retVal = new DtoServiceVersionJsonRpc20();
-			break;
-		case HL7OVERHTTP:
-			PersServiceVersionHl7OverHttp persHl7 = (PersServiceVersionHl7OverHttp) theVersion;
-			DtoServiceVersionHl7OverHttp dto = new DtoServiceVersionHl7OverHttp();
-			dto.setMethodNameTemplate(persHl7.getMethodNameTemplate());
-			retVal = dto;
-			break;
-		}
 
-		if (retVal == null) {
-			throw new UnexpectedFailureException("Don't know how to handle service of type " + theVersion.getProtocol());
-		}
-
-		retVal.setPid(theVersion.getPid());
-		retVal.setId(theVersion.getVersionId());
-		retVal.setName(theVersion.getVersionId());
-		retVal.setServerSecured(theVersion.getServerSecured());
-		retVal.setUseDefaultProxyPath(theVersion.isUseDefaultProxyPath());
-		retVal.setDefaultProxyPath(theVersion.getDefaultProxyPath());
-		retVal.setExplicitProxyPath(theVersion.getExplicitProxyPath());
-		retVal.setParentServiceName(theVersion.getService().getServiceName());
-		retVal.setParentServicePid(theVersion.getService().getPid());
-		retVal.setDescription(theVersion.getDescription());
-		retVal.setServerSecurityMode(theVersion.getServerSecurityMode());
-		retVal.setObscureRequestElementsInLog(theVersion.getObscureRequestElementsInLog());
-		retVal.setObscureResponseElementsInLog(theVersion.getObscureResponseElementsInLog());
-
-		theVersion.populateKeepRecentTransactionsToDto(retVal);
-		theVersion.populateServiceCatalogItemToDto(retVal);
-
-		toUiMonitorRules(theVersion, retVal);
-
-		for (PersServiceVersionMethod nextMethod : theVersion.getMethods()) {
-			boolean loadStats = theLoadMethodStats != null && theLoadMethodStats.contains(nextMethod.getPid());
-			GServiceMethod gMethod = toUi(nextMethod, loadStats);
-			retVal.getMethodList().add(gMethod);
-		} // for methods
-
-		for (PersServiceVersionUrl nextUrl : theVersion.getUrls()) {
-			GServiceVersionUrl gUrl = toUi(nextUrl, theLoadUrlStats != null && theLoadUrlStats.contains(nextUrl.getPid()), theStatuses);
-			retVal.getUrlList().add(gUrl);
-		} // for URLs
-
-		for (PersServiceVersionResource nextResource : theVersion.getUriToResource().values()) {
-			GServiceVersionResourcePointer gResource = toUi(nextResource);
-			retVal.getResourcePointerList().add(gResource);
-		} // for resources
-
-		for (PersBaseServerAuth<?, ?> nextServerAuth : theVersion.getServerAuths()) {
-			BaseGServerSecurity gServerAuth = toUi(nextServerAuth);
-			retVal.getServerSecurityList().add(gServerAuth);
-		} // server auths
-
-		for (PersBaseClientAuth<?> nextClientAuth : theVersion.getClientAuths()) {
-			BaseGClientSecurity gClientAuth = toUi(nextClientAuth);
-			retVal.getClientSecurityList().add(gClientAuth);
-		} // Client auths
-
-		PersHttpClientConfig httpClientConfig = theVersion.getHttpClientConfig();
-		if (httpClientConfig == null) {
-			throw new UnexpectedFailureException("Service version doesn't have an HTTP client config");
-		}
-		retVal.setHttpClientConfigPid(httpClientConfig.getPid());
-
-		if (theLoadStats) {
-
-			StatusEnum status = StatusEnum.UNKNOWN;
-			StatsAccumulator accumulator = null;
-			extractStatus(retVal, theStatuses, status, theVersion);
-			
-			accumulator = myRuntimeStatusQuerySvc.extract60MinuteStats(theVersion);
-			accumulator.populateDto(retVal);
-
-			retVal.setStatsInitialized(new Date());
-
-			int urlsActive = 0;
-			int urlsDown = 0;
-			int urlsUnknown = 0;
-			for (PersServiceVersionUrl nextUrl : theVersion.getUrls()) {
-
-				PersServiceVersionUrlStatus urlStatus = theStatuses.getUrlStatus(nextUrl.getPid());
-				if (urlStatus == null) {
-					continue;
-				}
-
-				switch (urlStatus.getStatus()) {
-				case ACTIVE:
-					urlsActive++;
-					break;
-				case DOWN:
-					urlsDown++;
-					break;
-				case UNKNOWN:
-					urlsUnknown++;
-					break;
-				}
-
-			}
-			retVal.setUrlsActive(urlsActive);
-			retVal.setUrlsDown(urlsDown);
-			retVal.setUrlsUnknown(urlsUnknown);
-
-			PersServiceVersionStatus svcVerStatus = theStatuses.getServiceVersionStatus(theVersion.getPid());
-			if (svcVerStatus != null) {
-				retVal.setLastServerSecurityFailure(svcVerStatus.getLastServerSecurityFailure());
-				retVal.setLastSuccessfulInvocation(svcVerStatus.getLastSuccessfulInvocation());
-			}
-
-			if (urlsDown > 0) {
-				retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.DOWN);
-			} else if (urlsActive > 0) {
-				retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.ACTIVE);
-			} else {
-				retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.UNKNOWN);
-			}
-		}
-
-		return retVal;
-	}
-
-	private BaseGServiceVersion toUi(BasePersServiceVersion theSvcVer, boolean theLoadStats, StatusesBean theStatuses) throws UnexpectedFailureException {
-		Set<Long> emptySet = Collections.emptySet();
-		return toUi(theSvcVer, theLoadStats, emptySet, emptySet, theStatuses);
-	}
 
 	private List<GUserDomainPermission> toUi(Collection<PersUserDomainPermission> theDomainPermissions) {
 		List<GUserDomainPermission> retVal = new ArrayList<GUserDomainPermission>();
@@ -1876,71 +1689,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private BaseGClientSecurity toUi(PersBaseClientAuth<?> theAuth) throws UnexpectedFailureException {
-		BaseGClientSecurity retVal = null;
 
-		switch (theAuth.getAuthType()) {
-		case WSSEC_UT: {
-			retVal = new GWsSecUsernameTokenClientSecurity();
-			break;
-		}
-		case HTTP_BASICAUTH: {
-			retVal = new DtoClientSecurityHttpBasicAuth();
-			break;
-		}
-		case JSONRPC_NAMPARM: {
-			NamedParameterJsonRpcClientAuth obj = (NamedParameterJsonRpcClientAuth) theAuth;
-			retVal = new DtoClientSecurityJsonRpcNamedParameter();
-			((DtoClientSecurityJsonRpcNamedParameter) retVal).setUsernameParameterName(obj.getUsernameParameterName());
-			((DtoClientSecurityJsonRpcNamedParameter) retVal).setPasswordParameterName(obj.getPasswordParameterName());
-			break;
-		}
-		}
-
-		if (retVal == null) {
-			throw new UnexpectedFailureException("Unknown auth type; " + theAuth.getAuthType());
-		}
-
-		retVal.setPid(theAuth.getPid());
-		retVal.setUsername(theAuth.getUsername());
-		retVal.setPassword(theAuth.getPassword());
-
-		return retVal;
-	}
-
-	private BaseGServerSecurity toUi(PersBaseServerAuth<?, ?> theAuth) {
-		BaseGServerSecurity retVal = null;
-
-		switch (theAuth.getAuthType()) {
-		case WSSEC_UT: {
-			GWsSecServerSecurity auth = new GWsSecServerSecurity();
-			retVal = auth;
-			break;
-		}
-		case HTTP_BASIC_AUTH: {
-			GHttpBasicAuthServerSecurity auth = new GHttpBasicAuthServerSecurity();
-			retVal = auth;
-			break;
-		}
-		case JSONRPC_NAMED_PARAMETER: {
-			NamedParameterJsonRpcServerAuth pers = (NamedParameterJsonRpcServerAuth) theAuth;
-			GNamedParameterJsonRpcServerAuth auth = new GNamedParameterJsonRpcServerAuth();
-			auth.setUsernameParameterName(pers.getUsernameParameterName());
-			auth.setPasswordParameterName(pers.getPasswordParameterName());
-			retVal = auth;
-			break;
-		}
-		}
-
-		if (retVal == null) {
-			throw new IllegalStateException("Unknown auth type; " + theAuth.getAuthType());
-		}
-
-		retVal.setPid(theAuth.getPid());
-		retVal.setAuthHostPid(theAuth.getAuthenticationHost().getPid());
-
-		return retVal;
-	}
 
 	private GConfig toUi(PersConfig theConfig) {
 		GConfig retVal = new GConfig();
@@ -1959,8 +1708,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		retVal.setName(theDomain.getDomainName());
 		retVal.setServerSecured(theDomain.getServerSecured());
 
-		toUiMonitorRules(theDomain, retVal);
-
+		theDomain.populateDtoWithMonitorRules(retVal);
 		theDomain.populateKeepRecentTransactionsToDto(retVal);
 		theDomain.populateServiceCatalogItemToDto(retVal);
 
@@ -1970,13 +1718,11 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 			StatsAccumulator accumulator = null;
 			for (PersService nextService : theDomain.getServices()) {
-				status = extractStatus(retVal, status, nextService, theStatuses);
+				status = nextService.populateDtoWithStatusAndProvideStatusForParent(retVal, status, theStatuses);
 			}
 			
 			accumulator = myRuntimeStatusQuerySvc.extract60MinuteStats(theDomain);
 			accumulator.populateDto(retVal);
-
-			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
 
 			int urlsActive = 0;
 			int urlsDown = 0;
@@ -2087,19 +1833,17 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		theService.populateKeepRecentTransactionsToDto(retVal);
 		theService.populateServiceCatalogItemToDto(retVal);
-
-		toUiMonitorRules(theService, retVal);
+		theService.populateDtoWithMonitorRules(retVal);
 
 		if (theLoadStats) {
 			retVal.setStatsInitialized(new Date());
 			StatusEnum status = StatusEnum.UNKNOWN;
 
 			StatsAccumulator accumulator = null;
-			status = extractStatus(retVal, status, theService, theStatuses);
+			status = theService.populateDtoWithStatusAndProvideStatusForParent(retVal, status, theStatuses);
 
 			accumulator = myRuntimeStatusQuerySvc.extract60MinuteStats(theService);
 			accumulator.populateDto(retVal);
-			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
 
 			int urlsActive = 0;
 			int urlsDown = 0;
@@ -2143,91 +1887,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private GServiceMethod toUi(PersServiceVersionMethod theMethod, boolean theLoadStats) throws UnexpectedFailureException {
-		GServiceMethod retVal = new GServiceMethod();
-		if (theMethod.getPid() != null) {
-			retVal.setPid(theMethod.getPid());
-		}
-		retVal.setId(theMethod.getName());
-		retVal.setName(theMethod.getName());
-		retVal.setRootElements(theMethod.getRootElements());
-		retVal.setSecurityPolicy(theMethod.getSecurityPolicy());
 
-		if (theLoadStats) {
-			retVal.setStatsInitialized(new Date());
-			StatusEnum status = StatusEnum.UNKNOWN;
-
-			StatsAccumulator accumulator = new StatsAccumulator();
-			myRuntimeStatusQuerySvc.extract60MinuteMethodStats(theMethod, accumulator);
-			accumulator.populateDto(retVal);
-
-			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
-
-		}
-
-		return retVal;
-	}
-
-	private GServiceVersionResourcePointer toUi(PersServiceVersionResource theResource) {
-		GServiceVersionResourcePointer retVal = new GServiceVersionResourcePointer();
-		retVal.setPid(theResource.getPid());
-		retVal.setSize(theResource.getResourceText().length());
-		retVal.setType(theResource.getResourceContentType());
-		retVal.setUrl(theResource.getResourceUrl());
-		return retVal;
-	}
-
-	private GServiceVersionUrl toUi(PersServiceVersionUrl theUrl, boolean theLoadStats, StatusesBean theStatuses) throws UnexpectedFailureException {
-		PersServiceVersionUrlStatus theUrlStatus = null;
-		if (theLoadStats) {
-			theUrlStatus = theStatuses.getUrlStatus(theUrl.getPid());
-		}
-
-		return toUi(theUrl, theLoadStats, theUrlStatus);
-	}
-
-	private GServiceVersionUrl toUi(PersServiceVersionUrl theUrl, boolean theLoadStats, PersServiceVersionUrlStatus urlStatus) throws UnexpectedFailureException {
-		GServiceVersionUrl retVal = new GServiceVersionUrl();
-		if (theUrl.getPid() != null) {
-			retVal.setPid(theUrl.getPid());
-		}
-		retVal.setId(theUrl.getUrlId());
-		retVal.setUrl(theUrl.getUrl());
-
-		if (theLoadStats) {
-			if (urlStatus.getStatus() == StatusEnum.DOWN) {
-				if (urlStatus.getNextCircuitBreakerReset() != null) {
-					retVal.setNextCircuitBreakerReset(urlStatus.getNextCircuitBreakerReset());
-				}
-			}
-
-			retVal.setStatsLastFailure(urlStatus.getLastFail());
-			retVal.setStatsLastFailureMessage(urlStatus.getLastFailMessage());
-			retVal.setStatsLastFailureStatusCode(urlStatus.getLastFailStatusCode());
-			retVal.setStatsLastFailureContentType(urlStatus.getLastFailContentType());
-
-			retVal.setStatsLastSuccess(urlStatus.getLastSuccess());
-			retVal.setStatsLastSuccessMessage(urlStatus.getLastSuccessMessage());
-			retVal.setStatsLastSuccessStatusCode(urlStatus.getLastSuccessStatusCode());
-			retVal.setStatsLastSuccessContentType(urlStatus.getLastSuccessContentType());
-
-			retVal.setStatsLastFault(urlStatus.getLastFault());
-			retVal.setStatsLastFaultMessage(urlStatus.getLastFaultMessage());
-			retVal.setStatsLastFaultStatusCode(urlStatus.getLastFaultStatusCode());
-			retVal.setStatsLastFaultContentType(urlStatus.getLastFaultContentType());
-
-			retVal.setStatus(urlStatus.getStatus());
-			retVal.setStatsNextCircuitBreakerReset(urlStatus.getNextCircuitBreakerReset());
-
-			StatsAccumulator accumulator = new StatsAccumulator();
-			myRuntimeStatusQuerySvc.extract60MinuteServiceVersionUrlStatistics(theUrl, accumulator);
-			accumulator.populateDto(retVal);
-
-			retVal.setStatsInitialized(new Date());
-
-		}
-		return retVal;
-	}
 
 	private GUser toUi(PersUser thePersUser, boolean theLoadStats) throws UnexpectedFailureException {
 		GUser retVal = new GUser();
@@ -2314,39 +1974,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private void toUiMonitorRules(BasePersServiceVersion theSvcVer, BaseDtoServiceCatalogItem retVal) {
-		for (PersMonitorAppliesTo nextRule : theSvcVer.getMonitorRules()) {
-			if (nextRule.getItem().equals(theSvcVer)) {
-				retVal.getMonitorRulePids().add(nextRule.getPid());
-			}
-		}
-		for (PersMonitorRuleActiveCheck next : theSvcVer.getActiveChecks()) {
-			retVal.getMonitorRulePids().add(next.getRule().getPid());
-		}
 
-	}
-
-	private void toUiMonitorRules(PersDomain theDomain, BaseDtoServiceCatalogItem retVal) {
-		for (PersService nextSvc : theDomain.getServices()) {
-			toUiMonitorRules(nextSvc, retVal);
-		}
-		for (PersMonitorAppliesTo nextRule : theDomain.getMonitorRules()) {
-			if (nextRule.getItem().equals(theDomain)) {
-				retVal.getMonitorRulePids().add(nextRule.getPid());
-			}
-		}
-	}
-
-	private void toUiMonitorRules(PersService theService, BaseDtoServiceCatalogItem retVal) {
-		for (BasePersServiceVersion nextSvcVer : theService.getVersions()) {
-			toUiMonitorRules(nextSvcVer, retVal);
-		}
-		for (PersMonitorAppliesTo nextRule : theService.getMonitorRules()) {
-			if (nextRule.getItem().equals(theService)) {
-				retVal.getMonitorRulePids().add(nextRule.getPid());
-			}
-		}
-	}
 
 	/**
 	 * Convenience for Unit Tests
@@ -2549,7 +2177,47 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	@Override
 	public GServiceVersionUrl resetCircuitBreaker(long theUrlPid) throws UnexpectedFailureException {
 		PersServiceVersionUrl url = myServiceRegistry.resetCircuitBreaker(theUrlPid);
-		return toUi(url, true, url.getStatus());
+		PersServiceVersionUrlStatus urlStatus = url.getStatus();
+		GServiceVersionUrl retVal = new GServiceVersionUrl();
+		if (url.getPid() != null) {
+			retVal.setPid(url.getPid());
+		}
+		retVal.setId(url.getUrlId());
+		retVal.setUrl(url.getUrl());
+		
+		if (true) {
+			if (urlStatus.getStatus() == StatusEnum.DOWN) {
+				if (urlStatus.getNextCircuitBreakerReset() != null) {
+					retVal.setNextCircuitBreakerReset(urlStatus.getNextCircuitBreakerReset());
+				}
+			}
+		
+			retVal.setStatsLastFailure(urlStatus.getLastFail());
+			retVal.setStatsLastFailureMessage(urlStatus.getLastFailMessage());
+			retVal.setStatsLastFailureStatusCode(urlStatus.getLastFailStatusCode());
+			retVal.setStatsLastFailureContentType(urlStatus.getLastFailContentType());
+		
+			retVal.setStatsLastSuccess(urlStatus.getLastSuccess());
+			retVal.setStatsLastSuccessMessage(urlStatus.getLastSuccessMessage());
+			retVal.setStatsLastSuccessStatusCode(urlStatus.getLastSuccessStatusCode());
+			retVal.setStatsLastSuccessContentType(urlStatus.getLastSuccessContentType());
+		
+			retVal.setStatsLastFault(urlStatus.getLastFault());
+			retVal.setStatsLastFaultMessage(urlStatus.getLastFaultMessage());
+			retVal.setStatsLastFaultStatusCode(urlStatus.getLastFaultStatusCode());
+			retVal.setStatsLastFaultContentType(urlStatus.getLastFaultContentType());
+		
+			retVal.setStatus(urlStatus.getStatus());
+			retVal.setStatsNextCircuitBreakerReset(urlStatus.getNextCircuitBreakerReset());
+		
+			StatsAccumulator accumulator = new StatsAccumulator();
+			myRuntimeStatusQuerySvc.extract60MinuteServiceVersionUrlStatistics(url, accumulator);
+			accumulator.populateDto(retVal);
+		
+			retVal.setStatsInitialized(new Date());
+		
+		}
+		return retVal;
 	}
 
 	@Override

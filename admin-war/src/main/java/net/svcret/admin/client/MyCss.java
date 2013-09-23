@@ -38,5 +38,9 @@ public interface MyCss extends CssResource {
 	String spinnerStatusMessageStyle();
 
 	String spinnerElement();
+
+	String topPanelNodeStatusLabel();
+
+	String topPanelNodeStatusLabelContents();
 	
 }

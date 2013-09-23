@@ -4,7 +4,7 @@ import java.util.Date;
 
 import net.svcret.admin.client.MyResources;
 import net.svcret.admin.client.ui.components.IProvidesTooltip;
-import net.svcret.admin.client.ui.stats.DateUtil;
+import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
 
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;

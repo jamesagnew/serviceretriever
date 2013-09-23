@@ -127,7 +127,7 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 			@Override
 			public void onClick(ClickEvent theEvent) {
 				thePopupPanel.hide();
-				History.newItem(NavProcessor.getTokenEditService(true, domain.getPid(), service.getPid()));
+				History.newItem(NavProcessor.getTokenEditService(domain.getPid(), service.getPid()));
 			}
 		});
 		content.add(editDomain);
@@ -139,7 +139,7 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 			@Override
 			public void onClick(ClickEvent theEvent) {
 				thePopupPanel.hide();
-				History.newItem(NavProcessor.getTokenDeleteService(true, domain.getPid(), service.getPid()));
+				History.newItem(NavProcessor.getTokenDeleteService(domain.getPid(), service.getPid()));
 			}
 		});
 		content.add(delete);
@@ -150,7 +150,7 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 		msgLib.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
-				History.newItem(NavProcessor.getTokenMessageLibrary(true, HierarchyEnum.SERVICE, service.getPid()));
+				History.newItem(NavProcessor.getTokenMessageLibrary(HierarchyEnum.SERVICE, service.getPid()));
 			}
 		});
 		content.add(msgLib);
@@ -167,7 +167,7 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 			@Override
 			public void onClick(ClickEvent theEvent) {
 				thePopupPanel.hide();
-				String newToken = NavProcessor.getTokenAddServiceVersion(true, domain.getPid(), service.getPid(), null);
+				String newToken = NavProcessor.getTokenAddServiceVersion(domain.getPid(), service.getPid(), null);
 				History.newItem(newToken);
 			}
 		});

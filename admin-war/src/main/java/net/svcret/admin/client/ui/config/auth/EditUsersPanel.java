@@ -19,7 +19,7 @@ import net.svcret.admin.client.ui.components.PCellTable;
 import net.svcret.admin.client.ui.config.svcver.BaseDetailPanel;
 import net.svcret.admin.client.ui.config.svcver.NullColumn;
 import net.svcret.admin.client.ui.dash.model.UsageSparklineTooltipProvider;
-import net.svcret.admin.client.ui.stats.DateUtil;
+import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseGAuthHost;
@@ -273,7 +273,7 @@ public class EditUsersPanel extends FlowPanel {
 
 			@Override
 			public void onClick(ClickEvent theEvent) {
-				History.newItem(NavProcessor.getTokenAddUser(true, Long.parseLong(myAuthHostsListBox.getValue(myAuthHostsListBox.getSelectedIndex()))));
+				History.newItem(NavProcessor.getTokenAddUser(Long.parseLong(myAuthHostsListBox.getValue(myAuthHostsListBox.getSelectedIndex()))));
 			}
 		}));
 		addPanel.add(new Label("Using Authentication Host:"));
@@ -296,7 +296,7 @@ public class EditUsersPanel extends FlowPanel {
 	}
 
 	private void viewUserStats(GUser theObject) {
-		String token = NavProcessor.getTokenUserStats(true, theObject.getPid());
+		String token = NavProcessor.getTokenUserStats(theObject.getPid());
 		History.newItem(token);
 	}
 
@@ -337,12 +337,12 @@ public class EditUsersPanel extends FlowPanel {
 	}
 
 	private void viewUserRecentMessages(GUser theNextUser) {
-		String token = NavProcessor.getTokenUserRecentMessages(true, theNextUser.getPid());
+		String token = NavProcessor.getTokenUserRecentMessages(theNextUser.getPid());
 		History.newItem(token);
 	}
 
 	private void editUser(GUser theNextUser) {
-		String token = NavProcessor.getTokenEditUser(true, theNextUser.getPid());
+		String token = NavProcessor.getTokenEditUser(theNextUser.getPid());
 		History.newItem(token);
 	}
 

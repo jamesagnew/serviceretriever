@@ -43,6 +43,9 @@ public class Queries {
 	public static final String RULEFIRING_FINDACTIVE = "PersMonitorRuleFiring.findAll";
 	public static final String RULEFIRING_FINDACTIVE_Q = "SELECT f FROM PersMonitorRuleFiring f WHERE f.myEndDate IS NULL";
 
+	public static final String NODESTATUS_FINDALL = "PersNodeStatus.findAll";
+	public static final String NODRSTATUS_FINDALL_Q = "SELECT s FROM PersNodeStatus s";
+
 	public static final String PERSINVOC_STATS = "PersInvocationStats.findBeforeDate";
 	public static final String PERSINVOC_STATS_Q = "SELECT s FROM PersInvocationMethodSvcverStats s WHERE s.myPk.myInterval = :INTERVAL AND s.myPk.myStartTime < :BEFORE_DATE";
 

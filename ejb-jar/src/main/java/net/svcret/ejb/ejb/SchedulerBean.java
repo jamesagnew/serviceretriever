@@ -100,14 +100,14 @@ public class SchedulerBean implements IScheduler {
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	public void flushInMemoryStatistics() {
 		try {
-			ourLog.debug("flushStats()");
-			myStatsSvc.flushStatus();
-
 			for (String nextUrl : myConfigSvc.getSecondaryNodeRefreshUrls()) {
 				ourLog.debug("Invoking secondary refresh URL: {}", nextUrl);
 				myHttpClient.get(nextUrl);
 			}
-			
+
+			ourLog.debug("flushStats()");
+			myStatsSvc.flushStatus();
+
 			myLastStatsFlush = System.currentTimeMillis();
 		} catch (Exception e) {
 			ourLog.error("Failed to flush stats", e);

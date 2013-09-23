@@ -42,7 +42,11 @@ public interface ModelUpdateServiceAsync {
 
 	void addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion, AsyncCallback<AddServiceVersionResponse> theCallback);
 
+	void cloneServiceVersion(long thePidToClone, AsyncCallback<BaseGServiceVersion> theCallback);
+
 	void createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncommittedId, AsyncCallback<BaseGServiceVersion> theCallback);
+
+	void executeMonitorRuleActiveCheck(DtoMonitorRuleActiveCheck theCheck, AsyncCallback<DtoMonitorRuleActiveCheck> theAsyncCallback);
 
 	void getLatestFailingMonitorRuleFiringForRulePids(AsyncCallback<Map<Long, GMonitorRuleFiring>> theIAsyncLoadCallback);
 
@@ -109,7 +113,5 @@ public interface ModelUpdateServiceAsync {
 	void saveUser(GUser theUser, AsyncCallback<Void> theAsyncCallback);
 
 	void testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long theServiceVersionPid, AsyncCallback<GServiceVersionSingleFireResponse> theAsyncCallback);
-
-	void executeMonitorRuleActiveCheck(DtoMonitorRuleActiveCheck theCheck, AsyncCallback<DtoMonitorRuleActiveCheck> theAsyncCallback);
 
 }

@@ -1,6 +1,7 @@
 package net.svcret.admin.client.nav;
 
 import static net.svcret.admin.shared.util.StringUtil.*;
+import static net.svcret.admin.client.nav.PagesEnum.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -30,6 +31,7 @@ import net.svcret.admin.client.ui.config.service.DeleteServicePanel;
 import net.svcret.admin.client.ui.config.service.EditServicePanel;
 import net.svcret.admin.client.ui.config.svcver.AddServiceVersionPanel;
 import net.svcret.admin.client.ui.config.svcver.AddServiceVersionStep2Panel;
+import net.svcret.admin.client.ui.config.svcver.CloneServiceVersionPanel;
 import net.svcret.admin.client.ui.config.svcver.EditServiceVersionPanel;
 import net.svcret.admin.client.ui.config.svcver.ServiceVersionRecentMessagePanel;
 import net.svcret.admin.client.ui.dash.IDestroyable;
@@ -139,8 +141,8 @@ public class NavProcessor {
 		return prev;
 	}
 
-	public static String getMonitorRules(boolean theAddToHistory) {
-		return createArgumentToken(theAddToHistory, PagesEnum.MRL);
+	public static String getMonitorRules() {
+		return createArgumentToken(PagesEnum.MRL);
 	}
 
 	public static String getTokenAddDomainStep2(long theId) {
@@ -153,31 +155,20 @@ public class NavProcessor {
 		return token;
 	}
 
-	public static String getTokenAddMonitorRule(boolean theAddToHistory, int theAddType) {
-		return createArgumentToken(theAddToHistory, PagesEnum.AMR, theAddType);
+	public static String getTokenAddMonitorRule(int theAddType) {
+		return createArgumentToken(PagesEnum.AMR, theAddType);
 	}
 
-	public static String getTokenAddService(boolean theAddToHistory, long theDomainPid) {
-		return createArgumentToken(theAddToHistory, PagesEnum.ASE, theDomainPid);
+	public static String getTokenAddService(long theDomainPid) {
+		return createArgumentToken(PagesEnum.ASE, theDomainPid);
 	}
 
-	public static String getTokenAddServiceVersion(boolean theAddToHistory, Long theDomainId, Long theServiceId, Long theUncommittedSessionId) {
-		String token = "";
-		if (theAddToHistory) {
-			token = getCurrentToken();
-			if (!token.isEmpty()) {
-				token = token + SEPARATOR;
-			}
-		}
-
+	public static String getTokenAddServiceVersion(Long theDomainId, Long theServiceId, Long theUncommittedSessionId) {
 		if (theUncommittedSessionId != null) {
-			token = token + PagesEnum.ASV + "_" + theDomainId + "_" + theServiceId + "_" + theUncommittedSessionId;
+			return createArgumentToken(PagesEnum.ASV, theDomainId , theServiceId , theUncommittedSessionId);
 		} else {
-			token = token + PagesEnum.ASV;
+			return createArgumentToken(PagesEnum.ASV);
 		}
-
-		token = removeDuplicates(token);
-		return token;
 	}
 
 	public static String getTokenAddServiceVersionStep2(long theDomainPid, long theServicePid, long theVersionPid) {
@@ -193,97 +184,41 @@ public class NavProcessor {
 		return token;
 	}
 
-	public static String getTokenAddUser(boolean theAddToHistory, long theAuthHostPid) {
-		String token = "";
-		if (theAddToHistory) {
-			token = getCurrentToken();
-			if (!token.isEmpty()) {
-				token = token + SEPARATOR;
-			}
-		}
-		token = token + PagesEnum.ADU + "_" + theAuthHostPid;
-		token = removeDuplicates(token);
-		return token;
+	public static String getTokenAddUser(long theAuthHostPid) {
+		return createArgumentToken(PagesEnum.ADU, theAuthHostPid);
 	}
 
-	public static String getTokenDeleteDomain(boolean theAddToHistory, long theDomainPid) {
-		String token = "";
-		if (theAddToHistory) {
-			token = getCurrentToken();
-			if (!token.isEmpty()) {
-				token = token + SEPARATOR;
-			}
-		}
-		token = token + PagesEnum.DDO + "_" + theDomainPid;
-		token = removeDuplicates(token);
-		return token;
+	public static String getTokenDeleteDomain(long theDomainPid) {
+		return createArgumentToken(DDO, theDomainPid);
 	}
 
-	public static String getTokenDeleteService(boolean theAddToHistory, long theDomainPid, long theServicePid) {
-		String token = "";
-		if (theAddToHistory) {
-			token = getCurrentToken();
-			if (!token.isEmpty()) {
-				token = token + SEPARATOR;
-			}
-		}
-		token = token + PagesEnum.DSE + "_" + theDomainPid + "_" + theServicePid;
-		token = removeDuplicates(token);
-		return token;
+	public static String getTokenDeleteService(long theDomainPid, long theServicePid) {
+		return createArgumentToken(DSE,theDomainPid, theServicePid				);
+		
 	}
 
-	public static String getTokenDeleteServiceVersion(boolean theAddToHistory, long thePid) {
-		String token = "";
-		if (theAddToHistory) {
-			token = getCurrentToken();
-			if (!token.isEmpty()) {
-				token = token + SEPARATOR;
-			}
-		}
-		token = token + PagesEnum.DSV + "_" + thePid;
-		token = removeDuplicates(token);
-		return token;
+	public static String getTokenDeleteServiceVersion(long thePid) {
+		return createArgumentToken(DSV, thePid);
 	}
 
-	public static String getTokenEditDomain(boolean theAddToHistory, long theDomainPid) {
-		return createArgumentToken(theAddToHistory, PagesEnum.EDO, theDomainPid);
+	public static String getTokenEditDomain(long theDomainPid) {
+		return createArgumentToken(PagesEnum.EDO, theDomainPid);
 	}
 
-	public static String getTokenEditLibraryMessage(boolean theAddToHistory, long theMessagePid) {
-		return createArgumentToken(theAddToHistory, PagesEnum.ELM, theMessagePid);
+	public static String getTokenEditLibraryMessage(long theMessagePid) {
+		return createArgumentToken(PagesEnum.ELM, theMessagePid);
 	}
 
-	public static String getTokenEditMonitorRule(boolean theAddToHistory, long theRulePid) {
-		return createArgumentToken(theAddToHistory, PagesEnum.EMR, theRulePid);
+	public static String getTokenEditMonitorRule(long theRulePid) {
+		return createArgumentToken(PagesEnum.EMR, theRulePid);
 	}
 
-	public static String getTokenEditService(boolean theAddToHistory, long theDomainPid, long theServicePid) {
-		String token = "";
-		if (theAddToHistory) {
-			token = getCurrentToken();
-			if (!token.isEmpty()) {
-				token = token + SEPARATOR;
-			}
-		}
-		token = token + PagesEnum.ESE + "_" + theDomainPid + "_" + theServicePid;
-		token = removeDuplicates(token);
-		return token;
+	public static String getTokenEditService(long theDomainPid, long theServicePid) {
+		return createArgumentToken(ESE, theDomainPid,theServicePid);
 	}
 
-	public static String getTokenEditServiceVersion(boolean theAddToHistory, long theVersionPid) {
-		String token = "";
-		if (theAddToHistory) {
-			token = getCurrentToken();
-			if (!token.isEmpty()) {
-				token = token + SEPARATOR;
-			}
-		}
-
-		token = token + PagesEnum.ESV + "_" + theVersionPid;
-
-		token = removeDuplicates(token);
-
-		return createArgumentToken(theAddToHistory, PagesEnum.ESV, theVersionPid);
+	public static String getTokenEditServiceVersion(long theVersionPid) {
+		return createArgumentToken(PagesEnum.ESV, theVersionPid);
 	}
 
 	// public static Long getParamAddServiceVersionUncommittedId() {
@@ -300,104 +235,68 @@ public class NavProcessor {
 	// return Long.parseLong(numStr);
 	// }
 
-	public static String getTokenEditUser(boolean theAddToHistory, long theUserPid) {
-		String token = "";
-		if (theAddToHistory) {
-			token = getCurrentToken();
-			if (!token.isEmpty()) {
-				token = token + SEPARATOR;
-			}
-		}
-		token = token + PagesEnum.EDU + "_" + theUserPid;
-		token = removeDuplicates(token);
-		return token;
+	public static String getTokenEditUser(long theUserPid) {
+		return createArgumentToken(EDU, theUserPid);
 	}
 
-	public static String getTokenReplayLibraryMessage(boolean theAddToHistory, long theServiceVersionPid, long theLibraryMessagePid) {
-		return createArgumentToken(theAddToHistory, PagesEnum.RLM, theServiceVersionPid, theLibraryMessagePid);
+	public static String getTokenReplayLibraryMessage(long theServiceVersionPid, long theLibraryMessagePid) {
+		return createArgumentToken(PagesEnum.RLM, theServiceVersionPid, theLibraryMessagePid);
 	}
 
-	public static String getTokenReplayMessageForUser(boolean theAddToHistory, long theMessagePid) {
-		return createArgumentToken(theAddToHistory, PagesEnum.RPU, theMessagePid);
+	public static String getTokenReplayMessageForUser(long theMessagePid) {
+		return createArgumentToken(PagesEnum.RPU, theMessagePid);
 	}
 
-	public static String getTokenReplayMessageForServiceVersion(boolean theAddToHistory, long theMessagePid) {
-		return createArgumentToken(theAddToHistory, PagesEnum.RPM, theMessagePid);
+	public static String getTokenReplayMessageForServiceVersion(long theMessagePid) {
+		return createArgumentToken(PagesEnum.RPM, theMessagePid);
 	}
 
-	public static String getTokenSaveRecentMessageToLibrary(boolean theAddToHistory, RecentMessageTypeEnum theType, long thePid) {
-		return createArgumentToken(theAddToHistory, PagesEnum.SML, theType, Long.toString(thePid));
+	public static String getTokenSaveRecentMessageToLibrary(RecentMessageTypeEnum theType, long thePid) {
+		return createArgumentToken(PagesEnum.SML, theType, Long.toString(thePid));
 	}
 
-	public static String getTokenServiceVersionStats(boolean theAddToHistory, long theServiceVersionPid) {
-		return createArgumentToken(theAddToHistory, PagesEnum.SVS, theServiceVersionPid);
+	public static String getTokenServiceVersionStats(long theServiceVersionPid) {
+		return createArgumentToken(PagesEnum.SVS, theServiceVersionPid);
 	}
 
-	public static String getTokenMessageLibrary(boolean theAddToHistory) {
-		return createArgumentToken(theAddToHistory, PagesEnum.MLB);
+	public static String getTokenMessageLibrary() {
+		return createArgumentToken(PagesEnum.MLB);
 	}
 
-	public static String getTokenMessageLibrary(boolean theAddToHistory, HierarchyEnum theType, long thePid) {
-		return createArgumentToken(theAddToHistory, PagesEnum.MLB, theType, thePid);
+	public static String getTokenMessageLibrary(HierarchyEnum theType, long thePid) {
+		return createArgumentToken(PagesEnum.MLB, theType, thePid);
 	}
 
-	public static String getTokenMessageLibraryAdd(boolean theAddToHistory) {
-		return createArgumentToken(theAddToHistory, PagesEnum.CLM);
+	public static String getTokenMessageLibraryAdd() {
+		return createArgumentToken(PagesEnum.CLM);
 	}
 
-	public static String getTokenMessageLibraryAdd(boolean theAddToHistory, HierarchyEnum theType, long thePid) {
-		return createArgumentToken(theAddToHistory, PagesEnum.CLM, theType, thePid);
+	public static String getTokenMessageLibraryAdd(HierarchyEnum theType, long thePid) {
+		return createArgumentToken(PagesEnum.CLM, theType, thePid);
 	}
 
-	public static String getTokenEditHttpClientConfig(boolean theAddToHistory, long thePid) {
-		return createArgumentToken(theAddToHistory, PagesEnum.HCC, thePid);
+	public static String getTokenEditHttpClientConfig(long thePid) {
+		return createArgumentToken(PagesEnum.HCC, thePid);
 	}
 
-	public static String getTokenTestServiceVersion(boolean theAddToHistory, long theServiceVersionPid) {
-		return createArgumentToken(theAddToHistory, PagesEnum.TSV, theServiceVersionPid);
+	public static String getTokenTestServiceVersion(long theServiceVersionPid) {
+		return createArgumentToken(PagesEnum.TSV, theServiceVersionPid);
 	}
 
-	public static String getTokenViewServiceVersionRecentMessage(boolean theAddToHistory, long thePid) {
-		String token = "";
-		if (theAddToHistory) {
-			token = getCurrentToken();
-			if (!token.isEmpty()) {
-				token = token + SEPARATOR;
-			}
-		}
-		token = token + PagesEnum.RSV + "_" + thePid;
-		token = removeDuplicates(token);
-		return token;
+	public static String getTokenViewServiceVersionRecentMessage(long thePid) {
+		return createArgumentToken(RSV,thePid);
 	}
 
-	public static String getTokenServiceVersionRecentMessages(boolean theAddToHistory, long thePid) {
-		String token = "";
-		if (theAddToHistory) {
-			token = getCurrentToken();
-			if (!token.isEmpty()) {
-				token = token + SEPARATOR;
-			}
-		}
-		token = token + PagesEnum.SRM + "_" + thePid;
-		token = removeDuplicates(token);
-		return token;
+	public static String getTokenServiceVersionRecentMessages(long thePid) {
+		return createArgumentToken(SRM,thePid);
 	}
 
-	public static String getTokenViewUserRecentMessage(boolean theAddToHistory, long thePid) {
-		String token = "";
-		if (theAddToHistory) {
-			token = getCurrentToken();
-			if (!token.isEmpty()) {
-				token = token + SEPARATOR;
-			}
-		}
-		token = token + PagesEnum.RUS + "_" + thePid;
-		token = removeDuplicates(token);
-		return token;
+	public static String getTokenViewUserRecentMessage(long thePid) {
+		return createArgumentToken(RUS,thePid);
 	}
 
-	public static String getTokenUserRecentMessages(boolean theAddToHistory, long theUserPid) {
-		return createArgumentToken(theAddToHistory, PagesEnum.URM, theUserPid);
+	public static String getTokenUserRecentMessages(long theUserPid) {
+		return createArgumentToken(PagesEnum.URM, theUserPid);
 	}
 
 	public static void goHome() {
@@ -420,6 +319,9 @@ public class NavProcessor {
 			break;
 		case AD2:
 			panel = new AddDomainStep2Panel(Long.parseLong(args));
+			break;
+		case CSV:
+			panel = new CloneServiceVersionPanel(Long.parseLong(args));
 			break;
 		case UST:
 			panel = new UserStatsPanel(Long.parseLong(args));
@@ -600,8 +502,8 @@ public class NavProcessor {
 		History.newItem(thePage.name(), true);
 	}
 
-	private static String createArgumentToken(boolean theAddToHistory, PagesEnum thePage, Object... theArgs) {
-		String token = createArgumentToken(theAddToHistory, thePage);
+	private static String createArgumentToken(PagesEnum thePage, Object... theArgs) {
+		String token = createArgumentTokenInternal(thePage);
 		for (Object next : theArgs) {
 			token = token + "_" + next.toString();
 		}
@@ -610,8 +512,8 @@ public class NavProcessor {
 	}
 
 
-//	private static String createArgumentToken(boolean theAddToHistory, PagesEnum thePage, long... theArgument) {
-//		String token = createArgumentToken(theAddToHistory, thePage);
+//	private static String createArgumentToken(PagesEnum thePage, long... theArgument) {
+//		String token = createArgumentToken(thePage);
 //		for (long next : theArgument) {
 //			token = token + "_" + next;
 //		}
@@ -619,14 +521,12 @@ public class NavProcessor {
 //		return token;
 //	}
 
-	private static String createArgumentToken(boolean theAddToHistory, PagesEnum thePage) {
+	private static String createArgumentTokenInternal(PagesEnum thePage) {
 		String token = "";
-		if (theAddToHistory) {
 			token = getCurrentToken();
 			if (!token.isEmpty()) {
 				token = token + SEPARATOR;
 			}
-		}
 		token = token + thePage;
 		return token;
 	}
@@ -672,8 +572,12 @@ public class NavProcessor {
 
 	}
 
-	public static String getTokenUserStats(boolean theAddToHistory, long theUserPid) {
-		return createArgumentToken(theAddToHistory, PagesEnum.UST, theUserPid);
+	public static String getTokenUserStats(long theUserPid) {
+		return createArgumentToken(PagesEnum.UST, theUserPid);
+	}
+
+	public static String getTokenCloneServiceVersion(long thePid) {
+		return createArgumentToken(PagesEnum.CSV, thePid);
 	}
 
 }

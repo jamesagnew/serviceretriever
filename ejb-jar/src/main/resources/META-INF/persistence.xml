@@ -32,6 +32,7 @@
 		<class>net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact</class>
 		<class>net.svcret.ejb.model.entity.PersNodeStats</class>
+		<class>net.svcret.ejb.model.entity.PersNodeStatus</class>
 		<class>net.svcret.ejb.model.entity.PersServiceVersionMethod</class>
 		<class>net.svcret.ejb.model.entity.PersService</class>
 		<class>net.svcret.ejb.model.entity.PersStickySessionUrlBinding</class>
@@ -62,10 +63,10 @@
 		<class>net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual</class>
 		<exclude-unlisted-classes>false</exclude-unlisted-classes>
 		<properties>
-			<property name="hibernate.dialect" value="org.hibernate.dialect.Oracle10gDialect" />
-			<property name="hibernate.hbm2ddl.auto" value="validate" />  
 			<!-- 
 			-->
+			<property name="hibernate.dialect" value="org.hibernate.dialect.Oracle10gDialect" />
+			<property name="hibernate.hbm2ddl.auto" value="validate" />  
 			
             <!-- 
 			<property name="hibernate.hbm2ddl.auto" value="" />  
@@ -123,6 +124,7 @@
 		<class>net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact</class>
 		<class>net.svcret.ejb.model.entity.PersNodeStats</class>
+		<class>net.svcret.ejb.model.entity.PersNodeStatus</class>
 		<class>net.svcret.ejb.model.entity.PersServiceVersionMethod</class>
 		<class>net.svcret.ejb.model.entity.PersService</class>
 		<class>net.svcret.ejb.model.entity.PersUser</class>

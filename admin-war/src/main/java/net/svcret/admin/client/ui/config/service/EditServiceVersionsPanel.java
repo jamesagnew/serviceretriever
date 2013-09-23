@@ -85,7 +85,7 @@ public class EditServiceVersionsPanel extends FlowPanel {
 			editBtn.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent theEvent) {
-					String token = NavProcessor.getTokenEditServiceVersion(true, myVersion.getPid());
+					String token = NavProcessor.getTokenEditServiceVersion(myVersion.getPid());
 					History.newItem(token);
 				}
 			});
@@ -98,7 +98,7 @@ public class EditServiceVersionsPanel extends FlowPanel {
 
 		@Override
 		public void onClick(ClickEvent theEvent) {
-			History.newItem(NavProcessor.getTokenAddService(true, myService.getPid()));
+			History.newItem(NavProcessor.getTokenAddService(myService.getPid()));
 		}
 
 	}

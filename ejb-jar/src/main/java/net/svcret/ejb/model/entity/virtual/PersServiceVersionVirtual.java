@@ -8,6 +8,8 @@ import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.ForeignKey;
 
+import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.DtoServiceVersionVirtual;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 
@@ -34,6 +36,13 @@ public class PersServiceVersionVirtual extends BasePersServiceVersion {
 
 	public void setTarget(BasePersServiceVersion theTarget) {
 		myTarget = theTarget;
+	}
+
+	@Override
+	protected BaseGServiceVersion createDtoAndPopulateWithTypeSpecificEntries() {
+		DtoServiceVersionVirtual retVal = new DtoServiceVersionVirtual();
+		retVal.setTargetServiceVersionPid(myTarget.getPid());
+		return retVal;
 	}
 
 }

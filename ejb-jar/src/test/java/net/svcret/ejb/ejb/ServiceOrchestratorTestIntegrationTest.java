@@ -564,6 +564,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		myConfigService = mock(IConfigService.class);
 		when(myConfigService.getFilesystemAuditLoggerPath()).thenReturn(myTempPath);
 		when(myConfigService.getConfig()).thenReturn(new PersConfig());
+		when(myConfigService.getNodeId()).thenReturn("unittest.node");
 		
 		myDao = new DaoBean();
 		myDao.setThisForUnitTest();
@@ -571,6 +572,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		myRuntimeStatus = new RuntimeStatusBean();
 		myRuntimeStatus.setDao(myDao);
 		myRuntimeStatus.setBroadcastSender(myBroadcastSender);
+		myRuntimeStatus.setConfigSvc(myConfigService);
 
 		myRuntimeQuerySvc = new RuntimeStatusQueryBean();
 		myRuntimeQuerySvc.setDaoForUnitTests(myDao);
@@ -726,7 +728,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		PersHttpClientConfig httpClient = any();
 		when(myHttpClient.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
 		
-		OrchestratorResponseBean resp = mySvc.handleServiceRequest(req);
+		mySvc.handleServiceRequest(req);
 
 		newEntityManager();
 		

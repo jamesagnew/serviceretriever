@@ -48,6 +48,8 @@ public interface ModelUpdateService extends RemoteService {
 
 	AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion) throws ServiceFailureException;
 
+	BaseGServiceVersion cloneServiceVersion(long thePidToClone) throws ServiceFailureException;
+
 	BaseGServiceVersion createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncommittedId);
 
 	DtoMonitorRuleActiveCheck executeMonitorRuleActiveCheck(DtoMonitorRuleActiveCheck theCheck) throws ServiceFailureException;

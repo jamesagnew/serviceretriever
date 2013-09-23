@@ -134,7 +134,12 @@ public enum PagesEnum {
 	/**
 	 * User stats
 	 */
-	UST(MSGS.userStats_Breadcrumb())
+	UST(MSGS.userStats_Breadcrumb()), 
+	
+	/**
+	 * Clone service version
+	 */
+	CSV(MSGS.cloneServiceVersion_Title())
 	;
 	
 	private String myBreadcrumb;

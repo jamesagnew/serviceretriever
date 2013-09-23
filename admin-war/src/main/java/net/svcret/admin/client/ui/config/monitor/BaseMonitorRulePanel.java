@@ -27,7 +27,7 @@ import net.svcret.admin.client.ui.components.VersionPickerPanel;
 import net.svcret.admin.client.ui.components.VersionPickerPanel.ChangeListener;
 import net.svcret.admin.client.ui.config.auth.DomainTreePanel.ITreeStatusModel;
 import net.svcret.admin.client.ui.config.svcver.NullColumn;
-import net.svcret.admin.client.ui.stats.DateUtil;
+import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.HtmlUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
@@ -558,7 +558,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		if (enabled) {
 			myActiveAddMessagePickerDescription.setHTML("");
 		} else {
-			myActiveAddMessagePickerDescription.setHTML("This version has no messages in the <a href=\"" + NavProcessor.getTokenMessageLibrary(true, HierarchyEnum.VERSION, versionPid)
+			myActiveAddMessagePickerDescription.setHTML("This version has no messages in the <a href=\"" + NavProcessor.getTokenMessageLibrary(HierarchyEnum.VERSION, versionPid)
 					+ "\">message library</a> for this service version. Add a message before adding active monitor checks for this version to this rule.");
 		}
 	}
@@ -591,8 +591,14 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		myPassiveUrlUnavailableTypeCombo.addItem(FIRE_0_IF_ANY_BACKING_URL_IS_FAILING);
 		myPassiveUrlUnavailableTypeCombo.addItem(FIRE_1_ONLY_IF_ALL_BACKING_UR_LS_ARE_FAILING);
 
+		//@formatter:on
 		grid.addRow(myPassiveUrlUnavailableCheckbox, myPassiveUrlUnavailableTypeCombo);
-		grid.addDescription("If enabled, the rule will fire upon detecting failures when " + "accessing the backing service implementations. Failures generally occur when " + "the backing server can't be reached, returns HTTP 500, etc.");
+		grid.addDescription(
+				"If enabled, the rule will fire upon detecting failures when " + 
+				"accessing the backing service implementations. Failures generally occur when " + 
+				"the backing server can't be reached, returns HTTP 500, etc.");
+		//@formatter:off
+		
 		myPassiveUrlUnavailableCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
 			@Override
 			public void onValueChange(ValueChangeEvent<Boolean> theEvent) {

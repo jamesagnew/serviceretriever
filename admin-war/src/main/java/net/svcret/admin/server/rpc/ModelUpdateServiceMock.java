@@ -15,6 +15,7 @@ import net.svcret.admin.client.rpc.ModelUpdateService;
 import net.svcret.admin.server.rpc.HttpClientConfigServiceImpl.SessionUploadedKeystore;
 import net.svcret.admin.shared.ServiceFailureException;
 import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
+import net.svcret.admin.shared.enm.NodeStatusEnum;
 import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
@@ -31,6 +32,7 @@ import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcomeList;
+import net.svcret.admin.shared.model.DtoNodeStatus;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
@@ -501,6 +503,22 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		retVal.setDomainList(new GDomainList());
 		retVal.getDomainList().mergeResults(myDomainList);
 
+		retVal.getNodeStatuses().add(new DtoNodeStatus());
+		retVal.getNodeStatuses().get(0).setNodeId("node_1");
+		retVal.getNodeStatuses().get(0).setStatus(NodeStatusEnum.ACTIVE);
+		retVal.getNodeStatuses().get(0).setTransactionsSuccessfulPerMinute(33.1);
+		retVal.getNodeStatuses().add(new DtoNodeStatus());
+		retVal.getNodeStatuses().get(1).setNodeId("node_2");
+		retVal.getNodeStatuses().get(1).setStatus(NodeStatusEnum.DOWN);
+		retVal.getNodeStatuses().get(1).setTimeElapsedSinceDown(234567L);
+		retVal.getNodeStatuses().add(new DtoNodeStatus());
+		retVal.getNodeStatuses().get(2).setNodeId("node_3");
+		retVal.getNodeStatuses().get(2).setStatus(NodeStatusEnum.ACTIVE);
+		retVal.getNodeStatuses().get(2).setTransactionsSuccessfulPerMinute(20.1);
+		retVal.getNodeStatuses().get(2).setTransactionsFaultPerMinute(10.1);
+		retVal.getNodeStatuses().get(2).setTransactionsFailPerMinute(10.1);
+		retVal.getNodeStatuses().get(2).setTransactionsSecurityFailPerMinute(10.1);
+		
 		for (GDomain nextDomain : retVal.getDomainList()) {
 			Set<Long> domainsToLoadStats = theRequest.getDomainsToLoadStats();
 			long nextDomainPid = nextDomain.getPid();
@@ -1034,6 +1052,11 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 			// ignore
 		}
 		return check;
+	}
+
+	@Override
+	public BaseGServiceVersion cloneServiceVersion(long thePidToClone) {
+		throw new UnsupportedOperationException();
 	}
 
 }

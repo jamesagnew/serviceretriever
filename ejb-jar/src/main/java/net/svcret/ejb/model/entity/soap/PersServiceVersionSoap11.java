@@ -56,6 +56,13 @@ public class PersServiceVersionSoap11 extends BasePersServiceVersion {
 		setWsdlUrl(((DtoServiceVersionSoap11)theDto).getWsdlLocation());
 	}
 
+	@Override
+	protected BaseGServiceVersion createDtoAndPopulateWithTypeSpecificEntries() {
+		DtoServiceVersionSoap11 retVal = new DtoServiceVersionSoap11();
+		retVal.setWsdlLocation(getWsdlUrl());
+		return retVal;
+	}
+
 
 
 

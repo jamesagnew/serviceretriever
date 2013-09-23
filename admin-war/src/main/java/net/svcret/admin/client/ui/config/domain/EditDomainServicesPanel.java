@@ -84,7 +84,7 @@ public class EditDomainServicesPanel extends FlowPanel {
 			editBtn.addClickHandler(new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent theEvent) {
-					String token = NavProcessor.getTokenEditService(true, myDomain.getPid(), mySvc.getPid());
+					String token = NavProcessor.getTokenEditService(myDomain.getPid(), mySvc.getPid());
 					History.newItem(token);
 				}
 			});
@@ -97,7 +97,7 @@ public class EditDomainServicesPanel extends FlowPanel {
 
 		@Override
 		public void onClick(ClickEvent theEvent) {
-			History.newItem(NavProcessor.getTokenAddService(true, myDomain.getPid()));
+			History.newItem(NavProcessor.getTokenAddService(myDomain.getPid()));
 		}
 
 	}

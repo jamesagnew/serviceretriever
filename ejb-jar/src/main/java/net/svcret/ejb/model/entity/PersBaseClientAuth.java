@@ -14,8 +14,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
+import net.svcret.admin.shared.model.BaseGClientSecurity;
 import net.svcret.admin.shared.model.ClientSecurityEnum;
-import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -187,5 +187,16 @@ public abstract class PersBaseClientAuth<T extends PersBaseClientAuth<?>> extend
 		b.append("pid", getPid());
 		return b.toString();
 	}
+
+	public BaseGClientSecurity toDao() {
+		BaseGClientSecurity retVal = createDtoAndPopulateWithTypeSpecificFields();
+
+		retVal.setPid(this.getPid());
+		retVal.setUsername(this.getUsername());
+		retVal.setPassword(this.getPassword());
+		return retVal;
+	}
+
+	protected abstract BaseGClientSecurity createDtoAndPopulateWithTypeSpecificFields();
 
 }

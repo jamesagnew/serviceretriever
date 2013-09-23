@@ -2,7 +2,7 @@ package net.svcret.admin.client.ui.config.monitor;
 
 import net.svcret.admin.client.MyResources;
 import net.svcret.admin.client.ui.components.IProvidesTooltip;
-import net.svcret.admin.client.ui.stats.DateUtil;
+import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
 import net.svcret.admin.shared.util.StringUtil;

@@ -1,4 +1,4 @@
-package net.svcret.admin.client.ui.stats;
+package net.svcret.admin.shared;
 
 import static net.svcret.admin.client.AdminPortal.MSGS;
 

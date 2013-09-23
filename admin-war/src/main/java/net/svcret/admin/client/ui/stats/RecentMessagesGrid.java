@@ -12,6 +12,7 @@ import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.PButtonCell;
 import net.svcret.admin.client.ui.components.PCellTable;
 import net.svcret.admin.client.ui.config.svcver.NullColumn;
+import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.admin.shared.util.StringUtil;
 
@@ -56,10 +57,10 @@ public class RecentMessagesGrid extends FlowPanel {
 			public void update(int theIndex, GRecentMessage theObject, String theValue) {
 				switch (theObject.getRecentMessageType()) {
 				case USER:
-					History.newItem(NavProcessor.getTokenViewUserRecentMessage(true, theObject.getPid()));
+					History.newItem(NavProcessor.getTokenViewUserRecentMessage(theObject.getPid()));
 					break;
 				case SVCVER:
-					History.newItem(NavProcessor.getTokenViewServiceVersionRecentMessage(true, theObject.getPid()));
+					History.newItem(NavProcessor.getTokenViewServiceVersionRecentMessage(theObject.getPid()));
 					break;
 				}
 			}
@@ -74,10 +75,10 @@ public class RecentMessagesGrid extends FlowPanel {
 			public void update(int theIndex, GRecentMessage theObject, String theValue) {
 				switch (theObject.getRecentMessageType()) {
 				case USER:
-					History.newItem(NavProcessor.getTokenReplayMessageForUser(true, theObject.getPid()));
+					History.newItem(NavProcessor.getTokenReplayMessageForUser(theObject.getPid()));
 					break;
 				case SVCVER:
-					History.newItem(NavProcessor.getTokenReplayMessageForServiceVersion(true, theObject.getPid()));
+					History.newItem(NavProcessor.getTokenReplayMessageForServiceVersion(theObject.getPid()));
 					break;
 				}
 			}
@@ -90,7 +91,7 @@ public class RecentMessagesGrid extends FlowPanel {
 		saveColumn.setFieldUpdater(new FieldUpdater<GRecentMessage, String>() {
 			@Override
 			public void update(int theIndex, GRecentMessage theObject, String theValue) {
-				History.newItem(NavProcessor.getTokenSaveRecentMessageToLibrary(true, theObject.getRecentMessageType(), theObject.getPid()));
+				History.newItem(NavProcessor.getTokenSaveRecentMessageToLibrary(theObject.getRecentMessageType(), theObject.getPid()));
 			}
 		});
 		CompositeCell<GRecentMessage> actionCell = new CompositeCell<GRecentMessage>(actionCells);
@@ -116,7 +117,7 @@ public class RecentMessagesGrid extends FlowPanel {
 					b.appendEscaped(theObject.getServiceName());
 				}
 				if (StringUtil.isNotBlank(theObject.getServiceVersionId())) {
-					b.appendHtmlConstant(" <a href=\"#" + NavProcessor.getTokenEditServiceVersion(true, theObject.getServiceVersionPid())+"\">"+theObject.getServiceVersionId()+"</a>");
+					b.appendHtmlConstant(" <a href=\"#" + NavProcessor.getTokenEditServiceVersion(theObject.getServiceVersionPid())+"\">"+theObject.getServiceVersionId()+"</a>");
 				}
 				return b.toSafeHtml();
 			}
@@ -192,7 +193,7 @@ public class RecentMessagesGrid extends FlowPanel {
 			public SafeHtml getValue(GRecentMessage theObject) {
 				SafeHtmlBuilder b = new SafeHtmlBuilder();
 				if (theObject.getRequestUsername() != null) {
-					b.appendHtmlConstant("<a href=\""+"#" + NavProcessor.getTokenEditUser(true, theObject.getRequestUserPid())+"\">"+theObject.getRequestUsername()+"</a>");
+					b.appendHtmlConstant("<a href=\""+"#" + NavProcessor.getTokenEditUser(theObject.getRequestUserPid())+"\">"+theObject.getRequestUsername()+"</a>");
 				}
 				return b.toSafeHtml();
 			}

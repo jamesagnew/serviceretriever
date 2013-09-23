@@ -3,6 +3,8 @@ package net.svcret.ejb.model.entity.http;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
+import net.svcret.admin.shared.model.BaseGServerSecurity;
+import net.svcret.admin.shared.model.GHttpBasicAuthServerSecurity;
 import net.svcret.admin.shared.model.ServerSecurityEnum;
 import net.svcret.ejb.model.entity.BasePersObject;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
@@ -28,6 +30,11 @@ public class PersHttpBasicServerAuth  extends PersBaseServerAuth<PersHttpBasicSe
 		PersHttpBasicServerAuth obj = (PersHttpBasicServerAuth)theObj;
 		setAuthenticationHost(obj.getAuthenticationHost());
 		setServiceVersion(obj.getServiceVersion());
+	}
+
+	@Override
+	protected BaseGServerSecurity createDtoAndPopulateWithTypeSpecificEntries() {
+		return new GHttpBasicAuthServerSecurity();
 	}
 
 }

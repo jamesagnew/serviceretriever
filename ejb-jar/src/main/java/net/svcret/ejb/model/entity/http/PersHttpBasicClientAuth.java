@@ -3,7 +3,9 @@ package net.svcret.ejb.model.entity.http;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
+import net.svcret.admin.shared.model.BaseGClientSecurity;
 import net.svcret.admin.shared.model.ClientSecurityEnum;
+import net.svcret.admin.shared.model.DtoClientSecurityHttpBasicAuth;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 
 import org.apache.commons.lang3.ObjectUtils;
@@ -45,6 +47,11 @@ public class PersHttpBasicClientAuth extends PersBaseClientAuth<PersHttpBasicCli
 		retVal.setPassword(obj.getPassword());
 		
 		return retVal;
+	}
+
+	@Override
+	protected BaseGClientSecurity createDtoAndPopulateWithTypeSpecificFields() {
+		return new DtoClientSecurityHttpBasicAuth();
 	}
 
 	

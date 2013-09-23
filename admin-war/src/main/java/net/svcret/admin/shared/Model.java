@@ -3,6 +3,7 @@ package net.svcret.admin.shared;
 import java.util.Date;
 
 import net.svcret.admin.client.AdminPortal;
+import net.svcret.admin.client.ui.layout.TopBarPanel;
 import net.svcret.admin.shared.model.BaseGAuthHost;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
@@ -184,14 +185,10 @@ public class Model {
 			theCallback.onSuccess(myDomainList);
 		} else {
 			ModelUpdateRequest req = new ModelUpdateRequest();
-			AsyncCallback<ModelUpdateResponse> callback = new AsyncCallback<ModelUpdateResponse>() {
-				@Override
-				public void onFailure(Throwable theCaught) {
-					handleFailure(theCaught);
-				}
-
+			AsyncCallback<ModelUpdateResponse> callback = new MyModelUpdateCallbackHandler() {
 				@Override
 				public void onSuccess(ModelUpdateResponse theResult) {
+					super.onSuccess(theResult);
 					myDomainListInitialized = true;
 					myDomainList.mergeResults(theResult.getDomainList());
 					theCallback.onSuccess(myDomainList);
@@ -408,7 +405,7 @@ public class Model {
 		Window.alert(b.toString());
 	}
 
-	private final class MyModelUpdateCallbackHandler implements AsyncCallback<ModelUpdateResponse> {
+	private class MyModelUpdateCallbackHandler implements AsyncCallback<ModelUpdateResponse> {
 		public IAsyncLoadCallback<GAuthenticationHostList> myAuthHostListCallback;
 		private IAsyncLoadCallback<GDomainList> myDomainListCallback;
 		private IAsyncLoadCallback<GHttpClientConfigList> myHttpClientConfigListCallback;
@@ -420,6 +417,8 @@ public class Model {
 
 		@Override
 		public void onSuccess(ModelUpdateResponse theResult) {
+			TopBarPanel.getInstance().setNodeStatuses(theResult.getNodeStatuses());
+			
 			if (theResult.getDomainList() != null) {
 				myDomainList.mergeResults(theResult.getDomainList());
 			}

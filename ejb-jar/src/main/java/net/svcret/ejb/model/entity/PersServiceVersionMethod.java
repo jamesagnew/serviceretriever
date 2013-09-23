@@ -2,6 +2,7 @@ package net.svcret.ejb.model.entity;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -20,6 +21,11 @@ import javax.persistence.Table;
 import javax.persistence.Version;
 
 import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
+import net.svcret.admin.shared.model.GServiceMethod;
+import net.svcret.admin.shared.model.StatusEnum;
+import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
+import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 
 import org.apache.commons.lang3.Validate;
 
@@ -203,6 +209,31 @@ public class PersServiceVersionMethod extends BasePersObject {
 		
 		myServiceVersion = theServiceVersion;
 //		theServiceVersion.addMethod(this);
+	}
+
+	public GServiceMethod toDao(boolean theLoadStats, IRuntimeStatusQueryLocal theRuntimeStatusQuerySvc) throws UnexpectedFailureException {
+		GServiceMethod retVal = new GServiceMethod();
+		if (this.getPid() != null) {
+			retVal.setPid(this.getPid());
+		}
+		retVal.setId(this.getName());
+		retVal.setName(this.getName());
+		retVal.setRootElements(this.getRootElements());
+		retVal.setSecurityPolicy(this.getSecurityPolicy());
+
+		if (theLoadStats) {
+			retVal.setStatsInitialized(new Date());
+			StatusEnum status = StatusEnum.UNKNOWN;
+
+			StatsAccumulator accumulator = new StatsAccumulator();
+			theRuntimeStatusQuerySvc.extract60MinuteMethodStats(this, accumulator);
+			accumulator.populateDto(retVal);
+
+			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
+
+		}
+
+		return retVal;
 	}
 
 }

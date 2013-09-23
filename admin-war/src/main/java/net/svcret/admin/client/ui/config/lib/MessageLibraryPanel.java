@@ -180,7 +180,7 @@ public class MessageLibraryPanel extends FlowPanel {
 		editColumn.setFieldUpdater(new FieldUpdater<DtoLibraryMessage, String>() {
 			@Override
 			public void update(int theIndex, DtoLibraryMessage theObject, String theValue) {
-				History.newItem(NavProcessor.getTokenEditLibraryMessage(true, theObject.getPid()));
+				History.newItem(NavProcessor.getTokenEditLibraryMessage(theObject.getPid()));
 			}
 		});
 		editColumn.setCellStyleNames(CssConstants.PCELLTABLE_ACTION_COLUMN);
@@ -189,7 +189,7 @@ public class MessageLibraryPanel extends FlowPanel {
 			@Override
 			public void update(int theIndex, DtoLibraryMessage theObject, String theValue) {
 				long svcVerPid = tryToSelectAppropriateReplayDestinationForMessage(theObject.getAppliesToServiceVersionPids());
-				String token = NavProcessor.getTokenReplayLibraryMessage(true, svcVerPid, theObject.getPid());
+				String token = NavProcessor.getTokenReplayLibraryMessage(svcVerPid, theObject.getPid());
 				History.newItem(token);
 			}
 		});
@@ -288,17 +288,17 @@ public class MessageLibraryPanel extends FlowPanel {
 			public void onClick(ClickEvent theEvent) {
 				Long pid = myVersionPicker.getSelectedVersionPid();
 				if (pid != null && pid != VersionPickerPanel.ALL_PID) {
-					History.newItem(NavProcessor.getTokenMessageLibraryAdd(true, HierarchyEnum.VERSION, pid));
+					History.newItem(NavProcessor.getTokenMessageLibraryAdd(HierarchyEnum.VERSION, pid));
 				} else {
 					pid = myVersionPicker.getSelectedServicePid();
 					if (pid != null && pid != VersionPickerPanel.ALL_PID) {
-						History.newItem(NavProcessor.getTokenMessageLibraryAdd(true, HierarchyEnum.SERVICE, pid));
+						History.newItem(NavProcessor.getTokenMessageLibraryAdd(HierarchyEnum.SERVICE, pid));
 					} else {
 						pid = myVersionPicker.getSelectedDomainPid();
 						if (pid != null && pid != VersionPickerPanel.ALL_PID) {
-							History.newItem(NavProcessor.getTokenMessageLibraryAdd(true, HierarchyEnum.DOMAIN, pid));
+							History.newItem(NavProcessor.getTokenMessageLibraryAdd(HierarchyEnum.DOMAIN, pid));
 						} else {
-							History.newItem(NavProcessor.getTokenMessageLibraryAdd(true));
+							History.newItem(NavProcessor.getTokenMessageLibraryAdd());
 						}
 					}
 				}

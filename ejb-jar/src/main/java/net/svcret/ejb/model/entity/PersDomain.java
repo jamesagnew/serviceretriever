@@ -21,6 +21,7 @@ import javax.persistence.Transient;
 import javax.persistence.Version;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
+import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.ServerSecuredEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 
@@ -297,5 +298,15 @@ public class PersDomain extends BasePersServiceCatalogItem {
 		return retVal;
 	}
 
+	public void populateDtoWithMonitorRules(BaseDtoServiceCatalogItem theDto) {
+		for (PersService nextSvc : getServices()) {
+			nextSvc.populateDtoWithMonitorRules(theDto);
+		}
+		for (PersMonitorAppliesTo nextRule : getMonitorRules()) {
+			if (nextRule.getItem().equals(this)) {
+				theDto.getMonitorRulePids().add(nextRule.getPid());
+			}
+		}
+	}
 
 }

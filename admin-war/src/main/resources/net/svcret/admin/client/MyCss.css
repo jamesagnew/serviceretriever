@@ -58,6 +58,17 @@
 	box-shadow: 4px 4px 3px -1px #bbb;
 }
 
+.topPanelNodeStatusLabelContents {
+	position: absolute;
+	bottom: 2px;
+	right: 5px;
+}
+
+.topPanelNodeStatusLabel {
+	font-size: 0.8em;
+	color: #ACC;	
+}
+
 TABLE.usageTooltipTable {
 	border-spacing: 2px;
     font-size: 0.8em !important;	

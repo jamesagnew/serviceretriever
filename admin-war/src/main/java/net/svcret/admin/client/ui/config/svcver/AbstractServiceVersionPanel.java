@@ -1,7 +1,6 @@
 package net.svcret.admin.client.ui.config.svcver;
 
 import net.svcret.admin.client.AdminPortal;
-import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.EditableField;
 import net.svcret.admin.client.ui.components.HtmlLabel;
@@ -13,14 +12,13 @@ import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.AddServiceVersionResponse;
 import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
+import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
+import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoServiceVersionVirtual;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceList;
-import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
-import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
-import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.core.shared.GWT;
@@ -31,7 +29,6 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
-import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HasValue;
@@ -51,33 +48,21 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 	private Long myDomainPid;
 	private LoadingSpinner myLoadingSpinner;
 
-	public void setDomainPid(Long theDomainPid) {
-		myDomainPid = theDomainPid;
-	}
-
-	public void setServicePid(Long theServicePid) {
-		myServicePid = theServicePid;
-	}
-
-	public void setUncommittedSessionId(Long theUncommittedSessionId) {
-		myUncommittedSessionId = theUncommittedSessionId;
-	}
-
-	public LoadingSpinner getLoadingSpinner() {
-		return myLoadingSpinner;
-	}
-
 	private HtmlLabel myNewDomainLabel;
+
 	private TextBox myNewDomainNameTextBox;
+
 	private HtmlLabel myNewServiceLabel;
+
 	private TextBox myNewServiceNameTextBox;
+
 	private TwoColumnGrid myParentsGrid2;
 	private ListBox myServiceListBox;
 	private Long myServicePid;
+	private BaseGServiceVersion myServiceVersion;
 	private FlowPanel myTopPanel;
 	private Long myUncommittedSessionId;
 	private boolean myUpdating;
-	private BaseGServiceVersion myVersion;
 	private HasValue<String> myVersionTextBox;
 
 	public AbstractServiceVersionPanel() {
@@ -156,6 +141,12 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 		myParentsGrid2.addWidgetToRight(newSvcPanel);
 
 		/*
+		 * Type
+		 */
+
+		addProtocolSelectionUi(myParentsGrid2);
+
+		/*
 		 * Version
 		 */
 
@@ -168,8 +159,8 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 		myVersionTextBox.addValueChangeHandler(new ValueChangeHandler<String>() {
 			@Override
 			public void onValueChange(ValueChangeEvent<String> theEvent) {
-				if (myVersion != null) {
-					myVersion.setId(myVersionTextBox.getValue());
+				if (myServiceVersion != null) {
+					myServiceVersion.setId(myVersionTextBox.getValue());
 				}
 			}
 		});
@@ -179,59 +170,21 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 		myDescriptionEditor.setMultiline(true);
 		myParentsGrid2.addRowDoubleWidth("Description", myDescriptionEditor);
 
-		addProtocolSelectionUi(myParentsGrid2);
-
 		PButton saveButton = new PButton(AdminPortal.IMAGES.iconSave(), AdminPortal.MSGS.actions_Save());
 		saveButton.getElement().getStyle().setFloat(Float.LEFT);
 		saveButton.addClickHandler(new SaveClickHandler());
 
 		myLoadingSpinner = new LoadingSpinner();
 
-		HorizontalPanel savePanel = new HorizontalPanel();
-		myContentPanel.add(savePanel);
-		savePanel.add(saveButton);
+		HorizontalPanel actionButtonPanel = new HorizontalPanel();
+		myContentPanel.add(actionButtonPanel);
+		actionButtonPanel.add(saveButton);
 
 		if (!isAddPanel()) {
-			PButton testButton = new PButton(AdminPortal.IMAGES.iconTest16(), "Test Service");
-			testButton.addClickHandler(new ClickHandler() {
-				@Override
-				public void onClick(ClickEvent theEvent) {
-					History.newItem(NavProcessor.getTokenTestServiceVersion(true, myVersion.getPid()));
-				}
-			});
-			savePanel.add(testButton);
-
-			// TODO: better icon
-			PButton transactionsButton = new PButton(AdminPortal.IMAGES.iconTransactions(), AdminPortal.MSGS.actions_RecentTransactions());
-			transactionsButton.addClickHandler(new ClickHandler() {
-				@Override
-				public void onClick(ClickEvent theEvent) {
-					History.newItem(NavProcessor.getTokenServiceVersionRecentMessages(true, myVersion.getPid()));
-				}
-			});
-			savePanel.add(transactionsButton);
-
-			PButton msgLibButton = new PButton(AdminPortal.IMAGES.iconLibrary(), AdminPortal.MSGS.actions_MessageLibrary());
-			msgLibButton.addClickHandler(new ClickHandler() {
-				@Override
-				public void onClick(ClickEvent theEvent) {
-					History.newItem(NavProcessor.getTokenMessageLibrary(true, HierarchyEnum.VERSION, myVersion.getPid()));
-				}
-			});
-			savePanel.add(msgLibButton);
-
-			PButton statsButton = new PButton(AdminPortal.IMAGES.iconStatus(), "Statistics");
-			statsButton.addClickHandler(new ClickHandler() {
-				@Override
-				public void onClick(ClickEvent theEvent) {
-					History.newItem(NavProcessor.getTokenServiceVersionStats(true, myVersion.getPid()));
-				}
-			});
-			savePanel.add(statsButton);
-
+			addActionButtons(actionButtonPanel);
 		}
 
-		savePanel.add(myLoadingSpinner);
+		actionButtonPanel.add(myLoadingSpinner);
 
 	}
 
@@ -239,11 +192,19 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 		return myDomainPid;
 	}
 
+	public LoadingSpinner getLoadingSpinner() {
+		return myLoadingSpinner;
+	}
+
 	/**
 	 * @return the servicePid
 	 */
 	public Long getServicePid() {
 		return myServicePid;
+	}
+
+	public BaseGServiceVersion getServiceVersion() {
+		return myServiceVersion;
 	}
 
 	public Long getUncommittedSessionId() {
@@ -260,6 +221,18 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 		if (myBottomContents != null) {
 			myBottomContents.setWidth((getOffsetWidth() - 20) + "px");
 		}
+	}
+
+	public void setDomainPid(Long theDomainPid) {
+		myDomainPid = theDomainPid;
+	}
+
+	public void setServicePid(Long theServicePid) {
+		myServicePid = theServicePid;
+	}
+
+	public void setUncommittedSessionId(Long theUncommittedSessionId) {
+		myUncommittedSessionId = theUncommittedSessionId;
 	}
 
 	private void handleDomainListChange() {
@@ -332,6 +305,14 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 		handleServiceListChange();
 	}
 
+	/**
+	 * Subclasses may override
+	 */
+	@SuppressWarnings("unused")
+	protected void addActionButtons(HorizontalPanel savePanel) {
+		// nothing
+	}
+
 	protected abstract void addProtocolSelectionUi(TwoColumnGrid theGrid);
 
 	protected BaseDetailPanel<?> getBottomContents() {
@@ -353,8 +334,8 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 	protected void setServiceVersion(BaseGServiceVersion theResult) {
 		myLoadingSpinner.hide();
 
-		myVersion = theResult;
-		myVersionTextBox.setValue(myVersion.getId(), false);
+		myServiceVersion = theResult;
+		myVersionTextBox.setValue(myServiceVersion.getId(), false);
 
 		if (myBottomContents != null) {
 			remove(myBottomContents);
@@ -368,7 +349,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 			myBottomContents = new DetailPanelJsonRpc20(this, (DtoServiceVersionJsonRpc20) theResult);
 			break;
 		case HL7OVERHTTP:
-			myBottomContents = new DetailPanelHl7OverHttp(this, (DtoServiceVersionHl7OverHttp)theResult);
+			myBottomContents = new DetailPanelHl7OverHttp(this, (DtoServiceVersionHl7OverHttp) theResult);
 			break;
 		case VIRTUAL:
 			myBottomContents = new DetailPanelVirtual(this, (DtoServiceVersionVirtual) theResult);
@@ -377,7 +358,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 
 		add(myBottomContents);
 
-		myDescriptionEditor.setValue(myVersion.getDescription());
+		myDescriptionEditor.setValue(myServiceVersion.getDescription());
 
 		onResize();
 	}
@@ -437,7 +418,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 				return;
 			}
 
-			myVersion.setDescription(myDescriptionEditor.getValue());
+			myServiceVersion.setDescription(myDescriptionEditor.getValue());
 
 			AsyncCallback<AddServiceVersionResponse> callback = new AsyncCallback<AddServiceVersionResponse>() {
 				@Override
@@ -462,7 +443,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 
 			myLoadingSpinner.show();
 
-			AdminPortal.MODEL_SVC.addServiceVersion(myDomainPid, domainId, myServicePid, serviceId, myVersion, callback);
+			AdminPortal.MODEL_SVC.addServiceVersion(myDomainPid, domainId, myServicePid, serviceId, myServiceVersion, callback);
 		}
 
 	}

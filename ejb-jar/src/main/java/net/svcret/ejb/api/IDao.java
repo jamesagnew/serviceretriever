@@ -39,6 +39,7 @@ import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheckOutcome;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersNodeStats;
+import net.svcret.ejb.model.entity.PersNodeStatus;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
@@ -266,5 +267,11 @@ public interface IDao {
 	}
 
 	PersMonitorRuleActiveCheck getMonitorRuleActiveCheck(long thePid);
+
+	PersNodeStatus getOrCreateNodeStatus(String theNodeId);
+
+	void saveNodeStatus(PersNodeStatus theNodeStatus);
+
+	Collection<PersNodeStatus> getAllNodeStatuses();
 
 }

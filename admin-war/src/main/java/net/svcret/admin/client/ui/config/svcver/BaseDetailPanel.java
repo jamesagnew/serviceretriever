@@ -24,7 +24,7 @@ import net.svcret.admin.client.ui.config.KeepRecentTransactionsPanel;
 import net.svcret.admin.client.ui.config.sec.IProvidesViewAndEdit;
 import net.svcret.admin.client.ui.config.sec.IProvidesViewAndEdit.IValueChangeHandler;
 import net.svcret.admin.client.ui.config.sec.ViewAndEditFactory;
-import net.svcret.admin.client.ui.stats.DateUtil;
+import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
@@ -695,7 +695,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 	}
 
 	private void updateEditHttpClientConfigLink() {
-		myEditHttpClientConfigLink.setTargetHistoryToken(NavProcessor.getTokenEditHttpClientConfig(true, getServiceVersion().getHttpClientConfigPid()));
+		myEditHttpClientConfigLink.setTargetHistoryToken(NavProcessor.getTokenEditHttpClientConfig(getServiceVersion().getHttpClientConfigPid()));
 	}
 
 	private void updateClientSercurityPanel() {

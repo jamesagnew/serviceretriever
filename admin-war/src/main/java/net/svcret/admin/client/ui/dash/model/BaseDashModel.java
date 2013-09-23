@@ -10,7 +10,7 @@ import net.svcret.admin.client.ui.components.IProvidesTooltip;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.Sparkline;
 import net.svcret.admin.client.ui.components.UsageSparkline;
-import net.svcret.admin.client.ui.stats.DateUtil;
+import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.BaseGDashboardObject;
 import net.svcret.admin.shared.model.StatusEnum;

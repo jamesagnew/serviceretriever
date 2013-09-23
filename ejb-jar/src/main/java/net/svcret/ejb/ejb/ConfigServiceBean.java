@@ -20,10 +20,10 @@ import com.google.common.annotations.VisibleForTesting;
 @Stateless
 public class ConfigServiceBean implements IConfigService {
 
-	private static final String SYSTEM_PROPERTY_NODEID = "net.svcret.nodeid";
-	private static final String SYSTEM_PROPERTY_NODETYPE = "net.svcret.nodetype";
-	private static final String SYSTEM_PROPERTY_AUDITLOG_PATH = "net.svcret.auditlog.path";
-	private static final String SYSTEM_PROPERTY_SECONDARY_REFRESHURLS = "net.svcret.secondarynodes.refreshurls";
+	public static final String SYSTEM_PROPERTY_NODEID = "net.svcret.nodeid";
+	public static final String SYSTEM_PROPERTY_NODETYPE = "net.svcret.nodetype";
+	public static final String SYSTEM_PROPERTY_AUDITLOG_PATH = "net.svcret.auditlog.path";
+	public static final String SYSTEM_PROPERTY_SECONDARY_REFRESHURLS = "net.svcret.secondarynodes.refreshurls";
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ConfigServiceBean.class);
 

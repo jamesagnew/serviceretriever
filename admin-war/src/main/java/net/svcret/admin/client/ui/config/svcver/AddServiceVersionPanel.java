@@ -59,11 +59,10 @@ public class AddServiceVersionPanel extends AbstractServiceVersionPanel {
 
 	@Override
 	protected void handleDoneSaving(AddServiceVersionResponse theResult) {
-		String token = NavProcessor.getTokenAddServiceVersionStep2(getDomainPid(), getServicePid(), theResult.getNewServiceVersion().getPid());
-		History.newItem(token);
+		History.newItem(NavProcessor.getTokenAddServiceVersionStep2(getDomainPid(), getServicePid(), theResult.getNewServiceVersion().getPid()));
 	}
 
-	void handleTypeChange() {
+	private void handleTypeChange() {
 		ServiceProtocolEnum protocol = ServiceProtocolEnum.valueOf(myTypeComboBox.getValue(myTypeComboBox.getSelectedIndex()));
 		if (getBottomContents() == null || getBottomContents().getProtocol() != protocol) {
 
@@ -80,7 +79,7 @@ public class AddServiceVersionPanel extends AbstractServiceVersionPanel {
 				public void onSuccess(BaseGServiceVersion theResult) {
 					setServiceVersion(theResult);
 					setUncommittedSessionId(theResult.getUncommittedSessionId());
-					String navToken = NavProcessor.getTokenAddServiceVersion(true, getDomainPid(), getServicePid(), getUncommittedSessionId());
+					String navToken = NavProcessor.getTokenAddServiceVersion(getDomainPid(), getServicePid(), getUncommittedSessionId());
 					History.newItem(navToken, false);
 				}
 			};

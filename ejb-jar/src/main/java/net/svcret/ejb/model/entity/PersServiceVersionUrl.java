@@ -5,6 +5,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.Column;
@@ -23,6 +24,12 @@ import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
+import net.svcret.admin.shared.model.GServiceVersionUrl;
+import net.svcret.admin.shared.model.StatusEnum;
+import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
+import net.svcret.ejb.api.StatusesBean;
+import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.util.UrlUtils;
 import net.svcret.ejb.util.Validate;
 
@@ -315,6 +322,51 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 		b.append("PID", getPid());
 		b.append("ID", getUrlId());
 		return b.build();
+	}
+
+	public GServiceVersionUrl toDao(boolean theLoadStats, StatusesBean theStatuses, IRuntimeStatusQueryLocal theRuntimeStatusQuerySvc) throws UnexpectedFailureException {
+		GServiceVersionUrl retVal = new GServiceVersionUrl();
+		if (this.getPid() != null) {
+			retVal.setPid(this.getPid());
+		}
+		retVal.setId(this.getUrlId());
+		retVal.setUrl(this.getUrl());
+		
+		if (theLoadStats) {
+			PersServiceVersionUrlStatus theUrlStatus = null;
+			theUrlStatus = theStatuses.getUrlStatus(this.getPid());
+			if (theUrlStatus.getStatus() == StatusEnum.DOWN) {
+				if (theUrlStatus.getNextCircuitBreakerReset() != null) {
+					retVal.setNextCircuitBreakerReset(theUrlStatus.getNextCircuitBreakerReset());
+				}
+			}
+		
+			retVal.setStatsLastFailure(theUrlStatus.getLastFail());
+			retVal.setStatsLastFailureMessage(theUrlStatus.getLastFailMessage());
+			retVal.setStatsLastFailureStatusCode(theUrlStatus.getLastFailStatusCode());
+			retVal.setStatsLastFailureContentType(theUrlStatus.getLastFailContentType());
+		
+			retVal.setStatsLastSuccess(theUrlStatus.getLastSuccess());
+			retVal.setStatsLastSuccessMessage(theUrlStatus.getLastSuccessMessage());
+			retVal.setStatsLastSuccessStatusCode(theUrlStatus.getLastSuccessStatusCode());
+			retVal.setStatsLastSuccessContentType(theUrlStatus.getLastSuccessContentType());
+		
+			retVal.setStatsLastFault(theUrlStatus.getLastFault());
+			retVal.setStatsLastFaultMessage(theUrlStatus.getLastFaultMessage());
+			retVal.setStatsLastFaultStatusCode(theUrlStatus.getLastFaultStatusCode());
+			retVal.setStatsLastFaultContentType(theUrlStatus.getLastFaultContentType());
+		
+			retVal.setStatus(theUrlStatus.getStatus());
+			retVal.setStatsNextCircuitBreakerReset(theUrlStatus.getNextCircuitBreakerReset());
+		
+			StatsAccumulator accumulator = new StatsAccumulator();
+			theRuntimeStatusQuerySvc.extract60MinuteServiceVersionUrlStatistics(this, accumulator);
+			accumulator.populateDto(retVal);
+		
+			retVal.setStatsInitialized(new Date());
+		
+		}
+		return retVal;
 	}
 	
 	

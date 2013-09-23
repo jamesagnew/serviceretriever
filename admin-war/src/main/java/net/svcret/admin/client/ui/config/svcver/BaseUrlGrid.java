@@ -11,7 +11,7 @@ import net.svcret.admin.client.ui.components.FlowPanelWithTooltip;
 import net.svcret.admin.client.ui.components.IProvidesTooltip;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.dash.model.BaseDashModel;
-import net.svcret.admin.client.ui.stats.DateUtil;
+import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.GServiceVersionUrl;

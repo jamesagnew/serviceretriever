@@ -19,7 +19,7 @@ import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.PButtonCell;
 import net.svcret.admin.client.ui.components.PCellTable;
 import net.svcret.admin.client.ui.config.svcver.NullColumn;
-import net.svcret.admin.client.ui.stats.DateUtil;
+import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.enm.MonitorRuleTypeEnum;
@@ -233,7 +233,7 @@ public class MonitorRulesPanel extends FlowPanel {
 		editColumn.setFieldUpdater(new FieldUpdater<BaseGMonitorRule, String>() {
 			@Override
 			public void update(int theIndex, BaseGMonitorRule theObject, String theValue) {
-				History.newItem(NavProcessor.getTokenEditMonitorRule(true, theObject.getPid()));
+				History.newItem(NavProcessor.getTokenEditMonitorRule(theObject.getPid()));
 			}
 		});
 		editColumn.setCellStyleNames(CssConstants.PCELLTABLE_ACTION_COLUMN);
@@ -398,7 +398,7 @@ public class MonitorRulesPanel extends FlowPanel {
 		addButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
-				History.newItem(NavProcessor.getTokenAddMonitorRule(true, myAddTypeBox.getSelectedIndex()));
+				History.newItem(NavProcessor.getTokenAddMonitorRule(myAddTypeBox.getSelectedIndex()));
 			}
 		});
 		controlsPanel.add(addButton);
