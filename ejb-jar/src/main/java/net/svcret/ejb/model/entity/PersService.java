@@ -3,6 +3,7 @@ package net.svcret.ejb.model.entity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -27,9 +28,14 @@ import javax.persistence.Version;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
+import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.ServerSecuredEnum;
 import net.svcret.admin.shared.model.StatusEnum;
+import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.StatusesBean;
+import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.ForeignKey;
@@ -54,6 +60,9 @@ public class PersService extends BasePersServiceCatalogItem {
 	@Transient
 	private transient HashMap<String, BasePersServiceVersion> myIdToVersion;
 
+	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myService")
+	private Collection<PersMonitorAppliesTo> myMonitorRules;
+
 	@Version()
 	@Column(name = "OPTLOCK")
 	private int myOptLock;
@@ -66,17 +75,14 @@ public class PersService extends BasePersServiceCatalogItem {
 	@Transient
 	private transient ServerSecuredEnum myServerSecured;
 
-	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myService")
-	private Collection<PersUserServicePermission> myUserPermissions;
-
-	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myService")
-	private Collection<PersMonitorAppliesTo> myMonitorRules;
-
 	@Column(name = "SERVICE_ID", nullable = false, length = 100)
 	private String myServiceId;
 
 	@Column(name = "SERVICE_NAME", nullable = false, length = 200)
 	private String myServiceName = "";
+
+	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myService")
+	private Collection<PersUserServicePermission> myUserPermissions;
 
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true, mappedBy = "myService")
 	private Collection<BasePersServiceVersion> myVersions;
@@ -100,6 +106,39 @@ public class PersService extends BasePersServiceCatalogItem {
 	}
 
 	@Override
+	public boolean canInheritKeepNumRecentTransactions() {
+		return true;
+	}
+
+	@Override
+	public boolean canInheritObscureElements() {
+		return true;
+	}
+
+	@Override
+	public boolean determineInheritedAuditLogEnable() {
+		if (getAuditLogEnable() != null) {
+			return getAuditLogEnable();
+		}
+		return getDomain().determineInheritedAuditLogEnable();
+	}
+
+	@Override
+	public Integer determineInheritedKeepNumRecentTransactions(ResponseTypeEnum theResultType) {
+		return myDomain.determineKeepNumRecentTransactions(theResultType);
+	}
+
+	@Override
+	public Set<String> determineInheritedObscureRequestElements() {
+		return myDomain.determineObscureRequestElements();
+	}
+
+	@Override
+	public Set<String> determineInheritedObscureResponseElements() {
+		return myDomain.determineObscureResponseElements();
+	}
+
+	@Override
 	public Integer determineKeepNumRecentTransactions(ResponseTypeEnum theResultType) {
 		Integer retVal = super.determineKeepNumRecentTransactions(theResultType);
 		if (retVal == null) {
@@ -108,11 +147,22 @@ public class PersService extends BasePersServiceCatalogItem {
 		return retVal;
 	}
 
-	public Collection<PersMonitorAppliesTo> getMonitorRules() {
-		if (myMonitorRules == null) {
-			myMonitorRules = new ArrayList<PersMonitorAppliesTo>();
+	@Override
+	public Set<String> determineObscureRequestElements() {
+		Set<String> retVal = getObscureRequestElementsInLog();
+		if (retVal.isEmpty()) {
+			retVal = myDomain.determineObscureRequestElements();
 		}
-		return myMonitorRules;
+		return retVal;
+	}
+
+	@Override
+	public Set<String> determineObscureResponseElements() {
+		Set<String> retVal = getObscureResponseElementsInLog();
+		if (retVal.isEmpty()) {
+			retVal = myDomain.determineObscureResponseElements();
+		}
+		return retVal;
 	}
 
 	/**
@@ -138,12 +188,31 @@ public class PersService extends BasePersServiceCatalogItem {
 		return Objects.equal(myPid, obj.myPid);
 	}
 
+	@Override
+	public Set<PersMonitorRuleFiring> getActiveRuleFiringsWhichMightApply() {
+		Set<PersMonitorRuleFiring> retVal = new HashSet<PersMonitorRuleFiring>();
+		if (getMostRecentMonitorRuleFiring() != null && getMostRecentMonitorRuleFiring().getEndDate() == null) {
+			retVal.add(getMostRecentMonitorRuleFiring());
+		}
+		retVal.addAll(myDomain.getActiveRuleFiringsWhichMightApply());
+		return retVal;
+	}
+
 	public Collection<PersServiceVersionMethod> getAllServiceVersionMethods() {
 		List<PersServiceVersionMethod> retVal = new ArrayList<PersServiceVersionMethod>();
 		for (BasePersServiceVersion nextServicVersion : getVersions()) {
 			retVal.addAll(nextServicVersion.getMethods());
 		}
 		return Collections.unmodifiableList(retVal);
+	}
+
+	@Override
+	public Set<BasePersServiceVersion> getAllServiceVersions() {
+		Set<BasePersServiceVersion> retVal = new HashSet<BasePersServiceVersion>();
+		for (BasePersServiceVersion next : getVersions()) {
+			retVal.addAll(next.getAllServiceVersions());
+		}
+		return retVal;
 	}
 
 	/**
@@ -153,11 +222,11 @@ public class PersService extends BasePersServiceCatalogItem {
 		return myDomain;
 	}
 
-	public String getServiceNameOrId() {
-		if (StringUtils.isNotBlank(getServiceName())) {
-			return getServiceName();
+	public Collection<PersMonitorAppliesTo> getMonitorRules() {
+		if (myMonitorRules == null) {
+			myMonitorRules = new ArrayList<PersMonitorAppliesTo>();
 		}
-		return getServiceId();
+		return myMonitorRules;
 	}
 
 	/**
@@ -195,6 +264,13 @@ public class PersService extends BasePersServiceCatalogItem {
 	 */
 	public String getServiceName() {
 		return myServiceName;
+	}
+
+	public String getServiceNameOrId() {
+		if (StringUtils.isNotBlank(getServiceName())) {
+			return getServiceName();
+		}
+		return getServiceId();
 	}
 
 	/**
@@ -254,6 +330,31 @@ public class PersService extends BasePersServiceCatalogItem {
 		setActive(theService.isActive());
 	}
 
+	public void populateDtoWithMonitorRules(BaseDtoServiceCatalogItem theDto) {
+		for (BasePersServiceVersion nextSvcVer : getVersions()) {
+			nextSvcVer.populateDtoWithMonitorRules(theDto);
+		}
+		for (PersMonitorAppliesTo nextRule : getMonitorRules()) {
+			if (nextRule.getItem().equals(this)) {
+				theDto.getMonitorRulePids().add(nextRule.getPid());
+			}
+		}
+	}
+
+	public StatusEnum populateDtoWithStatusAndProvideStatusForParent(BaseDtoServiceCatalogItem theDashboardObject, StatusEnum theInitialStatus, StatusesBean theStatuses) {
+
+		// Value will be changed below
+		StatusEnum status = theInitialStatus;
+
+		for (BasePersServiceVersion nextVersion : getVersions()) {
+			status = nextVersion.populateDtoWithStatusAndProvideStatusForParent(theDashboardObject, theStatuses, status);
+		} // end VERSION
+		
+		theDashboardObject.setStatus(status);
+		
+		return status;
+	}
+
 	public void removeVersion(BasePersServiceVersion theVersion) {
 		getVersions();
 		myVersions.remove(theVersion);
@@ -310,100 +411,81 @@ public class PersService extends BasePersServiceCatalogItem {
 	public void setServiceName(String theServiceName) {
 		myServiceName = theServiceName;
 	}
-
-	@Override
-	public Set<BasePersServiceVersion> getAllServiceVersions() {
-		Set<BasePersServiceVersion> retVal = new HashSet<BasePersServiceVersion>();
-		for (BasePersServiceVersion next : getVersions()) {
-			retVal.addAll(next.getAllServiceVersions());
-		}
-		return retVal;
+	
+	public GService toDto() throws UnexpectedFailureException {
+		Set<Long> stats = Collections.emptySet();
+		return toDto(stats, stats, stats, stats, null, null);
 	}
 
-	@Override
-	public Integer determineInheritedKeepNumRecentTransactions(ResponseTypeEnum theResultType) {
-		return myDomain.determineKeepNumRecentTransactions(theResultType);
-	}
+	public GService toDto(Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, Set<Long> theLoadUrlStats, StatusesBean theStatuses, IRuntimeStatusQueryLocal theRuntimeStatusQuerySvc) throws UnexpectedFailureException {
+		GService retVal = new GService();
+		retVal.setPid(this.getPid());
+		retVal.setId(this.getServiceId());
+		retVal.setName(this.getServiceName());
+		retVal.setActive(this.isActive());
+		retVal.setServerSecured(this.getServerSecured());
 
-	@Override
-	public boolean canInheritKeepNumRecentTransactions() {
-		return true;
-	}
-
-	@Override
-	public Set<PersMonitorRuleFiring> getActiveRuleFiringsWhichMightApply() {
-		Set<PersMonitorRuleFiring> retVal = new HashSet<PersMonitorRuleFiring>();
-		if (getMostRecentMonitorRuleFiring() != null && getMostRecentMonitorRuleFiring().getEndDate() == null) {
-			retVal.add(getMostRecentMonitorRuleFiring());
-		}
-		retVal.addAll(myDomain.getActiveRuleFiringsWhichMightApply());
-		return retVal;
-	}
-
-	@Override
-	public boolean determineInheritedAuditLogEnable() {
-		if (getAuditLogEnable() != null) {
-			return getAuditLogEnable();
-		}
-		return getDomain().determineInheritedAuditLogEnable();
-	}
-
-	@Override
-	public boolean canInheritObscureElements() {
-		return true;
-	}
-
-	@Override
-	public Set<String> determineInheritedObscureRequestElements() {
-		return myDomain.determineObscureRequestElements();
-	}
-
-	@Override
-	public Set<String> determineInheritedObscureResponseElements() {
-		return myDomain.determineObscureResponseElements();
-	}
-
-	@Override
-	public Set<String> determineObscureRequestElements() {
-		Set<String> retVal = getObscureRequestElementsInLog();
-		if (retVal.isEmpty()) {
-			retVal = myDomain.determineObscureRequestElements();
-		}
-		return retVal;
-	}
-
-	@Override
-	public Set<String> determineObscureResponseElements() {
-		Set<String> retVal = getObscureResponseElementsInLog();
-		if (retVal.isEmpty()) {
-			retVal = myDomain.determineObscureResponseElements();
-		}
-		return retVal;
-	}
-
-	public void populateDtoWithMonitorRules(BaseDtoServiceCatalogItem theDto) {
-		for (BasePersServiceVersion nextSvcVer : getVersions()) {
-			nextSvcVer.populateDtoWithMonitorRules(theDto);
-		}
-		for (PersMonitorAppliesTo nextRule : getMonitorRules()) {
-			if (nextRule.getItem().equals(this)) {
-				theDto.getMonitorRulePids().add(nextRule.getPid());
-			}
-		}
-	}
-
-	public StatusEnum populateDtoWithStatusAndProvideStatusForParent(BaseDtoServiceCatalogItem theDashboardObject, StatusEnum theInitialStatus, StatusesBean theStatuses) {
-
-		// Value will be changed below
-		StatusEnum status = theInitialStatus;
+		this.populateKeepRecentTransactionsToDto(retVal);
+		this.populateServiceCatalogItemToDto(retVal);
+		this.populateDtoWithMonitorRules(retVal);
 
 		for (BasePersServiceVersion nextVersion : getVersions()) {
-			status = nextVersion.populateDtoWithStatusAndProvideStatusForParent(theDashboardObject, theStatuses, status);
-		} // end VERSION
-		
-		theDashboardObject.setStatus(status);
-		
-		return status;
+			BaseGServiceVersion gVersion = nextVersion.toDto(theLoadVerStats, theRuntimeStatusQuerySvc, theStatuses, theLoadVerMethodStats, theLoadUrlStats);
+			retVal.getVersionList().add(gVersion);
+		} // for service versions
+
+		if (theLoadSvcStats.contains(getPid())) {
+			retVal.setStatsInitialized(new Date());
+			StatusEnum status = StatusEnum.UNKNOWN;
+
+			StatsAccumulator accumulator = null;
+			status = this.populateDtoWithStatusAndProvideStatusForParent(retVal, status, theStatuses);
+
+			accumulator = theRuntimeStatusQuerySvc.extract60MinuteStats(this);
+			accumulator.populateDto(retVal);
+
+			int urlsActive = 0;
+			int urlsDown = 0;
+			int urlsUnknown = 0;
+			Date lastServerSecurityFail = null;
+			Date lastSuccess = null;
+			for (BasePersServiceVersion nextVersion : this.getVersions()) {
+				for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
+					PersServiceVersionUrlStatus urlStatus = theStatuses.getUrlStatus(nextUrl.getPid());
+					if (urlStatus == null) {
+						continue;
+					}
+					switch (urlStatus.getStatus()) {
+					case ACTIVE:
+						urlsActive++;
+						break;
+					case DOWN:
+						urlsDown++;
+						break;
+					case UNKNOWN:
+						urlsUnknown++;
+						break;
+					}
+				}
+
+				PersServiceVersionStatus svcStatus = theStatuses.getServiceVersionStatus(nextVersion.getPid());
+				if (svcStatus != null) {
+					lastServerSecurityFail = PersServiceVersionStatus.newer(lastServerSecurityFail, svcStatus.getLastServerSecurityFailure());
+					lastSuccess = PersServiceVersionStatus.newer(lastSuccess, svcStatus.getLastSuccessfulInvocation());
+				}
+			}
+
+			retVal.setUrlsActive(urlsActive);
+			retVal.setUrlsDown(urlsDown);
+			retVal.setUrlsUnknown(urlsUnknown);
+			retVal.setLastServerSecurityFailure(lastServerSecurityFail);
+			retVal.setLastSuccessfulInvocation(lastSuccess);
+
+		}
+
+		return retVal;
 	}
+
+	
 
 }

@@ -5,16 +5,16 @@ public interface IProvidesUrlCount {
 	/**
 	 * @return the urlsActive
 	 */
-	public abstract int getUrlsActive();
+	public abstract Integer getUrlsActive();
 
 	/**
 	 * @return the urlsFailed
 	 */
-	public abstract int getUrlsDown();
+	public abstract Integer getUrlsDown();
 
 	/**
 	 * @return the urlsUnknown
 	 */
-	public abstract int getUrlsUnknown();
+	public abstract Integer getUrlsUnknown();
 
 }

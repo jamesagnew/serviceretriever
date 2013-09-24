@@ -34,13 +34,13 @@ public abstract class BaseDtoServiceCatalogItem extends BaseGDashboardObject imp
 	private ServerSecuredEnum myServerSecured;
 	
 	@XmlElement(name="runtime_UrlsActive")
-	private int myUrlsActive;
+	private Integer myUrlsActive;
 	
 	@XmlElement(name="runtime_UrlsDown")
-	private int myUrlsDown;
+	private Integer myUrlsDown;
 	
 	@XmlElement(name="runtime_UrlsUnknown")
-	private int myUrlsUnknown;
+	private Integer myUrlsUnknown;
 
 	public Set<Long> getFailingApplicableRulePids() {
 		if (myFailingApplicableRulePids == null) {
@@ -82,21 +82,21 @@ public abstract class BaseDtoServiceCatalogItem extends BaseGDashboardObject imp
 	/**
 	 * @return the urlsActive
 	 */
-	public int getUrlsActive() {
+	public Integer getUrlsActive() {
 		return myUrlsActive;
 	}
 
 	/**
 	 * @return the urlsDown
 	 */
-	public int getUrlsDown() {
+	public Integer getUrlsDown() {
 		return myUrlsDown;
 	}
 
 	/**
 	 * @return the urlsUnknown
 	 */
-	public int getUrlsUnknown() {
+	public Integer getUrlsUnknown() {
 		return myUrlsUnknown;
 	}
 
@@ -152,7 +152,7 @@ public abstract class BaseDtoServiceCatalogItem extends BaseGDashboardObject imp
 	 * @param theUrlsActive
 	 *            the urlsActive to set
 	 */
-	public void setUrlsActive(int theUrlsActive) {
+	public void setUrlsActive(Integer theUrlsActive) {
 		myUrlsActive = theUrlsActive;
 	}
 
@@ -160,7 +160,7 @@ public abstract class BaseDtoServiceCatalogItem extends BaseGDashboardObject imp
 	 * @param theUrlsDown
 	 *            the urlsDown to set
 	 */
-	public void setUrlsDown(int theUrlsDown) {
+	public void setUrlsDown(Integer theUrlsDown) {
 		myUrlsDown = theUrlsDown;
 	}
 
@@ -168,7 +168,7 @@ public abstract class BaseDtoServiceCatalogItem extends BaseGDashboardObject imp
 	 * @param theUrlsUnknown
 	 *            the urlsUnknown to set
 	 */
-	public void setUrlsUnknown(int theUrlsUnknown) {
+	public void setUrlsUnknown(Integer theUrlsUnknown) {
 		myUrlsUnknown = theUrlsUnknown;
 	}
 

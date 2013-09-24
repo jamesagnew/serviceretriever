@@ -13,7 +13,7 @@ public abstract class BaseDtoKeepsRecentMessages extends BaseGObject {
 	private Boolean myAuditLogEnable;
 	
 	@XmlElement(name="runtime_CanInheritKeepNumRecentTransactions")
-	private boolean myCanInheritKeepNumRecentTransactions;
+	private Boolean myCanInheritKeepNumRecentTransactions;
 
 	@XmlElement(name="runtime_InheritedAuditLogEnabled")
 	private Boolean myInheritedAuditLogEnable;
@@ -30,16 +30,16 @@ public abstract class BaseDtoKeepsRecentMessages extends BaseGObject {
 	@XmlElement(name="runtime_InheritedKeepNumRecentTransactionsSuccess")
 	private Integer myInheritedKeepNumRecentTransactionsSuccess;
 
-	@XmlElement(name="runtime_KeepNumRecentTransactionsFail")
+	@XmlElement(name="config_KeepNumRecentTransactionsFail")
 	private Integer myKeepNumRecentTransactionsFail;
 
-	@XmlElement(name="runtime_KeepNumRecentTransactionsFault")
+	@XmlElement(name="config_KeepNumRecentTransactionsFault")
 	private Integer myKeepNumRecentTransactionsFault;
 
-	@XmlElement(name="runtime_KeepNumRecentTransactionsSecurityFail")
+	@XmlElement(name="config_KeepNumRecentTransactionsSecurityFail")
 	private Integer myKeepNumRecentTransactionsSecurityFail;
 
-	@XmlElement(name="runtime_KeepNumRecentTransactionsSuccess")
+	@XmlElement(name="config_KeepNumRecentTransactionsSuccess")
 	private Integer myKeepNumRecentTransactionsSuccess;
 
 	public Boolean getAuditLogEnable() {
@@ -94,7 +94,7 @@ public abstract class BaseDtoKeepsRecentMessages extends BaseGObject {
 		return myKeepNumRecentTransactionsSuccess;
 	}
 
-	public boolean isCanInheritKeepNumRecentTransactions() {
+	public Boolean isCanInheritKeepNumRecentTransactions() {
 		return myCanInheritKeepNumRecentTransactions;
 	}
 
@@ -112,7 +112,7 @@ public abstract class BaseDtoKeepsRecentMessages extends BaseGObject {
 		myAuditLogEnable = theAuditLogEnable;
 	}
 
-	public void setCanInheritKeepNumRecentTransactions(boolean theCanInheritKeepNumRecentTransactions) {
+	public void setCanInheritKeepNumRecentTransactions(Boolean theCanInheritKeepNumRecentTransactions) {
 		myCanInheritKeepNumRecentTransactions = theCanInheritKeepNumRecentTransactions;
 	}
 

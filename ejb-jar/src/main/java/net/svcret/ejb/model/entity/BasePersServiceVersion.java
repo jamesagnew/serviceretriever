@@ -887,12 +887,14 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		}
 	}
 
-	public BaseGServiceVersion toDao(boolean theLoadStats, IRuntimeStatusQueryLocal theQuerySvc, StatusesBean theStatuses) throws UnexpectedFailureException {
+	// TODO: rename this method
+	public BaseGServiceVersion toDao() throws UnexpectedFailureException {
 		Set<Long> emptySet = Collections.emptySet();
-		return toDto(theLoadStats, theQuerySvc, theStatuses, emptySet, emptySet);
+		return toDto(emptySet, null, null, emptySet, emptySet);
 	}
 
-	public BaseGServiceVersion toDto(boolean theLoadStats, IRuntimeStatusQueryLocal theQuerySvc, StatusesBean theStatuses, Set<Long> theLoadMethodStats, Set<Long> theLoadUrlStats)
+	// TODO: refactor this method to put the set params together
+	public BaseGServiceVersion toDto(Set<Long> theLoadVerStats, IRuntimeStatusQueryLocal theQuerySvc, StatusesBean theStatuses, Set<Long> theLoadMethodStats, Set<Long> theLoadUrlStats)
 			throws UnexpectedFailureException {
 
 		BaseGServiceVersion retVal = createDtoAndPopulateWithTypeSpecificEntries();
@@ -947,7 +949,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		}
 		retVal.setHttpClientConfigPid(httpClientConfig.getPid());
 
-		if (theLoadStats) {
+		if (theLoadVerStats.contains(getPid())) {
 
 			StatusEnum status = StatusEnum.UNKNOWN;
 			StatsAccumulator accumulator = null;

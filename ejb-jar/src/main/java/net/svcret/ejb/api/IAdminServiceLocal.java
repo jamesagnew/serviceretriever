@@ -73,8 +73,6 @@ public interface IAdminServiceLocal {
 
 	Collection<DtoLibraryMessage> getLibraryMessagesForService(long thePid, boolean theLoadContents) throws ProcessingException;
 
-	GService getServiceByPid(long theService) throws ProcessingException, UnexpectedFailureException;
-
 	long getServicePid(long theDomainPid, String theServiceId) throws ProcessingException;
 
 	Collection<GMonitorRuleFiring> loadAllActiveRuleFirings() throws ProcessingException;

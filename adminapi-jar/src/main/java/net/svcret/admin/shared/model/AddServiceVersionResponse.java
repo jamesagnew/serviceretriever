@@ -7,9 +7,6 @@ public class AddServiceVersionResponse implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private GDomain myNewDomain;
-	
-	private GService myNewService;
-	
 	private BaseGServiceVersion myNewServiceVersion;
 
 	/**
@@ -26,19 +23,6 @@ public class AddServiceVersionResponse implements Serializable {
 		myNewDomain = theNewDomain;
 	}
 
-	/**
-	 * @return the newService
-	 */
-	public GService getNewService() {
-		return myNewService;
-	}
-
-	/**
-	 * @param theNewService the newService to set
-	 */
-	public void setNewService(GService theNewService) {
-		myNewService = theNewService;
-	}
 
 	/**
 	 * @return the newServiceVersion

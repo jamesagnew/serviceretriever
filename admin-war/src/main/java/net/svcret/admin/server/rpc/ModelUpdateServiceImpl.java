@@ -190,15 +190,6 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 			ourLog.error("Failure when adding a service version", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
-		try {
-			retVal.setNewService(myAdminSvc.getServiceByPid(service));
-		} catch (ProcessingException e) {
-			ourLog.error("Failed to create service version", e);
-			throw new ServiceFailureException("Failed to create service version - " + e.getMessage());
-		} catch (UnexpectedFailureException e) {
-			ourLog.error("Failed to create service version", e);
-			throw new ServiceFailureException("Failed to create service version - " + e.getMessage());
-		}
 
 		return retVal;
 	}

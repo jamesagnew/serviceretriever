@@ -8,6 +8,8 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.ejb.api.IServiceRegistry;
@@ -24,14 +26,14 @@ public class ImportExportServiceBean implements IImportExportServiceLocal {
 	
 	public ImportExportServiceBean() throws JAXBException {
 		
-		myJaxbContext = JAXBContext.newInstance(GDomainList.class);
+		myJaxbContext = JAXBContext.newInstance(GDomainList.class, GDomain.class);
 		
 	}
 	
 	@Override
 	public String exportDomain(long theDomainPid) throws UnexpectedFailureException {
 		PersDomain domain = myServiceRegistry.getDomainByPid(theDomainPid);
-		GDomain dto = domain.toDto(false, null, null);
+		GDomain dto = domain.toDto();
 		String retVal;
 		
 		Marshaller marshaller;
@@ -46,6 +48,11 @@ public class ImportExportServiceBean implements IImportExportServiceLocal {
 		}
 		
 		return retVal;
+	}
+
+	@VisibleForTesting
+ void setServiceRegistryForUnitTest(IServiceRegistry theSr) {
+		myServiceRegistry=theSr;
 	}
 	
 }

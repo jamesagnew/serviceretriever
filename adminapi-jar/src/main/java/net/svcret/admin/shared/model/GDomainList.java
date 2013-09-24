@@ -21,10 +21,7 @@ public class GDomainList extends BaseDtoList<GDomain> {
 
 	private static final long serialVersionUID = 1L;
 
-	@XmlTransient
 	private transient Map<Long, BaseGServiceVersion> myPidToServiceVersion;
-
-	@XmlTransient
 	private transient Map<Long, GServiceVersionUrl> myPidToUrl;
 
 	public GDomainList() {

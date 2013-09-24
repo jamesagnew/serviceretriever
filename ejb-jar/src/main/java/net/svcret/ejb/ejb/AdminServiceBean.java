@@ -200,7 +200,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		domain = myServiceRegistry.saveDomain(domain);
 
-		return domain.toDto(false, null, null);
+		return domain.toDto();
 	}
 
 	@Override
@@ -236,7 +236,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		service.setActive(theActive);
 		myServiceRegistry.saveService(service);
 
-		return toUi(service, false, null);
+		return service.toDto();
 	}
 
 	public GServiceMethod addServiceVersionMethod(long theServiceVersionPid, GServiceMethod theMethod) throws ProcessingException, UnexpectedFailureException {
@@ -362,8 +362,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	public GDomain getDomainByPid(long theDomain) throws ProcessingException, UnexpectedFailureException {
 		PersDomain domain = myDao.getDomainByPid(theDomain);
 		if (domain != null) {
-			Set<Long> empty = Collections.emptySet();
-			return loadDomain(domain, empty, empty, empty, empty, empty, null);
+			return domain.toDto();
 		}
 		return null;
 	}
@@ -413,14 +412,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return toUiCollectionLibraryMessages(msgs, theLoadContents);
 	}
 
-	@Override
-	public GService getServiceByPid(long theService) throws ProcessingException, UnexpectedFailureException {
-		PersService service = myDao.getServiceByPid(theService);
-		if (service != null) {
-			return toUi(service, false, null);
-		}
-		return null;
-	}
 
 	@Override
 	public long getServicePid(long theDomainPid, String theServiceId) throws ProcessingException {
@@ -670,7 +661,8 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		StatusesBean statuses = myDao.loadAllStatuses();
 
-		BaseGServiceVersion uiService = svcVer.toDto(true, myRuntimeStatusQuerySvc, statuses, methodPids, urlPids);
+		Set<Long> svcVerPids=Collections.singleton(theServiceVersionPid);
+		BaseGServiceVersion uiService = svcVer.toDto(svcVerPids, myRuntimeStatusQuerySvc, statuses, methodPids, urlPids);
 		GSoap11ServiceVersionAndResources retVal = toUi(uiService, svcVer);
 		return retVal;
 	}
@@ -1047,7 +1039,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		version = myServiceRegistry.saveServiceVersion(version);
 
 		@SuppressWarnings("unchecked")
-		T retVal = (T) version.toDao(false, myRuntimeStatusQuerySvc, null);
+		T retVal = (T) version.toDao();
 
 		return retVal;
 	}
@@ -1504,30 +1496,13 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private GDomain loadDomain(PersDomain nextDomain, Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, Set<Long> theLoadUrlStats,
-			StatusesBean statuses) throws UnexpectedFailureException {
-		GDomain gDomain = nextDomain.toDto(theLoadDomStats.contains(nextDomain.getPid()), statuses, myRuntimeStatusQuerySvc);
-
-		for (PersService nextService : nextDomain.getServices()) {
-			GService gService = toUi(nextService, theLoadSvcStats.contains(nextService.getPid()), statuses);
-			gDomain.getServiceList().add(gService);
-
-			for (BasePersServiceVersion nextVersion : nextService.getVersions()) {
-				BaseGServiceVersion gVersion = nextVersion.toDto(theLoadVerStats.contains(nextVersion.getPid()), myRuntimeStatusQuerySvc, statuses, theLoadVerMethodStats, theLoadUrlStats);
-				gService.getVersionList().add(gVersion);
-
-			} // for service versions
-		} // for services
-		return gDomain;
-	}
 
 	private GDomainList loadDomainList(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, Set<Long> theLoadUrlStats,
-			StatusesBean statuses) throws UnexpectedFailureException {
+			StatusesBean theStatuses) throws UnexpectedFailureException {
 		GDomainList domainList = new GDomainList();
 
 		for (PersDomain nextDomain : myServiceRegistry.getAllDomains()) {
-			GDomain gDomain = loadDomain(nextDomain, theLoadDomStats, theLoadSvcStats, theLoadVerStats, theLoadVerMethodStats, theLoadUrlStats, statuses);
-
+			GDomain gDomain = nextDomain.toDto(theLoadDomStats, theLoadSvcStats, theLoadVerStats, theLoadVerMethodStats, theLoadUrlStats, theStatuses, myRuntimeStatusQuerySvc);
 			domainList.add(gDomain);
 		} // for domains
 		return domainList;
@@ -1745,69 +1720,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private GService toUi(PersService theService, boolean theLoadStats, StatusesBean theStatuses) throws UnexpectedFailureException {
-		GService retVal = new GService();
-		retVal.setPid(theService.getPid());
-		retVal.setId(theService.getServiceId());
-		retVal.setName(theService.getServiceName());
-		retVal.setActive(theService.isActive());
-		retVal.setServerSecured(theService.getServerSecured());
-
-		theService.populateKeepRecentTransactionsToDto(retVal);
-		theService.populateServiceCatalogItemToDto(retVal);
-		theService.populateDtoWithMonitorRules(retVal);
-
-		if (theLoadStats) {
-			retVal.setStatsInitialized(new Date());
-			StatusEnum status = StatusEnum.UNKNOWN;
-
-			StatsAccumulator accumulator = null;
-			status = theService.populateDtoWithStatusAndProvideStatusForParent(retVal, status, theStatuses);
-
-			accumulator = myRuntimeStatusQuerySvc.extract60MinuteStats(theService);
-			accumulator.populateDto(retVal);
-
-			int urlsActive = 0;
-			int urlsDown = 0;
-			int urlsUnknown = 0;
-			Date lastServerSecurityFail = null;
-			Date lastSuccess = null;
-			for (BasePersServiceVersion nextVersion : theService.getVersions()) {
-				for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
-					PersServiceVersionUrlStatus urlStatus = theStatuses.getUrlStatus(nextUrl.getPid());
-					if (urlStatus == null) {
-						continue;
-					}
-					switch (urlStatus.getStatus()) {
-					case ACTIVE:
-						urlsActive++;
-						break;
-					case DOWN:
-						urlsDown++;
-						break;
-					case UNKNOWN:
-						urlsUnknown++;
-						break;
-					}
-				}
-
-				PersServiceVersionStatus svcStatus = theStatuses.getServiceVersionStatus(nextVersion.getPid());
-				if (svcStatus != null) {
-					lastServerSecurityFail = PersServiceVersionStatus.newer(lastServerSecurityFail, svcStatus.getLastServerSecurityFailure());
-					lastSuccess = PersServiceVersionStatus.newer(lastSuccess, svcStatus.getLastSuccessfulInvocation());
-				}
-			}
-
-			retVal.setUrlsActive(urlsActive);
-			retVal.setUrlsDown(urlsDown);
-			retVal.setUrlsUnknown(urlsUnknown);
-			retVal.setLastServerSecurityFailure(lastServerSecurityFail);
-			retVal.setLastSuccessfulInvocation(lastSuccess);
-
-		}
-
-		return retVal;
-	}
 
 	private GUser toUi(PersUser thePersUser, boolean theLoadStats) throws UnexpectedFailureException {
 		GUser retVal = new GUser();

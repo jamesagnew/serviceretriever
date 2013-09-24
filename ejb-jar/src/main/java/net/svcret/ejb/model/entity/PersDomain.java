@@ -23,7 +23,6 @@ import javax.persistence.Version;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.ServerSecuredEnum;
@@ -53,29 +52,29 @@ public class PersDomain extends BasePersServiceCatalogItem {
 	@Transient
 	private volatile transient HashMap<String, PersService> myIdToServices;
 
-	@Version()
-	@Column(name = "OPTLOCK")
-	protected int myOptLock;
+	@OneToMany(fetch=FetchType.LAZY, cascade= {}, orphanRemoval=true, mappedBy="myDomain")
+	private Collection<PersMonitorAppliesTo> myMonitorRules;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "PID")
 	private Long myPid;
 
+	@Transient
+	private transient ServerSecuredEnum myServerSecured;
+
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy="myDomain")
 	private Collection<PersService> myServices;
-
-	@OneToMany(fetch=FetchType.LAZY, cascade= {}, orphanRemoval=true, mappedBy="myDomain")
-	private Collection<PersUserDomainPermission> myUserPermissions;
 	
-	@OneToMany(fetch=FetchType.LAZY, cascade= {}, orphanRemoval=true, mappedBy="myDomain")
-	private Collection<PersMonitorAppliesTo> myMonitorRules;
-
 	@Transient
 	private transient StatusEnum myStatus;
 
-	@Transient
-	private transient ServerSecuredEnum myServerSecured;
+	@OneToMany(fetch=FetchType.LAZY, cascade= {}, orphanRemoval=true, mappedBy="myDomain")
+	private Collection<PersUserDomainPermission> myUserPermissions;
+
+	@Version()
+	@Column(name = "OPTLOCK")
+	protected int myOptLock;
 
 	public PersDomain() {
 		super();
@@ -84,6 +83,89 @@ public class PersDomain extends BasePersServiceCatalogItem {
 	public PersDomain(long thePid, String theDomainId) {
 		myPid = thePid;
 		myDomainId = theDomainId;
+	}
+
+	public void addService(PersService thePersService) {
+		getServices();
+		myServices.add(thePersService);
+		myIdToServices = null;
+	}
+
+	@Override
+	public boolean canInheritKeepNumRecentTransactions() {
+		return false;
+	}
+
+	@Override
+	public boolean canInheritObscureElements() {
+		return false;
+	}
+
+	@Override
+	public boolean determineInheritedAuditLogEnable() {
+		if (getAuditLogEnable() != null) {
+			return getAuditLogEnable();
+		}
+		return false;
+	}
+
+	@Override
+	public Integer determineInheritedKeepNumRecentTransactions(ResponseTypeEnum theResultType) {
+		return null;
+	}
+
+	@Override
+	public Set<String> determineInheritedObscureRequestElements() {
+		return null;
+	}
+
+	@Override
+	public Set<String> determineInheritedObscureResponseElements() {
+		return null;
+	}
+
+
+	@Override
+	public Set<String> determineObscureRequestElements() {
+		Set<String> retVal = getObscureRequestElementsInLog();
+		return retVal;
+	}
+
+	@Override
+	public Set<String> determineObscureResponseElements() {
+		Set<String> retVal = getObscureResponseElementsInLog();
+		return retVal;
+	}
+
+	@Override
+	public Set<PersMonitorRuleFiring> getActiveRuleFiringsWhichMightApply() {
+		if (getMostRecentMonitorRuleFiring() != null && getMostRecentMonitorRuleFiring().getEndDate() == null) {
+			HashSet<PersMonitorRuleFiring> retVal = new HashSet<PersMonitorRuleFiring>();
+			retVal.add(getMostRecentMonitorRuleFiring());
+			return retVal;
+		}else {
+			return Collections.emptySet();
+		}
+	}
+
+	public Collection<PersServiceVersionMethod> getAllServiceVersionMethods() {
+		List<PersServiceVersionMethod> retVal = new ArrayList<PersServiceVersionMethod>();
+		for (PersService nextService : getServices()) {
+			retVal.addAll(nextService.getAllServiceVersionMethods());
+		}
+		return retVal;
+	}
+
+
+	@Override
+	public Set<BasePersServiceVersion> getAllServiceVersions() {
+		Set<BasePersServiceVersion> retVal = new HashSet<BasePersServiceVersion>();
+		for (PersService next : getServices()) {
+			for (BasePersServiceVersion nextVer : next.getAllServiceVersions()) {
+				retVal.add(nextVer);
+			}
+		}
+		return retVal;
 	}
 
 	/**
@@ -100,6 +182,20 @@ public class PersDomain extends BasePersServiceCatalogItem {
 		return myDomainName;
 	}
 
+	public String getDomainNameOrId() {
+		if (StringUtils.isNotBlank(getDomainName())) {
+			return getDomainName();
+		}
+		return getDomainId();
+	}
+
+	public Collection<PersMonitorAppliesTo> getMonitorRules() {
+		if (myMonitorRules==null) {
+			myMonitorRules=new ArrayList<PersMonitorAppliesTo>();
+		}
+		return myMonitorRules;
+	}
+
 	/**
 	 * @return the versionNum
 	 */
@@ -114,6 +210,15 @@ public class PersDomain extends BasePersServiceCatalogItem {
 		return myPid;
 	}
 
+	public ServerSecuredEnum getServerSecured() {
+		if (myServerSecured == null) {
+			for (PersService next : getServices()) {
+				myServerSecured = ServerSecuredEnum.merge(myServerSecured, next.getServerSecured());
+			}
+		}
+		return myServerSecured;
+	}
+
 	/**
 	 * @return the services
 	 */
@@ -124,17 +229,16 @@ public class PersDomain extends BasePersServiceCatalogItem {
 		return myServices;
 	}
 
-	public Collection<PersMonitorAppliesTo> getMonitorRules() {
-		if (myMonitorRules==null) {
-			myMonitorRules=new ArrayList<PersMonitorAppliesTo>();
+	public PersService getServiceWithId(String theId) {
+		if (myIdToServices == null) {
+			return initIdToServices().get(theId);
 		}
-		return myMonitorRules;
+		return myIdToServices.get(theId);
 	}
 
 	public StatusEnum getStatus() {
 		return myStatus;
 	}
-
 
 	public void loadAllAssociations() {
 		if (myAllAssociationsLoaded) {
@@ -150,14 +254,23 @@ public class PersDomain extends BasePersServiceCatalogItem {
 		myAllAssociationsLoaded = true;
 	}
 
-	private HashMap<String, PersService> initIdToServices() {
-		HashMap<String, PersService> idToServices = new HashMap<String, PersService>();
-		for (PersService next : getServices()) {
-			idToServices.put(next.getServiceId(), next);
-			next.loadAllAssociations();
+	public void merge(BasePersObject theObj) {
+		super.merge(theObj);
+	
+		PersDomain domain = (PersDomain)theObj;
+		setDomainId(domain.getDomainId());
+		setDomainName(domain.getDomainName());
+	}
+
+	public void populateDtoWithMonitorRules(BaseDtoServiceCatalogItem theDto) {
+		for (PersService nextSvc : getServices()) {
+			nextSvc.populateDtoWithMonitorRules(theDto);
 		}
-		myIdToServices = idToServices;
-		return idToServices;
+		for (PersMonitorAppliesTo nextRule : getMonitorRules()) {
+			if (nextRule.getItem().equals(this)) {
+				theDto.getMonitorRulePids().add(nextRule.getPid());
+			}
+		}
 	}
 
 	/**
@@ -177,7 +290,6 @@ public class PersDomain extends BasePersServiceCatalogItem {
 		myDomainName = theDomainName;
 	}
 
-
 	/**
 	 * @param theOptLock
 	 *            the versionNum to set
@@ -194,127 +306,9 @@ public class PersDomain extends BasePersServiceCatalogItem {
 		myPid = thePid;
 	}
 
-	public Collection<PersServiceVersionMethod> getAllServiceVersionMethods() {
-		List<PersServiceVersionMethod> retVal = new ArrayList<PersServiceVersionMethod>();
-		for (PersService nextService : getServices()) {
-			retVal.addAll(nextService.getAllServiceVersionMethods());
-		}
-		return retVal;
-	}
-
-	public PersService getServiceWithId(String theId) {
-		if (myIdToServices == null) {
-			return initIdToServices().get(theId);
-		}
-		return myIdToServices.get(theId);
-	}
-
-	public void addService(PersService thePersService) {
-		getServices();
-		myServices.add(thePersService);
-		myIdToServices = null;
-	}
-
-	public void merge(BasePersObject theObj) {
-		super.merge(theObj);
-	
-		PersDomain domain = (PersDomain)theObj;
-		setDomainId(domain.getDomainId());
-		setDomainName(domain.getDomainName());
-	}
-
-	public ServerSecuredEnum getServerSecured() {
-		if (myServerSecured == null) {
-			for (PersService next : getServices()) {
-				myServerSecured = ServerSecuredEnum.merge(myServerSecured, next.getServerSecured());
-			}
-		}
-		return myServerSecured;
-	}
-
-	@Override
-	public Set<BasePersServiceVersion> getAllServiceVersions() {
-		Set<BasePersServiceVersion> retVal = new HashSet<BasePersServiceVersion>();
-		for (PersService next : getServices()) {
-			for (BasePersServiceVersion nextVer : next.getAllServiceVersions()) {
-				retVal.add(nextVer);
-			}
-		}
-		return retVal;
-	}
-
-	public String getDomainNameOrId() {
-		if (StringUtils.isNotBlank(getDomainName())) {
-			return getDomainName();
-		}
-		return getDomainId();
-	}
-
-	@Override
-	public Integer determineInheritedKeepNumRecentTransactions(ResponseTypeEnum theResultType) {
-		return null;
-	}
-
-	@Override
-	public boolean canInheritKeepNumRecentTransactions() {
-		return false;
-	}
-
-	@Override
-	public Set<PersMonitorRuleFiring> getActiveRuleFiringsWhichMightApply() {
-		if (getMostRecentMonitorRuleFiring() != null && getMostRecentMonitorRuleFiring().getEndDate() == null) {
-			HashSet<PersMonitorRuleFiring> retVal = new HashSet<PersMonitorRuleFiring>();
-			retVal.add(getMostRecentMonitorRuleFiring());
-			return retVal;
-		}else {
-			return Collections.emptySet();
-		}
-	}
-
-	@Override
-	public boolean determineInheritedAuditLogEnable() {
-		if (getAuditLogEnable() != null) {
-			return getAuditLogEnable();
-		}
-		return false;
-	}
-
-	@Override
-	public boolean canInheritObscureElements() {
-		return false;
-	}
-
-	@Override
-	public Set<String> determineInheritedObscureRequestElements() {
-		return null;
-	}
-
-	@Override
-	public Set<String> determineInheritedObscureResponseElements() {
-		return null;
-	}
-
-	@Override
-	public Set<String> determineObscureRequestElements() {
-		Set<String> retVal = getObscureRequestElementsInLog();
-		return retVal;
-	}
-
-	@Override
-	public Set<String> determineObscureResponseElements() {
-		Set<String> retVal = getObscureResponseElementsInLog();
-		return retVal;
-	}
-
-	public void populateDtoWithMonitorRules(BaseDtoServiceCatalogItem theDto) {
-		for (PersService nextSvc : getServices()) {
-			nextSvc.populateDtoWithMonitorRules(theDto);
-		}
-		for (PersMonitorAppliesTo nextRule : getMonitorRules()) {
-			if (nextRule.getItem().equals(this)) {
-				theDto.getMonitorRulePids().add(nextRule.getPid());
-			}
-		}
+	public GDomain toDto() throws UnexpectedFailureException {
+		Set<Long> stats = Collections.emptySet();
+		return toDto(stats, stats, stats, stats, stats, null, null);
 	}
 
 	public GDomain toDto(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, Set<Long> theLoadUrlStats, StatusesBean theStatuses, IRuntimeStatusQueryLocal theStatusQuerySvc) throws UnexpectedFailureException {
@@ -329,14 +323,8 @@ public class PersDomain extends BasePersServiceCatalogItem {
 		this.populateServiceCatalogItemToDto(retVal);
 
 		for (PersService nextService : getServices()) {
-			GService gService = toUi(nextService, theLoadSvcStats.contains(nextService.getPid()), theStatuses);
+			GService gService = nextService.toDto(theLoadSvcStats, theLoadVerStats, theLoadVerMethodStats, theLoadUrlStats, theStatuses, theStatusQuerySvc);
 			retVal.getServiceList().add(gService);
-
-			for (BasePersServiceVersion nextVersion : nextService.getVersions()) {
-				BaseGServiceVersion gVersion = nextVersion.toDto(theLoadVerStats.contains(nextVersion.getPid()), theStatusQuerySvc, theStatuses, theLoadVerMethodStats, theLoadUrlStats);
-				gService.getVersionList().add(gVersion);
-
-			} // for service versions
 		} // for services
 		
 		if (theLoadDomStats.contains(getPid())) {
@@ -393,6 +381,16 @@ public class PersDomain extends BasePersServiceCatalogItem {
 		// retVal.get
 
 		return retVal;
+	}
+
+	private HashMap<String, PersService> initIdToServices() {
+		HashMap<String, PersService> idToServices = new HashMap<String, PersService>();
+		for (PersService next : getServices()) {
+			idToServices.put(next.getServiceId(), next);
+			next.loadAllAssociations();
+		}
+		myIdToServices = idToServices;
+		return idToServices;
 	}
 
 	
