@@ -7,12 +7,13 @@ import java.util.Set;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import net.svcret.admin.shared.util.XmlConstants;
 
 @XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="Service")
+@XmlRootElement(namespace=XmlConstants.DTO_NAMESPACE, name="Service")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class GService extends BaseDtoServiceCatalogItem {
 
@@ -24,7 +25,6 @@ public class GService extends BaseDtoServiceCatalogItem {
 	@XmlElement(name="config_VersionList")
 	private GServiceVersionList myVersionList = new GServiceVersionList();;
 	
-	@XmlTransient
 	private transient Set<Long> myServiceVersionPids = new HashSet<Long>();
 
 	public GServiceVersionList getVersionList() {

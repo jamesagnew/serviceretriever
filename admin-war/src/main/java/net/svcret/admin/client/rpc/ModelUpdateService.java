@@ -116,7 +116,7 @@ public interface ModelUpdateService extends RemoteService {
 
 	void saveServiceVersionToSession(BaseGServiceVersion theServiceVersion);
 
-	void saveUser(GUser theUser) throws ServiceFailureException;
+	GUser saveUser(GUser theUser) throws ServiceFailureException;
 
 	GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long theServiceVersionPid) throws ServiceFailureException;
 

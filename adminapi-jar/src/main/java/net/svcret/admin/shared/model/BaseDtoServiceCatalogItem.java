@@ -100,6 +100,27 @@ public abstract class BaseDtoServiceCatalogItem extends BaseGDashboardObject imp
 		return myUrlsUnknown;
 	}
 
+	/**
+	 * @return the urlsActive
+	 */
+	public int getUrlsActiveAsIntWithDefault() {
+		return myUrlsActive != null ? myUrlsActive : 0;
+	}
+
+	/**
+	 * @return the urlsDown
+	 */
+	public int getUrlsDownAsIntWithDefault() {
+		return myUrlsDown != null ? myUrlsDown : 0;
+	}
+
+	/**
+	 * @return the urlsUnknown
+	 */
+	public int getUrlsUnknownAsIntWithDefault() {
+		return myUrlsUnknown != null ? myUrlsUnknown : 0;
+	}
+
 	@Override
 	public void merge(BaseGObject theObject) {
 		super.merge(theObject);

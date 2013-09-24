@@ -139,7 +139,16 @@ public class HttpClientBeanTest {
 		server.addConnector(sslConnector);
 
 		server.start();
-		Thread.sleep(500);
+		
+		long start = System.currentTimeMillis();
+		while (!server.isStarted()) {
+			ourLog.info("Server hasn't started yet, going to sleep for 500ms");
+			Thread.sleep(500);
+			long delay = System.currentTimeMillis() - start;
+			if (delay > 10 * 1000) {
+				fail("TOok more than 10 seconds to start server, aborting");
+			}
+		}
 
 		mySvc.setUp();
 		try {

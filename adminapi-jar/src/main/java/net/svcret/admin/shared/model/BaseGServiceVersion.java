@@ -3,12 +3,20 @@ package net.svcret.admin.shared.model;
 import java.util.Date;
 import java.util.Set;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
+
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
+import net.svcret.admin.shared.util.XmlConstants;
 
 public abstract class BaseGServiceVersion extends BaseDtoServiceCatalogItem implements IProvidesUrlCount {
 
 	private static final long serialVersionUID = 7886801527330335503L;
 
+	@XmlElement(name="config_Active")
 	private boolean myActive;
 	private BaseGClientSecurityList myClientSecurityList;
 	private String myDefaultProxyPath;

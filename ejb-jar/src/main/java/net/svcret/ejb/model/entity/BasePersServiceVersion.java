@@ -888,7 +888,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	}
 
 	// TODO: rename this method
-	public BaseGServiceVersion toDao() throws UnexpectedFailureException {
+	public BaseGServiceVersion toDto() throws UnexpectedFailureException {
 		Set<Long> emptySet = Collections.emptySet();
 		return toDto(emptySet, null, null, emptySet, emptySet);
 	}
@@ -1020,16 +1020,16 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 			switch (nextUrlStatus.getStatus()) {
 			case ACTIVE:
 				retVal = StatusEnum.ACTIVE;
-				theDashboardObject.setUrlsActive(theDashboardObject.getUrlsActive() + 1);
+				theDashboardObject.setUrlsActive(theDashboardObject.getUrlsActiveAsIntWithDefault() + 1);
 				break;
 			case DOWN:
 				if (retVal != StatusEnum.ACTIVE) {
 					retVal = StatusEnum.DOWN;
 				}
-				theDashboardObject.setUrlsDown(theDashboardObject.getUrlsDown() + 1);
+				theDashboardObject.setUrlsDown(theDashboardObject.getUrlsDownAsIntWithDefault() + 1);
 				break;
 			case UNKNOWN:
-				theDashboardObject.setUrlsUnknown(theDashboardObject.getUrlsUnknown() + 1);
+				theDashboardObject.setUrlsUnknown(theDashboardObject.getUrlsUnknownAsIntWithDefault() + 1);
 				break;
 			}
 

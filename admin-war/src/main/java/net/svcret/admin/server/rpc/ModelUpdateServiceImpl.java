@@ -819,16 +819,16 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public void saveUser(GUser theUser) throws ServiceFailureException {
+	public GUser saveUser(GUser theUser) throws ServiceFailureException {
 		ourLog.info("Saving user {} / {}", theUser.getPid(), theUser.getUsername());
 
 		if (isMockMode()) {
-			getMock().saveUser(theUser);
-			return;
+			return getMock().saveUser(theUser);
 		}
 
+		GUser retVal;
 		try {
-			myAdminSvc.saveUser(theUser);
+			retVal = myAdminSvc.saveUser(theUser);
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to save user", e);
 			throw new ServiceFailureException(e.getMessage());
@@ -838,6 +838,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		}
 
 		ourLog.info("Done saving user {} / {}", theUser.getPid(), theUser.getUsername());
+		return retVal;
 	}
 
 	@Override

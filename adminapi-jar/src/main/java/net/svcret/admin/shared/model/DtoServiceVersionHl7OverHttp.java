@@ -1,6 +1,17 @@
 package net.svcret.admin.shared.model;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
+import net.svcret.admin.shared.util.XmlConstants;
+
+
+@XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="ServiceVersionHl7OverHttp")
+@XmlRootElement(namespace=XmlConstants.DTO_NAMESPACE, name="ServiceVersionHl7OverHttp")
+@XmlAccessorType(XmlAccessType.FIELD)
 public class DtoServiceVersionHl7OverHttp extends BaseGServiceVersion {
 
 	public static final String DEFAULT_METHOD_NAME_TEMPLATE = "${messageType}";
@@ -8,6 +19,7 @@ public class DtoServiceVersionHl7OverHttp extends BaseGServiceVersion {
 	
 	private static final long serialVersionUID = 1L;
 
+	@XmlElement(name="config_MethodNameTemplate")
 	private String myMethodNameTemplate;
 
 	public String getMethodNameTemplate() {

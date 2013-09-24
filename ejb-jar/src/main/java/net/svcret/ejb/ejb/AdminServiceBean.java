@@ -121,7 +121,6 @@ import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
-import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.ejb.model.entity.PersStickySessionUrlBinding;
@@ -1039,7 +1038,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		version = myServiceRegistry.saveServiceVersion(version);
 
 		@SuppressWarnings("unchecked")
-		T retVal = (T) version.toDao();
+		T retVal = (T) version.toDto();
 
 		return retVal;
 	}

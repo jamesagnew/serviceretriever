@@ -400,7 +400,6 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		AddServiceVersionResponse retVal = null;
 		retVal = new AddServiceVersionResponse();
 		retVal.setNewDomain(dom);
-		retVal.setNewService(svc);
 		retVal.setNewServiceVersion(theVersion);
 		return retVal;
 
@@ -860,8 +859,10 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	}
 
 	@Override
-	public void saveUser(GUser theUser) {
-		myUserList.getUserByPid(theUser.getPid()).merge(theUser);
+	public GUser saveUser(GUser theUser) {
+		GUser user = myUserList.getUserByPid(theUser.getPid());
+		user.merge(theUser);
+		return user;
 	}
 
 	@Override

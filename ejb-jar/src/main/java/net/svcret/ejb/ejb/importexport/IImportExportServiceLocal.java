@@ -9,4 +9,6 @@ public interface IImportExportServiceLocal {
 
 	String exportDomain(long theDomainPid) throws UnexpectedFailureException;
 
+	String exportDomain(String theDomainId)  throws UnexpectedFailureException;
+
 }

@@ -8,6 +8,11 @@
 	</servlet>
 
 	<servlet>
+		<servlet-name>managementServlet</servlet-name>
+		<servlet-class>net.svcret.admin.server.rpc.ManagementServlet</servlet-class>
+	</servlet>
+
+	<servlet>
 		<servlet-name>modelUpdateServlet</servlet-name>
 		<servlet-class>net.svcret.admin.server.rpc.ModelUpdateServiceImpl</servlet-class>
 	</servlet>
@@ -71,6 +76,12 @@
 		<url-pattern>/AdminPortal/remote_logging</url-pattern>  
 	</servlet-mapping>  
 
+	<servlet-mapping>  
+		<servlet-name>managementServlet</servlet-name>  
+		<url-pattern>/svcretadmin/management</url-pattern>  
+	</servlet-mapping>  
+
+
 	<servlet-mapping>
 		<servlet-name>resourceServlet</servlet-name>
 		<url-pattern>/resources/*</url-pattern>
@@ -91,27 +102,16 @@
 	</login-config>
 
 	<security-constraint>
-
 		<web-resource-collection>
 			<web-resource-name>Secured Content</web-resource-name>
 			<url-pattern>/admin/*</url-pattern>
 		</web-resource-collection>
-      
-    <!-- only users with at least one of these roles are allowed to access the secured content -->
 		<auth-constraint>
 			<role-name>USER</role-name>
 		</auth-constraint>
-
 		<user-data-constraint>
 			<transport-guarantee>NONE</transport-guarantee>
 		</user-data-constraint>
-    <!-- 
-    <user-data-constraint>
-      <description>highest supported transport security level</description>
-      <transport-guarantee>CONFIDENTIAL</transport-guarantee>
-    </user-data-constraint>
-  	-->
-
 	</security-constraint>
   
   <!-- declare the roles relevant for our webapp -->

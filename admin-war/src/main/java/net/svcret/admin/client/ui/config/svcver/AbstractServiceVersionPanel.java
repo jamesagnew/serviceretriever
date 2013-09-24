@@ -432,10 +432,6 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 						Model.getInstance().addDomain(theResult.getNewDomain());
 						myDomainPid = theResult.getNewDomain().getPid();
 					}
-					if (theResult.getNewService() != null) {
-						Model.getInstance().addService(myDomainPid, theResult.getNewService());
-						myServicePid = theResult.getNewService().getPid();
-					}
 					Model.getInstance().addOrUpdateServiceVersion(myDomainPid, myServicePid, theResult.getNewServiceVersion());
 					handleDoneSaving(theResult);
 				}

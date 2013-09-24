@@ -426,14 +426,15 @@ public abstract class BaseUserPanel extends FlowPanel {
 		myKeepRecentTransactionsPanel.populateDto(myUser);
 		
 		myLoadingSpinner.show();
-		AdminPortal.MODEL_SVC.saveUser(myUser, new AsyncCallback<Void>() {
+		AdminPortal.MODEL_SVC.saveUser(myUser, new AsyncCallback<GUser>() {
 			@Override
 			public void onFailure(Throwable theCaught) {
 				Model.handleFailure(theCaught);
 			}
 
 			@Override
-			public void onSuccess(Void theResult) {
+			public void onSuccess(GUser theResult) {
+				myUser.setPid(theResult.getPid());
 				myLoadingSpinner.showMessage(MSGS.editUser_DoneSaving(), false);
 			}
 		});

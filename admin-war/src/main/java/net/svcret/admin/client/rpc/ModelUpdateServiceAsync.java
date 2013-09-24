@@ -110,7 +110,7 @@ public interface ModelUpdateServiceAsync {
 
 	void saveServiceVersionToSession(BaseGServiceVersion theServiceVersion, AsyncCallback<Void> callback);
 
-	void saveUser(GUser theUser, AsyncCallback<Void> theAsyncCallback);
+	void saveUser(GUser theUser, AsyncCallback<GUser> theAsyncCallback);
 
 	void testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long theServiceVersionPid, AsyncCallback<GServiceVersionSingleFireResponse> theAsyncCallback);
 
