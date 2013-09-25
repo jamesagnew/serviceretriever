@@ -6,8 +6,8 @@ import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
-import net.svcret.admin.shared.model.BaseGClientSecurity;
-import net.svcret.admin.shared.model.ClientSecurityEnum;
+import net.svcret.admin.shared.enm.ClientSecurityEnum;
+import net.svcret.admin.shared.model.BaseDtoClientSecurity;
 import net.svcret.admin.shared.model.DtoClientSecurityJsonRpcNamedParameter;
 import net.svcret.ejb.invoker.jsonrpc.IJsonWriter;
 import net.svcret.ejb.model.entity.BasePersObject;
@@ -285,7 +285,7 @@ public class NamedParameterJsonRpcClientAuth extends PersBaseClientAuth<NamedPar
 	}
 
 	@Override
-	protected BaseGClientSecurity createDtoAndPopulateWithTypeSpecificFields() {
+	protected BaseDtoClientSecurity createDtoAndPopulateWithTypeSpecificFields() {
 		DtoClientSecurityJsonRpcNamedParameter retVal = new DtoClientSecurityJsonRpcNamedParameter();
 		retVal.setUsernameParameterName(getUsernameParameterName());
 		retVal.setUsername(getUsername());

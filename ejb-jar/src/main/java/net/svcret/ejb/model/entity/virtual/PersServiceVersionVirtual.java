@@ -8,7 +8,7 @@ import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.ForeignKey;
 
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoServiceVersionVirtual;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -39,7 +39,7 @@ public class PersServiceVersionVirtual extends BasePersServiceVersion {
 	}
 
 	@Override
-	protected BaseGServiceVersion createDtoAndPopulateWithTypeSpecificEntries() {
+	protected BaseDtoServiceVersion createDtoAndPopulateWithTypeSpecificEntries() {
 		DtoServiceVersionVirtual retVal = new DtoServiceVersionVirtual();
 		retVal.setTargetServiceVersionPid(myTarget.getPid());
 		return retVal;

@@ -3,10 +3,10 @@ package net.svcret.admin.client.ui.config.svcver;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
+import net.svcret.admin.shared.AddServiceVersionResponse;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.AddServiceVersionResponse;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.GDomainList;
 
 import com.google.gwt.user.client.History;
@@ -26,14 +26,14 @@ public class CloneServiceVersionPanel extends AbstractServiceVersionPanel {
 				initParents(theResult);
 				setDomainPid(theResult.getDomainPidWithServiceVersion(thePidToClone));
 				setServicePid(theResult.getServicePidWithServiceVersion(thePidToClone));
-				AdminPortal.MODEL_SVC.cloneServiceVersion(thePidToClone, new AsyncCallback<BaseGServiceVersion>() {
+				AdminPortal.MODEL_SVC.cloneServiceVersion(thePidToClone, new AsyncCallback<BaseDtoServiceVersion>() {
 					@Override
 					public void onFailure(Throwable theCaught) {
 						Model.handleFailure(theCaught);
 					}
 					
 					@Override
-					public void onSuccess(BaseGServiceVersion theServiceVersion) {
+					public void onSuccess(BaseDtoServiceVersion theServiceVersion) {
 						setServiceVersion(theServiceVersion);
 						setUncommittedSessionId(theServiceVersion.getUncommittedSessionId());
 						myProtocolLabel.setText(theServiceVersion.getProtocol().getNiceName());

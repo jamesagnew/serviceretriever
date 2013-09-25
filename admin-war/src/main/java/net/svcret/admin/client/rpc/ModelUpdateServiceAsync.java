@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Map;
 
 import net.svcret.admin.client.rpc.ModelUpdateService.UserAndAuthHost;
-import net.svcret.admin.shared.model.AddServiceVersionResponse;
-import net.svcret.admin.shared.model.BaseGAuthHost;
-import net.svcret.admin.shared.model.BaseGMonitorRule;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.AddServiceVersionResponse;
+import net.svcret.admin.shared.model.BaseDtoAuthHost;
+import net.svcret.admin.shared.model.BaseDtoMonitorRule;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
@@ -40,11 +40,11 @@ public interface ModelUpdateServiceAsync {
 
 	void addService(long theDomainPid, String theId, String theName, boolean theActive, AsyncCallback<GService> theCallback);
 
-	void addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion, AsyncCallback<AddServiceVersionResponse> theCallback);
+	void addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseDtoServiceVersion theVersion, AsyncCallback<AddServiceVersionResponse> theCallback);
 
-	void cloneServiceVersion(long thePidToClone, AsyncCallback<BaseGServiceVersion> theCallback);
+	void cloneServiceVersion(long thePidToClone, AsyncCallback<BaseDtoServiceVersion> theCallback);
 
-	void createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncommittedId, AsyncCallback<BaseGServiceVersion> theCallback);
+	void createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncommittedId, AsyncCallback<BaseDtoServiceVersion> theCallback);
 
 	void executeMonitorRuleActiveCheck(DtoMonitorRuleActiveCheck theCheck, AsyncCallback<DtoMonitorRuleActiveCheck> theAsyncCallback);
 
@@ -60,7 +60,7 @@ public interface ModelUpdateServiceAsync {
 
 	void loadModelUpdate(ModelUpdateRequest theRequest, AsyncCallback<ModelUpdateResponse> callback);
 
-	void loadMonitorRule(long theRulePid, AsyncCallback<BaseGMonitorRule> theAsyncCallback);
+	void loadMonitorRule(long theRulePid, AsyncCallback<BaseDtoMonitorRule> theAsyncCallback);
 
 	void loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart, AsyncCallback<List<GMonitorRuleFiring>> theAsyncCallback);
 
@@ -76,7 +76,7 @@ public interface ModelUpdateServiceAsync {
 
 	void loadServiceVersionDetailedStats(long theVersionPid, AsyncCallback<GServiceVersionDetailedStats> theAsyncCallback);
 
-	void loadServiceVersionIntoSession(long theServiceVersionPid, AsyncCallback<BaseGServiceVersion> theAsyncCallback);
+	void loadServiceVersionIntoSession(long theServiceVersionPid, AsyncCallback<BaseDtoServiceVersion> theAsyncCallback);
 
 	void loadUser(long theUserPid, boolean theLoadStats, AsyncCallback<UserAndAuthHost> callback);
 
@@ -96,7 +96,7 @@ public interface ModelUpdateServiceAsync {
 
 	void resetCircuitBreakerForServiceVersionUrl(long theUrlPid, AsyncCallback<GServiceVersionUrl> theAsyncCallback);
 
-	void saveAuthenticationHost(BaseGAuthHost theAuthHost, AsyncCallback<GAuthenticationHostList> theCallback);
+	void saveAuthenticationHost(BaseDtoAuthHost theAuthHost, AsyncCallback<GAuthenticationHostList> theCallback);
 
 	void saveConfig(GConfig theConfig, AsyncCallback<Void> theAsyncCallback);
 
@@ -104,11 +104,11 @@ public interface ModelUpdateServiceAsync {
 
 	void saveLibraryMessage(DtoLibraryMessage theMessage, AsyncCallback<Void> theIAsyncLoadCallback);
 
-	void saveMonitorRule(BaseGMonitorRule theRule, AsyncCallback<GMonitorRuleList> theAsyncCallback);
+	void saveMonitorRule(BaseDtoMonitorRule theRule, AsyncCallback<GMonitorRuleList> theAsyncCallback);
 
 	void saveService(GService theService, AsyncCallback<GDomainList> theMySaveButtonHandler);
 
-	void saveServiceVersionToSession(BaseGServiceVersion theServiceVersion, AsyncCallback<Void> callback);
+	void saveServiceVersionToSession(BaseDtoServiceVersion theServiceVersion, AsyncCallback<Void> callback);
 
 	void saveUser(GUser theUser, AsyncCallback<GUser> theAsyncCallback);
 

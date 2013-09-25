@@ -41,9 +41,9 @@ import javax.persistence.Version;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
-import net.svcret.admin.shared.model.BaseGClientSecurity;
-import net.svcret.admin.shared.model.BaseGServerSecurity;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoClientSecurity;
+import net.svcret.admin.shared.model.BaseDtoServerSecurity;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionResourcePointer;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
@@ -827,10 +827,10 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	/**
 	 * Subclasses may override
 	 */
-	protected void fromDto(@SuppressWarnings("unused") BaseGServiceVersion theDto) {
+	protected void fromDto(@SuppressWarnings("unused") BaseDtoServiceVersion theDto) {
 	};
 
-	public static <T extends BaseGServiceVersion> BasePersServiceVersion fromDto(T theDto, PersService theService, IDao theDao, IServiceRegistry theServiceRegistry) throws ProcessingException,
+	public static <T extends BaseDtoServiceVersion> BasePersServiceVersion fromDto(T theDto, PersService theService, IDao theDao, IServiceRegistry theServiceRegistry) throws ProcessingException,
 			UnexpectedFailureException {
 		Validate.notNull(theDto);
 		Validate.notNull(theService);
@@ -888,16 +888,16 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	}
 
 	// TODO: rename this method
-	public BaseGServiceVersion toDto() throws UnexpectedFailureException {
+	public BaseDtoServiceVersion toDto() throws UnexpectedFailureException {
 		Set<Long> emptySet = Collections.emptySet();
 		return toDto(emptySet, null, null, emptySet, emptySet);
 	}
 
 	// TODO: refactor this method to put the set params together
-	public BaseGServiceVersion toDto(Set<Long> theLoadVerStats, IRuntimeStatusQueryLocal theQuerySvc, StatusesBean theStatuses, Set<Long> theLoadMethodStats, Set<Long> theLoadUrlStats)
+	public BaseDtoServiceVersion toDto(Set<Long> theLoadVerStats, IRuntimeStatusQueryLocal theQuerySvc, StatusesBean theStatuses, Set<Long> theLoadMethodStats, Set<Long> theLoadUrlStats)
 			throws UnexpectedFailureException {
 
-		BaseGServiceVersion retVal = createDtoAndPopulateWithTypeSpecificEntries();
+		BaseDtoServiceVersion retVal = createDtoAndPopulateWithTypeSpecificEntries();
 
 		retVal.setPid(this.getPid());
 		retVal.setId(this.getVersionId());
@@ -910,8 +910,6 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		retVal.setParentServicePid(this.getService().getPid());
 		retVal.setDescription(this.getDescription());
 		retVal.setServerSecurityMode(this.getServerSecurityMode());
-		retVal.setObscureRequestElementsInLog(this.getObscureRequestElementsInLog());
-		retVal.setObscureResponseElementsInLog(this.getObscureResponseElementsInLog());
 
 		populateKeepRecentTransactionsToDto(retVal);
 		populateServiceCatalogItemToDto(retVal);
@@ -934,12 +932,12 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		} // for resources
 
 		for (PersBaseServerAuth<?, ?> nextServerAuth : this.getServerAuths()) {
-			BaseGServerSecurity gServerAuth = nextServerAuth.toDto();
+			BaseDtoServerSecurity gServerAuth = nextServerAuth.toDto();
 			retVal.getServerSecurityList().add(gServerAuth);
 		} // server auths
 
 		for (PersBaseClientAuth<?> nextClientAuth : this.getClientAuths()) {
-			BaseGClientSecurity gClientAuth = nextClientAuth.toDao();
+			BaseDtoClientSecurity gClientAuth = nextClientAuth.toDao();
 			retVal.getClientSecurityList().add(gClientAuth);
 		} // Client auths
 
@@ -948,6 +946,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 			throw new UnexpectedFailureException("Service version doesn't have an HTTP client config");
 		}
 		retVal.setHttpClientConfigPid(httpClientConfig.getPid());
+		retVal.setHttpClientConfigId(httpClientConfig.getId());
 
 		if (theLoadVerStats.contains(getPid())) {
 
@@ -1006,7 +1005,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		return retVal;
 	}
 
-	protected abstract BaseGServiceVersion createDtoAndPopulateWithTypeSpecificEntries();
+	protected abstract BaseDtoServiceVersion createDtoAndPopulateWithTypeSpecificEntries();
 
 	public StatusEnum populateDtoWithStatusAndProvideStatusForParent(BaseDtoServiceCatalogItem theDashboardObject, StatusesBean theStatuses, StatusEnum theInitialStatus) {
 		StatusEnum retVal = theInitialStatus;

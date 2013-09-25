@@ -22,7 +22,7 @@ import net.svcret.admin.client.ui.dash.model.UsageSparklineTooltipProvider;
 import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.BaseGAuthHost;
+import net.svcret.admin.shared.model.BaseDtoAuthHost;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GUser;
@@ -135,7 +135,7 @@ public class EditUsersPanel extends FlowPanel {
 		Column<GUser, SafeHtml> authHostCol = new Column<GUser, SafeHtml>(new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(GUser theObject) {
-				BaseGAuthHost authHostByPid = myAuthenticationHostList.getAuthHostByPid(theObject.getAuthHostPid());
+				BaseDtoAuthHost authHostByPid = myAuthenticationHostList.getAuthHostByPid(theObject.getAuthHostPid());
 				if (authHostByPid == null) {
 					return SafeHtmlUtils.fromString("ERROR");
 				}
@@ -284,7 +284,7 @@ public class EditUsersPanel extends FlowPanel {
 		Model.getInstance().loadAuthenticationHosts(new IAsyncLoadCallback<GAuthenticationHostList>() {
 			@Override
 			public void onSuccess(GAuthenticationHostList theResult) {
-				for (BaseGAuthHost next : theResult) {
+				for (BaseDtoAuthHost next : theResult) {
 					myAuthHostsListBox.addItem(next.getModuleId(), next.getPidOrNull().toString());
 				}
 				myAuthHostsListBox.setSelectedIndex(0);

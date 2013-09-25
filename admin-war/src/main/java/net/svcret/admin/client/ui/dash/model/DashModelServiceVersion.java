@@ -4,8 +4,8 @@ import static net.svcret.admin.client.AdminPortal.*;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.PButton;
-import net.svcret.admin.shared.model.BaseGDashboardObject;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoDashboardObject;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.model.IProvidesUrlCount;
@@ -23,10 +23,10 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class DashModelServiceVersion extends BaseDashModel implements IDashModel {
 
-	private BaseGServiceVersion mySvcVer;
+	private BaseDtoServiceVersion mySvcVer;
 	private PopupPanel myActionPopup;
 	private GService myService;
-	public DashModelServiceVersion(GService theService, BaseGServiceVersion theServiceVersion) {
+	public DashModelServiceVersion(GService theService, BaseDtoServiceVersion theServiceVersion) {
 		super(theServiceVersion);
 		myService = theService;
 		mySvcVer = theServiceVersion;
@@ -61,7 +61,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 	}
 
 	@Override
-	public BaseGDashboardObject getModel() {
+	public BaseDtoDashboardObject getModel() {
 		return mySvcVer;
 	}
 
@@ -128,7 +128,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		}
 	}
 
-	static FlowPanel createActionPanel(final PopupPanel theActionPopup, final GService theService, final BaseGServiceVersion theSvcVer, boolean addServiceToTitle, final FlowPanel thePreviousContent) {
+	static FlowPanel createActionPanel(final PopupPanel theActionPopup, final GService theService, final BaseDtoServiceVersion theSvcVer, boolean addServiceToTitle, final FlowPanel thePreviousContent) {
 		final FlowPanel content = new FlowPanel();
 
 		if (thePreviousContent!=null) {

@@ -4,8 +4,8 @@ import java.util.Date;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.layout.TopBarPanel;
-import net.svcret.admin.shared.model.BaseGAuthHost;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoAuthHost;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
@@ -57,7 +57,7 @@ public class Model {
 		}
 	}
 
-	public void addOrUpdateServiceVersion(long theDomainPid, long theServicePid, BaseGServiceVersion theServiceVersion) {
+	public void addOrUpdateServiceVersion(long theDomainPid, long theServicePid, BaseDtoServiceVersion theServiceVersion) {
 		GDomain domain = myDomainList.getDomainByPid(theDomainPid);
 		if (domain == null) {
 			GWT.log("Unknown domain! " + theDomainPid);
@@ -70,7 +70,7 @@ public class Model {
 			return;
 		}
 
-		BaseGServiceVersion existing = service.getVersionList().getVersionByPid(theServiceVersion.getPid());
+		BaseDtoServiceVersion existing = service.getVersionList().getVersionByPid(theServiceVersion.getPid());
 		if (existing != null) {
 			existing.merge(theServiceVersion);
 		} else {
@@ -99,7 +99,7 @@ public class Model {
 				nextDomain.flushStats();
 				for (GService nextSvc : nextDomain.getServiceList()) {
 					nextSvc.flushStats();
-					for (BaseGServiceVersion nextVer : nextSvc.getVersionList()) {
+					for (BaseDtoServiceVersion nextVer : nextSvc.getVersionList()) {
 						nextVer.flushStats();
 						for (GServiceMethod nextMethod : nextVer.getMethodList()) {
 							nextMethod.flushStats();
@@ -140,7 +140,7 @@ public class Model {
 		myDomainListInitialized = false;
 	}
 
-	public void loadAuthenticationHost(final long theAuthHostPid, final IAsyncLoadCallback<BaseGAuthHost> theIAsyncLoadCallback) {
+	public void loadAuthenticationHost(final long theAuthHostPid, final IAsyncLoadCallback<BaseDtoAuthHost> theIAsyncLoadCallback) {
 		loadAuthenticationHosts(new IAsyncLoadCallback<GAuthenticationHostList>() {
 			@Override
 			public void onSuccess(GAuthenticationHostList theResult) {
@@ -205,7 +205,7 @@ public class Model {
 			for (GService nextSvc : nextDom.getServiceList()) {
 				if (nextDom.isExpandedOnDashboard()) {
 					request.addServiceToLoadStats(nextSvc.getPid());
-					for (BaseGServiceVersion nextVer : nextSvc.getVersionList()) {
+					for (BaseDtoServiceVersion nextVer : nextSvc.getVersionList()) {
 						if (nextSvc.isExpandedOnDashboard()) {
 							request.addVersionToLoadStats(nextVer.getPid());
 							for (GServiceMethod nextMethod : nextVer.getMethodList()) {
@@ -305,12 +305,12 @@ public class Model {
 		});
 	}
 
-	public void loadServiceVersion(final long theVersionPid, final boolean theLoadDetailedStats, final IAsyncLoadCallback<BaseGServiceVersion> theCallback) {
-		loadServiceVersion(theVersionPid, new IAsyncLoadCallback<BaseGServiceVersion>() {
+	public void loadServiceVersion(final long theVersionPid, final boolean theLoadDetailedStats, final IAsyncLoadCallback<BaseDtoServiceVersion> theCallback) {
+		loadServiceVersion(theVersionPid, new IAsyncLoadCallback<BaseDtoServiceVersion>() {
 
 			@Override
-			public void onSuccess(BaseGServiceVersion theResult) {
-				final BaseGServiceVersion version = theResult;
+			public void onSuccess(BaseDtoServiceVersion theResult) {
+				final BaseDtoServiceVersion version = theResult;
 				if (version == null) {
 					GWT.log("Unknown version! " + theVersionPid);
 					return;
@@ -337,11 +337,11 @@ public class Model {
 		});
 	}
 
-	public void loadServiceVersion(final long theServiceVersionPid, final IAsyncLoadCallback<BaseGServiceVersion> theCallback) {
+	public void loadServiceVersion(final long theServiceVersionPid, final IAsyncLoadCallback<BaseDtoServiceVersion> theCallback) {
 		loadDomainList(new IAsyncLoadCallback<GDomainList>() {
 			@Override
 			public void onSuccess(GDomainList theResult) {
-				BaseGServiceVersion serviceVersion = theResult.getServiceVersionByPid(theServiceVersionPid);
+				BaseDtoServiceVersion serviceVersion = theResult.getServiceVersionByPid(theServiceVersionPid);
 				if (serviceVersion == null) {
 					throw new Error("Unknown version: " + theServiceVersionPid);
 				}
@@ -355,7 +355,7 @@ public class Model {
 		myDomainList.mergeResults(theResult);
 	}
 
-	public void saveAuthenticationHost(BaseGAuthHost theAuthHost, final IAsyncLoadCallback<GAuthenticationHostList> theIAsyncLoadCallback) {
+	public void saveAuthenticationHost(BaseDtoAuthHost theAuthHost, final IAsyncLoadCallback<GAuthenticationHostList> theIAsyncLoadCallback) {
 		AsyncCallback<GAuthenticationHostList> callback = new AsyncCallback<GAuthenticationHostList>() {
 			@Override
 			public void onFailure(Throwable theCaught) {

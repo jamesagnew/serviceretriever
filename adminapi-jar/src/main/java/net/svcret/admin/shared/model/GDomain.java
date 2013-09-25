@@ -27,7 +27,7 @@ public class GDomain extends BaseDtoServiceCatalogItem {
 	}
 
 	@Override
-	public void merge(BaseGObject theObject) {
+	public void merge(BaseDtoObject theObject) {
 		super.merge(theObject);
 
 		GDomain obj=(GDomain) theObject;

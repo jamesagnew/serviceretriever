@@ -8,7 +8,7 @@ import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.client.ui.stats.BaseViewRecentMessagePanel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
@@ -86,7 +86,7 @@ public abstract class BaseServiceVersionTestPanel extends FlowPanel {
 		if (myServiceBox.getSelectedIndex() != -1) {
 			GDomain domain = myDomainList.getDomainByPid(Long.parseLong(myDomainBox.getValue(myDomainBox.getSelectedIndex())));
 			GService service = domain.getServiceList().getServiceByPid(Long.parseLong(myServiceBox.getValue(myServiceBox.getSelectedIndex())));
-			for (BaseGServiceVersion nextVer : service.getVersionList()) {
+			for (BaseDtoServiceVersion nextVer : service.getVersionList()) {
 				myVersionBox.addItem(nextVer.getId(), Long.toString(nextVer.getPid()));
 			}
 		}
@@ -106,9 +106,9 @@ public abstract class BaseServiceVersionTestPanel extends FlowPanel {
 		if (myInitialContentType != null) {
 			myContentTypeBox.setValue(myInitialContentType);
 		} else {
-			Model.getInstance().loadServiceVersion(myServiceVersionPid, false, new IAsyncLoadCallback<BaseGServiceVersion>() {
+			Model.getInstance().loadServiceVersion(myServiceVersionPid, false, new IAsyncLoadCallback<BaseDtoServiceVersion>() {
 				@Override
-				public void onSuccess(BaseGServiceVersion theResult) {
+				public void onSuccess(BaseDtoServiceVersion theResult) {
 					myContentTypeBox.setValue(theResult.getProtocol().getRequestContentType());
 				}
 			});

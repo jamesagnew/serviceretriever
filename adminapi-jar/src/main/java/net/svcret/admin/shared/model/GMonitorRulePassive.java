@@ -6,7 +6,7 @@ import java.util.Set;
 import net.svcret.admin.shared.enm.MonitorRuleTypeEnum;
 
 
-public class GMonitorRulePassive extends BaseGMonitorRule {
+public class GMonitorRulePassive extends BaseDtoMonitorRule {
 
 	private static final long serialVersionUID = 1L;
 
@@ -16,7 +16,7 @@ public class GMonitorRulePassive extends BaseGMonitorRule {
 	private boolean myPassiveFireIfAllBackingUrlsAreUnavailable;
 	private boolean myPassiveFireIfSingleBackingUrlIsUnavailable;
 
-	public boolean appliesTo(BaseGServiceVersion theSvcVer) {
+	public boolean appliesTo(BaseDtoServiceVersion theSvcVer) {
 		return getAppliesToServiceVersion(theSvcVer) != null;
 	}
 
@@ -40,7 +40,7 @@ public class GMonitorRulePassive extends BaseGMonitorRule {
 		}
 	}
 
-	public void applyTo(GDomain theDomain, GService theService, BaseGServiceVersion theSvcVer, boolean theValue) {
+	public void applyTo(GDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, boolean theValue) {
 		GMonitorRuleAppliesTo existing = getAppliesToServiceVersion(theSvcVer);
 		if (existing != null && !theValue) {
 			myAppliesTo.remove(existing);
@@ -167,7 +167,7 @@ public class GMonitorRulePassive extends BaseGMonitorRule {
 		return appliesTo;
 	}
 
-	private GMonitorRuleAppliesTo getAppliesToServiceVersion(BaseGServiceVersion theSvcVer) {
+	private GMonitorRuleAppliesTo getAppliesToServiceVersion(BaseDtoServiceVersion theSvcVer) {
 		GMonitorRuleAppliesTo appliesTo = null;
 		for (GMonitorRuleAppliesTo next : getAppliesTo()) {
 			if (next.getServiceVersionPid() != null && next.getServiceVersionPid() == theSvcVer.getPid()) {

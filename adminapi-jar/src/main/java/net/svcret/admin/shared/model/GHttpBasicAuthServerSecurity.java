@@ -1,6 +1,6 @@
 package net.svcret.admin.shared.model;
 
-public class GHttpBasicAuthServerSecurity extends BaseGServerSecurity {
+public class GHttpBasicAuthServerSecurity extends BaseDtoServerSecurity {
 
 	private static final long serialVersionUID = 1L;
 

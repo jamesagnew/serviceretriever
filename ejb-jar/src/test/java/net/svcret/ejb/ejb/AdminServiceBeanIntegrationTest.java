@@ -22,11 +22,11 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
+import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
-import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
-import net.svcret.admin.shared.model.BaseGDashboardObject;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoDashboardObject;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
@@ -744,7 +744,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	public void testLoad60MinuteStats() throws Exception {
 		GDomain domain = createEverything();
 		GService svc = domain.getServiceList().get(0);
-		BaseGServiceVersion svcVer = svc.getVersionList().get(0);
+		BaseDtoServiceVersion svcVer = svc.getVersionList().get(0);
 
 		newEntityManager();
 
@@ -790,7 +790,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 	}
 
-	private void testLoad60MinuteStats_CheckStats(BaseGDashboardObject obj) {
+	private void testLoad60MinuteStats_CheckStats(BaseDtoDashboardObject obj) {
 		int[] trans = obj.getTransactions60mins();
 		Date firstDate = obj.getStatistics60MinuteFirstDate();
 		Date expected = InvocationStatsIntervalEnum.MINUTE.truncate(new Date(System.currentTimeMillis() - (59 * DateUtils.MILLIS_PER_MINUTE)));

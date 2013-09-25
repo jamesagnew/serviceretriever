@@ -5,7 +5,7 @@ import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.PButton;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceVersionList;
 
@@ -63,7 +63,7 @@ public class EditServiceVersionsPanel extends FlowPanel {
 			myServicesGrid.setWidget(1, 2, null);
 		} else {
 			for (int i = 0; i < versionList.size(); i++) {
-				BaseGServiceVersion next = versionList.get(i);
+				BaseDtoServiceVersion next = versionList.get(i);
 				myServicesGrid.setWidget(i + 1, 0, new ActionPanel(next));
 				myServicesGrid.setWidget(i + 1, 1, new Label(next.getId(), true));
 				myServicesGrid.setWidget(i + 1, 2, new Label(next.getProtocol().getNiceName(), true));
@@ -74,9 +74,9 @@ public class EditServiceVersionsPanel extends FlowPanel {
 
 	public class ActionPanel extends FlowPanel {
 
-		private BaseGServiceVersion myVersion;
+		private BaseDtoServiceVersion myVersion;
 
-		public ActionPanel(BaseGServiceVersion theVersion) {
+		public ActionPanel(BaseDtoServiceVersion theVersion) {
 			myVersion = theVersion;
 
 			Button editBtn = new PButton(AdminPortal.IMAGES.iconEdit(), AdminPortal.MSGS.actions_Edit());

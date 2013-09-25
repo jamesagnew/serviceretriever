@@ -1,6 +1,6 @@
 package net.svcret.ejb.ejb;
 
-import static net.svcret.admin.shared.model.AuthorizationOutcomeEnum.*;
+import static net.svcret.admin.shared.enm.AuthorizationOutcomeEnum.*;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -12,9 +12,9 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
-import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.api.IAuthorizationService;
 import net.svcret.ejb.api.IAuthorizationService.ILdapAuthorizationService;

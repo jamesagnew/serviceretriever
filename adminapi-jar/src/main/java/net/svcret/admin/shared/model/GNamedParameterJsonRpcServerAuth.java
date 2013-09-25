@@ -1,7 +1,7 @@
 package net.svcret.admin.shared.model;
 
 
-public class GNamedParameterJsonRpcServerAuth extends BaseGServerSecurity {
+public class GNamedParameterJsonRpcServerAuth extends BaseDtoServerSecurity {
 
 	private static final long serialVersionUID = 1L;
 

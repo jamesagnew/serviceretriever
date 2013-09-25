@@ -7,7 +7,7 @@ import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.GService;
 
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -33,9 +33,9 @@ public class AddServiceVersionStep2Panel extends FlowPanel {
 		spinner.show();
 		contentPanel.add(spinner);
 		
-		IAsyncLoadCallback<BaseGServiceVersion> callback = new IAsyncLoadCallback<BaseGServiceVersion>() {
+		IAsyncLoadCallback<BaseDtoServiceVersion> callback = new IAsyncLoadCallback<BaseDtoServiceVersion>() {
 			@Override
-			public void onSuccess(final BaseGServiceVersion theResult) {
+			public void onSuccess(final BaseDtoServiceVersion theResult) {
 				spinner.hideCompletely();
 				
 				final Label messageLabel = new Label();

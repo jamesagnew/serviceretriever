@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlElement;
 
 import net.svcret.admin.shared.enm.MonitorRuleTypeEnum;
 
-public abstract class BaseGMonitorRule extends BaseGObject {
+public abstract class BaseDtoMonitorRule extends BaseDtoObject {
 
 	private static final long serialVersionUID = 1L;
 

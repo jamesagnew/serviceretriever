@@ -19,13 +19,13 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
-import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
-import net.svcret.admin.shared.model.BaseGAuthHost;
-import net.svcret.admin.shared.model.BaseGClientSecurity;
-import net.svcret.admin.shared.model.BaseGMonitorRule;
-import net.svcret.admin.shared.model.BaseGServerSecurity;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoAuthHost;
+import net.svcret.admin.shared.model.BaseDtoClientSecurity;
+import net.svcret.admin.shared.model.BaseDtoMonitorRule;
+import net.svcret.admin.shared.model.BaseDtoServerSecurity;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoClientSecurityJsonRpcNamedParameter;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
@@ -432,7 +432,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public BaseGAuthHost loadAuthenticationHost(long thePid) throws ProcessingException {
+	public BaseDtoAuthHost loadAuthenticationHost(long thePid) throws ProcessingException {
 		ourLog.info("Loading authentication host with PID: {}", thePid);
 
 		BasePersAuthenticationHost authHost = myDao.getAuthenticationHostByPid(thePid);
@@ -661,7 +661,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		StatusesBean statuses = myDao.loadAllStatuses();
 
 		Set<Long> svcVerPids=Collections.singleton(theServiceVersionPid);
-		BaseGServiceVersion uiService = svcVer.toDto(svcVerPids, myRuntimeStatusQuerySvc, statuses, methodPids, urlPids);
+		BaseDtoServiceVersion uiService = svcVer.toDto(svcVerPids, myRuntimeStatusQuerySvc, statuses, methodPids, urlPids);
 		GSoap11ServiceVersionAndResources retVal = toUi(uiService, svcVer);
 		return retVal;
 	}
@@ -761,7 +761,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) throws ProcessingException {
+	public GAuthenticationHostList saveAuthenticationHost(BaseDtoAuthHost theAuthHost) throws ProcessingException {
 		Validate.notNull(theAuthHost);
 
 		BasePersAuthenticationHost host = fromUi(theAuthHost);
@@ -867,7 +867,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public void saveMonitorRule(BaseGMonitorRule theRule) throws UnexpectedFailureException, ProcessingException {
+	public void saveMonitorRule(BaseDtoMonitorRule theRule) throws UnexpectedFailureException, ProcessingException {
 		BasePersMonitorRule rule = fromUi(theRule);
 		myMonitorSvc.saveRule(rule);
 	}
@@ -891,7 +891,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public <T extends BaseGServiceVersion> T saveServiceVersion(long theDomain, long theService, T theVersion, List<GResource> theResources) throws ProcessingException, UnexpectedFailureException {
+	public <T extends BaseDtoServiceVersion> T saveServiceVersion(long theDomain, long theService, T theVersion, List<GResource> theResources) throws ProcessingException, UnexpectedFailureException {
 		Validate.notBlank(theVersion.getId(), "Version#ID");
 
 		ourLog.info("Adding service version {} to domain {} / service {}", new Object[] { theVersion.getPid(), theDomain, theService });
@@ -976,7 +976,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		 * Client Auths
 		 */
 		Set<Long> pids = new HashSet<Long>();
-		for (BaseGClientSecurity next : theVersion.getClientSecurityList()) {
+		for (BaseDtoClientSecurity next : theVersion.getClientSecurityList()) {
 			PersBaseClientAuth<?> nextPers = fromUi(next, version);
 			if (nextPers.getPid() != null) {
 				PersBaseClientAuth<?> existing = version.getClientAuthWithPid(nextPers.getPid());
@@ -1005,7 +1005,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		 * Server Auths
 		 */
 		pids = new HashSet<Long>();
-		for (BaseGServerSecurity next : theVersion.getServerSecurityList()) {
+		for (BaseDtoServerSecurity next : theVersion.getServerSecurityList()) {
 			if (next.getAuthHostPid() <= 0) {
 				throw new IllegalArgumentException("No auth host PID specified");
 			}
@@ -1137,7 +1137,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	// extractSuccessfulInvocationInvocationTimes(myConfigSvc.getConfig(), theNumMinsBack, the60MinInvCount, the60minTime, nextMethod, statusSvc);
 	// }
 
-	private BasePersAuthenticationHost fromUi(BaseGAuthHost theAuthHost) {
+	private BasePersAuthenticationHost fromUi(BaseDtoAuthHost theAuthHost) {
 		BasePersAuthenticationHost retVal = null;
 
 		switch (theAuthHost.getType()) {
@@ -1171,7 +1171,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private PersBaseClientAuth<?> fromUi(BaseGClientSecurity theObj, BasePersServiceVersion theServiceVersion) {
+	private PersBaseClientAuth<?> fromUi(BaseDtoClientSecurity theObj, BasePersServiceVersion theServiceVersion) {
 
 		PersBaseClientAuth<?> retVal = null;
 		switch (theObj.getType()) {
@@ -1204,7 +1204,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private BasePersMonitorRule fromUi(BaseGMonitorRule theRule) throws ProcessingException {
+	private BasePersMonitorRule fromUi(BaseDtoMonitorRule theRule) throws ProcessingException {
 
 		BasePersMonitorRule retVal = null;
 
@@ -1255,7 +1255,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private PersBaseServerAuth<?, ?> fromUi(BaseGServerSecurity theObj, BasePersServiceVersion theSvcVer) {
+	private PersBaseServerAuth<?, ?> fromUi(BaseDtoServerSecurity theObj, BasePersServiceVersion theSvcVer) {
 		switch (theObj.getType()) {
 		case WSSEC_UT: {
 			PersWsSecUsernameTokenServerAuth retVal = new PersWsSecUsernameTokenServerAuth();
@@ -1489,7 +1489,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	private GAuthenticationHostList loadAuthHostList() {
 		GAuthenticationHostList retVal = new GAuthenticationHostList();
 		for (BasePersAuthenticationHost next : myDao.getAllAuthenticationHosts()) {
-			BaseGAuthHost uiObject = toUi(next);
+			BaseDtoAuthHost uiObject = toUi(next);
 			retVal.add(uiObject);
 		}
 		return retVal;
@@ -1570,7 +1570,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private GSoap11ServiceVersionAndResources toUi(BaseGServiceVersion theUiService, BasePersServiceVersion theSvcVer) {
+	private GSoap11ServiceVersionAndResources toUi(BaseDtoServiceVersion theUiService, BasePersServiceVersion theSvcVer) {
 		GSoap11ServiceVersionAndResources retVal = new GSoap11ServiceVersionAndResources();
 
 		retVal.setServiceVersion(theUiService);
@@ -1602,8 +1602,8 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private BaseGAuthHost toUi(BasePersAuthenticationHost thePersObj) {
-		BaseGAuthHost retVal = null;
+	private BaseDtoAuthHost toUi(BasePersAuthenticationHost thePersObj) {
+		BaseDtoAuthHost retVal = null;
 		switch (thePersObj.getType()) {
 		case LOCAL_DATABASE:
 			retVal = new GLocalDatabaseAuthHost();
@@ -2050,7 +2050,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public BaseGMonitorRule loadMonitorRuleAndDetailedSatistics(long theRulePid) {
+	public BaseDtoMonitorRule loadMonitorRuleAndDetailedSatistics(long theRulePid) {
 		return myDao.getMonitorRule(theRulePid).toDao(true);
 	}
 

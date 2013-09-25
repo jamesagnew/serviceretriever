@@ -7,34 +7,34 @@ public enum ServerSecurityEnum {
 
 	JSONRPC_NAMED_PARAMETER("JSON-RPC Named Parameter", DtoServiceVersionJsonRpc20.class) {
 		@Override
-		public BaseGServerSecurity newInstance() {
+		public BaseDtoServerSecurity newInstance() {
 			return new GNamedParameterJsonRpcServerAuth();
 		}
 	},
 
 	WSSEC_UT("WS-Security UsernameToken", DtoServiceVersionSoap11.class) {
 		@Override
-		public BaseGServerSecurity newInstance() {
+		public BaseDtoServerSecurity newInstance() {
 			return new GWsSecServerSecurity();
 		}
 	},
 
 	HTTP_BASIC_AUTH("HTTP Basic") {
 		@Override
-		public BaseGServerSecurity newInstance() {
+		public BaseDtoServerSecurity newInstance() {
 			return new GHttpBasicAuthServerSecurity();
 		}
 	};
 
 	private String myName;
-	private Set<Class<? extends BaseGServiceVersion>> myAppliesTo;
+	private Set<Class<? extends BaseDtoServiceVersion>> myAppliesTo;
 
 	@SuppressWarnings("unchecked")
 	ServerSecurityEnum(String theName, Class<?>... theAppliesTo) {
 		myName = theName;
-		myAppliesTo = new HashSet<Class<? extends BaseGServiceVersion>>();
+		myAppliesTo = new HashSet<Class<? extends BaseDtoServiceVersion>>();
 		for (Class<?> next : theAppliesTo) {
-			myAppliesTo.add((Class<? extends BaseGServiceVersion>) next);
+			myAppliesTo.add((Class<? extends BaseDtoServiceVersion>) next);
 		}
 	}
 
@@ -45,9 +45,9 @@ public enum ServerSecurityEnum {
 		return myName;
 	}
 
-	public abstract BaseGServerSecurity newInstance();
+	public abstract BaseDtoServerSecurity newInstance();
 
-	public boolean appliesTo(Class<? extends BaseGServiceVersion> theClass) {
+	public boolean appliesTo(Class<? extends BaseDtoServiceVersion> theClass) {
 		if (myAppliesTo.isEmpty()) {
 			return true;
 		}

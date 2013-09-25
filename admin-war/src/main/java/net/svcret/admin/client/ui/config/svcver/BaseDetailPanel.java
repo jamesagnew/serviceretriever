@@ -27,13 +27,13 @@ import net.svcret.admin.client.ui.config.sec.ViewAndEditFactory;
 import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
+import net.svcret.admin.shared.enm.ClientSecurityEnum;
 import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
-import net.svcret.admin.shared.model.BaseGClientSecurity;
-import net.svcret.admin.shared.model.BaseGServerSecurity;
-import net.svcret.admin.shared.model.BaseGServerSecurityList;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
-import net.svcret.admin.shared.model.ClientSecurityEnum;
+import net.svcret.admin.shared.model.BaseDtoClientSecurity;
+import net.svcret.admin.shared.model.BaseDtoServerSecurity;
+import net.svcret.admin.shared.model.DtoServerSecurityList;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GServiceMethod;
@@ -75,7 +75,7 @@ import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
 
-public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends TabPanel {
+public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends TabPanel {
 
 	private static final int TAB_DOESNT_EXIST = -2;
 	private static final int COL_CLI_SECURITY_MODULE = 1;
@@ -300,7 +300,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 			@Override
 			public void onClick(ClickEvent theEvent) {
 				ClientSecurityEnum type = ClientSecurityEnum.valueOf(addClientList.getValue(addClientList.getSelectedIndex()));
-				BaseGClientSecurity module = type.newInstance();
+				BaseDtoClientSecurity module = type.newInstance();
 				module.setUncommittedSessionId(newUncommittedSessionId());
 				module.setEditMode(true);
 				getServiceVersion().getClientSecurityList().add(module);
@@ -584,7 +584,7 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 			@Override
 			public void onClick(ClickEvent theEvent) {
 				ServerSecurityEnum type = ServerSecurityEnum.valueOf(addServerList.getValue(addServerList.getSelectedIndex()));
-				BaseGServerSecurity module = type.newInstance();
+				BaseDtoServerSecurity module = type.newInstance();
 				module.setEditMode(true);
 				module.setUncommittedSessionId(newUncommittedSessionId());
 				getServiceVersion().getServerSecurityList().add(module);
@@ -702,10 +702,10 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		myClientSecurityGrid.resize(getServiceVersion().getClientSecurityList().size() + 1, 2);
 
 		int row = 0;
-		for (BaseGClientSecurity next : getServiceVersion().getClientSecurityList()) {
+		for (BaseDtoClientSecurity next : getServiceVersion().getClientSecurityList()) {
 			row++;
 
-			IProvidesViewAndEdit<BaseGClientSecurity> provider = ViewAndEditFactory.provideClientSecurity(next);
+			IProvidesViewAndEdit<BaseDtoClientSecurity> provider = ViewAndEditFactory.provideClientSecurity(next);
 			Widget view;
 			if (next.isEditMode()) {
 				view = provider.provideEdit(row, next, new AutosaveValueChangeHandler());
@@ -722,14 +722,14 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 	}
 
 	private void updateServerSercurityPanel() {
-		BaseGServerSecurityList serverSecurityList = getServiceVersion().getServerSecurityList();
+		DtoServerSecurityList serverSecurityList = getServiceVersion().getServerSecurityList();
 		myServerSecurityGrid.resize(serverSecurityList.size() + 1, 2);
 
 		int row = 0;
-		for (BaseGServerSecurity next : getServiceVersion().getServerSecurityList()) {
+		for (BaseDtoServerSecurity next : getServiceVersion().getServerSecurityList()) {
 			row++;
 
-			IProvidesViewAndEdit<BaseGServerSecurity> provider = ViewAndEditFactory.provideServerSecurity(next);
+			IProvidesViewAndEdit<BaseDtoServerSecurity> provider = ViewAndEditFactory.provideServerSecurity(next);
 			Widget view;
 			if (next.isEditMode()) {
 				view = provider.provideEdit(row, next, new AutosaveValueChangeHandler());
@@ -812,9 +812,9 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		private PButton myDeleteButton;
 		private PButton myEditButton;
 		private int myRow;
-		private BaseGClientSecurity mySec;
+		private BaseDtoClientSecurity mySec;
 
-		private ClientSecurityEditButtonPanel(BaseGClientSecurity theSec, int theRow) {
+		private ClientSecurityEditButtonPanel(BaseDtoClientSecurity theSec, int theRow) {
 			mySec = theSec;
 			myRow = theRow;
 
@@ -856,9 +856,9 @@ public abstract class BaseDetailPanel<T extends BaseGServiceVersion> extends Tab
 		private PButton myDeleteButton;
 		private PButton myEditButton;
 		private int myRow;
-		private BaseGServerSecurity mySec;
+		private BaseDtoServerSecurity mySec;
 
-		private ServerSecurityEditButtonPanel(BaseGServerSecurity theSec, int theRow) {
+		private ServerSecurityEditButtonPanel(BaseDtoServerSecurity theSec, int theRow) {
 			mySec = theSec;
 			myRow = theRow;
 

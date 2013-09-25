@@ -1,11 +1,19 @@
 package net.svcret.admin.shared.model;
 
-public abstract class BaseGClientSecurity extends BaseGObject {
+import javax.xml.bind.annotation.XmlElement;
+
+import net.svcret.admin.shared.enm.ClientSecurityEnum;
+
+public abstract class BaseDtoClientSecurity extends BaseDtoObject {
 
 	private static final long serialVersionUID = 1L;
 
 	private transient boolean myEditMode;
+
+	@XmlElement(name="config_Password")
 	private String myPassword;
+	
+	@XmlElement(name="config_Username")
 	private String myUsername;
 
 	/**
@@ -32,8 +40,8 @@ public abstract class BaseGClientSecurity extends BaseGObject {
 	}
 
 	@Override
-	public void merge(BaseGObject theObject) {
-		BaseGClientSecurity obj = (BaseGClientSecurity)theObject;
+	public void merge(BaseDtoObject theObject) {
+		BaseDtoClientSecurity obj = (BaseDtoClientSecurity)theObject;
 		setPid(theObject.getPid());
 		setUsername(obj.getUsername());
 		setPassword(obj.getPassword());

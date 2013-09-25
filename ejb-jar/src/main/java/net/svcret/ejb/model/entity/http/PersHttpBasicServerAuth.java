@@ -3,7 +3,7 @@ package net.svcret.ejb.model.entity.http;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
-import net.svcret.admin.shared.model.BaseGServerSecurity;
+import net.svcret.admin.shared.model.BaseDtoServerSecurity;
 import net.svcret.admin.shared.model.GHttpBasicAuthServerSecurity;
 import net.svcret.admin.shared.model.ServerSecurityEnum;
 import net.svcret.ejb.model.entity.BasePersObject;
@@ -33,7 +33,7 @@ public class PersHttpBasicServerAuth  extends PersBaseServerAuth<PersHttpBasicSe
 	}
 
 	@Override
-	protected BaseGServerSecurity createDtoAndPopulateWithTypeSpecificEntries() {
+	protected BaseDtoServerSecurity createDtoAndPopulateWithTypeSpecificEntries() {
 		return new GHttpBasicAuthServerSecurity();
 	}
 

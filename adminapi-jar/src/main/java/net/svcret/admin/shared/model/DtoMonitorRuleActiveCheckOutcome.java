@@ -11,7 +11,7 @@ import net.svcret.admin.shared.util.XmlConstants;
 
 @XmlType(namespace = XmlConstants.DTO_NAMESPACE, name = "MonitorRuleActiveCheckOutcome")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class DtoMonitorRuleActiveCheckOutcome extends BaseGObject {
+public class DtoMonitorRuleActiveCheckOutcome extends BaseDtoObject {
 
 	private static final long serialVersionUID = 1L;
 

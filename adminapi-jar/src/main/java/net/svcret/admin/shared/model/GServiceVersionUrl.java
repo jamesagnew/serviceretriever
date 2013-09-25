@@ -9,7 +9,7 @@ import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.util.ComparableComparator;
 import net.svcret.admin.shared.util.InverseComparator;
 
-public class GServiceVersionUrl extends BaseGDashboardObject {
+public class GServiceVersionUrl extends BaseDtoDashboardObject {
 
 	private static final long serialVersionUID = 1L;
 
@@ -134,7 +134,7 @@ public class GServiceVersionUrl extends BaseGDashboardObject {
 	}
 
 	@Override
-	public void merge(BaseGObject theObject) {
+	public void merge(BaseDtoObject theObject) {
 		super.merge(theObject);
 
 		setPid(theObject.getPid());

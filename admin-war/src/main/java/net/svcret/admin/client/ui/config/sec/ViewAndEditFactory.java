@@ -1,7 +1,7 @@
 package net.svcret.admin.client.ui.config.sec;
 
-import net.svcret.admin.shared.model.BaseGClientSecurity;
-import net.svcret.admin.shared.model.BaseGServerSecurity;
+import net.svcret.admin.shared.model.BaseDtoClientSecurity;
+import net.svcret.admin.shared.model.BaseDtoServerSecurity;
 
 public class ViewAndEditFactory {
 
@@ -10,7 +10,7 @@ public class ViewAndEditFactory {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static <T extends BaseGClientSecurity> IProvidesViewAndEdit<T> provideClientSecurity(T theClientSecurity) {
+	public static <T extends BaseDtoClientSecurity> IProvidesViewAndEdit<T> provideClientSecurity(T theClientSecurity) {
 		switch (theClientSecurity.getType()) {
 		case WSSEC_UT:
 			return (IProvidesViewAndEdit<T>) new WsSecUsernameTokenClientSecurityViewAndEdit();
@@ -24,7 +24,7 @@ public class ViewAndEditFactory {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static <T extends BaseGServerSecurity> IProvidesViewAndEdit<T> provideServerSecurity(T theServerSecurity) {
+	public static <T extends BaseDtoServerSecurity> IProvidesViewAndEdit<T> provideServerSecurity(T theServerSecurity) {
 		switch (theServerSecurity.getType()) {
 		case WSSEC_UT:
 			return (IProvidesViewAndEdit<T>) new SoapWsSecUsernameTokenServerSecurity();

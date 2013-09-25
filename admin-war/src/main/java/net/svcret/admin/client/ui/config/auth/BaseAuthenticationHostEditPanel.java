@@ -9,7 +9,7 @@ import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.client.ui.config.KeepRecentTransactionsPanel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.BaseGAuthHost;
+import net.svcret.admin.shared.model.BaseDtoAuthHost;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GLdapAuthHost;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
@@ -27,7 +27,7 @@ import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextBox;
 
-abstract class BaseAuthenticationHostEditPanel<T extends BaseGAuthHost> extends FlowPanel {
+abstract class BaseAuthenticationHostEditPanel<T extends BaseDtoAuthHost> extends FlowPanel {
 	private TextBox myIdTextBox;
 	private TextBox myNameTextBox;
 	private LoadingSpinner myLoadingSpinner;

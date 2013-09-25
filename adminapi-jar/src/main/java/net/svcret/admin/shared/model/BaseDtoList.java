@@ -12,17 +12,12 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-public class BaseDtoList<T extends BaseGObject> implements Iterable<T>, Serializable {
+public class BaseDtoList<T extends BaseDtoObject> implements Iterable<T>, Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	@XmlTransient
 	private Comparator<? super T> myComparator;
-
-	@XmlTransient
 	private Date myLastMerged;
-
-	@XmlElement(name = "Element")
 	private List<T> myList;
 
 	public BaseDtoList() {
@@ -104,6 +99,13 @@ public class BaseDtoList<T extends BaseGObject> implements Iterable<T>, Serializ
 		if (myComparator != null) {
 			Collections.sort(myList, myComparator);
 		}
+	}
+
+	protected List<T> getListForJaxb() {
+		if (myList == null) {
+			myList = new ArrayList<T>();
+		}
+		return myList;
 	}
 
 	protected void setComparator(Comparator<? super T> theComparator) {

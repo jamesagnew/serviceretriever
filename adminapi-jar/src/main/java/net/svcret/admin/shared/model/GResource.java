@@ -2,7 +2,7 @@ package net.svcret.admin.shared.model;
 
 import java.io.Serializable;
 
-public class GResource extends BaseGObject implements Serializable {
+public class GResource extends BaseDtoObject implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -66,7 +66,7 @@ public class GResource extends BaseGObject implements Serializable {
 
 	
 	@Override
-	public void merge(BaseGObject theObject) {
+	public void merge(BaseDtoObject theObject) {
 		super.merge(theObject);
 		
 		GResource obj = (GResource)theObject;

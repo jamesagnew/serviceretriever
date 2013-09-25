@@ -1,6 +1,8 @@
 package net.svcret.admin.shared.model;
 
-public class GWsSecUsernameTokenClientSecurity extends BaseGClientSecurity {
+import net.svcret.admin.shared.enm.ClientSecurityEnum;
+
+public class GWsSecUsernameTokenClientSecurity extends BaseDtoClientSecurity {
 
 	private static final long serialVersionUID = 1L;
 

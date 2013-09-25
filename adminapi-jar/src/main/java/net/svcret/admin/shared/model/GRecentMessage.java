@@ -4,9 +4,10 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
 
-public class GRecentMessage extends BaseGObject {
+public class GRecentMessage extends BaseDtoObject {
 
 	private static final long serialVersionUID = 1L;
 

@@ -6,8 +6,8 @@ import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.AuthorizationHostTypeEnum;
-import net.svcret.admin.shared.model.BaseGAuthHost;
+import net.svcret.admin.shared.enm.AuthorizationHostTypeEnum;
+import net.svcret.admin.shared.model.BaseDtoAuthHost;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 import net.svcret.admin.shared.model.GLdapAuthHost;
 import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
@@ -143,7 +143,7 @@ public class AuthenticationHostsPanel extends FlowPanel {
 		 * portal itself be deleted
 		 */
 
-		BaseGAuthHost config = myConfigs.get(myHostsListBox.getSelectedIndex());
+		BaseDtoAuthHost config = myConfigs.get(myHostsListBox.getSelectedIndex());
 		if (!Window.confirm(AdminPortal.MSGS.baseAuthenticationHostEditPanel_ConfirmDelete(config.getModuleId()))) {
 			return;
 		}
@@ -191,7 +191,7 @@ public class AuthenticationHostsPanel extends FlowPanel {
 		updateSelectedHost();
 	}
 
-	private void populateNewNameAndId(BaseGAuthHost host) {
+	private void populateNewNameAndId(BaseDtoAuthHost host) {
 		host.setModuleId("Untitled");
 		host.setModuleName("Untitled");
 	}
@@ -209,7 +209,7 @@ public class AuthenticationHostsPanel extends FlowPanel {
 		myHostsListBox.clear();
 
 		int selectedIndex = 0;
-		for (BaseGAuthHost next : myConfigs) {
+		for (BaseDtoAuthHost next : myConfigs) {
 			String desc = next.getModuleId();
 			if (StringUtil.isNotBlank(next.getModuleName())) {
 				desc = desc + " - " + next.getModuleName();
@@ -234,7 +234,7 @@ public class AuthenticationHostsPanel extends FlowPanel {
 	}
 
 	private void updateSelectedHost() {
-		BaseGAuthHost host = myConfigs.getAuthHostByPid(mySelectedPid);
+		BaseDtoAuthHost host = myConfigs.getAuthHostByPid(mySelectedPid);
 		Widget panel = null;
 		switch (host.getType()) {
 		case LOCAL_DATABASE:

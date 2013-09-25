@@ -5,11 +5,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import net.svcret.admin.shared.AddServiceVersionResponse;
 import net.svcret.admin.shared.ServiceFailureException;
-import net.svcret.admin.shared.model.AddServiceVersionResponse;
-import net.svcret.admin.shared.model.BaseGAuthHost;
-import net.svcret.admin.shared.model.BaseGMonitorRule;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoAuthHost;
+import net.svcret.admin.shared.model.BaseDtoMonitorRule;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
@@ -46,11 +46,11 @@ public interface ModelUpdateService extends RemoteService {
 
 	GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ServiceFailureException;
 
-	AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion) throws ServiceFailureException;
+	AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseDtoServiceVersion theVersion) throws ServiceFailureException;
 
-	BaseGServiceVersion cloneServiceVersion(long thePidToClone) throws ServiceFailureException;
+	BaseDtoServiceVersion cloneServiceVersion(long thePidToClone) throws ServiceFailureException;
 
-	BaseGServiceVersion createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncommittedId);
+	BaseDtoServiceVersion createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncommittedId);
 
 	DtoMonitorRuleActiveCheck executeMonitorRuleActiveCheck(DtoMonitorRuleActiveCheck theCheck) throws ServiceFailureException;
 
@@ -66,7 +66,7 @@ public interface ModelUpdateService extends RemoteService {
 
 	ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ServiceFailureException;
 
-	BaseGMonitorRule loadMonitorRule(long theRulePid);
+	BaseDtoMonitorRule loadMonitorRule(long theRulePid);
 
 	List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart);
 
@@ -82,7 +82,7 @@ public interface ModelUpdateService extends RemoteService {
 
 	GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws ServiceFailureException;
 
-	BaseGServiceVersion loadServiceVersionIntoSession(long theServiceVersionPid) throws ServiceFailureException;
+	BaseDtoServiceVersion loadServiceVersionIntoSession(long theServiceVersionPid) throws ServiceFailureException;
 
 	UserAndAuthHost loadUser(long theUserPid, boolean theLoadStats) throws ServiceFailureException;
 
@@ -102,7 +102,7 @@ public interface ModelUpdateService extends RemoteService {
 
 	GServiceVersionUrl resetCircuitBreakerForServiceVersionUrl(long theUrlPid) throws ServiceFailureException;
 
-	GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) throws ServiceFailureException;
+	GAuthenticationHostList saveAuthenticationHost(BaseDtoAuthHost theAuthHost) throws ServiceFailureException;
 
 	void saveConfig(GConfig theConfig) throws ServiceFailureException;
 
@@ -110,11 +110,11 @@ public interface ModelUpdateService extends RemoteService {
 
 	void saveLibraryMessage(DtoLibraryMessage theMessage) throws ServiceFailureException;
 
-	GMonitorRuleList saveMonitorRule(BaseGMonitorRule theRule) throws ServiceFailureException;
+	GMonitorRuleList saveMonitorRule(BaseDtoMonitorRule theRule) throws ServiceFailureException;
 
 	GDomainList saveService(GService theService) throws ServiceFailureException;
 
-	void saveServiceVersionToSession(BaseGServiceVersion theServiceVersion);
+	void saveServiceVersionToSession(BaseDtoServiceVersion theServiceVersion);
 
 	GUser saveUser(GUser theUser) throws ServiceFailureException;
 
@@ -123,7 +123,7 @@ public interface ModelUpdateService extends RemoteService {
 	public static class UserAndAuthHost implements Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private BaseGAuthHost myAuthHost;
+		private BaseDtoAuthHost myAuthHost;
 		private GUser myUser;
 
 		/**
@@ -136,7 +136,7 @@ public interface ModelUpdateService extends RemoteService {
 		/**
 		 * Constructor
 		 */
-		public UserAndAuthHost(GUser theUser, BaseGAuthHost theAuthHost) {
+		public UserAndAuthHost(GUser theUser, BaseDtoAuthHost theAuthHost) {
 			super();
 			myUser = theUser;
 			myAuthHost = theAuthHost;
@@ -145,7 +145,7 @@ public interface ModelUpdateService extends RemoteService {
 		/**
 		 * @return the authHost
 		 */
-		public BaseGAuthHost getAuthHost() {
+		public BaseDtoAuthHost getAuthHost() {
 			return myAuthHost;
 		}
 
@@ -160,7 +160,7 @@ public interface ModelUpdateService extends RemoteService {
 		 * @param theAuthHost
 		 *            the authHost to set
 		 */
-		public void setAuthHost(BaseGAuthHost theAuthHost) {
+		public void setAuthHost(BaseDtoAuthHost theAuthHost) {
 			myAuthHost = theAuthHost;
 		}
 

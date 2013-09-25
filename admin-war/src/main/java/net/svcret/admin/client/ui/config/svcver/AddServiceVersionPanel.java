@@ -3,10 +3,10 @@ package net.svcret.admin.client.ui.config.svcver;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
+import net.svcret.admin.shared.AddServiceVersionResponse;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.AddServiceVersionResponse;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 
@@ -68,7 +68,7 @@ public class AddServiceVersionPanel extends AbstractServiceVersionPanel {
 
 			getLoadingSpinner().show();
 
-			AsyncCallback<BaseGServiceVersion> callback = new AsyncCallback<BaseGServiceVersion>() {
+			AsyncCallback<BaseDtoServiceVersion> callback = new AsyncCallback<BaseDtoServiceVersion>() {
 
 				@Override
 				public void onFailure(Throwable theCaught) {
@@ -76,7 +76,7 @@ public class AddServiceVersionPanel extends AbstractServiceVersionPanel {
 				}
 
 				@Override
-				public void onSuccess(BaseGServiceVersion theResult) {
+				public void onSuccess(BaseDtoServiceVersion theResult) {
 					setServiceVersion(theResult);
 					setUncommittedSessionId(theResult.getUncommittedSessionId());
 					String navToken = NavProcessor.getTokenAddServiceVersion(getDomainPid(), getServicePid(), getUncommittedSessionId());

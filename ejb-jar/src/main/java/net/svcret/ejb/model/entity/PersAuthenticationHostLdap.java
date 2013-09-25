@@ -6,7 +6,7 @@ import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
-import net.svcret.admin.shared.model.AuthorizationHostTypeEnum;
+import net.svcret.admin.shared.enm.AuthorizationHostTypeEnum;
 
 /**
  * LDAP authentication host

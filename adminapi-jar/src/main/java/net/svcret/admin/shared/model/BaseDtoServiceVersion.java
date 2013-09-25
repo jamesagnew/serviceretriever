@@ -1,53 +1,78 @@
 package net.svcret.admin.shared.model;
 
 import java.util.Date;
-import java.util.Set;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
-import net.svcret.admin.shared.util.XmlConstants;
 
-public abstract class BaseGServiceVersion extends BaseDtoServiceCatalogItem implements IProvidesUrlCount {
+public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem implements IProvidesUrlCount {
 
 	private static final long serialVersionUID = 7886801527330335503L;
 
 	@XmlElement(name="config_Active")
 	private boolean myActive;
-	private BaseGClientSecurityList myClientSecurityList;
+	
+	@XmlElement(name="config_ClientSecurity")
+	private DtoClientSecurityList myClientSecurityList;
+
+	@XmlElement(name="runtime_DefaultProxyPath")
 	private String myDefaultProxyPath;
+
+	@XmlElement(name="config_Description")
 	private String myDescription;
+
+	@XmlElement(name="runtime_DetailedStats")
 	private GServiceVersionDetailedStats myDetailedStats;
+	
+	@XmlElement(name="config_ExplicitProxyPath")
 	private String myExplicitProxyPath;
+	
+	@XmlElement(name="config_HttpClientConfigId")
+	private String myHttpClientConfigId;
+	
+	@XmlElement(name="config_HttpClientConfigPid")
 	private long myHttpClientConfigPid;
+	
+	@XmlElement(name="runtime_LastAccess")	
 	private Date myLastAccess;
-	private Set<String> myObscureRequestElementsInLog;
-	private Set<String> myObscureResponseElementsInLog;
+
+	@XmlElement(name="runtime_ParentServiceName")
 	private String myParentServiceName;
+	
+	@XmlElement(name="runtime_ParentServicePid")
 	private long myParentServicePid;
+	
+	@XmlElement(name="config_ServiceVersionResourcePointers")
 	private GServiceVersionResourcePointerList myResourcePointerList;
-	private BaseGServerSecurityList myServerSecurityList;
+	
+	@XmlElement(name="config_ServerSecurity")
+	private DtoServerSecurityList myServerSecurityList;
+	
+	@XmlElement(name="config_ServerSecurityMode")
 	private ServerSecurityModeEnum myServerSecurityMode;
+	
+	@XmlElement(name="config_Methods")
 	private GServiceMethodList myServiceMethodList;
+
+	@XmlElement(name="config_Urls")
 	private GServiceVersionUrlList myServiceUrlList;
+
+	@XmlElement(name="config_UseDefaultProxyPath")
 	private boolean myUseDefaultProxyPath = true;
 
-	public BaseGServiceVersion() {
+	public BaseDtoServiceVersion() {
 		myServiceMethodList = new GServiceMethodList();
 		myServiceUrlList = new GServiceVersionUrlList();
-		myServerSecurityList = new BaseGServerSecurityList();
-		myClientSecurityList = new BaseGClientSecurityList();
+		myServerSecurityList = new DtoServerSecurityList();
+		myClientSecurityList = new DtoClientSecurityList();
 		myResourcePointerList = new GServiceVersionResourcePointerList();
 	}
 
 	/**
 	 * @return the clientSecurityList
 	 */
-	public BaseGClientSecurityList getClientSecurityList() {
+	public DtoClientSecurityList getClientSecurityList() {
 		return myClientSecurityList;
 	}
 
@@ -73,6 +98,10 @@ public abstract class BaseGServiceVersion extends BaseDtoServiceCatalogItem impl
 		return myExplicitProxyPath;
 	}
 
+	public String getHttpClientConfigId() {
+		return myHttpClientConfigId;
+	}
+
 	/**
 	 * @return the httpClientConfigPid
 	 */
@@ -87,19 +116,19 @@ public abstract class BaseGServiceVersion extends BaseDtoServiceCatalogItem impl
 		return myLastAccess;
 	}
 
+//	public Set<String> getObscureRequestElementsInLog() {
+//		return myObscureRequestElementsInLog;
+//	}
+//
+//	public Set<String> getObscureResponseElementsInLog() {
+//		return myObscureResponseElementsInLog;
+//	}
+
 	/**
 	 * @return the serviceUrlList
 	 */
 	public GServiceMethodList getMethodList() {
 		return myServiceMethodList;
-	}
-
-	public Set<String> getObscureRequestElementsInLog() {
-		return myObscureRequestElementsInLog;
-	}
-
-	public Set<String> getObscureResponseElementsInLog() {
-		return myObscureResponseElementsInLog;
 	}
 
 	public String getParentServiceName() {
@@ -122,7 +151,7 @@ public abstract class BaseGServiceVersion extends BaseDtoServiceCatalogItem impl
 	/**
 	 * @return the serverSecurityList
 	 */
-	public BaseGServerSecurityList getServerSecurityList() {
+	public DtoServerSecurityList getServerSecurityList() {
 		return myServerSecurityList;
 	}
 
@@ -175,10 +204,10 @@ public abstract class BaseGServiceVersion extends BaseDtoServiceCatalogItem impl
 	}
 
 	@Override
-	public void merge(BaseGObject theObject) {
+	public void merge(BaseDtoObject theObject) {
 		super.merge(theObject);
 
-		BaseGServiceVersion obj=(BaseGServiceVersion) theObject;
+		BaseDtoServiceVersion obj=(BaseDtoServiceVersion) theObject;
 		myActive = obj.myActive;
 		myLastAccess = obj.myLastAccess;
 		myServerSecurityMode = obj.myServerSecurityMode;
@@ -229,6 +258,10 @@ public abstract class BaseGServiceVersion extends BaseDtoServiceCatalogItem impl
 		myExplicitProxyPath = theExplicitProxyPath;
 	}
 
+	public void setHttpClientConfigId(String theId) {
+		myHttpClientConfigId=theId;
+	}
+
 	/**
 	 * @param theHttpClientConfigPid
 	 *            the httpClientConfigPid to set
@@ -243,14 +276,6 @@ public abstract class BaseGServiceVersion extends BaseDtoServiceCatalogItem impl
 	 */
 	public void setLastAccess(Date theLastAccess) {
 		myLastAccess = theLastAccess;
-	}
-
-	public void setObscureRequestElementsInLog(Set<String> theObscureRequestElementsInLog) {
-		myObscureRequestElementsInLog = theObscureRequestElementsInLog;
-	}
-
-	public void setObscureResponseElementsInLog(Set<String> theObscureResponseElementsInLog) {
-		myObscureResponseElementsInLog = theObscureResponseElementsInLog;
 	}
 
 	public void setParentServiceName(String theParentServiceName) {

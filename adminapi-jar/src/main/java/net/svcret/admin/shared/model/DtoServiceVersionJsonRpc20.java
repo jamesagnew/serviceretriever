@@ -11,7 +11,7 @@ import net.svcret.admin.shared.util.XmlConstants;
 @XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="ServiceVersionJsonRpc20")
 @XmlRootElement(namespace=XmlConstants.DTO_NAMESPACE, name="ServiceVersionJsonRpc20")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class DtoServiceVersionJsonRpc20 extends BaseGServiceVersion {
+public class DtoServiceVersionJsonRpc20 extends BaseDtoServiceVersion {
 
 	private static final long serialVersionUID = 1L;
 

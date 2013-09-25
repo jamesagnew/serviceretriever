@@ -1,7 +1,7 @@
 package net.svcret.admin.client.ui.dash.model;
 
 import net.svcret.admin.client.ui.components.PButton;
-import net.svcret.admin.shared.model.BaseGDashboardObject;
+import net.svcret.admin.shared.model.BaseDtoDashboardObject;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.HierarchyEnum;
 
@@ -50,7 +50,7 @@ public class DashModelServiceMethod extends BaseDashModel implements IDashModel 
 	}
 
 	@Override
-	public BaseGDashboardObject getModel() {
+	public BaseDtoDashboardObject getModel() {
 		return myServiceMethod;
 	}
 

@@ -5,7 +5,7 @@ import java.util.List;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.shared.ObjectUtil;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
@@ -169,7 +169,7 @@ public class VersionPickerPanel extends TwoColumnGrid {
 			if (myAllowSelectAll) {
 				myVersionBox.addItem("All Versions", ALL_PID_STR);
 			}
-			for (BaseGServiceVersion nextVersion : service.getVersionList()) {
+			for (BaseDtoServiceVersion nextVersion : service.getVersionList()) {
 				myVersionBox.addItem(nextVersion.getId(), Long.toString(nextVersion.getPid()));
 			}
 		}

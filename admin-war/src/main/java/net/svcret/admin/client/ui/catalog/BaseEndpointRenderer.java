@@ -1,7 +1,7 @@
 package net.svcret.admin.client.ui.catalog;
 
 import net.svcret.admin.client.ui.components.HtmlBr;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.util.StringUtil;
 
@@ -9,7 +9,7 @@ import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Widget;
 
-public abstract class BaseEndpointRenderer<T extends BaseGServiceVersion> {
+public abstract class BaseEndpointRenderer<T extends BaseDtoServiceVersion> {
 
 	private GConfig myConfig;
 

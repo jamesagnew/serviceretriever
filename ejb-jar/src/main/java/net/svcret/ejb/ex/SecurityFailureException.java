@@ -1,6 +1,6 @@
 package net.svcret.ejb.ex;
 
-import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
+import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 
 public class SecurityFailureException extends Exception {
 

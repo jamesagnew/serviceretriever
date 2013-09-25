@@ -5,11 +5,12 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import net.svcret.admin.shared.enm.ClientSecurityEnum;
 import net.svcret.admin.shared.util.XmlConstants;
 
 @XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="ClientSecurityJsonRpcNamedParameter")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class DtoClientSecurityJsonRpcNamedParameter extends BaseGClientSecurity {
+public class DtoClientSecurityJsonRpcNamedParameter extends BaseDtoClientSecurity {
 
 	private static final long serialVersionUID = 1L;
 
@@ -33,7 +34,7 @@ public class DtoClientSecurityJsonRpcNamedParameter extends BaseGClientSecurity 
 	}
 
 	@Override
-	public void merge(BaseGObject theObject) {
+	public void merge(BaseDtoObject theObject) {
 		super.merge(theObject);
 
 		DtoClientSecurityJsonRpcNamedParameter obj = (DtoClientSecurityJsonRpcNamedParameter) theObject;

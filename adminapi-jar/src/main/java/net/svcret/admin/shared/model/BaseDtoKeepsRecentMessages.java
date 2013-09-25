@@ -5,7 +5,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public abstract class BaseDtoKeepsRecentMessages extends BaseGObject {
+public abstract class BaseDtoKeepsRecentMessages extends BaseDtoObject {
 
 	private static final long serialVersionUID = 1L;
 
@@ -98,7 +98,7 @@ public abstract class BaseDtoKeepsRecentMessages extends BaseGObject {
 		return myCanInheritKeepNumRecentTransactions;
 	}
 
-	public void merge(BaseGObject theObject) {
+	public void merge(BaseDtoObject theObject) {
 		super.merge(theObject);
 		
 		BaseDtoKeepsRecentMessages obj = (BaseDtoKeepsRecentMessages) theObject;

@@ -10,7 +10,7 @@ import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.admin.shared.model.Pair;
 import net.svcret.admin.shared.util.StringUtil;
@@ -62,7 +62,7 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 
 	}
 
-	private void addResponseFormatButtons(HorizontalPanel respFunctions, String contentType, final HtmlPre respPre, final String messageBody, BaseGServiceVersion theSvcVer) {
+	private void addResponseFormatButtons(HorizontalPanel respFunctions, String contentType, final HtmlPre respPre, final String messageBody, BaseDtoServiceVersion theSvcVer) {
 		if ((contentType != null && contentType.toLowerCase().contains("xml")) || theSvcVer.getProtocol().getRequestContentType().contains("xml")) {
 			respFunctions.add(new PButton(AdminPortal.IMAGES.iconFormat16(), AdminPortal.MSGS.actions_FormatXml(), new ClickHandler() {
 				@Override
@@ -111,9 +111,9 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 	}
 
 	public void setMessage(final GRecentMessage theResult) {
-		Model.getInstance().loadServiceVersion(theResult.getServiceVersionPid(), new IAsyncLoadCallback<BaseGServiceVersion>() {
+		Model.getInstance().loadServiceVersion(theResult.getServiceVersionPid(), new IAsyncLoadCallback<BaseDtoServiceVersion>() {
 			@Override
-			public void onSuccess(BaseGServiceVersion theSvcVer) {
+			public void onSuccess(BaseDtoServiceVersion theSvcVer) {
 				myTopLoadingSpinner.hideCompletely();
 
 				while (myTopGrid.getRowCount() > 0) {

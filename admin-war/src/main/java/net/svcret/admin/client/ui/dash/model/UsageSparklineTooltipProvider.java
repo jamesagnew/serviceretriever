@@ -5,7 +5,7 @@ import java.util.Date;
 import net.svcret.admin.client.MyResources;
 import net.svcret.admin.client.ui.components.IProvidesTooltip;
 import net.svcret.admin.shared.DateUtil;
-import net.svcret.admin.shared.model.BaseGDashboardObject;
+import net.svcret.admin.shared.model.BaseDtoDashboardObject;
 
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.client.ui.FlexTable;
@@ -13,10 +13,10 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Widget;
 
-public final class UsageSparklineTooltipProvider<T extends BaseGDashboardObject> implements IProvidesTooltip<T> {
+public final class UsageSparklineTooltipProvider<T extends BaseDtoDashboardObject> implements IProvidesTooltip<T> {
 
 	@Override
-	public Widget getTooltip(BaseGDashboardObject theObject) {
+	public Widget getTooltip(BaseDtoDashboardObject theObject) {
 		FlowPanel retVal = new FlowPanel();
 		SafeHtmlBuilder b = new SafeHtmlBuilder();
 		if (theObject.getName() != null) {

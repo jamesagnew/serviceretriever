@@ -5,10 +5,10 @@ import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
+import net.svcret.admin.shared.AddServiceVersionResponse;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.AddServiceVersionResponse;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.HierarchyEnum;
 
@@ -36,14 +36,14 @@ public class EditServiceVersionPanel extends AbstractServiceVersionPanel {
 				
 				initParents(theResult);
 
-				AdminPortal.MODEL_SVC.loadServiceVersionIntoSession(theServiceVersionPid, new AsyncCallback<BaseGServiceVersion>() {
+				AdminPortal.MODEL_SVC.loadServiceVersionIntoSession(theServiceVersionPid, new AsyncCallback<BaseDtoServiceVersion>() {
 					@Override
 					public void onFailure(Throwable theCaught) {
 						Model.handleFailure(theCaught);
 					}
 
 					@Override
-					public void onSuccess(BaseGServiceVersion theServiceVersion) {
+					public void onSuccess(BaseDtoServiceVersion theServiceVersion) {
 						setServiceVersion(theServiceVersion);
 						getLoadingSpinner().hide();
 						myProtocolLabel.setText(theServiceVersion.getProtocol().getNiceName());

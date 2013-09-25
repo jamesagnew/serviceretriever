@@ -3,7 +3,7 @@ package net.svcret.ejb.ejb;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
-import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
+import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.IAuthorizationService.ILocalDatabaseAuthorizationService;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IDao;

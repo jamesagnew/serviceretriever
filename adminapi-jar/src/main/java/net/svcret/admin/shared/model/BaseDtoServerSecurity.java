@@ -1,20 +1,33 @@
 package net.svcret.admin.shared.model;
 
-public abstract class BaseGServerSecurity extends BaseGObject {
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+
+@XmlAccessorType(XmlAccessType.FIELD)
+public abstract class BaseDtoServerSecurity extends BaseDtoObject {
 
 	private static final long serialVersionUID = 1L;
 
+	@XmlElement(name="config_AuthHostId")
+	private String myAuthHostId;
+
+	@XmlElement(name="config_AuthHostPid")
 	private long myAuthHostPid;
-	
+
 	private transient boolean myEditMode;
-	
+
+	public String getAuthHostId() {
+		return myAuthHostId;
+	}
+
 	/**
 	 * @return the authHostPid
 	 */
 	public long getAuthHostPid() {
 		return myAuthHostPid;
 	}
-
+	
 	public abstract ServerSecurityEnum getType();
 
 	/**
@@ -22,6 +35,10 @@ public abstract class BaseGServerSecurity extends BaseGObject {
 	 */
 	public boolean isEditMode() {
 		return myEditMode;
+	}
+
+	public void setAuthHostId(String theAuthHostId) {
+		myAuthHostId = theAuthHostId;
 	}
 
 	/**

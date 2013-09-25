@@ -1,6 +1,6 @@
 package net.svcret.admin.shared.model;
 
-public class GUserServiceVersionMethodPermission extends BaseGObject {
+public class GUserServiceVersionMethodPermission extends BaseDtoObject {
 
 	private static final long serialVersionUID = 1L;
 	
@@ -20,7 +20,7 @@ public class GUserServiceVersionMethodPermission extends BaseGObject {
 	}
 
 	@Override
-	public void merge(BaseGObject theObject) {
+	public void merge(BaseDtoObject theObject) {
 		super.merge(theObject);
 
 		setServiceVersionMethodPid(((GUserServiceVersionMethodPermission)theObject).getServiceVersionMethodPid());

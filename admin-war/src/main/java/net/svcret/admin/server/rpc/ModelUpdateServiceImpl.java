@@ -13,12 +13,12 @@ import javax.ejb.EJB;
 import javax.servlet.http.HttpSession;
 
 import net.svcret.admin.client.rpc.ModelUpdateService;
+import net.svcret.admin.shared.AddServiceVersionResponse;
 import net.svcret.admin.shared.ServiceFailureException;
-import net.svcret.admin.shared.model.AddServiceVersionResponse;
-import net.svcret.admin.shared.model.BaseGAuthHost;
-import net.svcret.admin.shared.model.BaseGMonitorRule;
-import net.svcret.admin.shared.model.BaseGObject;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoAuthHost;
+import net.svcret.admin.shared.model.BaseDtoMonitorRule;
+import net.svcret.admin.shared.model.BaseDtoObject;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
@@ -104,7 +104,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion) throws ServiceFailureException {
+	public AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseDtoServiceVersion theVersion) throws ServiceFailureException {
 		if (theExistingDomainPid == null && isBlank(theCreateDomainId)) {
 			throw new IllegalArgumentException("Domain PID and new domain ID are both missing");
 		}
@@ -167,7 +167,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 			service = theExistingServicePid;
 		}
 
-		BaseGServiceVersion newVersion;
+		BaseDtoServiceVersion newVersion;
 		try {
 			newVersion = myAdminSvc.saveServiceVersion(domain, service, theVersion, resList);
 		} catch (ProcessingException e) {
@@ -195,13 +195,13 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public BaseGServiceVersion createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncommittedId) {
-		BaseGServiceVersion retVal = null;
+	public BaseDtoServiceVersion createNewServiceVersion(ServiceProtocolEnum theProtocol, Long theDomainPid, Long theServicePid, Long theUncommittedId) {
+		BaseDtoServiceVersion retVal = null;
 		HttpSession session = getThreadLocalRequest().getSession(true);
 
 		if (theUncommittedId != null) {
 			String key = SESSION_PREFIX_UNCOMITTED_SVC_VER + theUncommittedId;
-			retVal = (BaseGServiceVersion) session.getAttribute(key);
+			retVal = (BaseDtoServiceVersion) session.getAttribute(key);
 			if (retVal != null && retVal.getProtocol() == theProtocol) {
 				ourLog.info("Retrieving {} Service Version with uncommitted ID[{}]", retVal.getProtocol().name(), theUncommittedId);
 				return retVal;
@@ -356,7 +356,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 			for (GDomain nextDomain : retVal.getDomainList()) {
 				ourLog.trace(" * Returning Domain: {}", nextDomain);
 				for (GService nextSvc : nextDomain.getServiceList()) {
-					for (BaseGServiceVersion nextSvcVer : nextSvc.getVersionList()) {
+					for (BaseDtoServiceVersion nextSvcVer : nextSvc.getVersionList()) {
 						ourLog.trace(" * Returning SvcVer: {}", nextSvcVer);
 					}
 				}
@@ -460,12 +460,12 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public BaseGServiceVersion loadServiceVersionIntoSession(long theServiceVersionPid) throws ServiceFailureException {
+	public BaseDtoServiceVersion loadServiceVersionIntoSession(long theServiceVersionPid) throws ServiceFailureException {
 		return loadServiceVersionIntoSession(theServiceVersionPid, false);
 	}
 
-	private BaseGServiceVersion loadServiceVersionIntoSession(long theServiceVersionPid, boolean theClearPids) throws ServiceFailureException {
-		BaseGServiceVersion retVal;
+	private BaseDtoServiceVersion loadServiceVersionIntoSession(long theServiceVersionPid, boolean theClearPids) throws ServiceFailureException {
+		BaseDtoServiceVersion retVal;
 
 		GSoap11ServiceVersionAndResources serviceAndResources;
 		if (isMockMode()) {
@@ -496,16 +496,16 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 				next.clearPid();
 			}
 			retVal.clearPid();
-			for (BaseGObject next : retVal.getMethodList()) {
+			for (BaseDtoObject next : retVal.getMethodList()) {
 				next.clearPid();
 			}
-			for (BaseGObject next : retVal.getClientSecurityList()) {
+			for (BaseDtoObject next : retVal.getClientSecurityList()) {
 				next.clearPid();
 			}
-			for (BaseGObject next : retVal.getServerSecurityList()) {
+			for (BaseDtoObject next : retVal.getServerSecurityList()) {
 				next.clearPid();
 			}
-			for (BaseGObject next : retVal.getUrlList()) {
+			for (BaseDtoObject next : retVal.getUrlList()) {
 				next.clearPid();
 			}
 		}else {
@@ -524,7 +524,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		GUser user;
 		try {
 			user = myAdminSvc.loadUser(thePid, theLoadStats);
-			BaseGAuthHost authHost = myAdminSvc.loadAuthenticationHost(user.getAuthHostPid());
+			BaseDtoAuthHost authHost = myAdminSvc.loadAuthenticationHost(user.getAuthHostPid());
 			return new UserAndAuthHost(user, authHost);
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to load user " + thePid, e);
@@ -702,7 +702,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) throws ServiceFailureException {
+	public GAuthenticationHostList saveAuthenticationHost(BaseDtoAuthHost theAuthHost) throws ServiceFailureException {
 		if (isMockMode()) {
 			return getMock().saveAuthenticationHost(theAuthHost);
 		}
@@ -770,7 +770,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public GMonitorRuleList saveMonitorRule(BaseGMonitorRule theRule) throws ServiceFailureException {
+	public GMonitorRuleList saveMonitorRule(BaseDtoMonitorRule theRule) throws ServiceFailureException {
 		try {
 			if (isMockMode()) {
 				getMock().saveMonitorRule(theRule);
@@ -808,7 +808,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public void saveServiceVersionToSession(BaseGServiceVersion theServiceVersion) {
+	public void saveServiceVersionToSession(BaseDtoServiceVersion theServiceVersion) {
 		Validate.notNull(theServiceVersion, "ServiceVersion");
 		Validate.notNull(theServiceVersion.getUncommittedSessionId(), "ServiceVersion#UncommittedSessionId");
 
@@ -861,7 +861,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	private void saveServiceVersionResourcesToSession(GSoap11ServiceVersionAndResources theServiceAndResources) {
-		BaseGServiceVersion serviceVersion = theServiceAndResources.getServiceVersion();
+		BaseDtoServiceVersion serviceVersion = theServiceAndResources.getServiceVersion();
 		ourLog.info("Storing service resource collection to temporary session with id: " + serviceVersion.getUncommittedSessionId());
 		String key = SESSION_PREFIX_UNCOMITTED_SVC_VER_RES + theServiceAndResources.getServiceVersion().getUncommittedSessionId();
 		getThreadLocalRequest().getSession(true).setAttribute(key, theServiceAndResources.getResource());
@@ -875,7 +875,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public BaseGMonitorRule loadMonitorRule(long theRulePid) {
+	public BaseDtoMonitorRule loadMonitorRule(long theRulePid) {
 		if (isMockMode()) {
 			return getMock().loadMonitorRule(theRulePid);
 		}
@@ -896,7 +896,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public BaseGServiceVersion cloneServiceVersion(long thePidToClone) throws ServiceFailureException {
+	public BaseDtoServiceVersion cloneServiceVersion(long thePidToClone) throws ServiceFailureException {
 		return loadServiceVersionIntoSession(thePidToClone,true);
 	}
 

@@ -7,7 +7,7 @@ import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.GDomainList;
 
 import com.google.gwt.core.shared.GWT;
@@ -50,7 +50,7 @@ public class DeleteServiceVersionPanel extends FlowPanel {
 	}
 
 	private void populate(final long thePid, final FlowPanel contentPanel, GDomainList theResult) {
-		BaseGServiceVersion svcVer = theResult.getServiceVersionByPid(thePid);
+		BaseDtoServiceVersion svcVer = theResult.getServiceVersionByPid(thePid);
 		if (svcVer == null) {
 			GWT.log("Unknown SvcVer PID: " + thePid);
 			NavProcessor.goHome();

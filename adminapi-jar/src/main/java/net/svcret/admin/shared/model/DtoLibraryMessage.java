@@ -80,7 +80,7 @@ public class DtoLibraryMessage implements Serializable {
 					GDomain nextDomain = theDomainList.getDomainByPid(nextDomainPid);
 					Long nextServicePid = theDomainList.getServicePidWithServiceVersion(nextPid);
 					GService nextService = nextDomain.getServiceList().getServiceByPid(nextServicePid);
-					BaseGServiceVersion nextSvcVer = theDomainList.getServiceVersionByPid(nextPid);
+					BaseDtoServiceVersion nextSvcVer = theDomainList.getServiceVersionByPid(nextPid);
 
 					String nextString = nextDomain.getName() + " " + nextService.getName() + " " + nextSvcVer.getId();
 					if (firstString.equals("") || firstString.compareTo(nextString) > 0) {

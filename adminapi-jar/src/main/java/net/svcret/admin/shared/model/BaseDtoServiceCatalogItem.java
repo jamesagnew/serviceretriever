@@ -6,28 +6,35 @@ import java.util.Set;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public abstract class BaseDtoServiceCatalogItem extends BaseGDashboardObject implements IProvidesUrlCount {
+public abstract class BaseDtoServiceCatalogItem extends BaseDtoDashboardObject implements IProvidesUrlCount {
 
 	private static final long serialVersionUID = 1L;
 
-	@XmlElement(name="runtime_FailingApplicableRulePids")
+	@XmlElementWrapper(name="runtime_FailingApplicableRulePids")
+	@XmlElement(name="Element")
 	private Set<Long> myFailingApplicableRulePids;
 
-	@XmlElement(name="ro_InheritedObscureRequestElementsInLogCache")
+	@XmlElementWrapper(name="ro_InheritedObscureRequestElementsInLogCache")
+	@XmlElement(name="Element")
 	private Set<String> myInheritedObscureRequestElementsInLogCache;
 	
-	@XmlElement(name="ro_InheritedObscureResponseElementsInLogCache")
+	@XmlElementWrapper(name="ro_InheritedObscureResponseElementsInLogCache")
+	@XmlElement(name="Element")
 	private Set<String> myInheritedObscureResponseElementsInLogCache;
 
-	@XmlElement(name="ro_MonitorRulePids")
+	@XmlElementWrapper(name="ro_MonitorRulePids")
+	@XmlElement(name="Element")
 	private Set<Long> myMonitorRulePids;
 	
-	@XmlElement(name="config_ObscureRequestElementsInLogCache")
+	@XmlElementWrapper(name="config_ObscureRequestElementsInLogCache")
+	@XmlElement(name="Element")
 	private Set<String> myObscureRequestElementsInLogCache;
 	
-	@XmlElement(name="config_ObscureResponseElementsInLogCache")
+	@XmlElementWrapper(name="config_ObscureResponseElementsInLogCache")
+	@XmlElement(name="Element")
 	private Set<String> myObscureResponseElementsInLogCache;
 	
 	@XmlElement(name="ro_ServerSecured")
@@ -122,7 +129,7 @@ public abstract class BaseDtoServiceCatalogItem extends BaseGDashboardObject imp
 	}
 
 	@Override
-	public void merge(BaseGObject theObject) {
+	public void merge(BaseDtoObject theObject) {
 		super.merge(theObject);
 
 		BaseDtoServiceCatalogItem obj = (BaseDtoServiceCatalogItem) theObject;

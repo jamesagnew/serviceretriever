@@ -5,7 +5,7 @@ import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.PButton;
-import net.svcret.admin.shared.model.BaseGDashboardObject;
+import net.svcret.admin.shared.model.BaseDtoDashboardObject;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.HierarchyEnum;
@@ -127,7 +127,7 @@ public class DashModelDomain extends BaseDashModel implements IDashModel {
 	}
 
 	@Override
-	public BaseGDashboardObject getModel() {
+	public BaseDtoDashboardObject getModel() {
 		return myDomain;
 	}
 

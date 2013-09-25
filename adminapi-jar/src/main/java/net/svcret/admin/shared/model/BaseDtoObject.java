@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public abstract class BaseGObject implements Serializable {
+public abstract class BaseDtoObject implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -28,7 +28,7 @@ public abstract class BaseGObject implements Serializable {
 			return false;
 		}
 		
-		BaseGObject obj = (BaseGObject) theObj;
+		BaseDtoObject obj = (BaseDtoObject) theObj;
 		
 		if (myPid != 0 && obj.myPid != 0) {
 			return myPid == obj.myPid;
@@ -67,7 +67,7 @@ public abstract class BaseGObject implements Serializable {
 		return 0;
 	}
 
-	protected void merge(BaseGObject theObject) {
+	protected void merge(BaseDtoObject theObject) {
 		setPid(theObject.getPid());
 	}
 
