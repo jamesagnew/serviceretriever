@@ -29,9 +29,12 @@ public interface IDashModel {
 
 	String getCellStyle();
 
-	Widget renderLatency();
+	Widget renderLatency(int thePeakLatency);
 
 	Widget renderSecurity();
 
 	IProvidesTooltip<BaseGDashboardObject> getUsageTooltip();
+	
+	int getPeakLatency();
+	
 }

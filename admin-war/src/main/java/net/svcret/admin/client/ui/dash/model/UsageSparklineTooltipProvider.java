@@ -45,6 +45,9 @@ public final class UsageSparklineTooltipProvider<T extends BaseGDashboardObject>
 		grid.setText(0, 4, "Security Failures");
 		grid.getFlexCellFormatter().addStyleName(0, 4, MyResources.CSS.usageTooltipTableSecFailColumn());
 
+		grid.setText(0, 5, "Avg Latency");
+		grid.getFlexCellFormatter().addStyleName(0, 5, MyResources.CSS.usageTooltipTableSecLatencyColumn());
+
 		Date nextDate = theObject.getStatistics60MinuteFirstDate();
 		int row = 1;
 		int incrementMins = 10;
@@ -54,13 +57,17 @@ public final class UsageSparklineTooltipProvider<T extends BaseGDashboardObject>
 			int fault = 0;
 			int fail = 0;
 			int secFail = 0;
+			int latency = 0;
 			for (int j = i; j < i + incrementMins; j++) {
 				success += theObject.getTransactions60mins()[j];
 				fault += theObject.getTransactionsFault60mins()[j];
 				fail += theObject.getTransactionsFail60mins()[j];
 				secFail += theObject.getTransactionsSecurityFail60mins()[j];
+				latency += theObject.getLatency60mins()[j];
 			}
 
+			latency = latency / incrementMins;
+			
 			Date nextEndDate = new Date(nextDate.getTime() + ((incrementMins - 1) * DateUtil.MILLIS_PER_MINUTE));
 			grid.setText(row, 0, DateUtil.formatTimeOnly(nextDate) + " - " + DateUtil.formatTimeOnly(nextEndDate));
 			grid.getFlexCellFormatter().addStyleName(row, 0, MyResources.CSS.usageTooltipTableDateColumn());
@@ -76,6 +83,9 @@ public final class UsageSparklineTooltipProvider<T extends BaseGDashboardObject>
 
 			grid.setText(row, 4, Integer.toString(secFail));
 			grid.getFlexCellFormatter().addStyleName(row, 4, MyResources.CSS.usageTooltipTableValueColumn());
+
+			grid.setText(row, 5, Integer.toString(latency)+"ms");
+			grid.getFlexCellFormatter().addStyleName(row, 5, MyResources.CSS.usageTooltipTableValueColumn());
 
 			nextDate = new Date(nextDate.getTime() + (incrementMins * 60 * 1000L));
 		}

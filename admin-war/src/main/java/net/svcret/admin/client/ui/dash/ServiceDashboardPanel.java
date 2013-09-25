@@ -263,6 +263,12 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 	private void updateRows(ArrayList<IDashModel> theNewUiList) {
 		int rowOffset = 1;
 
+		int peakLatency = 0;
+		for (int i = 0; i < theNewUiList.size(); i++) {
+			IDashModel model = theNewUiList.get(i);
+			peakLatency = Math.max(peakLatency, model.getPeakLatency());
+		}
+		
 		for (int i = 0; i < theNewUiList.size(); i++) {
 			IDashModel model = theNewUiList.get(i);
 
@@ -341,9 +347,10 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 			myGrid.setWidget(i + rowOffset, offset + COL_BACKING_URLS + 1, urls);
 			myGrid.getCellFormatter().setStyleName(i + rowOffset, offset + COL_BACKING_URLS + 1, styleName);
 
-			Widget latency = EmptyCell.defaultWidget(model.renderLatency());
+			Widget latency = EmptyCell.defaultWidget(model.renderLatency(peakLatency));
 			myGrid.setWidget(i + rowOffset, offset + COL_LATENCY + 1, latency);
 			myGrid.getCellFormatter().setStyleName(i + rowOffset, offset + COL_LATENCY + 1, styleName);
+			myGrid.setTooltipProvider(i + rowOffset, offset + COL_LATENCY + 1, model.getUsageTooltip());
 
 			Widget security = EmptyCell.defaultWidget(model.renderSecurity());
 			myGrid.setWidget(i + rowOffset, offset + COL_SECURITY + 1, security);

@@ -56,11 +56,6 @@ public class DashModelLoading implements IDashModel {
 	}
 
 	@Override
-	public Widget renderLatency() {
-		return null;
-	}
-
-	@Override
 	public boolean hasChildren() {
 		return false;
 	}
@@ -77,6 +72,16 @@ public class DashModelLoading implements IDashModel {
 
 	@Override
 	public IProvidesTooltip<BaseGDashboardObject> getUsageTooltip() {
+		return null;
+	}
+
+	@Override
+	public int getPeakLatency() {
+		return 0;
+	}
+
+	@Override
+	public Widget renderLatency(int thePeakLatency) {
 		return null;
 	}
 

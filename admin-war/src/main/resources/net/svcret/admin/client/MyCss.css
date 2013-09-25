@@ -104,6 +104,7 @@ TABLE.usageTooltipTable {
 
 TD.usageTooltipTableSuccessColumn, TD.usageTooltipTableFaultColumn, 
 TD.usageTooltipTableFailColumn, TD.usageTooltipTableSecFailColumn,
+TD.usageTooltipTableSecLatencyColumn,
 TD.monitorRuleActiveCheckTooltipTableColumnHeader {
 	background: #444;
     font-size: 0.8em !important;
@@ -126,6 +127,10 @@ TD.usageTooltipTableSecFailColumn {
 	color: #FA0;
 }
 
+TD.usageTooltipTableSecLatencyColumn {
+	color: #CCC;
+}
+
 .usageTooltipTableDateColumn {
 	white-space: pre;
     font-size: 0.8em !important;
@@ -135,5 +140,6 @@ TD.usageTooltipTableSecFailColumn {
 .usageTooltipTableValueColumn {
     font-size: 0.8em !important;
 	background: #444;
+	color: #AAA;
 	text-align: center;
 }

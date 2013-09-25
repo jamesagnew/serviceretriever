@@ -56,6 +56,11 @@ public abstract class BaseUrlGrid extends FlowPanel {
 
 		int row = 0;
 
+		int peakLatency = 1;
+		for (final GServiceVersionUrl next : theUrlList) {
+			peakLatency = Math.max(peakLatency, next.getMaxLatency60min());
+		}
+
 		for (final GServiceVersionUrl next : theUrlList) {
 			row++;
 
@@ -150,7 +155,8 @@ public abstract class BaseUrlGrid extends FlowPanel {
 					transactionsSparkline.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
 					grid.add(transactionsSparkline);
 
-					Widget latencySparkline = BaseDashModel.returnSparklineFor60minsLatency(next.getLatency60mins(), next.getStatsInitialized(), next.getAverageLatency60min(), next.getMaxLatency60min());
+					Widget latencySparkline = BaseDashModel.returnSparklineFor60minsLatency(next.getLatency60mins(), next.getAverageLatency60min(),
+							next.getMaxLatency60min(), peakLatency);
 					if (latencySparkline != null) {
 						latencySparkline.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
 						grid.add(latencySparkline);
@@ -180,8 +186,8 @@ public abstract class BaseUrlGrid extends FlowPanel {
 	}
 
 	protected void init() {
-		this.add(new Label("Each proxied service will have one or more implementation URLs. " + "When a client attempts to invoke a service that has been proxied, the ServiceProxy will " + "forward this request to one of these implementations. Specifying more than one "
-				+ "implementation URL means that if one is unavailable, another can be tried (i.e. redundancy)."));
+		this.add(new Label("Each proxied service will have one or more implementation URLs. " + "When a client attempts to invoke a service that has been proxied, the ServiceProxy will "
+				+ "forward this request to one of these implementations. Specifying more than one " + "implementation URL means that if one is unavailable, another can be tried (i.e. redundancy)."));
 
 		myUrlGrid = new Grid(1, NUM_COLS);
 		myUrlGrid.addStyleName(CssConstants.PROPERTY_TABLE);
@@ -239,7 +245,7 @@ public abstract class BaseUrlGrid extends FlowPanel {
 
 		private MyPanel(GServiceVersionUrl theStatus, ResponseTypeEnum theResponseType) {
 			super(theStatus);
-			
+
 			setTooltipProvider(this);
 			myResponseType = theResponseType;
 			myStatus = theStatus;

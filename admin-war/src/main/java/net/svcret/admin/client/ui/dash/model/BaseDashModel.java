@@ -1,8 +1,6 @@
 package net.svcret.admin.client.ui.dash.model;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.CssConstants;
@@ -40,6 +38,11 @@ public abstract class BaseDashModel implements IDashModel {
 	}
 
 	@Override
+	public int getPeakLatency() {
+		return myModel.getMaxLatency60min();
+	}
+
+	@Override
 	public IProvidesTooltip<BaseGDashboardObject> getUsageTooltip() {
 		return new UsageSparklineTooltipProvider<BaseGDashboardObject>();
 	}
@@ -66,8 +69,26 @@ public abstract class BaseDashModel implements IDashModel {
 	}
 
 	@Override
-	public final Widget renderLatency() {
-		return returnSparklineFor60minsLatency(myModel.getLatency60mins(), myModel.getStatsInitialized(), myModel.getAverageLatency60min(), myModel.getMaxLatency60min());
+	public final Widget renderLatency(int thePeakLatency) {
+		Integer averageLatency60min = myModel.getAverageLatency60min();
+		if (averageLatency60min==null) {
+			averageLatency60min = 0;
+		}
+		
+		return returnSparklineFor60minsLatency(myModel.getLatency60mins(), averageLatency60min, myModel.getMaxLatency60min(), thePeakLatency);
+	}
+
+	protected Widget renderName(String thePrefix, String theName, String thePostFix) {
+		HorizontalPanel hp = new HorizontalPanel();
+		hp.setStyleName(CssConstants.UNSTYLED_TABLE);
+		if (thePrefix != null) {
+			hp.add(new HTML(thePrefix));
+		}
+		hp.add(new HTML(theName));
+		if (thePostFix != null) {
+			hp.add(new HTML(thePostFix));
+		}
+		return hp;
 	}
 
 	@Override
@@ -119,17 +140,37 @@ public abstract class BaseDashModel implements IDashModel {
 		return returnSparklineFor60MinsUsage(myModel);
 	}
 
-	protected Widget renderName(String thePrefix, String theName, String thePostFix) {
-		HorizontalPanel hp = new HorizontalPanel();
-		hp.setStyleName(CssConstants.UNSTYLED_TABLE);
-		if (thePrefix != null) {
-			hp.add(new HTML(thePrefix));
-		}
-		hp.add(new HTML(theName));
-		if (thePostFix != null) {
-			hp.add(new HTML(thePostFix));
-		}
-		return hp;
+	static void createBackButton(final PopupPanel theActionPopup, final FlowPanel thePreviousContent, final FlowPanel content) {
+		PButton backButton = new ActionPButton("Back");
+		backButton.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				theActionPopup.remove(content);
+				theActionPopup.add(thePreviousContent);
+			}
+		});
+		content.add(backButton.toBackwardNavButtonPanel());
+	}
+
+	private static String formatDouble(double theNumber) {
+		return ourDecimalFormat.format(theNumber);
+	}
+
+	private static UsageSparkline returnBarSparklineFor60mins(int[] theSuccessList, int[] theFaultValues, int[] theFailValues, int[] theSecurityFailValues, String theAvgValue, String theMaxValue, String theUnitDesc) {
+		String text = "Avg:" + theAvgValue + " Max:" + theMaxValue + "" + theUnitDesc;
+
+		// List<Long> dates = new ArrayList<Long>();
+		// long nextDate = theStatsInitialized.getTime() - (60 * 60 * 1000L);
+		// for (int i = 0; i < 60; i++) {
+		// dates.add(nextDate);
+		// nextDate += (60 * 1000L);
+		// }
+
+		UsageSparkline retVal = new UsageSparkline(theSuccessList, theFaultValues, theFailValues, theSecurityFailValues, text);
+		retVal.setBar(true);
+		retVal.setWidth("100px");
+		retVal.addStyleName(CssConstants.DASHBOARD_SPARKLINE);
+		return retVal;
 	}
 
 	public static Widget returnImageForStatus(BaseDtoServiceCatalogItem theObject) {
@@ -180,7 +221,8 @@ public abstract class BaseDashModel implements IDashModel {
 		return null;
 	}
 
-	public static Widget returnSparklineFor60minsLatency(int[] theList, Date theStatsInitialized, int theAvgValue, int theMaxValue) {
+	public static Widget returnSparklineFor60minsLatency(int[] theList, Integer theAvgValue, int theMaxValue, int thePeakLatency) {
+		
 		if (theList == null) {
 			GWT.log(new Date() + " - No 60 minutes data");
 			return null;
@@ -190,16 +232,12 @@ public abstract class BaseDashModel implements IDashModel {
 			return null;
 		}
 
-		String text = "Avg:" + theAvgValue + " Max:" + theMaxValue + "ms";
-
-		List<Long> dates = new ArrayList<Long>();
-		long nextDate = theStatsInitialized.getTime() - (60 * 60 * 1000L);
-		for (int i = 0; i < 60; i++) {
-			dates.add(nextDate);
-			nextDate += (60 * 1000L);
-		}
-
-		Sparkline retVal = new Sparkline(theList, dates, text);
+		Integer avgValue = theAvgValue != null ? theAvgValue : 0;
+		
+		String text = "Avg:" + avgValue + " Max:" + theMaxValue + "ms";
+		int peakValue = Math.max(1, thePeakLatency);
+		
+		Sparkline retVal = new Sparkline(theList, text, peakValue);
 		retVal.setWidth("100px");
 		retVal.addStyleName(CssConstants.DASHBOARD_SPARKLINE);
 		return retVal;
@@ -226,39 +264,6 @@ public abstract class BaseDashModel implements IDashModel {
 
 			return retVal;
 		}
-	}
-
-	private static String formatDouble(double theNumber) {
-		return ourDecimalFormat.format(theNumber);
-	}
-
-	private static UsageSparkline returnBarSparklineFor60mins(int[] theSuccessList, int[] theFaultValues, int[] theFailValues, int[] theSecurityFailValues, String theAvgValue, String theMaxValue, String theUnitDesc) {
-		String text = "Avg:" + theAvgValue + " Max:" + theMaxValue + "" + theUnitDesc;
-
-		// List<Long> dates = new ArrayList<Long>();
-		// long nextDate = theStatsInitialized.getTime() - (60 * 60 * 1000L);
-		// for (int i = 0; i < 60; i++) {
-		// dates.add(nextDate);
-		// nextDate += (60 * 1000L);
-		// }
-
-		UsageSparkline retVal = new UsageSparkline(theSuccessList, theFaultValues, theFailValues, theSecurityFailValues, text);
-		retVal.setBar(true);
-		retVal.setWidth("100px");
-		retVal.addStyleName(CssConstants.DASHBOARD_SPARKLINE);
-		return retVal;
-	}
-
-	static void createBackButton(final PopupPanel theActionPopup, final FlowPanel thePreviousContent, final FlowPanel content) {
-		PButton backButton = new ActionPButton("Back");
-		backButton.addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent theEvent) {
-				theActionPopup.remove(content);
-				theActionPopup.add(thePreviousContent);
-			}
-		});
-		content.add(backButton.toBackwardNavButtonPanel());
 	}
 
 }

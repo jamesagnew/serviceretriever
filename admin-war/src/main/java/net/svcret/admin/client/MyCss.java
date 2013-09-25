@@ -49,5 +49,7 @@ public interface MyCss extends CssResource {
 
 	String leftMenuTitle();
 
+	String usageTooltipTableSecLatencyColumn();
+
 	
 }
