@@ -7,10 +7,10 @@ import net.svcret.admin.client.ui.components.HtmlLabel;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
+import net.svcret.admin.shared.AddServiceVersionResponse;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.AddServiceVersionResponse;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
 import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
@@ -59,7 +59,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 	private TwoColumnGrid myParentsGrid2;
 	private ListBox myServiceListBox;
 	private Long myServicePid;
-	private BaseGServiceVersion myServiceVersion;
+	private BaseDtoServiceVersion myServiceVersion;
 	private FlowPanel myTopPanel;
 	private Long myUncommittedSessionId;
 	private boolean myUpdating;
@@ -203,7 +203,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 		return myServicePid;
 	}
 
-	public BaseGServiceVersion getServiceVersion() {
+	public BaseDtoServiceVersion getServiceVersion() {
 		return myServiceVersion;
 	}
 
@@ -331,7 +331,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 		onResize();
 	}
 
-	protected void setServiceVersion(BaseGServiceVersion theResult) {
+	protected void setServiceVersion(BaseDtoServiceVersion theResult) {
 		myLoadingSpinner.hide();
 
 		myServiceVersion = theResult;

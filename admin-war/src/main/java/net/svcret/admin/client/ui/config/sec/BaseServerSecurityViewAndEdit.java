@@ -6,8 +6,8 @@ import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.BaseGAuthHost;
-import net.svcret.admin.shared.model.BaseGServerSecurity;
+import net.svcret.admin.shared.model.BaseDtoAuthHost;
+import net.svcret.admin.shared.model.BaseDtoServerSecurity;
 import net.svcret.admin.shared.model.GAuthenticationHostList;
 
 import com.google.gwt.event.dom.client.ChangeEvent;
@@ -17,7 +17,7 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Widget;
 
-public abstract class BaseServerSecurityViewAndEdit<T extends BaseGServerSecurity> implements IProvidesViewAndEdit<T> {
+public abstract class BaseServerSecurityViewAndEdit<T extends BaseDtoServerSecurity> implements IProvidesViewAndEdit<T> {
 
 	@Override
 	public Widget provideView(final int theRow, final T theObject) {
@@ -28,7 +28,7 @@ public abstract class BaseServerSecurityViewAndEdit<T extends BaseGServerSecurit
 		Model.getInstance().loadAuthenticationHosts(new IAsyncLoadCallback<GAuthenticationHostList>() {
 			@Override
 			public void onSuccess(GAuthenticationHostList theResult) {
-				BaseGAuthHost authHost = theResult.getAuthHostByPid(theObject.getAuthHostPid());
+				BaseDtoAuthHost authHost = theResult.getAuthHostByPid(theObject.getAuthHostPid());
 				if (authHost!=null) {
 					flowPanel.add(new Label(AdminPortal.MSGS.wsSecServerSecurity_UsesAuthenticationHost(authHost.getModuleId())));
 				}
@@ -66,7 +66,7 @@ public abstract class BaseServerSecurityViewAndEdit<T extends BaseGServerSecurit
 			@Override
 			public void onSuccess(final GAuthenticationHostList theResult) {
 				int index=0;
-				for (BaseGAuthHost next : theResult) {
+				for (BaseDtoAuthHost next : theResult) {
 					authHostList.addItem(next.getModuleId() + " (" + next.getModuleName() + ")");
 					if (theObject.getAuthHostPid()==next.getPid()) {
 						authHostList.setSelectedIndex(index);

@@ -3,7 +3,7 @@ package net.svcret.ejb.model.entity.jsonrpc;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -20,7 +20,7 @@ public class PersServiceVersionJsonRpc20 extends BasePersServiceVersion {
 	}
 
 	@Override
-	protected BaseGServiceVersion createDtoAndPopulateWithTypeSpecificEntries() {
+	protected BaseDtoServiceVersion createDtoAndPopulateWithTypeSpecificEntries() {
 		DtoServiceVersionJsonRpc20 retVal = new DtoServiceVersionJsonRpc20();
 		return retVal;
 	}

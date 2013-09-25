@@ -7,7 +7,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.naming.directory.DirContext;
 
-import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
+import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.IAuthorizationService.ILdapAuthorizationService;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.ISecurityService;

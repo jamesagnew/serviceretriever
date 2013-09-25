@@ -28,7 +28,7 @@ import javax.persistence.Version;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.ServerSecuredEnum;
 import net.svcret.admin.shared.model.StatusEnum;
@@ -430,7 +430,7 @@ public class PersService extends BasePersServiceCatalogItem {
 		this.populateDtoWithMonitorRules(retVal);
 
 		for (BasePersServiceVersion nextVersion : getVersions()) {
-			BaseGServiceVersion gVersion = nextVersion.toDto(theLoadVerStats, theRuntimeStatusQuerySvc, theStatuses, theLoadVerMethodStats, theLoadUrlStats);
+			BaseDtoServiceVersion gVersion = nextVersion.toDto(theLoadVerStats, theRuntimeStatusQuerySvc, theStatuses, theLoadVerMethodStats, theLoadUrlStats);
 			retVal.getVersionList().add(gVersion);
 		} // for service versions
 

@@ -19,7 +19,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import net.svcret.admin.shared.enm.MonitorRuleTypeEnum;
-import net.svcret.admin.shared.model.BaseGMonitorRule;
+import net.svcret.admin.shared.model.BaseDtoMonitorRule;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
 import net.svcret.admin.shared.model.GMonitorRulePassive;
@@ -125,8 +125,8 @@ public abstract class BasePersMonitorRule extends BasePersObject {
 		return retVal;
 	}
 
-	public BaseGMonitorRule toDao(boolean theLoadDetailedStatistics) {
-		BaseGMonitorRule retVal = null;
+	public BaseDtoMonitorRule toDao(boolean theLoadDetailedStatistics) {
+		BaseDtoMonitorRule retVal = null;
 		switch (this.getRuleType()) {
 		case PASSIVE: {
 			GMonitorRulePassive ruleDto = new GMonitorRulePassive();

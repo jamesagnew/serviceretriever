@@ -10,8 +10,8 @@ import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.PCellTable;
 import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.BaseGMonitorRule;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoMonitorRule;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
@@ -102,7 +102,7 @@ public class AlertGrid extends FlowPanel {
 			@Override
 			public SafeHtml getValue(GMonitorRuleFiring theObject) {
 				SafeHtmlBuilder b = new SafeHtmlBuilder();
-				BaseGMonitorRule rule = myRuleList.getRuleByPid(theObject.getRulePid());
+				BaseDtoMonitorRule rule = myRuleList.getRuleByPid(theObject.getRulePid());
 				if (rule!=null) {
 					b.appendHtmlConstant("<a href=\"#" + NavProcessor.getTokenEditMonitorRule(theObject.getRulePid()) + "\">");
 					b.appendEscaped(rule.getName());
@@ -232,7 +232,7 @@ public class AlertGrid extends FlowPanel {
 						theSafeHtmlBuilder.appendHtmlConstant(" (all versions)");
 					} else {
 						theSafeHtmlBuilder.appendHtmlConstant("<ul>");
-						for (BaseGServiceVersion nextSvcVer : nextSvc.getVersionList()) {
+						for (BaseDtoServiceVersion nextSvcVer : nextSvc.getVersionList()) {
 							theSafeHtmlBuilder.appendHtmlConstant("<li>");
 							theSafeHtmlBuilder.appendHtmlConstant("<a href=\"#" + NavProcessor.getTokenEditServiceVersion(nextSvcVer.getPid()) + "\">");
 							theSafeHtmlBuilder.appendEscaped(nextSvcVer.getId());

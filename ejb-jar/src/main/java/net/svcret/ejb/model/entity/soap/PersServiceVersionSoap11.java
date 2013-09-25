@@ -4,7 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -52,12 +52,12 @@ public class PersServiceVersionSoap11 extends BasePersServiceVersion {
 	}
 
 	@Override
-	protected void fromDto(BaseGServiceVersion theDto) {
+	protected void fromDto(BaseDtoServiceVersion theDto) {
 		setWsdlUrl(((DtoServiceVersionSoap11)theDto).getWsdlLocation());
 	}
 
 	@Override
-	protected BaseGServiceVersion createDtoAndPopulateWithTypeSpecificEntries() {
+	protected BaseDtoServiceVersion createDtoAndPopulateWithTypeSpecificEntries() {
 		DtoServiceVersionSoap11 retVal = new DtoServiceVersionSoap11();
 		retVal.setWsdlLocation(getWsdlUrl());
 		return retVal;

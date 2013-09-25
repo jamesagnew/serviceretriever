@@ -1,14 +1,14 @@
 package net.svcret.admin.client.ui.config.monitor;
 
 import net.svcret.admin.shared.enm.MonitorRuleTypeEnum;
-import net.svcret.admin.shared.model.BaseGMonitorRule;
+import net.svcret.admin.shared.model.BaseDtoMonitorRule;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.GMonitorRulePassive;
 
 public class AddMonitorRulePanel extends BaseMonitorRulePanel {
 
 	public AddMonitorRulePanel(MonitorRuleTypeEnum theRuleType) {
-		BaseGMonitorRule rule = null;
+		BaseDtoMonitorRule rule = null;
 		switch (theRuleType) {
 		case PASSIVE:
 			rule = new GMonitorRulePassive();

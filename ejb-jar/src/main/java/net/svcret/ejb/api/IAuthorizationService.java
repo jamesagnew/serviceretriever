@@ -1,6 +1,6 @@
 package net.svcret.ejb.api;
 
-import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
+import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.ejb.ejb.InMemoryUserCatalog;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;

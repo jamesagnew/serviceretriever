@@ -23,8 +23,8 @@ import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.enm.MonitorRuleTypeEnum;
-import net.svcret.admin.shared.model.BaseGMonitorRule;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoMonitorRule;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.GDomainList;
@@ -56,8 +56,8 @@ import com.google.gwt.view.client.ListDataProvider;
 public class MonitorRulesPanel extends FlowPanel {
 
 	private LoadingSpinner myConfigListLoadingSpinner;
-	private PCellTable<BaseGMonitorRule> myGrid;
-	private ListDataProvider<BaseGMonitorRule> myDataProvider;
+	private PCellTable<BaseDtoMonitorRule> myGrid;
+	private ListDataProvider<BaseDtoMonitorRule> myDataProvider;
 	private ListBox myAddTypeBox;
 	private GDomainList myDomainList;
 	private Map<Long, GMonitorRuleFiring> myRulePidToLatestMonitorRuleFiring;
@@ -103,7 +103,7 @@ public class MonitorRulesPanel extends FlowPanel {
 		myDataProvider.refresh();
 	}
 
-	private List<String> toAppliesTo(BaseGMonitorRule theNext) {
+	private List<String> toAppliesTo(BaseDtoMonitorRule theNext) {
 		ArrayList<String> retVal = new ArrayList<String>();
 		switch (theNext.getRuleType()) {
 		case PASSIVE: {
@@ -133,7 +133,7 @@ public class MonitorRulesPanel extends FlowPanel {
 
 			for (Long next : svcVerPids) {
 				GService svc = myDomainList.getServiceWithServiceVersion(next);
-				BaseGServiceVersion svcVer = svc.getVersionList().getVersionByPid(next);
+				BaseDtoServiceVersion svcVer = svc.getVersionList().getVersionByPid(next);
 				if (svc.allVersionPidsInThisServiceAreAmongThesePids(svcVerPids)) {
 					retVal.add(svc.getName() + " - All Versions");
 				} else {
@@ -150,7 +150,7 @@ public class MonitorRulesPanel extends FlowPanel {
 		return retVal;
 	}
 
-	private List<SafeHtml> toTypeDescriptions(BaseGMonitorRule theNext) {
+	private List<SafeHtml> toTypeDescriptions(BaseDtoMonitorRule theNext) {
 		ArrayList<SafeHtml> retVal = new ArrayList<SafeHtml>();
 
 		switch (theNext.getRuleType()) {
@@ -215,33 +215,33 @@ public class MonitorRulesPanel extends FlowPanel {
 		// myRulesGrid.addStyleName(CssConstants.PROPERTY_TABLE);
 		// contentPanel.add(myRulesGrid);
 
-		myGrid = new PCellTable<BaseGMonitorRule>();
+		myGrid = new PCellTable<BaseDtoMonitorRule>();
 		myGrid.setWidth("100%");
 		contentPanel.add(myGrid);
 
 		myGrid.setEmptyTableWidget(new Label("No rules defined"));
 
-		myDataProvider = new ListDataProvider<BaseGMonitorRule>();
+		myDataProvider = new ListDataProvider<BaseDtoMonitorRule>();
 		myDataProvider.addDataDisplay(myGrid);
 
-		ListHandler<BaseGMonitorRule> sortHandler = new ListHandler<BaseGMonitorRule>(myDataProvider.getList());
+		ListHandler<BaseDtoMonitorRule> sortHandler = new ListHandler<BaseDtoMonitorRule>(myDataProvider.getList());
 		myGrid.addColumnSortHandler(sortHandler);
 
 		// Edit
-		Column<BaseGMonitorRule, String> editColumn = new NullColumn<BaseGMonitorRule>(new PButtonCell(IMAGES.iconEdit(), MSGS.actions_Edit()));
+		Column<BaseDtoMonitorRule, String> editColumn = new NullColumn<BaseDtoMonitorRule>(new PButtonCell(IMAGES.iconEdit(), MSGS.actions_Edit()));
 		myGrid.addColumn(editColumn, "");
-		editColumn.setFieldUpdater(new FieldUpdater<BaseGMonitorRule, String>() {
+		editColumn.setFieldUpdater(new FieldUpdater<BaseDtoMonitorRule, String>() {
 			@Override
-			public void update(int theIndex, BaseGMonitorRule theObject, String theValue) {
+			public void update(int theIndex, BaseDtoMonitorRule theObject, String theValue) {
 				History.newItem(NavProcessor.getTokenEditMonitorRule(theObject.getPid()));
 			}
 		});
 		editColumn.setCellStyleNames(CssConstants.PCELLTABLE_ACTION_COLUMN);
 
 		// Active
-		Column<BaseGMonitorRule, SafeHtml> enabledColumn = new Column<BaseGMonitorRule, SafeHtml>(new SafeHtmlCell()) {
+		Column<BaseDtoMonitorRule, SafeHtml> enabledColumn = new Column<BaseDtoMonitorRule, SafeHtml>(new SafeHtmlCell()) {
 			@Override
-			public SafeHtml getValue(BaseGMonitorRule theObject) {
+			public SafeHtml getValue(BaseDtoMonitorRule theObject) {
 				if (theObject.isActive()) {
 					return SafeHtmlUtils.fromSafeConstant("Yes");
 				} else {
@@ -251,9 +251,9 @@ public class MonitorRulesPanel extends FlowPanel {
 		};
 		myGrid.addColumn(enabledColumn, "Enabled");
 		myGrid.getColumn(myGrid.getColumnCount() - 1).setSortable(true);
-		sortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<BaseGMonitorRule>() {
+		sortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<BaseDtoMonitorRule>() {
 			@Override
-			public int compare(BaseGMonitorRule theO1, BaseGMonitorRule theO2) {
+			public int compare(BaseDtoMonitorRule theO1, BaseDtoMonitorRule theO2) {
 				if ((theO1.isActive()) == (theO2.isActive())) {
 					return 0;
 				}
@@ -266,25 +266,25 @@ public class MonitorRulesPanel extends FlowPanel {
 		});
 
 		// Active
-		Column<BaseGMonitorRule, SafeHtml> typeColumn = new Column<BaseGMonitorRule, SafeHtml>(new SafeHtmlCell()) {
+		Column<BaseDtoMonitorRule, SafeHtml> typeColumn = new Column<BaseDtoMonitorRule, SafeHtml>(new SafeHtmlCell()) {
 			@Override
-			public SafeHtml getValue(BaseGMonitorRule theObject) {
+			public SafeHtml getValue(BaseDtoMonitorRule theObject) {
 				return SafeHtmlUtils.fromTrustedString(theObject.getRuleType().getFriendlyName());
 			}
 		};
 		myGrid.addColumn(typeColumn, "Type");
 		myGrid.getColumn(myGrid.getColumnCount() - 1).setSortable(true);
-		sortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<BaseGMonitorRule>() {
+		sortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<BaseDtoMonitorRule>() {
 			@Override
-			public int compare(BaseGMonitorRule theO1, BaseGMonitorRule theO2) {
+			public int compare(BaseDtoMonitorRule theO1, BaseDtoMonitorRule theO2) {
 				return theO1.getRuleType().ordinal()- theO2.getRuleType().ordinal();
 			}
 		});
 
 		// Criteria
-		Column<BaseGMonitorRule, SafeHtml> criteriaColumn = new Column<BaseGMonitorRule, SafeHtml>(new SafeHtmlCell()) {
+		Column<BaseDtoMonitorRule, SafeHtml> criteriaColumn = new Column<BaseDtoMonitorRule, SafeHtml>(new SafeHtmlCell()) {
 			@Override
-			public SafeHtml getValue(BaseGMonitorRule theObject) {
+			public SafeHtml getValue(BaseDtoMonitorRule theObject) {
 				List<SafeHtml> typeDescriptions = toTypeDescriptions(theObject);
 				if (typeDescriptions.size() == 0) {
 					return SafeHtmlUtils.fromSafeConstant("No triggers defined");
@@ -306,25 +306,25 @@ public class MonitorRulesPanel extends FlowPanel {
 		myGrid.addColumn(criteriaColumn, "Criteria");
 
 		// Rule Name
-		Column<BaseGMonitorRule, SafeHtml> ruleNameColumn = new Column<BaseGMonitorRule, SafeHtml>(new SafeHtmlCell()) {
+		Column<BaseDtoMonitorRule, SafeHtml> ruleNameColumn = new Column<BaseDtoMonitorRule, SafeHtml>(new SafeHtmlCell()) {
 			@Override
-			public SafeHtml getValue(BaseGMonitorRule theObject) {
+			public SafeHtml getValue(BaseDtoMonitorRule theObject) {
 				return SafeHtmlUtils.fromString(theObject.getName());
 			}
 		};
 		myGrid.addColumn(ruleNameColumn, "Name");
 		myGrid.getColumn(myGrid.getColumnCount() - 1).setSortable(true);
-		sortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<BaseGMonitorRule>() {
+		sortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<BaseDtoMonitorRule>() {
 			@Override
-			public int compare(BaseGMonitorRule theO1, BaseGMonitorRule theO2) {
+			public int compare(BaseDtoMonitorRule theO1, BaseDtoMonitorRule theO2) {
 				return StringUtil.compare(theO1.getName(), theO2.getName());
 			}
 		});
 		
 		// Applies To
-		Column<BaseGMonitorRule, SafeHtml> appliesToColumn = new Column<BaseGMonitorRule, SafeHtml>(new SafeHtmlCell()) {
+		Column<BaseDtoMonitorRule, SafeHtml> appliesToColumn = new Column<BaseDtoMonitorRule, SafeHtml>(new SafeHtmlCell()) {
 			@Override
-			public SafeHtml getValue(BaseGMonitorRule theObject) {
+			public SafeHtml getValue(BaseDtoMonitorRule theObject) {
 				List<String> appliesTos = toAppliesTo(theObject);
 				if (appliesTos.size() == 0) {
 					return SafeHtmlUtils.fromSafeConstant("No triggers defined");
@@ -346,9 +346,9 @@ public class MonitorRulesPanel extends FlowPanel {
 		myGrid.addColumn(appliesToColumn, "Applies To");
 
 		// Current Status
-		Column<BaseGMonitorRule, SafeHtml> currentStatusColumn = new Column<BaseGMonitorRule, SafeHtml>(new SafeHtmlCell()) {
+		Column<BaseDtoMonitorRule, SafeHtml> currentStatusColumn = new Column<BaseDtoMonitorRule, SafeHtml>(new SafeHtmlCell()) {
 			@Override
-			public SafeHtml getValue(BaseGMonitorRule theObject) {
+			public SafeHtml getValue(BaseDtoMonitorRule theObject) {
 				GMonitorRuleFiring latestFiring = myRulePidToLatestMonitorRuleFiring.get(theObject.getPid());
 				if (latestFiring == null) {
 					return SafeHtmlUtils.fromSafeConstant("Ok");
@@ -364,9 +364,9 @@ public class MonitorRulesPanel extends FlowPanel {
 		};
 		myGrid.addColumn(currentStatusColumn, "Current Status");
 		myGrid.getColumn(myGrid.getColumnCount() - 1).setSortable(true);
-		sortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<BaseGMonitorRule>() {
+		sortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<BaseDtoMonitorRule>() {
 			@Override
-			public int compare(BaseGMonitorRule theO1, BaseGMonitorRule theO2) {
+			public int compare(BaseDtoMonitorRule theO1, BaseDtoMonitorRule theO2) {
 				GMonitorRuleFiring firing1 = myRulePidToLatestMonitorRuleFiring.get(theO1.getPid());
 				GMonitorRuleFiring firing2 = myRulePidToLatestMonitorRuleFiring.get(theO2.getPid());
 				if (firing1==null&&firing2==null) {

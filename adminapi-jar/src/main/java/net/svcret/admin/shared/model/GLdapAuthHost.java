@@ -1,7 +1,9 @@
 package net.svcret.admin.shared.model;
 
+import net.svcret.admin.shared.enm.AuthorizationHostTypeEnum;
 
-public class GLdapAuthHost extends BaseGAuthHost {
+
+public class GLdapAuthHost extends BaseDtoAuthHost {
 
 	private static final long serialVersionUID = 1L;
 
@@ -66,7 +68,7 @@ public class GLdapAuthHost extends BaseGAuthHost {
 	}
 
 	@Override
-	public void merge(BaseGAuthHost theObject) {
+	public void merge(BaseDtoAuthHost theObject) {
 		super.merge(theObject);
 
 		GLdapAuthHost obj = (GLdapAuthHost) theObject;

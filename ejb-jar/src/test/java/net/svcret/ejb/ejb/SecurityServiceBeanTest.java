@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
-import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.IAuthorizationService.ILocalDatabaseAuthorizationService;
 import net.svcret.ejb.api.IAuthorizationService.UserOrFailure;
 import net.svcret.ejb.api.ICredentialGrabber;

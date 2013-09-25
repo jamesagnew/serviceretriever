@@ -5,7 +5,7 @@ import java.util.Date;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 
-public class DtoMonitorRuleActiveTest extends BaseGObject {
+public class DtoMonitorRuleActiveTest extends BaseDtoObject {
 
 	private static final long serialVersionUID = 1L;
 

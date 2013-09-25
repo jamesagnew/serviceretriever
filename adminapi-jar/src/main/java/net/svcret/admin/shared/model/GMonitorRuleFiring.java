@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class GMonitorRuleFiring extends BaseGObject {
+public class GMonitorRuleFiring extends BaseDtoObject {
 
 	private static final long serialVersionUID = 1L;
 
@@ -33,7 +33,7 @@ public class GMonitorRuleFiring extends BaseGObject {
 	}
 
 	@Override
-	public void merge(BaseGObject theObject) {
+	public void merge(BaseDtoObject theObject) {
 		throw new UnsupportedOperationException();
 	}
 

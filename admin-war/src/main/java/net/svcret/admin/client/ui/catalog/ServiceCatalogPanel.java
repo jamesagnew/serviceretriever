@@ -4,7 +4,7 @@ import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
 import net.svcret.admin.shared.model.DtoServiceVersionVirtual;
 import net.svcret.admin.shared.model.GConfig;
@@ -86,7 +86,7 @@ public class ServiceCatalogPanel extends FlowPanel {
 		
 		for (GDomain nextDomain : theResult) {
 			for (GService nextService : nextDomain.getServiceList()) {
-				for (BaseGServiceVersion nextVersion : nextService.getVersionList()) {
+				for (BaseDtoServiceVersion nextVersion : nextService.getVersionList()) {
 					
 					int row = myGrid.getRowCount();
 					myGrid.setText(row, COL_DOMAIN, nextDomain.getName());

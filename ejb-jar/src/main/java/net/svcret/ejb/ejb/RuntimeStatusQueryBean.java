@@ -17,7 +17,7 @@ import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 
-import net.svcret.admin.shared.model.BaseGDashboardObject;
+import net.svcret.admin.shared.model.BaseDtoDashboardObject;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatus;
@@ -496,7 +496,7 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 			return myFirstDate;
 		}
 
-		public void populateDto(BaseGDashboardObject theObject) {
+		public void populateDto(BaseDtoDashboardObject theObject) {
 			theObject.setStatistics60MinuteFirstDate(myFirstDate);
 			theObject.setTransactions60mins(AdminServiceBean.toArray(mySuccessCounts));
 			theObject.setTransactionsFault60mins(AdminServiceBean.toArray(myFaultCounts));

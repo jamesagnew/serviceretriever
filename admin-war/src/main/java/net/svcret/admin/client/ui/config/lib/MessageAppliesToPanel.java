@@ -5,7 +5,7 @@ import static net.svcret.admin.client.AdminPortal.*;
 import com.google.gwt.safehtml.shared.SafeHtml;
 
 import net.svcret.admin.client.ui.config.auth.DomainTreePanel;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
@@ -23,12 +23,12 @@ public class MessageAppliesToPanel extends DomainTreePanel {
 		setModel(theDomainList, new ITreeStatusModel() {
 
 			@Override
-			public void setMethodChecked(GDomain theDomain, GService theService, BaseGServiceVersion theSvcVer, GServiceMethod theMethod, Boolean theValue) {
+			public void setMethodChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod, Boolean theValue) {
 				throw new UnsupportedOperationException();
 			}
 
 			@Override
-			public void setEntireServiceVersionChecked(GDomain theDomain, GService theService, BaseGServiceVersion theServiceVersion, boolean theValue) {
+			public void setEntireServiceVersionChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theServiceVersion, boolean theValue) {
 				if (theValue) {
 					theMessage.getAppliesToServiceVersionPids().add(theServiceVersion.getPid());
 				} else {
@@ -51,12 +51,12 @@ public class MessageAppliesToPanel extends DomainTreePanel {
 			}
 
 			@Override
-			public boolean isMethodChecked(GDomain theDomain, GService theService, BaseGServiceVersion theSvcVer, GServiceMethod theMethod) {
+			public boolean isMethodChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod) {
 				throw new UnsupportedOperationException();
 			}
 
 			@Override
-			public boolean isEntireServiceVersionChecked(GDomain theDomain, GService theService, BaseGServiceVersion theServiceVersion) {
+			public boolean isEntireServiceVersionChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theServiceVersion) {
 				return theMessage.getAppliesToServiceVersionPids().contains(theServiceVersion.getPid());
 			}
 

@@ -39,7 +39,7 @@ public class GService extends BaseDtoServiceCatalogItem {
 	}
 
 	@Override
-	public void merge(BaseGObject theObject) {
+	public void merge(BaseDtoObject theObject) {
 		super.merge(theObject);
 
 		GService obj = (GService)theObject;
@@ -66,7 +66,7 @@ public class GService extends BaseDtoServiceCatalogItem {
 
 	private void populateSvcVerPids() {
 		if (myServiceVersionPids.isEmpty()) {
-			for (BaseGServiceVersion next : getVersionList()) {
+			for (BaseDtoServiceVersion next : getVersionList()) {
 				myServiceVersionPids.add(next.getPid());
 			}
 		}
@@ -84,7 +84,7 @@ public class GService extends BaseDtoServiceCatalogItem {
 
 	public Collection<Long> getAllServiceVersionPids() {
 		HashSet<Long> retVal = new HashSet<Long>();
-		for (BaseGServiceVersion next : getVersionList()) {
+		for (BaseDtoServiceVersion next : getVersionList()) {
 			retVal.add(next.getPid());
 		}
 		return retVal;

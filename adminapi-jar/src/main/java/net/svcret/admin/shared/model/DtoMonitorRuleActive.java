@@ -10,7 +10,7 @@ import net.svcret.admin.shared.util.XmlConstants;
 
 @XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="MonitorRuleActive")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class DtoMonitorRuleActive extends BaseGMonitorRule {
+public class DtoMonitorRuleActive extends BaseDtoMonitorRule {
 
 	private static final long serialVersionUID = 1L;
 

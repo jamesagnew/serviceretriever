@@ -1,6 +1,15 @@
 package net.svcret.admin.shared.model;
 
-public class GServiceVersionList extends BaseDtoList<BaseGServiceVersion> {
+import java.util.List;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+
+import net.svcret.admin.shared.util.BaseGDashboardObjectComparator;
+
+@XmlAccessorType(XmlAccessType.NONE)
+public class GServiceVersionList extends BaseDtoList<BaseDtoServiceVersion> {
 
 	private static final long serialVersionUID = 1L;
 
@@ -8,8 +17,14 @@ public class GServiceVersionList extends BaseDtoList<BaseGServiceVersion> {
 		setComparator(new BaseGDashboardObjectComparator());
 	}
 
-	public BaseGServiceVersion getVersionByPid(long thePid) {
-		for (BaseGServiceVersion next : this) {
+	@XmlElement(name="Version")
+	@Override
+	public List<BaseDtoServiceVersion> getListForJaxb() {
+		return super.getListForJaxb();
+	}
+
+	public BaseDtoServiceVersion getVersionByPid(long thePid) {
+		for (BaseDtoServiceVersion next : this) {
 			if  (next.getPid() == thePid) {
 				return next;
 			}
@@ -17,7 +32,7 @@ public class GServiceVersionList extends BaseDtoList<BaseGServiceVersion> {
 		return null;
 	}
 
-	public BaseGServiceVersion getFirstServiceVersion() {
+	public BaseDtoServiceVersion getFirstServiceVersion() {
 		if (size() >0) {
 			return get(0);
 		}

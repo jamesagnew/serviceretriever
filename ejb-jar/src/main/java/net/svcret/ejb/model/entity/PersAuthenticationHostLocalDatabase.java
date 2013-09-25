@@ -3,7 +3,7 @@ package net.svcret.ejb.model.entity;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
-import net.svcret.admin.shared.model.AuthorizationHostTypeEnum;
+import net.svcret.admin.shared.enm.AuthorizationHostTypeEnum;
 
 @Entity
 @DiscriminatorValue("LOCAL_DB")

@@ -19,8 +19,8 @@ import net.svcret.admin.client.ui.dash.model.IDashModel;
 import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.BaseGDashboardObject;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoDashboardObject;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
@@ -200,7 +200,7 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 
 							if (nextService.isExpandedOnDashboard()) {
 
-								for (BaseGServiceVersion nextServiceVersion : nextService.getVersionList()) {
+								for (BaseDtoServiceVersion nextServiceVersion : nextService.getVersionList()) {
 									if (!nextServiceVersion.isStatsInitialized()) {
 										addSpinnerToList(newUiList);
 										haveStatsToLoad = true;
@@ -240,7 +240,7 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 		}
 	}
 
-	private boolean addServiceVersionChildren(ArrayList<IDashModel> newUiList, boolean haveStatsToLoad, BaseGServiceVersion nextServiceVersion) {
+	private boolean addServiceVersionChildren(ArrayList<IDashModel> newUiList, boolean haveStatsToLoad, BaseDtoServiceVersion nextServiceVersion) {
 		for (GServiceMethod nextMethod : nextServiceVersion.getMethodList()) {
 			if (!nextMethod.isStatsInitialized()) {
 				addSpinnerToList(newUiList);
@@ -388,9 +388,9 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 			sinkEvents(Event.ONMOUSEOVER | Event.ONMOUSEOUT);
 		}
 
-		private List<List<IProvidesTooltip<BaseGDashboardObject>>> myTooltipProviders = new ArrayList<List<IProvidesTooltip<BaseGDashboardObject>>>();
+		private List<List<IProvidesTooltip<BaseDtoDashboardObject>>> myTooltipProviders = new ArrayList<List<IProvidesTooltip<BaseDtoDashboardObject>>>();
 
-		public void setTooltipProvider(int theRow, int theCol, IProvidesTooltip<BaseGDashboardObject> theTooltipProvider) {
+		public void setTooltipProvider(int theRow, int theCol, IProvidesTooltip<BaseDtoDashboardObject> theTooltipProvider) {
 			ensureTooltipRow(theRow);
 			ensureTooltipCol(theRow, theCol);
 			myTooltipProviders.get(theRow).set(theCol, theTooltipProvider);
@@ -411,7 +411,7 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 
 		private void ensureTooltipRow(int theRow) {
 			while (myTooltipProviders.size() <= theRow) {
-				myTooltipProviders.add(new ArrayList< IProvidesTooltip<BaseGDashboardObject>>());
+				myTooltipProviders.add(new ArrayList< IProvidesTooltip<BaseDtoDashboardObject>>());
 			}
 		}
 
@@ -448,9 +448,9 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 				}
 
 				if (myTooltipProviders.size() > rowStr) {
-					List< IProvidesTooltip<BaseGDashboardObject>> cols = myTooltipProviders.get(rowStr);
+					List< IProvidesTooltip<BaseDtoDashboardObject>> cols = myTooltipProviders.get(rowStr);
 					if (cols.size() > colStr) {
-						 IProvidesTooltip<BaseGDashboardObject> col = cols.get(colStr);
+						 IProvidesTooltip<BaseDtoDashboardObject> col = cols.get(colStr);
 						if (col != null) {
 							int index = rowStr-1;
 							IDashModel dashModel = myUiList.get(index);

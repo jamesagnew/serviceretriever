@@ -11,7 +11,7 @@ import net.svcret.admin.client.ui.components.PCellTable;
 import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
@@ -111,7 +111,7 @@ public class StickySessionListPanel extends FlowPanel {
 			@Override
 			public SafeHtml getValue(DtoStickySessionUrlBinding theObject) {
 				GService service = theDomainList.getServiceWithServiceVersion(theObject.getServiceVersionPid());
-				BaseGServiceVersion svcVer = theDomainList.getServiceVersionByPid(theObject.getServiceVersionPid());
+				BaseDtoServiceVersion svcVer = theDomainList.getServiceVersionByPid(theObject.getServiceVersionPid());
 				if (service == null || svcVer == null) {
 					return SafeHtmlUtils.fromTrustedString("Unknown");
 				}
@@ -164,7 +164,7 @@ public class StickySessionListPanel extends FlowPanel {
 
 			private String toString(DtoStickySessionUrlBinding theObject) {
 				GService service = theDomainList.getServiceWithServiceVersion(theObject.getServiceVersionPid());
-				BaseGServiceVersion svcVer = theDomainList.getServiceVersionByPid(theObject.getServiceVersionPid());
+				BaseDtoServiceVersion svcVer = theDomainList.getServiceVersionByPid(theObject.getServiceVersionPid());
 				if (service == null || svcVer == null) {
 					return "Unknown";
 				}

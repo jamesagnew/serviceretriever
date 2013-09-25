@@ -1,14 +1,26 @@
 package net.svcret.admin.shared.model;
 
-public abstract class BaseGAuthHost extends BaseDtoKeepsRecentMessages {
+import javax.xml.bind.annotation.XmlElement;
+
+import net.svcret.admin.shared.enm.AuthorizationHostTypeEnum;
+
+public abstract class BaseDtoAuthHost extends BaseDtoKeepsRecentMessages {
 
 	private static final long serialVersionUID = 1L;
 
+	@XmlElement(name="config_AutoCreateAuthorizedUsers")
 	private boolean myAutoCreateAuthorizedUsers;
+	
+	@XmlElement(name="config_CacheSuccessesForMillis")
 	private Integer myCacheSuccessesForMillis;
+	
+	@XmlElement(name="config_ModuleId")
 	private String myModuleId;
+	
+	@XmlElement(name="config_ModuleName")
 	private String myModuleName;
 
+	@XmlElement(name="runtime_SupportsPasswordChange")
 	private boolean mySupportsPasswordChange;
 	
 	/**
@@ -45,7 +57,7 @@ public abstract class BaseGAuthHost extends BaseDtoKeepsRecentMessages {
 		return mySupportsPasswordChange;
 	}
 
-	public void merge(BaseGAuthHost theObject) {
+	public void merge(BaseDtoAuthHost theObject) {
 		setPid(theObject.getPid());
 		setAutoCreateAuthorizedUsers(theObject.isAutoCreateAuthorizedUsers());
 		setCacheSuccessesForMillis(theObject.getCacheSuccessesForMillis());

@@ -1,4 +1,4 @@
-package net.svcret.admin.shared.model;
+package net.svcret.admin.shared.enm;
 
 public enum AuthorizationHostTypeEnum {
 

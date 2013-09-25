@@ -1,13 +1,16 @@
-package net.svcret.admin.shared.model;
+package net.svcret.admin.shared;
 
 import java.io.Serializable;
+
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
+import net.svcret.admin.shared.model.GDomain;
 
 public class AddServiceVersionResponse implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
 	private GDomain myNewDomain;
-	private BaseGServiceVersion myNewServiceVersion;
+	private BaseDtoServiceVersion myNewServiceVersion;
 
 	/**
 	 * @return the newDomain
@@ -27,14 +30,14 @@ public class AddServiceVersionResponse implements Serializable {
 	/**
 	 * @return the newServiceVersion
 	 */
-	public BaseGServiceVersion getNewServiceVersion() {
+	public BaseDtoServiceVersion getNewServiceVersion() {
 		return myNewServiceVersion;
 	}
 
 	/**
 	 * @param theNewServiceVersion the newServiceVersion to set
 	 */
-	public void setNewServiceVersion(BaseGServiceVersion theNewServiceVersion) {
+	public void setNewServiceVersion(BaseDtoServiceVersion theNewServiceVersion) {
 		myNewServiceVersion = theNewServiceVersion;
 	}
 }

@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class GUser extends BaseGDashboardObject implements IHasPermissions {
+public class GUser extends BaseDtoDashboardObject implements IHasPermissions {
 
 	private static final long serialVersionUID = 1L;
 
@@ -159,7 +159,7 @@ public class GUser extends BaseGDashboardObject implements IHasPermissions {
 	}
 
 	@Override
-	public void merge(BaseGObject theObject) {
+	public void merge(BaseDtoObject theObject) {
 		super.merge(theObject);
 
 		GUser obj = (GUser) theObject;

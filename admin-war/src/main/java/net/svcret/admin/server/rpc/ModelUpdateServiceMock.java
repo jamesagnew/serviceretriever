@@ -13,6 +13,7 @@ import java.util.UUID;
 import net.svcret.admin.client.rpc.HttpClientConfigService;
 import net.svcret.admin.client.rpc.ModelUpdateService;
 import net.svcret.admin.server.rpc.HttpClientConfigServiceImpl.SessionUploadedKeystore;
+import net.svcret.admin.shared.AddServiceVersionResponse;
 import net.svcret.admin.shared.ServiceFailureException;
 import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 import net.svcret.admin.shared.enm.NodeStatusEnum;
@@ -20,12 +21,11 @@ import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
-import net.svcret.admin.shared.model.AddServiceVersionResponse;
 import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
-import net.svcret.admin.shared.model.BaseGAuthHost;
-import net.svcret.admin.shared.model.BaseGDashboardObject;
-import net.svcret.admin.shared.model.BaseGMonitorRule;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoAuthHost;
+import net.svcret.admin.shared.model.BaseDtoDashboardObject;
+import net.svcret.admin.shared.model.BaseDtoMonitorRule;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoKeystoreAnalysis;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
@@ -357,7 +357,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	}
 
 	@Override
-	public AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseGServiceVersion theVersion) {
+	public AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseDtoServiceVersion theVersion) {
 		GDomain dom;
 		if (theExistingDomainPid != null) {
 			dom = myDomainList.getDomainByPid(theExistingDomainPid);
@@ -388,7 +388,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		}
 
 		if (theVersion.getPidOrNull() != null) {
-			BaseGServiceVersion ver = myDomainList.getServiceVersionByPid(theVersion.getPid());
+			BaseDtoServiceVersion ver = myDomainList.getServiceVersionByPid(theVersion.getPid());
 			ver.merge(theVersion);
 			theVersion = ver;
 
@@ -528,7 +528,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 				if (theRequest.getServicesToLoadStats().contains(nextService.getPid())) {
 					populateRandom(nextService);
 				}
-				for (BaseGServiceVersion nextVersion : nextService.getVersionList()) {
+				for (BaseDtoServiceVersion nextVersion : nextService.getVersionList()) {
 					if (theRequest.getVersionsToLoadStats().contains(nextVersion.getPid())) {
 						populateRandom(nextVersion);
 					}
@@ -619,7 +619,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	public GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) {
 		for (GDomain nextDomain : myDomainList) {
 			for (GService nextService : nextDomain.getServiceList()) {
-				for (BaseGServiceVersion nextVersion : nextService.getVersionList()) {
+				for (BaseDtoServiceVersion nextVersion : nextService.getVersionList()) {
 					if (nextVersion.getPid() == theVersionPid) {
 						GServiceVersionDetailedStats retVal = new GServiceVersionDetailedStats();
 						Map<Long, int[]> fail = new HashMap<Long, int[]>();
@@ -645,15 +645,15 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	}
 
 	@Override
-	public BaseGServiceVersion loadServiceVersionIntoSession(long theServiceVersionPid) throws ServiceFailureException {
-		BaseGServiceVersion ver = myDomainList.getServiceVersionByPid(theServiceVersionPid);
+	public BaseDtoServiceVersion loadServiceVersionIntoSession(long theServiceVersionPid) throws ServiceFailureException {
+		BaseDtoServiceVersion ver = myDomainList.getServiceVersionByPid(theServiceVersionPid);
 		return ver;
 	}
 
 	@Override
 	public UserAndAuthHost loadUser(long thePid, boolean theLoadStats) {
 		GUser user = myUserList.getUserByPid(thePid);
-		BaseGAuthHost authHost = myAuthHostList.getAuthHostByPid(user.getAuthHostPid());
+		BaseDtoAuthHost authHost = myAuthHostList.getAuthHostByPid(user.getAuthHostPid());
 
 		return new UserAndAuthHost(user, authHost);
 	}
@@ -702,7 +702,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		return retVal;
 	}
 
-	private void populateRandom(BaseGDashboardObject obj) {
+	private void populateRandom(BaseDtoDashboardObject obj) {
 		obj.setStatsInitialized(new Date());
 		obj.setStatus(randomStatus());
 		obj.setTransactions60mins(random60mins());
@@ -780,7 +780,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	public GDomainList removeServiceVersion(long thePid) {
 		for (GDomain nextDomain : myDomainList) {
 			for (GService nextSvc : nextDomain.getServiceList()) {
-				BaseGServiceVersion ver = nextSvc.getVersionList().getVersionByPid(thePid);
+				BaseDtoServiceVersion ver = nextSvc.getVersionList().getVersionByPid(thePid);
 				if (ver != null) {
 					nextSvc.getVersionList().remove(ver);
 				}
@@ -796,7 +796,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	}
 
 	@Override
-	public GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) {
+	public GAuthenticationHostList saveAuthenticationHost(BaseDtoAuthHost theAuthHost) {
 		if (theAuthHost.getPid() <= 0) {
 			theAuthHost.setPid(ourNextPid++);
 			myAuthHostList.add(theAuthHost);
@@ -854,7 +854,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	}
 
 	@Override
-	public void saveServiceVersionToSession(BaseGServiceVersion theServiceVersion) {
+	public void saveServiceVersionToSession(BaseDtoServiceVersion theServiceVersion) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -871,7 +871,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	}
 
 	@Override
-	public GMonitorRuleList saveMonitorRule(BaseGMonitorRule theRule) {
+	public GMonitorRuleList saveMonitorRule(BaseDtoMonitorRule theRule) {
 		if (theRule.getPidOrNull() != null) {
 			myMonitorRuleList.remove(myMonitorRuleList.getRuleByPid(theRule.getPidOrNull()));
 			myMonitorRuleList.add(theRule);
@@ -1011,7 +1011,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	public GServiceVersionUrl resetCircuitBreakerForServiceVersionUrl(long theUrlPid) {
 		for (GDomain nextDomain : myDomainList) {
 			for (GService nextSvc : nextDomain.getServiceList()) {
-				for (BaseGServiceVersion nextVer : nextSvc.getVersionList()) {
+				for (BaseDtoServiceVersion nextVer : nextSvc.getVersionList()) {
 					for (GServiceVersionUrl nextUrl : nextVer.getUrlList()) {
 						if (nextUrl.getPid() == theUrlPid) {
 							nextUrl.setNextCircuitBreakerReset(new Date(System.currentTimeMillis() + 10000));
@@ -1031,7 +1031,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		retVal.get(0).setCreated(new Date(System.currentTimeMillis() - 100000));
 		retVal.get(0).setLastAccessed(new Date(System.currentTimeMillis() - 600000));
 
-		BaseGServiceVersion svcVer = myDomainList.get(0).getServiceList().get(0).getVersionList().get(0);
+		BaseDtoServiceVersion svcVer = myDomainList.get(0).getServiceList().get(0).getVersionList().get(0);
 		retVal.get(0).setServiceVersionPid(svcVer.getPidOrNull());
 		retVal.get(0).setUrlPid(svcVer.getUrlList().get(0).getPidOrNull());
 		retVal.get(0).setSessionId(UUID.randomUUID().toString());
@@ -1040,7 +1040,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	}
 
 	@Override
-	public BaseGMonitorRule loadMonitorRule(long theRulePid) {
+	public BaseDtoMonitorRule loadMonitorRule(long theRulePid) {
 		return myMonitorRuleList.getRuleByPid(theRulePid);
 	}
 
@@ -1056,7 +1056,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	}
 
 	@Override
-	public BaseGServiceVersion cloneServiceVersion(long thePidToClone) {
+	public BaseDtoServiceVersion cloneServiceVersion(long thePidToClone) {
 		throw new UnsupportedOperationException();
 	}
 

@@ -2,7 +2,7 @@ package net.svcret.admin.client.ui.config.lib;
 
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.HierarchyEnum;
@@ -20,14 +20,14 @@ public class CreateNewLibraryMessagePanel extends BaseEditLibraryMessagePanel {
 			public void onSuccess(GDomainList theDomainList) {
 				DtoLibraryMessage message = new DtoLibraryMessage();
 				if (theType == null) {
-					BaseGServiceVersion svcVer = theDomainList.getFirstServiceVersion();
+					BaseDtoServiceVersion svcVer = theDomainList.getFirstServiceVersion();
 					if (svcVer != null) {
 						message.setAppliesToServiceVersionPids(svcVer.getPid());
 					}
 				} else {
 					switch (theType) {
 					case DOMAIN:
-						BaseGServiceVersion firstServiceVersion = theDomainList.getDomainByPid(thePid).getServiceList().getFirstServiceVersion();
+						BaseDtoServiceVersion firstServiceVersion = theDomainList.getDomainByPid(thePid).getServiceList().getFirstServiceVersion();
 						if (firstServiceVersion != null) {
 							message.setAppliesToServiceVersionPids(firstServiceVersion.getPid());
 						}

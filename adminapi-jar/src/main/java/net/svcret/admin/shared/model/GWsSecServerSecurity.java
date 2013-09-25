@@ -1,6 +1,6 @@
 package net.svcret.admin.shared.model;
 
-public class GWsSecServerSecurity extends BaseGServerSecurity {
+public class GWsSecServerSecurity extends BaseDtoServerSecurity {
 
 	private static final long serialVersionUID = 1L;
 

@@ -4,7 +4,7 @@ import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.Sparkline;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
 
@@ -19,15 +19,15 @@ public class ServiceVersionIndividualStatusPanel extends FlowPanel {
 	private static final int COL_FAULT = 2;
 	private static final int COL_SUCCESS = 1;
 	private static final int COL_METHOD = 0;
-	private BaseGServiceVersion myServiceVersion;
+	private BaseDtoServiceVersion myServiceVersion;
 
 	public ServiceVersionIndividualStatusPanel(long theServiceVersionPid) {
 		addStyleName(CssConstants.CONTENT_INNER_PANEL);
 		
-		Model.getInstance().loadServiceVersion(theServiceVersionPid, true, new IAsyncLoadCallback<BaseGServiceVersion>() {
+		Model.getInstance().loadServiceVersion(theServiceVersionPid, true, new IAsyncLoadCallback<BaseDtoServiceVersion>() {
 
 			@Override
-			public void onSuccess(BaseGServiceVersion theResult) {
+			public void onSuccess(BaseDtoServiceVersion theResult) {
 				myServiceVersion = theResult;
 				initTable();
 			}

@@ -15,7 +15,7 @@ import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.HtmlLabel;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
@@ -23,7 +23,7 @@ import net.svcret.admin.shared.util.StringUtil;
 
 public class ServiceVersionUrlGrid extends BaseUrlGrid {
 
-	private BaseGServiceVersion myServiceVersion;
+	private BaseDtoServiceVersion myServiceVersion;
 
 	public ServiceVersionUrlGrid() {
 		init();
@@ -72,11 +72,11 @@ public class ServiceVersionUrlGrid extends BaseUrlGrid {
 		});
 	}
 
-	public BaseGServiceVersion getServiceVersion() {
+	public BaseDtoServiceVersion getServiceVersion() {
 		return myServiceVersion;
 	}
 
-	public void setServiceVersion(BaseGServiceVersion theServiceVersion) {
+	public void setServiceVersion(BaseDtoServiceVersion theServiceVersion) {
 		myServiceVersion = theServiceVersion;
 		updateUrlPanel();
 	}

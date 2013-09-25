@@ -12,7 +12,7 @@ import net.svcret.admin.shared.util.XmlConstants;
 @XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="ServiceVersionVirtual")
 @XmlRootElement(namespace=XmlConstants.DTO_NAMESPACE, name="ServiceVersionVirtual")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class DtoServiceVersionVirtual extends BaseGServiceVersion {
+public class DtoServiceVersionVirtual extends BaseDtoServiceVersion {
 
 	private static final long serialVersionUID = 1L;
 

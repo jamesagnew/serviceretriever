@@ -6,9 +6,9 @@ import java.util.List;
 
 import javax.ejb.Local;
 
-import net.svcret.admin.shared.model.BaseGAuthHost;
-import net.svcret.admin.shared.model.BaseGMonitorRule;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoAuthHost;
+import net.svcret.admin.shared.model.BaseDtoMonitorRule;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
@@ -43,7 +43,7 @@ public interface IAdminServiceLocal {
 
 	DtoMonitorRuleActiveCheck executeMonitorRuleActiveCheck(DtoMonitorRuleActiveCheck theCheck) throws ProcessingException;
 
-	BaseGMonitorRule loadMonitorRuleAndDetailedSatistics(long theRulePid);
+	BaseDtoMonitorRule loadMonitorRuleAndDetailedSatistics(long theRulePid);
 
 	GDomain addDomain(GDomain theDomain) throws ProcessingException, UnexpectedFailureException;
 
@@ -77,7 +77,7 @@ public interface IAdminServiceLocal {
 
 	Collection<GMonitorRuleFiring> loadAllActiveRuleFirings() throws ProcessingException;
 
-	BaseGAuthHost loadAuthenticationHost(long thePid) throws ProcessingException;
+	BaseDtoAuthHost loadAuthenticationHost(long thePid) throws ProcessingException;
 
 	GConfig loadConfig() throws UnexpectedFailureException;
 
@@ -111,7 +111,7 @@ public interface IAdminServiceLocal {
 
 	GServiceVersionUrl resetCircuitBreaker(long theUrlPid) throws  UnexpectedFailureException;
 
-	GAuthenticationHostList saveAuthenticationHost(BaseGAuthHost theAuthHost) throws ProcessingException;
+	GAuthenticationHostList saveAuthenticationHost(BaseDtoAuthHost theAuthHost) throws ProcessingException;
 
 	GConfig saveConfig(GConfig theConfig) throws UnexpectedFailureException;
 
@@ -122,11 +122,11 @@ public interface IAdminServiceLocal {
 
 	void saveLibraryMessage(DtoLibraryMessage theMessage) throws ProcessingException;
 
-	void saveMonitorRule(BaseGMonitorRule theRule) throws UnexpectedFailureException, ProcessingException;
+	void saveMonitorRule(BaseDtoMonitorRule theRule) throws UnexpectedFailureException, ProcessingException;
 
 	GDomainList saveService(GService theService) throws ProcessingException, UnexpectedFailureException;
 
-	<T extends BaseGServiceVersion> T saveServiceVersion(long theDomain, long theService, T theVersion, List<GResource> theResources) throws ProcessingException, UnexpectedFailureException;
+	<T extends BaseDtoServiceVersion> T saveServiceVersion(long theDomain, long theService, T theVersion, List<GResource> theResources) throws ProcessingException, UnexpectedFailureException;
 
 	GUser saveUser(GUser theUser) throws  UnexpectedFailureException, ProcessingException;
 

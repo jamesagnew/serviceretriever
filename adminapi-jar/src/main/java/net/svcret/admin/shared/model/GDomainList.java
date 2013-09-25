@@ -11,6 +11,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import net.svcret.admin.shared.util.BaseGDashboardObjectComparator;
 import net.svcret.admin.shared.util.XmlConstants;
 
 @XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="DomainList")
@@ -20,7 +21,7 @@ public class GDomainList extends BaseDtoList<GDomain> {
 
 	private static final long serialVersionUID = 1L;
 
-	private transient Map<Long, BaseGServiceVersion> myPidToServiceVersion;
+	private transient Map<Long, BaseDtoServiceVersion> myPidToServiceVersion;
 	private transient Map<Long, GServiceVersionUrl> myPidToUrl;
 
 	public GDomainList() {
@@ -36,9 +37,9 @@ public class GDomainList extends BaseDtoList<GDomain> {
 		return null;
 	}
 
-	public BaseGServiceVersion getServiceVersionByPid(long thePid) {
+	public BaseDtoServiceVersion getServiceVersionByPid(long thePid) {
 		if (myPidToServiceVersion == null) {
-			myPidToServiceVersion = new HashMap<Long, BaseGServiceVersion>();
+			myPidToServiceVersion = new HashMap<Long, BaseDtoServiceVersion>();
 		}
 		if (myPidToServiceVersion.containsKey(thePid)) {
 			return myPidToServiceVersion.get(thePid);
@@ -46,7 +47,7 @@ public class GDomainList extends BaseDtoList<GDomain> {
 
 		for (GDomain nextDomain : this) {
 			for (GService nextSvc : nextDomain.getServiceList()) {
-				BaseGServiceVersion ver = nextSvc.getVersionList().getVersionByPid(thePid);
+				BaseDtoServiceVersion ver = nextSvc.getVersionList().getVersionByPid(thePid);
 				if (ver != null) {
 					myPidToServiceVersion.put(thePid, ver);
 					return ver;
@@ -66,7 +67,7 @@ public class GDomainList extends BaseDtoList<GDomain> {
 
 		for (GDomain nextDomain : this) {
 			for (GService nextSvc : nextDomain.getServiceList()) {
-				for (BaseGServiceVersion nextVer : nextSvc.getVersionList()) {
+				for (BaseDtoServiceVersion nextVer : nextSvc.getVersionList()) {
 					GServiceVersionUrl url = nextVer.getUrlList().getUrlWithPid(thePid);
 					if (url != null) {
 						myPidToUrl.put(thePid, url);
@@ -81,7 +82,7 @@ public class GDomainList extends BaseDtoList<GDomain> {
 	public Long getDomainPidWithServiceVersion(long theServiceVersionPid) {
 		for (GDomain nextDomain : this) {
 			for (GService nextSvc : nextDomain.getServiceList()) {
-				for (BaseGServiceVersion nextVer : nextSvc.getVersionList()) {
+				for (BaseDtoServiceVersion nextVer : nextSvc.getVersionList()) {
 					if (nextVer.getPid() == theServiceVersionPid) {
 						return nextDomain.getPid();
 					}
@@ -94,7 +95,7 @@ public class GDomainList extends BaseDtoList<GDomain> {
 	public Long getServicePidWithServiceVersion(long theServiceVersionPid) {
 		for (GDomain nextDomain : this) {
 			for (GService nextSvc : nextDomain.getServiceList()) {
-				for (BaseGServiceVersion nextVer : nextSvc.getVersionList()) {
+				for (BaseDtoServiceVersion nextVer : nextSvc.getVersionList()) {
 					if (nextVer.getPid() == theServiceVersionPid) {
 						return nextSvc.getPid();
 					}
@@ -107,7 +108,7 @@ public class GDomainList extends BaseDtoList<GDomain> {
 	public GService getServiceWithServiceVersion(long theServiceVersionPid) {
 		for (GDomain nextDomain : this) {
 			for (GService nextSvc : nextDomain.getServiceList()) {
-				for (BaseGServiceVersion nextVer : nextSvc.getVersionList()) {
+				for (BaseDtoServiceVersion nextVer : nextSvc.getVersionList()) {
 					if (nextVer.getPid() == theServiceVersionPid) {
 						return nextSvc;
 					}
@@ -121,7 +122,7 @@ public class GDomainList extends BaseDtoList<GDomain> {
 		Set<Long> retVal = new HashSet<Long>();
 		for (GDomain nextDoman : this) {
 			for (GService nextSvc : nextDoman.getServiceList()) {
-				for (BaseGServiceVersion nextVer : nextSvc.getVersionList()) {
+				for (BaseDtoServiceVersion nextVer : nextSvc.getVersionList()) {
 					retVal.add(nextVer.getPid());
 				}
 			}
@@ -140,7 +141,7 @@ public class GDomainList extends BaseDtoList<GDomain> {
 		return null;
 	}
 
-	public BaseGServiceVersion getFirstServiceVersion() {
+	public BaseDtoServiceVersion getFirstServiceVersion() {
 		if (size() > 0) {
 			return get(0).getServiceList().getFirstServiceVersion();
 		}

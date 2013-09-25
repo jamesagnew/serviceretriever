@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.svcret.admin.client.ui.components.CssConstants;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
@@ -180,7 +180,7 @@ public abstract class DomainTreePanel extends FlowPanel {
 	private boolean repopulateServiceVersion(final GDomain nextDomain, final GService nextService, TreeItem serviceItem, int svcVerIdx) {
 		boolean retVal = false;
 		
-		final BaseGServiceVersion nextSvcVer = nextService.getVersionList().get(svcVerIdx);
+		final BaseDtoServiceVersion nextSvcVer = nextService.getVersionList().get(svcVerIdx);
 
 		TreeItem svcVerItem;
 		if ((serviceItem.getChildCount()) <= svcVerIdx || !nextSvcVer.equals(serviceItem.getChild(svcVerIdx).getUserObject())) {
@@ -238,7 +238,7 @@ public abstract class DomainTreePanel extends FlowPanel {
 		return retVal;
 	}
 
-	private boolean repopulateServiceVersionMethod(final GDomain theDomain, final GService theService, final BaseGServiceVersion nextSvcVer, TreeItem svcVerItem, int verMethodIdx) {
+	private boolean repopulateServiceVersionMethod(final GDomain theDomain, final GService theService, final BaseDtoServiceVersion nextSvcVer, TreeItem svcVerItem, int verMethodIdx) {
 		boolean retVal = false;
 		final GServiceMethod nextMethod = nextSvcVer.getMethodList().get(verMethodIdx);
 
@@ -338,17 +338,17 @@ public abstract class DomainTreePanel extends FlowPanel {
 
 		boolean isEntireServiceChecked(GDomain theDomain, GService theService);
 
-		boolean isEntireServiceVersionChecked(GDomain theDomain, GService theService, BaseGServiceVersion theServiceVersion);
+		boolean isEntireServiceVersionChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theServiceVersion);
 
-		boolean isMethodChecked(GDomain theDomain, GService theService, BaseGServiceVersion theSvcVer, GServiceMethod theMethod);
+		boolean isMethodChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod);
 
 		void setEntireDomainChecked(GDomain theDomain, boolean theValue);
 
 		void setEntireServiceChecked(GDomain theDomain, GService theService, boolean theValue);
 
-		void setEntireServiceVersionChecked(GDomain theDomain, GService theService, BaseGServiceVersion theServiceVersion, boolean theValue);
+		void setEntireServiceVersionChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theServiceVersion, boolean theValue);
 
-		void setMethodChecked(GDomain theDomain, GService theService, BaseGServiceVersion theSvcVer, GServiceMethod theMethod, Boolean theValue);
+		void setMethodChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod, Boolean theValue);
 
 	}
 

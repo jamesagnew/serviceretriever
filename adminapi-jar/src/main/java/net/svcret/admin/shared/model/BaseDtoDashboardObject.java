@@ -7,80 +7,80 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public abstract class BaseGDashboardObject extends BaseDtoKeepsRecentMessages {
+public abstract class BaseDtoDashboardObject extends BaseDtoKeepsRecentMessages {
 
 	private static final long serialVersionUID = 1L;
-	
-	@XmlElement(name="runtime_AvgFailLatencyOverLast60Min")
+
+	@XmlElement(name = "runtime_AvgFailLatencyOverLast60Min")
 	private Double myAverageFailTransactionsPerMin60min;
-	
-	@XmlElement(name="runtime_AvgFaultLatencyOverLast60Min")
+
+	@XmlElement(name = "runtime_AvgFaultLatencyOverLast60Min")
 	private Double myAverageFaultTransactionsPerMin60min;
 
-	@XmlElement(name="runtime_AvgSuccessLatencyOverLast60Min")
+	@XmlElement(name = "runtime_AvgSuccessLatencyOverLast60Min")
 	private Integer myAverageLatency60min;
-	
-	@XmlElement(name="runtime_AvgSecurityFailLatencyOverLast60Min")
+
+	@XmlElement(name = "runtime_AvgSecurityFailLatencyOverLast60Min")
 	private Double myAverageSecurityFailTransactionsPerMin60min;
-	
-	@XmlElement(name="runtime_AvgTransactionsPerMinuteOverLast60Min")
+
+	@XmlElement(name = "runtime_AvgTransactionsPerMinuteOverLast60Min")
 	private Double myAverageTransactionsPerMin60min;
-	
+
 	private transient boolean myExpandedOnDashboard;
 
-	@XmlElement(name="config_Id")
+	@XmlElement(name = "config_Id")
 	private String myId;
 
-	@XmlElement(name="runtime_LastServerSecurityFailure")
+	@XmlElement(name = "runtime_LastServerSecurityFailure")
 	private Date myLastServerSecurityFailure;
-	
-	@XmlElement(name="runtime_LastSuccessfulInvocation")
+
+	@XmlElement(name = "runtime_LastSuccessfulInvocation")
 	private Date myLastSuccessfulInvocation;
 
-	@XmlElement(name="runtime_LatencyInMillisOver60Mins")
+	@XmlElement(name = "runtime_LatencyInMillisOver60Mins")
 	private DtoIntArray myLatency60mins;
 
-	@XmlElement(name="runtime_MaxFailLatencyOverLast60Min")
+	@XmlElement(name = "runtime_MaxFailLatencyOverLast60Min")
 	private Long myMaxFailTransactionsPerMin60min;
 
-	@XmlElement(name="runtime_MaxFaultLatencyOverLast60Min")
+	@XmlElement(name = "runtime_MaxFaultLatencyOverLast60Min")
 	private Long myMaxFaultTransactionsPerMin60min;
-	
-	@XmlElement(name="runtime_MaxLatencyInMillisOver60Mins")
+
+	@XmlElement(name = "runtime_MaxLatencyInMillisOver60Mins")
 	private Integer myMaxLatency60min;
-	
-	@XmlElement(name="runtime_MaxSecurityFailLatencyOverLast60Min")
+
+	@XmlElement(name = "runtime_MaxSecurityFailLatencyOverLast60Min")
 	private Long myMaxSecurityFailTransactionsPerMin60min;
 
-	@XmlElement(name="runtime_MaxTransactionsPerMinOver60Mins")
+	@XmlElement(name = "runtime_MaxTransactionsPerMinOver60Mins")
 	private Double myMaxTransactionsPerMin60min;
 
-	@XmlElement(name="config_Name")
+	@XmlElement(name = "config_Name")
 	private String myName;
 
-	@XmlElement(name="runtime_Stats60MinutesFirstDate")
-	private Date myStatistics60MinuteFirstDate ;
+	@XmlElement(name = "runtime_Stats60MinutesFirstDate")
+	private Date myStatistics60MinuteFirstDate;
 
-	@XmlElement(name="runtime_StatsInitialized")
+	@XmlElement(name = "runtime_StatsInitialized")
 	private Date myStatsInitialized;
 
-	@XmlElement(name="runtime_Status")
+	@XmlElement(name = "runtime_Status")
 	private StatusEnum myStatus;
 
-	@XmlElement(name="runtime_TransactionSuccessCountOver60Mins")
+	@XmlElement(name = "runtime_TransactionSuccessCountOver60Mins")
 	private DtoIntArray myTransactions60mins;
 
-	@XmlElement(name="runtime_TransactionFailCountOver60Mins")
+	@XmlElement(name = "runtime_TransactionFailCountOver60Mins")
 	private DtoIntArray myTransactionsFail60mins;
 
-	@XmlElement(name="runtime_TransactionFaultCountOver60Mins")
+	@XmlElement(name = "runtime_TransactionFaultCountOver60Mins")
 	private DtoIntArray myTransactionsFault60mins;
 
-	@XmlElement(name="runtime_TransactionSecurityFailCountOver60Mins")
+	@XmlElement(name = "runtime_TransactionSecurityFailCountOver60Mins")
 	private DtoIntArray myTransactionsSecurityFail60mins;
 
 	public void flushStats() {
-		myStatsInitialized=null;
+		myStatsInitialized = null;
 	}
 
 	public Double getAverageFailTransactionsPerMin60min() {
@@ -202,8 +202,7 @@ public abstract class BaseGDashboardObject extends BaseDtoKeepsRecentMessages {
 	public int[] getTransactions60mins() {
 		return DtoIntArray.from(myTransactions60mins);
 	}
-	
-	
+
 	public int[] getTransactionsFail60mins() {
 		return DtoIntArray.from(myTransactionsFail60mins);
 	}
@@ -234,17 +233,17 @@ public abstract class BaseGDashboardObject extends BaseDtoKeepsRecentMessages {
 	 * @return the statsInitialized
 	 */
 	public boolean isStatsInitialized() {
-		return myStatsInitialized!=null;
+		return myStatsInitialized != null;
 	}
 
 	@Override
-	public void merge(BaseGObject theObject) {
+	public void merge(BaseDtoObject theObject) {
 		super.merge(theObject);
-		
-		BaseGDashboardObject obj = (BaseGDashboardObject)theObject;
+
+		BaseDtoDashboardObject obj = (BaseDtoDashboardObject) theObject;
 		setId(obj.getId());
 		setName(obj.getName());
-		
+
 		if (obj.isStatsInitialized()) {
 			setStatsInitialized(obj.getStatsInitialized());
 			setStatus(obj.getStatus());
@@ -323,7 +322,7 @@ public abstract class BaseGDashboardObject extends BaseDtoKeepsRecentMessages {
 	}
 
 	public void setStatistics60MinuteFirstDate(Date theFirstDate) {
-		myStatistics60MinuteFirstDate =theFirstDate;
+		myStatistics60MinuteFirstDate = theFirstDate;
 	}
 
 	/**
@@ -358,8 +357,8 @@ public abstract class BaseGDashboardObject extends BaseDtoKeepsRecentMessages {
 			max = Math.max(max, i);
 		}
 		if (theTransactions60mins.length > 0) {
-			myAverageTransactionsPerMin60min = ((double)total / (double)theTransactions60mins.length);
-			myMaxTransactionsPerMin60min = (double)max;
+			myAverageTransactionsPerMin60min = ((double) total / (double) theTransactions60mins.length);
+			myMaxTransactionsPerMin60min = (double) max;
 		}
 	}
 
@@ -376,7 +375,7 @@ public abstract class BaseGDashboardObject extends BaseDtoKeepsRecentMessages {
 			max = Math.max(max, i);
 		}
 		if (theTransactionsFail60mins.length > 0) {
-			myAverageFailTransactionsPerMin60min = ((double)total / (double)theTransactionsFail60mins.length);
+			myAverageFailTransactionsPerMin60min = ((double) total / (double) theTransactionsFail60mins.length);
 			myMaxFailTransactionsPerMin60min = max;
 		}
 	}
@@ -394,7 +393,7 @@ public abstract class BaseGDashboardObject extends BaseDtoKeepsRecentMessages {
 			max = Math.max(max, i);
 		}
 		if (theTransactionsFault60mins.length > 0) {
-			myAverageFaultTransactionsPerMin60min = ((double)total / (double)theTransactionsFault60mins.length);
+			myAverageFaultTransactionsPerMin60min = ((double) total / (double) theTransactionsFault60mins.length);
 			myMaxFaultTransactionsPerMin60min = max;
 		}
 	}
@@ -412,7 +411,7 @@ public abstract class BaseGDashboardObject extends BaseDtoKeepsRecentMessages {
 			max = Math.max(max, i);
 		}
 		if (theTransactionsSecurityFail60mins.length > 0) {
-			myAverageSecurityFailTransactionsPerMin60min = ((double)total / (double)theTransactionsSecurityFail60mins.length);
+			myAverageSecurityFailTransactionsPerMin60min = ((double) total / (double) theTransactionsSecurityFail60mins.length);
 			myMaxSecurityFailTransactionsPerMin60min = max;
 		}
 	}

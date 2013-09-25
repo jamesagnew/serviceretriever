@@ -6,7 +6,7 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.xml.stream.events.XMLEvent;
 
-import net.svcret.admin.shared.model.BaseGServerSecurity;
+import net.svcret.admin.shared.model.BaseDtoServerSecurity;
 import net.svcret.admin.shared.model.GWsSecServerSecurity;
 import net.svcret.admin.shared.model.ServerSecurityEnum;
 import net.svcret.ejb.api.ICredentialGrabber;
@@ -50,7 +50,7 @@ public class PersWsSecUsernameTokenServerAuth extends PersBaseServerAuth<PersWsS
 	}
 
 	@Override
-	protected BaseGServerSecurity createDtoAndPopulateWithTypeSpecificEntries() {
+	protected BaseDtoServerSecurity createDtoAndPopulateWithTypeSpecificEntries() {
 		return new GWsSecServerSecurity();
 	}
 

@@ -3,8 +3,8 @@ package net.svcret.ejb.model.entity.http;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
-import net.svcret.admin.shared.model.BaseGClientSecurity;
-import net.svcret.admin.shared.model.ClientSecurityEnum;
+import net.svcret.admin.shared.enm.ClientSecurityEnum;
+import net.svcret.admin.shared.model.BaseDtoClientSecurity;
 import net.svcret.admin.shared.model.DtoClientSecurityHttpBasicAuth;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 
@@ -50,7 +50,7 @@ public class PersHttpBasicClientAuth extends PersBaseClientAuth<PersHttpBasicCli
 	}
 
 	@Override
-	protected BaseGClientSecurity createDtoAndPopulateWithTypeSpecificFields() {
+	protected BaseDtoClientSecurity createDtoAndPopulateWithTypeSpecificFields() {
 		return new DtoClientSecurityHttpBasicAuth();
 	}
 

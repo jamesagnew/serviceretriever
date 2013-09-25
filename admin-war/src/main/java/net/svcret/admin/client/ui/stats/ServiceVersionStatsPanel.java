@@ -6,7 +6,7 @@ import net.svcret.admin.client.ui.components.HtmlH1;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.TimeRange;
 import net.svcret.admin.shared.util.ChartParams;
 import net.svcret.admin.shared.util.ChartTypeEnum;
@@ -51,16 +51,16 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 		myTopLoadingSpinner.show();
 		myTopContentPanel.add(myTopLoadingSpinner);
 
-		Model.getInstance().loadServiceVersion(theVersionPid, true, new IAsyncLoadCallback<BaseGServiceVersion>() {
+		Model.getInstance().loadServiceVersion(theVersionPid, true, new IAsyncLoadCallback<BaseDtoServiceVersion>() {
 			@Override
-			public void onSuccess(BaseGServiceVersion theResult) {
+			public void onSuccess(BaseDtoServiceVersion theResult) {
 				initUi(theResult);
 			}
 		});
 
 	}
 
-	private void initUi(final BaseGServiceVersion theResult) {
+	private void initUi(final BaseDtoServiceVersion theResult) {
 		myTopLoadingSpinner.hideCompletely();
 		myTitleLabel.setText(MSGS.serviceVersionStats_Title(theResult.getName()));
 

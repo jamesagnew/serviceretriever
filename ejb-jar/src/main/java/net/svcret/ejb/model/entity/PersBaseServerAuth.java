@@ -14,16 +14,15 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
-import net.svcret.admin.shared.model.BaseGServerSecurity;
+import net.svcret.admin.shared.model.BaseDtoServerSecurity;
 import net.svcret.admin.shared.model.ServerSecurityEnum;
 import net.svcret.ejb.api.ICredentialGrabber;
-
 
 @Table(name = "PX_SERVER_AUTH")
 @Entity()
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "AUTH_TYPE", length = 20, discriminatorType = DiscriminatorType.STRING)
-public abstract class PersBaseServerAuth<T extends PersBaseServerAuth<?,?>, G extends ICredentialGrabber> extends BasePersObject {
+public abstract class PersBaseServerAuth<T extends PersBaseServerAuth<?, ?>, G extends ICredentialGrabber> extends BasePersObject {
 
 	private static final long serialVersionUID = 1L;
 
@@ -35,7 +34,7 @@ public abstract class PersBaseServerAuth<T extends PersBaseServerAuth<?,?>, G ex
 	@Column(name = "OPTLOCK")
 	private int myOptLock;
 
-	@Column(name="SAUTH_ORDER", nullable=false)
+	@Column(name = "SAUTH_ORDER", nullable = false)
 	private int myOrder;
 
 	@Id
@@ -57,7 +56,7 @@ public abstract class PersBaseServerAuth<T extends PersBaseServerAuth<?,?>, G ex
 	public abstract ServerSecurityEnum getAuthType();
 
 	public abstract Class<? extends G> getGrabberClass();
-	
+
 	/**
 	 * @return the optLock
 	 */
@@ -90,14 +89,17 @@ public abstract class PersBaseServerAuth<T extends PersBaseServerAuth<?,?>, G ex
 		// nothing
 	}
 
-//	/**
-//	 * Subclasses must provide an implementation which compares all
-//	 * relevant properties to the subclass type
-//	 */
-//	protected abstract boolean relevantPropertiesEqual(T theT);
+	// /**
+	// * Subclasses must provide an implementation which compares all
+	// * relevant properties to the subclass type
+	// */
+	// protected abstract boolean relevantPropertiesEqual(T theT);
+
+	public abstract void merge(BasePersObject theObj);
 
 	/**
-	 * @param theAuthenticationHost the authenticationHost to set
+	 * @param theAuthenticationHost
+	 *            the authenticationHost to set
 	 */
 	public void setAuthenticationHost(BasePersAuthenticationHost theAuthenticationHost) {
 		myAuthenticationHost = theAuthenticationHost;
@@ -111,9 +113,9 @@ public abstract class PersBaseServerAuth<T extends PersBaseServerAuth<?,?>, G ex
 		myOptLock = theOptLock;
 	}
 
-
 	/**
-	 * @param theOrder the order to set
+	 * @param theOrder
+	 *            the order to set
 	 */
 	public void setOrder(int theOrder) {
 		myOrder = theOrder;
@@ -135,15 +137,14 @@ public abstract class PersBaseServerAuth<T extends PersBaseServerAuth<?,?>, G ex
 		myServiceVersion = theServiceVersion;
 	}
 
-	public abstract void merge(BasePersObject theObj);
-
-	public BaseGServerSecurity toDto() {
-		BaseGServerSecurity retVal=createDtoAndPopulateWithTypeSpecificEntries();
+	public BaseDtoServerSecurity toDto() {
+		BaseDtoServerSecurity retVal = createDtoAndPopulateWithTypeSpecificEntries();
 		retVal.setPid(this.getPid());
-		retVal.setAuthHostPid(this.getAuthenticationHost().getPid());
+		retVal.setAuthHostPid(getAuthenticationHost().getPid());
+		retVal.setAuthHostId(getAuthenticationHost().getModuleId());
 		return retVal;
 	}
 
-	protected abstract BaseGServerSecurity createDtoAndPopulateWithTypeSpecificEntries();
+	protected abstract BaseDtoServerSecurity createDtoAndPopulateWithTypeSpecificEntries();
 
 }

@@ -9,8 +9,8 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.MappedSuperclass;
 
+import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
-import net.svcret.admin.shared.model.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.admin.shared.model.Pair;
 import net.svcret.ejb.api.HttpRequestBean;

@@ -12,7 +12,7 @@ import net.svcret.admin.shared.util.XmlConstants;
 @XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="ServiceVersionHl7OverHttp")
 @XmlRootElement(namespace=XmlConstants.DTO_NAMESPACE, name="ServiceVersionHl7OverHttp")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class DtoServiceVersionHl7OverHttp extends BaseGServiceVersion {
+public class DtoServiceVersionHl7OverHttp extends BaseDtoServiceVersion {
 
 	public static final String DEFAULT_METHOD_NAME_TEMPLATE = "${messageType}";
 	public static final String FANCY_METHOD_NAME_TEMPLATE = "${messageType}^${messageVersion}";

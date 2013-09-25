@@ -3,7 +3,7 @@ package net.svcret.admin.client.ui.config.svcver;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.GRecentMessageLists;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -24,9 +24,9 @@ public class ServiceVersionRecentMessagePanel extends BaseRecentMessagesPanel {
 
 			@Override
 			public void onSuccess(final GRecentMessageLists theResult) {
-				Model.getInstance().loadServiceVersion(myServiceVersionPid, new IAsyncLoadCallback<BaseGServiceVersion>() {
+				Model.getInstance().loadServiceVersion(myServiceVersionPid, new IAsyncLoadCallback<BaseDtoServiceVersion>() {
 					@Override
-					public void onSuccess(BaseGServiceVersion theSvcVer) {
+					public void onSuccess(BaseDtoServiceVersion theSvcVer) {
 						String title = ("Displaying recent transactions for version " + theSvcVer.getId());
 						setRecentMessages(theResult, "Service Version", title);
 					}

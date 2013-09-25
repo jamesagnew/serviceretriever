@@ -1,11 +1,13 @@
 package net.svcret.admin.shared.model;
 
-public class GLocalDatabaseAuthHost extends BaseGAuthHost {
+import net.svcret.admin.shared.enm.AuthorizationHostTypeEnum;
+
+public class GLocalDatabaseAuthHost extends BaseDtoAuthHost {
 
 	private static final long serialVersionUID = 1L;
 
 	@Override
-	public void merge(BaseGAuthHost theObject) {
+	public void merge(BaseDtoAuthHost theObject) {
 		super.merge(theObject);
 	}
 

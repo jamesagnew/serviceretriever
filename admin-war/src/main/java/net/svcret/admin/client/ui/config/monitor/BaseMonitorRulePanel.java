@@ -34,8 +34,8 @@ import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.enm.MonitorRuleTypeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
-import net.svcret.admin.shared.model.BaseGMonitorRule;
-import net.svcret.admin.shared.model.BaseGServiceVersion;
+import net.svcret.admin.shared.model.BaseDtoMonitorRule;
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
@@ -88,7 +88,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 	private IntegerBox myPassiveLatencyOverMinsBox;
 	private CheckBox myPassiveLatencyOverMinsEnabledCheck;
 	private LoadingSpinner myLoadingSpinner;
-	private BaseGMonitorRule myRule;
+	private BaseDtoMonitorRule myRule;
 	private CheckBox myRuleActiveCheckBox;
 	private TextBox myRuleNameTextBox;
 	private CheckBox myPassiveUrlUnavailableCheckbox;
@@ -307,7 +307,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 				b.appendHtmlConstant("<div class=\"" + MyResources.CSS.monitorRuleActiveTargetKey() + "\">Target</div>");
 				b.appendHtmlConstant("<div class=\"" + MyResources.CSS.monitorRuleActiveTargetValue() + "\">");
 				GService service = myDomainList.getServiceWithServiceVersion(theObject.getServiceVersionPid());
-				BaseGServiceVersion svcVer = service.getVersionList().getVersionByPid(theObject.getServiceVersionPid());
+				BaseDtoServiceVersion svcVer = service.getVersionList().getVersionByPid(theObject.getServiceVersionPid());
 				b.appendEscaped(service.getName());
 				b.appendHtmlConstant(" / ");
 				b.appendEscaped(svcVer.getId());
@@ -762,7 +762,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 
 	}
 
-	protected void setRule(final BaseGMonitorRule theRule) {
+	protected void setRule(final BaseDtoMonitorRule theRule) {
 		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
 
 			@Override
@@ -838,12 +838,12 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		}
 
 		@Override
-		public boolean isEntireServiceVersionChecked(GDomain theDomain, GService theService, BaseGServiceVersion theServiceVersion) {
+		public boolean isEntireServiceVersionChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theServiceVersion) {
 			return myRule.appliesTo(theServiceVersion);
 		}
 
 		@Override
-		public boolean isMethodChecked(GDomain theDomain, GService theService, BaseGServiceVersion theSvcVer, GServiceMethod theMethod) {
+		public boolean isMethodChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -858,12 +858,12 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		}
 
 		@Override
-		public void setEntireServiceVersionChecked(GDomain theDomain, GService theService, BaseGServiceVersion theServiceVersion, boolean theValue) {
+		public void setEntireServiceVersionChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theServiceVersion, boolean theValue) {
 			myRule.applyTo(theDomain, theService, theServiceVersion, theValue);
 		}
 
 		@Override
-		public void setMethodChecked(GDomain theDomain, GService theService, BaseGServiceVersion theSvcVer, GServiceMethod theMethod, Boolean theValue) {
+		public void setMethodChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod, Boolean theValue) {
 			throw new UnsupportedOperationException();
 		}
 

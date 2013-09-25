@@ -1,6 +1,8 @@
 package net.svcret.ejb.ejb.importexport;
 
+import java.io.IOException;
 import java.io.StringWriter;
+import java.util.List;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -8,14 +10,14 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
-import net.svcret.admin.shared.model.GService;
+import net.svcret.admin.shared.util.ScanDtoUtil;
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.PersDomain;
+
+import com.google.common.annotations.VisibleForTesting;
 
 @Stateless
 public class ImportExportServiceBean implements IImportExportServiceLocal {
@@ -25,9 +27,9 @@ public class ImportExportServiceBean implements IImportExportServiceLocal {
 	@EJB
 	private IServiceRegistry myServiceRegistry;
 
-	public ImportExportServiceBean() throws JAXBException {
-
-		myJaxbContext = JAXBContext.newInstance(GDomainList.class, GDomain.class, GService.class);
+	public ImportExportServiceBean() throws JAXBException, IOException, ClassNotFoundException {
+		List<Class<?>> classes = ScanDtoUtil.findMyTypes(GDomainList.class.getPackage().getName());
+		myJaxbContext = JAXBContext.newInstance(classes.toArray(new Class[classes.size()]));
 
 	}
 

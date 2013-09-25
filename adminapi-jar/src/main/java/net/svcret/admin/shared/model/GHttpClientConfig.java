@@ -9,7 +9,7 @@ import net.svcret.admin.shared.util.XmlConstants;
 
 @XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="HttpClientConfig")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class GHttpClientConfig extends BaseGObject {
+public class GHttpClientConfig extends BaseDtoObject {
 
 	public static final String DEFAULT_ID = "DEFAULT";
 
@@ -111,7 +111,7 @@ public class GHttpClientConfig extends BaseGObject {
 	}
 
 	@Override
-	public void merge(BaseGObject theObject) {
+	public void merge(BaseDtoObject theObject) {
 		super.merge(theObject);
 		
 		GHttpClientConfig obj = (GHttpClientConfig)theObject;

@@ -10,7 +10,7 @@ import net.svcret.admin.client.ui.components.Sparkline;
 import net.svcret.admin.client.ui.components.UsageSparkline;
 import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
-import net.svcret.admin.shared.model.BaseGDashboardObject;
+import net.svcret.admin.shared.model.BaseDtoDashboardObject;
 import net.svcret.admin.shared.model.StatusEnum;
 
 import com.google.gwt.core.shared.GWT;
@@ -31,9 +31,9 @@ public abstract class BaseDashModel implements IDashModel {
 
 	private static NumberFormat ourDecimalFormat = NumberFormat.getFormat("0.0");
 
-	private BaseGDashboardObject myModel;
+	private BaseDtoDashboardObject myModel;
 
-	public BaseDashModel(BaseGDashboardObject theModel) {
+	public BaseDashModel(BaseDtoDashboardObject theModel) {
 		myModel = theModel;
 	}
 
@@ -43,8 +43,8 @@ public abstract class BaseDashModel implements IDashModel {
 	}
 
 	@Override
-	public IProvidesTooltip<BaseGDashboardObject> getUsageTooltip() {
-		return new UsageSparklineTooltipProvider<BaseGDashboardObject>();
+	public IProvidesTooltip<BaseDtoDashboardObject> getUsageTooltip() {
+		return new UsageSparklineTooltipProvider<BaseDtoDashboardObject>();
 	}
 
 	@Override
@@ -243,7 +243,7 @@ public abstract class BaseDashModel implements IDashModel {
 		return retVal;
 	}
 
-	public static Widget returnSparklineFor60MinsUsage(BaseGDashboardObject theObject) {
+	public static Widget returnSparklineFor60MinsUsage(BaseDtoDashboardObject theObject) {
 		if (theObject.getMaxTotalTransactionsPerMin() == 0.0) {
 			Label retVal = new Label("No usage");
 			retVal.addStyleName(CssConstants.DASHBOARD_SPARKLINE_NOUSAGE);
