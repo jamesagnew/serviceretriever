@@ -19,7 +19,9 @@ public class HttpRequestBean {
 	private String myContextPath;
 	private CapturingReader myInputReader;
 	private String myPath;
+	private String myProtocol;
 	private String myQuery;
+	private String myRequestFullUri;
 	private Map<String, List<String>> myRequestHeaders;
 	private String myRequestHostIp;
 	private Date myRequestTime;
@@ -106,6 +108,10 @@ public class HttpRequestBean {
 		return path;
 	}
 
+	public String getProtocol() {
+		return myProtocol;
+	}
+
 	/**
 	 * @return the query
 	 */
@@ -115,6 +121,10 @@ public class HttpRequestBean {
 
 	public String getRequestBody() {
 		return myInputReader.getCapturedString();
+	}
+
+	public String getRequestFullUri() {
+		return myRequestFullUri;
 	}
 
 	/**
@@ -166,12 +176,20 @@ public class HttpRequestBean {
 		myPath = thePath;
 	}
 
+	public void setProtocol(String theProtocol) {
+		myProtocol = theProtocol;
+	}
+
 	/**
 	 * @param theQuery
 	 *            the query to set
 	 */
 	public void setQuery(String theQuery) {
 		myQuery = theQuery;
+	}
+
+	public void setRequestFullUri(String theRequestURI) {
+		myRequestFullUri = theRequestURI;
 	}
 
 	public void setRequestHeaders(Map<String, List<String>> theRequestHeaders) {

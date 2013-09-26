@@ -44,14 +44,8 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	@EJB
 	private IFilesystemAuditLogger myFilesystemAuditLogger;
 	
-	@VisibleForTesting
-	void setFilesystemAuditLoggerForUnitTests(IFilesystemAuditLogger theFilesystemAuditLogger) {
-		myFilesystemAuditLogger = theFilesystemAuditLogger;
-	}
-
 	private final ReentrantLock myFlushLock = new ReentrantLock();
 	private final ConcurrentHashMap<BasePersServiceVersion, UnflushedServiceVersionRecentMessages> myUnflushedMessages = new ConcurrentHashMap<BasePersServiceVersion, UnflushedServiceVersionRecentMessages>();
-
 	private final ConcurrentHashMap<PersUser, UnflushedUserRecentMessages> myUnflushedUserMessages = new ConcurrentHashMap<PersUser, UnflushedUserRecentMessages>();
 
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -155,6 +149,11 @@ public class TransactionLoggerBean implements ITransactionLogger {
 
 		long delay = System.currentTimeMillis() - start;
 		ourLog.info("Done saving {} recent transactions to database in {}ms", saveCount, delay);
+	}
+
+	@VisibleForTesting
+	void setFilesystemAuditLoggerForUnitTests(IFilesystemAuditLogger theFilesystemAuditLogger) {
+		myFilesystemAuditLogger = theFilesystemAuditLogger;
 	}
 
 	public static void trimOldest(LinkedList<?> theList, int theSize) {

@@ -35,6 +35,7 @@ public class EditServiceVersionPanel extends AbstractServiceVersionPanel {
 				setServicePid(theResult.getServicePidWithServiceVersion(theServiceVersionPid));
 				
 				initParents(theResult);
+				lockParents();
 
 				AdminPortal.MODEL_SVC.loadServiceVersionIntoSession(theServiceVersionPid, new AsyncCallback<BaseDtoServiceVersion>() {
 					@Override
