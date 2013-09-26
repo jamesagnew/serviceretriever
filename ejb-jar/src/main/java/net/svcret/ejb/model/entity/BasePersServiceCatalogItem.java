@@ -19,6 +19,9 @@ public abstract class BasePersServiceCatalogItem extends BasePersKeepsRecentTran
 
 	private static final long serialVersionUID = 1L;
 
+	@Column(name = "DISP_PUBLIC_REG", nullable = true)
+	private Boolean myDisplayInPublicRegistry;
+
 	@ManyToOne(cascade = {}, optional = true)
 	@JoinColumn(name = "MOST_REC_MONITORRULE_FIR", nullable = true)
 	private PersMonitorRuleFiring myMostRecentMonitorRuleFiring;
@@ -27,10 +30,21 @@ public abstract class BasePersServiceCatalogItem extends BasePersKeepsRecentTran
 	private String myObscureRequestElementsInLog;
 
 	private transient volatile TreeSet<String> myObscureRequestElementsInLogCache;
+
 	@Column(name = "OBSCURE_RESP_ELEMS_IN_LOG", length = 2000, nullable = true)
 	private String myObscureResponseElementsInLog;
 
 	private transient volatile TreeSet<String> myObscureResponseElementsInLogCache;
+
+	public abstract boolean canInheritObscureElements();
+
+	public abstract Set<String> determineInheritedObscureRequestElements();
+
+	public abstract Set<String> determineInheritedObscureResponseElements();
+
+	public abstract Set<String> determineObscureRequestElements();
+
+	public abstract Set<String> determineObscureResponseElements();
 
 	public Set<Long> getActiveMonitorRuleFiringPidsWhichApply() {
 		HashSet<Long> retVal = new HashSet<Long>();
@@ -48,27 +62,13 @@ public abstract class BasePersServiceCatalogItem extends BasePersKeepsRecentTran
 		return retVal;
 	}
 
-	public void merge(BasePersObject theObj) {
-		super.merge(theObj);
-
-		BasePersServiceCatalogItem item = (BasePersServiceCatalogItem) theObj;
-		setObscureRequestElementsInLog(item.getObscureRequestElementsInLog());
-		setObscureResponseElementsInLog(item.getObscureResponseElementsInLog());
-	}
-
-	public abstract boolean canInheritObscureElements();
-
-	public abstract Set<String> determineInheritedObscureRequestElements();
-
-	public abstract Set<String> determineInheritedObscureResponseElements();
-
-	public abstract Set<String> determineObscureRequestElements();
-
-	public abstract Set<String> determineObscureResponseElements();
-
 	public abstract Collection<PersMonitorRuleFiring> getActiveRuleFiringsWhichMightApply();
 
 	public abstract Collection<? extends BasePersServiceVersion> getAllServiceVersions();
+
+	public Boolean getDisplayInPublicRegistry() {
+		return myDisplayInPublicRegistry;
+	}
 
 	public PersMonitorRuleFiring getMostRecentMonitorRuleFiring() {
 		return myMostRecentMonitorRuleFiring;
@@ -104,6 +104,31 @@ public abstract class BasePersServiceCatalogItem extends BasePersKeepsRecentTran
 			myObscureResponseElementsInLogCache = retVal;
 		}
 		return retVal;
+	}
+
+	public void merge(BasePersObject theObj) {
+		super.merge(theObj);
+
+		BasePersServiceCatalogItem item = (BasePersServiceCatalogItem) theObj;
+		setObscureRequestElementsInLog(item.getObscureRequestElementsInLog());
+		setObscureResponseElementsInLog(item.getObscureResponseElementsInLog());
+		setDisplayInPublicRegistry(item.getDisplayInPublicRegistry());
+	}
+
+	public void populateServiceCatalogItemFromDto(BaseDtoServiceCatalogItem theDto) {
+		setObscureRequestElementsInLog(theDto.getObscureRequestElementsInLogCache());
+		setObscureResponseElementsInLog(theDto.getObscureResponseElementsInLogCache());
+		setDisplayInPublicRegistry(theDto.getDisplayInPublicRegistry());
+	}
+
+	public void populateServiceCatalogItemToDto(BaseDtoServiceCatalogItem theDto) {
+		theDto.setObscureRequestElementsInLogCache(getObscureRequestElementsInLog());
+		theDto.setObscureResponseElementsInLogCache(getObscureResponseElementsInLog());
+		theDto.setDisplayInPublicRegistry(getDisplayInPublicRegistry());
+	}
+
+	public void setDisplayInPublicRegistry(Boolean theDisplayInPublicRegistry) {
+		myDisplayInPublicRegistry = theDisplayInPublicRegistry;
 	}
 
 	/**
@@ -148,25 +173,15 @@ public abstract class BasePersServiceCatalogItem extends BasePersKeepsRecentTran
 		myObscureRequestElementsInLogCache = null;
 	}
 
-	public void populateServiceCatalogItemFromDto(BaseDtoServiceCatalogItem theDto) {
-		setObscureRequestElementsInLog(theDto.getObscureRequestElementsInLogCache());
-		setObscureResponseElementsInLog(theDto.getObscureResponseElementsInLogCache());
-	}
-
-	public void populateServiceCatalogItemToDto(BaseDtoServiceCatalogItem theDto) {
-		theDto.setObscureRequestElementsInLogCache(getObscureRequestElementsInLog());
-		theDto.setObscureResponseElementsInLogCache(getObscureResponseElementsInLog());
-	}
-
 	public static void validateId(String theId) {
 		if (StringUtils.isBlank(theId)) {
 			throw new IllegalArgumentException("ID must not be blank");
 		}
-		
+
 		if (theId.contains(" ")) {
-			throw new IllegalArgumentException("ID must not contain spaces: "  + theId);
+			throw new IllegalArgumentException("ID must not contain spaces: " + theId);
 		}
-		
+
 		if (theId.contains("__")) {
 			throw new IllegalArgumentException("ID must not contain the character saequence: '__': " + theId);
 		}

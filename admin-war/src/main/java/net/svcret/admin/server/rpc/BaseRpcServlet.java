@@ -6,7 +6,7 @@ public abstract class BaseRpcServlet extends RemoteServiceServlet{
 
 	private static final long serialVersionUID = 1L;
 
-	protected ModelUpdateServiceMock getMock() {
+	public static ModelUpdateServiceMock getMock() {
 		return ourMock;
 	}
 

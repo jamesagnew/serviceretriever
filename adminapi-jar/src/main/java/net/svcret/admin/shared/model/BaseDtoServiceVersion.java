@@ -56,14 +56,14 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 	private GServiceMethodList myServiceMethodList;
 
 	@XmlElement(name="config_Urls")
-	private GServiceVersionUrlList myServiceUrlList;
+	private DtoServiceVersionUrlList myServiceUrlList;
 
 	@XmlElement(name="config_UseDefaultProxyPath")
 	private boolean myUseDefaultProxyPath = true;
 
 	public BaseDtoServiceVersion() {
 		myServiceMethodList = new GServiceMethodList();
-		myServiceUrlList = new GServiceVersionUrlList();
+		myServiceUrlList = new DtoServiceVersionUrlList();
 		myServerSecurityList = new DtoServerSecurityList();
 		myClientSecurityList = new DtoClientSecurityList();
 		myResourcePointerList = new GServiceVersionResourcePointerList();
@@ -159,7 +159,7 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 		return myServerSecurityMode;
 	}
 
-	public GServiceVersionUrlList getUrlList() {
+	public DtoServiceVersionUrlList getUrlList() {
 		return myServiceUrlList;
 	}
 

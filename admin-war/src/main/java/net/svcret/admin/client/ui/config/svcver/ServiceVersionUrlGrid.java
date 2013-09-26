@@ -103,7 +103,8 @@ public class ServiceVersionUrlGrid extends BaseUrlGrid {
 
 			@Override
 			public void onSuccess(ModelUpdateResponse theResult) {
-				myServiceVersion = theResult.getDomainList().getServiceVersionByPid(myServiceVersion.getPid());
+				BaseDtoServiceVersion newServiceVersion = theResult.getDomainList().getServiceVersionByPid(myServiceVersion.getPid());
+				myServiceVersion.merge(newServiceVersion);
 				doUpdateUrlPanel(myServiceVersion.getUrlList().toList());
 			}
 		};
@@ -134,7 +135,7 @@ public class ServiceVersionUrlGrid extends BaseUrlGrid {
 			if (source == myDeleteButton) {
 				if (Window.confirm("Delete - Are you sure?")) {
 					myServiceVersion.getUrlList().remove(myUrl);
-					updateUrlPanel();
+					doUpdateUrlPanel(myServiceVersion.getUrlList().toList());
 				}
 			}
 

@@ -2017,7 +2017,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		if (true) {
 			if (urlStatus.getStatus() == StatusEnum.DOWN) {
 				if (urlStatus.getNextCircuitBreakerReset() != null) {
-					retVal.setNextCircuitBreakerReset(urlStatus.getNextCircuitBreakerReset());
+					retVal.setStatsNextCircuitBreakerReset(urlStatus.getNextCircuitBreakerReset());
 				}
 			}
 

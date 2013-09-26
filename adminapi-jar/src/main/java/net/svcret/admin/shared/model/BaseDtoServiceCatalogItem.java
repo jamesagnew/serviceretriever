@@ -13,41 +13,48 @@ public abstract class BaseDtoServiceCatalogItem extends BaseDtoDashboardObject i
 
 	private static final long serialVersionUID = 1L;
 
-	@XmlElementWrapper(name="runtime_FailingApplicableRulePids")
-	@XmlElement(name="Element")
+	@XmlElement(name = "config_DisplayInPublicRegistry")
+	private Boolean myDisplayInPublicRegistry;
+
+	@XmlElementWrapper(name = "runtime_FailingApplicableRulePids")
+	@XmlElement(name = "Element")
 	private Set<Long> myFailingApplicableRulePids;
 
-	@XmlElementWrapper(name="ro_InheritedObscureRequestElementsInLogCache")
-	@XmlElement(name="Element")
+	@XmlElementWrapper(name = "ro_InheritedObscureRequestElementsInLogCache")
+	@XmlElement(name = "Element")
 	private Set<String> myInheritedObscureRequestElementsInLogCache;
-	
-	@XmlElementWrapper(name="ro_InheritedObscureResponseElementsInLogCache")
-	@XmlElement(name="Element")
+
+	@XmlElementWrapper(name = "ro_InheritedObscureResponseElementsInLogCache")
+	@XmlElement(name = "Element")
 	private Set<String> myInheritedObscureResponseElementsInLogCache;
 
-	@XmlElementWrapper(name="ro_MonitorRulePids")
-	@XmlElement(name="Element")
+	@XmlElementWrapper(name = "ro_MonitorRulePids")
+	@XmlElement(name = "Element")
 	private Set<Long> myMonitorRulePids;
-	
-	@XmlElementWrapper(name="config_ObscureRequestElementsInLogCache")
-	@XmlElement(name="Element")
+
+	@XmlElementWrapper(name = "config_ObscureRequestElementsInLogCache")
+	@XmlElement(name = "Element")
 	private Set<String> myObscureRequestElementsInLogCache;
-	
-	@XmlElementWrapper(name="config_ObscureResponseElementsInLogCache")
-	@XmlElement(name="Element")
+
+	@XmlElementWrapper(name = "config_ObscureResponseElementsInLogCache")
+	@XmlElement(name = "Element")
 	private Set<String> myObscureResponseElementsInLogCache;
-	
-	@XmlElement(name="ro_ServerSecured")
+
+	@XmlElement(name = "ro_ServerSecured")
 	private ServerSecuredEnum myServerSecured;
-	
-	@XmlElement(name="runtime_UrlsActive")
+
+	@XmlElement(name = "runtime_UrlsActive")
 	private Integer myUrlsActive;
-	
-	@XmlElement(name="runtime_UrlsDown")
+
+	@XmlElement(name = "runtime_UrlsDown")
 	private Integer myUrlsDown;
-	
-	@XmlElement(name="runtime_UrlsUnknown")
+
+	@XmlElement(name = "runtime_UrlsUnknown")
 	private Integer myUrlsUnknown;
+
+	public Boolean getDisplayInPublicRegistry() {
+		return myDisplayInPublicRegistry;
+	}
 
 	public Set<Long> getFailingApplicableRulePids() {
 		if (myFailingApplicableRulePids == null) {
@@ -94,20 +101,6 @@ public abstract class BaseDtoServiceCatalogItem extends BaseDtoDashboardObject i
 	}
 
 	/**
-	 * @return the urlsDown
-	 */
-	public Integer getUrlsDown() {
-		return myUrlsDown;
-	}
-
-	/**
-	 * @return the urlsUnknown
-	 */
-	public Integer getUrlsUnknown() {
-		return myUrlsUnknown;
-	}
-
-	/**
 	 * @return the urlsActive
 	 */
 	public int getUrlsActiveAsIntWithDefault() {
@@ -117,8 +110,22 @@ public abstract class BaseDtoServiceCatalogItem extends BaseDtoDashboardObject i
 	/**
 	 * @return the urlsDown
 	 */
+	public Integer getUrlsDown() {
+		return myUrlsDown;
+	}
+
+	/**
+	 * @return the urlsDown
+	 */
 	public int getUrlsDownAsIntWithDefault() {
 		return myUrlsDown != null ? myUrlsDown : 0;
+	}
+
+	/**
+	 * @return the urlsUnknown
+	 */
+	public Integer getUrlsUnknown() {
+		return myUrlsUnknown;
 	}
 
 	/**
@@ -142,7 +149,7 @@ public abstract class BaseDtoServiceCatalogItem extends BaseDtoDashboardObject i
 		setInheritedObscureResponseElementsInLogCache(obj.getInheritedObscureResponseElementsInLogCache());
 		setObscureRequestElementsInLogCache(obj.getObscureRequestElementsInLogCache());
 		setObscureResponseElementsInLogCache(obj.getObscureResponseElementsInLogCache());
-		
+
 		if (obj.isStatsInitialized()) {
 			getFailingApplicableRulePids().clear();
 			getFailingApplicableRulePids().addAll(obj.getFailingApplicableRulePids());
@@ -150,6 +157,10 @@ public abstract class BaseDtoServiceCatalogItem extends BaseDtoDashboardObject i
 			setUrlsDown(obj.getUrlsDown());
 			setUrlsUnknown(obj.getUrlsUnknown());
 		}
+	}
+
+	public void setDisplayInPublicRegistry(Boolean theDisplayInPublicRegistry) {
+		myDisplayInPublicRegistry = theDisplayInPublicRegistry;
 	}
 
 	public void setInheritedObscureRequestElementsInLogCache(Set<String> theInheritedObscureRequestElementsInLogCache) {

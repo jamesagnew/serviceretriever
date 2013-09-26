@@ -337,7 +337,7 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 			theUrlStatus = theStatuses.getUrlStatus(this.getPid());
 			if (theUrlStatus.getStatus() == StatusEnum.DOWN) {
 				if (theUrlStatus.getNextCircuitBreakerReset() != null) {
-					retVal.setNextCircuitBreakerReset(theUrlStatus.getNextCircuitBreakerReset());
+					retVal.setStatsNextCircuitBreakerReset(theUrlStatus.getNextCircuitBreakerReset());
 				}
 			}
 		
@@ -357,7 +357,6 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 			retVal.setStatsLastFaultContentType(theUrlStatus.getLastFaultContentType());
 		
 			retVal.setStatus(theUrlStatus.getStatus());
-			retVal.setStatsNextCircuitBreakerReset(theUrlStatus.getNextCircuitBreakerReset());
 		
 			StatsAccumulator accumulator = new StatsAccumulator();
 			theRuntimeStatusQuerySvc.extract60MinuteServiceVersionUrlStatistics(this, accumulator);

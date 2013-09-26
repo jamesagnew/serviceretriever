@@ -5,29 +5,46 @@ import java.util.Date;
 import java.util.List;
 import java.util.TreeMap;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.util.ComparableComparator;
 import net.svcret.admin.shared.util.InverseComparator;
 
+@XmlAccessorType(XmlAccessType.FIELD)
 public class GServiceVersionUrl extends BaseDtoDashboardObject {
 
 	private static final long serialVersionUID = 1L;
 
-	private Date myNextCircuitBreakerReset;
+	@XmlElement(name="runtime_StatsLastFailure")
 	private Date myStatsLastFailure;
+	@XmlElement(name="runtime_StatsLastFailureContentType")
 	private String myStatsLastFailureContentType;
+	@XmlElement(name="runtime_StatsLastFailureMessage")
 	private String myStatsLastFailureMessage;
+	@XmlElement(name="runtime_StatsLastFailureStatusCode")
 	private Integer myStatsLastFailureStatusCode;
+	@XmlElement(name="runtime_StatsLastFault")
 	private Date myStatsLastFault;
+	@XmlElement(name="runtime_StatsLastFaultContentType")
 	private String myStatsLastFaultContentType;
+	@XmlElement(name="runtime_StatsLastFaultMessage")
 	private String myStatsLastFaultMessage;
+	@XmlElement(name="runtime_StatsLastFaultStatusCode")
 	private Integer myStatsLastFaultStatusCode;
+	@XmlElement(name="runtime_StatsLastSuccess")
 	private Date myStatsLastSuccess;
+	@XmlElement(name="runtime_StatsLastSuccessContentType")
 	private String myStatsLastSuccessContentType;
+	@XmlElement(name="runtime_StatsLastSuccessMessage")
 	private String myStatsLastSuccessMessage;
+	@XmlElement(name="runtime_StatsLastSuccessStatusCode")
 	private Integer myStatsLastSuccessStatusCode;
+	@XmlElement(name="runtime_StatsNextCircuitBreakerReset")
 	private Date myStatsNextCircuitBreakerReset;
-
+	@XmlElement(name="config_Url")
 	private String myUrl;
 
 	public GServiceVersionUrl() {
@@ -37,10 +54,6 @@ public class GServiceVersionUrl extends BaseDtoDashboardObject {
 	public GServiceVersionUrl(String theId, String theUrl) {
 		setId(theId);
 		myUrl = theUrl;
-	}
-
-	public Date getNextCircuitBreakerReset() {
-		return myNextCircuitBreakerReset;
 	}
 
 	public Date getStatsLastFailure() {
@@ -151,10 +164,6 @@ public class GServiceVersionUrl extends BaseDtoDashboardObject {
 			setStatsLastFault(obj.getStatsLastFault());
 			setStatsLastFaultMessage(obj.getStatsLastFaultMessage());
 		}
-	}
-
-	public void setNextCircuitBreakerReset(Date theNextCircuitBreakerReset) {
-		myNextCircuitBreakerReset = theNextCircuitBreakerReset;
 	}
 
 	public void setStatsLastFailure(Date theStatsLastFailure) {

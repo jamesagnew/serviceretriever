@@ -145,7 +145,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 			url.setStatsLastSuccess(new Date());
 			url.setStatsLastSuccessMessage("This is a success message");
 			url.setStatus(StatusEnum.DOWN);
-			url.setNextCircuitBreakerReset(new Date(System.currentTimeMillis() + 100000));
+			url.setStatsNextCircuitBreakerReset(new Date(System.currentTimeMillis() + 100000));
 			ver.getUrlList().add(url);
 
 			GServiceMethod met = new GServiceMethod();
@@ -1014,7 +1014,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 				for (BaseDtoServiceVersion nextVer : nextSvc.getVersionList()) {
 					for (GServiceVersionUrl nextUrl : nextVer.getUrlList()) {
 						if (nextUrl.getPid() == theUrlPid) {
-							nextUrl.setNextCircuitBreakerReset(new Date(System.currentTimeMillis() + 10000));
+							nextUrl.setStatsNextCircuitBreakerReset(new Date(System.currentTimeMillis() + 10000));
 							return nextUrl;
 						}
 					}

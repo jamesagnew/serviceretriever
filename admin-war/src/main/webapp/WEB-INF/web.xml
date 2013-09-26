@@ -18,6 +18,11 @@
 	</servlet>
 
 	<servlet>
+		<servlet-name>publicRegistryServlet</servlet-name>
+		<servlet-class>net.svcret.admin.server.pub.PublicRegistryServlet</servlet-class>
+	</servlet>
+
+	<servlet>
 		<servlet-name>resourceServlet</servlet-name>
 		<servlet-class>net.svcret.admin.server.rpc.ResourceServlet</servlet-class>
 	</servlet>
@@ -75,6 +80,11 @@
 		<servlet-name>remoteLogging</servlet-name>  
 		<url-pattern>/AdminPortal/remote_logging</url-pattern>  
 	</servlet-mapping>  
+
+	<servlet-mapping>
+		<servlet-name>publicRegistryServlet</servlet-name>
+		<url-pattern>/public/registry.html</url-pattern>
+	</servlet-mapping>
 
 	<servlet-mapping>  
 		<servlet-name>managementServlet</servlet-name>  

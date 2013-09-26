@@ -122,8 +122,8 @@ public abstract class BaseUrlGrid extends FlowPanel {
 						text = "Ok";
 						break;
 					case DOWN:
-						if (next.getNextCircuitBreakerReset() != null) {
-							text = "Down (next circuit breaker reset at " + DateUtil.formatTimeOnly(next.getNextCircuitBreakerReset()) + ")";
+						if (next.getStatsNextCircuitBreakerReset() != null) {
+							text = "Down (next circuit breaker reset at " + DateUtil.formatTimeOnly(next.getStatsNextCircuitBreakerReset()) + ")";
 							cbResetButton = new PButton("Reset CB");
 							cbResetButton.addClickHandler(new CircuitBreakerResetActionHandler(cbResetButton, next.getPid()));
 							cbResetButton.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
