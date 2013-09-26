@@ -14,16 +14,7 @@
 
 * Security column should have an indicator for services with some unsecured methods, or "ALLOW_ANY" status 
 
-* URL list should show CB status and allow a reset
-
 * Should log transactions where the rerquest type is GET as failed transactions (as well as other reasons to throw ProcessingException?)
-
-* Should store the first HTTP line in the request body  
-
-* Monitor active checks should store URL latency and the last response text and allow you to manually trigger them 
-  and show the results of the last test in the panel
-  
-* Deleting URLs from SvcVers doesn't work if they have failed and have rule checks against them
 
 * client and server auths should know what type of service versions they can apply to
 

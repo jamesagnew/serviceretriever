@@ -36,9 +36,6 @@ import org.apache.commons.logging.LogFactory;
  * <li>* (the star character)
  * </ul>
  * </p>
- * 
- * @author <a href="mailto:james.agnew@uhn.on.ca">James Agnew</a>
- * @version $Revision: 79 $ updated on $Date: 2008-06-02 12:46:51 -0400 (Mon, 02 Jun 2008) $ by $Author: jagnew $
  */
 public class StringSubstituter
 {

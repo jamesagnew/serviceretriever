@@ -119,7 +119,7 @@ public abstract class BasePersSavedTransaction implements Serializable {
 
 	public void populate(Date theTransactionTime, HttpRequestBean theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, InvocationResponseResultsBean theInvocationResult,
 			String theResponseBody) {
-		setRequestBody(extractHeadersForBody(theRequest.getRequestHeaders()) + theRequestBody);
+		setRequestBody(extractHeadersForBody(theRequest) + theRequestBody);
 		setImplementationUrl(theImplementationUrl);
 		setResponseBody(extractHeadersForBody(theInvocationResult.getResponseHeaders()) + theResponseBody);
 		setResponseType(theInvocationResult.getResponseType());
@@ -164,7 +164,7 @@ public abstract class BasePersSavedTransaction implements Serializable {
 	 *            the responseType to set
 	 */
 	public void setResponseType(ResponseTypeEnum theResponseType) {
-		if (theResponseType==null) {
+		if (theResponseType == null) {
 			throw new NullPointerException();
 		}
 		myResponseType = theResponseType;
@@ -186,11 +186,25 @@ public abstract class BasePersSavedTransaction implements Serializable {
 		myTransactionTime = theTransactionTime;
 	}
 
-	private String extractHeadersForBody(Map<String, List<String>> headers) {
+	private String extractHeadersForBody(HttpRequestBean theRequest) {
 		StringBuilder b = new StringBuilder();
-		if (headers != null) {
-			for (String nextHeader : headers.keySet()) {
-				for (String nextValue : headers.get(nextHeader)) {
+
+		b.append(theRequest.getRequestType().name()).append(' ');
+		b.append(theRequest.getRequestFullUri()).append(' ');
+		b.append(theRequest.getProtocol()).append("\r\n");
+
+		Map<String, List<String>> headers = theRequest.getRequestHeaders();
+		return extractHeadersForBody(headers, b);
+	}
+
+	private String extractHeadersForBody(Map<String, List<String>> theResponseHeaders) {
+		return extractHeadersForBody(theResponseHeaders, new StringBuilder());
+	}
+
+	private String extractHeadersForBody(Map<String, List<String>> theHeaders, StringBuilder b) {
+		if (theHeaders != null) {
+			for (String nextHeader : theHeaders.keySet()) {
+				for (String nextValue : theHeaders.get(nextHeader)) {
 					b.append(nextHeader).append(": ").append(nextValue).append("\r\n");
 				}
 			}

@@ -47,15 +47,10 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 	private ListBox myDomainListBox;
 	private Long myDomainPid;
 	private LoadingSpinner myLoadingSpinner;
-
 	private HtmlLabel myNewDomainLabel;
-
 	private TextBox myNewDomainNameTextBox;
-
 	private HtmlLabel myNewServiceLabel;
-
 	private TextBox myNewServiceNameTextBox;
-
 	private TwoColumnGrid myParentsGrid2;
 	private ListBox myServiceListBox;
 	private Long myServicePid;
@@ -317,6 +312,11 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 
 	protected BaseDetailPanel<?> getBottomContents() {
 		return myBottomContents;
+	}
+
+	protected void lockParents() {
+		myDomainListBox.setEnabled(false);
+		myServiceListBox.setEnabled(false);
 	}
 
 	protected abstract String getDialogDescription();

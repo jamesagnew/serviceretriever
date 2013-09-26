@@ -70,7 +70,7 @@ public class ServiceServlet extends HttpServlet {
 		}
 	}
 
-	private void doHandle(HttpServletRequest theReq, HttpServletResponse theResp, RequestType get) throws IOException {
+	private void doHandle(HttpServletRequest theReq, HttpServletResponse theResp, RequestType requestAction) throws IOException {
 		long start = System.currentTimeMillis();
 
 		String path = theReq.getRequestURI().substring(theReq.getContextPath().length());
@@ -85,19 +85,23 @@ public class ServiceServlet extends HttpServlet {
 		String query = "?" + theReq.getQueryString();
 		String requestURL = theReq.getRequestURL().toString();
 		String requestHostIp = theReq.getRemoteAddr();
+		String protocol = theReq.getProtocol();
+		String requestURI = theReq.getRequestURI();
 
 		String base = extractBase(contextPath, requestURL);
 
-		ourLog.debug("New {} request at path[{}] and base[{}] and context path[{}]", new Object[] { get.name(), path, base, contextPath });
+		ourLog.debug("New {} request at path[{}] and base[{}] and context path[{}]", new Object[] { requestAction.name(), path, base, contextPath });
 
 		OrchestratorResponseBean response;
 		try {
 			HttpRequestBean request = new HttpRequestBean();
-			request.setRequestType(get);
+			request.setRequestType(requestAction);
 			request.setRequestHostIp(requestHostIp);
 			request.setPath(path);
+			request.setRequestFullUri(requestURI);
 			request.setQuery(query);
 			request.setBase(base);
+			request.setProtocol(protocol);
 			request.setContextPath(contextPath);
 			request.setInputReader(theReq.getReader());
 			request.setRequestTime(new Date(start));
@@ -149,7 +153,7 @@ public class ServiceServlet extends HttpServlet {
 		sendSuccessfulResponse(theResp, response);
 
 		long delay = System.currentTimeMillis() - start;
-		ourLog.info("Handled {} request at path[{}] with {} byte response in {} ms", new Object[] { get.name(), path, response.getResponseBody().length(), delay });
+		ourLog.info("Handled {} request at path[{}] with {} byte response in {} ms", new Object[] { requestAction.name(), path, response.getResponseBody().length(), delay });
 	}
 
 	@Override
