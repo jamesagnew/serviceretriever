@@ -6,6 +6,7 @@ import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
+import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceVersionList;
 
@@ -24,8 +25,10 @@ public class EditServiceVersionsPanel extends FlowPanel {
 	private Button myAddServiceButton;
 	private GService myService;
 	private Grid myServicesGrid;
+	private GDomain myDomain;
 
-	public EditServiceVersionsPanel(GService theService) {
+	public EditServiceVersionsPanel(GDomain theDomain, GService theService) {
+		myDomain = theDomain;
 		myService = theService;
 
 		add(new Label("A service must have at least one version defined in order to be invoked. " +
@@ -44,7 +47,7 @@ public class EditServiceVersionsPanel extends FlowPanel {
 
 		add(new HtmlBr());
 
-		myAddServiceButton = new PButton("Add Version");
+		myAddServiceButton = new PButton(AdminPortal.IMAGES.iconAdd(), "Add Version");
 		myAddServiceButton.addClickHandler(new AddServiceClickHandler());
 		add(myAddServiceButton);
 
@@ -98,7 +101,7 @@ public class EditServiceVersionsPanel extends FlowPanel {
 
 		@Override
 		public void onClick(ClickEvent theEvent) {
-			History.newItem(NavProcessor.getTokenAddService(myService.getPid()));
+			History.newItem(NavProcessor.getTokenAddServiceVersion(myDomain.getPid(), myService.getPid(), null));
 		}
 
 	}

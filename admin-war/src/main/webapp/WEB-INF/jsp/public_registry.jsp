@@ -1,3 +1,4 @@
+<%@page import="net.svcret.admin.shared.model.DtoServiceVersionSoap11"%>
 <%@page import="net.svcret.admin.shared.model.GConfig"%>
 <%@page import="net.svcret.admin.shared.model.BaseDtoServiceVersion"%>
 <%@page import="net.svcret.admin.shared.model.GService"%>
@@ -49,9 +50,17 @@ for (GDomain nextDomain : domainList) {
 			<td>
 				<%
 					if (!nextVersion.isUseDefaultProxyPath()) {
-						out.append(baseUrl + nextVersion.getExplicitProxyPath());
+						out.append("<a href=\"" + baseUrl + nextVersion.getExplicitProxyPath() + "\">Endpoint</a>");
 					} else {
-						out.append(baseUrl + nextVersion.getDefaultProxyPath());
+						out.append("<a href=\"" + baseUrl + nextVersion.getDefaultProxyPath() + "\">Endpoint</a>");
+					}
+				
+					if (nextVersion instanceof DtoServiceVersionSoap11) {
+						if (!nextVersion.isUseDefaultProxyPath()) {
+							out.append(" <a href=\"" + baseUrl + nextVersion.getExplicitProxyPath() + "?wsdl\">WSDL</a>");
+						} else {
+							out.append(" <a href=\"" + baseUrl + nextVersion.getDefaultProxyPath() + "?wsdl\">WSDL</a>");
+						}
 					}
 				%>
 			</td>

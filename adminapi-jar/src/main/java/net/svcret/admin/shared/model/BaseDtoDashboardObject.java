@@ -152,7 +152,7 @@ public abstract class BaseDtoDashboardObject extends BaseDtoKeepsRecentMessages 
 	/**
 	 * @return the averageLatency
 	 */
-	public int getMaxLatency60min() {
+	public Integer getMaxLatency60min() {
 		return myMaxLatency60min;
 	}
 

@@ -58,7 +58,9 @@ public abstract class BaseUrlGrid extends FlowPanel {
 
 		int peakLatency = 1;
 		for (final GServiceVersionUrl next : theUrlList) {
-			peakLatency = Math.max(peakLatency, next.getMaxLatency60min());
+			if (next.getMaxLatency60min() != null) {
+				peakLatency = Math.max(peakLatency, next.getMaxLatency60min());
+			}
 		}
 
 		for (final GServiceVersionUrl next : theUrlList) {

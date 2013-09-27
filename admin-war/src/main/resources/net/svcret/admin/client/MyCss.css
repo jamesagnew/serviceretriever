@@ -74,6 +74,14 @@
 	color: #FF0000;
 }
 
+UL.tableEmbeddedUnorderedList {
+	padding-left: 20px;	
+}
+
+UL.tableEmbeddedUnorderedList LI {
+	text-indent: -7px;
+}
+
 .tooltipPopup {
 	background: rgba(0, 0, 0, 0.8);
 	color: #FFF;

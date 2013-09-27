@@ -174,9 +174,15 @@ public abstract class BasePersSavedTransactionRecentMessage extends BasePersSave
 
 	private static List<Pair<String>> toHeaders(String theHeaders) {
 		ArrayList<Pair<String>> retVal = new ArrayList<Pair<String>>();
+		int index = 0;
 		for (String next : theHeaders.split("\\r\\n")) {
-			int idx = next.indexOf(": ");
-			retVal.add(new Pair<String>(next.substring(0, idx), next.substring(idx + 2)));
+			int colonIndex = next.indexOf(": ");
+			if (index == 0 && colonIndex == -1) {
+				// First line is generally the action line for request messages
+				continue;
+			}
+			retVal.add(new Pair<String>(next.substring(0, colonIndex), next.substring(colonIndex + 2)));
+			index++;
 		}
 		return retVal;
 	}

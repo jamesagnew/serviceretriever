@@ -165,7 +165,9 @@ public class NavProcessor {
 
 	public static String getTokenAddServiceVersion(Long theDomainId, Long theServiceId, Long theUncommittedSessionId) {
 		if (theUncommittedSessionId != null) {
-			return createArgumentToken(PagesEnum.ASV, theDomainId , theServiceId , theUncommittedSessionId);
+			return createArgumentToken(PagesEnum.ASV, theDomainId, theServiceId, theUncommittedSessionId);
+		} else if (theDomainId != null && theServiceId != null) {
+			return createArgumentToken(PagesEnum.ASV, theDomainId, theServiceId);
 		} else {
 			return createArgumentToken(PagesEnum.ASV);
 		}
@@ -193,8 +195,8 @@ public class NavProcessor {
 	}
 
 	public static String getTokenDeleteService(long theDomainPid, long theServicePid) {
-		return createArgumentToken(DSE,theDomainPid, theServicePid				);
-		
+		return createArgumentToken(DSE, theDomainPid, theServicePid);
+
 	}
 
 	public static String getTokenDeleteServiceVersion(long thePid) {
@@ -214,7 +216,7 @@ public class NavProcessor {
 	}
 
 	public static String getTokenEditService(long theDomainPid, long theServicePid) {
-		return createArgumentToken(ESE, theDomainPid,theServicePid);
+		return createArgumentToken(ESE, theDomainPid, theServicePid);
 	}
 
 	public static String getTokenEditServiceVersion(long theVersionPid) {
@@ -284,15 +286,15 @@ public class NavProcessor {
 	}
 
 	public static String getTokenViewServiceVersionRecentMessage(long thePid) {
-		return createArgumentToken(RSV,thePid);
+		return createArgumentToken(RSV, thePid);
 	}
 
 	public static String getTokenServiceVersionRecentMessages(long thePid) {
-		return createArgumentToken(SRM,thePid);
+		return createArgumentToken(SRM, thePid);
 	}
 
 	public static String getTokenViewUserRecentMessage(long thePid) {
-		return createArgumentToken(RUS,thePid);
+		return createArgumentToken(RUS, thePid);
 	}
 
 	public static String getTokenUserRecentMessages(long theUserPid) {
@@ -409,10 +411,10 @@ public class NavProcessor {
 			}
 			break;
 		case RPU:
-			panel = new ReplayMessagePanel(ReplayMessagePanel.MSGTYPE_USER, Long.parseLong( args));
+			panel = new ReplayMessagePanel(ReplayMessagePanel.MSGTYPE_USER, Long.parseLong(args));
 			break;
 		case RPM:
-			panel = new ReplayMessagePanel(ReplayMessagePanel.MSGTYPE_SVCVER, Long.parseLong( args));
+			panel = new ReplayMessagePanel(ReplayMessagePanel.MSGTYPE_SVCVER, Long.parseLong(args));
 			break;
 		case DSH:
 			panel = new ServiceDashboardPanel();
@@ -511,22 +513,21 @@ public class NavProcessor {
 		return token;
 	}
 
-
-//	private static String createArgumentToken(PagesEnum thePage, long... theArgument) {
-//		String token = createArgumentToken(thePage);
-//		for (long next : theArgument) {
-//			token = token + "_" + next;
-//		}
-//		token = removeDuplicates(token);
-//		return token;
-//	}
+	// private static String createArgumentToken(PagesEnum thePage, long... theArgument) {
+	// String token = createArgumentToken(thePage);
+	// for (long next : theArgument) {
+	// token = token + "_" + next;
+	// }
+	// token = removeDuplicates(token);
+	// return token;
+	// }
 
 	private static String createArgumentTokenInternal(PagesEnum thePage) {
 		String token = "";
-			token = getCurrentToken();
-			if (!token.isEmpty()) {
-				token = token + SEPARATOR;
-			}
+		token = getCurrentToken();
+		if (!token.isEmpty()) {
+			token = token + SEPARATOR;
+		}
 		token = token + thePage;
 		return token;
 	}

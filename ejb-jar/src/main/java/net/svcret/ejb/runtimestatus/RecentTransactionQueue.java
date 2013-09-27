@@ -11,7 +11,6 @@ public class RecentTransactionQueue {
 	static final int MAX_SIZE = 50000;
 
 	private final Date myInitialized = new Date();
-
 	private final LinkedList<Date> myRecentDates = new LinkedList<Date>();
 
 	public synchronized void addDate(Date theDate) {
@@ -25,7 +24,7 @@ public class RecentTransactionQueue {
 		return myInitialized;
 	}
 
-	public double getTransactionsPerMinute() {
+	public synchronized double getTransactionsPerMinute() {
 		Date start = new Date();
 		Date nextCutoff = DateUtils.addMinutes(start, -1);
 
@@ -57,7 +56,7 @@ public class RecentTransactionQueue {
 					}
 				}
 			}
-			
+
 		}
 
 		if (myRecentDates.size() > 1) {
@@ -82,11 +81,11 @@ public class RecentTransactionQueue {
 		return 0.0;
 	}
 
-	public Date getLastTransaction() {
+	public synchronized Date getLastTransaction() {
 		return myRecentDates.peekFirst();
 	}
 
-	public int getSize() {
+	public synchronized int getSize() {
 		return myRecentDates.size();
 	}
 

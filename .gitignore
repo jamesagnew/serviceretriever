@@ -1,3 +1,4 @@
 /bin2
 /admin-war/src/main/webapp/WEB-INF/classes
 .DS_Store
+*.log
