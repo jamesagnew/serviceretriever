@@ -143,4 +143,9 @@ public class ServiceVersionUrlGrid extends BaseUrlGrid {
 		}
 	}
 
+	@Override
+	protected String provideActionColumnHeaderText() {
+		return "";
+	}
+
 }

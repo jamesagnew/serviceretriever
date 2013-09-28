@@ -2,7 +2,7 @@ package net.svcret.admin.client.ui.config.sec;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
-import net.svcret.admin.shared.model.GAuthenticationHostList;
+import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.GNamedParameterJsonRpcServerAuth;
 
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -18,13 +18,13 @@ public class JsonRpcNamedParameterServerSecurity extends BaseServerSecurityViewA
 	}
 
 	@Override
-	protected void initViewPanel(int theRow, GNamedParameterJsonRpcServerAuth theObject, TwoColumnGrid thePanelToPopulate, GAuthenticationHostList theAuthenticationHostList) {
+	protected void initViewPanel(int theRow, GNamedParameterJsonRpcServerAuth theObject, TwoColumnGrid thePanelToPopulate, DtoAuthenticationHostList theAuthenticationHostList) {
 		thePanelToPopulate.addRow("Username Parameter Name", new Label(theObject.getUsernameParameterName()));
 		thePanelToPopulate.addRow("Password Parameter Name", new Label(theObject.getPasswordParameterName()));
 	}
 
 	@Override
-	protected void initEditPanel(int theRow, final GNamedParameterJsonRpcServerAuth theObject, TwoColumnGrid thePanelToPopulate, GAuthenticationHostList theAuthenticationHostList) {
+	protected void initEditPanel(int theRow, final GNamedParameterJsonRpcServerAuth theObject, TwoColumnGrid thePanelToPopulate, DtoAuthenticationHostList theAuthenticationHostList) {
 		TextBox usernameTextBox = new TextBox();
 		usernameTextBox.setValue(theObject.getUsernameParameterName());
 		usernameTextBox.addValueChangeHandler(new ValueChangeHandler<String>() {

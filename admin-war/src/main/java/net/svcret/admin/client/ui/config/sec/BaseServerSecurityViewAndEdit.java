@@ -6,9 +6,9 @@ import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.BaseDtoAuthHost;
+import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
 import net.svcret.admin.shared.model.BaseDtoServerSecurity;
-import net.svcret.admin.shared.model.GAuthenticationHostList;
+import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
@@ -25,10 +25,10 @@ public abstract class BaseServerSecurityViewAndEdit<T extends BaseDtoServerSecur
 		flowPanel.add(new Label(provideName()));
 		flowPanel.add(new HtmlBr());
 		
-		Model.getInstance().loadAuthenticationHosts(new IAsyncLoadCallback<GAuthenticationHostList>() {
+		Model.getInstance().loadAuthenticationHosts(new IAsyncLoadCallback<DtoAuthenticationHostList>() {
 			@Override
-			public void onSuccess(GAuthenticationHostList theResult) {
-				BaseDtoAuthHost authHost = theResult.getAuthHostByPid(theObject.getAuthHostPid());
+			public void onSuccess(DtoAuthenticationHostList theResult) {
+				BaseDtoAuthenticationHost authHost = theResult.getAuthHostByPid(theObject.getAuthHostPid());
 				if (authHost!=null) {
 					flowPanel.add(new Label(AdminPortal.MSGS.wsSecServerSecurity_UsesAuthenticationHost(authHost.getModuleId())));
 				}
@@ -44,9 +44,9 @@ public abstract class BaseServerSecurityViewAndEdit<T extends BaseDtoServerSecur
 		return flowPanel;
 	}
 
-	protected abstract void initViewPanel(int theRow, T theObject, TwoColumnGrid thePanelToPopulate, GAuthenticationHostList theAuthenticationHostList);
+	protected abstract void initViewPanel(int theRow, T theObject, TwoColumnGrid thePanelToPopulate, DtoAuthenticationHostList theAuthenticationHostList);
 
-	protected abstract void initEditPanel(int theRow, T theObject, TwoColumnGrid thePanelToPopulate, GAuthenticationHostList theAuthenticationHostList);
+	protected abstract void initEditPanel(int theRow, T theObject, TwoColumnGrid thePanelToPopulate, DtoAuthenticationHostList theAuthenticationHostList);
 
 	protected abstract String provideName();
 
@@ -62,11 +62,11 @@ public abstract class BaseServerSecurityViewAndEdit<T extends BaseDtoServerSecur
 		final ListBox authHostList = new ListBox(false);
 		propertyGrid.addRow(AdminPortal.MSGS.wsSecServerSecurity_AuthenticationHost(), authHostList);
 		
-		Model.getInstance().loadAuthenticationHosts(new IAsyncLoadCallback<GAuthenticationHostList>() {
+		Model.getInstance().loadAuthenticationHosts(new IAsyncLoadCallback<DtoAuthenticationHostList>() {
 			@Override
-			public void onSuccess(final GAuthenticationHostList theResult) {
+			public void onSuccess(final DtoAuthenticationHostList theResult) {
 				int index=0;
-				for (BaseDtoAuthHost next : theResult) {
+				for (BaseDtoAuthenticationHost next : theResult) {
 					authHostList.addItem(next.getModuleId() + " (" + next.getModuleName() + ")");
 					if (theObject.getAuthHostPid()==next.getPid()) {
 						authHostList.setSelectedIndex(index);

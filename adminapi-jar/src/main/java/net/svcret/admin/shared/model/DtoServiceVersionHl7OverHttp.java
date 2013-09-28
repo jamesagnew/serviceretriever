@@ -19,7 +19,7 @@ public class DtoServiceVersionHl7OverHttp extends BaseDtoServiceVersion {
 	
 	private static final long serialVersionUID = 1L;
 
-	@XmlElement(name="config_MethodNameTemplate")
+	@XmlElement(name="MethodNameTemplate")
 	private String myMethodNameTemplate;
 
 	public String getMethodNameTemplate() {

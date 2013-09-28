@@ -4,11 +4,11 @@ import static net.svcret.admin.client.AdminPortal.MSGS;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.HtmlH1;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
-import net.svcret.admin.shared.model.GLdapAuthHost;
+import net.svcret.admin.shared.model.DtoAuthenticationHostLdap;
 
 import com.google.gwt.user.client.ui.TextBox;
 
-public class LdapAuthenticationHostEditPanel extends BaseAuthenticationHostEditPanel<GLdapAuthHost> {
+public class LdapAuthenticationHostEditPanel extends BaseAuthenticationHostEditPanel<DtoAuthenticationHostLdap> {
 
 	private TextBox myUrlTextBox;
 	private TextBox myBindUserTextBox;
@@ -16,7 +16,7 @@ public class LdapAuthenticationHostEditPanel extends BaseAuthenticationHostEditP
 	private TextBox myAuthenticateBaseDnTextBox;
 	private TextBox myAuthenticateFilterTextBox;
 
-	public LdapAuthenticationHostEditPanel(AuthenticationHostsPanel thePanel, GLdapAuthHost theAuthHost) {
+	public LdapAuthenticationHostEditPanel(AuthenticationHostsPanel thePanel, DtoAuthenticationHostLdap theAuthHost) {
 		super(thePanel, theAuthHost);
 
 		// URL

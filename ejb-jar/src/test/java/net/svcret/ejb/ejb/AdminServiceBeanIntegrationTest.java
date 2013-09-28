@@ -35,7 +35,7 @@ import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GHttpClientConfig;
-import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
+import net.svcret.admin.shared.model.DtoAuthenticationHostLocalDatabase;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GMonitorRulePassive;
 import net.svcret.admin.shared.model.GResource;
@@ -1448,10 +1448,10 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		d2s1v1m1.setName("d2s1v1m1");
 		d2s1v1m1 = mySvc.addServiceVersionMethod(d2s1v1.getPid(), d2s1v1m1);
 
-		GLocalDatabaseAuthHost authHost = new GLocalDatabaseAuthHost();
+		DtoAuthenticationHostLocalDatabase authHost = new DtoAuthenticationHostLocalDatabase();
 		authHost.setModuleId("authHost");
 		authHost.setModuleName("authHost");
-		authHost = (GLocalDatabaseAuthHost) mySvc.saveAuthenticationHost(authHost).get(0);
+		authHost = (DtoAuthenticationHostLocalDatabase) mySvc.saveAuthenticationHost(authHost).get(0);
 
 		newEntityManager();
 

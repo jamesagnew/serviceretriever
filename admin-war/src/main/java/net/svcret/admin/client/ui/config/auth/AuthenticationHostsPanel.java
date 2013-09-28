@@ -7,10 +7,10 @@ import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.enm.AuthorizationHostTypeEnum;
-import net.svcret.admin.shared.model.BaseDtoAuthHost;
-import net.svcret.admin.shared.model.GAuthenticationHostList;
-import net.svcret.admin.shared.model.GLdapAuthHost;
-import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
+import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
+import net.svcret.admin.shared.model.DtoAuthenticationHostList;
+import net.svcret.admin.shared.model.DtoAuthenticationHostLdap;
+import net.svcret.admin.shared.model.DtoAuthenticationHostLocalDatabase;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.event.dom.client.ChangeEvent;
@@ -35,7 +35,7 @@ public class AuthenticationHostsPanel extends FlowPanel {
 	private ListBox myHostsListBox;
 	private boolean myUpdatingConfigsListBox;
 	private Long mySelectedPid;
-	private GAuthenticationHostList myConfigs;
+	private DtoAuthenticationHostList myConfigs;
 	private FlowPanel myDetailsContainer;
 	private ListBox myAddListBox;
 	private static long ourNextTemporaryPid = -1;
@@ -44,9 +44,9 @@ public class AuthenticationHostsPanel extends FlowPanel {
 		initListPanel();
 		initDetailsPanel();
 
-		Model.getInstance().loadAuthenticationHosts(new IAsyncLoadCallback<GAuthenticationHostList>() {
+		Model.getInstance().loadAuthenticationHosts(new IAsyncLoadCallback<DtoAuthenticationHostList>() {
 			@Override
-			public void onSuccess(GAuthenticationHostList theResult) {
+			public void onSuccess(DtoAuthenticationHostList theResult) {
 				setHostList(theResult);
 			}
 		});
@@ -143,7 +143,7 @@ public class AuthenticationHostsPanel extends FlowPanel {
 		 * portal itself be deleted
 		 */
 
-		BaseDtoAuthHost config = myConfigs.get(myHostsListBox.getSelectedIndex());
+		BaseDtoAuthenticationHost config = myConfigs.get(myHostsListBox.getSelectedIndex());
 		if (!Window.confirm(AdminPortal.MSGS.baseAuthenticationHostEditPanel_ConfirmDelete(config.getModuleId()))) {
 			return;
 		}
@@ -152,14 +152,14 @@ public class AuthenticationHostsPanel extends FlowPanel {
 			myConfigs.remove(config);
 			setHostList(myConfigs);
 		} else {
-			AdminPortal.MODEL_SVC.removeAuthenticationHost(config.getPid(), new AsyncCallback<GAuthenticationHostList>() {
+			AdminPortal.MODEL_SVC.removeAuthenticationHost(config.getPid(), new AsyncCallback<DtoAuthenticationHostList>() {
 				@Override
 				public void onFailure(Throwable theCaught) {
 					Model.handleFailure(theCaught);
 				}
 
 				@Override
-				public void onSuccess(GAuthenticationHostList theResult) {
+				public void onSuccess(DtoAuthenticationHostList theResult) {
 					setHostList(theResult);
 				}
 			});
@@ -169,7 +169,7 @@ public class AuthenticationHostsPanel extends FlowPanel {
 	private void addHost() {
 		switch (AuthorizationHostTypeEnum.values()[myAddListBox.getSelectedIndex()]) {
 		case LOCAL_DATABASE: {
-			GLocalDatabaseAuthHost host = new GLocalDatabaseAuthHost();
+			DtoAuthenticationHostLocalDatabase host = new DtoAuthenticationHostLocalDatabase();
 			host.setPid(ourNextTemporaryPid--);
 			populateNewNameAndId(host);
 			myConfigs.add(host);
@@ -177,7 +177,7 @@ public class AuthenticationHostsPanel extends FlowPanel {
 			break;
 		}
 		case LDAP: {
-			GLdapAuthHost host = new GLdapAuthHost();
+			DtoAuthenticationHostLdap host = new DtoAuthenticationHostLdap();
 			host.setPid(ourNextTemporaryPid--);
 			host.setDefaults();
 			populateNewNameAndId(host);
@@ -191,12 +191,12 @@ public class AuthenticationHostsPanel extends FlowPanel {
 		updateSelectedHost();
 	}
 
-	private void populateNewNameAndId(BaseDtoAuthHost host) {
+	private void populateNewNameAndId(BaseDtoAuthenticationHost host) {
 		host.setModuleId("Untitled");
 		host.setModuleName("Untitled");
 	}
 
-	public void setHostList(GAuthenticationHostList theHostList) {
+	public void setHostList(DtoAuthenticationHostList theHostList) {
 		assert theHostList.size() > 0;
 		myConfigListLoadingSpinner.hideCompletely();
 		myConfigs = theHostList;
@@ -209,7 +209,7 @@ public class AuthenticationHostsPanel extends FlowPanel {
 		myHostsListBox.clear();
 
 		int selectedIndex = 0;
-		for (BaseDtoAuthHost next : myConfigs) {
+		for (BaseDtoAuthenticationHost next : myConfigs) {
 			String desc = next.getModuleId();
 			if (StringUtil.isNotBlank(next.getModuleName())) {
 				desc = desc + " - " + next.getModuleName();
@@ -234,14 +234,14 @@ public class AuthenticationHostsPanel extends FlowPanel {
 	}
 
 	private void updateSelectedHost() {
-		BaseDtoAuthHost host = myConfigs.getAuthHostByPid(mySelectedPid);
+		BaseDtoAuthenticationHost host = myConfigs.getAuthHostByPid(mySelectedPid);
 		Widget panel = null;
 		switch (host.getType()) {
 		case LOCAL_DATABASE:
-			panel = new LocalDatabaseAuthenticationHostEditPanel(this, (GLocalDatabaseAuthHost) host);
+			panel = new LocalDatabaseAuthenticationHostEditPanel(this, (DtoAuthenticationHostLocalDatabase) host);
 			break;
 		case LDAP:
-			panel = new LdapAuthenticationHostEditPanel(this, (GLdapAuthHost) host);
+			panel = new LdapAuthenticationHostEditPanel(this, (DtoAuthenticationHostLdap) host);
 			break;
 		}
 

@@ -2,20 +2,32 @@ package net.svcret.admin.shared.model;
 
 import java.io.Serializable;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+
 import net.svcret.admin.shared.enm.NodeStatusEnum;
 
+@XmlAccessorType(XmlAccessType.FIELD)
 public class DtoNodeStatus implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
+	@XmlElement(name = "NodeId")
 	private String myNodeId;
+	@XmlElement(name = "Status")
 	private NodeStatusEnum myStatus;
+	@XmlElement(name = "TimeElapsedSinceDown")
 	private Long myTimeElapsedSinceDown;
+	@XmlElement(name = "TimeElapsedSinceLastTx")
 	private Long myTimeElapsedSinceLastTx;
+	@XmlElement(name = "TransactionsFailPerMinute")
 	private double myTransactionsFailPerMinute;
+	@XmlElement(name = "TransactionsFaultPerMinute")
 	private double myTransactionsFaultPerMinute;
+	@XmlElement(name = "TransactionsSecurityFailPerMinute")
 	private double myTransactionsSecurityFailPerMinute;
-
+	@XmlElement(name = "TransactionsSuccessPerMinute")
 	private double myTransactionsSuccessfulPerMinute;
 
 	public String getNodeId() {

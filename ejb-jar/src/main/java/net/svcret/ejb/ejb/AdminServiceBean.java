@@ -21,7 +21,7 @@ import javax.ejb.TransactionAttributeType;
 
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
-import net.svcret.admin.shared.model.BaseDtoAuthHost;
+import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
 import net.svcret.admin.shared.model.BaseDtoClientSecurity;
 import net.svcret.admin.shared.model.BaseDtoMonitorRule;
 import net.svcret.admin.shared.model.BaseDtoServerSecurity;
@@ -32,14 +32,14 @@ import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
-import net.svcret.admin.shared.model.GAuthenticationHostList;
+import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
-import net.svcret.admin.shared.model.GLdapAuthHost;
-import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
+import net.svcret.admin.shared.model.DtoAuthenticationHostLdap;
+import net.svcret.admin.shared.model.DtoAuthenticationHostLocalDatabase;
 import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleFiringProblem;
@@ -268,7 +268,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GAuthenticationHostList deleteAuthenticationHost(long thePid) throws ProcessingException {
+	public DtoAuthenticationHostList deleteAuthenticationHost(long thePid) throws ProcessingException {
 
 		BasePersAuthenticationHost authHost = myDao.getAuthenticationHostByPid(thePid);
 		if (authHost == null) {
@@ -432,7 +432,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public BaseDtoAuthHost loadAuthenticationHost(long thePid) throws ProcessingException {
+	public BaseDtoAuthenticationHost loadAuthenticationHost(long thePid) throws ProcessingException {
 		ourLog.info("Loading authentication host with PID: {}", thePid);
 
 		BasePersAuthenticationHost authHost = myDao.getAuthenticationHostByPid(thePid);
@@ -480,7 +480,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 
 		if (theRequest.isLoadAuthHosts()) {
-			GAuthenticationHostList hostList = loadAuthHostList();
+			DtoAuthenticationHostList hostList = loadAuthHostList();
 			retVal.setAuthenticationHostList(hostList);
 		}
 
@@ -727,7 +727,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		// Only add URLs if there aren't any already defined for this version
 		if (theService.getUrlList().size() == 0) {
 			for (PersServiceVersionUrl next : def.getUrls()) {
-				theService.getUrlList().add(next.toDao(false, (StatusesBean) null, myRuntimeStatusQuerySvc));
+				theService.getUrlList().add(next.toDto(false, (StatusesBean) null, myRuntimeStatusQuerySvc));
 			}
 		}
 
@@ -761,7 +761,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GAuthenticationHostList saveAuthenticationHost(BaseDtoAuthHost theAuthHost) throws ProcessingException {
+	public DtoAuthenticationHostList saveAuthenticationHost(BaseDtoAuthenticationHost theAuthHost) throws ProcessingException {
 		Validate.notNull(theAuthHost);
 
 		BasePersAuthenticationHost host = fromUi(theAuthHost);
@@ -1137,13 +1137,13 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	// extractSuccessfulInvocationInvocationTimes(myConfigSvc.getConfig(), theNumMinsBack, the60MinInvCount, the60minTime, nextMethod, statusSvc);
 	// }
 
-	private BasePersAuthenticationHost fromUi(BaseDtoAuthHost theAuthHost) {
+	private BasePersAuthenticationHost fromUi(BaseDtoAuthenticationHost theAuthHost) {
 		BasePersAuthenticationHost retVal = null;
 
 		switch (theAuthHost.getType()) {
 		case LDAP:
 			PersAuthenticationHostLdap pLdap = new PersAuthenticationHostLdap();
-			GLdapAuthHost uiLdap = (GLdapAuthHost) theAuthHost;
+			DtoAuthenticationHostLdap uiLdap = (DtoAuthenticationHostLdap) theAuthHost;
 			pLdap.setAuthenticateBaseDn(uiLdap.getAuthenticateBaseDn());
 			pLdap.setAuthenticateFilter(uiLdap.getAuthenticateFilter());
 			pLdap.setBindPassword(uiLdap.getBindUserPassword());
@@ -1486,10 +1486,10 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return false;
 	}
 
-	private GAuthenticationHostList loadAuthHostList() {
-		GAuthenticationHostList retVal = new GAuthenticationHostList();
+	private DtoAuthenticationHostList loadAuthHostList() {
+		DtoAuthenticationHostList retVal = new DtoAuthenticationHostList();
 		for (BasePersAuthenticationHost next : myDao.getAllAuthenticationHosts()) {
-			BaseDtoAuthHost uiObject = toUi(next);
+			BaseDtoAuthenticationHost uiObject = toUi(next);
 			retVal.add(uiObject);
 		}
 		return retVal;
@@ -1602,14 +1602,14 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private BaseDtoAuthHost toUi(BasePersAuthenticationHost thePersObj) {
-		BaseDtoAuthHost retVal = null;
+	private BaseDtoAuthenticationHost toUi(BasePersAuthenticationHost thePersObj) {
+		BaseDtoAuthenticationHost retVal = null;
 		switch (thePersObj.getType()) {
 		case LOCAL_DATABASE:
-			retVal = new GLocalDatabaseAuthHost();
+			retVal = new DtoAuthenticationHostLocalDatabase();
 			break;
 		case LDAP:
-			GLdapAuthHost dto = new GLdapAuthHost();
+			DtoAuthenticationHostLdap dto = new DtoAuthenticationHostLdap();
 			PersAuthenticationHostLdap uiLdap = (PersAuthenticationHostLdap) thePersObj;
 			retVal = dto;
 			dto.setAuthenticateBaseDn(uiLdap.getAuthenticateBaseDn());

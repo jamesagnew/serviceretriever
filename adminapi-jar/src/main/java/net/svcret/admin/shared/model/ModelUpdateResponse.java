@@ -8,7 +8,7 @@ public class ModelUpdateResponse implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private GAuthenticationHostList myAuthenticationHostList;
+	private DtoAuthenticationHostList myAuthenticationHostList;
 	private GDomainList myDomainList;
 	private GHttpClientConfigList myHttpClientConfigList;
 	private List<DtoNodeStatus> myNodeStatuses;
@@ -17,7 +17,7 @@ public class ModelUpdateResponse implements Serializable {
 	/**
 	 * @return the authenticationHostList
 	 */
-	public GAuthenticationHostList getAuthenticationHostList() {
+	public DtoAuthenticationHostList getAuthenticationHostList() {
 		return myAuthenticationHostList;
 	}
 
@@ -49,7 +49,7 @@ public class ModelUpdateResponse implements Serializable {
 		return myUserList;
 	}
 
-	public void setAuthenticationHostList(GAuthenticationHostList theAuthenticationHostList) {
+	public void setAuthenticationHostList(DtoAuthenticationHostList theAuthenticationHostList) {
 		myAuthenticationHostList = theAuthenticationHostList;
 	}
 

@@ -18,7 +18,7 @@ import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.client.ui.config.KeepRecentTransactionsPanel;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
-import net.svcret.admin.shared.model.BaseDtoAuthHost;
+import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.util.StringUtil;
 
@@ -81,7 +81,7 @@ public abstract class BaseUserPanel extends FlowPanel {
 
 	}
 
-	public void setUser(final GUser theResult, BaseDtoAuthHost theAuthHost) {
+	public void setUser(final GUser theResult, BaseDtoAuthenticationHost theAuthHost) {
 		myLoadingSpinner.hideCompletely();
 		myUser = theResult;
 		myPermissionsPanel.setPermissions(theResult);

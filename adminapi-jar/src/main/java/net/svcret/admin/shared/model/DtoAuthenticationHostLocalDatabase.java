@@ -1,13 +1,20 @@
 package net.svcret.admin.shared.model;
 
-import net.svcret.admin.shared.enm.AuthorizationHostTypeEnum;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
 
-public class GLocalDatabaseAuthHost extends BaseDtoAuthHost {
+import net.svcret.admin.shared.enm.AuthorizationHostTypeEnum;
+import net.svcret.admin.shared.util.XmlConstants;
+
+@XmlRootElement(namespace=XmlConstants.DTO_NAMESPACE, name="AuthenticationHostLocalDatabase")
+@XmlAccessorType(XmlAccessType.FIELD)
+public class DtoAuthenticationHostLocalDatabase extends BaseDtoAuthenticationHost {
 
 	private static final long serialVersionUID = 1L;
 
 	@Override
-	public void merge(BaseDtoAuthHost theObject) {
+	public void merge(BaseDtoAuthenticationHost theObject) {
 		super.merge(theObject);
 	}
 

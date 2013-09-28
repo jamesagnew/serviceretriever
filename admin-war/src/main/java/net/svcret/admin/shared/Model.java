@@ -4,9 +4,9 @@ import java.util.Date;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.layout.TopBarPanel;
-import net.svcret.admin.shared.model.BaseDtoAuthHost;
+import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.GAuthenticationHostList;
+import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
@@ -27,7 +27,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 public class Model {
 
 	private static Model ourInstance;
-	private GAuthenticationHostList myAuthHostList;
+	private DtoAuthenticationHostList myAuthHostList;
 	private GConfig myConfig;
 	private GDomainList myDomainList;
 	private boolean myDomainListInitialized = false;
@@ -116,7 +116,7 @@ public class Model {
 		return retVal;
 	}
 
-	private MyModelUpdateCallbackHandler getCallbackWithAuthHostListCallback(IAsyncLoadCallback<GAuthenticationHostList> theCallback) {
+	private MyModelUpdateCallbackHandler getCallbackWithAuthHostListCallback(IAsyncLoadCallback<DtoAuthenticationHostList> theCallback) {
 		MyModelUpdateCallbackHandler retVal = new MyModelUpdateCallbackHandler();
 		retVal.myAuthHostListCallback = theCallback;
 		return retVal;
@@ -132,7 +132,7 @@ public class Model {
 		if (myDomainList == null) {
 			myDomainList = new GDomainList();
 			myHttpClientConfigList = new GHttpClientConfigList();
-			myAuthHostList = new GAuthenticationHostList();
+			myAuthHostList = new DtoAuthenticationHostList();
 		}
 	}
 
@@ -140,16 +140,16 @@ public class Model {
 		myDomainListInitialized = false;
 	}
 
-	public void loadAuthenticationHost(final long theAuthHostPid, final IAsyncLoadCallback<BaseDtoAuthHost> theIAsyncLoadCallback) {
-		loadAuthenticationHosts(new IAsyncLoadCallback<GAuthenticationHostList>() {
+	public void loadAuthenticationHost(final long theAuthHostPid, final IAsyncLoadCallback<BaseDtoAuthenticationHost> theIAsyncLoadCallback) {
+		loadAuthenticationHosts(new IAsyncLoadCallback<DtoAuthenticationHostList>() {
 			@Override
-			public void onSuccess(GAuthenticationHostList theResult) {
+			public void onSuccess(DtoAuthenticationHostList theResult) {
 				theIAsyncLoadCallback.onSuccess(theResult.getAuthHostByPid(theAuthHostPid));
 			}
 		});
 	}
 
-	public void loadAuthenticationHosts(IAsyncLoadCallback<GAuthenticationHostList> theCallback) {
+	public void loadAuthenticationHosts(IAsyncLoadCallback<DtoAuthenticationHostList> theCallback) {
 		if (myAuthHostList.getLastMerged() != null) {
 			theCallback.onSuccess(myAuthHostList);
 		} else {
@@ -355,15 +355,15 @@ public class Model {
 		myDomainList.mergeResults(theResult);
 	}
 
-	public void saveAuthenticationHost(BaseDtoAuthHost theAuthHost, final IAsyncLoadCallback<GAuthenticationHostList> theIAsyncLoadCallback) {
-		AsyncCallback<GAuthenticationHostList> callback = new AsyncCallback<GAuthenticationHostList>() {
+	public void saveAuthenticationHost(BaseDtoAuthenticationHost theAuthHost, final IAsyncLoadCallback<DtoAuthenticationHostList> theIAsyncLoadCallback) {
+		AsyncCallback<DtoAuthenticationHostList> callback = new AsyncCallback<DtoAuthenticationHostList>() {
 			@Override
 			public void onFailure(Throwable theCaught) {
 				Model.handleFailure(theCaught);
 			}
 
 			@Override
-			public void onSuccess(GAuthenticationHostList theResult) {
+			public void onSuccess(DtoAuthenticationHostList theResult) {
 				theIAsyncLoadCallback.onSuccess(theResult);
 			}
 		};
@@ -371,7 +371,7 @@ public class Model {
 
 	}
 
-	public void setAuthenticationHostList(GAuthenticationHostList theResult) {
+	public void setAuthenticationHostList(DtoAuthenticationHostList theResult) {
 		myAuthHostList = theResult;
 	}
 
@@ -406,7 +406,7 @@ public class Model {
 	}
 
 	private class MyModelUpdateCallbackHandler implements AsyncCallback<ModelUpdateResponse> {
-		public IAsyncLoadCallback<GAuthenticationHostList> myAuthHostListCallback;
+		public IAsyncLoadCallback<DtoAuthenticationHostList> myAuthHostListCallback;
 		private IAsyncLoadCallback<GDomainList> myDomainListCallback;
 		private IAsyncLoadCallback<GHttpClientConfigList> myHttpClientConfigListCallback;
 

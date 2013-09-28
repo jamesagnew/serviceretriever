@@ -18,33 +18,35 @@ public class GServiceVersionUrl extends BaseDtoDashboardObject {
 
 	private static final long serialVersionUID = 1L;
 
-	@XmlElement(name="runtime_StatsLastFailure")
+	@XmlElement(name = "ServiceVersionPid")
+	private long myServiceVersionPid;
+	@XmlElement(name = "runtime_StatsLastFailure")
 	private Date myStatsLastFailure;
-	@XmlElement(name="runtime_StatsLastFailureContentType")
+	@XmlElement(name = "runtime_StatsLastFailureContentType")
 	private String myStatsLastFailureContentType;
-	@XmlElement(name="runtime_StatsLastFailureMessage")
+	@XmlElement(name = "runtime_StatsLastFailureMessage")
 	private String myStatsLastFailureMessage;
-	@XmlElement(name="runtime_StatsLastFailureStatusCode")
+	@XmlElement(name = "runtime_StatsLastFailureStatusCode")
 	private Integer myStatsLastFailureStatusCode;
-	@XmlElement(name="runtime_StatsLastFault")
+	@XmlElement(name = "runtime_StatsLastFault")
 	private Date myStatsLastFault;
-	@XmlElement(name="runtime_StatsLastFaultContentType")
+	@XmlElement(name = "runtime_StatsLastFaultContentType")
 	private String myStatsLastFaultContentType;
-	@XmlElement(name="runtime_StatsLastFaultMessage")
+	@XmlElement(name = "runtime_StatsLastFaultMessage")
 	private String myStatsLastFaultMessage;
-	@XmlElement(name="runtime_StatsLastFaultStatusCode")
+	@XmlElement(name = "runtime_StatsLastFaultStatusCode")
 	private Integer myStatsLastFaultStatusCode;
-	@XmlElement(name="runtime_StatsLastSuccess")
+	@XmlElement(name = "runtime_StatsLastSuccess")
 	private Date myStatsLastSuccess;
-	@XmlElement(name="runtime_StatsLastSuccessContentType")
+	@XmlElement(name = "runtime_StatsLastSuccessContentType")
 	private String myStatsLastSuccessContentType;
-	@XmlElement(name="runtime_StatsLastSuccessMessage")
+	@XmlElement(name = "runtime_StatsLastSuccessMessage")
 	private String myStatsLastSuccessMessage;
-	@XmlElement(name="runtime_StatsLastSuccessStatusCode")
+	@XmlElement(name = "runtime_StatsLastSuccessStatusCode")
 	private Integer myStatsLastSuccessStatusCode;
-	@XmlElement(name="runtime_StatsNextCircuitBreakerReset")
+	@XmlElement(name = "runtime_StatsNextCircuitBreakerReset")
 	private Date myStatsNextCircuitBreakerReset;
-	@XmlElement(name="config_Url")
+	@XmlElement(name = "config_Url")
 	private String myUrl;
 
 	public GServiceVersionUrl() {
@@ -54,6 +56,10 @@ public class GServiceVersionUrl extends BaseDtoDashboardObject {
 	public GServiceVersionUrl(String theId, String theUrl) {
 		setId(theId);
 		myUrl = theUrl;
+	}
+
+	public long getServiceVersionPid() {
+		return myServiceVersionPid;
 	}
 
 	public Date getStatsLastFailure() {
@@ -164,6 +170,10 @@ public class GServiceVersionUrl extends BaseDtoDashboardObject {
 			setStatsLastFault(obj.getStatsLastFault());
 			setStatsLastFaultMessage(obj.getStatsLastFaultMessage());
 		}
+	}
+
+	public void setServiceVersionPid(long theServiceVersionPid) {
+		myServiceVersionPid = theServiceVersionPid;
 	}
 
 	public void setStatsLastFailure(Date theStatsLastFailure) {

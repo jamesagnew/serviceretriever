@@ -22,8 +22,8 @@ import net.svcret.admin.client.ui.dash.model.UsageSparklineTooltipProvider;
 import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.BaseDtoAuthHost;
-import net.svcret.admin.shared.model.GAuthenticationHostList;
+import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
+import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.GPartialUserList;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.PartialUserListRequest;
@@ -61,7 +61,7 @@ public class EditUsersPanel extends FlowPanel {
 	private GPartialUserList myUserList;
 	private LoadingSpinner myLoadingSpinner;
 	private ListBox myAuthHostsListBox;
-	private GAuthenticationHostList myAuthenticationHostList;
+	private DtoAuthenticationHostList myAuthenticationHostList;
 	private ListDataProvider<GUser> myMethodDataProvider;
 
 	public EditUsersPanel() {
@@ -135,7 +135,7 @@ public class EditUsersPanel extends FlowPanel {
 		Column<GUser, SafeHtml> authHostCol = new Column<GUser, SafeHtml>(new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(GUser theObject) {
-				BaseDtoAuthHost authHostByPid = myAuthenticationHostList.getAuthHostByPid(theObject.getAuthHostPid());
+				BaseDtoAuthenticationHost authHostByPid = myAuthenticationHostList.getAuthHostByPid(theObject.getAuthHostPid());
 				if (authHostByPid == null) {
 					return SafeHtmlUtils.fromString("ERROR");
 				}
@@ -281,10 +281,10 @@ public class EditUsersPanel extends FlowPanel {
 		myAuthHostsListBox = new ListBox();
 		addPanel.add(myAuthHostsListBox);
 
-		Model.getInstance().loadAuthenticationHosts(new IAsyncLoadCallback<GAuthenticationHostList>() {
+		Model.getInstance().loadAuthenticationHosts(new IAsyncLoadCallback<DtoAuthenticationHostList>() {
 			@Override
-			public void onSuccess(GAuthenticationHostList theResult) {
-				for (BaseDtoAuthHost next : theResult) {
+			public void onSuccess(DtoAuthenticationHostList theResult) {
+				for (BaseDtoAuthenticationHost next : theResult) {
 					myAuthHostsListBox.addItem(next.getModuleId(), next.getPidOrNull().toString());
 				}
 				myAuthHostsListBox.setSelectedIndex(0);
@@ -322,9 +322,9 @@ public class EditUsersPanel extends FlowPanel {
 	}
 
 	private void setUserlist(final GPartialUserList theUserList) {
-		Model.getInstance().loadAuthenticationHosts(new IAsyncLoadCallback<GAuthenticationHostList>() {
+		Model.getInstance().loadAuthenticationHosts(new IAsyncLoadCallback<DtoAuthenticationHostList>() {
 			@Override
-			public void onSuccess(GAuthenticationHostList theResult) {
+			public void onSuccess(DtoAuthenticationHostList theResult) {
 				myAuthenticationHostList = theResult;
 				myUserList = theUserList;
 

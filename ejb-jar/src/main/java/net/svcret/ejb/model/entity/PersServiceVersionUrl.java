@@ -324,13 +324,14 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 		return b.build();
 	}
 
-	public GServiceVersionUrl toDao(boolean theLoadStats, StatusesBean theStatuses, IRuntimeStatusQueryLocal theRuntimeStatusQuerySvc) throws UnexpectedFailureException {
+	public GServiceVersionUrl toDto(boolean theLoadStats, StatusesBean theStatuses, IRuntimeStatusQueryLocal theRuntimeStatusQuerySvc) throws UnexpectedFailureException {
 		GServiceVersionUrl retVal = new GServiceVersionUrl();
 		if (this.getPid() != null) {
 			retVal.setPid(this.getPid());
 		}
 		retVal.setId(this.getUrlId());
 		retVal.setUrl(this.getUrl());
+		retVal.setServiceVersionPid(myServiceVersion.getPid());
 		
 		if (theLoadStats) {
 			PersServiceVersionUrlStatus theUrlStatus = null;

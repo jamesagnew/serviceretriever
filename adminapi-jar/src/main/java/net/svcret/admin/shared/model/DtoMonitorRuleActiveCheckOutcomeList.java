@@ -8,6 +8,7 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 
 import net.svcret.admin.shared.util.XmlConstants;
@@ -19,6 +20,7 @@ public class DtoMonitorRuleActiveCheckOutcomeList extends BaseDtoObject {
 	private static final long serialVersionUID = 1L;
 
 	@XmlElement(name = "Outcome")
+	@XmlElementWrapper(name="Outcomes")
 	private List<DtoMonitorRuleActiveCheckOutcome> myOutcomes;
 
 	@XmlElement(name = "Url")

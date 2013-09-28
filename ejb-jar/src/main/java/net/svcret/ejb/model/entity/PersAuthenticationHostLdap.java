@@ -1,6 +1,6 @@
 package net.svcret.ejb.model.entity;
 
-import static net.svcret.admin.shared.model.GLdapAuthHost.*;
+import static net.svcret.admin.shared.model.DtoAuthenticationHostLdap.*;
 
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;

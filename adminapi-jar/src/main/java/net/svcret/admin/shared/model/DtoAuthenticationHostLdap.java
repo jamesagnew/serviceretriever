@@ -1,9 +1,16 @@
 package net.svcret.admin.shared.model;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import net.svcret.admin.shared.enm.AuthorizationHostTypeEnum;
+import net.svcret.admin.shared.util.XmlConstants;
 
-
-public class GLdapAuthHost extends BaseDtoAuthHost {
+@XmlRootElement(namespace=XmlConstants.DTO_NAMESPACE, name="AuthenticationHostLdap")
+@XmlAccessorType(XmlAccessType.FIELD)
+public class DtoAuthenticationHostLdap extends BaseDtoAuthenticationHost {
 
 	private static final long serialVersionUID = 1L;
 
@@ -13,10 +20,15 @@ public class GLdapAuthHost extends BaseDtoAuthHost {
 	public static final String DEFAULT_BIND_USER_DN = "CN=some.user,OU=All\\ Users,DC=some,DC=org";
 	public static final String DEFAULT_HOST = "ldap://localhost:389";
 
+	@XmlElement(name="AuthenticateBaseDn")
 	private String myAuthenticateBaseDn;
+	@XmlElement(name="AuthenticateFilter")
 	private String myAuthenticateFilter;
+	@XmlElement(name="BindUserDn")
 	private String myBindUserDn;
+	@XmlElement(name="BindUserPassword")
 	private String myBindUserPassword;
+	@XmlElement(name="Url")
 	private String myUrl;
 
 	public void setDefaults() {
@@ -68,10 +80,10 @@ public class GLdapAuthHost extends BaseDtoAuthHost {
 	}
 
 	@Override
-	public void merge(BaseDtoAuthHost theObject) {
+	public void merge(BaseDtoAuthenticationHost theObject) {
 		super.merge(theObject);
 
-		GLdapAuthHost obj = (GLdapAuthHost) theObject;
+		DtoAuthenticationHostLdap obj = (DtoAuthenticationHostLdap) theObject;
 		setAuthenticateBaseDn(obj.getAuthenticateBaseDn());
 		setAuthenticateFilter(obj.getAuthenticateFilter());
 		setBindUserDn(obj.getBindUserDn());

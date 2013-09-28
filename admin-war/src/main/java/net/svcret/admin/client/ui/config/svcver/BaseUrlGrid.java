@@ -193,7 +193,7 @@ public abstract class BaseUrlGrid extends FlowPanel {
 		myUrlGrid.addStyleName(CssConstants.PROPERTY_TABLE);
 		this.add(myUrlGrid);
 
-		// myUrlGrid.setWidget(0, 0, new Label("Action"));
+		myUrlGrid.setWidget(0, 0, new Label(provideActionColumnHeaderText()));
 		myUrlGrid.setWidget(0, COL_URL_ID, new Label("ID"));
 		myUrlGrid.setWidget(0, COL_URL_URL, new Label("URL"));
 		myUrlGrid.setWidget(0, COL_URL_STATUS, new Label("Status"));
@@ -203,6 +203,8 @@ public abstract class BaseUrlGrid extends FlowPanel {
 		myNoUrlsLabel = new Label("No URLs Defined");
 		this.add(myNoUrlsLabel);
 	}
+
+	protected abstract String provideActionColumnHeaderText();
 
 	public class CircuitBreakerResetActionHandler implements ClickHandler {
 

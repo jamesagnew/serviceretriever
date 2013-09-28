@@ -7,13 +7,13 @@ import java.util.Map;
 
 import net.svcret.admin.shared.AddServiceVersionResponse;
 import net.svcret.admin.shared.ServiceFailureException;
-import net.svcret.admin.shared.model.BaseDtoAuthHost;
+import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
 import net.svcret.admin.shared.model.BaseDtoMonitorRule;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
-import net.svcret.admin.shared.model.GAuthenticationHostList;
+import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
@@ -90,7 +90,7 @@ public interface ModelUpdateService extends RemoteService {
 
 	DtoServiceVersionSoap11 loadWsdl(DtoServiceVersionSoap11 theService, String theWsdlUrl) throws ServiceFailureException;
 
-	GAuthenticationHostList removeAuthenticationHost(long thePid) throws ServiceFailureException;
+	DtoAuthenticationHostList removeAuthenticationHost(long thePid) throws ServiceFailureException;
 
 	GDomainList removeDomain(long thePid) throws ServiceFailureException;
 
@@ -102,7 +102,7 @@ public interface ModelUpdateService extends RemoteService {
 
 	GServiceVersionUrl resetCircuitBreakerForServiceVersionUrl(long theUrlPid) throws ServiceFailureException;
 
-	GAuthenticationHostList saveAuthenticationHost(BaseDtoAuthHost theAuthHost) throws ServiceFailureException;
+	DtoAuthenticationHostList saveAuthenticationHost(BaseDtoAuthenticationHost theAuthHost) throws ServiceFailureException;
 
 	void saveConfig(GConfig theConfig) throws ServiceFailureException;
 
@@ -123,7 +123,7 @@ public interface ModelUpdateService extends RemoteService {
 	public static class UserAndAuthHost implements Serializable {
 		private static final long serialVersionUID = 1L;
 
-		private BaseDtoAuthHost myAuthHost;
+		private BaseDtoAuthenticationHost myAuthHost;
 		private GUser myUser;
 
 		/**
@@ -136,7 +136,7 @@ public interface ModelUpdateService extends RemoteService {
 		/**
 		 * Constructor
 		 */
-		public UserAndAuthHost(GUser theUser, BaseDtoAuthHost theAuthHost) {
+		public UserAndAuthHost(GUser theUser, BaseDtoAuthenticationHost theAuthHost) {
 			super();
 			myUser = theUser;
 			myAuthHost = theAuthHost;
@@ -145,7 +145,7 @@ public interface ModelUpdateService extends RemoteService {
 		/**
 		 * @return the authHost
 		 */
-		public BaseDtoAuthHost getAuthHost() {
+		public BaseDtoAuthenticationHost getAuthHost() {
 			return myAuthHost;
 		}
 
@@ -160,7 +160,7 @@ public interface ModelUpdateService extends RemoteService {
 		 * @param theAuthHost
 		 *            the authHost to set
 		 */
-		public void setAuthHost(BaseDtoAuthHost theAuthHost) {
+		public void setAuthHost(BaseDtoAuthenticationHost theAuthHost) {
 			myAuthHost = theAuthHost;
 		}
 

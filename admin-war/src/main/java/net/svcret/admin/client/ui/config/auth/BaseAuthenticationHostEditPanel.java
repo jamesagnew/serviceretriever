@@ -9,10 +9,10 @@ import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.client.ui.config.KeepRecentTransactionsPanel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.BaseDtoAuthHost;
-import net.svcret.admin.shared.model.GAuthenticationHostList;
-import net.svcret.admin.shared.model.GLdapAuthHost;
-import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
+import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
+import net.svcret.admin.shared.model.DtoAuthenticationHostList;
+import net.svcret.admin.shared.model.DtoAuthenticationHostLdap;
+import net.svcret.admin.shared.model.DtoAuthenticationHostLocalDatabase;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -27,7 +27,7 @@ import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextBox;
 
-abstract class BaseAuthenticationHostEditPanel<T extends BaseDtoAuthHost> extends FlowPanel {
+abstract class BaseAuthenticationHostEditPanel<T extends BaseDtoAuthenticationHost> extends FlowPanel {
 	private TextBox myIdTextBox;
 	private TextBox myNameTextBox;
 	private LoadingSpinner myLoadingSpinner;
@@ -49,11 +49,11 @@ abstract class BaseAuthenticationHostEditPanel<T extends BaseDtoAuthHost> extend
 
 		switch (theAuthHost.getType()) {
 		case LOCAL_DATABASE:
-			myAuthHost = (T) new GLocalDatabaseAuthHost();
+			myAuthHost = (T) new DtoAuthenticationHostLocalDatabase();
 			((T) myAuthHost).merge((T) theAuthHost);
 			break;
 		case LDAP:
-			myAuthHost = (T) new GLdapAuthHost();
+			myAuthHost = (T) new DtoAuthenticationHostLdap();
 			((T) myAuthHost).merge((T) theAuthHost);
 			break;
 		}
@@ -168,9 +168,9 @@ abstract class BaseAuthenticationHostEditPanel<T extends BaseDtoAuthHost> extend
 		myKeepRecentTransactionsPanel.populateDto(myAuthHost);
 		
 		myLoadingSpinner.show();
-		Model.getInstance().saveAuthenticationHost(myAuthHost, new IAsyncLoadCallback<GAuthenticationHostList>() {
+		Model.getInstance().saveAuthenticationHost(myAuthHost, new IAsyncLoadCallback<DtoAuthenticationHostList>() {
 			@Override
-			public void onSuccess(GAuthenticationHostList theResult) {
+			public void onSuccess(DtoAuthenticationHostList theResult) {
 				Model.getInstance().setAuthenticationHostList(theResult);
 				myLoadingSpinner.showMessage(AdminPortal.MSGS.baseAuthenticationHostEditPanel_Saved(), false);
 				myParent.setHostList(theResult);

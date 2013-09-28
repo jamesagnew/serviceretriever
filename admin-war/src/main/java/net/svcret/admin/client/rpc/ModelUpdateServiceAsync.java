@@ -6,13 +6,13 @@ import java.util.Map;
 
 import net.svcret.admin.client.rpc.ModelUpdateService.UserAndAuthHost;
 import net.svcret.admin.shared.AddServiceVersionResponse;
-import net.svcret.admin.shared.model.BaseDtoAuthHost;
+import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
 import net.svcret.admin.shared.model.BaseDtoMonitorRule;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
-import net.svcret.admin.shared.model.GAuthenticationHostList;
+import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
@@ -84,7 +84,7 @@ public interface ModelUpdateServiceAsync {
 
 	void loadWsdl(DtoServiceVersionSoap11 theService, String theWsdlUrl, AsyncCallback<DtoServiceVersionSoap11> callback);
 
-	void removeAuthenticationHost(long thePid, AsyncCallback<GAuthenticationHostList> theAsyncCallback);
+	void removeAuthenticationHost(long thePid, AsyncCallback<DtoAuthenticationHostList> theAsyncCallback);
 
 	void removeDomain(long thePid, AsyncCallback<GDomainList> theAsyncCallback);
 
@@ -96,7 +96,7 @@ public interface ModelUpdateServiceAsync {
 
 	void resetCircuitBreakerForServiceVersionUrl(long theUrlPid, AsyncCallback<GServiceVersionUrl> theAsyncCallback);
 
-	void saveAuthenticationHost(BaseDtoAuthHost theAuthHost, AsyncCallback<GAuthenticationHostList> theCallback);
+	void saveAuthenticationHost(BaseDtoAuthenticationHost theAuthHost, AsyncCallback<DtoAuthenticationHostList> theCallback);
 
 	void saveConfig(GConfig theConfig, AsyncCallback<Void> theAsyncCallback);
 

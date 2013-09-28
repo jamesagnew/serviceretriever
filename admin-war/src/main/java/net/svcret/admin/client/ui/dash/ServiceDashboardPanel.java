@@ -45,7 +45,7 @@ import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
-public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
+public class ServiceDashboardPanel extends BaseDashboardPanel{
 
 	private static final int COL_ACTIONS = 7;
 	private static final int COL_BACKING_URLS = 4;
@@ -54,63 +54,14 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 	private static final int COL_SECURITY = 6;
 	private static final int COL_STATUS = 1;
 	private static final int COL_USAGE = 2;
-
 	private static final int NUM_STATUS_COLS = 6;
 
 	private MyTable myGrid;
 	private List<IDashModel> myUiList = new ArrayList<IDashModel>();
-	private Label myLastUpdateLabel;
-	private Timer myTimer;
-	private boolean myUpdating;
-	private Image myReloadButton;
-	private Label myTimeSinceLastUpdateLabel;
-	private Date myLastUpdate;
-	private Timer myLastUpdateTimer;
 
 	public ServiceDashboardPanel() {
-		Model.getInstance().flushStats();
-
-		setStylePrimaryName(CssConstants.MAIN_PANEL);
-
-		HorizontalPanel titlePanel = new HorizontalPanel();
-		titlePanel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
-		add(titlePanel);
-
-		Label titleLabel = new Label("Service Dashboard");
-		titleLabel.addStyleName(CssConstants.MAIN_PANEL_TITLE_TEXT);
-		titlePanel.add(titleLabel);
-
-		HTML spacer = new HTML("&nbsp;");
-		titlePanel.add(spacer);
-		titlePanel.setCellWidth(spacer, "100%");
-
-		myLastUpdateLabel = new Label();
-		myLastUpdateLabel.addStyleName(CssConstants.MAIN_PANEL_UPDATE);
-		titlePanel.add(myLastUpdateLabel);
-		titlePanel.setCellVerticalAlignment(myLastUpdateLabel, HasVerticalAlignment.ALIGN_MIDDLE);
-
-		myTimeSinceLastUpdateLabel = new Label();
-		myTimeSinceLastUpdateLabel.addStyleName(MyResources.CSS.dashboardTimeSinceLastUpdateLabel());
-		titlePanel.add(myTimeSinceLastUpdateLabel);
-
-		myReloadButton = new Image(AdminPortal.IMAGES.iconReload16());
-		myReloadButton.addStyleName(MyResources.CSS.dashboardReloadButton());
-		myReloadButton.addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent theEvent) {
-				myReloadButton.setResource(AdminPortal.IMAGES.dashboardSpinner());
-				myUpdating = true;
-				Model.getInstance().loadDomainListAndStats(new IAsyncLoadCallback<GDomainList>() {
-					@Override
-					public void onSuccess(GDomainList theResult) {
-						myUpdating = false;
-						updateView(theResult);
-					}
-				});
-			}
-		});
-		titlePanel.add(myReloadButton);
-
+		super();
+		
 		myGrid = new MyTable();
 		myGrid.setCellPadding(2);
 		myGrid.setCellSpacing(0);
@@ -131,53 +82,10 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 
 		updateView();
 
-		myTimer = new Timer() {
-			@Override
-			public void run() {
-				if (myUpdating) {
-					return;
-				}
-				myReloadButton.setResource(AdminPortal.IMAGES.dashboardSpinner());
-				myUpdating = true;
-				Model.getInstance().loadDomainListAndStats(new IAsyncLoadCallback<GDomainList>() {
-					@Override
-					public void onSuccess(GDomainList theResult) {
-						myUpdating = false;
-						updateView(theResult);
-					}
-				});
-			}
-		};
-		myTimer.scheduleRepeating(30 * 1000);
-
-		myLastUpdateTimer = new Timer() {
-
-			@Override
-			public void run() {
-				if (myLastUpdate != null) {
-					myTimeSinceLastUpdateLabel.setText(DateUtil.formatTimeElapsedForLastInvocation(myLastUpdate, true));
-				}
-			}
-		};
-		myLastUpdateTimer.scheduleRepeating(1000);
-
 	}
 
-	public void updateView() {
-		if (myUpdating) {
-			return;
-		}
-		myReloadButton.setResource(AdminPortal.IMAGES.dashboardSpinner());
-		myUpdating = true;
-		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
-			@Override
-			public void onSuccess(GDomainList theResult) {
-				myUpdating = false;
-				updateView(theResult);
-			}
-		});
-	}
 
+	@Override
 	public void updateView(GDomainList theDomainList) {
 		ArrayList<IDashModel> newUiList = new ArrayList<IDashModel>();
 
@@ -234,11 +142,11 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 				}
 			});
 		} else {
-			myReloadButton.setResource(AdminPortal.IMAGES.iconReload16());
-			myLastUpdateLabel.setText("Updated " + DateTimeFormat.getFormat(PredefinedFormat.TIME_MEDIUM).format(new Date()));
-			myLastUpdate = new Date();
+			updatingFinished();
 		}
 	}
+
+
 
 	private boolean addServiceVersionChildren(ArrayList<IDashModel> newUiList, boolean haveStatsToLoad, BaseDtoServiceVersion nextServiceVersion) {
 		for (GServiceMethod nextMethod : nextServiceVersion.getMethodList()) {
@@ -377,11 +285,6 @@ public class ServiceDashboardPanel extends FlowPanel implements IDestroyable {
 		myUiList = theNewUiList;
 	}
 
-	@Override
-	public void destroy() {
-		myTimer.cancel();
-		myLastUpdateTimer.cancel();
-	}
 
 	private class MyTable extends FlexTable {
 		public MyTable() {

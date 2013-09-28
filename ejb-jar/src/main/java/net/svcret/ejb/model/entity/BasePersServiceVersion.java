@@ -922,7 +922,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		} // for methods
 
 		for (PersServiceVersionUrl nextUrl : this.getUrls()) {
-			GServiceVersionUrl gUrl = nextUrl.toDao(theLoadUrlStats != null && theLoadUrlStats.contains(nextUrl.getPid()), theStatuses, theQuerySvc);
+			GServiceVersionUrl gUrl = nextUrl.toDto(theLoadUrlStats != null && theLoadUrlStats.contains(nextUrl.getPid()), theStatuses, theQuerySvc);
 			retVal.getUrlList().add(gUrl);
 		} // for URLs
 

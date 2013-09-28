@@ -1,26 +1,29 @@
 package net.svcret.admin.shared.model;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
 import net.svcret.admin.shared.enm.AuthorizationHostTypeEnum;
 
-public abstract class BaseDtoAuthHost extends BaseDtoKeepsRecentMessages {
+@XmlAccessorType(XmlAccessType.FIELD)
+public abstract class BaseDtoAuthenticationHost extends BaseDtoKeepsRecentMessages {
 
 	private static final long serialVersionUID = 1L;
 
-	@XmlElement(name="config_AutoCreateAuthorizedUsers")
+	@XmlElement(name="AutoCreateAuthorizedUsers")
 	private boolean myAutoCreateAuthorizedUsers;
 	
-	@XmlElement(name="config_CacheSuccessesForMillis")
+	@XmlElement(name="CacheSuccessesForMillis")
 	private Integer myCacheSuccessesForMillis;
 	
-	@XmlElement(name="config_ModuleId")
+	@XmlElement(name="ModuleId")
 	private String myModuleId;
 	
-	@XmlElement(name="config_ModuleName")
+	@XmlElement(name="ModuleName")
 	private String myModuleName;
 
-	@XmlElement(name="runtime_SupportsPasswordChange")
+	@XmlElement(name="SupportsPasswordChange")
 	private boolean mySupportsPasswordChange;
 	
 	/**
@@ -57,7 +60,7 @@ public abstract class BaseDtoAuthHost extends BaseDtoKeepsRecentMessages {
 		return mySupportsPasswordChange;
 	}
 
-	public void merge(BaseDtoAuthHost theObject) {
+	public void merge(BaseDtoAuthenticationHost theObject) {
 		setPid(theObject.getPid());
 		setAutoCreateAuthorizedUsers(theObject.isAutoCreateAuthorizedUsers());
 		setCacheSuccessesForMillis(theObject.getCacheSuccessesForMillis());

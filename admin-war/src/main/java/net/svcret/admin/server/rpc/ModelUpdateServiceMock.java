@@ -22,7 +22,7 @@ import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
-import net.svcret.admin.shared.model.BaseDtoAuthHost;
+import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
 import net.svcret.admin.shared.model.BaseDtoDashboardObject;
 import net.svcret.admin.shared.model.BaseDtoMonitorRule;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
@@ -35,13 +35,13 @@ import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcomeList;
 import net.svcret.admin.shared.model.DtoNodeStatus;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
-import net.svcret.admin.shared.model.GAuthenticationHostList;
+import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
-import net.svcret.admin.shared.model.GLocalDatabaseAuthHost;
+import net.svcret.admin.shared.model.DtoAuthenticationHostLocalDatabase;
 import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleFiringProblem;
@@ -81,7 +81,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	private static final long MET1_PID = 1000L;
 	private static final long SVCVER_PID = 100L;
 	private static long ourNextPid = 1000000L;
-	private GAuthenticationHostList myAuthHostList;
+	private DtoAuthenticationHostList myAuthHostList;
 	private GHttpClientConfigList myClientConfigList;
 	private GConfig myConfig;
 	private GDomainList myDomainList;
@@ -223,8 +223,8 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		defCfg.getTlsKeystore().setPassword("changeit");
 		myClientConfigList.add(defCfg);
 
-		myAuthHostList = new GAuthenticationHostList();
-		GLocalDatabaseAuthHost hostList = new GLocalDatabaseAuthHost();
+		myAuthHostList = new DtoAuthenticationHostList();
+		DtoAuthenticationHostLocalDatabase hostList = new DtoAuthenticationHostLocalDatabase();
 		hostList.setPid(ourNextPid++);
 		hostList.setModuleId(BasePersAuthenticationHost.MODULE_ID_ADMIN_AUTH);
 		hostList.setModuleName(BasePersAuthenticationHost.MODULE_DESC_ADMIN_AUTH);
@@ -474,8 +474,8 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		return getHttpClientConfigList();
 	}
 
-	private GAuthenticationHostList getAuthHostList() {
-		GAuthenticationHostList retVal = new GAuthenticationHostList();
+	private DtoAuthenticationHostList getAuthHostList() {
+		DtoAuthenticationHostList retVal = new DtoAuthenticationHostList();
 		retVal.mergeResults(myAuthHostList);
 		return retVal;
 	}
@@ -653,7 +653,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	@Override
 	public UserAndAuthHost loadUser(long thePid, boolean theLoadStats) {
 		GUser user = myUserList.getUserByPid(thePid);
-		BaseDtoAuthHost authHost = myAuthHostList.getAuthHostByPid(user.getAuthHostPid());
+		BaseDtoAuthenticationHost authHost = myAuthHostList.getAuthHostByPid(user.getAuthHostPid());
 
 		return new UserAndAuthHost(user, authHost);
 	}
@@ -758,7 +758,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	}
 
 	@Override
-	public GAuthenticationHostList removeAuthenticationHost(long thePid) {
+	public DtoAuthenticationHostList removeAuthenticationHost(long thePid) {
 		myAuthHostList.remove(myAuthHostList.getAuthHostByPid(thePid));
 		return getAuthHostList();
 	}
@@ -796,7 +796,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	}
 
 	@Override
-	public GAuthenticationHostList saveAuthenticationHost(BaseDtoAuthHost theAuthHost) {
+	public DtoAuthenticationHostList saveAuthenticationHost(BaseDtoAuthenticationHost theAuthHost) {
 		if (theAuthHost.getPid() <= 0) {
 			theAuthHost.setPid(ourNextPid++);
 			myAuthHostList.add(theAuthHost);

@@ -6,14 +6,14 @@ import java.util.List;
 
 import javax.ejb.Local;
 
-import net.svcret.admin.shared.model.BaseDtoAuthHost;
+import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
 import net.svcret.admin.shared.model.BaseDtoMonitorRule;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
-import net.svcret.admin.shared.model.GAuthenticationHostList;
+import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
@@ -51,7 +51,7 @@ public interface IAdminServiceLocal {
 
 	byte[] createWsdlBundle(long theServiceVersionPid) throws ProcessingException, IOException;
 
-	GAuthenticationHostList deleteAuthenticationHost(long thePid) throws ProcessingException;
+	DtoAuthenticationHostList deleteAuthenticationHost(long thePid) throws ProcessingException;
 
 	void deleteDomain(long thePid) throws ProcessingException, UnexpectedFailureException;
 
@@ -77,7 +77,7 @@ public interface IAdminServiceLocal {
 
 	Collection<GMonitorRuleFiring> loadAllActiveRuleFirings() throws ProcessingException;
 
-	BaseDtoAuthHost loadAuthenticationHost(long thePid) throws ProcessingException;
+	BaseDtoAuthenticationHost loadAuthenticationHost(long thePid) throws ProcessingException;
 
 	GConfig loadConfig() throws UnexpectedFailureException;
 
@@ -111,7 +111,7 @@ public interface IAdminServiceLocal {
 
 	GServiceVersionUrl resetCircuitBreaker(long theUrlPid) throws  UnexpectedFailureException;
 
-	GAuthenticationHostList saveAuthenticationHost(BaseDtoAuthHost theAuthHost) throws ProcessingException;
+	DtoAuthenticationHostList saveAuthenticationHost(BaseDtoAuthenticationHost theAuthHost) throws ProcessingException;
 
 	GConfig saveConfig(GConfig theConfig) throws UnexpectedFailureException;
 

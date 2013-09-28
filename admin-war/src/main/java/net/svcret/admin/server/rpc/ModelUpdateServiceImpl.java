@@ -15,7 +15,7 @@ import javax.servlet.http.HttpSession;
 import net.svcret.admin.client.rpc.ModelUpdateService;
 import net.svcret.admin.shared.AddServiceVersionResponse;
 import net.svcret.admin.shared.ServiceFailureException;
-import net.svcret.admin.shared.model.BaseDtoAuthHost;
+import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
 import net.svcret.admin.shared.model.BaseDtoMonitorRule;
 import net.svcret.admin.shared.model.BaseDtoObject;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
@@ -25,7 +25,7 @@ import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
 import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoServiceVersionVirtual;
-import net.svcret.admin.shared.model.GAuthenticationHostList;
+import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
@@ -524,7 +524,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		GUser user;
 		try {
 			user = myAdminSvc.loadUser(thePid, theLoadStats);
-			BaseDtoAuthHost authHost = myAdminSvc.loadAuthenticationHost(user.getAuthHostPid());
+			BaseDtoAuthenticationHost authHost = myAdminSvc.loadAuthenticationHost(user.getAuthHostPid());
 			return new UserAndAuthHost(user, authHost);
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to load user " + thePid, e);
@@ -601,7 +601,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public GAuthenticationHostList removeAuthenticationHost(long thePid) throws ServiceFailureException {
+	public DtoAuthenticationHostList removeAuthenticationHost(long thePid) throws ServiceFailureException {
 		if (isMockMode()) {
 			return getMock().removeAuthenticationHost(thePid);
 		}
@@ -702,7 +702,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public GAuthenticationHostList saveAuthenticationHost(BaseDtoAuthHost theAuthHost) throws ServiceFailureException {
+	public DtoAuthenticationHostList saveAuthenticationHost(BaseDtoAuthenticationHost theAuthHost) throws ServiceFailureException {
 		if (isMockMode()) {
 			return getMock().saveAuthenticationHost(theAuthHost);
 		}

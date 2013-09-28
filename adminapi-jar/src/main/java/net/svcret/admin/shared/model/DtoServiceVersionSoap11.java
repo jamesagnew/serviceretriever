@@ -16,7 +16,7 @@ public class DtoServiceVersionSoap11 extends BaseDtoServiceVersion {
 
 	private static final long serialVersionUID = 1L;
 
-	@XmlElement(name="config_WsdlLocation")
+	@XmlElement(name="WsdlLocation")
 	private String myWsdlLocation;
 
 	@Override
