@@ -12,27 +12,29 @@ public enum ServerSecuredEnum {
 			return theInitial;
 		}
 
-		switch (theAdd) {
-		case FULLY:
-			switch (theInitial) {
-			case NONE:
-			case PARTIALLY:
-				return PARTIALLY;
-			default:
-			}
-
-		case NONE:
-			switch (theInitial) {
+		if (theAdd != null) {
+			switch (theAdd) {
 			case FULLY:
-			case PARTIALLY:
-				return PARTIALLY;
+				switch (theInitial) {
+				case NONE:
+				case PARTIALLY:
+					return PARTIALLY;
+				default:
+				}
+
+			case NONE:
+				switch (theInitial) {
+				case FULLY:
+				case PARTIALLY:
+					return PARTIALLY;
+				default:
+				}
+
 			default:
 			}
-
-		default:
 		}
 
-		return null;
+		return theInitial;
 	}
 
 }

@@ -27,6 +27,7 @@ public class EditServicePanel extends FlowPanel {
 	private EditServiceBasicPropertiesPanel myEditServiceBasicPropertiesPanel;
 	private FlowPanel myTopContentPanel;
 	private KeepRecentTransactionsPanel myKeepRecentTransactionsPanel;
+	private GDomain myDomain;
 
 	public EditServicePanel(final long theDomainPid, final long theServicePid) {
 		FlowPanel topPanel = new FlowPanel();
@@ -50,17 +51,18 @@ public class EditServicePanel extends FlowPanel {
 
 		IAsyncLoadCallback<GDomainList> callback = new IAsyncLoadCallback<GDomainList>() {
 
+
 			@Override
 			public void onSuccess(GDomainList theResult) {
 
-				GDomain domain = theResult.getDomainByPid(theDomainPid);
-				if (domain == null) {
+				myDomain = theResult.getDomainByPid(theDomainPid);
+				if (myDomain == null) {
 					GWT.log("Unknown domain PID: " + theDomainPid);
 					NavProcessor.goHome();
 					return;
 				}
 
-				myService = domain.getServiceList().getServiceByPid(theServicePid);
+				myService = myDomain.getServiceList().getServiceByPid(theServicePid);
 				if (myService == null) {
 					GWT.log("Unknown service PID: " + theDomainPid);
 					NavProcessor.goHome();
@@ -84,7 +86,7 @@ public class EditServicePanel extends FlowPanel {
 		domainTabs.addStyleName(CssConstants.CONTENT_OUTER_TAB_PANEL);
 		add(domainTabs);
 
-		EditServiceVersionsPanel childrenPanel = new EditServiceVersionsPanel(myService);
+		EditServiceVersionsPanel childrenPanel = new EditServiceVersionsPanel(myDomain, myService);
 		domainTabs.add(childrenPanel, "Versions");
 
 		FlowPanel configPanel = new FlowPanel();

@@ -51,5 +51,6 @@ public interface MyCss extends CssResource {
 
 	String usageTooltipTableSecLatencyColumn();
 
-	
+	String tableEmbeddedUnorderedList();
+
 }

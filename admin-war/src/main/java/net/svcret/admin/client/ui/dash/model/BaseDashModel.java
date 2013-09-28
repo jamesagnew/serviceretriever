@@ -11,6 +11,7 @@ import net.svcret.admin.client.ui.components.UsageSparkline;
 import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.BaseDtoDashboardObject;
+import net.svcret.admin.shared.model.ServerSecuredEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 
 import com.google.gwt.core.shared.GWT;
@@ -39,7 +40,11 @@ public abstract class BaseDashModel implements IDashModel {
 
 	@Override
 	public int getPeakLatency() {
-		return myModel.getMaxLatency60min();
+		Integer retVal = myModel.getMaxLatency60min();
+		if (retVal == null) {
+			retVal = 0;
+		}
+		return retVal;
 	}
 
 	@Override
@@ -75,7 +80,12 @@ public abstract class BaseDashModel implements IDashModel {
 			averageLatency60min = 0;
 		}
 		
-		return returnSparklineFor60minsLatency(myModel.getLatency60mins(), averageLatency60min, myModel.getMaxLatency60min(), thePeakLatency);
+		Integer maxLatency60min = myModel.getMaxLatency60min();
+		if (maxLatency60min == null) {
+			maxLatency60min=0;
+		}
+		
+		return returnSparklineFor60minsLatency(myModel.getLatency60mins(), averageLatency60min, maxLatency60min, thePeakLatency);
 	}
 
 	protected Widget renderName(String thePrefix, String theName, String thePostFix) {
@@ -102,7 +112,12 @@ public abstract class BaseDashModel implements IDashModel {
 		String clazz = null;
 
 		BaseDtoServiceCatalogItem obj = (BaseDtoServiceCatalogItem) myModel;
-		switch (obj.getServerSecured()) {
+		ServerSecuredEnum serverSecured = obj.getServerSecured();
+		if (serverSecured == null) {
+			serverSecured = ServerSecuredEnum.NONE;
+		}
+		
+		switch (serverSecured) {
 		case FULLY:
 			image = AdminPortal.IMAGES.dashSecure();
 			text = AdminPortal.MSGS.dashboard_SecuredFully();

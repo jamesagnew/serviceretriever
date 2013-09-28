@@ -148,4 +148,17 @@ public class GDomainList extends BaseDtoList<GDomain> {
 		return null;
 	}
 
+	public GDomain getDomainWithServiceVersion(long theServiceVersionPid) {
+		for (GDomain nextDomain : this) {
+			for (GService nextSvc : nextDomain.getServiceList()) {
+				for (BaseDtoServiceVersion nextVer : nextSvc.getVersionList()) {
+					if (nextVer.getPid() == theServiceVersionPid) {
+						return nextDomain;
+					}
+				}
+			}
+		}
+		return null;
+	}
+
 }

@@ -6,6 +6,7 @@ import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -24,19 +25,7 @@ public class EditServiceBasicPropertiesPanel extends FlowPanel {
 	private Grid myFormGrid;
 	private CheckBox myActiveCheckbox;
 
-	public EditServiceBasicPropertiesPanel(String theId, String theName, boolean theActive, String theButtonText, ClickHandler theButtonHandler) {
-		this(theId, theName, theActive);
-		
-		mySpinner = new LoadingSpinner();
-		mySpinner.hideCompletely();
-		add(mySpinner);
-
-		Button addButton = new PButton(theButtonText);
-		addButton.addClickHandler(theButtonHandler);
-		add(addButton);
-	}
-
-	public EditServiceBasicPropertiesPanel(String theId, String theName, boolean theActive) {
+	public EditServiceBasicPropertiesPanel(String theButtonText, ClickHandler theButtonHandler, ImageResource theButtonImage) {
 		myFormGrid = new Grid(3, 2);
 		add(myFormGrid);
 
@@ -47,7 +36,6 @@ public class EditServiceBasicPropertiesPanel extends FlowPanel {
 		myFormGrid.setWidget(0, 0, myIdLabel);
 
 		myIdTextBox = new TextBox();
-		myIdTextBox.setValue(theId);
 		myIdTextBox.getElement().setId("elem_id");
 		myFormGrid.setWidget(0, 1, myIdTextBox);
 
@@ -57,7 +45,6 @@ public class EditServiceBasicPropertiesPanel extends FlowPanel {
 		myNameLabel = new HtmlLabel("Name", "elem_name");
 		myFormGrid.setWidget(1, 0, myNameLabel);
 		myNameTextBox = new TextBox();
-		myNameTextBox.setValue(theName);
 		myNameTextBox.getElement().setId("elem_name");
 		myFormGrid.setWidget(1, 1, myNameTextBox);
 		
@@ -65,13 +52,20 @@ public class EditServiceBasicPropertiesPanel extends FlowPanel {
 		 * Active
 		 */
 		myActiveCheckbox = new CheckBox("Active");
-		myActiveCheckbox.setValue(theActive);
+		myActiveCheckbox.setValue(true);
 		myFormGrid.setWidget(2, 1, myActiveCheckbox);
 		
 		myErrorLabel = new Label();
 		myErrorLabel.setStyleName("hidden");
 		add(myErrorLabel);
+		
+		mySpinner = new LoadingSpinner();
+		mySpinner.hideCompletely();
+		add(mySpinner);
 
+		Button addButton = new PButton(theButtonImage, theButtonText);
+		addButton.addClickHandler(theButtonHandler);
+		add(addButton);
 	}
 
 	public boolean isActive() {

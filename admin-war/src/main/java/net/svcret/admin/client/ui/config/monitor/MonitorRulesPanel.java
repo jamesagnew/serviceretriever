@@ -6,6 +6,7 @@ import static net.svcret.admin.client.AdminPortal.MSGS;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -22,11 +23,12 @@ import net.svcret.admin.client.ui.config.svcver.NullColumn;
 import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.enm.MonitorRuleTypeEnum;
 import net.svcret.admin.shared.model.BaseDtoMonitorRule;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckList;
+import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
@@ -50,7 +52,6 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.view.client.ListDataProvider;
 
 public class MonitorRulesPanel extends FlowPanel {
@@ -58,7 +59,6 @@ public class MonitorRulesPanel extends FlowPanel {
 	private LoadingSpinner myConfigListLoadingSpinner;
 	private PCellTable<BaseDtoMonitorRule> myGrid;
 	private ListDataProvider<BaseDtoMonitorRule> myDataProvider;
-	private ListBox myAddTypeBox;
 	private GDomainList myDomainList;
 	private Map<Long, GMonitorRuleFiring> myRulePidToLatestMonitorRuleFiring;
 
@@ -98,12 +98,21 @@ public class MonitorRulesPanel extends FlowPanel {
 	private void setRuleList(GMonitorRuleList theResult, Map<Long, GMonitorRuleFiring> theRulePidToLatestMonitorRuleFiring) {
 		myRulePidToLatestMonitorRuleFiring = theRulePidToLatestMonitorRuleFiring;
 
+		myAppliesTo.clear();
+
 		myDataProvider.getList().clear();
 		myDataProvider.getList().addAll(theResult.toCollection());
 		myDataProvider.refresh();
 	}
 
+	private Map<Long, List<String>> myAppliesTo = new HashMap<Long, List<String>>();
+
 	private List<String> toAppliesTo(BaseDtoMonitorRule theNext) {
+		Long pid = theNext.getPidOrNull();
+		if (pid != null && myAppliesTo.containsKey(pid)) {
+			return myAppliesTo.get(pid);
+		}
+
 		ArrayList<String> retVal = new ArrayList<String>();
 		switch (theNext.getRuleType()) {
 		case PASSIVE: {
@@ -132,13 +141,10 @@ public class MonitorRulesPanel extends FlowPanel {
 			}
 
 			for (Long next : svcVerPids) {
+				GDomain domain = myDomainList.getDomainWithServiceVersion(next);
 				GService svc = myDomainList.getServiceWithServiceVersion(next);
 				BaseDtoServiceVersion svcVer = svc.getVersionList().getVersionByPid(next);
-				if (svc.allVersionPidsInThisServiceAreAmongThesePids(svcVerPids)) {
-					retVal.add(svc.getName() + " - All Versions");
-				} else {
-					retVal.add(svc.getName() + " / " + svcVer.getId());
-				}
+				retVal.add(domain.getName() + " / " + svc.getName() + " / " + svcVer.getId());
 			}
 
 			break;
@@ -147,44 +153,75 @@ public class MonitorRulesPanel extends FlowPanel {
 
 		Collections.sort(retVal);
 
+		if (pid != null) {
+			myAppliesTo.put(pid, retVal);
+		}
+
 		return retVal;
 	}
 
-	private List<SafeHtml> toTypeDescriptions(BaseDtoMonitorRule theNext) {
-		ArrayList<SafeHtml> retVal = new ArrayList<SafeHtml>();
+	private SafeHtml toTypeDescriptions(BaseDtoMonitorRule theNext) {
+		SafeHtml retVal = null;
 
 		switch (theNext.getRuleType()) {
-		case ACTIVE:
-			for (DtoMonitorRuleActiveCheck next : ((DtoMonitorRuleActive) theNext).getCheckList()) {
-				SafeHtmlBuilder b = new SafeHtmlBuilder();
-				b.appendHtmlConstant("Send message every " + next.getCheckFrequencyNum() + " " + next.getCheckFrequencyUnit().getFriendlyName(next.getCheckFrequencyNum()).toLowerCase() + ": \"");
-				b.appendEscaped(next.getMessageDescription());
-				b.appendHtmlConstant("\"");
-				b.appendHtmlConstant("<ul>");
-				b.appendHtmlConstant("<li>Expects response type: " + next.getExpectResponseType().getFriendlyName() + "</li>");
+		case ACTIVE: {
+
+			boolean checkLatency = false;
+			boolean checkResponseBody = false;
+			DtoMonitorRuleActiveCheckList checkList = ((DtoMonitorRuleActive) theNext).getCheckList();
+
+			for (DtoMonitorRuleActiveCheck next : checkList) {
 				if (next.getExpectLatencyUnderMillis() != null) {
-					b.appendHtmlConstant("<li>Expects latency under " + next.getExpectLatencyUnderMillis() + "ms/call</li>");
+					checkLatency = true;
 				}
 				if (next.getExpectResponseContainsText() != null) {
-					b.appendHtmlConstant("<li>Expects response to contain text: \"");
-					b.appendEscaped(next.getExpectResponseContainsText());
-					b.appendHtmlConstant("\"</li>");
+					checkResponseBody = true;
 				}
-				b.appendHtmlConstant("</ul>");
-				retVal.add(b.toSafeHtml());
 			}
+
+			SafeHtmlBuilder b = new SafeHtmlBuilder();
+			b.appendHtmlConstant("Active rule: Send " + checkList.size() + " message");
+			if (checkList.size() != 1) {
+				b.appendHtmlConstant("s");
+			}
+			if (checkLatency || checkResponseBody) {
+				b.appendHtmlConstant(" and check ");
+				if (checkLatency) {
+					b.appendHtmlConstant("latency");
+					if (checkResponseBody) {
+						b.appendHtmlConstant(" and ");
+					}
+				}
+				if (checkResponseBody) {
+					b.appendHtmlConstant("response body");
+				}
+			}
+
+			retVal = b.toSafeHtml();
 			break;
+		}
 		case PASSIVE: {
 			GMonitorRulePassive next = (GMonitorRulePassive) theNext;
+			SafeHtmlBuilder b = new SafeHtmlBuilder();
+			b.appendHtmlConstant("Passive rule: For any incoming requests, ");
+
+			boolean haveSomething = false;
 			if (next.isPassiveFireIfSingleBackingUrlIsUnavailable()) {
-				retVal.add(SafeHtmlUtils.fromSafeConstant("Fire if any backing URLs unavailable"));
+				b.appendHtmlConstant("fire if any backing URLs unavailable");
+				haveSomething = true;
 			} else if (!next.isPassiveFireIfAllBackingUrlsAreUnavailable()) {
-				retVal.add(SafeHtmlUtils.fromSafeConstant("Fire if all backing URLs unavailable"));
+				b.appendHtmlConstant("fire if all backing URLs unavailable");
+				haveSomething = true;
 			}
 
 			if (next.getPassiveFireForBackingServiceLatencyIsAboveMillis() != null) {
-				retVal.add(SafeHtmlUtils.fromSafeConstant("Fire is backing service latency exceeds " + next.getPassiveFireForBackingServiceLatencyIsAboveMillis() + "ms"));
+				if (haveSomething) {
+					b.appendHtmlConstant(" and ");
+				}
+				b.appendHtmlConstant("Fire if backing service latency exceeds " + next.getPassiveFireForBackingServiceLatencyIsAboveMillis() + "ms");
 			}
+
+			retVal = b.toSafeHtml();
 			break;
 		}
 		}
@@ -265,62 +302,6 @@ public class MonitorRulesPanel extends FlowPanel {
 			}
 		});
 
-		// Active
-		Column<BaseDtoMonitorRule, SafeHtml> typeColumn = new Column<BaseDtoMonitorRule, SafeHtml>(new SafeHtmlCell()) {
-			@Override
-			public SafeHtml getValue(BaseDtoMonitorRule theObject) {
-				return SafeHtmlUtils.fromTrustedString(theObject.getRuleType().getFriendlyName());
-			}
-		};
-		myGrid.addColumn(typeColumn, "Type");
-		myGrid.getColumn(myGrid.getColumnCount() - 1).setSortable(true);
-		sortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<BaseDtoMonitorRule>() {
-			@Override
-			public int compare(BaseDtoMonitorRule theO1, BaseDtoMonitorRule theO2) {
-				return theO1.getRuleType().ordinal()- theO2.getRuleType().ordinal();
-			}
-		});
-
-		// Criteria
-		Column<BaseDtoMonitorRule, SafeHtml> criteriaColumn = new Column<BaseDtoMonitorRule, SafeHtml>(new SafeHtmlCell()) {
-			@Override
-			public SafeHtml getValue(BaseDtoMonitorRule theObject) {
-				List<SafeHtml> typeDescriptions = toTypeDescriptions(theObject);
-				if (typeDescriptions.size() == 0) {
-					return SafeHtmlUtils.fromSafeConstant("No triggers defined");
-				} else if (typeDescriptions.size() == 1) {
-					return typeDescriptions.get(0);
-				} else {
-					SafeHtmlBuilder b = new SafeHtmlBuilder();
-					b.appendHtmlConstant("<ul>");
-					for (SafeHtml string : typeDescriptions) {
-						b.appendHtmlConstant("<li>");
-						b.append(string);
-						b.appendHtmlConstant("</li>");
-					}
-					b.appendHtmlConstant("</ul>");
-					return b.toSafeHtml();
-				}
-			}
-		};
-		myGrid.addColumn(criteriaColumn, "Criteria");
-
-		// Rule Name
-		Column<BaseDtoMonitorRule, SafeHtml> ruleNameColumn = new Column<BaseDtoMonitorRule, SafeHtml>(new SafeHtmlCell()) {
-			@Override
-			public SafeHtml getValue(BaseDtoMonitorRule theObject) {
-				return SafeHtmlUtils.fromString(theObject.getName());
-			}
-		};
-		myGrid.addColumn(ruleNameColumn, "Name");
-		myGrid.getColumn(myGrid.getColumnCount() - 1).setSortable(true);
-		sortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<BaseDtoMonitorRule>() {
-			@Override
-			public int compare(BaseDtoMonitorRule theO1, BaseDtoMonitorRule theO2) {
-				return StringUtil.compare(theO1.getName(), theO2.getName());
-			}
-		});
-		
 		// Applies To
 		Column<BaseDtoMonitorRule, SafeHtml> appliesToColumn = new Column<BaseDtoMonitorRule, SafeHtml>(new SafeHtmlCell()) {
 			@Override
@@ -344,6 +325,56 @@ public class MonitorRulesPanel extends FlowPanel {
 			}
 		};
 		myGrid.addColumn(appliesToColumn, "Applies To");
+		appliesToColumn.setSortable(true);
+		sortHandler.setComparator(appliesToColumn, new Comparator<BaseDtoMonitorRule>() {
+			@Override
+			public int compare(BaseDtoMonitorRule theO1, BaseDtoMonitorRule theO2) {
+				List<String> app1 = toAppliesTo(theO1);
+				List<String> app2 = toAppliesTo(theO2);
+				int retVal = 0;
+				if (app1.isEmpty() && app2.isEmpty()) {
+					retVal = 0;
+				} else if (app1.isEmpty()) {
+					retVal = 1;
+				} else if (app2.isEmpty()) {
+					retVal = -1;
+				} else {
+					retVal = StringUtil.compare(app1.get(0), app2.get(0));
+				}
+
+				if (retVal == 0) {
+					retVal = StringUtil.compare(theO1.getName(), theO2.getName());
+				}
+
+				return retVal;
+			}
+		});
+
+		// Rule Name
+		Column<BaseDtoMonitorRule, SafeHtml> ruleNameColumn = new Column<BaseDtoMonitorRule, SafeHtml>(new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(BaseDtoMonitorRule theObject) {
+				return SafeHtmlUtils.fromString(theObject.getName());
+			}
+		};
+		myGrid.addColumn(ruleNameColumn, "Name");
+		myGrid.getColumn(myGrid.getColumnCount() - 1).setSortable(true);
+		sortHandler.setComparator(myGrid.getColumn(myGrid.getColumnCount() - 1), new Comparator<BaseDtoMonitorRule>() {
+			@Override
+			public int compare(BaseDtoMonitorRule theO1, BaseDtoMonitorRule theO2) {
+				return StringUtil.compare(theO1.getName(), theO2.getName());
+			}
+		});
+
+		// Criteria
+		Column<BaseDtoMonitorRule, SafeHtml> criteriaColumn = new Column<BaseDtoMonitorRule, SafeHtml>(new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(BaseDtoMonitorRule theObject) {
+				SafeHtml typeDescriptions = toTypeDescriptions(theObject);
+				return typeDescriptions;
+			}
+		};
+		myGrid.addColumn(criteriaColumn, "Criteria");
 
 		// Current Status
 		Column<BaseDtoMonitorRule, SafeHtml> currentStatusColumn = new Column<BaseDtoMonitorRule, SafeHtml>(new SafeHtmlCell()) {
@@ -351,12 +382,18 @@ public class MonitorRulesPanel extends FlowPanel {
 			public SafeHtml getValue(BaseDtoMonitorRule theObject) {
 				GMonitorRuleFiring latestFiring = myRulePidToLatestMonitorRuleFiring.get(theObject.getPid());
 				if (latestFiring == null) {
-					return SafeHtmlUtils.fromSafeConstant("Ok");
+					StringBuilder b = new StringBuilder();
+					b.append("<img src=\"");
+					b.append(AdminPortal.IMAGES.dashMonitorOk().getSafeUri().asString());
+					b.append("\" />");
+					b.append("Ok");
+					return SafeHtmlUtils.fromSafeConstant(b.toString());
 				}
 
 				// TODO: If the rule isn't currently firing, also include the last time it did fire
 
 				SafeHtmlBuilder b = new SafeHtmlBuilder();
+				b.appendHtmlConstant("<img src=\"" + AdminPortal.IMAGES.dashMonitorAlert().getSafeUri().asString() + "\" />");
 				b.appendHtmlConstant("Failing since ");
 				b.append(DateUtil.formatTimeElapsedForMessage(latestFiring.getStartDate()));
 				return b.toSafeHtml();
@@ -369,36 +406,38 @@ public class MonitorRulesPanel extends FlowPanel {
 			public int compare(BaseDtoMonitorRule theO1, BaseDtoMonitorRule theO2) {
 				GMonitorRuleFiring firing1 = myRulePidToLatestMonitorRuleFiring.get(theO1.getPid());
 				GMonitorRuleFiring firing2 = myRulePidToLatestMonitorRuleFiring.get(theO2.getPid());
-				if (firing1==null&&firing2==null) {
+				if (firing1 == null && firing2 == null) {
 					return 0;
 				}
-				if (firing1==null) {
+				if (firing1 == null) {
 					return -1;
 				}
-				if (firing2==null) {
+				if (firing2 == null) {
 					return 1;
 				}
 				return firing1.getStartDate().compareTo(firing2.getStartDate());
 			}
 		});
 
-		myGrid.getColumnSortList().push(ruleNameColumn);
+		myGrid.getColumnSortList().push(appliesToColumn);
 
 		HorizontalPanel controlsPanel = new HorizontalPanel();
 		contentPanel.add(controlsPanel);
 
-		myAddTypeBox = new ListBox(false);
-		for (MonitorRuleTypeEnum next : MonitorRuleTypeEnum.values()) {
-			myAddTypeBox.addItem(next.getFriendlyName());
-		}
-		myAddTypeBox.setSelectedIndex(0);
-		controlsPanel.add(myAddTypeBox);
-
-		PButton addButton = new PButton(AdminPortal.IMAGES.iconAdd(), AdminPortal.MSGS.actions_Add());
+		PButton addButton = new PButton(AdminPortal.IMAGES.iconAdd(), "Add Active Rule");
 		addButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
-				History.newItem(NavProcessor.getTokenAddMonitorRule(myAddTypeBox.getSelectedIndex()));
+				History.newItem(NavProcessor.getTokenAddMonitorRule(0));
+			}
+		});
+		controlsPanel.add(addButton);
+
+		addButton = new PButton(AdminPortal.IMAGES.iconAdd(), "Add Passive Rule");
+		addButton.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				History.newItem(NavProcessor.getTokenAddMonitorRule(1));
 			}
 		});
 		controlsPanel.add(addButton);

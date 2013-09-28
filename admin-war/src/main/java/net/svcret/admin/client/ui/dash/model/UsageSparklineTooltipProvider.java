@@ -65,7 +65,12 @@ public final class UsageSparklineTooltipProvider<T extends BaseDtoDashboardObjec
 				secFail += theObject.getTransactionsSecurityFail60mins()[j];
 				latency += theObject.getLatency60mins()[j];
 			}
-
+			
+			success = fixIntegerValue(success);
+			fault = fixIntegerValue(fault);
+			fail = fixIntegerValue(fail);
+			secFail= fixIntegerValue(secFail);
+			
 			latency = latency / incrementMins;
 			
 			Date nextEndDate = new Date(nextDate.getTime() + ((incrementMins - 1) * DateUtil.MILLIS_PER_MINUTE));
@@ -91,5 +96,14 @@ public final class UsageSparklineTooltipProvider<T extends BaseDtoDashboardObjec
 		}
 
 		return retVal;
+	}
+
+	private int fixIntegerValue(int theVal) {
+		// This is a fix for Javascript NaN which result from
+		// unitialized array values
+		if (!(theVal > 0)) {
+			return 0;
+		}
+		return theVal;
 	}
 }

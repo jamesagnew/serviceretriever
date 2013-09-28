@@ -60,7 +60,7 @@ public class AddServicePanel extends FlowPanel {
 		 */
 		
 		ClickHandler addHandler = new MyAddHandler();
-		myServicePropertiesPanel = new EditServiceBasicPropertiesPanel("", "", true, "Add", addHandler);
+		myServicePropertiesPanel = new EditServiceBasicPropertiesPanel(AdminPortal.MSGS.actions_Add(), addHandler, AdminPortal.IMAGES.iconAdd());
 		myServicePropertiesPanel.setVisible(false);
 		contentPanel.add(myServicePropertiesPanel);
 		
@@ -110,11 +110,14 @@ public class AddServicePanel extends FlowPanel {
 					}
 					@Override
 					public void onSuccess(GService theResult) {
+						mySpinner.showMessage("Added Service", false);
 						Model.getInstance().addService(domainPid, theResult);
 						updateDomains();
 						// TODO: move to a step 2 panel
 					}
 				};
+				
+				mySpinner.show();
 				AdminPortal.MODEL_SVC.addService(domainPid, id, name, active, callback);
 			}
 			

@@ -23,6 +23,7 @@ import javax.persistence.TemporalType;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
+import net.svcret.ejb.api.RequestType;
 
 @MappedSuperclass()
 public abstract class BasePersSavedTransaction implements Serializable {
@@ -189,9 +190,12 @@ public abstract class BasePersSavedTransaction implements Serializable {
 	private String extractHeadersForBody(HttpRequestBean theRequest) {
 		StringBuilder b = new StringBuilder();
 
-		b.append(theRequest.getRequestType().name()).append(' ');
-		b.append(theRequest.getRequestFullUri()).append(' ');
-		b.append(theRequest.getProtocol()).append("\r\n");
+		RequestType requestType = theRequest.getRequestType();
+		if (requestType != null) {
+			b.append(requestType.name()).append(' ');
+			b.append(theRequest.getRequestFullUri()).append(' ');
+			b.append(theRequest.getProtocol()).append("\r\n");
+		}
 
 		Map<String, List<String>> headers = theRequest.getRequestHeaders();
 		return extractHeadersForBody(headers, b);
