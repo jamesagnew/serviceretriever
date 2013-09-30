@@ -1,14 +1,8 @@
 package net.svcret.ejb.ejb;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import java.io.File;
 import java.io.FileReader;
@@ -41,6 +35,7 @@ import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.invoker.hl7.ServiceInvokerHl7OverHttp;
 import net.svcret.ejb.invoker.soap.ServiceInvokerSoap11;
+import net.svcret.ejb.invoker.virtual.ServiceInvokerVirtual;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersConfig;
@@ -53,6 +48,7 @@ import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersStickySessionUrlBinding;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
+import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
 
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.core.IsNot;
@@ -87,6 +83,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 	private PersServiceVersionMethod myMethod;
 	private BasePersServiceVersion mySvcVer;
 	private ServiceInvokerHl7OverHttp myHl7Invoker;
+	private ServiceInvokerVirtual myVirtualInvoker;
 
 	@SuppressWarnings("null")
 	@Test
@@ -96,13 +93,18 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		 * Make request
 		 */
 
+		//@formatter:off
 		String request = "<soapenv:Envelope xmlns:net=\"net:svcret:demo\" xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
 				+ "   <soapenv:Header>\n"
 				+ "      <wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\" xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">\n"
-				+ "         <wsse:UsernameToken wsu:Id=\"UsernameToken-1\">\n" + "            <wsse:Username>test</wsse:Username>\n"
+				+ "         <wsse:UsernameToken wsu:Id=\"UsernameToken-1\">\n" 
+				+ "            <wsse:Username>test</wsse:Username>\n"
 				+ "            <wsse:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">admin</wsse:Password>\n"
 				+ "            <wsse:Nonce EncodingType=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary\">P8ypSWlCHRqR4T1ABYHHbA==</wsse:Nonce>\n"
-				+ "            <wsu:Created>2013-04-20T21:18:55.025Z</wsu:Created>\n" + "         </wsse:UsernameToken>\n" + "      </wsse:Security>\n" + "   </soapenv:Header>\n"
+				+ "            <wsu:Created>2013-04-20T21:18:55.025Z</wsu:Created>\n" 
+				+ "         </wsse:UsernameToken>\n" 
+				+ "      </wsse:Security>\n" 
+				+ "   </soapenv:Header>\n"
 				+ "   <soapenv:Body>\n" 
 				+ "      <net:d0s0v0m0>\n" 
 				+ "          <arg0>FAULT</arg0>\n" 
@@ -111,8 +113,14 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 				+ "   </soapenv:Body>\n"
 				+ "</soapenv:Envelope>";
 
-		String response = "<S:Envelope xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" + "   <S:Body>\n" + "      <ns2:addStringsResponse xmlns:ns2=\"net:svcret:demo\">\n"
-				+ "         <return>aFAULT?</return>\n" + "      </ns2:addStringsResponse>\n" + "   </S:Body>\n" + "</S:Envelope>";
+		String response = "<S:Envelope xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" 
+				+ "   <S:Body>\n" 
+				+ "      <ns2:addStringsResponse xmlns:ns2=\"net:svcret:demo\">\n"
+				+ "         <return>aFAULT?</return>\n" 
+				+ "      </ns2:addStringsResponse>\n" 
+				+ "   </S:Body>\n" 
+				+ "</S:Envelope>";
+		//@formatter:on
 
 		IResponseValidator theResponseValidator = any();
 		UrlPoolBean theUrlPool = any();
@@ -152,6 +160,86 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		assertEquals(response, resp.getResponseBody());
 
 		ourLog.info("Did {} reps in {}ms for {}ms/rep", new Object[] { reps, delay, (delay / reps) });
+
+	}
+
+	@SuppressWarnings("null")
+	@Test
+	public void testVirtualService() throws Exception {
+
+		/*
+		 * Make request
+		 */
+
+		//@formatter:off
+		String request = "<soapenv:Envelope xmlns:net=\"net:svcret:demo\" xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
+				+ "   <soapenv:Header>\n"
+				+ "      <wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\" xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">\n"
+				+ "         <wsse:UsernameToken wsu:Id=\"UsernameToken-1\">\n" 
+				+ "            <wsse:Username>test</wsse:Username>\n"
+				+ "            <wsse:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">admin</wsse:Password>\n"
+				+ "            <wsse:Nonce EncodingType=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary\">P8ypSWlCHRqR4T1ABYHHbA==</wsse:Nonce>\n"
+				+ "            <wsu:Created>2013-04-20T21:18:55.025Z</wsu:Created>\n" 
+				+ "         </wsse:UsernameToken>\n" 
+				+ "      </wsse:Security>\n" 
+				+ "   </soapenv:Header>\n"
+				+ "   <soapenv:Body>\n" 
+				+ "      <net:d0s0v0m0>\n" 
+				+ "          <arg0>FAULT</arg0>\n" 
+				+ "          <arg1>?</arg1>\n" 
+				+ "      </net:d0s0v0m0>\n" 
+				+ "   </soapenv:Body>\n"
+				+ "</soapenv:Envelope>";
+
+		String response = "<S:Envelope xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" 
+				+ "   <S:Body>\n" 
+				+ "      <ns2:addStringsResponse xmlns:ns2=\"net:svcret:demo\">\n"
+				+ "         <return>aFAULT?</return>\n" 
+				+ "      </ns2:addStringsResponse>\n" 
+				+ "   </S:Body>\n" 
+				+ "</S:Envelope>";
+		//@formatter:on
+
+		IResponseValidator theResponseValidator = any();
+		UrlPoolBean theUrlPool = any();
+		String theContentBody = any();
+		Map<String, List<String>> theHeaders = any();
+		String theContentType = any();
+		HttpResponseBean respBean = new HttpResponseBean();
+		respBean.setCode(200);
+		respBean.setBody(response);
+		respBean.setContentType("text/xml");
+		respBean.setResponseTime(100);
+		respBean.setSuccessfulUrl(myUrl);
+		respBean.setHeaders(new HashMap<String, List<String>>());
+		PersHttpClientConfig httpClient = any();
+		when(myHttpClient.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
+
+		ITransactionLogger transactionLogger = mock(ITransactionLogger.class);
+		mySvc.setTransactionLogger(transactionLogger);
+
+		newEntityManager();
+
+		PersService d0s0 = myServiceRegistry.getAllDomains().iterator().next().getServices().iterator().next();
+		PersServiceVersionVirtual d0s0v1 = (PersServiceVersionVirtual) myServiceRegistry.getOrCreateServiceVersionWithId(d0s0, ServiceProtocolEnum.VIRTUAL, "d0s0v1", new PersServiceVersionVirtual(
+				mySvcVer));
+		myServiceRegistry.reloadRegistryFromDatabase();
+
+		newEntityManager();
+
+		OrchestratorResponseBean resp = null;
+		String query = "";
+		Reader reader = new StringReader(request);
+		HttpRequestBean req = new HttpRequestBean();
+		req.setRequestType(RequestType.POST);
+		req.setRequestHostIp("127.0.0.1");
+		req.setPath("/d0/d0s0/d0s0v1");
+		req.setQuery(query);
+		req.setInputReader(reader);
+		req.setRequestTime(new Date());
+		req.setRequestHeaders(new HashMap<String, List<String>>());
+		resp = mySvc.handleServiceRequest(req);
+		assertEquals(response, resp.getResponseBody());
 
 	}
 
@@ -219,7 +307,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 			resp = mySvc.handleServiceRequest(req);
 			fail();
 		} catch (ProcessingException e) {
-			ourLog.info("Message: "+e.getMessage());
+			ourLog.info("Message: " + e.getMessage());
 			assertThat(e.getMessage(), IsNot.not(IsEmptyString.isEmptyOrNullString()));
 		}
 		assertNull(resp);
@@ -279,7 +367,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		respBean.setContentType("text/xml");
 		respBean.setResponseTime(100);
 		respBean.addFailedUrl(myUrl, "This is the failure explanation", 200, "text/plain", "This is the failure body", 100);
-		
+
 		respBean.setHeaders(new HashMap<String, List<String>>());
 		PersHttpClientConfig httpClient = any();
 		when(myHttpClient.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
@@ -308,7 +396,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 			resp = mySvc.handleServiceRequest(req);
 			fail();
 		} catch (ProcessingException e) {
-			ourLog.info("Message: "+e.getMessage());
+			ourLog.info("Message: " + e.getMessage());
 			assertThat(e.getMessage(), IsNot.not(IsEmptyString.isEmptyOrNullString()));
 		}
 		assertNull(resp);
@@ -321,17 +409,17 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		StatsAccumulator accumulator=new StatsAccumulator();
+		StatsAccumulator accumulator = new StatsAccumulator();
 		myRuntimeQuerySvc.extract60MinuteMethodStats(myMethod, accumulator);
 		assertEquals(Integer.valueOf(1), accumulator.getFailCounts().get(59));
-		
+
 		List<PersServiceVersionRecentMessage> recentMessages = myDao.getServiceVersionRecentMessages(mySvcVer, ResponseTypeEnum.FAIL);
 		assertEquals(1, recentMessages.size());
 		assertThat(recentMessages.get(0).getFailDescription(), StringContains.containsString("All service URLs appear to be failing"));
-		assertThat(recentMessages.get(0).getFailDescription(), StringContains.containsString( "This is the failure explanation"));
-		
+		assertThat(recentMessages.get(0).getFailDescription(), StringContains.containsString("This is the failure explanation"));
+
 		verify(myHttpClient, times(1)).post(any(PersHttpClientConfig.class), any(IResponseValidator.class), any(UrlPoolBean.class), any(String.class), any(Map.class), any(String.class));
-		
+
 		FileReader fr = new FileReader(getSvcVerFileName());
 		String entireLog = org.apache.commons.io.IOUtils.toString(fr);
 		ourLog.info("Journal file: {}", entireLog);
@@ -339,10 +427,6 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		assertThat(entireLog, StringContains.containsString("</soapenv:Envelope>"));
 	}
 
-	
-	
-	
-	
 	/**
 	 * Have the invoker throw an NPE
 	 */
@@ -375,7 +459,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		ServiceInvokerSoap11 invoker = mock(ServiceInvokerSoap11.class);
 		mySvc.setSoap11ServiceInvoker(invoker);
 		when(invoker.processInvocation(any(HttpRequestBean.class), any(BasePersServiceVersion.class))).thenThrow(NullPointerException.class);
-		
+
 		OrchestratorResponseBean resp = null;
 		String query = "";
 		Reader reader = new StringReader(request);
@@ -391,7 +475,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 			resp = mySvc.handleServiceRequest(req);
 			fail();
 		} catch (ProcessingException e) {
-			ourLog.info("Message: "+e.getMessage());
+			ourLog.info("Message: " + e.getMessage());
 			assertThat(e.getMessage(), IsNot.not(IsEmptyString.isEmptyOrNullString()));
 		}
 		assertNull(resp);
@@ -419,7 +503,6 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		throw new Error("Failed with: " + Arrays.asList(new File(myTempPath).listFiles()));
 	}
 
-	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testSoap11WithStickySession() throws Exception {
@@ -452,7 +535,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		//@formatter:on
 
 		newEntityManager();
-		
+
 		PersHttpClientConfig cfg = myServiceRegistry.getServiceVersionByPid(mySvcVerPid).getHttpClientConfig();
 		cfg.setUrlSelectionPolicy(UrlSelectionPolicy.RR_STICKY_SESSION);
 		cfg.setStickySessionCookieForSessionId("JSESSIONID");
@@ -473,18 +556,18 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		respBean.setHeaders(new HashMap<String, List<String>>());
 		PersHttpClientConfig httpClient = any();
 		when(myHttpClient.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
-		
+
 		String query = "";
 		HttpRequestBean req = new HttpRequestBean();
 		req.setRequestType(RequestType.POST);
 		req.setRequestHostIp("127.0.0.1");
 		req.setPath("/d0/d0s0/d0s0v0");
 		req.setQuery(query);
-		
+
 		/*
 		 * First query
 		 */
-		
+
 		req.setInputReader(new StringReader(request));
 		req.setRequestTime(new Date());
 		req.setRequestHeaders(new HashMap<String, List<String>>());
@@ -498,16 +581,15 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		/*
-		 * Second query, no sesion cookie still so we should round robin the URLs. This one
-		 * will return a cookie though
+		 * Second query, no sesion cookie still so we should round robin the URLs. This one will return a cookie though
 		 */
-		
+
 		req.setInputReader(new StringReader(request));
 		req.setRequestTime(new Date());
 		req.setRequestHeaders(new HashMap<String, List<String>>());
 		respBean.getHeaders().put("Set-Cookie", Collections.singletonList("JSESSIONID=THE_SESSION_ID"));
 		respBean.setSuccessfulUrl(myUrl2);
-		
+
 		mySvc.handleServiceRequest(req);
 
 		urlPool = ArgumentCaptor.forClass(UrlPoolBean.class);
@@ -524,11 +606,11 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		/*
 		 * Third query, should use the second URL because we have a sticky session now
 		 */
-		
+
 		req.setInputReader(new StringReader(request));
 		req.setRequestTime(new Date());
 		req.getRequestHeaders().put("Cookie", Collections.singletonList("JSESSIONID=THE_SESSION_ID"));
-		
+
 		mySvc.handleServiceRequest(req);
 
 		urlPool = ArgumentCaptor.forClass(UrlPoolBean.class);
@@ -543,7 +625,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 	}
-	
+
 	@After
 	public void after() throws IOException {
 		if (myTempPath != null) {
@@ -565,7 +647,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		when(myConfigService.getFilesystemAuditLoggerPath()).thenReturn(myTempPath);
 		when(myConfigService.getConfig()).thenReturn(new PersConfig());
 		when(myConfigService.getNodeId()).thenReturn("unittest.node");
-		
+
 		myDao = new DaoBean();
 		myDao.setThisForUnitTest();
 
@@ -577,7 +659,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		myRuntimeQuerySvc = new RuntimeStatusQueryBean();
 		myRuntimeQuerySvc.setDaoForUnitTests(myDao);
 		myRuntimeQuerySvc.setConfigSvcForUnitTests(myConfigService);
-		
+
 		myLocalDbAuthService = new LocalDatabaseAuthorizationServiceBean();
 		myLocalDbAuthService.setDao(myDao);
 
@@ -590,7 +672,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		myServiceRegistry.setBroadcastSender(myBroadcastSender);
 		myServiceRegistry.setDao(myDao);
 		myServiceRegistry.setSvcHttpClient(myHttpClient);
-		
+
 		mySoapInvoker = new ServiceInvokerSoap11();
 		mySoapInvoker.setConfigService(myConfigService);
 		mySoapInvoker.setHttpClient(myHttpClient);
@@ -599,6 +681,8 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		myHl7Invoker.setDaoForUnitTest(myDao);
 		myHl7Invoker.setServiceRegistryForUnitTest(myServiceRegistry);
 
+		myVirtualInvoker = new ServiceInvokerVirtual();
+
 		mySvc = new ServiceOrchestratorBean();
 		mySvc.setHttpClient(myHttpClient);
 		mySvc.setRuntimeStatus(myRuntimeStatus);
@@ -606,7 +690,10 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		mySvc.setSoap11ServiceInvoker(mySoapInvoker);
 		mySvc.setSvcRegistry(myServiceRegistry);
 		mySvc.setServiceInvokerHl7OverhttpForUnitTests(myHl7Invoker);
+		mySvc.setServiceInvokerVirtualForUnitTests(myVirtualInvoker);
 		mySvc.setThrottlingService(mock(IThrottlingService.class));
+
+		myVirtualInvoker.setOrchestratorForUnitTests(mySvc);
 
 		/*
 		 * Start test
@@ -658,16 +745,16 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		mySecurityService.loadUserCatalogIfNeeded();
 
 		mySvcVer = myDao.getServiceVersionByPid(d0s0v0.getPid());
-		
+
 		newEntityManager();
 
 		myDao.setEntityManager(null);
 		myUrl = d0s0v0.getUrls().get(0);
 		myUrl2 = d0s0v0.getUrls().get(1);
 		myMethod = d0s0v0.getMethods().get(0);
-		
+
 		mySvcVerPid = d0s0v0.getPid();
-		
+
 		TransactionLoggerBean logger = new TransactionLoggerBean();
 		logger.setDao(myDao);
 		mySvc.setTransactionLogger(logger);
@@ -676,13 +763,13 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		fsAuditLogger.setConfigServiceForUnitTests(myConfigService);
 		fsAuditLogger.initialize();
 		logger.setFilesystemAuditLoggerForUnitTests(fsAuditLogger);
-		
+
 	}
 
 	@Test
 	public void testHl7OverHttpGoodRequest() throws Exception {
 		newEntityManager();
-		
+
 		PersDomain d0 = myServiceRegistry.getOrCreateDomainWithId("d0");
 		PersService d0s0 = myServiceRegistry.getOrCreateServiceWithId(d0, "d0s0");
 		BasePersServiceVersion d0s0v1 = myServiceRegistry.getOrCreateServiceVersionWithId(d0s0, ServiceProtocolEnum.HL7OVERHTTP, "d0s0v1");
@@ -690,18 +777,18 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		d0s0v1.getUrls().get(0).setUrlId("url1");
 		d0s0v1.getUrls().get(0).setUrl("http://foo");
 		myServiceRegistry.saveServiceVersion(d0s0v1);
-		
+
 		newEntityManager();
 
 		myServiceRegistry.reloadRegistryFromDatabase();
-		
+
 		newEntityManager();
-		
+
 		String request = "MSH|^~\\&|DATASERVICES|CORPORATE|||20120711120510.2-0500||ADT^A01^ADT_A01|9c906177-dfca-4bbe-9abd-d8eb43df93a0|D|2.6\r" + // -
 				"EVN||20120701000000-0500\r" + // -
 				"PID|1||397979797^^^SN^SN~4242^^^BKDMDM^PI~1000^^^YARDI^PI||Williams^Rory^H^^^^A||19641028000000-0600|M||||||||||31592^^^YARDI^AN\r";
 		String response = new PipeParser().parse(request).generateACK().encode();
-		
+
 		Reader reader = new StringReader(request);
 		HttpRequestBean req = new HttpRequestBean();
 		req.setRequestType(RequestType.POST);
@@ -727,19 +814,19 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		respBean.setHeaders(new HashMap<String, List<String>>());
 		PersHttpClientConfig httpClient = any();
 		when(myHttpClient.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
-		
+
 		mySvc.handleServiceRequest(req);
 
 		newEntityManager();
-		
+
 		myServiceRegistry.reloadRegistryFromDatabase();
-		
+
 		d0s0v1 = myServiceRegistry.getOrCreateServiceVersionWithId(d0s0, ServiceProtocolEnum.HL7OVERHTTP, "d0s0v1");
 		assertEquals(1, d0s0v1.getMethods().size());
 		assertEquals("ADT", d0s0v1.getMethods().get(0).getName());
-		
+
 	}
-	
+
 	@Override
 	protected void newEntityManager() {
 		super.newEntityManager();

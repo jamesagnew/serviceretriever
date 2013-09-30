@@ -32,6 +32,7 @@ import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.ejb.model.entity.PersUser;
+import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
 import net.svcret.ejb.util.Validate;
 
 import org.slf4j.LoggerFactory;
@@ -99,6 +100,15 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	@Override
 	public BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, ServiceProtocolEnum theProtocol, String theVersionId) throws ProcessingException, UnexpectedFailureException {
 		BasePersServiceVersion retVal = myDao.getOrCreateServiceVersionWithId(theService, theVersionId, theProtocol);
+		if (retVal.isNewlyCreated()) {
+			catalogHasChanged();
+		}
+		return retVal;
+	}
+
+	@Override
+	public BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, ServiceProtocolEnum theProtocol, String theVersionId, PersServiceVersionVirtual theSvcVerToUseIfCreatingNew) throws UnexpectedFailureException {
+		BasePersServiceVersion retVal = myDao.getOrCreateServiceVersionWithId(theService, theVersionId, theProtocol, theSvcVerToUseIfCreatingNew);
 		if (retVal.isNewlyCreated()) {
 			catalogHasChanged();
 		}

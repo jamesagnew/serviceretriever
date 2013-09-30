@@ -163,6 +163,11 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
+	public void deleteStickySession(PersStickySessionUrlBinding theStickySession) {
+		myEntityManager.remove(theStickySession);
+	}
+
+	@Override
 	public void deleteUser(PersUser theUser) {
 		Validate.notNull(theUser);
 
@@ -190,6 +195,11 @@ public class DaoBean implements IDao {
 		return myEntityManager.createNamedQuery(Queries.PERSACTIVECHECK_FINDALL, PersMonitorRuleActiveCheck.class).getResultList();
 	}
 
+	@Override
+	public Collection<PersNodeStatus> getAllNodeStatuses() {
+		return myEntityManager.createNamedQuery(Queries.NODESTATUS_FINDALL, PersNodeStatus.class).getResultList();
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public Collection<PersService> getAllServices() {
@@ -204,6 +214,12 @@ public class DaoBean implements IDao {
 		Query q = myEntityManager.createQuery("SELECT v FROM PersServiceVersionSoap11 v");
 		Collection<PersServiceVersionSoap11> resultList = q.getResultList();
 		return resultList;
+	}
+
+	@Override
+	public Collection<PersStickySessionUrlBinding> getAllStickySessions() {
+		TypedQuery<PersStickySessionUrlBinding> q = myEntityManager.createNamedQuery(Queries.SSURL_FINDALL, PersStickySessionUrlBinding.class);
+		return q.getResultList();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -406,6 +422,11 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
+	public PersMonitorRuleActiveCheck getMonitorRuleActiveCheck(long thePid) {
+		return myEntityManager.find(PersMonitorRuleActiveCheck.class, thePid);
+	}
+
+	@Override
 	public List<BasePersMonitorRule> getMonitorRules() {
 		TypedQuery<BasePersMonitorRule> q = myEntityManager.createNamedQuery(Queries.MONITORRULE_FINDALL, BasePersMonitorRule.class);
 		return q.getResultList();
@@ -518,49 +539,70 @@ public class DaoBean implements IDao {
 		}
 	}
 
+	@Override
+	public PersNodeStatus getOrCreateNodeStatus(String theNodeId) {
+		PersNodeStatus retVal = myEntityManager.find(PersNodeStatus.class, theNodeId);
+		if (retVal == null) {
+			retVal =new PersNodeStatus();
+			retVal.setNodeId(theNodeId);
+			retVal.setStatusTimestamp(new Date());
+			myEntityManager.merge(retVal);
+		}
+		return retVal;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, String theId, ServiceProtocolEnum theProtocol) throws ProcessingException {
+	public BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, String theVersionId, ServiceProtocolEnum theProtocol) throws ProcessingException {
+		BasePersServiceVersion retVal = null;
+		switch (theProtocol) {
+		case SOAP11:
+			retVal = new PersServiceVersionSoap11();
+			break;
+		case JSONRPC20:
+			retVal = new PersServiceVersionJsonRpc20();
+			break;
+		case HL7OVERHTTP:
+			retVal = new PersServiceVersionHl7OverHttp();
+			break;
+		case VIRTUAL:
+			retVal = new PersServiceVersionVirtual();
+			break;
+		}
+
+		if (retVal == null) {
+			throw new IllegalStateException("Unknown protocol: " + theProtocol);
+		}
+
+		retVal = getOrCreateServiceVersionWithId(theService, theVersionId, theProtocol, retVal);
+		
+		return retVal;
+	}
+
+	@Override
+	public BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, String theVersionId, ServiceProtocolEnum theProtocol, BasePersServiceVersion theSvcVerToUseIfCreatingNew) {
 		Validate.notNull(theService, "PersService");
-		Validate.throwProcessingExceptionIfBlank(theId, "The ID may not be blank");
+		Validate.notBlank(theVersionId, "The ID may not be blank");
 
 		TypedQuery<BasePersServiceVersion> q = myEntityManager.createQuery("SELECT v FROM BasePersServiceVersion v WHERE v.myService.myPid = :SERVICE_PID AND v.myVersionId = :VERSION_ID",
 				BasePersServiceVersion.class);
 		q.setParameter("SERVICE_PID", theService.getPid());
-		q.setParameter("VERSION_ID", theId);
+		q.setParameter("VERSION_ID", theVersionId);
 		BasePersServiceVersion retVal = null;
 		try {
 			retVal = q.getSingleResult();
 		} catch (NoResultException e) {
-			ourLog.info("Creating new service version {} for service {}", theId, theService.getServiceId());
+			ourLog.info("Creating new service version {} for service {}", theVersionId, theService.getServiceId());
 
 			PersHttpClientConfig config = getOrCreateHttpClientConfig(PersHttpClientConfig.DEFAULT_ID);
 
-			switch (theProtocol) {
-			case SOAP11:
-				retVal = new PersServiceVersionSoap11();
-				break;
-			case JSONRPC20:
-				retVal = new PersServiceVersionJsonRpc20();
-				break;
-			case HL7OVERHTTP:
-				retVal = new PersServiceVersionHl7OverHttp();
-				break;
-			case VIRTUAL:
-				retVal = new PersServiceVersionVirtual();
-				break;
-			}
-
-			if (retVal == null) {
-				throw new IllegalStateException("Unknown protocol: " + theProtocol);
-			}
-
+			retVal = theSvcVerToUseIfCreatingNew;
 			retVal.prePersist();
 
 			retVal.setService(theService);
-			retVal.setVersionId(theId);
+			retVal.setVersionId(theVersionId);
 			retVal.setHttpClientConfig(config);
 			retVal.setServerSecurityMode(ServerSecurityModeEnum.NONE);
 
@@ -569,7 +611,7 @@ public class DaoBean implements IDao {
 			theService.addVersion(retVal);
 			PersService service = myEntityManager.merge(theService);
 
-			retVal = service.getVersionWithId(theId);
+			retVal = service.getVersionWithId(theVersionId);
 
 			// Create a status entry
 
@@ -1132,6 +1174,11 @@ public class DaoBean implements IDao {
 		return firing;
 	}
 
+	@Override
+	public void saveNodeStatus(PersNodeStatus theNodeStatus) {
+		myEntityManager.merge(theNodeStatus);
+	}
+
 	public <T extends BasePersMonitorRule> T saveOrCreateMonitorRule(T theRule) {
 		Validate.notNull(theRule, "theRule");
 
@@ -1334,6 +1381,7 @@ public class DaoBean implements IDao {
 		myEntityManager.merge(theMsg);
 	}
 
+
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	@Override
 	public void saveUserStatus(Collection<PersUserStatus> theStatus) {
@@ -1445,48 +1493,9 @@ public class DaoBean implements IDao {
 		}
 	}
 
-	@Override
-	public Collection<PersStickySessionUrlBinding> getAllStickySessions() {
-		TypedQuery<PersStickySessionUrlBinding> q = myEntityManager.createNamedQuery(Queries.SSURL_FINDALL, PersStickySessionUrlBinding.class);
-		return q.getResultList();
-	}
-
-
-	@Override
-	public void deleteStickySession(PersStickySessionUrlBinding theStickySession) {
-		myEntityManager.remove(theStickySession);
-	}
-
 	@VisibleForTesting
 	void setThisForUnitTest() {
 		myThis = this;
-	}
-
-	@Override
-	public PersMonitorRuleActiveCheck getMonitorRuleActiveCheck(long thePid) {
-		return myEntityManager.find(PersMonitorRuleActiveCheck.class, thePid);
-	}
-
-	@Override
-	public PersNodeStatus getOrCreateNodeStatus(String theNodeId) {
-		PersNodeStatus retVal = myEntityManager.find(PersNodeStatus.class, theNodeId);
-		if (retVal == null) {
-			retVal =new PersNodeStatus();
-			retVal.setNodeId(theNodeId);
-			retVal.setStatusTimestamp(new Date());
-			myEntityManager.merge(retVal);
-		}
-		return retVal;
-	}
-
-	@Override
-	public void saveNodeStatus(PersNodeStatus theNodeStatus) {
-		myEntityManager.merge(theNodeStatus);
-	}
-
-	@Override
-	public Collection<PersNodeStatus> getAllNodeStatuses() {
-		return myEntityManager.createNamedQuery(Queries.NODESTATUS_FINDALL, PersNodeStatus.class).getResultList();
 	}
 
 }

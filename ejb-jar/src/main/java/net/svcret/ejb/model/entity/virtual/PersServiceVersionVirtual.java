@@ -25,9 +25,16 @@ public class PersServiceVersionVirtual extends BasePersServiceVersion {
 	@ForeignKey(name = "PX_SVCVER_VIRT_TARGET")
 	private BasePersServiceVersion myTarget;
 	
+	public PersServiceVersionVirtual() {
+	}
+	
+	public PersServiceVersionVirtual(BasePersServiceVersion theTarget) {
+		myTarget=theTarget;
+	}
+
 	@Override
 	public ServiceProtocolEnum getProtocol() {
-		return ServiceProtocolEnum.JSONRPC20;
+		return ServiceProtocolEnum.VIRTUAL;
 	}
 
 	public BasePersServiceVersion getTarget() {

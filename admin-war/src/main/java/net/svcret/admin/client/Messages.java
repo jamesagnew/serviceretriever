@@ -817,6 +817,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Clone Service Version")
 	String cloneServiceVersion_Title();
+
+	@DefaultMessage("Backing Service Implementation Dashboard")
+	String urlDashboardPanel_Title();
 	
 	
 }

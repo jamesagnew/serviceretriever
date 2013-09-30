@@ -282,4 +282,9 @@ public class GUser extends BaseDtoDashboardObject implements IHasPermissions {
 		myUsername = theUsername;
 	}
 
+	@Override
+	public List<BaseDtoServiceVersion> getAllServiceVersions() {
+		throw new UnsupportedOperationException();
+	}
+
 }

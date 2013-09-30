@@ -538,7 +538,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 						}
 					}
 					for (GServiceVersionUrl nextUrl : nextVersion.getUrlList()) {
-						if (theRequest.getUrlsToLoadStats().contains(nextUrl.getPid())) {
+						if (theRequest.getUrlsToLoadStats().contains(nextUrl.getPid()) || theRequest.isLoadAllUrlStats()) {
 							StatusEnum status = nextUrl.getStatus();
 							populateRandom(nextUrl);
 							nextUrl.setStatus(status);

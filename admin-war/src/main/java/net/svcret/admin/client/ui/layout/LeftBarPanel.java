@@ -17,22 +17,24 @@ import com.google.gwt.user.client.ui.Hyperlink;
 
 public class LeftBarPanel extends FlowPanel {
 
-	private Hyperlink myDashboardBtn;
+	private static LeftBarPanel ourInstance;
 	private Hyperlink myAddDomainBtn;
 	private Hyperlink myAddSvcBtn;
-	private ArrayList<Hyperlink> myAllButtons;
 	private Hyperlink myAddSvcVerBtn;
-	private Hyperlink myHttpClientConfigsBtn;
+	private ArrayList<Hyperlink> myAllButtons;
 	private Hyperlink myAuthenticationHostsBtn;
-	private Hyperlink myEditUsersBtn;
-	private Hyperlink mySvcCatalogBtn;
-	private Hyperlink myProxyConfigBtn;
+	private Hyperlink myBackingServicesBtn;
+	private Hyperlink myDashboardBtn;
 	private Hyperlink myEditRulesBtn;
+	private Hyperlink myEditUsersBtn;
+	private Hyperlink myHttpClientConfigsBtn;
 	private Hyperlink myManualTestBtn;
 	private Hyperlink myMessageLibraryBtn;
+	private Hyperlink myProxyConfigBtn;
 	private Hyperlink myStickySessionsBtn;
+	private Hyperlink mySvcCatalogBtn;
 
-	public LeftBarPanel() {
+	private LeftBarPanel() {
 		setStylePrimaryName(MyResources.CSS.outerLayoutLeftBar());
 		
 		myAllButtons = new ArrayList<Hyperlink>();
@@ -52,6 +54,9 @@ public class LeftBarPanel extends FlowPanel {
 
 		myStickySessionsBtn = dashboard.addItem("Sticky Sessions", PagesEnum.SSL);
 		myAllButtons.add(myStickySessionsBtn);
+
+		myBackingServicesBtn = dashboard.addItem("Backing URLs", PagesEnum.UDS);
+		myAllButtons.add(myBackingServicesBtn);
 
 		/*
 		 * Configure Subment
@@ -121,8 +126,8 @@ public class LeftBarPanel extends FlowPanel {
 		});
 		
 	}
-
-	private void updateStyles() {
+	
+	public void updateStyles() {
 		PagesEnum current = NavProcessor.getCurrentPage();
 		
 		ArrayList<Hyperlink> buttons = new ArrayList<Hyperlink>(myAllButtons);
@@ -184,6 +189,10 @@ public class LeftBarPanel extends FlowPanel {
 			break;
 		case CLM:
 		case ELM:
+		case UDS:
+			myBackingServicesBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
+			buttons.remove(myBackingServicesBtn);
+			break;
 		case MLB:
 			myMessageLibraryBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
 			buttons.remove(myMessageLibraryBtn);
@@ -212,6 +221,13 @@ public class LeftBarPanel extends FlowPanel {
 			next.removeStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
 		}
 		
+	}
+
+	public static LeftBarPanel getInstance() {
+		if (ourInstance==null) {
+			ourInstance=new LeftBarPanel();
+		}
+		return ourInstance;
 	}
 
 }

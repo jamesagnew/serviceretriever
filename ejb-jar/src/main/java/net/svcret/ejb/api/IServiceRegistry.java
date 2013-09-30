@@ -13,6 +13,7 @@ import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
+import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
 
 @Local
 public interface IServiceRegistry {
@@ -66,5 +67,7 @@ public interface IServiceRegistry {
 	void saveService(PersService theService) throws ProcessingException, UnexpectedFailureException;
 
 	BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theSv) throws  UnexpectedFailureException, ProcessingException;
+
+	BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, ServiceProtocolEnum theProtocol, String theVersionId, PersServiceVersionVirtual theSvcVerToUseIfCreatingNew) throws UnexpectedFailureException;
 
 }

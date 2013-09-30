@@ -1,6 +1,8 @@
 package net.svcret.admin.shared.model;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 
@@ -56,6 +58,11 @@ public class GServiceMethod extends BaseDtoDashboardObject {
 
 	public void setSecurityPolicy(MethodSecurityPolicyEnum theSecurityPolicy) {
 		mySecurityPolicy = theSecurityPolicy;
+	}
+
+	@Override
+	public List<BaseDtoServiceVersion> getAllServiceVersions() {
+		return Collections.emptyList();
 	}
 
 

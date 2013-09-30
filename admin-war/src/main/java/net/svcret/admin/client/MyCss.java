@@ -49,7 +49,8 @@ public interface MyCss extends CssResource {
 
 	String leftMenuTitle();
 
-	String usageTooltipTableSecLatencyColumn();
+	String usageTooltipTableLatencyColumn();
+	String usageTooltipTableNormalColumn();
 
 	String tableEmbeddedUnorderedList();
 

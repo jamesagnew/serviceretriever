@@ -1,6 +1,7 @@
 package net.svcret.admin.shared.model;
 
 import java.util.Date;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -415,5 +416,7 @@ public abstract class BaseDtoDashboardObject extends BaseDtoKeepsRecentMessages 
 			myMaxSecurityFailTransactionsPerMin60min = max;
 		}
 	}
+
+	public abstract List<BaseDtoServiceVersion> getAllServiceVersions();
 
 }

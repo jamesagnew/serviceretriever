@@ -15,7 +15,7 @@ public class OuterLayoutPanel extends DockLayoutPanel {
 		super(Unit.PX);
 		
 		addNorth(TopBarPanel.getInstance(), 62);
-		addWest(new LeftBarPanel(), 200);
+		addWest(LeftBarPanel.getInstance(), 200);
 		//addEast(new RightBarPanel(), 300);
 		
 		DockLayoutPanel bodyDock = new DockLayoutPanel(Unit.PX);
@@ -31,6 +31,7 @@ public class OuterLayoutPanel extends DockLayoutPanel {
 		if (StringUtil.isNotBlank(initPage)) {
 			History.newItem(initPage, false);
 			Cookies.setCookie("sr-first-page", "");
+			LeftBarPanel.getInstance().updateStyles();
 		}
 		
 		NavProcessor.navigate();

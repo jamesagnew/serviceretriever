@@ -1,22 +1,17 @@
 package net.svcret.admin.client.ui.dash;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-import net.svcret.admin.client.AdminPortal;
-import net.svcret.admin.client.MyResources;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.EmptyCell;
-import net.svcret.admin.client.ui.components.IProvidesTooltip;
-import net.svcret.admin.client.ui.components.TooltipListener.Tooltip;
+import net.svcret.admin.client.ui.components.FlexTableWithTooltips;
 import net.svcret.admin.client.ui.dash.model.DashModelDomain;
 import net.svcret.admin.client.ui.dash.model.DashModelLoading;
 import net.svcret.admin.client.ui.dash.model.DashModelService;
 import net.svcret.admin.client.ui.dash.model.DashModelServiceMethod;
 import net.svcret.admin.client.ui.dash.model.DashModelServiceVersion;
 import net.svcret.admin.client.ui.dash.model.IDashModel;
-import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoDashboardObject;
@@ -27,22 +22,6 @@ import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.HierarchyEnum;
 
-import com.google.gwt.core.shared.GWT;
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.i18n.client.DateTimeFormat;
-import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
-import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.Element;
-import com.google.gwt.user.client.Event;
-import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.ui.FlexTable;
-import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.HasVerticalAlignment;
-import com.google.gwt.user.client.ui.HorizontalPanel;
-import com.google.gwt.user.client.ui.Image;
-import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
 public class ServiceDashboardPanel extends BaseDashboardPanel{
@@ -56,13 +35,14 @@ public class ServiceDashboardPanel extends BaseDashboardPanel{
 	private static final int COL_USAGE = 2;
 	private static final int NUM_STATUS_COLS = 6;
 
-	private MyTable myGrid;
+	private FlexTableWithTooltips<BaseDtoDashboardObject> myGrid;
 	private List<IDashModel> myUiList = new ArrayList<IDashModel>();
+	private List<BaseDtoDashboardObject> myUiModelItems = new ArrayList<BaseDtoDashboardObject>();
 
 	public ServiceDashboardPanel() {
 		super();
 		
-		myGrid = new MyTable();
+		myGrid = new FlexTableWithTooltips<BaseDtoDashboardObject>(myUiModelItems);
 		myGrid.setCellPadding(2);
 		myGrid.setCellSpacing(0);
 		add(myGrid);
@@ -254,6 +234,7 @@ public class ServiceDashboardPanel extends BaseDashboardPanel{
 			Widget urls = EmptyCell.defaultWidget(model.renderUrls());
 			myGrid.setWidget(i + rowOffset, offset + COL_BACKING_URLS + 1, urls);
 			myGrid.getCellFormatter().setStyleName(i + rowOffset, offset + COL_BACKING_URLS + 1, styleName);
+			myGrid.setTooltipProvider(i + rowOffset, offset + COL_BACKING_URLS + 1, model.getUrlsTooltip());
 
 			Widget latency = EmptyCell.defaultWidget(model.renderLatency(peakLatency));
 			myGrid.setWidget(i + rowOffset, offset + COL_LATENCY + 1, latency);
@@ -282,123 +263,12 @@ public class ServiceDashboardPanel extends BaseDashboardPanel{
 			myGrid.removeRow(myGrid.getRowCount() - 1);
 		}
 
+		myUiModelItems.clear();
+		for (IDashModel next : theNewUiList) {
+			myUiModelItems.add(next.getModel());
+		}
 		myUiList = theNewUiList;
 	}
 
-
-	private class MyTable extends FlexTable {
-		public MyTable() {
-			sinkEvents(Event.ONMOUSEOVER | Event.ONMOUSEOUT);
-		}
-
-		private List<List<IProvidesTooltip<BaseDtoDashboardObject>>> myTooltipProviders = new ArrayList<List<IProvidesTooltip<BaseDtoDashboardObject>>>();
-
-		public void setTooltipProvider(int theRow, int theCol, IProvidesTooltip<BaseDtoDashboardObject> theTooltipProvider) {
-			ensureTooltipRow(theRow);
-			ensureTooltipCol(theRow, theCol);
-			myTooltipProviders.get(theRow).set(theCol, theTooltipProvider);
-		}
-
-		public void clearTooltipRow(int theRow) {
-			ensureTooltipRow(theRow);
-			for (int i = 0; i < myTooltipProviders.get(theRow).size(); i++) {
-				myTooltipProviders.get(theRow).set(i, null);
-			}
-		}
-
-		private void ensureTooltipCol(int theRow, int theCol) {
-			while (myTooltipProviders.get(theRow).size() <= theCol) {
-				myTooltipProviders.get(theRow).add(null);
-			}
-		}
-
-		private void ensureTooltipRow(int theRow) {
-			while (myTooltipProviders.size() <= theRow) {
-				myTooltipProviders.add(new ArrayList< IProvidesTooltip<BaseDtoDashboardObject>>());
-			}
-		}
-
-		private int myCurrentTooltipRow;
-		private int myCurrentTooltipCol;
-		private Tooltip myCurrentTooltip;
-
-		@Override
-		public void onBrowserEvent(Event theEvent) {
-			super.onBrowserEvent(theEvent);
-
-			Element td = getEventTargetCell(theEvent);
-			if (td == null || !"TD".equalsIgnoreCase(td.getTagName())) {
-				return;
-			}
-
-			Element tr = (Element) td.getParentNode();
-			if (tr==null || !"TR".equalsIgnoreCase(tr.getTagName())) {
-				return;
-			}
-			
-			int rowStr = indexWithinParent(tr);
-			int colStr = indexWithinParent(td);
-
-			switch (DOM.eventGetType(theEvent)) {
-			case Event.ONMOUSEOVER: {
-				GWT.log("Mouseover row " + rowStr + " col " + colStr);
-				if (rowStr == myCurrentTooltipRow && colStr == myCurrentTooltipCol) {
-					return;
-				}
-				if (myCurrentTooltip != null) {
-					myCurrentTooltip.hideTooltip();
-					myCurrentTooltip = null;
-				}
-
-				if (myTooltipProviders.size() > rowStr) {
-					List< IProvidesTooltip<BaseDtoDashboardObject>> cols = myTooltipProviders.get(rowStr);
-					if (cols.size() > colStr) {
-						 IProvidesTooltip<BaseDtoDashboardObject> col = cols.get(colStr);
-						if (col != null) {
-							int index = rowStr-1;
-							IDashModel dashModel = myUiList.get(index);
-							Widget tooltipContents = col.getTooltip(dashModel.getModel());
-							if (tooltipContents != null) {
-								GWT.log("Showing tooltip for row " + rowStr + " col " + colStr);
-								Tooltip tooltip = new Tooltip(td, tooltipContents);
-								tooltip.displayPopup();
-								myCurrentTooltip = tooltip;
-							}
-						}
-					}
-				}
-
-				myCurrentTooltipCol = colStr;
-				myCurrentTooltipRow = rowStr;
-				break;
-			}
-			case Event.ONMOUSEOUT: {
-				GWT.log("Mouseout  row " + rowStr + " col " + colStr);
-				if (rowStr == myCurrentTooltipRow && colStr == myCurrentTooltipCol) {
-					if (myCurrentTooltip != null) {
-						GWT.log("Hiding tooltip for row " + rowStr + " col " + colStr);
-						myCurrentTooltip.hideTooltip();
-						myCurrentTooltip = null;
-						myCurrentTooltipCol=-1;
-						myCurrentTooltipRow=-1;
-					}
-				}
-				break;
-			}
-			}
-
-		}
-
-	}
-
-	public int indexWithinParent(Element theElement) {
-		Element parent = (Element)theElement.getParentNode();
-		for (int i = 0; i < parent.getChildCount(); i++) {
-			if (parent.getChild(i).equals(theElement)) {
-				return i;
-			}
-		}
-		return 0;
-	}
 
 }

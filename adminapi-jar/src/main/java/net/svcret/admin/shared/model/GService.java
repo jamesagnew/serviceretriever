@@ -1,7 +1,9 @@
 package net.svcret.admin.shared.model;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -89,6 +91,16 @@ public class GService extends BaseDtoServiceCatalogItem {
 		}
 		return retVal;
 	}
+
+	@Override
+	public List<BaseDtoServiceVersion> getAllServiceVersions() {
+		ArrayList<BaseDtoServiceVersion> retVal = new ArrayList<BaseDtoServiceVersion>();
+		for (BaseDtoServiceVersion next : getVersionList()) {
+			retVal.add(next);
+		}
+		return retVal;
+	}
+
 
 	public void removeVersionList() {
 		myVersionList=null;

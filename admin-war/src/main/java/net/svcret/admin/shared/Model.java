@@ -1,6 +1,7 @@
 package net.svcret.admin.shared;
 
 import java.util.Date;
+import java.util.Set;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.layout.TopBarPanel;
@@ -443,6 +444,21 @@ public class Model {
 			}
 		}
 
+	}
+
+	public void loadDomainListAndUrlStats(IAsyncLoadCallback<GDomainList> theCallback) {
+		ModelUpdateRequest request = new ModelUpdateRequest();
+		request.setLoadAllUrlStats(true);
+		AdminPortal.MODEL_SVC.loadModelUpdate(request, getCallbackWithDomainListCallback(theCallback));
+
+	}
+
+	public void loadDomainListAndUrlStats(Set<Long> theUrlPids, IAsyncLoadCallback<GDomainList> theCallback) {
+		ModelUpdateRequest request = new ModelUpdateRequest();
+		for (Long next : theUrlPids) {
+			request.addUrlToLoadStats(next);
+		}
+		AdminPortal.MODEL_SVC.loadModelUpdate(request, getCallbackWithDomainListCallback(theCallback));
 	}
 
 }

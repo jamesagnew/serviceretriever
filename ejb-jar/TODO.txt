@@ -1,7 +1,6 @@
 
-* Allow individual methods to require explicit authorization (make sure this is saved when refreshing WSDLs too)
-
 * In replay existing message dialog, allow save button to update saved message, and maybe "save as new" (also change the title of this dialog to better explain that's it's replaying from liibrary)
+
 * In manual test dialod, button to save transaction to library
 
 * Save message to library panel should have a button to jump to "replay" once the message is saved
@@ -21,8 +20,6 @@
 * Active checks should average latency over more than one subsequent call somehow.. This is hard because it's URL specific. The
   alert email should ideally contain the last few latency checks too, and really it would be nice if the alert email showed 
   the non-failing URLs too.
-
-* Edit serviceversion dialog shouldn't allow you to change the domain and service on a service once it's saved. 
 
 * recreate URL statuses if they disappear
 

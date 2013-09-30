@@ -1,6 +1,11 @@
 package net.svcret.admin.client.ui.dash;
 
+import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.CssConstants;
+import net.svcret.admin.client.ui.components.LoadingSpinner;
+import net.svcret.admin.shared.IAsyncLoadCallback;
+import net.svcret.admin.shared.Model;
+import net.svcret.admin.shared.model.GDomainList;
 
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
@@ -15,11 +20,23 @@ public class UrlDashboardPanel extends FlowPanel {
 		titlePanel.setStyleName(CssConstants.MAIN_PANEL_TITLE);
 		add(titlePanel);
 
-		Label titleLabel = new Label("Backing URL Dashboard");
+		Label titleLabel = new Label(AdminPortal.MSGS.urlDashboardPanel_Title());
 		titleLabel.addStyleName(CssConstants.MAIN_PANEL_TITLE_TEXT);
 		titlePanel.add(titleLabel);
 		
+		final LoadingSpinner loadingSpinner = new LoadingSpinner();
+		add(loadingSpinner);
+		loadingSpinner.show();
 		
+		Model.getInstance().loadDomainListAndUrlStats(new IAsyncLoadCallback<GDomainList>() {
+			
+			@Override
+			public void onSuccess(GDomainList theResult) {
+				loadingSpinner.hideCompletely();
+				UrlDashboardGrid grid = new UrlDashboardGrid(theResult);
+				add(grid);
+			}
+		});
 		
 	}
 }

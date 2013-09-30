@@ -53,6 +53,11 @@ public abstract class BaseDashModel implements IDashModel {
 	}
 
 	@Override
+	public IProvidesTooltip<BaseDtoDashboardObject> getUrlsTooltip() {
+		return new UrlStatusTooltipProvider<BaseDtoDashboardObject>();
+	}
+
+	@Override
 	public Widget renderLastInvocation() {
 		if (!(myModel instanceof BaseDtoServiceCatalogItem)) {
 			return null;

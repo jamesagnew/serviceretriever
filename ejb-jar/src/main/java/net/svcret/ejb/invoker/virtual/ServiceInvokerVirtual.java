@@ -2,7 +2,10 @@ package net.svcret.ejb.invoker.virtual;
 
 import java.util.Set;
 
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
@@ -24,8 +27,13 @@ import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
 @Stateless
 public class ServiceInvokerVirtual extends BaseServiceInvoker implements IServiceInvokerVirtual {
 
+	@EJB
 	public IServiceOrchestrator myOrchestrator;
 	
+	@VisibleForTesting
+	public void setOrchestratorForUnitTests(IServiceOrchestrator theOrchestrator) {
+		myOrchestrator = theOrchestrator;
+	}
 
 	@Override
 	public BasePersServiceVersion introspectServiceFromUrl(String theUrl) throws ProcessingException {

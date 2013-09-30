@@ -642,4 +642,9 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	void setServiceInvokerHl7OverhttpForUnitTests(ServiceInvokerHl7OverHttp theHl7Invoker) {
 		myServiceInvokerHl7OverHttp = theHl7Invoker;
 	}
+
+	@VisibleForTesting
+	public void setServiceInvokerVirtualForUnitTests(IServiceInvokerVirtual theVirtualInvoker) {
+		myServiceInvokerVirtual=theVirtualInvoker;
+	}
 }

@@ -7,14 +7,17 @@ import java.util.List;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.EditableField;
+import net.svcret.admin.client.ui.components.FlexTableWithTooltips;
 import net.svcret.admin.client.ui.components.FlowPanelWithTooltip;
 import net.svcret.admin.client.ui.components.IProvidesTooltip;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.dash.model.BaseDashModel;
+import net.svcret.admin.client.ui.dash.model.UsageSparklineTooltipProvider;
 import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
+import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.dom.client.Style.Display;
@@ -25,34 +28,46 @@ import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
 public abstract class BaseUrlGrid extends FlowPanel {
-	private static final int COL_URL_ID = 1;
-
-	private static final int COL_URL_LAST_TRANSACTION = 5;
-	private static final int COL_URL_STATUS = 3;
-	private static final int COL_URL_URL = 2;
-	private static final int COL_URL_USAGE = 4;
-	private static final int NUM_COLS = 6;
+	private final int myColId;
+	private final int myColLastTransaction;
+	private final int myColUrl;
+	private final int myColUrlStatus;
+	private final int myColUsage;
 	private Label myNoUrlsLabel;
-
-	private Grid myUrlGrid;
-	private List<GServiceVersionUrl> myUrlList;
+	private FlexTableWithTooltips<GServiceVersionUrl> myUrlGrid;
+	private final List<GServiceVersionUrl> myUrlList = new ArrayList<GServiceVersionUrl>();
 
 	public BaseUrlGrid() {
+		int next = 1;
+		if (!isHideIdColumn()) {
+			myColId = next++;
+		} else {
+			myColId = -1;
+		}
+		myColUrl = next++;
+		myColUrlStatus = next++;
+		myColLastTransaction = next++;
+		myColUsage = next++;
+
 	}
 
 	protected abstract Widget createActionPanel(GServiceVersionUrl theUrl);
 
-	protected void doUpdateUrlPanel(List<GServiceVersionUrl> theUrlList) {
-		myUrlList = new ArrayList<GServiceVersionUrl>(theUrlList);
+	protected abstract Widget createUrlWidget(GServiceVersionUrl theUrl);
 
-		myUrlGrid.resize(theUrlList.size() + 1, NUM_COLS);
+	protected void doUpdateUrlPanel(List<GServiceVersionUrl> theUrlList) {
+		myUrlList.clear();
+		myUrlList.addAll(theUrlList);
+
+		while (myUrlGrid.getRowCount() > myUrlList.size()) {
+			myUrlGrid.removeRow(myUrlGrid.getRowCount() - 1);
+		}
 
 		int row = 0;
 
@@ -68,45 +83,31 @@ public abstract class BaseUrlGrid extends FlowPanel {
 
 			myUrlGrid.setWidget(row, 0, createActionPanel(next));
 
-			EditableField idField = new EditableField();
-			idField.setMultiline(false);
-			idField.setTransparent(true);
-			idField.setProcessHtml(false);
-			idField.setValue(next.getId());
-			if (StringUtil.isBlank(next.getId())) {
-				idField.setEditorMode();
-			}
-			idField.addValueChangeHandler(new ValueChangeHandler<String>() {
-				@Override
-				public void onValueChange(ValueChangeEvent<String> theEvent) {
-					next.setId(theEvent.getValue());
+			if (!isHideIdColumn()) {
+				EditableField idField = new EditableField();
+				idField.setMultiline(false);
+				idField.setTransparent(true);
+				idField.setProcessHtml(false);
+				idField.setValue(next.getId());
+				if (StringUtil.isBlank(next.getId())) {
+					idField.setEditorMode();
 				}
-			});
-			myUrlGrid.setWidget(row, COL_URL_ID, idField);
+				idField.addValueChangeHandler(new ValueChangeHandler<String>() {
+					@Override
+					public void onValueChange(ValueChangeEvent<String> theEvent) {
+						next.setId(theEvent.getValue());
+					}
+				});
+				myUrlGrid.setWidget(row, myColId, idField);
+			}
 
-			EditableField urlField = new EditableField();
-			urlField.setMultiline(false);
-			urlField.setTransparent(true);
-			urlField.setProcessHtml(false);
-			urlField.setMaxFieldWidth(180);
-			urlField.setLabelIsPlainText(true);
-			urlField.setShowTooltip(true);
-			urlField.setValue(next.getUrl());
-			if (StringUtil.isBlank(next.getId())) {
-				urlField.setEditorMode();
-			}
-			urlField.addValueChangeHandler(new ValueChangeHandler<String>() {
-				@Override
-				public void onValueChange(ValueChangeEvent<String> theEvent) {
-					next.setUrl(theEvent.getValue());
-				}
-			});
-			myUrlGrid.setWidget(row, COL_URL_URL, urlField);
+			Widget urlField = createUrlWidget(next);
+			myUrlGrid.setWidget(row, myColUrl, urlField);
 
 			// Status
 			if (next.isStatsInitialized() == false) {
-				myUrlGrid.setWidget(row, COL_URL_STATUS, null);
-				myUrlGrid.setWidget(row, COL_URL_LAST_TRANSACTION, null);
+				myUrlGrid.setWidget(row, myColUrlStatus, null);
+				myUrlGrid.setWidget(row, myColLastTransaction, null);
 			} else {
 
 				// Status
@@ -117,26 +118,15 @@ public abstract class BaseUrlGrid extends FlowPanel {
 					Widget imageForStatus = BaseDashModel.returnImageForStatus(next.getStatus());
 					imageForStatus.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
 					statusPanel.add(imageForStatus);
-					String text = null;
 					PButton cbResetButton = null;
-					switch (next.getStatus()) {
-					case ACTIVE:
-						text = "Ok";
-						break;
-					case DOWN:
-						if (next.getStatsNextCircuitBreakerReset() != null) {
-							text = "Down (next circuit breaker reset at " + DateUtil.formatTimeOnly(next.getStatsNextCircuitBreakerReset()) + ")";
-							cbResetButton = new PButton("Reset CB");
-							cbResetButton.addClickHandler(new CircuitBreakerResetActionHandler(cbResetButton, next.getPid()));
-							cbResetButton.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
-						} else {
-							text = "Down";
-						}
-						break;
-					case UNKNOWN:
-						text = "Unknown (no requests)";
-						break;
+					String text = createUrlStatusText(next);
+					
+					if (next.getStatus()==StatusEnum.DOWN && next.getStatsNextCircuitBreakerReset()!=null) {
+						cbResetButton = new PButton("Reset CB");
+						cbResetButton.addClickHandler(new CircuitBreakerResetActionHandler(cbResetButton, next.getPid()));
+						cbResetButton.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
 					}
+					
 					Label urlStatusLabel = new Label(text, true);
 					urlStatusLabel.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
 					statusPanel.add(urlStatusLabel);
@@ -145,24 +135,25 @@ public abstract class BaseUrlGrid extends FlowPanel {
 						statusPanel.add(cbResetButton);
 					}
 
-					myUrlGrid.setWidget(row, COL_URL_STATUS, statusPanel);
+					myUrlGrid.setWidget(row, myColUrlStatus, statusPanel);
 				}
 
 				// Usage
 				{
 					FlowPanel grid = new FlowPanel();
-					myUrlGrid.setWidget(row, COL_URL_USAGE, grid);
+					myUrlGrid.setWidget(row, myColUsage, grid);
 
 					Widget transactionsSparkline = BaseDashModel.returnSparklineFor60MinsUsage(next);
 					transactionsSparkline.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
 					grid.add(transactionsSparkline);
 
-					Widget latencySparkline = BaseDashModel.returnSparklineFor60minsLatency(next.getLatency60mins(), next.getAverageLatency60min(),
-							next.getMaxLatency60min(), peakLatency);
+					Widget latencySparkline = BaseDashModel.returnSparklineFor60minsLatency(next.getLatency60mins(), next.getAverageLatency60min(), next.getMaxLatency60min(), peakLatency);
 					if (latencySparkline != null) {
 						latencySparkline.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
 						grid.add(latencySparkline);
 					}
+					
+					myUrlGrid.setTooltipProvider(row, myColUsage, new UsageSparklineTooltipProvider<GServiceVersionUrl>());
 				}
 
 				// Last transaction
@@ -178,7 +169,7 @@ public abstract class BaseUrlGrid extends FlowPanel {
 						}
 					}
 
-					myUrlGrid.setWidget(row, COL_URL_LAST_TRANSACTION, lastXPanel);
+					myUrlGrid.setWidget(row, myColLastTransaction, lastXPanel);
 				}
 			}
 
@@ -187,31 +178,54 @@ public abstract class BaseUrlGrid extends FlowPanel {
 		myNoUrlsLabel.setVisible(theUrlList.size() == 0);
 	}
 
-	protected void init() {
-		this.add(new Label("Each proxied service will have one or more implementation URLs. " + "When a client attempts to invoke a service that has been proxied, the ServiceProxy will "
-				+ "forward this request to one of these implementations. Specifying more than one " + "implementation URL means that if one is unavailable, another can be tried (i.e. redundancy)."));
+	public static String createUrlStatusText(final GServiceVersionUrl next) {
+		String text = null;
+		switch (next.getStatus()) {
+		case ACTIVE:
+			text = "Ok";
+			break;
+		case DOWN:
+			if (next.getStatsNextCircuitBreakerReset() != null) {
+				text = "Down (next circuit breaker reset at " + DateUtil.formatTimeOnly(next.getStatsNextCircuitBreakerReset()) + ")";
+			} else {
+				text = "Down";
+			}
+			break;
+		case UNKNOWN:
+			text = "Unknown (no requests)";
+			break;
+		}
+		return text;
+	}
 
-		myUrlGrid = new Grid(1, NUM_COLS);
+	protected void init() {
+		myUrlGrid = new FlexTableWithTooltips<GServiceVersionUrl>(myUrlList);
 		myUrlGrid.addStyleName(CssConstants.PROPERTY_TABLE);
 		this.add(myUrlGrid);
 
 		myUrlGrid.setWidget(0, 0, new Label(provideActionColumnHeaderText()));
-		myUrlGrid.setWidget(0, COL_URL_ID, new Label("ID"));
-		myUrlGrid.setWidget(0, COL_URL_URL, new Label("URL"));
-		myUrlGrid.setWidget(0, COL_URL_STATUS, new Label("Status"));
-		myUrlGrid.setWidget(0, COL_URL_USAGE, new Label("60 Min Activity"));
-		myUrlGrid.setWidget(0, COL_URL_LAST_TRANSACTION, new Label("Last Transaction"));
+		if (!isHideIdColumn()) {
+			myUrlGrid.setWidget(0, myColId, new Label("ID"));
+		}
+		myUrlGrid.setWidget(0, myColUrl, new Label("URL"));
+		myUrlGrid.setWidget(0, myColUrlStatus, new Label("Status"));
+		myUrlGrid.setWidget(0, myColUsage, new Label("60 Min Activity"));
+		myUrlGrid.setWidget(0, myColLastTransaction, new Label("Last Transaction"));
 
 		myNoUrlsLabel = new Label("No URLs Defined");
 		this.add(myNoUrlsLabel);
+	}
+
+	protected boolean isHideIdColumn() {
+		return false;
 	}
 
 	protected abstract String provideActionColumnHeaderText();
 
 	public class CircuitBreakerResetActionHandler implements ClickHandler {
 
-		private long myUrlPid;
 		private PButton myButton;
+		private long myUrlPid;
 
 		public CircuitBreakerResetActionHandler(PButton theButton, long theUrlPid) {
 			myUrlPid = theUrlPid;

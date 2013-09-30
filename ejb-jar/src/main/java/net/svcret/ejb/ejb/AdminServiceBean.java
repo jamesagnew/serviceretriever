@@ -151,6 +151,8 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(AdminServiceBean.class);
 
+	public static final long URL_PID_TO_LOAD_ALL = -1;
+	
 	@EJB
 	private IConfigService myConfigSvc;
 
@@ -490,6 +492,10 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		Set<Long> loadVerMethodStats = theRequest.getVersionMethodsToLoadStats();
 		Set<Long> loadUrlStats = theRequest.getUrlsToLoadStats();
 
+		if (theRequest.isLoadAllUrlStats()) {
+			loadUrlStats = Collections.singleton(URL_PID_TO_LOAD_ALL);
+		}
+		
 		StatusesBean statuses = null;
 		if (hasAnything(loadDomStats, loadSvcStats, loadVerStats, loadVerMethodStats, loadUrlStats)) {
 			statuses = myDao.loadAllStatuses();

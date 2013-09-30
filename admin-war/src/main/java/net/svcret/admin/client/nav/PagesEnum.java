@@ -1,5 +1,6 @@
 package net.svcret.admin.client.nav;
 import static net.svcret.admin.client.AdminPortal.MSGS;
+import net.svcret.admin.client.AdminPortal;
 
 public enum PagesEnum {
 
@@ -125,6 +126,11 @@ public enum PagesEnum {
 	 * Test service version
 	 */
 	TSV(MSGS.testServiceVersion_Breadcrumb()),
+	
+	/**
+	 * URL Dashboard
+	 */
+	UDS(AdminPortal.MSGS.urlDashboardPanel_Title()),
 	
 	/**
 	 * View user recent messages

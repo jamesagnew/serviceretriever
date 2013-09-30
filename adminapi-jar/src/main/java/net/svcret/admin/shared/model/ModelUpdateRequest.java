@@ -10,12 +10,14 @@ public class ModelUpdateRequest implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private Set<Long> myDomainsToLoadStats;
+	private boolean myLoadAllUrlStats;
 	private boolean myLoadAuthHosts;
 	private boolean myLoadHttpClientConfigs;
 	private boolean myLoadUsers;
 	private Set<Long> myServicesToLoadStats;
 	private Set<Long> myUrlsToLoadStats;
 	private Set<Long> myVersionMethodsToLoadStats;
+
 	private Set<Long> myVersionsToLoadStats;
 
 	public void addDomainToLoadStats(long theDomainToLoadStats) {
@@ -82,6 +84,10 @@ public class ModelUpdateRequest implements Serializable {
 		return retVal;
 	}
 
+	public boolean isLoadAllUrlStats() {
+		return myLoadAllUrlStats;
+	}
+
 	/**
 	 * @return the loadAuthHosts
 	 */
@@ -98,6 +104,10 @@ public class ModelUpdateRequest implements Serializable {
 	 */
 	public boolean isLoadUsers() {
 		return myLoadUsers;
+	}
+
+	public void setLoadAllUrlStats(boolean theB) {
+		myLoadAllUrlStats = theB;
 	}
 
 	/**
@@ -161,5 +171,6 @@ public class ModelUpdateRequest implements Serializable {
 		}
 		return retVal;
 	}
+
 
 }

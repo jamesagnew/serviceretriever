@@ -55,6 +55,7 @@ import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.StatusesBean;
+import net.svcret.ejb.ejb.AdminServiceBean;
 import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
@@ -922,7 +923,8 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		} // for methods
 
 		for (PersServiceVersionUrl nextUrl : this.getUrls()) {
-			GServiceVersionUrl gUrl = nextUrl.toDto(theLoadUrlStats != null && theLoadUrlStats.contains(nextUrl.getPid()), theStatuses, theQuerySvc);
+			boolean loadUrlStats = theLoadUrlStats != null && (theLoadUrlStats.contains(nextUrl.getPid()) || theLoadUrlStats.contains(AdminServiceBean.URL_PID_TO_LOAD_ALL));
+			GServiceVersionUrl gUrl = nextUrl.toDto(loadUrlStats, theStatuses, theQuerySvc);
 			retVal.getUrlList().add(gUrl);
 		} // for URLs
 

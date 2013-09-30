@@ -46,7 +46,7 @@ public final class UsageSparklineTooltipProvider<T extends BaseDtoDashboardObjec
 		grid.getFlexCellFormatter().addStyleName(0, 4, MyResources.CSS.usageTooltipTableSecFailColumn());
 
 		grid.setText(0, 5, "Avg Latency");
-		grid.getFlexCellFormatter().addStyleName(0, 5, MyResources.CSS.usageTooltipTableSecLatencyColumn());
+		grid.getFlexCellFormatter().addStyleName(0, 5, MyResources.CSS.usageTooltipTableLatencyColumn());
 
 		Date nextDate = theObject.getStatistics60MinuteFirstDate();
 		int row = 1;

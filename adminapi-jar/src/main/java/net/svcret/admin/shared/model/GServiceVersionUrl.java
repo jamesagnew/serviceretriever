@@ -236,4 +236,9 @@ public class GServiceVersionUrl extends BaseDtoDashboardObject {
 		myUrl = theUrl;
 	}
 
+	@Override
+	public List<BaseDtoServiceVersion> getAllServiceVersions() {
+		throw new UnsupportedOperationException();
+	}
+
 }

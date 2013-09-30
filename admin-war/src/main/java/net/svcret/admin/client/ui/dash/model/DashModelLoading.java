@@ -85,4 +85,9 @@ public class DashModelLoading implements IDashModel {
 		return null;
 	}
 
+	@Override
+	public IProvidesTooltip<BaseDtoDashboardObject> getUrlsTooltip() {
+		return null;
+	}
+
 }

@@ -4,13 +4,17 @@ import static net.svcret.admin.client.AdminPortal.*;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
 import net.svcret.admin.client.AdminPortal;
+import net.svcret.admin.client.ui.components.EditableField;
 import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.HtmlLabel;
 import net.svcret.admin.client.ui.components.PButton;
@@ -26,6 +30,9 @@ public class ServiceVersionUrlGrid extends BaseUrlGrid {
 	private BaseDtoServiceVersion myServiceVersion;
 
 	public ServiceVersionUrlGrid() {
+		this.add(new Label("Each proxied service will have one or more implementation URLs. " + "When a client attempts to invoke a service that has been proxied, the ServiceProxy will "
+				+ "forward this request to one of these implementations. Specifying more than one " + "implementation URL means that if one is unavailable, another can be tried (i.e. redundancy)."));
+
 		init();
 
 		this.add(new HtmlBr());
@@ -142,6 +149,29 @@ public class ServiceVersionUrlGrid extends BaseUrlGrid {
 			source.setEnabled(false);
 		}
 	}
+	
+	@Override
+	protected EditableField createUrlWidget(final GServiceVersionUrl theUrl) {
+		EditableField urlField = new EditableField();
+		urlField.setMultiline(false);
+		urlField.setTransparent(true);
+		urlField.setProcessHtml(false);
+		urlField.setMaxFieldWidth(180);
+		urlField.setLabelIsPlainText(true);
+		urlField.setShowTooltip(true);
+		urlField.setValue(theUrl.getUrl());
+		if (StringUtil.isBlank(theUrl.getId())) {
+			urlField.setEditorMode();
+		}
+		urlField.addValueChangeHandler(new ValueChangeHandler<String>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<String> theEvent) {
+				theUrl.setUrl(theEvent.getValue());
+			}
+		});
+		return urlField;
+	}
+
 
 	@Override
 	protected String provideActionColumnHeaderText() {

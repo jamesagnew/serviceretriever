@@ -37,4 +37,6 @@ public interface IDashModel {
 	int getPeakLatency();
 	
 	IProvidesTooltip<BaseDtoDashboardObject> getUsageTooltip();
+
+	IProvidesTooltip<BaseDtoDashboardObject> getUrlsTooltip();
 }

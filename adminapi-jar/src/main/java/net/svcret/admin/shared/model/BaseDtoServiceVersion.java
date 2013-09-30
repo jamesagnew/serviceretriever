@@ -1,6 +1,8 @@
 package net.svcret.admin.shared.model;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 
@@ -12,10 +14,10 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 
 	@XmlElement(name="config_Active")
 	private boolean myActive;
-	
+
 	@XmlElement(name="config_ClientSecurity")
 	private DtoClientSecurityList myClientSecurityList;
-
+	
 	@XmlElement(name="runtime_DefaultProxyPath")
 	private String myDefaultProxyPath;
 
@@ -24,7 +26,7 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 
 	@XmlElement(name="runtime_DetailedStats")
 	private GServiceVersionDetailedStats myDetailedStats;
-	
+
 	@XmlElement(name="config_ExplicitProxyPath")
 	private String myExplicitProxyPath;
 	
@@ -36,10 +38,10 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 	
 	@XmlElement(name="runtime_LastAccess")	
 	private Date myLastAccess;
-
+	
 	@XmlElement(name="runtime_ParentServiceName")
 	private String myParentServiceName;
-	
+
 	@XmlElement(name="runtime_ParentServicePid")
 	private long myParentServicePid;
 	
@@ -54,7 +56,7 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 	
 	@XmlElement(name="config_Methods")
 	private GServiceMethodList myServiceMethodList;
-
+	
 	@XmlElement(name="config_Urls")
 	private DtoServiceVersionUrlList myServiceUrlList;
 
@@ -67,6 +69,11 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 		myServerSecurityList = new DtoServerSecurityList();
 		myClientSecurityList = new DtoClientSecurityList();
 		myResourcePointerList = new GServiceVersionResourcePointerList();
+	}
+
+	@Override
+	public List<BaseDtoServiceVersion> getAllServiceVersions() {
+		return Collections.singletonList(this);
 	}
 
 	/**

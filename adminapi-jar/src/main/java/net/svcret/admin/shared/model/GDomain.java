@@ -1,6 +1,8 @@
 package net.svcret.admin.shared.model;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -41,6 +43,15 @@ public class GDomain extends BaseDtoServiceCatalogItem {
 		HashSet<Long> retVal = new HashSet<Long>();
 		for (GService next : getServiceList()) {
 			retVal.addAll(next.getAllServiceVersionPids());
+		}
+		return retVal;
+	}
+
+	@Override
+	public List<BaseDtoServiceVersion> getAllServiceVersions() {
+		ArrayList<BaseDtoServiceVersion> retVal = new ArrayList<BaseDtoServiceVersion>();
+		for (GService next : getServiceList()) {
+			retVal.addAll(next.getAllServiceVersions());
 		}
 		return retVal;
 	}

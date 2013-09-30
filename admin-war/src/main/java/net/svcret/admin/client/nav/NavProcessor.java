@@ -36,6 +36,7 @@ import net.svcret.admin.client.ui.config.svcver.EditServiceVersionPanel;
 import net.svcret.admin.client.ui.config.svcver.ServiceVersionRecentMessagePanel;
 import net.svcret.admin.client.ui.dash.IDestroyable;
 import net.svcret.admin.client.ui.dash.ServiceDashboardPanel;
+import net.svcret.admin.client.ui.dash.UrlDashboardPanel;
 import net.svcret.admin.client.ui.layout.BodyPanel;
 import net.svcret.admin.client.ui.layout.BreadcrumbPanel;
 import net.svcret.admin.client.ui.stats.ServiceVersionStatsPanel;
@@ -313,6 +314,9 @@ public class NavProcessor {
 		// try {
 		Panel panel = null;
 		switch (page) {
+		case UDS:
+			panel = new UrlDashboardPanel();
+			break;
 		case SSL:
 			panel = new StickySessionListPanel();
 			break;

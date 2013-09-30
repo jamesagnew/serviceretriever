@@ -52,6 +52,7 @@ import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserRecentMessage;
 import net.svcret.ejb.model.entity.PersUserStatus;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
+import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
 
 @Local
 public interface IDao {
@@ -273,5 +274,8 @@ public interface IDao {
 	void saveNodeStatus(PersNodeStatus theNodeStatus);
 
 	Collection<PersNodeStatus> getAllNodeStatuses();
+
+
+	BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, String theVersionId, ServiceProtocolEnum theProtocol, BasePersServiceVersion theSvcVerToUseIfCreatingNew);
 
 }
