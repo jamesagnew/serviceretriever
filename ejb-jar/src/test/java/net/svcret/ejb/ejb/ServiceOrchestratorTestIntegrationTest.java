@@ -16,8 +16,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
+import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
 import net.svcret.ejb.api.HttpRequestBean;
@@ -33,22 +35,28 @@ import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.invoker.hl7.ServiceInvokerHl7OverHttp;
 import net.svcret.ejb.invoker.soap.ServiceInvokerSoap11;
 import net.svcret.ejb.invoker.virtual.ServiceInvokerVirtual;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
+import net.svcret.ejb.model.entity.BasePersStats;
+import net.svcret.ejb.model.entity.BasePersStatsPk;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
+import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersStickySessionUrlBinding;
 import net.svcret.ejb.model.entity.PersUser;
+import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
 import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
+import net.svcret.ejb.model.registry.WsSecUsernameClientAuthentication;
 
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.core.IsNot;
@@ -58,6 +66,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Matchers;
+import org.mockito.internal.matchers.CapturingMatcher;
 import org.mockito.internal.stubbing.defaultanswers.ReturnsDeepStubs;
 
 import ca.uhn.hl7v2.parser.PipeParser;
@@ -163,7 +173,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
 	}
 
-	@SuppressWarnings("null")
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testVirtualService() throws Exception {
 
@@ -200,11 +210,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 				+ "</S:Envelope>";
 		//@formatter:on
 
-		IResponseValidator theResponseValidator = any();
-		UrlPoolBean theUrlPool = any();
-		String theContentBody = any();
-		Map<String, List<String>> theHeaders = any();
-		String theContentType = any();
+		ArgumentCaptor<String> contentBodyCaptor = ArgumentCaptor.forClass(String.class);
 		HttpResponseBean respBean = new HttpResponseBean();
 		respBean.setCode(200);
 		respBean.setBody(response);
@@ -212,8 +218,8 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		respBean.setResponseTime(100);
 		respBean.setSuccessfulUrl(myUrl);
 		respBean.setHeaders(new HashMap<String, List<String>>());
-		PersHttpClientConfig httpClient = any();
-		when(myHttpClient.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
+		when(myHttpClient.post(any(PersHttpClientConfig.class), any(IResponseValidator.class), any(UrlPoolBean.class), contentBodyCaptor.capture(), any(Map.class), any(String.class))).thenReturn(
+				respBean);
 
 		ITransactionLogger transactionLogger = mock(ITransactionLogger.class);
 		mySvc.setTransactionLogger(transactionLogger);
@@ -223,6 +229,17 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		PersService d0s0 = myServiceRegistry.getAllDomains().iterator().next().getServices().iterator().next();
 		PersServiceVersionVirtual d0s0v1 = (PersServiceVersionVirtual) myServiceRegistry.getOrCreateServiceVersionWithId(d0s0, ServiceProtocolEnum.VIRTUAL, "d0s0v1", new PersServiceVersionVirtual(
 				mySvcVer));
+		myServiceRegistry.reloadRegistryFromDatabase();
+
+		newEntityManager();
+
+		// PersWsSecUsernameTokenServerAuth sa = new PersWsSecUsernameTokenServerAuth();
+		// sa.setAuthenticationHost(myDao.getOrCreateAuthenticationHostLocalDatabase("TEST"));
+		// mySvcVer.addServerAuth(sa);
+
+		mySvcVer.addClientAuth(new PersWsSecUsernameTokenClientAuth("newuser", "newpass"));
+
+		myServiceRegistry.saveServiceVersion(mySvcVer);
 		myServiceRegistry.reloadRegistryFromDatabase();
 
 		newEntityManager();
@@ -241,6 +258,27 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		resp = mySvc.handleServiceRequest(req);
 		assertEquals(response, resp.getResponseBody());
 
+		String requestBody = contentBodyCaptor.getValue();
+		assertThat(requestBody, StringContains.containsString("newuser"));
+		assertThat(requestBody, StringContains.containsString("newpass"));
+
+		req.setInputReader(new StringReader(request.replace("<wsse:Username>test</wsse:Username>", "<wsse:Username>test2222</wsse:Username>")));
+		try {
+			mySvc.handleServiceRequest(req);
+			fail();
+		} catch (SecurityFailureException e) {
+			// expected
+		}
+		
+		/*
+		 * Check that stats were saved to the virtual service
+		 */
+		ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>> stats = myRuntimeStatus.getUnflushedInvocationStatsForUnitTests();
+		assertEquals(1, stats.size());
+		PersInvocationMethodSvcverStats next = (PersInvocationMethodSvcverStats) stats.values().iterator().next();
+		assertEquals(1, next.getSuccessInvocationCount());
+		assertEquals(1, next.getServerSecurityFailures());
+		
 	}
 
 	@Test
@@ -715,6 +753,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		PersDomain d0 = myServiceRegistry.getOrCreateDomainWithId("d0");
 		PersService d0s0 = myServiceRegistry.getOrCreateServiceWithId(d0, "d0s0");
 		BasePersServiceVersion d0s0v0 = myServiceRegistry.getOrCreateServiceVersionWithId(d0s0, ServiceProtocolEnum.SOAP11, "d0s0v0");
+		d0s0v0.setServerSecurityMode(ServerSecurityModeEnum.REQUIRE_ANY);
 		PersServiceVersionMethod d0s0v0m0 = new PersServiceVersionMethod();
 		d0s0v0m0.setName("d0s0v0m0");
 		d0s0v0.addMethod(d0s0v0m0);

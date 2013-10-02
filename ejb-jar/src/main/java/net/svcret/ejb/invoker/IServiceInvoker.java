@@ -17,6 +17,7 @@ import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.invoker.soap.InvocationFailedException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
+import net.svcret.ejb.model.entity.PersBaseServerAuth;
 
 /**
  * 
@@ -77,5 +78,7 @@ public interface IServiceInvoker {
 			InvocationFailedDueToInternalErrorException;
 
 	IResponseValidator provideInvocationResponseValidator(BasePersServiceVersion theServiceDefinition);
+
+	List<PersBaseServerAuth<?, ?>> provideServerAuthorizationModules(BasePersServiceVersion theServiceVersion);
 
 }

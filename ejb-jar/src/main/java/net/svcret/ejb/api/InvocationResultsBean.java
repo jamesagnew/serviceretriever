@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.svcret.ejb.invoker.IServiceInvoker;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
@@ -19,7 +18,6 @@ public class InvocationResultsBean {
 	private Map<String, List<String>> myMethodHeaders;
 	private String myMethodRequestBody;
 	private ResultTypeEnum myResultType;
-	private IServiceInvoker myServiceInvoker;
 	private String myStaticResourceContentTyoe;
 	private PersServiceVersionResource myStaticResourceDefinition;
 	private Map<String, List<String>> myStaticResourceHeaders;
@@ -81,9 +79,6 @@ public class InvocationResultsBean {
 		return myResultType;
 	}
 
-	public IServiceInvoker getServiceInvoker() {
-		return myServiceInvoker;
-	}
 
 	/**
 	 * @return the staticResourceContentTyoe
@@ -140,10 +135,6 @@ public class InvocationResultsBean {
 		myStaticResourceContentTyoe = theContentType;
 		myStaticResourceHeaders = theHeaders;
 		myStaticResourceText = theResourceText;
-	}
-
-	public void setServiceInvoker(IServiceInvoker theServiceInvoker) {
-		myServiceInvoker = theServiceInvoker;
 	}
 
 	private void validateResultTypeNotSet() {

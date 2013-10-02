@@ -88,6 +88,9 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private static final int MAX_STATS_TO_FLUSH_AT_ONCE = 100;
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(RuntimeStatusBean.class);
 
+	@EJB
+	private IBroadcastSender myBroadcastSender;
+
 	private final ReentrantLock myCollapseLock = new ReentrantLock();
 
 	@EJB
@@ -95,26 +98,27 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	@EJB
 	private IDao myDao;
-
-	private final RecentTransactionQueue myInMemoryRecentTransactionSuccessCounter = new RecentTransactionQueue();
-	private final RecentTransactionQueue myInMemoryRecentTransactionFaultCounter = new RecentTransactionQueue();
-	private final RecentTransactionQueue myInMemoryRecentTransactionFailCounter = new RecentTransactionQueue();
-	private final RecentTransactionQueue myInMemoryRecentTransactionSecFailCounter = new RecentTransactionQueue();
 	private final ReentrantLock myFlushLock = new ReentrantLock();
-	private final AtomicLong myUnflushedNodeSuccessMethodInvocations = new AtomicLong();
-	private final AtomicLong myUnflushedNodeFaultMethodInvocations = new AtomicLong();
-	private final AtomicLong myUnflushedNodeFailMethodInvocations = new AtomicLong();
-	private final AtomicLong myUnflushedNodeSecFailMethodInvocations = new AtomicLong();
+	private final RecentTransactionQueue myInMemoryRecentTransactionFailCounter = new RecentTransactionQueue();
+	private final RecentTransactionQueue myInMemoryRecentTransactionFaultCounter = new RecentTransactionQueue();
+	private final RecentTransactionQueue myInMemoryRecentTransactionSecFailCounter = new RecentTransactionQueue();
+	private final RecentTransactionQueue myInMemoryRecentTransactionSuccessCounter = new RecentTransactionQueue();
 	private Date myNodeStatisticsDate;
 	private final ReentrantLock myNodeStatisticsLock = new ReentrantLock();
+	private PersNodeStatus myNodeStatus;
 	private Date myNowForUnitTests;
+	@EJB
+	private IServiceRegistry myServiceRegistry;
 	private final Map<PersStickySessionUrlBindingPk, PersStickySessionUrlBinding> myStickySessionUrlBindings;
 	private final DateFormat myTimeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
 	private final ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>> myUnflushedInvocationStats;
+	private final AtomicLong myUnflushedNodeFailMethodInvocations = new AtomicLong();
+	private final AtomicLong myUnflushedNodeFaultMethodInvocations = new AtomicLong();
+	private final AtomicLong myUnflushedNodeSecFailMethodInvocations = new AtomicLong();
+	private final AtomicLong myUnflushedNodeSuccessMethodInvocations = new AtomicLong();
 	private final ConcurrentHashMap<Long, PersServiceVersionStatus> myUnflushedServiceVersionStatus;
 	private final ConcurrentHashMap<PersUser, PersUserStatus> myUnflushedUserStatus;
 	private final ConcurrentHashMap<Long, PersServiceVersionUrlStatus> myUrlStatus;
-	private PersNodeStatus myNodeStatus;
 
 	public RuntimeStatusBean() {
 		myUnflushedInvocationStats = new ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>>();
@@ -122,11 +126,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		myUnflushedUserStatus = new ConcurrentHashMap<PersUser, PersUserStatus>();
 		myUrlStatus = new ConcurrentHashMap<Long, PersServiceVersionUrlStatus>();
 		myStickySessionUrlBindings = new HashMap<PersStickySessionUrlBindingPk, PersStickySessionUrlBinding>();
-	}
-
-	@PostConstruct
-	public void initializeNodeStat() {
-		myNodeStatus = myDao.getOrCreateNodeStatus(myConfigSvc.getNodeId());
 	}
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
@@ -184,6 +183,16 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			myFlushLock.unlock();
 		}
 
+	}
+
+	@VisibleForTesting
+	public ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>> getUnflushedInvocationStatsForUnitTests() {
+		return myUnflushedInvocationStats;
+	}
+
+	@PostConstruct
+	public void initializeNodeStat() {
+		myNodeStatus = myDao.getOrCreateNodeStatus(myConfigSvc.getNodeId());
 	}
 
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -334,31 +343,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	}
 
-	private void updateStickySession(String theSessionId, BasePersServiceVersion theSvcVer, PersServiceVersionUrl theSuccessfulUrl) throws UnexpectedFailureException {
-		if (StringUtils.isBlank(theSessionId)) {
-			return;
-		}
-		PersStickySessionUrlBindingPk pk = new PersStickySessionUrlBindingPk(theSessionId, theSvcVer);
-		PersStickySessionUrlBinding existing = myStickySessionUrlBindings.get(pk);
-		if (existing == null) {
-			existing = myDao.getOrCreateStickySessionUrlBinding(pk, theSuccessfulUrl);
-			if (existing.isNewlyCreated()) {
-				myBroadcastSender.notifyNewStickySession(existing);
-			}
-		}
-
-		if (!existing.getUrl().equals(theSuccessfulUrl)) {
-			ourLog.debug("Changing sticky session URL binding for session {} to {}", theSessionId, theSuccessfulUrl.getPid());
-			existing.setUrl(theSuccessfulUrl);
-			myDao.saveStickySessionUrlBinding(existing);
-			myBroadcastSender.notifyNewStickySession(existing);
-		}
-
-	}
-
-	@EJB
-	private IBroadcastSender myBroadcastSender;
-
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
 	public void recordInvocationStaticResource(Date theInvocationTime, PersServiceVersionResource theResource) {
@@ -432,6 +416,31 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 		inMemory.mergeNewer(fromDisk);
 
+	}
+
+	@Override
+	public void updatedStickySessionBinding(DtoStickySessionUrlBinding theBinding) {
+		BasePersServiceVersion svcVer = myServiceRegistry.getServiceVersionByPid(theBinding.getServiceVersionPid());
+		if (svcVer == null) {
+			ourLog.warn("Unknown service version from update: {}", theBinding.getServiceVersionPid());
+			return;
+		}
+
+		PersServiceVersionUrl url = svcVer.getUrlWithPid(theBinding.getUrlPid());
+		if (url == null) {
+			ourLog.warn("Unknown URL from update: {}", theBinding.getServiceVersionPid());
+			return;
+		}
+
+		synchronized (myStickySessionUrlBindings) {
+			PersStickySessionUrlBindingPk pk = new PersStickySessionUrlBindingPk(theBinding.getSessionId(), svcVer);
+			PersStickySessionUrlBinding existing = myStickySessionUrlBindings.get(pk);
+			if (existing != null) {
+				existing.setUrl(url);
+			} else {
+				myStickySessionUrlBindings.put(pk, new PersStickySessionUrlBinding(pk, url));
+			}
+		}
 	}
 
 	private void chooseUrlRoundRobin(BasePersServiceVersion theServiceVersion, UrlPoolBean theRetVal) {
@@ -636,6 +645,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 	}
 
+
 	private void doFlushStatus() {
 
 		ourLog.debug("Going to flush status entries");
@@ -793,7 +803,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		ourLog.debug("Node status {} successful transactions with {} in bean total. First entries: {}", myInMemoryRecentTransactionSuccessCounter.getTransactionsPerMinute(), myInMemoryRecentTransactionSuccessCounter.getSize(), myInMemoryRecentTransactionSuccessCounter.describeFirstTenEntries());
 		
 	}
-
 
 	private void doRecordInvocationForUrls(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, Date theInvocationTime) {
 		if (theHttpResponse == null) {
@@ -1067,6 +1076,33 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 	}
 
+	private void updateStickySession(String theSessionId, BasePersServiceVersion theSvcVer, PersServiceVersionUrl theSuccessfulUrl) throws UnexpectedFailureException {
+		if (StringUtils.isBlank(theSessionId)) {
+			return;
+		}
+		PersStickySessionUrlBindingPk pk = new PersStickySessionUrlBindingPk(theSessionId, theSvcVer);
+		PersStickySessionUrlBinding existing = myStickySessionUrlBindings.get(pk);
+		if (existing == null) {
+			existing = myDao.getOrCreateStickySessionUrlBinding(pk, theSuccessfulUrl);
+			if (existing.isNewlyCreated()) {
+				myBroadcastSender.notifyNewStickySession(existing);
+			}
+		}
+
+		if (!existing.getUrl().equals(theSuccessfulUrl)) {
+			ourLog.debug("Changing sticky session URL binding for session {} to {}", theSessionId, theSuccessfulUrl.getPid());
+			existing.setUrl(theSuccessfulUrl);
+			myDao.saveStickySessionUrlBinding(existing);
+			myBroadcastSender.notifyNewStickySession(existing);
+		}
+
+	}
+
+	@VisibleForTesting
+	void setBroadcastSender(IBroadcastSender theBroadcastSender) {
+		myBroadcastSender = theBroadcastSender;
+	}
+
 	void setConfigSvc(IConfigService theConfigSvc) {
 		myConfigSvc = theConfigSvc;
 	}
@@ -1080,39 +1116,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	void setNowForUnitTests(Date theNow) {
 		myNowForUnitTests = theNow;
-	}
-
-	@EJB
-	private IServiceRegistry myServiceRegistry;
-
-	@Override
-	public void updatedStickySessionBinding(DtoStickySessionUrlBinding theBinding) {
-		BasePersServiceVersion svcVer = myServiceRegistry.getServiceVersionByPid(theBinding.getServiceVersionPid());
-		if (svcVer == null) {
-			ourLog.warn("Unknown service version from update: {}", theBinding.getServiceVersionPid());
-			return;
-		}
-
-		PersServiceVersionUrl url = svcVer.getUrlWithPid(theBinding.getUrlPid());
-		if (url == null) {
-			ourLog.warn("Unknown URL from update: {}", theBinding.getServiceVersionPid());
-			return;
-		}
-
-		synchronized (myStickySessionUrlBindings) {
-			PersStickySessionUrlBindingPk pk = new PersStickySessionUrlBindingPk(theBinding.getSessionId(), svcVer);
-			PersStickySessionUrlBinding existing = myStickySessionUrlBindings.get(pk);
-			if (existing != null) {
-				existing.setUrl(url);
-			} else {
-				myStickySessionUrlBindings.put(pk, new PersStickySessionUrlBinding(pk, url));
-			}
-		}
-	}
-
-	@VisibleForTesting
-	void setBroadcastSender(IBroadcastSender theBroadcastSender) {
-		myBroadcastSender = theBroadcastSender;
 	}
 
 }

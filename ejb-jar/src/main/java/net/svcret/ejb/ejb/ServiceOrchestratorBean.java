@@ -149,7 +149,8 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			 * 
 			 * Currently only active for method invocations
 			 */
-			authorized = processSecurity(theRequest, serviceVersion, results);
+			List<PersBaseServerAuth<?, ?>> serverAuths = getServiceInvoker(serviceVersion).provideServerAuthorizationModules(serviceVersion);
+			authorized = processSecurity(theRequest, serverAuths, results);
 
 			/*
 			 * Apply throttling if needed (may throw an exception if request is throttled)
@@ -388,8 +389,6 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			results.setMethodHeaders(svcInvoker.createBackingRequestHeadersForMethodInvocation(serviceVersion, theRequest.getRequestHeaders()));
 		}
 
-		results.setServiceInvoker(svcInvoker);
-
 		for (PersBaseClientAuth<?> next : serviceVersion.getClientAuths()) {
 			if (next instanceof PersHttpBasicClientAuth) {
 				PersHttpBasicClientAuth clientAuth = (PersHttpBasicClientAuth) next;
@@ -435,7 +434,9 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		Map<String, List<String>> headers = results.getMethodHeaders();
 		String contentType = results.getMethodContentType();
 		String contentBody = results.getMethodRequestBody();
-		IResponseValidator responseValidator = results.getServiceInvoker().provideInvocationResponseValidator(serviceVersion);
+		
+		IServiceInvoker invoker = getServiceInvoker(method.getServiceVersion());
+		IResponseValidator responseValidator = invoker.provideInvocationResponseValidator(serviceVersion);
 
 		UrlPoolBean urlPool;
 		if (theForceUrl == null) {
@@ -472,7 +473,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			throw new InvocationResponseFailedException(b.toString());
 		}
 
-		InvocationResponseResultsBean invocationResponse = results.getServiceInvoker().processInvocationResponse(serviceVersion, httpResponse);
+		InvocationResponseResultsBean invocationResponse = invoker.processInvocationResponse(serviceVersion, httpResponse);
 		invocationResponse.validate();
 
 		String responseBody = invocationResponse.getResponseBody();
@@ -509,21 +510,21 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		return retVal;
 	}
 
-	private AuthorizationResultsBean processSecurity(HttpRequestBean theRequest, BasePersServiceVersion serviceVersion, InvocationResultsBean results) throws SecurityFailureException,
+	private AuthorizationResultsBean processSecurity(HttpRequestBean theRequest, List<PersBaseServerAuth<?,?>> theServerAuths, InvocationResultsBean results) throws SecurityFailureException,
 			ProcessingException {
 		AuthorizationResultsBean authorized = null;
 		if (results.getResultType() == ResultTypeEnum.METHOD) {
 			if (ourLog.isDebugEnabled()) {
-				if (serviceVersion.getServerAuths().isEmpty()) {
+				if (theServerAuths.isEmpty()) {
 					ourLog.trace("Service has no server auths");
 				} else {
-					ourLog.trace("Service has the following server auths: {}", serviceVersion.getServerAuths());
+					ourLog.trace("Service has the following server auths: {}", theServerAuths);
 				}
 			}
 
 			PersServiceVersionMethod method = results.getMethodDefinition();
 			List<AuthorizationRequestBean> authRequests = new ArrayList<ISecurityService.AuthorizationRequestBean>();
-			for (PersBaseServerAuth<?, ?> nextServerAuth : serviceVersion.getServerAuths()) {
+			for (PersBaseServerAuth<?, ?> nextServerAuth : theServerAuths) {
 				ICredentialGrabber credentials;
 				if (nextServerAuth instanceof PersHttpBasicServerAuth) {
 					credentials = new PersHttpBasicCredentialGrabber(theRequest.getRequestHeaders());

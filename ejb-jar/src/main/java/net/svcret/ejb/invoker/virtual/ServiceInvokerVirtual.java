@@ -1,5 +1,6 @@
 package net.svcret.ejb.invoker.virtual;
 
+import java.util.List;
 import java.util.Set;
 
 import javax.ejb.EJB;
@@ -22,6 +23,7 @@ import net.svcret.ejb.invoker.BaseServiceInvoker;
 import net.svcret.ejb.invoker.IServiceInvoker;
 import net.svcret.ejb.invoker.soap.InvocationFailedException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
+import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
 
 @Stateless
@@ -29,11 +31,6 @@ public class ServiceInvokerVirtual extends BaseServiceInvoker implements IServic
 
 	@EJB
 	public IServiceOrchestrator myOrchestrator;
-	
-	@VisibleForTesting
-	public void setOrchestratorForUnitTests(IServiceOrchestrator theOrchestrator) {
-		myOrchestrator = theOrchestrator;
-	}
 
 	@Override
 	public BasePersServiceVersion introspectServiceFromUrl(String theUrl) throws ProcessingException {
@@ -45,25 +42,40 @@ public class ServiceInvokerVirtual extends BaseServiceInvoker implements IServic
 		return determineInvoker(theServiceDefinition).obscureMessageForLogs(theServiceDefinition, theMessage, theElementNamesToRedact);
 	}
 
-	private IServiceInvoker determineInvoker(BasePersServiceVersion theServiceDefinition) {
-		PersServiceVersionVirtual svcVer = (PersServiceVersionVirtual) theServiceDefinition;
-		return myOrchestrator.getServiceInvoker(svcVer.getTarget());
+	@Override
+	public InvocationResultsBean processInvocation(HttpRequestBean theRequest, BasePersServiceVersion theServiceDefinition) throws UnknownRequestException, InvocationRequestFailedException,
+			InvocationFailedException {
+		return determineInvoker(theServiceDefinition).processInvocation(theRequest, determineTarget(theServiceDefinition));
 	}
 
 	@Override
-	public InvocationResultsBean processInvocation(HttpRequestBean theRequest, BasePersServiceVersion theServiceDefinition)
-			throws UnknownRequestException, InvocationRequestFailedException, InvocationFailedException {
-		return determineInvoker(theServiceDefinition).processInvocation(theRequest,theServiceDefinition);
-	}
-
-	@Override
-	public InvocationResponseResultsBean processInvocationResponse(BasePersServiceVersion theServiceDefinition, HttpResponseBean theResponse) throws InvocationResponseFailedException, InvocationFailedDueToInternalErrorException {
-		return determineInvoker(theServiceDefinition).processInvocationResponse(theServiceDefinition, theResponse);
+	public InvocationResponseResultsBean processInvocationResponse(BasePersServiceVersion theServiceDefinition, HttpResponseBean theResponse) throws InvocationResponseFailedException,
+			InvocationFailedDueToInternalErrorException {
+		return determineInvoker(theServiceDefinition).processInvocationResponse(determineTarget(theServiceDefinition), theResponse);
 	}
 
 	@Override
 	public IResponseValidator provideInvocationResponseValidator(BasePersServiceVersion theServiceDefinition) {
 		return determineInvoker(theServiceDefinition).provideInvocationResponseValidator(theServiceDefinition);
+	}
+
+	@Override
+	public List<PersBaseServerAuth<?, ?>> provideServerAuthorizationModules(BasePersServiceVersion theServiceVersion) {
+		return ((PersServiceVersionVirtual)theServiceVersion).getTarget().getServerAuths();
+	}
+
+	@VisibleForTesting
+	public void setOrchestratorForUnitTests(IServiceOrchestrator theOrchestrator) {
+		myOrchestrator = theOrchestrator;
+	}
+
+	private IServiceInvoker determineInvoker(BasePersServiceVersion theServiceDefinition) {
+		PersServiceVersionVirtual svcVer = (PersServiceVersionVirtual) theServiceDefinition;
+		return myOrchestrator.getServiceInvoker(svcVer.getTarget());
+	}
+
+	private BasePersServiceVersion determineTarget(BasePersServiceVersion theServiceDefinition) {
+		return ((PersServiceVersionVirtual)theServiceDefinition).getTarget();
 	}
 
 }
