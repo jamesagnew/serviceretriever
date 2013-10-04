@@ -8,6 +8,7 @@ import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.ejb.TransactionLoggerBean;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
+import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
@@ -24,7 +25,7 @@ public class UnflushedUserRecentMessages extends BaseUnflushed<PersUserRecentMes
 		myUser = theUser;
 	}
 private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(UnflushedUserRecentMessages.class);
-	public synchronized void recordTransaction(Date theTransactionTime, HttpRequestBean theRequest, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody,
+	public synchronized void recordTransaction(PersConfig theConfig, Date theTransactionTime, HttpRequestBean theRequest, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody,
 			InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome,
 			String theResponseBody) {
 		Validate.notNull(theInvocationResponse);
@@ -38,7 +39,7 @@ private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger
 		if (keepNum != null && keepNum > 0) {
 
 			PersUserRecentMessage userMessage = new PersUserRecentMessage();
-			userMessage.populate(theTransactionTime, theRequest, theImplementationUrl, theRequestBody, theInvocationResponse, theResponseBody);
+			userMessage.populate(theConfig, theTransactionTime, theRequest, theImplementationUrl, theRequestBody, theInvocationResponse, theResponseBody);
 			userMessage.setUser(theUser);
 			userMessage.setServiceVersion(theSvcVer);
 			userMessage.setMethod(theMethod);

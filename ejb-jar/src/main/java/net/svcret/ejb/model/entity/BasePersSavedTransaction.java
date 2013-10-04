@@ -49,10 +49,22 @@ public abstract class BasePersSavedTransaction implements Serializable {
 	@Basic(fetch = FetchType.LAZY)
 	private String myRequestBody;
 
+	@Column(name = "REQ_BODY_BYTES")
+	private int myRequestBodyBytes;
+
+	@Column(name = "REQ_BODY_TRUNCATED")
+	private boolean myRequestBodyTruncated;
+
 	@Column(name = "RESP_BODY")
 	@Lob()
 	@Basic(fetch = FetchType.LAZY)
 	private String myResponseBody;
+
+	@Column(name = "RESP_BODY_BYTES")
+	private int myResponseBodyBytes;
+
+	@Column(name = "RESP_BODY_TRUNCATED")
+	private boolean myResponseBodyTruncated;
 
 	@Column(name = "RESPONSE_TYPE", nullable = false, length = EntityConstants.MAXLEN_RESPONSE_TYPE_ENUM)
 	@Enumerated(EnumType.STRING)
@@ -90,11 +102,19 @@ public abstract class BasePersSavedTransaction implements Serializable {
 		return myRequestBody;
 	}
 
+	public int getRequestBodyBytes() {
+		return myRequestBodyBytes;
+	}
+
 	/**
 	 * @return the responseBody
 	 */
 	public String getResponseBody() {
 		return myResponseBody;
+	}
+
+	public int getResponseBodyBytes() {
+		return myResponseBodyBytes;
 	}
 
 	/**
@@ -118,11 +138,19 @@ public abstract class BasePersSavedTransaction implements Serializable {
 		return myTransactionTime;
 	}
 
-	public void populate(Date theTransactionTime, HttpRequestBean theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, InvocationResponseResultsBean theInvocationResult,
+	public boolean isRequestBodyTruncated() {
+		return myRequestBodyTruncated;
+	}
+
+	public boolean isResponseBodyTruncated() {
+		return myResponseBodyTruncated;
+	}
+
+	public void populate(PersConfig theConfig, Date theTransactionTime, HttpRequestBean theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, InvocationResponseResultsBean theInvocationResult,
 			String theResponseBody) {
-		setRequestBody(extractHeadersForBody(theRequest) + theRequestBody);
+		setRequestBody(extractHeadersForBody(theRequest) + theRequestBody, theConfig);
 		setImplementationUrl(theImplementationUrl);
-		setResponseBody(extractHeadersForBody(theInvocationResult.getResponseHeaders()) + theResponseBody);
+		setResponseBody(extractHeadersForBody(theInvocationResult.getResponseHeaders()) + theResponseBody, theConfig);
 		setResponseType(theInvocationResult.getResponseType());
 		setTransactionTime(theTransactionTime);
 		setFailDescription(theInvocationResult.getResponseFailureDescription());
@@ -148,18 +176,48 @@ public abstract class BasePersSavedTransaction implements Serializable {
 	 * @param theRequestBody
 	 *            the requestBody to set
 	 */
-	public void setRequestBody(String theRequestBody) {
-		myRequestBody = BasePersObject.trimClobForUnitTest(theRequestBody);
+	public void setRequestBody(String theRequestBody, PersConfig theConfig) {
+		if (theRequestBody != null) {
+			String requestBody = BasePersObject.trimClobForUnitTest(theRequestBody);;
+			if (theConfig.getTruncateRecentDatabaseTransactionsToBytes() != null) {
+				if (requestBody.length() > theConfig.getTruncateRecentDatabaseTransactionsToBytes()) {
+					requestBody = requestBody.substring(0, theConfig.getTruncateRecentDatabaseTransactionsToBytes());
+				}
+			}
+			myRequestBody = requestBody;
+			myRequestBodyBytes = myRequestBody.length();
+			myRequestBodyTruncated = requestBody.length() < theRequestBody.length();
+		} else {
+			myRequestBody = null;
+			myRequestBodyBytes = -1;
+			myRequestBodyTruncated = false;
+		}
+
 	}
 
 	/**
 	 * @param theResponseBody
 	 *            the responseBody to set
 	 */
-	public void setResponseBody(String theResponseBody) {
-		myResponseBody = theResponseBody;
+	public void setResponseBody(String theResponseBody, PersConfig theConfig) {
+		if (theResponseBody != null) {
+			String responseBody = BasePersObject.trimClobForUnitTest(theResponseBody);
+			if (theConfig.getTruncateRecentDatabaseTransactionsToBytes() != null) {
+				if (responseBody.length() > theConfig.getTruncateRecentDatabaseTransactionsToBytes()) {
+					responseBody = responseBody.substring(0, theConfig.getTruncateRecentDatabaseTransactionsToBytes());
+				}
+			}
+			myResponseBody = responseBody;
+			myResponseBodyBytes = myResponseBody.length();
+			myResponseBodyTruncated = responseBody.length() < theResponseBody.length();
+		} else {
+			myResponseBody = null;
+			myResponseBodyBytes = -1;
+			myResponseBodyTruncated = false;
+		}
 	}
 
+	
 	/**
 	 * @param theResponseType
 	 *            the responseType to set

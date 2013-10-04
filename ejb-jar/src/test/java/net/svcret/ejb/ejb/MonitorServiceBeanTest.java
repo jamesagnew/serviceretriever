@@ -102,6 +102,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		mySvc.setDao(myDao);
 		mySvc.setRuntimeStatus(myQuerySvc);
 		mySvc.setRuntimeStatus(myStatsSvc);
+		mySvc.setConfigServiceForUnitTests(myConfigSvc);
 		mySvc.setBroadcastSender(mock(IBroadcastSender.class));
 
 		DefaultAnswer.setDesignTime();
@@ -538,7 +539,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 
 		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
 		assertNotNull(svcVer.getMostRecentMonitorRuleFiring());
-		assertNull(svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage(),svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage());
+		assertNull(svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage(), svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage());
 		assertNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
 
 		rule = (PersMonitorRuleActive) myDao.getMonitorRule(rule.getPid());

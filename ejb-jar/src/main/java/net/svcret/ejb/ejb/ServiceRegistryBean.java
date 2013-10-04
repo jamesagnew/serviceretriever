@@ -265,7 +265,8 @@ public class ServiceRegistryBean implements IServiceRegistry {
 			String nextProxyPath) {
 		pidToServiceVersions.put(nextVersion.getPid(), nextVersion);
 		if (pathToServiceVersions.containsKey(nextProxyPath)) {
-			ourLog.warn("Service version {} created duplicate proxy path, so it will be ignored!", nextVersion.getPid());
+			ourLog.warn("Service version {} ({}/{}/{}) created duplicate proxy path '{}', so it will be ignored!", 
+					new Object[] {nextVersion.getPid(), nextVersion.getService().getDomain().getDomainId(), nextVersion.getService().getServiceId(), nextVersion.getVersionId(), nextProxyPath });
 		} else {
 			pathToServiceVersions.put(nextProxyPath, nextVersion);
 		}

@@ -231,6 +231,16 @@ public class HttpRequestBean {
 		}
 
 		@Override
+		public boolean containsKey(Object theKey) {
+			return super.containsKey(((String)theKey).toLowerCase());
+		}
+
+		@Override
+		public T remove(Object theKey) {
+			return super.remove(((String)theKey).toLowerCase());
+		}
+
+		@Override
 	    public T put(String key, T value) {
 	       return super.put(key.toLowerCase(), value);
 	    }

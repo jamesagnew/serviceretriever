@@ -77,7 +77,7 @@ public class HttpClientConfigServiceImpl extends BaseRpcServlet implements HttpC
 
 		byte[] newTruststore=null;
 		String newTruststorePass=null;
-		if (theUseNewKeystore) {
+		if (theUseNewTruststore) {
 			SessionUploadedKeystore ts = getTransientTrustStore(theConfig.getPid(), false);
 			if (ts == null) {
 				throw new ServiceFailureException("No truststore in session");

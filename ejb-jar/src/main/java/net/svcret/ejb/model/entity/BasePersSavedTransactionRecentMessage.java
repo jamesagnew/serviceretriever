@@ -55,10 +55,10 @@ public abstract class BasePersSavedTransactionRecentMessage extends BasePersSave
 	public abstract BasePersServiceVersion getServiceVersion();
 
 	@Override
-	public void populate(Date theTransactionTime, HttpRequestBean theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, InvocationResponseResultsBean theInvocationResult,
+	public void populate(PersConfig theConfig, Date theTransactionTime, HttpRequestBean theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, InvocationResponseResultsBean theInvocationResult,
 			String theResponseBody) {
 		setRequestHostIp(theRequest.getRequestHostIp());
-		super.populate(theTransactionTime, theRequest, theImplementationUrl, theRequestBody, theInvocationResult, theResponseBody);
+		super.populate(theConfig, theTransactionTime, theRequest, theImplementationUrl, theRequestBody, theInvocationResult, theResponseBody);
 	}
 
 	/**

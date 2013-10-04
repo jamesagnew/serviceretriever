@@ -153,6 +153,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		myTransactionLogSvc = new TransactionLoggerBean();
 		myTransactionLogSvc.setDao(myDao);
+		myTransactionLogSvc.setConfigServiceForUnitTests(myConfigSvc);
 
 		DefaultAnswer.setDesignTime();
 	}
@@ -1171,9 +1172,26 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		copy = mySvc.loadServiceVersion(d1s1v1.getPid());
 		svcVer = (DtoServiceVersionSoap11) copy.getServiceVersion();
+		assertEquals(2, svcVer.getUrlList().size());
 		assertEquals("url1", svcVer.getUrlList().get(0).getId());
 		assertEquals("http://zzzzzz", svcVer.getUrlList().get(0).getUrl());
 
+		/*
+		 * Now change a URL ID
+		 */
+		
+		svcVer.getUrlList().get(0).setId("aaaaa");
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), svcVer, resource);
+
+		newEntityManager();
+
+		copy = mySvc.loadServiceVersion(d1s1v1.getPid());
+		svcVer = (DtoServiceVersionSoap11) copy.getServiceVersion();
+		assertEquals(2, svcVer.getUrlList().size());
+		assertEquals("aaaaa", svcVer.getUrlList().get(0).getId());
+		assertEquals("http://zzzzzz", svcVer.getUrlList().get(0).getUrl());
+		
+		
 	}
 
 	@Test

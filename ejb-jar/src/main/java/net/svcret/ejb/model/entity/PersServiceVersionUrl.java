@@ -37,10 +37,8 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-@Table(name = "PX_SVC_VER_URL", uniqueConstraints = { @UniqueConstraint(name = "PX_URL_CONS_URL", columnNames = { "SVC_VERSION_PID", "URL" }), // -
-		@UniqueConstraint(name = "PX_URL_CONS_URLID", columnNames = { "SVC_VERSION_PID", "URL_ID" }), // -
-		// @UniqueConstraint(name = "PX_URL_CONS_ORDER", columnNames = {
-		// "SVC_VERSION_PID", "URL_ORDER" }), // -
+@Table(name = "PX_SVC_VER_URL", uniqueConstraints = { 
+	@UniqueConstraint(name = "PX_URL_CONS_URLID", columnNames = { "SVC_VERSION_PID", "URL_ID" }), // -
 })
 @Entity
 public class PersServiceVersionUrl extends BasePersObject implements Comparable<PersServiceVersionUrl> {
@@ -371,6 +369,14 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 		}
 		return retVal;
 	}
+
+	public static PersServiceVersionUrl fromDto(GServiceVersionUrl theUrl, BasePersServiceVersion theServiceVersion) {
+			PersServiceVersionUrl retVal = new PersServiceVersionUrl();
+				retVal.setUrlId(theUrl.getId());
+				retVal.setUrl(theUrl.getUrl());
+				retVal.setServiceVersion(theServiceVersion);
+				return retVal;
+		}
 	
 	
 

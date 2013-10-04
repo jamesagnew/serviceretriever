@@ -426,6 +426,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
 		TransactionLoggerBean logger = new TransactionLoggerBean();
 		logger.setDao(myDao);
+		logger.setConfigServiceForUnitTests(myConfigService);
 		mySvc.setTransactionLogger(logger);
 
 		FilesystemAuditLoggerBean fsAuditLogger = new FilesystemAuditLoggerBean();
@@ -522,6 +523,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		when(myHttpClient.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
 
 		TransactionLoggerBean logger = new TransactionLoggerBean();
+		logger.setConfigServiceForUnitTests(myConfigService);
 		logger.setDao(myDao);
 		mySvc.setTransactionLogger(logger);
 
@@ -598,6 +600,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
 		TransactionLoggerBean logger = new TransactionLoggerBean();
 		logger.setDao(myDao);
+		logger.setConfigServiceForUnitTests(myConfigService);
 		mySvc.setTransactionLogger(logger);
 
 		FilesystemAuditLoggerBean fsAuditLogger = new FilesystemAuditLoggerBean();
@@ -914,6 +917,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
 		TransactionLoggerBean logger = new TransactionLoggerBean();
 		logger.setDao(myDao);
+		logger.setConfigServiceForUnitTests(myConfigService);
 		mySvc.setTransactionLogger(logger);
 
 		FilesystemAuditLoggerBean fsAuditLogger = new FilesystemAuditLoggerBean();

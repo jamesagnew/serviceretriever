@@ -45,6 +45,8 @@
 
 * user list page should refresh stats
 
+* allow URL reordering
+
 ----
 DONE
 
@@ -52,11 +54,22 @@ DONE
   recent transactions table (also maybe use it in the auto generated
   title for saved transactions)
   
-* Message library view: Need an "add" button, should also be able to choose which SVCVER to display, or to display all 
+* Message library view: less Need an "add" button, should also be able to choose which SVCVER to display, or to display all 
   messages in the library. Also columns should be sortable
 
     Table mods:
     Add System Property: net.svcret.nodeid	                                  
 	                                  
-	                                  
+	Add to PX_CONFIG: TRUNC_RECENT_XACTS_BYTES
+	
+	Add to:
+	  PX_SVC_VER_RCNT_MSG
+	  PX_USER_RCNT_MSG
+	  PX_MONITOR_RULE_AC_OUTCM
+	  		REQ_BODY_BYTES (int)
+	  		REQ_BODY_TRUNCATED (boolean)
+	  		RESP_BODY_BYTES (int)
+	  		RESP_BODY_TRUNCATED (boolean)
+	  		
+	  	                                  
 	

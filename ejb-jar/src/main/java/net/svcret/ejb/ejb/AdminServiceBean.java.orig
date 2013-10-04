@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -153,7 +152,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(AdminServiceBean.class);
 
 	public static final long URL_PID_TO_LOAD_ALL = -1;
-
+	
 	@EJB
 	private IConfigService myConfigSvc;
 
@@ -440,9 +439,19 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 		}
 
+<<<<<<< HEAD
 		if (retVal == null) {
 			throw new IllegalArgumentException("Unknown service type: " + theObj.getType());
 		}
+=======
+		return toUi(authHost);
+	}
+
+	@Override
+	public GConfig loadConfig() throws UnexpectedFailureException {
+		return myConfigSvc.getConfig().toDto();
+	}
+>>>>>>> e24f77d58a5c472d6e713ac50ecf062c219eb0d7
 
 		retVal.setPid(theObj.getPidOrNull());
 		retVal.setUsername(theObj.getUsername());
@@ -452,10 +461,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	@Override
-	public GConfig loadConfig() throws UnexpectedFailureException {
-		return myConfigSvc.getConfig().toDto();
-	}
 
 	private BasePersMonitorRule fromUi(BaseDtoMonitorRule theRule) throws ProcessingException {
 
@@ -604,6 +609,13 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
+	private PersServiceVersionUrl fromUi(GServiceVersionUrl theUrl, BasePersServiceVersion theServiceVersion) {
+		PersServiceVersionUrl retVal = new PersServiceVersionUrl();
+		retVal.setUrlId(theUrl.getId());
+		retVal.setUrl(theUrl.getUrl());
+		retVal.setServiceVersion(theServiceVersion);
+		return retVal;
+	}
 
 	private PersUser fromUi(GUser theUser) throws ProcessingException {
 		PersUser retVal;
@@ -825,6 +837,11 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
+	public GConfig loadConfig() throws UnexpectedFailureException {
+		return toUi(myConfigSvc.getConfig());
+	}
+
+	@Override
 	public GDomainList loadDomainList() throws ProcessingException, UnexpectedFailureException {
 		Set<Long> empty = Collections.emptySet();
 		return loadDomainList(empty, empty, empty, empty, empty, null);
@@ -834,12 +851,16 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			StatusesBean theStatuses) throws UnexpectedFailureException {
 		GDomainList domainList = new GDomainList();
 
+<<<<<<< HEAD
 		for (PersDomain nextDomain : myServiceRegistry.getAllDomains()) {
 			GDomain gDomain = nextDomain.toDto(theLoadDomStats, theLoadSvcStats, theLoadVerStats, theLoadVerMethodStats, theLoadUrlStats, theStatuses, myRuntimeStatusQuerySvc);
 			domainList.add(gDomain);
 		} // for domains
 		return domainList;
 	}
+=======
+		return newCfg.toDto();
+>>>>>>> e24f77d58a5c472d6e713ac50ecf062c219eb0d7
 
 	private GHttpClientConfigList loadHttpClientConfigList() throws ProcessingException {
 		GHttpClientConfigList configList = new GHttpClientConfigList();
@@ -888,7 +909,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		if (theRequest.isLoadAllUrlStats()) {
 			loadUrlStats = Collections.singleton(URL_PID_TO_LOAD_ALL);
 		}
-
+		
 		StatusesBean statuses = null;
 		if (hasAnything(loadDomStats, loadSvcStats, loadVerStats, loadVerMethodStats, loadUrlStats)) {
 			statuses = myDao.loadAllStatuses();
@@ -1063,7 +1084,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		StatusesBean statuses = myDao.loadAllStatuses();
 
-		Set<Long> svcVerPids = Collections.singleton(theServiceVersionPid);
+		Set<Long> svcVerPids=Collections.singleton(theServiceVersionPid);
 		BaseDtoServiceVersion uiService = svcVer.toDto(svcVerPids, myRuntimeStatusQuerySvc, statuses, methodPids, urlPids);
 		GSoap11ServiceVersionAndResources retVal = toUi(uiService, svcVer);
 		return retVal;
@@ -1105,8 +1126,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(DtoServiceVersionSoap11 theService, GHttpClientConfig theHttpClientConfig, String theWsdlUrl) throws ProcessingException,
-			UnexpectedFailureException {
+	public GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(DtoServiceVersionSoap11 theService, GHttpClientConfig theHttpClientConfig, String theWsdlUrl) throws ProcessingException, UnexpectedFailureException {
 		Validate.notNull(theService, "Definition");
 		Validate.notBlank(theWsdlUrl, "URL");
 
@@ -1259,7 +1279,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		PersConfig newCfg = myConfigSvc.saveConfig(existing);
 
-		return newCfg.toDto();
+		return toUi(newCfg);
 
 		//
 		// PersConfig existing =
@@ -1318,7 +1338,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			ourLog.info("HTTP client config has a truststore defined");
 			config.setTlsTruststore(theNewTruststore);
 			config.setTlsTruststorePassword(theNewTruststorePass);
-		} else {
+		}else {
 			ourLog.info("HTTP client config has no truststore defined");
 			config.setTlsTruststore(null);
 			config.setTlsTruststorePassword(null);
@@ -1328,7 +1348,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			ourLog.info("HTTP client config has a keystore defined");
 			config.setTlsKeystore(theNewKeystore);
 			config.setTlsKeystorePassword(theNewKeystorePass);
-		} else {
+		}else {
 			ourLog.info("HTTP client config has no keystore defined");
 			config.setTlsKeystore(null);
 			config.setTlsKeystorePassword(null);
@@ -1336,6 +1356,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		return myServiceRegistry.saveHttpClientConfig(config).toDto(myKeystoreSvc);
 	}
+
 
 	@Override
 	public void saveLibraryMessage(DtoLibraryMessage theMessage) throws ProcessingException {
@@ -1389,18 +1410,17 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			throw new ProcessingException("Service with ID " + theService + " is not a part of domain " + theDomain);
 		}
 
-		BasePersServiceVersion existingVersion = BasePersServiceVersion.fromDto(theVersion, service, myDao, myServiceRegistry);
+		BasePersServiceVersion version = BasePersServiceVersion.fromDto(theVersion, service, myDao, myServiceRegistry);
 
-		Map<String, PersServiceVersionResource> uriToResource = existingVersion.getUriToResource();
+		Map<String, PersServiceVersionResource> uriToResource = version.getUriToResource();
 		Set<String> urls = new HashSet<String>();
 		for (GResource next : theResources) {
 			urls.add(next.getUrl());
-
 			if (uriToResource.containsKey(next.getUrl())) {
 				PersServiceVersionResource existing = uriToResource.get(next.getUrl());
-				existing.merge(fromUi(next, existingVersion));
+				existing.merge(fromUi(next, version));
 			} else {
-				uriToResource.put(next.getUrl(), fromUi(next, existingVersion));
+				uriToResource.put(next.getUrl(), fromUi(next, version));
 			}
 		}
 		for (Iterator<Map.Entry<String, PersServiceVersionResource>> iter = uriToResource.entrySet().iterator(); iter.hasNext();) {
@@ -1412,51 +1432,23 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		/*
 		 * Urls
 		 */
-		Collection<PersServiceVersionUrl> urlsToAdd = new ArrayList<PersServiceVersionUrl>(); 
-		for (GServiceVersionUrl nextRequired : theVersion.getUrlList()) {
-			boolean alreadyExists = false;
-			for (PersServiceVersionUrl nextExisting : existingVersion.getUrls()) {
-//				if (StringUtils.equals(nextRequired.getUrl(), nextExisting.getUrl())) {
-					if (StringUtils.equals(nextRequired.getId(), nextExisting.getUrlId())) {
-						alreadyExists=true;
-						nextExisting.merge(PersServiceVersionUrl.fromDto(nextRequired, existingVersion));
-						break;
-					}
-//				}
-			}
-			if (!alreadyExists) {
-				urlsToAdd.add(PersServiceVersionUrl.fromDto(nextRequired, existingVersion));
+		urls = new HashSet<String>();
+		for (GServiceVersionUrl next : theVersion.getUrlList()) {
+			urls.add(next.getUrl());
+			PersServiceVersionUrl existing = version.getUrlWithUrl(next.getUrl());
+			if (existing != null) {
+				existing.merge(fromUi(next, version));
+			} else {
+				version.getUrls().add(fromUi(next, version));
 			}
 		}
-
-		// Remove any unneccesary URLs
-		for (Iterator<PersServiceVersionUrl> iter = existingVersion.getUrls().iterator(); iter.hasNext();) {
-			PersServiceVersionUrl nextExisting = iter.next();
-			boolean shouldRemove = true;
-			for (GServiceVersionUrl nextRequired : theVersion.getUrlList()) {
-				if (StringUtils.equals(nextRequired.getUrl(), nextExisting.getUrl())) {
-					if (StringUtils.equals(nextRequired.getId(), nextExisting.getUrlId())) {
-						shouldRemove = false;
-						break;
-					}
-				}
-			}
-			if (shouldRemove) {
+		for (Iterator<PersServiceVersionUrl> iter = version.getUrls().iterator(); iter.hasNext();) {
+			if (!urls.contains(iter.next().getUrl())) {
 				iter.remove();
 			}
 		}
-
-		existingVersion.getUrls().addAll(urlsToAdd);
-
-		// Update URL order
-		Collections.sort(existingVersion.getUrls(), new Comparator<PersServiceVersionUrl>() {
-			@Override
-			public int compare(PersServiceVersionUrl theO1, PersServiceVersionUrl theO2) {
-				return theO1.getUrlId().compareTo(theO2.getUrlId());
-			}
-		});
 		int index = 0;
-		for (PersServiceVersionUrl next : existingVersion.getUrls()) {
+		for (PersServiceVersionUrl next : version.getUrls()) {
 			next.setOrder(index++);
 		}
 
@@ -1467,16 +1459,16 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		HashSet<String> methods = new HashSet<String>();
 		for (GServiceMethod next : theVersion.getMethodList()) {
 			methods.add(next.getName());
-			PersServiceVersionMethod existing = existingVersion.getMethod(next.getName());
+			PersServiceVersionMethod existing = version.getMethod(next.getName());
 			if (existing != null) {
-				existing.merge(fromUi(next, existingVersion.getPid()));
+				existing.merge(fromUi(next, version.getPid()));
 			} else {
-				existingVersion.addMethod(fromUi(next, existingVersion.getPid()));
+				version.addMethod(fromUi(next, version.getPid()));
 			}
 		}
-		existingVersion.retainOnlyMethodsWithNames(methods);
+		version.retainOnlyMethodsWithNames(methods);
 		index = 0;
-		for (PersServiceVersionMethod next : existingVersion.getMethods()) {
+		for (PersServiceVersionMethod next : version.getMethods()) {
 			next.setOrder(index++);
 		}
 
@@ -1485,9 +1477,9 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		 */
 		Set<Long> pids = new HashSet<Long>();
 		for (BaseDtoClientSecurity next : theVersion.getClientSecurityList()) {
-			PersBaseClientAuth<?> nextPers = fromUi(next, existingVersion);
+			PersBaseClientAuth<?> nextPers = fromUi(next, version);
 			if (nextPers.getPid() != null) {
-				PersBaseClientAuth<?> existing = existingVersion.getClientAuthWithPid(nextPers.getPid());
+				PersBaseClientAuth<?> existing = version.getClientAuthWithPid(nextPers.getPid());
 				if (existing != null) {
 					existing.merge(nextPers);
 				} else {
@@ -1497,13 +1489,13 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			} else {
 				nextPers = myDao.saveClientAuth(nextPers);
 				pids.add(nextPers.getPid());
-				existingVersion.addClientAuth(nextPers);
+				version.addClientAuth(nextPers);
 			}
 		}
 		index = 0;
-		for (PersBaseClientAuth<?> next : new ArrayList<PersBaseClientAuth<?>>(existingVersion.getClientAuths())) {
+		for (PersBaseClientAuth<?> next : new ArrayList<PersBaseClientAuth<?>>(version.getClientAuths())) {
 			if (next.getPid() != null && !pids.contains(next.getPid())) {
-				existingVersion.removeClientAuth(next);
+				version.removeClientAuth(next);
 			} else {
 				next.setOrder(index++);
 			}
@@ -1518,9 +1510,9 @@ public class AdminServiceBean implements IAdminServiceLocal {
 				throw new IllegalArgumentException("No auth host PID specified");
 			}
 
-			PersBaseServerAuth<?, ?> nextPers = fromUi(next, existingVersion);
+			PersBaseServerAuth<?, ?> nextPers = fromUi(next, version);
 			if (nextPers.getPid() != null) {
-				PersBaseServerAuth<?, ?> existing = existingVersion.getServerAuthWithPid(nextPers.getPid());
+				PersBaseServerAuth<?, ?> existing = version.getServerAuthWithPid(nextPers.getPid());
 				if (existing != null) {
 					existing.merge(nextPers);
 				} else {
@@ -1530,23 +1522,23 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			} else {
 				nextPers = myDao.saveServerAuth(nextPers);
 				pids.add(nextPers.getPid());
-				existingVersion.addServerAuth(nextPers);
+				version.addServerAuth(nextPers);
 			}
-			existingVersion.addServerAuth(nextPers);
+			version.addServerAuth(nextPers);
 		}
 		index = 0;
-		for (PersBaseServerAuth<?, ?> next : new ArrayList<PersBaseServerAuth<?, ?>>(existingVersion.getServerAuths())) {
+		for (PersBaseServerAuth<?, ?> next : new ArrayList<PersBaseServerAuth<?, ?>>(version.getServerAuths())) {
 			if (next.getPid() != null && !pids.contains(next.getPid())) {
-				existingVersion.removeServerAuth(next);
+				version.removeServerAuth(next);
 			} else {
 				next.setOrder(index++);
 			}
 		}
 
-		existingVersion = myServiceRegistry.saveServiceVersion(existingVersion);
+		version = myServiceRegistry.saveServiceVersion(version);
 
 		@SuppressWarnings("unchecked")
-		T retVal = (T) existingVersion.toDto();
+		T retVal = (T) version.toDto();
 
 		return retVal;
 	}
@@ -1617,6 +1609,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	void setServiceRegistry(ServiceRegistryBean theSvcReg) {
 		myServiceRegistry = theSvcReg;
 	}
+
 
 	@Override
 	public String suggestNewVersionNumber(Long theDomainPid, Long theServicePid) {
@@ -1782,6 +1775,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		return retVal;
 	}
+
 
 	private DtoLibraryMessage toUi(PersLibraryMessage theMessage, boolean theLoadContents) {
 		DtoLibraryMessage retVal = new DtoLibraryMessage();

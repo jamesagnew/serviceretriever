@@ -17,6 +17,8 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 
+import net.svcret.admin.shared.model.GConfig;
+
 import org.apache.commons.lang3.time.DateUtils;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -41,7 +43,7 @@ public class PersConfig {
 
 	@Transient
 	private transient long myNowForUnitTests;
-
+	
 	@Version()
 	@Column(name = "OPTLOCK")
 	private int myOptLock;
@@ -49,15 +51,18 @@ public class PersConfig {
 	@Id
 	@Column(name = "PID")
 	private long myPid = DEFAULT_ID;
+
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "myConfig", fetch = FetchType.EAGER, orphanRemoval=true)
 	private Collection<PersConfigProxyUrlBase> myProxyUrlBases;
+
+	@Column(name="TRUNC_RECENT_XACTS_BYTES", nullable=true)
+	private Integer myTruncateRecentDatabaseTransactionsToBytes;
 
 	public void addProxyUrlBase(PersConfigProxyUrlBase theBase) {
 		theBase.setConfig(this);
 		getProxyUrlBases();
 		myProxyUrlBases.add(theBase);
 	}
-
 	/**
 	 * @return the collapseStatsToDaysAfterNumDays
 	 */
@@ -127,7 +132,11 @@ public class PersConfig {
 		}
 		return Collections.unmodifiableCollection(myProxyUrlBases);
 	}
-	
+
+	public Integer getTruncateRecentDatabaseTransactionsToBytes() {
+		return myTruncateRecentDatabaseTransactionsToBytes;
+	}
+
 	public void merge(PersConfig theFromUi) {
 		myCollapseStatsToDaysAfterNumDays = theFromUi.getCollapseStatsToDaysAfterNumDays();
 		myCollapseStatsToHoursAfterNumHours = theFromUi.getCollapseStatsToDaysAfterNumDays();
@@ -139,7 +148,7 @@ public class PersConfig {
 		myProxyUrlBases.addAll(theFromUi.getProxyUrlBases());
 		
 	}
-
+	
 	/**
 	 * @param theCollapseStatsToDaysAfterNumDays the collapseStatsToDaysAfterNumDays to set
 	 */
@@ -173,6 +182,10 @@ public class PersConfig {
 		myNowForUnitTests = theNow;
 	}
 
+	public void setTruncateRecentDatabaseTransactionsToBytes(Integer theTruncateRecentDatabaseTransactionsToBytes) {
+		myTruncateRecentDatabaseTransactionsToBytes = theTruncateRecentDatabaseTransactionsToBytes;
+	}
+
 	private long getNow() {
 		if (myNowForUnitTests > 0) {
 			return myNowForUnitTests;
@@ -180,6 +193,17 @@ public class PersConfig {
 		return System.currentTimeMillis();
 	}
 	
-	
+	public GConfig toDto() {
+		GConfig retVal = new GConfig();
+
+		for (PersConfigProxyUrlBase next : getProxyUrlBases()) {
+			retVal.getProxyUrlBases().add(next.getUrlBase());
+		}
+		
+		retVal.setTruncateRecentDatabaseTransactionsToBytes(getTruncateRecentDatabaseTransactionsToBytes());
+
+		return retVal;
+	}
+
 	
 }

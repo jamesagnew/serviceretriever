@@ -211,6 +211,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 				invocationResponseResultsBean.setResponseType(theResponseType);
 				myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), theRequest.getRequestBody().length(), theMethodIfKnown, theUserIfKnown, null, invocationResponseResultsBean,
 						theThrottleDelayIfAnyAndKnown);
+
 			} catch (UnexpectedFailureException e1) {
 				// Don't do anything except log here since we're already handling a failure by the
 				// time we get here so this is pretty much the last resort..
@@ -221,9 +222,15 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		/*
 		 * TODO: add some kind of statistic recording for svcVer failed requests that don't have a method associated
 		 */
+		try {
+			myTransactionLogger.logTransaction(theRequest, serviceVersion, null, theUserIfKnown, theRequest.getRequestBody(), theInvocationFailure.toInvocationResponse(),
+					theInvocationFailure.getImplementationUrl(), theInvocationFailure.getHttpResponse(), null, null);
+		} catch (UnexpectedFailureException e1) {
+			// Don't do anything except log here since we're already handling a failure by the
+			// time we get here so this is pretty much the last resort..
+			ourLog.error("Failed to record method invocation", e1);
+		}
 
-		myTransactionLogger.logTransaction(theRequest, serviceVersion, null, theUserIfKnown, theRequest.getRequestBody(), theInvocationFailure.toInvocationResponse(),
-				theInvocationFailure.getImplementationUrl(), theInvocationFailure.getHttpResponse(), null, null);
 	}
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
@@ -313,6 +320,8 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			myTransactionLogger.logTransaction(theRequest, method.getServiceVersion(), method, user, requestBody, invocationResponse, successfulUrl, httpResponse, authorizationOutcome, responseBody);
 		} catch (ProcessingException e) {
 			throw new InvocationFailedDueToInternalErrorException(e);
+		} catch (UnexpectedFailureException e) {
+			throw new InvocationFailedDueToInternalErrorException(e);
 		}
 	}
 
@@ -369,8 +378,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		}
 	}
 
-	private InvocationResultsBean processInvokeService(HttpRequestBean theRequest, BasePersServiceVersion serviceVersion)
-			throws InvocationFailedException, UnknownRequestException {
+	private InvocationResultsBean processInvokeService(HttpRequestBean theRequest, BasePersServiceVersion serviceVersion) throws InvocationFailedException, UnknownRequestException {
 		InvocationResultsBean results = null;
 		IServiceInvoker svcInvoker = getServiceInvoker(serviceVersion);
 		ourLog.trace("Handling service with invoker {}", svcInvoker);
@@ -434,7 +442,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		Map<String, List<String>> headers = results.getMethodHeaders();
 		String contentType = results.getMethodContentType();
 		String contentBody = results.getMethodRequestBody();
-		
+
 		IServiceInvoker invoker = getServiceInvoker(method.getServiceVersion());
 		IResponseValidator responseValidator = invoker.provideInvocationResponseValidator(serviceVersion);
 
@@ -510,7 +518,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		return retVal;
 	}
 
-	private AuthorizationResultsBean processSecurity(HttpRequestBean theRequest, List<PersBaseServerAuth<?,?>> theServerAuths, InvocationResultsBean results) throws SecurityFailureException,
+	private AuthorizationResultsBean processSecurity(HttpRequestBean theRequest, List<PersBaseServerAuth<?, ?>> theServerAuths, InvocationResultsBean results) throws SecurityFailureException,
 			ProcessingException {
 		AuthorizationResultsBean authorized = null;
 		if (results.getResultType() == ResultTypeEnum.METHOD) {
@@ -646,6 +654,6 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 	@VisibleForTesting
 	public void setServiceInvokerVirtualForUnitTests(IServiceInvokerVirtual theVirtualInvoker) {
-		myServiceInvokerVirtual=theVirtualInvoker;
+		myServiceInvokerVirtual = theVirtualInvoker;
 	}
 }
