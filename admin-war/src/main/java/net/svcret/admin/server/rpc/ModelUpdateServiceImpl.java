@@ -29,6 +29,7 @@ import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GPartialUserList;
@@ -564,19 +565,19 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public DtoServiceVersionSoap11 loadWsdl(DtoServiceVersionSoap11 theService, String theWsdlUrl) throws ServiceFailureException {
+	public DtoServiceVersionSoap11 loadWsdl(DtoServiceVersionSoap11 theService, GHttpClientConfig theClientConfig, String theWsdlUrl) throws ServiceFailureException {
 		Validate.notNull(theService, "Service");
 		Validate.notNull(theService.getUncommittedSessionId(), "Service#UncommittedSessionId");
 		Validate.notBlank(theWsdlUrl, "Service");
 
 		DtoServiceVersionSoap11 retVal;
 		if (isMockMode()) {
-			retVal = getMock().loadWsdl(theService, theWsdlUrl);
+			retVal = getMock().loadWsdl(theService, theClientConfig, theWsdlUrl);
 		} else {
 
 			GSoap11ServiceVersionAndResources serviceAndResources;
 			try {
-				serviceAndResources = myAdminSvc.loadSoap11ServiceVersionFromWsdl(theService, theWsdlUrl);
+				serviceAndResources = myAdminSvc.loadSoap11ServiceVersionFromWsdl(theService, theClientConfig, theWsdlUrl);
 			} catch (ProcessingException e) {
 				ourLog.error("Failed to load service version from WSDL", e);
 				throw new ServiceFailureException(e.getMessage());

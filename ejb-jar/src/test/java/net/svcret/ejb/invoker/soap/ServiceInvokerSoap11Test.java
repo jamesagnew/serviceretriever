@@ -21,12 +21,13 @@ import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.RequestType;
-import net.svcret.ejb.ejb.DefaultAnswer;
+import net.svcret.ejb.ejb.HttpClientBean.ClientConfigException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersConfig;
+import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
@@ -44,16 +45,17 @@ import org.mockito.internal.stubbing.defaultanswers.ReturnsDeepStubs;
 public class ServiceInvokerSoap11Test {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceInvokerSoap11Test.class);
+	private PersHttpClientConfig myHttpConfig;
 
 	@Test
 	public void testGetWsdl()  throws Exception {
 
-		PersServiceVersionSoap11 svcVersion = mock(PersServiceVersionSoap11.class, new DefaultAnswer());
+		PersServiceVersionSoap11 svcVersion = mock(PersServiceVersionSoap11.class);
 		
-		DefaultAnswer.setDesignTime();
+		
 		when(svcVersion.getWsdlUrl()).thenReturn("http://the_wsdl_url");
 		
-		PersServiceVersionResource res = mock(PersServiceVersionResource.class, new DefaultAnswer());
+		PersServiceVersionResource res = mock(PersServiceVersionResource.class);
 		when(res.getResourceText()).thenReturn(IOUtils.readClasspathIntoString("/test_simple.wsdl"));
 		when(svcVersion.getResourceForUri("http://the_wsdl_url")).thenReturn(res);
 		when(svcVersion.getResourceTextForUri("http://the_wsdl_url")).thenReturn(IOUtils.readClasspathIntoString("/test_simple.wsdl"));
@@ -62,12 +64,12 @@ public class ServiceInvokerSoap11Test {
 		when(svcVersion.getResourceTextForUri("bar.xsd")).thenReturn(IOUtils.readClasspathIntoString("/basic_schema.xsd"));
 		when(svcVersion.getPid()).thenReturn(101L);
 
-		PersServiceVersionResource resource = mock(PersServiceVersionResource.class, new DefaultAnswer());
+		PersServiceVersionResource resource = mock(PersServiceVersionResource.class);
 		when(res.getResourceText()).thenReturn(IOUtils.readClasspathIntoString("/basic_schema.xsd"));
 		when(resource.getPid()).thenReturn(100L);
 		when(svcVersion.getResourceForUri("bar.xsd")).thenReturn(resource);
 
-		PersServiceVersionResource wsdlResource = mock(PersServiceVersionResource.class, new DefaultAnswer());
+		PersServiceVersionResource wsdlResource = mock(PersServiceVersionResource.class);
 		when(wsdlResource.getResourceText()).thenReturn(IOUtils.readClasspathIntoString("/test_simple.wsdl"));
 		when(svcVersion.getResourceForUri("http://the_wsdl_url")).thenReturn(wsdlResource);
 
@@ -80,7 +82,7 @@ public class ServiceInvokerSoap11Test {
 		config.getProxyUrlBases().iterator().next().setUrlBase("http://foo bar");
 		when(configService.getConfig()).thenReturn(config);
 		
-		DefaultAnswer.setRunTime();
+		
 
 		HttpRequestBean req = new HttpRequestBean();
 		req.setInputReader(new StringReader(""));
@@ -111,7 +113,7 @@ public class ServiceInvokerSoap11Test {
 		when(svcVersion.getService().getServiceId()).thenReturn("SVCID");
 		when(svcVersion.getVersionId()).thenReturn("VID");
 		
-		DefaultAnswer.setDesignTime();
+		
 		when(svcVersion.getWsdlUrl()).thenReturn("http://the_wsdl_url");
 		
 		PersServiceVersionResource res = mock(PersServiceVersionResource.class);
@@ -140,7 +142,7 @@ public class ServiceInvokerSoap11Test {
 		config.getProxyUrlBases().iterator().next().setUrlBase("http://foo bar");
 		when(configService.getConfig()).thenReturn(config);
 		
-		DefaultAnswer.setRunTime();
+		
 		
 		byte[] wsdlBundle = svc.createWsdlBundle(svcVersion);
 		ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(wsdlBundle));
@@ -449,35 +451,39 @@ public class ServiceInvokerSoap11Test {
 
 	@Before
 	public void before()  throws Exception {
-		DefaultAnswer.setDesignTime();
+		
+		
+		myHttpConfig = new PersHttpClientConfig();
+		myHttpConfig.setDefaults();
+
 	}
 
 	@After
 	public void after() {
-		DefaultAnswer.setDesignTime();
+		
 		validateMockitoUsage();
 	}
 
 	@Test
-	public void testIntrospectServiceFromUrl() throws IOException, ProcessingException {
+	public void testIntrospectServiceFromUrl() throws IOException, ProcessingException, ClientConfigException {
 		
 		ServiceInvokerSoap11 svc = new ServiceInvokerSoap11();
 		
-		IHttpClient httpClient = mock(IHttpClient.class, DefaultAnswer.INSTANCE);
+		IHttpClient httpClient = mock(IHttpClient.class);
 		svc.setHttpClient(httpClient);
 
 		String wsdlBody = IOUtils.readClasspathIntoString("/test_simple.wsdl");
 		String wsdlUrl = "http://foo/wsdl.wsdl";
-		when(httpClient.get(wsdlUrl)).thenReturn(new HttpResponseBean(null, "text/xml", 200, wsdlBody));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq(wsdlUrl))).thenReturn(new HttpResponseBean(null, "text/xml", 200, wsdlBody));
 
 		String xsdBody = IOUtils.readClasspathIntoString("/basic_schema.xsd");
 		String xsdUrl = "http://foo/bar.xsd";
-		when(httpClient.get(xsdUrl)).thenReturn(new HttpResponseBean(null, "text/xml", 200, xsdBody));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq(xsdUrl))).thenReturn(new HttpResponseBean(null, "text/xml", 200, xsdBody));
 		
-		DefaultAnswer.setRunTime();
+		
 		
 		PersServiceVersionSoap11 def;
-		def = svc.introspectServiceFromUrl(wsdlUrl);
+		def = svc.introspectServiceFromUrl(myHttpConfig,wsdlUrl);
 		
 		assertEquals(def.getMethodNames().toString(), 14, def.getMethods().size());
 		assertEquals("getPatientByMrn", def.getMethods().get(0).getName());
@@ -495,23 +501,42 @@ public class ServiceInvokerSoap11Test {
 	}
 	
 	@Test
-	public void testIntrospectServiceFromUrl2() throws IOException, ProcessingException {
+	public void testIntrospectServiceFromUrl3() throws Exception {
+		ServiceInvokerSoap11 svc = new ServiceInvokerSoap11();
+		
+		IHttpClient httpClient = mock(IHttpClient.class);
+		svc.setHttpClient(httpClient);
+
+		String wsdlBody = IOUtils.readClasspathIntoString("/THIP.wsdl");
+		String wsdlUrl = "http://foo/wsdl.wsdl";
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq(wsdlUrl))).thenReturn(new HttpResponseBean(null, "text/xml", 200, wsdlBody));
+
+		PersServiceVersionSoap11 def=null;
+		def = svc.introspectServiceFromUrl(myHttpConfig,wsdlUrl);
+		
+		assertEquals(def.getMethodNames().toString(), 1, def.getMethods().size());
+		assertEquals("getErrorQueueWS", def.getMethods().get(0).getName());
+		
+	}
+	
+	@Test
+	public void testIntrospectServiceFromUrl2() throws Exception {
 		
 		ServiceInvokerSoap11 svc = new ServiceInvokerSoap11();
 		
-		IHttpClient httpClient = mock(IHttpClient.class, DefaultAnswer.INSTANCE);
+		IHttpClient httpClient = mock(IHttpClient.class);
 		svc.setHttpClient(httpClient);
 
 		String wsdlBody = IOUtils.readClasspathIntoString("/test_simple2.wsdl");
 		String wsdlUrl = "http://foo/wsdl.wsdl";
-		when(httpClient.get(wsdlUrl)).thenReturn(new HttpResponseBean(null, "text/xml", 200, wsdlBody));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq(wsdlUrl))).thenReturn(new HttpResponseBean(null, "text/xml", 200, wsdlBody));
 
 		String xsdBody = IOUtils.readClasspathIntoString("/basic_schema2.xsd");
 		String xsdUrl = "http://192.168.1.3:8081/DemoServiceSvc/StringConcatService?xsd=1";
-		when(httpClient.get(xsdUrl)).thenReturn(new HttpResponseBean(null, "text/xml", 200, xsdBody));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq(xsdUrl))).thenReturn(new HttpResponseBean(null, "text/xml", 200, xsdBody));
 		
 		PersServiceVersionSoap11 def=null;
-		def = svc.introspectServiceFromUrl(wsdlUrl);
+		def = svc.introspectServiceFromUrl(myHttpConfig,wsdlUrl);
 		
 		assertEquals(def.getMethodNames().toString(), 2, def.getMethods().size());
 		assertEquals("addStrings", def.getMethods().get(0).getName());
@@ -525,19 +550,19 @@ public class ServiceInvokerSoap11Test {
 	}
 
 	@Test
-	public void testIntrospectServiceWithMultipleBindings() throws IOException, ProcessingException {
+	public void testIntrospectServiceWithMultipleBindings() throws IOException, ProcessingException, ClientConfigException {
 		
 		ServiceInvokerSoap11 svc = new ServiceInvokerSoap11();
 		
-		IHttpClient httpClient = mock(IHttpClient.class, DefaultAnswer.INSTANCE);
+		IHttpClient httpClient = mock(IHttpClient.class);
 		svc.setHttpClient(httpClient);
 
 		String wsdlBody = IOUtils.readClasspathIntoString("/cdyne_weatherws.wsdl");
 		String wsdlUrl = "http://foo/wsdl.wsdl";
-		when(httpClient.get(wsdlUrl)).thenReturn(new HttpResponseBean(null, "text/xml", 200, wsdlBody));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq(wsdlUrl))).thenReturn(new HttpResponseBean(null, "text/xml", 200, wsdlBody));
 
 		PersServiceVersionSoap11 def=null;
-		def = svc.introspectServiceFromUrl(wsdlUrl);
+		def = svc.introspectServiceFromUrl(myHttpConfig,wsdlUrl);
 		
 		assertEquals("GetWeatherInformation", def.getMethods().get(0).getName());
 		assertEquals("http://ws.cdyne.com/WeatherWS/:GetWeatherInformation", def.getMethods().get(0).getRootElements());
@@ -555,19 +580,19 @@ public class ServiceInvokerSoap11Test {
 
 		String wsdlBody = IOUtils.readClasspathIntoString("/wsdl/journal.wsdl");
 		String wsdlUrl = "http://foo/wsdl.wsdl";
-		when(httpClient.get(wsdlUrl)).thenReturn(new HttpResponseBean(null, "text/xml", 200, wsdlBody));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq(wsdlUrl))).thenReturn(new HttpResponseBean(null, "text/xml", 200, wsdlBody));
 
-		when(httpClient.get("http://foo/journal_1.xsd")).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_1.xsd")));
-		when(httpClient.get("http://foo/journal_12.xsd")).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_12.xsd")));
-		when(httpClient.get("http://foo/journal_14.xsd")).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_14.xsd")));
-		when(httpClient.get("http://foo/journal_4.xsd")).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_4.xsd")));
-		when(httpClient.get("http://foo/journal_5.xsd")).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_5.xsd")));
-		when(httpClient.get("http://foo/journal_7.xsd")).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_7.xsd")));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq("http://foo/journal_1.xsd"))).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_1.xsd")));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq("http://foo/journal_12.xsd"))).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_12.xsd")));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq("http://foo/journal_14.xsd"))).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_14.xsd")));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq("http://foo/journal_4.xsd"))).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_4.xsd")));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq("http://foo/journal_5.xsd"))).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_5.xsd")));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq("http://foo/journal_7.xsd"))).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_7.xsd")));
 		
-		DefaultAnswer.setRunTime();
+		
 		
 		PersServiceVersionSoap11 def=null;
-		def = svc.introspectServiceFromUrl(wsdlUrl);
+		def = svc.introspectServiceFromUrl(myHttpConfig,wsdlUrl);
 		
 		assertEquals(5, def.getMethods().size());
 		

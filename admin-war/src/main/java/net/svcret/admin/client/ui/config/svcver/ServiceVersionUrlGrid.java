@@ -72,7 +72,7 @@ public class ServiceVersionUrlGrid extends BaseUrlGrid {
 					}
 				}
 
-				updateUrlPanel();
+				doUpdateUrlPanel(myServiceVersion.getUrlList().toList());
 
 				addText.setValue("");
 			}

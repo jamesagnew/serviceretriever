@@ -18,6 +18,7 @@ import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.invoker.soap.InvocationFailedException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
+import net.svcret.ejb.model.entity.PersHttpClientConfig;
 
 /**
  * 
@@ -40,7 +41,7 @@ public interface IServiceInvoker {
 	 * @return
 	 * @throws ProcessingException
 	 */
-	BasePersServiceVersion introspectServiceFromUrl(String theUrl) throws ProcessingException;
+	BasePersServiceVersion introspectServiceFromUrl(PersHttpClientConfig theHttpConfig, String theUrl) throws ProcessingException;
 
 	/**
 	 * @see BasePersServiceVersion#getObscureRequestElementsInLog()

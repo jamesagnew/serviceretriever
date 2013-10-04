@@ -41,10 +41,6 @@ import net.svcret.ejb.ex.UnexpectedFailureException;
 @Local
 public interface IAdminServiceLocal {
 
-	DtoMonitorRuleActiveCheck executeMonitorRuleActiveCheck(DtoMonitorRuleActiveCheck theCheck) throws ProcessingException;
-
-	BaseDtoMonitorRule loadMonitorRuleAndDetailedSatistics(long theRulePid);
-
 	GDomain addDomain(GDomain theDomain) throws ProcessingException, UnexpectedFailureException;
 
 	GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ProcessingException, UnexpectedFailureException;
@@ -60,6 +56,10 @@ public interface IAdminServiceLocal {
 	GDomainList deleteService(long theServicePid) throws ProcessingException, UnexpectedFailureException;
 
 	GDomainList deleteServiceVersion(long thePid) throws ProcessingException, UnexpectedFailureException;
+
+	DtoMonitorRuleActiveCheck executeMonitorRuleActiveCheck(DtoMonitorRuleActiveCheck theCheck) throws ProcessingException;
+
+	Collection<DtoStickySessionUrlBinding> getAllStickySessions();
 
 	long getDefaultHttpClientConfigPid();
 
@@ -87,6 +87,8 @@ public interface IAdminServiceLocal {
 
 	ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ProcessingException, UnexpectedFailureException;
 
+	BaseDtoMonitorRule loadMonitorRuleAndDetailedSatistics(long theRulePid);
+
 	List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart);
 
 	GMonitorRuleList loadMonitorRuleList() throws ProcessingException, UnexpectedFailureException;
@@ -103,7 +105,8 @@ public interface IAdminServiceLocal {
 
 	GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws UnexpectedFailureException;
 
-	GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(DtoServiceVersionSoap11 theService, String theWsdlUrl) throws ProcessingException, UnexpectedFailureException;
+	GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(DtoServiceVersionSoap11 theService, GHttpClientConfig theHttpClientConfig, String theWsdlUrl) throws ProcessingException,
+			UnexpectedFailureException;
 
 	GUser loadUser(long thePid, boolean theLoadStats) throws ProcessingException, UnexpectedFailureException;
 
@@ -133,7 +136,5 @@ public interface IAdminServiceLocal {
 	String suggestNewVersionNumber(Long theDomainPid, Long theServicePid);
 
 	GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long thePid, String theRequestedByString) throws ProcessingException;
-
-	Collection<DtoStickySessionUrlBinding> getAllStickySessions();
 
 }

@@ -28,6 +28,23 @@
 
 * Allow recent transactions to be pinned 
 
+* edit keystore and truststore in HTTP client config are upside down (keystore should be first)
+
+* edit keystore and truststore should show key info, maybe allow download?
+
+* Adding a new svcversion with an existing domain but a new service causes the redirect on save to fail
+
+* need delete button for svcversions
+
+* backing URL panel  should have a domain column 
+
+* view recent transactions should cause a flush
+
+* HTTP client config should be created per service version with the option to link (and defaults should
+  be set on each new one)
+
+* user list page should refresh stats
+
 ----
 DONE
 

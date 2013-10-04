@@ -59,11 +59,6 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 	}
 
 	@Override
-	public PersServiceVersionHl7OverHttp introspectServiceFromUrl(String theUrl) throws ProcessingException {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public InvocationResultsBean processInvocation(HttpRequestBean theRequest, BasePersServiceVersion theServiceDefinition) throws UnknownRequestException, InvocationRequestFailedException {
 		PersServiceVersionHl7OverHttp svc = (PersServiceVersionHl7OverHttp)theServiceDefinition;
 		

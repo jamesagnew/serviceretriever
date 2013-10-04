@@ -55,8 +55,9 @@ public class DetailPanelSoap11 extends BaseDetailPanel<DtoServiceVersionSoap11> 
 				History.newItem(navToken, false);
 			}
 		};
-		AdminPortal.MODEL_SVC.loadWsdl(getServiceVersion(), myUrlTextBox.getValue(), callback);
+		AdminPortal.MODEL_SVC.loadWsdl(getServiceVersion(), getHttpClientConfig(), myUrlTextBox.getValue(), callback);
 	}
+
 
 	private void initWsdlPanel(FlowPanel thePanel) {
 

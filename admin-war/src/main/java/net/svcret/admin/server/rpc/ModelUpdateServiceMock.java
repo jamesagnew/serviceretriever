@@ -665,43 +665,6 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		return retVal;
 	}
 
-	@Override
-	public DtoServiceVersionSoap11 loadWsdl(DtoServiceVersionSoap11 theService, String theWsdlUrl) throws ServiceFailureException {
-		if (StringUtil.isBlank(theWsdlUrl)) {
-			throw new ServiceFailureException("Failed to load URL: \"" + theWsdlUrl + '"');
-		}
-
-		DtoServiceVersionSoap11 retVal = new DtoServiceVersionSoap11();
-		retVal.setWsdlLocation(theWsdlUrl);
-
-		retVal.setActive(true);
-		retVal.setUncommittedSessionId(theService.getUncommittedSessionId());
-
-		GServiceMethod method = new GServiceMethod();
-		method.setId("method1");
-		method.setName("method1");
-		method.setSecurityPolicy(MethodSecurityPolicyEnum.REJECT_UNLESS_ALLOWED);
-		retVal.getMethodList().add(method);
-
-		method = new GServiceMethod();
-		method.setId("method2");
-		method.setName("method2");
-		method.setSecurityPolicy(MethodSecurityPolicyEnum.REJECT_UNLESS_ALLOWED);
-		retVal.getMethodList().add(method);
-
-		GServiceVersionUrl url = new GServiceVersionUrl();
-		url.setId("url1");
-		url.setUrl("http://something/aaaa.html");
-		url.setStatsLastFailure(new Date());
-		url.setStatsLastFailureMessage("This is a fail message");
-		url.setStatsLastSuccess(new Date());
-		url.setStatsLastSuccessMessage("This is a success message");
-		url.setStatus(StatusEnum.ACTIVE);
-		retVal.getUrlList().add(url);
-
-		return retVal;
-	}
-
 	private void populateRandom(BaseDtoDashboardObject obj) {
 		obj.setStatsInitialized(new Date());
 		obj.setStatus(randomStatus());
@@ -1058,6 +1021,43 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	@Override
 	public BaseDtoServiceVersion cloneServiceVersion(long thePidToClone) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public DtoServiceVersionSoap11 loadWsdl(DtoServiceVersionSoap11 theService, GHttpClientConfig theClientConfig, String theWsdlUrl) throws ServiceFailureException {
+		if (StringUtil.isBlank(theWsdlUrl)) {
+			throw new ServiceFailureException("Failed to load URL: \"" + theWsdlUrl + '"');
+		}
+
+		DtoServiceVersionSoap11 retVal = new DtoServiceVersionSoap11();
+		retVal.setWsdlLocation(theWsdlUrl);
+
+		retVal.setActive(true);
+		retVal.setUncommittedSessionId(theService.getUncommittedSessionId());
+
+		GServiceMethod method = new GServiceMethod();
+		method.setId("method1");
+		method.setName("method1");
+		method.setSecurityPolicy(MethodSecurityPolicyEnum.REJECT_UNLESS_ALLOWED);
+		retVal.getMethodList().add(method);
+
+		method = new GServiceMethod();
+		method.setId("method2");
+		method.setName("method2");
+		method.setSecurityPolicy(MethodSecurityPolicyEnum.REJECT_UNLESS_ALLOWED);
+		retVal.getMethodList().add(method);
+
+		GServiceVersionUrl url = new GServiceVersionUrl();
+		url.setId("url1");
+		url.setUrl("http://something/aaaa.html");
+		url.setStatsLastFailure(new Date());
+		url.setStatsLastFailureMessage("This is a fail message");
+		url.setStatsLastSuccess(new Date());
+		url.setStatsLastSuccessMessage("This is a success message");
+		url.setStatus(StatusEnum.ACTIVE);
+		retVal.getUrlList().add(url);
+
+		return retVal;
 	}
 
 }

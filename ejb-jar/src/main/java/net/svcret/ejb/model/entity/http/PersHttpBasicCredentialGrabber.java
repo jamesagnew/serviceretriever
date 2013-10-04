@@ -12,7 +12,7 @@ public class PersHttpBasicCredentialGrabber extends BaseCredentialGrabber {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(PersHttpBasicCredentialGrabber.class);
 
 	public PersHttpBasicCredentialGrabber(Map<String, List<String>> theRequestHeaders) {
-		List<String> nextValues = theRequestHeaders.get("Authorization");
+		List<String> nextValues = theRequestHeaders.get("authorization");
 		if (nextValues==null||nextValues.size()==0) {
 			return;
 		}
@@ -51,4 +51,6 @@ public class PersHttpBasicCredentialGrabber extends BaseCredentialGrabber {
 		return myPassword;
 	}
 
+	
+	
 }

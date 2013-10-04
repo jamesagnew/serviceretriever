@@ -49,7 +49,7 @@ public class SchedulerBean implements IScheduler {
 
 	@EJB
 	private IFilesystemAuditLogger myFilesystemAuditLogger;
-	
+
 	private long myLastStatsFlush;
 
 	@Override
@@ -102,7 +102,12 @@ public class SchedulerBean implements IScheduler {
 		try {
 			for (String nextUrl : myConfigSvc.getSecondaryNodeRefreshUrls()) {
 				ourLog.debug("Invoking secondary refresh URL: {}", nextUrl);
-				myHttpClient.get(nextUrl);
+				try {
+					myHttpClient.get(nextUrl);
+				} catch (Exception e) {
+					ourLog.debug("Failed to invoke URL to flush statistics on remote node", e);
+					ourLog.error("Failed to invoke URL '{}' to flush statistics on remote node: {}", nextUrl, e.toString());
+				}
 			}
 
 			ourLog.debug("flushStats()");
@@ -179,12 +184,12 @@ public class SchedulerBean implements IScheduler {
 			ourLog.debug("Last stats flush was at {}, not going to do another", new Date(myLastStatsFlush));
 			return;
 		}
-		
+
 		if (myConfigSvc.getNodeType() != RetrieverNodeTypeEnum.PRIMARY) {
 			ourLog.debug("Not the primary node, not going to flush stats");
 			return;
 		}
-		
+
 		flushInMemoryStatistics();
 	}
 

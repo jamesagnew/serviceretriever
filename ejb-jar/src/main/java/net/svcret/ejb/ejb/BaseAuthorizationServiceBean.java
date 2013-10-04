@@ -29,10 +29,13 @@ public abstract class BaseAuthorizationServiceBean<T extends BasePersAuthenticat
 		Validate.notNull(theUserCatalog, "Catalog");
 		Validate.notNull(theCredentialGrabber, "Grabber");
 
+		ourLog.debug("Trying to authorize username: {}", theCredentialGrabber.getUsername());
+
 		Integer cacheForMillis = theHost.getCacheSuccessfulCredentialsForMillis();
 		if (cacheForMillis != null) {
 			CacheBean userCache = checkCachedAuthorization(theCredentialGrabber);
 			if (userCache != null) {
+				ourLog.debug("Found cached authorization containing user PID {}", userCache.getUserPid());
 				PersUser user = theUserCatalog.getUser(userCache.getAuthHostPid(), userCache.getUserPid());
 				if (user != null) {
 					return new UserOrFailure(user);

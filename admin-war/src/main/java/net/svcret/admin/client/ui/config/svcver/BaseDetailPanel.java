@@ -77,14 +77,16 @@ import com.google.gwt.view.client.ListDataProvider;
 
 public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends TabPanel {
 
-	private static final int TAB_DOESNT_EXIST = -2;
 	private static final int COL_CLI_SECURITY_MODULE = 1;
 	private static final int COL_METHOD_NAME = 1;
 	private static final int COL_SVR_SECURITY_MODULE = 1;
+	private static final int TAB_DOESNT_EXIST = -2;
 
 	private Grid myClientSecurityGrid;
+	private Hyperlink myEditHttpClientConfigLink;
 	private CheckBox myExplicitProxyPathEnabledCheckbox;
 	private TextBox myExplicitProxyPathTextbox;
+	private GHttpClientConfigList myHttpClientConfigList;
 	private ListBox myHttpConfigList;
 	private KeepRecentTransactionsPanel myKeepRecentTransactionsPanel;
 	private ListDataProvider<GServiceMethod> myMethodDataProvider;
@@ -93,13 +95,12 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 	private Label myNoServerSercuritysLabel;
 	private AbstractServiceVersionPanel myParent;
 	private Grid myServerSecurityGrid;
-	private T myServiceVersion;
-	private ServiceVersionUrlGrid myUrlGrid;
 	private ListBox myServerSecurityModeBox;
 	private HTML myServerSecurityModeDescription;
+	private T myServiceVersion;
 	private CheckBox myStandardProxyPathEnabledCheckbox;
 	private Label myStandardProxyPathLabel;
-	private Hyperlink myEditHttpClientConfigLink;
+	private ServiceVersionUrlGrid myUrlGrid;
 
 	public BaseDetailPanel(AbstractServiceVersionPanel theParent, T theServiceVersion) {
 		myServiceVersion = theServiceVersion;
@@ -119,10 +120,10 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 			FlowPanel urlsPanel = new FlowPanel();
 			add(urlsPanel, "URLs");
 			initUrlPanel(urlsPanel);
-		}else {
-			urlsIndex=TAB_DOESNT_EXIST;
+		} else {
+			urlsIndex = TAB_DOESNT_EXIST;
 		}
-		
+
 		FlowPanel accessPanel = new FlowPanel();
 		add(accessPanel, "Access");
 		initAccessPanel(accessPanel);
@@ -130,14 +131,14 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		FlowPanel securityPanel = new FlowPanel();
 		add(securityPanel, "Security");
 		initServerSecurityPanel(securityPanel);
-		
+
 		if (isIncludeClientSecurity()) {
 			FlowPanel csp = new FlowPanel();
 			csp.addStyleName(CssConstants.CONTENT_INNER_SUBPANEL);
 			securityPanel.add(csp);
 			initClientSecurityPanel(csp);
 		}
-		
+
 		FlowPanel transactionFlowPanel = new FlowPanel();
 		add(transactionFlowPanel, "Config");
 		initJournalPanel(transactionFlowPanel);
@@ -153,8 +154,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 					}
 				} else if (theEvent.getSelectedItem() == urlsIndex) {
 					/*
-					 * Ok to do this even if it's already been done because the
-					 * urls might have changed (ie for a WSDL reload)
+					 * Ok to do this even if it's already been done because the urls might have changed (ie for a WSDL reload)
 					 */
 					myUrlGrid.setServiceVersion(myServiceVersion);
 				}
@@ -165,13 +165,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 
 	}
 
-	protected boolean isIncludeClientSecurity() {
-		return true;
-	}
-
-	protected boolean isIncludeUrlsTab() {
-		return true;
-	}
+	protected abstract void addProtocolSpecificPanelsToTop(boolean theIsAddPanel);
 
 	public void doBackgroundSave() {
 		myNextBackgroundSave = System.currentTimeMillis() + 1000;
@@ -199,42 +193,44 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 
 	}
 
+	protected GHttpClientConfig getHttpClientConfig() {
+		return myHttpClientConfigList.get(myHttpConfigList.getSelectedIndex());
+	}
+
+	/**
+	 * @return the parent
+	 */
+	protected AbstractServiceVersionPanel getParentPanel() {
+		return myParent;
+	}
+
 	public abstract ServiceProtocolEnum getProtocol();
+
+	/**
+	 * @return the serviceVersion
+	 */
+	protected T getServiceVersion() {
+		return myServiceVersion;
+	}
 
 	public BaseUrlGrid getUrlGrid() {
 		return myUrlGrid;
 	}
 
-	public boolean validateValuesAndApplyIfGood() {
-		boolean retVal = myKeepRecentTransactionsPanel.validateAndShowErrorIfNotValid();
-		if (!retVal) {
-			return false;
-		}
-
-		myKeepRecentTransactionsPanel.populateDto(getServiceVersion());
-
-		if (myExplicitProxyPathEnabledCheckbox.getValue()) {
-			String newPath = myExplicitProxyPathTextbox.getValue();
-			if (StringUtil.isBlank(newPath)) {
-				Window.alert("Explicit proxy path is enabled, but no path is specified.");
-				myExplicitProxyPathTextbox.setFocus(true);
-				return false;
+	private void handleServerSecurityModeChange() {
+		int index = myServerSecurityModeBox.getSelectedIndex();
+		if (index != -1) {
+			ServerSecurityModeEnum mode = ServerSecurityModeEnum.values()[index];
+			myServerSecurityModeDescription.setText(mode.getDescription());
+			if (myServiceVersion != null) {
+				myServiceVersion.setServerSecurityMode(mode);
 			}
-			if (!newPath.startsWith("/") || newPath.length() < 2) {
-				Window.alert("Explicit proxy path must be of the form /[path[/more path]]");
-				myExplicitProxyPathTextbox.setFocus(true);
-				return false;
-			}
-			myServiceVersion.setExplicitProxyPath(newPath);
-		} else {
-			myServiceVersion.setExplicitProxyPath(null);
 		}
-
-		return retVal;
 	}
 
 	private void initAccessPanel(FlowPanel thePanel) {
-		Label intro = new Label("By default, ServiceRetriever publishes your services at a simple " + "default path. If needed, an alternate path may be used instead, or as well as the " + "default path.");
+		Label intro = new Label("By default, ServiceRetriever publishes your services at a simple " + "default path. If needed, an alternate path may be used instead, or as well as the "
+				+ "default path.");
 		thePanel.add(intro);
 
 		TwoColumnGrid grid = new TwoColumnGrid();
@@ -273,8 +269,8 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 
 		thePanel.add(new HtmlH1("Client Security"));
 
-		Label urlLabel = new Label("Client Security modules provide credentials to proxied service implementations. In other words, " + "if the service which is being proxied requires credentials in order to be invoked, a client "
-				+ "security module can be used to provide those credentials.");
+		Label urlLabel = new Label("Client Security modules provide credentials to proxied service implementations. In other words, "
+				+ "if the service which is being proxied requires credentials in order to be invoked, a client " + "security module can be used to provide those credentials.");
 		thePanel.add(urlLabel);
 
 		myClientSecurityGrid = new Grid(1, 2);
@@ -463,7 +459,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 					int[] fail = detailedStats.getMethodPidToFailCount().get(theObject.getPid());
 					int[] secFail = detailedStats.getMethodPidToSecurityFailCount().get(theObject.getPid());
 
-					renderTransactionGraphsAsHtml(b, success, fault, fail, secFail, false,null);
+					renderTransactionGraphsAsHtml(b, success, fault, fail, secFail, false, null);
 				}
 				return b.toSafeHtml();
 			}
@@ -472,6 +468,18 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		grid.addColumn(usageColumn, "Usage");
 		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
 		sortHandler.setComparator(usageColumn, new Comparator<GServiceMethod>() {
+			private int addToTotal(int[]... theLists) {
+				int retVal = 0;
+				for (int[] next : theLists) {
+					if (next != null) {
+						for (int nextInteger : next) {
+							retVal += nextInteger;
+						}
+					}
+				}
+				return retVal;
+			}
+
 			@Override
 			public int compare(GServiceMethod theO1, GServiceMethod theO2) {
 				GServiceVersionDetailedStats detailedStats = myServiceVersion.getDetailedStats();
@@ -488,18 +496,6 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 				int total1 = addToTotal(successCount.get(o1), faultCount.get(o1), failCount.get(o1), secFailCount.get(o1));
 				int total2 = addToTotal(successCount.get(o2), faultCount.get(o2), failCount.get(o2), secFailCount.get(o2));
 				return total2 - total1;
-			}
-
-			private int addToTotal(int[]... theLists) {
-				int retVal = 0;
-				for (int[] next : theLists) {
-					if (next != null) {
-						for (int nextInteger : next) {
-							retVal += nextInteger;
-						}
-					}
-				}
-				return retVal;
 			}
 		});
 
@@ -555,7 +551,8 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 
 		thePanel.add(new HtmlH1("Server Security"));
 
-		Label urlLabel = new Label("Server Security modules verify that the client which is making requests coming " + "in to the proxy are authorized to invoke the particular service they are attempting to "
+		Label urlLabel = new Label("Server Security modules verify that the client which is making requests coming "
+				+ "in to the proxy are authorized to invoke the particular service they are attempting to "
 				+ "invoke. If no server security modules are defined for this service version, all requests will be " + "allowed to proceed.");
 		thePanel.add(urlLabel);
 
@@ -629,17 +626,6 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 
 	}
 
-	private void handleServerSecurityModeChange() {
-		int index = myServerSecurityModeBox.getSelectedIndex();
-		if (index != -1) {
-			ServerSecurityModeEnum mode = ServerSecurityModeEnum.values()[index];
-			myServerSecurityModeDescription.setText(mode.getDescription());
-			if (myServiceVersion != null) {
-				myServiceVersion.setServerSecurityMode(mode);
-			}
-		}
-	}
-
 	private void initUrlPanel(FlowPanel thePanel) {
 
 		myUrlGrid = new ServiceVersionUrlGrid();
@@ -651,7 +637,8 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		thePanel.add(clientConfigPanel);
 
 		clientConfigPanel.addStyleName(CssConstants.CONTENT_INNER_SUBPANEL);
-		clientConfigPanel.add(new Label("The HTTP client configuration provides the connection details for " + "how the proxy will attempt to invoke proxied service implementations. This includes " + "settings for timeouts, round-robin policies, etc."));
+		clientConfigPanel.add(new Label("The HTTP client configuration provides the connection details for " + "how the proxy will attempt to invoke proxied service implementations. This includes "
+				+ "settings for timeouts, round-robin policies, etc."));
 
 		myHttpConfigList = new ListBox();
 
@@ -667,6 +654,8 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 
 			@Override
 			public void onSuccess(final GHttpClientConfigList theResult) {
+				myHttpClientConfigList = theResult;
+
 				for (GHttpClientConfig next : theResult) {
 					myHttpConfigList.addItem(next.getId() + " (" + next.getName() + ")");
 					if (next.getPid() == getServiceVersion().getHttpClientConfigPid()) {
@@ -694,8 +683,12 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 
 	}
 
-	private void updateEditHttpClientConfigLink() {
-		myEditHttpClientConfigLink.setTargetHistoryToken(NavProcessor.getTokenEditHttpClientConfig(getServiceVersion().getHttpClientConfigPid()));
+	protected boolean isIncludeClientSecurity() {
+		return true;
+	}
+
+	protected boolean isIncludeUrlsTab() {
+		return true;
 	}
 
 	private void updateClientSercurityPanel() {
@@ -719,6 +712,19 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		}
 
 		myNoClientSercuritysLabel.setVisible(getServiceVersion().getClientSecurityList().size() == 0);
+	}
+
+	private void updateEditHttpClientConfigLink() {
+		myEditHttpClientConfigLink.setTargetHistoryToken(NavProcessor.getTokenEditHttpClientConfig(getServiceVersion().getHttpClientConfigPid()));
+	}
+
+	protected void updateMethodPanel() {
+		if (myMethodDataProvider != null) {
+			List<GServiceMethod> list = myMethodDataProvider.getList();
+			list.clear();
+			list.addAll(myServiceVersion.getMethodList().toList());
+			myMethodDataProvider.refresh();
+		}
 	}
 
 	private void updateServerSercurityPanel() {
@@ -745,29 +751,47 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		myNoServerSercuritysLabel.setVisible(getServiceVersion().getServerSecurityList().size() == 0);
 	}
 
-	protected abstract void addProtocolSpecificPanelsToTop(boolean theIsAddPanel);
-
-	/**
-	 * @return the parent
-	 */
-	protected AbstractServiceVersionPanel getParentPanel() {
-		return myParent;
-	}
-
-	/**
-	 * @return the serviceVersion
-	 */
-	protected T getServiceVersion() {
-		return myServiceVersion;
-	}
-
-	protected void updateMethodPanel() {
-		if (myMethodDataProvider != null) {
-			List<GServiceMethod> list = myMethodDataProvider.getList();
-			list.clear();
-			list.addAll(myServiceVersion.getMethodList().toList());
-			myMethodDataProvider.refresh();
+	public boolean validateValuesAndApplyIfGood() {
+		boolean retVal = myKeepRecentTransactionsPanel.validateAndShowErrorIfNotValid();
+		if (!retVal) {
+			return false;
 		}
+
+		myKeepRecentTransactionsPanel.populateDto(getServiceVersion());
+
+		if (myExplicitProxyPathEnabledCheckbox.getValue()) {
+			String newPath = myExplicitProxyPathTextbox.getValue();
+			if (StringUtil.isBlank(newPath)) {
+				Window.alert("Explicit proxy path is enabled, but no path is specified.");
+				myExplicitProxyPathTextbox.setFocus(true);
+				return false;
+			}
+			if (!newPath.startsWith("/") || newPath.length() < 2) {
+				Window.alert("Explicit proxy path must be of the form /[path[/more path]]");
+				myExplicitProxyPathTextbox.setFocus(true);
+				return false;
+			}
+			myServiceVersion.setExplicitProxyPath(newPath);
+		} else {
+			myServiceVersion.setExplicitProxyPath(null);
+		}
+
+		return retVal;
+	}
+
+	private static boolean hasValues(int[] theSuccess) {
+		if (theSuccess != null) {
+			for (int integer : theSuccess) {
+				if (integer != 0) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	static long newUncommittedSessionId() {
+		return (long) (Math.random() * Long.MAX_VALUE);
 	}
 
 	public static void renderTransactionGraphsAsHtml(SafeHtmlBuilder b, int[] success, int[] fault, int[] fail, int[] secFail, boolean theLastUsageProvidedIfKnown, Date theLastUsage) {
@@ -784,21 +808,6 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 				b.appendHtmlConstant("No Usage since " + DateUtil.formatTime(theLastUsage));
 			}
 		}
-	}
-
-	private static boolean hasValues(int[] theSuccess) {
-		if (theSuccess != null) {
-			for (int integer : theSuccess) {
-				if (integer != 0) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	static long newUncommittedSessionId() {
-		return (long) (Math.random() * Long.MAX_VALUE);
 	}
 
 	private final class AutosaveValueChangeHandler implements IValueChangeHandler {

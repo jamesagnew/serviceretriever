@@ -14,6 +14,8 @@ import net.svcret.ejb.model.entity.PersUser;
 @Stateless
 public class LocalDatabaseAuthorizationServiceBean extends BaseAuthorizationServiceBean<PersAuthenticationHostLocalDatabase> implements ILocalDatabaseAuthorizationService {
 
+	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(LocalDatabaseAuthorizationServiceBean.class);
+	
 	@Override
 	protected UserOrFailure doAuthorize(PersAuthenticationHostLocalDatabase theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException {
 		PersUser user = theUserCatalog.findUser(theHost.getPid(), theCredentialGrabber.getUsername());
@@ -21,6 +23,7 @@ public class LocalDatabaseAuthorizationServiceBean extends BaseAuthorizationServ
 			return new UserOrFailure(AuthorizationOutcomeEnum.FAILED_USER_UNKNOWN_TO_SR);
 		}
 		if (!user.checkPassword(theCredentialGrabber.getPassword())) {
+			ourLog.debug("Password does not match");
 			return new UserOrFailure(AuthorizationOutcomeEnum.FAILED_BAD_CREDENTIALS_IN_REQUEST);
 		}
 		

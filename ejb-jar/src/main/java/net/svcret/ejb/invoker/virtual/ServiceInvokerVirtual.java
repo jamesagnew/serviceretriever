@@ -6,8 +6,6 @@ import java.util.Set;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IResponseValidator;
@@ -17,7 +15,6 @@ import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.invoker.BaseServiceInvoker;
 import net.svcret.ejb.invoker.IServiceInvoker;
@@ -26,16 +23,13 @@ import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
 
+import com.google.common.annotations.VisibleForTesting;
+
 @Stateless
 public class ServiceInvokerVirtual extends BaseServiceInvoker implements IServiceInvokerVirtual {
 
 	@EJB
 	public IServiceOrchestrator myOrchestrator;
-
-	@Override
-	public BasePersServiceVersion introspectServiceFromUrl(String theUrl) throws ProcessingException {
-		throw new UnsupportedOperationException();
-	}
 
 	@Override
 	public String obscureMessageForLogs(BasePersServiceVersion theServiceDefinition, String theMessage, Set<String> theElementNamesToRedact) throws InvocationFailedDueToInternalErrorException {

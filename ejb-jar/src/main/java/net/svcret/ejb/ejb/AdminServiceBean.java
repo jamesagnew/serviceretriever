@@ -172,6 +172,9 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	private IServiceOrchestrator myOrchestrator;
 
 	@EJB
+	private IRuntimeStatusQueryLocal myRuntimeStatusQuerySvc;
+
+	@EJB
 	private IScheduler myScheduler;
 
 	@EJB
@@ -204,15 +207,14 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return domain.toDto();
 	}
 
-	@Override
-	public Collection<DtoStickySessionUrlBinding> getAllStickySessions() {
-		flushOutstandingStats();
-
-		Collection<PersStickySessionUrlBinding> sessions = myDao.getAllStickySessions();
-		Collection<DtoStickySessionUrlBinding> retVal = new ArrayList<DtoStickySessionUrlBinding>();
-		for (PersStickySessionUrlBinding next : sessions) {
-			retVal.add(next.toDao());
-		}
+	/**
+	 * Convenience for Unit Tests
+	 */
+	GDomain addDomain(String theId, String theName) throws ProcessingException, UnexpectedFailureException {
+		GDomain domain = new GDomain();
+		domain.setId(theId);
+		domain.setName(theName);
+		GDomain retVal = addDomain(domain);
 		return retVal;
 	}
 
@@ -267,6 +269,10 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 
 		throw new IllegalArgumentException("Service " + theServiceVersionPid + " is of type " + svcVer.getProtocol() + " which does not support WSDL bundles");
+	}
+
+	private int defaultInteger(Integer theInt) {
+		return theInt != null ? theInt : 0;
 	}
 
 	@Override
@@ -355,161 +361,21 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public long getDefaultHttpClientConfigPid() {
-		return myDao.getHttpClientConfigs().iterator().next().getPid();
-	}
+	public DtoMonitorRuleActiveCheck executeMonitorRuleActiveCheck(DtoMonitorRuleActiveCheck theCheck) throws ProcessingException {
 
-	@Override
-	public GDomain getDomainByPid(long theDomain) throws ProcessingException, UnexpectedFailureException {
-		PersDomain domain = myDao.getDomainByPid(theDomain);
-		if (domain != null) {
-			return domain.toDto();
-		}
-		return null;
-	}
-
-	@Override
-	public long getDomainPid(String theDomainId) throws ProcessingException {
-		PersDomain domain = myDao.getDomainById(theDomainId);
-		if (domain == null) {
-			throw new ProcessingException("Unknown ID: " + theDomainId);
-		}
-		return domain.getPid();
-	}
-
-	@Override
-	public DtoLibraryMessage getLibraryMessage(long theMessagePid) throws ProcessingException {
-		return toUi(myDao.getLibraryMessageByPid(theMessagePid), true);
-	}
-
-	@Override
-	public Collection<DtoLibraryMessage> getLibraryMessages(HierarchyEnum theType, long thePid, boolean theLoadContents) throws ProcessingException {
-
-		Collection<PersLibraryMessage> msgs = null;
-		switch (theType) {
-		case DOMAIN:
-			msgs = myDao.getLibraryMessagesWhichApplyToDomain(thePid);
-			break;
-		case SERVICE:
-			msgs = myDao.getLibraryMessagesWhichApplyToService(thePid);
-			break;
-		case VERSION:
-			msgs = myDao.getLibraryMessagesWhichApplyToServiceVersion(thePid);
-			break;
-		case METHOD:
-			break;
+		PersMonitorRuleActive rule = null;
+		if (theCheck.getPidOrNull() != null) {
+			PersMonitorRuleActiveCheck existing = myDao.getMonitorRuleActiveCheck(theCheck.getPid());
+			rule = (PersMonitorRuleActive) existing.getRule();
 		}
 
-		if (msgs == null) {
-			throw new IllegalArgumentException("Invalid type: " + theType);
-		}
+		PersMonitorRuleActiveCheck check = PersMonitorRuleActiveCheck.fromDto(theCheck, rule, myDao);
+		List<PersMonitorRuleActiveCheckOutcome> outcome = myMonitorSvc.runActiveCheckInCurrentTransaction(check, theCheck.getPidOrNull() != null);
 
-		return toUiCollectionLibraryMessages(msgs, theLoadContents);
-	}
+		check.getRecentOutcomes().clear();
+		check.getRecentOutcomes().addAll(outcome);
 
-	@Override
-	public Collection<DtoLibraryMessage> getLibraryMessagesForService(long thePid, boolean theLoadContents) throws ProcessingException {
-		Collection<PersLibraryMessage> msgs = myDao.getLibraryMessagesWhichApplyToService(thePid);
-		return toUiCollectionLibraryMessages(msgs, theLoadContents);
-	}
-
-
-	@Override
-	public long getServicePid(long theDomainPid, String theServiceId) throws ProcessingException {
-		PersService service = myDao.getServiceById(theDomainPid, theServiceId);
-		if (service == null) {
-			throw new ProcessingException("Unknown ID: " + theServiceId);
-		}
-		return service.getPid();
-	}
-
-	@Override
-	public Collection<GMonitorRuleFiring> loadAllActiveRuleFirings() {
-		Collection<GMonitorRuleFiring> retVal = new ArrayList<GMonitorRuleFiring>();
-		List<PersMonitorRuleFiring> firings = myDao.loadMonitorRuleFiringsWhichAreActive();
-		for (PersMonitorRuleFiring nextFiring : firings) {
-			retVal.add(toUi(nextFiring));
-		}
-		return retVal;
-	}
-
-	@Override
-	public BaseDtoAuthenticationHost loadAuthenticationHost(long thePid) throws ProcessingException {
-		ourLog.info("Loading authentication host with PID: {}", thePid);
-
-		BasePersAuthenticationHost authHost = myDao.getAuthenticationHostByPid(thePid);
-		if (authHost == null) {
-			throw new ProcessingException("Unknown authentication host: " + thePid);
-		}
-
-		return toUi(authHost);
-	}
-
-	@Override
-	public GConfig loadConfig() throws UnexpectedFailureException {
-		return toUi(myConfigSvc.getConfig());
-	}
-
-	@Override
-	public GDomainList loadDomainList() throws ProcessingException, UnexpectedFailureException {
-		Set<Long> empty = Collections.emptySet();
-		return loadDomainList(empty, empty, empty, empty, empty, null);
-	}
-
-	@Override
-	public Collection<DtoLibraryMessage> loadLibraryMessages() throws ProcessingException {
-		ArrayList<DtoLibraryMessage> retVal = new ArrayList<DtoLibraryMessage>();
-		for (PersLibraryMessage next : myDao.loadLibraryMessages()) {
-			retVal.add(toUi(next, false));
-		}
-		return retVal;
-	}
-
-	@Override
-	public ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ProcessingException, UnexpectedFailureException {
-		flushOutstandingStats();
-
-		ModelUpdateResponse retVal = new ModelUpdateResponse();
-
-		if (theRequest.isLoadHttpClientConfigs()) {
-			GHttpClientConfigList configList = loadHttpClientConfigList();
-			retVal.setHttpClientConfigList(configList);
-		}
-
-		if (theRequest.isLoadUsers()) {
-			GUserList userList = loadUserList(false);
-			retVal.setUserList(userList);
-		}
-
-		if (theRequest.isLoadAuthHosts()) {
-			DtoAuthenticationHostList hostList = loadAuthHostList();
-			retVal.setAuthenticationHostList(hostList);
-		}
-
-		Set<Long> loadDomStats = theRequest.getDomainsToLoadStats();
-		Set<Long> loadSvcStats = theRequest.getServicesToLoadStats();
-		Set<Long> loadVerStats = theRequest.getVersionsToLoadStats();
-		Set<Long> loadVerMethodStats = theRequest.getVersionMethodsToLoadStats();
-		Set<Long> loadUrlStats = theRequest.getUrlsToLoadStats();
-
-		if (theRequest.isLoadAllUrlStats()) {
-			loadUrlStats = Collections.singleton(URL_PID_TO_LOAD_ALL);
-		}
-		
-		StatusesBean statuses = null;
-		if (hasAnything(loadDomStats, loadSvcStats, loadVerStats, loadVerMethodStats, loadUrlStats)) {
-			statuses = myDao.loadAllStatuses();
-		}
-
-		GDomainList domainList = loadDomainList(loadDomStats, loadSvcStats, loadVerStats, loadVerMethodStats, loadUrlStats, statuses);
-
-		retVal.setDomainList(domainList);
-
-		for (PersNodeStatus next : myRuntimeStatusQuerySvc.getAllNodeStatuses()) {
-			retVal.getNodeStatuses().add(next.toDao());
-		}
-
-		return retVal;
+		return check.toDto(true);
 	}
 
 	private void flushOutstandingStats() {
@@ -517,631 +383,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		myScheduler.flushInMemoryStatisticsUnlessItHasHappenedVeryRecently();
 		ourLog.debug("Done flushing stats");
 	}
-
-	@Override
-	public List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart) {
-
-		Set<BasePersServiceVersion> allSvcVers;
-		if (theDomainPid != null) {
-			assert theServicePid == null;
-			assert theServiceVersionPid == null;
-			PersDomain domain = myServiceRegistry.getDomainByPid(theDomainPid);
-			allSvcVers = domain.getAllServiceVersions();
-		} else if (theServicePid != null) {
-			assert theDomainPid == null;
-			assert theServiceVersionPid == null;
-			PersService service = myServiceRegistry.getServiceByPid(theServicePid);
-			allSvcVers = service.getAllServiceVersions();
-		} else if (theServiceVersionPid != null) {
-			assert theServicePid == null;
-			assert theDomainPid == null;
-			allSvcVers = Collections.singleton(myServiceRegistry.getServiceVersionByPid(theServiceVersionPid));
-		} else {
-			throw new NullPointerException("No domain/service/svcver pid provided!");
-		}
-
-		List<GMonitorRuleFiring> retVal = new ArrayList<GMonitorRuleFiring>();
-		List<PersMonitorRuleFiring> firings = myDao.loadMonitorRuleFirings(allSvcVers, theStart);
-		for (PersMonitorRuleFiring next : firings) {
-			retVal.add(toUi(next));
-		}
-
-		// Set<Long> svcVerPids = new HashSet<Long>();
-		// for (BasePersServiceVersion basePersServiceVersion : allSvcVers) {
-		//
-		// }
-
-		return retVal;
-	}
-
-	@Override
-	public GMonitorRuleList loadMonitorRuleList() throws ProcessingException, UnexpectedFailureException {
-		GMonitorRuleList retVal = new GMonitorRuleList();
-
-		Collection<BasePersMonitorRule> allRules = myDao.getMonitorRules();
-		for (BasePersMonitorRule persMonitorRule : allRules) {
-			retVal.add(persMonitorRule.toDao(false));
-		}
-
-		return retVal;
-	}
-
-	@Override
-	public GRecentMessage loadRecentMessageForServiceVersion(long thePid) throws ProcessingException {
-		PersServiceVersionRecentMessage msg = myDao.loadRecentMessageForServiceVersion(thePid);
-		if (msg == null) {
-			throw new ProcessingException("Unable to find transaction with PID " + thePid + ". Maybe it has been purged?");
-		}
-		return msg.toDto(true);
-	}
-
-	@Override
-	public GRecentMessage loadRecentMessageForUser(long thePid) throws ProcessingException {
-		PersUserRecentMessage msg = myDao.loadRecentMessageForUser(thePid);
-		if (msg == null) {
-			throw new ProcessingException("Unable to find transaction with PID " + thePid + ". Maybe it has been purged?");
-		}
-		return msg.toDto(true);
-	}
-
-	@Override
-	public GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid) {
-		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
-
-		GRecentMessageLists retVal = new GRecentMessageLists();
-		retVal.setKeepSuccess(defaultInteger(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.SUCCESS)));
-		retVal.setKeepFail(defaultInteger(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.FAIL)));
-		retVal.setKeepFault(defaultInteger(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.FAULT)));
-		retVal.setKeepSecurityFail(defaultInteger(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.SECURITY_FAIL)));
-
-		if (retVal.getKeepSuccess() > 0) {
-			retVal.setSuccessList(toUi(myDao.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.SUCCESS), true));
-		}
-
-		if (retVal.getKeepFail() > 0) {
-			retVal.setFailList(toUi(myDao.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.FAIL), true));
-		}
-
-		if (retVal.getKeepSecurityFail() > 0) {
-			retVal.setSecurityFailList(toUi(myDao.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.SECURITY_FAIL), true));
-		}
-
-		if (retVal.getKeepFault() > 0) {
-			retVal.setFaultList(toUi(myDao.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.FAULT), true));
-		}
-
-		ourLog.info("Returning recent message list for service version {} - {}", theServiceVersionPid, retVal);
-
-		return retVal;
-	}
-
-	@Override
-	public GRecentMessageLists loadRecentTransactionListForUser(long thePid) {
-		PersUser user = myDao.getUser(thePid);
-		BasePersAuthenticationHost authHost = user.getAuthenticationHost();
-
-		GRecentMessageLists retVal = new GRecentMessageLists();
-		retVal.setKeepSuccess(defaultInteger(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.SUCCESS)));
-		retVal.setKeepFail(defaultInteger(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.FAIL)));
-		retVal.setKeepFault(defaultInteger(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.FAULT)));
-		retVal.setKeepSecurityFail(defaultInteger(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.SECURITY_FAIL)));
-
-		if (retVal.getKeepSuccess() > 0) {
-			retVal.setSuccessList(toUi(myDao.getUserRecentMessages(user, ResponseTypeEnum.SUCCESS), true));
-		}
-
-		if (retVal.getKeepFail() > 0) {
-			retVal.setFailList(toUi(myDao.getUserRecentMessages(user, ResponseTypeEnum.FAIL), true));
-		}
-
-		if (retVal.getKeepSecurityFail() > 0) {
-			retVal.setSecurityFailList(toUi(myDao.getUserRecentMessages(user, ResponseTypeEnum.SECURITY_FAIL), true));
-		}
-
-		if (retVal.getKeepFault() > 0) {
-			retVal.setFaultList(toUi(myDao.getUserRecentMessages(user, ResponseTypeEnum.FAULT), true));
-		}
-
-		ourLog.info("Returning recent message list for service version {} - {}", thePid, retVal);
-
-		return retVal;
-	}
-
-	@Override
-	public GSoap11ServiceVersionAndResources loadServiceVersion(long theServiceVersionPid) throws UnexpectedFailureException {
-		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
-		if (svcVer == null) {
-			throw new IllegalArgumentException("Unknown service version PID: " + theServiceVersionPid);
-		}
-
-		Set<Long> methodPids = new HashSet<Long>();
-		for (PersServiceVersionMethod next : svcVer.getMethods()) {
-			methodPids.add(next.getPid());
-		}
-
-		Set<Long> urlPids = new HashSet<Long>();
-		for (PersServiceVersionUrl next : svcVer.getUrls()) {
-			urlPids.add(next.getPid());
-		}
-
-		StatusesBean statuses = myDao.loadAllStatuses();
-
-		Set<Long> svcVerPids=Collections.singleton(theServiceVersionPid);
-		BaseDtoServiceVersion uiService = svcVer.toDto(svcVerPids, myRuntimeStatusQuerySvc, statuses, methodPids, urlPids);
-		GSoap11ServiceVersionAndResources retVal = toUi(uiService, svcVer);
-		return retVal;
-	}
-
-	@Override
-	public GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws UnexpectedFailureException {
-
-		BasePersServiceVersion ver = myDao.getServiceVersionByPid(theVersionPid);
-
-		final Map<Long, int[]> methodPidToSuccessCount = new HashMap<Long, int[]>();
-		final Map<Long, int[]> methodPidToFailCount = new HashMap<Long, int[]>();
-		final Map<Long, int[]> methodPidToSecurityFailCount = new HashMap<Long, int[]>();
-		final Map<Long, int[]> methodPidToFaultCount = new HashMap<Long, int[]>();
-
-		final List<Long> statsTimestamps = new ArrayList<Long>();
-
-		for (final PersServiceVersionMethod nextMethod : ver.getMethods()) {
-
-			StatsAccumulator accumulator = new StatsAccumulator();
-			myRuntimeStatusQuerySvc.extract60MinuteMethodStats(nextMethod, accumulator);
-
-			methodPidToSuccessCount.put(nextMethod.getPid(), toIntArray(accumulator.getSuccessCounts()));
-			methodPidToFailCount.put(nextMethod.getPid(), toIntArray(accumulator.getFailCounts()));
-			methodPidToSecurityFailCount.put(nextMethod.getPid(), toIntArray(accumulator.getSecurityFailCounts()));
-			methodPidToFaultCount.put(nextMethod.getPid(), toIntArray(accumulator.getFaultCounts()));
-		}
-
-		GServiceVersionDetailedStats retVal = new GServiceVersionDetailedStats();
-
-		retVal.setMethodPidToSuccessCount(methodPidToSuccessCount);
-		retVal.setMethodPidToFailCount(methodPidToFailCount);
-		retVal.setMethodPidToSecurityFailCount(methodPidToSecurityFailCount);
-		retVal.setMethodPidToFaultCount(methodPidToFaultCount);
-
-		retVal.setStatsTimestamps(statsTimestamps);
-
-		return retVal;
-	}
-
-	private int[] toIntArray(ArrayList<Integer> theList) {
-		int[] retVal = new int[theList.size()];
-		for (int i = 0; i < theList.size(); i++) {
-			if (theList.get(i) != null) {
-				retVal[i] = theList.get(i);
-			}
-		}
-		return retVal;
-	}
-
-	@Override
-	public GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(DtoServiceVersionSoap11 theService, String theWsdlUrl) throws ProcessingException, UnexpectedFailureException {
-		Validate.notNull(theService, "Definition");
-		Validate.notBlank(theWsdlUrl, "URL");
-
-		ourLog.info("Loading service version from URL: {}", theWsdlUrl);
-		PersServiceVersionSoap11 def = (PersServiceVersionSoap11) myInvokerSoap11.introspectServiceFromUrl(theWsdlUrl);
-
-		theService.getMethodList().clear();
-		for (PersServiceVersionMethod next : def.getMethods()) {
-			theService.getMethodList().add(next.toDao(false, myRuntimeStatusQuerySvc));
-		}
-
-		// Only add URLs if there aren't any already defined for this version
-		if (theService.getUrlList().size() == 0) {
-			for (PersServiceVersionUrl next : def.getUrls()) {
-				theService.getUrlList().add(next.toDto(false, (StatusesBean) null, myRuntimeStatusQuerySvc));
-			}
-		}
-
-		GSoap11ServiceVersionAndResources retVal = toUi(theService, def);
-		return retVal;
-	}
-
-	@Override
-	public GUser loadUser(long thePid, boolean theLoadStats) throws ProcessingException, UnexpectedFailureException {
-		ourLog.info("Loading user {}", thePid);
-
-		PersUser persUser = myDao.getUser(thePid);
-		if (persUser == null) {
-			throw new ProcessingException("Unknown user PID: " + thePid);
-		}
-
-		return toUi(persUser, theLoadStats);
-	}
-
-	@Override
-	public GPartialUserList loadUsers(PartialUserListRequest theRequest) throws ProcessingException, UnexpectedFailureException {
-		GPartialUserList retVal = new GPartialUserList();
-
-		ourLog.info("Loading user list: " + theRequest.toString());
-
-		for (PersUser next : myDao.getAllUsersAndInitializeThem()) {
-			retVal.add(toUi(next, theRequest.isLoadStats()));
-		}
-
-		return retVal;
-	}
-
-	@Override
-	public DtoAuthenticationHostList saveAuthenticationHost(BaseDtoAuthenticationHost theAuthHost) throws ProcessingException {
-		Validate.notNull(theAuthHost);
-
-		BasePersAuthenticationHost host = fromUi(theAuthHost);
-
-		if (theAuthHost.getPid() > 0) {
-			BasePersAuthenticationHost existingHost = myDao.getAuthenticationHostByPid(theAuthHost.getPid());
-			existingHost.merge(host);
-			ourLog.info("Saving existing authentication host of type {} with id {} / {}", new Object[] { host.getClass().getSimpleName(), theAuthHost.getPid(), theAuthHost.getModuleId() });
-			myDao.saveAuthenticationHost(existingHost);
-		} else {
-			ourLog.info("Saving new authentication host of type {} with id {} / {}", new Object[] { host.getClass().getSimpleName(), theAuthHost.getPid(), theAuthHost.getModuleId() });
-			myDao.saveAuthenticationHost(host);
-		}
-
-		return loadAuthHostList();
-	}
-
-	@Override
-	public GConfig saveConfig(GConfig theConfig) throws UnexpectedFailureException {
-		ourLog.info("Saving config");
-
-		ourLog.info("Proxy config now contains the following URL Bases: {}", theConfig.getProxyUrlBases());
-
-		PersConfig existing = myConfigSvc.getConfig();
-		existing.merge(fromUi(theConfig));
-
-		PersConfig newCfg = myConfigSvc.saveConfig(existing);
-
-		return toUi(newCfg);
-
-		//
-		// PersConfig existing =
-		// myPersSvc.getConfigByPid(PersConfig.DEFAULT_ID);
-		// existing.merge(fromUi(theConfig));
-		// PersConfig retVal = myPersSvc.saveConfig(existing);
-		// return toUi(retVal);
-	}
-
-	@Override
-	public GDomainList saveDomain(GDomain theDomain) throws ProcessingException, UnexpectedFailureException {
-		ourLog.info("Saving domain with PID {}", theDomain.getPid());
-
-		PersDomain domain = myDao.getDomainByPid(theDomain.getPid());
-		PersDomain newDomain = fromUi(theDomain);
-		domain.merge(newDomain);
-
-		myServiceRegistry.saveDomain(domain);
-
-		// TODO: make this synchronous? (ie don't use a cached version, or force a cache refresh or something?
-		return loadDomainList();
-	}
-
-	@Override
-	public GHttpClientConfig saveHttpClientConfig(GHttpClientConfig theConfig, byte[] theNewTruststore, String theNewTruststorePass, byte[] theNewKeystore, String theNewKeystorePass)
-			throws ProcessingException, UnexpectedFailureException {
-		Validate.notNull(theConfig, "HttpClientConfig");
-
-		PersHttpClientConfig existing = null;
-		boolean isDefault = false;
-
-		if (theConfig.getPid() <= 0) {
-			ourLog.info("Saving new HTTP client config");
-		} else {
-			ourLog.info("Saving HTTP client config ID[{}]", theConfig.getPid());
-			existing = myDao.getHttpClientConfig(theConfig.getPid());
-			if (existing == null) {
-				throw new ProcessingException("Unknown client config PID: " + theConfig.getPid());
-			}
-			if (existing.getId().equals(GHttpClientConfig.DEFAULT_ID)) {
-				isDefault = true;
-			}
-		}
-
-		PersHttpClientConfig config = PersHttpClientConfig.fromDto(theConfig);
-		if (existing != null) {
-			config.setOptLock(existing.getOptLock());
-		}
-
-		if (isDefault) {
-			config.setId(config.getId());
-			config.setName(config.getName());
-		}
-
-		if (theNewTruststore != null) {
-			config.setTlsTruststore(theNewTruststore);
-			config.setTlsTruststorePassword(theNewTruststorePass);
-		}
-
-		if (theNewKeystore != null) {
-			config.setTlsKeystore(theNewKeystore);
-			config.setTlsKeystorePassword(theNewKeystorePass);
-		}
-
-		return myServiceRegistry.saveHttpClientConfig(config).toDto(myKeystoreSvc);
-	}
-
-	@Override
-	public void saveLibraryMessage(DtoLibraryMessage theMessage) throws ProcessingException {
-		ourLog.info("Saving library message");
-
-		PersLibraryMessage msg = fromUi(theMessage);
-		myDao.saveLibraryMessage(msg);
-	}
-
-	@Override
-	public void saveMonitorRule(BaseDtoMonitorRule theRule) throws UnexpectedFailureException, ProcessingException {
-		BasePersMonitorRule rule = fromUi(theRule);
-		myMonitorSvc.saveRule(rule);
-	}
-
-	@Override
-	public GDomainList saveService(GService theService) throws ProcessingException, UnexpectedFailureException {
-		ourLog.info("Saving service {}", theService.getPid());
-
-		PersService service = myDao.getServiceByPid(theService.getPid());
-		if (service == null) {
-			throw new ProcessingException("Unknown service PID " + theService.getPid());
-		}
-
-		PersService newService = fromUi(theService);
-		service.merge(newService);
-
-		myServiceRegistry.saveService(service);
-
-		// TODO: make this synchronous? (ie don't use a cached version, or force a cache refresh or something?
-		return loadDomainList();
-	}
-
-	@Override
-	public <T extends BaseDtoServiceVersion> T saveServiceVersion(long theDomain, long theService, T theVersion, List<GResource> theResources) throws ProcessingException, UnexpectedFailureException {
-		Validate.notBlank(theVersion.getId(), "Version#ID");
-
-		ourLog.info("Adding service version {} to domain {} / service {}", new Object[] { theVersion.getPid(), theDomain, theService });
-
-		PersDomain domain = myDao.getDomainByPid(theDomain);
-		if (domain == null) {
-			throw new ProcessingException("Unknown domain ID: " + theDomain);
-		}
-
-		PersService service = myDao.getServiceByPid(theService);
-		if (service == null) {
-			throw new ProcessingException("Unknown service ID: " + theService);
-		}
-
-		if (!domain.equals(service.getDomain())) {
-			throw new ProcessingException("Service with ID " + theService + " is not a part of domain " + theDomain);
-		}
-
-		BasePersServiceVersion version = BasePersServiceVersion.fromDto(theVersion, service, myDao, myServiceRegistry);
-
-		Map<String, PersServiceVersionResource> uriToResource = version.getUriToResource();
-		Set<String> urls = new HashSet<String>();
-		for (GResource next : theResources) {
-			urls.add(next.getUrl());
-			if (uriToResource.containsKey(next.getUrl())) {
-				PersServiceVersionResource existing = uriToResource.get(next.getUrl());
-				existing.merge(fromUi(next, version));
-			} else {
-				uriToResource.put(next.getUrl(), fromUi(next, version));
-			}
-		}
-		for (Iterator<Map.Entry<String, PersServiceVersionResource>> iter = uriToResource.entrySet().iterator(); iter.hasNext();) {
-			if (!urls.contains(iter.next().getKey())) {
-				iter.remove();
-			}
-		}
-
-		/*
-		 * Urls
-		 */
-		urls = new HashSet<String>();
-		for (GServiceVersionUrl next : theVersion.getUrlList()) {
-			urls.add(next.getUrl());
-			PersServiceVersionUrl existing = version.getUrlWithUrl(next.getUrl());
-			if (existing != null) {
-				existing.merge(fromUi(next, version));
-			} else {
-				version.getUrls().add(fromUi(next, version));
-			}
-		}
-		for (Iterator<PersServiceVersionUrl> iter = version.getUrls().iterator(); iter.hasNext();) {
-			if (!urls.contains(iter.next().getUrl())) {
-				iter.remove();
-			}
-		}
-		int index = 0;
-		for (PersServiceVersionUrl next : version.getUrls()) {
-			next.setOrder(index++);
-		}
-
-		/*
-		 * Methods
-		 */
-
-		HashSet<String> methods = new HashSet<String>();
-		for (GServiceMethod next : theVersion.getMethodList()) {
-			methods.add(next.getName());
-			PersServiceVersionMethod existing = version.getMethod(next.getName());
-			if (existing != null) {
-				existing.merge(fromUi(next, version.getPid()));
-			} else {
-				version.addMethod(fromUi(next, version.getPid()));
-			}
-		}
-		version.retainOnlyMethodsWithNames(methods);
-		index = 0;
-		for (PersServiceVersionMethod next : version.getMethods()) {
-			next.setOrder(index++);
-		}
-
-		/*
-		 * Client Auths
-		 */
-		Set<Long> pids = new HashSet<Long>();
-		for (BaseDtoClientSecurity next : theVersion.getClientSecurityList()) {
-			PersBaseClientAuth<?> nextPers = fromUi(next, version);
-			if (nextPers.getPid() != null) {
-				PersBaseClientAuth<?> existing = version.getClientAuthWithPid(nextPers.getPid());
-				if (existing != null) {
-					existing.merge(nextPers);
-				} else {
-					pids.add(nextPers.getPid());
-				}
-				pids.add(nextPers.getPid());
-			} else {
-				nextPers = myDao.saveClientAuth(nextPers);
-				pids.add(nextPers.getPid());
-				version.addClientAuth(nextPers);
-			}
-		}
-		index = 0;
-		for (PersBaseClientAuth<?> next : new ArrayList<PersBaseClientAuth<?>>(version.getClientAuths())) {
-			if (next.getPid() != null && !pids.contains(next.getPid())) {
-				version.removeClientAuth(next);
-			} else {
-				next.setOrder(index++);
-			}
-		}
-
-		/*
-		 * Server Auths
-		 */
-		pids = new HashSet<Long>();
-		for (BaseDtoServerSecurity next : theVersion.getServerSecurityList()) {
-			if (next.getAuthHostPid() <= 0) {
-				throw new IllegalArgumentException("No auth host PID specified");
-			}
-
-			PersBaseServerAuth<?, ?> nextPers = fromUi(next, version);
-			if (nextPers.getPid() != null) {
-				PersBaseServerAuth<?, ?> existing = version.getServerAuthWithPid(nextPers.getPid());
-				if (existing != null) {
-					existing.merge(nextPers);
-				} else {
-					pids.add(nextPers.getPid());
-				}
-				pids.add(nextPers.getPid());
-			} else {
-				nextPers = myDao.saveServerAuth(nextPers);
-				pids.add(nextPers.getPid());
-				version.addServerAuth(nextPers);
-			}
-			version.addServerAuth(nextPers);
-		}
-		index = 0;
-		for (PersBaseServerAuth<?, ?> next : new ArrayList<PersBaseServerAuth<?, ?>>(version.getServerAuths())) {
-			if (next.getPid() != null && !pids.contains(next.getPid())) {
-				version.removeServerAuth(next);
-			} else {
-				next.setOrder(index++);
-			}
-		}
-
-		version = myServiceRegistry.saveServiceVersion(version);
-
-		@SuppressWarnings("unchecked")
-		T retVal = (T) version.toDto();
-
-		return retVal;
-	}
-
-	@Override
-	public GUser saveUser(GUser theUser) throws UnexpectedFailureException, ProcessingException {
-		ourLog.info("Saving user with PID {}", theUser.getPid());
-
-		PersUser user = fromUi(theUser);
-
-		user = mySecurityService.saveServiceUser(user);
-
-		return toUi(user, false);
-	}
-
-	@Override
-	public String suggestNewVersionNumber(Long theDomainPid, Long theServicePid) {
-		Validate.throwIllegalArgumentExceptionIfNotPositive(theDomainPid, "DomainPID");
-		Validate.throwIllegalArgumentExceptionIfNotPositive(theServicePid, "ServicePID");
-
-		PersService service = myDao.getServiceByPid(theServicePid);
-
-		for (int i = 1;; i++) {
-			String name = i + ".0";
-			if (service.getVersionWithId(name) == null) {
-				return name;
-			}
-		}
-
-	}
-
-	@Override
-	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long thePid, String theRequestedByString) throws ProcessingException {
-		ourLog.info("Testing single fire of service version {}", thePid);
-		Date transactionTime = new Date();
-
-		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(thePid);
-		if (svcVer == null) {
-			throw new IllegalArgumentException("Unknown service version: " + thePid);
-		}
-
-		HttpRequestBean request = new HttpRequestBean();
-		request.setInputReader(new StringReader(theMessageText));
-		request.setPath(svcVer.getDefaultProxyPath());
-		request.setQuery("");
-		request.setRequestHostIp("127.0.0.1");
-		request.setRequestType(RequestType.POST);
-
-		GServiceVersionSingleFireResponse retVal = new GServiceVersionSingleFireResponse();
-		try {
-			SidechannelOrchestratorResponseBean response = myOrchestrator.handleSidechannelRequest(thePid, theMessageText, theContentType, theRequestedByString);
-
-			retVal.setAuthorizationOutcome(AuthorizationOutcomeEnum.AUTHORIZED);
-			retVal.setDomainName(svcVer.getService().getDomain().getDomainName());
-			retVal.setDomainPid(svcVer.getService().getDomain().getPid());
-			if (response.getHttpResponse().getSuccessfulUrl() != null) {
-				retVal.setImplementationUrlHref(response.getHttpResponse().getSuccessfulUrl().getUrl());
-				retVal.setImplementationUrlId(response.getHttpResponse().getSuccessfulUrl().getUrlId());
-				retVal.setImplementationUrlPid(response.getHttpResponse().getSuccessfulUrl().getPid());
-			}
-
-			List<Pair<String>> requestHeaders = new ArrayList<Pair<String>>();
-			requestHeaders.add(new Pair<String>("Content-Type", svcVer.getProtocol().getRequestContentType()));
-
-			retVal.setRequestContentType(svcVer.getProtocol().getRequestContentType());
-			retVal.setRequestHeaders(requestHeaders);
-
-			retVal.setRequestMessage(theMessageText);
-			retVal.setResponseContentType(response.getResponseContentType());
-			retVal.setResponseHeaders(response.getHttpResponse().getResponseHeadersAsPairList());
-			retVal.setResponseMessage(response.getResponseBody());
-			retVal.setServiceName(svcVer.getService().getServiceName());
-			retVal.setServicePid(svcVer.getService().getPid());
-			retVal.setServiceVersionId(svcVer.getVersionId());
-			retVal.setServiceVersionPid(svcVer.getPid());
-			retVal.setTransactionMillis(response.getHttpResponse().getResponseTime());
-			retVal.setTransactionTime(transactionTime);
-
-		} catch (Exception e) {
-			ourLog.error("Failed to invoke service", e);
-			retVal.setOutcomeDescription("Failed with internal exception: " + e.getMessage());
-		}
-
-		return retVal;
-	}
-
-	private int defaultInteger(Integer theInt) {
-		return theInt != null ? theInt : 0;
-	}
-
-	@EJB
-	private IRuntimeStatusQueryLocal myRuntimeStatusQuerySvc;
-
-	// private void extractStatus(int theNumMinsBack, List<Integer> the60MinInvCount, List<Long> the60minTime, PersServiceVersionMethod nextMethod) throws ProcessingException {
-	// IRuntimeStatus statusSvc = myStatusSvc;
-	// extractSuccessfulInvocationInvocationTimes(myConfigSvc.getConfig(), theNumMinsBack, the60MinInvCount, the60minTime, nextMethod, statusSvc);
-	// }
 
 	private BasePersAuthenticationHost fromUi(BaseDtoAuthenticationHost theAuthHost) {
 		BasePersAuthenticationHost retVal = null;
@@ -1209,6 +450,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		return retVal;
 	}
+
 
 	private BasePersMonitorRule fromUi(BaseDtoMonitorRule theRule) throws ProcessingException {
 
@@ -1443,25 +685,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	// private GHttpClientConfig toUi(PersHttpClientConfig theConfig) {
-	// GHttpClientConfig retVal = new GHttpClientConfig();
-	//
-	// if (theConfig.getPid() > 0) {
-	// retVal.setPid(theConfig.getPid());
-	// }
-	//
-	// retVal.setId(theConfig.getId());
-	// retVal.setName(theConfig.getName());
-	// retVal.setCircuitBreakerEnabled(theConfig.isCircuitBreakerEnabled());
-	// retVal.setCircuitBreakerTimeBetweenResetAttempts(theConfig.getCircuitBreakerTimeBetweenResetAttempts());
-	// retVal.setConnectTimeoutMillis(theConfig.getConnectTimeoutMillis());
-	// retVal.setFailureRetriesBeforeAborting(theConfig.getFailureRetriesBeforeAborting());
-	// retVal.setReadTimeoutMillis(theConfig.getReadTimeoutMillis());
-	// retVal.setUrlSelectionPolicy(theConfig.getUrlSelectionPolicy());
-	//
-	// return retVal;
-	// }
-
 	private PersUserServiceVersionPermission fromUi(GUserServiceVersionPermission theObj) {
 		PersUserServiceVersionPermission retVal = new PersUserServiceVersionPermission();
 		retVal.setPid(theObj.getPidOrNull());
@@ -1483,6 +706,86 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
+	@Override
+	public Collection<DtoStickySessionUrlBinding> getAllStickySessions() {
+		flushOutstandingStats();
+
+		Collection<PersStickySessionUrlBinding> sessions = myDao.getAllStickySessions();
+		Collection<DtoStickySessionUrlBinding> retVal = new ArrayList<DtoStickySessionUrlBinding>();
+		for (PersStickySessionUrlBinding next : sessions) {
+			retVal.add(next.toDao());
+		}
+		return retVal;
+	}
+
+	@Override
+	public long getDefaultHttpClientConfigPid() {
+		return myDao.getHttpClientConfigs().iterator().next().getPid();
+	}
+
+	@Override
+	public GDomain getDomainByPid(long theDomain) throws ProcessingException, UnexpectedFailureException {
+		PersDomain domain = myDao.getDomainByPid(theDomain);
+		if (domain != null) {
+			return domain.toDto();
+		}
+		return null;
+	}
+
+	@Override
+	public long getDomainPid(String theDomainId) throws ProcessingException {
+		PersDomain domain = myDao.getDomainById(theDomainId);
+		if (domain == null) {
+			throw new ProcessingException("Unknown ID: " + theDomainId);
+		}
+		return domain.getPid();
+	}
+
+	@Override
+	public DtoLibraryMessage getLibraryMessage(long theMessagePid) throws ProcessingException {
+		return toUi(myDao.getLibraryMessageByPid(theMessagePid), true);
+	}
+
+	@Override
+	public Collection<DtoLibraryMessage> getLibraryMessages(HierarchyEnum theType, long thePid, boolean theLoadContents) throws ProcessingException {
+
+		Collection<PersLibraryMessage> msgs = null;
+		switch (theType) {
+		case DOMAIN:
+			msgs = myDao.getLibraryMessagesWhichApplyToDomain(thePid);
+			break;
+		case SERVICE:
+			msgs = myDao.getLibraryMessagesWhichApplyToService(thePid);
+			break;
+		case VERSION:
+			msgs = myDao.getLibraryMessagesWhichApplyToServiceVersion(thePid);
+			break;
+		case METHOD:
+			break;
+		}
+
+		if (msgs == null) {
+			throw new IllegalArgumentException("Invalid type: " + theType);
+		}
+
+		return toUiCollectionLibraryMessages(msgs, theLoadContents);
+	}
+
+	@Override
+	public Collection<DtoLibraryMessage> getLibraryMessagesForService(long thePid, boolean theLoadContents) throws ProcessingException {
+		Collection<PersLibraryMessage> msgs = myDao.getLibraryMessagesWhichApplyToService(thePid);
+		return toUiCollectionLibraryMessages(msgs, theLoadContents);
+	}
+
+	@Override
+	public long getServicePid(long theDomainPid, String theServiceId) throws ProcessingException {
+		PersService service = myDao.getServiceById(theDomainPid, theServiceId);
+		if (service == null) {
+			throw new ProcessingException("Unknown ID: " + theServiceId);
+		}
+		return service.getPid();
+	}
+
 	private boolean hasAnything(Set<?>... theSets) {
 		for (Set<?> next : theSets) {
 			if (next != null && next.isEmpty() == false) {
@@ -1490,6 +793,28 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public Collection<GMonitorRuleFiring> loadAllActiveRuleFirings() {
+		Collection<GMonitorRuleFiring> retVal = new ArrayList<GMonitorRuleFiring>();
+		List<PersMonitorRuleFiring> firings = myDao.loadMonitorRuleFiringsWhichAreActive();
+		for (PersMonitorRuleFiring nextFiring : firings) {
+			retVal.add(toUi(nextFiring));
+		}
+		return retVal;
+	}
+
+	@Override
+	public BaseDtoAuthenticationHost loadAuthenticationHost(long thePid) throws ProcessingException {
+		ourLog.info("Loading authentication host with PID: {}", thePid);
+
+		BasePersAuthenticationHost authHost = myDao.getAuthenticationHostByPid(thePid);
+		if (authHost == null) {
+			throw new ProcessingException("Unknown authentication host: " + thePid);
+		}
+
+		return toUi(authHost);
 	}
 
 	private DtoAuthenticationHostList loadAuthHostList() {
@@ -1501,6 +826,16 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
+	@Override
+	public GConfig loadConfig() throws UnexpectedFailureException {
+		return toUi(myConfigSvc.getConfig());
+	}
+
+	@Override
+	public GDomainList loadDomainList() throws ProcessingException, UnexpectedFailureException {
+		Set<Long> empty = Collections.emptySet();
+		return loadDomainList(empty, empty, empty, empty, empty, null);
+	}
 
 	private GDomainList loadDomainList(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, Set<Long> theLoadUrlStats,
 			StatusesBean theStatuses) throws UnexpectedFailureException {
@@ -1521,6 +856,298 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return configList;
 	}
 
+	@Override
+	public Collection<DtoLibraryMessage> loadLibraryMessages() throws ProcessingException {
+		ArrayList<DtoLibraryMessage> retVal = new ArrayList<DtoLibraryMessage>();
+		for (PersLibraryMessage next : myDao.loadLibraryMessages()) {
+			retVal.add(toUi(next, false));
+		}
+		return retVal;
+	}
+
+	@Override
+	public ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) throws ProcessingException, UnexpectedFailureException {
+		flushOutstandingStats();
+
+		ModelUpdateResponse retVal = new ModelUpdateResponse();
+
+		if (theRequest.isLoadHttpClientConfigs()) {
+			GHttpClientConfigList configList = loadHttpClientConfigList();
+			retVal.setHttpClientConfigList(configList);
+		}
+
+		if (theRequest.isLoadUsers()) {
+			GUserList userList = loadUserList(false);
+			retVal.setUserList(userList);
+		}
+
+		if (theRequest.isLoadAuthHosts()) {
+			DtoAuthenticationHostList hostList = loadAuthHostList();
+			retVal.setAuthenticationHostList(hostList);
+		}
+
+		Set<Long> loadDomStats = theRequest.getDomainsToLoadStats();
+		Set<Long> loadSvcStats = theRequest.getServicesToLoadStats();
+		Set<Long> loadVerStats = theRequest.getVersionsToLoadStats();
+		Set<Long> loadVerMethodStats = theRequest.getVersionMethodsToLoadStats();
+		Set<Long> loadUrlStats = theRequest.getUrlsToLoadStats();
+
+		if (theRequest.isLoadAllUrlStats()) {
+			loadUrlStats = Collections.singleton(URL_PID_TO_LOAD_ALL);
+		}
+		
+		StatusesBean statuses = null;
+		if (hasAnything(loadDomStats, loadSvcStats, loadVerStats, loadVerMethodStats, loadUrlStats)) {
+			statuses = myDao.loadAllStatuses();
+		}
+
+		GDomainList domainList = loadDomainList(loadDomStats, loadSvcStats, loadVerStats, loadVerMethodStats, loadUrlStats, statuses);
+
+		retVal.setDomainList(domainList);
+
+		for (PersNodeStatus next : myRuntimeStatusQuerySvc.getAllNodeStatuses()) {
+			retVal.getNodeStatuses().add(next.toDao());
+		}
+
+		return retVal;
+	}
+
+	// private void extractStatus(int theNumMinsBack, List<Integer> the60MinInvCount, List<Long> the60minTime, PersServiceVersionMethod nextMethod) throws ProcessingException {
+	// IRuntimeStatus statusSvc = myStatusSvc;
+	// extractSuccessfulInvocationInvocationTimes(myConfigSvc.getConfig(), theNumMinsBack, the60MinInvCount, the60minTime, nextMethod, statusSvc);
+	// }
+
+	@Override
+	public BaseDtoMonitorRule loadMonitorRuleAndDetailedSatistics(long theRulePid) {
+		return myDao.getMonitorRule(theRulePid).toDao(true);
+	}
+
+	@Override
+	public List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart) {
+
+		Set<BasePersServiceVersion> allSvcVers;
+		if (theDomainPid != null) {
+			assert theServicePid == null;
+			assert theServiceVersionPid == null;
+			PersDomain domain = myServiceRegistry.getDomainByPid(theDomainPid);
+			allSvcVers = domain.getAllServiceVersions();
+		} else if (theServicePid != null) {
+			assert theDomainPid == null;
+			assert theServiceVersionPid == null;
+			PersService service = myServiceRegistry.getServiceByPid(theServicePid);
+			allSvcVers = service.getAllServiceVersions();
+		} else if (theServiceVersionPid != null) {
+			assert theServicePid == null;
+			assert theDomainPid == null;
+			allSvcVers = Collections.singleton(myServiceRegistry.getServiceVersionByPid(theServiceVersionPid));
+		} else {
+			throw new NullPointerException("No domain/service/svcver pid provided!");
+		}
+
+		List<GMonitorRuleFiring> retVal = new ArrayList<GMonitorRuleFiring>();
+		List<PersMonitorRuleFiring> firings = myDao.loadMonitorRuleFirings(allSvcVers, theStart);
+		for (PersMonitorRuleFiring next : firings) {
+			retVal.add(toUi(next));
+		}
+
+		// Set<Long> svcVerPids = new HashSet<Long>();
+		// for (BasePersServiceVersion basePersServiceVersion : allSvcVers) {
+		//
+		// }
+
+		return retVal;
+	}
+
+	@Override
+	public GMonitorRuleList loadMonitorRuleList() throws ProcessingException, UnexpectedFailureException {
+		GMonitorRuleList retVal = new GMonitorRuleList();
+
+		Collection<BasePersMonitorRule> allRules = myDao.getMonitorRules();
+		for (BasePersMonitorRule persMonitorRule : allRules) {
+			retVal.add(persMonitorRule.toDao(false));
+		}
+
+		return retVal;
+	}
+
+	@Override
+	public GRecentMessage loadRecentMessageForServiceVersion(long thePid) throws ProcessingException {
+		PersServiceVersionRecentMessage msg = myDao.loadRecentMessageForServiceVersion(thePid);
+		if (msg == null) {
+			throw new ProcessingException("Unable to find transaction with PID " + thePid + ". Maybe it has been purged?");
+		}
+		return msg.toDto(true);
+	}
+
+	@Override
+	public GRecentMessage loadRecentMessageForUser(long thePid) throws ProcessingException {
+		PersUserRecentMessage msg = myDao.loadRecentMessageForUser(thePid);
+		if (msg == null) {
+			throw new ProcessingException("Unable to find transaction with PID " + thePid + ". Maybe it has been purged?");
+		}
+		return msg.toDto(true);
+	}
+
+	@Override
+	public GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid) {
+		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
+
+		GRecentMessageLists retVal = new GRecentMessageLists();
+		retVal.setKeepSuccess(defaultInteger(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.SUCCESS)));
+		retVal.setKeepFail(defaultInteger(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.FAIL)));
+		retVal.setKeepFault(defaultInteger(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.FAULT)));
+		retVal.setKeepSecurityFail(defaultInteger(svcVer.determineKeepNumRecentTransactions(ResponseTypeEnum.SECURITY_FAIL)));
+
+		if (retVal.getKeepSuccess() > 0) {
+			retVal.setSuccessList(toUi(myDao.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.SUCCESS), true));
+		}
+
+		if (retVal.getKeepFail() > 0) {
+			retVal.setFailList(toUi(myDao.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.FAIL), true));
+		}
+
+		if (retVal.getKeepSecurityFail() > 0) {
+			retVal.setSecurityFailList(toUi(myDao.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.SECURITY_FAIL), true));
+		}
+
+		if (retVal.getKeepFault() > 0) {
+			retVal.setFaultList(toUi(myDao.getServiceVersionRecentMessages(svcVer, ResponseTypeEnum.FAULT), true));
+		}
+
+		ourLog.info("Returning recent message list for service version {} - {}", theServiceVersionPid, retVal);
+
+		return retVal;
+	}
+
+	@Override
+	public GRecentMessageLists loadRecentTransactionListForUser(long thePid) {
+		PersUser user = myDao.getUser(thePid);
+		BasePersAuthenticationHost authHost = user.getAuthenticationHost();
+
+		GRecentMessageLists retVal = new GRecentMessageLists();
+		retVal.setKeepSuccess(defaultInteger(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.SUCCESS)));
+		retVal.setKeepFail(defaultInteger(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.FAIL)));
+		retVal.setKeepFault(defaultInteger(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.FAULT)));
+		retVal.setKeepSecurityFail(defaultInteger(authHost.determineKeepNumRecentTransactions(ResponseTypeEnum.SECURITY_FAIL)));
+
+		if (retVal.getKeepSuccess() > 0) {
+			retVal.setSuccessList(toUi(myDao.getUserRecentMessages(user, ResponseTypeEnum.SUCCESS), true));
+		}
+
+		if (retVal.getKeepFail() > 0) {
+			retVal.setFailList(toUi(myDao.getUserRecentMessages(user, ResponseTypeEnum.FAIL), true));
+		}
+
+		if (retVal.getKeepSecurityFail() > 0) {
+			retVal.setSecurityFailList(toUi(myDao.getUserRecentMessages(user, ResponseTypeEnum.SECURITY_FAIL), true));
+		}
+
+		if (retVal.getKeepFault() > 0) {
+			retVal.setFaultList(toUi(myDao.getUserRecentMessages(user, ResponseTypeEnum.FAULT), true));
+		}
+
+		ourLog.info("Returning recent message list for service version {} - {}", thePid, retVal);
+
+		return retVal;
+	}
+
+	@Override
+	public GSoap11ServiceVersionAndResources loadServiceVersion(long theServiceVersionPid) throws UnexpectedFailureException {
+		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
+		if (svcVer == null) {
+			throw new IllegalArgumentException("Unknown service version PID: " + theServiceVersionPid);
+		}
+
+		Set<Long> methodPids = new HashSet<Long>();
+		for (PersServiceVersionMethod next : svcVer.getMethods()) {
+			methodPids.add(next.getPid());
+		}
+
+		Set<Long> urlPids = new HashSet<Long>();
+		for (PersServiceVersionUrl next : svcVer.getUrls()) {
+			urlPids.add(next.getPid());
+		}
+
+		StatusesBean statuses = myDao.loadAllStatuses();
+
+		Set<Long> svcVerPids=Collections.singleton(theServiceVersionPid);
+		BaseDtoServiceVersion uiService = svcVer.toDto(svcVerPids, myRuntimeStatusQuerySvc, statuses, methodPids, urlPids);
+		GSoap11ServiceVersionAndResources retVal = toUi(uiService, svcVer);
+		return retVal;
+	}
+
+	@Override
+	public GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws UnexpectedFailureException {
+
+		BasePersServiceVersion ver = myDao.getServiceVersionByPid(theVersionPid);
+
+		final Map<Long, int[]> methodPidToSuccessCount = new HashMap<Long, int[]>();
+		final Map<Long, int[]> methodPidToFailCount = new HashMap<Long, int[]>();
+		final Map<Long, int[]> methodPidToSecurityFailCount = new HashMap<Long, int[]>();
+		final Map<Long, int[]> methodPidToFaultCount = new HashMap<Long, int[]>();
+
+		final List<Long> statsTimestamps = new ArrayList<Long>();
+
+		for (final PersServiceVersionMethod nextMethod : ver.getMethods()) {
+
+			StatsAccumulator accumulator = new StatsAccumulator();
+			myRuntimeStatusQuerySvc.extract60MinuteMethodStats(nextMethod, accumulator);
+
+			methodPidToSuccessCount.put(nextMethod.getPid(), toIntArray(accumulator.getSuccessCounts()));
+			methodPidToFailCount.put(nextMethod.getPid(), toIntArray(accumulator.getFailCounts()));
+			methodPidToSecurityFailCount.put(nextMethod.getPid(), toIntArray(accumulator.getSecurityFailCounts()));
+			methodPidToFaultCount.put(nextMethod.getPid(), toIntArray(accumulator.getFaultCounts()));
+		}
+
+		GServiceVersionDetailedStats retVal = new GServiceVersionDetailedStats();
+
+		retVal.setMethodPidToSuccessCount(methodPidToSuccessCount);
+		retVal.setMethodPidToFailCount(methodPidToFailCount);
+		retVal.setMethodPidToSecurityFailCount(methodPidToSecurityFailCount);
+		retVal.setMethodPidToFaultCount(methodPidToFaultCount);
+
+		retVal.setStatsTimestamps(statsTimestamps);
+
+		return retVal;
+	}
+
+	@Override
+	public GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(DtoServiceVersionSoap11 theService, GHttpClientConfig theHttpClientConfig, String theWsdlUrl) throws ProcessingException, UnexpectedFailureException {
+		Validate.notNull(theService, "Definition");
+		Validate.notBlank(theWsdlUrl, "URL");
+
+		ourLog.info("Loading service version from URL: {}", theWsdlUrl);
+		PersHttpClientConfig httpConfig = PersHttpClientConfig.fromDto(theHttpClientConfig, myDao);
+		PersServiceVersionSoap11 def = (PersServiceVersionSoap11) myInvokerSoap11.introspectServiceFromUrl(httpConfig, theWsdlUrl);
+
+		theService.getMethodList().clear();
+		for (PersServiceVersionMethod next : def.getMethods()) {
+			theService.getMethodList().add(next.toDao(false, myRuntimeStatusQuerySvc));
+		}
+
+		// Only add URLs if there aren't any already defined for this version
+		if (theService.getUrlList().size() == 0) {
+			for (PersServiceVersionUrl next : def.getUrls()) {
+				theService.getUrlList().add(next.toDto(false, (StatusesBean) null, myRuntimeStatusQuerySvc));
+			}
+		}
+
+		GSoap11ServiceVersionAndResources retVal = toUi(theService, def);
+		return retVal;
+	}
+
+	@Override
+	public GUser loadUser(long thePid, boolean theLoadStats) throws ProcessingException, UnexpectedFailureException {
+		ourLog.info("Loading user {}", thePid);
+
+		PersUser persUser = myDao.getUser(thePid);
+		if (persUser == null) {
+			throw new ProcessingException("Unknown user PID: " + thePid);
+		}
+
+		return toUi(persUser, theLoadStats);
+	}
+
 	private GUserList loadUserList(boolean theLoadStats) throws UnexpectedFailureException {
 		GUserList retVal = new GUserList();
 		Collection<PersUser> users = myDao.getAllUsersAndInitializeThem();
@@ -1530,49 +1157,524 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	static int[] toLatency(List<Long> theTimes, List<Integer> theCountsEntry0, List<Integer> theCountsEntry1, List<Integer> theCountsEntry2) {
-		return toLatency(theTimes, theCountsEntry0, theCountsEntry1, theCountsEntry2, null);
+	@Override
+	public GPartialUserList loadUsers(PartialUserListRequest theRequest) throws ProcessingException, UnexpectedFailureException {
+		GPartialUserList retVal = new GPartialUserList();
+
+		ourLog.info("Loading user list: " + theRequest.toString());
+
+		for (PersUser next : myDao.getAllUsersAndInitializeThem()) {
+			retVal.add(toUi(next, theRequest.isLoadStats()));
+		}
+
+		return retVal;
 	}
 
-	private static int[] toLatency(List<Long> theTimes, List<Integer> theCountsEntry0, List<Integer> theCountsEntry1, List<Integer> theCountsEntry2, List<Integer> theCountsEntry3) {
-		List<List<Integer>> entries = new ArrayList<List<Integer>>(3);
-		entries.add(theCountsEntry0);
-		entries.add(theCountsEntry1);
-		entries.add(theCountsEntry2);
-		entries.add(theCountsEntry3);
-		return toLatency2(theTimes, entries);
+	@Override
+	public GServiceVersionUrl resetCircuitBreaker(long theUrlPid) throws UnexpectedFailureException {
+		PersServiceVersionUrl url = myServiceRegistry.resetCircuitBreaker(theUrlPid);
+		PersServiceVersionUrlStatus urlStatus = url.getStatus();
+		GServiceVersionUrl retVal = new GServiceVersionUrl();
+		if (url.getPid() != null) {
+			retVal.setPid(url.getPid());
+		}
+		retVal.setId(url.getUrlId());
+		retVal.setUrl(url.getUrl());
+
+		if (true) {
+			if (urlStatus.getStatus() == StatusEnum.DOWN) {
+				if (urlStatus.getNextCircuitBreakerReset() != null) {
+					retVal.setStatsNextCircuitBreakerReset(urlStatus.getNextCircuitBreakerReset());
+				}
+			}
+
+			retVal.setStatsLastFailure(urlStatus.getLastFail());
+			retVal.setStatsLastFailureMessage(urlStatus.getLastFailMessage());
+			retVal.setStatsLastFailureStatusCode(urlStatus.getLastFailStatusCode());
+			retVal.setStatsLastFailureContentType(urlStatus.getLastFailContentType());
+
+			retVal.setStatsLastSuccess(urlStatus.getLastSuccess());
+			retVal.setStatsLastSuccessMessage(urlStatus.getLastSuccessMessage());
+			retVal.setStatsLastSuccessStatusCode(urlStatus.getLastSuccessStatusCode());
+			retVal.setStatsLastSuccessContentType(urlStatus.getLastSuccessContentType());
+
+			retVal.setStatsLastFault(urlStatus.getLastFault());
+			retVal.setStatsLastFaultMessage(urlStatus.getLastFaultMessage());
+			retVal.setStatsLastFaultStatusCode(urlStatus.getLastFaultStatusCode());
+			retVal.setStatsLastFaultContentType(urlStatus.getLastFaultContentType());
+
+			retVal.setStatus(urlStatus.getStatus());
+			retVal.setStatsNextCircuitBreakerReset(urlStatus.getNextCircuitBreakerReset());
+
+			StatsAccumulator accumulator = new StatsAccumulator();
+			myRuntimeStatusQuerySvc.extract60MinuteServiceVersionUrlStatistics(url, accumulator);
+			accumulator.populateDto(retVal);
+
+			retVal.setStatsInitialized(new Date());
+
+		}
+		return retVal;
 	}
 
-	private static int[] toLatency2(List<Long> theTimes, List<List<Integer>> theCountsEntries) {
-		if (theCountsEntries == null || theCountsEntries.size() == 0) {
-			throw new IllegalArgumentException("No counts given");
+	// private GHttpClientConfig toUi(PersHttpClientConfig theConfig) {
+	// GHttpClientConfig retVal = new GHttpClientConfig();
+	//
+	// if (theConfig.getPid() > 0) {
+	// retVal.setPid(theConfig.getPid());
+	// }
+	//
+	// retVal.setId(theConfig.getId());
+	// retVal.setName(theConfig.getName());
+	// retVal.setCircuitBreakerEnabled(theConfig.isCircuitBreakerEnabled());
+	// retVal.setCircuitBreakerTimeBetweenResetAttempts(theConfig.getCircuitBreakerTimeBetweenResetAttempts());
+	// retVal.setConnectTimeoutMillis(theConfig.getConnectTimeoutMillis());
+	// retVal.setFailureRetriesBeforeAborting(theConfig.getFailureRetriesBeforeAborting());
+	// retVal.setReadTimeoutMillis(theConfig.getReadTimeoutMillis());
+	// retVal.setUrlSelectionPolicy(theConfig.getUrlSelectionPolicy());
+	//
+	// return retVal;
+	// }
+
+	@Override
+	public DtoAuthenticationHostList saveAuthenticationHost(BaseDtoAuthenticationHost theAuthHost) throws ProcessingException {
+		Validate.notNull(theAuthHost);
+
+		BasePersAuthenticationHost host = fromUi(theAuthHost);
+
+		if (theAuthHost.getPid() > 0) {
+			BasePersAuthenticationHost existingHost = myDao.getAuthenticationHostByPid(theAuthHost.getPid());
+			existingHost.merge(host);
+			ourLog.info("Saving existing authentication host of type {} with id {} / {}", new Object[] { host.getClass().getSimpleName(), theAuthHost.getPid(), theAuthHost.getModuleId() });
+			myDao.saveAuthenticationHost(existingHost);
+		} else {
+			ourLog.info("Saving new authentication host of type {} with id {} / {}", new Object[] { host.getClass().getSimpleName(), theAuthHost.getPid(), theAuthHost.getModuleId() });
+			myDao.saveAuthenticationHost(host);
 		}
 
-		int[] counts = new int[theTimes.size()];
+		return loadAuthHostList();
+	}
 
-		for (List<Integer> nextEntry : theCountsEntries) {
-			if (nextEntry == null) {
-				continue;
+	@Override
+	public GConfig saveConfig(GConfig theConfig) throws UnexpectedFailureException {
+		ourLog.info("Saving config");
+
+		ourLog.info("Proxy config now contains the following URL Bases: {}", theConfig.getProxyUrlBases());
+
+		PersConfig existing = myConfigSvc.getConfig();
+		existing.merge(fromUi(theConfig));
+
+		PersConfig newCfg = myConfigSvc.saveConfig(existing);
+
+		return toUi(newCfg);
+
+		//
+		// PersConfig existing =
+		// myPersSvc.getConfigByPid(PersConfig.DEFAULT_ID);
+		// existing.merge(fromUi(theConfig));
+		// PersConfig retVal = myPersSvc.saveConfig(existing);
+		// return toUi(retVal);
+	}
+
+	@Override
+	public GDomainList saveDomain(GDomain theDomain) throws ProcessingException, UnexpectedFailureException {
+		ourLog.info("Saving domain with PID {}", theDomain.getPid());
+
+		PersDomain domain = myDao.getDomainByPid(theDomain.getPid());
+		PersDomain newDomain = fromUi(theDomain);
+		domain.merge(newDomain);
+
+		myServiceRegistry.saveDomain(domain);
+
+		// TODO: make this synchronous? (ie don't use a cached version, or force a cache refresh or something?
+		return loadDomainList();
+	}
+
+	@Override
+	public GHttpClientConfig saveHttpClientConfig(GHttpClientConfig theConfig, byte[] theNewTruststore, String theNewTruststorePass, byte[] theNewKeystore, String theNewKeystorePass)
+			throws ProcessingException, UnexpectedFailureException {
+		Validate.notNull(theConfig, "HttpClientConfig");
+
+		PersHttpClientConfig existing = null;
+		boolean isDefault = false;
+
+		if (theConfig.getPid() <= 0) {
+			ourLog.info("Saving new HTTP client config");
+		} else {
+			ourLog.info("Saving HTTP client config ID[{}]", theConfig.getPid());
+			existing = myDao.getHttpClientConfig(theConfig.getPid());
+			if (existing == null) {
+				throw new ProcessingException("Unknown client config PID: " + theConfig.getPid());
 			}
-			assert nextEntry.size() == theTimes.size();
-			int index = 0;
-			for (int next : nextEntry) {
-				counts[index] = counts[index] + next;
-				index++;
+			if (existing.getId().equals(GHttpClientConfig.DEFAULT_ID)) {
+				isDefault = true;
 			}
 		}
 
-		int[] retVal = new int[counts.length];
-		int prevValue = -1;
-		for (int i = 0; i < counts.length; i++) {
-			if (counts[i] > 0) {
-				retVal[i] = (int) Math.min(theTimes.get(i) / counts[i], Integer.MAX_VALUE);
-				prevValue = retVal[i];
-			} else if (prevValue > -1) {
-				retVal[i] = prevValue;
+		PersHttpClientConfig config = PersHttpClientConfig.fromDto(theConfig, myDao);
+		if (existing != null) {
+			config.setOptLock(existing.getOptLock());
+		}
+
+		if (isDefault) {
+			config.setId(config.getId());
+			config.setName(config.getName());
+		}
+
+		if (theNewTruststore != null) {
+			ourLog.info("HTTP client config has a truststore defined");
+			config.setTlsTruststore(theNewTruststore);
+			config.setTlsTruststorePassword(theNewTruststorePass);
+		}else {
+			ourLog.info("HTTP client config has no truststore defined");
+			config.setTlsTruststore(null);
+			config.setTlsTruststorePassword(null);
+		}
+
+		if (theNewKeystore != null) {
+			ourLog.info("HTTP client config has a keystore defined");
+			config.setTlsKeystore(theNewKeystore);
+			config.setTlsKeystorePassword(theNewKeystorePass);
+		}else {
+			ourLog.info("HTTP client config has no keystore defined");
+			config.setTlsKeystore(null);
+			config.setTlsKeystorePassword(null);
+		}
+
+		return myServiceRegistry.saveHttpClientConfig(config).toDto(myKeystoreSvc);
+	}
+
+
+	@Override
+	public void saveLibraryMessage(DtoLibraryMessage theMessage) throws ProcessingException {
+		ourLog.info("Saving library message");
+
+		PersLibraryMessage msg = fromUi(theMessage);
+		myDao.saveLibraryMessage(msg);
+	}
+
+	@Override
+	public void saveMonitorRule(BaseDtoMonitorRule theRule) throws UnexpectedFailureException, ProcessingException {
+		BasePersMonitorRule rule = fromUi(theRule);
+		myMonitorSvc.saveRule(rule);
+	}
+
+	@Override
+	public GDomainList saveService(GService theService) throws ProcessingException, UnexpectedFailureException {
+		ourLog.info("Saving service {}", theService.getPid());
+
+		PersService service = myDao.getServiceByPid(theService.getPid());
+		if (service == null) {
+			throw new ProcessingException("Unknown service PID " + theService.getPid());
+		}
+
+		PersService newService = fromUi(theService);
+		service.merge(newService);
+
+		myServiceRegistry.saveService(service);
+
+		// TODO: make this synchronous? (ie don't use a cached version, or force a cache refresh or something?
+		return loadDomainList();
+	}
+
+	@Override
+	public <T extends BaseDtoServiceVersion> T saveServiceVersion(long theDomain, long theService, T theVersion, List<GResource> theResources) throws ProcessingException, UnexpectedFailureException {
+		Validate.notBlank(theVersion.getId(), "Version#ID");
+
+		ourLog.info("Adding service version {} to domain {} / service {}", new Object[] { theVersion.getPid(), theDomain, theService });
+
+		PersDomain domain = myDao.getDomainByPid(theDomain);
+		if (domain == null) {
+			throw new ProcessingException("Unknown domain ID: " + theDomain);
+		}
+
+		PersService service = myDao.getServiceByPid(theService);
+		if (service == null) {
+			throw new ProcessingException("Unknown service ID: " + theService);
+		}
+
+		if (!domain.equals(service.getDomain())) {
+			throw new ProcessingException("Service with ID " + theService + " is not a part of domain " + theDomain);
+		}
+
+		BasePersServiceVersion version = BasePersServiceVersion.fromDto(theVersion, service, myDao, myServiceRegistry);
+
+		Map<String, PersServiceVersionResource> uriToResource = version.getUriToResource();
+		Set<String> urls = new HashSet<String>();
+		for (GResource next : theResources) {
+			urls.add(next.getUrl());
+			if (uriToResource.containsKey(next.getUrl())) {
+				PersServiceVersionResource existing = uriToResource.get(next.getUrl());
+				existing.merge(fromUi(next, version));
+			} else {
+				uriToResource.put(next.getUrl(), fromUi(next, version));
+			}
+		}
+		for (Iterator<Map.Entry<String, PersServiceVersionResource>> iter = uriToResource.entrySet().iterator(); iter.hasNext();) {
+			if (!urls.contains(iter.next().getKey())) {
+				iter.remove();
 			}
 		}
 
+		/*
+		 * Urls
+		 */
+		urls = new HashSet<String>();
+		for (GServiceVersionUrl next : theVersion.getUrlList()) {
+			urls.add(next.getUrl());
+			PersServiceVersionUrl existing = version.getUrlWithUrl(next.getUrl());
+			if (existing != null) {
+				existing.merge(fromUi(next, version));
+			} else {
+				version.getUrls().add(fromUi(next, version));
+			}
+		}
+		for (Iterator<PersServiceVersionUrl> iter = version.getUrls().iterator(); iter.hasNext();) {
+			if (!urls.contains(iter.next().getUrl())) {
+				iter.remove();
+			}
+		}
+		int index = 0;
+		for (PersServiceVersionUrl next : version.getUrls()) {
+			next.setOrder(index++);
+		}
+
+		/*
+		 * Methods
+		 */
+
+		HashSet<String> methods = new HashSet<String>();
+		for (GServiceMethod next : theVersion.getMethodList()) {
+			methods.add(next.getName());
+			PersServiceVersionMethod existing = version.getMethod(next.getName());
+			if (existing != null) {
+				existing.merge(fromUi(next, version.getPid()));
+			} else {
+				version.addMethod(fromUi(next, version.getPid()));
+			}
+		}
+		version.retainOnlyMethodsWithNames(methods);
+		index = 0;
+		for (PersServiceVersionMethod next : version.getMethods()) {
+			next.setOrder(index++);
+		}
+
+		/*
+		 * Client Auths
+		 */
+		Set<Long> pids = new HashSet<Long>();
+		for (BaseDtoClientSecurity next : theVersion.getClientSecurityList()) {
+			PersBaseClientAuth<?> nextPers = fromUi(next, version);
+			if (nextPers.getPid() != null) {
+				PersBaseClientAuth<?> existing = version.getClientAuthWithPid(nextPers.getPid());
+				if (existing != null) {
+					existing.merge(nextPers);
+				} else {
+					pids.add(nextPers.getPid());
+				}
+				pids.add(nextPers.getPid());
+			} else {
+				nextPers = myDao.saveClientAuth(nextPers);
+				pids.add(nextPers.getPid());
+				version.addClientAuth(nextPers);
+			}
+		}
+		index = 0;
+		for (PersBaseClientAuth<?> next : new ArrayList<PersBaseClientAuth<?>>(version.getClientAuths())) {
+			if (next.getPid() != null && !pids.contains(next.getPid())) {
+				version.removeClientAuth(next);
+			} else {
+				next.setOrder(index++);
+			}
+		}
+
+		/*
+		 * Server Auths
+		 */
+		pids = new HashSet<Long>();
+		for (BaseDtoServerSecurity next : theVersion.getServerSecurityList()) {
+			if (next.getAuthHostPid() <= 0) {
+				throw new IllegalArgumentException("No auth host PID specified");
+			}
+
+			PersBaseServerAuth<?, ?> nextPers = fromUi(next, version);
+			if (nextPers.getPid() != null) {
+				PersBaseServerAuth<?, ?> existing = version.getServerAuthWithPid(nextPers.getPid());
+				if (existing != null) {
+					existing.merge(nextPers);
+				} else {
+					pids.add(nextPers.getPid());
+				}
+				pids.add(nextPers.getPid());
+			} else {
+				nextPers = myDao.saveServerAuth(nextPers);
+				pids.add(nextPers.getPid());
+				version.addServerAuth(nextPers);
+			}
+			version.addServerAuth(nextPers);
+		}
+		index = 0;
+		for (PersBaseServerAuth<?, ?> next : new ArrayList<PersBaseServerAuth<?, ?>>(version.getServerAuths())) {
+			if (next.getPid() != null && !pids.contains(next.getPid())) {
+				version.removeServerAuth(next);
+			} else {
+				next.setOrder(index++);
+			}
+		}
+
+		version = myServiceRegistry.saveServiceVersion(version);
+
+		@SuppressWarnings("unchecked")
+		T retVal = (T) version.toDto();
+
+		return retVal;
+	}
+
+	@Override
+	public GUser saveUser(GUser theUser) throws UnexpectedFailureException, ProcessingException {
+		ourLog.info("Saving user with PID {}", theUser.getPid());
+
+		PersUser user = fromUi(theUser);
+
+		user = mySecurityService.saveServiceUser(user);
+
+		return toUi(user, false);
+	}
+
+	/**
+	 * Unit test only
+	 */
+	void setConfigSvc(IConfigService theConfigSvc) {
+		myConfigSvc = theConfigSvc;
+	}
+
+	/**
+	 * Unit test only
+	 */
+	void setInvokerSoap11(IServiceInvokerSoap11 theInvokerSoap11) {
+		myInvokerSoap11 = theInvokerSoap11;
+	}
+
+	@VisibleForTesting
+	void setMonitorSvc(MonitorServiceBean theMonitorSvc) {
+		myMonitorSvc = theMonitorSvc;
+	}
+
+	void setPersSvc(DaoBean thePersSvc) {
+		assert myDao == null;
+		myDao = thePersSvc;
+	}
+
+	@VisibleForTesting
+	void setRuntimeStatusQuerySvcForUnitTests(IRuntimeStatusQueryLocal theStatsQSvc) {
+		myRuntimeStatusQuerySvc = theStatsQSvc;
+	}
+
+	/**
+	 * FOR UNIT TESTS ONLY
+	 */
+	@VisibleForTesting
+	void setRuntimeStatusSvc(RuntimeStatusBean theRs) {
+		myStatusSvc = theRs;
+	}
+
+	@VisibleForTesting
+	void setSchedulerServiceForTesting(IScheduler theMock) {
+		myScheduler = theMock;
+	}
+
+	/**
+	 * FOR UNIT TESTS ONLY
+	 */
+	void setSecuritySvc(SecurityServiceBean theSecSvc) {
+		mySecurityService = theSecSvc;
+	}
+
+	/**
+	 * FOR UNIT TESTS ONLY
+	 */
+	void setServiceRegistry(ServiceRegistryBean theSvcReg) {
+		myServiceRegistry = theSvcReg;
+	}
+
+
+	@Override
+	public String suggestNewVersionNumber(Long theDomainPid, Long theServicePid) {
+		Validate.throwIllegalArgumentExceptionIfNotPositive(theDomainPid, "DomainPID");
+		Validate.throwIllegalArgumentExceptionIfNotPositive(theServicePid, "ServicePID");
+
+		PersService service = myDao.getServiceByPid(theServicePid);
+
+		for (int i = 1;; i++) {
+			String name = i + ".0";
+			if (service.getVersionWithId(name) == null) {
+				return name;
+			}
+		}
+
+	}
+
+	@Override
+	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long thePid, String theRequestedByString) throws ProcessingException {
+		ourLog.info("Testing single fire of service version {}", thePid);
+		Date transactionTime = new Date();
+
+		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(thePid);
+		if (svcVer == null) {
+			throw new IllegalArgumentException("Unknown service version: " + thePid);
+		}
+
+		HttpRequestBean request = new HttpRequestBean();
+		request.setInputReader(new StringReader(theMessageText));
+		request.setPath(svcVer.getDefaultProxyPath());
+		request.setQuery("");
+		request.setRequestHostIp("127.0.0.1");
+		request.setRequestType(RequestType.POST);
+
+		GServiceVersionSingleFireResponse retVal = new GServiceVersionSingleFireResponse();
+		try {
+			SidechannelOrchestratorResponseBean response = myOrchestrator.handleSidechannelRequest(thePid, theMessageText, theContentType, theRequestedByString);
+
+			retVal.setAuthorizationOutcome(AuthorizationOutcomeEnum.AUTHORIZED);
+			retVal.setDomainName(svcVer.getService().getDomain().getDomainName());
+			retVal.setDomainPid(svcVer.getService().getDomain().getPid());
+			if (response.getHttpResponse().getSuccessfulUrl() != null) {
+				retVal.setImplementationUrlHref(response.getHttpResponse().getSuccessfulUrl().getUrl());
+				retVal.setImplementationUrlId(response.getHttpResponse().getSuccessfulUrl().getUrlId());
+				retVal.setImplementationUrlPid(response.getHttpResponse().getSuccessfulUrl().getPid());
+			}
+
+			List<Pair<String>> requestHeaders = new ArrayList<Pair<String>>();
+			requestHeaders.add(new Pair<String>("Content-Type", svcVer.getProtocol().getRequestContentType()));
+
+			retVal.setRequestContentType(svcVer.getProtocol().getRequestContentType());
+			retVal.setRequestHeaders(requestHeaders);
+
+			retVal.setRequestMessage(theMessageText);
+			retVal.setResponseContentType(response.getResponseContentType());
+			retVal.setResponseHeaders(response.getHttpResponse().getResponseHeadersAsPairList());
+			retVal.setResponseMessage(response.getResponseBody());
+			retVal.setServiceName(svcVer.getService().getServiceName());
+			retVal.setServicePid(svcVer.getService().getPid());
+			retVal.setServiceVersionId(svcVer.getVersionId());
+			retVal.setServiceVersionPid(svcVer.getPid());
+			retVal.setTransactionMillis(response.getHttpResponse().getResponseTime());
+			retVal.setTransactionTime(transactionTime);
+
+		} catch (Exception e) {
+			ourLog.error("Failed to invoke service", e);
+			retVal.setOutcomeDescription("Failed with internal exception: " + e.getMessage());
+		}
+
+		return retVal;
+	}
+
+	private int[] toIntArray(ArrayList<Integer> theList) {
+		int[] retVal = new int[theList.size()];
+		for (int i = 0; i < theList.size(); i++) {
+			if (theList.get(i) != null) {
+				retVal[i] = theList.get(i);
+			}
+		}
 		return retVal;
 	}
 
@@ -1725,7 +1827,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-
 	private GUser toUi(PersUser thePersUser, boolean theLoadStats) throws UnexpectedFailureException {
 		GUser retVal = new GUser();
 		retVal.setPid(thePersUser.getPid());
@@ -1811,68 +1912,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	/**
-	 * Convenience for Unit Tests
-	 */
-	GDomain addDomain(String theId, String theName) throws ProcessingException, UnexpectedFailureException {
-		GDomain domain = new GDomain();
-		domain.setId(theId);
-		domain.setName(theName);
-		GDomain retVal = addDomain(domain);
-		return retVal;
-	}
-
-	/**
-	 * Unit test only
-	 */
-	void setConfigSvc(IConfigService theConfigSvc) {
-		myConfigSvc = theConfigSvc;
-	}
-
-	/**
-	 * Unit test only
-	 */
-	void setInvokerSoap11(IServiceInvokerSoap11 theInvokerSoap11) {
-		myInvokerSoap11 = theInvokerSoap11;
-	}
-
-	@VisibleForTesting
-	void setMonitorSvc(MonitorServiceBean theMonitorSvc) {
-		myMonitorSvc = theMonitorSvc;
-	}
-
-	void setPersSvc(DaoBean thePersSvc) {
-		assert myDao == null;
-		myDao = thePersSvc;
-	}
-
-	/**
-	 * FOR UNIT TESTS ONLY
-	 */
-	@VisibleForTesting
-	void setRuntimeStatusSvc(RuntimeStatusBean theRs) {
-		myStatusSvc = theRs;
-	}
-
-	@VisibleForTesting
-	void setSchedulerServiceForTesting(IScheduler theMock) {
-		myScheduler = theMock;
-	}
-
-	/**
-	 * FOR UNIT TESTS ONLY
-	 */
-	void setSecuritySvc(SecurityServiceBean theSecSvc) {
-		mySecurityService = theSecSvc;
-	}
-
-	/**
-	 * FOR UNIT TESTS ONLY
-	 */
-	void setServiceRegistry(ServiceRegistryBean theSvcReg) {
-		myServiceRegistry = theSvcReg;
-	}
-
 	public static int addToInt(int theAddTo, long theNumberToAdd) {
 		long newValue = theAddTo + theNumberToAdd;
 		if (newValue > Integer.MAX_VALUE) {
@@ -1880,6 +1919,11 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 		return (int) newValue;
 	}
+
+	// public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatus theStatus, PersServiceVersionMethod theNextMethod, IWithStats theOperator, Date end) {
+	// Date start = new Date(end.getTime() - (theRange.getWithPresetRange().getNumMins() * 60 * 1000L));
+	// doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator, start, end);
+	// }
 
 	public static long addToLong(long theAddTo, long theNumberToAdd) {
 		long newValue = theAddTo + theNumberToAdd;
@@ -1892,53 +1936,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		Date end = new Date();
 
 		doWithStatsByMinute(theConfig, statusSvc, theMethod, theOperator, start, end);
-	}
-
-	// public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatus theStatus, PersServiceVersionMethod theNextMethod, IWithStats theOperator, Date end) {
-	// Date start = new Date(end.getTime() - (theRange.getWithPresetRange().getNumMins() * 60 * 1000L));
-	// doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator, start, end);
-	// }
-
-	public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatusQueryLocal theStatus, PersServiceVersionMethod theNextMethod,
-			IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator) {
-		Date end;
-		Date start;
-		if (theRange.getWithPresetRange() != null) {
-			if (theRange.getWithPresetRangeEndForUnitTest() != null) {
-				end = theRange.getWithPresetRangeEndForUnitTest();
-			} else {
-				end = new Date();
-			}
-			start = new Date(end.getTime() - (theRange.getWithPresetRange().getNumMins() * 60 * 1000L));
-		} else {
-			end = theRange.getNoPresetTo();
-			start = theRange.getNoPresetFrom();
-		}
-		doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator, start, end);
-	}
-
-	public static Date getDateXMinsAgoTruncatedToMinute(int theNumberOfMinutes) {
-		Date date60MinsAgo = new Date(System.currentTimeMillis() - (theNumberOfMinutes * DateUtils.MILLIS_PER_MINUTE));
-		Date date = DateUtils.truncate(date60MinsAgo, Calendar.MINUTE);
-		return date;
-	}
-
-	public static void growToSizeDouble(List<Double> theCountArray, int theIndex) {
-		while (theCountArray.size() <= (theIndex)) {
-			theCountArray.add(0.0);
-		}
-	}
-
-	public static void growToSizeInt(List<Integer> theCountArray, int theIndex) {
-		while (theCountArray.size() <= (theIndex)) {
-			theCountArray.add(0);
-		}
-	}
-
-	public static void growToSizeLong(List<Long> theCountArray, int theIndex) {
-		while (theCountArray.size() <= (theIndex)) {
-			theCountArray.add(0L);
-		}
 	}
 
 	public static void doWithStatsByMinute(PersConfig theConfig, IRuntimeStatusQueryLocal statusSvc, PersServiceVersionMethod theMethod,
@@ -1958,17 +1955,26 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 	}
 
-	private static Date doWithStatsSupportFindDate(Date date, InvocationStatsIntervalEnum interval) {
-		Date retVal = interval.truncate(date);
-		return retVal;
+	public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatusQueryLocal theStatus, PersServiceVersionMethod theNextMethod,
+			IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator) {
+		Date end;
+		Date start;
+		if (theRange.getWithPresetRange() != null) {
+			if (theRange.getWithPresetRangeEndForUnitTest() != null) {
+				end = theRange.getWithPresetRangeEndForUnitTest();
+			} else {
+				end = new Date();
+			}
+			start = new Date(end.getTime() - (theRange.getWithPresetRange().getNumMins() * 60 * 1000L));
+		} else {
+			end = theRange.getNoPresetTo();
+			start = theRange.getNoPresetFrom();
+		}
+		doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator, start, end);
 	}
 
-	static int[] toArray(ArrayList<Integer> theT60minCount) {
-		int[] retVal = new int[theT60minCount.size()];
-		int index = 0;
-		for (Integer integer : theT60minCount) {
-			retVal[index++] = integer;
-		}
+	private static Date doWithStatsSupportFindDate(Date date, InvocationStatsIntervalEnum interval) {
+		Date retVal = interval.truncate(date);
 		return retVal;
 	}
 
@@ -1998,84 +2004,89 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	public interface IWithStats<P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> {
-
-		void withStats(int theIndex, O theStats);
-
+	public static Date getDateXMinsAgoTruncatedToMinute(int theNumberOfMinutes) {
+		Date date60MinsAgo = new Date(System.currentTimeMillis() - (theNumberOfMinutes * DateUtils.MILLIS_PER_MINUTE));
+		Date date = DateUtils.truncate(date60MinsAgo, Calendar.MINUTE);
+		return date;
 	}
 
-	@VisibleForTesting
-	void setRuntimeStatusQuerySvcForUnitTests(IRuntimeStatusQueryLocal theStatsQSvc) {
-		myRuntimeStatusQuerySvc = theStatsQSvc;
-	}
-
-	@Override
-	public GServiceVersionUrl resetCircuitBreaker(long theUrlPid) throws UnexpectedFailureException {
-		PersServiceVersionUrl url = myServiceRegistry.resetCircuitBreaker(theUrlPid);
-		PersServiceVersionUrlStatus urlStatus = url.getStatus();
-		GServiceVersionUrl retVal = new GServiceVersionUrl();
-		if (url.getPid() != null) {
-			retVal.setPid(url.getPid());
+	public static void growToSizeDouble(List<Double> theCountArray, int theIndex) {
+		while (theCountArray.size() <= (theIndex)) {
+			theCountArray.add(0.0);
 		}
-		retVal.setId(url.getUrlId());
-		retVal.setUrl(url.getUrl());
+	}
 
-		if (true) {
-			if (urlStatus.getStatus() == StatusEnum.DOWN) {
-				if (urlStatus.getNextCircuitBreakerReset() != null) {
-					retVal.setStatsNextCircuitBreakerReset(urlStatus.getNextCircuitBreakerReset());
-				}
-			}
+	public static void growToSizeInt(List<Integer> theCountArray, int theIndex) {
+		while (theCountArray.size() <= (theIndex)) {
+			theCountArray.add(0);
+		}
+	}
 
-			retVal.setStatsLastFailure(urlStatus.getLastFail());
-			retVal.setStatsLastFailureMessage(urlStatus.getLastFailMessage());
-			retVal.setStatsLastFailureStatusCode(urlStatus.getLastFailStatusCode());
-			retVal.setStatsLastFailureContentType(urlStatus.getLastFailContentType());
+	public static void growToSizeLong(List<Long> theCountArray, int theIndex) {
+		while (theCountArray.size() <= (theIndex)) {
+			theCountArray.add(0L);
+		}
+	}
 
-			retVal.setStatsLastSuccess(urlStatus.getLastSuccess());
-			retVal.setStatsLastSuccessMessage(urlStatus.getLastSuccessMessage());
-			retVal.setStatsLastSuccessStatusCode(urlStatus.getLastSuccessStatusCode());
-			retVal.setStatsLastSuccessContentType(urlStatus.getLastSuccessContentType());
-
-			retVal.setStatsLastFault(urlStatus.getLastFault());
-			retVal.setStatsLastFaultMessage(urlStatus.getLastFaultMessage());
-			retVal.setStatsLastFaultStatusCode(urlStatus.getLastFaultStatusCode());
-			retVal.setStatsLastFaultContentType(urlStatus.getLastFaultContentType());
-
-			retVal.setStatus(urlStatus.getStatus());
-			retVal.setStatsNextCircuitBreakerReset(urlStatus.getNextCircuitBreakerReset());
-
-			StatsAccumulator accumulator = new StatsAccumulator();
-			myRuntimeStatusQuerySvc.extract60MinuteServiceVersionUrlStatistics(url, accumulator);
-			accumulator.populateDto(retVal);
-
-			retVal.setStatsInitialized(new Date());
-
+	static int[] toArray(ArrayList<Integer> theT60minCount) {
+		int[] retVal = new int[theT60minCount.size()];
+		int index = 0;
+		for (Integer integer : theT60minCount) {
+			retVal[index++] = integer;
 		}
 		return retVal;
 	}
 
-	@Override
-	public BaseDtoMonitorRule loadMonitorRuleAndDetailedSatistics(long theRulePid) {
-		return myDao.getMonitorRule(theRulePid).toDao(true);
+	static int[] toLatency(List<Long> theTimes, List<Integer> theCountsEntry0, List<Integer> theCountsEntry1, List<Integer> theCountsEntry2) {
+		return toLatency(theTimes, theCountsEntry0, theCountsEntry1, theCountsEntry2, null);
 	}
 
-	@Override
-	public DtoMonitorRuleActiveCheck executeMonitorRuleActiveCheck(DtoMonitorRuleActiveCheck theCheck) throws ProcessingException {
+	private static int[] toLatency(List<Long> theTimes, List<Integer> theCountsEntry0, List<Integer> theCountsEntry1, List<Integer> theCountsEntry2, List<Integer> theCountsEntry3) {
+		List<List<Integer>> entries = new ArrayList<List<Integer>>(3);
+		entries.add(theCountsEntry0);
+		entries.add(theCountsEntry1);
+		entries.add(theCountsEntry2);
+		entries.add(theCountsEntry3);
+		return toLatency2(theTimes, entries);
+	}
 
-		PersMonitorRuleActive rule = null;
-		if (theCheck.getPidOrNull() != null) {
-			PersMonitorRuleActiveCheck existing = myDao.getMonitorRuleActiveCheck(theCheck.getPid());
-			rule = (PersMonitorRuleActive) existing.getRule();
+	private static int[] toLatency2(List<Long> theTimes, List<List<Integer>> theCountsEntries) {
+		if (theCountsEntries == null || theCountsEntries.size() == 0) {
+			throw new IllegalArgumentException("No counts given");
 		}
 
-		PersMonitorRuleActiveCheck check = PersMonitorRuleActiveCheck.fromDto(theCheck, rule, myDao);
-		List<PersMonitorRuleActiveCheckOutcome> outcome = myMonitorSvc.runActiveCheckInCurrentTransaction(check, theCheck.getPidOrNull() != null);
+		int[] counts = new int[theTimes.size()];
 
-		check.getRecentOutcomes().clear();
-		check.getRecentOutcomes().addAll(outcome);
+		for (List<Integer> nextEntry : theCountsEntries) {
+			if (nextEntry == null) {
+				continue;
+			}
+			assert nextEntry.size() == theTimes.size();
+			int index = 0;
+			for (int next : nextEntry) {
+				counts[index] = counts[index] + next;
+				index++;
+			}
+		}
 
-		return check.toDto(true);
+		int[] retVal = new int[counts.length];
+		int prevValue = -1;
+		for (int i = 0; i < counts.length; i++) {
+			if (counts[i] > 0) {
+				retVal[i] = (int) Math.min(theTimes.get(i) / counts[i], Integer.MAX_VALUE);
+				prevValue = retVal[i];
+			} else if (prevValue > -1) {
+				retVal[i] = prevValue;
+			}
+		}
+
+		return retVal;
+	}
+
+	public interface IWithStats<P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> {
+
+		void withStats(int theIndex, O theStats);
+
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {

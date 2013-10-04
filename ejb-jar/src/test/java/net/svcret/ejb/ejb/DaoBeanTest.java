@@ -242,7 +242,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		url2 = ver.getUrls().get(1);
 		PersStickySessionUrlBindingPk pk = new PersStickySessionUrlBindingPk("ABC", ver);
 		PersStickySessionUrlBinding newBinding = mySvc.getOrCreateStickySessionUrlBindingInNewTransaction(pk, url1);
-		
+
 		assertEquals(pk, newBinding.getPk());
 		assertEquals(url1, newBinding.getUrl());
 		assertNotNull(newBinding.getLastAccessed());
@@ -631,6 +631,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		assertEquals(PersHttpClientConfig.DEFAULT_CONNECT_TIMEOUT_MILLIS, config.getConnectTimeoutMillis());
 		assertEquals(PersHttpClientConfig.DEFAULT_READ_TIMEOUT_MILLIS, config.getReadTimeoutMillis());
 		assertEquals(PersHttpClientConfig.DEFAULT_URL_SELECTION_POLICY, config.getUrlSelectionPolicy());
+
 	}
 
 	@Test

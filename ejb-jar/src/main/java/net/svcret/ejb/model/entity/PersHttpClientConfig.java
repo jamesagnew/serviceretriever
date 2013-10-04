@@ -9,10 +9,13 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.Version;
 
+import net.svcret.admin.shared.model.DtoKeystoreAnalysis;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
+import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IKeystoreService;
 import net.svcret.ejb.ex.ProcessingException;
 
@@ -23,17 +26,15 @@ import com.google.common.base.Objects;
 public class PersHttpClientConfig extends BasePersObject {
 
 	public static final int DEFAULT_CB_TIME_BETWEEN_ATTEMPTS = 60 * 1000;
-
 	public static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 10 * 1000;
 	public static final int DEFAULT_FAIL_RETRIES_BEFORE_ABORT = 1;
+
 	/**
 	 * Default ID for config. At least this config will always exist.
 	 */
 	public static final String DEFAULT_ID = GHttpClientConfig.DEFAULT_ID;
 	private static final String DEFAULT_NAME = "Default Configuration";
-
 	public static final int DEFAULT_READ_TIMEOUT_MILLIS = 20 * 1000;
-
 	public static final UrlSelectionPolicy DEFAULT_URL_SELECTION_POLICY = UrlSelectionPolicy.PREFER_LOCAL;
 
 	private static final long serialVersionUID = 1L;
@@ -75,22 +76,28 @@ public class PersHttpClientConfig extends BasePersObject {
 	private String myStickySessionHeaderForSessionId;
 
 	@Lob
-	@Column(name = "TLS_KEYSTORE", nullable=true)
+	@Column(name = "TLS_KEYSTORE", nullable = true)
 	private byte[] myTlsKeystore;
 
-	@Column(name = "TLS_KEYSTORE_PASS", length = 200, nullable=true)
+	@Column(name = "TLS_KEYSTORE_PASS", length = 200, nullable = true)
 	private String myTlsKeystorePassword;
 
 	@Lob
-	@Column(name = "TLS_TRUSTSTORE", nullable=true)
+	@Column(name = "TLS_TRUSTSTORE", nullable = true)
 	private byte[] myTlsTruststore;
 
-	@Column(name = "TLS_TRUSTSTORE_PASS", length = 200, nullable=true)
+	@Column(name = "TLS_TRUSTSTORE_PASS", length = 200, nullable = true)
 	private String myTlsTruststorePassword;
 
 	@Column(name = "URL_SEL_POLICY", length = 20, nullable = false)
 	@Enumerated(EnumType.STRING)
 	private UrlSelectionPolicy myUrlSelectionPolicy;
+
+	@Transient
+	private DtoKeystoreAnalysis myKeystoreAnalysis;
+
+	@Transient
+	private DtoKeystoreAnalysis myTruststoreAnalysis;
 
 	/**
 	 * {@inheritDoc}
@@ -299,18 +306,22 @@ public class PersHttpClientConfig extends BasePersObject {
 	}
 
 	public void setTlsKeystore(byte[] theTlsKeystore) {
+		myKeystoreAnalysis = null;
 		myTlsKeystore = theTlsKeystore;
 	}
 
 	public void setTlsKeystorePassword(String theTlsKeystorePassword) {
+		myKeystoreAnalysis = null;
 		myTlsKeystorePassword = theTlsKeystorePassword;
 	}
 
 	public void setTlsTruststore(byte[] theTlsTruststore) {
+		myTruststoreAnalysis = null;
 		myTlsTruststore = theTlsTruststore;
 	}
 
 	public void setTlsTruststorePassword(String theTlsTruststorePassword) {
+		myTruststoreAnalysis = null;
 		myTlsTruststorePassword = theTlsTruststorePassword;
 	}
 
@@ -325,7 +336,9 @@ public class PersHttpClientConfig extends BasePersObject {
 	public GHttpClientConfig toDto(IKeystoreService theKeystoreSvc) throws ProcessingException {
 		GHttpClientConfig retVal = new GHttpClientConfig();
 
-		retVal.setPid(this.getPid());
+		if (getPid() != null) {
+			retVal.setPid(this.getPid());
+		}
 		retVal.setId(this.getId());
 		retVal.setName(this.getName());
 
@@ -338,23 +351,29 @@ public class PersHttpClientConfig extends BasePersObject {
 		retVal.setFailureRetriesBeforeAborting(this.getFailureRetriesBeforeAborting());
 		retVal.setUrlSelectionPolicy(this.getUrlSelectionPolicy());
 		retVal.setStickySessionCookieForSessionId(getStickySessionCookieForSessionId());
-		
+
 		if (this.getTlsKeystore() != null) {
-			retVal.setTlsKeystore(theKeystoreSvc.analyzeKeystore(this.getTlsKeystore(), this.getTlsKeystorePassword()));
+			if (myKeystoreAnalysis == null) {
+				myKeystoreAnalysis = theKeystoreSvc.analyzeKeystore(this.getTlsKeystore(), this.getTlsKeystorePassword());
+			}
+			retVal.setTlsKeystore(myKeystoreAnalysis);
 		}
 
 		if (this.getTlsTruststore() != null) {
-			retVal.setTlsTruststore(theKeystoreSvc.analyzeKeystore(this.getTlsTruststore(), this.getTlsTruststorePassword()));
+			if (myTruststoreAnalysis == null) {
+				myTruststoreAnalysis = theKeystoreSvc.analyzeKeystore(this.getTlsTruststore(), this.getTlsTruststorePassword());
+			}
+			retVal.setTlsTruststore(myTruststoreAnalysis);
 		}
 
 		return retVal;
 	}
 
-	public static PersHttpClientConfig fromDto(GHttpClientConfig theConfig) {
+	public static PersHttpClientConfig fromDto(GHttpClientConfig theConfig, IDao theDao) {
 		PersHttpClientConfig retVal = new PersHttpClientConfig();
 
 		if (theConfig.getPid() > 0) {
-			retVal.setPid(theConfig.getPid());
+			retVal = theDao.getHttpClientConfig(theConfig.getPid());
 		}
 
 		retVal.setId(theConfig.getId());
@@ -366,7 +385,7 @@ public class PersHttpClientConfig extends BasePersObject {
 		retVal.setReadTimeoutMillis(theConfig.getReadTimeoutMillis());
 		retVal.setUrlSelectionPolicy(theConfig.getUrlSelectionPolicy());
 		retVal.setStickySessionCookieForSessionId(theConfig.getStickySessionCookieForSessionId());
-		
+
 		return retVal;
 	}
 

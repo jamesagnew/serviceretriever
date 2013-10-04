@@ -115,6 +115,7 @@ public class SecurityServiceBeanTest {
 		
 	}
 	
+	
 	@Test
 	public void testInitWorks() throws ProcessingException {
 		myLocalDbAuthService = mock(ILocalDatabaseAuthorizationService.class, new DefaultAnswer());

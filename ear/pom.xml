@@ -33,12 +33,14 @@
 			<version>1.0</version>
 			<type>war</type>
 		</dependency>
+		<!-- 
 		<dependency>
 			<groupId>net.svcret</groupId>
 			<artifactId>serviceretriever-demoservices-jar</artifactId>
 			<version>1.0</version>
 			<type>ejb</type>
 		</dependency>
+		 -->
 	</dependencies>
 
 	<build>
@@ -52,10 +54,12 @@
 							<groupId>net.svcret</groupId>
 							<artifactId>serviceretriever-ejb-jar</artifactId>
 						</ejbModule>
+						<!-- 
 						<ejbModule>
 							<groupId>net.svcret</groupId>
 							<artifactId>serviceretriever-demoservices-jar</artifactId>
 						</ejbModule>
+						 -->
 						<webModule>
 							<groupId>net.svcret</groupId>
 							<artifactId>serviceretriever-admin-war</artifactId>
@@ -64,7 +68,7 @@
 						<webModule>
 							<groupId>net.svcret</groupId>
 							<artifactId>serviceretriever-proxy-war</artifactId>
-							<contextRoot>/service</contextRoot>
+							<contextRoot>/</contextRoot>
 						</webModule>
 					</modules>
                     <defaultLibBundleDir>lib</defaultLibBundleDir>

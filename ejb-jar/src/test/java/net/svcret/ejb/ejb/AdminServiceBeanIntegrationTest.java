@@ -307,6 +307,8 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 	}
 
+
+	
 	@Test
 	public void testAddDomain() throws Exception {
 		newEntityManager();
@@ -1158,14 +1160,30 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		assertEquals("http://baz", svcVer.getWsdlLocation());
 		assertEquals(1, copy.getResource().size());
 
+		/*
+		 * Now change the URL
+		 */
+
+		svcVer.getUrlList().get(0).setUrl("http://zzzzzz");
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), svcVer, resource);
+
+		newEntityManager();
+
+		copy = mySvc.loadServiceVersion(d1s1v1.getPid());
+		svcVer = (DtoServiceVersionSoap11) copy.getServiceVersion();
+		assertEquals("url1", svcVer.getUrlList().get(0).getId());
+		assertEquals("http://zzzzzz", svcVer.getUrlList().get(0).getUrl());
+
 	}
 
 	@Test
 	public void testLoadWsdl() throws Exception {
 
 		DtoServiceVersionSoap11 ver = new DtoServiceVersionSoap11();
-
+		ver.setPid(123L);
+		
 		PersServiceVersionSoap11 persSvcVer = new PersServiceVersionSoap11();
+		persSvcVer.setPid(ver.getPid());
 		persSvcVer.setWsdlUrl("http://wsdlurl");
 
 		PersServiceVersionMethod m1 = new PersServiceVersionMethod();
@@ -1182,12 +1200,15 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		PersServiceVersionUrl url = new PersServiceVersionUrl();
 		url.setUrlId("url1");
 		url.setUrl("http://svcurl");
+		url.setServiceVersion(persSvcVer);
 		persSvcVer.addUrl(url);
 
-		when(mySoapInvoker.introspectServiceFromUrl("http://wsdlurl")).thenReturn(persSvcVer);
+		PersHttpClientConfig cfg = new PersHttpClientConfig();
+		cfg.setDefaults();
+		when(mySoapInvoker.introspectServiceFromUrl(cfg, "http://wsdlurl")).thenReturn(persSvcVer);
 
 		DefaultAnswer.setRunTime();
-		GSoap11ServiceVersionAndResources verAndRes = mySvc.loadSoap11ServiceVersionFromWsdl(ver, "http://wsdlurl");
+		GSoap11ServiceVersionAndResources verAndRes = mySvc.loadSoap11ServiceVersionFromWsdl(ver, cfg.toDto(null), "http://wsdlurl");
 
 		assertEquals(2, verAndRes.getResource().size());
 		assertEquals("http://wsdlurl", verAndRes.getResource().get(0).getUrl());

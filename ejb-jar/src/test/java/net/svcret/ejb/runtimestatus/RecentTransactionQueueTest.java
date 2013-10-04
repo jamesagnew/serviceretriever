@@ -29,7 +29,56 @@ public class RecentTransactionQueueTest {
 		assertEquals(4.0, q.getTransactionsPerMinute(), 1.0);
 
 	}
-	
+
+	@Test
+	public void testOnlyLongAgo() {
+		Date now = new Date();
+		
+		RecentTransactionQueue q = new RecentTransactionQueue();
+		assertEquals(0.0, q.getTransactionsPerMinute(), 0.0);
+
+		q.addDate(new Date(now.getTime() - (200 + (62 * DateUtils.MILLIS_PER_HOUR))));
+		q.addDate(new Date(now.getTime() - (150 + (62 * DateUtils.MILLIS_PER_HOUR))));
+		q.addDate(new Date(now.getTime() - (150 + (62 * DateUtils.MILLIS_PER_HOUR))));
+		
+		assertEquals(0.0, q.getTransactionsPerMinute(), 0.0);
+
+	}
+
+	@Test
+	public void testThreeMinsAgo() {
+		Date now = new Date();
+		
+		RecentTransactionQueue q = new RecentTransactionQueue();
+		q.addDate(new Date(now.getTime() - (3 * DateUtils.MILLIS_PER_MINUTE) + 100));
+		q.addDate(new Date(now.getTime() - (3 * DateUtils.MILLIS_PER_MINUTE) + 100));
+		q.addDate(new Date(now.getTime() - (3 * DateUtils.MILLIS_PER_MINUTE) + 100));
+		/* 
+		 * This is 0.6 because with older entries in the queue we rank this
+		 * out of 5 minutes (3/5=0.6)
+		 */
+		assertEquals(0.6, q.getTransactionsPerMinute(), 0.01);
+
+		// And with some old ones in the queue as well
+		q = new RecentTransactionQueue();
+		q.addDate(new Date(now.getTime() - (6 * DateUtils.MILLIS_PER_MINUTE)+100));
+		q.addDate(new Date(now.getTime() - (6 * DateUtils.MILLIS_PER_MINUTE)+100));
+		q.addDate(new Date(now.getTime() - (3 * DateUtils.MILLIS_PER_MINUTE) + 100));
+		q.addDate(new Date(now.getTime() - (3 * DateUtils.MILLIS_PER_MINUTE) + 100));
+		q.addDate(new Date(now.getTime() - (3 * DateUtils.MILLIS_PER_MINUTE) + 100));
+		assertEquals(0.6, q.getTransactionsPerMinute(), 0.01);
+
+		// And with some old ones in the queue as well
+		q = new RecentTransactionQueue();
+		q.addDate(new Date(now.getTime() - (36 * DateUtils.MILLIS_PER_HOUR)));
+		q.addDate(new Date(now.getTime() - (36 * DateUtils.MILLIS_PER_HOUR)));
+		q.addDate(new Date(now.getTime() - (3 * DateUtils.MILLIS_PER_MINUTE) + 100));
+		q.addDate(new Date(now.getTime() - (3 * DateUtils.MILLIS_PER_MINUTE) + 100));
+		q.addDate(new Date(now.getTime() - (3 * DateUtils.MILLIS_PER_MINUTE) + 100));
+		assertEquals(0.6, q.getTransactionsPerMinute(), 0.01);
+
+	}
+
 	@Test
 	public void testIt() {
 		Date now = new Date();

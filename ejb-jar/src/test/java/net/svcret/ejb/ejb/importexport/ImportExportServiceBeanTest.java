@@ -58,7 +58,7 @@ private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger
 		String output = svc.exportDomain(1L);
 		ourLog.info("XML:\n{}", output);
 		
-		org.junit.Assert.assertThat(output, StringContains.containsString("<Element xsi:type=\"ns2:ServiceVersionSoap11\">"));
+		org.junit.Assert.assertThat(output, StringContains.containsString("<Version xsi:type=\"ns2:ServiceVersionSoap11\""));
 	}
 
 	private Set<String> createObscureElements() {

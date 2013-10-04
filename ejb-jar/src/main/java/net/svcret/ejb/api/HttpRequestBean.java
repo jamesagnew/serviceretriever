@@ -22,19 +22,19 @@ public class HttpRequestBean {
 	private String myProtocol;
 	private String myQuery;
 	private String myRequestFullUri;
-	private Map<String, List<String>> myRequestHeaders;
+	private CaseInsensitiveMap<List<String>> myRequestHeaders;
 	private String myRequestHostIp;
 	private Date myRequestTime;
 	private RequestType myRequestType;
 
 	public void addHeader(String theHeader, String theValue) {
 		if (myRequestHeaders == null) {
-			myRequestHeaders = new HashMap<String, List<String>>();
+			myRequestHeaders = new CaseInsensitiveMap<List<String>>();
 		}
 		if (!myRequestHeaders.containsKey(theHeader)) {
 			myRequestHeaders.put(theHeader, new ArrayList<String>());
 		}
-		myRequestHeaders.get(theHeader).add(theValue);
+		myRequestHeaders.get(theHeader).add(theValue.toLowerCase());
 	}
 
 	public void drainInputMessage() {
@@ -63,7 +63,7 @@ public class HttpRequestBean {
 		if (myContentType != null) {
 			return myContentType;
 		}
-		List<String> headerValues = myRequestHeaders.get("Content-Type");
+		List<String> headerValues = myRequestHeaders.get("content-type");
 		if (headerValues == null || headerValues.isEmpty()) {
 			return null;
 		}
@@ -193,7 +193,7 @@ public class HttpRequestBean {
 	}
 
 	public void setRequestHeaders(Map<String, List<String>> theRequestHeaders) {
-		myRequestHeaders = theRequestHeaders;
+		myRequestHeaders = new CaseInsensitiveMap<List<String>>(theRequestHeaders);
 	}
 
 	/**
@@ -214,6 +214,32 @@ public class HttpRequestBean {
 	 */
 	public void setRequestType(RequestType theRequestType) {
 		myRequestType = theRequestType;
+	}
+	
+	
+	private static class CaseInsensitiveMap<T> extends HashMap<String, T> {
+
+	    private static final long serialVersionUID = 1L;
+
+		public CaseInsensitiveMap() {
+		}
+		
+		public CaseInsensitiveMap(Map<String, T> theRequestHeaders) {
+			for (java.util.Map.Entry<String, T> nextEntry : theRequestHeaders.entrySet()) {
+				put(nextEntry.getKey(), nextEntry.getValue());
+			}
+		}
+
+		@Override
+	    public T put(String key, T value) {
+	       return super.put(key.toLowerCase(), value);
+	    }
+
+	    @Override
+		public T get(Object theKey) {
+			return super.get(((String)theKey).toLowerCase());
+		}
+
 	}
 
 }

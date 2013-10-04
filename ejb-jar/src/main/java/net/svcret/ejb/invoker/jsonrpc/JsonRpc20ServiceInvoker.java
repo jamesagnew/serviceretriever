@@ -437,11 +437,6 @@ public class JsonRpc20ServiceInvoker extends BaseServiceInvoker implements IServ
 	}
 
 	@Override
-	public PersServiceVersionJsonRpc20 introspectServiceFromUrl(String theUrl) throws ProcessingException {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public String obscureMessageForLogs(BasePersServiceVersion theServiceDefinition, String theMessage, Set<String> theElementNamesToRedact) throws InvocationFailedDueToInternalErrorException {
 		if (theElementNamesToRedact == null || theElementNamesToRedact.isEmpty()) {
 			return theMessage;

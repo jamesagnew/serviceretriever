@@ -331,7 +331,10 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 		}
 		retVal.setId(this.getUrlId());
 		retVal.setUrl(this.getUrl());
-		retVal.setServiceVersionPid(myServiceVersion.getPid());
+		
+		if (myServiceVersion != null && myServiceVersion.getPid() != null) {
+			retVal.setServiceVersionPid(myServiceVersion.getPid());
+		}
 		
 		if (theLoadStats) {
 			PersServiceVersionUrlStatus theUrlStatus = null;

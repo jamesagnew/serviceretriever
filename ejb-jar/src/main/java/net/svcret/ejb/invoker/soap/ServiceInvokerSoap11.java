@@ -37,6 +37,7 @@ import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.ejb.HttpClientBean.ClientConfigException;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
@@ -47,6 +48,7 @@ import net.svcret.ejb.invoker.BaseServiceInvoker;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
+import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
@@ -349,7 +351,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 	}
 
 	@Override
-	public PersServiceVersionSoap11 introspectServiceFromUrl(String theUrl) throws ProcessingException {
+	public PersServiceVersionSoap11 introspectServiceFromUrl(PersHttpClientConfig theHttpClientConfig, String theUrl) throws ProcessingException {
 		PersServiceVersionSoap11 retVal = new PersServiceVersionSoap11();
 
 		// TODO: wrap all getElementsBy... calls to remove
@@ -359,16 +361,21 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 		ourLog.info("Loading WSDL URL: {}", theUrl);
 		HttpResponseBean wsdlHttpResponse;
 		try {
-			wsdlHttpResponse = myHttpClient.get(theUrl);
+			wsdlHttpResponse = myHttpClient.getOneTime(theHttpClientConfig, theUrl);
 		} catch (ClientProtocolException e1) {
 			throw new ProcessingException(Messages.getString("Soap11ServiceInvoker.retrieveWsdlFail", theUrl, e1.getMessage()));
 		} catch (IOException e1) {
+			throw new ProcessingException(Messages.getString("Soap11ServiceInvoker.retrieveWsdlFail", theUrl, e1.getMessage()));
+		} catch (ClientConfigException e1) {
 			throw new ProcessingException(Messages.getString("Soap11ServiceInvoker.retrieveWsdlFail", theUrl, e1.getMessage()));
 		}
 
 		ourLog.info("Loaded WSDL ({} bytes) in {}ms, going to parse", wsdlHttpResponse.getBody().length(), wsdlHttpResponse.getResponseTime());
 
-		Document wsdlDocument = XMLUtils.parse(wsdlHttpResponse.getBody());
+		String wsdlBody = wsdlHttpResponse.getBody();
+		ourLog.debug("WSDL body is:\n{}", wsdlBody);
+		
+		Document wsdlDocument = XMLUtils.parse(wsdlBody);
 
 		// if (portTypeElements.getLength() > 1) {
 		// throw new ProcessingException("WSDL \"" + theUrl + "\" has more than one PortType defined (this is not currently supported by ServiceProxy)");
@@ -407,11 +414,13 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 
 					HttpResponseBean schemaHttpResponse;
 					try {
-						schemaHttpResponse = myHttpClient.get(norm);
+						schemaHttpResponse = myHttpClient.getOneTime(theHttpClientConfig, norm);
 					} catch (ClientProtocolException e1) {
 						throw new ProcessingException(Messages.getString("Soap11ServiceInvoker.retrieveWsdlFail", theUrl, e1.getMessage()));
 					} catch (IOException e1) {
 						throw new ProcessingException(Messages.getString("Soap11ServiceInvoker.retrieveWsdlFail", theUrl, e1.getMessage()));
+					} catch (ClientConfigException e) {
+						throw new ProcessingException(Messages.getString("Soap11ServiceInvoker.retrieveWsdlFail", theUrl, e.getMessage()));
 					}
 
 					contentType = schemaHttpResponse.getContentType();

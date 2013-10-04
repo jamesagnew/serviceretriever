@@ -25,56 +25,85 @@ public class RecentTransactionQueue {
 	}
 
 	public synchronized double getTransactionsPerMinute() {
+		if (myRecentDates.size() == 0) {
+			return 0.0;
+		}
+
 		Date start = new Date();
-		Date nextCutoff = DateUtils.addMinutes(start, -1);
+		Date cutoffOneMin = DateUtils.addMinutes(start, -1);
+		Date cutoffFiveMin = DateUtils.addMinutes(start, -5);
+		Date cutoffTenMin = DateUtils.addMinutes(start, -10);
 
-		boolean havePassedOneMinute = false;
-		boolean havePassedFiveMinutes = false;
-		boolean havePassedTenMinutes = false;
+		Date firstDate = myRecentDates.peek();
+		boolean havePassedOneMinute = firstDate.before(cutoffOneMin);
+		boolean havePassedFiveMinutes = firstDate.before(cutoffFiveMin);
+		boolean havePassedTenMinutes = firstDate.before(cutoffTenMin);
 		int count = 0;
-		for (Date next : myRecentDates) {
-			count++;
 
+		if (havePassedTenMinutes) {
+			return 0.0;
+		}
+
+		Date nextCutoff;
+		if (havePassedOneMinute) {
+			nextCutoff = cutoffFiveMin;
+		} else if (havePassedFiveMinutes) {
+			nextCutoff = cutoffTenMin;
+		} else {
+			nextCutoff = cutoffOneMin;
+		}
+
+		for (Date next : myRecentDates) {
 			if (next.before(nextCutoff)) {
 				if (!havePassedOneMinute) {
-					if (count > 1) {
-						return ((double) count - 1);
+					if (count > 0) {
+						return count;
 					}
 					havePassedOneMinute = true;
-					nextCutoff = DateUtils.addMinutes(start, -5);
+					nextCutoff = cutoffFiveMin;
 				} else if (!havePassedFiveMinutes) {
-					if (count > 1) {
-						return ((double) count - 1) / 5.0;
+					if (count > 0) {
+						return count / 5.0;
 					}
 					havePassedFiveMinutes = true;
-					nextCutoff = DateUtils.addMinutes(start, -10);
+					nextCutoff = cutoffTenMin;
 				} else if (!havePassedTenMinutes) {
-					if (count > 1) {
-						return ((double) count - 1) / 10.0;
+					if (count > 0) {
+						return count / 10.0;
 					} else {
 						return 0.0;
 					}
 				}
 			}
 
+			count++;
 		}
 
 		if (myRecentDates.size() > 1) {
-			long mostRecentTime = myRecentDates.peekFirst().getTime();
+			long mostRecentTime = start.getTime();
 			long leastRecentTime = myRecentDates.peekLast().getTime();
 			double span = mostRecentTime - leastRecentTime;
-			if (span > DateUtils.MILLIS_PER_MINUTE) {
-				return 0.0;
-			}
-			if (span == 0) {
-				span = DateUtils.MILLIS_PER_SECOND;
+			if (span < DateUtils.MILLIS_PER_SECOND) {
+				if (myRecentDates.size() < MAX_SIZE) {
+					span = DateUtils.MILLIS_PER_MINUTE;
+				}else {
+					span = DateUtils.MILLIS_PER_SECOND;
+				}
+			} else if (span < DateUtils.MILLIS_PER_MINUTE) {
+				if (myRecentDates.size() < MAX_SIZE) {
+					span = DateUtils.MILLIS_PER_MINUTE;
+				}
+			} else if (span > DateUtils.MILLIS_PER_MINUTE && span < (5*DateUtils.MILLIS_PER_MINUTE)){
+				span = 5*DateUtils.MILLIS_PER_MINUTE;
+			} else if (span > (5*DateUtils.MILLIS_PER_MINUTE) && span < (10*DateUtils.MILLIS_PER_MINUTE)){
+				span = 10*DateUtils.MILLIS_PER_MINUTE;
 			}
 			if (myRecentDates.size() == MAX_SIZE) {
 				double spanMultiplier = DateUtils.MILLIS_PER_MINUTE / span;
 				spanMultiplier = Math.max(spanMultiplier, 0.0001d);
 				return spanMultiplier * MAX_SIZE;
 			} else {
-				return myRecentDates.size();
+				return myRecentDates.size() / (span / DateUtils.MILLIS_PER_MINUTE);
 			}
 		}
 

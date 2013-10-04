@@ -17,6 +17,7 @@ import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GPartialUserList;
@@ -46,7 +47,8 @@ public interface ModelUpdateService extends RemoteService {
 
 	GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ServiceFailureException;
 
-	AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseDtoServiceVersion theVersion) throws ServiceFailureException;
+	AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseDtoServiceVersion theVersion)
+			throws ServiceFailureException;
 
 	BaseDtoServiceVersion cloneServiceVersion(long thePidToClone) throws ServiceFailureException;
 
@@ -88,7 +90,7 @@ public interface ModelUpdateService extends RemoteService {
 
 	GPartialUserList loadUsers(PartialUserListRequest theRequest) throws ServiceFailureException;
 
-	DtoServiceVersionSoap11 loadWsdl(DtoServiceVersionSoap11 theService, String theWsdlUrl) throws ServiceFailureException;
+	DtoServiceVersionSoap11 loadWsdl(DtoServiceVersionSoap11 theService, GHttpClientConfig theClientConfig, String theWsdlUrl) throws ServiceFailureException;
 
 	DtoAuthenticationHostList removeAuthenticationHost(long thePid) throws ServiceFailureException;
 

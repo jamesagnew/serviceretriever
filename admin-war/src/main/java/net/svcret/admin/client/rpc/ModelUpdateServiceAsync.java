@@ -16,6 +16,7 @@ import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.GConfig;
 import net.svcret.admin.shared.model.GDomain;
 import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GPartialUserList;
@@ -82,7 +83,7 @@ public interface ModelUpdateServiceAsync {
 
 	void loadUsers(PartialUserListRequest theRequest, AsyncCallback<GPartialUserList> callback);
 
-	void loadWsdl(DtoServiceVersionSoap11 theService, String theWsdlUrl, AsyncCallback<DtoServiceVersionSoap11> callback);
+	void loadWsdl(DtoServiceVersionSoap11 theService, GHttpClientConfig theClientConfig, String theWsdlUrl, AsyncCallback<DtoServiceVersionSoap11> callback);
 
 	void removeAuthenticationHost(long thePid, AsyncCallback<DtoAuthenticationHostList> theAsyncCallback);
 

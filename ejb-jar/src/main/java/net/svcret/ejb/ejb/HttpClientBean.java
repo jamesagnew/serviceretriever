@@ -3,6 +3,7 @@ package net.svcret.ejb.ejb;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -35,6 +36,7 @@ import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.util.Validate;
 
+import org.apache.commons.collections.EnumerationUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -190,9 +192,9 @@ public class HttpClientBean implements IHttpClient {
 			PersServiceVersionUrl theNextUrl, int theFailureRetries) {
 		int failuresRemaining = theFailureRetries + 1;
 		for (;;) {
-			
+
 			failuresRemaining--;
-			
+
 			HttpPost post = new HttpPost(theNextUrl.getUrl());
 			post.setEntity(postEntity);
 			if (theHeaders != null) {
@@ -307,15 +309,21 @@ public class HttpClientBean implements IHttpClient {
 		private PoolingClientConnectionManager myConMgr;
 
 		public HttpClientImpl(PersHttpClientConfig theClientConfig) throws ClientConfigException {
+			ourLog.info("Creating new HTTP client for config[{} / {}]", new Object[] { theClientConfig.getPid(), theClientConfig.getId() });
+
 			myClientConfig = theClientConfig;
 			myConMgr = new PoolingClientConnectionManager(SchemeRegistryFactory.createDefault(), 5000, TimeUnit.MILLISECONDS);
 
 			String algorithm = "TLS";
 			KeyStore keystore = null;
 			if (myClientConfig.getTlsKeystore() != null) {
+				ourLog.info("Initializing HTTP client keystore");
 				try {
 					keystore = myKeystoreService.loadKeystore(myClientConfig.getTlsKeystore(), myClientConfig.getTlsKeystorePassword());
+					ourLog.info("Keystore contains the following aliases: {}", EnumerationUtils.toList(keystore.aliases()));
 				} catch (ProcessingException e) {
+					throw new ClientConfigException("Failed to initialize keystore", e);
+				} catch (KeyStoreException e) {
 					throw new ClientConfigException("Failed to initialize keystore", e);
 				}
 			}
@@ -325,8 +333,12 @@ public class HttpClientBean implements IHttpClient {
 
 			if (myClientConfig.getTlsTruststore() != null) {
 				try {
+					ourLog.info("Initializing HTTP client truststore");
 					truststore = myKeystoreService.loadKeystore(myClientConfig.getTlsTruststore(), myClientConfig.getTlsTruststorePassword());
+					ourLog.info("Truststore contains the following aliases: {}", EnumerationUtils.toList(truststore.aliases()));
 				} catch (ProcessingException e) {
+					throw new ClientConfigException("Failed to initialize truststore", e);
+				} catch (KeyStoreException e) {
 					throw new ClientConfigException("Failed to initialize truststore", e);
 				}
 			}
@@ -354,13 +366,46 @@ public class HttpClientBean implements IHttpClient {
 			return myConMgr;
 		}
 
+		public HttpResponseBean get(String theUrl) throws ClientProtocolException, IOException {
+			HttpParams params = createHttpParams(myClientConfig);
+
+			DefaultHttpClient client = new DefaultHttpClient(myConMgr, params);
+
+			HttpGet httpReq = new HttpGet(theUrl);
+			HttpEntity entity = null;
+			HttpResponseBean retVal = new HttpResponseBean();
+			try {
+				long start = System.currentTimeMillis();
+				HttpResponse httpResp = client.execute(httpReq);
+				entity = httpResp.getEntity();
+
+				retVal.setBody(IOUtils.toString(entity.getContent()));
+				retVal.setCode(httpResp.getStatusLine().getStatusCode());
+				retVal.setContentType(httpResp.getEntity().getContentType().getValue());
+				retVal.setHeaders(toHeaderMap(httpResp.getAllHeaders()));
+
+				long delay = System.currentTimeMillis() - start;
+				retVal.setResponseTime(delay);
+
+				ourLog.debug("Done requesting URL \"{}\" in {}ms", theUrl, delay);
+				return retVal;
+
+			} finally {
+				if (entity != null) {
+					try {
+						entity.getContent().close();
+					} catch (IllegalStateException e) {
+						ourLog.debug("Error closing input stream: ", e);
+					} catch (IOException e) {
+						ourLog.debug("Error closing input stream: ", e);
+					}
+				}
+			}
+		}
+
 		public HttpResponseBean post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody,
 				Map<String, List<String>> theHeaders, String theContentType) {
-			HttpParams params = new BasicHttpParams();
-			params.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, theClientConfig.getConnectTimeoutMillis());
-			params.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, theClientConfig.getReadTimeoutMillis());
-			params.setBooleanParameter(CoreConnectionPNames.STALE_CONNECTION_CHECK, true);
-			params.setBooleanParameter(CoreConnectionPNames.SO_KEEPALIVE, true);
+			HttpParams params = createHttpParams(theClientConfig);
 
 			ContentType contentType = ContentType.create(theContentType, ourDefaultCharset);
 			HttpEntity postEntity = new StringEntity(theContentBody, contentType);
@@ -385,6 +430,15 @@ public class HttpClientBean implements IHttpClient {
 			return retVal;
 		}
 
+		private HttpParams createHttpParams(PersHttpClientConfig theClientConfig) {
+			HttpParams params = new BasicHttpParams();
+			params.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, theClientConfig.getConnectTimeoutMillis());
+			params.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, theClientConfig.getReadTimeoutMillis());
+			params.setBooleanParameter(CoreConnectionPNames.STALE_CONNECTION_CHECK, true);
+			params.setBooleanParameter(CoreConnectionPNames.SO_KEEPALIVE, true);
+			return params;
+		}
+
 	}
 
 	public static class ClientConfigException extends Exception {
@@ -400,6 +454,11 @@ public class HttpClientBean implements IHttpClient {
 	@VisibleForTesting
 	void setKeystoreServiceForUnitTest(KeystoreServiceBean theKss) {
 		myKeystoreService = theKss;
+	}
+
+	@Override
+	public HttpResponseBean getOneTime(PersHttpClientConfig theHttpClientConfig, String theUrl) throws ClientProtocolException, IOException, ClientConfigException {
+		return new HttpClientImpl(theHttpClientConfig).get(theUrl);
 	}
 
 }

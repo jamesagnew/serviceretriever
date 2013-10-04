@@ -65,11 +65,14 @@ public class HttpClientConfigServiceImpl extends BaseRpcServlet implements HttpC
 
 		byte[] newKeystore=null;
 		String newKeystorePass=null;
+		ourLog.info("New keystore:{} New truststore:{}", theUseNewKeystore, theUseNewTruststore);
 		if (theUseNewKeystore) {
 			SessionUploadedKeystore ks = getTransientKeyStore(theConfig.getPid(), false);
 			if (ks == null) {
 				throw new ServiceFailureException("No keystore in session");
 			}
+			newKeystore = ks.getKeystore();
+			newKeystorePass = ks.getPassword();
 		}
 
 		byte[] newTruststore=null;
@@ -79,6 +82,8 @@ public class HttpClientConfigServiceImpl extends BaseRpcServlet implements HttpC
 			if (ts == null) {
 				throw new ServiceFailureException("No truststore in session");
 			}
+			newTruststore = ts.getKeystore();
+			newTruststorePass = ts.getPassword();
 		}
 
 		if (isMockMode()) {
