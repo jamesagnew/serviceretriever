@@ -27,6 +27,7 @@ import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
+import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
@@ -67,6 +68,8 @@ public class DaoBeanTest extends BaseJpaTest {
 	private DaoBean mySvc;
 
 	private DateFormat myTimeFormat = new SimpleDateFormat("HH:mm");
+
+	private PersConfig myConfig;
 
 	@Test
 	public void testGetRuleFirings() throws ProcessingException {
@@ -295,8 +298,8 @@ public class DaoBeanTest extends BaseJpaTest {
 			msg.setUser(user);
 			msg.setServiceVersion(ver);
 			msg.setResponseType(ResponseTypeEnum.FAULT);
-			msg.setRequestBody("req" + i);
-			msg.setResponseBody("resp" + i);
+			msg.setRequestBody("req" + i, myConfig);
+			msg.setResponseBody("resp" + i, myConfig);
 			msg.setRequestHostIp("127.0.0.1");
 			msg.setImplementationUrl(url);
 			msg.setTransactionTime(new Date(System.currentTimeMillis() + (1000 * i)));
@@ -320,8 +323,8 @@ public class DaoBeanTest extends BaseJpaTest {
 			msg.setUser(user);
 			msg.setServiceVersion(ver);
 			msg.setResponseType(ResponseTypeEnum.FAULT);
-			msg.setRequestBody("req" + i);
-			msg.setResponseBody("resp" + i);
+			msg.setRequestBody("req" + i, myConfig);
+			msg.setResponseBody("resp" + i, myConfig);
 			msg.setRequestHostIp("127.0.0.1");
 			msg.setImplementationUrl(url);
 			msg.setTransactionTime(new Date(System.currentTimeMillis() + (1000 * i)));
@@ -381,8 +384,8 @@ public class DaoBeanTest extends BaseJpaTest {
 			PersServiceVersionRecentMessage msg = new PersServiceVersionRecentMessage();
 			msg.setServiceVersion(ver);
 			msg.setResponseType(ResponseTypeEnum.FAULT);
-			msg.setRequestBody("req" + i);
-			msg.setResponseBody("resp" + i);
+			msg.setRequestBody("req" + i, myConfig);
+			msg.setResponseBody("resp" + i, myConfig);
 			msg.setRequestHostIp("127.0.0.1");
 			msg.setImplementationUrl(url);
 			msg.setTransactionTime(new Date(System.currentTimeMillis() + (1000 * i)));
@@ -405,8 +408,8 @@ public class DaoBeanTest extends BaseJpaTest {
 			PersServiceVersionRecentMessage msg = new PersServiceVersionRecentMessage();
 			msg.setServiceVersion(ver);
 			msg.setResponseType(ResponseTypeEnum.FAULT);
-			msg.setRequestBody("req" + i);
-			msg.setResponseBody("resp" + i);
+			msg.setRequestBody("req" + i, myConfig);
+			msg.setResponseBody("resp" + i, myConfig);
 			msg.setRequestHostIp("127.0.0.1");
 			msg.setImplementationUrl(url);
 			msg.setMethod(method);
@@ -831,6 +834,9 @@ public class DaoBeanTest extends BaseJpaTest {
 	@Before
 	public void before2() throws Exception {
 		mySvc = new DaoBean();
+		
+		myConfig = new PersConfig();
+		
 	}
 
 	@Override

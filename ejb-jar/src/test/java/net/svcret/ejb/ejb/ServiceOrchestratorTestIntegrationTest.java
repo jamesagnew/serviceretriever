@@ -56,7 +56,6 @@ import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
 import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
-import net.svcret.ejb.model.registry.WsSecUsernameClientAuthentication;
 
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.core.IsNot;
@@ -66,8 +65,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Matchers;
-import org.mockito.internal.matchers.CapturingMatcher;
 import org.mockito.internal.stubbing.defaultanswers.ReturnsDeepStubs;
 
 import ca.uhn.hl7v2.parser.PipeParser;
@@ -323,6 +320,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
 		TransactionLoggerBean logger = new TransactionLoggerBean();
 		logger.setDao(myDao);
+		logger.setConfigServiceForUnitTests(myConfigService);
 		mySvc.setTransactionLogger(logger);
 
 		FilesystemAuditLoggerBean fsAuditLogger = new FilesystemAuditLoggerBean();
@@ -411,6 +409,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		when(myHttpClient.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
 
 		TransactionLoggerBean logger = new TransactionLoggerBean();
+		logger.setConfigServiceForUnitTests(myConfigService);
 		logger.setDao(myDao);
 		mySvc.setTransactionLogger(logger);
 
@@ -487,6 +486,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
 		TransactionLoggerBean logger = new TransactionLoggerBean();
 		logger.setDao(myDao);
+		logger.setConfigServiceForUnitTests(myConfigService);
 		mySvc.setTransactionLogger(logger);
 
 		FilesystemAuditLoggerBean fsAuditLogger = new FilesystemAuditLoggerBean();
@@ -796,6 +796,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
 		TransactionLoggerBean logger = new TransactionLoggerBean();
 		logger.setDao(myDao);
+		logger.setConfigServiceForUnitTests(myConfigService);
 		mySvc.setTransactionLogger(logger);
 
 		FilesystemAuditLoggerBean fsAuditLogger = new FilesystemAuditLoggerBean();

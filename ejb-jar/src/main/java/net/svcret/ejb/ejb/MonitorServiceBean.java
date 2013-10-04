@@ -26,6 +26,7 @@ import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.Messages;
 import net.svcret.ejb.api.HttpResponseBean.Failure;
 import net.svcret.ejb.api.IBroadcastSender;
+import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IMonitorNotifier;
 import net.svcret.ejb.api.IMonitorService;
@@ -68,6 +69,9 @@ public class MonitorServiceBean implements IMonitorService {
 	@EJB
 	private IDao myDao;
 
+	@EJB
+	private IConfigService myConfigSvc;
+	
 	@EJB
 	private IRuntimeStatusQueryLocal myRuntimeStatusQuery;
 
@@ -155,8 +159,8 @@ public class MonitorServiceBean implements IMonitorService {
 				PersMonitorRuleActiveCheckOutcome recentOutcome = new PersMonitorRuleActiveCheckOutcome();
 				recentOutcome.setCheck(theCheck);
 				recentOutcome.setImplementationUrl(nextOutcome.getApplicableUrl());
-				recentOutcome.setRequestBody(theCheck.getMessage().getMessageBody());
-				recentOutcome.setResponseBody(nextOutcome.getResponseBody());
+				recentOutcome.setRequestBody(theCheck.getMessage().getMessageBody(), myConfigSvc.getConfig());
+				recentOutcome.setResponseBody(nextOutcome.getResponseBody(), myConfigSvc.getConfig());
 				recentOutcome.setResponseType(nextOutcome.getResponseType());
 				recentOutcome.setFailDescription(nextOutcome.getFailureDescription());
 				if (nextOutcome.getHttpResponse() != null) {

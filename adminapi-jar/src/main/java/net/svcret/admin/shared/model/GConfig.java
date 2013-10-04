@@ -9,6 +9,7 @@ public class GConfig implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private List<String> myProxyUrlBases;
+	private Integer myTruncateRecentDatabaseTransactionsToBytes;
 
 	/**
 	 * @return the proxyUrlBase
@@ -18,6 +19,14 @@ public class GConfig implements Serializable {
 			myProxyUrlBases = new ArrayList<String>();
 		}
 		return myProxyUrlBases;
+	}
+
+	public Integer getTruncateRecentDatabaseTransactionsToBytes() {
+		return myTruncateRecentDatabaseTransactionsToBytes;
+	}
+
+	public void setTruncateRecentDatabaseTransactionsToBytes(Integer theTruncateRecentDatabaseTransactionsToBytes) {
+		myTruncateRecentDatabaseTransactionsToBytes=theTruncateRecentDatabaseTransactionsToBytes;
 	}
 
 }

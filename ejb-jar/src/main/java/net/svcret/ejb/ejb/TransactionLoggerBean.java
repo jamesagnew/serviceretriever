@@ -16,6 +16,7 @@ import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IFilesystemAuditLogger;
 import net.svcret.ejb.api.ITransactionLogger;
@@ -24,6 +25,7 @@ import net.svcret.ejb.ejb.log.BaseUnflushed;
 import net.svcret.ejb.ejb.log.UnflushedServiceVersionRecentMessages;
 import net.svcret.ejb.ejb.log.UnflushedUserRecentMessages;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersSavedTransactionRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
@@ -43,6 +45,8 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	private IDao myDao;
 	@EJB
 	private IFilesystemAuditLogger myFilesystemAuditLogger;
+	@EJB
+	private IConfigService myConfigSvc;
 	
 	private final ReentrantLock myFlushLock = new ReentrantLock();
 	private final ConcurrentHashMap<BasePersServiceVersion, UnflushedServiceVersionRecentMessages> myUnflushedMessages = new ConcurrentHashMap<BasePersServiceVersion, UnflushedServiceVersionRecentMessages>();
@@ -73,10 +77,11 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	 * @param theHttpResponse
 	 * @param theResponseBody
 	 * @throws ProcessingException 
+	 * @throws UnexpectedFailureException 
 	 */
 	@Override
 	public void logTransaction(HttpRequestBean theRequest,BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse,
-			PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, String theResponseBody) throws ProcessingException {
+			PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, String theResponseBody) throws ProcessingException, UnexpectedFailureException {
 		Validate.notNull(theSvcVer);
 		Validate.notNull(theInvocationResponse);
 		if (theInvocationResponse.getResponseType() != ResponseTypeEnum.FAIL) {
@@ -90,7 +95,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 			if (existing == null) {
 				existing = newValue;
 			}
-			existing.recordTransaction(theRequest.getRequestTime(), theSvcVer, theMethod, theUser, theRequestBody, theInvocationResponse, theRequest, theImplementationUrl, theHttpResponse,
+			existing.recordTransaction(myConfigSvc.getConfig(),theRequest.getRequestTime(), theSvcVer, theMethod, theUser, theRequestBody, theInvocationResponse, theRequest, theImplementationUrl, theHttpResponse,
 					theAuthorizationOutcome, theResponseBody);
 		}
 
@@ -101,7 +106,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 				existing = newValue;
 			}
 
-			existing.recordTransaction(theRequest.getRequestTime(), theRequest, theSvcVer, theMethod, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse,
+			existing.recordTransaction(myConfigSvc.getConfig(), theRequest.getRequestTime(), theRequest, theSvcVer, theMethod, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse,
 					theAuthorizationOutcome, theResponseBody);
 
 			// Audit log
@@ -160,6 +165,11 @@ public class TransactionLoggerBean implements ITransactionLogger {
 		while (theList.size() > theSize) {
 			theList.pop();
 		}
+	}
+
+	@VisibleForTesting
+	public void setConfigServiceForUnitTests(IConfigService theConfigSvc) {
+		myConfigSvc=theConfigSvc;
 	}
 
 

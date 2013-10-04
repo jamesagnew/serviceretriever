@@ -447,7 +447,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 	@Override
 	public GConfig loadConfig() throws UnexpectedFailureException {
-		return toUi(myConfigSvc.getConfig());
+		return myConfigSvc.getConfig().toDto();
 	}
 
 	@Override
@@ -796,7 +796,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		PersConfig newCfg = myConfigSvc.saveConfig(existing);
 
-		return toUi(newCfg);
+		return newCfg.toDto();
 
 		//
 		// PersConfig existing =
@@ -1660,15 +1660,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private GConfig toUi(PersConfig theConfig) {
-		GConfig retVal = new GConfig();
-
-		for (PersConfigProxyUrlBase next : theConfig.getProxyUrlBases()) {
-			retVal.getProxyUrlBases().add(next.getUrlBase());
-		}
-
-		return retVal;
-	}
 
 	private DtoLibraryMessage toUi(PersLibraryMessage theMessage, boolean theLoadContents) {
 		DtoLibraryMessage retVal = new DtoLibraryMessage();

@@ -153,6 +153,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		myTransactionLogSvc = new TransactionLoggerBean();
 		myTransactionLogSvc.setDao(myDao);
+		myTransactionLogSvc.setConfigServiceForUnitTests(myConfigSvc);
 
 		DefaultAnswer.setDesignTime();
 	}

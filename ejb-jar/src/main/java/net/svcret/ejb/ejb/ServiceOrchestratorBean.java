@@ -211,6 +211,14 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 				invocationResponseResultsBean.setResponseType(theResponseType);
 				myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), theRequest.getRequestBody().length(), theMethodIfKnown, theUserIfKnown, null, invocationResponseResultsBean,
 						theThrottleDelayIfAnyAndKnown);
+				
+				/*
+				 * TODO: add some kind of statistic recording for svcVer failed requests that don't have a method associated
+				 */
+				
+				myTransactionLogger.logTransaction(theRequest, serviceVersion, null, theUserIfKnown, theRequest.getRequestBody(), theInvocationFailure.toInvocationResponse(),
+						theInvocationFailure.getImplementationUrl(), theInvocationFailure.getHttpResponse(), null, null);
+				
 			} catch (UnexpectedFailureException e1) {
 				// Don't do anything except log here since we're already handling a failure by the
 				// time we get here so this is pretty much the last resort..
@@ -218,12 +226,6 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			}
 		}
 
-		/*
-		 * TODO: add some kind of statistic recording for svcVer failed requests that don't have a method associated
-		 */
-
-		myTransactionLogger.logTransaction(theRequest, serviceVersion, null, theUserIfKnown, theRequest.getRequestBody(), theInvocationFailure.toInvocationResponse(),
-				theInvocationFailure.getImplementationUrl(), theInvocationFailure.getHttpResponse(), null, null);
 	}
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
@@ -312,6 +314,8 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		try {
 			myTransactionLogger.logTransaction(theRequest, method.getServiceVersion(), method, user, requestBody, invocationResponse, successfulUrl, httpResponse, authorizationOutcome, responseBody);
 		} catch (ProcessingException e) {
+			throw new InvocationFailedDueToInternalErrorException(e);
+		} catch (UnexpectedFailureException e) {
 			throw new InvocationFailedDueToInternalErrorException(e);
 		}
 	}
