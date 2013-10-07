@@ -76,6 +76,8 @@ public interface IDao {
 
 	Collection<PersMonitorRuleActiveCheck> getAllMonitorRuleActiveChecks();
 
+	Collection<PersNodeStatus> getAllNodeStatuses();
+
 	Collection<PersService> getAllServices();
 
 	Collection<PersServiceVersionSoap11> getAllServiceVersions();
@@ -119,6 +121,8 @@ public interface IDao {
 
 	BasePersMonitorRule getMonitorRule(long thePid);
 
+	PersMonitorRuleActiveCheck getMonitorRuleActiveCheck(long thePid);
+
 	Collection<BasePersMonitorRule> getMonitorRules();
 
 	List<PersNodeStats> getNodeStatsBefore(InvocationStatsIntervalEnum theMinute, Date theHoursCutoff);
@@ -133,7 +137,11 @@ public interface IDao {
 
 	PersHttpClientConfig getOrCreateHttpClientConfig(String theId);
 
+	PersNodeStatus getOrCreateNodeStatus(String theNodeId);
+
 	BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, String theVersionId, ServiceProtocolEnum theProtocol) throws ProcessingException;
+
+	BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, String theVersionId, ServiceProtocolEnum theProtocol, BasePersServiceVersion theSvcVerToUseIfCreatingNew);
 
 	PersService getOrCreateServiceWithId(PersDomain theDomain, String theServiceId) throws ProcessingException;
 
@@ -179,6 +187,8 @@ public interface IDao {
 
 	List<PersMonitorRuleFiring> loadMonitorRuleFiringsWhichAreActive();
 
+	// List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int theStart);
+
 	PersServiceVersionRecentMessage loadRecentMessageForServiceVersion(long thePid);
 
 	PersUserRecentMessage loadRecentMessageForUser(long thePid);
@@ -186,8 +196,6 @@ public interface IDao {
 	void removeDomain(PersDomain theDomain);
 
 	void removeServiceVersion(long thePid) throws ProcessingException;
-
-	// List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int theStart);
 
 	void saveAuthenticationHost(BasePersAuthenticationHost theHost);
 
@@ -211,9 +219,11 @@ public interface IDao {
 
 	PersMonitorRuleFiring saveMonitorRuleFiring(PersMonitorRuleFiring theFiring);
 
+	void saveNodeStatus(PersNodeStatus theNodeStatus);
+
 	<T extends BasePersMonitorRule> T saveOrCreateMonitorRule(T theRule);
 
-	void saveRecentMessagesAndTrimInNewTransaction(BaseUnflushed<? extends BasePersSavedTransactionRecentMessage> theNextTransactions);
+	ByteDelta saveRecentMessagesAndTrimInNewTransaction(BaseUnflushed<? extends BasePersSavedTransactionRecentMessage> theNextTransactions);
 
 	PersBaseServerAuth<?, ?> saveServerAuth(PersBaseServerAuth<?, ?> theNextPers);
 
@@ -237,9 +247,45 @@ public interface IDao {
 
 	void saveUserStatus(Collection<PersUserStatus> theStatus);
 
-	void trimServiceVersionRecentMessages(BasePersServiceVersion theVersion, ResponseTypeEnum theType, int theNumberToTrimTo);
+	long trimServiceVersionRecentMessages(BasePersServiceVersion theVersion, ResponseTypeEnum theType, int theNumberToTrimTo);
 
 	void trimUserRecentMessages(PersUser theUser, ResponseTypeEnum theType, int theNumberToTrimTo);
+
+	public static class ByteDelta {
+		private long myAdded;
+		private long myRemoved;
+
+		public ByteDelta(long theAdded, long theRemoved) {
+			super();
+			myAdded = theAdded;
+			myRemoved = theRemoved;
+		}
+
+		public ByteDelta() {
+			// nothing
+		}
+
+		public void add(ByteDelta theByteDelta) {
+			myAdded += theByteDelta.getAdded();
+			myRemoved += theByteDelta.getRemoved();
+		}
+
+		public long getAdded() {
+			return myAdded;
+		}
+
+		public long getRemoved() {
+			return myRemoved;
+		}
+
+		public void addRemoved(long theRemovedBytes) {
+			myRemoved += theRemovedBytes;
+		}
+
+		public void addAdded(int theAddedBytes) {
+			myAdded += theAddedBytes;
+		}
+	}
 
 	public static class RecentMessagesAndMaxToKeep {
 		private List<BasePersSavedTransaction> myMessages = new ArrayList<BasePersSavedTransaction>();
@@ -265,16 +311,5 @@ public interface IDao {
 		}
 
 	}
-
-	PersMonitorRuleActiveCheck getMonitorRuleActiveCheck(long thePid);
-
-	PersNodeStatus getOrCreateNodeStatus(String theNodeId);
-
-	void saveNodeStatus(PersNodeStatus theNodeStatus);
-
-	Collection<PersNodeStatus> getAllNodeStatuses();
-
-
-	BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, String theVersionId, ServiceProtocolEnum theProtocol, BasePersServiceVersion theSvcVerToUseIfCreatingNew);
 
 }

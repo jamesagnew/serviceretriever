@@ -34,21 +34,31 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
 public abstract class BaseUrlGrid extends FlowPanel {
-	private final int myColId;
-	private final int myColLastTransaction;
-	private final int myColUrl;
-	private final int myColUrlStatus;
-	private final int myColUsage;
+	private int myColAction = -1;
+	private int myColDomain = -1;
+	private int myColId = -1;
+	private int myColLastTransaction = -1;
+	private int myColService = -1;
+	private int myColUrl = -1;
+	private int myColUrlStatus = -1;
+	private int myColUsage = -1;
 	private Label myNoUrlsLabel;
 	private FlexTableWithTooltips<GServiceVersionUrl> myUrlGrid;
 	private final List<GServiceVersionUrl> myUrlList = new ArrayList<GServiceVersionUrl>();
 
 	public BaseUrlGrid() {
 		int next = 1;
+		if (!isHideActionColumn()) {
+			myColAction = next++;
+		}
+		if (!isHideDomainColumn()) {
+			myColDomain = next++;
+		}
+		if (!isHideServiceColumn()) {
+			myColService = next++;
+		}
 		if (!isHideIdColumn()) {
 			myColId = next++;
-		} else {
-			myColId = -1;
 		}
 		myColUrl = next++;
 		myColUrlStatus = next++;
@@ -57,7 +67,10 @@ public abstract class BaseUrlGrid extends FlowPanel {
 
 	}
 
-	protected abstract Widget createActionPanel(GServiceVersionUrl theUrl);
+	@SuppressWarnings("unused")
+	protected Widget createActionPanel(GServiceVersionUrl theUrl) {
+		return null;
+	}
 
 	protected abstract Widget createUrlWidget(GServiceVersionUrl theUrl);
 
@@ -81,7 +94,17 @@ public abstract class BaseUrlGrid extends FlowPanel {
 		for (final GServiceVersionUrl next : theUrlList) {
 			row++;
 
-			myUrlGrid.setWidget(row, 0, createActionPanel(next));
+			if (!isHideActionColumn()) {
+				myUrlGrid.setWidget(row, myColAction, createActionPanel(next));
+			}
+
+			if (!isHideDomainColumn()) {
+				myUrlGrid.setWidget(row, myColDomain, createDomainPanel(next));
+			}
+
+			if (!isHideServiceColumn()) {
+				myUrlGrid.setWidget(row, myColService, createServicePanel(next));
+			}
 
 			if (!isHideIdColumn()) {
 				EditableField idField = new EditableField();
@@ -120,13 +143,13 @@ public abstract class BaseUrlGrid extends FlowPanel {
 					statusPanel.add(imageForStatus);
 					PButton cbResetButton = null;
 					String text = createUrlStatusText(next);
-					
-					if (next.getStatus()==StatusEnum.DOWN && next.getStatsNextCircuitBreakerReset()!=null) {
+
+					if (next.getStatus() == StatusEnum.DOWN && next.getStatsNextCircuitBreakerReset() != null) {
 						cbResetButton = new PButton("Reset CB");
 						cbResetButton.addClickHandler(new CircuitBreakerResetActionHandler(cbResetButton, next.getPid()));
 						cbResetButton.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
 					}
-					
+
 					Label urlStatusLabel = new Label(text, true);
 					urlStatusLabel.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
 					statusPanel.add(urlStatusLabel);
@@ -152,7 +175,7 @@ public abstract class BaseUrlGrid extends FlowPanel {
 						latencySparkline.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
 						grid.add(latencySparkline);
 					}
-					
+
 					myUrlGrid.setTooltipProvider(row, myColUsage, new UsageSparklineTooltipProvider<GServiceVersionUrl>());
 				}
 
@@ -178,6 +201,55 @@ public abstract class BaseUrlGrid extends FlowPanel {
 		myNoUrlsLabel.setVisible(theUrlList.size() == 0);
 	}
 
+	@SuppressWarnings("unused")
+	protected Widget createServicePanel(GServiceVersionUrl theNext) {
+		return null;
+	}
+
+	@SuppressWarnings("unused")
+	protected Widget createDomainPanel(GServiceVersionUrl theNext) {
+		return null;
+	}
+
+	protected void init() {
+		myUrlGrid = new FlexTableWithTooltips<GServiceVersionUrl>(myUrlList);
+		myUrlGrid.addStyleName(CssConstants.PROPERTY_TABLE);
+		this.add(myUrlGrid);
+
+		if (!isHideDomainColumn()) {
+			myUrlGrid.setWidget(0, myColDomain, new Label("Domain"));
+		}
+		if (!isHideServiceColumn()) {
+			myUrlGrid.setWidget(0, myColService, new Label("Service"));
+		}
+		if (!isHideIdColumn()) {
+			myUrlGrid.setWidget(0, myColId, new Label("ID"));
+		}
+		myUrlGrid.setWidget(0, myColUrl, new Label("URL"));
+		myUrlGrid.setWidget(0, myColUrlStatus, new Label("Status"));
+		myUrlGrid.setWidget(0, myColUsage, new Label("60 Min Activity"));
+		myUrlGrid.setWidget(0, myColLastTransaction, new Label("Last Transaction"));
+
+		myNoUrlsLabel = new Label("No URLs Defined");
+		this.add(myNoUrlsLabel);
+	}
+
+	protected boolean isHideActionColumn() {
+		return false;
+	}
+
+	protected boolean isHideDomainColumn() {
+		return false;
+	}
+
+	protected boolean isHideIdColumn() {
+		return false;
+	}
+
+	protected boolean isHideServiceColumn() {
+		return false;
+	}
+
 	public static String createUrlStatusText(final GServiceVersionUrl next) {
 		String text = null;
 		switch (next.getStatus()) {
@@ -197,30 +269,6 @@ public abstract class BaseUrlGrid extends FlowPanel {
 		}
 		return text;
 	}
-
-	protected void init() {
-		myUrlGrid = new FlexTableWithTooltips<GServiceVersionUrl>(myUrlList);
-		myUrlGrid.addStyleName(CssConstants.PROPERTY_TABLE);
-		this.add(myUrlGrid);
-
-		myUrlGrid.setWidget(0, 0, new Label(provideActionColumnHeaderText()));
-		if (!isHideIdColumn()) {
-			myUrlGrid.setWidget(0, myColId, new Label("ID"));
-		}
-		myUrlGrid.setWidget(0, myColUrl, new Label("URL"));
-		myUrlGrid.setWidget(0, myColUrlStatus, new Label("Status"));
-		myUrlGrid.setWidget(0, myColUsage, new Label("60 Min Activity"));
-		myUrlGrid.setWidget(0, myColLastTransaction, new Label("Last Transaction"));
-
-		myNoUrlsLabel = new Label("No URLs Defined");
-		this.add(myNoUrlsLabel);
-	}
-
-	protected boolean isHideIdColumn() {
-		return false;
-	}
-
-	protected abstract String provideActionColumnHeaderText();
 
 	public class CircuitBreakerResetActionHandler implements ClickHandler {
 

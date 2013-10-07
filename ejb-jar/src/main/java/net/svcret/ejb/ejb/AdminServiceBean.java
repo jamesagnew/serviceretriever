@@ -87,6 +87,7 @@ import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.StatusesBean;
 import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
+import net.svcret.ejb.ejb.nodecomm.ISynchronousNodeIpcClient;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.invoker.soap.IServiceInvokerSoap11;
@@ -980,9 +981,14 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 		return msg.toDto(true);
 	}
-
+	
+	@EJB
+	private ISynchronousNodeIpcClient mySynchronousNodeIpcClient;
+	
 	@Override
 	public GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid) {
+		mySynchronousNodeIpcClient.invokeFlushTransactionLogs();
+		
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
 
 		GRecentMessageLists retVal = new GRecentMessageLists();
@@ -1014,6 +1020,8 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 	@Override
 	public GRecentMessageLists loadRecentTransactionListForUser(long thePid) {
+		mySynchronousNodeIpcClient.invokeFlushTransactionLogs();
+
 		PersUser user = myDao.getUser(thePid);
 		BasePersAuthenticationHost authHost = user.getAuthenticationHost();
 

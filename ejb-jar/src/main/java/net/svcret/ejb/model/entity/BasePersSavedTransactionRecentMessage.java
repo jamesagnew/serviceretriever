@@ -161,7 +161,7 @@ public abstract class BasePersSavedTransactionRecentMessage extends BasePersSave
 		return retVal;
 	}
 
-	public abstract void trimUsingDao(IDao theDaoBean);
+	public abstract long trimUsingDao(IDao theDaoBean);
 
 	private static String toHeaderContentType(List<Pair<String>> theResponseHeaders) {
 		for (Pair<String> pair : theResponseHeaders) {

@@ -9,18 +9,16 @@ import javax.ejb.EJB;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 
 import net.svcret.admin.shared.model.RetrieverNodeTypeEnum;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IFilesystemAuditLogger;
-import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IMonitorService;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.api.ISecurityService;
 import net.svcret.ejb.api.ITransactionLogger;
+import net.svcret.ejb.ejb.nodecomm.ISynchronousNodeIpcClient;
 
 @Startup()
 @Singleton()
@@ -30,27 +28,28 @@ public class SchedulerBean implements IScheduler {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(SchedulerBean.class);
 
 	@EJB
+	private IConfigService myConfigSvc;
+
+	@EJB
+	private IFilesystemAuditLogger myFilesystemAuditLogger;
+
+	private long myLastRecentMessagesFlush;
+
+	private long myLastStatsFlush;
+
+	@EJB
 	private IMonitorService myMonitorSvc;
 
 	@EJB
 	private ISecurityService mySecuritySvc;
 
 	@EJB
-	private IConfigService myConfigSvc;
-
-	@EJB
 	private IRuntimeStatus myStatsSvc;
+	@EJB
+	private ISynchronousNodeIpcClient mySynchronousNodeIpcClient;
 
 	@EJB
 	private ITransactionLogger myTransactionLogger;
-
-	@EJB
-	private IHttpClient myHttpClient;
-
-	@EJB
-	private IFilesystemAuditLogger myFilesystemAuditLogger;
-
-	private long myLastStatsFlush;
 
 	@Override
 	@Schedule(second = "0", minute = "*", hour = "*", persistent = false)
@@ -79,71 +78,58 @@ public class SchedulerBean implements IScheduler {
 	}
 
 	@Override
-	@Schedule(second = "0", minute = "*", hour = "*", persistent = false)
-	public void flushInMemoryStatisticsAndTransactionsPrimary() {
-		try {
-			if (myConfigSvc.getNodeType() != RetrieverNodeTypeEnum.PRIMARY) {
-				return;
-			}
-
-			ourLog.debug("flushTransactionLogs()");
-			myTransactionLogger.flush();
-
-			flushInMemoryStatistics();
-
-		} catch (Exception e) {
-			ourLog.error("Failed to flush stats", e);
+	@Schedule(second = "0", minute = "0/15", hour = "*", persistent = false)
+	public synchronized void flushInMemoryRecentMessagesUnlessItHasHappenedVeryRecently() {
+		if ((myLastRecentMessagesFlush + 5000) > System.currentTimeMillis()) {
+			ourLog.debug("Last stats flush was at {}, not going to do another", new Date(myLastStatsFlush));
+			return;
 		}
+
+		if (myConfigSvc.getNodeType() != RetrieverNodeTypeEnum.PRIMARY) {
+			ourLog.debug("Not the primary node, not going to flush stats");
+			return;
+		}
+
+		try {
+			mySynchronousNodeIpcClient.invokeFlushTransactionLogs();
+		} catch (Exception e) {
+			ourLog.error("Failed to flush remote stats", e);
+		}
+
+		try {
+			myTransactionLogger.flush();
+			myLastRecentMessagesFlush = System.currentTimeMillis();
+		} catch (Exception e) {
+			ourLog.error("Failed to flush local stats", e);
+		}
+
 	}
 
 	@Override
-	@TransactionAttribute(TransactionAttributeType.NEVER)
-	public void flushInMemoryStatistics() {
-		try {
-			for (String nextUrl : myConfigSvc.getSecondaryNodeRefreshUrls()) {
-				ourLog.debug("Invoking secondary refresh URL: {}", nextUrl);
-				try {
-					myHttpClient.get(nextUrl);
-				} catch (Exception e) {
-					ourLog.debug("Failed to invoke URL to flush statistics on remote node", e);
-					ourLog.error("Failed to invoke URL '{}' to flush statistics on remote node: {}", nextUrl, e.toString());
-				}
-			}
+	@Schedule(second = "0", minute = "*", hour = "*", persistent = false)
+	public synchronized void flushInMemoryStatisticsUnlessItHasHappenedVeryRecently() {
+		if ((myLastStatsFlush + 5000) > System.currentTimeMillis()) {
+			ourLog.debug("Last stats flush was at {}, not going to do another", new Date(myLastStatsFlush));
+			return;
+		}
 
+		if (myConfigSvc.getNodeType() != RetrieverNodeTypeEnum.PRIMARY) {
+			ourLog.debug("Not the primary node, not going to flush stats");
+			return;
+		}
+
+		try {
+			mySynchronousNodeIpcClient.invokeFlushRuntimeStatus();
+		} catch (Exception e) {
+			ourLog.error("Failed to flush remote stats", e);
+		}
+
+		try {
 			ourLog.debug("flushStats()");
 			myStatsSvc.flushStatus();
-
 			myLastStatsFlush = System.currentTimeMillis();
 		} catch (Exception e) {
-			ourLog.error("Failed to flush stats", e);
-		}
-	}
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.NEVER)
-	public void flushInMemoryStatisticsAndTransactionsSecondary() {
-		try {
-			ourLog.debug("flushStats()");
-			myStatsSvc.flushStatus();
-
-			ourLog.debug("flushTransactionLogs()");
-			myTransactionLogger.flush();
-		} catch (Exception e) {
-			ourLog.error("Failed to flush stats", e);
-		}
-	}
-
-	@Override
-	@Schedule(second = "0", minute = "*", hour = "*", persistent = false)
-	public void monitorRunPassiveChecks() {
-		try {
-			if (myConfigSvc.getNodeType() != RetrieverNodeTypeEnum.PRIMARY) {
-				return;
-			}
-
-			myMonitorSvc.check();
-		} catch (Exception e) {
-			ourLog.error("Failed to collapse stats", e);
+			ourLog.error("Failed to flush local stats", e);
 		}
 	}
 
@@ -161,6 +147,20 @@ public class SchedulerBean implements IScheduler {
 		}
 	}
 
+	@Override
+	@Schedule(second = "0", minute = "*", hour = "*", persistent = false)
+	public void monitorRunPassiveChecks() {
+		try {
+			if (myConfigSvc.getNodeType() != RetrieverNodeTypeEnum.PRIMARY) {
+				return;
+			}
+
+			myMonitorSvc.check();
+		} catch (Exception e) {
+			ourLog.error("Failed to collapse stats", e);
+		}
+	}
+
 	@PostConstruct
 	public void postConstruct() {
 		ourLog.info("Scheduler has started");
@@ -169,9 +169,9 @@ public class SchedulerBean implements IScheduler {
 
 	@Override
 	@Schedule(second = "0", minute = "*", hour = "*", persistent = false)
-	public void reloadUserRegistry() {
+	public void recordNodeStats() {
 		try {
-			mySecuritySvc.loadUserCatalogIfNeeded();
+			myStatsSvc.recordNodeStatistics();
 		} catch (Exception e) {
 			ourLog.error("Failed to load user catalog", e);
 		}
@@ -179,25 +179,9 @@ public class SchedulerBean implements IScheduler {
 
 	@Override
 	@Schedule(second = "0", minute = "*", hour = "*", persistent = false)
-	public synchronized void flushInMemoryStatisticsUnlessItHasHappenedVeryRecently() {
-		if ((myLastStatsFlush + 5000) > System.currentTimeMillis()) {
-			ourLog.debug("Last stats flush was at {}, not going to do another", new Date(myLastStatsFlush));
-			return;
-		}
-
-		if (myConfigSvc.getNodeType() != RetrieverNodeTypeEnum.PRIMARY) {
-			ourLog.debug("Not the primary node, not going to flush stats");
-			return;
-		}
-
-		flushInMemoryStatistics();
-	}
-
-	@Override
-	@Schedule(second = "0", minute = "*", hour = "*", persistent = false)
-	public void recordNodeStats() {
+	public void reloadUserRegistry() {
 		try {
-			myStatsSvc.recordNodeStatistics();
+			mySecuritySvc.loadUserCatalogIfNeeded();
 		} catch (Exception e) {
 			ourLog.error("Failed to load user catalog", e);
 		}

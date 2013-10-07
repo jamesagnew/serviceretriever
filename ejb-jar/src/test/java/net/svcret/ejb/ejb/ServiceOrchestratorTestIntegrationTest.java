@@ -1,14 +1,8 @@
 package net.svcret.ejb.ejb;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import java.io.File;
 import java.io.FileReader;
@@ -60,7 +54,6 @@ import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersStickySessionUrlBinding;
 import net.svcret.ejb.model.entity.PersUser;
-import net.svcret.ejb.model.entity.http.PersHttpBasicClientAuth;
 import net.svcret.ejb.model.entity.http.PersHttpBasicServerAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
@@ -378,8 +371,8 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
 		}
 
-		// PersInvocationMethodSvcverStats next = (PersInvocationMethodSvcverStats) values.iterator().next();
-		// assertEquals(1, next.getSuccessInvocationCount());
+		 PersInvocationMethodSvcverStats next = (PersInvocationMethodSvcverStats) values.iterator().next();
+		 assertEquals(1, next.getSuccessInvocationCount());
 		// assertEquals(1, next.getServerSecurityFailures());
 
 	}

@@ -472,11 +472,19 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	}
 
 	public ServerSecuredEnum getServerSecured() {
-		if (getServerAuths().size() > 0) {
-			return ServerSecuredEnum.FULLY;
-		} else {
-			return ServerSecuredEnum.NONE;
+		switch (getServerSecurityMode()) {
+		case REQUIRE_ALL:
+		case REQUIRE_ANY:
+			if (getServerAuths().size() > 0) {
+				return ServerSecuredEnum.FULLY;
+			}
+			break;
+		case ALLOW_ANY:
+		case NONE:
+			break;
 		}
+
+		return ServerSecuredEnum.NONE;
 	}
 
 	public ServerSecurityModeEnum getServerSecurityMode() {

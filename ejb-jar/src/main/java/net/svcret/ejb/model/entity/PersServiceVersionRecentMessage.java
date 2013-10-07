@@ -90,8 +90,8 @@ public class PersServiceVersionRecentMessage extends BasePersSavedTransactionRec
 	}
 
 	@Override
-	public void trimUsingDao(IDao theDaoBean) {
-		theDaoBean.trimServiceVersionRecentMessages(myServiceVersion, getResponseType(), myServiceVersion.determineKeepNumRecentTransactions(getResponseType()));
+	public long trimUsingDao(IDao theDaoBean) {
+		return theDaoBean.trimServiceVersionRecentMessages(myServiceVersion, getResponseType(), myServiceVersion.determineKeepNumRecentTransactions(getResponseType()));
 	}
 
 }

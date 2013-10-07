@@ -9,7 +9,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IScheduler;
+import net.svcret.ejb.api.ITransactionLogger;
 
 @WebServlet(urlPatterns = { "/doSecondaryFlush" })
 public class SchedulerEventListenerServlet extends HttpServlet {
@@ -21,22 +23,30 @@ public class SchedulerEventListenerServlet extends HttpServlet {
 	@EJB
 	private IScheduler myScheduler;
 
+	@EJB
+	private IRuntimeStatus myStatsSvc;
+	
+	@EJB
+	private ITransactionLogger myTransactionLoggerSvc;
+	
 	@Override
 	protected void doGet(HttpServletRequest theReq, HttpServletResponse theResp) throws ServletException, IOException {
 		long start = System.currentTimeMillis();
 
-		if ("1".equals(theReq.getAttribute("statsonly"))) {
-			ourLog.debug("Received flush request for stats");
-			myScheduler.flushInMemoryStatistics();
+		if ("flushstats".equals(theReq.getAttribute("action"))) {
+			myStatsSvc.flushStatus();
+		} else if ("flushrecentmessages".equals(theReq.getAttribute("action"))) {
+			myTransactionLoggerSvc.flush();
 		} else {
-			ourLog.debug("Received flush request for everything");
-			myScheduler.flushInMemoryStatisticsAndTransactionsSecondary();
+			throw new ServletException("Unknown action: " + theReq.getAttribute("action"));
 		}
-
+		
 		long delay = System.currentTimeMillis() - start;
 
 		theResp.setContentType("text/plain");
-		theResp.getWriter().append("Completed flush in " + delay + "ms");
+		String msg = "Completed flush in " + delay + "ms";
+		theResp.getWriter().append(msg);
+		ourLog.info(msg);
 
 	}
 

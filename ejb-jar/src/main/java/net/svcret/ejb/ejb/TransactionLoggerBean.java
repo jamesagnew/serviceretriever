@@ -18,6 +18,7 @@ import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
+import net.svcret.ejb.api.IDao.ByteDelta;
 import net.svcret.ejb.api.IFilesystemAuditLogger;
 import net.svcret.ejb.api.ITransactionLogger;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
@@ -31,6 +32,7 @@ import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
+import net.svcret.ejb.util.LogUtil;
 import net.svcret.ejb.util.Validate;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -143,17 +145,20 @@ public class TransactionLoggerBean implements ITransactionLogger {
 		ourLog.debug("Going to flush recent transactions to database: {}", unflushedMessages.values());
 		long start = System.currentTimeMillis();
 
+		ByteDelta byteDelta = new ByteDelta();
 		int saveCount = 0;
 		for (Object next : new HashSet<Object>(unflushedMessages.keySet())) {
 			BaseUnflushed<? extends BasePersSavedTransactionRecentMessage> nextTransactions = unflushedMessages.remove(next);
 			if (nextTransactions != null) {
-				myDao.saveRecentMessagesAndTrimInNewTransaction(nextTransactions);
+				ByteDelta nextByteDelta = myDao.saveRecentMessagesAndTrimInNewTransaction(nextTransactions);
+				byteDelta.add(nextByteDelta);
 				saveCount += nextTransactions.getCount();
 			}
 		}
 
 		long delay = System.currentTimeMillis() - start;
-		ourLog.info("Done saving {} recent transactions to database in {}ms", saveCount, delay);
+		ourLog.info("Done saving {} recent transactions to database in {}ms. Added {} / Removed {}", 
+				new Object[] {saveCount, delay, LogUtil.formatByteCount(byteDelta.getAdded(), false), LogUtil.formatByteCount(byteDelta.getRemoved(), false)});
 	}
 
 	@VisibleForTesting

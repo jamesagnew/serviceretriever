@@ -113,6 +113,8 @@ public class DaoBean implements IDao {
 	@EJB
 	private IDao myThis;
 
+	private ByteDelta retVal;
+
 	@Override
 	public void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost) {
 		Validate.notNull(theAuthHost, "AuthenticationHost");
@@ -543,7 +545,7 @@ public class DaoBean implements IDao {
 	public PersNodeStatus getOrCreateNodeStatus(String theNodeId) {
 		PersNodeStatus retVal = myEntityManager.find(PersNodeStatus.class, theNodeId);
 		if (retVal == null) {
-			retVal =new PersNodeStatus();
+			retVal = new PersNodeStatus();
 			retVal.setNodeId(theNodeId);
 			retVal.setStatusTimestamp(new Date());
 			myEntityManager.merge(retVal);
@@ -577,7 +579,7 @@ public class DaoBean implements IDao {
 		}
 
 		retVal = getOrCreateServiceVersionWithId(theService, theVersionId, theProtocol, retVal);
-		
+
 		return retVal;
 	}
 
@@ -1008,11 +1010,10 @@ public class DaoBean implements IDao {
 			ourLog.info("Saving HTTP client config {} / {}", theConfig.getPid(), theConfig.getId());
 		}
 
-		if (StringUtils.isNotBlank(theConfig.getStickySessionCookieForSessionId()) && 
-				StringUtils.isNotBlank(theConfig.getStickySessionHeaderForSessionId())) {
+		if (StringUtils.isNotBlank(theConfig.getStickySessionCookieForSessionId()) && StringUtils.isNotBlank(theConfig.getStickySessionHeaderForSessionId())) {
 			throw new IllegalArgumentException("Must not provide both a sticky session cookie and a sticky session header value");
 		}
-		
+
 		PersHttpClientConfig retVal = myEntityManager.merge(theConfig);
 
 		if (isNew) {
@@ -1197,13 +1198,14 @@ public class DaoBean implements IDao {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void saveRecentMessagesAndTrimInNewTransaction(BaseUnflushed<? extends BasePersSavedTransactionRecentMessage> theNextTransactions) {
+	public ByteDelta saveRecentMessagesAndTrimInNewTransaction(BaseUnflushed<? extends BasePersSavedTransactionRecentMessage> theNextTransactions) {
 
-		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getSuccessAndRemove());
-		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getFailAndRemove());
-		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getSecurityFailAndRemove());
-		doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getFaultAndRemove());
+		ByteDelta delta = doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getSuccessAndRemove());
+		delta.add(doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getFailAndRemove()));
+		delta.add(doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getSecurityFailAndRemove()));
+		delta.add(doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getFaultAndRemove()));
 
+		return delta;
 	}
 
 	@Override
@@ -1381,7 +1383,6 @@ public class DaoBean implements IDao {
 		myEntityManager.merge(theMsg);
 	}
 
-
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	@Override
 	public void saveUserStatus(Collection<PersUserStatus> theStatus) {
@@ -1400,14 +1401,15 @@ public class DaoBean implements IDao {
 		}
 	}
 
-	/**	 * FOR UNIT TESTS ONLY
+	/**
+	 * * FOR UNIT TESTS ONLY
 	 */
 	public void setEntityManager(EntityManager theEntityManager) {
 		myEntityManager = theEntityManager;
 	}
 
 	@Override
-	public void trimServiceVersionRecentMessages(BasePersServiceVersion theVersion, ResponseTypeEnum theType, int theNumberToTrimTo) {
+	public long trimServiceVersionRecentMessages(BasePersServiceVersion theVersion, ResponseTypeEnum theType, int theNumberToTrimTo) {
 		Validate.notNull(theVersion);
 		Validate.notNull(theType);
 		Validate.notNegative(theNumberToTrimTo);
@@ -1430,14 +1432,19 @@ public class DaoBean implements IDao {
 
 		ourLog.debug("For recent messages of type {} for version {} we have {} entries and want {}", new Object[] { theType, theVersion.getPid(), num, toDelete });
 		if (toDelete <= 0) {
-			return;
+			return 0;
 		}
 
 		List<PersServiceVersionRecentMessage> messages = getServiceVersionRecentMessages(theVersion, theType);
 		int index = 0;
+		long retVal = 0;
 		for (Iterator<PersServiceVersionRecentMessage> iter = messages.iterator(); iter.hasNext() && index < toDelete; index++) {
-			myEntityManager.remove(iter.next());
+			PersServiceVersionRecentMessage next = iter.next();
+			retVal += next.getRequestBodyBytes() + next.getResponseBodyBytes();
+			myEntityManager.remove(next);
 		}
+
+		return retVal;
 	}
 
 	@Override
@@ -1484,13 +1491,18 @@ public class DaoBean implements IDao {
 		return retVal;
 	}
 
-	private void doSaveRecentMessagesAndTrimInNewTransaction(LinkedList<? extends BasePersSavedTransactionRecentMessage> transactions) {
+	private ByteDelta doSaveRecentMessagesAndTrimInNewTransaction(LinkedList<? extends BasePersSavedTransactionRecentMessage> transactions) {
+		ByteDelta retVal = new ByteDelta();
+
 		if (transactions.size() > 0) {
 			for (BasePersSavedTransactionRecentMessage nextRecentMessage : transactions) {
+				retVal.addAdded(nextRecentMessage.getRequestBodyBytes() + nextRecentMessage.getResponseBodyBytes());
 				nextRecentMessage.addUsingDao(this);
 			}
-			transactions.get(0).trimUsingDao(this);
+			retVal.addRemoved(transactions.get(0).trimUsingDao(this));
 		}
+
+		return retVal;
 	}
 
 	@VisibleForTesting

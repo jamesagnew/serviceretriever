@@ -91,8 +91,9 @@ public class PersUserRecentMessage extends BasePersSavedTransactionRecentMessage
 	}
 
 	@Override
-	public void trimUsingDao(IDao theDaoBean) {
+	public long trimUsingDao(IDao theDaoBean) {
 		theDaoBean.trimUserRecentMessages(myUser, getResponseType(), myUser.getAuthenticationHost().determineKeepNumRecentTransactions(getResponseType()));
+		return getRequestBodyBytes() + getResponseBodyBytes();
 	}
 
 }

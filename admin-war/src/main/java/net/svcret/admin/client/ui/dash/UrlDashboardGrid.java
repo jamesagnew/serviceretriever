@@ -22,10 +22,13 @@ import net.svcret.admin.shared.model.GServiceVersionUrl;
 
 public class UrlDashboardGrid extends BaseUrlGrid {
 
-	private Map<Long, GDomain> myUrlToDomain = new HashMap<Long, GDomain>();
-	private Map<Long, GService> myUrlToService = new HashMap<Long, GService>();
-	private Map<Long, BaseDtoServiceVersion> myUrlToServiceVersion = new HashMap<Long, BaseDtoServiceVersion>();
 	private List<GServiceVersionUrl> myUrls = new ArrayList<GServiceVersionUrl>();
+
+	private Map<Long, GDomain> myUrlToDomain = new HashMap<Long, GDomain>();
+
+	private Map<Long, GService> myUrlToService = new HashMap<Long, GService>();
+
+	private Map<Long, BaseDtoServiceVersion> myUrlToServiceVersion = new HashMap<Long, BaseDtoServiceVersion>();
 
 	public UrlDashboardGrid(GDomainList theDomainList) {
 		init();
@@ -70,17 +73,25 @@ public class UrlDashboardGrid extends BaseUrlGrid {
 		doUpdateUrlPanel(myUrls);
 	}
 
+
 	@Override
-	protected Widget createActionPanel(GServiceVersionUrl theUrl) {
+	protected Widget createDomainPanel(GServiceVersionUrl theUrl) {
 		GDomain domain = myUrlToDomain.get(theUrl.getPid());
-		GService service = myUrlToService.get(theUrl.getPid());
-		BaseDtoServiceVersion version = myUrlToServiceVersion.get(theUrl.getPid());
 
 		SafeHtmlBuilder b = new SafeHtmlBuilder();
 		b.appendHtmlConstant("<a href=\"#" + NavProcessor.getTokenEditDomain(domain.getPid()) + "\">");
 		b.appendEscaped(domain.getName());
 		b.appendHtmlConstant("</a> ");
 
+		return new HTML(b.toSafeHtml());
+	}
+	@Override
+	protected Widget createServicePanel(GServiceVersionUrl theUrl) {
+		GDomain domain = myUrlToDomain.get(theUrl.getPid());
+		GService service = myUrlToService.get(theUrl.getPid());
+		BaseDtoServiceVersion version = myUrlToServiceVersion.get(theUrl.getPid());
+
+		SafeHtmlBuilder b = new SafeHtmlBuilder();
 		b.appendHtmlConstant("<a href=\"#" + NavProcessor.getTokenEditService(domain.getPid(), service.getPid()) + "\">");
 		b.appendEscaped(service.getName());
 		b.appendHtmlConstant("</a> ");
@@ -91,22 +102,33 @@ public class UrlDashboardGrid extends BaseUrlGrid {
 
 		return new HTML(b.toSafeHtml());
 	}
+	@Override
+	protected Widget createUrlWidget(GServiceVersionUrl theUrl) {
+		Anchor retVal = new Anchor(theUrl.getId());
+		retVal.setHref(theUrl.getUrl());
+		return retVal;
+	}
+	@Override
+	protected boolean isHideActionColumn() {
+		return true;
+	}
+
+	@Override
+	protected boolean isHideDomainColumn() {
+		return false;
+	}
+
 
 	@Override
 	protected boolean isHideIdColumn() {
 		return true;
 	}
 
-	@Override
-	protected String provideActionColumnHeaderText() {
-		return "Service";
-	}
+	
 
 	@Override
-	protected Widget createUrlWidget(GServiceVersionUrl theUrl) {
-		Anchor retVal = new Anchor(theUrl.getId());
-		retVal.setHref(theUrl.getUrl());
-		return retVal;
+	protected boolean isHideServiceColumn() {
+		return false;
 	}
 
 }

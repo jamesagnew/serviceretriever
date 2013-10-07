@@ -1,18 +1,6 @@
 package net.svcret.admin.client.ui.config.svcver;
 
 import static net.svcret.admin.client.AdminPortal.*;
-
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.logical.shared.ValueChangeEvent;
-import com.google.gwt.event.logical.shared.ValueChangeHandler;
-import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.TextBox;
-import com.google.gwt.user.client.ui.Widget;
-
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.EditableField;
 import net.svcret.admin.client.ui.components.HtmlBr;
@@ -24,6 +12,17 @@ import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.util.StringUtil;
+
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.Widget;
 
 public class ServiceVersionUrlGrid extends BaseUrlGrid {
 
@@ -172,10 +171,24 @@ public class ServiceVersionUrlGrid extends BaseUrlGrid {
 		return urlField;
 	}
 
+	@Override
+	protected boolean isHideActionColumn() {
+		return false;
+	}
 
 	@Override
-	protected String provideActionColumnHeaderText() {
-		return "";
+	protected boolean isHideDomainColumn() {
+		return true;
+	}
+
+	@Override
+	protected boolean isHideIdColumn() {
+		return false;
+	}
+
+	@Override
+	protected boolean isHideServiceColumn() {
+		return true;
 	}
 
 }
