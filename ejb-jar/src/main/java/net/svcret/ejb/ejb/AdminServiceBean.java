@@ -1429,15 +1429,15 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		for (GServiceVersionUrl nextRequired : theVersion.getUrlList()) {
 			boolean alreadyExists = false;
 			for (PersServiceVersionUrl nextExisting : existingVersion.getUrls()) {
-//				if (StringUtils.equals(nextRequired.getUrl(), nextExisting.getUrl())) {
-					if (StringUtils.equals(nextRequired.getId(), nextExisting.getUrlId())) {
+					if (nextRequired.getPidOrNull() != null && nextRequired.getPidOrNull().equals(nextExisting.getPid())) {
 						alreadyExists=true;
+						ourLog.debug("Merging URL[{}/{}] into existing URL: {}", new Object[] {nextExisting.getPid(), nextExisting.getUrlId(), nextExisting.getUrl()});
 						nextExisting.merge(PersServiceVersionUrl.fromDto(nextRequired, existingVersion));
 						break;
 					}
-//				}
 			}
 			if (!alreadyExists) {
+				ourLog.debug("Adding URL[{}/{}] {}", new Object[] {nextRequired.getPid(), nextRequired.getId(), nextRequired.getUrl()});
 				urlsToAdd.add(PersServiceVersionUrl.fromDto(nextRequired, existingVersion));
 			}
 		}
@@ -1447,20 +1447,25 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			PersServiceVersionUrl nextExisting = iter.next();
 			boolean shouldRemove = true;
 			for (GServiceVersionUrl nextRequired : theVersion.getUrlList()) {
-				if (StringUtils.equals(nextRequired.getUrl(), nextExisting.getUrl())) {
-					if (StringUtils.equals(nextRequired.getId(), nextExisting.getUrlId())) {
+				if (nextRequired.getPidOrNull() != null && nextRequired.getPidOrNull().equals(nextExisting.getPid())) {
+//				if (StringUtils.equals(nextRequired.getUrl(), nextExisting.getUrl())) {
+//					if (StringUtils.equals(nextRequired.getId(), nextExisting.getUrlId())) {
 						shouldRemove = false;
 						break;
-					}
+//					}
+//				}
 				}
 			}
 			if (shouldRemove) {
+				ourLog.debug("Removing URL[{}/{}] {}", new Object[] {nextExisting.getPid(), nextExisting.getUrlId(), nextExisting.getUrl()});
 				iter.remove();
 			}
 		}
 
 		existingVersion.getUrls().addAll(urlsToAdd);
 
+		ourLog.debug("Now have {} URLs", existingVersion.getUrls().size());
+		
 		// Update URL order
 		Collections.sort(existingVersion.getUrls(), new Comparator<PersServiceVersionUrl>() {
 			@Override

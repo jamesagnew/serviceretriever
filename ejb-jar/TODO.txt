@@ -11,8 +11,6 @@
 
 * Clicking save a second time on Add user dialog should update the newly created user
 
-* Security column should have an indicator for services with some unsecured methods, or "ALLOW_ANY" status 
-
 * Should log transactions where the rerquest type is GET as failed transactions (as well as other reasons to throw ProcessingException?)
 
 * client and server auths should know what type of service versions they can apply to

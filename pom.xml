@@ -7,6 +7,10 @@
 	<packaging>pom</packaging>
 	<name>SAIL_Service_Proxy</name>
 
+	<scm>
+		<connection>scm:git:ssh://jamesagnew@git.code.sf.net/p/svcret/code</connection>
+	</scm>
+
 	<dependencies>
 
 		<!-- Logging -->

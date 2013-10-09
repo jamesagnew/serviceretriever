@@ -221,7 +221,10 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 	public void onResize() {
 		GWT.log("Setting width");
 		if (myBottomContents != null) {
-			myBottomContents.setWidth((getOffsetWidth() - 20) + "px");
+			int offsetWidth = getOffsetWidth();
+			if (offsetWidth > 0) {
+				myBottomContents.setWidth((offsetWidth - 20) + "px");
+			}
 		}
 	}
 
@@ -376,7 +379,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 			int serviceIndex = domain.getServiceList().indexOf(service);
 			if (serviceIndex > 0) {
 				GService svc = domain.getServiceList().get(serviceIndex-1);
-				Hyperlink prevLink = new Hyperlink(AdminPortal.MSGS.actions_EditNext(), NavProcessor.getTokenEditService(domain.getPid(), svc.getPid()));
+				Hyperlink prevLink = new Hyperlink(AdminPortal.MSGS.actions_EditPrev(), NavProcessor.getTokenEditService(domain.getPid(), svc.getPid()));
 				prevLink.setTitle(svc.getId());
 				myServicesAdditionalPanel.add(prevLink);
 			}
@@ -392,7 +395,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 			int serviceVersionIndex = service.getVersionList().indexOf(myServiceVersion);
 			if (serviceVersionIndex > 0) {
 				BaseDtoServiceVersion svcVer = service.getVersionList().get(serviceVersionIndex-1);
-				Hyperlink prevLink = new Hyperlink(AdminPortal.MSGS.actions_EditNext(), NavProcessor.getTokenEditServiceVersion(svcVer.getPid()));
+				Hyperlink prevLink = new Hyperlink(AdminPortal.MSGS.actions_EditPrev(), NavProcessor.getTokenEditServiceVersion(svcVer.getPid()));
 				prevLink.setTitle(svcVer.getId());
 				myVersionTextBoxPanel.add(prevLink);
 			}

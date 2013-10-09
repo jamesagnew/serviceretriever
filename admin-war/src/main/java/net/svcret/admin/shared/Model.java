@@ -287,16 +287,6 @@ public class Model {
 		}
 	}
 
-	public void loadService(final long theDomainPid, final long theServicePid, final IAsyncLoadCallback<GService> theIAsyncLoadCallback) {
-		loadServiceList(theDomainPid, new IAsyncLoadCallback<GServiceList>() {
-			@Override
-			public void onSuccess(GServiceList theResult) {
-				GService service = theResult.getServiceByPid(theServicePid);
-				theIAsyncLoadCallback.onSuccess(service);
-			}
-		});
-	}
-
 	public void loadServiceList(final long theDomainPid, final IAsyncLoadCallback<GServiceList> theCallback) {
 		loadDomainList(new IAsyncLoadCallback<GDomainList>() {
 			@Override

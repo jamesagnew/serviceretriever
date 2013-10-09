@@ -27,7 +27,7 @@ public final class UrlStatusTooltipProvider<T extends BaseDtoDashboardObject> im
 	@Override
 	public Widget getTooltip(BaseDtoDashboardObject theObject) {
 		final FlowPanel retVal = new FlowPanel();
-		retVal.setWidth("200px");
+		retVal.setWidth("400px");
 		
 		SafeHtmlBuilder b = new SafeHtmlBuilder();
 		if (theObject.getName() != null) {

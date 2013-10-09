@@ -59,7 +59,7 @@ public class AddServiceVersionPanel extends AbstractServiceVersionPanel {
 
 	@Override
 	protected void handleDoneSaving(AddServiceVersionResponse theResult) {
-		History.newItem(NavProcessor.getTokenAddServiceVersionStep2(getDomainPid(), getServicePid(), theResult.getNewServiceVersion().getPid()));
+		History.newItem(NavProcessor.getTokenAddServiceVersionStep2(theResult.getNewServiceVersion().getPid()));
 	}
 
 	private void handleTypeChange() {
@@ -77,6 +77,7 @@ public class AddServiceVersionPanel extends AbstractServiceVersionPanel {
 
 				@Override
 				public void onSuccess(BaseDtoServiceVersion theResult) {
+					getLoadingSpinner().hide();
 					setServiceVersion(theResult);
 					setUncommittedSessionId(theResult.getUncommittedSessionId());
 					String navToken = NavProcessor.getTokenAddServiceVersion(getDomainPid(), getServicePid(), getUncommittedSessionId());

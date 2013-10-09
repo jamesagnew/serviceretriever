@@ -821,16 +821,17 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Backing Service Implementation Dashboard")
 	String urlDashboardPanel_Title();
 
+<<<<<<< HEAD
 	@DefaultMessage("Edit Next")
 	SafeHtml actions_EditNext();
 
 	@DefaultMessage("Edit Prev")
 	SafeHtml actions_EditPrev();
 
+=======
 	@DefaultMessage("Delete Service Version")
 	String deleteServiceVersion_Title();
-
-	@DefaultMessage("Close")
-	String actions_Close();
+	
+>>>>>>> 18a5c3efd98551e76f720e1c79744e3f4025b019
 	
 }

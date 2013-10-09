@@ -146,9 +146,18 @@ TD.usageTooltipTableLatencyColumn, TD.usageTooltipTableNormalColumn {
 	background: #444;
 }
 
-.usageTooltipTableValueColumn {
+.usageTooltipTableValueColumn, .usageTooltipTableValueWrappingColumn {
     font-size: 0.8em !important;
 	background: #444;
 	color: #AAA;
 	text-align: center;
+}
+
+.usageTooltipTableValueWrappingColumn {
+	-ms-word-break: break-all;
+     word-break: break-all;
+     word-break: break-word;
+	-webkit-hyphens: auto;
+   	-moz-hyphens: auto;
+    hyphens: auto;
 }

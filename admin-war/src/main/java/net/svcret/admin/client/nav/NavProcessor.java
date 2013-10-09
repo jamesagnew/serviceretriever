@@ -6,6 +6,7 @@ import static net.svcret.admin.client.nav.PagesEnum.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ListIterator;
 
 import net.svcret.admin.client.ui.catalog.ServiceCatalogPanel;
 import net.svcret.admin.client.ui.config.ConfigPanel;
@@ -64,6 +65,9 @@ public class NavProcessor {
 
 	public static final PagesEnum DEFAULT_PAGE = PagesEnum.DSH;
 	public static final String SEPARATOR = "__";
+
+	private static List<String> ourInMemoryTokens = new ArrayList<String>();
+	private static List<Panel> ourInMemoryPages = new ArrayList<Panel>();
 
 	static {
 		History.addValueChangeHandler(new ValueChangeHandler<String>() {
@@ -124,6 +128,28 @@ public class NavProcessor {
 		return page;
 	}
 
+	public static String getBackToken() {
+		String token = History.getToken();
+		String[] parts = token.split(SEPARATOR);
+		if (parts.length < 2) {
+			return DEFAULT_PAGE.name();
+		} else {
+			StringBuilder b = new StringBuilder();
+			int index = 0;
+			for (String next : parts) {
+				index++;
+				if (index == parts.length) {
+					break;
+				}
+				if (b.length() > 0) {
+					b.append(SEPARATOR);
+				}
+				b.append(next);
+			}
+			return b.toString();
+		}
+	}
+
 	public static String getLastTokenBefore(PagesEnum... thePages) {
 		HashSet<String> names = new HashSet<String>();
 		for (PagesEnum pagesEnum : thePages) {
@@ -174,17 +200,8 @@ public class NavProcessor {
 		}
 	}
 
-	public static String getTokenAddServiceVersionStep2(long theDomainPid, long theServicePid, long theVersionPid) {
-		String token = "";
-		token = getCurrentToken();
-		if (!token.isEmpty()) {
-			token = token + SEPARATOR;
-		}
-
-		token = token + PagesEnum.AV2 + "_" + theDomainPid + "_" + theServicePid + "_" + theVersionPid;
-
-		token = removeDuplicates(token);
-		return token;
+	public static String getTokenAddServiceVersionStep2(long theVersionPid) {
+		return createArgumentToken(AV2, theVersionPid);
 	}
 
 	public static String getTokenAddUser(long theAuthHostPid) {
@@ -383,12 +400,7 @@ public class NavProcessor {
 			}
 			break;
 		case AV2:
-			argsSplit = args.split("_");
-			if (argsSplit.length < 3) {
-				navigateToDefault();
-			} else {
-				panel = new AddServiceVersionStep2Panel(Long.parseLong(argsSplit[0]), Long.parseLong(argsSplit[1]), Long.parseLong(argsSplit[2]));
-			}
+			panel = new AddServiceVersionStep2Panel(Long.parseLong(args));
 			break;
 		case CFG:
 			panel = new ConfigPanel();
@@ -486,9 +498,69 @@ public class NavProcessor {
 
 		if (panel == null) {
 			navigateToDefault();
+			return;
+		}
+
+		String[] tokenParts = History.getToken().split(SEPARATOR);
+		for (ListIterator<String> listIter = ourInMemoryTokens.listIterator(); listIter.hasNext();) {
+			int nextIndex = listIter.nextIndex();
+			String nextExistingToken = listIter.next();
+
+			if (nextIndex >= tokenParts.length) {
+				listIter.remove();
+				Panel pageToDelete = ourInMemoryPages.remove(ourInMemoryPages.size() - 1);
+				if (pageToDelete instanceof IDestroyable) {
+					((IDestroyable) pageToDelete).destroy();
+				}
+			} else if (!nextExistingToken.equals(tokenParts[nextIndex])) {
+				Panel pageToDelete = ourInMemoryPages.get(nextIndex);
+				if (pageToDelete instanceof IDestroyable) {
+					((IDestroyable) pageToDelete).destroy();
+				}
+				ourInMemoryPages.set(nextIndex, null);
+			}
+		}
+
+		for (int nextIndex = 0; nextIndex < tokenParts.length; nextIndex++) {
+			if (ourInMemoryTokens.size() <= nextIndex) {
+				ourInMemoryTokens.add(tokenParts[nextIndex]);
+				if (nextIndex == tokenParts.length - 1) {
+					ourInMemoryPages.add(panel);
+				}else {
+				ourInMemoryPages.add(null);
+				}
+			} else if (!tokenParts[nextIndex].equals(ourInMemoryTokens.get(nextIndex))) {
+				ourInMemoryTokens.set(nextIndex, tokenParts[nextIndex]);
+				ourInMemoryPages.add(null);
+			} else if (tokenParts[nextIndex].equals(ourInMemoryTokens.get(nextIndex))) {
+				if (nextIndex == tokenParts.length - 1) {
+					if (ourInMemoryPages.get(nextIndex) == null) {
+						ourInMemoryPages.set(nextIndex, panel);
+					}
+				}
+			}
 		}
 
 		Panel existingContents = BodyPanel.getInstance().getContents();
+		String currentToken = getCurrentToken();
+		currentToken = currentToken.replaceAll(".*__", "");
+
+		if (ourInMemoryTokens.contains(currentToken)) {
+			int index = ourInMemoryTokens.indexOf(currentToken);
+			Panel newContents = ourInMemoryPages.get(index);
+			if (newContents != null) {
+				while (ourInMemoryTokens.size() > (index + 1)) {
+					ourInMemoryTokens.remove(ourInMemoryTokens.size() - 1);
+					Panel pageToDelete = ourInMemoryPages.remove(ourInMemoryPages.size() - 1);
+					if (pageToDelete instanceof IDestroyable) {
+						((IDestroyable) pageToDelete).destroy();
+					}
+				}
+				BodyPanel.getInstance().setContents(newContents);
+				return;
+			}
+		}
+
 		if (existingContents != null) {
 			if (existingContents instanceof IDestroyable) {
 				((IDestroyable) existingContents).destroy();

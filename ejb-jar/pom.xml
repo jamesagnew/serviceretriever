@@ -325,7 +325,7 @@
 					</archive>
 				</configuration>
 			</plugin>
-			<plugin>
+			<!--<plugin>
 				<groupId>org.jvnet.jaxb2.maven2</groupId>
 				<artifactId>maven-jaxb2-plugin</artifactId>
 				<version>0.8.2</version>
@@ -347,6 +347,40 @@
 				<configuration>
 					<generateDirectory>target/generated-sources/jaxb</generateDirectory>
 				</configuration>
+			</plugin>-->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>buildnumber-maven-plugin</artifactId>
+				<version>1.2</version>
+				<executions>
+					<execution>
+						<id>num</id>
+						<phase>initialize</phase>
+						<goals>
+							<goal>create</goal>
+						</goals>
+						<configuration>
+							<doCheck>false</doCheck>
+							<doUpdate>false</doUpdate>
+							<format>{0} ({1,date,yyyy-MM-dd HH:mm:ss})</format>
+							<items>
+								<item>scmVersion</item>
+								<item>timestamp</item>
+							</items>
+						</configuration>
+					</execution>
+					<execution>
+						<id>ts</id>
+						<phase>initialize</phase>
+						<goals>
+							<goal>create-timestamp</goal>
+						</goals>
+						<configuration>
+							<doCheck>false</doCheck>
+							<doUpdate>false</doUpdate>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 
 			<!-- <plugin> <groupId>org.codehaus.mojo</groupId> <artifactId>hibernate3-maven-plugin</artifactId> 

@@ -67,7 +67,7 @@ public class CloneServiceVersionPanel extends AbstractServiceVersionPanel {
 
 	@Override
 	protected void handleDoneSaving(AddServiceVersionResponse theResult) {
-		History.newItem(NavProcessor.getTokenAddServiceVersionStep2(getDomainPid(), getServicePid(), theResult.getNewServiceVersion().getPid()));
+		History.newItem(NavProcessor.getTokenAddServiceVersionStep2(theResult.getNewServiceVersion().getPid()));
 	}
 
 }

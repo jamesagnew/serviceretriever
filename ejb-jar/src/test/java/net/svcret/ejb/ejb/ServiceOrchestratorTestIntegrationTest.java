@@ -367,12 +367,12 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		assertEquals(3, stats.size());
 
 		for (BasePersStats<?, ?> next : values) {
-
+			if (next instanceof PersInvocationMethodSvcverStats) {
+				 PersInvocationMethodSvcverStats nextStats = (PersInvocationMethodSvcverStats) next;
+				 assertEquals(1, nextStats.getSuccessInvocationCount());
+			}
 		}
 
-		 PersInvocationMethodSvcverStats next = (PersInvocationMethodSvcverStats) values.iterator().next();
-		 assertEquals(1, next.getSuccessInvocationCount());
-		// assertEquals(1, next.getServerSecurityFailures());
 
 	}
 

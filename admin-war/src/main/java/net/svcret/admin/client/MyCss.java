@@ -31,6 +31,8 @@ public interface MyCss extends CssResource {
 
 	String usageTooltipTableValueColumn();
 
+	String usageTooltipTableValueWrappingColumn();
+
 	String usageTooltipTableHeaderLabel();
 
 	String monitorRuleActiveCheckTooltipTableColumnHeader();
