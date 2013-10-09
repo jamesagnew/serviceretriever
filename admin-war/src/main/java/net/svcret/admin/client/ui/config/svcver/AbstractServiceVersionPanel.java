@@ -1,6 +1,7 @@
 package net.svcret.admin.client.ui.config.svcver;
 
 import net.svcret.admin.client.AdminPortal;
+import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.EditableField;
 import net.svcret.admin.client.ui.components.HtmlLabel;
@@ -33,6 +34,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HasValue;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Hyperlink;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.RequiresResize;
@@ -59,6 +61,9 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 	private Long myUncommittedSessionId;
 	private boolean myUpdating;
 	private HasValue<String> myVersionTextBox;
+	private HorizontalPanel myVersionTextBoxPanel;
+	private HorizontalPanel myServicesAdditionalPanel;
+	private GDomainList myDomainList;
 
 	public AbstractServiceVersionPanel() {
 		this(null, null, null);
@@ -126,14 +131,14 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 		myParentsGrid2.addRow("Service", myServiceListBox);
 
 		// New Service
-		HorizontalPanel newSvcPanel = new HorizontalPanel();
+		myServicesAdditionalPanel = new HorizontalPanel();
 		myNewServiceLabel = new HtmlLabel(" Name:", "cbNewServiceName");
-		newSvcPanel.add(myNewServiceLabel);
+		myServicesAdditionalPanel.add(myNewServiceLabel);
 		myNewServiceNameTextBox = new TextBox();
 		myNewServiceNameTextBox.getElement().setId("cbNewServiceName");
 		myNewServiceNameTextBox.setValue("Untitled Service");
-		newSvcPanel.add(myNewServiceNameTextBox);
-		myParentsGrid2.addWidgetToRight(newSvcPanel);
+		myServicesAdditionalPanel.add(myNewServiceNameTextBox);
+		myParentsGrid2.addWidgetToRight(myServicesAdditionalPanel);
 
 		/*
 		 * Type
@@ -159,7 +164,9 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 				}
 			}
 		});
-		myParentsGrid2.addRow("Version", (Widget) myVersionTextBox);
+		myVersionTextBoxPanel = new HorizontalPanel();
+		myVersionTextBoxPanel.add((Widget) myVersionTextBox);
+		myParentsGrid2.addRow("Version", myVersionTextBoxPanel);
 
 		myDescriptionEditor = new EditableField();
 		myDescriptionEditor.setMultiline(true);
@@ -360,12 +367,51 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 
 		myDescriptionEditor.setValue(myServiceVersion.getDescription());
 
+		if (!isAddPanel()) {
+			
+			GDomain domain = myDomainList.getDomainWithServiceVersion(myServiceVersion.getPid()); 
+			GService service = myDomainList.getServiceWithServiceVersion(myServiceVersion.getPid()); 
+
+			// Service next/prev links
+			int serviceIndex = domain.getServiceList().indexOf(service);
+			if (serviceIndex > 0) {
+				GService svc = domain.getServiceList().get(serviceIndex-1);
+				Hyperlink prevLink = new Hyperlink(AdminPortal.MSGS.actions_EditNext(), NavProcessor.getTokenEditService(domain.getPid(), svc.getPid()));
+				prevLink.setTitle(svc.getId());
+				myServicesAdditionalPanel.add(prevLink);
+			}
+			if (serviceIndex + 1 < domain.getServiceList().size()) {
+				GService svc = domain.getServiceList().get(serviceIndex+1);
+				Hyperlink nextLink = new Hyperlink(AdminPortal.MSGS.actions_EditNext(), NavProcessor.getTokenEditService(domain.getPid(), svc.getPid()));
+				nextLink.setTitle(svc.getId());
+				myServicesAdditionalPanel.add(nextLink);
+			}
+			
+			
+			// Service version next/prev links
+			int serviceVersionIndex = service.getVersionList().indexOf(myServiceVersion);
+			if (serviceVersionIndex > 0) {
+				BaseDtoServiceVersion svcVer = service.getVersionList().get(serviceVersionIndex-1);
+				Hyperlink prevLink = new Hyperlink(AdminPortal.MSGS.actions_EditNext(), NavProcessor.getTokenEditServiceVersion(svcVer.getPid()));
+				prevLink.setTitle(svcVer.getId());
+				myVersionTextBoxPanel.add(prevLink);
+			}
+			if (serviceVersionIndex + 1 < service.getVersionList().size()) {
+				BaseDtoServiceVersion svcVer = service.getVersionList().get(serviceVersionIndex+1);
+				Hyperlink nextLink = new Hyperlink(AdminPortal.MSGS.actions_EditNext(), NavProcessor.getTokenEditServiceVersion(svcVer.getPid()));
+				nextLink.setTitle(svcVer.getId());
+				myVersionTextBoxPanel.add(nextLink);
+			}
+			
+		}
+		
 		onResize();
 	}
 
 	void initParents(GDomainList theDomainList) {
 		myUpdating = true;
-
+		
+		myDomainList = theDomainList;
 		myDomainListBox.clear();
 		myDomainListBox.addItem("New...", "");
 		for (GDomain nextDomain : theDomainList) {

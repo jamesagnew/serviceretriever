@@ -173,7 +173,6 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
 	}
 
-	@SuppressWarnings("null")
 	@Test
 	public void testSoap11WithHttpBasicAuth() throws Exception {
 

@@ -45,6 +45,7 @@ public class SchedulerBean implements IScheduler {
 
 	@EJB
 	private IRuntimeStatus myStatsSvc;
+	
 	@EJB
 	private ISynchronousNodeIpcClient mySynchronousNodeIpcClient;
 

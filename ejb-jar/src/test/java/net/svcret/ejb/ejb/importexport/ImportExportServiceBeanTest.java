@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import java.util.HashSet;
 import java.util.Set;
 
+import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
@@ -48,6 +49,7 @@ private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger
 		ver.setService(service);
 		ver.setPid(myNextLong++);
 		ver.setVersionId("thisVersionId");
+		ver.setServerSecurityMode(ServerSecurityModeEnum.REQUIRE_ANY);
 		
 		PersHttpClientConfig hc = new PersHttpClientConfig();
 		hc.setDefaults();

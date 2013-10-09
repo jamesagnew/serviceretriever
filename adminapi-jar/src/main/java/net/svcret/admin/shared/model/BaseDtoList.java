@@ -34,6 +34,10 @@ public class BaseDtoList<T extends BaseDtoObject> implements Iterable<T>, Serial
 		sort();
 	}
 
+	public int indexOf(T theObj) {
+		return myList.indexOf(theObj);
+	}
+
 	public void clear() {
 		myList.clear();
 	}

@@ -82,6 +82,7 @@ import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.api.ISecurityService;
 import net.svcret.ejb.api.IServiceOrchestrator;
+import net.svcret.ejb.api.ITransactionLogger;
 import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.RequestType;
@@ -987,7 +988,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	
 	@Override
 	public GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid) {
-		mySynchronousNodeIpcClient.invokeFlushTransactionLogs();
+		flushRecentTransactions();
 		
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
 
@@ -1018,9 +1019,13 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
+	private void flushRecentTransactions() {
+		mySynchronousNodeIpcClient.invokeFlushTransactionLogs();
+	}
+
 	@Override
 	public GRecentMessageLists loadRecentTransactionListForUser(long thePid) {
-		mySynchronousNodeIpcClient.invokeFlushTransactionLogs();
+		flushRecentTransactions();
 
 		PersUser user = myDao.getUser(thePid);
 		BasePersAuthenticationHost authHost = user.getAuthenticationHost();

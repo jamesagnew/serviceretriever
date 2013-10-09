@@ -11,6 +11,7 @@ import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.MyResources;
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.CssConstants;
+import net.svcret.admin.client.ui.components.EditableField;
 import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.HtmlH1;
 import net.svcret.admin.client.ui.components.HtmlLabel;
@@ -74,6 +75,7 @@ import com.google.gwt.user.client.ui.TabPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
+import com.google.gwt.view.client.SetSelectionModel;
 
 public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends TabPanel {
 
@@ -85,7 +87,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 	private Grid myClientSecurityGrid;
 	private Hyperlink myEditHttpClientConfigLink;
 	private CheckBox myExplicitProxyPathEnabledCheckbox;
-	private TextBox myExplicitProxyPathTextbox;
+	private EditableField myExplicitProxyPathTextbox;
 	private GHttpClientConfigList myHttpClientConfigList;
 	private ListBox myHttpConfigList;
 	private KeepRecentTransactionsPanel myKeepRecentTransactionsPanel;
@@ -101,6 +103,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 	private CheckBox myStandardProxyPathEnabledCheckbox;
 	private Label myStandardProxyPathLabel;
 	private ServiceVersionUrlGrid myUrlGrid;
+	private int myAccessPanelTabIndex;
 
 	public BaseDetailPanel(AbstractServiceVersionPanel theParent, T theServiceVersion) {
 		myServiceVersion = theServiceVersion;
@@ -125,6 +128,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		}
 
 		FlowPanel accessPanel = new FlowPanel();
+		myAccessPanelTabIndex = getWidgetCount();
 		add(accessPanel, "Access");
 		initAccessPanel(accessPanel);
 
@@ -248,7 +252,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		grid.addRow(myStandardProxyPathEnabledCheckbox, myStandardProxyPathLabel);
 
 		myExplicitProxyPathEnabledCheckbox = new CheckBox("Use Alternate Proxy Path:");
-		myExplicitProxyPathTextbox = new TextBox();
+		myExplicitProxyPathTextbox = new EditableField();
 		grid.addRow(myExplicitProxyPathEnabledCheckbox, myExplicitProxyPathTextbox);
 
 		myExplicitProxyPathEnabledCheckbox.setValue(myServiceVersion.getExplicitProxyPath() != null);
@@ -762,13 +766,15 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		if (myExplicitProxyPathEnabledCheckbox.getValue()) {
 			String newPath = myExplicitProxyPathTextbox.getValue();
 			if (StringUtil.isBlank(newPath)) {
+				selectTab(myAccessPanelTabIndex);
 				Window.alert("Explicit proxy path is enabled, but no path is specified.");
-				myExplicitProxyPathTextbox.setFocus(true);
+				myExplicitProxyPathTextbox.setEditorMode();
 				return false;
 			}
 			if (!newPath.startsWith("/") || newPath.length() < 2) {
+				selectTab(myAccessPanelTabIndex);
 				Window.alert("Explicit proxy path must be of the form /[path[/more path]]");
-				myExplicitProxyPathTextbox.setFocus(true);
+				myExplicitProxyPathTextbox.setEditorMode();
 				return false;
 			}
 			myServiceVersion.setExplicitProxyPath(newPath);

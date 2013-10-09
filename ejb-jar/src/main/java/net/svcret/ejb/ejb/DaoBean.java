@@ -113,8 +113,6 @@ public class DaoBean implements IDao {
 	@EJB
 	private IDao myThis;
 
-	private ByteDelta retVal;
-
 	@Override
 	public void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost) {
 		Validate.notNull(theAuthHost, "AuthenticationHost");

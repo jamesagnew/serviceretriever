@@ -18,6 +18,7 @@ import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.Widget;
 
 public class EditServiceVersionPanel extends AbstractServiceVersionPanel {
 
@@ -25,12 +26,12 @@ public class EditServiceVersionPanel extends AbstractServiceVersionPanel {
 
 	public EditServiceVersionPanel(final long theServiceVersionPid) {
 		super();
-
+		
 		getLoadingSpinner().show();
 		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
 			@Override
 			public void onSuccess(GDomainList theResult) {
-				
+
 				setDomainPid(theResult.getDomainPidWithServiceVersion(theServiceVersionPid));
 				setServicePid(theResult.getServicePidWithServiceVersion(theServiceVersionPid));
 				

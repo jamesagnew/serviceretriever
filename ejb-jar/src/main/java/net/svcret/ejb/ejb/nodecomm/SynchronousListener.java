@@ -1,7 +1,11 @@
 package net.svcret.ejb.ejb.nodecomm;
 
 import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.jws.WebMethod;
+import javax.jws.WebParam;
 import javax.jws.WebResult;
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
@@ -13,6 +17,8 @@ import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.ITransactionLogger;
 
 @WebService(targetNamespace = SynchronousListener.SVC_NS, serviceName = SynchronousListener.SVC_SVCNAME, portName = SynchronousListener.SVC_PORT)
+@Stateless
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class SynchronousListener implements ISynchronousInvoker {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(SynchronousListener.class);
@@ -38,12 +44,13 @@ public class SynchronousListener implements ISynchronousInvoker {
 	@WebMethod(operationName = METHOD_FRS_NAME)
 	@SOAPBinding(parameterStyle = ParameterStyle.BARE, style = Style.DOCUMENT, use = Use.LITERAL)
 	@WebResult(name = METHOD_FRS_RESP, targetNamespace = SVC_NS)
-	public void flushRuntimeStatus() {
+	public FlushRuntimeStatusResponse flushRuntimeStatus(@WebParam(targetNamespace=SVC_NS, name="FlushRuntimeStatusRequest") FlushRuntimeStatusRequest theRequest) {
 		try {
 			myRuntimeStatusService.flushStatus();
 		} catch (Exception e) {
 			ourLog.error("Failed to flush status", e);
 		}
+		return new FlushRuntimeStatusResponse();
 	}
 	
 	/* (non-Javadoc)
@@ -53,12 +60,13 @@ public class SynchronousListener implements ISynchronousInvoker {
 	@WebMethod(operationName = METHOD_FTL_NAME)
 	@SOAPBinding(parameterStyle = ParameterStyle.BARE, style = Style.DOCUMENT, use = Use.LITERAL)
 	@WebResult(name = METHOD_FTL_RESP, targetNamespace = SVC_NS)
-	public void flushTransactionLogs() {
+	public FlushTransactionLogsResponse flushTransactionLogs(@WebParam(targetNamespace=SVC_NS, name="FlushTransactionLogsRequest") FlushTransactionLogsRequest theRequest) {
 		try {
 			myTransactionLoggerService.flush();
 		} catch (Exception e) {
 			ourLog.error("Failed to flush status", e);
 		}
+		return new FlushTransactionLogsResponse();
 	}
 
 }
