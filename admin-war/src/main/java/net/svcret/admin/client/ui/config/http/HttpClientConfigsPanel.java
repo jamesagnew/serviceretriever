@@ -419,21 +419,21 @@ public class HttpClientConfigsPanel extends FlowPanel {
 			// HtmlH1(MSGS.httpClientConfigsPanel_SSLTitle()));
 			contentPanel.add(new HTML(MSGS.httpClientConfigsPanel_SSLDesc()));
 
-			String uploadFieldName = ConstantsHttpClientConfig.TYPE_TRUSTSTORE;
-			String titleLabel = "Truststore";
+			String uploadFieldName = ConstantsHttpClientConfig.TYPE_KEYSTORE;
+			String titleLabel = "Keystore";
+			myKeystorePasswordBox = new EditableField();
+			myKeystorePasswordBox.setEmptyTextToDisplay("(No password)");
+			myKeyStoreLabel = new HTML("", true);
+			
+			createKeystorePanel(contentPanel, titleLabel, uploadFieldName, myKeystorePasswordBox, myKeyStoreLabel, true);
+
+			uploadFieldName = ConstantsHttpClientConfig.TYPE_TRUSTSTORE;
+			titleLabel = "Truststore";
 			myTruststorePasswordBox = new EditableField();
 			myTruststorePasswordBox.setEmptyTextToDisplay("(No password)");
 			myTrustStoreLabel = new HTML("", true);
 
 			createKeystorePanel(contentPanel, titleLabel, uploadFieldName, myTruststorePasswordBox, myTrustStoreLabel, false);
-
-			uploadFieldName = ConstantsHttpClientConfig.TYPE_KEYSTORE;
-			titleLabel = "Keystore";
-			myKeystorePasswordBox = new EditableField();
-			myKeystorePasswordBox.setEmptyTextToDisplay("(No password)");
-			myKeyStoreLabel = new HTML("", true);
-
-			createKeystorePanel(contentPanel, titleLabel, uploadFieldName, myKeystorePasswordBox, myKeyStoreLabel, true);
 
 		}
 	}

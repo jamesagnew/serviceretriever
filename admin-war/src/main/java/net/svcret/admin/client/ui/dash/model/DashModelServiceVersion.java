@@ -156,9 +156,21 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		});
 		content.add(editServiceVersion);
 
+		// Delete
+		
+		Button deleteServiceVersion = new ActionPButton(AdminPortal.IMAGES.iconRemove(), AdminPortal.MSGS.actions_Remove());
+		deleteServiceVersion.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				theActionPopup.hide();
+				History.newItem(NavProcessor.getTokenDeleteServiceVersion(theSvcVer.getPid()));
+			}
+		});
+		content.add(deleteServiceVersion);
+
 		// View Runtime Status
 		
-		ActionPButton viewStatus = new ActionPButton(IMAGES.iconStatus(), MSGS.actions_ViewRuntimeStatus());
+		ActionPButton viewStatus = new ActionPButton(IMAGES.iconStatus(), MSGS.actions_Stats());
 		viewStatus.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
