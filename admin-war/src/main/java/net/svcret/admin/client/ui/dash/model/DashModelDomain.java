@@ -6,7 +6,7 @@ import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.model.BaseDtoDashboardObject;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.HierarchyEnum;
 
@@ -21,9 +21,9 @@ import com.google.gwt.user.client.ui.Widget;
 public class DashModelDomain extends BaseDashModel implements IDashModel {
 
 	private PopupPanel myActionPopup;
-	private GDomain myDomain;
+	private DtoDomain myDomain;
 
-	public DashModelDomain(GDomain theDomain) {
+	public DashModelDomain(DtoDomain theDomain) {
 		super(theDomain);
 		myDomain = theDomain;
 	}

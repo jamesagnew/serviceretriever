@@ -14,8 +14,8 @@ import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.admin.shared.model.DtoAuthenticationHostList;
-import net.svcret.admin.shared.model.GConfig;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoConfig;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
@@ -41,7 +41,7 @@ import net.svcret.ejb.ex.UnexpectedFailureException;
 @Local
 public interface IAdminServiceLocal {
 
-	GDomain addDomain(GDomain theDomain) throws ProcessingException, UnexpectedFailureException;
+	DtoDomain addDomain(DtoDomain theDomain) throws ProcessingException, UnexpectedFailureException;
 
 	GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ProcessingException, UnexpectedFailureException;
 
@@ -63,7 +63,7 @@ public interface IAdminServiceLocal {
 
 	long getDefaultHttpClientConfigPid();
 
-	GDomain getDomainByPid(long theDomain) throws ProcessingException, UnexpectedFailureException;
+	DtoDomain getDomainByPid(long theDomain) throws ProcessingException, UnexpectedFailureException;
 
 	long getDomainPid(String theDomainId) throws ProcessingException;
 
@@ -79,7 +79,7 @@ public interface IAdminServiceLocal {
 
 	BaseDtoAuthenticationHost loadAuthenticationHost(long thePid) throws ProcessingException;
 
-	GConfig loadConfig() throws UnexpectedFailureException;
+	DtoConfig loadConfig() throws UnexpectedFailureException;
 
 	GDomainList loadDomainList() throws ProcessingException, UnexpectedFailureException;
 
@@ -116,9 +116,9 @@ public interface IAdminServiceLocal {
 
 	DtoAuthenticationHostList saveAuthenticationHost(BaseDtoAuthenticationHost theAuthHost) throws ProcessingException;
 
-	GConfig saveConfig(GConfig theConfig) throws UnexpectedFailureException;
+	DtoConfig saveConfig(DtoConfig theConfig) throws UnexpectedFailureException;
 
-	GDomainList saveDomain(GDomain theDomain) throws ProcessingException, UnexpectedFailureException;
+	GDomainList saveDomain(DtoDomain theDomain) throws ProcessingException, UnexpectedFailureException;
 
 	GHttpClientConfig saveHttpClientConfig(GHttpClientConfig theConfig, byte[] theNewTruststore, String theNewTruststorePass, byte[] theNewKeystore, String theNewKeystorePass)
 			throws ProcessingException, UnexpectedFailureException;

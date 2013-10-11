@@ -10,7 +10,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.util.ScanDtoUtil;
 import net.svcret.ejb.api.IServiceRegistry;
@@ -36,7 +36,7 @@ public class ImportExportServiceBean implements IImportExportServiceLocal {
 	@Override
 	public String exportDomain(long theDomainPid) throws UnexpectedFailureException {
 		PersDomain domain = myServiceRegistry.getDomainByPid(theDomainPid);
-		GDomain dto = domain.toDto();
+		DtoDomain dto = domain.toDto();
 		String retVal;
 
 		Marshaller marshaller;

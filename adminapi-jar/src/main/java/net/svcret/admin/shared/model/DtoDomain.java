@@ -16,7 +16,7 @@ import net.svcret.admin.shared.util.XmlConstants;
 @XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="Domain")
 @XmlRootElement(namespace=XmlConstants.DTO_NAMESPACE, name="Domain")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class GDomain extends BaseDtoServiceCatalogItem {
+public class DtoDomain extends BaseDtoServiceCatalogItem {
 
 	private static final long serialVersionUID = 1L;
 
@@ -32,7 +32,7 @@ public class GDomain extends BaseDtoServiceCatalogItem {
 	public void merge(BaseDtoObject theObject) {
 		super.merge(theObject);
 
-		GDomain obj=(GDomain) theObject;
+		DtoDomain obj=(DtoDomain) theObject;
 		if (obj.getServiceList() != null) {
 			getServiceList().mergeResults(obj.getServiceList());
 		}

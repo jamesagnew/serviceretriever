@@ -4,7 +4,7 @@ import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -13,18 +13,18 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Label;
 
-public class AddDomainPanel extends FlowPanel implements ClickHandler, AsyncCallback<GDomain> {
+public class AddDomainPanel extends FlowPanel implements ClickHandler, AsyncCallback<DtoDomain> {
 
 	public static final String DOMAIN_DESC = "A Domain is a logical grouping of services. This allows you to classify groups " +
 			"of services in whatever classification makes sense to you. There is no specific " +
 			"right way to group services, and if you want you can always move services from " +
 			"one domain to another.";
 	private EditDomainBasicPropertiesPanel myEditDomainBasicPropertiesPanel;
-	private GDomain myDomain;
+	private DtoDomain myDomain;
 	
 
 	public AddDomainPanel() {
-		myDomain = new GDomain();
+		myDomain = new DtoDomain();
 		
 		setStylePrimaryName(CssConstants.MAIN_PANEL);
 
@@ -59,7 +59,7 @@ public class AddDomainPanel extends FlowPanel implements ClickHandler, AsyncCall
 	}
 
 	@Override
-	public void onSuccess(GDomain theResult) {
+	public void onSuccess(DtoDomain theResult) {
 		Model.getInstance().addDomain(theResult);
 		History.newItem(NavProcessor.getTokenAddDomainStep2(theResult.getPid()));
 	}

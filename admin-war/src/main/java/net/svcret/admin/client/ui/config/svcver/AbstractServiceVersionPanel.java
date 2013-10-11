@@ -16,7 +16,7 @@ import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
 import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoServiceVersionVirtual;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceList;
@@ -372,7 +372,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 
 		if (!isAddPanel()) {
 			
-			GDomain domain = myDomainList.getDomainWithServiceVersion(myServiceVersion.getPid()); 
+			DtoDomain domain = myDomainList.getDomainWithServiceVersion(myServiceVersion.getPid()); 
 			GService service = myDomainList.getServiceWithServiceVersion(myServiceVersion.getPid()); 
 
 			// Service next/prev links
@@ -417,7 +417,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 		myDomainList = theDomainList;
 		myDomainListBox.clear();
 		myDomainListBox.addItem("New...", "");
-		for (GDomain nextDomain : theDomainList) {
+		for (DtoDomain nextDomain : theDomainList) {
 			Long value = nextDomain.getPid();
 			myDomainListBox.addItem(nextDomain.getName(), value.toString());
 			if (value.equals(myDomainPid)) {

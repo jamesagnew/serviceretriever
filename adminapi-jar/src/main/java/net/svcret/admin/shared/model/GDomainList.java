@@ -17,7 +17,7 @@ import net.svcret.admin.shared.util.XmlConstants;
 @XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="DomainList")
 @XmlRootElement(namespace=XmlConstants.DTO_NAMESPACE, name="DomainList")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class GDomainList extends BaseDtoList<GDomain> {
+public class GDomainList extends BaseDtoList<DtoDomain> {
 
 	private static final long serialVersionUID = 1L;
 
@@ -28,8 +28,8 @@ public class GDomainList extends BaseDtoList<GDomain> {
 		setComparator(new BaseGDashboardObjectComparator());
 	}
 
-	public GDomain getDomainByPid(long theDomainPid) {
-		for (GDomain next : this) {
+	public DtoDomain getDomainByPid(long theDomainPid) {
+		for (DtoDomain next : this) {
 			if (next.getPid() == theDomainPid) {
 				return next;
 			}
@@ -45,7 +45,7 @@ public class GDomainList extends BaseDtoList<GDomain> {
 			return myPidToServiceVersion.get(thePid);
 		}
 
-		for (GDomain nextDomain : this) {
+		for (DtoDomain nextDomain : this) {
 			for (GService nextSvc : nextDomain.getServiceList()) {
 				BaseDtoServiceVersion ver = nextSvc.getVersionList().getVersionByPid(thePid);
 				if (ver != null) {
@@ -65,7 +65,7 @@ public class GDomainList extends BaseDtoList<GDomain> {
 			return myPidToUrl.get(thePid);
 		}
 
-		for (GDomain nextDomain : this) {
+		for (DtoDomain nextDomain : this) {
 			for (GService nextSvc : nextDomain.getServiceList()) {
 				for (BaseDtoServiceVersion nextVer : nextSvc.getVersionList()) {
 					GServiceVersionUrl url = nextVer.getUrlList().getUrlWithPid(thePid);
@@ -80,7 +80,7 @@ public class GDomainList extends BaseDtoList<GDomain> {
 	}
 
 	public Long getDomainPidWithServiceVersion(long theServiceVersionPid) {
-		for (GDomain nextDomain : this) {
+		for (DtoDomain nextDomain : this) {
 			for (GService nextSvc : nextDomain.getServiceList()) {
 				for (BaseDtoServiceVersion nextVer : nextSvc.getVersionList()) {
 					if (nextVer.getPid() == theServiceVersionPid) {
@@ -93,7 +93,7 @@ public class GDomainList extends BaseDtoList<GDomain> {
 	}
 
 	public Long getServicePidWithServiceVersion(long theServiceVersionPid) {
-		for (GDomain nextDomain : this) {
+		for (DtoDomain nextDomain : this) {
 			for (GService nextSvc : nextDomain.getServiceList()) {
 				for (BaseDtoServiceVersion nextVer : nextSvc.getVersionList()) {
 					if (nextVer.getPid() == theServiceVersionPid) {
@@ -106,7 +106,7 @@ public class GDomainList extends BaseDtoList<GDomain> {
 	}
 
 	public GService getServiceWithServiceVersion(long theServiceVersionPid) {
-		for (GDomain nextDomain : this) {
+		for (DtoDomain nextDomain : this) {
 			for (GService nextSvc : nextDomain.getServiceList()) {
 				for (BaseDtoServiceVersion nextVer : nextSvc.getVersionList()) {
 					if (nextVer.getPid() == theServiceVersionPid) {
@@ -120,7 +120,7 @@ public class GDomainList extends BaseDtoList<GDomain> {
 
 	public Collection<Long> getAllServiceVersionPids() {
 		Set<Long> retVal = new HashSet<Long>();
-		for (GDomain nextDoman : this) {
+		for (DtoDomain nextDoman : this) {
 			for (GService nextSvc : nextDoman.getServiceList()) {
 				for (BaseDtoServiceVersion nextVer : nextSvc.getVersionList()) {
 					retVal.add(nextVer.getPid());
@@ -131,7 +131,7 @@ public class GDomainList extends BaseDtoList<GDomain> {
 	}
 
 	public Long getDomainPidWithService(Long theServicePid) {
-		for (GDomain nextDomain : this) {
+		for (DtoDomain nextDomain : this) {
 			for (GService nextSvc : nextDomain.getServiceList()) {
 				if (nextSvc.getPid() == theServicePid) {
 					return nextDomain.getPid();
@@ -148,8 +148,8 @@ public class GDomainList extends BaseDtoList<GDomain> {
 		return null;
 	}
 
-	public GDomain getDomainWithServiceVersion(long theServiceVersionPid) {
-		for (GDomain nextDomain : this) {
+	public DtoDomain getDomainWithServiceVersion(long theServiceVersionPid) {
+		for (DtoDomain nextDomain : this) {
 			for (GService nextSvc : nextDomain.getServiceList()) {
 				for (BaseDtoServiceVersion nextVer : nextSvc.getVersionList()) {
 					if (nextVer.getPid() == theServiceVersionPid) {

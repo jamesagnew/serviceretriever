@@ -20,7 +20,7 @@ public class GMonitorRulePassive extends BaseDtoMonitorRule {
 		return getAppliesToServiceVersion(theSvcVer) != null;
 	}
 
-	public boolean appliesTo(GDomain theDomain) {
+	public boolean appliesTo(DtoDomain theDomain) {
 		return getAppliesToDomain(theDomain) != null;
 	}
 
@@ -28,7 +28,7 @@ public class GMonitorRulePassive extends BaseDtoMonitorRule {
 		return getAppliesToService(theService) != null;
 	}
 
-	public void applyTo(GDomain theDomain, boolean theValue) {
+	public void applyTo(DtoDomain theDomain, boolean theValue) {
 		GMonitorRuleAppliesTo existing = getAppliesToDomain(theDomain);
 		if (existing != null && !theValue) {
 			myAppliesTo.remove(existing);
@@ -40,7 +40,7 @@ public class GMonitorRulePassive extends BaseDtoMonitorRule {
 		}
 	}
 
-	public void applyTo(GDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, boolean theValue) {
+	public void applyTo(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, boolean theValue) {
 		GMonitorRuleAppliesTo existing = getAppliesToServiceVersion(theSvcVer);
 		if (existing != null && !theValue) {
 			myAppliesTo.remove(existing);
@@ -56,7 +56,7 @@ public class GMonitorRulePassive extends BaseDtoMonitorRule {
 		}
 	}
 
-	public void applyTo(GDomain theDomain, GService theService, boolean theValue) {
+	public void applyTo(DtoDomain theDomain, GService theService, boolean theValue) {
 		GMonitorRuleAppliesTo existing = getAppliesToService(theService);
 		if (existing != null && !theValue) {
 			myAppliesTo.remove(existing);
@@ -145,7 +145,7 @@ public class GMonitorRulePassive extends BaseDtoMonitorRule {
 		myPassiveFireIfSingleBackingUrlIsUnavailable = thePassiveFireIfSingleBackingUrlIsUnavailable;
 	}
 
-	private GMonitorRuleAppliesTo getAppliesToDomain(GDomain theDomain) {
+	private GMonitorRuleAppliesTo getAppliesToDomain(DtoDomain theDomain) {
 		GMonitorRuleAppliesTo appliesTo = null;
 		for (GMonitorRuleAppliesTo next : getAppliesTo()) {
 			if (next.getDomainPid() == theDomain.getPid() && next.getServicePid() == null) {

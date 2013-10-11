@@ -34,8 +34,8 @@ import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.admin.shared.model.DtoAuthenticationHostList;
-import net.svcret.admin.shared.model.GConfig;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoConfig;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
@@ -190,7 +190,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	private IRuntimeStatus myStatusSvc;
 
 	@Override
-	public GDomain addDomain(GDomain theDomain) throws ProcessingException, UnexpectedFailureException {
+	public DtoDomain addDomain(DtoDomain theDomain) throws ProcessingException, UnexpectedFailureException {
 		Validate.notNull(theDomain, "ID");
 		Validate.isNull(theDomain.getPidOrNull(), "PID");
 		Validate.notBlank(theDomain.getId(), "ID");
@@ -213,11 +213,11 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	/**
 	 * Convenience for Unit Tests
 	 */
-	GDomain addDomain(String theId, String theName) throws ProcessingException, UnexpectedFailureException {
-		GDomain domain = new GDomain();
+	DtoDomain addDomain(String theId, String theName) throws ProcessingException, UnexpectedFailureException {
+		DtoDomain domain = new DtoDomain();
 		domain.setId(theId);
 		domain.setName(theName);
-		GDomain retVal = addDomain(domain);
+		DtoDomain retVal = addDomain(domain);
 		return retVal;
 	}
 
@@ -455,7 +455,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GConfig loadConfig() throws UnexpectedFailureException {
+	public DtoConfig loadConfig() throws UnexpectedFailureException {
 		return myConfigSvc.getConfig().toDto();
 	}
 
@@ -556,7 +556,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private PersConfig fromUi(GConfig theConfig) {
+	private PersConfig fromUi(DtoConfig theConfig) {
 		PersConfig retVal = new PersConfig();
 
 		for (String next : theConfig.getProxyUrlBases()) {
@@ -566,7 +566,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private PersDomain fromUi(GDomain theDomain) {
+	private PersDomain fromUi(DtoDomain theDomain) {
 		PersDomain retVal = new PersDomain();
 		retVal.setPid(theDomain.getPidOrNull());
 		retVal.setDomainId(theDomain.getId());
@@ -724,7 +724,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GDomain getDomainByPid(long theDomain) throws ProcessingException, UnexpectedFailureException {
+	public DtoDomain getDomainByPid(long theDomain) throws ProcessingException, UnexpectedFailureException {
 		PersDomain domain = myDao.getDomainByPid(theDomain);
 		if (domain != null) {
 			return domain.toDto();
@@ -837,7 +837,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		GDomainList domainList = new GDomainList();
 
 		for (PersDomain nextDomain : myServiceRegistry.getAllDomains()) {
-			GDomain gDomain = nextDomain.toDto(theLoadDomStats, theLoadSvcStats, theLoadVerStats, theLoadVerMethodStats, theLoadUrlStats, theStatuses, myRuntimeStatusQuerySvc);
+			DtoDomain gDomain = nextDomain.toDto(theLoadDomStats, theLoadSvcStats, theLoadVerStats, theLoadVerMethodStats, theLoadUrlStats, theStatuses, myRuntimeStatusQuerySvc);
 			domainList.add(gDomain);
 		} // for domains
 		return domainList;
@@ -1262,7 +1262,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GConfig saveConfig(GConfig theConfig) throws UnexpectedFailureException {
+	public DtoConfig saveConfig(DtoConfig theConfig) throws UnexpectedFailureException {
 		ourLog.info("Saving config");
 
 		ourLog.info("Proxy config now contains the following URL Bases: {}", theConfig.getProxyUrlBases());
@@ -1283,7 +1283,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GDomainList saveDomain(GDomain theDomain) throws ProcessingException, UnexpectedFailureException {
+	public GDomainList saveDomain(DtoDomain theDomain) throws ProcessingException, UnexpectedFailureException {
 		ourLog.info("Saving domain with PID {}", theDomain.getPid());
 
 		PersDomain domain = myDao.getDomainByPid(theDomain.getPid());

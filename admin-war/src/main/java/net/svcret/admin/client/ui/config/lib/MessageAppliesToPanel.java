@@ -7,7 +7,7 @@ import com.google.gwt.safehtml.shared.SafeHtml;
 import net.svcret.admin.client.ui.config.auth.DomainTreePanel;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
@@ -23,12 +23,12 @@ public class MessageAppliesToPanel extends DomainTreePanel {
 		setModel(theDomainList, new ITreeStatusModel() {
 
 			@Override
-			public void setMethodChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod, Boolean theValue) {
+			public void setMethodChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod, Boolean theValue) {
 				throw new UnsupportedOperationException();
 			}
 
 			@Override
-			public void setEntireServiceVersionChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theServiceVersion, boolean theValue) {
+			public void setEntireServiceVersionChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theServiceVersion, boolean theValue) {
 				if (theValue) {
 					theMessage.getAppliesToServiceVersionPids().add(theServiceVersion.getPid());
 				} else {
@@ -37,7 +37,7 @@ public class MessageAppliesToPanel extends DomainTreePanel {
 			}
 
 			@Override
-			public void setEntireServiceChecked(GDomain theDomain, GService theService, boolean theValue) {
+			public void setEntireServiceChecked(DtoDomain theDomain, GService theService, boolean theValue) {
 				if (theValue) {
 					theMessage.getAppliesToServiceVersionPids().addAll(theService.getAllServiceVersionPids());
 				} else {
@@ -46,28 +46,28 @@ public class MessageAppliesToPanel extends DomainTreePanel {
 			}
 
 			@Override
-			public void setEntireDomainChecked(GDomain theDomain, boolean theValue) {
+			public void setEntireDomainChecked(DtoDomain theDomain, boolean theValue) {
 				throw new UnsupportedOperationException();
 			}
 
 			@Override
-			public boolean isMethodChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod) {
+			public boolean isMethodChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod) {
 				throw new UnsupportedOperationException();
 			}
 
 			@Override
-			public boolean isEntireServiceVersionChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theServiceVersion) {
+			public boolean isEntireServiceVersionChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theServiceVersion) {
 				return theMessage.getAppliesToServiceVersionPids().contains(theServiceVersion.getPid());
 			}
 
 			@Override
-			public boolean isEntireServiceChecked(GDomain theDomain, GService theService) {
+			public boolean isEntireServiceChecked(DtoDomain theDomain, GService theService) {
 				return false;
 //				return theMessage.getAppliesToServiceVersionPids().containsAll(theService.getAllServiceVersionPids());
 			}
 
 			@Override
-			public boolean isEntireDomainChecked(GDomain theDomain) {
+			public boolean isEntireDomainChecked(DtoDomain theDomain) {
 				return false;
 //				return theMessage.getAppliesToServiceVersionPids().containsAll(theDomain.getAllServiceVersionPids());
 			}

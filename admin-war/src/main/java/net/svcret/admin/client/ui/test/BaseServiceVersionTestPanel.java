@@ -9,7 +9,7 @@ import net.svcret.admin.client.ui.stats.BaseViewRecentMessagePanel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
@@ -73,7 +73,7 @@ public abstract class BaseServiceVersionTestPanel extends FlowPanel {
 	private void handleDomainBoxChange() {
 		myServiceBox.clear();
 		if (myDomainBox.getSelectedIndex() != -1) {
-			GDomain domain = myDomainList.getDomainByPid(Long.parseLong(myDomainBox.getValue(myDomainBox.getSelectedIndex())));
+			DtoDomain domain = myDomainList.getDomainByPid(Long.parseLong(myDomainBox.getValue(myDomainBox.getSelectedIndex())));
 			for (GService nextSvc : domain.getServiceList()) {
 				myServiceBox.addItem(nextSvc.getName(), Long.toString(nextSvc.getPid()));
 			}
@@ -84,7 +84,7 @@ public abstract class BaseServiceVersionTestPanel extends FlowPanel {
 	private void handleServiceBoxChange() {
 		myVersionBox.clear();
 		if (myServiceBox.getSelectedIndex() != -1) {
-			GDomain domain = myDomainList.getDomainByPid(Long.parseLong(myDomainBox.getValue(myDomainBox.getSelectedIndex())));
+			DtoDomain domain = myDomainList.getDomainByPid(Long.parseLong(myDomainBox.getValue(myDomainBox.getSelectedIndex())));
 			GService service = domain.getServiceList().getServiceByPid(Long.parseLong(myServiceBox.getValue(myServiceBox.getSelectedIndex())));
 			for (BaseDtoServiceVersion nextVer : service.getVersionList()) {
 				myVersionBox.addItem(nextVer.getId(), Long.toString(nextVer.getPid()));
@@ -162,7 +162,7 @@ public abstract class BaseServiceVersionTestPanel extends FlowPanel {
 					domainPid = theDomainList.getDomainPidWithServiceVersion(myServiceVersionPid);
 					servicePid = theDomainList.getServicePidWithServiceVersion(myServiceVersionPid);
 				}
-				for (GDomain nextDomain : theDomainList) {
+				for (DtoDomain nextDomain : theDomainList) {
 					myDomainBox.addItem(nextDomain.getName(), Long.toString(nextDomain.getPid()));
 				}
 

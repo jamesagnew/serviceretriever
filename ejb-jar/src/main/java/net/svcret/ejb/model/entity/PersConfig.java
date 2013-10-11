@@ -17,7 +17,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 
-import net.svcret.admin.shared.model.GConfig;
+import net.svcret.admin.shared.model.DtoConfig;
 
 import org.apache.commons.lang3.time.DateUtils;
 
@@ -193,8 +193,8 @@ public class PersConfig {
 		return System.currentTimeMillis();
 	}
 	
-	public GConfig toDto() {
-		GConfig retVal = new GConfig();
+	public DtoConfig toDto() {
+		DtoConfig retVal = new DtoConfig();
 
 		for (PersConfigProxyUrlBase next : getProxyUrlBases()) {
 			retVal.getProxyUrlBases().add(next.getUrlBase());

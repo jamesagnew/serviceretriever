@@ -6,7 +6,7 @@ import net.svcret.admin.client.ui.config.EditServiceBasicPropertiesPanel;
 import net.svcret.admin.client.ui.config.domain.EditDomainServicesPanel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
 
@@ -82,7 +82,7 @@ public class AddServicePanel extends FlowPanel {
 		myServicePropertiesPanel.setVisible(true);
 		
 		myDomainListBox.clear();
-		for (GDomain next : myDomainList) {
+		for (DtoDomain next : myDomainList) {
 			String nextValue = Long.toString(next.getPid());
 			myDomainListBox.addItem(next.getName(), nextValue);
 			if (Long.valueOf(next.getPid()).equals(myDomainPid)) {

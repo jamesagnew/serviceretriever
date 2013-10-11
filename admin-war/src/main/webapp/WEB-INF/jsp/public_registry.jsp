@@ -1,8 +1,8 @@
 <%@page import="net.svcret.admin.shared.model.DtoServiceVersionSoap11"%>
-<%@page import="net.svcret.admin.shared.model.GConfig"%>
+<%@page import="net.svcret.admin.shared.model.DtoConfig"%>
 <%@page import="net.svcret.admin.shared.model.BaseDtoServiceVersion"%>
 <%@page import="net.svcret.admin.shared.model.GService"%>
-<%@page import="net.svcret.admin.shared.model.GDomain"%>
+<%@page import="net.svcret.admin.shared.model.DtoDomain"%>
 <%@page import="net.svcret.admin.shared.model.GDomainList"%>
 <%@ page language="java" contentType="text/html; charset=ISO-8859-1" pageEncoding="ISO-8859-1"%>
 <%@ taglib uri='http://java.sun.com/jsp/jstl/core' prefix='c' %>
@@ -11,7 +11,7 @@
 <head>
 <title>Service Registry</title>
     
-<link rel="stylesheet" type="text/css" href="<%=request.getContextPath() %>/css/auth.css" />  
+<link rel="stylesheet" type="text/css" href="<%=request.getContextPath()%>/css/auth.css" />  
       
 </head>
   
@@ -27,22 +27,22 @@
 		</tr>
 	
 <%
-String baseUrl = ((GConfig)request.getAttribute("config")).getProxyUrlBases().iterator().next();
-GDomainList domainList = (GDomainList)request.getAttribute("domainList");
+		String baseUrl = ((DtoConfig)request.getAttribute("config")).getProxyUrlBases().iterator().next();
+		GDomainList domainList = (GDomainList)request.getAttribute("domainList");
 
-for (GDomain nextDomain : domainList) {
-	for (GService nextService : nextDomain.getServiceList()) {
+		for (DtoDomain nextDomain : domainList) {
+			for (GService nextService : nextDomain.getServiceList()) {
 		for (BaseDtoServiceVersion nextVersion : nextService.getVersionList()) { 
 			if (nextVersion.getDisplayInPublicRegistry() == Boolean.FALSE) {
-				continue;
+		continue;
 			}
 			if (nextVersion.getDisplayInPublicRegistry() == null && nextService.getDisplayInPublicRegistry() == Boolean.FALSE) {
-				continue;
+		continue;
 			}
 			if (nextVersion.getDisplayInPublicRegistry() == null && nextService.getDisplayInPublicRegistry() == null && nextDomain.getDisplayInPublicRegistry() != Boolean.TRUE) {
-				continue;
+		continue;
 			}
-%>
+	%>
 		<tr>
 			<td><%=nextDomain.getName() %></td>
 			<td><%=nextService.getName() %></td>

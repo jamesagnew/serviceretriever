@@ -15,7 +15,7 @@ import com.google.gwt.user.client.ui.Widget;
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.config.svcver.BaseUrlGrid;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
@@ -24,7 +24,7 @@ public class UrlDashboardGrid extends BaseUrlGrid {
 
 	private List<GServiceVersionUrl> myUrls = new ArrayList<GServiceVersionUrl>();
 
-	private Map<Long, GDomain> myUrlToDomain = new HashMap<Long, GDomain>();
+	private Map<Long, DtoDomain> myUrlToDomain = new HashMap<Long, DtoDomain>();
 
 	private Map<Long, GService> myUrlToService = new HashMap<Long, GService>();
 
@@ -33,7 +33,7 @@ public class UrlDashboardGrid extends BaseUrlGrid {
 	public UrlDashboardGrid(GDomainList theDomainList) {
 		init();
 		
-		for (GDomain nextDomain : theDomainList) {
+		for (DtoDomain nextDomain : theDomainList) {
 			for (GService nextSvc : nextDomain.getServiceList()) {
 				for (BaseDtoServiceVersion nextVer : nextSvc.getVersionList()) {
 					for (GServiceVersionUrl nextUrl : nextVer.getUrlList()) {
@@ -49,8 +49,8 @@ public class UrlDashboardGrid extends BaseUrlGrid {
 		Collections.sort(myUrls, new Comparator<GServiceVersionUrl>() {
 			@Override
 			public int compare(GServiceVersionUrl theO1, GServiceVersionUrl theO2) {
-				GDomain domain1 = myUrlToDomain.get(theO1.getPid());
-				GDomain domain2 = myUrlToDomain.get(theO2.getPid());
+				DtoDomain domain1 = myUrlToDomain.get(theO1.getPid());
+				DtoDomain domain2 = myUrlToDomain.get(theO2.getPid());
 				int retVal = domain1.getName().compareToIgnoreCase(domain2.getName());
 				if (retVal == 0) {
 					GService service1 = myUrlToService.get(theO1.getPid());
@@ -76,7 +76,7 @@ public class UrlDashboardGrid extends BaseUrlGrid {
 
 	@Override
 	protected Widget createDomainPanel(GServiceVersionUrl theUrl) {
-		GDomain domain = myUrlToDomain.get(theUrl.getPid());
+		DtoDomain domain = myUrlToDomain.get(theUrl.getPid());
 
 		SafeHtmlBuilder b = new SafeHtmlBuilder();
 		b.appendHtmlConstant("<a href=\"#" + NavProcessor.getTokenEditDomain(domain.getPid()) + "\">");
@@ -87,7 +87,7 @@ public class UrlDashboardGrid extends BaseUrlGrid {
 	}
 	@Override
 	protected Widget createServicePanel(GServiceVersionUrl theUrl) {
-		GDomain domain = myUrlToDomain.get(theUrl.getPid());
+		DtoDomain domain = myUrlToDomain.get(theUrl.getPid());
 		GService service = myUrlToService.get(theUrl.getPid());
 		BaseDtoServiceVersion version = myUrlToServiceVersion.get(theUrl.getPid());
 

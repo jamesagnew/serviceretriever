@@ -12,7 +12,7 @@ import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoMonitorRule;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleFiringProblem;
@@ -219,7 +219,7 @@ public class AlertGrid extends FlowPanel {
 
 	
 	public static void createAppliesToHtml(SafeHtmlBuilder theSafeHtmlBuilder, Set<Long> theSvcVerPids, GDomainList theDomainList) {
-		for (GDomain nextDomain : theDomainList) {
+		for (DtoDomain nextDomain : theDomainList) {
 			for (GService nextSvc : nextDomain.getServiceList()) {
 				if (nextSvc.anyVersionPidsInThisServiceAreAmongThesePids(theSvcVerPids)) {
 					theSafeHtmlBuilder.appendHtmlConstant("<li>");

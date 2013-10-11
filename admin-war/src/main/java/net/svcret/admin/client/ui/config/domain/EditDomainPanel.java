@@ -8,7 +8,7 @@ import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.config.KeepRecentTransactionsPanel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -22,7 +22,7 @@ import com.google.gwt.user.client.ui.TabPanel;
 
 public class EditDomainPanel extends FlowPanel {
 
-	private GDomain myDomain;
+	private DtoDomain myDomain;
 	private long myDomainPid;
 	private LoadingSpinner myInitialSpinner;
 	private FlowPanel myTopContentPanel;

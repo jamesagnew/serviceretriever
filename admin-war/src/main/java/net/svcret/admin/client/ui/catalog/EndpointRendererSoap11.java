@@ -1,7 +1,7 @@
 package net.svcret.admin.client.ui.catalog;
 
 import net.svcret.admin.client.ui.components.HtmlBr;
-import net.svcret.admin.shared.model.GConfig;
+import net.svcret.admin.shared.model.DtoConfig;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.util.StringUtil;
 
@@ -12,7 +12,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class EndpointRendererSoap11 extends BaseEndpointRenderer<DtoServiceVersionSoap11> {
 
-	EndpointRendererSoap11(GConfig theConfig) {
+	EndpointRendererSoap11(DtoConfig theConfig) {
 		super(theConfig);
 	}
 	

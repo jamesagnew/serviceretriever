@@ -6,7 +6,7 @@ import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.model.BaseDtoDashboardObject;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceVersionList;
 import net.svcret.admin.shared.model.HierarchyEnum;
@@ -23,9 +23,9 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 
 	private GService myService;
 	private PopupPanel myActionPopup;
-	private GDomain myDomain;
+	private DtoDomain myDomain;
 
-	public DashModelService(GDomain theDomain, GService theService) {
+	public DashModelService(DtoDomain theDomain, GService theService) {
 		super(theService);
 		myDomain = theDomain;
 		myService = theService;
@@ -91,7 +91,7 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 				if (myActionPopup == null || myActionPopup.isShowing() == false) {
 					myActionPopup = new DashActionPopupPanel(true, true);
 
-					final GDomain domain = myDomain;
+					final DtoDomain domain = myDomain;
 					final GService service = myService;
 
 					FlowPanel content = createActionPanel(myActionPopup, domain, service, null);
@@ -111,7 +111,7 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 	}
 
 	
-	static FlowPanel createActionPanel(final PopupPanel thePopupPanel, final GDomain domain, final GService service, FlowPanel thePreviousContent) {
+	static FlowPanel createActionPanel(final PopupPanel thePopupPanel, final DtoDomain domain, final GService service, FlowPanel thePreviousContent) {
 		final FlowPanel content = new FlowPanel();
 
 		if (thePreviousContent!=null) {

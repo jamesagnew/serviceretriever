@@ -6,7 +6,7 @@ import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceVersionList;
 
@@ -25,9 +25,9 @@ public class EditServiceVersionsPanel extends FlowPanel {
 	private Button myAddServiceButton;
 	private GService myService;
 	private Grid myServicesGrid;
-	private GDomain myDomain;
+	private DtoDomain myDomain;
 
-	public EditServiceVersionsPanel(GDomain theDomain, GService theService) {
+	public EditServiceVersionsPanel(DtoDomain theDomain, GService theService) {
 		myDomain = theDomain;
 		myService = theService;
 

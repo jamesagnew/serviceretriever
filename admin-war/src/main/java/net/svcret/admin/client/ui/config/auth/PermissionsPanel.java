@@ -14,7 +14,7 @@ import net.svcret.admin.client.ui.config.auth.DomainTreePanel.ITreeStatusModel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
@@ -110,13 +110,13 @@ public class PermissionsPanel extends FlowPanel {
 
 
 					@Override
-					public boolean isEntireDomainChecked(GDomain theDomain) {
+					public boolean isEntireDomainChecked(DtoDomain theDomain) {
 						GUserDomainPermission domainPermission = myPermissions.getDomainPermission(theDomain.getPid());
 						return domainPermission != null && domainPermission.isAllowAllServices();
 					}
 
 					@Override
-					public boolean isEntireServiceChecked(GDomain theNextDomain, GService theService) {
+					public boolean isEntireServiceChecked(DtoDomain theNextDomain, GService theService) {
 						GUserDomainPermission domain = myPermissions.getDomainPermission(theNextDomain.getPid());
 						if (domain != null) {
 							return domain.getServicePermission(theService.getPid()) != null;
@@ -125,7 +125,7 @@ public class PermissionsPanel extends FlowPanel {
 					}
 
 					@Override
-					public boolean isEntireServiceVersionChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theServiceVersion) {
+					public boolean isEntireServiceVersionChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theServiceVersion) {
 						GUserDomainPermission domain = myPermissions.getDomainPermission(theDomain.getPid());
 						if (domain != null) {
 							GUserServicePermission service = domain.getServicePermission(theService.getPid());
@@ -140,7 +140,7 @@ public class PermissionsPanel extends FlowPanel {
 					}
 
 					@Override
-					public boolean isMethodChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod) {
+					public boolean isMethodChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod) {
 						GUserDomainPermission domain = myPermissions.getDomainPermission(theDomain.getPid());
 						if (domain != null) {
 							GUserServicePermission service = domain.getServicePermission(theService.getPid());
@@ -156,22 +156,22 @@ public class PermissionsPanel extends FlowPanel {
 					}
 
 					@Override
-					public void setEntireDomainChecked(GDomain theDomain, boolean theValue) {
+					public void setEntireDomainChecked(DtoDomain theDomain, boolean theValue) {
 						myPermissions.getOrCreateDomainPermission(theDomain.getPid()).setAllowAllServices(theValue);
 					}
 
 					@Override
-					public void setEntireServiceChecked(GDomain theDomain, GService theService, boolean theValue) {
+					public void setEntireServiceChecked(DtoDomain theDomain, GService theService, boolean theValue) {
 						myPermissions.getOrCreateDomainPermission(theDomain.getPid()).getOrCreateServicePermission(theService.getPid()).setAllowAllServiceVersions(theValue);
 					}
 
 					@Override
-					public void setEntireServiceVersionChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theServiceVersion, boolean theValue) {
+					public void setEntireServiceVersionChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theServiceVersion, boolean theValue) {
 						myPermissions.getOrCreateDomainPermission(theDomain.getPid()).getOrCreateServicePermission(theService.getPid()).getOrCreateServiceVersionPermission(theServiceVersion.getPid()).setAllowAllServiceVersionMethods(theValue);
 					}
 
 					@Override
-					public void setMethodChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod, Boolean theValue) {
+					public void setMethodChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod, Boolean theValue) {
 						if (theValue) {
 							myPermissions.getOrCreateDomainPermission(theDomain.getPid()).getOrCreateServicePermission(theService.getPid()).getOrCreateServiceVersionPermission(theSvcVer.getPid()).getOrCreateServiceVersionMethodPermission(theMethod.getPid());
 						}else {

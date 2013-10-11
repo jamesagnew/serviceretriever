@@ -96,7 +96,7 @@ public class DtoLibraryMessage implements Serializable {
 			if (getAppliesToServiceVersionPids().isEmpty() == false) {
 				for (Long nextPid : getAppliesToServiceVersionPids()) {
 					Long nextDomainPid = theDomainList.getDomainPidWithServiceVersion(nextPid);
-					GDomain nextDomain = theDomainList.getDomainByPid(nextDomainPid);
+					DtoDomain nextDomain = theDomainList.getDomainByPid(nextDomainPid);
 					Long nextServicePid = theDomainList.getServicePidWithServiceVersion(nextPid);
 					GService nextService = nextDomain.getServiceList().getServiceByPid(nextServicePid);
 					BaseDtoServiceVersion nextSvcVer = theDomainList.getServiceVersionByPid(nextPid);

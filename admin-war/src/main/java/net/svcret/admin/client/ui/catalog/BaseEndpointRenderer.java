@@ -2,7 +2,7 @@ package net.svcret.admin.client.ui.catalog;
 
 import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.GConfig;
+import net.svcret.admin.shared.model.DtoConfig;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.user.client.ui.Anchor;
@@ -11,9 +11,9 @@ import com.google.gwt.user.client.ui.Widget;
 
 public abstract class BaseEndpointRenderer<T extends BaseDtoServiceVersion> {
 
-	private GConfig myConfig;
+	private DtoConfig myConfig;
 
-	public BaseEndpointRenderer(GConfig theConfig) {
+	public BaseEndpointRenderer(DtoConfig theConfig) {
 		myConfig =theConfig;
 	}
 

@@ -6,7 +6,7 @@ import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 
 import com.google.gwt.core.shared.GWT;
@@ -50,7 +50,7 @@ public class DeleteDomainPanel extends FlowPanel {
 	}
 
 	private void populate(final long thePid, final FlowPanel contentPanel, GDomainList theResult) {
-		GDomain domain = theResult.getDomainByPid(thePid);
+		DtoDomain domain = theResult.getDomainByPid(thePid);
 		if (domain == null) {
 			GWT.log("Unknown domain PID: " + thePid);
 			NavProcessor.goHome();

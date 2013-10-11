@@ -3,26 +3,26 @@ package net.svcret.admin.shared;
 import java.io.Serializable;
 
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 
 public class AddServiceVersionResponse implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private GDomain myNewDomain;
+	private DtoDomain myNewDomain;
 	private BaseDtoServiceVersion myNewServiceVersion;
 
 	/**
 	 * @return the newDomain
 	 */
-	public GDomain getNewDomain() {
+	public DtoDomain getNewDomain() {
 		return myNewDomain;
 	}
 
 	/**
 	 * @param theNewDomain the newDomain to set
 	 */
-	public void setNewDomain(GDomain theNewDomain) {
+	public void setNewDomain(DtoDomain theNewDomain) {
 		myNewDomain = theNewDomain;
 	}
 

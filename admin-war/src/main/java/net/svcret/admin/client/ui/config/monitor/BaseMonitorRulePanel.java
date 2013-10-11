@@ -42,7 +42,7 @@ import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckList;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcomeList;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GMonitorRulePassive;
@@ -828,42 +828,42 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		}
 
 		@Override
-		public boolean isEntireDomainChecked(GDomain theDomain) {
+		public boolean isEntireDomainChecked(DtoDomain theDomain) {
 			return myRule.appliesTo(theDomain);
 		}
 
 		@Override
-		public boolean isEntireServiceChecked(GDomain theDomain, GService theService) {
+		public boolean isEntireServiceChecked(DtoDomain theDomain, GService theService) {
 			return myRule.appliesTo(theService);
 		}
 
 		@Override
-		public boolean isEntireServiceVersionChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theServiceVersion) {
+		public boolean isEntireServiceVersionChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theServiceVersion) {
 			return myRule.appliesTo(theServiceVersion);
 		}
 
 		@Override
-		public boolean isMethodChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod) {
+		public boolean isMethodChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public void setEntireDomainChecked(GDomain theDomain, boolean theValue) {
+		public void setEntireDomainChecked(DtoDomain theDomain, boolean theValue) {
 			myRule.applyTo(theDomain, theValue);
 		}
 
 		@Override
-		public void setEntireServiceChecked(GDomain theDomain, GService theService, boolean theValue) {
+		public void setEntireServiceChecked(DtoDomain theDomain, GService theService, boolean theValue) {
 			myRule.applyTo(theDomain, theService, theValue);
 		}
 
 		@Override
-		public void setEntireServiceVersionChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theServiceVersion, boolean theValue) {
+		public void setEntireServiceVersionChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theServiceVersion, boolean theValue) {
 			myRule.applyTo(theDomain, theService, theServiceVersion, theValue);
 		}
 
 		@Override
-		public void setMethodChecked(GDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod, Boolean theValue) {
+		public void setMethodChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod, Boolean theValue) {
 			throw new UnsupportedOperationException();
 		}
 

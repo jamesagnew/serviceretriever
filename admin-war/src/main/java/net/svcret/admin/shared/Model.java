@@ -8,8 +8,8 @@ import net.svcret.admin.client.ui.layout.TopBarPanel;
 import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoAuthenticationHostList;
-import net.svcret.admin.shared.model.GConfig;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoConfig;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
@@ -29,7 +29,7 @@ public class Model {
 
 	private static Model ourInstance;
 	private DtoAuthenticationHostList myAuthHostList;
-	private GConfig myConfig;
+	private DtoConfig myConfig;
 	private GDomainList myDomainList;
 	private boolean myDomainListInitialized = false;
 	private GHttpClientConfigList myHttpClientConfigList;
@@ -40,8 +40,8 @@ public class Model {
 		initLists();
 	}
 
-	public void addDomain(GDomain theDomain) {
-		GDomain domain = myDomainList.getDomainByPid(theDomain.getPid());
+	public void addDomain(DtoDomain theDomain) {
+		DtoDomain domain = myDomainList.getDomainByPid(theDomain.getPid());
 		if (domain != null) {
 			domain.merge(theDomain);
 		} else {
@@ -59,7 +59,7 @@ public class Model {
 	}
 
 	public void addOrUpdateServiceVersion(long theDomainPid, long theServicePid, BaseDtoServiceVersion theServiceVersion) {
-		GDomain domain = myDomainList.getDomainByPid(theDomainPid);
+		DtoDomain domain = myDomainList.getDomainByPid(theDomainPid);
 		if (domain == null) {
 			GWT.log("Unknown domain! " + theDomainPid);
 			return;
@@ -80,7 +80,7 @@ public class Model {
 	}
 
 	public void addService(long theDomainPid, GService theResult) {
-		GDomain domain = myDomainList.getDomainByPid(theDomainPid);
+		DtoDomain domain = myDomainList.getDomainByPid(theDomainPid);
 		if (domain == null) {
 			GWT.log("No domain in memory with PID: " + theDomainPid);
 			return;
@@ -96,7 +96,7 @@ public class Model {
 
 	public void flushStats() {
 		if (myDomainList != null) {
-			for (GDomain nextDomain : myDomainList) {
+			for (DtoDomain nextDomain : myDomainList) {
 				nextDomain.flushStats();
 				for (GService nextSvc : nextDomain.getServiceList()) {
 					nextSvc.flushStats();
@@ -161,20 +161,20 @@ public class Model {
 		}
 	}
 
-	public void loadConfig(final IAsyncLoadCallback<GConfig> theIAsyncLoadCallback) {
+	public void loadConfig(final IAsyncLoadCallback<DtoConfig> theIAsyncLoadCallback) {
 		if (myConfig != null) {
 			theIAsyncLoadCallback.onSuccess(myConfig);
 			return;
 		}
 
-		AdminPortal.MODEL_SVC.loadConfig(new AsyncCallback<GConfig>() {
+		AdminPortal.MODEL_SVC.loadConfig(new AsyncCallback<DtoConfig>() {
 			@Override
 			public void onFailure(Throwable theCaught) {
 				handleFailure(theCaught);
 			}
 
 			@Override
-			public void onSuccess(GConfig theResult) {
+			public void onSuccess(DtoConfig theResult) {
 				myConfig = theResult;
 				theIAsyncLoadCallback.onSuccess(theResult);
 			}
@@ -201,7 +201,7 @@ public class Model {
 
 	public void loadDomainListAndStats(IAsyncLoadCallback<GDomainList> theCallback) {
 		ModelUpdateRequest request = new ModelUpdateRequest();
-		for (GDomain nextDom : myDomainList) {
+		for (DtoDomain nextDom : myDomainList) {
 			request.addDomainToLoadStats(nextDom.getPid());
 			for (GService nextSvc : nextDom.getServiceList()) {
 				if (nextDom.isExpandedOnDashboard()) {

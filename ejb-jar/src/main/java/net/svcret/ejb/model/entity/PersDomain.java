@@ -23,7 +23,7 @@ import javax.persistence.Version;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.ServerSecuredEnum;
 import net.svcret.admin.shared.model.StatusEnum;
@@ -306,13 +306,13 @@ public class PersDomain extends BasePersServiceCatalogItem {
 		myPid = thePid;
 	}
 
-	public GDomain toDto() throws UnexpectedFailureException {
+	public DtoDomain toDto() throws UnexpectedFailureException {
 		Set<Long> stats = Collections.emptySet();
 		return toDto(stats, stats, stats, stats, stats, null, null);
 	}
 
-	public GDomain toDto(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, Set<Long> theLoadUrlStats, StatusesBean theStatuses, IRuntimeStatusQueryLocal theStatusQuerySvc) throws UnexpectedFailureException {
-		GDomain retVal = new GDomain();
+	public DtoDomain toDto(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, Set<Long> theLoadUrlStats, StatusesBean theStatuses, IRuntimeStatusQueryLocal theStatusQuerySvc) throws UnexpectedFailureException {
+		DtoDomain retVal = new DtoDomain();
 		retVal.setPid(this.getPid());
 		retVal.setId(this.getDomainId());
 		retVal.setName(this.getDomainName());

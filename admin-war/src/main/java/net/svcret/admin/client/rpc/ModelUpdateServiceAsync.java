@@ -13,8 +13,8 @@ import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoAuthenticationHostList;
-import net.svcret.admin.shared.model.GConfig;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoConfig;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
@@ -37,7 +37,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public interface ModelUpdateServiceAsync {
 
-	void addDomain(GDomain theDomain, AsyncCallback<GDomain> callback);
+	void addDomain(DtoDomain theDomain, AsyncCallback<DtoDomain> callback);
 
 	void addService(long theDomainPid, String theId, String theName, boolean theActive, AsyncCallback<GService> theCallback);
 
@@ -51,7 +51,7 @@ public interface ModelUpdateServiceAsync {
 
 	void getLatestFailingMonitorRuleFiringForRulePids(AsyncCallback<Map<Long, GMonitorRuleFiring>> theIAsyncLoadCallback);
 
-	void loadConfig(AsyncCallback<GConfig> theAsyncCallback);
+	void loadConfig(AsyncCallback<DtoConfig> theAsyncCallback);
 
 	void loadLibraryMessage(long theMessagePid, AsyncCallback<DtoLibraryMessage> theAsyncCallback);
 
@@ -99,9 +99,9 @@ public interface ModelUpdateServiceAsync {
 
 	void saveAuthenticationHost(BaseDtoAuthenticationHost theAuthHost, AsyncCallback<DtoAuthenticationHostList> theCallback);
 
-	void saveConfig(GConfig theConfig, AsyncCallback<Void> theAsyncCallback);
+	void saveConfig(DtoConfig theConfig, AsyncCallback<Void> theAsyncCallback);
 
-	void saveDomain(GDomain theDomain, AsyncCallback<GDomainList> theDomainList);
+	void saveDomain(DtoDomain theDomain, AsyncCallback<GDomainList> theDomainList);
 
 	void saveLibraryMessage(DtoLibraryMessage theMessage, AsyncCallback<Void> theIAsyncLoadCallback);
 

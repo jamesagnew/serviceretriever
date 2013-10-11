@@ -7,8 +7,8 @@ import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
 import net.svcret.admin.shared.model.DtoServiceVersionVirtual;
-import net.svcret.admin.shared.model.GConfig;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoConfig;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
@@ -33,7 +33,7 @@ public class ServiceCatalogPanel extends FlowPanel {
 	
 	private LoadingSpinner myLoadingSpinner;
 	private FlexTable myGrid;
-	private GConfig myConfig;
+	private DtoConfig myConfig;
 
 	public ServiceCatalogPanel() {
 		setStylePrimaryName(CssConstants.MAIN_PANEL);
@@ -62,10 +62,10 @@ public class ServiceCatalogPanel extends FlowPanel {
 		myGrid.setHTML(0, COL_BUNDLE, "Description<br />Bundle");
 		myGrid.getCellFormatter().setHorizontalAlignment(0, COL_BUNDLE, HasHorizontalAlignment.ALIGN_CENTER);
 		
-		Model.getInstance().loadConfig(new IAsyncLoadCallback<GConfig>() {
+		Model.getInstance().loadConfig(new IAsyncLoadCallback<DtoConfig>() {
 
 			@Override
-			public void onSuccess(GConfig theConfig) {
+			public void onSuccess(DtoConfig theConfig) {
 				myConfig=theConfig;
 		
 		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
@@ -84,7 +84,7 @@ public class ServiceCatalogPanel extends FlowPanel {
 
 	private void initGrid(GDomainList theResult) {
 		
-		for (GDomain nextDomain : theResult) {
+		for (DtoDomain nextDomain : theResult) {
 			for (GService nextService : nextDomain.getServiceList()) {
 				for (BaseDtoServiceVersion nextVersion : nextService.getVersionList()) {
 					

@@ -4,7 +4,7 @@ import net.svcret.admin.client.ui.components.EditableField;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -21,9 +21,9 @@ public class EditDomainBasicPropertiesPanel extends FlowPanel {
 	private HasValue<String> myNameTextBox;
 	private LoadingSpinner mySpinner;
 //	private KeepRecentTransactionsPanel myKeepRecentTransactionsPanel;
-	private GDomain myDomain;
+	private DtoDomain myDomain;
 
-	public EditDomainBasicPropertiesPanel(final GDomain theDomain, String theButtonText, ClickHandler theButtonHandler, ImageResource theButtonIcon, boolean theNewDomain) {
+	public EditDomainBasicPropertiesPanel(final DtoDomain theDomain, String theButtonText, ClickHandler theButtonHandler, ImageResource theButtonIcon, boolean theNewDomain) {
 		myDomain = theDomain;
 		
 		TwoColumnGrid formGrid = new TwoColumnGrid();

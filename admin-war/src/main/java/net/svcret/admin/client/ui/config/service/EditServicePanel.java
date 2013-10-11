@@ -9,7 +9,7 @@ import net.svcret.admin.client.ui.config.KeepRecentTransactionsPanel;
 import net.svcret.admin.client.ui.config.domain.EditDomainServicesPanel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
 
@@ -27,7 +27,7 @@ public class EditServicePanel extends FlowPanel {
 	private EditServiceBasicPropertiesPanel myEditServiceBasicPropertiesPanel;
 	private FlowPanel myTopContentPanel;
 	private KeepRecentTransactionsPanel myKeepRecentTransactionsPanel;
-	private GDomain myDomain;
+	private DtoDomain myDomain;
 
 	public EditServicePanel(final long theDomainPid, final long theServicePid) {
 		FlowPanel topPanel = new FlowPanel();

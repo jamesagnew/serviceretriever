@@ -7,7 +7,7 @@ import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.GConfig;
+import net.svcret.admin.shared.model.DtoConfig;
 
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -21,7 +21,7 @@ import com.google.gwt.user.client.ui.TextBox;
 public class ConfigPanel extends FlowPanel {
 
 	private LoadingSpinner mySpinner;
-	private GConfig myConfig;
+	private DtoConfig myConfig;
 	private TextBox myUrlBaseTextBox;
 
 	public ConfigPanel() {
@@ -53,9 +53,9 @@ public class ConfigPanel extends FlowPanel {
 		mySpinner.show();
 		savePanel.add(mySpinner);
 
-		Model.getInstance().loadConfig(new IAsyncLoadCallback<GConfig>() {
+		Model.getInstance().loadConfig(new IAsyncLoadCallback<DtoConfig>() {
 			@Override
-			public void onSuccess(GConfig theResult) {
+			public void onSuccess(DtoConfig theResult) {
 				initConfig(theResult);
 				mySpinner.hide();
 			}
@@ -63,7 +63,7 @@ public class ConfigPanel extends FlowPanel {
 
 	}
 
-	private void initConfig(GConfig theResult) {
+	private void initConfig(DtoConfig theResult) {
 		myConfig = theResult;
 		initClientConfig();
 	}

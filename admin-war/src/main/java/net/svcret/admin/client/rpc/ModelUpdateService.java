@@ -14,8 +14,8 @@ import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoAuthenticationHostList;
-import net.svcret.admin.shared.model.GConfig;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoConfig;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
@@ -43,7 +43,7 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 @RemoteServiceRelativePath("modelupdate")
 public interface ModelUpdateService extends RemoteService {
 
-	GDomain addDomain(GDomain theDomain) throws ServiceFailureException;
+	DtoDomain addDomain(DtoDomain theDomain) throws ServiceFailureException;
 
 	GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ServiceFailureException;
 
@@ -58,7 +58,7 @@ public interface ModelUpdateService extends RemoteService {
 
 	Map<Long, GMonitorRuleFiring> getLatestFailingMonitorRuleFiringForRulePids() throws ServiceFailureException;
 
-	GConfig loadConfig() throws ServiceFailureException;
+	DtoConfig loadConfig() throws ServiceFailureException;
 
 	DtoLibraryMessage loadLibraryMessage(long theMessagePid) throws ServiceFailureException;
 
@@ -106,9 +106,9 @@ public interface ModelUpdateService extends RemoteService {
 
 	DtoAuthenticationHostList saveAuthenticationHost(BaseDtoAuthenticationHost theAuthHost) throws ServiceFailureException;
 
-	void saveConfig(GConfig theConfig) throws ServiceFailureException;
+	void saveConfig(DtoConfig theConfig) throws ServiceFailureException;
 
-	GDomainList saveDomain(GDomain theDomain) throws ServiceFailureException;
+	GDomainList saveDomain(DtoDomain theDomain) throws ServiceFailureException;
 
 	void saveLibraryMessage(DtoLibraryMessage theMessage) throws ServiceFailureException;
 

@@ -26,8 +26,8 @@ import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoServiceVersionVirtual;
 import net.svcret.admin.shared.model.DtoAuthenticationHostList;
-import net.svcret.admin.shared.model.GConfig;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoConfig;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
@@ -67,7 +67,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	private IAdminServiceLocal myAdminSvc;
 
 	@Override
-	public GDomain addDomain(GDomain theDomain) throws ServiceFailureException {
+	public DtoDomain addDomain(DtoDomain theDomain) throws ServiceFailureException {
 		ourLog.info("Adding domain {}/{}", theDomain.getId(), theDomain.getName());
 
 		if (isMockMode()) {
@@ -138,7 +138,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		long domain;
 		if (isNotBlank(theCreateDomainId)) {
 			try {
-				GDomain newDomain = new GDomain();
+				DtoDomain newDomain = new DtoDomain();
 				newDomain.setId(theCreateDomainId);
 				newDomain.setName(theCreateDomainId);
 				domain = myAdminSvc.addDomain(newDomain).getPid();
@@ -277,7 +277,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public GConfig loadConfig() throws ServiceFailureException {
+	public DtoConfig loadConfig() throws ServiceFailureException {
 		if (isMockMode()) {
 			return getMock().loadConfig();
 		}
@@ -354,7 +354,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		ourLog.info("Loaded model update in {}ms", delay);
 
 		if (ourLog.isTraceEnabled()) {
-			for (GDomain nextDomain : retVal.getDomainList()) {
+			for (DtoDomain nextDomain : retVal.getDomainList()) {
 				ourLog.trace(" * Returning Domain: {}", nextDomain);
 				for (GService nextSvc : nextDomain.getServiceList()) {
 					for (BaseDtoServiceVersion nextSvcVer : nextSvc.getVersionList()) {
@@ -725,7 +725,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public void saveConfig(GConfig theConfig) throws ServiceFailureException {
+	public void saveConfig(DtoConfig theConfig) throws ServiceFailureException {
 		ourLog.info("Saving config");
 
 		try {
@@ -737,7 +737,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public GDomainList saveDomain(GDomain theDomain) throws ServiceFailureException {
+	public GDomainList saveDomain(DtoDomain theDomain) throws ServiceFailureException {
 		if (isMockMode()) {
 			return getMock().saveDomain(theDomain);
 		}

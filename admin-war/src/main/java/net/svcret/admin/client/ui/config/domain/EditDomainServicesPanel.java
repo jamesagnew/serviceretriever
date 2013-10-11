@@ -5,7 +5,7 @@ import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.PButton;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceList;
 
@@ -24,10 +24,10 @@ public class EditDomainServicesPanel extends FlowPanel {
 	private static final int NUM_COLS = 3;
 
 	private Button myAddServiceButton;
-	private GDomain myDomain;
+	private DtoDomain myDomain;
 	private Grid myServicesGrid;
 
-	public EditDomainServicesPanel(GDomain theDomain) {
+	public EditDomainServicesPanel(DtoDomain theDomain) {
 		myDomain = theDomain;
 
 		add(new Label(SVC_DESC));

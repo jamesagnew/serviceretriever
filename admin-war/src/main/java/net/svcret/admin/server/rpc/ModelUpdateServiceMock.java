@@ -36,8 +36,8 @@ import net.svcret.admin.shared.model.DtoNodeStatus;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.admin.shared.model.DtoAuthenticationHostList;
-import net.svcret.admin.shared.model.GConfig;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoConfig;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
@@ -83,19 +83,19 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	private static long ourNextPid = 1000000L;
 	private DtoAuthenticationHostList myAuthHostList;
 	private GHttpClientConfigList myClientConfigList;
-	private GConfig myConfig;
+	private DtoConfig myConfig;
 	private GDomainList myDomainList;
 	private GUserList myUserList;
 	private GMonitorRuleList myMonitorRuleList;
 
 	public ModelUpdateServiceMock() {
-		myConfig = new GConfig();
+		myConfig = new DtoConfig();
 		myConfig.getProxyUrlBases().add("http://base/proxy");
 
 		myDomainList = new GDomainList();
 
 		{
-			GDomain dom = new GDomain();
+			DtoDomain dom = new DtoDomain();
 			dom.setPid(ourNextPid++);
 			dom.setId("domain1");
 			dom.setName("Domain 1");
@@ -171,7 +171,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 			dom.getServiceList().add(svc);
 		}
 		{
-			GDomain dom = new GDomain();
+			DtoDomain dom = new DtoDomain();
 			dom.setPid(ourNextPid++);
 			dom.setId("domain2");
 			dom.setName("Domain 2");
@@ -330,7 +330,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	}
 
 	@Override
-	public GDomain addDomain(GDomain theDomain) throws ServiceFailureException {
+	public DtoDomain addDomain(DtoDomain theDomain) throws ServiceFailureException {
 		theDomain.setPid(ourNextPid++);
 		myDomainList.add(theDomain);
 		return theDomain;
@@ -339,7 +339,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	@Override
 	public GService addService(long theDomainPid, String theId, String theName, boolean theActive) {
 
-		GDomain dom = myDomainList.getDomainByPid(theDomainPid);
+		DtoDomain dom = myDomainList.getDomainByPid(theDomainPid);
 
 		GService svc = new GService();
 		svc.setCanInheritKeepNumRecentTransactions(true);
@@ -358,14 +358,14 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 
 	@Override
 	public AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseDtoServiceVersion theVersion) {
-		GDomain dom;
+		DtoDomain dom;
 		if (theExistingDomainPid != null) {
 			dom = myDomainList.getDomainByPid(theExistingDomainPid);
 			if (dom == null) {
 				throw new NullPointerException("Unknown dom " + theExistingDomainPid);
 			}
 		} else {
-			dom = new GDomain();
+			dom = new DtoDomain();
 			dom.setPid(ourNextPid++);
 			dom.setId(theCreateDomainId);
 			dom.setName(theCreateDomainId);
@@ -491,7 +491,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	}
 
 	@Override
-	public GConfig loadConfig() {
+	public DtoConfig loadConfig() {
 		return myConfig;
 	}
 
@@ -518,7 +518,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		retVal.getNodeStatuses().get(2).setTransactionsFailPerMinute(10.1);
 		retVal.getNodeStatuses().get(2).setTransactionsSecurityFailPerMinute(10.1);
 		
-		for (GDomain nextDomain : retVal.getDomainList()) {
+		for (DtoDomain nextDomain : retVal.getDomainList()) {
 			Set<Long> domainsToLoadStats = theRequest.getDomainsToLoadStats();
 			long nextDomainPid = nextDomain.getPid();
 			if (domainsToLoadStats.contains(nextDomainPid)) {
@@ -617,7 +617,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 
 	@Override
 	public GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) {
-		for (GDomain nextDomain : myDomainList) {
+		for (DtoDomain nextDomain : myDomainList) {
 			for (GService nextService : nextDomain.getServiceList()) {
 				for (BaseDtoServiceVersion nextVersion : nextService.getVersionList()) {
 					if (nextVersion.getPid() == theVersionPid) {
@@ -741,7 +741,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 
 	@Override
 	public GDomainList removeServiceVersion(long thePid) {
-		for (GDomain nextDomain : myDomainList) {
+		for (DtoDomain nextDomain : myDomainList) {
 			for (GService nextSvc : nextDomain.getServiceList()) {
 				BaseDtoServiceVersion ver = nextSvc.getVersionList().getVersionByPid(thePid);
 				if (ver != null) {
@@ -770,13 +770,13 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	}
 
 	@Override
-	public void saveConfig(GConfig theConfig) {
+	public void saveConfig(DtoConfig theConfig) {
 		myConfig = theConfig;
 	}
 
 	@Override
-	public GDomainList saveDomain(GDomain theDomain) {
-		GDomain retVal = myDomainList.getDomainByPid(theDomain.getPid());
+	public GDomainList saveDomain(DtoDomain theDomain) {
+		DtoDomain retVal = myDomainList.getDomainByPid(theDomain.getPid());
 		retVal.merge(theDomain);
 
 		for (GService next : retVal.getServiceList()) {
@@ -806,7 +806,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	public GDomainList saveService(GService theService) {
 		theService.removeVersionList();
 
-		for (GDomain nextDomain : myDomainList) {
+		for (DtoDomain nextDomain : myDomainList) {
 			for (GService nextService : nextDomain.getServiceList()) {
 				if (nextService.getPid() == theService.getPid()) {
 					nextService.merge(theService);
@@ -972,7 +972,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 
 	@Override
 	public GServiceVersionUrl resetCircuitBreakerForServiceVersionUrl(long theUrlPid) {
-		for (GDomain nextDomain : myDomainList) {
+		for (DtoDomain nextDomain : myDomainList) {
 			for (GService nextSvc : nextDomain.getServiceList()) {
 				for (BaseDtoServiceVersion nextVer : nextSvc.getVersionList()) {
 					for (GServiceVersionUrl nextUrl : nextVer.getUrlList()) {

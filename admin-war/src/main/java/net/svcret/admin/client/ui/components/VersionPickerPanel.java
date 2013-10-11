@@ -6,7 +6,7 @@ import java.util.List;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.shared.ObjectUtil;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
 
@@ -133,7 +133,7 @@ public class VersionPickerPanel extends TwoColumnGrid {
 
 			myServiceBox.setEnabled(true);
 
-			GDomain domain = myDomainList.getDomainByPid(selectedDomainPid);
+			DtoDomain domain = myDomainList.getDomainByPid(selectedDomainPid);
 
 			if (myAllowSelectAll) {
 				myServiceBox.addItem("All Services", ALL_PID_STR);
@@ -221,7 +221,7 @@ public class VersionPickerPanel extends TwoColumnGrid {
 		if (myAllowSelectAll) {
 			myDomainBox.addItem("All Domains", ALL_PID_STR);
 		}
-		for (GDomain next : theDomainList) {
+		for (DtoDomain next : theDomainList) {
 			myDomainBox.addItem(next.getName(), Long.toString(next.getPid()));
 		}
 		if (myDomainBox.getItemCount() > 0) {

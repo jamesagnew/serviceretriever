@@ -6,7 +6,7 @@ import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -40,7 +40,7 @@ public class AddDomainStep2Panel  extends FlowPanel implements ClickHandler {
 			@Override
 			public void onSuccess(GDomainList theResult) {
 				spinner.hideCompletely();
-				GDomain domain = theResult.getDomainByPid(myDomainPid);
+				DtoDomain domain = theResult.getDomainByPid(myDomainPid);
 				
 				Label text = new Label("Domain \"" + domain.getName() + "\" has been successfully added.");
 				contentPanel.add(text);

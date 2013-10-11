@@ -16,7 +16,7 @@ import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoDashboardObject;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
@@ -70,7 +70,7 @@ public class ServiceDashboardPanel extends BaseDashboardPanel{
 		ArrayList<IDashModel> newUiList = new ArrayList<IDashModel>();
 
 		boolean haveStatsToLoad = false;
-		for (GDomain nextDomain : theDomainList) {
+		for (DtoDomain nextDomain : theDomainList) {
 			if (!nextDomain.isStatsInitialized()) {
 				addSpinnerToList(newUiList);
 				haveStatsToLoad = true;

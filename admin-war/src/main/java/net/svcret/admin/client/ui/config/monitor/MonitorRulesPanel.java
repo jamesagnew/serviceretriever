@@ -28,7 +28,7 @@ import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckList;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
@@ -141,7 +141,7 @@ public class MonitorRulesPanel extends FlowPanel {
 			}
 
 			for (Long next : svcVerPids) {
-				GDomain domain = myDomainList.getDomainWithServiceVersion(next);
+				DtoDomain domain = myDomainList.getDomainWithServiceVersion(next);
 				GService svc = myDomainList.getServiceWithServiceVersion(next);
 				BaseDtoServiceVersion svcVer = svc.getVersionList().getVersionByPid(next);
 				retVal.add(domain.getName() + " / " + svc.getName() + " / " + svcVer.getId());

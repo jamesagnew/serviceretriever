@@ -11,7 +11,7 @@ public class XmlSerializationTest {
 	@Test
 	public void testMarshall() {
 		
-		GDomain domain = new GDomain();
+		DtoDomain domain = new DtoDomain();
 		domain.setPid(123L);
 		domain.setName("domainName");
 		domain.setId("domainId");

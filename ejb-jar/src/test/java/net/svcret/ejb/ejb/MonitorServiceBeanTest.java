@@ -17,7 +17,7 @@ import java.util.List;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
-import net.svcret.admin.shared.model.GDomain;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
@@ -566,7 +566,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 	private void createCatalog() throws Exception {
 		newEntityManager();
 
-		GDomain d1 = myOrchSvc.addDomain("asv_did", "asv_did");
+		DtoDomain d1 = myOrchSvc.addDomain("asv_did", "asv_did");
 		GService d1s1 = myOrchSvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 
