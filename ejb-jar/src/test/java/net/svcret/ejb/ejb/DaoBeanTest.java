@@ -698,7 +698,7 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		StatusesBean statuses = mySvc.loadAllStatuses();
+		StatusesBean statuses = mySvc.loadAllStatuses(new PersConfig());
 		assertEquals(1, statuses.getServiceVersionPidToStatus().size());
 	}
 

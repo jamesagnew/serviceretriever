@@ -451,11 +451,11 @@ public class PersService extends BasePersServiceCatalogItem {
 			Date lastSuccess = null;
 			for (BasePersServiceVersion nextVersion : this.getVersions()) {
 				for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
-					PersServiceVersionUrlStatus urlStatus = theStatuses.getUrlStatus(nextUrl.getPid());
+					StatusEnum urlStatus = theStatuses.getUrlStatusEnum(nextUrl.getPid());
 					if (urlStatus == null) {
 						continue;
 					}
-					switch (urlStatus.getStatus()) {
+					switch (urlStatus) {
 					case ACTIVE:
 						urlsActive++;
 						break;

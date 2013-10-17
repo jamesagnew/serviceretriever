@@ -1,4 +1,4 @@
-package net.svcret.ejb.ejb;
+package net.svcret.ejb.ejb.log;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -27,7 +27,6 @@ import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IConfigService;
-import net.svcret.ejb.api.IFilesystemAuditLogger;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -133,7 +132,7 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 		return PARAM_VALUE_WHITESPACE.matcher(theValue).replaceAll(" ");
 	}
 
-	private void flush() throws ProcessingException {
+	private void flushWithinLockedContext() throws ProcessingException {
 		ourLog.info("About to begin flushing approximately {} records from audit log queue", myUnflushedAuditRecord.size());
 		long start = System.currentTimeMillis();
 
@@ -238,7 +237,7 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 		}
 
 		try {
-			flush();
+			flushWithinLockedContext();
 		} finally {
 			myFlushLockAuditRecord.unlock();
 		}
@@ -251,7 +250,7 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 	}
 
 	@VisibleForTesting
-	void setConfigServiceForUnitTests(IConfigService theCfgSvc) {
+	public void setConfigServiceForUnitTests(IConfigService theCfgSvc) {
 		myConfigSvc = theCfgSvc;
 
 	}
@@ -310,19 +309,19 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 		 */
 		SVCVER {
 			@Override
-			public String createLogFile(UnflushedAuditRecord theRecord) {
+			public String createLogFileName(UnflushedAuditRecord theRecord) {
 				return "svcver_" + theRecord.getServiceVersionPid() + ".log";
 			}
 		},
 
 		USER {
 			@Override
-			public String createLogFile(UnflushedAuditRecord theRecord) {
+			public String createLogFileName(UnflushedAuditRecord theRecord) {
 				return "user_" + theRecord.getUserPid() + ".log";
 			}
 		};
 
-		public abstract String createLogFile(UnflushedAuditRecord theRecord);
+		public abstract String createLogFileName(UnflushedAuditRecord theRecord);
 
 	}
 
@@ -409,13 +408,13 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 		}
 
 		public String createLogFile() {
-			return myAuditRecordType.createLogFile(this);
+			return myAuditRecordType.createLogFileName(this);
 		}
 
 	}
 
 	public void forceFlush() throws ProcessingException {
-		flush();
+		flushWithinLockedContext();
 	}
 
 }

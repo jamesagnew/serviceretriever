@@ -59,7 +59,9 @@ public class AddServiceVersionPanel extends AbstractServiceVersionPanel {
 
 	@Override
 	protected void handleDoneSaving(AddServiceVersionResponse theResult) {
-		History.newItem(NavProcessor.getTokenAddServiceVersionStep2(theResult.getNewServiceVersion().getPid()));
+		BaseDtoServiceVersion newServiceVersion = theResult.getNewServiceVersion();
+		long pid = newServiceVersion.getPid();
+		History.newItem(NavProcessor.getTokenAddServiceVersionStep2(pid));
 	}
 
 	private void handleTypeChange() {

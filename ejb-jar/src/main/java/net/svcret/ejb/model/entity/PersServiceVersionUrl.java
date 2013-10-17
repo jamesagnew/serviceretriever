@@ -335,30 +335,31 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 		}
 		
 		if (theLoadStats) {
-			PersServiceVersionUrlStatus theUrlStatus = null;
-			theUrlStatus = theStatuses.getUrlStatus(this.getPid());
-			if (theUrlStatus.getStatus() == StatusEnum.DOWN) {
-				if (theUrlStatus.getNextCircuitBreakerReset() != null) {
-					retVal.setStatsNextCircuitBreakerReset(theUrlStatus.getNextCircuitBreakerReset());
+			StatusEnum urlStatus = null;
+			urlStatus = theStatuses.getUrlStatusEnum(this.getPid());
+			PersServiceVersionUrlStatus status = theStatuses.getUrlStatusBean(this.getPid());
+			if (urlStatus == StatusEnum.DOWN) {
+				if (status.getNextCircuitBreakerReset() != null) {
+					retVal.setStatsNextCircuitBreakerReset(status.getNextCircuitBreakerReset());
 				}
 			}
 		
-			retVal.setStatsLastFailure(theUrlStatus.getLastFail());
-			retVal.setStatsLastFailureMessage(theUrlStatus.getLastFailMessage());
-			retVal.setStatsLastFailureStatusCode(theUrlStatus.getLastFailStatusCode());
-			retVal.setStatsLastFailureContentType(theUrlStatus.getLastFailContentType());
+			retVal.setStatsLastFailure(status.getLastFail());
+			retVal.setStatsLastFailureMessage(status.getLastFailMessage());
+			retVal.setStatsLastFailureStatusCode(status.getLastFailStatusCode());
+			retVal.setStatsLastFailureContentType(status.getLastFailContentType());
 		
-			retVal.setStatsLastSuccess(theUrlStatus.getLastSuccess());
-			retVal.setStatsLastSuccessMessage(theUrlStatus.getLastSuccessMessage());
-			retVal.setStatsLastSuccessStatusCode(theUrlStatus.getLastSuccessStatusCode());
-			retVal.setStatsLastSuccessContentType(theUrlStatus.getLastSuccessContentType());
+			retVal.setStatsLastSuccess(status.getLastSuccess());
+			retVal.setStatsLastSuccessMessage(status.getLastSuccessMessage());
+			retVal.setStatsLastSuccessStatusCode(status.getLastSuccessStatusCode());
+			retVal.setStatsLastSuccessContentType(status.getLastSuccessContentType());
 		
-			retVal.setStatsLastFault(theUrlStatus.getLastFault());
-			retVal.setStatsLastFaultMessage(theUrlStatus.getLastFaultMessage());
-			retVal.setStatsLastFaultStatusCode(theUrlStatus.getLastFaultStatusCode());
-			retVal.setStatsLastFaultContentType(theUrlStatus.getLastFaultContentType());
+			retVal.setStatsLastFault(status.getLastFault());
+			retVal.setStatsLastFaultMessage(status.getLastFaultMessage());
+			retVal.setStatsLastFaultStatusCode(status.getLastFaultStatusCode());
+			retVal.setStatsLastFaultContentType(status.getLastFaultContentType());
 		
-			retVal.setStatus(theUrlStatus.getStatus());
+			retVal.setStatus(status.getStatus());
 		
 			StatsAccumulator accumulator = new StatsAccumulator();
 			theRuntimeStatusQuerySvc.extract60MinuteServiceVersionUrlStatistics(this, accumulator);

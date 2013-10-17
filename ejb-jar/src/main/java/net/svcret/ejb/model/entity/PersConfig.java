@@ -27,10 +27,10 @@ import com.google.common.annotations.VisibleForTesting;
 @Table(name = "PX_CONFIG")
 public class PersConfig {
 
-	public static final long DEFAULT_ID = 1L;
 	private static final int DEF_STATS_COL_10MIN = 2;
 	private static final int DEF_STATS_COL_DAYS = 90;
 	private static final int DEF_STATS_COL_HOUR = 48;
+	public static final long DEFAULT_ID = 1L;
 
 	@Column(name = "STATS_COL_DAY", nullable = false)
 	private int myCollapseStatsToDaysAfterNumDays;
@@ -41,9 +41,12 @@ public class PersConfig {
 	@Column(name = "STATS_COL_10MIN", nullable = false)
 	private int myCollapseStatsToTenMinutesAfterNumHours;
 
+	@Column(name="DEC_URLS_UNK_MILS", nullable=false)
+	private long myDeclareBackingUrlUnknownStatusAfterMillisUnused = 6 * DateUtils.MILLIS_PER_HOUR;
+	
 	@Transient
 	private transient long myNowForUnitTests;
-	
+
 	@Version()
 	@Column(name = "OPTLOCK")
 	private int myOptLock;
@@ -51,10 +54,10 @@ public class PersConfig {
 	@Id
 	@Column(name = "PID")
 	private long myPid = DEFAULT_ID;
-
+	
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "myConfig", fetch = FetchType.EAGER, orphanRemoval=true)
 	private Collection<PersConfigProxyUrlBase> myProxyUrlBases;
-
+	
 	@Column(name="TRUNC_RECENT_XACTS_BYTES", nullable=true)
 	private Integer myTruncateRecentDatabaseTransactionsToBytes;
 
@@ -63,6 +66,7 @@ public class PersConfig {
 		getProxyUrlBases();
 		myProxyUrlBases.add(theBase);
 	}
+
 	/**
 	 * @return the collapseStatsToDaysAfterNumDays
 	 */
@@ -76,7 +80,6 @@ public class PersConfig {
 	public Date getCollapseStatsToDaysCutoff() {
 		return new Date(getNow() - (getCollapseStatsToDaysAfterNumDays() * DateUtils.MILLIS_PER_DAY));
 	}
-
 	public Date getCollapseStatsToDaysCutoff(Date theNow) {
 		Date now = DAY.truncate(theNow);
 		Date daysCutoff = DateUtils.addDays(now, -getCollapseStatsToDaysAfterNumDays());
@@ -121,6 +124,17 @@ public class PersConfig {
 		Date now = TEN_MINUTE.truncate(theNow);
 		Date hoursCutoff = DateUtils.addHours(now, -getCollapseStatsToTenMinutesAfterNumHours());
 		return hoursCutoff;
+	}
+
+	public long getDeclareBackingUrlUnknownStatusAfterMillisUnused() {
+		return myDeclareBackingUrlUnknownStatusAfterMillisUnused;
+	}
+
+	private long getNow() {
+		if (myNowForUnitTests > 0) {
+			return myNowForUnitTests;
+		}
+		return System.currentTimeMillis();
 	}
 
 	/**
@@ -170,6 +184,10 @@ public class PersConfig {
 		myCollapseStatsToTenMinutesAfterNumHours = theCollapseStatsToTenMinutesAfterNumHours;
 	}
 
+	public void setDeclareBackingUrlUnknownStatusAfterMillisUnused(long theDeclareBackingUrlUnknownStatusAfterMillisUnused) {
+		myDeclareBackingUrlUnknownStatusAfterMillisUnused = theDeclareBackingUrlUnknownStatusAfterMillisUnused;
+	}
+
 	public void setDefaults() {
 		addProxyUrlBase(new PersConfigProxyUrlBase("http://localhost:8080/service"));
 		myCollapseStatsToTenMinutesAfterNumHours = DEF_STATS_COL_10MIN;
@@ -184,13 +202,6 @@ public class PersConfig {
 
 	public void setTruncateRecentDatabaseTransactionsToBytes(Integer theTruncateRecentDatabaseTransactionsToBytes) {
 		myTruncateRecentDatabaseTransactionsToBytes = theTruncateRecentDatabaseTransactionsToBytes;
-	}
-
-	private long getNow() {
-		if (myNowForUnitTests > 0) {
-			return myNowForUnitTests;
-		}
-		return System.currentTimeMillis();
 	}
 	
 	public DtoConfig toDto() {

@@ -6,7 +6,6 @@ import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.ejb.TransactionLoggerBean;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;

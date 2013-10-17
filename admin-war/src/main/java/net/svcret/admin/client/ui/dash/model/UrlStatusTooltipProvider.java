@@ -1,5 +1,6 @@
 package net.svcret.admin.client.ui.dash.model;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,8 +28,7 @@ public final class UrlStatusTooltipProvider<T extends BaseDtoDashboardObject> im
 	@Override
 	public Widget getTooltip(BaseDtoDashboardObject theObject) {
 		final FlowPanel retVal = new FlowPanel();
-		retVal.setWidth("400px");
-		
+
 		SafeHtmlBuilder b = new SafeHtmlBuilder();
 		if (theObject.getName() != null) {
 			b.appendEscaped(theObject.getName());
@@ -45,53 +45,60 @@ public final class UrlStatusTooltipProvider<T extends BaseDtoDashboardObject> im
 
 		final List<BaseDtoServiceVersion> allSvcVers = theObject.getAllServiceVersions();
 		Set<Long> urlPids = new HashSet<Long>();
+		final List<GServiceVersionUrl> urls = new ArrayList<GServiceVersionUrl>();
+
 		for (BaseDtoServiceVersion nextVer : allSvcVers) {
 			for (GServiceVersionUrl nextUrl : nextVer.getUrlList()) {
 				urlPids.add(nextUrl.getPid());
+				urls.add(nextUrl);
 			}
 		}
+
+		final FlexTable grid = new FlexTable();
+		retVal.add(grid);
+
+		populateGrid(grid, urls);
+		grid.getCellFormatter().setWidth(0, 2, "100px");
 
 		Model.getInstance().loadDomainListAndUrlStats(urlPids, new IAsyncLoadCallback<GDomainList>() {
 			@Override
 			public void onSuccess(GDomainList theResult) {
 				spinner.hideCompletely();
-
-				FlexTable grid = new FlexTable();
-				grid.addStyleName(MyResources.CSS.usageTooltipTable());
-				retVal.add(grid);
-
-				grid.setText(0, 0, "URL ID");
-				grid.getFlexCellFormatter().addStyleName(0, 0, MyResources.CSS.usageTooltipTableNormalColumn());
-
-				grid.setText(0, 1, "URL");
-				grid.getFlexCellFormatter().addStyleName(0, 1, MyResources.CSS.usageTooltipTableNormalColumn());
-
-				grid.setText(0, 2, "Status");
-				grid.getFlexCellFormatter().addStyleName(0, 2, MyResources.CSS.usageTooltipTableNormalColumn());
-
-				int row = 0;
-				for (BaseDtoServiceVersion nextSvcVer : allSvcVers) {
-					for (GServiceVersionUrl nextUrl : nextSvcVer.getUrlList()) {
-						row++;
-
-						grid.setText(row, 0, nextUrl.getId());
-						grid.getFlexCellFormatter().addStyleName(row, 0, MyResources.CSS.usageTooltipTableValueColumn());
-
-						grid.setText(row, 1, nextUrl.getUrl());
-						grid.getFlexCellFormatter().addStyleName(row, 1, MyResources.CSS.usageTooltipTableValueColumn());
-
-						FlowPanel statusPanel = new FlowPanel();
-						statusPanel.add(BaseDashModel.returnImageForStatus(nextUrl.getStatus()));
-						statusPanel.add(new Label(BaseUrlGrid.createUrlStatusText(nextUrl)));
-						grid.setWidget(row, 2, statusPanel);
-						grid.getFlexCellFormatter().addStyleName(row, 2, MyResources.CSS.usageTooltipTableValueColumn());
-
-					}
-				}
-
+				populateGrid(grid, urls);
 			}
 		});
 
 		return retVal;
+	}
+
+	private void populateGrid(FlexTable theGrid, List<GServiceVersionUrl> theUrls) {
+		theGrid.addStyleName(MyResources.CSS.usageTooltipTable());
+
+		theGrid.setText(0, 0, "URL ID");
+		theGrid.getFlexCellFormatter().addStyleName(0, 0, MyResources.CSS.usageTooltipTableNormalColumn());
+
+		theGrid.setText(0, 1, "URL");
+		theGrid.getFlexCellFormatter().addStyleName(0, 1, MyResources.CSS.usageTooltipTableNormalColumn());
+
+		theGrid.setText(0, 2, "Status");
+		theGrid.getFlexCellFormatter().addStyleName(0, 2, MyResources.CSS.usageTooltipTableNormalColumn());
+
+		int row = 0;
+		for (GServiceVersionUrl nextUrl : theUrls) {
+			row++;
+
+			theGrid.setText(row, 0, nextUrl.getId());
+			theGrid.getFlexCellFormatter().addStyleName(row, 0, MyResources.CSS.usageTooltipTableValueColumn());
+
+			theGrid.setText(row, 1, nextUrl.getUrl());
+			theGrid.getFlexCellFormatter().addStyleName(row, 1, MyResources.CSS.usageTooltipTableValueColumn());
+
+			FlowPanel statusPanel = new FlowPanel();
+			statusPanel.add(BaseDashModel.returnImageForStatus(nextUrl.getStatus()));
+			statusPanel.add(new Label(BaseUrlGrid.createUrlStatusText(nextUrl)));
+			theGrid.setWidget(row, 2, statusPanel);
+			theGrid.getFlexCellFormatter().addStyleName(row, 2, MyResources.CSS.usageTooltipTableValueColumn());
+
+		}
 	}
 }

@@ -27,20 +27,20 @@ import net.svcret.admin.shared.model.BaseDtoClientSecurity;
 import net.svcret.admin.shared.model.BaseDtoMonitorRule;
 import net.svcret.admin.shared.model.BaseDtoServerSecurity;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
+import net.svcret.admin.shared.model.DtoAuthenticationHostLdap;
+import net.svcret.admin.shared.model.DtoAuthenticationHostList;
+import net.svcret.admin.shared.model.DtoAuthenticationHostLocalDatabase;
 import net.svcret.admin.shared.model.DtoClientSecurityJsonRpcNamedParameter;
+import net.svcret.admin.shared.model.DtoConfig;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
-import net.svcret.admin.shared.model.DtoAuthenticationHostList;
-import net.svcret.admin.shared.model.DtoConfig;
-import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GDomainList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
-import net.svcret.admin.shared.model.DtoAuthenticationHostLdap;
-import net.svcret.admin.shared.model.DtoAuthenticationHostLocalDatabase;
 import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleFiringProblem;
@@ -82,7 +82,6 @@ import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.api.ISecurityService;
 import net.svcret.ejb.api.IServiceOrchestrator;
-import net.svcret.ejb.api.ITransactionLogger;
 import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.RequestType;
@@ -91,6 +90,7 @@ import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
 import net.svcret.ejb.ejb.nodecomm.ISynchronousNodeIpcClient;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
+import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.invoker.soap.IServiceInvokerSoap11;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
@@ -893,7 +893,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		StatusesBean statuses = null;
 		if (hasAnything(loadDomStats, loadSvcStats, loadVerStats, loadVerMethodStats, loadUrlStats)) {
-			statuses = myDao.loadAllStatuses();
+			statuses = myDao.loadAllStatuses(myConfigSvc.getConfig());
 		}
 
 		GDomainList domainList = loadDomainList(loadDomStats, loadSvcStats, loadVerStats, loadVerMethodStats, loadUrlStats, statuses);
@@ -1074,7 +1074,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			urlPids.add(next.getPid());
 		}
 
-		StatusesBean statuses = myDao.loadAllStatuses();
+		StatusesBean statuses = myDao.loadAllStatuses(myConfigSvc.getConfig());
 
 		Set<Long> svcVerPids = Collections.singleton(theServiceVersionPid);
 		BaseDtoServiceVersion uiService = svcVer.toDto(svcVerPids, myRuntimeStatusQuerySvc, statuses, methodPids, urlPids);
@@ -1699,6 +1699,9 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			retVal.setTransactionMillis(response.getHttpResponse().getResponseTime());
 			retVal.setTransactionTime(transactionTime);
 
+		} catch (UnknownRequestException e) {
+			ourLog.error("Failed to invoke service", e);
+			retVal.setOutcomeDescription(e.getMessage());
 		} catch (Exception e) {
 			ourLog.error("Failed to invoke service", e);
 			retVal.setOutcomeDescription("Failed with internal exception: " + e.getMessage());

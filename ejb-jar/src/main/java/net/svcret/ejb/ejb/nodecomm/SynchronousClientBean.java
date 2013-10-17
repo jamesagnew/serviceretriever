@@ -12,7 +12,7 @@ import javax.xml.ws.BindingProvider;
 import javax.xml.ws.handler.Handler;
 
 import net.svcret.ejb.api.IConfigService;
-import net.svcret.ejb.api.ITransactionLogger;
+import net.svcret.ejb.ejb.log.ITransactionLogger;
 
 import com.google.common.collect.Lists;
 

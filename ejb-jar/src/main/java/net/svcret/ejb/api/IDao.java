@@ -179,15 +179,15 @@ public interface IDao {
 
 	long incrementStateCounter(String theKey);
 
-	StatusesBean loadAllStatuses();
+	StatusesBean loadAllStatuses(PersConfig theConfig);
 
 	List<PersLibraryMessage> loadLibraryMessages();
 
 	List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<? extends BasePersServiceVersion> theAllSvcVers, int theStart);
 
-	List<PersMonitorRuleFiring> loadMonitorRuleFiringsWhichAreActive();
-
 	// List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int theStart);
+
+	List<PersMonitorRuleFiring> loadMonitorRuleFiringsWhichAreActive();
 
 	PersServiceVersionRecentMessage loadRecentMessageForServiceVersion(long thePid);
 
@@ -213,11 +213,11 @@ public interface IDao {
 
 	PersLibraryMessage saveLibraryMessage(PersLibraryMessage theMessage);
 
-	BasePersMonitorRule saveMonitorRule(BasePersMonitorRule theRule);
-
 	PersMonitorRuleActiveCheckOutcome saveMonitorRuleActiveCheckOutcome(PersMonitorRuleActiveCheckOutcome theRecentOutcome);
 
 	PersMonitorRuleFiring saveMonitorRuleFiring(PersMonitorRuleFiring theFiring);
+
+	BasePersMonitorRule saveMonitorRuleInNewTransaction(BasePersMonitorRule theRule);
 
 	void saveNodeStatus(PersNodeStatus theNodeStatus);
 
@@ -255,19 +255,27 @@ public interface IDao {
 		private long myAdded;
 		private long myRemoved;
 
+		public ByteDelta() {
+			// nothing
+		}
+
 		public ByteDelta(long theAdded, long theRemoved) {
 			super();
 			myAdded = theAdded;
 			myRemoved = theRemoved;
 		}
 
-		public ByteDelta() {
-			// nothing
-		}
-
 		public void add(ByteDelta theByteDelta) {
 			myAdded += theByteDelta.getAdded();
 			myRemoved += theByteDelta.getRemoved();
+		}
+
+		public void addAdded(int theAddedBytes) {
+			myAdded += theAddedBytes;
+		}
+
+		public void addRemoved(long theRemovedBytes) {
+			myRemoved += theRemovedBytes;
 		}
 
 		public long getAdded() {
@@ -276,14 +284,6 @@ public interface IDao {
 
 		public long getRemoved() {
 			return myRemoved;
-		}
-
-		public void addRemoved(long theRemovedBytes) {
-			myRemoved += theRemovedBytes;
-		}
-
-		public void addAdded(int theAddedBytes) {
-			myAdded += theAddedBytes;
 		}
 	}
 

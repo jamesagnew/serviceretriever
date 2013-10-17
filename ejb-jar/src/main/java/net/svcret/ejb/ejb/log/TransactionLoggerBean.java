@@ -1,4 +1,4 @@
-package net.svcret.ejb.ejb;
+package net.svcret.ejb.ejb.log;
 
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -19,12 +19,7 @@ import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IDao.ByteDelta;
-import net.svcret.ejb.api.IFilesystemAuditLogger;
-import net.svcret.ejb.api.ITransactionLogger;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.ejb.log.BaseUnflushed;
-import net.svcret.ejb.ejb.log.UnflushedServiceVersionRecentMessages;
-import net.svcret.ejb.ejb.log.UnflushedUserRecentMessages;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersSavedTransactionRecentMessage;
@@ -162,7 +157,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	}
 
 	@VisibleForTesting
-	void setFilesystemAuditLoggerForUnitTests(IFilesystemAuditLogger theFilesystemAuditLogger) {
+	public void setFilesystemAuditLoggerForUnitTests(IFilesystemAuditLogger theFilesystemAuditLogger) {
 		myFilesystemAuditLogger = theFilesystemAuditLogger;
 	}
 

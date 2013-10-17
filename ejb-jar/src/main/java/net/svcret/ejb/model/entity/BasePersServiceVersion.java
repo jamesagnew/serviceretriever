@@ -969,32 +969,33 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 
 			retVal.setStatsInitialized(new Date());
 
-			int urlsActive = 0;
-			int urlsDown = 0;
-			int urlsUnknown = 0;
-			for (PersServiceVersionUrl nextUrl : this.getUrls()) {
-
-				PersServiceVersionUrlStatus urlStatus = theStatuses.getUrlStatus(nextUrl.getPid());
-				if (urlStatus == null) {
-					continue;
-				}
-
-				switch (urlStatus.getStatus()) {
-				case ACTIVE:
-					urlsActive++;
-					break;
-				case DOWN:
-					urlsDown++;
-					break;
-				case UNKNOWN:
-					urlsUnknown++;
-					break;
-				}
-
-			}
-			retVal.setUrlsActive(urlsActive);
-			retVal.setUrlsDown(urlsDown);
-			retVal.setUrlsUnknown(urlsUnknown);
+			// This should be covered by populateDtoWithStatusAnd... above
+//			int urlsActive = 0;
+//			int urlsDown = 0;
+//			int urlsUnknown = 0;
+//			for (PersServiceVersionUrl nextUrl : this.getUrls()) {
+//
+//				PersServiceVersionUrlStatus urlStatus = theStatuses.getUrlStatus(nextUrl.getPid());
+//				if (urlStatus == null) {
+//					continue;
+//				}
+//
+//				switch (urlStatus.getStatus()) {
+//				case ACTIVE:
+//					urlsActive++;
+//					break;
+//				case DOWN:
+//					urlsDown++;
+//					break;
+//				case UNKNOWN:
+//					urlsUnknown++;
+//					break;
+//				}
+//
+//			}
+//			retVal.setUrlsActive(urlsActive);
+//			retVal.setUrlsDown(urlsDown);
+//			retVal.setUrlsUnknown(urlsUnknown);
 
 			PersServiceVersionStatus svcVerStatus = theStatuses.getServiceVersionStatus(this.getPid());
 			if (svcVerStatus != null) {
@@ -1002,9 +1003,9 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 				retVal.setLastSuccessfulInvocation(svcVerStatus.getLastSuccessfulInvocation());
 			}
 
-			if (urlsDown > 0) {
+			if (retVal.getUrlsActive() > 0) {
 				retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.DOWN);
-			} else if (urlsActive > 0) {
+			} else if (retVal.getUrlsActive() > 0) {
 				retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.ACTIVE);
 			} else {
 				retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.UNKNOWN);
@@ -1021,12 +1022,12 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		StatusEnum retVal = theInitialStatus;
 
 		for (PersServiceVersionUrl nextUrl : this.getUrls()) {
-			PersServiceVersionUrlStatus nextUrlStatus = theStatuses.getUrlStatus(nextUrl.getPid());
+			StatusEnum nextUrlStatus = theStatuses.getUrlStatusEnum(nextUrl.getPid());
 			if (nextUrlStatus == null) {
 				continue;
 			}
 
-			switch (nextUrlStatus.getStatus()) {
+			switch (nextUrlStatus) {
 			case ACTIVE:
 				retVal = StatusEnum.ACTIVE;
 				theDashboardObject.setUrlsActive(theDashboardObject.getUrlsActiveAsIntWithDefault() + 1);

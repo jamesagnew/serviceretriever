@@ -494,7 +494,7 @@ public class MonitorServiceBean implements IMonitorService {
 			rule = theRule;
 		}
 
-		BasePersMonitorRule retVal = myDao.saveMonitorRule(rule);
+		BasePersMonitorRule retVal = myDao.saveMonitorRuleInNewTransaction(rule);
 
 		myBroadcastSender.monitorRulesChanged();
 

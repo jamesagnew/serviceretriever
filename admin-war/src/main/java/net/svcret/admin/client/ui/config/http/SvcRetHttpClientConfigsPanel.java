@@ -75,7 +75,7 @@ public class SvcRetHttpClientConfigsPanel extends FlowPanel {
 	private HtmlLabel myStickySessionCookieLabel;
 
 	public SvcRetHttpClientConfigsPanel() {
-		initDetailsPanel();
+//XXX		initDetailsPanel();
 		initBottomTabs();
 
 //		Model.getInstance().loadHttpClientConfigs(new IAsyncLoadCallback<GHttpClientConfigList>() {
@@ -260,7 +260,7 @@ public class SvcRetHttpClientConfigsPanel extends FlowPanel {
 				Model.getInstance().addHttpClientConfig(theResult);
 				_mySelectedConfig = theResult;
 
-				updateConfigList();
+//XXX				updateConfigList();
 				updateSelectedConfig();
 			}
 		});
@@ -524,7 +524,7 @@ public class SvcRetHttpClientConfigsPanel extends FlowPanel {
 
 		@Override
 		public void onSuccess(GHttpClientConfigList theResult) {
-			setConfigList(theResult);
+//			XXX: setConfigList(theResult);
 		}
 	}
 

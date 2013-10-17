@@ -259,6 +259,10 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 		return myNextCircuitBreakerReset;
 	}
 
+	public Date getNextCircuitBreakerResetTimestamp() {
+		return myNextCircuitBreakerResetTimestamp;
+	}
+
 	/**
 	 * @return the pid
 	 */
@@ -271,6 +275,31 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	 */
 	public StatusEnum getStatus() {
 		return myStatus;
+	}
+
+	public Date getStatusTimestamp() {
+		return myStatusTimestamp;
+	}
+
+	/**
+	 * @return Returns the number of millis since the last successful or fault invocation for this URL. If none, just returns a very large value (System.currentTimeMillis())
+	 */
+	public long getTimeElapsedSinceLastSuccessOrFault() {
+		long now = System.currentTimeMillis();
+		long elapsed = -1;
+
+		if (myLastFault != null) {
+			elapsed = now - myLastFault.getTime();
+		}
+		if (myLastSuccess != null) {
+			elapsed = Math.max(elapsed, now - myLastSuccess.getTime());
+		}
+
+		if (elapsed > 0) {
+			return elapsed;
+		} else {
+			return now; // just a large value
+		}
 	}
 
 	/**
@@ -297,8 +326,7 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	}
 
 	/**
-	 * @return Returns true if this bean has any values that are more recent then the given bean, and therefore
-	 * has values that should presumably be saved back 
+	 * @return Returns true if this bean has any values that are more recent then the given bean, and therefore has values that should presumably be saved back
 	 */
 	public boolean mergeNewer(PersServiceVersionUrlStatus theExisting) {
 
@@ -338,30 +366,16 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 			retVal = true;
 		}
 
-		if (getNextCircuitBreakerResetTimestamp() == null || (theExisting.getNextCircuitBreakerResetTimestamp() != null && theExisting.getNextCircuitBreakerResetTimestamp().after(getNextCircuitBreakerResetTimestamp()))) {
+		if (getNextCircuitBreakerResetTimestamp() == null
+				|| (theExisting.getNextCircuitBreakerResetTimestamp() != null && theExisting.getNextCircuitBreakerResetTimestamp().after(getNextCircuitBreakerResetTimestamp()))) {
 			myNextCircuitBreakerReset = theExisting.getNextCircuitBreakerReset(); // Setter will trip the CB here!
 			setNextCircuitBreakerResetTimestamp(theExisting.getNextCircuitBreakerResetTimestamp());
-		} else if (getNextCircuitBreakerResetTimestamp() != null && (theExisting.getNextCircuitBreakerResetTimestamp() == null || theExisting.getNextCircuitBreakerResetTimestamp().before(getNextCircuitBreakerResetTimestamp()))) {
+		} else if (getNextCircuitBreakerResetTimestamp() != null
+				&& (theExisting.getNextCircuitBreakerResetTimestamp() == null || theExisting.getNextCircuitBreakerResetTimestamp().before(getNextCircuitBreakerResetTimestamp()))) {
 			retVal = true;
 		}
 
 		return retVal;
-	}
-
-	public Date getNextCircuitBreakerResetTimestamp() {
-		return myNextCircuitBreakerResetTimestamp;
-	}
-
-	public void setNextCircuitBreakerResetTimestamp(Date theNextCircuitBreakerResetTimestamp) {
-		myNextCircuitBreakerResetTimestamp = theNextCircuitBreakerResetTimestamp;
-	}
-
-	public Date getStatusTimestamp() {
-		return myStatusTimestamp;
-	}
-
-	public void setStatusTimestamp(Date theStatusTimestamp) {
-		myStatusTimestamp = theStatusTimestamp;
 	}
 
 	private void resetCurcuitBreaker() {
@@ -372,14 +386,6 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 		setNextCircuitBreakerReset(null);
 	}
 
-	// /**
-	// * @param theLastFailBody
-	// * the lastFailBody to set
-	// */
-	// public void setLastFailBody(String theLastFailBody) {
-	// myLastFailBody = left(theLastFailBody, MAX_LENGTH_BODY);
-	// }
-
 	/**
 	 * @param theLastFail
 	 *            the lastFail to set
@@ -387,6 +393,14 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	public void setLastFail(Date theLastFail) {
 		myLastFail = theLastFail;
 	}
+
+	// /**
+	// * @param theLastFailBody
+	// * the lastFailBody to set
+	// */
+	// public void setLastFailBody(String theLastFailBody) {
+	// myLastFailBody = left(theLastFailBody, MAX_LENGTH_BODY);
+	// }
 
 	/**
 	 * @param theLastFailContentType
@@ -412,14 +426,6 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 		myLastFailStatusCode = theLastFailStatusCode;
 	}
 
-	// /**
-	// * @param theLastFaultBody
-	// * the lastFaultBody to set
-	// */
-	// public void setLastFaultBody(String theLastFaultBody) {
-	// myLastFaultBody = left(theLastFaultBody, MAX_LENGTH_BODY);
-	// }
-
 	/**
 	 * @param theLastFault
 	 *            the lastFail to set
@@ -427,6 +433,14 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 	public void setLastFault(Date theLastFault) {
 		myLastFault = theLastFault;
 	}
+
+	// /**
+	// * @param theLastFaultBody
+	// * the lastFaultBody to set
+	// */
+	// public void setLastFaultBody(String theLastFaultBody) {
+	// myLastFaultBody = left(theLastFaultBody, MAX_LENGTH_BODY);
+	// }
 
 	/**
 	 * @param theLastFaultContentType
@@ -485,6 +499,10 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 		myNextCircuitBreakerResetTimestamp = new Date();
 	}
 
+	public void setNextCircuitBreakerResetTimestamp(Date theNextCircuitBreakerResetTimestamp) {
+		myNextCircuitBreakerResetTimestamp = theNextCircuitBreakerResetTimestamp;
+	}
+
 	/**
 	 * @param thePid
 	 *            the id to set
@@ -518,6 +536,10 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 			}
 			break;
 		}
+	}
+
+	public void setStatusTimestamp(Date theStatusTimestamp) {
+		myStatusTimestamp = theStatusTimestamp;
 	}
 
 	/**

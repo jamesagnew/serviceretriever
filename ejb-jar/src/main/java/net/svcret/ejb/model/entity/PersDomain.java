@@ -347,11 +347,11 @@ public class PersDomain extends BasePersServiceCatalogItem {
 			for (PersService nextService : this.getServices()) {
 				for (BasePersServiceVersion nextVersion : nextService.getVersions()) {
 					for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
-						PersServiceVersionUrlStatus urlStatus = theStatuses.getUrlStatus(nextUrl.getPid());
+						StatusEnum urlStatus = theStatuses.getUrlStatusEnum(nextUrl.getPid());
 						if (urlStatus == null) {
 							continue;
 						}
-						switch (urlStatus.getStatus()) {
+						switch (urlStatus) {
 						case ACTIVE:
 							urlsActive++;
 							break;

@@ -873,8 +873,8 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	public StatusesBean loadAllStatuses() {
-		StatusesBean statusesBean = new StatusesBean();
+	public StatusesBean loadAllStatuses(PersConfig theConfig) {
+		StatusesBean statusesBean = new StatusesBean(theConfig);
 
 		List<PersServiceVersionUrlStatus> urlStatuses = myEntityManager.createQuery("SELECT c FROM " + PersServiceVersionUrlStatus.class.getSimpleName() + " c", PersServiceVersionUrlStatus.class)
 				.getResultList();
@@ -1128,8 +1128,9 @@ public class DaoBean implements IDao {
 		}
 	}
 
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	@Override
-	public BasePersMonitorRule saveMonitorRule(BasePersMonitorRule theRule) {
+	public BasePersMonitorRule saveMonitorRuleInNewTransaction(BasePersMonitorRule theRule) {
 
 		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
 			next.setRule(theRule);

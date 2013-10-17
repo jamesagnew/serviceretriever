@@ -59,6 +59,7 @@ import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
+import net.svcret.ejb.ejb.log.TransactionLoggerBean;
 import net.svcret.ejb.invoker.soap.IServiceInvokerSoap11;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
