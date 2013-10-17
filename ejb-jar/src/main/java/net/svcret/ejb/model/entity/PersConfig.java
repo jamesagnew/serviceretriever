@@ -32,6 +32,9 @@ public class PersConfig {
 	private static final int DEF_STATS_COL_HOUR = 48;
 	public static final long DEFAULT_ID = 1L;
 
+	@Column(name="AUDIT_DISABLE_DISK_MB", nullable=true)
+	private Long myAuditLogDisableIfDiskCapacityBelowMb = null;
+
 	@Column(name = "STATS_COL_DAY", nullable = false)
 	private int myCollapseStatsToDaysAfterNumDays;
 
@@ -43,7 +46,7 @@ public class PersConfig {
 
 	@Column(name="DEC_URLS_UNK_MILS", nullable=false)
 	private long myDeclareBackingUrlUnknownStatusAfterMillisUnused = 6 * DateUtils.MILLIS_PER_HOUR;
-	
+
 	@Transient
 	private transient long myNowForUnitTests;
 
@@ -54,17 +57,21 @@ public class PersConfig {
 	@Id
 	@Column(name = "PID")
 	private long myPid = DEFAULT_ID;
-	
+
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "myConfig", fetch = FetchType.EAGER, orphanRemoval=true)
 	private Collection<PersConfigProxyUrlBase> myProxyUrlBases;
-	
+
 	@Column(name="TRUNC_RECENT_XACTS_BYTES", nullable=true)
 	private Integer myTruncateRecentDatabaseTransactionsToBytes;
-
+	
 	public void addProxyUrlBase(PersConfigProxyUrlBase theBase) {
 		theBase.setConfig(this);
 		getProxyUrlBases();
 		myProxyUrlBases.add(theBase);
+	}
+	
+	public Long getAuditLogDisableIfDiskCapacityBelowMb() {
+		return myAuditLogDisableIfDiskCapacityBelowMb;
 	}
 
 	/**
@@ -80,12 +87,12 @@ public class PersConfig {
 	public Date getCollapseStatsToDaysCutoff() {
 		return new Date(getNow() - (getCollapseStatsToDaysAfterNumDays() * DateUtils.MILLIS_PER_DAY));
 	}
+
 	public Date getCollapseStatsToDaysCutoff(Date theNow) {
 		Date now = DAY.truncate(theNow);
 		Date daysCutoff = DateUtils.addDays(now, -getCollapseStatsToDaysAfterNumDays());
 		return daysCutoff;
 	}
-
 	/**
 	 * @return the collapseStatsToHoursAfterNumHours
 	 */
@@ -161,6 +168,10 @@ public class PersConfig {
 		myProxyUrlBases.clear();
 		myProxyUrlBases.addAll(theFromUi.getProxyUrlBases());
 		
+	}
+
+	public void setAuditLogDisableIfDiskCapacityBelowMb(Long theAuditLogDisableIfDiskCapacityBelowMb) {
+		myAuditLogDisableIfDiskCapacityBelowMb = theAuditLogDisableIfDiskCapacityBelowMb;
 	}
 	
 	/**
