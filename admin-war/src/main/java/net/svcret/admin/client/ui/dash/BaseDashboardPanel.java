@@ -22,7 +22,13 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 
-public abstract class BaseDashboardPanel extends FlowPanel implements IDestroyable {
+/**
+ * Note that this class creates timers and doesn't clean them up because it
+ * assumes that it may be extended by a singleton!
+ * 
+ * Extend with caution!
+ */
+abstract class BaseDashboardPanel extends FlowPanel {
 
 	private Date myLastUpdate;
 	private Label myLastUpdateLabel;
@@ -113,11 +119,11 @@ public abstract class BaseDashboardPanel extends FlowPanel implements IDestroyab
 
 	}
 
-	@Override
-	public void destroy() {
-		myTimer.cancel();
-		myLastUpdateTimer.cancel();
-	}
+//	@Override
+//	public void destroy() {
+//		myTimer.cancel();
+//		myLastUpdateTimer.cancel();
+//	}
 
 	protected void updateView() {
 		if (myUpdating) {

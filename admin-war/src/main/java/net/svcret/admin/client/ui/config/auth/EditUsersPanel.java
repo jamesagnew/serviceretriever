@@ -48,6 +48,7 @@ import com.google.gwt.user.cellview.client.IdentityColumn;
 import com.google.gwt.user.cellview.client.SimplePager;
 import com.google.gwt.user.cellview.client.SimplePager.TextLocation;
 import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
@@ -113,7 +114,7 @@ public class EditUsersPanel extends FlowPanel {
 		});
 		viewRecentMessagesCell.addStyle(CssConstants.USERS_ACTION_BUTTON);
 
-		PButtonCell statsCell = new PButtonCell(AdminPortal.IMAGES.iconStatus(), "Stats");
+		PButtonCell statsCell = new PButtonCell(AdminPortal.IMAGES.iconStatus(), AdminPortal.MSGS.actions_Stats());
 		Column<GUser, String> statsColumn = new NullColumn<GUser>(statsCell);
 		statsColumn.setFieldUpdater(new FieldUpdater<GUser, String>() {
 			@Override
@@ -123,10 +124,25 @@ public class EditUsersPanel extends FlowPanel {
 		});
 		statsCell.addStyle(CssConstants.USERS_ACTION_BUTTON);
 
+		PButtonCell removeCell = new PButtonCell(AdminPortal.IMAGES.iconRemove(), AdminPortal.MSGS.actions_Remove());
+		Column<GUser, String> removeColumn = new NullColumn<GUser>(removeCell);
+		statsColumn.setFieldUpdater(new FieldUpdater<GUser, String>() {
+			@Override
+			public void update(int theIndex, GUser theObject, String theValue) {
+				if (Window.confirm("Are you sure you want to delete the user '" + theObject.getUsername() + "'? This action can not be undone!")) {
+					myLoadingSpinner.showMessage("Deleting user...", true);
+					AdminPortal.MODEL_SVC.removeUser(theObject.getPid(), new AsyncCallback<VoidVoid>() {
+					})
+				}
+			}
+		});
+		removeCell.addStyle(CssConstants.USERS_ACTION_BUTTON);
+
 		List<HasCell<GUser, ?>> actionCells = new ArrayList<HasCell<GUser, ?>>();
 		actionCells.add(editColumn);
 		actionCells.add(viewRecentMessagesColumn);
 		actionCells.add(statsColumn);
+		actionCells.add(removeColumn);
 		CompositeCell<GUser> actionColumn = new CompositeCell<GUser>(actionCells);
 		myTable.addColumn(new IdentityColumn<GUser>(actionColumn), "");
 

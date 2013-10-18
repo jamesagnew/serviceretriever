@@ -1003,9 +1003,9 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 				retVal.setLastSuccessfulInvocation(svcVerStatus.getLastSuccessfulInvocation());
 			}
 
-			if (retVal.getUrlsActive() > 0) {
+			if (retVal.getUrlsDownAsIntWithDefault() > 0) {
 				retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.DOWN);
-			} else if (retVal.getUrlsActive() > 0) {
+			} else if (retVal.getUrlsActiveAsIntWithDefault() > 0) {
 				retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.ACTIVE);
 			} else {
 				retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.UNKNOWN);

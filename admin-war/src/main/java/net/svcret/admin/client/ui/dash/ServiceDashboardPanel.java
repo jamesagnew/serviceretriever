@@ -34,12 +34,17 @@ public class ServiceDashboardPanel extends BaseDashboardPanel{
 	private static final int COL_STATUS = 1;
 	private static final int COL_USAGE = 2;
 	private static final int NUM_STATUS_COLS = 6;
+	private static ServiceDashboardPanel ourInstance;
 
 	private FlexTableWithTooltips<BaseDtoDashboardObject> myGrid;
 	private List<IDashModel> myUiList = new ArrayList<IDashModel>();
 	private List<BaseDtoDashboardObject> myUiModelItems = new ArrayList<BaseDtoDashboardObject>();
 
-	public ServiceDashboardPanel() {
+	/**
+	 * This class is a singleton so that it can keep updating
+	 * in the background
+	 */
+	private ServiceDashboardPanel() {
 		super();
 		
 		myGrid = new FlexTableWithTooltips<BaseDtoDashboardObject>(myUiModelItems);
@@ -63,71 +68,7 @@ public class ServiceDashboardPanel extends BaseDashboardPanel{
 		updateView();
 
 	}
-
-
-	@Override
-	public void updateView(GDomainList theDomainList) {
-		ArrayList<IDashModel> newUiList = new ArrayList<IDashModel>();
-
-		boolean haveStatsToLoad = false;
-		for (DtoDomain nextDomain : theDomainList) {
-			if (!nextDomain.isStatsInitialized()) {
-				addSpinnerToList(newUiList);
-				haveStatsToLoad = true;
-			} else {
-				DashModelDomain nextUiObject = new DashModelDomain(nextDomain);
-				newUiList.add(nextUiObject);
-
-				if (nextDomain.isExpandedOnDashboard()) {
-					for (GService nextService : nextDomain.getServiceList()) {
-						if (!nextService.isStatsInitialized()) {
-							addSpinnerToList(newUiList);
-							haveStatsToLoad = true;
-						} else {
-							newUiList.add(new DashModelService(nextDomain, nextService));
-
-							if (nextService.isExpandedOnDashboard()) {
-
-								for (BaseDtoServiceVersion nextServiceVersion : nextService.getVersionList()) {
-									if (!nextServiceVersion.isStatsInitialized()) {
-										addSpinnerToList(newUiList);
-										haveStatsToLoad = true;
-									} else {
-										newUiList.add(new DashModelServiceVersion(nextService, nextServiceVersion));
-
-										if (nextServiceVersion.isExpandedOnDashboard()) {
-											haveStatsToLoad = addServiceVersionChildren(newUiList, haveStatsToLoad, nextServiceVersion);
-										}
-
-									}
-
-								} // for service versions
-
-							}
-
-						}
-
-					}
-				}
-			}
-		}
-
-		updateRows(newUiList);
-
-		if (haveStatsToLoad) {
-			Model.getInstance().loadDomainListAndStats(new IAsyncLoadCallback<GDomainList>() {
-				@Override
-				public void onSuccess(GDomainList theResult) {
-					updateView(theResult);
-				}
-			});
-		} else {
-			updatingFinished();
-		}
-	}
-
-
-
+	
 	private boolean addServiceVersionChildren(ArrayList<IDashModel> newUiList, boolean haveStatsToLoad, BaseDtoServiceVersion nextServiceVersion) {
 		for (GServiceMethod nextMethod : nextServiceVersion.getMethodList()) {
 			if (!nextMethod.isStatsInitialized()) {
@@ -140,6 +81,7 @@ public class ServiceDashboardPanel extends BaseDashboardPanel{
 		return haveStatsToLoad;
 	}
 
+
 	private void addSpinnerToList(ArrayList<IDashModel> newUiList) {
 		if (newUiList.size() > 0 && newUiList.get(newUiList.size() - 1) instanceof DashModelLoading) {
 			// Don't add more than one in a row
@@ -147,6 +89,8 @@ public class ServiceDashboardPanel extends BaseDashboardPanel{
 		}
 		newUiList.add(new DashModelLoading());
 	}
+
+
 
 	private void updateRows(ArrayList<IDashModel> theNewUiList) {
 		int rowOffset = 1;
@@ -268,6 +212,78 @@ public class ServiceDashboardPanel extends BaseDashboardPanel{
 			myUiModelItems.add(next.getModel());
 		}
 		myUiList = theNewUiList;
+	}
+
+	@Override
+	public void updateView(GDomainList theDomainList) {
+		ArrayList<IDashModel> newUiList = new ArrayList<IDashModel>();
+
+		boolean haveStatsToLoad = false;
+		for (DtoDomain nextDomain : theDomainList) {
+			if (!nextDomain.isStatsInitialized()) {
+				addSpinnerToList(newUiList);
+				haveStatsToLoad = true;
+			} else {
+				DashModelDomain nextUiObject = new DashModelDomain(nextDomain);
+				newUiList.add(nextUiObject);
+
+				if (nextDomain.isExpandedOnDashboard()) {
+					for (GService nextService : nextDomain.getServiceList()) {
+						if (!nextService.isStatsInitialized()) {
+							addSpinnerToList(newUiList);
+							haveStatsToLoad = true;
+						} else {
+							newUiList.add(new DashModelService(nextDomain, nextService));
+
+							if (nextService.isExpandedOnDashboard()) {
+
+								for (BaseDtoServiceVersion nextServiceVersion : nextService.getVersionList()) {
+									if (!nextServiceVersion.isStatsInitialized()) {
+										addSpinnerToList(newUiList);
+										haveStatsToLoad = true;
+									} else {
+										newUiList.add(new DashModelServiceVersion(nextService, nextServiceVersion));
+
+										if (nextServiceVersion.isExpandedOnDashboard()) {
+											haveStatsToLoad = addServiceVersionChildren(newUiList, haveStatsToLoad, nextServiceVersion);
+										}
+
+									}
+
+								} // for service versions
+
+							}
+
+						}
+
+					}
+				}
+			}
+		}
+
+		updateRows(newUiList);
+
+		if (haveStatsToLoad) {
+			Model.getInstance().loadDomainListAndStats(new IAsyncLoadCallback<GDomainList>() {
+				@Override
+				public void onSuccess(GDomainList theResult) {
+					updateView(theResult);
+				}
+			});
+		} else {
+			updatingFinished();
+		}
+	}
+
+	/**
+	 * This class is a singleton so that it can keep updating
+	 * in the background
+	 */
+	public static ServiceDashboardPanel getInstance() {
+		if (ourInstance == null) {
+			ourInstance = new ServiceDashboardPanel();
+		}
+		return ourInstance;
 	}
 
 

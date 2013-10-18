@@ -29,11 +29,14 @@ import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
+import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -42,31 +45,167 @@ import com.google.common.annotations.VisibleForTesting;
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 
-	private static final Pattern PARAM_VALUE_WHITESPACE = Pattern.compile("\\r|\\n", Pattern.MULTILINE);
-
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(FilesystemAuditLoggerBean.class);
-
+	private static SimpleDateFormat ourLogDateFormat = new SimpleDateFormat("yyyyMMdd-HH':00:00'");
+	private static final Pattern PARAM_VALUE_WHITESPACE = Pattern.compile("\\r|\\n", Pattern.MULTILINE);
 	private File myAuditPath;
-
 	@EJB
 	private IConfigService myConfigSvc;
 	private volatile int myFailIfQueueExceedsSize = 10000;
 	private ReentrantLock myFlushLockAuditRecord = new ReentrantLock();
 	private SimpleDateFormat myItemDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS Z");
 	private AtomicLong myLastAuditRecordFlush = new AtomicLong(System.currentTimeMillis());
+	private Map<String, MyFileWriter> myLogFileWriters = new HashMap<String, MyFileWriter>();
 	private volatile int myTriggerQueueFlushAtMillisSinceLastFlush = 60 * 1000;
 	private volatile int myTriggerQueueFlushAtQueueSize = 100;
 
 	private ConcurrentLinkedQueue<UnflushedAuditRecord> myUnflushedAuditRecord = new ConcurrentLinkedQueue<UnflushedAuditRecord>();
+
+	private void addItem(FileWriter writer, String key, String value) throws IOException {
+		writer.append(key);
+		writer.append(": ");
+		writer.append(formatParamValue(value));
+		writer.append("\n");
+	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	@Override
 	public void flushAuditEventsIfNeeded() {
 		try {
 			flushIfNeccesary();
-		} catch (ProcessingException e) {
+		} catch (Exception e) {
 			ourLog.error("Failed to flush transactions", e);
 		}
+	}
+
+	private void flushIfNeccesary() throws ProcessingException, UnexpectedFailureException {
+		if (myUnflushedAuditRecord.size() < myTriggerQueueFlushAtQueueSize) {
+			if (myLastAuditRecordFlush.get() + myTriggerQueueFlushAtMillisSinceLastFlush > System.currentTimeMillis()) {
+				return;
+			}
+		}
+
+		if (!myFlushLockAuditRecord.tryLock()) {
+			return;
+		}
+
+		try {
+			flushWithinLockedContext();
+		} finally {
+			myFlushLockAuditRecord.unlock();
+		}
+	}
+
+	private void flushWithinLockedContext() throws ProcessingException, UnexpectedFailureException {
+		ourLog.info("About to begin flushing approximately {} records from audit log queue", myUnflushedAuditRecord.size());
+		long start = System.currentTimeMillis();
+
+		Map<String, String> lookups = new HashMap<String, String>();
+		PersConfig config = myConfigSvc.getConfig();
+
+		int count = 0;
+		while (true) {
+
+			UnflushedAuditRecord next = myUnflushedAuditRecord.peek();
+			if (next == null) {
+				break;
+			}
+
+			try {
+				String fileName = next.createLogFile();
+				if (!myLogFileWriters.containsKey(fileName)) {
+					MyFileWriter writer = new MyFileWriter(new File(myAuditPath, fileName));
+					myLogFileWriters.put(fileName, writer);
+				}
+
+				if (!lookups.containsKey(next.myRequestHostIp)) {
+					try {
+						InetAddress addr = InetAddress.getByName(next.myRequestHostIp);
+						String host = addr.getHostName();
+						lookups.put(next.myRequestHostIp, host);
+					} catch (Throwable e) {
+						ourLog.debug("Failed to lookup hostname", e);
+						lookups.put(next.myRequestHostIp, null);
+					}
+				}
+
+				MyFileWriter writer = myLogFileWriters.get(fileName);
+
+				if (config.getAuditLogDisableIfDiskCapacityBelowMb() != null) {
+					long freeSpaceMb = (writer.getBytesFree() / FileUtils.ONE_MB);
+					if (freeSpaceMb < config.getAuditLogDisableIfDiskCapacityBelowMb()) {
+						ourLog.debug("Not saving audit record because only {} Mb free (threshold is {})", freeSpaceMb, config.getAuditLogDisableIfDiskCapacityBelowMb());
+						// TODO: add a line at the bottom of the file indicating that saving was suspended
+					}
+				} else {
+
+					addItem(writer, "Date", myItemDateFormat.format(next.myRequestTime));
+					addItem(writer, "Latency", Long.toString(next.myTransactionMillis));
+					addItem(writer, "ResponseType", next.myResponseType.name());
+					if (StringUtils.isNotBlank(next.myFailureDescription)) {
+						addItem(writer, "FailureDescription", next.myFailureDescription);
+					}
+					addItem(writer, "RequestorIp", next.myRequestHostIp + " (" + lookups.get(next.myRequestHostIp) + ")");
+					addItem(writer, "DomainId", next.myDomainId);
+					addItem(writer, "ServiceId", next.myServiceId);
+					addItem(writer, "ServiceVersionId", next.myServiceVersionId);
+					addItem(writer, "ServiceVersionPid", Long.toString(next.myServiceVersionPid));
+					if (StringUtils.isNotBlank(next.myMethodName)) {
+						addItem(writer, "MethodName", next.myMethodName);
+					}
+					if (next.myImplementationUrl != null) {
+						addItem(writer, "HandledByUrl", "[" + next.myImplementationUrlId + "] " + next.myImplementationUrl);
+					}
+					if (next.myUserPid == null) {
+						addItem(writer, "User", "none");
+					} else {
+						addItem(writer, "User", "[" + next.myUserPid + "] " + next.myUsername);
+					}
+					if (next.myAuthorizationOutcome != null) {
+						addItem(writer, "AuthorizationOutcome", next.myAuthorizationOutcome.name());
+					}
+					writer.append("Request:\n");
+					String formatedRequest = formatMessage(next.myRequestBody);
+					writer.append(formatedRequest);
+
+					if (next.myResponseBody != null) {
+						writer.append("\nResponse:\n");
+						String formattedResponse = formatMessage(next.myResponseBody);
+						writer.append(formattedResponse);
+					}
+
+					writer.append("\n\n");
+
+				}
+
+			} catch (IOException e) {
+				ourLog.error("Failed to write audit log", e);
+				throw new ProcessingException("Failed to write to audit log", e);
+			}
+
+			myUnflushedAuditRecord.poll();
+			count++;
+		}
+
+		for (FileWriter next : myLogFileWriters.values()) {
+			try {
+				next.close();
+			} catch (IOException e) {
+				ourLog.error("Failed to close writer", e);
+			}
+
+		}
+
+		long delay = System.currentTimeMillis() - start;
+		ourLog.info("Finished flushing {} audit records in {}ms", count, delay);
+	}
+
+	public void forceFlush() throws ProcessingException, UnexpectedFailureException {
+		flushWithinLockedContext();
+	}
+
+	private CharSequence formatParamValue(String theValue) {
+		return PARAM_VALUE_WHITESPACE.matcher(theValue).replaceAll(" ");
 	}
 
 	@PostConstruct
@@ -96,7 +235,7 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 	@Override
 	public void recordServiceTransaction(HttpRequestBean theRequest, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody,
 			InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome)
-			throws ProcessingException {
+			throws ProcessingException, UnexpectedFailureException {
 
 		validateQueueSize();
 
@@ -110,7 +249,7 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 	@Override
 	public void recordUserTransaction(HttpRequestBean theRequest, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody,
 			InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome)
-			throws ProcessingException {
+			throws ProcessingException, UnexpectedFailureException {
 
 		validateQueueSize();
 
@@ -121,138 +260,16 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 		flushIfNeccesary();
 	}
 
-	private void addItem(FileWriter writer, String key, String value) throws IOException {
-		writer.append(key);
-		writer.append(": ");
-		writer.append(formatParamValue(value));
-		writer.append("\n");
-	}
+	@VisibleForTesting
+	public void setConfigServiceForUnitTests(IConfigService theCfgSvc) {
+		myConfigSvc = theCfgSvc;
 
-	private CharSequence formatParamValue(String theValue) {
-		return PARAM_VALUE_WHITESPACE.matcher(theValue).replaceAll(" ");
-	}
-
-	private void flushWithinLockedContext() throws ProcessingException {
-		ourLog.info("About to begin flushing approximately {} records from audit log queue", myUnflushedAuditRecord.size());
-		long start = System.currentTimeMillis();
-
-		Map<String, FileWriter> writers = new HashMap<String, FileWriter>();
-		Map<String, String> lookups = new HashMap<String, String>();
-
-		int count = 0;
-		while (true) {
-
-			UnflushedAuditRecord next = myUnflushedAuditRecord.peek();
-			if (next == null) {
-				break;
-			}
-
-			try {
-				String fileName = next.createLogFile();
-				if (!writers.containsKey(fileName)) {
-					FileWriter writer = new FileWriter(new File(myAuditPath, fileName), true);
-					writers.put(fileName, writer);
-				}
-
-				if (!lookups.containsKey(next.myRequestHostIp)) {
-					try {
-						InetAddress addr = InetAddress.getByName(next.myRequestHostIp);
-						String host = addr.getHostName();
-						lookups.put(next.myRequestHostIp, host);
-					} catch (Throwable e) {
-						ourLog.debug("Failed to lookup hostname", e);
-						lookups.put(next.myRequestHostIp, null);
-					}
-				}
-
-				FileWriter writer = writers.get(fileName);
-				addItem(writer, "Date", myItemDateFormat.format(next.myRequestTime));
-				addItem(writer, "Latency", Long.toString(next.myTransactionMillis));
-				addItem(writer, "ResponseType", next.myResponseType.name());
-				if (StringUtils.isNotBlank(next.myFailureDescription)) {
-					addItem(writer, "FailureDescription", next.myFailureDescription);
-				}
-				addItem(writer, "RequestorIp", next.myRequestHostIp + " (" + lookups.get(next.myRequestHostIp) + ")");
-				addItem(writer, "DomainId", next.myDomainId);
-				addItem(writer, "ServiceId", next.myServiceId);
-				addItem(writer, "ServiceVersionId", next.myServiceVersionId);
-				addItem(writer, "ServiceVersionPid", Long.toString(next.myServiceVersionPid));
-				if (StringUtils.isNotBlank(next.myMethodName)) {
-					addItem(writer, "MethodName", next.myMethodName);
-				}
-				if (next.myImplementationUrl != null) {
-					addItem(writer, "HandledByUrl", "[" + next.myImplementationUrlId + "] " + next.myImplementationUrl);
-				}
-				if (next.myUserPid == null) {
-					addItem(writer, "User", "none");
-				} else {
-					addItem(writer, "User", "[" + next.myUserPid + "] " + next.myUsername);
-				}
-				if (next.myAuthorizationOutcome != null) {
-					addItem(writer, "AuthorizationOutcome", next.myAuthorizationOutcome.name());
-				}
-				writer.append("Request:\n");
-				String formatedRequest = formatMessage(next.myRequestBody);
-				writer.append(formatedRequest);
-
-				if (next.myResponseBody != null) {
-					writer.append("\nResponse:\n");
-					String formattedResponse = formatMessage(next.myResponseBody);
-					writer.append(formattedResponse);
-				}
-
-				writer.append("\n\n");
-
-			} catch (IOException e) {
-				ourLog.error("Failed to write audit log", e);
-				throw new ProcessingException("Failed to write to audit log", e);
-			}
-
-			myUnflushedAuditRecord.poll();
-			count++;
-		}
-
-		for (FileWriter next : writers.values()) {
-			try {
-				next.close();
-			} catch (IOException e) {
-				ourLog.error("Failed to close writer", e);
-			}
-
-		}
-
-		long delay = System.currentTimeMillis() - start;
-		ourLog.info("Finished flushing {} audit records in {}ms", count, delay);
-	}
-
-	private void flushIfNeccesary() throws ProcessingException {
-		if (myUnflushedAuditRecord.size() < myTriggerQueueFlushAtQueueSize) {
-			if (myLastAuditRecordFlush.get() + myTriggerQueueFlushAtMillisSinceLastFlush > System.currentTimeMillis()) {
-				return;
-			}
-		}
-
-		if (!myFlushLockAuditRecord.tryLock()) {
-			return;
-		}
-
-		try {
-			flushWithinLockedContext();
-		} finally {
-			myFlushLockAuditRecord.unlock();
-		}
 	}
 
 	private void validateQueueSize() throws ProcessingException {
 		if (myUnflushedAuditRecord.size() > myFailIfQueueExceedsSize) {
 			throw new ProcessingException("Audit log queue has exceeded maximum threshold of " + myFailIfQueueExceedsSize);
 		}
-	}
-
-	@VisibleForTesting
-	public void setConfigServiceForUnitTests(IConfigService theCfgSvc) {
-		myConfigSvc = theCfgSvc;
-
 	}
 
 	/**
@@ -310,14 +327,14 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 		SVCVER {
 			@Override
 			public String createLogFileName(UnflushedAuditRecord theRecord) {
-				return "svcver_" + theRecord.getServiceVersionPid() + ".log";
+				return "svcver_" + theRecord.getServiceVersionPid() + "_" + theRecord.getServiceVersionId() + ".log_" + theRecord.formatEventDateForLogFilename();
 			}
 		},
 
 		USER {
 			@Override
 			public String createLogFileName(UnflushedAuditRecord theRecord) {
-				return "user_" + theRecord.getUserPid() + ".log";
+				return "user_" + theRecord.getUserPid() + "_" + theRecord.getUsername() + ".log_" + theRecord.formatEventDateForLogFilename();
 			}
 		};
 
@@ -325,12 +342,29 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 
 	}
 
+	private class MyFileWriter extends FileWriter {
+
+		private File myFile;
+
+		public MyFileWriter(File theFile) throws IOException {
+			super(theFile, true);
+			myFile = theFile;
+		}
+
+		public long getBytesFree() {
+			return myFile.getFreeSpace();
+		}
+
+	}
+
 	private class UnflushedAuditRecord {
 
-		public String myImplementationUrl;
 		private AuditLogTypeEnum myAuditRecordType;
+		private AuthorizationOutcomeEnum myAuthorizationOutcome;
 		private String myDomainId;
+		private String myFailureDescription;
 		private Map<String, List<String>> myHeaders;
+		public String myImplementationUrl;
 		private String myImplementationUrlId;
 		private String myMethodName;
 		private String myRequestBody;
@@ -345,8 +379,6 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 		private Long myTransactionMillis;
 		private String myUsername;
 		private Long myUserPid;
-		private String myFailureDescription;
-		private AuthorizationOutcomeEnum myAuthorizationOutcome;
 
 		public UnflushedAuditRecord(Date theRequestTime, HttpRequestBean theRequest, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody,
 				InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome,
@@ -399,22 +431,30 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 			assert myResponseBody == null || myResponseHeaders != null;
 		}
 
+		public String createLogFile() {
+			return myAuditRecordType.createLogFileName(this);
+		}
+
+		public String formatEventDateForLogFilename() {
+			return ourLogDateFormat.format(myRequestTime);
+		}
+
+		public String getServiceVersionId() {
+			return myServiceVersionId;
+		}
+
 		public Long getServiceVersionPid() {
 			return myServiceVersionPid;
+		}
+
+		public String getUsername() {
+			return myUsername;
 		}
 
 		public Long getUserPid() {
 			return myUserPid;
 		}
 
-		public String createLogFile() {
-			return myAuditRecordType.createLogFileName(this);
-		}
-
-	}
-
-	public void forceFlush() throws ProcessingException {
-		flushWithinLockedContext();
 	}
 
 }

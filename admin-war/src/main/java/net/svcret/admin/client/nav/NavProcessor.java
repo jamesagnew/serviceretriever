@@ -433,7 +433,7 @@ public class NavProcessor {
 			panel = new ReplayMessagePanel(ReplayMessagePanel.MSGTYPE_SVCVER, Long.parseLong(args));
 			break;
 		case DSH:
-			panel = new ServiceDashboardPanel();
+			panel = ServiceDashboardPanel.getInstance();
 			break;
 		case DSE:
 			argsSplit = args.split("_");
