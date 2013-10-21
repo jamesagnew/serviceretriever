@@ -18,11 +18,11 @@ public interface IMonitorService {
 	 */
 	void check();
 
-	Future<Void> runActiveCheck(PersMonitorRuleActiveCheck theCheck);
+	void runActiveCheck(PersMonitorRuleActiveCheck theCheck);
 
 	List<PersMonitorRuleActiveCheckOutcome> runActiveCheckInCurrentTransaction(PersMonitorRuleActiveCheck theCheck, boolean thePersistResults);
 
-	Future<Void> runActiveCheckInNewTransaction(PersMonitorRuleActiveCheck theCheck);
+	void runActiveCheckInNewTransaction(PersMonitorRuleActiveCheck theCheck);
 
 	void runActiveChecks();
 

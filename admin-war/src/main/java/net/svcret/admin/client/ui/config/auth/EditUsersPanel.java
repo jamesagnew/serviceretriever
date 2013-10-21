@@ -131,8 +131,8 @@ public class EditUsersPanel extends FlowPanel {
 			public void update(int theIndex, GUser theObject, String theValue) {
 				if (Window.confirm("Are you sure you want to delete the user '" + theObject.getUsername() + "'? This action can not be undone!")) {
 					myLoadingSpinner.showMessage("Deleting user...", true);
-					AdminPortal.MODEL_SVC.removeUser(theObject.getPid(), new AsyncCallback<VoidVoid>() {
-					})
+//					AdminPortal.MODEL_SVC.removeUser(theObject.getPid(), new AsyncCallback<VoidVoid>() {
+//					})
 				}
 			}
 		});

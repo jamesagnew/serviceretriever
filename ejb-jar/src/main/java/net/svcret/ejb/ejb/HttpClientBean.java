@@ -247,6 +247,9 @@ public class HttpClientBean implements IHttpClient {
 					theResponse.setHeaders(headerMap);
 					theResponse.setResponseTime(delay);
 					theResponse.setSuccessfulUrl(theNextUrl);
+
+					ourLog.debug("Invoked service at URL[{}] in {}ms", theNextUrl, delay);
+					
 					return;
 
 				}

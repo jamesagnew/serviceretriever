@@ -10,10 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Future;
 
-import javax.ejb.AsyncResult;
-import javax.ejb.Asynchronous;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
@@ -127,10 +124,8 @@ public class MonitorServiceBean implements IMonitorService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public Future<Void> runActiveCheckInNewTransaction(PersMonitorRuleActiveCheck theCheck) {
+	public void runActiveCheckInNewTransaction(PersMonitorRuleActiveCheck theCheck) {
 		runActiveCheckInCurrentTransaction(theCheck, true);
-
-		return new AsyncResult<Void>(null);
 	}
 
 	@Override
@@ -329,9 +324,8 @@ public class MonitorServiceBean implements IMonitorService {
 	}
 
 	@Override
-	@Asynchronous
-	public Future<Void> runActiveCheck(PersMonitorRuleActiveCheck theCheck) {
-		return myThis.runActiveCheckInNewTransaction(theCheck);
+	public void runActiveCheck(PersMonitorRuleActiveCheck theCheck) {
+		myThis.runActiveCheckInNewTransaction(theCheck);
 	}
 
 	@Override

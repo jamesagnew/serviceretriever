@@ -291,6 +291,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		} catch (InvocationFailedException e) {
 			throw new ProcessingException(e);
 		}
+		
 		SidechannelOrchestratorResponseBean retVal;
 		try {
 			retVal = processRequestMethod(request, results, authorized, null, false, theForceUrl, new Date());
@@ -628,6 +629,8 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		ArrayList<SidechannelOrchestratorResponseBean> retVal = new ArrayList<IServiceOrchestrator.SidechannelOrchestratorResponseBean>();
 
 		for (PersServiceVersionUrl nextUrl : svcVer.getUrls()) {
+			ourLog.debug("About to perform sidechannel request for URL: {} / {}", nextUrl.getPid(), nextUrl.getUrl());
+			
 			SidechannelOrchestratorResponseBean responseBean;
 			Date startedTime = new Date();
 			try {

@@ -98,7 +98,7 @@ public class ServiceCatalogPanel extends FlowPanel {
 					case SOAP11:
 						endpoint = new EndpointRendererSoap11(myConfig).render((DtoServiceVersionSoap11) nextVersion);
 						Anchor anchor = new Anchor();
-						anchor.setHref("resources/wsdl_bundle_" + nextVersion.getPid() + ".zip");
+						anchor.setHref("../resources/wsdl_bundle_" + nextVersion.getPid() + ".zip");
 						anchor.setText("Download");
 						myGrid.setWidget(row, COL_BUNDLE, anchor);
 						myGrid.getCellFormatter().setHorizontalAlignment(row, COL_BUNDLE, HasHorizontalAlignment.ALIGN_CENTER);

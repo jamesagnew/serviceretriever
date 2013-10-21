@@ -13,6 +13,8 @@ import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.ejb.log.FilesystemAuditLoggerBean;
 import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ex.UnexpectedFailureException;
+import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
@@ -37,7 +39,7 @@ public class FilesystemAuditLoggerBeanTest {
 	}
 
 	@Before
-	public void before() throws IOException, ProcessingException {
+	public void before() throws IOException, ProcessingException, UnexpectedFailureException {
 		myTempPath = File.createTempFile("sr-unittest", "");
 		myTempPath.delete();
 
@@ -45,6 +47,7 @@ public class FilesystemAuditLoggerBeanTest {
 		mySvc = new FilesystemAuditLoggerBean();
 		mySvc.setConfigServiceForUnitTests(cfgSvc);
 		when(cfgSvc.getFilesystemAuditLoggerPath()).thenReturn(myTempPath.getAbsolutePath());
+		when(cfgSvc.getConfig()).thenReturn(new PersConfig());
 
 		mySvc.initialize();
 	}

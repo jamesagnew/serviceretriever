@@ -70,6 +70,7 @@ import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersLibraryMessage;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
@@ -80,6 +81,8 @@ import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import antlr.Version;
 
 public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
@@ -127,7 +130,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		myStatsQSvc.setStatusSvcForUnitTest(myStatsSvc);
 		myStatsQSvc.setDaoForUnitTests(myDao);
 
-		mySoapInvoker = mock(IServiceInvokerSoap11.class, new DefaultAnswer());
+		mySoapInvoker = mock(IServiceInvokerSoap11.class);
 
 		mySecSvc = new SecurityServiceBean();
 		mySecSvc.setPersSvc(myDao);
@@ -156,7 +159,6 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		myTransactionLogSvc.setDao(myDao);
 		myTransactionLogSvc.setConfigServiceForUnitTests(myConfigSvc);
 
-		DefaultAnswer.setDesignTime();
 	}
 
 	private DtoDomain createEverything() throws Exception {
@@ -1199,7 +1201,6 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	public void testLoadWsdl() throws Exception {
 
 		DtoServiceVersionSoap11 ver = new DtoServiceVersionSoap11();
-		ver.setPid(123L);
 		
 		PersServiceVersionSoap11 persSvcVer = new PersServiceVersionSoap11();
 		persSvcVer.setPid(ver.getPid());
@@ -1226,7 +1227,6 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		cfg.setDefaults();
 		when(mySoapInvoker.introspectServiceFromUrl(cfg, "http://wsdlurl")).thenReturn(persSvcVer);
 
-		DefaultAnswer.setRunTime();
 		GSoap11ServiceVersionAndResources verAndRes = mySvc.loadSoap11ServiceVersionFromWsdl(ver, cfg.toDto(null), "http://wsdlurl");
 
 		assertEquals(2, verAndRes.getResource().size());
@@ -1240,6 +1240,40 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		assertEquals("m1", verAndRes.getServiceVersion().getMethodList().get(0).getName());
 		assertEquals("m2", verAndRes.getServiceVersion().getMethodList().get(1).getName());
 
+		// Load stats
+		newEntityManager();
+		
+		PersDomain d0 = myDao.getOrCreateDomainWithId("d0");
+		PersService s0 = myDao.getOrCreateServiceWithId(d0, "s0");
+		verAndRes.getServiceVersion().setId("v0");
+		verAndRes.getServiceVersion().setHttpClientConfigPid(myDao.getHttpClientConfigs().iterator().next().getPid());
+		
+		BaseDtoServiceVersion newVer = mySvc.saveServiceVersion(d0.getPid(), s0.getPid(), verAndRes.getServiceVersion(), verAndRes.getResource());
+		
+		newEntityManager();
+		
+		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(newVer.getPid());
+		PersServiceVersionResource res = svcVer.getResourceForUri("http://wsdlurl");
+		myStatsSvc.recordInvocationStaticResource(new Date(), res);
+		myStatsSvc.flushStatus();
+		
+		newEntityManager();
+		
+		// Now change the WSDL URL
+		
+		persSvcVer = new PersServiceVersionSoap11();
+		persSvcVer.setPid(ver.getPid());
+		persSvcVer.addMethod(m1);
+		persSvcVer.addMethod(m2);
+		persSvcVer.addResource("http://wsdlurl2", "application/xml", "wsdlcontents");
+		persSvcVer.addResource("http://xsdurl", "application/xml", "xsdcontents");
+		persSvcVer.setWsdlUrl("http://wsdlurl2");
+		when(mySoapInvoker.introspectServiceFromUrl(cfg, "http://wsdlurl2")).thenReturn(persSvcVer);
+		verAndRes = mySvc.loadSoap11ServiceVersionFromWsdl((DtoServiceVersionSoap11) newVer, cfg.toDto(null), "http://wsdlurl2");
+		newVer = mySvc.saveServiceVersion(d0.getPid(), s0.getPid(), verAndRes.getServiceVersion(), verAndRes.getResource());
+
+		newEntityManager();
+		
 	}
 
 	// @Test
