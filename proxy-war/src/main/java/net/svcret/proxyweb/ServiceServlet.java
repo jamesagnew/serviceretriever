@@ -29,6 +29,8 @@ import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.OrchestratorResponseBean;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.ejb.ThrottleQueueFullException;
+import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
+import net.svcret.ejb.ex.InvocationRequestOrResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.ex.ThrottleException;
@@ -121,6 +123,14 @@ public class ServiceServlet extends HttpServlet {
 			return;
 		} catch (ProcessingException e) {
 			ourLog.info("Processing Failure", e);
+			sendFailure(theResp, e.toString());
+			return;
+		} catch (InvocationRequestOrResponseFailedException e) {
+			ourLog.info("Processing Failure", e.getMessage());
+			sendFailure(theResp, e.toString());
+			return;
+		} catch (InvocationFailedDueToInternalErrorException e) {
+			ourLog.info("Processing Failure", e.getMessage());
 			sendFailure(theResp, e.toString());
 			return;
 		} catch (SecurityFailureException e) {

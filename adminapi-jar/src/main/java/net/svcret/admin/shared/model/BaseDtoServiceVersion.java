@@ -12,6 +12,8 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 
 	private static final long serialVersionUID = 7886801527330335503L;
 
+	public static final String METHOD_NAME_UNKNOWN = "SVCRETUNKNOWNMETHOD";
+	
 	@XmlElement(name="config_Active")
 	private boolean myActive;
 

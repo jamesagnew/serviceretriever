@@ -45,6 +45,11 @@ public abstract class InvocationFailedException extends Exception {
 		assert theCause != null;
 	}
 
+	public InvocationFailedException(String theMessage, HttpResponseBean theHttpResponse) {
+		super(theMessage);
+		myHttpResponse=theHttpResponse;
+	}
+
 	private static String toMessage(Throwable theCause) {
 		if (theCause.getMessage() != null) {
 			return theCause.getMessage();

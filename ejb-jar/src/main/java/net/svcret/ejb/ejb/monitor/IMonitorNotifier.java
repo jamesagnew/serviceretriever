@@ -1,4 +1,4 @@
-package net.svcret.ejb.api;
+package net.svcret.ejb.ejb.monitor;
 
 import javax.ejb.Local;
 

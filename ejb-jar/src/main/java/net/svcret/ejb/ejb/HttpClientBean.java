@@ -235,6 +235,7 @@ public class HttpClientBean implements IHttpClient {
 						continue;
 					}
 					ourLog.debug("Failed to invoke service at URL[{}]: {}", theNextUrl, validates.getFailureExplanation());
+					ourLog.debug("Failing message body was: {}", body);
 					theResponse.addFailedUrl(theNextUrl, validates.getFailureExplanation(), statusCode, contentType, body, delay);
 					theResponse.setResponseTime(delay);
 					return;

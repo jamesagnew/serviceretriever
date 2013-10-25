@@ -122,7 +122,7 @@ public class DashModelService extends BaseDashModel implements IDashModel {
 
 		// Edit domain
 
-		Button editDomain = new ActionPButton(IMAGES.iconEdit(), "Edit Service");
+		Button editDomain = new ActionPButton(IMAGES.iconEdit(), MSGS.actions_openEdit());
 		editDomain.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {

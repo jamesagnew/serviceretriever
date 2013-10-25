@@ -10,10 +10,13 @@ import java.util.Map;
 
 import javax.ejb.Local;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
 import net.svcret.ejb.ejb.ThrottleQueueFullException;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
+import net.svcret.ejb.ex.InvocationRequestOrResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.ex.ThrottleException;
@@ -36,7 +39,7 @@ public interface IServiceOrchestrator {
 	 * Process a normal request
 	 */
 	OrchestratorResponseBean handleServiceRequest(HttpRequestBean theRequest) throws UnknownRequestException, ProcessingException, IOException, SecurityFailureException, ThrottleException,
-			ThrottleQueueFullException;
+			ThrottleQueueFullException, InvocationRequestOrResponseFailedException, InvocationFailedDueToInternalErrorException;
 
 	/**
 	 * Process a request invoked through a means other than the proxy itself (e.g. monitoring, management console, etc.)
@@ -138,6 +141,14 @@ public interface IServiceOrchestrator {
 			retVal.setFailureDescription(theException.toString());
 			retVal.setApplicableUrl(theApplicableUrl);
 			return retVal;
+		}
+
+		@Override
+		public String toString() {
+			ToStringBuilder b = new ToStringBuilder(this);
+			b.append("URL", getApplicableUrl().getPid());
+			b.append("Latency", getHttpResponse().getResponseTime());
+			return b.build();
 		}
 
 	}

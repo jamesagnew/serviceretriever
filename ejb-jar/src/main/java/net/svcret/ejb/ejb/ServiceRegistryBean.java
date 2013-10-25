@@ -18,17 +18,20 @@ import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
-import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IServiceRegistry;
+import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
+import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersService;
+import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.ejb.model.entity.PersUser;
@@ -36,6 +39,8 @@ import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
 import net.svcret.ejb.util.Validate;
 
 import org.slf4j.LoggerFactory;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
@@ -68,14 +73,82 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	/**
 	 * Constructor
 	 */
-	public ServiceRegistryBean()  {
+	public ServiceRegistryBean() {
 		super();
+	}
+
+	private void addProxyPath(Map<String, BasePersServiceVersion> pathToServiceVersions, Map<Long, BasePersServiceVersion> pidToServiceVersions, BasePersServiceVersion nextVersion,
+			String nextProxyPath) {
+		pidToServiceVersions.put(nextVersion.getPid(), nextVersion);
+		if (pathToServiceVersions.containsKey(nextProxyPath)) {
+			ourLog.warn("Service version {} ({}/{}/{}) created duplicate proxy path '{}', so it will be ignored!", new Object[] { nextVersion.getPid(),
+					nextVersion.getService().getDomain().getDomainId(), nextVersion.getService().getServiceId(), nextVersion.getVersionId(), nextProxyPath });
+		} else {
+			pathToServiceVersions.put(nextProxyPath, nextVersion);
+		}
+	}
+
+	private void catalogHasChanged() throws UnexpectedFailureException {
+		incrementStateVersion();
+		myBroadcastSender.notifyServiceCatalogChanged();
 	}
 
 	@Override
 	public void deleteHttpClientConfig(PersHttpClientConfig theConfig) throws ProcessingException, UnexpectedFailureException {
 		catalogHasChanged();
 		myDao.deleteHttpClientConfig(theConfig);
+	}
+
+	private void doReloadRegistryFromDatabase() {
+		ourLog.info("Reloading service registry from database");
+
+		long newVersion = myDao.getStateCounter(STATE_KEY);
+
+		Map<String, PersDomain> domainMap = new HashMap<String, PersDomain>();
+		Map<String, BasePersServiceVersion> pathToServiceVersions = new HashMap<String, BasePersServiceVersion>();
+		Map<Long, BasePersServiceVersion> pidToServiceVersions = new HashMap<Long, BasePersServiceVersion>();
+		Map<Long, PersDomain> pidToDomains = new HashMap<Long, PersDomain>();
+		Map<Long, PersService> pidToServices = new HashMap<Long, PersService>();
+
+		Collection<PersDomain> domains = myDao.getAllDomains();
+		for (PersDomain nextDomain : domains) {
+			domainMap.put(nextDomain.getDomainId(), nextDomain);
+			pidToDomains.put(nextDomain.getPid(), nextDomain);
+			nextDomain.loadAllAssociations();
+
+			for (PersService nextService : nextDomain.getServices()) {
+				pidToServices.put(nextService.getPid(), nextService);
+				for (BasePersServiceVersion nextVersion : nextService.getVersions()) {
+
+					if (nextVersion.isUseDefaultProxyPath()) {
+						addProxyPath(pathToServiceVersions, pidToServiceVersions, nextVersion, nextVersion.getDefaultProxyPath());
+					}
+
+					if (nextVersion.getExplicitProxyPath() != null && nextVersion.getExplicitProxyPath().startsWith("/")) {
+						addProxyPath(pathToServiceVersions, pidToServiceVersions, nextVersion, nextVersion.getExplicitProxyPath());
+					}
+
+				}
+			}
+
+		}
+
+		Map<String, PersUser> serviceUserMap = new HashMap<String, PersUser>();
+		Collection<PersUser> users = myDao.getAllUsersAndInitializeThem();
+		for (PersUser nextUser : users) {
+			serviceUserMap.put(nextUser.getUsername(), nextUser);
+		}
+
+		ourLog.info("Done loading service registry from database");
+
+		synchronized (ourRegistryLock) {
+			ourDomainMap = domainMap;
+			ourPidToDomains = pidToDomains;
+			ourPidToServices = pidToServices;
+			ourPidToServiceVersions = pidToServiceVersions;
+			ourProxyPathToServices = pathToServiceVersions;
+			myCurrentVersion = newVersion;
+		}
 	}
 
 	@Override
@@ -107,7 +180,8 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	}
 
 	@Override
-	public BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, ServiceProtocolEnum theProtocol, String theVersionId, PersServiceVersionVirtual theSvcVerToUseIfCreatingNew) throws UnexpectedFailureException {
+	public BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, ServiceProtocolEnum theProtocol, String theVersionId, PersServiceVersionVirtual theSvcVerToUseIfCreatingNew)
+			throws UnexpectedFailureException {
 		BasePersServiceVersion retVal = myDao.getOrCreateServiceVersionWithId(theService, theVersionId, theProtocol, theSvcVerToUseIfCreatingNew);
 		if (retVal.isNewlyCreated()) {
 			catalogHasChanged();
@@ -122,6 +196,30 @@ public class ServiceRegistryBean implements IServiceRegistry {
 			catalogHasChanged();
 		}
 		return retVal;
+	}
+
+	
+	@Override
+	public PersServiceVersionMethod getOrCreateUnknownMethodEntryForServiceVersion(BasePersServiceVersion theServiceVersion) throws InvocationFailedDueToInternalErrorException {
+		PersServiceVersionMethod method = theServiceVersion.getMethod(BaseDtoServiceVersion.METHOD_NAME_UNKNOWN);
+		if (method == null) {
+			ourLog.info("Creating 'unknown' method for service version {} to store statistics against", theServiceVersion.getPid());
+			BasePersServiceVersion dbSvcVer = myDao.getServiceVersionByPid(theServiceVersion.getPid());
+			dbSvcVer.getOrCreateAndAddMethodWithName(BaseDtoServiceVersion.METHOD_NAME_UNKNOWN);
+			try {
+				dbSvcVer = saveServiceVersion(dbSvcVer);
+			} catch (ProcessingException e) {
+				ourLog.error("Failed to auto-create method", e);
+				throw new InvocationFailedDueToInternalErrorException(e, "Failed to auto-create method '" + BaseDtoServiceVersion.METHOD_NAME_UNKNOWN + "'. Error was: " + e.getMessage());
+			} catch (UnexpectedFailureException e) {
+				ourLog.error("Failed to auto-create method", e);
+				throw new InvocationFailedDueToInternalErrorException(e, "Failed to auto-create method '" + BaseDtoServiceVersion.METHOD_NAME_UNKNOWN + "'. Error was: " + e.getMessage());
+			}
+			method = dbSvcVer.getMethod(BaseDtoServiceVersion.METHOD_NAME_UNKNOWN);
+			ourLog.info("Created new method '{}' and got PID {}", BaseDtoServiceVersion.METHOD_NAME_UNKNOWN, method.getPid());
+		}
+
+		return method;
 	}
 
 	@Override
@@ -155,6 +253,11 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		Collections.sort(retVal);
 
 		return retVal;
+	}
+
+	private void incrementStateVersion() {
+		long newVersion = myDao.incrementStateCounter(STATE_KEY);
+		ourLog.debug("State counter is now {}", newVersion);
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -239,106 +342,27 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	}
 
 	@Override
-	public BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theSv) throws  UnexpectedFailureException, ProcessingException {
+	public BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theSv) throws UnexpectedFailureException, ProcessingException {
 		catalogHasChanged();
 		// reloadRegistryFromDatabase();
 		return myDao.saveServiceVersion(theSv);
 	}
 
-	/**
-	 * FOR UNIT TESTS ONLY
-	 */
+	@VisibleForTesting
+	public void setBroadcastSender(IBroadcastSender theBroadcastSender) {
+		myBroadcastSender = theBroadcastSender;
+	}
+
+	@VisibleForTesting
 	public void setDao(IDao theSvcPersistence) {
 		Validate.isNull(myDao, "IDao");
 		myDao = theSvcPersistence;
 	}
 
-	/**
-	 * FOR UNIT TESTS ONLY
-	 */
+	@VisibleForTesting
 	public void setSvcHttpClient(IHttpClient theSvcHttpClient) {
 		Validate.isNull(mySvcHttpClient, "IServicHttpClient");
 		mySvcHttpClient = theSvcHttpClient;
-	}
-
-	private void addProxyPath(Map<String, BasePersServiceVersion> pathToServiceVersions, Map<Long, BasePersServiceVersion> pidToServiceVersions, BasePersServiceVersion nextVersion,
-			String nextProxyPath) {
-		pidToServiceVersions.put(nextVersion.getPid(), nextVersion);
-		if (pathToServiceVersions.containsKey(nextProxyPath)) {
-			ourLog.warn("Service version {} ({}/{}/{}) created duplicate proxy path '{}', so it will be ignored!", 
-					new Object[] {nextVersion.getPid(), nextVersion.getService().getDomain().getDomainId(), nextVersion.getService().getServiceId(), nextVersion.getVersionId(), nextProxyPath });
-		} else {
-			pathToServiceVersions.put(nextProxyPath, nextVersion);
-		}
-	}
-
-	private void catalogHasChanged() throws UnexpectedFailureException {
-		incrementStateVersion();
-		myBroadcastSender.notifyServiceCatalogChanged();
-	}
-
-	private void doReloadRegistryFromDatabase() {
-		ourLog.info("Reloading service registry from database");
-
-		long newVersion = myDao.getStateCounter(STATE_KEY);
-
-		Map<String, PersDomain> domainMap = new HashMap<String, PersDomain>();
-		Map<String, BasePersServiceVersion> pathToServiceVersions = new HashMap<String, BasePersServiceVersion>();
-		Map<Long, BasePersServiceVersion> pidToServiceVersions = new HashMap<Long, BasePersServiceVersion>();
-		Map<Long, PersDomain> pidToDomains = new HashMap<Long, PersDomain>();
-		Map<Long, PersService> pidToServices = new HashMap<Long, PersService>();
-
-		Collection<PersDomain> domains = myDao.getAllDomains();
-		for (PersDomain nextDomain : domains) {
-			domainMap.put(nextDomain.getDomainId(), nextDomain);
-			pidToDomains.put(nextDomain.getPid(), nextDomain);
-			nextDomain.loadAllAssociations();
-
-			for (PersService nextService : nextDomain.getServices()) {
-				pidToServices.put(nextService.getPid(), nextService);
-				for (BasePersServiceVersion nextVersion : nextService.getVersions()) {
-
-					if (nextVersion.isUseDefaultProxyPath()) {
-						addProxyPath(pathToServiceVersions, pidToServiceVersions, nextVersion, nextVersion.getDefaultProxyPath());
-					}
-
-					if (nextVersion.getExplicitProxyPath() != null && nextVersion.getExplicitProxyPath().startsWith("/")) {
-						addProxyPath(pathToServiceVersions, pidToServiceVersions, nextVersion, nextVersion.getExplicitProxyPath());
-					}
-
-				}
-			}
-
-		}
-
-		Map<String, PersUser> serviceUserMap = new HashMap<String, PersUser>();
-		Collection<PersUser> users = myDao.getAllUsersAndInitializeThem();
-		for (PersUser nextUser : users) {
-			serviceUserMap.put(nextUser.getUsername(), nextUser);
-		}
-
-		ourLog.info("Done loading service registry from database");
-
-		synchronized (ourRegistryLock) {
-			ourDomainMap = domainMap;
-			ourPidToDomains = pidToDomains;
-			ourPidToServices = pidToServices;
-			ourPidToServiceVersions = pidToServiceVersions;
-			ourProxyPathToServices = pathToServiceVersions;
-			myCurrentVersion = newVersion;
-		}
-	}
-
-	private void incrementStateVersion() {
-		long newVersion = myDao.incrementStateCounter(STATE_KEY);
-		ourLog.debug("State counter is now {}", newVersion);
-	}
-
-	/**
-	 * FOR UNIT TESTS ONLY
-	 */
-	void setBroadcastSender(IBroadcastSender theBroadcastSender) {
-		myBroadcastSender = theBroadcastSender;
 	}
 
 }

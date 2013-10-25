@@ -44,11 +44,12 @@ public final class ActiveChecksRecentOutcomeTooltipProvider implements IProvides
 		}
 
 		for (int row = 0; row < theObject.getRecentOutcomesForUrl().get(0).getOutcomes().size(); row++) {
-			DtoMonitorRuleActiveCheckOutcome rowModel = theObject.getRecentOutcomesForUrl().get(0).getOutcomes().get(row);
-			grid.setText(row + 1, 0, DateUtil.formatTimeOnly(rowModel.getTimestamp()));
+			DtoMonitorRuleActiveCheckOutcome rowModelWhole = theObject.getRecentOutcomesForUrl().get(0).getOutcomes().get(row);
+			grid.setText(row + 1, 0, DateUtil.formatTimeOnly(rowModelWhole.getTimestamp()));
 			grid.getFlexCellFormatter().addStyleName(row+1, 0, MyResources.CSS.usageTooltipTableDateColumn());
 
 			for (int col = 0; col < theObject.getRecentOutcomesForUrl().size(); col++) {
+				DtoMonitorRuleActiveCheckOutcome rowModel = theObject.getRecentOutcomesForUrl().get(col).getOutcomes().get(row);
 				int column = (col*2) + 1;
 
 				String message;

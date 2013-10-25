@@ -211,4 +211,11 @@ public class HttpResponseBean {
 		}
 		return getFailedUrls().keySet().iterator().next();
 	}
+
+	public String getFailingResponseBody() {
+		for (Failure next : myFailedUrls.values()) {
+			return next.getBody();
+		}
+		return null;
+	}
 }

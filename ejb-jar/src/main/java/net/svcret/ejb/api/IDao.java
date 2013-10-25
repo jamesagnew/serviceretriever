@@ -187,7 +187,7 @@ public interface IDao {
 
 	// List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int theStart);
 
-	List<PersMonitorRuleFiring> loadMonitorRuleFiringsWhichAreActive();
+	List<PersMonitorRuleFiring> getAllMonitorRuleFiringsWhichAreActive();
 
 	PersServiceVersionRecentMessage loadRecentMessageForServiceVersion(long thePid);
 

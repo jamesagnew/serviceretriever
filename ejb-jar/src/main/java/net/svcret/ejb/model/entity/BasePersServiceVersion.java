@@ -40,9 +40,9 @@ import javax.persistence.Version;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
-import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.BaseDtoClientSecurity;
 import net.svcret.admin.shared.model.BaseDtoServerSecurity;
+import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionResourcePointer;
@@ -270,15 +270,6 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		return myActiveChecks;
 	}
 
-	@Override
-	public Set<PersMonitorRuleFiring> getActiveRuleFiringsWhichMightApply() {
-		Set<PersMonitorRuleFiring> retVal = new HashSet<PersMonitorRuleFiring>();
-		if (getMostRecentMonitorRuleFiring() != null && getMostRecentMonitorRuleFiring().getEndDate() == null) {
-			retVal.add(getMostRecentMonitorRuleFiring());
-		}
-		retVal.addAll(myService.getActiveRuleFiringsWhichMightApply());
-		return retVal;
-	}
 
 	@Override
 	public Collection<? extends BasePersServiceVersion> getAllServiceVersions() {
@@ -662,14 +653,14 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	/**
 	 * Remove any URLs whose ID doesn't appear in the given IDs
 	 */
-	public void retainOnlyMethodsWithNames(Collection<String> theIds) {
+	public void retainOnlyMethodsWithNamesAndUnknownMethod(Collection<String> theIds) {
 		ourLog.debug("Retaining method names: {}", theIds);
 		getMethods();
 
 		HashSet<String> ids = new HashSet<String>(theIds);
 		for (Iterator<PersServiceVersionMethod> iter = myMethods.iterator(); iter.hasNext();) {
 			PersServiceVersionMethod next = iter.next();
-			if (!ids.contains(next.getName())) {
+			if (!BaseDtoServiceVersion.METHOD_NAME_UNKNOWN.equals(next.getName()) && !ids.contains(next.getName())) {
 				ourLog.info("Removing Method with ID[{}] and NAME[{}] from Service Version with ID[{}/{}]", new Object[] { next.getPid(), next.getName(), getPid(), getVersionId() });
 				iter.remove();
 			}
@@ -680,7 +671,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	 * Remove any URLs whose ID doesn't appear in the given IDs
 	 */
 	public void retainOnlyMethodsWithNames(String... theUrlIds) {
-		retainOnlyMethodsWithNames(Arrays.asList(theUrlIds));
+		retainOnlyMethodsWithNamesAndUnknownMethod(Arrays.asList(theUrlIds));
 	}
 
 	/**
@@ -925,9 +916,11 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		populateDtoWithMonitorRules(retVal);
 
 		for (PersServiceVersionMethod nextMethod : this.getMethods()) {
-			boolean loadStats = theLoadMethodStats != null && theLoadMethodStats.contains(nextMethod.getPid());
-			GServiceMethod gMethod = nextMethod.toDao(loadStats, theQuerySvc);
-			retVal.getMethodList().add(gMethod);
+			if (!BaseDtoServiceVersion.METHOD_NAME_UNKNOWN.equals(nextMethod.getName())) {
+				boolean loadStats = theLoadMethodStats != null && theLoadMethodStats.contains(nextMethod.getPid());
+				GServiceMethod gMethod = nextMethod.toDao(loadStats, theQuerySvc);
+				retVal.getMethodList().add(gMethod);
+			}
 		} // for methods
 
 		for (PersServiceVersionUrl nextUrl : this.getUrls()) {

@@ -1,4 +1,4 @@
-package net.svcret.ejb.ejb;
+package net.svcret.ejb.ejb.monitor;
 
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -18,7 +18,6 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import net.svcret.admin.shared.enm.MonitorRuleTypeEnum;
-import net.svcret.ejb.api.IMonitorNotifier;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem;

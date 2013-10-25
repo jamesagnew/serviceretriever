@@ -832,5 +832,8 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Close")
 	String actions_Close();
+
+	@DefaultMessage("Open / Edit")
+	String actions_openEdit();
 	
 }

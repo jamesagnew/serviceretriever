@@ -12,6 +12,10 @@ public class InvocationFailedDueToInternalErrorException extends InvocationFaile
 		super(theMessage);
 	}
 
+	public InvocationFailedDueToInternalErrorException(Throwable theCause, String theMessage) {
+		super(theCause, theMessage);
+	}
+
 	private static final long serialVersionUID = 1L;
 
 }

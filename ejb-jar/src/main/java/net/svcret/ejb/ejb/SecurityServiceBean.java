@@ -20,9 +20,9 @@ import net.svcret.ejb.api.IAuthorizationService;
 import net.svcret.ejb.api.IAuthorizationService.ILdapAuthorizationService;
 import net.svcret.ejb.api.IAuthorizationService.ILocalDatabaseAuthorizationService;
 import net.svcret.ejb.api.IAuthorizationService.UserOrFailure;
-import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.ISecurityService;
+import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
@@ -31,6 +31,8 @@ import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersUser;
 
 import org.apache.commons.lang3.Validate;
+
+import com.google.common.annotations.VisibleForTesting;
 
 @Stateless
 public class SecurityServiceBean implements ISecurityService {
@@ -307,24 +309,18 @@ public class SecurityServiceBean implements ISecurityService {
 		ourLog.info("Done loading user catalog, found {} users", allUsers.size());
 	}
 
-	/**
-	 * UNIT TESTS ONLY
-	 */
-	void setBroadcastSender(IBroadcastSender theBroadcastSender) {
+	@VisibleForTesting
+	public void setBroadcastSender(IBroadcastSender theBroadcastSender) {
 		myBroadcastSender = theBroadcastSender;
 	}
 
-	/**
-	 * UNIT TESTS ONLY
-	 */
-	void setLocalDbAuthService(ILocalDatabaseAuthorizationService theLocalDbAuthService) {
+	@VisibleForTesting
+	public void setLocalDbAuthService(ILocalDatabaseAuthorizationService theLocalDbAuthService) {
 		myLocalDbAuthService = theLocalDbAuthService;
 	}
 
-	/**
-	 * UNIT TESTS ONLY
-	 */
-	void setPersSvc(IDao thePersSvc) {
+	@VisibleForTesting
+	public void setPersSvc(IDao thePersSvc) {
 		myDao = thePersSvc;
 	}
 

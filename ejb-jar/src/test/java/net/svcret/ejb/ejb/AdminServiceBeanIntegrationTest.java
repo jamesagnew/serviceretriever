@@ -27,15 +27,15 @@ import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.BaseDtoDashboardObject;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
+import net.svcret.admin.shared.model.DtoAuthenticationHostLocalDatabase;
+import net.svcret.admin.shared.model.DtoConfig;
+import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
-import net.svcret.admin.shared.model.DtoConfig;
-import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.GHttpClientConfig;
-import net.svcret.admin.shared.model.DtoAuthenticationHostLocalDatabase;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GMonitorRulePassive;
 import net.svcret.admin.shared.model.GResource;
@@ -56,10 +56,11 @@ import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
-import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.ejb.log.TransactionLoggerBean;
+import net.svcret.ejb.ejb.monitor.MonitorServiceBean;
+import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
 import net.svcret.ejb.invoker.soap.IServiceInvokerSoap11;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -81,8 +82,6 @@ import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import antlr.Version;
 
 public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
@@ -175,7 +174,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		DtoDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
 		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 
@@ -292,7 +291,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	public void testAddAndSaveService() throws Exception {
 		newEntityManager();
 
-		DtoDomain domain = mySvc.addDomain("domain_id3", "domain_name");
+		DtoDomain domain = mySvc.unitTestMethod_addDomain("domain_id3", "domain_name");
 		newEntityManager();
 
 		GService service = mySvc.addService(domain.getPid(), "svc_id", "svc_name", true);
@@ -317,7 +316,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	public void testAddDomain() throws Exception {
 		newEntityManager();
 
-		DtoDomain domain = mySvc.addDomain("domain_id", "domain_name");
+		DtoDomain domain = mySvc.unitTestMethod_addDomain("domain_id", "domain_name");
 		newEntityManager();
 
 		assertEquals("domain_id", domain.getId());
@@ -329,10 +328,10 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	public void testAddDomainDuplicate() throws Exception {
 		newEntityManager();
 
-		mySvc.addDomain("domain_id2", "domain_name");
+		mySvc.unitTestMethod_addDomain("domain_id2", "domain_name");
 		newEntityManager();
 
-		mySvc.addDomain("domain_id2", "domain_name");
+		mySvc.unitTestMethod_addDomain("domain_id2", "domain_name");
 		newEntityManager();
 
 	}
@@ -342,7 +341,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		
 		newEntityManager();
 
-		DtoDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
 		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpServer");
 		myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
@@ -448,7 +447,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		DtoDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
 		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 		myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
@@ -521,7 +520,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	public void testAddServiceVersion() throws Exception {
 		newEntityManager();
 
-		DtoDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
 		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 
@@ -567,7 +566,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	public void testAddServiceWithDuplicates() throws Exception {
 		newEntityManager();
 
-		DtoDomain domain = mySvc.addDomain("domain_id4", "domain_name");
+		DtoDomain domain = mySvc.unitTestMethod_addDomain("domain_id4", "domain_name");
 		newEntityManager();
 
 		mySvc.addService(domain.getPid(), "svc_id2", "svc_name", true);
@@ -598,7 +597,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	public void testDeleteServiceVersion() throws Exception {
 		newEntityManager();
 
-		DtoDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
 		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 
@@ -811,7 +810,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		DtoDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
 		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 		myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
@@ -883,7 +882,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		DtoDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
 		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 
@@ -931,7 +930,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		DtoDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
 		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 
@@ -997,7 +996,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		DtoDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
 		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpServer");
 		PersAuthenticationHostLocalDatabase auth = myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
@@ -1067,7 +1066,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		DtoDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
 		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpServer");
 		myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
@@ -1101,7 +1100,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		DtoDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
 		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 
@@ -1320,7 +1319,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	public void testRenameServiceVersion() throws Exception {
 		newEntityManager();
 
-		DtoDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
 		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 
@@ -1381,7 +1380,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		DtoDomain d1 = mySvc.addDomain("asv_did", "asv_did");
+		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
 
 		newEntityManager();
 
@@ -1488,8 +1487,8 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 	public void testSaveUser() throws Exception {
 		newEntityManager();
 
-		DtoDomain d1 = mySvc.addDomain("asv_did1", "asv_did1");
-		DtoDomain d2 = mySvc.addDomain("asv_did2", "asv_did2");
+		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did1", "asv_did1");
+		DtoDomain d2 = mySvc.unitTestMethod_addDomain("asv_did2", "asv_did2");
 
 		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
 		GService d2s1 = mySvc.addService(d2.getPid(), "d2s1", "d2s1", true);

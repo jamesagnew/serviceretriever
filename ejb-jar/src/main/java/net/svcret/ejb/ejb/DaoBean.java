@@ -888,7 +888,7 @@ public class DaoBean implements IDao {
 			statusesBean.getServiceVersionPidToStatus().put(next.getServiceVersionPid(), next);
 		}
 
-		List<PersMonitorRuleFiring> activeRuleFailures = loadMonitorRuleFiringsWhichAreActive();
+		List<PersMonitorRuleFiring> activeRuleFailures = getAllMonitorRuleFiringsWhichAreActive();
 		for (PersMonitorRuleFiring next : activeRuleFailures) {
 			statusesBean.addActiveRuleFiring(next);
 		}
@@ -913,8 +913,10 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	public List<PersMonitorRuleFiring> loadMonitorRuleFiringsWhichAreActive() {
-		List<PersMonitorRuleFiring> activeRuleFailures = myEntityManager.createNamedQuery(Queries.RULEFIRING_FINDACTIVE, PersMonitorRuleFiring.class).getResultList();
+	public List<PersMonitorRuleFiring> getAllMonitorRuleFiringsWhichAreActive() {
+		TypedQuery<PersMonitorRuleFiring> q = myEntityManager.createNamedQuery(Queries.RULEFIRING_FINDACTIVE, PersMonitorRuleFiring.class);
+		q.setParameter("NULLDATE", PersMonitorRuleFiring.NULL_DATE);
+		List<PersMonitorRuleFiring> activeRuleFailures = q.getResultList();
 		return activeRuleFailures;
 	}
 

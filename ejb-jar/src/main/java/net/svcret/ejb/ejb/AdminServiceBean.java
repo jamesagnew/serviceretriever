@@ -43,7 +43,6 @@ import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
-import net.svcret.admin.shared.model.GMonitorRuleFiringProblem;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GMonitorRulePassive;
 import net.svcret.admin.shared.model.GNamedParameterJsonRpcServerAuth;
@@ -76,7 +75,6 @@ import net.svcret.ejb.api.IAdminServiceLocal;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IKeystoreService;
-import net.svcret.ejb.api.IMonitorService;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.IScheduler;
@@ -87,6 +85,8 @@ import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.StatusesBean;
 import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
+import net.svcret.ejb.ejb.monitor.IMonitorService;
+import net.svcret.ejb.ejb.monitor.MonitorServiceBean;
 import net.svcret.ejb.ejb.nodecomm.ISynchronousNodeIpcClient;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
@@ -114,9 +114,7 @@ import net.svcret.ejb.model.entity.PersLibraryMessageAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorRuleActive;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
-import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheckOutcome;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
-import net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem;
 import net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact;
 import net.svcret.ejb.model.entity.PersMonitorRulePassive;
 import net.svcret.ejb.model.entity.PersNodeStatus;
@@ -213,7 +211,8 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	/**
 	 * Convenience for Unit Tests
 	 */
-	DtoDomain addDomain(String theId, String theName) throws ProcessingException, UnexpectedFailureException {
+	@VisibleForTesting
+	public DtoDomain unitTestMethod_addDomain(String theId, String theName) throws ProcessingException, UnexpectedFailureException {
 		DtoDomain domain = new DtoDomain();
 		domain.setId(theId);
 		domain.setName(theName);
@@ -373,10 +372,13 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 
 		PersMonitorRuleActiveCheck check = PersMonitorRuleActiveCheck.fromDto(theCheck, rule, myDao);
-		List<PersMonitorRuleActiveCheckOutcome> outcome = myMonitorSvc.runActiveCheckInCurrentTransaction(check, theCheck.getPidOrNull() != null);
+		try {
+			myMonitorSvc.runActiveCheck(check, theCheck.getPidOrNull() != null);
+		} catch (UnexpectedFailureException e) {
+			throw new ProcessingException(e);
+		}
 
-		check.getRecentOutcomes().clear();
-		check.getRecentOutcomes().addAll(outcome);
+		// TODO: add most recent outcome so that it actually shows up in the UI
 
 		return check.toDto(true);
 	}
@@ -573,6 +575,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		retVal.setDomainName(theDomain.getName());
 		retVal.populateKeepRecentTransactionsFromDto(theDomain);
 		retVal.populateServiceCatalogItemFromDto(theDomain);
+		retVal.setDescription(theDomain.getDescription());
 		return retVal;
 	}
 
@@ -591,6 +594,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		retVal.setActive(theService.isActive());
 		retVal.setServiceId(theService.getId());
 		retVal.setServiceName(theService.getName());
+		retVal.setDescription(theService.getDescription());
 		retVal.populateKeepRecentTransactionsFromDto(theService);
 		retVal.populateServiceCatalogItemFromDto(theService);
 		return retVal;
@@ -798,9 +802,9 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	@Override
 	public Collection<GMonitorRuleFiring> loadAllActiveRuleFirings() {
 		Collection<GMonitorRuleFiring> retVal = new ArrayList<GMonitorRuleFiring>();
-		List<PersMonitorRuleFiring> firings = myDao.loadMonitorRuleFiringsWhichAreActive();
+		List<PersMonitorRuleFiring> firings = myDao.getAllMonitorRuleFiringsWhichAreActive();
 		for (PersMonitorRuleFiring nextFiring : firings) {
-			retVal.add(toUi(nextFiring));
+			retVal.add(nextFiring.toDto());
 		}
 		return retVal;
 	}
@@ -942,7 +946,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		List<GMonitorRuleFiring> retVal = new ArrayList<GMonitorRuleFiring>();
 		List<PersMonitorRuleFiring> firings = myDao.loadMonitorRuleFirings(allSvcVers, theStart);
 		for (PersMonitorRuleFiring next : firings) {
-			retVal.add(toUi(next));
+			retVal.add(next.toDto());
 		}
 
 		// Set<Long> svcVerPids = new HashSet<Long>();
@@ -1492,7 +1496,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 				existingVersion.addMethod(fromUi(next, existingVersion.getPid()));
 			}
 		}
-		existingVersion.retainOnlyMethodsWithNames(methods);
+		existingVersion.retainOnlyMethodsWithNamesAndUnknownMethod(methods);
 		index = 0;
 		for (PersServiceVersionMethod next : existingVersion.getMethods()) {
 			next.setOrder(index++);
@@ -1583,29 +1587,32 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	/**
 	 * Unit test only
 	 */
-	void setConfigSvc(IConfigService theConfigSvc) {
+	@VisibleForTesting
+	public void setConfigSvc(IConfigService theConfigSvc) {
 		myConfigSvc = theConfigSvc;
 	}
 
 	/**
 	 * Unit test only
 	 */
-	void setInvokerSoap11(IServiceInvokerSoap11 theInvokerSoap11) {
+	@VisibleForTesting
+	public void setInvokerSoap11(IServiceInvokerSoap11 theInvokerSoap11) {
 		myInvokerSoap11 = theInvokerSoap11;
 	}
 
 	@VisibleForTesting
-	void setMonitorSvc(MonitorServiceBean theMonitorSvc) {
+	public void setMonitorSvc(MonitorServiceBean theMonitorSvc) {
 		myMonitorSvc = theMonitorSvc;
 	}
 
-	void setPersSvc(DaoBean thePersSvc) {
+	@VisibleForTesting
+	public void setPersSvc(DaoBean thePersSvc) {
 		assert myDao == null;
 		myDao = thePersSvc;
 	}
 
 	@VisibleForTesting
-	void setRuntimeStatusQuerySvcForUnitTests(IRuntimeStatusQueryLocal theStatsQSvc) {
+	public void setRuntimeStatusQuerySvcForUnitTests(IRuntimeStatusQueryLocal theStatsQSvc) {
 		myRuntimeStatusQuerySvc = theStatsQSvc;
 	}
 
@@ -1613,26 +1620,26 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	 * FOR UNIT TESTS ONLY
 	 */
 	@VisibleForTesting
-	void setRuntimeStatusSvc(RuntimeStatusBean theRs) {
+	public void setRuntimeStatusSvc(RuntimeStatusBean theRs) {
 		myStatusSvc = theRs;
 	}
 
 	@VisibleForTesting
-	void setSchedulerServiceForTesting(IScheduler theMock) {
+	public void setSchedulerServiceForTesting(IScheduler theMock) {
 		myScheduler = theMock;
 	}
 
 	/**
 	 * FOR UNIT TESTS ONLY
 	 */
-	void setSecuritySvc(SecurityServiceBean theSecSvc) {
+	public void setSecuritySvc(SecurityServiceBean theSecSvc) {
 		mySecurityService = theSecSvc;
 	}
 
 	/**
 	 * FOR UNIT TESTS ONLY
 	 */
-	void setServiceRegistry(ServiceRegistryBean theSvcReg) {
+	public void setServiceRegistry(ServiceRegistryBean theSvcReg) {
 		myServiceRegistry = theSvcReg;
 	}
 
@@ -1670,12 +1677,17 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		request.setRequestType(RequestType.POST);
 
 		GServiceVersionSingleFireResponse retVal = new GServiceVersionSingleFireResponse();
+		retVal.setDomainName(svcVer.getService().getDomain().getDomainName());
+		retVal.setDomainPid(svcVer.getService().getDomain().getPid());
+		retVal.setServiceName(svcVer.getService().getServiceName());
+		retVal.setServicePid(svcVer.getService().getPid());
+		retVal.setServiceVersionPid(svcVer.getPid());
+		retVal.setServiceVersionId(svcVer.getVersionId());
+
 		try {
 			SidechannelOrchestratorResponseBean response = myOrchestrator.handleSidechannelRequest(thePid, theMessageText, theContentType, theRequestedByString);
 
 			retVal.setAuthorizationOutcome(AuthorizationOutcomeEnum.AUTHORIZED);
-			retVal.setDomainName(svcVer.getService().getDomain().getDomainName());
-			retVal.setDomainPid(svcVer.getService().getDomain().getPid());
 			if (response.getHttpResponse().getSuccessfulUrl() != null) {
 				retVal.setImplementationUrlHref(response.getHttpResponse().getSuccessfulUrl().getUrl());
 				retVal.setImplementationUrlId(response.getHttpResponse().getSuccessfulUrl().getUrlId());
@@ -1692,10 +1704,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			retVal.setResponseContentType(response.getResponseContentType());
 			retVal.setResponseHeaders(response.getHttpResponse().getResponseHeadersAsPairList());
 			retVal.setResponseMessage(response.getResponseBody());
-			retVal.setServiceName(svcVer.getService().getServiceName());
-			retVal.setServicePid(svcVer.getService().getPid());
-			retVal.setServiceVersionId(svcVer.getVersionId());
-			retVal.setServiceVersionPid(svcVer.getPid());
 			retVal.setTransactionMillis(response.getHttpResponse().getResponseTime());
 			retVal.setTransactionTime(transactionTime);
 
@@ -1823,41 +1831,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private GMonitorRuleFiring toUi(PersMonitorRuleFiring theNext) {
-		GMonitorRuleFiring retVal = new GMonitorRuleFiring();
-		retVal.setPid(theNext.getPid());
-		retVal.setStartDate(theNext.getStartDate());
-		retVal.setEndDate(theNext.getEndDate());
-		retVal.setRulePid(theNext.getRule().getPid());
-
-		for (PersMonitorRuleFiringProblem next : theNext.getProblems()) {
-			retVal.getProblems().add(toUi(next));
-		}
-
-		return retVal;
-	}
-
-	private GMonitorRuleFiringProblem toUi(PersMonitorRuleFiringProblem theNext) {
-		GMonitorRuleFiringProblem retVal = new GMonitorRuleFiringProblem();
-		retVal.setPid(theNext.getPid());
-		retVal.setServiceVersionPid(theNext.getServiceVersion().getPid());
-
-		if (theNext.getUrl() != null) {
-			retVal.setUrlPid(theNext.getUrl().getPid());
-		}
-
-		if (theNext.getFailedUrlMessage() != null) {
-			retVal.setFailedUrlMessage(theNext.getFailedUrlMessage());
-		}
-
-		if (theNext.getLatencyAverageMillisPerCall() != null) {
-			retVal.setFailedLatencyAverageMillisPerCall(theNext.getLatencyAverageMillisPerCall());
-			retVal.setFailedLatencyAverageOverMinutes(theNext.getLatencyAverageOverMinutes());
-			retVal.setFailedLatencyThreshold(theNext.getLatencyThreshold());
-		}
-
-		return retVal;
-	}
 
 	private GUser toUi(PersUser thePersUser, boolean theLoadStats) throws UnexpectedFailureException {
 		GUser retVal = new GUser();

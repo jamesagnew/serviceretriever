@@ -70,6 +70,7 @@ public class ServiceInvokerHl7OverHttpTest {
 		assertSame(method, result.getMethodDefinition());
 	}
 
+	
 	@Test
 	public void testResponse() throws Exception {
 		

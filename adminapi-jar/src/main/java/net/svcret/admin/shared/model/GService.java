@@ -29,6 +29,8 @@ public class GService extends BaseDtoServiceCatalogItem {
 	
 	private transient Set<Long> myServiceVersionPids = new HashSet<Long>();
 
+	private String myDescription;
+
 	public GServiceVersionList getVersionList() {
 		return myVersionList;
 	}
@@ -104,6 +106,14 @@ public class GService extends BaseDtoServiceCatalogItem {
 
 	public void removeVersionList() {
 		myVersionList=null;
+	}
+
+	public void setDescription(String theDescription) {
+		myDescription=theDescription;
+	}
+
+	public String getDescription() {
+		return myDescription;
 	}
 
 }

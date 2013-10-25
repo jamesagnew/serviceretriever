@@ -9,6 +9,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import net.svcret.admin.shared.model.GMonitorRuleFiringProblem;
+
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import com.google.common.base.Objects;
@@ -245,5 +247,28 @@ public class PersMonitorRuleFiringProblem extends BasePersObject {
 		retVal.setFailedUrlMessage(theMessage);
 		return retVal;
 	}
+	
+	public GMonitorRuleFiringProblem toDto() {
+		GMonitorRuleFiringProblem retVal = new GMonitorRuleFiringProblem();
+		retVal.setPid(this.getPid());
+		retVal.setServiceVersionPid(this.getServiceVersion().getPid());
+
+		if (this.getUrl() != null) {
+			retVal.setUrlPid(this.getUrl().getPid());
+		}
+
+		if (this.getFailedUrlMessage() != null) {
+			retVal.setFailedUrlMessage(this.getFailedUrlMessage());
+		}
+
+		if (this.getLatencyAverageMillisPerCall() != null) {
+			retVal.setFailedLatencyAverageMillisPerCall(this.getLatencyAverageMillisPerCall());
+			retVal.setFailedLatencyAverageOverMinutes(this.getLatencyAverageOverMinutes());
+			retVal.setFailedLatencyThreshold(this.getLatencyThreshold());
+		}
+
+		return retVal;
+	}
+
 
 }

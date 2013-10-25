@@ -75,19 +75,19 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		retVal.setStyleName("urlStatusSummaryPanel");
 
 		boolean found = false;
-		if (theObj.getUrlsActive() > 0) {
+		if (theObj.getUrlsActive() != null && theObj.getUrlsActive() > 0) {
 			retVal.add(new Label("" + theObj.getUrlsActive()));
 			retVal.add(new Image("images/icon_check_16.png"));
 			found = true;
 		}
 
-		if (theObj.getUrlsUnknown() > 0) {
+		if (theObj.getUrlsUnknown()!=null&&theObj.getUrlsUnknown() > 0) {
 			retVal.add(new Label("" + theObj.getUrlsUnknown()));
 			retVal.add(new Image("images/icon_unknown_16.png"));
 			found = true;
 		}
 
-		if (theObj.getUrlsDown() > 0) {
+		if (theObj.getUrlsDown()!=null&&theObj.getUrlsDown() > 0) {
 			retVal.add(new Label("" + theObj.getUrlsDown()));
 			retVal.add(new Image("images/icon_warn_16.png"));
 			found = true;
@@ -146,7 +146,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 
 		// Edit Service Version
 		
-		Button editServiceVersion = new ActionPButton(AdminPortal.IMAGES.iconEdit(), "Edit");
+		Button editServiceVersion = new ActionPButton(AdminPortal.IMAGES.iconEdit(), MSGS.actions_openEdit());
 		editServiceVersion.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {

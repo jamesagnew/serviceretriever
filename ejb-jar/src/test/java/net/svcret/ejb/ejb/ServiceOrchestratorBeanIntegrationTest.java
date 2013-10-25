@@ -25,7 +25,6 @@ import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
-import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IResponseValidator;
@@ -37,6 +36,8 @@ import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
 import net.svcret.ejb.ejb.log.FilesystemAuditLoggerBean;
 import net.svcret.ejb.ejb.log.ITransactionLogger;
 import net.svcret.ejb.ejb.log.TransactionLoggerBean;
+import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
+import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.invoker.hl7.ServiceInvokerHl7OverHttp;
@@ -73,9 +74,9 @@ import org.mockito.internal.stubbing.defaultanswers.ReturnsDeepStubs;
 
 import ca.uhn.hl7v2.parser.PipeParser;
 
-public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
+public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 
-	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceOrchestratorTestIntegrationTest.class);
+	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceOrchestratorBeanIntegrationTest.class);
 	private IBroadcastSender myBroadcastSender;
 	private IConfigService myConfigService;
 	private DaoBean myDao;
@@ -258,7 +259,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		}
 
 		// Try again with credentials
-		
+
 		req.setInputReader(new StringReader(request));
 		req.getRequestHeaders().put("AUTHorization", Collections.singletonList("Basic dGVzdDphZG1pbg=="));
 		mySvc.handleServiceRequest(req);
@@ -370,11 +371,10 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
 		for (BasePersStats<?, ?> next : values) {
 			if (next instanceof PersInvocationMethodSvcverStats) {
-				 PersInvocationMethodSvcverStats nextStats = (PersInvocationMethodSvcverStats) next;
-				 assertEquals(1, nextStats.getSuccessInvocationCount());
+				PersInvocationMethodSvcverStats nextStats = (PersInvocationMethodSvcverStats) next;
+				assertEquals(1, nextStats.getSuccessInvocationCount());
 			}
 		}
-
 
 	}
 
@@ -442,7 +442,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		try {
 			resp = mySvc.handleServiceRequest(req);
 			fail();
-		} catch (ProcessingException e) {
+		} catch (InvocationRequestFailedException e) {
 			ourLog.info("Message: " + e.getMessage());
 			assertThat(e.getMessage(), IsNot.not(IsEmptyString.isEmptyOrNullString()));
 		}
@@ -460,6 +460,17 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		ourLog.info("Journal file: {}", entireLog);
 
 		assertThat(entireLog, StringContains.containsString("</soapenv:Envelope>"));
+
+		// Make sure we keep stats
+		myRuntimeStatus.flushStatus();
+		newEntityManager();
+		
+		myServiceRegistry.reloadRegistryFromDatabase();
+		
+		newEntityManager();
+		mySvcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
+		StatsAccumulator stats = myRuntimeQuerySvc.extract60MinuteStats(mySvcVer);
+		assertEquals(stats.getFailCounts().toString(), 1, stats.getFailCounts().get(stats.getFailCounts().size() - 1).intValue());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -562,10 +573,12 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		assertEquals(1, recentMessages.size());
 		assertThat(recentMessages.get(0).getFailDescription(), StringContains.containsString("All service URLs appear to be failing"));
 		assertThat(recentMessages.get(0).getFailDescription(), StringContains.containsString("This is the failure explanation"));
+		assertThat(recentMessages.get(0).getResponseBody(), StringContains.containsString("This is the failure body"));
 
 		verify(myHttpClient, times(1)).post(any(PersHttpClientConfig.class), any(IResponseValidator.class), any(UrlPoolBean.class), any(String.class), any(Map.class), any(String.class));
 
-		FileReader fr = new FileReader(getSvcVerFileName());
+		String svcVerFileName = getSvcVerFileName();
+		FileReader fr = new FileReader(svcVerFileName);
 		String entireLog = org.apache.commons.io.IOUtils.toString(fr);
 		ourLog.info("Journal file: {}", entireLog);
 
@@ -989,7 +1002,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 	}
 
 	public static void main(String[] args) throws Exception {
-		new ServiceOrchestratorTestIntegrationTest().testSoap11GoodRequest();
+		new ServiceOrchestratorBeanIntegrationTest().testSoap11GoodRequest();
 	}
 
 }

@@ -17,6 +17,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -66,6 +67,18 @@ public class PersService extends BasePersServiceCatalogItem {
 	@Version()
 	@Column(name = "OPTLOCK")
 	private int myOptLock;
+
+	@Lob
+	@Column(name = "SVC_DESC", nullable = true)
+	private String myDescription;
+
+	public String getDescription() {
+		return myDescription;
+	}
+
+	public void setDescription(String theDescription) {
+		myDescription = theDescription;
+	}
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -186,16 +199,6 @@ public class PersService extends BasePersServiceCatalogItem {
 		}
 
 		return Objects.equal(myPid, obj.myPid);
-	}
-
-	@Override
-	public Set<PersMonitorRuleFiring> getActiveRuleFiringsWhichMightApply() {
-		Set<PersMonitorRuleFiring> retVal = new HashSet<PersMonitorRuleFiring>();
-		if (getMostRecentMonitorRuleFiring() != null && getMostRecentMonitorRuleFiring().getEndDate() == null) {
-			retVal.add(getMostRecentMonitorRuleFiring());
-		}
-		retVal.addAll(myDomain.getActiveRuleFiringsWhichMightApply());
-		return retVal;
 	}
 
 	public Collection<PersServiceVersionMethod> getAllServiceVersionMethods() {
@@ -424,6 +427,7 @@ public class PersService extends BasePersServiceCatalogItem {
 		retVal.setName(this.getServiceName());
 		retVal.setActive(this.isActive());
 		retVal.setServerSecured(this.getServerSecured());
+		retVal.setDescription(this.getDescription());
 
 		this.populateKeepRecentTransactionsToDto(retVal);
 		this.populateServiceCatalogItemToDto(retVal);

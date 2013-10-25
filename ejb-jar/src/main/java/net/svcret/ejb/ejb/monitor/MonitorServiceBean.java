@@ -1,4 +1,4 @@
-package net.svcret.ejb.ejb;
+package net.svcret.ejb.ejb.monitor;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -22,24 +22,20 @@ import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.Messages;
 import net.svcret.ejb.api.HttpResponseBean.Failure;
-import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
-import net.svcret.ejb.api.IMonitorNotifier;
-import net.svcret.ejb.api.IMonitorService;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
-import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.ejb.ejb.RuntimeStatusBean;
+import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
-import net.svcret.ejb.model.entity.BasePersServiceCatalogItem;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
-import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorRuleActive;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheckOutcome;
@@ -68,7 +64,7 @@ public class MonitorServiceBean implements IMonitorService {
 
 	@EJB
 	private IConfigService myConfigSvc;
-	
+
 	@EJB
 	private IRuntimeStatusQueryLocal myRuntimeStatusQuery;
 
@@ -92,6 +88,15 @@ public class MonitorServiceBean implements IMonitorService {
 	public void runActiveChecks() {
 
 		Collection<PersMonitorRuleActiveCheck> activeChecks = myDao.getAllMonitorRuleActiveChecks();
+		ourLog.trace("About to execute {} monitor active checks");
+
+		/*
+		 * How this works: First we execute all active checks, which are essentially firing sample messages at services and seeing what happens..
+		 * 
+		 * Then, once they are all done, we loop through the rules and see which ones generated alerts
+		 */
+
+		List<PersMonitorRuleFiring> firings = new ArrayList<PersMonitorRuleFiring>();
 		for (PersMonitorRuleActiveCheck nextCheck : activeChecks) {
 			if (nextCheck.getRule().isRuleActive() == false) {
 				continue;
@@ -112,27 +117,101 @@ public class MonitorServiceBean implements IMonitorService {
 
 			if (rateLimiter.tryAcquire()) {
 				nextCheck.loadMessageAndRule();
-				ourLog.debug("Queuing active rule {} check {} for execution", nextCheck.getRule().getPid(), nextCheck.getPid());
-				myThis.runActiveCheck(nextCheck);
+				ourLog.debug("Executing active rule {} check {}", nextCheck.getRule().getPid(), nextCheck.getPid());
+				PersMonitorRuleFiring firing = runActiveCheck(nextCheck, true);
+				firings.add(firing);
 			} else {
 				ourLog.trace("Rule active check {} is not yet scheduled to fire", nextCheck.getPid());
 			}
 
 		}
 
+		ourLog.debug("Checking active rules for any state changes");
+		Collection<BasePersMonitorRule> rules = myDao.getMonitorRules();
+		for (BasePersMonitorRule nextRule : rules) {
+			if (!(nextRule instanceof PersMonitorRuleActive)) {
+				continue;
+			}
+			PersMonitorRuleActive rule = (PersMonitorRuleActive) nextRule;
+
+			ourLog.debug("Checking monitor rule: {}", rule);
+
+			if (rule.isRuleActive() == false) {
+				continue;
+			}
+
+			List<PersMonitorRuleFiring> activeFirings = myDao.getAllMonitorRuleFiringsWhichAreActive();
+			PersMonitorRuleFiring ruleCurrentFiring = null;
+			for (PersMonitorRuleFiring next : activeFirings) {
+				if (next.getRule().equals(nextRule)) {
+					ruleCurrentFiring = next;
+					break;
+				}
+			}
+
+			boolean failed = true;
+			for (PersMonitorRuleActiveCheck nextActiveCheck : rule.getActiveChecks()) {
+				List<PersMonitorRuleActiveCheckOutcome> recentOutcomes = nextActiveCheck.getRecentOutcomes();
+				if (recentOutcomes.isEmpty()) {
+					failed = false;
+				} else if (recentOutcomes.get(recentOutcomes.size() - 1).getFailed() != Boolean.TRUE) {
+					failed = false;
+				}
+			}
+
+			if (ruleCurrentFiring != null && !failed) {
+				ourLog.info("Rule {} firing {} appears to now be over, closing it", rule.getPid(), ruleCurrentFiring.getPid());
+				ruleCurrentFiring.setEndDate(new Date());
+				myDao.saveMonitorRuleFiring(ruleCurrentFiring);
+			} else if (ruleCurrentFiring == null && failed) {
+				PersMonitorRuleFiring firing = null;
+				for (PersMonitorRuleFiring next : firings) {
+					if (next.getRule().equals(rule)) {
+						if (firing == null) {
+							firing = next;
+						} else {
+							firing.getProblems().addAll(next.getProblems());
+						}
+					}
+				}
+
+				if (firing != null && firing.getProblems().size() > 0) {
+					firing = myDao.saveMonitorRuleFiring(firing);
+				}
+			}
+
+			//
+			// PersMonitorRuleFiring firing = evaluateRuleForPassiveIssues(rule);
+			// ourLog.debug("Checking firing produced result: {}", firing);
+			//
+			// for (PersMonitorAppliesTo nextAppliesTo : rule.getAppliesTo()) {
+			// BasePersServiceCatalogItem item = nextAppliesTo.getItem();
+			// PersMonitorRuleFiring mostRecentFiring = item.getMostRecentMonitorRuleFiring();
+			//
+			// if (mostRecentFiring == null || mostRecentFiring.getEndDate() != null) {
+			// if (firing != null) {
+			// firing = myDao.saveMonitorRuleFiring(firing);
+			// item.setMostRecentMonitorRuleFiring(firing);
+			// item = myDao.saveServiceCatalogItem(item);
+			// }
+			// } else if (mostRecentFiring.getEndDate() == null) {
+			// if (mostRecentFiring.getRule().equals(rule)) {
+			// if (firing == null) {
+			// mostRecentFiring.setEndDate(new Date());
+			// myDao.saveMonitorRuleFiring(mostRecentFiring);
+			// }
+			// }
+			// }
+			//
+			// }
+
+		} // for active checks
+
 	}
 
 	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void runActiveCheckInNewTransaction(PersMonitorRuleActiveCheck theCheck) {
-		runActiveCheckInCurrentTransaction(theCheck, true);
-	}
-
-	@Override
-	public List<PersMonitorRuleActiveCheckOutcome> runActiveCheckInCurrentTransaction(PersMonitorRuleActiveCheck theCheck, boolean thePersistResults) {
+	public PersMonitorRuleFiring runActiveCheck(PersMonitorRuleActiveCheck theCheck, boolean thePersistResults) {
 		ourLog.debug("Beginning active check pass for check {}", theCheck.getPid());
-
-		List<PersMonitorRuleActiveCheckOutcome> retVal = new ArrayList<PersMonitorRuleActiveCheckOutcome>();
 
 		long svcVerPid = theCheck.getServiceVersion().getPid();
 		String requestBody = theCheck.getMessage().getMessageBody();
@@ -142,15 +221,15 @@ public class MonitorServiceBean implements IMonitorService {
 		try {
 
 			ourLog.debug("Active check going to invoke each URL for {}", svcVerPid);
-			Collection<SidechannelOrchestratorResponseBean> outcomes = myServiceOrchestrator.handleSidechannelRequestForEachUrl(svcVerPid, requestBody, contentType, requestedByString);
+			Collection<SidechannelOrchestratorResponseBean> urlResponses = myServiceOrchestrator.handleSidechannelRequestForEachUrl(svcVerPid, requestBody, contentType, requestedByString);
 
-			outcome = evaluateRuleForActiveIssues(theCheck, outcomes);
-			ourLog.debug("Active check got {} outcomes. Problem: {}", outcomes.size(), outcome);
+			outcome = evaluateRuleForActiveIssues(theCheck, urlResponses);
+			ourLog.debug("Active check got URL reponses: {} -- Outcome: {}", urlResponses, outcome);
 
 			/*
 			 * Save the outcome with the check
 			 */
-			for (SidechannelOrchestratorResponseBean nextOutcome : outcomes) {
+			for (SidechannelOrchestratorResponseBean nextOutcome : urlResponses) {
 				PersMonitorRuleActiveCheckOutcome recentOutcome = new PersMonitorRuleActiveCheckOutcome();
 				recentOutcome.setCheck(theCheck);
 				recentOutcome.setImplementationUrl(nextOutcome.getApplicableUrl());
@@ -162,13 +241,10 @@ public class MonitorServiceBean implements IMonitorService {
 					recentOutcome.setTransactionMillis(nextOutcome.getHttpResponse().getResponseTime());
 				}
 				recentOutcome.setTransactionTime(nextOutcome.getRequestStartedTime());
-				retVal.add(recentOutcome);
 
-				if (outcome != null) {
-					for (PersMonitorRuleFiringProblem next : outcome.getProblems()) {
-						if (next.getUrl() == null || next.getUrl().equals(recentOutcome.getImplementationUrl())) {
-							recentOutcome.setFailed(true);
-						}
+				for (PersMonitorRuleFiringProblem next : outcome.getProblems()) {
+					if (next.getUrl() == null || next.getUrl().equals(recentOutcome.getImplementationUrl())) {
+						recentOutcome.setFailed(true);
 					}
 				}
 
@@ -200,78 +276,75 @@ public class MonitorServiceBean implements IMonitorService {
 			outcome = toFiring(theCheck.getRule(), problems);
 		}
 
-		if (!thePersistResults) {
-			return retVal;
-		}
+		return outcome;
 
-		/*
-		 * Check if this outcome either causes a new firing for its target, or cancels out a currently active one
-		 */
-		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theCheck.getServiceVersion().getPid());
-		PersMonitorRuleFiring currentFiring = svcVer.getMostRecentMonitorRuleFiring();
-		if (outcome != null) {
-			if (currentFiring == null || currentFiring.getEndDate() != null) {
-				/*
-				 * We have a new failure
-				 */
-				outcome = myDao.saveMonitorRuleFiring(outcome);
-				svcVer.setMostRecentMonitorRuleFiring(outcome);
-				myDao.saveServiceCatalogItem(svcVer);
+		// /*
+		// * Check if this outcome either causes a new firing for its target, or cancels out a currently active one
+		// */
+		// BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theCheck.getServiceVersion().getPid());
+		// PersMonitorRuleFiring currentFiring = svcVer.getMostRecentMonitorRuleFiring();
+		// if (outcome != null) {
+		// if (currentFiring == null || currentFiring.getEndDate() != null) {
+		// /*
+		// * We have a new failure
+		// */
+		// outcome = myDao.saveMonitorRuleFiring(outcome);
+		// svcVer.setMostRecentMonitorRuleFiring(outcome);
+		// myDao.saveServiceCatalogItem(svcVer);
+		//
+		// if (ourLog.isInfoEnabled()) {
+		// StringBuilder b = new StringBuilder();
+		// b.append("Saving active check failure ");
+		// b.append(outcome.getPid());
+		// b.append(" for rule ");
+		// b.append(theCheck.getRule().getPid());
+		// b.append(" which applies to service version ");
+		// b.append(svcVer.getPid());
+		// b.append(" which currently has {}");
+		// if (currentFiring == null) {
+		// b.append("no firing");
+		// } else {
+		// b.append("finished firing ");
+		// b.append(currentFiring.getPid());
+		// }
+		// ourLog.info(b.toString());
+		// }
+		//
+		// // notify listeners
+		// try {
+		// myMonitorNotifier.notifyFailingRule(outcome);
+		// } catch (ProcessingException e) {
+		// ourLog.error("Failed to notify listeners", e);
+		// }
+		//
+		// } else {
+		// ourLog.info("Active monitor check {} is failing, but not going to save it because service version {} already has a faling rule", theCheck.getPid(), svcVer.getPid());
+		// }
+		// } else {
+		// if (currentFiring != null && currentFiring.getEndDate() == null) {
+		// /*
+		// * Check didn't fail, but the service version it applies to has a current rule failure, so let's see if the current pass will cancel out that failure
+		// */
+		// if (currentFiring.getRule().equals(theCheck.getRule())) {
+		// boolean applies = false;
+		// for (PersMonitorRuleFiringProblem nextProblem : currentFiring.getProblems()) {
+		// if (theCheck.equals(nextProblem.getActiveCheck())) {
+		// applies = true;
+		// }
+		// }
+		//
+		// if (applies) {
+		// ourLog.info("Ending monitor failure {} because active check passed", currentFiring.getPid());
+		// currentFiring.setEndDate(new Date());
+		//
+		// currentFiring = myDao.saveMonitorRuleFiring(currentFiring);
+		// svcVer.setMostRecentMonitorRuleFiring(currentFiring);
+		// myDao.saveServiceCatalogItem(svcVer);
+		// }
+		// }
+		// }
+		// }
 
-				if (ourLog.isInfoEnabled()) {
-					StringBuilder b = new StringBuilder();
-					b.append("Saving active check failure ");
-					b.append(outcome.getPid());
-					b.append(" for rule ");
-					b.append(theCheck.getRule().getPid());
-					b.append(" which applies to service version ");
-					b.append(svcVer.getPid());
-					b.append(" which currently has {}");
-					if (currentFiring == null) {
-						b.append("no firing");
-					} else {
-						b.append("finished firing ");
-						b.append(currentFiring.getPid());
-					}
-					ourLog.info(b.toString());
-				}
-
-				// notify listeners
-				try {
-					myMonitorNotifier.notifyFailingRule(outcome);
-				} catch (ProcessingException e) {
-					ourLog.error("Failed to notify listeners", e);
-				}
-
-			} else {
-				ourLog.info("Active monitor check {} is failing, but not going to save it because service version {} already has a faling rule", theCheck.getPid(), svcVer.getPid());
-			}
-		} else {
-			if (currentFiring != null && currentFiring.getEndDate() == null) {
-				/*
-				 * Check didn't fail, but the service version it applies to has a current rule failure, so let's see if the current pass will cancel out that failure
-				 */
-				if (currentFiring.getRule().equals(theCheck.getRule())) {
-					boolean applies = false;
-					for (PersMonitorRuleFiringProblem nextProblem : currentFiring.getProblems()) {
-						if (theCheck.equals(nextProblem.getActiveCheck())) {
-							applies = true;
-						}
-					}
-
-					if (applies) {
-						ourLog.info("Ending monitor failure {} because active check passed", currentFiring.getPid());
-						currentFiring.setEndDate(new Date());
-
-						currentFiring = myDao.saveMonitorRuleFiring(currentFiring);
-						svcVer.setMostRecentMonitorRuleFiring(currentFiring);
-						myDao.saveServiceCatalogItem(svcVer);
-					}
-				}
-			}
-		}
-
-		return retVal;
 	}
 
 	private PersMonitorRuleFiring evaluateRuleForActiveIssues(PersMonitorRuleActiveCheck theCheck, Collection<SidechannelOrchestratorResponseBean> theOutcomes) {
@@ -324,13 +397,8 @@ public class MonitorServiceBean implements IMonitorService {
 	}
 
 	@Override
-	public void runActiveCheck(PersMonitorRuleActiveCheck theCheck) {
-		myThis.runActiveCheckInNewTransaction(theCheck);
-	}
-
-	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void check() {
+	public void runPassiveChecks() {
 		ourLog.debug("Beginning monitor checking pass");
 
 		Collection<BasePersMonitorRule> rules = myDao.getMonitorRules();
@@ -349,33 +417,28 @@ public class MonitorServiceBean implements IMonitorService {
 			PersMonitorRuleFiring firing = evaluateRuleForPassiveIssues(rule);
 			ourLog.debug("Checking firing produced result: {}", firing);
 
-			for (PersMonitorAppliesTo nextAppliesTo : rule.getAppliesTo()) {
-				BasePersServiceCatalogItem item = nextAppliesTo.getItem();
-				PersMonitorRuleFiring mostRecentFiring = item.getMostRecentMonitorRuleFiring();
-
-				if (mostRecentFiring == null || mostRecentFiring.getEndDate() != null) {
-					if (firing != null) {
-						firing = myDao.saveMonitorRuleFiring(firing);
-						item.setMostRecentMonitorRuleFiring(firing);
-						item = myDao.saveServiceCatalogItem(item);
-					}
-				} else if (mostRecentFiring.getEndDate() == null) {
-					if (mostRecentFiring.getRule().equals(rule)) {
-						if (firing == null) {
-							mostRecentFiring.setEndDate(new Date());
-							myDao.saveMonitorRuleFiring(mostRecentFiring);
-						}
+			List<PersMonitorRuleFiring> activeFirings = myDao.getAllMonitorRuleFiringsWhichAreActive();
+			boolean haveActiveFiringForRule = false;
+			for (PersMonitorRuleFiring nextActiveFiring : activeFirings) {
+				if (nextActiveFiring.getRule().equals(rule)) {
+					haveActiveFiringForRule = true;
+					if (firing.getProblems().isEmpty()) {
+						nextActiveFiring.setEndDate(new Date());
+						myDao.saveMonitorRuleFiring(nextActiveFiring);
 					}
 				}
-
 			}
 
-		}
+			if (firing.getProblems().size() > 0 && !haveActiveFiringForRule) {
+				myDao.saveMonitorRuleFiring(firing);
+			}
+
+		} // for passive checks
 
 	}
 
 	@VisibleForTesting
-	void setDao(IDao theDao) {
+	public void setDao(IDao theDao) {
 		myDao = theDao;
 	}
 
@@ -458,14 +521,10 @@ public class MonitorServiceBean implements IMonitorService {
 
 	private PersMonitorRuleFiring toFiring(BasePersMonitorRule theRule, Collection<PersMonitorRuleFiringProblem> problems) {
 		PersMonitorRuleFiring firing;
-		if (problems.isEmpty()) {
-			firing = null;
-		} else {
-			firing = new PersMonitorRuleFiring();
-			firing.setRule(theRule);
-			firing.getProblems().addAll(problems);
-			firing.setStartDate(new Date());
-		}
+		firing = new PersMonitorRuleFiring();
+		firing.setRule(theRule);
+		firing.getProblems().addAll(problems);
+		firing.setStartDate(new Date());
 		return firing;
 	}
 
@@ -499,7 +558,7 @@ public class MonitorServiceBean implements IMonitorService {
 	}
 
 	@VisibleForTesting
-	void setBroadcastSender(IBroadcastSender theBroadcastSender) {
+	public void setBroadcastSender(IBroadcastSender theBroadcastSender) {
 		myBroadcastSender = theBroadcastSender;
 
 	}
@@ -526,7 +585,7 @@ public class MonitorServiceBean implements IMonitorService {
 
 	@VisibleForTesting
 	public void setConfigServiceForUnitTests(IConfigService theConfigSvc) {
-		myConfigSvc=theConfigSvc;
+		myConfigSvc = theConfigSvc;
 	}
 
 }

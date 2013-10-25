@@ -9,9 +9,7 @@ public interface IScheduler {
 
 	void collapseStats();
 
-	void monitorRunPassiveChecks();
-
-	void monitorActiveChecks();
+	void monitorRunChecks();
 
 	void flushInMemoryStatisticsUnlessItHasHappenedVeryRecently();
 

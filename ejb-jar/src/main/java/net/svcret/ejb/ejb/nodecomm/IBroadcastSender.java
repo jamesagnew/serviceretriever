@@ -1,4 +1,4 @@
-package net.svcret.ejb.api;
+package net.svcret.ejb.ejb.nodecomm;
 
 import javax.ejb.Local;
 
