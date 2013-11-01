@@ -153,7 +153,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		newEntityManager();
 		HttpResponseBean httpResponse = new HttpResponseBean();
 		httpResponse.setSuccessfulUrl(myUrl1);
-		httpResponse.addFailedUrl(myUrl2, "failure explanation", 500, "text/plain", "response body",0);
+		httpResponse.addFailedUrl(myUrl2, "failure explanation", 500, "text/plain", "response body",0, null);
 		httpResponse.setBody("successful response");
 		InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
 		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
@@ -211,7 +211,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		newEntityManager();
 		HttpResponseBean httpResponse = new HttpResponseBean();
 		httpResponse.setSuccessfulUrl(myUrl1);
-		httpResponse.addFailedUrl(myUrl2, "failure explanation", 500, "text/plain", "response body",0);
+		httpResponse.addFailedUrl(myUrl2, "failure explanation", 500, "text/plain", "response body",0, null);
 		httpResponse.setBody("successful response");
 		InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
 		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);

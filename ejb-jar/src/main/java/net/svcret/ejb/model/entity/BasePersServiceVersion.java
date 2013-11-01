@@ -994,6 +994,8 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 			if (svcVerStatus != null) {
 				retVal.setLastServerSecurityFailure(svcVerStatus.getLastServerSecurityFailure());
 				retVal.setLastSuccessfulInvocation(svcVerStatus.getLastSuccessfulInvocation());
+				retVal.setLastFaultInvocation(svcVerStatus.getLastFaultInvocation());
+				retVal.setLastFailInvocation(svcVerStatus.getLastFailInvocation());
 			}
 
 			if (retVal.getUrlsDownAsIntWithDefault() > 0) {

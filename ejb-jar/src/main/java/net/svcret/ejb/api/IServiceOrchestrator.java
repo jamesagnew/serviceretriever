@@ -22,6 +22,7 @@ import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.ex.ThrottleException;
 import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.invoker.IServiceInvoker;
+import net.svcret.ejb.invoker.soap.InvocationFailedException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 
@@ -43,9 +44,9 @@ public interface IServiceOrchestrator {
 
 	/**
 	 * Process a request invoked through a means other than the proxy itself (e.g. monitoring, management console, etc.)
+	 * @throws InvocationFailedException 
 	 */
-	SidechannelOrchestratorResponseBean handleSidechannelRequest(long theServiceVersionPid, String theRequestBody, String theContentType, String theRequestedByString) throws ProcessingException,
-			UnknownRequestException;
+	SidechannelOrchestratorResponseBean handleSidechannelRequest(long theServiceVersionPid, String theRequestBody, String theContentType, String theRequestedByString) throws UnknownRequestException, InvocationFailedException;
 
 	Collection<SidechannelOrchestratorResponseBean> handleSidechannelRequestForEachUrl(long theServiceVersionPid, String theRequestBody, String theContentType, String theRequestedByString);
 
@@ -137,7 +138,11 @@ public interface IServiceOrchestrator {
 		}
 
 		public static SidechannelOrchestratorResponseBean forFailure(Exception theException, Date theRequestStartedTime, PersServiceVersionUrl theApplicableUrl) {
-			SidechannelOrchestratorResponseBean retVal = new SidechannelOrchestratorResponseBean(null, null, new HashMap<String, List<String>>(), null, ResponseTypeEnum.FAIL, theRequestStartedTime);
+			String responseBody = null;
+			String responseContentType = null;
+			HashMap<String, List<String>> responseHeaders = new HashMap<String, List<String>>();
+			HttpResponseBean httpResponse = null;
+			SidechannelOrchestratorResponseBean retVal = new SidechannelOrchestratorResponseBean(responseBody, responseContentType, responseHeaders, httpResponse, ResponseTypeEnum.FAIL, theRequestStartedTime);
 			retVal.setFailureDescription(theException.toString());
 			retVal.setApplicableUrl(theApplicableUrl);
 			return retVal;

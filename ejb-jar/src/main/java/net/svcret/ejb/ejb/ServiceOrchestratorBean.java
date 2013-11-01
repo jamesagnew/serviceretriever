@@ -291,12 +291,12 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override
 	public SidechannelOrchestratorResponseBean handleSidechannelRequest(long theServiceVersionPid, String theRequestBody, String theContentType, String theRequestedByString)
-			throws ProcessingException, UnknownRequestException {
+			throws UnknownRequestException, InvocationFailedException {
 		return doHandleSideChannelRequest(theServiceVersionPid, theRequestBody, theContentType, theRequestedByString, null);
 	}
 
 	private SidechannelOrchestratorResponseBean doHandleSideChannelRequest(long theServiceVersionPid, String theRequestBody, String theContentType, String theRequestedByString,
-			PersServiceVersionUrl theForceUrl) throws ProcessingException, UnknownRequestException {
+			PersServiceVersionUrl theForceUrl) throws UnknownRequestException, InvocationFailedException {
 		Date startTime = new Date();
 		BasePersServiceVersion svcVer = mySvcRegistry.getServiceVersionByPid(theServiceVersionPid);
 
@@ -314,18 +314,11 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		AuthorizationResultsBean authorized = null;
 
 		InvocationResultsBean results;
-		try {
-			results = processInvokeService(request, svcVer);
-		} catch (InvocationFailedException e) {
-			throw new ProcessingException(e);
-		}
+		results = processInvokeService(request, svcVer);
 
 		SidechannelOrchestratorResponseBean retVal;
-		try {
-			retVal = processRequestMethod(request, results, authorized, null, false, theForceUrl, new Date());
-		} catch (InvocationFailedException e) {
-			throw new ProcessingException(e);
-		}
+		retVal = processRequestMethod(request, results, authorized, null, false, theForceUrl, new Date());
+		
 		return retVal;
 	}
 
@@ -664,11 +657,11 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			try {
 				responseBean = doHandleSideChannelRequest(theServiceVersionPid, theRequestBody, theContentType, theRequestedByString, nextUrl);
 				retVal.add(responseBean);
-			} catch (ProcessingException e) {
+			} catch (UnknownRequestException e) {
 				ourLog.debug("Failed to execute sidechannel request for URL", e);
 				responseBean = SidechannelOrchestratorResponseBean.forFailure(e, startedTime, nextUrl);
 				retVal.add(responseBean);
-			} catch (UnknownRequestException e) {
+			} catch (InvocationFailedException e) {
 				ourLog.debug("Failed to execute sidechannel request for URL", e);
 				responseBean = SidechannelOrchestratorResponseBean.forFailure(e, startedTime, nextUrl);
 				retVal.add(responseBean);

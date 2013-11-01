@@ -11,6 +11,7 @@ import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.shared.ConstantsHttpClientConfig;
+import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.DtoKeystoreAnalysis;
@@ -25,6 +26,8 @@ import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.safehtml.shared.SafeHtml;
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.CheckBox;
@@ -343,7 +346,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 
 			myStickySessionCookieNameBox = new EditableField();
 			myStickySessionCookieLabel = urlSelGrid.addRow("Session Cookie", myStickySessionCookieNameBox);
-			
+
 			/*
 			 * Circuit Breaker
 			 */
@@ -424,7 +427,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 			myKeystorePasswordBox = new EditableField();
 			myKeystorePasswordBox.setEmptyTextToDisplay("(No password)");
 			myKeyStoreLabel = new HTML("", true);
-			
+
 			createKeystorePanel(contentPanel, titleLabel, uploadFieldName, myKeystorePasswordBox, myKeyStoreLabel, true);
 
 			uploadFieldName = ConstantsHttpClientConfig.TYPE_TRUSTSTORE;
@@ -663,7 +666,12 @@ public class HttpClientConfigsPanel extends FlowPanel {
 					myTrustStoreLabel.setText("Successfully uploaded new store, contains " + trust.getKeyAliases().size() + " entries");
 				}
 			} else {
-				myTrustStoreLabel.setText("Config has a truststore defined, contains " + trust.getKeyAliases().size() + " entries");
+				SafeHtmlBuilder stringBuilder = new SafeHtmlBuilder();
+				stringBuilder.appendHtmlConstant("Config has a truststore defined, contains ");
+				stringBuilder.append(trust.getKeyAliases().size());
+				stringBuilder.appendHtmlConstant(" entries: ");
+				stringBuilder.append(describeKeystore(trust));
+				myTrustStoreLabel.setHTML(stringBuilder.toSafeHtml());
 			}
 			myTruststorePasswordBox.setValue(trust.getPassword());
 		}
@@ -682,11 +690,55 @@ public class HttpClientConfigsPanel extends FlowPanel {
 					myKeyStoreLabel.setText("Successfully uploaded new store, contains " + keystore.getKeyAliases().size() + " entries");
 				}
 			} else {
-				myKeyStoreLabel.setText("Config has a truststore defined, contains " + keystore.getKeyAliases().size() + " entries");
+				SafeHtmlBuilder stringBuilder = new SafeHtmlBuilder();
+				stringBuilder.appendHtmlConstant("Config has a keystore defined, contains ");
+				stringBuilder.append(keystore.getKeyAliases().size());
+				stringBuilder.appendHtmlConstant(" entries: ");
+				stringBuilder.append(describeKeystore(keystore));
+				myKeyStoreLabel.setHTML(stringBuilder.toSafeHtml());
 			}
 			myKeystorePasswordBox.setValue(keystore.getPassword());
 		}
 
+	}
+
+	private SafeHtml describeKeystore(DtoKeystoreAnalysis theKeystore) {
+		SafeHtmlBuilder b = new SafeHtmlBuilder();
+
+		b.appendHtmlConstant("<ul>");
+		for (String nextAlias : theKeystore.getKeyAliases()) {
+			b.appendHtmlConstant("<li>Alias: ");
+			b.appendHtmlConstant("<b>");
+			b.appendEscaped(nextAlias);
+			b.appendHtmlConstant("</b>");
+			b.appendHtmlConstant("<ul>");
+
+			b.appendHtmlConstant("<li>");
+			b.appendHtmlConstant("Subject: ");
+			b.appendEscaped(theKeystore.getSubject().get(nextAlias));
+			b.appendHtmlConstant("</li>");
+
+			b.appendHtmlConstant("<li>");
+			b.appendHtmlConstant("Issuer: ");
+			b.appendEscaped(theKeystore.getIssuer().get(nextAlias));
+			b.appendHtmlConstant("</li>");
+
+			b.appendHtmlConstant("<li>");
+			b.appendHtmlConstant("Expiry: ");
+			b.appendEscaped(DateUtil.formatTime(theKeystore.getExpiryDate().get(nextAlias)));
+			b.appendHtmlConstant("</li>");
+
+			b.appendHtmlConstant("<li>");
+			b.appendHtmlConstant("Private Key: ");
+			b.appendEscaped(theKeystore.getKeyEntry().get(nextAlias) ? "Yes" : "No");
+			b.appendHtmlConstant("</li>");
+
+			b.appendHtmlConstant("</ul>");
+			b.appendHtmlConstant("</li>");
+		}
+		b.appendHtmlConstant("</ul>");
+
+		return b.toSafeHtml();
 	}
 
 	private void updateSelectedUrlSelectionPolicy() {
@@ -694,10 +746,10 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		if (selectedIndex == -1) {
 			return;
 		}
-		
+
 		myStickySessionCookieLabel.setVisible(false);
 		myStickySessionCookieNameBox.setVisible(false);
-		
+
 		UrlSelectionPolicy policy = UrlSelectionPolicy.values()[selectedIndex];
 		switch (policy) {
 		case PREFER_LOCAL:

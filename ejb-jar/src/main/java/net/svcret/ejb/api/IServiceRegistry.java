@@ -74,4 +74,6 @@ public interface IServiceRegistry {
 
 	PersServiceVersionMethod getOrCreateUnknownMethodEntryForServiceVersion(BasePersServiceVersion theServiceVersion) throws InvocationFailedDueToInternalErrorException;
 
+	void deleteServiceVersion(long thePid) throws ProcessingException;
+
 }

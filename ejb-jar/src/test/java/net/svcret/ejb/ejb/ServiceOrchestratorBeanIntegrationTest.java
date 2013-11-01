@@ -1,8 +1,14 @@
 package net.svcret.ejb.ejb;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.FileReader;
@@ -38,6 +44,7 @@ import net.svcret.ejb.ejb.log.ITransactionLogger;
 import net.svcret.ejb.ejb.log.TransactionLoggerBean;
 import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
+import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.invoker.hl7.ServiceInvokerHl7OverHttp;
@@ -63,6 +70,7 @@ import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
 import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
 
 import org.apache.commons.io.FileUtils;
+import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.hamcrest.core.IsNot;
 import org.hamcrest.core.StringContains;
 import org.hamcrest.text.IsEmptyString;
@@ -464,9 +472,9 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		// Make sure we keep stats
 		myRuntimeStatus.flushStatus();
 		newEntityManager();
-		
+
 		myServiceRegistry.reloadRegistryFromDatabase();
-		
+
 		newEntityManager();
 		mySvcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
 		StatsAccumulator stats = myRuntimeQuerySvc.extract60MinuteStats(mySvcVer);
@@ -521,7 +529,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		respBean.setBody(response);
 		respBean.setContentType("text/xml");
 		respBean.setResponseTime(100);
-		respBean.addFailedUrl(myUrl, "This is the failure explanation", 200, "text/plain", "This is the failure body", 100);
+		respBean.addFailedUrl(myUrl, "This is the failure explanation", 200, "text/plain", "This is the failure body", 100, new HashMap<String, List<String>>());
 
 		respBean.setHeaders(new HashMap<String, List<String>>());
 		PersHttpClientConfig httpClient = any();
@@ -583,6 +591,88 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		ourLog.info("Journal file: {}", entireLog);
 
 		assertThat(entireLog, StringContains.containsString("</soapenv:Envelope>"));
+	}
+
+	@Test
+	public void testSoap11SidechannelRequestWithBackingError() throws Exception {
+
+		/*
+		 * Make request
+		 */
+
+		//@formatter:off
+		String request = "<soapenv:Envelope xmlns:net=\"net:svcret:demo\" xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
+				+ "   <soapenv:Header>\n"
+				+ "      <wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\" xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">\n"
+				+ "         <wsse:UsernameToken wsu:Id=\"UsernameToken-1\">\n" 
+				+ "            <wsse:Username>test</wsse:Username>\n"
+				+ "            <wsse:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">admin</wsse:Password>\n"
+				+ "            <wsse:Nonce EncodingType=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary\">P8ypSWlCHRqR4T1ABYHHbA==</wsse:Nonce>\n"
+				+ "            <wsu:Created>2013-04-20T21:18:55.025Z</wsu:Created>\n" 
+				+ "         </wsse:UsernameToken>\n" 
+				+ "      </wsse:Security>\n" 
+				+ "   </soapenv:Header>\n"
+				+ "   <soapenv:Body>\n" 
+				+ "      <net:d0s0v0m0>\n" 
+				+ "          <arg0>FAULT</arg0>\n" 
+				+ "          <arg1>?</arg1>\n" 
+				+ "      </net:d0s0v0m0>\n" 
+				+ "   </soapenv:Body>\n"
+				+ "</soapenv:Envelope>";
+
+		String response = 
+				"500 horrible internal exception";
+		//@formatter:on
+
+		IResponseValidator theResponseValidator = any();
+		UrlPoolBean theUrlPool = any();
+		String theContentBody = any();
+		Map<String, List<String>> theHeaders = any();
+		String theContentType = any();
+		HttpResponseBean respBean = new HttpResponseBean();
+		respBean.setCode(500);
+		respBean.setBody(response);
+		respBean.setContentType("text/xml");
+		respBean.setResponseTime(100);
+		HashMap<String, List<String>> headers = new HashMap<String, List<String>>();
+		headers.put("Header0", new ArrayList<String>());
+		headers.get("Header0").add("Header0Value");
+		respBean.addFailedUrl(myUrl, "This is the failure explanation", 500, "text/xml", response, 100, headers);
+		respBean.setHeaders(headers);
+		
+		PersHttpClientConfig httpClient = any();
+		when(myHttpClient.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
+
+		TransactionLoggerBean logger = new TransactionLoggerBean();
+		logger.setConfigServiceForUnitTests(myConfigService);
+		logger.setDao(myDao);
+		mySvc.setTransactionLogger(logger);
+
+		FilesystemAuditLoggerBean fsAuditLogger = new FilesystemAuditLoggerBean();
+		fsAuditLogger.setConfigServiceForUnitTests(myConfigService);
+		fsAuditLogger.initialize();
+		logger.setFilesystemAuditLoggerForUnitTests(fsAuditLogger);
+
+		String query = "";
+		Reader reader = new StringReader(request);
+		HttpRequestBean req = new HttpRequestBean();
+		req.setRequestType(RequestType.POST);
+		req.setRequestHostIp("127.0.0.1");
+		req.setPath("/d0/d0s0/d0s0v0");
+		req.setQuery(query);
+		req.setInputReader(reader);
+		req.setRequestTime(new Date());
+		req.setRequestHeaders(new HashMap<String, List<String>>());
+
+		try {
+			mySvc.handleSidechannelRequest(mySvcVerPid, request, "text/xml", "Admin Console");
+			fail();
+		} catch (InvocationResponseFailedException e) {
+			assertThat(e.getHttpResponse().getBody(), StringContains.containsString("500 horrible "));
+			assertThat(e.getHttpResponse().getContentType(), StringContains.containsString("text/xml"));
+			assertThat(e.getHttpResponse().getHeaders().get("Header0"), IsIterableContainingInAnyOrder.containsInAnyOrder("Header0Value"));
+		}
+
 	}
 
 	/**

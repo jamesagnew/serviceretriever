@@ -157,7 +157,7 @@ public class HttpClientBean implements IHttpClient {
 			} catch (ClientConfigException e) {
 				ourLog.error("Failed to initialize HTTP client", e);
 				HttpResponseBean retVal = new HttpResponseBean();
-				retVal.addFailedUrl(theUrlPool.getPreferredUrl(), "ServiceRetriever failed to initialize HTTP client, problem was: " + e.getMessage(), 0, "", "", 0);
+				retVal.addFailedUrl(theUrlPool.getPreferredUrl(), "ServiceRetriever failed to initialize HTTP client, problem was: " + e.getMessage(), 0, "", "", 0,null);
 				return retVal;
 			}
 			myClientConfigPidToClient.put(theClientConfig.getPid(), client);
@@ -227,6 +227,12 @@ public class HttpClientBean implements IHttpClient {
 
 				Map<String, List<String>> headerMap = toHeaderMap(resp.getAllHeaders());
 
+				theResponse.setBody(body);
+				theResponse.setCode(statusCode);
+				theResponse.setContentType(contentType);
+				theResponse.setHeaders(headerMap);
+				theResponse.setResponseTime(delay);
+
 				ValidationResponse validates = theResponseValidator.validate(body, statusCode, contentType);
 				if (validates.isValidates() == false) {
 
@@ -236,19 +242,12 @@ public class HttpClientBean implements IHttpClient {
 					}
 					ourLog.debug("Failed to invoke service at URL[{}]: {}", theNextUrl, validates.getFailureExplanation());
 					ourLog.debug("Failing message body was: {}", body);
-					theResponse.addFailedUrl(theNextUrl, validates.getFailureExplanation(), statusCode, contentType, body, delay);
-					theResponse.setResponseTime(delay);
+					theResponse.addFailedUrl(theNextUrl, validates.getFailureExplanation(), statusCode, contentType, body, delay, headerMap);
 					return;
 
 				} else {
 
-					theResponse.setBody(body);
-					theResponse.setCode(statusCode);
-					theResponse.setContentType(contentType);
-					theResponse.setHeaders(headerMap);
-					theResponse.setResponseTime(delay);
 					theResponse.setSuccessfulUrl(theNextUrl);
-
 					ourLog.debug("Invoked service at URL[{}] in {}ms", theNextUrl, delay);
 					
 					return;
@@ -264,7 +263,7 @@ public class HttpClientBean implements IHttpClient {
 				if (delay == 0) {
 					delay = System.currentTimeMillis() - start;
 				}
-				theResponse.addFailedUrl(theNextUrl, Messages.getString("HttpClientBean.postClientProtocolException", e.toString()), 0, null, null, delay);
+				theResponse.addFailedUrl(theNextUrl, Messages.getString("HttpClientBean.postClientProtocolException", e.toString()), 0, null, null, delay,null);
 				theResponse.setResponseTime(System.currentTimeMillis() - start);
 				return;
 			} catch (Exception e) {
@@ -276,7 +275,7 @@ public class HttpClientBean implements IHttpClient {
 				if (delay == 0) {
 					delay = System.currentTimeMillis() - start;
 				}
-				theResponse.addFailedUrl(theNextUrl, Messages.getString("HttpClientBean.postIoException", e.toString()), 0, null, null, delay);
+				theResponse.addFailedUrl(theNextUrl, Messages.getString("HttpClientBean.postIoException", e.toString()), 0, null, null, delay, null);
 				theResponse.setResponseTime(System.currentTimeMillis() - start);
 				return;
 			} finally {

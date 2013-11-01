@@ -88,6 +88,7 @@ import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
 import net.svcret.ejb.ejb.monitor.IMonitorService;
 import net.svcret.ejb.ejb.monitor.MonitorServiceBean;
 import net.svcret.ejb.ejb.nodecomm.ISynchronousNodeIpcClient;
+import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.ex.UnknownRequestException;
@@ -341,13 +342,8 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	public GDomainList deleteServiceVersion(long thePid) throws ProcessingException, UnexpectedFailureException {
 		ourLog.info("Deleting service version {}", thePid);
 
-		BasePersServiceVersion sv = myDao.getServiceVersionByPid(thePid);
-		if (sv == null) {
-			throw new ProcessingException("Unknown service version ID:" + thePid);
-		}
-
-		myDao.deleteServiceVersion(sv);
-
+		myServiceRegistry.deleteServiceVersion(thePid);
+		
 		return loadDomainList();
 	}
 
@@ -1710,6 +1706,14 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		} catch (UnknownRequestException e) {
 			ourLog.error("Failed to invoke service", e);
 			retVal.setOutcomeDescription(e.getMessage());
+		} catch (InvocationResponseFailedException e) {
+			ourLog.error("Failed to invoke service", e);
+			retVal.setOutcomeDescription(e.getMessage());
+			if (e.getHttpResponse()!=null) {
+				retVal.setResponseContentType(e.getHttpResponse().getContentType());
+				retVal.setResponseMessage(e.getHttpResponse().getBody());
+				retVal.setResponseHeaders(e.getHttpResponse().getResponseHeadersAsPairList());
+			}
 		} catch (Exception e) {
 			ourLog.error("Failed to invoke service", e);
 			retVal.setOutcomeDescription("Failed with internal exception: " + e.getMessage());

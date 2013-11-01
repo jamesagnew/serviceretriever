@@ -251,7 +251,7 @@ public class MonitorServiceBean implements IMonitorService {
 				if (nextOutcome.getResponseType() == ResponseTypeEnum.FAIL) {
 					int code = nextOutcome.getHttpResponse() != null ? nextOutcome.getHttpResponse().getCode() : 0;
 					long latency = nextOutcome.getHttpResponse() != null ? nextOutcome.getHttpResponse().getResponseTime() : 0;
-					Failure failure = new Failure(nextOutcome.getResponseBody(), nextOutcome.getResponseContentType(), nextOutcome.getFailureDescription(), code, latency);
+					Failure failure = new Failure(nextOutcome.getResponseBody(), nextOutcome.getResponseContentType(), nextOutcome.getFailureDescription(), code, latency,null);
 					myRuntimeStatus.recordUrlFailure(recentOutcome.getImplementationUrl(), failure);
 				} else if (recentOutcome.getFailed() != Boolean.TRUE) {
 					myRuntimeStatus.recordUrlSuccess(recentOutcome.getImplementationUrl());

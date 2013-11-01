@@ -26,6 +26,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 	private BaseDtoServiceVersion mySvcVer;
 	private PopupPanel myActionPopup;
 	private GService myService;
+
 	public DashModelServiceVersion(GService theService, BaseDtoServiceVersion theServiceVersion) {
 		super(theServiceVersion);
 		myService = theService;
@@ -81,13 +82,13 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 			found = true;
 		}
 
-		if (theObj.getUrlsUnknown()!=null&&theObj.getUrlsUnknown() > 0) {
+		if (theObj.getUrlsUnknown() != null && theObj.getUrlsUnknown() > 0) {
 			retVal.add(new Label("" + theObj.getUrlsUnknown()));
 			retVal.add(new Image("images/icon_unknown_16.png"));
 			found = true;
 		}
 
-		if (theObj.getUrlsDown()!=null&&theObj.getUrlsDown() > 0) {
+		if (theObj.getUrlsDown() != null && theObj.getUrlsDown() > 0) {
 			retVal.add(new Label("" + theObj.getUrlsDown()));
 			retVal.add(new Image("images/icon_warn_16.png"));
 			found = true;
@@ -131,21 +132,21 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 	static FlowPanel createActionPanel(final PopupPanel theActionPopup, final GService theService, final BaseDtoServiceVersion theSvcVer, boolean addServiceToTitle, final FlowPanel thePreviousContent) {
 		final FlowPanel content = new FlowPanel();
 
-		if (thePreviousContent!=null) {
+		if (thePreviousContent != null) {
 			createBackButton(theActionPopup, thePreviousContent, content);
 		}
-		
+
 		SafeHtmlBuilder titleB = new SafeHtmlBuilder();
 		if (addServiceToTitle) {
 			titleB.appendEscaped(theService.getName());
 			titleB.appendHtmlConstant("<br/>");
 		}
-		
+
 		titleB.appendEscaped(theSvcVer.getId());
 		content.add(new HeaderLabel(titleB.toSafeHtml()));
 
 		// Edit Service Version
-		
+
 		Button editServiceVersion = new ActionPButton(AdminPortal.IMAGES.iconEdit(), MSGS.actions_openEdit());
 		editServiceVersion.addClickHandler(new ClickHandler() {
 			@Override
@@ -157,7 +158,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		content.add(editServiceVersion);
 
 		// Delete
-		
+
 		Button deleteServiceVersion = new ActionPButton(AdminPortal.IMAGES.iconRemove(), AdminPortal.MSGS.actions_Remove());
 		deleteServiceVersion.addClickHandler(new ClickHandler() {
 			@Override
@@ -169,7 +170,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		content.add(deleteServiceVersion);
 
 		// View Runtime Status
-		
+
 		ActionPButton viewStatus = new ActionPButton(IMAGES.iconStatus(), MSGS.actions_Stats());
 		viewStatus.addClickHandler(new ClickHandler() {
 			@Override
@@ -178,9 +179,9 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 			}
 		});
 		content.add(viewStatus);
-		
+
 		// View Recent Transactions
-		
+
 		ActionPButton viewRecentTransactions = new ActionPButton(AdminPortal.IMAGES.iconTransactions(), AdminPortal.MSGS.actions_RecentTransactions());
 		viewRecentTransactions.addClickHandler(new ClickHandler() {
 			@Override
@@ -191,7 +192,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		content.add(viewRecentTransactions);
 
 		// Test Version
-		
+
 		ActionPButton testSvcVer = new ActionPButton(IMAGES.iconTest16(), MSGS.actions_TestServiceVersion());
 		testSvcVer.addClickHandler(new ClickHandler() {
 			@Override
@@ -202,7 +203,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		content.add(testSvcVer);
 
 		// Message Library
-		
+
 		ActionPButton msgLib = new ActionPButton(AdminPortal.IMAGES.iconLibrary(), AdminPortal.MSGS.actions_MessageLibrary());
 		msgLib.addClickHandler(new ClickHandler() {
 			@Override
@@ -214,7 +215,6 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 
 		return content;
 	}
-
 
 	@Override
 	public String getCellStyle() {

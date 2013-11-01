@@ -8,6 +8,8 @@ import java.util.Set;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
+import org.apache.commons.lang3.StringUtils;
+
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
@@ -66,12 +68,19 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 			throw new UnknownRequestException(theRequest.getPath(), "HL7 over HTTP service at " + theRequest.getPath() + " requires all requests to be of type POST");
 		}
 
-		if ("application/hl7-v2".equals(theRequest.getContentType())) {
-			ourLog.debug("Content type is {}", theRequest.getContentType());
-		} else if ("application/hl7-v2+xml".equals(theRequest.getContentType())) {
-			ourLog.debug("Content type is {}", theRequest.getContentType());
+		String contentType = theRequest.getContentType();
+		contentType = StringUtils.defaultString(contentType);
+		int semicolonIndex = contentType.indexOf(';');
+		if (semicolonIndex > -1) {
+			contentType = contentType.substring(0, semicolonIndex).trim();
+		}
+		
+		if ("application/hl7-v2".equals(contentType)) {
+			ourLog.debug("Content type is {}", contentType);
+		} else if ("application/hl7-v2+xml".equals(contentType)) {
+			ourLog.debug("Content type is {}", contentType);
 		} else {
-			throw new UnknownRequestException(theRequest.getPath(),"HL7 over HTTP service cannot accept content type: " + theRequest.getContentType());
+			throw new UnknownRequestException(theRequest.getPath(),"HL7 over HTTP service cannot accept content type: " + contentType);
 		}
 
 		String message;
@@ -108,7 +117,7 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 		}
 
 		InvocationResultsBean retVal = new InvocationResultsBean();
-		retVal.setResultMethod(method, message, theRequest.getContentType());
+		retVal.setResultMethod(method, message, contentType);
 		
 		return retVal;
 	}

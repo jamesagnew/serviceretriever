@@ -365,4 +365,15 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		mySvcHttpClient = theSvcHttpClient;
 	}
 
+	@Override
+	public void deleteServiceVersion(long thePid) throws ProcessingException {
+		BasePersServiceVersion sv = myDao.getServiceVersionByPid(thePid);
+		if (sv == null) {
+			throw new ProcessingException("Unknown service version ID:" + thePid);
+		}
+		myDao.deleteServiceVersion(sv);
+		
+		reloadRegistryFromDatabase();
+	}
+
 }
