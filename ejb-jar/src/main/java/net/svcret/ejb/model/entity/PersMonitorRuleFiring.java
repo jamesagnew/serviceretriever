@@ -23,6 +23,8 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 
+import net.svcret.admin.shared.model.GMonitorRuleFiring;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.hibernate.annotations.Index;
@@ -41,21 +43,27 @@ import org.hibernate.annotations.Index;
 	@NamedQuery(name=Queries.RULEFIRING_FINDACTIVE, query=Queries.RULEFIRING_FINDACTIVE_Q)
 })
 //@formatter:on
-
 public class PersMonitorRuleFiring extends BasePersObject {
+
+	public static Date NULL_DATE = new Date(0L);
+	private static final long NULL_DATE_TIME = NULL_DATE.getTime();
 
 	private static final long serialVersionUID = 1L;
 
+	public PersMonitorRuleFiring() {
+		
+	}
+	
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "END_DATE", nullable = true)
-	private Date myEndDate;
+	@Column(name = "END_DATE", nullable = false)
+	private Date myEndDate = NULL_DATE;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "PID")
 	private Long myPid;
 
-	@OneToMany(cascade= {CascadeType.REMOVE}, fetch=FetchType.EAGER, orphanRemoval = true, mappedBy="myFiring")
+	@OneToMany(cascade = { CascadeType.REMOVE }, fetch = FetchType.EAGER, orphanRemoval = true, mappedBy = "myFiring")
 	private Collection<PersMonitorRuleFiringProblem> myProblems;
 
 	@ManyToOne(cascade = {}, optional = false)
@@ -70,6 +78,9 @@ public class PersMonitorRuleFiring extends BasePersObject {
 	 * @return the endDate
 	 */
 	public Date getEndDate() {
+		if (myEndDate.getTime() == NULL_DATE_TIME) {
+			return null;
+		}
 		return myEndDate;
 	}
 
@@ -106,7 +117,11 @@ public class PersMonitorRuleFiring extends BasePersObject {
 	 *            the endDate to set
 	 */
 	public void setEndDate(Date theEndDate) {
-		myEndDate = theEndDate;
+		if (theEndDate == null) {
+			myEndDate = NULL_DATE;
+		} else {
+			myEndDate = theEndDate;
+		}
 	}
 
 	/**
@@ -145,6 +160,26 @@ public class PersMonitorRuleFiring extends BasePersObject {
 			b.append("problem_" + (index++), next.toStringShort());
 		}
 		return b.toString();
+	}
+
+	public GMonitorRuleFiring toDto() {
+		GMonitorRuleFiring retVal = new GMonitorRuleFiring();
+		retVal.setPid(this.getPid());
+		retVal.setStartDate(this.getStartDate());
+
+		if (myEndDate.getTime() == NULL_DATE_TIME) {
+			retVal.setEndDate(null);
+		} else {
+			retVal.setEndDate(this.getEndDate());
+		}
+
+		retVal.setRulePid(this.getRule().getPid());
+
+		for (PersMonitorRuleFiringProblem next : this.getProblems()) {
+			retVal.getProblems().add(next.toDto());
+		}
+
+		return retVal;
 	}
 
 }

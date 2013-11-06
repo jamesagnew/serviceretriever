@@ -40,6 +40,7 @@ import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ejb.log.ITransactionLogger;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
+import net.svcret.ejb.ex.InvocationRequestOrResponseFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
@@ -107,8 +108,8 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	@EJB
 	private IServiceInvokerVirtual myServiceInvokerVirtual;
 
-	private OrchestratorResponseBean doHandleServiceRequest(HttpRequestBean theRequest) throws UnknownRequestException, ProcessingException, SecurityFailureException, ThrottleException,
-			ThrottleQueueFullException {
+	private OrchestratorResponseBean doHandleServiceRequest(HttpRequestBean theRequest) throws UnknownRequestException, SecurityFailureException, ThrottleException, ThrottleQueueFullException,
+			InvocationRequestOrResponseFailedException, InvocationFailedDueToInternalErrorException, ProcessingException {
 		if (theRequest.getQuery().length() > 0 && theRequest.getQuery().charAt(0) != '?') {
 			throw new IllegalArgumentException("Path must be blank or start with '?'");
 		}
@@ -161,10 +162,14 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			ourLog.debug("Exception occurred", e);
 			handleInvocationFailure(theRequest, serviceVersion, invokingMethod, new InvocationRequestFailedException(e), null, null, ResponseTypeEnum.FAIL);
 			throw e;
-		} catch (InvocationFailedException e) {
+		} catch (InvocationRequestOrResponseFailedException e) {
 			ourLog.debug("Exception occurred", e);
 			handleInvocationFailure(theRequest, serviceVersion, invokingMethod, e, null, null, ResponseTypeEnum.FAIL);
-			throw new ProcessingException(e);
+			throw e;
+		} catch (InvocationFailedDueToInternalErrorException e) {
+			ourLog.debug("Exception occurred", e);
+			handleInvocationFailure(theRequest, serviceVersion, invokingMethod, e, null, null, ResponseTypeEnum.FAIL);
+			throw e;
 		} catch (ThrottleException e) {
 			ourLog.debug("Exception occurred", e);
 			/*
@@ -205,26 +210,49 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			PersUser theUserIfKnown, Long theThrottleDelayIfAnyAndKnown, ResponseTypeEnum theResponseType) throws ProcessingException {
 		theRequest.drainInputMessage();
 
-		if (theMethodIfKnown != null) {
-			try {
-				InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
-				invocationResponseResultsBean.setResponseType(theResponseType);
-				myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), theRequest.getRequestBody().length(), theMethodIfKnown, theUserIfKnown, null, invocationResponseResultsBean,
-						theThrottleDelayIfAnyAndKnown);
-
-			} catch (UnexpectedFailureException e1) {
-				// Don't do anything except log here since we're already handling a failure by the
-				// time we get here so this is pretty much the last resort..
-				ourLog.error("Failed to record method invocation", e1);
+		try {
+			PersServiceVersionMethod method;
+			if (theMethodIfKnown != null) {
+				method = theMethodIfKnown;
+			} else {
+				method = mySvcRegistry.getOrCreateUnknownMethodEntryForServiceVersion(serviceVersion);
 			}
+			InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
+			invocationResponseResultsBean.setResponseType(theResponseType);
+			myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), theRequest.getRequestBody().length(), method, theUserIfKnown, null, invocationResponseResultsBean,
+					theThrottleDelayIfAnyAndKnown);
+		} catch (UnexpectedFailureException e) {
+			// Don't do anything except log here since we're already handling a failure by the
+			// time we get here so this is pretty much the last resort..
+			ourLog.error("Failed to record method invocation", e);
+		} catch (InvocationFailedDueToInternalErrorException e) {
+			// Don't do anything except log here since we're already handling a failure by the
+			// time we get here so this is pretty much the last resort..
+			ourLog.error("Failed to record method invocation", e);
 		}
 
-		/*
-		 * TODO: add some kind of statistic recording for svcVer failed requests that don't have a method associated
-		 */
 		try {
-			myTransactionLogger.logTransaction(theRequest, serviceVersion, null, theUserIfKnown, theRequest.getRequestBody(), theInvocationFailure.toInvocationResponse(),
-					theInvocationFailure.getImplementationUrl(), theInvocationFailure.getHttpResponse(), null, null);
+
+			String requestBody = theRequest.getRequestBody();
+			String responseBody = null;
+			if (theInvocationFailure.getHttpResponse() != null) {
+				responseBody = theInvocationFailure.getHttpResponse().getFailingResponseBody();
+			}
+
+			// Try to obscure
+			if (theMethodIfKnown != null) {
+				try {
+					BasePersServiceVersion svcVer = theMethodIfKnown.getServiceVersion();
+					IServiceInvoker svcInvoker = getServiceInvoker(svcVer);
+					requestBody = svcInvoker.obscureMessageForLogs(svcVer, requestBody, theMethodIfKnown.getServiceVersion().determineObscureRequestElements());
+					responseBody = svcInvoker.obscureMessageForLogs(svcVer, responseBody, theMethodIfKnown.getServiceVersion().determineObscureResponseElements());
+				} catch (Exception e) {
+					ourLog.debug("Failed to obscure message", e);
+				}
+			}
+
+			myTransactionLogger.logTransaction(theRequest, serviceVersion, null, theUserIfKnown, requestBody, theInvocationFailure.toInvocationResponse(), theInvocationFailure.getImplementationUrl(),
+					theInvocationFailure.getHttpResponse(), null, responseBody);
 		} catch (UnexpectedFailureException e1) {
 			// Don't do anything except log here since we're already handling a failure by the
 			// time we get here so this is pretty much the last resort..
@@ -243,7 +271,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
 	public OrchestratorResponseBean handleServiceRequest(HttpRequestBean theRequest) throws UnknownRequestException, ProcessingException, SecurityFailureException, ThrottleException,
-			ThrottleQueueFullException {
+			ThrottleQueueFullException, InvocationRequestOrResponseFailedException, InvocationFailedDueToInternalErrorException {
 		Validate.notNull(theRequest.getRequestType(), "RequestType");
 		Validate.notNull(theRequest.getPath(), "Path");
 		Validate.notNull(theRequest.getQuery(), "Query");
@@ -263,12 +291,12 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override
 	public SidechannelOrchestratorResponseBean handleSidechannelRequest(long theServiceVersionPid, String theRequestBody, String theContentType, String theRequestedByString)
-			throws ProcessingException, UnknownRequestException {
+			throws UnknownRequestException, InvocationFailedException {
 		return doHandleSideChannelRequest(theServiceVersionPid, theRequestBody, theContentType, theRequestedByString, null);
 	}
 
 	private SidechannelOrchestratorResponseBean doHandleSideChannelRequest(long theServiceVersionPid, String theRequestBody, String theContentType, String theRequestedByString,
-			PersServiceVersionUrl theForceUrl) throws ProcessingException, UnknownRequestException {
+			PersServiceVersionUrl theForceUrl) throws UnknownRequestException, InvocationFailedException {
 		Date startTime = new Date();
 		BasePersServiceVersion svcVer = mySvcRegistry.getServiceVersionByPid(theServiceVersionPid);
 
@@ -286,18 +314,11 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		AuthorizationResultsBean authorized = null;
 
 		InvocationResultsBean results;
-		try {
-			results = processInvokeService(request, svcVer);
-		} catch (InvocationFailedException e) {
-			throw new ProcessingException(e);
-		}
-		
+		results = processInvokeService(request, svcVer);
+
 		SidechannelOrchestratorResponseBean retVal;
-		try {
-			retVal = processRequestMethod(request, results, authorized, null, false, theForceUrl, new Date());
-		} catch (InvocationFailedException e) {
-			throw new ProcessingException(e);
-		}
+		retVal = processRequestMethod(request, results, authorized, null, false, theForceUrl, new Date());
+		
 		return retVal;
 	}
 
@@ -479,7 +500,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			b.append(exampleUrl.getUrlId());
 			b.append("' failed with error: ");
 			b.append(exampleFailure.getExplanation());
-			throw new InvocationResponseFailedException(b.toString());
+			throw new InvocationResponseFailedException(b.toString(), httpResponse);
 		}
 
 		InvocationResponseResultsBean invocationResponse = invoker.processInvocationResponse(serviceVersion, httpResponse);
@@ -630,17 +651,17 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 		for (PersServiceVersionUrl nextUrl : svcVer.getUrls()) {
 			ourLog.debug("About to perform sidechannel request for URL: {} / {}", nextUrl.getPid(), nextUrl.getUrl());
-			
+
 			SidechannelOrchestratorResponseBean responseBean;
 			Date startedTime = new Date();
 			try {
 				responseBean = doHandleSideChannelRequest(theServiceVersionPid, theRequestBody, theContentType, theRequestedByString, nextUrl);
 				retVal.add(responseBean);
-			} catch (ProcessingException e) {
+			} catch (UnknownRequestException e) {
 				ourLog.debug("Failed to execute sidechannel request for URL", e);
 				responseBean = SidechannelOrchestratorResponseBean.forFailure(e, startedTime, nextUrl);
 				retVal.add(responseBean);
-			} catch (UnknownRequestException e) {
+			} catch (InvocationFailedException e) {
 				ourLog.debug("Failed to execute sidechannel request for URL", e);
 				responseBean = SidechannelOrchestratorResponseBean.forFailure(e, startedTime, nextUrl);
 				retVal.add(responseBean);

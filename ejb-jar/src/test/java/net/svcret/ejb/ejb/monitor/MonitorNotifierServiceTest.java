@@ -1,4 +1,4 @@
-package net.svcret.ejb.ejb;
+package net.svcret.ejb.ejb.monitor;
 
 import static org.mockito.Mockito.*;
 
@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import net.svcret.admin.shared.enm.MonitorRuleTypeEnum;
+import net.svcret.ejb.ejb.monitor.MonitorNotifierService;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;

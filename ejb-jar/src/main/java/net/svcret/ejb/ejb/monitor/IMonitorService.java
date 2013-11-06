@@ -1,14 +1,11 @@
-package net.svcret.ejb.api;
-
-import java.util.List;
-import java.util.concurrent.Future;
+package net.svcret.ejb.ejb.monitor;
 
 import javax.ejb.Local;
 
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
-import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheckOutcome;
+import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 
 @Local
 public interface IMonitorService {
@@ -16,13 +13,9 @@ public interface IMonitorService {
 	/**
 	 * Do a pass of the monitor, and fire any events that need to be fired. This method should be called once per minute.
 	 */
-	void check();
+	void runPassiveChecks();
 
-	void runActiveCheck(PersMonitorRuleActiveCheck theCheck);
-
-	List<PersMonitorRuleActiveCheckOutcome> runActiveCheckInCurrentTransaction(PersMonitorRuleActiveCheck theCheck, boolean thePersistResults);
-
-	void runActiveCheckInNewTransaction(PersMonitorRuleActiveCheck theCheck);
+	PersMonitorRuleFiring runActiveCheck(PersMonitorRuleActiveCheck theCheck, boolean thePersistResults) throws UnexpectedFailureException;
 
 	void runActiveChecks();
 

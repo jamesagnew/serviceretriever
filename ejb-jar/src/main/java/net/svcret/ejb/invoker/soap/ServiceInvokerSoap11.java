@@ -347,7 +347,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 			operationNames.add(opName);
 		}
 
-		retVal.retainOnlyMethodsWithNames(operationNames);
+		retVal.retainOnlyMethodsWithNamesAndUnknownMethod(operationNames);
 	}
 
 	@Override

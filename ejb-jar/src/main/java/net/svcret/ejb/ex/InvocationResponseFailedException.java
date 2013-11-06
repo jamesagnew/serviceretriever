@@ -1,16 +1,19 @@
 package net.svcret.ejb.ex;
 
 import net.svcret.ejb.api.HttpResponseBean;
-import net.svcret.ejb.invoker.soap.InvocationFailedException;
 
-public class InvocationResponseFailedException extends InvocationFailedException {
+public class InvocationResponseFailedException extends InvocationRequestOrResponseFailedException {
 
-	public InvocationResponseFailedException(Throwable theCause, String theMessage, HttpResponseBean theResponse) {
-		super(theCause, theMessage, theResponse);
+	public InvocationResponseFailedException(Throwable theCause, String theMessage, HttpResponseBean theHttpResponse) {
+		super(theCause, theMessage, theHttpResponse);
 	}
 
 	public InvocationResponseFailedException(String theMessage) {
 		super(theMessage);
+	}
+
+	public InvocationResponseFailedException(String theMessage, HttpResponseBean theHttpResponse) {
+		super(theMessage, theHttpResponse);
 	}
 
 	private static final long serialVersionUID = 1L;

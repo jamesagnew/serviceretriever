@@ -47,12 +47,18 @@ public class HttpResponseBean {
 		myContentType = theContentType;
 	}
 
-	public void addFailedUrl(PersServiceVersionUrl theUrl, String theFailureExplanation, int theStatusCode, String theContentType, String theBody, long theInvocationMillis) {
+	public void addFailedUrl(PersServiceVersionUrl theUrl, String theFailureExplanation, int theStatusCode, String theContentType, String theBody, long theInvocationMillis,
+			Map<String, List<String>> theHeaders) {
 		if (myFailedUrls == null) {
 			myFailedUrls = new HashMap<PersServiceVersionUrl, Failure>();
 		}
 
-		myFailedUrls.put(theUrl, new Failure(theBody, theContentType, theFailureExplanation, theStatusCode, theInvocationMillis));
+		Map<String, List<String>> headers = theHeaders;
+		if (headers == null) {
+			headers = new HashMap<String, List<String>>();
+		}
+
+		myFailedUrls.put(theUrl, new Failure(theBody, theContentType, theFailureExplanation, theStatusCode, theInvocationMillis, headers));
 	}
 
 	/**
@@ -81,7 +87,11 @@ public class HttpResponseBean {
 	}
 
 	public Map<String, List<String>> getHeaders() {
-		return myHeaders;
+		if (myHeaders != null) {
+			return myHeaders;
+		} else {
+			return Collections.emptyMap();
+		}
 	}
 
 	public long getResponseTime() {
@@ -139,14 +149,21 @@ public class HttpResponseBean {
 		private String myExplanation;
 		private int myStatusCode;
 		private long myInvocationMillis;
+		private Map<String, List<String>> myHeaders;
 
-		public Failure(String theBody, String theContentType, String theExplanation, int theStatusCode, long theInvocationMillis) {
+		public Failure(String theBody, String theContentType, String theExplanation, int theStatusCode, long theInvocationMillis, Map<String, List<String>> theHeaders) {
 			super();
 			myBody = theBody;
 			myContentType = theContentType;
+
 			myExplanation = theExplanation;
 			myStatusCode = theStatusCode;
-			myInvocationMillis=theInvocationMillis;
+			myInvocationMillis = theInvocationMillis;
+			myHeaders = theHeaders;
+		}
+
+		public Map<String, List<String>> getHeaders() {
+			return myHeaders;
 		}
 
 		public long getInvocationMillis() {
@@ -193,8 +210,7 @@ public class HttpResponseBean {
 	}
 
 	/**
-	 * This method expects to have only one URL (either sucessful or failing) and returns
-	 * that URL. If no URLS, or more than one, throws an exception.
+	 * This method expects to have only one URL (either sucessful or failing) and returns that URL. If no URLS, or more than one, throws an exception.
 	 */
 	public PersServiceVersionUrl getSingleUrlOrThrow() {
 		if (getSuccessfulUrl() != null) {
@@ -210,5 +226,12 @@ public class HttpResponseBean {
 			throw new IllegalStateException("HTTP Response bean contains no URLs");
 		}
 		return getFailedUrls().keySet().iterator().next();
+	}
+
+	public String getFailingResponseBody() {
+		for (Failure next : myFailedUrls.values()) {
+			return next.getBody();
+		}
+		return null;
 	}
 }

@@ -29,7 +29,7 @@ public abstract class BasePersServiceVersionSingleMethod extends BasePersService
 	}
 
 	@Override
-	public void retainOnlyMethodsWithNames(Collection<String> theIds) {
+	public void retainOnlyMethodsWithNamesAndUnknownMethod(Collection<String> theIds) {
 		throw new UnsupportedOperationException();
 	}
 

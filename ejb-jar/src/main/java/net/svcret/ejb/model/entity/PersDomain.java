@@ -16,6 +16,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -49,6 +50,10 @@ public class PersDomain extends BasePersServiceCatalogItem {
 	@Column(name = "DOMAIN_NAME", length = 200, nullable = true)
 	private String myDomainName;
 
+	@Lob
+	@Column(name = "DOMAIN_DESC", nullable = true)
+	private String myDescription;
+	
 	@Transient
 	private volatile transient HashMap<String, PersService> myIdToServices;
 
@@ -135,17 +140,6 @@ public class PersDomain extends BasePersServiceCatalogItem {
 	public Set<String> determineObscureResponseElements() {
 		Set<String> retVal = getObscureResponseElementsInLog();
 		return retVal;
-	}
-
-	@Override
-	public Set<PersMonitorRuleFiring> getActiveRuleFiringsWhichMightApply() {
-		if (getMostRecentMonitorRuleFiring() != null && getMostRecentMonitorRuleFiring().getEndDate() == null) {
-			HashSet<PersMonitorRuleFiring> retVal = new HashSet<PersMonitorRuleFiring>();
-			retVal.add(getMostRecentMonitorRuleFiring());
-			return retVal;
-		}else {
-			return Collections.emptySet();
-		}
 	}
 
 	public Collection<PersServiceVersionMethod> getAllServiceVersionMethods() {
@@ -260,6 +254,7 @@ public class PersDomain extends BasePersServiceCatalogItem {
 		PersDomain domain = (PersDomain)theObj;
 		setDomainId(domain.getDomainId());
 		setDomainName(domain.getDomainName());
+		setDescription(domain.getDescription());
 	}
 
 	public void populateDtoWithMonitorRules(BaseDtoServiceCatalogItem theDto) {
@@ -317,7 +312,8 @@ public class PersDomain extends BasePersServiceCatalogItem {
 		retVal.setId(this.getDomainId());
 		retVal.setName(this.getDomainName());
 		retVal.setServerSecured(this.getServerSecured());
-
+		retVal.setDescription(this.getDescription());
+		
 		this.populateDtoWithMonitorRules(retVal);
 		this.populateKeepRecentTransactionsToDto(retVal);
 		this.populateServiceCatalogItemToDto(retVal);
@@ -381,6 +377,14 @@ public class PersDomain extends BasePersServiceCatalogItem {
 		// retVal.get
 
 		return retVal;
+	}
+
+	public String getDescription() {
+		return myDescription;
+	}
+
+	public void setDescription(String theDomainDescription) {
+		myDescription = theDomainDescription;
 	}
 
 	private HashMap<String, PersService> initIdToServices() {

@@ -7,9 +7,9 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
 import net.svcret.admin.shared.model.RetrieverNodeTypeEnum;
-import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
+import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.PersConfig;
 
@@ -98,7 +98,7 @@ public class ConfigServiceBean implements IConfigService {
 	 * For unit tests only
 	 */
 	@VisibleForTesting
-	void setDao(DaoBean theDao) {
+	public void setDao(DaoBean theDao) {
 		myDao = theDao;
 	}
 
@@ -106,7 +106,7 @@ public class ConfigServiceBean implements IConfigService {
 	 * For unit tests only
 	 */
 	@VisibleForTesting
-	void setBroadcastSender(IBroadcastSender theBroadcastSender) {
+	public void setBroadcastSender(IBroadcastSender theBroadcastSender) {
 		myBroadcastSender = theBroadcastSender;
 	}
 

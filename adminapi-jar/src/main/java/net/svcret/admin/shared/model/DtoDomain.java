@@ -13,16 +13,17 @@ import javax.xml.bind.annotation.XmlType;
 
 import net.svcret.admin.shared.util.XmlConstants;
 
-@XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="Domain")
-@XmlRootElement(namespace=XmlConstants.DTO_NAMESPACE, name="Domain")
+@XmlType(namespace = XmlConstants.DTO_NAMESPACE, name = "Domain")
+@XmlRootElement(namespace = XmlConstants.DTO_NAMESPACE, name = "Domain")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class DtoDomain extends BaseDtoServiceCatalogItem {
 
 	private static final long serialVersionUID = 1L;
 
-	@XmlElement(name="config_ServiceList")
+	@XmlElement(name = "config_ServiceList")
 	private GServiceList myServiceList = new GServiceList();
 
+	private String myDescription;
 
 	public GServiceList getServiceList() {
 		return myServiceList;
@@ -32,7 +33,7 @@ public class DtoDomain extends BaseDtoServiceCatalogItem {
 	public void merge(BaseDtoObject theObject) {
 		super.merge(theObject);
 
-		DtoDomain obj=(DtoDomain) theObject;
+		DtoDomain obj = (DtoDomain) theObject;
 		if (obj.getServiceList() != null) {
 			getServiceList().mergeResults(obj.getServiceList());
 		}
@@ -56,5 +57,12 @@ public class DtoDomain extends BaseDtoServiceCatalogItem {
 		return retVal;
 	}
 
+	public void setDescription(String theDomainDescription) {
+		myDescription = theDomainDescription;
+	}
+
+	public String getDescription() {
+		return myDescription;
+	}
 
 }

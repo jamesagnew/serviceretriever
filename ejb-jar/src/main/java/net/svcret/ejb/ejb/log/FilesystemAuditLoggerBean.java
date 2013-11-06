@@ -7,8 +7,10 @@ import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
@@ -37,6 +39,7 @@ import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -112,92 +115,116 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 			}
 
 			try {
-				String fileName = next.createLogFile();
-				if (!myLogFileWriters.containsKey(fileName)) {
-					MyFileWriter writer = new MyFileWriter(new File(myAuditPath, fileName));
-					myLogFileWriters.put(fileName, writer);
-				}
-
-				if (!lookups.containsKey(next.myRequestHostIp)) {
-					try {
-						InetAddress addr = InetAddress.getByName(next.myRequestHostIp);
-						String host = addr.getHostName();
-						lookups.put(next.myRequestHostIp, host);
-					} catch (Throwable e) {
-						ourLog.debug("Failed to lookup hostname", e);
-						lookups.put(next.myRequestHostIp, null);
-					}
-				}
-
-				MyFileWriter writer = myLogFileWriters.get(fileName);
-
-				if (config.getAuditLogDisableIfDiskCapacityBelowMb() != null) {
-					long freeSpaceMb = (writer.getBytesFree() / FileUtils.ONE_MB);
-					if (freeSpaceMb < config.getAuditLogDisableIfDiskCapacityBelowMb()) {
-						ourLog.debug("Not saving audit record because only {} Mb free (threshold is {})", freeSpaceMb, config.getAuditLogDisableIfDiskCapacityBelowMb());
-						// TODO: add a line at the bottom of the file indicating that saving was suspended
-					}
-				} else {
-
-					addItem(writer, "Date", myItemDateFormat.format(next.myRequestTime));
-					addItem(writer, "Latency", Long.toString(next.myTransactionMillis));
-					addItem(writer, "ResponseType", next.myResponseType.name());
-					if (StringUtils.isNotBlank(next.myFailureDescription)) {
-						addItem(writer, "FailureDescription", next.myFailureDescription);
-					}
-					addItem(writer, "RequestorIp", next.myRequestHostIp + " (" + lookups.get(next.myRequestHostIp) + ")");
-					addItem(writer, "DomainId", next.myDomainId);
-					addItem(writer, "ServiceId", next.myServiceId);
-					addItem(writer, "ServiceVersionId", next.myServiceVersionId);
-					addItem(writer, "ServiceVersionPid", Long.toString(next.myServiceVersionPid));
-					if (StringUtils.isNotBlank(next.myMethodName)) {
-						addItem(writer, "MethodName", next.myMethodName);
-					}
-					if (next.myImplementationUrl != null) {
-						addItem(writer, "HandledByUrl", "[" + next.myImplementationUrlId + "] " + next.myImplementationUrl);
-					}
-					if (next.myUserPid == null) {
-						addItem(writer, "User", "none");
-					} else {
-						addItem(writer, "User", "[" + next.myUserPid + "] " + next.myUsername);
-					}
-					if (next.myAuthorizationOutcome != null) {
-						addItem(writer, "AuthorizationOutcome", next.myAuthorizationOutcome.name());
-					}
-					writer.append("Request:\n");
-					String formatedRequest = formatMessage(next.myRequestBody);
-					writer.append(formatedRequest);
-
-					if (next.myResponseBody != null) {
-						writer.append("\nResponse:\n");
-						String formattedResponse = formatMessage(next.myResponseBody);
-						writer.append(formattedResponse);
-					}
-
-					writer.append("\n\n");
-
-				}
-
+				flushWithinLockedContext(lookups, config, next);
 			} catch (IOException e) {
-				ourLog.error("Failed to write audit log", e);
-				throw new ProcessingException("Failed to write to audit log", e);
+				ourLog.info("Failed while writing audit log, going to retry once: {}", e.toString());
+				closeAndRemoveWriter(next);
+				try {
+					flushWithinLockedContext(lookups, config, next);
+				} catch (IOException e1) {
+					closeAndRemoveWriter(next);
+					ourLog.error("Failed to write audit log", e);
+					throw new ProcessingException("Failed to write to audit log", e);
+				}
 			}
 
 			myUnflushedAuditRecord.poll();
 			count++;
 		}
 
-		for (FileWriter next : myLogFileWriters.values()) {
+		for (Iterator<Entry<String, MyFileWriter>> iter= myLogFileWriters.entrySet().iterator(); iter.hasNext(); ) {
+			Entry<String, MyFileWriter> next = iter.next();
 			try {
-				next.close();
+				next.getValue().flush();
 			} catch (IOException e) {
-				ourLog.error("Failed to close writer", e);
+				ourLog.error("Failed to flush writer", e);
+				IOUtils.closeQuietly(next.getValue());
+				iter.remove();
 			}
-
 		}
-
+		
 		long delay = System.currentTimeMillis() - start;
 		ourLog.info("Finished flushing {} audit records in {}ms", count, delay);
+	}
+
+	private void closeAndRemoveWriter(UnflushedAuditRecord theNext) {
+		String fileName = theNext.createLogFile();
+		MyFileWriter existing = myLogFileWriters.remove(fileName);
+		if (existing != null) {
+			try {
+				existing.close();
+			} catch (IOException e) {
+				ourLog.debug("Failed to close writer", e);
+			}
+		}
+	}
+
+	private void flushWithinLockedContext(Map<String, String> lookups, PersConfig config, UnflushedAuditRecord next) throws IOException {
+		String fileName = next.createLogFile();
+		if (!myLogFileWriters.containsKey(fileName)) {
+			MyFileWriter writer = new MyFileWriter(new File(myAuditPath, fileName));
+			myLogFileWriters.put(fileName, writer);
+		}
+
+		if (!lookups.containsKey(next.myRequestHostIp)) {
+			try {
+				InetAddress addr = InetAddress.getByName(next.myRequestHostIp);
+				String host = addr.getHostName();
+				lookups.put(next.myRequestHostIp, host);
+			} catch (Throwable e) {
+				ourLog.debug("Failed to lookup hostname", e);
+				lookups.put(next.myRequestHostIp, null);
+			}
+		}
+
+		MyFileWriter writer = myLogFileWriters.get(fileName);
+
+		if (config.getAuditLogDisableIfDiskCapacityBelowMb() != null) {
+			long freeSpaceMb = (writer.getBytesFree() / FileUtils.ONE_MB);
+			if (freeSpaceMb < config.getAuditLogDisableIfDiskCapacityBelowMb()) {
+				ourLog.debug("Not saving audit record because only {} Mb free (threshold is {})", freeSpaceMb, config.getAuditLogDisableIfDiskCapacityBelowMb());
+				// TODO: add a line at the bottom of the file indicating that saving was suspended
+			}
+		} else {
+
+			addItem(writer, "Date", myItemDateFormat.format(next.myRequestTime));
+			addItem(writer, "Latency", Long.toString(next.myTransactionMillis));
+			addItem(writer, "ResponseType", next.myResponseType.name());
+			if (StringUtils.isNotBlank(next.myFailureDescription)) {
+				addItem(writer, "FailureDescription", next.myFailureDescription);
+			}
+			addItem(writer, "RequestorIp", next.myRequestHostIp + " (" + lookups.get(next.myRequestHostIp) + ")");
+			addItem(writer, "DomainId", next.myDomainId);
+			addItem(writer, "ServiceId", next.myServiceId);
+			addItem(writer, "ServiceVersionId", next.myServiceVersionId);
+			addItem(writer, "ServiceVersionPid", Long.toString(next.myServiceVersionPid));
+			if (StringUtils.isNotBlank(next.myMethodName)) {
+				addItem(writer, "MethodName", next.myMethodName);
+			}
+			if (next.myImplementationUrl != null) {
+				addItem(writer, "HandledByUrl", "[" + next.myImplementationUrlId + "] " + next.myImplementationUrl);
+			}
+			if (next.myUserPid == null) {
+				addItem(writer, "User", "none");
+			} else {
+				addItem(writer, "User", "[" + next.myUserPid + "] " + next.myUsername);
+			}
+			if (next.myAuthorizationOutcome != null) {
+				addItem(writer, "AuthorizationOutcome", next.myAuthorizationOutcome.name());
+			}
+			writer.append("Request:\n");
+			String formatedRequest = formatMessage(next.myRequestBody);
+			writer.append(formatedRequest);
+
+			if (next.myResponseBody != null) {
+				writer.append("\nResponse:\n");
+				String formattedResponse = formatMessage(next.myResponseBody);
+				writer.append(formattedResponse);
+			}
+
+			writer.append("\n\n");
+
+		}
 	}
 
 	public void forceFlush() throws ProcessingException, UnexpectedFailureException {

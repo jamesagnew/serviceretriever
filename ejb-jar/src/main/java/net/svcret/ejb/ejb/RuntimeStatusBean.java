@@ -37,13 +37,13 @@ import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.Messages;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.HttpResponseBean.Failure;
-import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.UrlPoolBean;
+import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStatsPk;
@@ -397,7 +397,11 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		status.setLastFailStatusCode(theFailure.getStatusCode());
 
 		// Do this last since it triggers a state change
-		status.setStatus(StatusEnum.DOWN);
+		if (status.getStatus() != StatusEnum.DOWN) {
+			status.setStatus(StatusEnum.DOWN);
+			logUrlStatusDown(status);
+		}
+		
 	}
 
 	@Override
@@ -920,16 +924,20 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				theUrlStatusBean.setLastFailContentType(theContentType);
 				theUrlStatusBean.setLastFailStatusCode(theResponseCode);
 
-				Date nextReset = theUrlStatusBean.getNextCircuitBreakerReset();
-				if (nextReset != null) {
-					ourLog.info("URL[{}] is DOWN, Next circuit breaker reset attempt is {} - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), myTimeFormat.format(nextReset),
-							theUrlStatusBean.getUrl().getUrl() });
-				} else {
-					ourLog.info("URL[{}] is DOWN - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), theUrlStatusBean.getUrl().getUrl() });
-				}
+				logUrlStatusDown(theUrlStatusBean);
 
 			}
 
+		}
+	}
+
+	private void logUrlStatusDown(PersServiceVersionUrlStatus theUrlStatusBean) {
+		Date nextReset = theUrlStatusBean.getNextCircuitBreakerReset();
+		if (nextReset != null) {
+			ourLog.info("URL[{}] is DOWN, Next circuit breaker reset attempt is {} - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), myTimeFormat.format(nextReset),
+					theUrlStatusBean.getUrl().getUrl() });
+		} else {
+			ourLog.info("URL[{}] is DOWN - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), theUrlStatusBean.getUrl().getUrl() });
 		}
 	}
 
@@ -1103,18 +1111,18 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		myBroadcastSender = theBroadcastSender;
 	}
 
-	void setConfigSvc(IConfigService theConfigSvc) {
+	@VisibleForTesting
+	public void setConfigSvc(IConfigService theConfigSvc) {
 		myConfigSvc = theConfigSvc;
 	}
 
-	/**
-	 * FOR UNIT TESTS ONLY
-	 */
-	void setDao(IDao thePersistence) {
+	@VisibleForTesting
+	public void setDao(IDao thePersistence) {
 		myDao = thePersistence;
 	}
 
-	void setNowForUnitTests(Date theNow) {
+	@VisibleForTesting
+	public void setNowForUnitTests(Date theNow) {
 		myNowForUnitTests = theNow;
 	}
 

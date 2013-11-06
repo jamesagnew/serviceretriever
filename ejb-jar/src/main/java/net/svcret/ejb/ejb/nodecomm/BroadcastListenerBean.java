@@ -1,4 +1,4 @@
-package net.svcret.ejb.ejb;
+package net.svcret.ejb.ejb.nodecomm;
 
 import javax.annotation.Resource;
 import javax.ejb.ActivationConfigProperty;

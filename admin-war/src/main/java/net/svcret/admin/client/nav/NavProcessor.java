@@ -583,7 +583,9 @@ public class NavProcessor {
 	private static String createArgumentToken(PagesEnum thePage, Object... theArgs) {
 		String token = createArgumentTokenInternal(thePage);
 		for (Object next : theArgs) {
-			token = token + "_" + next.toString();
+			if (next != null) {
+				token = token + "_" + next.toString();
+			}
 		}
 		token = removeDuplicates(token);
 		return token;

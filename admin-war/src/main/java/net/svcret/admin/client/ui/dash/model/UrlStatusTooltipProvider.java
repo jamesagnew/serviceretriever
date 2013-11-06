@@ -88,14 +88,19 @@ public final class UrlStatusTooltipProvider<T extends BaseDtoDashboardObject> im
 			row++;
 
 			theGrid.setText(row, 0, nextUrl.getId());
-			theGrid.getFlexCellFormatter().addStyleName(row, 0, MyResources.CSS.usageTooltipTableValueColumn());
+			theGrid.getFlexCellFormatter().addStyleName(row, 0, MyResources.CSS.usageTooltipTableValueWrappingColumn());
 
 			theGrid.setText(row, 1, nextUrl.getUrl());
-			theGrid.getFlexCellFormatter().addStyleName(row, 1, MyResources.CSS.usageTooltipTableValueColumn());
+			theGrid.getFlexCellFormatter().addStyleName(row, 1, MyResources.CSS.usageTooltipTableValueWrappingColumn());
 
 			FlowPanel statusPanel = new FlowPanel();
-			statusPanel.add(BaseDashModel.returnImageForStatus(nextUrl.getStatus()));
-			statusPanel.add(new Label(BaseUrlGrid.createUrlStatusText(nextUrl)));
+			if (nextUrl.getStatus() == null) {
+				statusPanel.add(new Label());
+				statusPanel.add(new Label());
+			} else {
+				statusPanel.add(BaseDashModel.returnImageForStatus(nextUrl.getStatus()));
+				statusPanel.add(new Label(BaseUrlGrid.createUrlStatusText(nextUrl)));
+			}
 			theGrid.setWidget(row, 2, statusPanel);
 			theGrid.getFlexCellFormatter().addStyleName(row, 2, MyResources.CSS.usageTooltipTableValueColumn());
 

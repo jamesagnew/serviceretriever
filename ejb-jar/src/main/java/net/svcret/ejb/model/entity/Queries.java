@@ -41,7 +41,7 @@ public class Queries {
 	public static final String RULEFIRING_Q = "SELECT f FROM PersMonitorRuleFiring f JOIN f.myProblems as p WHERE p.myServiceVersion IN :SVC_VERS ORDER BY f.myStartDate DESC";
 
 	public static final String RULEFIRING_FINDACTIVE = "PersMonitorRuleFiring.findAll";
-	public static final String RULEFIRING_FINDACTIVE_Q = "SELECT f FROM PersMonitorRuleFiring f WHERE f.myEndDate IS NULL";
+	public static final String RULEFIRING_FINDACTIVE_Q = "SELECT f FROM PersMonitorRuleFiring f WHERE f.myEndDate = :NULLDATE";
 
 	public static final String NODESTATUS_FINDALL = "PersNodeStatus.findAll";
 	public static final String NODRSTATUS_FINDALL_Q = "SELECT s FROM PersNodeStatus s";

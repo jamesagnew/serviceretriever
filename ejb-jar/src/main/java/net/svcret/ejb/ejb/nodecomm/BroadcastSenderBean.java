@@ -1,4 +1,4 @@
-package net.svcret.ejb.ejb;
+package net.svcret.ejb.ejb.nodecomm;
 
 import java.io.Serializable;
 
@@ -13,7 +13,6 @@ import javax.jms.TopicConnectionFactory;
 import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 
-import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.PersStickySessionUrlBinding;
 

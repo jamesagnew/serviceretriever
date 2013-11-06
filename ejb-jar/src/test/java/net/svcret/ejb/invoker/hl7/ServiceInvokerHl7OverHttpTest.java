@@ -58,7 +58,7 @@ public class ServiceInvokerHl7OverHttpTest {
 		HttpRequestBean req = new HttpRequestBean();
 		req.setPath("/Some/System");
 		req.setQuery("");
-		req.addHeader("Content-Type", "application/hl7-v2");
+		req.addHeader("Content-Type", "application/hl7-v2; charset=UTF-8");
 		req.setRequestType(RequestType.POST);
 		req.setInputReader(new StringReader(msgS));
 		InvocationResultsBean result = mySvc.processInvocation(req,svcVer);
@@ -70,6 +70,7 @@ public class ServiceInvokerHl7OverHttpTest {
 		assertSame(method, result.getMethodDefinition());
 	}
 
+	
 	@Test
 	public void testResponse() throws Exception {
 		

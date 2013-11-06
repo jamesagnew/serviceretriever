@@ -1,8 +1,14 @@
 package net.svcret.ejb.ejb;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.FileReader;
@@ -25,7 +31,6 @@ import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
-import net.svcret.ejb.api.IBroadcastSender;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IResponseValidator;
@@ -37,6 +42,9 @@ import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
 import net.svcret.ejb.ejb.log.FilesystemAuditLoggerBean;
 import net.svcret.ejb.ejb.log.ITransactionLogger;
 import net.svcret.ejb.ejb.log.TransactionLoggerBean;
+import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
+import net.svcret.ejb.ex.InvocationRequestFailedException;
+import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.invoker.hl7.ServiceInvokerHl7OverHttp;
@@ -62,6 +70,7 @@ import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
 import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
 
 import org.apache.commons.io.FileUtils;
+import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.hamcrest.core.IsNot;
 import org.hamcrest.core.StringContains;
 import org.hamcrest.text.IsEmptyString;
@@ -73,9 +82,9 @@ import org.mockito.internal.stubbing.defaultanswers.ReturnsDeepStubs;
 
 import ca.uhn.hl7v2.parser.PipeParser;
 
-public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
+public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 
-	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceOrchestratorTestIntegrationTest.class);
+	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceOrchestratorBeanIntegrationTest.class);
 	private IBroadcastSender myBroadcastSender;
 	private IConfigService myConfigService;
 	private DaoBean myDao;
@@ -258,7 +267,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		}
 
 		// Try again with credentials
-		
+
 		req.setInputReader(new StringReader(request));
 		req.getRequestHeaders().put("AUTHorization", Collections.singletonList("Basic dGVzdDphZG1pbg=="));
 		mySvc.handleServiceRequest(req);
@@ -370,11 +379,10 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 
 		for (BasePersStats<?, ?> next : values) {
 			if (next instanceof PersInvocationMethodSvcverStats) {
-				 PersInvocationMethodSvcverStats nextStats = (PersInvocationMethodSvcverStats) next;
-				 assertEquals(1, nextStats.getSuccessInvocationCount());
+				PersInvocationMethodSvcverStats nextStats = (PersInvocationMethodSvcverStats) next;
+				assertEquals(1, nextStats.getSuccessInvocationCount());
 			}
 		}
-
 
 	}
 
@@ -442,7 +450,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		try {
 			resp = mySvc.handleServiceRequest(req);
 			fail();
-		} catch (ProcessingException e) {
+		} catch (InvocationRequestFailedException e) {
 			ourLog.info("Message: " + e.getMessage());
 			assertThat(e.getMessage(), IsNot.not(IsEmptyString.isEmptyOrNullString()));
 		}
@@ -460,6 +468,17 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		ourLog.info("Journal file: {}", entireLog);
 
 		assertThat(entireLog, StringContains.containsString("</soapenv:Envelope>"));
+
+		// Make sure we keep stats
+		myRuntimeStatus.flushStatus();
+		newEntityManager();
+
+		myServiceRegistry.reloadRegistryFromDatabase();
+
+		newEntityManager();
+		mySvcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
+		StatsAccumulator stats = myRuntimeQuerySvc.extract60MinuteStats(mySvcVer);
+		assertEquals(stats.getFailCounts().toString(), 1, stats.getFailCounts().get(stats.getFailCounts().size() - 1).intValue());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -510,7 +529,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		respBean.setBody(response);
 		respBean.setContentType("text/xml");
 		respBean.setResponseTime(100);
-		respBean.addFailedUrl(myUrl, "This is the failure explanation", 200, "text/plain", "This is the failure body", 100);
+		respBean.addFailedUrl(myUrl, "This is the failure explanation", 200, "text/plain", "This is the failure body", 100, new HashMap<String, List<String>>());
 
 		respBean.setHeaders(new HashMap<String, List<String>>());
 		PersHttpClientConfig httpClient = any();
@@ -562,14 +581,98 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 		assertEquals(1, recentMessages.size());
 		assertThat(recentMessages.get(0).getFailDescription(), StringContains.containsString("All service URLs appear to be failing"));
 		assertThat(recentMessages.get(0).getFailDescription(), StringContains.containsString("This is the failure explanation"));
+		assertThat(recentMessages.get(0).getResponseBody(), StringContains.containsString("This is the failure body"));
 
 		verify(myHttpClient, times(1)).post(any(PersHttpClientConfig.class), any(IResponseValidator.class), any(UrlPoolBean.class), any(String.class), any(Map.class), any(String.class));
 
-		FileReader fr = new FileReader(getSvcVerFileName());
+		String svcVerFileName = getSvcVerFileName();
+		FileReader fr = new FileReader(svcVerFileName);
 		String entireLog = org.apache.commons.io.IOUtils.toString(fr);
 		ourLog.info("Journal file: {}", entireLog);
 
 		assertThat(entireLog, StringContains.containsString("</soapenv:Envelope>"));
+	}
+
+	@Test
+	public void testSoap11SidechannelRequestWithBackingError() throws Exception {
+
+		/*
+		 * Make request
+		 */
+
+		//@formatter:off
+		String request = "<soapenv:Envelope xmlns:net=\"net:svcret:demo\" xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
+				+ "   <soapenv:Header>\n"
+				+ "      <wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\" xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">\n"
+				+ "         <wsse:UsernameToken wsu:Id=\"UsernameToken-1\">\n" 
+				+ "            <wsse:Username>test</wsse:Username>\n"
+				+ "            <wsse:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">admin</wsse:Password>\n"
+				+ "            <wsse:Nonce EncodingType=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary\">P8ypSWlCHRqR4T1ABYHHbA==</wsse:Nonce>\n"
+				+ "            <wsu:Created>2013-04-20T21:18:55.025Z</wsu:Created>\n" 
+				+ "         </wsse:UsernameToken>\n" 
+				+ "      </wsse:Security>\n" 
+				+ "   </soapenv:Header>\n"
+				+ "   <soapenv:Body>\n" 
+				+ "      <net:d0s0v0m0>\n" 
+				+ "          <arg0>FAULT</arg0>\n" 
+				+ "          <arg1>?</arg1>\n" 
+				+ "      </net:d0s0v0m0>\n" 
+				+ "   </soapenv:Body>\n"
+				+ "</soapenv:Envelope>";
+
+		String response = 
+				"500 horrible internal exception";
+		//@formatter:on
+
+		IResponseValidator theResponseValidator = any();
+		UrlPoolBean theUrlPool = any();
+		String theContentBody = any();
+		Map<String, List<String>> theHeaders = any();
+		String theContentType = any();
+		HttpResponseBean respBean = new HttpResponseBean();
+		respBean.setCode(500);
+		respBean.setBody(response);
+		respBean.setContentType("text/xml");
+		respBean.setResponseTime(100);
+		HashMap<String, List<String>> headers = new HashMap<String, List<String>>();
+		headers.put("Header0", new ArrayList<String>());
+		headers.get("Header0").add("Header0Value");
+		respBean.addFailedUrl(myUrl, "This is the failure explanation", 500, "text/xml", response, 100, headers);
+		respBean.setHeaders(headers);
+		
+		PersHttpClientConfig httpClient = any();
+		when(myHttpClient.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
+
+		TransactionLoggerBean logger = new TransactionLoggerBean();
+		logger.setConfigServiceForUnitTests(myConfigService);
+		logger.setDao(myDao);
+		mySvc.setTransactionLogger(logger);
+
+		FilesystemAuditLoggerBean fsAuditLogger = new FilesystemAuditLoggerBean();
+		fsAuditLogger.setConfigServiceForUnitTests(myConfigService);
+		fsAuditLogger.initialize();
+		logger.setFilesystemAuditLoggerForUnitTests(fsAuditLogger);
+
+		String query = "";
+		Reader reader = new StringReader(request);
+		HttpRequestBean req = new HttpRequestBean();
+		req.setRequestType(RequestType.POST);
+		req.setRequestHostIp("127.0.0.1");
+		req.setPath("/d0/d0s0/d0s0v0");
+		req.setQuery(query);
+		req.setInputReader(reader);
+		req.setRequestTime(new Date());
+		req.setRequestHeaders(new HashMap<String, List<String>>());
+
+		try {
+			mySvc.handleSidechannelRequest(mySvcVerPid, request, "text/xml", "Admin Console");
+			fail();
+		} catch (InvocationResponseFailedException e) {
+			assertThat(e.getHttpResponse().getBody(), StringContains.containsString("500 horrible "));
+			assertThat(e.getHttpResponse().getContentType(), StringContains.containsString("text/xml"));
+			assertThat(e.getHttpResponse().getHeaders().get("Header0"), IsIterableContainingInAnyOrder.containsInAnyOrder("Header0Value"));
+		}
+
 	}
 
 	/**
@@ -989,7 +1092,7 @@ public class ServiceOrchestratorTestIntegrationTest extends BaseJpaTest {
 	}
 
 	public static void main(String[] args) throws Exception {
-		new ServiceOrchestratorTestIntegrationTest().testSoap11GoodRequest();
+		new ServiceOrchestratorBeanIntegrationTest().testSoap11GoodRequest();
 	}
 
 }

@@ -1,4 +1,4 @@
-package net.svcret.ejb.ejb;
+package net.svcret.ejb.ejb.monitor;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -16,25 +16,34 @@ import java.util.List;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
-import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoDomain;
+import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.api.HttpResponseBean;
-import net.svcret.ejb.api.IBroadcastSender;
-import net.svcret.ejb.api.IMonitorNotifier;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
+import net.svcret.ejb.ejb.AdminServiceBean;
+import net.svcret.ejb.ejb.BaseJpaTest;
+import net.svcret.ejb.ejb.ConfigServiceBean;
+import net.svcret.ejb.ejb.DaoBean;
+import net.svcret.ejb.ejb.DefaultAnswer;
+import net.svcret.ejb.ejb.RuntimeStatusBean;
+import net.svcret.ejb.ejb.RuntimeStatusQueryBean;
+import net.svcret.ejb.ejb.SecurityServiceBean;
+import net.svcret.ejb.ejb.ServiceRegistryBean;
+import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
 import net.svcret.ejb.invoker.soap.IServiceInvokerSoap11;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersLibraryMessage;
 import net.svcret.ejb.model.entity.PersMonitorRuleActive;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
+import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersMonitorRulePassive;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
@@ -136,16 +145,15 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 
 		// No calls have happened yet..
 		newEntityManager();
-		mySvc.check();
+		mySvc.runPassiveChecks();
 		newEntityManager();
-		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
-		assertNull(svcVer.getMostRecentMonitorRuleFiring());
+		assertNull(getMostRecentMonitorRuleFiring());
 
 		// Fail one of the URLs
 		newEntityManager();
 		HttpResponseBean httpResponse = new HttpResponseBean();
 		httpResponse.setSuccessfulUrl(myUrl1);
-		httpResponse.addFailedUrl(myUrl2, "failure explanation", 500, "text/plain", "response body",0);
+		httpResponse.addFailedUrl(myUrl2, "failure explanation", 500, "text/plain", "response body",0, null);
 		httpResponse.setBody("successful response");
 		InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
 		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
@@ -154,14 +162,13 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		myStatsSvc.flushStatus();
 		newEntityManager();
 
-		mySvc.check();
+		mySvc.runPassiveChecks();
 		newEntityManager();
-		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
-		assertNotNull(svcVer.getMostRecentMonitorRuleFiring());
-		assertNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
-		assertEquals(1, svcVer.getMostRecentMonitorRuleFiring().getProblems().size());
-		assertEquals(myUrl2, svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getUrl());
-		assertEquals("failure explanation", svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getFailedUrlMessage());
+		assertNotNull(getMostRecentMonitorRuleFiring());
+		assertNull(getMostRecentMonitorRuleFiring().getEndDate());
+		assertEquals(1, getMostRecentMonitorRuleFiring().getProblems().size());
+		assertEquals(myUrl2, getMostRecentMonitorRuleFiring().getProblems().iterator().next().getUrl());
+		assertEquals("failure explanation", getMostRecentMonitorRuleFiring().getProblems().iterator().next().getFailedUrlMessage());
 
 		// Succeed the URL again
 		newEntityManager();
@@ -175,10 +182,9 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		myStatsSvc.flushStatus();
 		newEntityManager();
 
-		mySvc.check();
+		mySvc.runPassiveChecks();
 		newEntityManager();
-		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
-		assertNotNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
+		assertNotNull(getMostRecentMonitorRuleFiring().getEndDate());
 		
 		
 	}
@@ -197,16 +203,15 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 
 		// No calls have happened yet..
 		newEntityManager();
-		mySvc.check();
+		mySvc.runPassiveChecks();
 		newEntityManager();
-		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
-		assertNull(svcVer.getMostRecentMonitorRuleFiring());
+		assertNull(getMostRecentMonitorRuleFiring());
 
 		// Fail one of the URLs
 		newEntityManager();
 		HttpResponseBean httpResponse = new HttpResponseBean();
 		httpResponse.setSuccessfulUrl(myUrl1);
-		httpResponse.addFailedUrl(myUrl2, "failure explanation", 500, "text/plain", "response body",0);
+		httpResponse.addFailedUrl(myUrl2, "failure explanation", 500, "text/plain", "response body",0, null);
 		httpResponse.setBody("successful response");
 		InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
 		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
@@ -215,11 +220,10 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		myStatsSvc.flushStatus();
 		newEntityManager();
 
-		mySvc.check();
+		mySvc.runPassiveChecks();
 		newEntityManager();
-		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
-		assertNotNull(svcVer.getMostRecentMonitorRuleFiring());
-		assertNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
+		assertNotNull(getMostRecentMonitorRuleFiring());
+		assertNull(getMostRecentMonitorRuleFiring().getEndDate());
 
 		// Succeed the URL again
 		newEntityManager();
@@ -233,10 +237,9 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		myStatsSvc.flushStatus();
 		newEntityManager();
 
-		mySvc.check();
+		mySvc.runPassiveChecks();
 		newEntityManager();
-		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
-		assertNotNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
+		assertNotNull(getMostRecentMonitorRuleFiring().getEndDate());
 		
 		
 	}
@@ -281,10 +284,10 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 
 		// No calls have happened yet..
 		newEntityManager();
-		mySvc.check();
+		mySvc.runPassiveChecks();
 		newEntityManager();
 		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
-		assertNull(svcVer.getMostRecentMonitorRuleFiring());
+		assertNull(getMostRecentMonitorRuleFiring());
 
 		// Fail one of the URLs
 		newEntityManager();
@@ -297,7 +300,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		httpResponse.setResponseTime(1000);
 		responses.add(new SidechannelOrchestratorResponseBean("", "", new HashMap<String, List<String>>(), httpResponse, ResponseTypeEnum.SUCCESS, new Date()));
 		when(orch.handleSidechannelRequestForEachUrl(eq(mySvcVer.getPid()), (String)any(), (String)any(), (String)any())).thenReturn(responses);
-		mySvc.runActiveCheck(check);
+		mySvc.runActiveChecks();
 		
 //		HttpResponseBean httpResponse = new HttpResponseBean();
 //		httpResponse.setSuccessfulUrl(myUrl1);
@@ -315,9 +318,9 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		// This doesn't change because the service didn't fail, just the rule
 		assertEquals(StatusEnum.UNKNOWN, svcVer.getUrls().get(0).getStatus().getStatus());
 
-		assertNotNull(svcVer.getMostRecentMonitorRuleFiring());
-		assertNull(svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage(),svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage());
-		assertNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
+		assertNotNull(getMostRecentMonitorRuleFiring());
+		assertNull(getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage(),getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage());
+		assertNull(getMostRecentMonitorRuleFiring().getEndDate());
 
 		rule = (PersMonitorRuleActive) myDao.getMonitorRule(rule.getPid());
 		assertEquals(1, rule.getActiveChecks().iterator().next().getRecentOutcomes().size());
@@ -325,12 +328,12 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		newEntityManager();
 
 		// Make sure the passive check doesn't overwrite things
-		mySvc.check();
+		mySvc.runPassiveChecks();
 		
 		newEntityManager();
 		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
-		assertNotNull(svcVer.getMostRecentMonitorRuleFiring());
-		assertNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
+		assertNotNull(getMostRecentMonitorRuleFiring());
+		assertNull(getMostRecentMonitorRuleFiring().getEndDate());
 
 		// Succeed the URL again
 		newEntityManager();
@@ -342,7 +345,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 //		myStatsSvc.recordInvocationMethod(new Date(), 100, myMethod, null, httpResponse, invocationResponseResultsBean, null);
 
 		httpResponse.setResponseTime(1);
-		mySvc.runActiveCheck(check);
+		mySvc.runActiveChecks();
 
 		newEntityManager();
 
@@ -350,7 +353,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		newEntityManager();
 
 		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
-		assertNotNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
+		assertNotNull(getMostRecentMonitorRuleFiring().getEndDate());
 		assertEquals(StatusEnum.ACTIVE, svcVer.getUrls().get(0).getStatus().getStatus());
 
 		
@@ -396,10 +399,10 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 
 		// No calls have happened yet..
 		newEntityManager();
-		mySvc.check();
+		mySvc.runPassiveChecks();
 		newEntityManager();
 		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
-		assertNull(svcVer.getMostRecentMonitorRuleFiring());
+		assertNull(getMostRecentMonitorRuleFiring());
 
 		// Fail one of the URLs
 		newEntityManager();
@@ -411,7 +414,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		rsp.setApplicableUrl(myUrl1);
 		responses.add(rsp);
 		when(orch.handleSidechannelRequestForEachUrl(eq(mySvcVer.getPid()), (String)any(), (String)any(), (String)any())).thenReturn(responses);
-		mySvc.runActiveCheck(check);
+		mySvc.runActiveChecks();
 		
 //		HttpResponseBean httpResponse = new HttpResponseBean();
 //		httpResponse.setSuccessfulUrl(myUrl1);
@@ -428,9 +431,9 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
 		assertEquals(StatusEnum.DOWN, svcVer.getUrls().get(0).getStatus().getStatus());
 
-		assertNotNull(svcVer.getMostRecentMonitorRuleFiring());
-		assertNull(svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage(),svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage());
-		assertNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
+		assertNotNull(getMostRecentMonitorRuleFiring());
+		assertNull(getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage(),getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage());
+		assertNull(getMostRecentMonitorRuleFiring().getEndDate());
 
 		rule = (PersMonitorRuleActive) myDao.getMonitorRule(rule.getPid());
 		assertEquals(1, rule.getActiveChecks().iterator().next().getRecentOutcomes().size());
@@ -438,12 +441,12 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		newEntityManager();
 
 		// Make sure the passive check doesn't overwrite things
-		mySvc.check();
+		mySvc.runPassiveChecks();
 		
 		newEntityManager();
 		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
-		assertNotNull(svcVer.getMostRecentMonitorRuleFiring());
-		assertNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
+		assertNotNull(getMostRecentMonitorRuleFiring());
+		assertNull(getMostRecentMonitorRuleFiring().getEndDate());
 
 		// Succeed the URL again
 		newEntityManager();
@@ -461,13 +464,13 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		httpResponse.setResponseTime(1);
 		responses.clear();
 		responses.add(new SidechannelOrchestratorResponseBean("", "", new HashMap<String, List<String>>(), httpResponse, ResponseTypeEnum.SUCCESS, new Date()));
-		mySvc.runActiveCheck(check);
+		mySvc.runActiveChecks();
 
 		myStatsSvc.flushStatus();
 		newEntityManager();
 		
 		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
-		assertNotNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
+		assertNotNull(getMostRecentMonitorRuleFiring().getEndDate());
 		assertEquals(StatusEnum.ACTIVE, svcVer.getUrls().get(0).getStatus().getStatus());
 
 		
@@ -509,10 +512,10 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 
 		// No calls have happened yet..
 		newEntityManager();
-		mySvc.check();
+		mySvc.runPassiveChecks();
 		newEntityManager();
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
-		assertNull(svcVer.getMostRecentMonitorRuleFiring());
+		assertNull(getMostRecentMonitorRuleFiring());
 
 		// Fail one of the URLs
 		newEntityManager();
@@ -524,7 +527,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		bean.setApplicableUrl(myUrl1);
 		responses.add(bean);
 		when(orch.handleSidechannelRequestForEachUrl(eq(mySvcVer.getPid()), (String)any(), (String)any(), (String)any())).thenReturn(responses);
-		mySvc.runActiveCheck(check);
+		mySvc.runActiveChecks();
 		
 //		HttpResponseBean httpResponse = new HttpResponseBean();
 //		httpResponse.setSuccessfulUrl(myUrl1);
@@ -538,9 +541,9 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		newEntityManager();
 
 		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
-		assertNotNull(svcVer.getMostRecentMonitorRuleFiring());
-		assertNull(svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage(), svcVer.getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage());
-		assertNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
+		assertNotNull(getMostRecentMonitorRuleFiring());
+		assertNull(getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage(), getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage());
+		assertNull(getMostRecentMonitorRuleFiring().getEndDate());
 
 		rule = (PersMonitorRuleActive) myDao.getMonitorRule(rule.getPid());
 		assertEquals(1, rule.getActiveChecks().iterator().next().getRecentOutcomes().size());
@@ -548,12 +551,12 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		newEntityManager();
 
 		// Make sure the passive check doesn't overwrite things
-		mySvc.check();
+		mySvc.runPassiveChecks();
 		
 		newEntityManager();
 		svcVer = myDao.getServiceVersionByPid(mySvcVer.getPid());
-		assertNotNull(svcVer.getMostRecentMonitorRuleFiring());
-		assertNull(svcVer.getMostRecentMonitorRuleFiring().getEndDate());
+		assertNotNull(getMostRecentMonitorRuleFiring());
+		assertNull(getMostRecentMonitorRuleFiring().getEndDate());
 
 		// Succeed the URL again
 		newEntityManager();
@@ -563,10 +566,22 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 	}
 
 	
+	private PersMonitorRuleFiring getMostRecentMonitorRuleFiring() {
+		@SuppressWarnings("rawtypes")
+		List list = myEntityManager.createQuery("SELECT f FROM PersMonitorRuleFiring f").getResultList();
+		if (list.isEmpty()) {
+			return null;
+		}
+		if (list.size() > 1) {
+			throw new IllegalStateException();
+		}
+		return (PersMonitorRuleFiring) list.get(0);
+	}
+
 	private void createCatalog() throws Exception {
 		newEntityManager();
 
-		DtoDomain d1 = myOrchSvc.addDomain("asv_did", "asv_did");
+		DtoDomain d1 = myOrchSvc.unitTestMethod_addDomain("asv_did", "asv_did");
 		GService d1s1 = myOrchSvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 

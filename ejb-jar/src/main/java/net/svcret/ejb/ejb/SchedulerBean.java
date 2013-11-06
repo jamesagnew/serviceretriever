@@ -12,12 +12,12 @@ import javax.ejb.Startup;
 
 import net.svcret.admin.shared.model.RetrieverNodeTypeEnum;
 import net.svcret.ejb.api.IConfigService;
-import net.svcret.ejb.api.IMonitorService;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.api.ISecurityService;
 import net.svcret.ejb.ejb.log.IFilesystemAuditLogger;
 import net.svcret.ejb.ejb.log.ITransactionLogger;
+import net.svcret.ejb.ejb.monitor.IMonitorService;
 import net.svcret.ejb.ejb.nodecomm.ISynchronousNodeIpcClient;
 
 @Startup()
@@ -136,27 +136,14 @@ public class SchedulerBean implements IScheduler {
 
 	@Override
 	@Schedule(second = "0", minute = "*", hour = "*", persistent = false)
-	public void monitorActiveChecks() {
+	public void monitorRunChecks() {
 		try {
 			if (myConfigSvc.getNodeType() != RetrieverNodeTypeEnum.PRIMARY) {
 				return;
 			}
 
 			myMonitorSvc.runActiveChecks();
-		} catch (Exception e) {
-			ourLog.error("Failed to collapse stats", e);
-		}
-	}
-
-	@Override
-	@Schedule(second = "0", minute = "*", hour = "*", persistent = false)
-	public void monitorRunPassiveChecks() {
-		try {
-			if (myConfigSvc.getNodeType() != RetrieverNodeTypeEnum.PRIMARY) {
-				return;
-			}
-
-			myMonitorSvc.check();
+			myMonitorSvc.runPassiveChecks();
 		} catch (Exception e) {
 			ourLog.error("Failed to collapse stats", e);
 		}

@@ -1,13 +1,10 @@
 package net.svcret.ejb.model.entity;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
 import javax.persistence.Column;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 
 import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
@@ -22,9 +19,9 @@ public abstract class BasePersServiceCatalogItem extends BasePersKeepsRecentTran
 	@Column(name = "DISP_PUBLIC_REG", nullable = true)
 	private Boolean myDisplayInPublicRegistry;
 
-	@ManyToOne(cascade = {}, optional = true)
-	@JoinColumn(name = "MOST_REC_MONITORRULE_FIR", nullable = true)
-	private PersMonitorRuleFiring myMostRecentMonitorRuleFiring;
+//	@ManyToOne(cascade = {}, optional = true)
+//	@JoinColumn(name = "MOST_REC_MONITORRULE_FIR", nullable = true)
+//	private PersMonitorRuleFiring myMostRecentMonitorRuleFiring;
 
 	@Column(name = "OBSCURE_REQ_ELEMS_IN_LOG", length = 2000, nullable = true)
 	private String myObscureRequestElementsInLog;
@@ -46,23 +43,6 @@ public abstract class BasePersServiceCatalogItem extends BasePersKeepsRecentTran
 
 	public abstract Set<String> determineObscureResponseElements();
 
-	public Set<Long> getActiveMonitorRuleFiringPidsWhichApply() {
-		HashSet<Long> retVal = new HashSet<Long>();
-
-		for (PersMonitorRuleFiring next : getActiveRuleFiringsWhichMightApply()) {
-			Set<Long> applicableSvcVerPids = next.getAppliesToServiceVersionPids();
-			for (BasePersServiceVersion nextSvcVer : getAllServiceVersions()) {
-				if (applicableSvcVerPids.contains(nextSvcVer.getPid())) {
-					retVal.add(next.getPid());
-				}
-			}
-
-		}
-
-		return retVal;
-	}
-
-	public abstract Collection<PersMonitorRuleFiring> getActiveRuleFiringsWhichMightApply();
 
 	public abstract Collection<? extends BasePersServiceVersion> getAllServiceVersions();
 
@@ -70,9 +50,9 @@ public abstract class BasePersServiceCatalogItem extends BasePersKeepsRecentTran
 		return myDisplayInPublicRegistry;
 	}
 
-	public PersMonitorRuleFiring getMostRecentMonitorRuleFiring() {
-		return myMostRecentMonitorRuleFiring;
-	}
+//	public PersMonitorRuleFiring getMostRecentMonitorRuleFiring() {
+//		return myMostRecentMonitorRuleFiring;
+//	}
 
 	public Set<String> getObscureRequestElementsInLog() {
 		TreeSet<String> retVal = myObscureRequestElementsInLogCache;
@@ -131,13 +111,13 @@ public abstract class BasePersServiceCatalogItem extends BasePersKeepsRecentTran
 		myDisplayInPublicRegistry = theDisplayInPublicRegistry;
 	}
 
-	/**
-	 * @param theMostRecentMonitorRuleFiring
-	 *            the mostRecentMonitorRuleFiring to set
-	 */
-	public void setMostRecentMonitorRuleFiring(PersMonitorRuleFiring theMostRecentMonitorRuleFiring) {
-		myMostRecentMonitorRuleFiring = theMostRecentMonitorRuleFiring;
-	}
+//	/**
+//	 * @param theMostRecentMonitorRuleFiring
+//	 *            the mostRecentMonitorRuleFiring to set
+//	 */
+//	public void setMostRecentMonitorRuleFiring(PersMonitorRuleFiring theMostRecentMonitorRuleFiring) {
+//		myMostRecentMonitorRuleFiring = theMostRecentMonitorRuleFiring;
+//	}
 
 	public void setObscureRequestElementsInLog(Set<String> theObscureRequestElementsInLog) {
 		StringBuilder b = new StringBuilder();

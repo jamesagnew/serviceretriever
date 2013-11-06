@@ -32,6 +32,12 @@ public abstract class BaseDtoDashboardObject extends BaseDtoKeepsRecentMessages 
 	@XmlElement(name = "config_Id")
 	private String myId;
 
+	@XmlElement(name = "runtime_LastFailInvocation")
+	private Date myLastFailInvocation;
+
+	@XmlElement(name = "runtime_LastFaultInvocation")
+	private Date myLastFaultInvocation;
+
 	@XmlElement(name = "runtime_LastServerSecurityFailure")
 	private Date myLastServerSecurityFailure;
 
@@ -84,6 +90,8 @@ public abstract class BaseDtoDashboardObject extends BaseDtoKeepsRecentMessages 
 		myStatsInitialized = null;
 	}
 
+	public abstract List<BaseDtoServiceVersion> getAllServiceVersions();
+
 	public Double getAverageFailTransactionsPerMin60min() {
 		return myAverageFailTransactionsPerMin60min;
 	}
@@ -119,6 +127,14 @@ public abstract class BaseDtoDashboardObject extends BaseDtoKeepsRecentMessages 
 	 */
 	public String getId() {
 		return myId;
+	}
+
+	public Date getLastFailInvocation() {
+		return myLastFailInvocation;
+	}
+
+	public Date getLastFaultInvocation() {
+		return myLastFaultInvocation;
 	}
 
 	/**
@@ -275,6 +291,14 @@ public abstract class BaseDtoDashboardObject extends BaseDtoKeepsRecentMessages 
 		myId = theId;
 	}
 
+	public void setLastFailInvocation(Date theLastFailInvocation) {
+		myLastFailInvocation = theLastFailInvocation;
+	}
+
+	public void setLastFaultInvocation(Date theLastFaultInvocation) {
+		myLastFaultInvocation = theLastFaultInvocation;
+	}
+
 	/**
 	 * @param theLastServerSecurityFailure
 	 *            the lastServerSecurityFailure to set
@@ -416,7 +440,5 @@ public abstract class BaseDtoDashboardObject extends BaseDtoKeepsRecentMessages 
 			myMaxSecurityFailTransactionsPerMin60min = max;
 		}
 	}
-
-	public abstract List<BaseDtoServiceVersion> getAllServiceVersions();
 
 }
