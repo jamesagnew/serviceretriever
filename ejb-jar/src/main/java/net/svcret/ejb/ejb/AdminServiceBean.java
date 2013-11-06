@@ -1331,7 +1331,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			ourLog.info("HTTP client config has a truststore defined");
 			config.setTlsTruststore(theNewTruststore);
 			config.setTlsTruststorePassword(theNewTruststorePass);
-		} else {
+		} else if (theConfig.getTlsTruststore() == null) {
 			ourLog.info("HTTP client config has no truststore defined");
 			config.setTlsTruststore(null);
 			config.setTlsTruststorePassword(null);
@@ -1341,7 +1341,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			ourLog.info("HTTP client config has a keystore defined");
 			config.setTlsKeystore(theNewKeystore);
 			config.setTlsKeystorePassword(theNewKeystorePass);
-		} else {
+		} else if (theConfig.getTlsKeystore() == null) {
 			ourLog.info("HTTP client config has no keystore defined");
 			config.setTlsKeystore(null);
 			config.setTlsKeystorePassword(null);

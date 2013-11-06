@@ -20,8 +20,10 @@ public interface HttpClientConfigService extends RemoteService {
 
 	DtoKeystoreAnalysis analyzeTransientKeyStore(long theHttpClientConfig) throws ServiceFailureException;
 
-	GHttpClientConfig saveHttpClientConfig(boolean theCreate, boolean theUseNewTruststore, boolean theUseNewKeystore, GHttpClientConfig theConfig) throws ServiceFailureException;
-
 	Collection<DtoStickySessionUrlBinding> getAllStickySessions();
 
+	GHttpClientConfig saveHttpClientConfig(boolean theCreate,
+			boolean theUseNewTruststore, boolean theUseNewKeystore,
+			GHttpClientConfig theConfig) throws ServiceFailureException;
+	
 }
