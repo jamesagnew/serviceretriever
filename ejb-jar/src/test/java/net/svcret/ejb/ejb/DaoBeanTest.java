@@ -20,6 +20,7 @@ import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
+import net.svcret.ejb.model.entity.BasePersObject;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.BasePersStats;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
@@ -834,6 +835,7 @@ public class DaoBeanTest extends BaseJpaTest {
 
 	@Before
 	public void before2() throws Exception {
+		System.setProperty(BasePersObject.NET_SVCRET_UNITTESTMODE,"true");
 		mySvc = new DaoBean();
 		
 		myConfig = new PersConfig();
@@ -1014,17 +1016,17 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		PersServiceVersionUrl url0 = new PersServiceVersionUrl();
 		url0.setUrlId("url0");
-		url0.setUrl("http://url0");
+		url0.setUrl("http://foourl0");
 		ver.getUrls().add(url0);
 
 		PersServiceVersionUrl url1 = new PersServiceVersionUrl();
 		url1.setUrlId("url1");
-		url1.setUrl("http://url1");
+		url1.setUrl("http://foourl1");
 		ver.getUrls().add(url1);
 
 		PersServiceVersionUrl url2 = new PersServiceVersionUrl();
 		url2.setUrlId("url2");
-		url2.setUrl("http://url2");
+		url2.setUrl("http://foourl2");
 		ver.getUrls().add(url2);
 
 		mySvc.saveServiceVersion(ver);
@@ -1036,7 +1038,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		assertNotNull(ver.getUrls().get(0).getStatus());
 
 		ver.retainOnlyUrlsWithIds("url0", "url2");
-		ver.getUrlWithId("url0").setUrl("http://url0b");
+		ver.getUrlWithId("url0").setUrl("http://foourl0b");
 
 		mySvc.saveServiceVersion(ver);
 
@@ -1045,8 +1047,8 @@ public class DaoBeanTest extends BaseJpaTest {
 		ver = mySvc.getAllServiceVersions().iterator().next();
 		assertEquals(2, ver.getUrls().size());
 		Iterator<PersServiceVersionUrl> iter = ver.getUrls().iterator();
-		assertEquals("http://url0b", iter.next().getUrl());
-		assertEquals("http://url2", iter.next().getUrl());
+		assertEquals("http://foourl0b", iter.next().getUrl());
+		assertEquals("http://foourl2", iter.next().getUrl());
 
 		newEntityManager();
 
@@ -1054,7 +1056,7 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		PersServiceVersionUrl url1b = new PersServiceVersionUrl();
 		url1b.setUrlId("url1b");
-		url1b.setUrl("http://url1b");
+		url1b.setUrl("http://foourl1b");
 		ver.getUrls().add(1, url1b);
 
 		mySvc.saveServiceVersion(ver);
@@ -1064,9 +1066,9 @@ public class DaoBeanTest extends BaseJpaTest {
 		ver = mySvc.getAllServiceVersions().iterator().next();
 		assertEquals(3, ver.getUrls().size());
 		iter = ver.getUrls().iterator();
-		assertEquals("http://url0b", iter.next().getUrl());
-		assertEquals("http://url1b", iter.next().getUrl());
-		assertEquals("http://url2", iter.next().getUrl());
+		assertEquals("http://foourl0b", iter.next().getUrl());
+		assertEquals("http://foourl1b", iter.next().getUrl());
+		assertEquals("http://foourl2", iter.next().getUrl());
 
 	}
 

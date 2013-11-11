@@ -7,35 +7,41 @@ import javax.xml.bind.annotation.XmlType;
 
 import net.svcret.admin.shared.util.XmlConstants;
 
-@XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="HttpClientConfig")
+@XmlType(namespace = XmlConstants.DTO_NAMESPACE, name = "HttpClientConfig")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class GHttpClientConfig extends BaseDtoObject {
+
+	public static final UrlSelectionPolicy DEFAULT_URL_SELECTION_POLICY = UrlSelectionPolicy.ROUND_ROBIN;
+	public static final int DEFAULT_CB_RESET_TIME = 60000;
+	public static final int DEFAULT_CONNECT_TIMEOUT = 10000;
+	public static final int DEFAULT_READ_TIMEOUT = 30000;
 
 	public static final String DEFAULT_ID = "DEFAULT";
 
 	private static final long serialVersionUID = 1L;
+	public static final int DEFAULT_FAILURE_RETRIES = 0;
 
-	@XmlElement(name="config_CircuitBreakerEnabled")
+	@XmlElement(name = "config_CircuitBreakerEnabled")
 	private boolean myCircuitBreakerEnabled;
-	@XmlElement(name="config_CircuitBreakerTimeBetweenResetAttempts")
+	@XmlElement(name = "config_CircuitBreakerTimeBetweenResetAttempts")
 	private int myCircuitBreakerTimeBetweenResetAttempts;
-	@XmlElement(name="config_ConnectTimeoutMillis")
+	@XmlElement(name = "config_ConnectTimeoutMillis")
 	private int myConnectTimeoutMillis;
-	@XmlElement(name="config_FailureRetriesBeforeAborting")
+	@XmlElement(name = "config_FailureRetriesBeforeAborting")
 	private int myFailureRetriesBeforeAborting;
-	@XmlElement(name="config_Id")
+	@XmlElement(name = "config_Id")
 	private String myId;
-	@XmlElement(name="config_Name")
+	@XmlElement(name = "config_Name")
 	private String myName;
-	@XmlElement(name="config_ReadTimeoutMillis")
+	@XmlElement(name = "config_ReadTimeoutMillis")
 	private int myReadTimeoutMillis;
-	@XmlElement(name="config_StickySessionCookieForSessionId")
+	@XmlElement(name = "config_StickySessionCookieForSessionId")
 	private String myStickySessionCookieForSessionId;
-	@XmlElement(name="config_TlsKeystore")
+	@XmlElement(name = "config_TlsKeystore")
 	private DtoKeystoreAnalysis myTlsKeystore;
-	@XmlElement(name="config_TlsTruststore")
+	@XmlElement(name = "config_TlsTruststore")
 	private DtoKeystoreAnalysis myTlsTruststore;
-	@XmlElement(name="config_UrlSelectionPolicy")
+	@XmlElement(name = "config_UrlSelectionPolicy")
 	private UrlSelectionPolicy myUrlSelectionPolicy;
 
 	/**
@@ -113,8 +119,8 @@ public class GHttpClientConfig extends BaseDtoObject {
 	@Override
 	public void merge(BaseDtoObject theObject) {
 		super.merge(theObject);
-		
-		GHttpClientConfig obj = (GHttpClientConfig)theObject;
+
+		GHttpClientConfig obj = (GHttpClientConfig) theObject;
 		myCircuitBreakerEnabled = obj.myCircuitBreakerEnabled;
 		myCircuitBreakerTimeBetweenResetAttempts = obj.myCircuitBreakerTimeBetweenResetAttempts;
 		myConnectTimeoutMillis = obj.myConnectTimeoutMillis;
@@ -147,6 +153,15 @@ public class GHttpClientConfig extends BaseDtoObject {
 	 */
 	public void setConnectTimeoutMillis(int theConnectTimeoutMillis) {
 		myConnectTimeoutMillis = theConnectTimeoutMillis;
+	}
+
+	public void setDefaults() {
+		setConnectTimeoutMillis(DEFAULT_CONNECT_TIMEOUT);
+		setReadTimeoutMillis(DEFAULT_READ_TIMEOUT);
+		setCircuitBreakerEnabled(false);
+		setCircuitBreakerTimeBetweenResetAttempts(DEFAULT_CB_RESET_TIME);
+		setFailureRetriesBeforeAborting(DEFAULT_FAILURE_RETRIES);
+		setUrlSelectionPolicy(DEFAULT_URL_SELECTION_POLICY);
 	}
 
 	/**
@@ -182,7 +197,7 @@ public class GHttpClientConfig extends BaseDtoObject {
 	}
 
 	public void setStickySessionCookieForSessionId(String theStickySessionCookieForSessionId) {
-		myStickySessionCookieForSessionId=theStickySessionCookieForSessionId;
+		myStickySessionCookieForSessionId = theStickySessionCookieForSessionId;
 	}
 
 	public void setTlsKeystore(DtoKeystoreAnalysis theKeystore) {

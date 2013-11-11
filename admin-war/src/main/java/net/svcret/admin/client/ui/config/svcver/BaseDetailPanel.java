@@ -33,8 +33,8 @@ import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.BaseDtoClientSecurity;
 import net.svcret.admin.shared.model.BaseDtoServerSecurity;
-import net.svcret.admin.shared.model.DtoServerSecurityList;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
+import net.svcret.admin.shared.model.DtoServerSecurityList;
 import net.svcret.admin.shared.model.GHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GServiceMethod;
@@ -75,7 +75,6 @@ import com.google.gwt.user.client.ui.TabPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
-import com.google.gwt.view.client.SetSelectionModel;
 
 public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends TabPanel {
 

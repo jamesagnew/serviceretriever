@@ -77,6 +77,8 @@ public class HttpClientConfigsPanel extends FlowPanel {
 	private Long myDefaultPid;
 	private EditableField myStickySessionCookieNameBox;
 	private HtmlLabel myStickySessionCookieLabel;
+	private boolean myClearKeystore;
+	private boolean myClearTrustStore;
 
 	public HttpClientConfigsPanel() {
 		this(null);
@@ -189,6 +191,23 @@ public class HttpClientConfigsPanel extends FlowPanel {
 			}
 		});
 		panel.add(submitButton);
+		
+		PButton clearButton = new PButton(AdminPortal.MSGS.actions_Clear());
+		panel.add(clearButton);
+		clearButton.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				if (theIsKeystore) {
+					myClearKeystore=true;
+					myNewKeystore=null;
+				}else {
+					myClearTrustStore=true;
+					myNewTruststore=null;
+				}
+				updateKeystoreLabels();
+			}
+		});
+		
 		panel.add(trustStoreLoadingSpinner);
 
 		Hidden typeHidden = new Hidden();
@@ -261,9 +280,13 @@ public class HttpClientConfigsPanel extends FlowPanel {
 
 		if (myNewKeystore != null) {
 			config.setTlsKeystore(myNewKeystore);
+		} else if (myClearKeystore) {
+			config.setTlsKeystore(null);
 		}
 		if (myNewTruststore != null) {
 			config.setTlsKeystore(myNewTruststore);
+		} else if (myClearTrustStore) {
+			config.setTlsTruststore(null);
 		}
 
 		myLoadingSpinner.show();
@@ -297,12 +320,18 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		if (myNewKeystore != null) {
 			return myNewKeystore;
 		}
+		if (myClearKeystore) {
+			return null;
+		}
 		return mySelectedConfig.getTlsKeystore();
 	}
 
 	private DtoKeystoreAnalysis getTruststoreAnalysis() {
 		if (myNewTruststore != null) {
 			return myNewTruststore;
+		}
+		if (myClearTrustStore) {
+			return null;
 		}
 		return mySelectedConfig.getTlsTruststore();
 	}
@@ -647,6 +676,11 @@ public class HttpClientConfigsPanel extends FlowPanel {
 
 		myRetriesTextBox.setValue((mySelectedConfig.getFailureRetriesBeforeAborting()));
 
+		myNewKeystore=null;
+		myClearKeystore=false;
+		myNewTruststore=null;
+		myClearTrustStore=false;
+		
 		updateKeystoreLabels();
 	}
 
@@ -663,7 +697,12 @@ public class HttpClientConfigsPanel extends FlowPanel {
 				if (trust.isPasswordAccepted() == false) {
 					myTrustStoreLabel.setText("Failed to process store because of error: " + trust.getProblemDescription());
 				} else {
-					myTrustStoreLabel.setText("Successfully uploaded new store, contains " + trust.getKeyAliases().size() + " entries");
+					SafeHtmlBuilder stringBuilder = new SafeHtmlBuilder();
+					stringBuilder.appendHtmlConstant("Successfully uploaded new store, contains ");
+					stringBuilder.append(trust.getKeyAliases().size());
+					stringBuilder.appendHtmlConstant(" entries: ");
+					stringBuilder.append(describeKeystore(trust));
+					myTrustStoreLabel.setHTML(stringBuilder.toSafeHtml());
 				}
 			} else {
 				SafeHtmlBuilder stringBuilder = new SafeHtmlBuilder();
@@ -687,7 +726,12 @@ public class HttpClientConfigsPanel extends FlowPanel {
 				if (keystore.isPasswordAccepted() == false) {
 					myKeyStoreLabel.setText("Failed to process store because of error: " + keystore.getProblemDescription());
 				} else {
-					myKeyStoreLabel.setText("Successfully uploaded new store, contains " + keystore.getKeyAliases().size() + " entries");
+					SafeHtmlBuilder stringBuilder = new SafeHtmlBuilder();
+					stringBuilder.appendHtmlConstant("Successfully uploaded new store, contains ");
+					stringBuilder.append(keystore.getKeyAliases().size());
+					stringBuilder.appendHtmlConstant(" entries: ");
+					stringBuilder.append(describeKeystore(keystore));
+					myKeyStoreLabel.setHTML(stringBuilder.toSafeHtml());
 				}
 			} else {
 				SafeHtmlBuilder stringBuilder = new SafeHtmlBuilder();
@@ -730,7 +774,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 
 			b.appendHtmlConstant("<li>");
 			b.appendHtmlConstant("Private Key: ");
-			b.appendEscaped(theKeystore.getKeyEntry().get(nextAlias) ? "Yes" : "No");
+			b.appendEscaped(Boolean.TRUE.equals(theKeystore.getKeyEntry().get(nextAlias)) ? "Yes" : "No");
 			b.appendHtmlConstant("</li>");
 
 			b.appendHtmlConstant("</ul>");

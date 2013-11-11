@@ -28,16 +28,16 @@ public abstract class InvocationFailedException extends Exception {
 	public InvocationFailedException(String theMessage) {
 		super(theMessage);
 		assert StringUtils.isNotBlank(theMessage);
-		myUser=null;
+		myUser = null;
 	}
 
 	public InvocationFailedException(Throwable theCause, String theMessage, HttpResponseBean theResponse) {
 		super(theMessage, theCause);
-		myHttpResponse= theResponse;
+		myHttpResponse = theResponse;
 	}
 
 	public InvocationFailedException(Throwable theCause, String theMessage) {
-		super(theMessage,theCause);
+		super(theMessage, theCause);
 	}
 
 	public InvocationFailedException(Throwable theCause) {
@@ -47,7 +47,7 @@ public abstract class InvocationFailedException extends Exception {
 
 	public InvocationFailedException(String theMessage, HttpResponseBean theHttpResponse) {
 		super(theMessage);
-		myHttpResponse=theHttpResponse;
+		myHttpResponse = theHttpResponse;
 	}
 
 	private static String toMessage(Throwable theCause) {
@@ -60,8 +60,6 @@ public abstract class InvocationFailedException extends Exception {
 	public PersUser getUser() {
 		return myUser;
 	}
-
-
 
 	public InvocationResponseResultsBean getInvocationResponse() {
 		return myInvocationResponse;
@@ -83,6 +81,9 @@ public abstract class InvocationFailedException extends Exception {
 		InvocationResponseResultsBean retVal = new InvocationResponseResultsBean();
 		retVal.setResponseFailureDescription(getMessage());
 		retVal.setResponseType(ResponseTypeEnum.FAIL);
+		if (getHttpResponse() != null) {
+			retVal.setResponseHeaders(getHttpResponse().getHeaders());
+		}
 		return retVal;
 	}
 

@@ -1,14 +1,8 @@
 package net.svcret.ejb.ejb;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import java.io.File;
 import java.io.FileReader;
@@ -50,6 +44,7 @@ import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.invoker.hl7.ServiceInvokerHl7OverHttp;
 import net.svcret.ejb.invoker.soap.ServiceInvokerSoap11;
 import net.svcret.ejb.invoker.virtual.ServiceInvokerVirtual;
+import net.svcret.ejb.model.entity.BasePersObject;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.BasePersStats;
 import net.svcret.ejb.model.entity.BasePersStatsPk;
@@ -892,6 +887,8 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 
 	@Before
 	public void before() throws Exception {
+		System.setProperty(BasePersObject.NET_SVCRET_UNITTESTMODE, "true");
+		
 		myHttpClient = mock(IHttpClient.class, new ReturnsDeepStubs());
 		myBroadcastSender = mock(IBroadcastSender.class);
 
@@ -982,12 +979,12 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		d0s0v0.addServerAuth(serverAuth);
 		PersServiceVersionUrl url = new PersServiceVersionUrl();
 		url.setUrlId("url1");
-		url.setUrl("http://foo");
+		url.setUrl("http://example.com/foo");
 		d0s0v0.addUrl(url);
 
 		PersServiceVersionUrl url2 = new PersServiceVersionUrl();
 		url2.setUrlId("url2");
-		url2.setUrl("http://bar");
+		url2.setUrl("http://example.com/bar");
 		d0s0v0.addUrl(url2);
 
 		d0s0v0.setKeepNumRecentTransactionsFail(100);
@@ -1033,7 +1030,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		BasePersServiceVersion d0s0v1 = myServiceRegistry.getOrCreateServiceVersionWithId(d0s0, ServiceProtocolEnum.HL7OVERHTTP, "d0s0v1");
 		d0s0v1.addUrl(new PersServiceVersionUrl());
 		d0s0v1.getUrls().get(0).setUrlId("url1");
-		d0s0v1.getUrls().get(0).setUrl("http://foo");
+		d0s0v1.getUrls().get(0).setUrl("http://example.com/foo");
 		myServiceRegistry.saveServiceVersion(d0s0v1);
 
 		newEntityManager();
