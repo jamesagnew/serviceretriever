@@ -186,7 +186,9 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 		return pathBase;
 	}
 
-	private void doHandleGetXsd(HttpRequestBean theRequest, InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition) throws UnknownRequestException {
+	private void doHandleGetXsd(HttpRequestBean theRequest, InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition) throws UnknownRequestException, InvocationFailedDueToInternalErrorException {
+		Validate.notNull(theRequest);
+		
 		StringTokenizer tok = new StringTokenizer(theRequest.getQuery(), "&");
 		String xsdNumString = null;
 		while (tok.hasMoreElements()) {
@@ -198,7 +200,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 		}
 
 		// TODO: handle xsd imports
-
+		
 		if (xsdNumString == null) {
 			throw new UnknownRequestException("Invalid XSD query, no 'xsdnum' parameter found");
 		}
@@ -214,11 +216,72 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 			throw new UnknownRequestException(theRequest.getPath() + theRequest.getQuery(), "Invalid XSD query, invalid 'xsdnum' parameter found: " + xsdNumString);
 		}
 
-		String resourceText = res.getResourceText();
+		final String pathBase = toPathBase(theRequest);
+		ICreatesImportUrl urlCreator = new ICreatesImportUrl() {
+			@Override
+			public String createImportUrlForSchemaImport(PersServiceVersionResource theResource) throws InvocationFailedDueToInternalErrorException {
+				return pathBase + "?xsd&xsdnum=" + theResource.getPid();
+			}
+		};
+
+		String resourceText = renderXsd(theServiceDefinition, res, urlCreator);
+		
 		String resourceUrl = res.getResourceUrl();
 		String contentType = "text/xml";
 		Map<String, List<String>> headers = new HashMap<String, List<String>>();
 		theResults.setResultStaticResource(resourceUrl, res, resourceText, contentType, headers);
+
+	}
+
+	private String renderXsd(PersServiceVersionSoap11 theServiceDefinition, PersServiceVersionResource theResource, ICreatesImportUrl theUrlCreator) throws InvocationFailedDueToInternalErrorException {
+		String xsdResourceText = theResource.getResourceText();
+
+		Document xsdDocument = XMLUtils.parse(xsdResourceText);
+
+		/*
+		 * Process Schema Imports
+		 */
+//		NodeList typesList = xsdDocument.getElementsByTagNameNS(Constants.NS_WSDL, "types");
+//		for (int typesIdx = 0; typesIdx < typesList.getLength(); typesIdx++) {
+//			Element typesElem = (Element) typesList.item(typesIdx);
+//			NodeList schemaList = typesElem.getElementsByTagNameNS(Constants.NS_XSD, "schema");
+//			for (int schemaIdx = 0; schemaIdx < schemaList.getLength(); schemaIdx++) {
+//				Element schemaElem = (Element) schemaList.item(schemaIdx);
+//				NodeList importList = schemaElem.getElementsByTagNameNS(Constants.NS_XSD, "import");
+//				for (int importIdx = 0; importIdx < importList.getLength(); importIdx++) {
+//					Element importElem = (Element) importList.item(importIdx);
+//
+//					String importLocation = importElem.getAttribute("schemaLocation");
+//					if (StringUtils.isNotBlank(importLocation)) {
+//						PersServiceVersionResource nResource = theServiceDefinition.getResourceForUri(importLocation);
+//						importElem.setAttribute("schemaLocation", theUrlCreator.createImportUrlForSchemaImport(nResource));
+//					}
+//				}
+//			}
+//		}
+
+		/*
+		 * Process imports as root elements
+		 */
+		NodeList typesList = xsdDocument.getElementsByTagNameNS(Constants.NS_XSD, "import");
+		for (int typesIdx = 0; typesIdx < typesList.getLength(); typesIdx++) {
+			Element typesElem = (Element) typesList.item(typesIdx);
+			String importLocation = typesElem.getAttribute("schemaLocation");
+			if (StringUtils.isNotBlank(importLocation)) {
+				PersServiceVersionResource nResource = theServiceDefinition.getResourceForUri(importLocation);
+				if (nResource == null) {
+					throw new InvocationFailedDueToInternalErrorException("Service definition has no resource with URI: " + importLocation);
+				}
+				typesElem.setAttribute("schemaLocation", theUrlCreator.createImportUrlForSchemaImport(nResource));
+			}
+		}
+		
+		ourLog.debug("Writing XSD for ServiceVersion[{}]", theServiceDefinition.getPid());
+		StringWriter writer = new StringWriter();
+		XMLUtils.serialize(xsdDocument, true, writer);
+
+		String resourceText = writer.toString();
+		return resourceText;
 
 	}
 

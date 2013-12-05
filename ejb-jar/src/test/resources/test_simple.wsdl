@@ -1,4 +1,16 @@
-<wsdl:definitions targetNamespace="http://ws.ehr.uhn.ca" xmlns:ns2="https://syseng3/dev-uhn-ehr-ws-r3/ehrPatientService" xmlns:ns1="http://model.ehr.uhn.ca" xmlns:ns4="http://ehractservice.dev_uhn_ehr_ws_r3.syseng3.https" xmlns:ns3="http://exception.services.ehr.uhn.ca" xmlns:soapenc12="http://www.w3.org/2003/05/soap-encoding" xmlns:tns="http://ws.ehr.uhn.ca" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap11="http://schemas.xmlsoap.org/soap/envelope/" xmlns:wsdlsoap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soapenc11="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+<wsdl:definitions targetNamespace="http://ws.ehr.uhn.ca" 
+xmlns:ns2="https://syseng3/dev-uhn-ehr-ws-r3/ehrPatientService" 
+xmlns:ns1="http://model.ehr.uhn.ca" 
+xmlns:ns4="http://ehractservice.dev_uhn_ehr_ws_r3.syseng3.https" 
+xmlns:ns3="http://exception.services.ehr.uhn.ca" 
+xmlns:soapenc12="http://www.w3.org/2003/05/soap-encoding" 
+xmlns:tns="http://ws.ehr.uhn.ca" 
+xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" 
+xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+xmlns:soap11="http://schemas.xmlsoap.org/soap/envelope/" 
+xmlns:wsdlsoap="http://schemas.xmlsoap.org/wsdl/soap/" 
+xmlns:soapenc11="http://schemas.xmlsoap.org/soap/encoding/" 
+xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
   <wsdl:types>
   	<xsd:schema>
   		<xsd:import namespace="urn:2" schemaLocation="bar.xsd"></xsd:import>

@@ -36,6 +36,7 @@ import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
 import net.svcret.ejb.util.IOUtils;
 
+import org.hamcrest.core.StringContains;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,18 +57,26 @@ public class ServiceInvokerSoap11Test {
 		when(svcVersion.getWsdlUrl()).thenReturn("http://the_wsdl_url");
 		
 		PersServiceVersionResource res = mock(PersServiceVersionResource.class);
+		when(res.getPid()).thenReturn(101L);
 		when(res.getResourceText()).thenReturn(IOUtils.readClasspathIntoString("/test_simple.wsdl"));
 		when(svcVersion.getResourceForUri("http://the_wsdl_url")).thenReturn(res);
 		when(svcVersion.getResourceTextForUri("http://the_wsdl_url")).thenReturn(IOUtils.readClasspathIntoString("/test_simple.wsdl"));
 		
-		
-		when(svcVersion.getResourceTextForUri("bar.xsd")).thenReturn(IOUtils.readClasspathIntoString("/basic_schema.xsd"));
 		when(svcVersion.getPid()).thenReturn(101L);
 
+		when(svcVersion.getResourceTextForUri("bar.xsd")).thenReturn(IOUtils.readClasspathIntoString("/basic_schema.xsd"));
 		PersServiceVersionResource resource = mock(PersServiceVersionResource.class);
-		when(res.getResourceText()).thenReturn(IOUtils.readClasspathIntoString("/basic_schema.xsd"));
+		when(resource.getResourceText()).thenReturn(IOUtils.readClasspathIntoString("/basic_schema.xsd"));
 		when(resource.getPid()).thenReturn(100L);
 		when(svcVersion.getResourceForUri("bar.xsd")).thenReturn(resource);
+		when(svcVersion.getResourceWithPid(100L)).thenReturn(resource);
+
+		when(svcVersion.getResourceTextForUri("basic_schema2_.xsd")).thenReturn(IOUtils.readClasspathIntoString("/basic_schema2.xsd"));
+		PersServiceVersionResource resource2 = mock(PersServiceVersionResource.class);
+		when(resource2.getResourceText()).thenReturn(IOUtils.readClasspathIntoString("/basic_schema2.xsd"));
+		when(resource2.getPid()).thenReturn(102L);
+		when(svcVersion.getResourceForUri("basic_schema2_.xsd")).thenReturn(resource2);
+		when(svcVersion.getResourceWithPid(102L)).thenReturn(resource2);
 
 		PersServiceVersionResource wsdlResource = mock(PersServiceVersionResource.class);
 		when(wsdlResource.getResourceText()).thenReturn(IOUtils.readClasspathIntoString("/test_simple.wsdl"));
@@ -83,7 +92,10 @@ public class ServiceInvokerSoap11Test {
 		when(configService.getConfig()).thenReturn(config);
 		
 		
-
+		/*
+		 * Load WSDL
+		 */
+		
 		HttpRequestBean req = new HttpRequestBean();
 		req.setInputReader(new StringReader(""));
 		req.setRequestType(RequestType.GET);
@@ -97,13 +109,34 @@ public class ServiceInvokerSoap11Test {
 		assertEquals(InvocationResultsBean.ResultTypeEnum.STATIC_RESOURCE, result.getResultType());
 		assertEquals(Constants.CONTENT_TYPE_XML, result.getStaticResourceContentTyoe());
 
-		ourLog.info("Wsdl Outputted:\n{}", result.getStaticResourceText());
+//		ourLog.info("Wsdl Outputted:\n{}", result.getStaticResourceText());
 
 		assertTrue(result.getStaticResourceText(), result.getStaticResourceText().contains("<xsd:import namespace=\"urn:2\" schemaLocation=\"http://localhost:26080/Some/Path?xsd&amp;xsdnum=100\"/>"));
 		assertEquals("http://the_wsdl_url", result.getStaticResourceUrl());
 		
 		assertTrue(result.getStaticResourceText().contains("<wsdlsoap:address location=\"http://localhost:26080/Some/Path\"/>"));
+
+		/*
+		 * Load XSD
+		 */
 		
+		req = new HttpRequestBean();
+		req.setInputReader(new StringReader(""));
+		req.setRequestType(RequestType.GET);
+		req.setPath("/Some/Path");
+		req.setQuery("?xsd&xsdnum=100");
+		req.addHeader("Content-Type", "text/xml");
+		req.setBase("http://localhost:26080");
+		req.setContextPath("");
+		result = svc.processInvocation(req, svcVersion);
+
+		assertEquals(InvocationResultsBean.ResultTypeEnum.STATIC_RESOURCE, result.getResultType());
+		assertEquals(Constants.CONTENT_TYPE_XML, result.getStaticResourceContentTyoe());
+
+		ourLog.info("XSD Outputted:\n{}", result.getStaticResourceText());
+
+		assertThat(result.getStaticResourceText(), StringContains.containsString("schemaLocation=\"http://localhost:26080/Some/Path?xsd&amp;xsdnum=102\"/>"));
+
 	}
 
 	@Test
@@ -176,6 +209,13 @@ public class ServiceInvokerSoap11Test {
 		when(svcVersion.getResourceWithPid(100L)).thenReturn(resource);
 		when(svcVersion.getResourceForUri("bar.xsd")).thenReturn(resource);
 
+//		when(svcVersion.getResourceTextForUri("basic_schema2_.xsd")).thenReturn(IOUtils.readClasspathIntoString("/basic_schema2.xsd"));
+		resource = mock(PersServiceVersionResource.class);
+//		when(resource.getResourceText()).thenReturn(IOUtils.readClasspathIntoString("/basic_schema2.xsd"));
+		when(resource.getPid()).thenReturn(102L);
+		when(svcVersion.getResourceForUri("basic_schema2_.xsd")).thenReturn(resource);
+		when(svcVersion.getResourceWithPid(102L)).thenReturn(resource);
+
 		PersServiceVersionResource wsdlResource = mock(PersServiceVersionResource.class);
 		when(svcVersion.getResourceForUri("http://the_wsdl_url")).thenReturn(wsdlResource);
 
@@ -194,11 +234,6 @@ public class ServiceInvokerSoap11Test {
 
 		ourLog.info("Xsd Outputted:\n{}", result.getStaticResourceDefinition().getResourceText());
 
-		verify(svcVersion, atLeastOnce()).getResourceWithPid(100L);
-		verify(resource, atLeastOnce()).getResourceText();
-		verify(resource, atLeastOnce()).getResourceUrl();
-		verifyNoMoreInteractions(svcVersion);
-		verifyNoMoreInteractions(resource);
 
 		assertEquals(IOUtils.readClasspathIntoString("/basic_schema.xsd"), result.getStaticResourceDefinition().getResourceText());
 		assertEquals("bar.xsd", result.getStaticResourceUrl());

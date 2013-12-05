@@ -126,13 +126,25 @@ public class EditUsersPanel extends FlowPanel {
 
 		PButtonCell removeCell = new PButtonCell(AdminPortal.IMAGES.iconRemove(), AdminPortal.MSGS.actions_Remove());
 		Column<GUser, String> removeColumn = new NullColumn<GUser>(removeCell);
-		statsColumn.setFieldUpdater(new FieldUpdater<GUser, String>() {
+		removeColumn.setFieldUpdater(new FieldUpdater<GUser, String>() {
 			@Override
 			public void update(int theIndex, GUser theObject, String theValue) {
 				if (Window.confirm("Are you sure you want to delete the user '" + theObject.getUsername() + "'? This action can not be undone!")) {
 					myLoadingSpinner.showMessage("Deleting user...", true);
-//					AdminPortal.MODEL_SVC.removeUser(theObject.getPid(), new AsyncCallback<VoidVoid>() {
-//					})
+//					AdminPortal.MODEL_SVC.removeUser(theObject.getPid(), new AsyncCallback<Void>() {
+//
+//						@Override
+//						public void onFailure(Throwable theCaught) {
+//							// TODO Auto-generated method stub
+//							
+//						}
+//
+//						@Override
+//						public void onSuccess(Void theResult) {
+//							// TODO Auto-generated method stub
+//							
+//						}
+//					});
 				}
 			}
 		});

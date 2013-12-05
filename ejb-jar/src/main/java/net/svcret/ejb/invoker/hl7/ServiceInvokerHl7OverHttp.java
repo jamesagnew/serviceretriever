@@ -136,7 +136,8 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 		InvocationResponseResultsBean retVal=new InvocationResponseResultsBean();
 		retVal.setResponseBody(responseBody);
 		retVal.setResponseContentType(theResponse.getContentType());
-		
+		retVal.setResponseHeaders(new HashMap<String, List<String>>());
+
 		ourLog.trace("Successful acknowledgement code: {}", ourLog);
 		if ("AA".equals(responseCode) || "CA".equals(responseCode)) {
 			retVal.setResponseType(ResponseTypeEnum.SUCCESS);
@@ -146,8 +147,6 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 			retVal.setResponseType(ResponseTypeEnum.FAULT);
 		}
 		
-		retVal.setResponseHeaders(new HashMap<String, List<String>>());
-
 		return retVal;
 	}
 

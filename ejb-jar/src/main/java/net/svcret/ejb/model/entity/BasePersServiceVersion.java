@@ -918,7 +918,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		for (PersServiceVersionMethod nextMethod : this.getMethods()) {
 			if (!BaseDtoServiceVersion.METHOD_NAME_UNKNOWN.equals(nextMethod.getName())) {
 				boolean loadStats = theLoadMethodStats != null && theLoadMethodStats.contains(nextMethod.getPid());
-				GServiceMethod gMethod = nextMethod.toDao(loadStats, theQuerySvc);
+				GServiceMethod gMethod = nextMethod.toDto(loadStats, theQuerySvc);
 				retVal.getMethodList().add(gMethod);
 			}
 		} // for methods

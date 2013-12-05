@@ -211,7 +211,7 @@ public class PersServiceVersionMethod extends BasePersObject {
 //		theServiceVersion.addMethod(this);
 	}
 
-	public GServiceMethod toDao(boolean theLoadStats, IRuntimeStatusQueryLocal theRuntimeStatusQuerySvc) throws UnexpectedFailureException {
+	public GServiceMethod toDto(boolean theLoadStats, IRuntimeStatusQueryLocal theRuntimeStatusQuerySvc) throws UnexpectedFailureException {
 		GServiceMethod retVal = new GServiceMethod();
 		if (this.getPid() != null) {
 			retVal.setPid(this.getPid());
@@ -231,6 +231,7 @@ public class PersServiceVersionMethod extends BasePersObject {
 
 			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
 
+			
 		}
 
 		return retVal;

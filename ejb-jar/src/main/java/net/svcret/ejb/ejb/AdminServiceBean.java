@@ -252,7 +252,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		PersServiceVersionMethod ui = fromUi(theMethod, theServiceVersionPid);
 		sv.addMethod(ui);
 		sv = myServiceRegistry.saveServiceVersion(sv);
-		return sv.getMethod(theMethod.getName()).toDao(false, myRuntimeStatusQuerySvc);
+		return sv.getMethod(theMethod.getName()).toDto(false, myRuntimeStatusQuerySvc);
 	}
 
 	@Override
@@ -1129,7 +1129,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		theService.getMethodList().clear();
 		for (PersServiceVersionMethod next : def.getMethods()) {
-			theService.getMethodList().add(next.toDao(false, myRuntimeStatusQuerySvc));
+			theService.getMethodList().add(next.toDto(false, myRuntimeStatusQuerySvc));
 		}
 
 		// Only add URLs if there aren't any already defined for this version
