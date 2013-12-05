@@ -91,9 +91,12 @@ public class MonitorServiceBean implements IMonitorService {
 		ourLog.trace("About to execute {} monitor active checks");
 
 		/*
-		 * How this works: First we execute all active checks, which are essentially firing sample messages at services and seeing what happens..
+		 * How this works: First we execute all active checks, which are
+		 * essentially firing sample messages at services and seeing what
+		 * happens..
 		 * 
-		 * Then, once they are all done, we loop through the rules and see which ones generated alerts
+		 * Then, once they are all done, we loop through the rules and see which
+		 * ones generated alerts
 		 */
 
 		List<PersMonitorRuleFiring> firings = new ArrayList<PersMonitorRuleFiring>();
@@ -104,13 +107,15 @@ public class MonitorServiceBean implements IMonitorService {
 
 			RateLimiter rateLimiter;
 			synchronized (myCheckToRateLimiter) {
-				rateLimiter = myCheckToRateLimiter.get(myCheckToRateLimiter.get(nextCheck));
+				rateLimiter = myCheckToRateLimiter.get(nextCheck);
 				double reqsPerSecond = nextCheck.getCheckFrequencyUnit().toRequestsPerSecond(nextCheck.getCheckFrequencyNum());
 				if (rateLimiter == null) {
+					ourLog.debug("Creating a RateLimiter for rule active check {}", nextCheck.getPid());
 					rateLimiter = RateLimiter.create(reqsPerSecond);
 					myCheckToRateLimiter.put(nextCheck, rateLimiter);
 				}
 				if (rateLimiter.getRate() != reqsPerSecond) {
+					ourLog.trace("Updating RateLimiter frequency for rule active check {}", nextCheck.getPid());
 					rateLimiter.setRate(reqsPerSecond);
 				}
 			}
@@ -121,7 +126,7 @@ public class MonitorServiceBean implements IMonitorService {
 				PersMonitorRuleFiring firing = runActiveCheck(nextCheck, true);
 				firings.add(firing);
 			} else {
-				ourLog.trace("Rule active check {} is not yet scheduled to fire", nextCheck.getPid());
+				ourLog.trace("Rule active check {} is not scheduled to fire right now", nextCheck.getPid());
 			}
 
 		}
@@ -149,13 +154,17 @@ public class MonitorServiceBean implements IMonitorService {
 				}
 			}
 
-			boolean failed = true;
+			/*
+			 * If the most recent failure of any given check is a failure, then
+			 * this rule is failing. If each of the checks passed the most recent time
+			 * they fired, then we are fine.
+			 */
+			
+			boolean failed = false;
 			for (PersMonitorRuleActiveCheck nextActiveCheck : rule.getActiveChecks()) {
 				List<PersMonitorRuleActiveCheckOutcome> recentOutcomes = nextActiveCheck.getRecentOutcomes();
-				if (recentOutcomes.isEmpty()) {
-					failed = false;
-				} else if (recentOutcomes.get(recentOutcomes.size() - 1).getFailed() != Boolean.TRUE) {
-					failed = false;
+				if (!recentOutcomes.isEmpty() && recentOutcomes.get(recentOutcomes.size() - 1).getFailed() == Boolean.TRUE) {
+					failed = true;
 				}
 			}
 
@@ -181,14 +190,17 @@ public class MonitorServiceBean implements IMonitorService {
 			}
 
 			//
-			// PersMonitorRuleFiring firing = evaluateRuleForPassiveIssues(rule);
+			// PersMonitorRuleFiring firing =
+			// evaluateRuleForPassiveIssues(rule);
 			// ourLog.debug("Checking firing produced result: {}", firing);
 			//
 			// for (PersMonitorAppliesTo nextAppliesTo : rule.getAppliesTo()) {
 			// BasePersServiceCatalogItem item = nextAppliesTo.getItem();
-			// PersMonitorRuleFiring mostRecentFiring = item.getMostRecentMonitorRuleFiring();
+			// PersMonitorRuleFiring mostRecentFiring =
+			// item.getMostRecentMonitorRuleFiring();
 			//
-			// if (mostRecentFiring == null || mostRecentFiring.getEndDate() != null) {
+			// if (mostRecentFiring == null || mostRecentFiring.getEndDate() !=
+			// null) {
 			// if (firing != null) {
 			// firing = myDao.saveMonitorRuleFiring(firing);
 			// item.setMostRecentMonitorRuleFiring(firing);
@@ -251,7 +263,7 @@ public class MonitorServiceBean implements IMonitorService {
 				if (nextOutcome.getResponseType() == ResponseTypeEnum.FAIL) {
 					int code = nextOutcome.getHttpResponse() != null ? nextOutcome.getHttpResponse().getCode() : 0;
 					long latency = nextOutcome.getHttpResponse() != null ? nextOutcome.getHttpResponse().getResponseTime() : 0;
-					Failure failure = new Failure(nextOutcome.getResponseBody(), nextOutcome.getResponseContentType(), nextOutcome.getFailureDescription(), code, latency,null);
+					Failure failure = new Failure(nextOutcome.getResponseBody(), nextOutcome.getResponseContentType(), nextOutcome.getFailureDescription(), code, latency, null);
 					myRuntimeStatus.recordUrlFailure(recentOutcome.getImplementationUrl(), failure);
 				} else if (recentOutcome.getFailed() != Boolean.TRUE) {
 					myRuntimeStatus.recordUrlSuccess(recentOutcome.getImplementationUrl());
@@ -279,10 +291,13 @@ public class MonitorServiceBean implements IMonitorService {
 		return outcome;
 
 		// /*
-		// * Check if this outcome either causes a new firing for its target, or cancels out a currently active one
+		// * Check if this outcome either causes a new firing for its target, or
+		// cancels out a currently active one
 		// */
-		// BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theCheck.getServiceVersion().getPid());
-		// PersMonitorRuleFiring currentFiring = svcVer.getMostRecentMonitorRuleFiring();
+		// BasePersServiceVersion svcVer =
+		// myDao.getServiceVersionByPid(theCheck.getServiceVersion().getPid());
+		// PersMonitorRuleFiring currentFiring =
+		// svcVer.getMostRecentMonitorRuleFiring();
 		// if (outcome != null) {
 		// if (currentFiring == null || currentFiring.getEndDate() != null) {
 		// /*
@@ -318,23 +333,28 @@ public class MonitorServiceBean implements IMonitorService {
 		// }
 		//
 		// } else {
-		// ourLog.info("Active monitor check {} is failing, but not going to save it because service version {} already has a faling rule", theCheck.getPid(), svcVer.getPid());
+		// ourLog.info("Active monitor check {} is failing, but not going to save it because service version {} already has a faling rule",
+		// theCheck.getPid(), svcVer.getPid());
 		// }
 		// } else {
 		// if (currentFiring != null && currentFiring.getEndDate() == null) {
 		// /*
-		// * Check didn't fail, but the service version it applies to has a current rule failure, so let's see if the current pass will cancel out that failure
+		// * Check didn't fail, but the service version it applies to has a
+		// current rule failure, so let's see if the current pass will cancel
+		// out that failure
 		// */
 		// if (currentFiring.getRule().equals(theCheck.getRule())) {
 		// boolean applies = false;
-		// for (PersMonitorRuleFiringProblem nextProblem : currentFiring.getProblems()) {
+		// for (PersMonitorRuleFiringProblem nextProblem :
+		// currentFiring.getProblems()) {
 		// if (theCheck.equals(nextProblem.getActiveCheck())) {
 		// applies = true;
 		// }
 		// }
 		//
 		// if (applies) {
-		// ourLog.info("Ending monitor failure {} because active check passed", currentFiring.getPid());
+		// ourLog.info("Ending monitor failure {} because active check passed",
+		// currentFiring.getPid());
 		// currentFiring.setEndDate(new Date());
 		//
 		// currentFiring = myDao.saveMonitorRuleFiring(currentFiring);
@@ -363,8 +383,7 @@ public class MonitorServiceBean implements IMonitorService {
 					ourLog.debug("Active check testing if latency of {} exceeds target of {}", latency, theCheck.getExpectLatencyUnderMillis());
 					if (latency > theCheck.getExpectLatencyUnderMillis()) {
 						PersServiceVersionUrl url = nextOutcome.getHttpResponse().getSingleUrlOrThrow();
-						PersMonitorRuleFiringProblem prob = PersMonitorRuleFiringProblem.getInstanceForServiceLatency(theCheck.getServiceVersion(), latency, theCheck.getExpectLatencyUnderMillis(),
-								null, url);
+						PersMonitorRuleFiringProblem prob = PersMonitorRuleFiringProblem.getInstanceForServiceLatency(theCheck.getServiceVersion(), latency, theCheck.getExpectLatencyUnderMillis(), null, url);
 						prob.setActiveCheck(theCheck);
 						problems.add(prob);
 					}
@@ -551,7 +570,8 @@ public class MonitorServiceBean implements IMonitorService {
 
 		myBroadcastSender.monitorRulesChanged();
 
-		// In case rules have been added or removed, so that the dashboard shows correctly
+		// In case rules have been added or removed, so that the dashboard shows
+		// correctly
 		myBroadcastSender.notifyServiceCatalogChanged();
 
 		return retVal;
@@ -586,6 +606,15 @@ public class MonitorServiceBean implements IMonitorService {
 	@VisibleForTesting
 	public void setConfigServiceForUnitTests(IConfigService theConfigSvc) {
 		myConfigSvc = theConfigSvc;
+	}
+
+	/*
+	 * Force all active checks to fire again on the next invocation even
+	 * if they wouldn't otherwise be scheduled to 
+	 */
+	@VisibleForTesting
+	public void clearRateLimitersForUnitTests() {
+		myCheckToRateLimiter.clear();
 	}
 
 }
