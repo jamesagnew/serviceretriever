@@ -9,7 +9,7 @@ import net.svcret.admin.client.ui.config.KeepRecentTransactionsPanel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -48,9 +48,9 @@ public class EditDomainPanel extends FlowPanel {
 		myInitialSpinner.show();
 		myTopContentPanel.add(myInitialSpinner);
 		
-		IAsyncLoadCallback<GDomainList> callback=new IAsyncLoadCallback<GDomainList>() {
+		IAsyncLoadCallback<DtoDomainList> callback=new IAsyncLoadCallback<DtoDomainList>() {
 			@Override
-			public void onSuccess(GDomainList theResult) {
+			public void onSuccess(DtoDomainList theResult) {
 				myInitialSpinner.hideCompletely();
 				myDomain = theResult.getDomainByPid(myDomainPid);
 				if (myDomain == null) {
@@ -102,10 +102,10 @@ public class EditDomainPanel extends FlowPanel {
 		spinner.show();
 		theAlertsPanel.add(spinner);
 		
-		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+		Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 
 			@Override
-			public void onSuccess(GDomainList theResult) {
+			public void onSuccess(DtoDomainList theResult) {
 				spinner.hideCompletely();
 				
 				final AlertGrid grid = new AlertGrid(theResult, myDomainPid, null, null);
@@ -114,7 +114,7 @@ public class EditDomainPanel extends FlowPanel {
 		});
 	}
 
-	public class MySaveButtonHandler implements ClickHandler, AsyncCallback<GDomainList> {
+	public class MySaveButtonHandler implements ClickHandler, AsyncCallback<DtoDomainList> {
 
 		@Override
 		public void onClick(ClickEvent theEvent) {
@@ -135,7 +135,7 @@ public class EditDomainPanel extends FlowPanel {
 		}
 
 		@Override
-		public void onSuccess(GDomainList theResult) {
+		public void onSuccess(DtoDomainList theResult) {
 			Model.getInstance().mergeDomainList(theResult);
 			myEditDomainBasicPropertiesPanel.showMessage("Domain has been saved", false);
 		}

@@ -365,7 +365,7 @@ public class EditUsersPanel extends FlowPanel {
 	}
 
 	private void viewUserRecentMessages(GUser theNextUser) {
-		String token = NavProcessor.getTokenUserRecentMessages(theNextUser.getPid());
+		String token = NavProcessor.getTokenUserRecentMessages(theNextUser.getPid(),false);
 		History.newItem(token);
 	}
 

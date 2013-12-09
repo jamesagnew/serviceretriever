@@ -9,7 +9,7 @@ public class ModelUpdateResponse implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private DtoAuthenticationHostList myAuthenticationHostList;
-	private GDomainList myDomainList;
+	private DtoDomainList myDomainList;
 	private GHttpClientConfigList myHttpClientConfigList;
 	private List<DtoNodeStatus> myNodeStatuses;
 	private GUserList myUserList;
@@ -24,7 +24,7 @@ public class ModelUpdateResponse implements Serializable {
 	/**
 	 * @return the domainList
 	 */
-	public GDomainList getDomainList() {
+	public DtoDomainList getDomainList() {
 		return myDomainList;
 	}
 
@@ -57,7 +57,7 @@ public class ModelUpdateResponse implements Serializable {
 	 * @param theDomainList
 	 *            the domainList to set
 	 */
-	public void setDomainList(GDomainList theDomainList) {
+	public void setDomainList(DtoDomainList theDomainList) {
 		myDomainList = theDomainList;
 	}
 

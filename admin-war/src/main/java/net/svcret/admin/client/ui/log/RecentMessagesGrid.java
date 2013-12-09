@@ -1,4 +1,4 @@
-package net.svcret.admin.client.ui.stats;
+package net.svcret.admin.client.ui.log;
 
 import static net.svcret.admin.client.AdminPortal.*;
 
@@ -57,10 +57,10 @@ public class RecentMessagesGrid extends FlowPanel {
 			public void update(int theIndex, GRecentMessage theObject, String theValue) {
 				switch (theObject.getRecentMessageType()) {
 				case USER:
-					History.newItem(NavProcessor.getTokenViewUserRecentMessage(theObject.getPid()));
+					History.newItem(NavProcessor.getTokenViewUserRecentMessage(theObject.getRequestUserPid(), theObject.getPid()));
 					break;
 				case SVCVER:
-					History.newItem(NavProcessor.getTokenViewServiceVersionRecentMessage(theObject.getPid()));
+					History.newItem(NavProcessor.getTokenViewServiceVersionRecentMessage(theObject.getServiceVersionPid(), theObject.getPid()));
 					break;
 				}
 			}

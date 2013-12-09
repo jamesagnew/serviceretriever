@@ -5,7 +5,7 @@ import java.util.Collection;
 import net.svcret.admin.shared.ServiceFailureException;
 import net.svcret.admin.shared.model.DtoKeystoreAnalysis;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
-import net.svcret.admin.shared.model.GHttpClientConfig;
+import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 
 import com.google.gwt.user.client.rpc.RemoteService;
@@ -22,8 +22,8 @@ public interface HttpClientConfigService extends RemoteService {
 
 	Collection<DtoStickySessionUrlBinding> getAllStickySessions();
 
-	GHttpClientConfig saveHttpClientConfig(boolean theCreate,
+	DtoHttpClientConfig saveHttpClientConfig(boolean theCreate,
 			boolean theUseNewTruststore, boolean theUseNewKeystore,
-			GHttpClientConfig theConfig) throws ServiceFailureException;
+			DtoHttpClientConfig theConfig) throws ServiceFailureException;
 	
 }

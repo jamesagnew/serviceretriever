@@ -55,8 +55,7 @@ public abstract class BasePersSavedTransactionRecentMessage extends BasePersSave
 	public abstract BasePersServiceVersion getServiceVersion();
 
 	@Override
-	public void populate(PersConfig theConfig, Date theTransactionTime, HttpRequestBean theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, InvocationResponseResultsBean theInvocationResult,
-			String theResponseBody) {
+	public void populate(PersConfig theConfig, Date theTransactionTime, HttpRequestBean theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, InvocationResponseResultsBean theInvocationResult, String theResponseBody) {
 		setRequestHostIp(theRequest.getRequestHostIp());
 		super.populate(theConfig, theTransactionTime, theRequest, theImplementationUrl, theRequestBody, theInvocationResult, theResponseBody);
 	}
@@ -127,6 +126,7 @@ public abstract class BasePersSavedTransactionRecentMessage extends BasePersSave
 				retVal.setRequestContentType("unknown");
 			} else {
 				retVal.setRequestMessage(this.getRequestBody().substring(bodyIdx + 4));
+				retVal.setRequestActionLine(toActionLine(this.getRequestBody()));
 				retVal.setRequestHeaders(toHeaders(this.getRequestBody().substring(0, bodyIdx)));
 				retVal.setRequestContentType(toHeaderContentType(retVal.getRequestHeaders()));
 			}
@@ -159,6 +159,22 @@ public abstract class BasePersSavedTransactionRecentMessage extends BasePersSave
 		}
 
 		return retVal;
+	}
+
+	private static String toActionLine(String theRequestBody) {
+		int idx = theRequestBody.indexOf("\r\n");
+		if (idx == -1) {
+			return null;
+		}
+
+		String firstLine = theRequestBody.substring(0, idx);
+		idx = firstLine.indexOf(": ");
+		if (idx == -1) {
+			// If the first line has no colon, it's the action line
+			return firstLine;
+		} else {
+			return null;
+		}
 	}
 
 	public abstract long trimUsingDao(IDao theDaoBean);

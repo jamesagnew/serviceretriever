@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import net.svcret.admin.server.rpc.BaseRpcServlet;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
-import net.svcret.ejb.api.IAdminServiceLocal;
+import net.svcret.ejb.admin.IAdminServiceLocal;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 

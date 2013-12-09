@@ -10,7 +10,7 @@ import net.svcret.admin.client.ui.config.domain.EditDomainServicesPanel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.GService;
 
 import com.google.gwt.core.shared.GWT;
@@ -49,11 +49,11 @@ public class EditServicePanel extends FlowPanel {
 		spinner.show();
 		myTopContentPanel.add(spinner);
 
-		IAsyncLoadCallback<GDomainList> callback = new IAsyncLoadCallback<GDomainList>() {
+		IAsyncLoadCallback<DtoDomainList> callback = new IAsyncLoadCallback<DtoDomainList>() {
 
 
 			@Override
-			public void onSuccess(GDomainList theResult) {
+			public void onSuccess(DtoDomainList theResult) {
 
 				myDomain = theResult.getDomainByPid(theDomainPid);
 				if (myDomain == null) {
@@ -114,10 +114,10 @@ public class EditServicePanel extends FlowPanel {
 		spinner.show();
 		theAlertsPanel.add(spinner);
 
-		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+		Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 
 			@Override
-			public void onSuccess(GDomainList theResult) {
+			public void onSuccess(DtoDomainList theResult) {
 				spinner.hideCompletely();
 
 				final AlertGrid grid = new AlertGrid(theResult, null, myService.getPid(), null);
@@ -128,7 +128,7 @@ public class EditServicePanel extends FlowPanel {
 
 	private GService myService;
 
-	public class MySaveButtonHandler implements ClickHandler, AsyncCallback<GDomainList> {
+	public class MySaveButtonHandler implements ClickHandler, AsyncCallback<DtoDomainList> {
 
 		private GService myService;
 
@@ -155,7 +155,7 @@ public class EditServicePanel extends FlowPanel {
 		}
 
 		@Override
-		public void onSuccess(GDomainList theResult) {
+		public void onSuccess(DtoDomainList theResult) {
 			Model.getInstance().mergeDomainList(theResult);
 			myEditServiceBasicPropertiesPanel.showMessage("Service has been saved", false);
 		}

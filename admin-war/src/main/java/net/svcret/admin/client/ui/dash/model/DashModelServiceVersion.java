@@ -186,7 +186,7 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		viewRecentTransactions.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
-				History.newItem(NavProcessor.getTokenServiceVersionRecentMessages(theSvcVer.getPid()));
+				History.newItem(NavProcessor.getTokenServiceVersionRecentMessages(theSvcVer.getPid(), false));
 			}
 		});
 		content.add(viewRecentTransactions);

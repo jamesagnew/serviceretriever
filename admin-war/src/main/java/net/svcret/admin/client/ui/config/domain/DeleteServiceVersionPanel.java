@@ -8,7 +8,7 @@ import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -38,9 +38,9 @@ public class DeleteServiceVersionPanel extends FlowPanel {
 		mySpinner.show();
 		contentPanel.add(mySpinner);
 
-		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+		Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 			@Override
-			public void onSuccess(GDomainList theResult) {
+			public void onSuccess(DtoDomainList theResult) {
 				mySpinner.hide();
 				populate(thePid, contentPanel, theResult);
 			}
@@ -49,7 +49,7 @@ public class DeleteServiceVersionPanel extends FlowPanel {
 
 	}
 
-	private void populate(final long thePid, final FlowPanel contentPanel, GDomainList theResult) {
+	private void populate(final long thePid, final FlowPanel contentPanel, DtoDomainList theResult) {
 		BaseDtoServiceVersion svcVer = theResult.getServiceVersionByPid(thePid);
 		if (svcVer == null) {
 			GWT.log("Unknown SvcVer PID: " + thePid);
@@ -68,10 +68,10 @@ public class DeleteServiceVersionPanel extends FlowPanel {
 			@Override
 			public void onClick(ClickEvent theEvent) {
 				mySpinner.show();
-				MODEL_SVC.removeServiceVersion(thePid, new AsyncCallback<GDomainList>() {
+				MODEL_SVC.removeServiceVersion(thePid, new AsyncCallback<DtoDomainList>() {
 					
 					@Override
-					public void onSuccess(GDomainList theDomainResult) {
+					public void onSuccess(DtoDomainList theDomainResult) {
 						Model.getInstance().mergeDomainList(theDomainResult);
 						mySpinner.showMessage("Service Version Deleted Successfully", false);
 						myDeleteButton.setEnabled(false);

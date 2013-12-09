@@ -9,9 +9,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlTransient;
-
 public class BaseDtoList<T extends BaseDtoObject> implements Iterable<T>, Serializable {
 
 	private static final long serialVersionUID = 1L;

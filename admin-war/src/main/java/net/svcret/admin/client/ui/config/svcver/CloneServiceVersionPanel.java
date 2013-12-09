@@ -7,7 +7,7 @@ import net.svcret.admin.shared.AddServiceVersionResponse;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -20,9 +20,9 @@ public class CloneServiceVersionPanel extends AbstractServiceVersionPanel {
 	public CloneServiceVersionPanel(final long thePidToClone) {
 		getLoadingSpinner().show();
 
-		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+		Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 			@Override
-			public void onSuccess(GDomainList theResult) {
+			public void onSuccess(DtoDomainList theResult) {
 				initParents(theResult);
 				setDomainPid(theResult.getDomainPidWithServiceVersion(thePidToClone));
 				setServicePid(theResult.getServicePidWithServiceVersion(thePidToClone));

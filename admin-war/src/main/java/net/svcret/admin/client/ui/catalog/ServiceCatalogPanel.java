@@ -9,7 +9,7 @@ import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
 import net.svcret.admin.shared.model.DtoServiceVersionVirtual;
 import net.svcret.admin.shared.model.DtoConfig;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
@@ -68,10 +68,10 @@ public class ServiceCatalogPanel extends FlowPanel {
 			public void onSuccess(DtoConfig theConfig) {
 				myConfig=theConfig;
 		
-		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+		Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 			
 			@Override
-			public void onSuccess(GDomainList theResult) {
+			public void onSuccess(DtoDomainList theResult) {
 				myLoadingSpinner.hideCompletely();
 				
 				initGrid(theResult);
@@ -82,7 +82,7 @@ public class ServiceCatalogPanel extends FlowPanel {
 
 	}
 
-	private void initGrid(GDomainList theResult) {
+	private void initGrid(DtoDomainList theResult) {
 		
 		for (DtoDomain nextDomain : theResult) {
 			for (GService nextService : nextDomain.getServiceList()) {

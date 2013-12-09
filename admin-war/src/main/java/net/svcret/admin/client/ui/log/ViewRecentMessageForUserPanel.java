@@ -1,17 +1,24 @@
-package net.svcret.admin.client.ui.stats;
+package net.svcret.admin.client.ui.log;
 
 import static net.svcret.admin.client.AdminPortal.*;
+import net.svcret.admin.client.nav.NavProcessor;
+import net.svcret.admin.client.nav.PagesEnum;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.GRecentMessage;
 
+import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class ViewRecentMessageForUserPanel extends BaseViewRecentMessagePanel {
 
 
-	public ViewRecentMessageForUserPanel(long thePid) {
+	private long myUserPid;
+
+	public ViewRecentMessageForUserPanel(long theUserPid, long theMessagePid) {
 		super();
-		loadMessage(thePid);
+		
+		myUserPid = theUserPid;
+		loadMessage(theMessagePid);
 	}
 
 	@Override
@@ -29,7 +36,11 @@ public class ViewRecentMessageForUserPanel extends BaseViewRecentMessagePanel {
 
 			@Override
 			public void onSuccess(GRecentMessage theResult) {
-				setMessage(theResult);
+				if (theResult == null) {
+					History.newItem(NavProcessor.removeTokens(NavProcessor.getTokenUserRecentMessages(myUserPid, true), PagesEnum.RSV,PagesEnum.RUS));
+				}else {
+					setMessage(theResult);
+				}
 			}
 		});
 	}

@@ -11,7 +11,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.util.ScanDtoUtil;
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.ex.UnexpectedFailureException;
@@ -28,7 +28,7 @@ public class ImportExportServiceBean implements IImportExportServiceLocal {
 	private IServiceRegistry myServiceRegistry;
 
 	public ImportExportServiceBean() throws JAXBException, IOException, ClassNotFoundException {
-		List<Class<?>> classes = ScanDtoUtil.findMyTypes(GDomainList.class.getPackage().getName());
+		List<Class<?>> classes = ScanDtoUtil.findMyTypes(DtoDomainList.class.getPackage().getName());
 		myJaxbContext = JAXBContext.newInstance(classes.toArray(new Class[classes.size()]));
 
 	}

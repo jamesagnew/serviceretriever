@@ -13,7 +13,7 @@ import javax.persistence.Transient;
 import javax.persistence.Version;
 
 import net.svcret.admin.shared.model.DtoKeystoreAnalysis;
-import net.svcret.admin.shared.model.GHttpClientConfig;
+import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IKeystoreService;
@@ -32,7 +32,7 @@ public class PersHttpClientConfig extends BasePersObject {
 	/**
 	 * Default ID for config. At least this config will always exist.
 	 */
-	public static final String DEFAULT_ID = GHttpClientConfig.DEFAULT_ID;
+	public static final String DEFAULT_ID = DtoHttpClientConfig.DEFAULT_ID;
 	private static final String DEFAULT_NAME = "Default Configuration";
 	public static final int DEFAULT_READ_TIMEOUT_MILLIS = 20 * 1000;
 	public static final UrlSelectionPolicy DEFAULT_URL_SELECTION_POLICY = UrlSelectionPolicy.PREFER_LOCAL;
@@ -333,8 +333,8 @@ public class PersHttpClientConfig extends BasePersObject {
 		myUrlSelectionPolicy = theUrlSelectionPolicy;
 	}
 
-	public GHttpClientConfig toDto(IKeystoreService theKeystoreSvc) throws ProcessingException {
-		GHttpClientConfig retVal = new GHttpClientConfig();
+	public DtoHttpClientConfig toDto(IKeystoreService theKeystoreSvc) throws ProcessingException {
+		DtoHttpClientConfig retVal = new DtoHttpClientConfig();
 
 		if (getPid() != null) {
 			retVal.setPid(this.getPid());
@@ -369,7 +369,7 @@ public class PersHttpClientConfig extends BasePersObject {
 		return retVal;
 	}
 
-	public static PersHttpClientConfig fromDto(GHttpClientConfig theConfig, IDao theDao) {
+	public static PersHttpClientConfig fromDto(DtoHttpClientConfig theConfig, IDao theDao) {
 		PersHttpClientConfig retVal = new PersHttpClientConfig();
 
 		if (theConfig.getPid() > 0) {

@@ -405,10 +405,11 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	}
 
 	@Override
-	public void recordUrlSuccess(PersServiceVersionUrl theUrl) {
+	public void recordUrlSuccess(PersServiceVersionUrl theUrl, boolean theWasFault, String theMessage, String theContentType, int theResponseCode) {
 		Validate.notNull(theUrl, "Url");
 		PersServiceVersionUrlStatus status = getUrlStatus(theUrl);
-		status.setStatus(StatusEnum.ACTIVE);
+
+		doRecordUrlStatus(true, theWasFault, status, theMessage, theContentType, theResponseCode);
 	}
 
 	@Override
@@ -886,7 +887,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 	}
 
-	private void doRecordUrlStatus(boolean theWasSuccess, boolean theWasFault, PersServiceVersionUrlStatus theUrlStatusBean, String theMessage, String theContentType, int theResponseCode) {
+	private void doRecordUrlStatus(boolean theWasSuccessOrFault, boolean theWasFault, PersServiceVersionUrlStatus theUrlStatusBean, String theMessage, String theContentType, int theResponseCode) {
 		if (theUrlStatusBean.getUrl() == null) {
 			throw new IllegalArgumentException("Status has no URL associated with it");
 		}
@@ -894,7 +895,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		synchronized (theUrlStatusBean) {
 			Date now = new Date();
 
-			if (theWasSuccess) {
+			if (theWasSuccessOrFault) {
 
 				if (theUrlStatusBean.getStatus() != StatusEnum.ACTIVE) {
 					Long urlPid = theUrlStatusBean.getUrl().getPid();

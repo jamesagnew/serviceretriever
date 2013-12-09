@@ -23,6 +23,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpUtils;
 
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.IServiceOrchestrator;
@@ -89,7 +90,6 @@ public class ServiceServlet extends HttpServlet {
 		String requestHostIp = theReq.getRemoteAddr();
 		String protocol = theReq.getProtocol();
 		String requestURI = theReq.getRequestURI();
-
 		String base = extractBase(contextPath, requestURL);
 
 		ourLog.debug("New {} request at path[{}] and base[{}] and context path[{}]", new Object[] { requestAction.name(), path, base, contextPath });

@@ -22,6 +22,7 @@ public class GRecentMessage extends BaseDtoObject {
 	private Long myMethodPid;
 	private String myOutcomeDescription;
 	private RecentMessageTypeEnum myRecentMessageType;
+	private String myRequestActionLine;
 	private String myRequestContentType;
 	private List<Pair<String>> myRequestHeaders;
 	private String myRequestHostIp;
@@ -34,27 +35,11 @@ public class GRecentMessage extends BaseDtoObject {
 	private String myServiceName;
 	private long myServicePid;
 	private String myServiceVersionId;
-
 	private long myServiceVersionPid;
-
 	private long myTransactionMillis;
-
 	private Date myTransactionTime;
-
 	public GRecentMessage() {
 		super();
-	}
-
-	public GRecentMessage(long thePid, Date theDate, String theRequestHostIp, String theRequestMessage, String theResponseMessage, List<Pair<String>> theRequestHeaders, List<Pair<String>> theResponseHeaders, String theRequestContentType, String theResponseContentType) {
-		setPid(thePid);
-		myTransactionTime = theDate;
-		myRequestHostIp = theRequestHostIp;
-		myRequestMessage = theRequestMessage;
-		myResponseMessage = theResponseMessage;
-		myRequestHeaders = theRequestHeaders;
-		myResponseHeaders = theResponseHeaders;
-		myRequestContentType = theRequestContentType;
-		myResponseContentType = theResponseContentType;
 	}
 
 	/**
@@ -63,6 +48,19 @@ public class GRecentMessage extends BaseDtoObject {
 	public AuthorizationOutcomeEnum getAuthorizationOutcome() {
 		return myAuthorizationOutcome;
 	}
+
+//	public GRecentMessage(long thePid, Date theDate, String theRequestHostIp, String theRequestMessage, String theResponseMessage, String theRequestActionLine, List<Pair<String>> theRequestHeaders, List<Pair<String>> theResponseHeaders, String theRequestContentType, String theResponseContentType) {
+//		setPid(thePid);
+//		myTransactionTime = theDate;
+//		myRequestHostIp = theRequestHostIp;
+//		myRequestMessage = theRequestMessage;
+//		myResponseMessage = theResponseMessage;
+//		myRequestHeaders = theRequestHeaders;
+//		myResponseHeaders = theResponseHeaders;
+//		myRequestContentType = theRequestContentType;
+//		myResponseContentType = theResponseContentType;
+//		myRequestActionLine = theRequestActionLine;
+//	}
 
 	public String getDomainName() {
 		return myDomainName;
@@ -102,6 +100,10 @@ public class GRecentMessage extends BaseDtoObject {
 
 	public RecentMessageTypeEnum getRecentMessageType() {
 		return myRecentMessageType;
+	}
+
+	public String getRequestActionLine() {
+		return myRequestActionLine;
 	}
 
 	/**
@@ -242,6 +244,10 @@ public class GRecentMessage extends BaseDtoObject {
 
 	public void setRecentMessageType(RecentMessageTypeEnum theRecentMessageType) {
 		myRecentMessageType = theRecentMessageType;
+	}
+
+	public void setRequestActionLine(String theRequestActionLine) {
+		myRequestActionLine = theRequestActionLine;
 	}
 
 	/**

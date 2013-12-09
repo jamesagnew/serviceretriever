@@ -1,4 +1,4 @@
-package net.svcret.admin.client.ui.dash;
+package net.svcret.admin.client.ui.api;
 
 public interface IDestroyable {
 

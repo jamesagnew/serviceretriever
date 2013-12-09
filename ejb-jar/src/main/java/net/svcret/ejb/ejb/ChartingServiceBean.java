@@ -1,6 +1,6 @@
 package net.svcret.ejb.ejb;
 
-import static net.svcret.ejb.ejb.AdminServiceBean.*;
+import static net.svcret.ejb.admin.AdminServiceBean.*;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -24,12 +24,12 @@ import javax.ejb.Singleton;
 import javax.imageio.ImageIO;
 
 import net.svcret.admin.shared.model.TimeRange;
+import net.svcret.ejb.admin.AdminServiceBean.IWithStats;
 import net.svcret.ejb.api.IChartingServiceBean;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.IScheduler;
-import net.svcret.ejb.ejb.AdminServiceBean.IWithStats;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;

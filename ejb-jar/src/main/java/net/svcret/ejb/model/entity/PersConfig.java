@@ -45,7 +45,7 @@ public class PersConfig {
 	private int myCollapseStatsToTenMinutesAfterNumHours;
 
 	@Column(name="DEC_URLS_UNK_MILS", nullable=false)
-	private long myDeclareBackingUrlUnknownStatusAfterMillisUnused = 6 * DateUtils.MILLIS_PER_HOUR;
+	private long myDeclareBackingUrlUnknownStatusAfterMillisUnused = 3 * DateUtils.MILLIS_PER_DAY;
 
 	@Transient
 	private transient long myNowForUnitTests;
@@ -227,5 +227,8 @@ public class PersConfig {
 		return retVal;
 	}
 
+	public static void main(String[] args) {
+		System.out.println(3 * DateUtils.MILLIS_PER_DAY);
+	}
 	
 }

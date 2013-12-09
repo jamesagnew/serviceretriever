@@ -18,11 +18,12 @@ import javax.ejb.EJB;
 import javax.ejb.Singleton;
 
 import net.svcret.admin.shared.model.BaseDtoDashboardObject;
+import net.svcret.ejb.admin.AdminServiceBean;
+import net.svcret.ejb.admin.AdminServiceBean.IWithStats;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
-import net.svcret.ejb.ejb.AdminServiceBean.IWithStats;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStatsPk;
@@ -556,39 +557,39 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 			return new ArrayList<T>(theValues.subList(0, theValues.size() - theCountToDelete));
 		}
 
-		ArrayList<Integer> getFailCounts() {
+		public ArrayList<Integer> getFailCounts() {
 			return myFailCounts;
 		}
 
-		ArrayList<Integer> getFaultCounts() {
+		public ArrayList<Integer> getFaultCounts() {
 			return myFaultCounts;
 		}
 
-		ArrayList<Integer> getSecurityFailCounts() {
+		public ArrayList<Integer> getSecurityFailCounts() {
 			return mySecFailCounts;
 		}
 
-		ArrayList<Integer> getSuccessCounts() {
+		public ArrayList<Integer> getSuccessCounts() {
 			return mySuccessCounts;
 		}
 
-		ArrayList<Integer> getThrottleAcceptCounts() {
+		public ArrayList<Integer> getThrottleAcceptCounts() {
 			return myThrottleAcceptCounts;
 		}
 
-		ArrayList<Integer> getThrottleRejectCounts() {
+		public ArrayList<Integer> getThrottleRejectCounts() {
 			return myThrottleRejectCounts;
 		}
 
-		ArrayList<Long> getTimes() {
+		public ArrayList<Long> getTimes() {
 			return myTimes;
 		}
 
-		List<Long> getTimestamps() {
+		public List<Long> getTimestamps() {
 			return myTimestamps;
 		}
 
-		void setFirstDate(Date theFirstTime) {
+		public void setFirstDate(Date theFirstTime) {
 			myFirstDate = theFirstTime;
 		}
 

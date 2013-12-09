@@ -5,10 +5,8 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import net.svcret.admin.shared.util.BaseGDashboardObjectComparator;
-import net.svcret.admin.shared.util.XmlConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class GServiceList extends BaseDtoList<GService> {

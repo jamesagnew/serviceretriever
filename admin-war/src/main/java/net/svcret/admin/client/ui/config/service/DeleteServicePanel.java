@@ -7,7 +7,7 @@ import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.GService;
 
 import com.google.gwt.core.shared.GWT;
@@ -39,9 +39,9 @@ public class DeleteServicePanel extends FlowPanel {
 		mySpinner.show();
 		contentPanel.add(mySpinner);
 
-		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+		Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 			@Override
-			public void onSuccess(GDomainList theResult) {
+			public void onSuccess(DtoDomainList theResult) {
 				mySpinner.hide();
 				populate(theDomainPid, theServicePid, contentPanel, theResult);
 			}
@@ -50,7 +50,7 @@ public class DeleteServicePanel extends FlowPanel {
 
 	}
 
-	private void populate(final long theDomainPid, final long theServicePid, final FlowPanel contentPanel, GDomainList theResult) {
+	private void populate(final long theDomainPid, final long theServicePid, final FlowPanel contentPanel, DtoDomainList theResult) {
 		DtoDomain domain = theResult.getDomainByPid(theDomainPid);
 		if (domain == null) {
 			GWT.log("Unknown domain PID: " + theDomainPid);
@@ -76,10 +76,10 @@ public class DeleteServicePanel extends FlowPanel {
 			@Override
 			public void onClick(ClickEvent theEvent) {
 				mySpinner.show();
-				MODEL_SVC.removeService(theDomainPid, theServicePid, new AsyncCallback<GDomainList>() {
+				MODEL_SVC.removeService(theDomainPid, theServicePid, new AsyncCallback<DtoDomainList>() {
 					
 					@Override
-					public void onSuccess(GDomainList theDomainResult) {
+					public void onSuccess(DtoDomainList theDomainResult) {
 						Model.getInstance().mergeDomainList(theDomainResult);
 						mySpinner.showMessage("Service Deleted Successfully", false);
 						myDeleteButton.setEnabled(false);

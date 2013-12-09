@@ -35,7 +35,7 @@ import net.svcret.admin.shared.model.BaseDtoClientSecurity;
 import net.svcret.admin.shared.model.BaseDtoServerSecurity;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoServerSecurityList;
-import net.svcret.admin.shared.model.GHttpClientConfig;
+import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
@@ -196,7 +196,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 
 	}
 
-	protected GHttpClientConfig getHttpClientConfig() {
+	protected DtoHttpClientConfig getHttpClientConfig() {
 		return myHttpClientConfigList.get(myHttpConfigList.getSelectedIndex());
 	}
 
@@ -659,7 +659,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 			public void onSuccess(final GHttpClientConfigList theResult) {
 				myHttpClientConfigList = theResult;
 
-				for (GHttpClientConfig next : theResult) {
+				for (DtoHttpClientConfig next : theResult) {
 					myHttpConfigList.addItem(next.getId() + " (" + next.getName() + ")");
 					if (next.getPid() == getServiceVersion().getHttpClientConfigPid()) {
 						myHttpConfigList.setSelectedIndex(myHttpConfigList.getItemCount() - 1);

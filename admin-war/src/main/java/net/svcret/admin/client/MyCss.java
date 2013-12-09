@@ -56,4 +56,8 @@ public interface MyCss extends CssResource {
 
 	String tableEmbeddedUnorderedList();
 
+	String messageActionLine();
+
+	String innerAlertPane();
+
 }

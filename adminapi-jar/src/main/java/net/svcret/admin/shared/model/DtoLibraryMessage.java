@@ -89,7 +89,7 @@ public class DtoLibraryMessage implements Serializable {
 		myPid = thePid;
 	}
 
-	public String getAppliesToSortText(GDomainList theDomainList) {
+	public String getAppliesToSortText(DtoDomainList theDomainList) {
 		if (myAppliesToSortText == null) {
 
 			String firstString = "";

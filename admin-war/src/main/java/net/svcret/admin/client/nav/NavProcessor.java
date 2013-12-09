@@ -4,10 +4,12 @@ import static net.svcret.admin.shared.util.StringUtil.*;
 import static net.svcret.admin.client.nav.PagesEnum.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 
+import net.svcret.admin.client.ui.api.IDestroyable;
 import net.svcret.admin.client.ui.catalog.ServiceCatalogPanel;
 import net.svcret.admin.client.ui.config.ConfigPanel;
 import net.svcret.admin.client.ui.config.auth.AddUserPanel;
@@ -34,17 +36,16 @@ import net.svcret.admin.client.ui.config.svcver.AddServiceVersionPanel;
 import net.svcret.admin.client.ui.config.svcver.AddServiceVersionStep2Panel;
 import net.svcret.admin.client.ui.config.svcver.CloneServiceVersionPanel;
 import net.svcret.admin.client.ui.config.svcver.EditServiceVersionPanel;
-import net.svcret.admin.client.ui.config.svcver.ServiceVersionRecentMessagePanel;
-import net.svcret.admin.client.ui.dash.IDestroyable;
 import net.svcret.admin.client.ui.dash.ServiceDashboardPanel;
 import net.svcret.admin.client.ui.dash.UrlDashboardPanel;
 import net.svcret.admin.client.ui.layout.BodyPanel;
 import net.svcret.admin.client.ui.layout.BreadcrumbPanel;
+import net.svcret.admin.client.ui.log.ServiceVersionRecentMessagePanel;
+import net.svcret.admin.client.ui.log.UserRecentMessagesPanel;
+import net.svcret.admin.client.ui.log.ViewRecentMessageForServiceVersionPanel;
+import net.svcret.admin.client.ui.log.ViewRecentMessageForUserPanel;
 import net.svcret.admin.client.ui.stats.ServiceVersionStatsPanel;
-import net.svcret.admin.client.ui.stats.UserRecentMessagesPanel;
 import net.svcret.admin.client.ui.stats.UserStatsPanel;
-import net.svcret.admin.client.ui.stats.ViewRecentMessageForServiceVersionPanel;
-import net.svcret.admin.client.ui.stats.ViewRecentMessageForUserPanel;
 import net.svcret.admin.client.ui.sticky.StickySessionListPanel;
 import net.svcret.admin.client.ui.test.ReplayLibraryMessagePanel;
 import net.svcret.admin.client.ui.test.ReplayMessagePanel;
@@ -303,20 +304,20 @@ public class NavProcessor {
 		return createArgumentToken(PagesEnum.TSV, theServiceVersionPid);
 	}
 
-	public static String getTokenViewServiceVersionRecentMessage(long thePid) {
-		return createArgumentToken(RSV, thePid);
+	public static String getTokenViewServiceVersionRecentMessage(long theSvcVerPid, long thePid) {
+		return createArgumentToken(RSV, theSvcVerPid, thePid);
 	}
 
-	public static String getTokenServiceVersionRecentMessages(long thePid) {
-		return createArgumentToken(SRM, thePid);
+	public static String getTokenServiceVersionRecentMessages(long thePid, boolean theFailedToLoadLast) {
+		return createArgumentToken(SRM, thePid, Boolean.toString(theFailedToLoadLast));
 	}
 
-	public static String getTokenViewUserRecentMessage(long thePid) {
-		return createArgumentToken(RUS, thePid);
+	public static String getTokenViewUserRecentMessage(long theUserPid, long thePid) {
+		return createArgumentToken(RUS, theUserPid, thePid);
 	}
 
-	public static String getTokenUserRecentMessages(long theUserPid) {
-		return createArgumentToken(PagesEnum.URM, theUserPid);
+	public static String getTokenUserRecentMessages(long theUserPid, boolean theFailedToLoadLast) {
+		return createArgumentToken(PagesEnum.URM, theUserPid, Boolean.toString(theFailedToLoadLast));
 	}
 
 	public static void goHome() {
@@ -372,7 +373,8 @@ public class NavProcessor {
 			panel = new AddUserPanel(Long.parseLong(args));
 			break;
 		case SRM:
-			panel = new ServiceVersionRecentMessagePanel(Long.parseLong(args));
+			argsSplit = args.split("_");
+			panel = new ServiceVersionRecentMessagePanel(Long.parseLong(argsSplit[0]), Boolean.parseBoolean(argsSplit[1]));
 			break;
 		case AHL:
 			panel = new AuthenticationHostsPanel();
@@ -444,10 +446,20 @@ public class NavProcessor {
 			}
 			break;
 		case RSV:
-			panel = new ViewRecentMessageForServiceVersionPanel(Long.parseLong(args));
+			argsSplit = args.split("_");
+			if (argsSplit.length < 2) {
+				navigateToDefault();
+			} else {
+			panel = new ViewRecentMessageForServiceVersionPanel(Long.parseLong(argsSplit[0]), Long.parseLong(argsSplit[1]));
+			}
 			break;
 		case RUS:
-			panel = new ViewRecentMessageForUserPanel(Long.parseLong(args));
+			argsSplit = args.split("_");
+			if (argsSplit.length < 2) {
+				navigateToDefault();
+			} else {
+			panel = new ViewRecentMessageForUserPanel(Long.parseLong(argsSplit[0]), Long.parseLong(argsSplit[1]));
+			}
 			break;
 		case EDO:
 			panel = new EditDomainPanel(Long.parseLong(args));
@@ -486,7 +498,8 @@ public class NavProcessor {
 			panel = new ServiceVersionStatsPanel(Long.parseLong(args));
 			break;
 		case URM:
-			panel = new UserRecentMessagesPanel(Long.parseLong(args));
+			argsSplit = args.split("_");
+			panel = new UserRecentMessagesPanel(Long.parseLong(argsSplit[0]), Boolean.parseBoolean(argsSplit[1]));
 			break;
 		case AMR:
 			panel = new AddMonitorRulePanel(MonitorRuleTypeEnum.values()[Integer.parseInt(args)]);
@@ -657,6 +670,37 @@ public class NavProcessor {
 
 	public static String getTokenCloneServiceVersion(long thePid) {
 		return createArgumentToken(PagesEnum.CSV, thePid);
+	}
+
+	public static String removeTokens(String theToken, PagesEnum... theTokensToRemove) {
+		List<PagesEnum> tokensList = Arrays.asList(theTokensToRemove);
+		
+		String[] parts = theToken.split(SEPARATOR);
+		List<String> newParts = new ArrayList<String>();
+
+		for (String nextToken : parts) {
+			if (nextToken.length() < 3) {
+				continue;
+			}
+
+			String nextType = nextToken.substring(0, 3);
+			PagesEnum nextTypeEnum = PagesEnum.valueOf(nextType);
+			if (tokensList.contains(nextTypeEnum)) {
+				continue;
+			}
+			
+			newParts.add(nextToken);
+		}
+
+		StringBuilder retVal = new StringBuilder();
+		for (String next : newParts) {
+			if (retVal.length() > 0) {
+				retVal.append(SEPARATOR);
+			}
+			retVal.append(next);
+		}
+
+		return retVal.toString();
 	}
 
 }

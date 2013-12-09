@@ -7,7 +7,7 @@ import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.shared.ObjectUtil;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.GService;
 
 import com.google.gwt.event.dom.client.ChangeEvent;
@@ -24,7 +24,7 @@ public class VersionPickerPanel extends TwoColumnGrid {
 	private static final String ALL_PID_STR = "-1";
 	private boolean myAllowSelectAll;
 	private ListBox myDomainBox;
-	private GDomainList myDomainList;
+	private DtoDomainList myDomainList;
 	private ListBox myServiceBox;
 	private ListBox myVersionBox;
 	private List<ChangeListener> myVersionChangeHandlers = new ArrayList<VersionPickerPanel.ChangeListener>();
@@ -32,11 +32,11 @@ public class VersionPickerPanel extends TwoColumnGrid {
 	private Long myLastSelectedServicePid;
 	private Long myLastSelectedSvcVerPid;
 
-	public VersionPickerPanel(GDomainList theDomainList) {
+	public VersionPickerPanel(DtoDomainList theDomainList) {
 		initUi(theDomainList, false);
 	}
 
-	public VersionPickerPanel(GDomainList theDomainList, boolean theAllowSelectAll) {
+	public VersionPickerPanel(DtoDomainList theDomainList, boolean theAllowSelectAll) {
 		initUi(theDomainList, theAllowSelectAll);
 	}
 
@@ -205,7 +205,7 @@ public class VersionPickerPanel extends TwoColumnGrid {
 		myLastSelectedSvcVerPid=selectedSvcVerPid;
 	}
 
-	private void initUi(GDomainList theDomainList, boolean theAllowSelectAll) {
+	private void initUi(DtoDomainList theDomainList, boolean theAllowSelectAll) {
 		myDomainList = theDomainList;
 		myAllowSelectAll = theAllowSelectAll;
 

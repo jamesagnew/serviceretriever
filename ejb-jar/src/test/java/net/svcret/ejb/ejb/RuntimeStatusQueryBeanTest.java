@@ -11,10 +11,11 @@ import java.util.Set;
 
 import net.svcret.admin.shared.model.TimeRange;
 import net.svcret.admin.shared.model.TimeRangeEnum;
+import net.svcret.ejb.admin.AdminServiceBean;
+import net.svcret.ejb.admin.AdminServiceBean.IWithStats;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
-import net.svcret.ejb.ejb.AdminServiceBean.IWithStats;
 import net.svcret.ejb.model.entity.BasePersStatsPk;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersConfig;

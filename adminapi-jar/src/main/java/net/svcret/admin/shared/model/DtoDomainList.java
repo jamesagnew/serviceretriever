@@ -3,31 +3,35 @@ package net.svcret.admin.shared.model;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.XmlElement;
 
 import net.svcret.admin.shared.util.BaseGDashboardObjectComparator;
-import net.svcret.admin.shared.util.XmlConstants;
 
-@XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="DomainList")
-@XmlRootElement(namespace=XmlConstants.DTO_NAMESPACE, name="DomainList")
-@XmlAccessorType(XmlAccessType.FIELD)
-public class GDomainList extends BaseDtoList<DtoDomain> {
+@XmlAccessorType(XmlAccessType.NONE)
+public class DtoDomainList extends BaseDtoList<DtoDomain> {
 
 	private static final long serialVersionUID = 1L;
 
 	private transient Map<Long, BaseDtoServiceVersion> myPidToServiceVersion;
 	private transient Map<Long, GServiceVersionUrl> myPidToUrl;
 
-	public GDomainList() {
+	public DtoDomainList() {
 		setComparator(new BaseGDashboardObjectComparator());
 	}
 
+	@XmlElement(name="Domain")
+	@Override
+	public List<DtoDomain> getListForJaxb() {
+		return super.getListForJaxb();
+	}
+
+	
 	public DtoDomain getDomainByPid(long theDomainPid) {
 		for (DtoDomain next : this) {
 			if (next.getPid() == theDomainPid) {

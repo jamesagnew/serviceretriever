@@ -3,6 +3,7 @@ package net.svcret.admin.shared.model;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public abstract class BaseDtoServerSecurity extends BaseDtoObject {
@@ -15,6 +16,7 @@ public abstract class BaseDtoServerSecurity extends BaseDtoObject {
 	@XmlElement(name="config_AuthHostPid")
 	private long myAuthHostPid;
 
+	@XmlTransient
 	private transient boolean myEditMode;
 
 	public String getAuthHostId() {

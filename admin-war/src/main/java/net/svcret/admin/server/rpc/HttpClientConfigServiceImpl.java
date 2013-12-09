@@ -11,9 +11,9 @@ import net.svcret.admin.shared.ServiceFailureException;
 import net.svcret.admin.shared.model.DtoKeystoreAnalysis;
 import net.svcret.admin.shared.model.DtoKeystoreToSave;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
-import net.svcret.admin.shared.model.GHttpClientConfig;
+import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
-import net.svcret.ejb.api.IAdminServiceLocal;
+import net.svcret.ejb.admin.IAdminServiceLocal;
 import net.svcret.ejb.api.IKeystoreService;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
@@ -54,7 +54,7 @@ public class HttpClientConfigServiceImpl extends BaseRpcServlet implements HttpC
 	}
 
 	@Override
-	public GHttpClientConfig saveHttpClientConfig(boolean theCreate, boolean theUseNewTruststore, boolean theUseNewKeystore, GHttpClientConfig theConfig) throws ServiceFailureException {
+	public DtoHttpClientConfig saveHttpClientConfig(boolean theCreate, boolean theUseNewTruststore, boolean theUseNewKeystore, DtoHttpClientConfig theConfig) throws ServiceFailureException {
 		Validate.notNull(theConfig, "HttpClientConfig");
 
 		if (theCreate) {

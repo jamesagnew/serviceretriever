@@ -16,7 +16,7 @@ import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.config.svcver.BaseUrlGrid;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 
@@ -30,7 +30,7 @@ public class UrlDashboardGrid extends BaseUrlGrid {
 
 	private Map<Long, BaseDtoServiceVersion> myUrlToServiceVersion = new HashMap<Long, BaseDtoServiceVersion>();
 
-	public UrlDashboardGrid(GDomainList theDomainList) {
+	public UrlDashboardGrid(DtoDomainList theDomainList) {
 		init();
 		
 		for (DtoDomain nextDomain : theDomainList) {

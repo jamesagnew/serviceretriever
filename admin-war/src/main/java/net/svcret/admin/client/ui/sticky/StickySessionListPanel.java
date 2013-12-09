@@ -13,7 +13,7 @@ import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.GService;
 
 import com.google.gwt.cell.client.SafeHtmlCell;
@@ -61,10 +61,10 @@ public class StickySessionListPanel extends FlowPanel {
 
 			@Override
 			public void onSuccess(final Collection<DtoStickySessionUrlBinding> theStickySessions) {
-				Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+				Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 
 					@Override
-					public void onSuccess(GDomainList theDomainList) {
+					public void onSuccess(DtoDomainList theDomainList) {
 						initUi(theDomainList, theStickySessions);
 					}
 
@@ -74,7 +74,7 @@ public class StickySessionListPanel extends FlowPanel {
 
 	}
 
-	private void initUi(final GDomainList theDomainList, Collection<DtoStickySessionUrlBinding> theStickySessions) {
+	private void initUi(final DtoDomainList theDomainList, Collection<DtoStickySessionUrlBinding> theStickySessions) {
 		final CellTable<DtoStickySessionUrlBinding> grid = new PCellTable<DtoStickySessionUrlBinding>();
 		myContentPanel.add(grid);
 

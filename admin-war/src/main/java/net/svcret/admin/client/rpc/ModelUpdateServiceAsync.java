@@ -15,8 +15,8 @@ import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.DtoConfig;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
-import net.svcret.admin.shared.model.GHttpClientConfig;
+import net.svcret.admin.shared.model.DtoDomainList;
+import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GPartialUserList;
@@ -83,15 +83,15 @@ public interface ModelUpdateServiceAsync {
 
 	void loadUsers(PartialUserListRequest theRequest, AsyncCallback<GPartialUserList> callback);
 
-	void loadWsdl(DtoServiceVersionSoap11 theService, GHttpClientConfig theClientConfig, String theWsdlUrl, AsyncCallback<DtoServiceVersionSoap11> callback);
+	void loadWsdl(DtoServiceVersionSoap11 theService, DtoHttpClientConfig theClientConfig, String theWsdlUrl, AsyncCallback<DtoServiceVersionSoap11> callback);
 
 	void removeAuthenticationHost(long thePid, AsyncCallback<DtoAuthenticationHostList> theAsyncCallback);
 
-	void removeDomain(long thePid, AsyncCallback<GDomainList> theAsyncCallback);
+	void removeDomain(long thePid, AsyncCallback<DtoDomainList> theAsyncCallback);
 
-	void removeService(long theDomainPid, long theServicePid, AsyncCallback<GDomainList> theAsyncCallback);
+	void removeService(long theDomainPid, long theServicePid, AsyncCallback<DtoDomainList> theAsyncCallback);
 
-	void removeServiceVersion(long thePid, AsyncCallback<GDomainList> theAsyncCallback);
+	void removeServiceVersion(long thePid, AsyncCallback<DtoDomainList> theAsyncCallback);
 
 	void reportClientError(String theMessage, Throwable theException, AsyncCallback<Void> callback);
 
@@ -101,13 +101,13 @@ public interface ModelUpdateServiceAsync {
 
 	void saveConfig(DtoConfig theConfig, AsyncCallback<Void> theAsyncCallback);
 
-	void saveDomain(DtoDomain theDomain, AsyncCallback<GDomainList> theDomainList);
+	void saveDomain(DtoDomain theDomain, AsyncCallback<DtoDomainList> theDomainList);
 
 	void saveLibraryMessage(DtoLibraryMessage theMessage, AsyncCallback<Void> theIAsyncLoadCallback);
 
 	void saveMonitorRule(BaseDtoMonitorRule theRule, AsyncCallback<GMonitorRuleList> theAsyncCallback);
 
-	void saveService(GService theService, AsyncCallback<GDomainList> theMySaveButtonHandler);
+	void saveService(GService theService, AsyncCallback<DtoDomainList> theMySaveButtonHandler);
 
 	void saveServiceVersionToSession(BaseDtoServiceVersion theServiceVersion, AsyncCallback<Void> callback);
 

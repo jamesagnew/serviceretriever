@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.svcret.ejb.api.IAdminServiceLocal;
+import net.svcret.ejb.admin.IAdminServiceLocal;
 
 //@WebServlet(urlPatterns = { "/resources/*" })
 public class ResourceServlet extends HttpServlet {

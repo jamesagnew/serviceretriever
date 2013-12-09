@@ -5,7 +5,7 @@ import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
@@ -28,10 +28,10 @@ public class UrlDashboardPanel extends FlowPanel {
 		add(loadingSpinner);
 		loadingSpinner.show();
 		
-		Model.getInstance().loadDomainListAndUrlStats(new IAsyncLoadCallback<GDomainList>() {
+		Model.getInstance().loadDomainListAndUrlStats(new IAsyncLoadCallback<DtoDomainList>() {
 			
 			@Override
-			public void onSuccess(GDomainList theResult) {
+			public void onSuccess(DtoDomainList theResult) {
 				loadingSpinner.hideCompletely();
 				UrlDashboardGrid grid = new UrlDashboardGrid(theResult);
 				add(grid);

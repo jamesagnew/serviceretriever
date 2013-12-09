@@ -18,6 +18,14 @@
 	margin-top: 8px;
 }
 
+.innerAlertPane {
+	margin: 5px;
+	padding: 5px;
+	border: 1px solid #FF8080;
+	background-color: #FFE0E0;
+	color: #FF4040;	
+}
+
 .leftMenuComponent {
 	margin-top: 6px;
 	margin-left: 10px;
@@ -40,6 +48,10 @@
 .outerLayoutLeftBar {
 	background-color: #E0E0E0;
 	overflow-y: auto;
+}
+
+.messageActionLine {
+	color: #606060;
 }
 
 .methodRootElementBlock {

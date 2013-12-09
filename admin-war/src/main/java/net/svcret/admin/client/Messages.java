@@ -680,6 +680,9 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Failed (Security) Transactions")
 	String serviceVersionStats_RecentSecurityFailTitle();
 
+	@DefaultMessage("Combined")
+	String serviceVersionStats_CombinedTitle();
+
 	@DefaultMessage("Successful Transactions")
 	String serviceVersionStats_RecentSuccessTitle();
 
@@ -838,5 +841,8 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Clear")
 	String actions_Clear();
+
+	@DefaultMessage("Refresh")
+	String actions_Refresh();
 	
 }

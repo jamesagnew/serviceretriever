@@ -20,6 +20,8 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
@@ -93,6 +95,11 @@ public abstract class BasePersSavedTransaction implements Serializable {
 	 */
 	public Long getPid() {
 		return myPid;
+	}
+
+	@VisibleForTesting
+	public void setPidForUnitTest(Long thePid) {
+		myPid = thePid;
 	}
 
 	/**

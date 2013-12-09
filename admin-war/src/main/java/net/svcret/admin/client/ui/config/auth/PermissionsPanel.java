@@ -15,7 +15,7 @@ import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GUserDomainPermission;
@@ -34,7 +34,7 @@ import com.google.gwt.user.client.ui.Label;
 public class PermissionsPanel extends FlowPanel {
 
 	private CheckBox myAllDomainsCheckbox;
-	private GDomainList myDomainList;
+	private DtoDomainList myDomainList;
 	private IHasPermissions myPermissions;
 	private LoadingSpinner myServicePermissionsSpinner;
 	private DomainTreePanel myServicePermissionsTree;
@@ -97,9 +97,9 @@ public class PermissionsPanel extends FlowPanel {
 		myServicePermissionsTreePanel.setVisible(!myAllDomainsCheckbox.getValue());
 
 		myServicePermissionsSpinner.show();
-		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+		Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 			@Override
-			public void onSuccess(GDomainList theDomainList) {
+			public void onSuccess(DtoDomainList theDomainList) {
 				myDomainList = theDomainList;
 				myServicePermissionsSpinner.hideCompletely();
 

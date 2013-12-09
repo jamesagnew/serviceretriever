@@ -1,6 +1,6 @@
 package net.svcret.admin.client.ui.test;
 
-import net.svcret.admin.client.ui.stats.BaseViewRecentMessagePanel;
+import net.svcret.admin.client.ui.log.BaseViewRecentMessagePanel;
 
 public class ServiceVersionTestResponsePanel extends BaseViewRecentMessagePanel {
 

@@ -4,7 +4,7 @@ import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.HierarchyEnum;
 
 public class CreateNewLibraryMessagePanel extends BaseEditLibraryMessagePanel {
@@ -14,10 +14,10 @@ public class CreateNewLibraryMessagePanel extends BaseEditLibraryMessagePanel {
 	}
 
 	public CreateNewLibraryMessagePanel(final HierarchyEnum theType, final long thePid) {
-		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+		Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 
 			@Override
-			public void onSuccess(GDomainList theDomainList) {
+			public void onSuccess(DtoDomainList theDomainList) {
 				DtoLibraryMessage message = new DtoLibraryMessage();
 				if (theType == null) {
 					BaseDtoServiceVersion svcVer = theDomainList.getFirstServiceVersion();

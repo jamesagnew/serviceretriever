@@ -28,8 +28,8 @@ import net.svcret.admin.shared.model.DtoServiceVersionVirtual;
 import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.DtoConfig;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
-import net.svcret.admin.shared.model.GHttpClientConfig;
+import net.svcret.admin.shared.model.DtoDomainList;
+import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GPartialUserList;
@@ -47,7 +47,8 @@ import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.PartialUserListRequest;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
-import net.svcret.ejb.api.IAdminServiceLocal;
+import net.svcret.ejb.admin.IAdminServiceLocal;
+import net.svcret.ejb.admin.UnknownPidException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.util.Validate;
@@ -405,26 +406,32 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	@Override
 	public GRecentMessage loadRecentMessageForServiceVersion(long thePid) throws ServiceFailureException {
 		if (isMockMode()) {
+			if (Math.random() < 0.3) {
+				return null;
+			}
 			return getMock().loadRecentMessageForServiceVersion(thePid);
 		}
 		try {
 			return myAdminSvc.loadRecentMessageForServiceVersion(thePid);
-		} catch (ProcessingException e) {
+		} catch (UnknownPidException e) {
 			ourLog.error("Failed to load transaction", e);
-			throw new ServiceFailureException(e.getMessage());
+			return null;
 		}
 	}
 
 	@Override
 	public GRecentMessage loadRecentMessageForUser(long thePid) throws ServiceFailureException {
 		if (isMockMode()) {
+			if (Math.random() < 0.3) {
+				return null;
+			}
 			return getMock().loadRecentMessageForUser(thePid);
 		}
 		try {
 			return myAdminSvc.loadRecentMessageForUser(thePid);
-		} catch (ProcessingException e) {
+		} catch (UnknownPidException e) {
 			ourLog.error("Failed to load transaction", e);
-			throw new ServiceFailureException(e.getMessage());
+			return null;
 		}
 	}
 
@@ -565,7 +572,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public DtoServiceVersionSoap11 loadWsdl(DtoServiceVersionSoap11 theService, GHttpClientConfig theClientConfig, String theWsdlUrl) throws ServiceFailureException {
+	public DtoServiceVersionSoap11 loadWsdl(DtoServiceVersionSoap11 theService, DtoHttpClientConfig theClientConfig, String theWsdlUrl) throws ServiceFailureException {
 		Validate.notNull(theService, "Service");
 		Validate.notNull(theService.getUncommittedSessionId(), "Service#UncommittedSessionId");
 		Validate.notBlank(theWsdlUrl, "Service");
@@ -616,7 +623,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public GDomainList removeDomain(long thePid) throws ServiceFailureException {
+	public DtoDomainList removeDomain(long thePid) throws ServiceFailureException {
 		ourLog.info("Removing domain: {}", thePid);
 
 		if (isMockMode()) {
@@ -645,7 +652,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public GDomainList removeService(long theDomainPid, long theServicePid) throws ServiceFailureException {
+	public DtoDomainList removeService(long theDomainPid, long theServicePid) throws ServiceFailureException {
 		if (isMockMode()) {
 			return getMock().removeService(theDomainPid, theServicePid);
 		}
@@ -664,7 +671,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public GDomainList removeServiceVersion(long thePid) throws ServiceFailureException {
+	public DtoDomainList removeServiceVersion(long thePid) throws ServiceFailureException {
 		Validate.greaterThanZero(thePid, "PID");
 		ourLog.info("Removing service version {}", thePid);
 
@@ -737,7 +744,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public GDomainList saveDomain(DtoDomain theDomain) throws ServiceFailureException {
+	public DtoDomainList saveDomain(DtoDomain theDomain) throws ServiceFailureException {
 		if (isMockMode()) {
 			return getMock().saveDomain(theDomain);
 		}
@@ -792,7 +799,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public GDomainList saveService(GService theService) throws ServiceFailureException {
+	public DtoDomainList saveService(GService theService) throws ServiceFailureException {
 		if (isMockMode()) {
 			return getMock().saveService(theService);
 		}

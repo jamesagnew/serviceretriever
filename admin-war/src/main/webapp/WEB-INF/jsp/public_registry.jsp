@@ -3,7 +3,7 @@
 <%@page import="net.svcret.admin.shared.model.BaseDtoServiceVersion"%>
 <%@page import="net.svcret.admin.shared.model.GService"%>
 <%@page import="net.svcret.admin.shared.model.DtoDomain"%>
-<%@page import="net.svcret.admin.shared.model.GDomainList"%>
+<%@page import="net.svcret.admin.shared.model.DtoDomainList"%>
 <%@ page language="java" contentType="text/html; charset=ISO-8859-1" pageEncoding="ISO-8859-1"%>
 <%@ taglib uri='http://java.sun.com/jsp/jstl/core' prefix='c' %>
 <!doctype html>
@@ -28,20 +28,20 @@
 	
 <%
 		String baseUrl = ((DtoConfig)request.getAttribute("config")).getProxyUrlBases().iterator().next();
-		GDomainList domainList = (GDomainList)request.getAttribute("domainList");
+			DtoDomainList domainList = (DtoDomainList)request.getAttribute("domainList");
 
-		for (DtoDomain nextDomain : domainList) {
-			for (GService nextService : nextDomain.getServiceList()) {
-		for (BaseDtoServiceVersion nextVersion : nextService.getVersionList()) { 
-			if (nextVersion.getDisplayInPublicRegistry() == Boolean.FALSE) {
-		continue;
-			}
-			if (nextVersion.getDisplayInPublicRegistry() == null && nextService.getDisplayInPublicRegistry() == Boolean.FALSE) {
-		continue;
-			}
-			if (nextVersion.getDisplayInPublicRegistry() == null && nextService.getDisplayInPublicRegistry() == null && nextDomain.getDisplayInPublicRegistry() != Boolean.TRUE) {
-		continue;
-			}
+			for (DtoDomain nextDomain : domainList) {
+		for (GService nextService : nextDomain.getServiceList()) {
+			for (BaseDtoServiceVersion nextVersion : nextService.getVersionList()) { 
+		if (nextVersion.getDisplayInPublicRegistry() == Boolean.FALSE) {
+			continue;
+		}
+		if (nextVersion.getDisplayInPublicRegistry() == null && nextService.getDisplayInPublicRegistry() == Boolean.FALSE) {
+			continue;
+		}
+		if (nextVersion.getDisplayInPublicRegistry() == null && nextService.getDisplayInPublicRegistry() == null && nextDomain.getDisplayInPublicRegistry() != Boolean.TRUE) {
+			continue;
+		}
 	%>
 		<tr>
 			<td><%=nextDomain.getName() %></td>

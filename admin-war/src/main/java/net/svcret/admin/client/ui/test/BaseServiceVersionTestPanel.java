@@ -5,12 +5,12 @@ import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
-import net.svcret.admin.client.ui.stats.BaseViewRecentMessagePanel;
+import net.svcret.admin.client.ui.log.BaseViewRecentMessagePanel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
 
@@ -31,7 +31,7 @@ import com.google.gwt.user.client.ui.Widget;
 public abstract class BaseServiceVersionTestPanel extends FlowPanel {
 
 	private ListBox myDomainBox;
-	private GDomainList myDomainList;
+	private DtoDomainList myDomainList;
 	private String myInitialMessage;
 	private ServiceVersionTestResponsePanel myResponsePanel;
 	private PButton mySendButton;
@@ -149,10 +149,10 @@ public abstract class BaseServiceVersionTestPanel extends FlowPanel {
 		myResponsePanel.setVisible(false);
 		add(myResponsePanel);
 
-		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+		Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 
 			@Override
-			public void onSuccess(final GDomainList theDomainList) {
+			public void onSuccess(final DtoDomainList theDomainList) {
 				myDomainList = theDomainList;
 				myInitializationSpinner.hideCompletely();
 

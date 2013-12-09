@@ -1,4 +1,4 @@
-package net.svcret.ejb.api;
+package net.svcret.ejb.admin;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -16,8 +16,8 @@ import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.DtoConfig;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
-import net.svcret.admin.shared.model.GHttpClientConfig;
+import net.svcret.admin.shared.model.DtoDomainList;
+import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleList;
@@ -53,9 +53,9 @@ public interface IAdminServiceLocal {
 
 	GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ProcessingException, UnexpectedFailureException;
 
-	GDomainList deleteService(long theServicePid) throws ProcessingException, UnexpectedFailureException;
+	DtoDomainList deleteService(long theServicePid) throws ProcessingException, UnexpectedFailureException;
 
-	GDomainList deleteServiceVersion(long thePid) throws ProcessingException, UnexpectedFailureException;
+	DtoDomainList deleteServiceVersion(long thePid) throws ProcessingException, UnexpectedFailureException;
 
 	DtoMonitorRuleActiveCheck executeMonitorRuleActiveCheck(DtoMonitorRuleActiveCheck theCheck) throws ProcessingException;
 
@@ -81,7 +81,7 @@ public interface IAdminServiceLocal {
 
 	DtoConfig loadConfig() throws UnexpectedFailureException;
 
-	GDomainList loadDomainList() throws ProcessingException, UnexpectedFailureException;
+	DtoDomainList loadDomainList() throws ProcessingException, UnexpectedFailureException;
 
 	Collection<DtoLibraryMessage> loadLibraryMessages() throws ProcessingException;
 
@@ -93,9 +93,9 @@ public interface IAdminServiceLocal {
 
 	GMonitorRuleList loadMonitorRuleList() throws ProcessingException, UnexpectedFailureException;
 
-	GRecentMessage loadRecentMessageForServiceVersion(long thePid) throws ProcessingException;
+	GRecentMessage loadRecentMessageForServiceVersion(long thePid) throws UnknownPidException;
 
-	GRecentMessage loadRecentMessageForUser(long thePid) throws ProcessingException;
+	GRecentMessage loadRecentMessageForUser(long thePid) throws UnknownPidException;
 
 	GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid);
 
@@ -105,7 +105,7 @@ public interface IAdminServiceLocal {
 
 	GServiceVersionDetailedStats loadServiceVersionDetailedStats(long theVersionPid) throws UnexpectedFailureException;
 
-	GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(DtoServiceVersionSoap11 theService, GHttpClientConfig theHttpClientConfig, String theWsdlUrl) throws ProcessingException,
+	GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(DtoServiceVersionSoap11 theService, DtoHttpClientConfig theHttpClientConfig, String theWsdlUrl) throws ProcessingException,
 			UnexpectedFailureException;
 
 	GUser loadUser(long thePid, boolean theLoadStats) throws ProcessingException, UnexpectedFailureException;
@@ -118,16 +118,16 @@ public interface IAdminServiceLocal {
 
 	DtoConfig saveConfig(DtoConfig theConfig) throws UnexpectedFailureException;
 
-	GDomainList saveDomain(DtoDomain theDomain) throws ProcessingException, UnexpectedFailureException;
+	DtoDomainList saveDomain(DtoDomain theDomain) throws ProcessingException, UnexpectedFailureException;
 
-	GHttpClientConfig saveHttpClientConfig(GHttpClientConfig theConfig, byte[] theNewTruststore, String theNewTruststorePass, byte[] theNewKeystore, String theNewKeystorePass)
+	DtoHttpClientConfig saveHttpClientConfig(DtoHttpClientConfig theConfig, byte[] theNewTruststore, String theNewTruststorePass, byte[] theNewKeystore, String theNewKeystorePass)
 			throws ProcessingException, UnexpectedFailureException;
 
 	void saveLibraryMessage(DtoLibraryMessage theMessage) throws ProcessingException;
 
 	void saveMonitorRule(BaseDtoMonitorRule theRule) throws UnexpectedFailureException, ProcessingException;
 
-	GDomainList saveService(GService theService) throws ProcessingException, UnexpectedFailureException;
+	DtoDomainList saveService(GService theService) throws ProcessingException, UnexpectedFailureException;
 
 	<T extends BaseDtoServiceVersion> T saveServiceVersion(long theDomain, long theService, T theVersion, List<GResource> theResources) throws ProcessingException, UnexpectedFailureException;
 

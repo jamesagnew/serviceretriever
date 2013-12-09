@@ -8,7 +8,7 @@ import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.GService;
 
 import com.google.gwt.core.shared.GWT;
@@ -41,9 +41,9 @@ public class DeleteServiceVersionPanel extends FlowPanel {
 		mySpinner.show();
 		contentPanel.add(mySpinner);
 
-		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+		Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 			@Override
-			public void onSuccess(GDomainList theResult) {
+			public void onSuccess(DtoDomainList theResult) {
 				mySpinner.hide();
 				populate(theServiceVersionPid, contentPanel, theResult);
 			}
@@ -52,7 +52,7 @@ public class DeleteServiceVersionPanel extends FlowPanel {
 
 	}
 
-	private void populate(final long theServiceVersionPid, final FlowPanel contentPanel, GDomainList theDomainList) {
+	private void populate(final long theServiceVersionPid, final FlowPanel contentPanel, DtoDomainList theDomainList) {
 		DtoDomain domain = theDomainList.getDomainWithServiceVersion(theServiceVersionPid);
 		if (domain == null) {
 			GWT.log("Unknown svcVer PID: " + theServiceVersionPid);
@@ -84,10 +84,10 @@ public class DeleteServiceVersionPanel extends FlowPanel {
 			@Override
 			public void onClick(ClickEvent theEvent) {
 				mySpinner.show();
-				MODEL_SVC.removeServiceVersion(theServiceVersionPid, new AsyncCallback<GDomainList>() {
+				MODEL_SVC.removeServiceVersion(theServiceVersionPid, new AsyncCallback<DtoDomainList>() {
 					
 					@Override
-					public void onSuccess(GDomainList theDomainResult) {
+					public void onSuccess(DtoDomainList theDomainResult) {
 						Model.getInstance().mergeDomainList(theDomainResult);
 						mySpinner.showMessage("Version Deleted Successfully", false);
 						myDeleteButton.setEnabled(false);

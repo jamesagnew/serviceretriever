@@ -43,7 +43,7 @@ import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckList;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcomeList;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GMonitorRulePassive;
 import net.svcret.admin.shared.model.GService;
@@ -97,7 +97,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 	private FlowPanel myCriteriaPanel;
 	private ListDataProvider<DtoMonitorRuleActiveCheck> myActiveChecksDataProvider;
 	private FlowPanel myPassiveAppliesToOuterPanel;
-	private GDomainList myDomainList;
+	private DtoDomainList myDomainList;
 	private ListBox myActiveAddMessagePickerBox;
 	private HTML myActiveAddMessagePickerDescription;
 	private PButton myAddActiveCheckButton;
@@ -558,7 +558,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		if (enabled) {
 			myActiveAddMessagePickerDescription.setHTML("");
 		} else {
-			myActiveAddMessagePickerDescription.setHTML("This version has no messages in the <a href=\"" + NavProcessor.getTokenMessageLibrary(HierarchyEnum.VERSION, versionPid)
+			myActiveAddMessagePickerDescription.setHTML("This version has no messages in the <a href=\"#" + NavProcessor.getTokenMessageLibrary(HierarchyEnum.VERSION, versionPid)
 					+ "\">message library</a> for this service version. Add a message before adding active monitor checks for this version to this rule.");
 		}
 	}
@@ -763,10 +763,10 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 	}
 
 	protected void setRule(final BaseDtoMonitorRule theRule) {
-		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+		Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 
 			@Override
-			public void onSuccess(GDomainList theResult) {
+			public void onSuccess(DtoDomainList theResult) {
 				myDomainList = theResult;
 				myRule = theRule;
 
@@ -799,7 +799,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		myActiveChecksDataProvider.refresh();
 	}
 
-	private void initPassiveValues(GMonitorRulePassive theRule, GDomainList theDomainList) {
+	private void initPassiveValues(GMonitorRulePassive theRule, DtoDomainList theDomainList) {
 		boolean latencyText = theRule.getPassiveFireForBackingServiceLatencyIsAboveMillis() != null;
 		if (latencyText) {
 			myPassiveLatencyBox.setValue(theRule.getPassiveFireForBackingServiceLatencyIsAboveMillis());

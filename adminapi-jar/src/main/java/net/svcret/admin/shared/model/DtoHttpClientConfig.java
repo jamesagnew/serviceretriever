@@ -9,15 +9,13 @@ import net.svcret.admin.shared.util.XmlConstants;
 
 @XmlType(namespace = XmlConstants.DTO_NAMESPACE, name = "HttpClientConfig")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class GHttpClientConfig extends BaseDtoObject {
+public class DtoHttpClientConfig extends BaseDtoObject {
 
 	public static final UrlSelectionPolicy DEFAULT_URL_SELECTION_POLICY = UrlSelectionPolicy.ROUND_ROBIN;
 	public static final int DEFAULT_CB_RESET_TIME = 60000;
 	public static final int DEFAULT_CONNECT_TIMEOUT = 10000;
 	public static final int DEFAULT_READ_TIMEOUT = 30000;
-
 	public static final String DEFAULT_ID = "DEFAULT";
-
 	private static final long serialVersionUID = 1L;
 	public static final int DEFAULT_FAILURE_RETRIES = 0;
 
@@ -120,7 +118,7 @@ public class GHttpClientConfig extends BaseDtoObject {
 	public void merge(BaseDtoObject theObject) {
 		super.merge(theObject);
 
-		GHttpClientConfig obj = (GHttpClientConfig) theObject;
+		DtoHttpClientConfig obj = (DtoHttpClientConfig) theObject;
 		myCircuitBreakerEnabled = obj.myCircuitBreakerEnabled;
 		myCircuitBreakerTimeBetweenResetAttempts = obj.myCircuitBreakerTimeBetweenResetAttempts;
 		myConnectTimeoutMillis = obj.myConnectTimeoutMillis;

@@ -1,6 +1,6 @@
 package net.svcret.admin.client.ui.config.svcver;
 
-import static net.svcret.admin.client.AdminPortal.*;
+import static net.svcret.admin.client.AdminPortal.MSGS;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.PButton;
@@ -9,7 +9,7 @@ import net.svcret.admin.shared.AddServiceVersionResponse;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.HierarchyEnum;
 
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -18,7 +18,6 @@ import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.Widget;
 
 public class EditServiceVersionPanel extends AbstractServiceVersionPanel {
 
@@ -28,9 +27,9 @@ public class EditServiceVersionPanel extends AbstractServiceVersionPanel {
 		super();
 		
 		getLoadingSpinner().show();
-		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+		Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 			@Override
-			public void onSuccess(GDomainList theResult) {
+			public void onSuccess(DtoDomainList theResult) {
 
 				setDomainPid(theResult.getDomainPidWithServiceVersion(theServiceVersionPid));
 				setServicePid(theResult.getServicePidWithServiceVersion(theServiceVersionPid));
@@ -88,7 +87,7 @@ public class EditServiceVersionPanel extends AbstractServiceVersionPanel {
 		transactionsButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent theEvent) {
-				History.newItem(NavProcessor.getTokenServiceVersionRecentMessages(getServiceVersion().getPid()));
+				History.newItem(NavProcessor.getTokenServiceVersionRecentMessages(getServiceVersion().getPid(),false));
 			}
 		});
 		savePanel.add(transactionsButton);

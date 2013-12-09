@@ -4,7 +4,7 @@ import java.util.Collection;
 
 import net.svcret.admin.shared.model.DtoKeystoreAnalysis;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
-import net.svcret.admin.shared.model.GHttpClientConfig;
+import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -15,8 +15,8 @@ public interface HttpClientConfigServiceAsync {
 			AsyncCallback<GHttpClientConfigList> theCallback);
 
 	void saveHttpClientConfig(boolean theCreate, boolean theUseNewTruststore,
-			boolean theUseNewKeystore, GHttpClientConfig theConfig,
-			AsyncCallback<GHttpClientConfig> theAsyncCallback);
+			boolean theUseNewKeystore, DtoHttpClientConfig theConfig,
+			AsyncCallback<DtoHttpClientConfig> theAsyncCallback);
 
 	void analyzeTransientTrustStore(long theHttpClientConfig,
 			AsyncCallback<DtoKeystoreAnalysis> callback);

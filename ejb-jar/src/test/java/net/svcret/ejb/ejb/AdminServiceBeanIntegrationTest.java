@@ -35,7 +35,7 @@ import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
-import net.svcret.admin.shared.model.GHttpClientConfig;
+import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GMonitorRulePassive;
 import net.svcret.admin.shared.model.GResource;
@@ -54,6 +54,7 @@ import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
+import net.svcret.ejb.admin.AdminServiceBean;
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IScheduler;
@@ -1408,7 +1409,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		req.setLoadHttpClientConfigs(true);
 		ModelUpdateResponse resp = mySvc.loadModelUpdate(req);
 
-		GHttpClientConfig cfg = resp.getHttpClientConfigList().get(0);
+		DtoHttpClientConfig cfg = resp.getHttpClientConfigList().get(0);
 
 		newEntityManager();
 

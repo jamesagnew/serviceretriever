@@ -7,7 +7,7 @@ import net.svcret.admin.client.ui.config.domain.EditDomainServicesPanel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.GService;
 
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -24,7 +24,7 @@ public class AddServicePanel extends FlowPanel {
 	private FlowPanel myDomainSelectorPanel;
 	private EditServiceBasicPropertiesPanel myServicePropertiesPanel;
 	private LoadingSpinner mySpinner;
-	private GDomainList myDomainList;
+	private DtoDomainList myDomainList;
 	
 	public AddServicePanel(Long theDomainPid) {
 		myDomainPid = theDomainPid;
@@ -65,9 +65,9 @@ public class AddServicePanel extends FlowPanel {
 		contentPanel.add(myServicePropertiesPanel);
 		
 		mySpinner.show();
-		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+		Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 			@Override
-			public void onSuccess(GDomainList theResult) {
+			public void onSuccess(DtoDomainList theResult) {
 				myDomainList = theResult;
 				mySpinner.hideCompletely();
 				updateDomains();

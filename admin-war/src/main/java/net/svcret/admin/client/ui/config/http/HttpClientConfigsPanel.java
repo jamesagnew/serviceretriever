@@ -15,7 +15,7 @@ import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.DtoKeystoreAnalysis;
-import net.svcret.admin.shared.model.GHttpClientConfig;
+import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
 import net.svcret.admin.shared.util.StringUtil;
@@ -64,7 +64,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 	private DtoKeystoreAnalysis myNewTruststore;
 	private PButton myRemoveButton;
 	private IntegerBox myRetriesTextBox;
-	private GHttpClientConfig mySelectedConfig;
+	private DtoHttpClientConfig mySelectedConfig;
 	private IntegerBox myTcpConnectTimeoutTb;
 	private IntegerBox myTcpReadTimeoutTb;
 	private HTML myTrustStoreLabel;
@@ -105,7 +105,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 	}
 
 	private void addConfig() {
-		GHttpClientConfig newConfig = new GHttpClientConfig();
+		DtoHttpClientConfig newConfig = new DtoHttpClientConfig();
 		newConfig.setId("NEW");
 		newConfig.setName("New");
 		newConfig.setPid(ourNextUnsavedPid--);
@@ -227,7 +227,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 	}
 
 	private void doSave() {
-		GHttpClientConfig config = myConfigs.getConfigByPid(mySelectedConfig.getPid());
+		DtoHttpClientConfig config = myConfigs.getConfigByPid(mySelectedConfig.getPid());
 		config.setId(myIdTextBox.getValue());
 		config.setName(myNameTextBox.getValue());
 
@@ -292,7 +292,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		myLoadingSpinner.show();
 		boolean useNewTruststore = myNewTruststore != null;
 		boolean useNewKeystore = myNewKeystore != null;
-		AdminPortal.SVC_HTTPCLIENTCONFIG.saveHttpClientConfig(create, useNewTruststore, useNewKeystore, config, new AsyncCallback<GHttpClientConfig>() {
+		AdminPortal.SVC_HTTPCLIENTCONFIG.saveHttpClientConfig(create, useNewTruststore, useNewKeystore, config, new AsyncCallback<DtoHttpClientConfig>() {
 
 			@Override
 			public void onFailure(Throwable theCaught) {
@@ -300,7 +300,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 			}
 
 			@Override
-			public void onSuccess(GHttpClientConfig theResult) {
+			public void onSuccess(DtoHttpClientConfig theResult) {
 				myLoadingSpinner.showMessage("Saved", false);
 				Model.getInstance().addHttpClientConfig(theResult);
 				mySelectedConfig = theResult;
@@ -576,7 +576,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 	}
 
 	private void removeConfig() {
-		GHttpClientConfig config = myConfigs.get(myConfigsListBox.getSelectedIndex());
+		DtoHttpClientConfig config = myConfigs.get(myConfigsListBox.getSelectedIndex());
 		if (config.isDefault()) {
 			Window.alert(MSGS.httpClientConfigsPanel_CantDeleteDefault());
 			return;
@@ -633,7 +633,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		myConfigsListBox.clear();
 
 		int selectedIndex = 0;
-		for (GHttpClientConfig next : myConfigs) {
+		for (DtoHttpClientConfig next : myConfigs) {
 			String desc = next.getId();
 			if (StringUtil.isNotBlank(next.getName())) {
 				desc = desc + " - " + next.getName();
@@ -648,7 +648,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 
 		myUpdatingConfigsListBox = false;
 
-		GHttpClientConfig newSelected = myConfigs.get(selectedIndex);
+		DtoHttpClientConfig newSelected = myConfigs.get(selectedIndex);
 		if (!newSelected.equals(mySelectedConfig)) {
 			mySelectedConfig = newSelected;
 			updateSelectedConfig();
@@ -660,7 +660,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		myIdTextBox.setValue(mySelectedConfig.getId());
 		myNameTextBox.setValue(mySelectedConfig.getName());
 
-		boolean nameAndIdEditable = !GHttpClientConfig.DEFAULT_ID.equals(mySelectedConfig.getId());
+		boolean nameAndIdEditable = !DtoHttpClientConfig.DEFAULT_ID.equals(mySelectedConfig.getId());
 		myIdTextBox.setEnabled(nameAndIdEditable);
 		myNameTextBox.setEnabled(nameAndIdEditable);
 

@@ -8,7 +8,7 @@ import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -71,9 +71,9 @@ abstract class BaseDashboardPanel extends FlowPanel {
 			public void onClick(ClickEvent theEvent) {
 				myReloadButton.setResource(AdminPortal.IMAGES.dashboardSpinner());
 				myUpdating = true;
-				Model.getInstance().loadDomainListAndStats(new IAsyncLoadCallback<GDomainList>() {
+				Model.getInstance().loadDomainListAndStats(new IAsyncLoadCallback<DtoDomainList>() {
 					@Override
-					public void onSuccess(GDomainList theResult) {
+					public void onSuccess(DtoDomainList theResult) {
 						myUpdating = false;
 						updateView(theResult);
 					}
@@ -95,9 +95,9 @@ abstract class BaseDashboardPanel extends FlowPanel {
 				}
 				myReloadButton.setResource(AdminPortal.IMAGES.dashboardSpinner());
 				myUpdating = true;
-				Model.getInstance().loadDomainListAndStats(new IAsyncLoadCallback<GDomainList>() {
+				Model.getInstance().loadDomainListAndStats(new IAsyncLoadCallback<DtoDomainList>() {
 					@Override
-					public void onSuccess(GDomainList theResult) {
+					public void onSuccess(DtoDomainList theResult) {
 						myUpdating = false;
 						updateView(theResult);
 					}
@@ -131,16 +131,16 @@ abstract class BaseDashboardPanel extends FlowPanel {
 		}
 		myReloadButton.setResource(AdminPortal.IMAGES.dashboardSpinner());
 		myUpdating = true;
-		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+		Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 			@Override
-			public void onSuccess(GDomainList theResult) {
+			public void onSuccess(DtoDomainList theResult) {
 				myUpdating = false;
 				updateView(theResult);
 			}
 		});
 	}
 
-	protected abstract void updateView(GDomainList theResult);
+	protected abstract void updateView(DtoDomainList theResult);
 
 	protected void updatingFinished() {
 		myReloadButton.setResource(AdminPortal.IMAGES.iconReload16());

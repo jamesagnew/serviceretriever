@@ -11,7 +11,7 @@ import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.dom.client.Style.Display;
@@ -33,7 +33,7 @@ public abstract class BaseEditLibraryMessagePanel extends FlowPanel {
 	private LoadingSpinner myInitialSpinner;
 	private EditableField myDescriptionEditor;
 	private DtoLibraryMessage myMessage;
-	private GDomainList myDomainList;
+	private DtoDomainList myDomainList;
 	private EditableField myContentTypeEditor;
 	private TextArea myMessageEditor;
 	private LoadingSpinner mySaveSpinner;
@@ -63,9 +63,9 @@ public abstract class BaseEditLibraryMessagePanel extends FlowPanel {
 
 	public void setContents(DtoLibraryMessage theMessage) {
 		myMessage = theMessage;
-		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+		Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 			@Override
-			public void onSuccess(GDomainList theDomainList) {
+			public void onSuccess(DtoDomainList theDomainList) {
 				myDomainList = theDomainList;
 				initUi();
 				updateContentTypeSuggestions();

@@ -20,6 +20,7 @@ import javax.ejb.TransactionAttributeType;
 
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
+import net.svcret.ejb.admin.AdminServiceBean;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IServiceRegistry;

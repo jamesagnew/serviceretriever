@@ -2,9 +2,18 @@ package net.svcret.admin.shared.model;
 
 import java.util.Comparator;
 
-import net.svcret.admin.shared.util.StringUtil;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
-public class GHttpClientConfigList extends BaseDtoList<GHttpClientConfig> implements Comparator<GHttpClientConfig> {
+import net.svcret.admin.shared.util.StringUtil;
+import net.svcret.admin.shared.util.XmlConstants;
+
+@XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="HttpClientConfigList")
+@XmlRootElement(namespace=XmlConstants.DTO_NAMESPACE, name="HttpBasicAuthServerSecurity")
+@XmlAccessorType(XmlAccessType.FIELD)
+public class GHttpClientConfigList extends BaseDtoList<DtoHttpClientConfig> implements Comparator<DtoHttpClientConfig> {
 
 	private static final long serialVersionUID = 1L;
 
@@ -12,8 +21,8 @@ public class GHttpClientConfigList extends BaseDtoList<GHttpClientConfig> implem
 		setComparator(this);
 	}
 	
-	public GHttpClientConfig getConfigByPid(long thePid) {
-		for (GHttpClientConfig next : this) {
+	public DtoHttpClientConfig getConfigByPid(long thePid) {
+		for (DtoHttpClientConfig next : this) {
 			if (next.getPid() == thePid) {
 				return next;
 			}
@@ -24,7 +33,7 @@ public class GHttpClientConfigList extends BaseDtoList<GHttpClientConfig> implem
 	public String listConfigIds() {
 		StringBuilder b = new StringBuilder();
 		b.append('[');
-		for (GHttpClientConfig next : this) {
+		for (DtoHttpClientConfig next : this) {
 			if (b.length() > 1) {
 				b.append(", ");
 			}
@@ -35,11 +44,11 @@ public class GHttpClientConfigList extends BaseDtoList<GHttpClientConfig> implem
 	}
 
 	@Override
-	public int compare(GHttpClientConfig theO1, GHttpClientConfig theO2) {
-		if (GHttpClientConfig.DEFAULT_ID.equals(theO1.getId())) {
+	public int compare(DtoHttpClientConfig theO1, DtoHttpClientConfig theO2) {
+		if (DtoHttpClientConfig.DEFAULT_ID.equals(theO1.getId())) {
 			return -1;
 		}
-		if (GHttpClientConfig.DEFAULT_ID.equals(theO2.getId())) {
+		if (DtoHttpClientConfig.DEFAULT_ID.equals(theO2.getId())) {
 			return 1;
 		}
 		return StringUtil.compare(theO1.getId(), theO2.getId());

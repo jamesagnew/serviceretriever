@@ -480,29 +480,22 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 	@Test
 	public void testSoap11FailingUrl() throws Exception {
 
+		BasePersServiceVersion d0s0v0 = myServiceRegistry.getServiceVersionByPid(mySvcVerPid);
+		d0s0v0.setServerSecurityMode(ServerSecurityModeEnum.ALLOW_ANY);
+		myServiceRegistry.saveServiceVersion(d0s0v0);
+		newEntityManager();
+		
 		/*
 		 * Make request
 		 */
 
 		//@formatter:off
-		String request = "<soapenv:Envelope xmlns:net=\"net:svcret:demo\" xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
-				+ "   <soapenv:Header>\n"
-				+ "      <wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\" xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">\n"
-				+ "         <wsse:UsernameToken wsu:Id=\"UsernameToken-1\">\n" 
-				+ "            <wsse:Username>test</wsse:Username>\n"
-				+ "            <wsse:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">admin</wsse:Password>\n"
-				+ "            <wsse:Nonce EncodingType=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary\">P8ypSWlCHRqR4T1ABYHHbA==</wsse:Nonce>\n"
-				+ "            <wsu:Created>2013-04-20T21:18:55.025Z</wsu:Created>\n" 
-				+ "         </wsse:UsernameToken>\n" 
-				+ "      </wsse:Security>\n" 
-				+ "   </soapenv:Header>\n"
-				+ "   <soapenv:Body>\n" 
+		String request = "<S:Envelope xmlns:net=\"net:svcret:demo\" xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
+				+ "   <S:Body>\n" 
 				+ "      <net:d0s0v0m0>\n" 
-				+ "          <arg0>FAULT</arg0>\n" 
-				+ "          <arg1>?</arg1>\n" 
 				+ "      </net:d0s0v0m0>\n" 
-				+ "   </soapenv:Body>\n"
-				+ "</soapenv:Envelope>";
+				+ "   </S:Body>\n"
+				+ "</S:Envelope>";
 
 		String response = 
 				"<S:Envelope xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" + 
@@ -585,7 +578,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		String entireLog = org.apache.commons.io.IOUtils.toString(fr);
 		ourLog.info("Journal file: {}", entireLog);
 
-		assertThat(entireLog, StringContains.containsString("</soapenv:Envelope>"));
+		assertThat(entireLog, StringContains.containsString("</S:Envelope>"));
 	}
 
 	@Test

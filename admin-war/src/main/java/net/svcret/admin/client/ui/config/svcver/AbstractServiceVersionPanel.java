@@ -17,7 +17,7 @@ import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoServiceVersionVirtual;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceList;
 import net.svcret.admin.shared.util.StringUtil;
@@ -63,7 +63,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 	private HasValue<String> myVersionTextBox;
 	private HorizontalPanel myVersionTextBoxPanel;
 	private HorizontalPanel myServicesAdditionalPanel;
-	private GDomainList myDomainList;
+	private DtoDomainList myDomainList;
 
 	public AbstractServiceVersionPanel() {
 		this(null, null, null);
@@ -411,7 +411,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 		onResize();
 	}
 
-	void initParents(GDomainList theDomainList) {
+	void initParents(DtoDomainList theDomainList) {
 		myUpdating = true;
 		
 		myDomainList = theDomainList;

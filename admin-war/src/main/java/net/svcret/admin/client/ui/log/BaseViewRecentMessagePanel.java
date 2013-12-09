@@ -1,7 +1,9 @@
-package net.svcret.admin.client.ui.stats;
+package net.svcret.admin.client.ui.log;
 
-import static net.svcret.admin.client.AdminPortal.*;
+import static net.svcret.admin.client.AdminPortal.MSGS;
 import net.svcret.admin.client.AdminPortal;
+import net.svcret.admin.client.MyResources;
+import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.HtmlPre;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
@@ -11,7 +13,10 @@ import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
+import net.svcret.admin.shared.model.DtoDomain;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.GRecentMessage;
+import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.Pair;
 import net.svcret.admin.shared.util.StringUtil;
 
@@ -23,6 +28,7 @@ import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Hyperlink;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.ScrollPanel;
@@ -34,7 +40,7 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 	private HtmlPre myReqPre;
 	private FlowPanel myRespPanel;
 	private HtmlPre myRespPre;
-	private TwoColumnGrid myTopGrid;
+	private TwoColumnGrid theGrid;
 	private LoadingSpinner myTopLoadingSpinner;
 	private FlowPanel myTopPanel;
 
@@ -55,10 +61,10 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		myTopLoadingSpinner.show();
 		topContentPanel.add(myTopLoadingSpinner);
 
-		myTopGrid = new TwoColumnGrid();
+		theGrid = new TwoColumnGrid();
 		myTopPanel.add(topContentPanel);
 
-		topContentPanel.add(myTopGrid);
+		topContentPanel.add(theGrid);
 
 	}
 
@@ -85,6 +91,18 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 		}
 	}
 
+	
+	private SafeHtml formatActionLine(String theActionLine) {
+		SafeHtmlBuilder b = new SafeHtmlBuilder();
+
+		b.appendHtmlConstant("<span class='" + MyResources.CSS.messageActionLine() + "'>");
+		b.appendEscaped(theActionLine);
+		b.appendHtmlConstant("</span>");
+
+		return b.toSafeHtml();
+	}
+
+	
 	private SafeHtml formatHeader(Pair<String> theNext) {
 		SafeHtmlBuilder b = new SafeHtmlBuilder();
 
@@ -111,31 +129,41 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 	}
 
 	public void setMessage(final GRecentMessage theResult) {
-		Model.getInstance().loadServiceVersion(theResult.getServiceVersionPid(), new IAsyncLoadCallback<BaseDtoServiceVersion>() {
+		IAsyncLoadCallback<DtoDomainList> callback=new IAsyncLoadCallback<DtoDomainList>() {
+			
 			@Override
-			public void onSuccess(BaseDtoServiceVersion theSvcVer) {
+			public void onSuccess(DtoDomainList theDomainList) {
 				myTopLoadingSpinner.hideCompletely();
 
-				while (myTopGrid.getRowCount() > 0) {
-					myTopGrid.removeRow(0);
+				while (theGrid.getRowCount() > 0) {
+					theGrid.removeRow(0);
 				}
 
+				
+				theGrid.addHeader("Service Information");
+
+				BaseDtoServiceVersion svcVer = theDomainList.getServiceVersionByPid(theResult.getServiceVersionPid());
+ 
+				addServiceVersionInfoToPropertyGrid(theGrid, theDomainList,theResult.getServiceVersionPid());
+
+				theGrid.addHeader("Transaction");
+
 				if (theResult.getOutcomeDescription() != null) {
-					myTopGrid.addRow("Outcome", new Label(theResult.getOutcomeDescription()));
+					theGrid.addRow("Outcome", new Label(theResult.getOutcomeDescription()));
 				}
 				if (theResult.getAuthorizationOutcome() != null) {
-					myTopGrid.addRow("Authorization", new Label(theResult.getAuthorizationOutcome().getDescription()));
+					theGrid.addRow("Authorization", new Label(theResult.getAuthorizationOutcome().getDescription()));
 				}
-				myTopGrid.addRow(MSGS.recentMessagesGrid_ColTimestamp(), new Label(DateUtil.formatTime(theResult.getTransactionTime())));
-				myTopGrid.addRow("Latency", theResult.getTransactionMillis() + "ms");
+				theGrid.addRow(MSGS.recentMessagesGrid_ColTimestamp(), new Label(DateUtil.formatTime(theResult.getTransactionTime())));
+				theGrid.addRow("Latency", theResult.getTransactionMillis() + "ms");
 				if (StringUtil.isNotBlank(theResult.getImplementationUrlId())) {
-					myTopGrid.addRow(MSGS.recentMessagesGrid_ColImplementationUrl(), new Anchor(theResult.getImplementationUrlId(), theResult.getImplementationUrlHref()));
+					theGrid.addRow(MSGS.recentMessagesGrid_ColImplementationUrl(), new Anchor(theResult.getImplementationUrlId(), theResult.getImplementationUrlHref()));
 				}
 				if (StringUtil.isNotBlank(theResult.getRequestHostIp())) {
-					myTopGrid.addRow(MSGS.recentMessagesGrid_ColIp(), new Label(theResult.getRequestHostIp()));
+					theGrid.addRow(MSGS.recentMessagesGrid_ColIp(), new Label(theResult.getRequestHostIp()));
 				}
 				if (StringUtil.isNotBlank(theResult.getFailDescription())) {
-					myTopGrid.addRow(MSGS.recentMessagesGrid_ColFailDescription(), new Label(theResult.getFailDescription(), true));
+					theGrid.addRow(MSGS.recentMessagesGrid_ColFailDescription(), new Label(theResult.getFailDescription(), true));
 				}
 
 				/*
@@ -161,6 +189,10 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 					myReqPanel.add(reqContentPanel);
 
 					Panel reqHeaderPanel = new FlowPanel();
+					if (StringUtil.isNotBlank(theResult.getRequestActionLine())) {
+						reqHeaderPanel.add(new HTML(formatActionLine(theResult.getRequestActionLine())));
+					}
+					
 					for (Pair<String> next : theResult.getRequestHeaders()) {
 						reqHeaderPanel.add(new HTML(formatHeader(next)));
 					}
@@ -169,7 +201,7 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 					myReqPre = new HtmlPre(theResult.getRequestMessage());
 
 					HorizontalPanel reqFunctions = new HorizontalPanel();
-					addResponseFormatButtons(reqFunctions, theResult.getRequestContentType(), myReqPre, theResult.getRequestMessage(), theSvcVer);
+					addResponseFormatButtons(reqFunctions, theResult.getRequestContentType(), myReqPre, theResult.getRequestMessage(), svcVer);
 					reqContentPanel.add(reqFunctions);
 
 					ScrollPanel reqMsgPanel = new ScrollPanel(myReqPre);
@@ -207,7 +239,7 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 				myRespPre = new HtmlPre(theResult.getResponseMessage());
 
 				HorizontalPanel respFunctions = new HorizontalPanel();
-				addResponseFormatButtons(respFunctions, theResult.getResponseContentType(), myRespPre, theResult.getResponseMessage(), theSvcVer);
+				addResponseFormatButtons(respFunctions, theResult.getResponseContentType(), myRespPre, theResult.getResponseMessage(), svcVer);
 
 				respContentPanel.add(respFunctions);
 
@@ -216,7 +248,11 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 				respContentPanel.add(respMsgPanel);
 
 			}
-		});
+
+		};
+		Model.getInstance().loadDomainList(callback);
+		
+		
 
 	}
 
@@ -231,5 +267,18 @@ public abstract class BaseViewRecentMessagePanel extends FlowPanel {
 	public static native void syntaxHighliter() /*-{
 		$wnd.SyntaxHighlighter.highlight();
 	}-*/;
+
+	public static void addServiceVersionInfoToPropertyGrid(TwoColumnGrid theGrid, DtoDomainList theDomainList, long theServiceVersionPid) {
+		DtoDomain domain = theDomainList.getDomainWithServiceVersion(theServiceVersionPid);
+		GService service = theDomainList.getServiceWithServiceVersion(theServiceVersionPid);
+		BaseDtoServiceVersion svcVer = theDomainList.getServiceVersionByPid(theServiceVersionPid);
+		
+		theGrid.addRow("Domain", domain.getName());
+		theGrid.addWidgetToRight(new Hyperlink(AdminPortal.MSGS.actions_Edit(), NavProcessor.getTokenEditDomain(domain.getPid())));
+		theGrid.addRow("Service", service.getName());
+		theGrid.addWidgetToRight(new Hyperlink(AdminPortal.MSGS.actions_Edit(), NavProcessor.getTokenEditService(domain.getPid(), service.getPid())));
+		theGrid.addRow("Version", svcVer.getId());
+		theGrid.addWidgetToRight(new Hyperlink(AdminPortal.MSGS.actions_Edit(), NavProcessor.getTokenEditServiceVersion(svcVer.getPid())));
+	}
 
 }

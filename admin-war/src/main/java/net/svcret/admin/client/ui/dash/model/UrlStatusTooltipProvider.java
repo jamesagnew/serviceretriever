@@ -13,7 +13,7 @@ import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoDashboardObject;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
@@ -60,9 +60,9 @@ public final class UrlStatusTooltipProvider<T extends BaseDtoDashboardObject> im
 		populateGrid(grid, urls);
 		grid.getCellFormatter().setWidth(0, 2, "100px");
 
-		Model.getInstance().loadDomainListAndUrlStats(urlPids, new IAsyncLoadCallback<GDomainList>() {
+		Model.getInstance().loadDomainListAndUrlStats(urlPids, new IAsyncLoadCallback<DtoDomainList>() {
 			@Override
-			public void onSuccess(GDomainList theResult) {
+			public void onSuccess(DtoDomainList theResult) {
 				spinner.hideCompletely();
 				populateGrid(grid, urls);
 			}

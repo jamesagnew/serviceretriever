@@ -22,7 +22,7 @@ import net.svcret.admin.client.ui.config.svcver.NullColumn;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.HierarchyEnum;
 import net.svcret.admin.shared.util.StringUtil;
 
@@ -52,7 +52,7 @@ public class MessageLibraryPanel extends FlowPanel {
 	private FlowPanel myContentPanel;
 	private LoadingSpinner myDataLoadingSpinner;
 	private ListDataProvider<DtoLibraryMessage> myDataProvider;
-	private GDomainList myDomainList;
+	private DtoDomainList myDomainList;
 	private PCellTable<DtoLibraryMessage> myGrid;
 	private LoadingSpinner myInitialLoadingSpinner;
 	private Long myInitialPid;
@@ -88,9 +88,9 @@ public class MessageLibraryPanel extends FlowPanel {
 		myInitialLoadingSpinner.show();
 		myContentPanel.add(myInitialLoadingSpinner);
 
-		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+		Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 			@Override
-			public void onSuccess(final GDomainList theDomainList) {
+			public void onSuccess(final DtoDomainList theDomainList) {
 				myDomainList = theDomainList;
 				myInitialLoadingSpinner.hideCompletely();
 				initUi();

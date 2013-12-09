@@ -1,4 +1,4 @@
-package net.svcret.ejb.ejb;
+package net.svcret.ejb.admin;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -38,8 +38,8 @@ import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
-import net.svcret.admin.shared.model.GDomainList;
-import net.svcret.admin.shared.model.GHttpClientConfig;
+import net.svcret.admin.shared.model.DtoDomainList;
+import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
@@ -71,7 +71,6 @@ import net.svcret.admin.shared.model.PartialUserListRequest;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.model.TimeRange;
 import net.svcret.ejb.api.HttpRequestBean;
-import net.svcret.ejb.api.IAdminServiceLocal;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IKeystoreService;
@@ -84,7 +83,11 @@ import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBe
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.StatusesBean;
+import net.svcret.ejb.ejb.DaoBean;
+import net.svcret.ejb.ejb.RuntimeStatusBean;
 import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
+import net.svcret.ejb.ejb.SecurityServiceBean;
+import net.svcret.ejb.ejb.ServiceRegistryBean;
 import net.svcret.ejb.ejb.monitor.IMonitorService;
 import net.svcret.ejb.ejb.monitor.MonitorServiceBean;
 import net.svcret.ejb.ejb.nodecomm.ISynchronousNodeIpcClient;
@@ -325,7 +328,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GDomainList deleteService(long theServicePid) throws ProcessingException, UnexpectedFailureException {
+	public DtoDomainList deleteService(long theServicePid) throws ProcessingException, UnexpectedFailureException {
 		ourLog.info("Deleting service {}", theServicePid);
 
 		PersService service = myDao.getServiceByPid(theServicePid);
@@ -339,7 +342,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GDomainList deleteServiceVersion(long thePid) throws ProcessingException, UnexpectedFailureException {
+	public DtoDomainList deleteServiceVersion(long thePid) throws ProcessingException, UnexpectedFailureException {
 		ourLog.info("Deleting service version {}", thePid);
 
 		myServiceRegistry.deleteServiceVersion(thePid);
@@ -827,14 +830,14 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GDomainList loadDomainList() throws ProcessingException, UnexpectedFailureException {
+	public DtoDomainList loadDomainList() throws ProcessingException, UnexpectedFailureException {
 		Set<Long> empty = Collections.emptySet();
 		return loadDomainList(empty, empty, empty, empty, empty, null);
 	}
 
-	private GDomainList loadDomainList(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, Set<Long> theLoadUrlStats,
+	private DtoDomainList loadDomainList(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, Set<Long> theLoadUrlStats,
 			StatusesBean theStatuses) throws UnexpectedFailureException {
-		GDomainList domainList = new GDomainList();
+		DtoDomainList domainList = new DtoDomainList();
 
 		for (PersDomain nextDomain : myServiceRegistry.getAllDomains()) {
 			DtoDomain gDomain = nextDomain.toDto(theLoadDomStats, theLoadSvcStats, theLoadVerStats, theLoadVerMethodStats, theLoadUrlStats, theStatuses, myRuntimeStatusQuerySvc);
@@ -896,7 +899,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			statuses = myDao.loadAllStatuses(myConfigSvc.getConfig());
 		}
 
-		GDomainList domainList = loadDomainList(loadDomStats, loadSvcStats, loadVerStats, loadVerMethodStats, loadUrlStats, statuses);
+		DtoDomainList domainList = loadDomainList(loadDomStats, loadSvcStats, loadVerStats, loadVerMethodStats, loadUrlStats, statuses);
 
 		retVal.setDomainList(domainList);
 
@@ -966,19 +969,19 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GRecentMessage loadRecentMessageForServiceVersion(long thePid) throws ProcessingException {
+	public GRecentMessage loadRecentMessageForServiceVersion(long thePid) throws UnknownPidException  {
 		PersServiceVersionRecentMessage msg = myDao.loadRecentMessageForServiceVersion(thePid);
 		if (msg == null) {
-			throw new ProcessingException("Unable to find transaction with PID " + thePid + ". Maybe it has been purged?");
+			throw new UnknownPidException("Unable to find transaction with PID " + thePid + ". Maybe it has been purged?");
 		}
 		return msg.toDto(true);
 	}
 
 	@Override
-	public GRecentMessage loadRecentMessageForUser(long thePid) throws ProcessingException {
+	public GRecentMessage loadRecentMessageForUser(long thePid) throws UnknownPidException {
 		PersUserRecentMessage msg = myDao.loadRecentMessageForUser(thePid);
 		if (msg == null) {
-			throw new ProcessingException("Unable to find transaction with PID " + thePid + ". Maybe it has been purged?");
+			throw new UnknownPidException("Unable to find transaction with PID " + thePid + ". Maybe it has been purged?");
 		}
 		return msg.toDto(true);
 	}
@@ -1118,7 +1121,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(DtoServiceVersionSoap11 theService, GHttpClientConfig theHttpClientConfig, String theWsdlUrl) throws ProcessingException,
+	public GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(DtoServiceVersionSoap11 theService, DtoHttpClientConfig theHttpClientConfig, String theWsdlUrl) throws ProcessingException,
 			UnexpectedFailureException {
 		Validate.notNull(theService, "Definition");
 		Validate.notBlank(theWsdlUrl, "URL");
@@ -1283,7 +1286,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GDomainList saveDomain(DtoDomain theDomain) throws ProcessingException, UnexpectedFailureException {
+	public DtoDomainList saveDomain(DtoDomain theDomain) throws ProcessingException, UnexpectedFailureException {
 		ourLog.info("Saving domain with PID {}", theDomain.getPid());
 
 		PersDomain domain = myDao.getDomainByPid(theDomain.getPid());
@@ -1297,7 +1300,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GHttpClientConfig saveHttpClientConfig(GHttpClientConfig theConfig, byte[] theNewTruststore, String theNewTruststorePass, byte[] theNewKeystore, String theNewKeystorePass)
+	public DtoHttpClientConfig saveHttpClientConfig(DtoHttpClientConfig theConfig, byte[] theNewTruststore, String theNewTruststorePass, byte[] theNewKeystore, String theNewKeystorePass)
 			throws ProcessingException, UnexpectedFailureException {
 		Validate.notNull(theConfig, "HttpClientConfig");
 
@@ -1312,7 +1315,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			if (existing == null) {
 				throw new ProcessingException("Unknown client config PID: " + theConfig.getPid());
 			}
-			if (existing.getId().equals(GHttpClientConfig.DEFAULT_ID)) {
+			if (existing.getId().equals(DtoHttpClientConfig.DEFAULT_ID)) {
 				isDefault = true;
 			}
 		}
@@ -1365,7 +1368,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GDomainList saveService(GService theService) throws ProcessingException, UnexpectedFailureException {
+	public DtoDomainList saveService(GService theService) throws ProcessingException, UnexpectedFailureException {
 		ourLog.info("Saving service {}", theService.getPid());
 
 		PersService service = myDao.getServiceByPid(theService.getPid());
@@ -1987,7 +1990,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	static InvocationStatsIntervalEnum doWithStatsSupportFindInterval(PersConfig theConfig, Date date) {
+	public static InvocationStatsIntervalEnum doWithStatsSupportFindInterval(PersConfig theConfig, Date date) {
 		InvocationStatsIntervalEnum interval;
 		Date collapseStatsToDaysCutoff = InvocationStatsIntervalEnum.DAY.truncate(theConfig.getCollapseStatsToDaysCutoff());
 		if (date.before(collapseStatsToDaysCutoff)) {
@@ -2008,7 +2011,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return interval;
 	}
 
-	static Date doWithStatsSupportIncrement(Date date, InvocationStatsIntervalEnum interval) {
+	public static Date doWithStatsSupportIncrement(Date date, InvocationStatsIntervalEnum interval) {
 		Date retVal = new Date(date.getTime() + interval.millis());
 		return retVal;
 	}
@@ -2037,7 +2040,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 	}
 
-	static int[] toArray(ArrayList<Integer> theT60minCount) {
+	public static int[] toArray(ArrayList<Integer> theT60minCount) {
 		int[] retVal = new int[theT60minCount.size()];
 		int index = 0;
 		for (Integer integer : theT60minCount) {
@@ -2046,7 +2049,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	static int[] toLatency(List<Long> theTimes, List<Integer> theCountsEntry0, List<Integer> theCountsEntry1, List<Integer> theCountsEntry2) {
+	public static int[] toLatency(List<Long> theTimes, List<Integer> theCountsEntry0, List<Integer> theCountsEntry1, List<Integer> theCountsEntry2) {
 		return toLatency(theTimes, theCountsEntry0, theCountsEntry1, theCountsEntry2, null);
 	}
 

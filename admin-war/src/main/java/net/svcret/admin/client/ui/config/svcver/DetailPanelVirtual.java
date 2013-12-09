@@ -8,7 +8,7 @@ import net.svcret.admin.client.ui.components.VersionPickerPanel.ChangeListener;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.DtoServiceVersionVirtual;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 
 public class DetailPanelVirtual extends BaseDetailPanel<DtoServiceVersionVirtual> {
@@ -30,9 +30,9 @@ public class DetailPanelVirtual extends BaseDetailPanel<DtoServiceVersionVirtual
 				+ "to a different service defined within the catalog."));
 		//@formatter:on
 
-		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+		Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 			@Override
-			public void onSuccess(GDomainList theDomainList) {
+			public void onSuccess(DtoDomainList theDomainList) {
 				VersionPickerPanel pickerPanel = new VersionPickerPanel(theDomainList);
 				pickerPanel.setAllowSelectAll(false);
 				targetPanel.add(pickerPanel);

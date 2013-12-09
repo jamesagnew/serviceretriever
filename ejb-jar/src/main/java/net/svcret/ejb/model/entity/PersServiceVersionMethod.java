@@ -230,8 +230,6 @@ public class PersServiceVersionMethod extends BasePersObject {
 			accumulator.populateDto(retVal);
 
 			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
-
-			
 		}
 
 		return retVal;

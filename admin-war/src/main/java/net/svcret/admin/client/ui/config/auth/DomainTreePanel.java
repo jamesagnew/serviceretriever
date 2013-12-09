@@ -6,7 +6,7 @@ import java.util.List;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
 
@@ -22,7 +22,7 @@ import com.google.gwt.user.client.ui.TreeItem;
 
 public abstract class DomainTreePanel extends FlowPanel {
 
-	private GDomainList myDomainList;
+	private DtoDomainList myDomainList;
 	private ITreeStatusModel myModel;
 	private Tree myServicePermissionsTree;
 	private List<ChangeHandler> myChangeHandlers;
@@ -50,7 +50,7 @@ public abstract class DomainTreePanel extends FlowPanel {
 		}
 	}
 	
-	public void setModel(GDomainList theDomainList, ITreeStatusModel theModel) {
+	public void setModel(DtoDomainList theDomainList, ITreeStatusModel theModel) {
 		if (theDomainList == null) {
 			throw new NullPointerException("theDomainList");
 		}

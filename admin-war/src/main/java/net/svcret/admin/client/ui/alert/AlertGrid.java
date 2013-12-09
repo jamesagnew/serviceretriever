@@ -13,7 +13,7 @@ import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoMonitorRule;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleFiringProblem;
 import net.svcret.admin.shared.model.GMonitorRuleList;
@@ -36,13 +36,13 @@ import com.google.gwt.view.client.ListDataProvider;
 
 public class AlertGrid extends FlowPanel {
 
-	private GDomainList myDomainList;
+	private DtoDomainList myDomainList;
 	private Long myDomainPid;
 	private Long myServicePid;
 	private Long myServiceVersionPid;
 	private GMonitorRuleList myRuleList;
 
-	public AlertGrid(GDomainList theDomainList, Long theDomainPid, Long theServicePid, Long theServiceVersionPid) {
+	public AlertGrid(DtoDomainList theDomainList, Long theDomainPid, Long theServicePid, Long theServiceVersionPid) {
 		myDomainList = theDomainList;
 		myDomainPid = theDomainPid;
 		myServicePid = theServicePid;
@@ -152,7 +152,7 @@ public class AlertGrid extends FlowPanel {
 
 				b.appendHtmlConstant("<ul>");
 
-				GDomainList domainList = myDomainList;
+				DtoDomainList domainList = myDomainList;
 				createAppliesToHtml(b, affectedSvcVerPids, domainList);
 
 				b.appendHtmlConstant("</ul>");
@@ -218,7 +218,7 @@ public class AlertGrid extends FlowPanel {
 	}
 
 	
-	public static void createAppliesToHtml(SafeHtmlBuilder theSafeHtmlBuilder, Set<Long> theSvcVerPids, GDomainList theDomainList) {
+	public static void createAppliesToHtml(SafeHtmlBuilder theSafeHtmlBuilder, Set<Long> theSvcVerPids, DtoDomainList theDomainList) {
 		for (DtoDomain nextDomain : theDomainList) {
 			for (GService nextSvc : nextDomain.getServiceList()) {
 				if (nextSvc.anyVersionPidsInThisServiceAreAmongThesePids(theSvcVerPids)) {

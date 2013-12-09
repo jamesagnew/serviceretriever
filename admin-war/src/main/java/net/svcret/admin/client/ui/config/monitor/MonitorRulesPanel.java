@@ -29,7 +29,7 @@ import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckList;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleList;
@@ -59,7 +59,7 @@ public class MonitorRulesPanel extends FlowPanel {
 	private LoadingSpinner myConfigListLoadingSpinner;
 	private PCellTable<BaseDtoMonitorRule> myGrid;
 	private ListDataProvider<BaseDtoMonitorRule> myDataProvider;
-	private GDomainList myDomainList;
+	private DtoDomainList myDomainList;
 	private Map<Long, GMonitorRuleFiring> myRulePidToLatestMonitorRuleFiring;
 
 	public MonitorRulesPanel() {
@@ -68,9 +68,9 @@ public class MonitorRulesPanel extends FlowPanel {
 		AdminPortal.MODEL_SVC.loadMonitorRuleList(new AsyncCallback<GMonitorRuleList>() {
 			@Override
 			public void onSuccess(final GMonitorRuleList theResult) {
-				Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+				Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 					@Override
-					public void onSuccess(final GDomainList theDomainList) {
+					public void onSuccess(final DtoDomainList theDomainList) {
 						AdminPortal.MODEL_SVC.getLatestFailingMonitorRuleFiringForRulePids(new AsyncCallback<Map<Long, GMonitorRuleFiring>>() {
 							@Override
 							public void onSuccess(Map<Long, GMonitorRuleFiring> theRulePidToLatestMonitorRuleFiring) {

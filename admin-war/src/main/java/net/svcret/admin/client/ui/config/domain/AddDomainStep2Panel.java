@@ -7,7 +7,7 @@ import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -36,9 +36,9 @@ public class AddDomainStep2Panel  extends FlowPanel implements ClickHandler {
 		spinner.show();
 		contentPanel.add(spinner);
 		
-		IAsyncLoadCallback<GDomainList> callback = new IAsyncLoadCallback<GDomainList>() {
+		IAsyncLoadCallback<DtoDomainList> callback = new IAsyncLoadCallback<DtoDomainList>() {
 			@Override
-			public void onSuccess(GDomainList theResult) {
+			public void onSuccess(DtoDomainList theResult) {
 				spinner.hideCompletely();
 				DtoDomain domain = theResult.getDomainByPid(myDomainPid);
 				

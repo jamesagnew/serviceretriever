@@ -292,13 +292,13 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 			elapsed = now - myLastFault.getTime();
 		}
 		if (myLastSuccess != null) {
-			elapsed = Math.max(elapsed, now - myLastSuccess.getTime());
+			elapsed = Math.min(elapsed, now - myLastSuccess.getTime());
 		}
 
 		if (elapsed > 0) {
 			return elapsed;
 		} else {
-			return now; // just a large value
+			return 0;
 		}
 	}
 

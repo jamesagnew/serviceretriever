@@ -16,8 +16,8 @@ import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.DtoConfig;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
-import net.svcret.admin.shared.model.GHttpClientConfig;
+import net.svcret.admin.shared.model.DtoDomainList;
+import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GPartialUserList;
@@ -90,15 +90,15 @@ public interface ModelUpdateService extends RemoteService {
 
 	GPartialUserList loadUsers(PartialUserListRequest theRequest) throws ServiceFailureException;
 
-	DtoServiceVersionSoap11 loadWsdl(DtoServiceVersionSoap11 theService, GHttpClientConfig theClientConfig, String theWsdlUrl) throws ServiceFailureException;
+	DtoServiceVersionSoap11 loadWsdl(DtoServiceVersionSoap11 theService, DtoHttpClientConfig theClientConfig, String theWsdlUrl) throws ServiceFailureException;
 
 	DtoAuthenticationHostList removeAuthenticationHost(long thePid) throws ServiceFailureException;
 
-	GDomainList removeDomain(long thePid) throws ServiceFailureException;
+	DtoDomainList removeDomain(long thePid) throws ServiceFailureException;
 
-	GDomainList removeService(long theDomainPid, long theServicePid) throws ServiceFailureException;
+	DtoDomainList removeService(long theDomainPid, long theServicePid) throws ServiceFailureException;
 
-	GDomainList removeServiceVersion(long thePid) throws ServiceFailureException;
+	DtoDomainList removeServiceVersion(long thePid) throws ServiceFailureException;
 
 	void reportClientError(String theMessage, Throwable theException);
 
@@ -108,13 +108,13 @@ public interface ModelUpdateService extends RemoteService {
 
 	void saveConfig(DtoConfig theConfig) throws ServiceFailureException;
 
-	GDomainList saveDomain(DtoDomain theDomain) throws ServiceFailureException;
+	DtoDomainList saveDomain(DtoDomain theDomain) throws ServiceFailureException;
 
 	void saveLibraryMessage(DtoLibraryMessage theMessage) throws ServiceFailureException;
 
 	GMonitorRuleList saveMonitorRule(BaseDtoMonitorRule theRule) throws ServiceFailureException;
 
-	GDomainList saveService(GService theService) throws ServiceFailureException;
+	DtoDomainList saveService(GService theService) throws ServiceFailureException;
 
 	void saveServiceVersionToSession(BaseDtoServiceVersion theServiceVersion);
 

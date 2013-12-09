@@ -9,7 +9,7 @@ import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.GService;
 
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -35,9 +35,9 @@ public class AddServiceVersionStep2Panel extends FlowPanel {
 		spinner.show();
 		contentPanel.add(spinner);
 
-		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+		Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 			@Override
-			public void onSuccess(final GDomainList theDomainList) {
+			public void onSuccess(final DtoDomainList theDomainList) {
 				spinner.hideCompletely();
 				
 				BaseDtoServiceVersion version = theDomainList.getServiceVersionByPid(theVersionPid);

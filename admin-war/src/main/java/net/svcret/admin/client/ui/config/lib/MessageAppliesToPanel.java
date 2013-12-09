@@ -8,7 +8,7 @@ import net.svcret.admin.client.ui.config.auth.DomainTreePanel;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
 
@@ -19,7 +19,7 @@ public class MessageAppliesToPanel extends DomainTreePanel {
 		return false;
 	}
 
-	public void setMessage(GDomainList theDomainList, final DtoLibraryMessage theMessage) {
+	public void setMessage(DtoDomainList theDomainList, final DtoLibraryMessage theMessage) {
 		setModel(theDomainList, new ITreeStatusModel() {
 
 			@Override

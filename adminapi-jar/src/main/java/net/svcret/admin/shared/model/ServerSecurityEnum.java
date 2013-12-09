@@ -22,7 +22,7 @@ public enum ServerSecurityEnum {
 	HTTP_BASIC_AUTH("HTTP Basic") {
 		@Override
 		public BaseDtoServerSecurity newInstance() {
-			return new GHttpBasicAuthServerSecurity();
+			return new DtoHttpBasicAuthServerSecurity();
 		}
 	};
 

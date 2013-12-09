@@ -38,8 +38,8 @@ import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.DtoConfig;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
-import net.svcret.admin.shared.model.GHttpClientConfig;
+import net.svcret.admin.shared.model.DtoDomainList;
+import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.DtoAuthenticationHostLocalDatabase;
 import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
@@ -84,7 +84,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	private DtoAuthenticationHostList myAuthHostList;
 	private GHttpClientConfigList myClientConfigList;
 	private DtoConfig myConfig;
-	private GDomainList myDomainList;
+	private DtoDomainList myDomainList;
 	private GUserList myUserList;
 	private GMonitorRuleList myMonitorRuleList;
 
@@ -92,7 +92,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		myConfig = new DtoConfig();
 		myConfig.getProxyUrlBases().add("http://base/proxy");
 
-		myDomainList = new GDomainList();
+		myDomainList = new DtoDomainList();
 
 		{
 			DtoDomain dom = new DtoDomain();
@@ -200,7 +200,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		}
 
 		myClientConfigList = new GHttpClientConfigList();
-		GHttpClientConfig defCfg = new GHttpClientConfig();
+		DtoHttpClientConfig defCfg = new DtoHttpClientConfig();
 		defCfg.setPid(ourNextPid++);
 		defCfg.setId("DEFAULT");
 		defCfg.setName("Default (Can't be mopdified)");
@@ -468,7 +468,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 
 	@Override
 	public GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ServiceFailureException {
-		GHttpClientConfig config = myClientConfigList.getConfigByPid(thePid);
+		DtoHttpClientConfig config = myClientConfigList.getConfigByPid(thePid);
 		myClientConfigList.remove(config);
 
 		return getHttpClientConfigList();
@@ -499,7 +499,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	public ModelUpdateResponse loadModelUpdate(ModelUpdateRequest theRequest) {
 		ModelUpdateResponse retVal = new ModelUpdateResponse();
 
-		retVal.setDomainList(new GDomainList());
+		retVal.setDomainList(new DtoDomainList());
 		retVal.getDomainList().mergeResults(myDomainList);
 
 		retVal.getNodeStatuses().add(new DtoNodeStatus());
@@ -727,20 +727,20 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	}
 
 	@Override
-	public GDomainList removeDomain(long thePid) {
+	public DtoDomainList removeDomain(long thePid) {
 		myDomainList.remove(myDomainList.getDomainByPid(thePid));
 		return myDomainList;
 	}
 
 	@Override
-	public GDomainList removeService(long theDomainPid, long theServicePid) {
+	public DtoDomainList removeService(long theDomainPid, long theServicePid) {
 		GServiceList serviceList = myDomainList.getDomainByPid(theDomainPid).getServiceList();
 		serviceList.remove(serviceList.getServiceByPid(theServicePid));
 		return myDomainList;
 	}
 
 	@Override
-	public GDomainList removeServiceVersion(long thePid) {
+	public DtoDomainList removeServiceVersion(long thePid) {
 		for (DtoDomain nextDomain : myDomainList) {
 			for (GService nextSvc : nextDomain.getServiceList()) {
 				BaseDtoServiceVersion ver = nextSvc.getVersionList().getVersionByPid(thePid);
@@ -775,7 +775,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	}
 
 	@Override
-	public GDomainList saveDomain(DtoDomain theDomain) {
+	public DtoDomainList saveDomain(DtoDomain theDomain) {
 		DtoDomain retVal = myDomainList.getDomainByPid(theDomain.getPid());
 		retVal.merge(theDomain);
 
@@ -790,20 +790,20 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	}
 
 	@Override
-	public GHttpClientConfig saveHttpClientConfig(boolean theCreate, boolean theUseNewTruststore, boolean theUseNewKeystore, GHttpClientConfig theConfig) {
+	public DtoHttpClientConfig saveHttpClientConfig(boolean theCreate, boolean theUseNewTruststore, boolean theUseNewKeystore, DtoHttpClientConfig theConfig) {
 		if (theCreate) {
 			theConfig.setPid(ourNextPid++);
 			myClientConfigList.add(theConfig);
 			return theConfig;
 		} else {
-			GHttpClientConfig existing = myClientConfigList.getConfigByPid(theConfig.getPid());
+			DtoHttpClientConfig existing = myClientConfigList.getConfigByPid(theConfig.getPid());
 			existing.merge(theConfig);
 			return existing;
 		}
 	}
 
 	@Override
-	public GDomainList saveService(GService theService) {
+	public DtoDomainList saveService(GService theService) {
 		theService.removeVersionList();
 
 		for (DtoDomain nextDomain : myDomainList) {
@@ -1024,7 +1024,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	}
 
 	@Override
-	public DtoServiceVersionSoap11 loadWsdl(DtoServiceVersionSoap11 theService, GHttpClientConfig theClientConfig, String theWsdlUrl) throws ServiceFailureException {
+	public DtoServiceVersionSoap11 loadWsdl(DtoServiceVersionSoap11 theService, DtoHttpClientConfig theClientConfig, String theWsdlUrl) throws ServiceFailureException {
 		if (StringUtil.isBlank(theWsdlUrl)) {
 			throw new ServiceFailureException("Failed to load URL: \"" + theWsdlUrl + '"');
 		}

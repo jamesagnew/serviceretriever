@@ -98,4 +98,8 @@ public class TwoColumnGrid extends FlexTable {
 	public void setMaximizeSecondColumn() {
 		getColumnFormatter().setWidth(1, "100%");
 	}
+
+	public void addHeader(String theString) {
+		addFullWidthCell(new HtmlH1(theString));
+	}
 }

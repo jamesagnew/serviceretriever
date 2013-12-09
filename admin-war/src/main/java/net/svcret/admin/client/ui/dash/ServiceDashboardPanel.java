@@ -17,7 +17,7 @@ import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoDashboardObject;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.GService;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.HierarchyEnum;
@@ -215,7 +215,7 @@ public class ServiceDashboardPanel extends BaseDashboardPanel{
 	}
 
 	@Override
-	public void updateView(GDomainList theDomainList) {
+	public void updateView(DtoDomainList theDomainList) {
 		ArrayList<IDashModel> newUiList = new ArrayList<IDashModel>();
 
 		boolean haveStatsToLoad = false;
@@ -264,9 +264,9 @@ public class ServiceDashboardPanel extends BaseDashboardPanel{
 		updateRows(newUiList);
 
 		if (haveStatsToLoad) {
-			Model.getInstance().loadDomainListAndStats(new IAsyncLoadCallback<GDomainList>() {
+			Model.getInstance().loadDomainListAndStats(new IAsyncLoadCallback<DtoDomainList>() {
 				@Override
-				public void onSuccess(GDomainList theResult) {
+				public void onSuccess(DtoDomainList theResult) {
 					updateView(theResult);
 				}
 			});

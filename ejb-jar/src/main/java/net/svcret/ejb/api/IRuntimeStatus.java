@@ -59,6 +59,6 @@ public interface IRuntimeStatus {
 
 	void updatedStickySessionBinding(DtoStickySessionUrlBinding theBinding);
 
-	void recordUrlSuccess(PersServiceVersionUrl theImplementationUrl);
+	void recordUrlSuccess(PersServiceVersionUrl theUrl, boolean theWasFault, String theMessage, String theContentType, int theResponseCode);
 
 }

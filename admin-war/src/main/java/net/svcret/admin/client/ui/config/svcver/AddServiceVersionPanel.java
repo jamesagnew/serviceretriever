@@ -7,7 +7,7 @@ import net.svcret.admin.shared.AddServiceVersionResponse;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.GDomainList;
+import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 
 import com.google.gwt.event.dom.client.ChangeEvent;
@@ -23,9 +23,9 @@ public class AddServiceVersionPanel extends AbstractServiceVersionPanel {
 	public AddServiceVersionPanel(Long theDomainPid, Long theServicePid, Long theUncommittedSessionId) {
 		super(theDomainPid, theServicePid, theUncommittedSessionId);
 
-		Model.getInstance().loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+		Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 			@Override
-			public void onSuccess(GDomainList theResult) {
+			public void onSuccess(DtoDomainList theResult) {
 				initParents(theResult);
 				handleTypeChange();
 			}

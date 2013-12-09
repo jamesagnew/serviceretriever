@@ -10,8 +10,8 @@ import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.DtoConfig;
 import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.GDomainList;
-import net.svcret.admin.shared.model.GHttpClientConfig;
+import net.svcret.admin.shared.model.DtoDomainList;
+import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GService;
@@ -30,7 +30,7 @@ public class Model {
 	private static Model ourInstance;
 	private DtoAuthenticationHostList myAuthHostList;
 	private DtoConfig myConfig;
-	private GDomainList myDomainList;
+	private DtoDomainList myDomainList;
 	private boolean myDomainListInitialized = false;
 	private GHttpClientConfigList myHttpClientConfigList;
 	private Long myLocalTimezoneOffsetInMillis;
@@ -49,8 +49,8 @@ public class Model {
 		}
 	}
 
-	public void addHttpClientConfig(GHttpClientConfig theConfig) {
-		GHttpClientConfig existing = myHttpClientConfigList.getConfigByPid(theConfig.getPid());
+	public void addHttpClientConfig(DtoHttpClientConfig theConfig) {
+		DtoHttpClientConfig existing = myHttpClientConfigList.getConfigByPid(theConfig.getPid());
 		if (existing != null) {
 			existing.merge(theConfig);
 		} else {
@@ -123,7 +123,7 @@ public class Model {
 		return retVal;
 	}
 
-	private MyModelUpdateCallbackHandler getCallbackWithDomainListCallback(IAsyncLoadCallback<GDomainList> theCallback) {
+	private MyModelUpdateCallbackHandler getCallbackWithDomainListCallback(IAsyncLoadCallback<DtoDomainList> theCallback) {
 		MyModelUpdateCallbackHandler retVal = new MyModelUpdateCallbackHandler();
 		retVal.myDomainListCallback = theCallback;
 		return retVal;
@@ -131,7 +131,7 @@ public class Model {
 
 	private void initLists() {
 		if (myDomainList == null) {
-			myDomainList = new GDomainList();
+			myDomainList = new DtoDomainList();
 			myHttpClientConfigList = new GHttpClientConfigList();
 			myAuthHostList = new DtoAuthenticationHostList();
 		}
@@ -181,7 +181,7 @@ public class Model {
 		});
 	}
 
-	public void loadDomainList(final IAsyncLoadCallback<GDomainList> theCallback) {
+	public void loadDomainList(final IAsyncLoadCallback<DtoDomainList> theCallback) {
 		if (myDomainListInitialized) {
 			theCallback.onSuccess(myDomainList);
 		} else {
@@ -199,7 +199,7 @@ public class Model {
 		}
 	}
 
-	public void loadDomainListAndStats(IAsyncLoadCallback<GDomainList> theCallback) {
+	public void loadDomainListAndStats(IAsyncLoadCallback<DtoDomainList> theCallback) {
 		ModelUpdateRequest request = new ModelUpdateRequest();
 		for (DtoDomain nextDom : myDomainList) {
 			request.addDomainToLoadStats(nextDom.getPid());
@@ -288,9 +288,9 @@ public class Model {
 	}
 
 	public void loadServiceList(final long theDomainPid, final IAsyncLoadCallback<GServiceList> theCallback) {
-		loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+		loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 			@Override
-			public void onSuccess(GDomainList theResult) {
+			public void onSuccess(DtoDomainList theResult) {
 				theCallback.onSuccess(myDomainList.getDomainByPid(theDomainPid).getServiceList());
 			}
 		});
@@ -329,9 +329,9 @@ public class Model {
 	}
 
 	public void loadServiceVersion(final long theServiceVersionPid, final IAsyncLoadCallback<BaseDtoServiceVersion> theCallback) {
-		loadDomainList(new IAsyncLoadCallback<GDomainList>() {
+		loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 			@Override
-			public void onSuccess(GDomainList theResult) {
+			public void onSuccess(DtoDomainList theResult) {
 				BaseDtoServiceVersion serviceVersion = theResult.getServiceVersionByPid(theServiceVersionPid);
 				if (serviceVersion == null) {
 					throw new Error("Unknown version: " + theServiceVersionPid);
@@ -341,7 +341,7 @@ public class Model {
 		});
 	}
 
-	public void mergeDomainList(GDomainList theResult) {
+	public void mergeDomainList(DtoDomainList theResult) {
 		myDomainListInitialized = true;
 		myDomainList.mergeResults(theResult);
 	}
@@ -398,7 +398,7 @@ public class Model {
 
 	private class MyModelUpdateCallbackHandler implements AsyncCallback<ModelUpdateResponse> {
 		public IAsyncLoadCallback<DtoAuthenticationHostList> myAuthHostListCallback;
-		private IAsyncLoadCallback<GDomainList> myDomainListCallback;
+		private IAsyncLoadCallback<DtoDomainList> myDomainListCallback;
 		private IAsyncLoadCallback<GHttpClientConfigList> myHttpClientConfigListCallback;
 
 		@Override
@@ -436,14 +436,14 @@ public class Model {
 
 	}
 
-	public void loadDomainListAndUrlStats(IAsyncLoadCallback<GDomainList> theCallback) {
+	public void loadDomainListAndUrlStats(IAsyncLoadCallback<DtoDomainList> theCallback) {
 		ModelUpdateRequest request = new ModelUpdateRequest();
 		request.setLoadAllUrlStats(true);
 		AdminPortal.MODEL_SVC.loadModelUpdate(request, getCallbackWithDomainListCallback(theCallback));
 
 	}
 
-	public void loadDomainListAndUrlStats(Set<Long> theUrlPids, IAsyncLoadCallback<GDomainList> theCallback) {
+	public void loadDomainListAndUrlStats(Set<Long> theUrlPids, IAsyncLoadCallback<DtoDomainList> theCallback) {
 		ModelUpdateRequest request = new ModelUpdateRequest();
 		for (Long next : theUrlPids) {
 			request.addUrlToLoadStats(next);

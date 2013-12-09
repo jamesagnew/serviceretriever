@@ -4,7 +4,7 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 
 import net.svcret.admin.shared.model.BaseDtoServerSecurity;
-import net.svcret.admin.shared.model.GHttpBasicAuthServerSecurity;
+import net.svcret.admin.shared.model.DtoHttpBasicAuthServerSecurity;
 import net.svcret.admin.shared.model.ServerSecurityEnum;
 import net.svcret.ejb.model.entity.BasePersObject;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
@@ -34,7 +34,7 @@ public class PersHttpBasicServerAuth  extends PersBaseServerAuth<PersHttpBasicSe
 
 	@Override
 	protected BaseDtoServerSecurity createDtoAndPopulateWithTypeSpecificEntries() {
-		return new GHttpBasicAuthServerSecurity();
+		return new DtoHttpBasicAuthServerSecurity();
 	}
 
 }
