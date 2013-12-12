@@ -100,6 +100,30 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		myDao.deleteHttpClientConfig(theConfig);
 	}
 
+	@Override
+	public void deleteService(long thePid) throws ProcessingException, UnexpectedFailureException {
+		PersService srv = myDao.getServiceByPid(thePid);
+		if (srv == null) {
+			throw new ProcessingException("Unknown service PID:" + thePid);
+		}
+		myDao.deleteService(srv);
+		
+		catalogHasChanged();
+		reloadRegistryFromDatabase();
+	}
+
+	@Override
+	public void deleteServiceVersion(long thePid) throws ProcessingException, UnexpectedFailureException {
+		BasePersServiceVersion sv = myDao.getServiceVersionByPid(thePid);
+		if (sv == null) {
+			throw new ProcessingException("Unknown service version ID:" + thePid);
+		}
+		myDao.deleteServiceVersion(sv);
+		
+		catalogHasChanged();
+		reloadRegistryFromDatabase();
+	}
+
 	private void doReloadRegistryFromDatabase() {
 		ourLog.info("Reloading service registry from database");
 
@@ -180,6 +204,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		return retVal;
 	}
 
+	
 	@Override
 	public BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, ServiceProtocolEnum theProtocol, String theVersionId, PersServiceVersionVirtual theSvcVerToUseIfCreatingNew)
 			throws UnexpectedFailureException {
@@ -199,7 +224,6 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		return retVal;
 	}
 
-	
 	@Override
 	public PersServiceVersionMethod getOrCreateUnknownMethodEntryForServiceVersion(BasePersServiceVersion theServiceVersion) throws InvocationFailedDueToInternalErrorException {
 		PersServiceVersionMethod method = theServiceVersion.getMethod(BaseDtoServiceVersion.METHOD_NAME_UNKNOWN);
@@ -364,17 +388,6 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	public void setSvcHttpClient(IHttpClient theSvcHttpClient) {
 		Validate.isNull(mySvcHttpClient, "IServicHttpClient");
 		mySvcHttpClient = theSvcHttpClient;
-	}
-
-	@Override
-	public void deleteServiceVersion(long thePid) throws ProcessingException {
-		BasePersServiceVersion sv = myDao.getServiceVersionByPid(thePid);
-		if (sv == null) {
-			throw new ProcessingException("Unknown service version ID:" + thePid);
-		}
-		myDao.deleteServiceVersion(sv);
-		
-		reloadRegistryFromDatabase();
 	}
 
 }

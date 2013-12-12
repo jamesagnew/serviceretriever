@@ -36,10 +36,10 @@ public class ViewRecentMessageForUserPanel extends BaseViewRecentMessagePanel {
 
 			@Override
 			public void onSuccess(GRecentMessage theResult) {
-				if (theResult == null) {
-					History.newItem(NavProcessor.removeTokens(NavProcessor.getTokenUserRecentMessages(myUserPid, true), PagesEnum.RSV,PagesEnum.RUS));
-				}else {
+				if (theResult != null) {
 					setMessage(theResult);
+				}else {
+					History.newItem(NavProcessor.removeTokens(NavProcessor.getTokenUserRecentMessages(myUserPid, true), PagesEnum.RSV,PagesEnum.RUS));
 				}
 			}
 		});

@@ -1,7 +1,15 @@
 package net.svcret.admin.client.nav;
 
-import static net.svcret.admin.shared.util.StringUtil.*;
-import static net.svcret.admin.client.nav.PagesEnum.*;
+import static net.svcret.admin.client.nav.PagesEnum.AV2;
+import static net.svcret.admin.client.nav.PagesEnum.DDO;
+import static net.svcret.admin.client.nav.PagesEnum.DSE;
+import static net.svcret.admin.client.nav.PagesEnum.DSV;
+import static net.svcret.admin.client.nav.PagesEnum.EDU;
+import static net.svcret.admin.client.nav.PagesEnum.ESE;
+import static net.svcret.admin.client.nav.PagesEnum.RSV;
+import static net.svcret.admin.client.nav.PagesEnum.RUS;
+import static net.svcret.admin.client.nav.PagesEnum.SRM;
+import static net.svcret.admin.shared.util.StringUtil.positiveInt;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -179,7 +187,6 @@ public class NavProcessor {
 			token = token + SEPARATOR;
 		}
 		token = token + PagesEnum.AD2 + "_" + theId;
-		token = removeDuplicates(token);
 		return token;
 	}
 
@@ -593,15 +600,35 @@ public class NavProcessor {
 		History.newItem(thePage.name(), true);
 	}
 
+
 	private static String createArgumentToken(PagesEnum thePage, Object... theArgs) {
-		String token = createArgumentTokenInternal(thePage);
+		StringBuilder b= new StringBuilder();
+		
+		String currentToken = getCurrentToken();
+		String[] parts = currentToken.split(SEPARATOR);
+		for (String nextToken : parts) {
+			if (nextToken.length() < 3) {
+				continue;
+			}
+
+			String nextType = nextToken.substring(0, 3);
+			if (nextType.equals(thePage.name()));
+			b.append(nextToken);
+		}
+		
+		if (b.length() > 0) {
+			b.append(SEPARATOR);
+		}
+		
+		b.append(thePage.name());
+
 		for (Object next : theArgs) {
 			if (next != null) {
-				token = token + "_" + next.toString();
+				b.append(currentToken).append( "_").append( next.toString());
 			}
 		}
-		token = removeDuplicates(token);
-		return token;
+		
+		return b.toString();
 	}
 
 	// private static String createArgumentToken(PagesEnum thePage, long... theArgument) {
@@ -613,15 +640,6 @@ public class NavProcessor {
 	// return token;
 	// }
 
-	private static String createArgumentTokenInternal(PagesEnum thePage) {
-		String token = "";
-		token = getCurrentToken();
-		if (!token.isEmpty()) {
-			token = token + SEPARATOR;
-		}
-		token = token + thePage;
-		return token;
-	}
 
 	private static String getCurrentToken() {
 		String token = History.getToken();
@@ -633,36 +651,48 @@ public class NavProcessor {
 		History.newItem("");
 	}
 
-	private static String removeDuplicates(String theToken) {
-
-		String[] parts = theToken.split(SEPARATOR);
-		List<String> newParts = new ArrayList<String>();
-
-		String prevType = null;
-		for (String nextToken : parts) {
-			if (nextToken.length() < 3) {
-				continue;
-			}
-			String nextType = nextToken.substring(0, 3);
-			if (nextType.equals(prevType)) {
-				newParts.remove(newParts.size() - 1);
-			}
-
-			newParts.add(nextToken);
-			prevType = nextType;
-		}
-
-		StringBuilder retVal = new StringBuilder();
-		for (String next : newParts) {
-			if (retVal.length() > 0) {
-				retVal.append(SEPARATOR);
-			}
-			retVal.append(next);
-		}
-
-		return retVal.toString();
-
-	}
+//	private static String removeDuplicatesAndFilterPages(String theToken, PagesEnum... thePagesToFilter) {
+//
+//		Set<String> toFilter = new HashSet<String>();
+//		if (thePagesToFilter!=null) {
+//			for (PagesEnum next : thePagesToFilter) {
+//				toFilter.add(next.name());
+//			}
+//		}
+//		
+//		String[] parts = theToken.split(SEPARATOR);
+//		List<String> newParts = new ArrayList<String>();
+//
+//		String prevType = null;
+//		for (String nextToken : parts) {
+//			if (nextToken.length() < 3) {
+//				continue;
+//			}
+//			
+//			String nextType = nextToken.substring(0, 3);
+//			if (toFilter.contains(nextType)) {
+//				continue;
+//			}
+//			
+//			if (nextType.equals(prevType)) {
+//				newParts.remove(newParts.size() - 1);
+//			}
+//
+//			newParts.add(nextToken);
+//			prevType = nextType;
+//		}
+//
+//		StringBuilder retVal = new StringBuilder();
+//		for (String next : newParts) {
+//			if (retVal.length() > 0) {
+//				retVal.append(SEPARATOR);
+//			}
+//			retVal.append(next);
+//		}
+//
+//		return retVal.toString();
+//
+//	}
 
 	public static String getTokenUserStats(long theUserPid) {
 		return createArgumentToken(PagesEnum.UST, theUserPid);

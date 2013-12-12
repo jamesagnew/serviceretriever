@@ -6,29 +6,28 @@ import java.util.List;
 public enum ThrottlePeriodEnum {
 	DAY("Day") {
 		@Override
-		public double toRequestsPerSecond(Integer theThrottleMaxRequests) {
-			return theThrottleMaxRequests / (60*60*24d);
+		public double toRequestsPerSecond(Integer theInterval) {
+			return 1.0 / (theInterval * 60.0 * 60.0 * 24.0);
 		}
 	},
 	HOUR("Hour") {
 		@Override
-		public double toRequestsPerSecond(Integer theThrottleMaxRequests) {
-			return theThrottleMaxRequests / (60*60d);
+		public double toRequestsPerSecond(Integer theInterval) {
+			return 1.0 / (theInterval * 60.0 * 60.0);
 		}
 	},
 	MINUTE("Minute") {
 		@Override
-		public double toRequestsPerSecond(Integer theThrottleMaxRequests) {
-			return theThrottleMaxRequests / 60d;
+		public double toRequestsPerSecond(Integer theInterval) {
+			return 1.0 / (theInterval * 60.0);
 		}
 	},
 	SECOND("Second") {
 		@Override
-		public double toRequestsPerSecond(Integer theThrottleMaxRequests) {
-			return theThrottleMaxRequests;
+		public double toRequestsPerSecond(Integer theInterval) {
+			return 1.0 / theInterval;
 		}
 	};
-
 
 	private String myDescription;
 
@@ -40,13 +39,13 @@ public enum ThrottlePeriodEnum {
 		myDescription = theDescription;
 	}
 
-	public abstract double toRequestsPerSecond(Integer theThrottleMaxRequests);
+	public abstract double toRequestsPerSecond(Integer theInterval);
 
 	public String getFriendlyName(int theForNumber) {
-		if (theForNumber==1) {
+		if (theForNumber == 1) {
 			return myDescription;
 		}
-		return myDescription+"s";
+		return myDescription + "s";
 	}
 
 	public static List<String> getDescriptions() {
@@ -63,7 +62,7 @@ public enum ThrottlePeriodEnum {
 				return next;
 			}
 		}
-		throw new IllegalArgumentException("Unknown description: "+theValue);
+		throw new IllegalArgumentException("Unknown description: " + theValue);
 	}
 
 }

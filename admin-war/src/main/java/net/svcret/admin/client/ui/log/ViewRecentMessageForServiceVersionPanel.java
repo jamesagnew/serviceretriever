@@ -32,9 +32,9 @@ public class ViewRecentMessageForServiceVersionPanel extends BaseViewRecentMessa
 			@Override
 			public void onSuccess(GRecentMessage theResult) {
 				if (theResult != null) {
-					History.newItem(NavProcessor.removeTokens(NavProcessor.getTokenServiceVersionRecentMessages(mySvcVerPid,true), PagesEnum.RSV,PagesEnum.RUS));
-				} else {
 					setMessage(theResult);
+				} else {
+					History.newItem(NavProcessor.removeTokens(NavProcessor.getTokenServiceVersionRecentMessages(mySvcVerPid,true), PagesEnum.RSV,PagesEnum.RUS));
 				}
 			}
 		});

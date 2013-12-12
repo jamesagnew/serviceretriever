@@ -56,6 +56,11 @@ public class EditServiceVersionPanel extends AbstractServiceVersionPanel {
 	}
 
 	@Override
+	protected boolean isEditPanel() {
+		return true;
+	}
+
+	@Override
 	protected String getDialogTitle() {
 		return MSGS.editServiceVersion_Title();
 	}

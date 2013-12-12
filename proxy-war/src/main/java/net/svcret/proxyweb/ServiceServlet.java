@@ -23,7 +23,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpUtils;
 
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.IServiceOrchestrator;
@@ -39,6 +38,7 @@ import net.svcret.ejb.ex.UnknownRequestException;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.net.URLCodec;
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.collect.Iterators;
 
@@ -98,7 +98,7 @@ public class ServiceServlet extends HttpServlet {
 		try {
 			HttpRequestBean request = new HttpRequestBean();
 			request.setRequestType(requestAction);
-			request.setRequestHostIp(requestHostIp);
+			request.setRequestHostIp(StringUtils.defaultString(requestHostIp, "UNKNOWN"));
 			request.setPath(path);
 			request.setRequestFullUri(requestURI);
 			request.setQuery(query);

@@ -2,6 +2,7 @@ package net.svcret.admin.client.ui.config.svcver;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
+import net.svcret.admin.client.ui.components.EditableField;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.shared.AddServiceVersionResponse;
 import net.svcret.admin.shared.IAsyncLoadCallback;
@@ -23,9 +24,10 @@ public class CloneServiceVersionPanel extends AbstractServiceVersionPanel {
 		Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
 			@Override
 			public void onSuccess(DtoDomainList theResult) {
-				initParents(theResult);
 				setDomainPid(theResult.getDomainPidWithServiceVersion(thePidToClone));
 				setServicePid(theResult.getServicePidWithServiceVersion(thePidToClone));
+				initParents(theResult);
+				
 				AdminPortal.MODEL_SVC.cloneServiceVersion(thePidToClone, new AsyncCallback<BaseDtoServiceVersion>() {
 					@Override
 					public void onFailure(Throwable theCaught) {
@@ -37,7 +39,8 @@ public class CloneServiceVersionPanel extends AbstractServiceVersionPanel {
 						setServiceVersion(theServiceVersion);
 						setUncommittedSessionId(theServiceVersion.getUncommittedSessionId());
 						myProtocolLabel.setText(theServiceVersion.getProtocol().getNiceName());
-						getLoadingSpinner().hide();
+						
+						((EditableField)getVersionTextBox()).setEditorMode();
 					}
 				});
 			}
@@ -46,6 +49,12 @@ public class CloneServiceVersionPanel extends AbstractServiceVersionPanel {
 
 	}
 
+	@Override
+	protected String provideSaveButtonText() {
+		return "Create Clone";
+	}
+
+	
 	@Override
 	protected void addProtocolSelectionUi(TwoColumnGrid theGrid) {
 		myProtocolLabel = new Label();

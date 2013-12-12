@@ -1,5 +1,8 @@
 package net.svcret.admin.client.ui.layout;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -48,8 +51,16 @@ public class TopBarPanel extends DockLayoutPanel {
 	}
 
 	public void setNodeStatuses(List<DtoNodeStatus> theNodeStatuses) {
+		List<DtoNodeStatus> nodeStatuses = new ArrayList<DtoNodeStatus>(theNodeStatuses);
+		Collections.sort(nodeStatuses, new Comparator<DtoNodeStatus>() {
+			@Override
+			public int compare(DtoNodeStatus theO1, DtoNodeStatus theO2) {
+				return theO1.getNodeId().compareTo(theO2.getNodeId());
+			}
+		});
+		
 		myNodesContentPanel.clear();
-		for (DtoNodeStatus nextStatus : theNodeStatuses) {
+		for (DtoNodeStatus nextStatus : nodeStatuses) {
 
 			String text = null;
 			switch (nextStatus.getStatus()) {

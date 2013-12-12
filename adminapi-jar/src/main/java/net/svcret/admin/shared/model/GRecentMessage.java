@@ -6,6 +6,7 @@ import java.util.List;
 
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
+import net.svcret.admin.shared.enm.ResponseTypeEnum;
 
 public class GRecentMessage extends BaseDtoObject {
 
@@ -32,12 +33,14 @@ public class GRecentMessage extends BaseDtoObject {
 	private String myResponseContentType;
 	private List<Pair<String>> myResponseHeaders;
 	private String myResponseMessage;
+	private ResponseTypeEnum myResponseType;
 	private String myServiceName;
 	private long myServicePid;
 	private String myServiceVersionId;
 	private long myServiceVersionPid;
 	private long myTransactionMillis;
 	private Date myTransactionTime;
+	
 	public GRecentMessage() {
 		super();
 	}
@@ -47,6 +50,10 @@ public class GRecentMessage extends BaseDtoObject {
 	 */
 	public AuthorizationOutcomeEnum getAuthorizationOutcome() {
 		return myAuthorizationOutcome;
+	}
+
+	public String getDomainName() {
+		return myDomainName;
 	}
 
 //	public GRecentMessage(long thePid, Date theDate, String theRequestHostIp, String theRequestMessage, String theResponseMessage, String theRequestActionLine, List<Pair<String>> theRequestHeaders, List<Pair<String>> theResponseHeaders, String theRequestContentType, String theResponseContentType) {
@@ -61,10 +68,6 @@ public class GRecentMessage extends BaseDtoObject {
 //		myResponseContentType = theResponseContentType;
 //		myRequestActionLine = theRequestActionLine;
 //	}
-
-	public String getDomainName() {
-		return myDomainName;
-	}
 
 	public long getDomainPid() {
 		return myDomainPid;
@@ -170,6 +173,10 @@ public class GRecentMessage extends BaseDtoObject {
 	 */
 	public String getResponseMessage() {
 		return myResponseMessage;
+	}
+
+	public ResponseTypeEnum getResponseType() {
+		return myResponseType;
 	}
 
 	public String getServiceName() {
@@ -312,6 +319,10 @@ public class GRecentMessage extends BaseDtoObject {
 	 */
 	public void setResponseMessage(String theResponseMessage) {
 		myResponseMessage = theResponseMessage;
+	}
+
+	public void setResponseType(ResponseTypeEnum theResponseType) {
+		myResponseType = theResponseType;
 	}
 
 	public void setServiceName(String theServiceName) {

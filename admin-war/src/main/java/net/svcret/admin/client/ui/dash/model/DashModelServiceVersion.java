@@ -169,6 +169,18 @@ public class DashModelServiceVersion extends BaseDashModel implements IDashModel
 		});
 		content.add(deleteServiceVersion);
 
+		// Clone
+
+		Button cloneServiceVersion = new ActionPButton(AdminPortal.IMAGES.iconClone(), AdminPortal.MSGS.actions_Clone());
+		cloneServiceVersion.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				theActionPopup.hide();
+				History.newItem(NavProcessor.getTokenCloneServiceVersion(theSvcVer.getPid()));
+			}
+		});
+		content.add(cloneServiceVersion);
+
 		// View Runtime Status
 
 		ActionPButton viewStatus = new ActionPButton(IMAGES.iconStatus(), MSGS.actions_Stats());

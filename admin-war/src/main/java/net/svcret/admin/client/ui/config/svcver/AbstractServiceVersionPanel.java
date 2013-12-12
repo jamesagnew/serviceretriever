@@ -46,6 +46,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 	private BaseDetailPanel<?> myBottomContents;
 	private FlowPanel myContentPanel;
 	private EditableField myDescriptionEditor;
+	private DtoDomainList myDomainList;
 	private ListBox myDomainListBox;
 	private Long myDomainPid;
 	private LoadingSpinner myLoadingSpinner;
@@ -56,15 +57,14 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 	private TwoColumnGrid myParentsGrid2;
 	private ListBox myServiceListBox;
 	private Long myServicePid;
+	private HorizontalPanel myServicesAdditionalPanel;
 	private BaseDtoServiceVersion myServiceVersion;
 	private FlowPanel myTopPanel;
 	private Long myUncommittedSessionId;
 	private boolean myUpdating;
 	private HasValue<String> myVersionTextBox;
 	private HorizontalPanel myVersionTextBoxPanel;
-	private HorizontalPanel myServicesAdditionalPanel;
-	private DtoDomainList myDomainList;
-
+	
 	public AbstractServiceVersionPanel() {
 		this(null, null, null);
 	}
@@ -172,7 +172,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 		myDescriptionEditor.setMultiline(true);
 		myParentsGrid2.addRowDoubleWidth("Description", myDescriptionEditor);
 
-		PButton saveButton = new PButton(AdminPortal.IMAGES.iconSave(), AdminPortal.MSGS.actions_Save());
+		PButton saveButton = new PButton(AdminPortal.IMAGES.iconSave(), provideSaveButtonText());
 		saveButton.getElement().getStyle().setFloat(Float.LEFT);
 		saveButton.addClickHandler(new SaveClickHandler());
 
@@ -189,6 +189,28 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 		actionButtonPanel.add(myLoadingSpinner);
 
 	}
+
+	protected String provideSaveButtonText() {
+		return AdminPortal.MSGS.actions_Save();
+	}
+
+	/**
+	 * Subclasses may override
+	 */
+	@SuppressWarnings("unused")
+	protected void addActionButtons(HorizontalPanel savePanel) {
+		// nothing
+	}
+
+	protected abstract void addProtocolSelectionUi(TwoColumnGrid theGrid);
+
+	protected BaseDetailPanel<?> getBottomContents() {
+		return myBottomContents;
+	}
+
+	protected abstract String getDialogDescription();
+
+	protected abstract String getDialogTitle();
 
 	public Long getDomainPid() {
 		return myDomainPid;
@@ -213,31 +235,8 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 		return myUncommittedSessionId;
 	}
 
-	public boolean isAddPanel() {
-		return this instanceof AddServiceVersionPanel;
-	}
-
-	@Override
-	public void onResize() {
-		GWT.log("Setting width");
-		if (myBottomContents != null) {
-			int offsetWidth = getOffsetWidth();
-			if (offsetWidth > 0) {
-				myBottomContents.setWidth((offsetWidth - 20) + "px");
-			}
-		}
-	}
-
-	public void setDomainPid(Long theDomainPid) {
-		myDomainPid = theDomainPid;
-	}
-
-	public void setServicePid(Long theServicePid) {
-		myServicePid = theServicePid;
-	}
-
-	public void setUncommittedSessionId(Long theUncommittedSessionId) {
-		myUncommittedSessionId = theUncommittedSessionId;
+	protected HasValue<String> getVersionTextBox() {
+		return myVersionTextBox;
 	}
 
 	private void handleDomainListChange() {
@@ -275,6 +274,8 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 		}
 	}
 
+	protected abstract void handleDoneSaving(AddServiceVersionResponse theResult);
+
 	private void handleServiceListChange() {
 		boolean showEdit = myServiceListBox.getSelectedIndex() == 0;
 
@@ -288,6 +289,65 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 				myServicePid = null;
 			} else {
 				myServicePid = Long.parseLong(pidString);
+			}
+		}
+	}
+
+	void initParents(DtoDomainList theDomainList) {
+		
+		myDomainList = theDomainList;
+		
+		initParents();
+
+	}
+
+	private void initParents() {
+		myUpdating = true;
+		myDomainListBox.clear();
+		myDomainListBox.addItem("New...", "");
+		for (DtoDomain nextDomain : myDomainList) {
+			Long value = nextDomain.getPid();
+			myDomainListBox.addItem(nextDomain.getName(), value.toString());
+			if (value.equals(myDomainPid)) {
+				myDomainListBox.setSelectedIndex(myDomainListBox.getItemCount() - 1);
+			}
+		}
+
+		if (myDomainPid == null && myDomainListBox.getItemCount() > 1) {
+			myDomainListBox.setSelectedIndex(1);
+		}
+
+		myUpdating = false;
+
+		handleDomainListChange();
+	}
+
+	public boolean isAddPanel() {
+		return this instanceof AddServiceVersionPanel;
+	}
+
+	protected boolean isEditPanel() {
+		return false;
+	}
+
+	protected void lockParents() {
+		myDomainListBox.setEnabled(false);
+		myServiceListBox.setEnabled(false);
+	}
+
+	@Override
+	protected void onLoad() {
+		super.onLoad();
+		onResize();
+	}
+
+	@Override
+	public void onResize() {
+		GWT.log("Setting width");
+		if (myBottomContents != null) {
+			int offsetWidth = getOffsetWidth();
+			if (offsetWidth > 0) {
+				myBottomContents.setWidth((offsetWidth - 20) + "px");
 			}
 		}
 	}
@@ -310,35 +370,12 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 		handleServiceListChange();
 	}
 
-	/**
-	 * Subclasses may override
-	 */
-	@SuppressWarnings("unused")
-	protected void addActionButtons(HorizontalPanel savePanel) {
-		// nothing
+	public void setDomainPid(Long theDomainPid) {
+		myDomainPid = theDomainPid;
 	}
 
-	protected abstract void addProtocolSelectionUi(TwoColumnGrid theGrid);
-
-	protected BaseDetailPanel<?> getBottomContents() {
-		return myBottomContents;
-	}
-
-	protected void lockParents() {
-		myDomainListBox.setEnabled(false);
-		myServiceListBox.setEnabled(false);
-	}
-
-	protected abstract String getDialogDescription();
-
-	protected abstract String getDialogTitle();
-
-	protected abstract void handleDoneSaving(AddServiceVersionResponse theResult);
-
-	@Override
-	protected void onLoad() {
-		super.onLoad();
-		onResize();
+	public void setServicePid(Long theServicePid) {
+		myServicePid = theServicePid;
 	}
 
 	protected void setServiceVersion(BaseDtoServiceVersion theResult) {
@@ -370,7 +407,7 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 
 		myDescriptionEditor.setValue(myServiceVersion.getDescription());
 
-		if (!isAddPanel()) {
+		if (isEditPanel()) {
 			
 			DtoDomain domain = myDomainList.getDomainWithServiceVersion(myServiceVersion.getPid()); 
 			GService service = myDomainList.getServiceWithServiceVersion(myServiceVersion.getPid()); 
@@ -411,28 +448,8 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 		onResize();
 	}
 
-	void initParents(DtoDomainList theDomainList) {
-		myUpdating = true;
-		
-		myDomainList = theDomainList;
-		myDomainListBox.clear();
-		myDomainListBox.addItem("New...", "");
-		for (DtoDomain nextDomain : theDomainList) {
-			Long value = nextDomain.getPid();
-			myDomainListBox.addItem(nextDomain.getName(), value.toString());
-			if (value.equals(myDomainPid)) {
-				myDomainListBox.setSelectedIndex(myDomainListBox.getItemCount() - 1);
-			}
-		}
-
-		if (myDomainPid == null && myDomainListBox.getItemCount() > 1) {
-			myDomainListBox.setSelectedIndex(1);
-		}
-
-		myUpdating = false;
-
-		handleDomainListChange();
-
+	public void setUncommittedSessionId(Long theUncommittedSessionId) {
+		myUncommittedSessionId = theUncommittedSessionId;
 	}
 
 	public class SaveClickHandler implements ClickHandler {

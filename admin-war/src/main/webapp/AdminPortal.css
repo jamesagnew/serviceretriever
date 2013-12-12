@@ -307,7 +307,8 @@ LABEL.formLabel {
 */
 H1 {
 	font-size: 1.2em;
-	margin-bottom: 0px;
+	margin-top: 0px;
+	margin-bottom: 2px;
 }
 
 .hidden {

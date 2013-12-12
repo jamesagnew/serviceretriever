@@ -152,7 +152,11 @@ public interface IServiceOrchestrator {
 		public String toString() {
 			ToStringBuilder b = new ToStringBuilder(this);
 			b.append("URL", getApplicableUrl().getPid());
-			b.append("Latency", getHttpResponse().getResponseTime());
+			if (getHttpResponse() != null) {
+				b.append("Latency", getHttpResponse().getResponseTime());
+			} else {
+				b.append("Latency", "Unknown");
+			}
 			return b.build();
 		}
 

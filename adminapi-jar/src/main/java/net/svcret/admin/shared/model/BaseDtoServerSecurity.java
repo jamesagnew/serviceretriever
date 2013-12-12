@@ -16,7 +16,6 @@ public abstract class BaseDtoServerSecurity extends BaseDtoObject {
 	@XmlElement(name="config_AuthHostPid")
 	private long myAuthHostPid;
 
-	@XmlTransient
 	private transient boolean myEditMode;
 
 	public String getAuthHostId() {

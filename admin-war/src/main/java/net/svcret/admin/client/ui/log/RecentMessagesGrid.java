@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import net.svcret.admin.client.AdminPortal;
+import net.svcret.admin.client.MyResources;
 import net.svcret.admin.client.nav.NavProcessor;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.PButtonCell;
@@ -36,7 +37,10 @@ import com.google.gwt.view.client.ListDataProvider;
 
 public class RecentMessagesGrid extends FlowPanel {
 
-	public RecentMessagesGrid(List<GRecentMessage> theList) {
+	private boolean myShowOutcome;
+
+	public RecentMessagesGrid(List<GRecentMessage> theList, boolean theShowOutcome) {
+		myShowOutcome = theShowOutcome;
 
 		final CellTable<GRecentMessage> grid = new PCellTable<GRecentMessage>();
 		add(grid);
@@ -102,7 +106,29 @@ public class RecentMessagesGrid extends FlowPanel {
 		Column<GRecentMessage, SafeHtml> timestampColumn = new Column<GRecentMessage, SafeHtml>(new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(GRecentMessage theObject) {
-				return DateUtil.formatTimeElapsedForMessage(theObject.getTransactionTime());
+				SafeHtmlBuilder b = new SafeHtmlBuilder();
+				b.append(DateUtil.formatTimeElapsedForMessage(theObject.getTransactionTime()));
+				if (myShowOutcome) {
+					b.appendHtmlConstant("<br/>");
+					switch (theObject.getResponseType()) {
+					case FAIL:
+						b.appendHtmlConstant("<span class=\"" + MyResources.CSS.outcomeLabelFail() + "\">(failed)</span>");
+						break;
+					case FAULT:
+						b.appendHtmlConstant("<span class=\"" + MyResources.CSS.outcomeLabelFault() + "\">(fault)</span>");
+						break;
+					case SECURITY_FAIL:
+						b.appendHtmlConstant("<span class=\"" + MyResources.CSS.outcomeLabelSecFail() + "\">(security fail)</span>");
+						break;
+					case SUCCESS:
+						b.appendHtmlConstant("<span class=\"" + MyResources.CSS.outcomeLabelSuccess() + "\">(success)</span>");
+						break;
+					case THROTTLE_REJ:
+						b.appendHtmlConstant("<span class=\"" + MyResources.CSS.outcomeLabelFail() + "\">(throttle reject)</span>");
+						break;
+					}
+				}
+				return b.toSafeHtml();
 			}
 		};
 		grid.addColumn(timestampColumn, MSGS.recentMessagesGrid_ColTimestamp());

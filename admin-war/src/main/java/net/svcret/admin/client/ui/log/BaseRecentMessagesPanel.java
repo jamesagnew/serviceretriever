@@ -114,14 +114,17 @@ public abstract class BaseRecentMessagesPanel extends FlowPanel {
 		myTransactionTypes.selectTab(0);
 	}
 
-	private void addRecentTransactionTable(boolean isCombined, String theTitle, int theNumToKeep, List<GRecentMessage> theList, String theTransactionType) {
+	private void addRecentTransactionTable(boolean theIsCombined, String theTitle, int theNumToKeep, List<GRecentMessage> theList, String theTransactionType) {
 
 		FlowPanel panel = new FlowPanel();
 		panel.add(new HtmlH1(theTitle));
-		if (!isCombined) {
+		if (!theIsCombined) {
 			panel.add(new Label(MSGS.serviceVersionStats_RecentConfigNum(getCatalogItemTypeThisPanelIsDisplaying(), theNumToKeep, theTransactionType)));
+		}else {
+			panel.add(new Label("This list contains the most recent transactions of all types in a "
+					+ "consolidated list. See the other tabs for individual transaction outcomes."));
 		}
-		panel.add(new RecentMessagesGrid(theList));
+		panel.add(new RecentMessagesGrid(theList, theIsCombined));
 
 		myTransactionTypes.add(panel, theTransactionType + "(" + theList.size() + ")");
 

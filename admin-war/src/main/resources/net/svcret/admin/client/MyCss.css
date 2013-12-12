@@ -73,6 +73,14 @@
 .monitorRuleActiveTargetValue {
 }
 
+/*
+FYI- These selectors also have colours defined later
+*/
+.outcomeLabelSuccess, .outcomeLabelFault, .outcomeLabelFail, .outcomeLabelSecFail {
+	font-size: 0.8em;
+	font-weight: bold;	
+}
+
 .spinnerElement {
 	display: inline-block;
 	margin-right: 5px;
@@ -132,19 +140,19 @@ TD.monitorRuleActiveCheckTooltipTableColumnHeader {
     font-weight: bold !important;	
 }
 
-TD.usageTooltipTableSuccessColumn {
+TD.usageTooltipTableSuccessColumn, .outcomeLabelSuccess {
 	color: #0C0;
 }
 
-TD.usageTooltipTableFaultColumn {
+TD.usageTooltipTableFaultColumn, .outcomeLabelFault {
 	color: #66C;
 }
 
-TD.usageTooltipTableFailColumn {
+TD.usageTooltipTableFailColumn, .outcomeLabelFail {
 	color: #F00;
 }
 
-TD.usageTooltipTableSecFailColumn {
+TD.usageTooltipTableSecFailColumn, .outcomeLabelSecFail {
 	color: #FA0;
 }
 

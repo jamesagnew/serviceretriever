@@ -117,6 +117,7 @@ public abstract class BasePersSavedTransactionRecentMessage extends BasePersSave
 		retVal.setTransactionMillis(this.getTransactionMillis());
 		retVal.setAuthorizationOutcome(this.getAuthorizationOutcome());
 		retVal.setFailDescription(this.getFailDescription());
+		retVal.setResponseType(this.getResponseType());
 
 		if (theLoadMessageContents) {
 			int bodyIdx = this.getRequestBody().indexOf("\r\n\r\n");

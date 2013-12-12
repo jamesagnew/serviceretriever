@@ -83,6 +83,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 	private static final int COL_SVR_SECURITY_MODULE = 1;
 	private static final int TAB_DOESNT_EXIST = -2;
 
+	private int myAccessPanelTabIndex;
 	private Grid myClientSecurityGrid;
 	private Hyperlink myEditHttpClientConfigLink;
 	private CheckBox myExplicitProxyPathEnabledCheckbox;
@@ -102,7 +103,6 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 	private CheckBox myStandardProxyPathEnabledCheckbox;
 	private Label myStandardProxyPathLabel;
 	private ServiceVersionUrlGrid myUrlGrid;
-	private int myAccessPanelTabIndex;
 
 	public BaseDetailPanel(AbstractServiceVersionPanel theParent, T theServiceVersion) {
 		myServiceVersion = theServiceVersion;
@@ -157,7 +157,8 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 					}
 				} else if (theEvent.getSelectedItem() == urlsIndex) {
 					/*
-					 * Ok to do this even if it's already been done because the urls might have changed (ie for a WSDL reload)
+					 * Ok to do this even if it's already been done because the
+					 * urls might have changed (ie for a WSDL reload)
 					 */
 					myUrlGrid.setServiceVersion(myServiceVersion);
 				}
@@ -232,8 +233,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 	}
 
 	private void initAccessPanel(FlowPanel thePanel) {
-		Label intro = new Label("By default, ServiceRetriever publishes your services at a simple " + "default path. If needed, an alternate path may be used instead, or as well as the "
-				+ "default path.");
+		Label intro = new Label("By default, ServiceRetriever publishes your services at a simple " + "default path. If needed, an alternate path may be used instead, or as well as the " + "default path.");
 		thePanel.add(intro);
 
 		TwoColumnGrid grid = new TwoColumnGrid();
@@ -247,8 +247,16 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 				myServiceVersion.setUseDefaultProxyPath(myStandardProxyPathEnabledCheckbox.getValue());
 			}
 		});
-		myStandardProxyPathLabel = new Label(myServiceVersion.getDefaultProxyPath());
+		myStandardProxyPathLabel = new Label();
 		grid.addRow(myStandardProxyPathEnabledCheckbox, myStandardProxyPathLabel);
+		updateStandardProxyPathLabel();
+		myParent.getVersionTextBox().addValueChangeHandler(new ValueChangeHandler<String>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<String> theEvent) {
+				updateStandardProxyPathLabel();
+			}
+
+		});
 
 		myExplicitProxyPathEnabledCheckbox = new CheckBox("Use Alternate Proxy Path:");
 		myExplicitProxyPathTextbox = new EditableField();
@@ -272,8 +280,8 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 
 		thePanel.add(new HtmlH1("Client Security"));
 
-		Label urlLabel = new Label("Client Security modules provide credentials to proxied service implementations. In other words, "
-				+ "if the service which is being proxied requires credentials in order to be invoked, a client " + "security module can be used to provide those credentials.");
+		Label urlLabel = new Label("Client Security modules provide credentials to proxied service implementations. In other words, " + "if the service which is being proxied requires credentials in order to be invoked, a client "
+				+ "security module can be used to provide those credentials.");
 		thePanel.add(urlLabel);
 
 		myClientSecurityGrid = new Grid(1, 2);
@@ -554,8 +562,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 
 		thePanel.add(new HtmlH1("Server Security"));
 
-		Label urlLabel = new Label("Server Security modules verify that the client which is making requests coming "
-				+ "in to the proxy are authorized to invoke the particular service they are attempting to "
+		Label urlLabel = new Label("Server Security modules verify that the client which is making requests coming " + "in to the proxy are authorized to invoke the particular service they are attempting to "
 				+ "invoke. If no server security modules are defined for this service version, all requests will be " + "allowed to proceed.");
 		thePanel.add(urlLabel);
 
@@ -640,8 +647,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		thePanel.add(clientConfigPanel);
 
 		clientConfigPanel.addStyleName(CssConstants.CONTENT_INNER_SUBPANEL);
-		clientConfigPanel.add(new Label("The HTTP client configuration provides the connection details for " + "how the proxy will attempt to invoke proxied service implementations. This includes "
-				+ "settings for timeouts, round-robin policies, etc."));
+		clientConfigPanel.add(new Label("The HTTP client configuration provides the connection details for " + "how the proxy will attempt to invoke proxied service implementations. This includes " + "settings for timeouts, round-robin policies, etc."));
 
 		myHttpConfigList = new ListBox();
 
@@ -752,6 +758,10 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		}
 
 		myNoServerSercuritysLabel.setVisible(getServiceVersion().getServerSecurityList().size() == 0);
+	}
+
+	private void updateStandardProxyPathLabel() {
+		myStandardProxyPathLabel.setText(myServiceVersion.getDefaultProxyPath());
 	}
 
 	public boolean validateValuesAndApplyIfGood() {
@@ -905,5 +915,4 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 			source.setEnabled(false);
 		}
 	}
-
 }

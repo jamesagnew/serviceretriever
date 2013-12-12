@@ -2,10 +2,10 @@ package net.svcret.admin.client.ui.config.svcver;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.nav.NavProcessor;
-import net.svcret.admin.client.nav.PagesEnum;
 import net.svcret.admin.client.ui.components.HtmlBr;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
+import net.svcret.admin.client.ui.dash.model.ActionPButton;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
@@ -49,16 +49,16 @@ public class AddServiceVersionStep2Panel extends FlowPanel {
 				
 				contentPanel.add(new HtmlBr());
 				
-				contentPanel.add(new PButton(AdminPortal.MSGS.actions_Back(), new ClickHandler() {
+				contentPanel.add(new ActionPButton(AdminPortal.IMAGES.iconEdit(),AdminPortal.MSGS.actions_Edit(), new ClickHandler() {
 					@Override
 					public void onClick(ClickEvent theEvent) {
-						History.newItem(NavProcessor.getBackToken());
+						History.newItem(NavProcessor.getTokenEditServiceVersion(theVersionPid));
 					}
 				}));
-				contentPanel.add(new PButton(AdminPortal.MSGS.actions_Close(), new ClickHandler() {
+				contentPanel.add(new PButton(AdminPortal.IMAGES.iconHome(),AdminPortal.MSGS.actions_Close(), new ClickHandler() {
 					@Override
 					public void onClick(ClickEvent theEvent) {
-						History.newItem(NavProcessor.getLastTokenBefore(PagesEnum.ASV, PagesEnum.AV2));
+						NavProcessor.goHome();
 					}
 				}));
 			}

@@ -155,7 +155,8 @@ public abstract class BaseUserPanel extends FlowPanel {
 			if (queue) {
 				myThrottleQueueMaxLength.setValue(myUser.getThrottle().getQueue());
 			}
-		}
+		} 
+		updateThrottleControlEnabledness(throttle);
 
 		updateIpsGrid();
 
@@ -300,15 +301,7 @@ public abstract class BaseUserPanel extends FlowPanel {
 		myThrottleCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
 			@Override
 			public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
-				myThrottlePeriodCombo.setEnabled(theEvent.getValue());
-				myThrottleNumberBox.setEnabled(theEvent.getValue());
-				myThrottleQueueCheckbox.setEnabled(theEvent.getValue());
-				myThrottleQueueMaxLength.setEnabled(theEvent.getValue() && myThrottleQueueCheckbox.getValue());
-				if (theEvent.getValue()) {
-					if (myThrottleNumberBox.getValue() == null) {
-						myThrottleNumberBox.setValue(1);
-					}
-				}
+				updateThrottleControlEnabledness(theEvent.getValue());
 			}
 		});
 
@@ -440,4 +433,17 @@ public abstract class BaseUserPanel extends FlowPanel {
 		});
 
 	}
+	
+	private void updateThrottleControlEnabledness(boolean theThrottlingEnabled) {
+		myThrottlePeriodCombo.setEnabled(theThrottlingEnabled);
+		myThrottleNumberBox.setEnabled(theThrottlingEnabled);
+		myThrottleQueueCheckbox.setEnabled(theThrottlingEnabled);
+		myThrottleQueueMaxLength.setEnabled(theThrottlingEnabled && myThrottleQueueCheckbox.getValue());
+		if (theThrottlingEnabled) {
+			if (myThrottleNumberBox.getValue() == null) {
+				myThrottleNumberBox.setValue(1);
+			}
+		}
+	}
+
 }

@@ -60,4 +60,9 @@ public interface MyCss extends CssResource {
 
 	String innerAlertPane();
 
+	String outcomeLabelSuccess();
+	String outcomeLabelFail();
+	String outcomeLabelFault();
+	String outcomeLabelSecFail();
+
 }

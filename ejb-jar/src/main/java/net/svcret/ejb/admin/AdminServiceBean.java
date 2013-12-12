@@ -336,8 +336,8 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			throw new ProcessingException("Unknown service PID " + theServicePid);
 		}
 
-		myDao.deleteService(service);
-
+		myServiceRegistry.deleteService(theServicePid);
+		
 		return loadDomainList();
 	}
 

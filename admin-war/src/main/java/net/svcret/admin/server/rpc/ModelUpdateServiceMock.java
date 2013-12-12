@@ -455,6 +455,25 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		retVal.setMethodPid(MET1_PID);
 		retVal.setMethodName("SomeMethod");
 		retVal.setServiceVersionId("1.0");
+		
+		switch ((int)(5.0 * Math.random())) {
+		case 0:
+			retVal.setResponseType(ResponseTypeEnum.SUCCESS);
+			break;
+		case 1:
+			retVal.setResponseType(ResponseTypeEnum.SECURITY_FAIL);
+			break;
+		case 2:
+			retVal.setResponseType(ResponseTypeEnum.FAULT);
+			break;
+		case 3:
+			retVal.setResponseType(ResponseTypeEnum.FAIL);
+			break;
+		case 4:
+			retVal.setResponseType(ResponseTypeEnum.THROTTLE_REJ);
+			break;
+		}
+		
 
 		retVal.setRecentMessageType(theType);
 

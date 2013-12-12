@@ -109,13 +109,15 @@ public class MonitorServiceBean implements IMonitorService {
 			synchronized (myCheckToRateLimiter) {
 				rateLimiter = myCheckToRateLimiter.get(nextCheck);
 				double reqsPerSecond = nextCheck.getCheckFrequencyUnit().toRequestsPerSecond(nextCheck.getCheckFrequencyNum());
+				
 				if (rateLimiter == null) {
 					ourLog.debug("Creating a RateLimiter for rule active check {}", nextCheck.getPid());
+					ourLog.trace("Active check should fire {} times / minute", (reqsPerSecond * 60.0));
 					rateLimiter = RateLimiter.create(reqsPerSecond);
 					myCheckToRateLimiter.put(nextCheck, rateLimiter);
 				}
 				if (rateLimiter.getRate() != reqsPerSecond) {
-					ourLog.trace("Updating RateLimiter frequency for rule active check {}", nextCheck.getPid());
+					ourLog.debug("Updating RateLimiter frequency for rule active check {}", nextCheck.getPid());
 					rateLimiter.setRate(reqsPerSecond);
 				}
 			}
