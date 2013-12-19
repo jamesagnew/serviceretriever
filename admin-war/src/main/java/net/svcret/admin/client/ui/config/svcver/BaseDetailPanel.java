@@ -33,6 +33,7 @@ import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.BaseDtoClientSecurity;
 import net.svcret.admin.shared.model.BaseDtoServerSecurity;
+import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoServerSecurityList;
 import net.svcret.admin.shared.model.DtoHttpClientConfig;
@@ -142,9 +143,9 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 			initClientSecurityPanel(csp);
 		}
 
-		FlowPanel transactionFlowPanel = new FlowPanel();
-		add(transactionFlowPanel, "Config");
-		initJournalPanel(transactionFlowPanel);
+		FlowPanel loggingPanel = new FlowPanel();
+		add(loggingPanel, "Logging");
+		initLoggingPanel(loggingPanel);
 
 		addSelectionHandler(new SelectionHandler<Integer>() {
 			@Override
@@ -233,9 +234,18 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 	}
 
 	private void initAccessPanel(FlowPanel thePanel) {
-		Label intro = new Label("By default, ServiceRetriever publishes your services at a simple " + "default path. If needed, an alternate path may be used instead, or as well as the " + "default path.");
+		String instructions = 
+				"By default, ServiceRetriever publishes your services at a simple " + 
+				"default path. If needed, an alternate path may be used instead, or as well as the " + 
+				"default path.";
+		thePanel.add(new HtmlH1("Access URLs"));
+		Label intro = new Label(instructions);
 		thePanel.add(intro);
 
+		/*
+		 * Access URLs
+		 */
+		
 		TwoColumnGrid grid = new TwoColumnGrid();
 		thePanel.add(grid);
 
@@ -265,7 +275,34 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		myExplicitProxyPathEnabledCheckbox.setValue(myServiceVersion.getExplicitProxyPath() != null);
 		myExplicitProxyPathTextbox.setValue(myServiceVersion.getExplicitProxyPath());
 
+		/*
+		 * Service Registry
+		 */
+		
+			thePanel.add(new HtmlH1("Service Registry"));
+
+			TwoColumnGrid serviceRegistryGrid = new TwoColumnGrid();
+			thePanel.add(serviceRegistryGrid);
+
+				myDisplayInPublicRegistryCheckbox = new CheckBox();
+				if (myServiceVersion.getDisplayInPublicRegistry() == Boolean.TRUE) {
+					myDisplayInPublicRegistryCheckbox.setValue(true);
+				}
+				serviceRegistryGrid.addRow("Display in public registry", myDisplayInPublicRegistryCheckbox);
+				serviceRegistryGrid.addDescriptionToRight("If checked, this item (and any of its children) will be displayed in the public service registry.");
+				myDisplayInPublicRegistryCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+					@Override
+					public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
+						myServiceVersion.setDisplayInPublicRegistry(myDisplayInPublicRegistryCheckbox.getValue());
+					}
+				});
+
+		
+
 	}
+	
+	private CheckBox myDisplayInPublicRegistryCheckbox;
+
 
 	private void initClientSecurityPanel(FlowPanel thePanel) {
 		// thePanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
@@ -319,7 +356,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 
 	}
 
-	private void initJournalPanel(FlowPanel thePanel) {
+	private void initLoggingPanel(FlowPanel thePanel) {
 		// thePanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
 		//
 		// Label titleLabel = new Label("Transaction Flow");

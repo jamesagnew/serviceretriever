@@ -1,68 +1,74 @@
 package net.svcret.admin.shared.model;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 
 public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem implements IProvidesUrlCount {
 
+	public static final String METHOD_NAME_UNKNOWN = "SVCRETUNKNOWNMETHOD";
+
 	private static final long serialVersionUID = 7886801527330335503L;
 
-	public static final String METHOD_NAME_UNKNOWN = "SVCRETUNKNOWNMETHOD";
-	
-	@XmlElement(name="config_Active")
+	@XmlElement(name = "config_Active")
 	private boolean myActive;
 
-	@XmlElement(name="config_ClientSecurity")
+	@XmlElement(name = "config_ClientSecurity")
 	private DtoClientSecurityList myClientSecurityList;
-	
-	@XmlElement(name="runtime_DefaultProxyPath")
+
+	@XmlElement(name = "runtime_DefaultProxyPath")
 	private String myDefaultProxyPath;
 
-	@XmlElement(name="config_Description")
+	@XmlElement(name = "config_Description")
 	private String myDescription;
 
-	@XmlElement(name="runtime_DetailedStats")
+	@XmlElement(name = "runtime_DetailedStats")
 	private GServiceVersionDetailedStats myDetailedStats;
 
-	@XmlElement(name="config_ExplicitProxyPath")
+	@XmlElement(name = "config_ExplicitProxyPath")
 	private String myExplicitProxyPath;
-	
-	@XmlElement(name="config_HttpClientConfigId")
+
+	@XmlElement(name = "config_HttpClientConfigId")
 	private String myHttpClientConfigId;
-	
-	@XmlElement(name="config_HttpClientConfigPid")
+
+	@XmlElement(name = "config_HttpClientConfigPid")
 	private long myHttpClientConfigPid;
-	
-	@XmlElement(name="runtime_LastAccess")	
+
+	@XmlElement(name = "runtime_LastAccess")
 	private Date myLastAccess;
-	
-	@XmlElement(name="runtime_ParentServiceName")
+
+	@XmlElement(name = "runtime_ParentServiceName")
 	private String myParentServiceName;
 
-	@XmlElement(name="runtime_ParentServicePid")
+	@XmlElement(name = "runtime_ParentServicePid")
 	private long myParentServicePid;
-	
-	@XmlElement(name="config_ServiceVersionResourcePointers")
+
+	@XmlElement(name = "Capture")
+	@XmlElementWrapper(name = "config_PropertyCaptures")
+	private List<DtoServiceVersionPropertyCapture> myPropertyCaptures;
+
+	@XmlElement(name = "config_ServiceVersionResourcePointers")
 	private GServiceVersionResourcePointerList myResourcePointerList;
-	
-	@XmlElement(name="config_ServerSecurity")
+
+	@XmlElement(name = "config_ServerSecurity")
 	private DtoServerSecurityList myServerSecurityList;
-	
-	@XmlElement(name="config_ServerSecurityMode")
+
+	@XmlElement(name = "config_ServerSecurityMode")
 	private ServerSecurityModeEnum myServerSecurityMode;
-	
-	@XmlElement(name="config_Methods")
+
+	@XmlElement(name = "config_Methods")
 	private GServiceMethodList myServiceMethodList;
-	
-	@XmlElement(name="config_Urls")
+
+	@XmlElement(name = "config_Urls")
 	private DtoServiceVersionUrlList myServiceUrlList;
 
-	@XmlElement(name="config_UseDefaultProxyPath")
+	@XmlElement(name = "config_UseDefaultProxyPath")
 	private boolean myUseDefaultProxyPath = true;
 
 	public BaseDtoServiceVersion() {
@@ -125,14 +131,6 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 		return myLastAccess;
 	}
 
-//	public Set<String> getObscureRequestElementsInLog() {
-//		return myObscureRequestElementsInLog;
-//	}
-//
-//	public Set<String> getObscureResponseElementsInLog() {
-//		return myObscureResponseElementsInLog;
-//	}
-
 	/**
 	 * @return the serviceUrlList
 	 */
@@ -140,12 +138,27 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 		return myServiceMethodList;
 	}
 
+	// public Set<String> getObscureRequestElementsInLog() {
+	// return myObscureRequestElementsInLog;
+	// }
+	//
+	// public Set<String> getObscureResponseElementsInLog() {
+	// return myObscureResponseElementsInLog;
+	// }
+
 	public String getParentServiceName() {
 		return myParentServiceName;
 	}
 
 	public long getParentServicePid() {
 		return myParentServicePid;
+	}
+
+	public List<DtoServiceVersionPropertyCapture> getPropertyCaptures() {
+		if (myPropertyCaptures == null) {
+			myPropertyCaptures = new ArrayList<DtoServiceVersionPropertyCapture>();
+		}
+		return myPropertyCaptures;
 	}
 
 	public abstract ServiceProtocolEnum getProtocol();
@@ -216,7 +229,7 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 	public void merge(BaseDtoObject theObject) {
 		super.merge(theObject);
 
-		BaseDtoServiceVersion obj=(BaseDtoServiceVersion) theObject;
+		BaseDtoServiceVersion obj = (BaseDtoServiceVersion) theObject;
 		myActive = obj.myActive;
 		myLastAccess = obj.myLastAccess;
 		myServerSecurityMode = obj.myServerSecurityMode;
@@ -268,7 +281,7 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 	}
 
 	public void setHttpClientConfigId(String theId) {
-		myHttpClientConfigId=theId;
+		myHttpClientConfigId = theId;
 	}
 
 	/**

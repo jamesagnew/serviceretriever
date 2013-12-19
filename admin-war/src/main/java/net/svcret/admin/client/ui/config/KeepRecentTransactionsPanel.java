@@ -32,7 +32,6 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 	private EditableField myObscureRequestElementsInLogEditor;
 	private EditableField myObscureResponseElementsInLogEditor;
 	private CheckBox myAuditLogEnabledCheckbox;
-	private CheckBox myDisplayInPublicRegistryCheckbox;
 
 	public KeepRecentTransactionsPanel(BaseDtoKeepsRecentMessages theKeepsRecentTransactions) {
 
@@ -142,32 +141,7 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 			myAuditLogEnabledCheckbox.setValue(theKeepsRecentTransactions.getAuditLogEnable());
 			grid.addRow("Enable Audit Logging", myAuditLogEnabledCheckbox);
 		}
-		
-		// Service Registry
-		if (theKeepsRecentTransactions instanceof BaseDtoServiceCatalogItem) {
-			final BaseDtoServiceCatalogItem sco = (BaseDtoServiceCatalogItem) theKeepsRecentTransactions;
-			add(new HtmlH1("Service Registry"));
-
-			TwoColumnGrid grid = new TwoColumnGrid();
-			add(grid);
-
-			{
-				myDisplayInPublicRegistryCheckbox = new CheckBox();
-				if (sco.getDisplayInPublicRegistry() == Boolean.TRUE) {
-					myDisplayInPublicRegistryCheckbox.setValue(true);
-				}
-				grid.addRow("Display in public registry", myDisplayInPublicRegistryCheckbox);
-				grid.addDescriptionToRight("If checked, this item (and any of its children) will be displayed in the public service registry.");
-				myDisplayInPublicRegistryCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
-					@Override
-					public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
-						sco.setDisplayInPublicRegistry(myDisplayInPublicRegistryCheckbox.getValue());
-					}
-				});
-			}
-
-		}
-		
+				
 	}
 
 	private void setObscureRequestItems(Set<String> items) {

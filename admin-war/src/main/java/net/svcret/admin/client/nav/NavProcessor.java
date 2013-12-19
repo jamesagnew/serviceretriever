@@ -612,7 +612,10 @@ public class NavProcessor {
 			}
 
 			String nextType = nextToken.substring(0, 3);
-			if (nextType.equals(thePage.name()));
+			if (nextType.equals(thePage.name())) {
+				break;
+			}
+			
 			b.append(nextToken);
 		}
 		
@@ -624,7 +627,7 @@ public class NavProcessor {
 
 		for (Object next : theArgs) {
 			if (next != null) {
-				b.append(currentToken).append( "_").append( next.toString());
+				b.append( "_").append( next.toString());
 			}
 		}
 		
