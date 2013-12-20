@@ -11,6 +11,7 @@ import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
+import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.ejb.log.FilesystemAuditLoggerBean;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
@@ -70,9 +71,10 @@ public class FilesystemAuditLoggerBeanTest {
 		when(implementationUrl.getUrl()).thenReturn("http://foo");
 		HttpResponseBean httpResponse = mock(HttpResponseBean.class, new ReturnsDeepStubs());
 		AuthorizationOutcomeEnum authorizationOutcome = AuthorizationOutcomeEnum.AUTHORIZED;
-		mySvc.recordServiceTransaction(request, method.getServiceVersion(), method, user, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome);
+		InvocationResultsBean req = new InvocationResultsBean();
+		mySvc.recordServiceTransaction(request, method.getServiceVersion(), method, user, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome, req);
 
-		mySvc.recordServiceTransaction(request, method.getServiceVersion(), method, user, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome);
+		mySvc.recordServiceTransaction(request, method.getServiceVersion(), method, user, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome, req);
 
 		mySvc.forceFlush();
 	}

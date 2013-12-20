@@ -20,6 +20,7 @@ import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IDao.ByteDelta;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
+import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersSavedTransactionRecentMessage;
@@ -73,12 +74,13 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	 * @param theImplementationUrl
 	 * @param theHttpResponse
 	 * @param theResponseBody
+	 * @param theInvocationResults 
 	 * @throws ProcessingException 
 	 * @throws UnexpectedFailureException 
 	 */
 	@Override
 	public void logTransaction(HttpRequestBean theRequest,BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse,
-			PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, String theResponseBody) throws ProcessingException, UnexpectedFailureException {
+			PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, String theResponseBody, InvocationResultsBean theInvocationResults) throws ProcessingException, UnexpectedFailureException {
 		Validate.notNull(theSvcVer);
 		Validate.notNull(theInvocationResponse);
 		if (theInvocationResponse.getResponseType() != ResponseTypeEnum.FAIL) {
@@ -108,14 +110,14 @@ public class TransactionLoggerBean implements ITransactionLogger {
 
 			// Audit log
 			if (theUser.determineInheritedAuditLogEnable()) {
-				myFilesystemAuditLogger.recordUserTransaction(theRequest, theSvcVer, theMethod, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome);
+				myFilesystemAuditLogger.recordUserTransaction(theRequest, theSvcVer, theMethod, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome, theInvocationResults);
 			}
 
 		}
 
 		// Audit Log
 		if (theSvcVer.determineInheritedAuditLogEnable() == true) {
-			myFilesystemAuditLogger.recordServiceTransaction(theRequest, theSvcVer, theMethod, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome);
+			myFilesystemAuditLogger.recordServiceTransaction(theRequest, theSvcVer, theMethod, theUser, theRequestBody, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome, theInvocationResults);
 		}
 
 	}

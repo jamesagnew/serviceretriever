@@ -66,6 +66,7 @@ import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.http.PersHttpBasicClientAuth;
 import net.svcret.ejb.model.entity.http.PersHttpBasicCredentialGrabber;
 import net.svcret.ejb.model.entity.http.PersHttpBasicServerAuth;
+import net.svcret.ejb.propcap.IPropertyCaptureService;
 import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.codec.binary.Base64;
@@ -80,7 +81,10 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 	@EJB
 	private IHttpClient myHttpClient;
-
+	
+	@EJB
+	private IPropertyCaptureService myPropertyCapture;
+	
 	@EJB
 	private IServiceInvokerJsonRpc20 myServiceInvokerJsonRpc20;
 
@@ -133,7 +137,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		/*
 		 * Process request
 		 */
-		InvocationResultsBean results;
+		InvocationResultsBean results = null;
 		AuthorizationResultsBean authorized;
 		PersServiceVersionMethod invokingMethod = null;
 		try {
@@ -160,15 +164,15 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 		} catch (UnknownRequestException e) {
 			ourLog.debug("Exception occurred", e);
-			handleInvocationFailure(theRequest, serviceVersion, invokingMethod, new InvocationRequestFailedException(e), null, null, ResponseTypeEnum.FAIL);
+			handleInvocationFailure(theRequest, serviceVersion, invokingMethod, new InvocationRequestFailedException(e), null, null, ResponseTypeEnum.FAIL, results);
 			throw e;
 		} catch (InvocationRequestOrResponseFailedException e) {
 			ourLog.debug("Exception occurred", e);
-			handleInvocationFailure(theRequest, serviceVersion, invokingMethod, e, null, null, ResponseTypeEnum.FAIL);
+			handleInvocationFailure(theRequest, serviceVersion, invokingMethod, e, null, null, ResponseTypeEnum.FAIL, results);
 			throw e;
 		} catch (InvocationFailedDueToInternalErrorException e) {
 			ourLog.debug("Exception occurred", e);
-			handleInvocationFailure(theRequest, serviceVersion, invokingMethod, e, null, null, ResponseTypeEnum.FAIL);
+			handleInvocationFailure(theRequest, serviceVersion, invokingMethod, e, null, null, ResponseTypeEnum.FAIL, results);
 			throw e;
 		} catch (ThrottleException e) {
 			ourLog.debug("Exception occurred", e);
@@ -184,11 +188,11 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			throw e;
 		} catch (SecurityFailureException e) {
 			ourLog.debug("Exception occurred", e);
-			handleInvocationFailure(theRequest, serviceVersion, invokingMethod, new InvocationRequestFailedException(e), null, null, ResponseTypeEnum.SECURITY_FAIL);
+			handleInvocationFailure(theRequest, serviceVersion, invokingMethod, new InvocationRequestFailedException(e), null, null, ResponseTypeEnum.SECURITY_FAIL, results);
 			throw e;
 		} catch (Exception e) {
 			ourLog.error("Unexpected failure", e);
-			handleInvocationFailure(theRequest, serviceVersion, invokingMethod, new InvocationRequestFailedException(e), null, null, ResponseTypeEnum.FAIL);
+			handleInvocationFailure(theRequest, serviceVersion, invokingMethod, new InvocationRequestFailedException(e), null, null, ResponseTypeEnum.FAIL, results);
 			throw new ProcessingException(e);
 		}
 
@@ -207,7 +211,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	}
 
 	private void handleInvocationFailure(HttpRequestBean theRequest, BasePersServiceVersion serviceVersion, PersServiceVersionMethod theMethodIfKnown, InvocationFailedException theInvocationFailure,
-			PersUser theUserIfKnown, Long theThrottleDelayIfAnyAndKnown, ResponseTypeEnum theResponseType) throws ProcessingException {
+			PersUser theUserIfKnown, Long theThrottleDelayIfAnyAndKnown, ResponseTypeEnum theResponseType, InvocationResultsBean theInvocationResults) throws ProcessingException {
 		theRequest.drainInputMessage();
 
 		try {
@@ -252,7 +256,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			}
 
 			myTransactionLogger.logTransaction(theRequest, serviceVersion, null, theUserIfKnown, requestBody, theInvocationFailure.toInvocationResponse(), theInvocationFailure.getImplementationUrl(),
-					theInvocationFailure.getHttpResponse(), null, responseBody);
+					theInvocationFailure.getHttpResponse(), null, responseBody, theInvocationResults);
 		} catch (UnexpectedFailureException e1) {
 			// Don't do anything except log here since we're already handling a failure by the
 			// time we get here so this is pretty much the last resort..
@@ -323,7 +327,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	}
 
 	private void logTransaction(HttpRequestBean theRequest, PersServiceVersionMethod method, AuthorizationResultsBean authorized, HttpResponseBean httpResponse,
-			InvocationResponseResultsBean invocationResponse) throws InvocationFailedDueToInternalErrorException {
+			InvocationResponseResultsBean invocationResponse, InvocationResultsBean theInvocationResults) throws InvocationFailedDueToInternalErrorException {
 		PersUser user = authorized.getAuthorizedUser();
 
 		String requestBody = theRequest.getRequestBody();
@@ -339,7 +343,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		PersServiceVersionUrl successfulUrl = httpResponse != null ? httpResponse.getSuccessfulUrl() : null;
 		AuthorizationOutcomeEnum authorizationOutcome = authorized.isAuthorized();
 		try {
-			myTransactionLogger.logTransaction(theRequest, method.getServiceVersion(), method, user, requestBody, invocationResponse, successfulUrl, httpResponse, authorizationOutcome, responseBody);
+			myTransactionLogger.logTransaction(theRequest, method.getServiceVersion(), method, user, requestBody, invocationResponse, successfulUrl, httpResponse, authorizationOutcome, responseBody, theInvocationResults);
 		} catch (ProcessingException e) {
 			throw new InvocationFailedDueToInternalErrorException(e);
 		} catch (UnexpectedFailureException e) {
@@ -363,7 +367,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			}
 
 			// Log transaction
-			logTransaction(theRequest, results.getMethodDefinition(), theAuthorized, null, invocationResponse);
+			logTransaction(theRequest, results.getMethodDefinition(), theAuthorized, null, invocationResponse, results);
 
 			throw new SecurityFailureException(theAuthorized.isAuthorized(), invocationResponse.getResponseStatusMessage());
 		}
@@ -378,11 +382,11 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			try {
 				retVal = processRequestMethod(theRequest, results, theAuthorized, theThrottleTimeIfAny, true, null, theRequest.getRequestTime());
 			} catch (InvocationResponseFailedException e) {
-				handleInvocationFailure(theRequest, results.getMethodDefinition().getServiceVersion(), results.getMethodDefinition(), e, user, theThrottleTimeIfAny, ResponseTypeEnum.FAIL);
+				handleInvocationFailure(theRequest, results.getMethodDefinition().getServiceVersion(), results.getMethodDefinition(), e, user, theThrottleTimeIfAny, ResponseTypeEnum.FAIL, results);
 				throw new ProcessingException(e);
 			} catch (RuntimeException e) {
 				handleInvocationFailure(theRequest, results.getMethodDefinition().getServiceVersion(), results.getMethodDefinition(), new InvocationResponseFailedException(e,
-						"Invocation failed due to ServiceRetriever internal error: " + e.getMessage(), null), user, theThrottleTimeIfAny, ResponseTypeEnum.FAIL);
+						"Invocation failed due to ServiceRetriever internal error: " + e.getMessage(), null), user, theThrottleTimeIfAny, ResponseTypeEnum.FAIL, results);
 				throw new ProcessingException(e);
 			}
 			break;
@@ -433,6 +437,8 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			}
 		}
 
+		myPropertyCapture.captureRequestProperties(serviceVersion, theRequest, results);
+		
 		return results;
 	}
 
@@ -518,7 +524,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			} catch (UnexpectedFailureException e) {
 				throw new InvocationFailedDueToInternalErrorException(e);
 			}
-			logTransaction(theRequest, method, authorized, httpResponse, invocationResponse);
+			logTransaction(theRequest, method, authorized, httpResponse, invocationResponse, results);
 		}
 
 		ResponseTypeEnum responseType = invocationResponse.getResponseType();

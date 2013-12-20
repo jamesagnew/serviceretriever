@@ -23,6 +23,7 @@ public class InvocationResultsBean {
 	private Map<String, List<String>> myStaticResourceHeaders;
 	private String myStaticResourceText;
 	private String myStaticResourceUrl;
+	private Map<String, String> myPropertyCaptures;
 
 	public void addCredentials(PersBaseServerAuth<?, ?> theServerAuth, ICredentialGrabber theCredentials) {
 		Validate.notNull(theCredentials);
@@ -32,6 +33,13 @@ public class InvocationResultsBean {
 		}
 
 		myCredentialsInRequest.put(theServerAuth, theCredentials);
+	}
+
+	public void addPropertyCapture(String thePropertyName, String theResult) {
+		if (myPropertyCaptures == null) {
+			myPropertyCaptures = new HashMap<String, String>();
+		}
+		myPropertyCaptures.put(thePropertyName,theResult);
 	}
 
 	/**
@@ -72,13 +80,17 @@ public class InvocationResultsBean {
 		return myMethodRequestBody;
 	}
 
+
+	public Map<String, String> getPropertyCaptures() {
+		return myPropertyCaptures;
+	}
+
 	/**
 	 * @return the resultType
 	 */
 	public ResultTypeEnum getResultType() {
 		return myResultType;
 	}
-
 
 	/**
 	 * @return the staticResourceContentTyoe

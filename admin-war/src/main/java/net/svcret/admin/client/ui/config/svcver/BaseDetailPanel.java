@@ -22,6 +22,7 @@ import net.svcret.admin.client.ui.components.PSelectionCell;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.client.ui.components.UsageSparkline;
 import net.svcret.admin.client.ui.config.KeepRecentTransactionsPanel;
+import net.svcret.admin.client.ui.config.monitor.PEditTextCell;
 import net.svcret.admin.client.ui.config.sec.IProvidesViewAndEdit;
 import net.svcret.admin.client.ui.config.sec.IProvidesViewAndEdit.IValueChangeHandler;
 import net.svcret.admin.client.ui.config.sec.ViewAndEditFactory;
@@ -33,10 +34,10 @@ import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.BaseDtoClientSecurity;
 import net.svcret.admin.shared.model.BaseDtoServerSecurity;
-import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.DtoServerSecurityList;
 import net.svcret.admin.shared.model.DtoHttpClientConfig;
+import net.svcret.admin.shared.model.DtoPropertyCapture;
+import net.svcret.admin.shared.model.DtoServerSecurityList;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
@@ -44,6 +45,7 @@ import net.svcret.admin.shared.model.ServerSecurityEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.util.StringUtil;
 
+import com.google.gwt.cell.client.Cell;
 import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.cell.client.SafeHtmlCell;
 import com.google.gwt.core.shared.GWT;
@@ -147,6 +149,10 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		add(loggingPanel, "Logging");
 		initLoggingPanel(loggingPanel);
 
+		FlowPanel propCapPanel = new FlowPanel();
+		add(propCapPanel, "Captures");
+		initPropertyCapturePanel(propCapPanel);
+
 		addSelectionHandler(new SelectionHandler<Integer>() {
 			@Override
 			public void onSelection(SelectionEvent<Integer> theEvent) {
@@ -169,6 +175,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		selectTab(0);
 
 	}
+
 
 	protected abstract void addProtocolSpecificPanelsToTop(boolean theIsAddPanel);
 
@@ -234,10 +241,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 	}
 
 	private void initAccessPanel(FlowPanel thePanel) {
-		String instructions = 
-				"By default, ServiceRetriever publishes your services at a simple " + 
-				"default path. If needed, an alternate path may be used instead, or as well as the " + 
-				"default path.";
+		String instructions = "By default, ServiceRetriever publishes your services at a simple " + "default path. If needed, an alternate path may be used instead, or as well as the " + "default path.";
 		thePanel.add(new HtmlH1("Access URLs"));
 		Label intro = new Label(instructions);
 		thePanel.add(intro);
@@ -245,7 +249,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		/*
 		 * Access URLs
 		 */
-		
+
 		TwoColumnGrid grid = new TwoColumnGrid();
 		thePanel.add(grid);
 
@@ -278,31 +282,29 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		/*
 		 * Service Registry
 		 */
-		
-			thePanel.add(new HtmlH1("Service Registry"));
 
-			TwoColumnGrid serviceRegistryGrid = new TwoColumnGrid();
-			thePanel.add(serviceRegistryGrid);
+		thePanel.add(new HtmlH1("Service Registry"));
 
-				myDisplayInPublicRegistryCheckbox = new CheckBox();
-				if (myServiceVersion.getDisplayInPublicRegistry() == Boolean.TRUE) {
-					myDisplayInPublicRegistryCheckbox.setValue(true);
-				}
-				serviceRegistryGrid.addRow("Display in public registry", myDisplayInPublicRegistryCheckbox);
-				serviceRegistryGrid.addDescriptionToRight("If checked, this item (and any of its children) will be displayed in the public service registry.");
-				myDisplayInPublicRegistryCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
-					@Override
-					public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
-						myServiceVersion.setDisplayInPublicRegistry(myDisplayInPublicRegistryCheckbox.getValue());
-					}
-				});
+		TwoColumnGrid serviceRegistryGrid = new TwoColumnGrid();
+		thePanel.add(serviceRegistryGrid);
 
-		
+		myDisplayInPublicRegistryCheckbox = new CheckBox();
+		if (myServiceVersion.getDisplayInPublicRegistry() == Boolean.TRUE) {
+			myDisplayInPublicRegistryCheckbox.setValue(true);
+		}
+		serviceRegistryGrid.addRow("Display in public registry", myDisplayInPublicRegistryCheckbox);
+		serviceRegistryGrid.addDescriptionToRight("If checked, this item (and any of its children) will be displayed in the public service registry.");
+		myDisplayInPublicRegistryCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
+				myServiceVersion.setDisplayInPublicRegistry(myDisplayInPublicRegistryCheckbox.getValue());
+			}
+		});
 
 	}
-	
-	private CheckBox myDisplayInPublicRegistryCheckbox;
 
+	private CheckBox myDisplayInPublicRegistryCheckbox;
+	private ListDataProvider<DtoPropertyCapture> myPropertyCaptureDataProvider;
 
 	private void initClientSecurityPanel(FlowPanel thePanel) {
 		// thePanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
@@ -586,6 +588,105 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		updateMethodPanel();
 	}
 
+	private void initPropertyCapturePanel(FlowPanel thePropertyCapturePanel) {
+		thePropertyCapturePanel.add(new Label("The table below defines any Property Captures for this "
+				+ "service version. Property Captures are specific data elements which are extracted from "
+				+ "the request or response message and can be used to apply decision criteria, logged, "
+				+ "audited, etc."));
+		
+		final CellTable<DtoPropertyCapture> grid = new PCellTable<DtoPropertyCapture>();
+		thePropertyCapturePanel.add(grid);
+		grid.setEmptyTableWidget(new Label("No Property Captures defined."));
+
+		myPropertyCaptureDataProvider = new ListDataProvider<DtoPropertyCapture>();
+		myPropertyCaptureDataProvider.addDataDisplay(grid);
+
+		ListHandler<DtoPropertyCapture> sortHandler = new ListHandler<DtoPropertyCapture>(myPropertyCaptureDataProvider.getList());
+		grid.addColumnSortHandler(sortHandler);
+
+		// Action
+
+		PButtonCell deleteCell = new PButtonCell(AdminPortal.IMAGES.iconRemove());
+
+		Column<DtoPropertyCapture, String> action = new NullColumn<DtoPropertyCapture>(deleteCell);
+		grid.addColumn(action, "");
+		action.setFieldUpdater(new FieldUpdater<DtoPropertyCapture, String>() {
+			@Override
+			public void update(int theIndex, DtoPropertyCapture theObject, String theValue) {
+				if (Window.confirm("Delete - Are you sure?")) {
+					getServiceVersion().getPropertyCaptures().remove(theObject);
+					updatePropertyCapturePanel();
+					doBackgroundSave();
+				}
+			}
+		});
+
+		// Property Name
+		
+		PEditTextCell propNameCell = new PEditTextCell("(Enter a property name)");
+		Column<DtoPropertyCapture, String> nameColumn = new Column<DtoPropertyCapture, String>(propNameCell) {
+			@Override
+			public String getValue(DtoPropertyCapture theObject) {
+				return theObject.getPropertyName();
+			}
+		};
+		grid.addColumn(nameColumn, "Property Name");
+		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
+		sortHandler.setComparator(nameColumn, new Comparator<DtoPropertyCapture>() {
+			@Override
+			public int compare(DtoPropertyCapture theO1, DtoPropertyCapture theO2) {
+				return StringUtil.compare(theO1.getPropertyName(), theO2.getPropertyName());
+			}
+		});
+		nameColumn.setFieldUpdater(new FieldUpdater<DtoPropertyCapture, String>() {
+			@Override
+			public void update(int theIndex, DtoPropertyCapture theObject, String theValue) {
+				theObject.setPropertyName(theValue);
+			}
+		});
+
+		// XPath
+
+		PEditTextCell xpathCell = new PEditTextCell("(Enter an XPath Expression)");
+		Column<DtoPropertyCapture, String> xpathColumn = new Column<DtoPropertyCapture, String>(xpathCell) {
+			@Override
+			public String getValue(DtoPropertyCapture theObject) {
+				return theObject.getXpathExpression();
+			}
+		};
+		grid.addColumn(xpathColumn, "XPath Expression");
+		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
+		sortHandler.setComparator(xpathColumn, new Comparator<DtoPropertyCapture>() {
+			@Override
+			public int compare(DtoPropertyCapture theO1, DtoPropertyCapture theO2) {
+				return StringUtil.compare(theO1.getXpathExpression(), theO2.getXpathExpression());
+			}
+		});
+		xpathColumn.setFieldUpdater(new FieldUpdater<DtoPropertyCapture, String>() {
+			@Override
+			public void update(int theIndex, DtoPropertyCapture theObject, String theValue) {
+				theObject.setXpathExpression(theValue);
+			}
+		});
+
+		grid.getColumnSortList().push(nameColumn);
+
+		// Add PropertyCapture
+		thePropertyCapturePanel.add(new HtmlBr());
+		PButton addButton = new PButton(IMAGES.iconAdd(), MSGS.actions_Add());
+		thePropertyCapturePanel.add(addButton);
+		addButton.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent theEvent) {
+				getServiceVersion().getPropertyCaptures().add(new DtoPropertyCapture());
+				updatePropertyCapturePanel();
+			}
+		});
+
+		updatePropertyCapturePanel();
+	}
+
+	
 	private void initServerSecurityPanel(FlowPanel thePanel) {
 		// thePanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
 		//
@@ -770,6 +871,15 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 			list.clear();
 			list.addAll(myServiceVersion.getMethodList().toList());
 			myMethodDataProvider.refresh();
+		}
+	}
+
+	private void updatePropertyCapturePanel() {
+		if (myPropertyCaptureDataProvider != null) {
+			List<DtoPropertyCapture> list = myPropertyCaptureDataProvider.getList();
+			list.clear();
+			list.addAll(myServiceVersion.getPropertyCaptures());
+			myPropertyCaptureDataProvider.refresh();
 		}
 	}
 

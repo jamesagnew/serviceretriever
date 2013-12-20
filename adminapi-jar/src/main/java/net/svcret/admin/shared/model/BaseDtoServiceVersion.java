@@ -51,7 +51,7 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 
 	@XmlElement(name = "Capture")
 	@XmlElementWrapper(name = "config_PropertyCaptures")
-	private List<DtoServiceVersionPropertyCapture> myPropertyCaptures;
+	private List<DtoPropertyCapture> myPropertyCaptures;
 
 	@XmlElement(name = "config_ServiceVersionResourcePointers")
 	private GServiceVersionResourcePointerList myResourcePointerList;
@@ -154,9 +154,9 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 		return myParentServicePid;
 	}
 
-	public List<DtoServiceVersionPropertyCapture> getPropertyCaptures() {
+	public List<DtoPropertyCapture> getPropertyCaptures() {
 		if (myPropertyCaptures == null) {
-			myPropertyCaptures = new ArrayList<DtoServiceVersionPropertyCapture>();
+			myPropertyCaptures = new ArrayList<DtoPropertyCapture>();
 		}
 		return myPropertyCaptures;
 	}
@@ -253,6 +253,9 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 		if (obj.getResourcePointerList() != null) {
 			getResourcePointerList().mergeResults(obj.getResourcePointerList());
 		}
+		
+		getPropertyCaptures().clear();
+		getPropertyCaptures().addAll(obj.getPropertyCaptures());
 
 	}
 

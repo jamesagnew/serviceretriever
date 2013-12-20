@@ -33,6 +33,7 @@ import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
+import net.svcret.admin.shared.model.DtoPropertyCapture;
 import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoHttpClientConfig;
@@ -266,7 +267,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		PersServiceVersionUrl implementationUrl = persVer.getUrls().get(0);
 		AuthorizationOutcomeEnum authorizationOutcome = AuthorizationOutcomeEnum.AUTHORIZED;
 		PersUser persUser = myDao.getUser(user.getPidOrNull());
-		myTransactionLogSvc.logTransaction(request, m1.getServiceVersion(), m1, persUser, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome, "response Body");
+		myTransactionLogSvc.logTransaction(request, m1.getServiceVersion(), m1, persUser, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome, "response Body", null);
 
 		newEntityManager();
 
@@ -878,6 +879,81 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 	}
 
+	@Test
+	public void testLoadAndSaveSvcVerPropertyCaptures() throws Exception {
+
+		newEntityManager();
+
+		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
+		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
+		myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
+
+		newEntityManager();
+
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setHttpClientConfigPid(hcc.getPid());
+		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		// Add one
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		DtoPropertyCapture cap1 = new DtoPropertyCapture();
+		cap1.setPropertyName("cap1");
+		cap1.setXpathExpression("//cap1");
+		d1s1v1.getPropertyCaptures().add(cap1);
+
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertEquals(1, d1s1v1.getPropertyCaptures().size());
+		assertEquals("cap1", d1s1v1.getPropertyCaptures().iterator().next().getPropertyName());
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertEquals(1, d1s1v1.getPropertyCaptures().size());
+		assertEquals("cap1", d1s1v1.getPropertyCaptures().iterator().next().getPropertyName());
+
+		newEntityManager();
+
+		// Add a second
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		DtoPropertyCapture cap2 = new DtoPropertyCapture();
+		cap2.setPropertyName("cap2");
+		cap2.setXpathExpression("//cap2");
+		d1s1v1.getPropertyCaptures().add(cap2);
+
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertEquals(2, d1s1v1.getPropertyCaptures().size());
+		assertEquals("cap1", d1s1v1.getPropertyCaptures().get(0).getPropertyName());
+		assertEquals("cap2", d1s1v1.getPropertyCaptures().get(1).getPropertyName());
+
+		// Remove one
+
+		d1s1v1.getPropertyCaptures().remove(d1s1v1.getPropertyCaptures().get(0));
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertEquals(1, d1s1v1.getPropertyCaptures().size());
+		assertEquals("cap2", d1s1v1.getPropertyCaptures().get(0).getPropertyName());
+
+	}
+
+	
 	@Test
 	public void testLoadAndSaveSvcVerJsonRpc20() throws Exception {
 

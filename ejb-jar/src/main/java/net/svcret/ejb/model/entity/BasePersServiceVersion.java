@@ -44,6 +44,7 @@ import net.svcret.admin.shared.model.BaseDtoClientSecurity;
 import net.svcret.admin.shared.model.BaseDtoServerSecurity;
 import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
+import net.svcret.admin.shared.model.DtoPropertyCapture;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionResourcePointer;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
@@ -108,6 +109,10 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("METHOD_ORDER")
 	private List<PersServiceVersionMethod> myMethods;
+
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myPk.myServiceVersion")
+	@OrderBy("CAPTURE_ORDER")
+	private List<PersPropertyCapture> myPropertyCaptures;
 
 	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myServiceVersion")
 	private Collection<PersMonitorAppliesTo> myMonitorRules;
@@ -229,6 +234,11 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	}
 
 	@Override
+	public boolean canInheritObscureElements() {
+		return true;
+	}
+
+	@Override
 	public boolean determineInheritedAuditLogEnable() {
 		if (getAuditLogEnable() != null) {
 			return getAuditLogEnable();
@@ -245,10 +255,38 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	}
 
 	@Override
+	public Set<String> determineInheritedObscureRequestElements() {
+		return myService.determineObscureRequestElements();
+	}
+
+	@Override
+	public Set<String> determineInheritedObscureResponseElements() {
+		return myService.determineObscureResponseElements();
+	}
+
+	@Override
 	public Integer determineKeepNumRecentTransactions(ResponseTypeEnum theResultType) {
 		Integer retVal = super.determineKeepNumRecentTransactions(theResultType);
 		if (retVal == null) {
 			retVal = myService.determineKeepNumRecentTransactions(theResultType);
+		}
+		return retVal;
+	}
+
+	@Override
+	public Set<String> determineObscureRequestElements() {
+		Set<String> retVal = getObscureRequestElementsInLog();
+		if (retVal.isEmpty()) {
+			retVal = myService.determineObscureRequestElements();
+		}
+		return retVal;
+	}
+
+	@Override
+	public Set<String> determineObscureResponseElements() {
+		Set<String> retVal = getObscureResponseElementsInLog();
+		if (retVal.isEmpty()) {
+			retVal = myService.determineObscureResponseElements();
 		}
 		return retVal;
 	}
@@ -269,7 +307,6 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		}
 		return myActiveChecks;
 	}
-
 
 	@Override
 	public Collection<? extends BasePersServiceVersion> getAllServiceVersions() {
@@ -324,7 +361,8 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 
 	public PersServiceVersionMethod getMethod(String theName) {
 		/*
-		 * We avoid synchronization here at the expense of the small chance we'll create the nameToMethod map more than once..
+		 * We avoid synchronization here at the expense of the small chance
+		 * we'll create the nameToMethod map more than once..
 		 */
 
 		if (myNameToMethod == null) {
@@ -341,7 +379,8 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 
 	public PersServiceVersionMethod getMethodForRootElementName(String theName) {
 		/*
-		 * We avoid synchronization here at the expense of the small chance we'll create the nameToMethod map more than once..
+		 * We avoid synchronization here at the expense of the small chance
+		 * we'll create the nameToMethod map more than once..
 		 */
 
 		if (myRootElementNameToMethod == null) {
@@ -414,6 +453,22 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	 */
 	public Long getPid() {
 		return myPid;
+	}
+
+	public Collection<PersPropertyCapture> getPropertyCaptures() {
+		if (myPropertyCaptures == null) {
+			myPropertyCaptures = new ArrayList<PersPropertyCapture>();
+		}
+		return myPropertyCaptures;
+	}
+
+	public PersPropertyCapture getPropertyCaptureWithPropertyName(String thePropertyName) {
+		for (PersPropertyCapture next : getPropertyCaptures()) {
+			if (next.getPk().getPropertyName().equals(thePropertyName)) {
+				return next;
+			}
+		}
+		return null;
 	}
 
 	public abstract ServiceProtocolEnum getProtocol();
@@ -598,6 +653,10 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 			next.loadAllAssociations();
 		}
 
+		for (PersPropertyCapture next : getPropertyCaptures()) {
+			next.loadAllAssociations();
+		}
+
 		for (PersServiceVersionResource next : getUriToResource().values()) {
 			next.loadAllAssociations();
 		}
@@ -616,6 +675,56 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 
 		myHttpClientConfig.loadAllAssociations();
 
+	}
+
+	public void populateDtoWithMonitorRules(BaseDtoServiceCatalogItem theDto) {
+		for (PersMonitorAppliesTo nextRule : this.getMonitorRules()) {
+			if (nextRule.getItem().equals(this)) {
+				theDto.getMonitorRulePids().add(nextRule.getPid());
+			}
+		}
+		for (PersMonitorRuleActiveCheck next : this.getActiveChecks()) {
+			theDto.getMonitorRulePids().add(next.getRule().getPid());
+		}
+	}
+
+	public StatusEnum populateDtoWithStatusAndProvideStatusForParent(BaseDtoServiceCatalogItem theDashboardObject, StatusesBean theStatuses, StatusEnum theInitialStatus) {
+		StatusEnum retVal = theInitialStatus;
+
+		for (PersServiceVersionUrl nextUrl : this.getUrls()) {
+			StatusEnum nextUrlStatus = theStatuses.getUrlStatusEnum(nextUrl.getPid());
+			if (nextUrlStatus == null) {
+				continue;
+			}
+
+			switch (nextUrlStatus) {
+			case ACTIVE:
+				retVal = StatusEnum.ACTIVE;
+				theDashboardObject.setUrlsActive(theDashboardObject.getUrlsActiveAsIntWithDefault() + 1);
+				break;
+			case DOWN:
+				if (retVal != StatusEnum.ACTIVE) {
+					retVal = StatusEnum.DOWN;
+				}
+				theDashboardObject.setUrlsDown(theDashboardObject.getUrlsDownAsIntWithDefault() + 1);
+				break;
+			case UNKNOWN:
+				theDashboardObject.setUrlsUnknown(theDashboardObject.getUrlsUnknownAsIntWithDefault() + 1);
+				break;
+			}
+
+		} // end URL
+
+		// XX myRuntimeStatusQuerySvc.extract60MinuteStats(nextVersion,
+		// theAccumulator);
+
+		// Failing monitor rules
+		List<PersMonitorRuleFiring> failingRules = theStatuses.getFirings(this.getPid());
+		for (PersMonitorRuleFiring next : failingRules) {
+			theDashboardObject.getFailingApplicableRulePids().add(next.getPid());
+		}
+
+		return retVal;
 	}
 
 	/**
@@ -644,10 +753,22 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		myClientAuths.remove(theClientAuth);
 	}
 
+	public void removePropertyCapture(PersPropertyCapture theNext) {
+		getPropertyCaptures();
+		myPropertyCaptures.remove(theNext);
+	}
+
 	public void removeServerAuth(PersBaseServerAuth<?, ?> theServerAuth) {
 		theServerAuth.setServiceVersion(null);
 		getServerAuths();
 		myServerAuths.remove(theServerAuth);
+	}
+
+	/**
+	 * Remove any URLs whose ID doesn't appear in the given IDs
+	 */
+	public void retainOnlyMethodsWithNames(String... theUrlIds) {
+		retainOnlyMethodsWithNamesAndUnknownMethod(Arrays.asList(theUrlIds));
 	}
 
 	/**
@@ -665,13 +786,6 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 				iter.remove();
 			}
 		}
-	}
-
-	/**
-	 * Remove any URLs whose ID doesn't appear in the given IDs
-	 */
-	public void retainOnlyMethodsWithNames(String... theUrlIds) {
-		retainOnlyMethodsWithNamesAndUnknownMethod(Arrays.asList(theUrlIds));
 	}
 
 	/**
@@ -770,7 +884,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	public void setStatus(PersServiceVersionStatus theStatus) {
 		Validate.notNull(theStatus, "Status");
 		myStatus = theStatus;
-	}
+	};
 
 	public void setUseDefaultProxyPath(boolean theDefaultProxyPath) {
 		myUseDefaultProxyPath = theDefaultProxyPath;
@@ -785,108 +899,6 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		myVersionId = theVersionId;
 	}
 
-	private void urlsChanged() {
-		myIdToUrl = null;
-		myPidToUrl = null;
-		myUrlToUrl = null;
-	}
-
-	@Override
-	public boolean canInheritObscureElements() {
-		return true;
-	}
-
-	@Override
-	public Set<String> determineInheritedObscureRequestElements() {
-		return myService.determineObscureRequestElements();
-	}
-
-	@Override
-	public Set<String> determineInheritedObscureResponseElements() {
-		return myService.determineObscureResponseElements();
-	}
-
-	@Override
-	public Set<String> determineObscureRequestElements() {
-		Set<String> retVal = getObscureRequestElementsInLog();
-		if (retVal.isEmpty()) {
-			retVal = myService.determineObscureRequestElements();
-		}
-		return retVal;
-	}
-
-	@Override
-	public Set<String> determineObscureResponseElements() {
-		Set<String> retVal = getObscureResponseElementsInLog();
-		if (retVal.isEmpty()) {
-			retVal = myService.determineObscureResponseElements();
-		}
-		return retVal;
-	}
-
-	/**
-	 * Subclasses may override
-	 */
-	protected void fromDto(@SuppressWarnings("unused") BaseDtoServiceVersion theDto) {
-	};
-
-	public static <T extends BaseDtoServiceVersion> BasePersServiceVersion fromDto(T theDto, PersService theService, IDao theDao, IServiceRegistry theServiceRegistry) throws ProcessingException,
-			UnexpectedFailureException {
-		Validate.notNull(theDto);
-		Validate.notNull(theService);
-
-		String versionId = theDto.getId();
-
-		BasePersServiceVersion retVal;
-		if (theDto.getPidOrNull() != null) {
-			ourLog.debug("Retrieving existing service version PID[{}]", theDto.getPidOrNull());
-			retVal = theDao.getServiceVersionByPid(theDto.getPid());
-		} else {
-			ourLog.debug("Retrieving service version ID[{}]", versionId);
-			retVal = theServiceRegistry.getOrCreateServiceVersionWithId(theService, theDto.getProtocol(), versionId);
-			ourLog.debug("Found service version NEW[{}], PID[{}], PROTOCOL[{}]", new Object[] { retVal.isNewlyCreated(), retVal.getPid(), retVal.getProtocol().name() });
-		}
-
-		retVal.fromDto(theDto);
-
-		retVal.setActive(theDto.isActive());
-		retVal.setVersionId(theDto.getId());
-		retVal.setExplicitProxyPath(theDto.getExplicitProxyPath());
-		retVal.setDescription(theDto.getDescription());
-		retVal.setUseDefaultProxyPath(theDto.isUseDefaultProxyPath());
-
-		retVal.setServerSecurityMode(theDto.getServerSecurityMode());
-		if (retVal.getServerSecurityMode() == null) {
-			if (theDto.getServerSecurityList().size() > 0) {
-				retVal.setServerSecurityMode(ServerSecurityModeEnum.REQUIRE_ANY);
-			} else {
-				retVal.setServerSecurityMode(ServerSecurityModeEnum.NONE);
-			}
-		}
-
-		PersHttpClientConfig httpClientConfig = theDao.getHttpClientConfig(theDto.getHttpClientConfigPid());
-		if (httpClientConfig == null) {
-			throw new ProcessingException("Unknown HTTP client config PID: " + theDto.getHttpClientConfigPid());
-		}
-		retVal.setHttpClientConfig(httpClientConfig);
-
-		retVal.populateKeepRecentTransactionsFromDto(theDto);
-		retVal.populateServiceCatalogItemFromDto(theDto);
-
-		return retVal;
-	}
-
-	public void populateDtoWithMonitorRules(BaseDtoServiceCatalogItem theDto) {
-		for (PersMonitorAppliesTo nextRule : this.getMonitorRules()) {
-			if (nextRule.getItem().equals(this)) {
-				theDto.getMonitorRulePids().add(nextRule.getPid());
-			}
-		}
-		for (PersMonitorRuleActiveCheck next : this.getActiveChecks()) {
-			theDto.getMonitorRulePids().add(next.getRule().getPid());
-		}
-	}
-
 	// TODO: rename this method
 	public BaseDtoServiceVersion toDto() throws UnexpectedFailureException {
 		Set<Long> emptySet = Collections.emptySet();
@@ -894,8 +906,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	}
 
 	// TODO: refactor this method to put the set params together
-	public BaseDtoServiceVersion toDto(Set<Long> theLoadVerStats, IRuntimeStatusQueryLocal theQuerySvc, StatusesBean theStatuses, Set<Long> theLoadMethodStats, Set<Long> theLoadUrlStats)
-			throws UnexpectedFailureException {
+	public BaseDtoServiceVersion toDto(Set<Long> theLoadVerStats, IRuntimeStatusQueryLocal theQuerySvc, StatusesBean theStatuses, Set<Long> theLoadMethodStats, Set<Long> theLoadUrlStats) throws UnexpectedFailureException {
 
 		BaseDtoServiceVersion retVal = createDtoAndPopulateWithTypeSpecificEntries();
 
@@ -944,6 +955,11 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 			retVal.getClientSecurityList().add(gClientAuth);
 		} // Client auths
 
+		for (PersPropertyCapture next : getPropertyCaptures()) {
+			DtoPropertyCapture dto = next.toDto();
+			retVal.getPropertyCaptures().add(dto);
+		}// property captures
+
 		PersHttpClientConfig httpClientConfig = this.getHttpClientConfig();
 		if (httpClientConfig == null) {
 			throw new UnexpectedFailureException("Service version doesn't have an HTTP client config");
@@ -963,32 +979,33 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 			retVal.setStatsInitialized(new Date());
 
 			// This should be covered by populateDtoWithStatusAnd... above
-//			int urlsActive = 0;
-//			int urlsDown = 0;
-//			int urlsUnknown = 0;
-//			for (PersServiceVersionUrl nextUrl : this.getUrls()) {
-//
-//				PersServiceVersionUrlStatus urlStatus = theStatuses.getUrlStatus(nextUrl.getPid());
-//				if (urlStatus == null) {
-//					continue;
-//				}
-//
-//				switch (urlStatus.getStatus()) {
-//				case ACTIVE:
-//					urlsActive++;
-//					break;
-//				case DOWN:
-//					urlsDown++;
-//					break;
-//				case UNKNOWN:
-//					urlsUnknown++;
-//					break;
-//				}
-//
-//			}
-//			retVal.setUrlsActive(urlsActive);
-//			retVal.setUrlsDown(urlsDown);
-//			retVal.setUrlsUnknown(urlsUnknown);
+			// int urlsActive = 0;
+			// int urlsDown = 0;
+			// int urlsUnknown = 0;
+			// for (PersServiceVersionUrl nextUrl : this.getUrls()) {
+			//
+			// PersServiceVersionUrlStatus urlStatus =
+			// theStatuses.getUrlStatus(nextUrl.getPid());
+			// if (urlStatus == null) {
+			// continue;
+			// }
+			//
+			// switch (urlStatus.getStatus()) {
+			// case ACTIVE:
+			// urlsActive++;
+			// break;
+			// case DOWN:
+			// urlsDown++;
+			// break;
+			// case UNKNOWN:
+			// urlsUnknown++;
+			// break;
+			// }
+			//
+			// }
+			// retVal.setUrlsActive(urlsActive);
+			// retVal.setUrlsDown(urlsDown);
+			// retVal.setUrlsUnknown(urlsUnknown);
 
 			PersServiceVersionStatus svcVerStatus = theStatuses.getServiceVersionStatus(this.getPid());
 			if (svcVerStatus != null) {
@@ -1011,42 +1028,61 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		return retVal;
 	}
 
+	private void urlsChanged() {
+		myIdToUrl = null;
+		myPidToUrl = null;
+		myUrlToUrl = null;
+	}
+
 	protected abstract BaseDtoServiceVersion createDtoAndPopulateWithTypeSpecificEntries();
 
-	public StatusEnum populateDtoWithStatusAndProvideStatusForParent(BaseDtoServiceCatalogItem theDashboardObject, StatusesBean theStatuses, StatusEnum theInitialStatus) {
-		StatusEnum retVal = theInitialStatus;
+	/**
+	 * Subclasses may override
+	 */
+	protected void fromDto(@SuppressWarnings("unused") BaseDtoServiceVersion theDto) {
+	}
 
-		for (PersServiceVersionUrl nextUrl : this.getUrls()) {
-			StatusEnum nextUrlStatus = theStatuses.getUrlStatusEnum(nextUrl.getPid());
-			if (nextUrlStatus == null) {
-				continue;
-			}
+	public static <T extends BaseDtoServiceVersion> BasePersServiceVersion fromDto(T theDto, PersService theService, IDao theDao, IServiceRegistry theServiceRegistry) throws ProcessingException, UnexpectedFailureException {
+		Validate.notNull(theDto);
+		Validate.notNull(theService);
 
-			switch (nextUrlStatus) {
-			case ACTIVE:
-				retVal = StatusEnum.ACTIVE;
-				theDashboardObject.setUrlsActive(theDashboardObject.getUrlsActiveAsIntWithDefault() + 1);
-				break;
-			case DOWN:
-				if (retVal != StatusEnum.ACTIVE) {
-					retVal = StatusEnum.DOWN;
-				}
-				theDashboardObject.setUrlsDown(theDashboardObject.getUrlsDownAsIntWithDefault() + 1);
-				break;
-			case UNKNOWN:
-				theDashboardObject.setUrlsUnknown(theDashboardObject.getUrlsUnknownAsIntWithDefault() + 1);
-				break;
-			}
+		String versionId = theDto.getId();
 
-		} // end URL
-
-		// XX myRuntimeStatusQuerySvc.extract60MinuteStats(nextVersion, theAccumulator);
-
-		// Failing monitor rules
-		List<PersMonitorRuleFiring> failingRules = theStatuses.getFirings(this.getPid());
-		for (PersMonitorRuleFiring next : failingRules) {
-			theDashboardObject.getFailingApplicableRulePids().add(next.getPid());
+		BasePersServiceVersion retVal;
+		if (theDto.getPidOrNull() != null) {
+			ourLog.debug("Retrieving existing service version PID[{}]", theDto.getPidOrNull());
+			retVal = theDao.getServiceVersionByPid(theDto.getPid());
+		} else {
+			ourLog.debug("Retrieving service version ID[{}]", versionId);
+			retVal = theServiceRegistry.getOrCreateServiceVersionWithId(theService, theDto.getProtocol(), versionId);
+			ourLog.debug("Found service version NEW[{}], PID[{}], PROTOCOL[{}]", new Object[] { retVal.isNewlyCreated(), retVal.getPid(), retVal.getProtocol().name() });
 		}
+
+		retVal.fromDto(theDto);
+
+		retVal.setActive(theDto.isActive());
+		retVal.setVersionId(theDto.getId());
+		retVal.setExplicitProxyPath(theDto.getExplicitProxyPath());
+		retVal.setDescription(theDto.getDescription());
+		retVal.setUseDefaultProxyPath(theDto.isUseDefaultProxyPath());
+
+		retVal.setServerSecurityMode(theDto.getServerSecurityMode());
+		if (retVal.getServerSecurityMode() == null) {
+			if (theDto.getServerSecurityList().size() > 0) {
+				retVal.setServerSecurityMode(ServerSecurityModeEnum.REQUIRE_ANY);
+			} else {
+				retVal.setServerSecurityMode(ServerSecurityModeEnum.NONE);
+			}
+		}
+
+		PersHttpClientConfig httpClientConfig = theDao.getHttpClientConfig(theDto.getHttpClientConfigPid());
+		if (httpClientConfig == null) {
+			throw new ProcessingException("Unknown HTTP client config PID: " + theDto.getHttpClientConfigPid());
+		}
+		retVal.setHttpClientConfig(httpClientConfig);
+
+		retVal.populateKeepRecentTransactionsFromDto(theDto);
+		retVal.populateServiceCatalogItemFromDto(theDto);
 
 		return retVal;
 	}

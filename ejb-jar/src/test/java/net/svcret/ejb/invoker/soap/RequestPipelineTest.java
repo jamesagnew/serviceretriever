@@ -210,7 +210,7 @@ public class RequestPipelineTest {
 
 	}
 
-	static String createRequest(String methodName, boolean theWithHeader) {
+	public static String createRequest(String methodName, boolean theWithHeader) {
 		StringBuilder b = new StringBuilder();
 		b.append("<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ws=\"http://ws.ehr.uhn.ca\">\n");
 		if (theWithHeader) {
@@ -229,8 +229,8 @@ public class RequestPipelineTest {
 		b.append("      <ws:");
 		b.append(methodName);
 		b.append(">\n");
-		b.append("         <ws:theMrn>?</ws:theMrn>\n");
-		b.append("         <ws:theMrnAuth>?</ws:theMrnAuth>\n");
+		b.append("         <ws:theMrn>MRN0</ws:theMrn>\n");
+		b.append("         <ws:theMrnAuth>MRNAUTH0</ws:theMrnAuth>\n");
 		b.append("      </ws:");
 		b.append(methodName);
 		b.append(">\n");

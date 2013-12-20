@@ -1,12 +1,8 @@
 package net.svcret.ejb.ejb.monitor;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -74,8 +70,11 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 //	private Date my2Min30SecsAgo;
 	private DtoServiceVersionSoap11 mySvcVer2G;
 	private BasePersServiceVersion myD1S1V2;
+	@SuppressWarnings("unused")
 	private PersServiceVersionMethod myD1S1V2M1;
+	@SuppressWarnings("unused")
 	private PersServiceVersionUrl myD1M1S2U1;
+	@SuppressWarnings("unused")
 	private PersServiceVersionUrl myD1M1S2U2;
 
 	@Before
@@ -521,7 +520,8 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		newEntityManager();
 		mySvc.runPassiveChecks();
 		newEntityManager();
-		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(myD1S1V1.getPid());
+
+		//		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(myD1S1V1.getPid());
 		assertNull(getMostRecentMonitorRuleFiring());
 
 		// Fail one of the URLs
@@ -547,7 +547,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 //		myStatsSvc.flushStatus();
 		newEntityManager();
 
-		svcVer = myDao.getServiceVersionByPid(myD1S1V1.getPid());
+//		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(myD1S1V1.getPid());
 		assertNotNull(getMostRecentMonitorRuleFiring());
 		assertNull(getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage(), getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage());
 		assertNull(getMostRecentMonitorRuleFiring().getEndDate());
@@ -561,7 +561,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		mySvc.runPassiveChecks();
 		
 		newEntityManager();
-		svcVer = myDao.getServiceVersionByPid(myD1S1V1.getPid());
+//		svcVer = myDao.getServiceVersionByPid(myD1S1V1.getPid());
 		assertNotNull(getMostRecentMonitorRuleFiring());
 		assertNull(getMostRecentMonitorRuleFiring().getEndDate());
 

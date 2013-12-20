@@ -36,6 +36,7 @@ import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
+import net.svcret.admin.shared.model.DtoPropertyCapture;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.admin.shared.model.DtoDomainList;
@@ -122,6 +123,7 @@ import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact;
 import net.svcret.ejb.model.entity.PersMonitorRulePassive;
 import net.svcret.ejb.model.entity.PersNodeStatus;
+import net.svcret.ejb.model.entity.PersPropertyCapture;
 import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
@@ -337,7 +339,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 
 		myServiceRegistry.deleteService(theServicePid);
-		
+
 		return loadDomainList();
 	}
 
@@ -346,7 +348,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		ourLog.info("Deleting service version {}", thePid);
 
 		myServiceRegistry.deleteServiceVersion(thePid);
-		
+
 		return loadDomainList();
 	}
 
@@ -609,7 +611,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-
 	private PersUser fromUi(GUser theUser) throws ProcessingException {
 		PersUser retVal;
 
@@ -835,8 +836,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return loadDomainList(empty, empty, empty, empty, empty, null);
 	}
 
-	private DtoDomainList loadDomainList(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, Set<Long> theLoadUrlStats,
-			StatusesBean theStatuses) throws UnexpectedFailureException {
+	private DtoDomainList loadDomainList(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, Set<Long> theLoadUrlStats, StatusesBean theStatuses) throws UnexpectedFailureException {
 		DtoDomainList domainList = new DtoDomainList();
 
 		for (PersDomain nextDomain : myServiceRegistry.getAllDomains()) {
@@ -910,9 +910,12 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	// private void extractStatus(int theNumMinsBack, List<Integer> the60MinInvCount, List<Long> the60minTime, PersServiceVersionMethod nextMethod) throws ProcessingException {
+	// private void extractStatus(int theNumMinsBack, List<Integer>
+	// the60MinInvCount, List<Long> the60minTime, PersServiceVersionMethod
+	// nextMethod) throws ProcessingException {
 	// IRuntimeStatus statusSvc = myStatusSvc;
-	// extractSuccessfulInvocationInvocationTimes(myConfigSvc.getConfig(), theNumMinsBack, the60MinInvCount, the60minTime, nextMethod, statusSvc);
+	// extractSuccessfulInvocationInvocationTimes(myConfigSvc.getConfig(),
+	// theNumMinsBack, the60MinInvCount, the60minTime, nextMethod, statusSvc);
 	// }
 
 	@Override
@@ -969,7 +972,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GRecentMessage loadRecentMessageForServiceVersion(long thePid) throws UnknownPidException  {
+	public GRecentMessage loadRecentMessageForServiceVersion(long thePid) throws UnknownPidException {
 		PersServiceVersionRecentMessage msg = myDao.loadRecentMessageForServiceVersion(thePid);
 		if (msg == null) {
 			throw new UnknownPidException("Unable to find transaction with PID " + thePid + ". Maybe it has been purged?");
@@ -985,14 +988,14 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 		return msg.toDto(true);
 	}
-	
+
 	@EJB
 	private ISynchronousNodeIpcClient mySynchronousNodeIpcClient;
-	
+
 	@Override
 	public GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid) {
 		flushRecentTransactions();
-		
+
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
 
 		GRecentMessageLists retVal = new GRecentMessageLists();
@@ -1121,8 +1124,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(DtoServiceVersionSoap11 theService, DtoHttpClientConfig theHttpClientConfig, String theWsdlUrl) throws ProcessingException,
-			UnexpectedFailureException {
+	public GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(DtoServiceVersionSoap11 theService, DtoHttpClientConfig theHttpClientConfig, String theWsdlUrl) throws ProcessingException, UnexpectedFailureException {
 		Validate.notNull(theService, "Definition");
 		Validate.notBlank(theWsdlUrl, "URL");
 
@@ -1295,13 +1297,13 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		myServiceRegistry.saveDomain(domain);
 
-		// TODO: make this synchronous? (ie don't use a cached version, or force a cache refresh or something?
+		// TODO: make this synchronous? (ie don't use a cached version, or force
+		// a cache refresh or something?
 		return loadDomainList();
 	}
 
 	@Override
-	public DtoHttpClientConfig saveHttpClientConfig(DtoHttpClientConfig theConfig, byte[] theNewTruststore, String theNewTruststorePass, byte[] theNewKeystore, String theNewKeystorePass)
-			throws ProcessingException, UnexpectedFailureException {
+	public DtoHttpClientConfig saveHttpClientConfig(DtoHttpClientConfig theConfig, byte[] theNewTruststore, String theNewTruststorePass, byte[] theNewKeystore, String theNewKeystorePass) throws ProcessingException, UnexpectedFailureException {
 		Validate.notNull(theConfig, "HttpClientConfig");
 
 		PersHttpClientConfig existing = null;
@@ -1381,7 +1383,8 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		myServiceRegistry.saveService(service);
 
-		// TODO: make this synchronous? (ie don't use a cached version, or force a cache refresh or something?
+		// TODO: make this synchronous? (ie don't use a cached version, or force
+		// a cache refresh or something?
 		return loadDomainList();
 	}
 
@@ -1428,19 +1431,19 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		/*
 		 * Urls
 		 */
-		Collection<PersServiceVersionUrl> urlsToAdd = new ArrayList<PersServiceVersionUrl>(); 
+		Collection<PersServiceVersionUrl> urlsToAdd = new ArrayList<PersServiceVersionUrl>();
 		for (GServiceVersionUrl nextRequired : theVersion.getUrlList()) {
 			boolean alreadyExists = false;
 			for (PersServiceVersionUrl nextExisting : existingVersion.getUrls()) {
-					if (nextRequired.getPidOrNull() != null && nextRequired.getPidOrNull().equals(nextExisting.getPid())) {
-						alreadyExists=true;
-						ourLog.debug("Merging URL[{}/{}] into existing URL: {}", new Object[] {nextExisting.getPid(), nextExisting.getUrlId(), nextExisting.getUrl()});
-						nextExisting.merge(PersServiceVersionUrl.fromDto(nextRequired, existingVersion));
-						break;
-					}
+				if (nextRequired.getPidOrNull() != null && nextRequired.getPidOrNull().equals(nextExisting.getPid())) {
+					alreadyExists = true;
+					ourLog.debug("Merging URL[{}/{}] into existing URL: {}", new Object[] { nextExisting.getPid(), nextExisting.getUrlId(), nextExisting.getUrl() });
+					nextExisting.merge(PersServiceVersionUrl.fromDto(nextRequired, existingVersion));
+					break;
+				}
 			}
 			if (!alreadyExists) {
-				ourLog.debug("Adding URL[{}/{}] {}", new Object[] {nextRequired.getPid(), nextRequired.getId(), nextRequired.getUrl()});
+				ourLog.debug("Adding URL[{}/{}] {}", new Object[] { nextRequired.getPid(), nextRequired.getId(), nextRequired.getUrl() });
 				urlsToAdd.add(PersServiceVersionUrl.fromDto(nextRequired, existingVersion));
 			}
 		}
@@ -1451,16 +1454,18 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			boolean shouldRemove = true;
 			for (GServiceVersionUrl nextRequired : theVersion.getUrlList()) {
 				if (nextRequired.getPidOrNull() != null && nextRequired.getPidOrNull().equals(nextExisting.getPid())) {
-//				if (StringUtils.equals(nextRequired.getUrl(), nextExisting.getUrl())) {
-//					if (StringUtils.equals(nextRequired.getId(), nextExisting.getUrlId())) {
-						shouldRemove = false;
-						break;
-//					}
-//				}
+					// if (StringUtils.equals(nextRequired.getUrl(),
+					// nextExisting.getUrl())) {
+					// if (StringUtils.equals(nextRequired.getId(),
+					// nextExisting.getUrlId())) {
+					shouldRemove = false;
+					break;
+					// }
+					// }
 				}
 			}
 			if (shouldRemove) {
-				ourLog.debug("Removing URL[{}/{}] {}", new Object[] {nextExisting.getPid(), nextExisting.getUrlId(), nextExisting.getUrl()});
+				ourLog.debug("Removing URL[{}/{}] {}", new Object[] { nextExisting.getPid(), nextExisting.getUrlId(), nextExisting.getUrl() });
 				iter.remove();
 			}
 		}
@@ -1468,7 +1473,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		existingVersion.getUrls().addAll(urlsToAdd);
 
 		ourLog.debug("Now have {} URLs", existingVersion.getUrls().size());
-		
+
 		// Update URL order
 		Collections.sort(existingVersion.getUrls(), new Comparator<PersServiceVersionUrl>() {
 			@Override
@@ -1559,6 +1564,29 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		for (PersBaseServerAuth<?, ?> next : new ArrayList<PersBaseServerAuth<?, ?>>(existingVersion.getServerAuths())) {
 			if (next.getPid() != null && !pids.contains(next.getPid())) {
 				existingVersion.removeServerAuth(next);
+			} else {
+				next.setOrder(index++);
+			}
+		}
+
+		/*
+		 * Property Captures
+		 */
+		Set<String> propCaps = new HashSet<String>();
+		for (DtoPropertyCapture next : theVersion.getPropertyCaptures()) {
+			PersPropertyCapture nextPers = PersPropertyCapture.fromDto(existingVersion, next);
+			PersPropertyCapture existing = existingVersion.getPropertyCaptureWithPropertyName(next.getPropertyName());
+			if (existing != null) {
+				existing.merge(nextPers);
+			} else {
+				existingVersion.getPropertyCaptures().add(nextPers);
+			}
+			propCaps.add(nextPers.getPk().getPropertyName());
+		}
+		index = 0;
+		for (PersPropertyCapture next : new ArrayList<PersPropertyCapture>(existingVersion.getPropertyCaptures())) {
+			if (!propCaps.contains(next.getPk().getPropertyName())) {
+				existingVersion.removePropertyCapture(next);
 			} else {
 				next.setOrder(index++);
 			}
@@ -1712,7 +1740,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		} catch (InvocationResponseFailedException e) {
 			ourLog.error("Failed to invoke service", e);
 			retVal.setOutcomeDescription(e.getMessage());
-			if (e.getHttpResponse()!=null) {
+			if (e.getHttpResponse() != null) {
 				retVal.setResponseContentType(e.getHttpResponse().getContentType());
 				retVal.setResponseMessage(e.getHttpResponse().getBody());
 				retVal.setResponseHeaders(e.getHttpResponse().getResponseHeadersAsPairList());
@@ -1838,7 +1866,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-
 	private GUser toUi(PersUser thePersUser, boolean theLoadStats) throws UnexpectedFailureException {
 		GUser retVal = new GUser();
 		retVal.setPid(thePersUser.getPid());
@@ -1932,9 +1959,13 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return (int) newValue;
 	}
 
-	// public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatus theStatus, PersServiceVersionMethod theNextMethod, IWithStats theOperator, Date end) {
-	// Date start = new Date(end.getTime() - (theRange.getWithPresetRange().getNumMins() * 60 * 1000L));
-	// doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator, start, end);
+	// public static void doWithStatsByMinute(PersConfig theConfig, TimeRange
+	// theRange, IRuntimeStatus theStatus, PersServiceVersionMethod
+	// theNextMethod, IWithStats theOperator, Date end) {
+	// Date start = new Date(end.getTime() -
+	// (theRange.getWithPresetRange().getNumMins() * 60 * 1000L));
+	// doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator,
+	// start, end);
 	// }
 
 	public static long addToLong(long theAddTo, long theNumberToAdd) {
@@ -1942,16 +1973,14 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return newValue;
 	}
 
-	public static void doWithStatsByMinute(PersConfig theConfig, int theNumberOfMinutes, IRuntimeStatusQueryLocal statusSvc, PersServiceVersionMethod theMethod,
-			IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator) {
+	public static void doWithStatsByMinute(PersConfig theConfig, int theNumberOfMinutes, IRuntimeStatusQueryLocal statusSvc, PersServiceVersionMethod theMethod, IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator) {
 		Date start = getDateXMinsAgoTruncatedToMinute(theNumberOfMinutes);
 		Date end = new Date();
 
 		doWithStatsByMinute(theConfig, statusSvc, theMethod, theOperator, start, end);
 	}
 
-	public static void doWithStatsByMinute(PersConfig theConfig, IRuntimeStatusQueryLocal statusSvc, PersServiceVersionMethod theMethod,
-			IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator, Date start, Date end) {
+	public static void doWithStatsByMinute(PersConfig theConfig, IRuntimeStatusQueryLocal statusSvc, PersServiceVersionMethod theMethod, IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator, Date start, Date end) {
 		Date date = start;
 		for (int min = 0; date.before(end); min++) {
 
@@ -1967,8 +1996,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 	}
 
-	public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatusQueryLocal theStatus, PersServiceVersionMethod theNextMethod,
-			IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator) {
+	public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatusQueryLocal theStatus, PersServiceVersionMethod theNextMethod, IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator) {
 		Date end;
 		Date start;
 		if (theRange.getWithPresetRange() != null) {

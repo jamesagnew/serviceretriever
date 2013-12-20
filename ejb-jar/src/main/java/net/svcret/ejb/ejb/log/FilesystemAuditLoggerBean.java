@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -30,6 +31,7 @@ import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
+import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -64,13 +66,6 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 
 	private ConcurrentLinkedQueue<UnflushedAuditRecord> myUnflushedAuditRecord = new ConcurrentLinkedQueue<UnflushedAuditRecord>();
 
-	private void addItem(FileWriter writer, String key, String value) throws IOException {
-		writer.append(key);
-		writer.append(": ");
-		writer.append(formatParamValue(value));
-		writer.append("\n");
-	}
-
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	@Override
 	public void flushAuditEventsIfNeeded() {
@@ -78,6 +73,85 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 			flushIfNeccesary();
 		} catch (Exception e) {
 			ourLog.error("Failed to flush transactions", e);
+		}
+	}
+
+	public void forceFlush() throws ProcessingException, UnexpectedFailureException {
+		flushWithinLockedContext();
+	}
+
+	@PostConstruct
+	public void initialize() throws ProcessingException {
+		ourLog.info("Initializing filesystem audit logger service");
+
+		String path = myConfigSvc.getFilesystemAuditLoggerPath();
+		if (StringUtils.isBlank(path)) {
+			path = new File("sr-audit").getAbsolutePath();
+			ourLog.info("No filesystem audit path specified, going to use the following path: {}", path);
+		}
+
+		myAuditPath = new File(path);
+		if (!myAuditPath.exists()) {
+			ourLog.info("Path does not exist, going to create it: {}", myAuditPath.getAbsolutePath());
+			if (!myAuditPath.mkdirs()) {
+				throw new ProcessingException("Failed to create path (do we have permission?): " + myAuditPath.getAbsoluteFile());
+			}
+		}
+
+		if (!myAuditPath.isDirectory()) {
+			throw new ProcessingException("Path exists but is not a directory: " + myAuditPath.getAbsoluteFile());
+		}
+
+	}
+
+	@Override
+	public void recordServiceTransaction(HttpRequestBean theRequest, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl,
+			HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, InvocationResultsBean theInvocationResults) throws ProcessingException, UnexpectedFailureException {
+
+		validateQueueSize();
+
+		UnflushedAuditRecord auditLog = new UnflushedAuditRecord(theRequest.getRequestTime(), theRequest, theSvcVer, theMethod, theUser, theRequestBody, theInvocationResults, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome,
+				AuditLogTypeEnum.SVCVER);
+		myUnflushedAuditRecord.add(auditLog);
+
+		flushIfNeccesary();
+	}
+
+	@Override
+	public void recordUserTransaction(HttpRequestBean theRequest, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl,
+			HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, InvocationResultsBean theInvocationResults) throws ProcessingException, UnexpectedFailureException {
+
+		validateQueueSize();
+
+		UnflushedAuditRecord auditLog = new UnflushedAuditRecord(theRequest.getRequestTime(), theRequest, theSvcVer, theMethod, theUser, theRequestBody, theInvocationResults, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome,
+				AuditLogTypeEnum.USER);
+		myUnflushedAuditRecord.add(auditLog);
+
+		flushIfNeccesary();
+	}
+
+	@VisibleForTesting
+	public void setConfigServiceForUnitTests(IConfigService theCfgSvc) {
+		myConfigSvc = theCfgSvc;
+
+	}
+
+	private void addItem(FileWriter writer, String key, String value) throws IOException {
+		writer.append(key);
+		writer.append(": ");
+		writer.append(formatParamValue(value));
+		writer.append("\n");
+	}
+
+	private void closeAndRemoveWriter(UnflushedAuditRecord theNext) {
+		String fileName = theNext.createLogFile();
+		MyFileWriter existing = myLogFileWriters.remove(fileName);
+		if (existing != null) {
+			try {
+				existing.close();
+			} catch (IOException e) {
+				ourLog.debug("Failed to close writer", e);
+			}
 		}
 	}
 
@@ -132,7 +206,7 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 			count++;
 		}
 
-		for (Iterator<Entry<String, MyFileWriter>> iter= myLogFileWriters.entrySet().iterator(); iter.hasNext(); ) {
+		for (Iterator<Entry<String, MyFileWriter>> iter = myLogFileWriters.entrySet().iterator(); iter.hasNext();) {
 			Entry<String, MyFileWriter> next = iter.next();
 			try {
 				next.getValue().flush();
@@ -142,21 +216,9 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 				iter.remove();
 			}
 		}
-		
+
 		long delay = System.currentTimeMillis() - start;
 		ourLog.info("Finished flushing {} audit records in {}ms", count, delay);
-	}
-
-	private void closeAndRemoveWriter(UnflushedAuditRecord theNext) {
-		String fileName = theNext.createLogFile();
-		MyFileWriter existing = myLogFileWriters.remove(fileName);
-		if (existing != null) {
-			try {
-				existing.close();
-			} catch (IOException e) {
-				ourLog.debug("Failed to close writer", e);
-			}
-		}
 	}
 
 	private void flushWithinLockedContext(Map<String, String> lookups, PersConfig config, UnflushedAuditRecord next) throws IOException {
@@ -183,7 +245,8 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 			long freeSpaceMb = (writer.getBytesFree() / FileUtils.ONE_MB);
 			if (freeSpaceMb < config.getAuditLogDisableIfDiskCapacityBelowMb()) {
 				ourLog.debug("Not saving audit record because only {} Mb free (threshold is {})", freeSpaceMb, config.getAuditLogDisableIfDiskCapacityBelowMb());
-				// TODO: add a line at the bottom of the file indicating that saving was suspended
+				// TODO: add a line at the bottom of the file indicating that
+				// saving was suspended
 			}
 		} else {
 
@@ -212,6 +275,9 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 			if (next.myAuthorizationOutcome != null) {
 				addItem(writer, "AuthorizationOutcome", next.myAuthorizationOutcome.name());
 			}
+			for (Entry<String, String> nextPair : next.getPropertyCaptures().entrySet()) {
+				addItem(writer, "PropertyCapture", "[" + nextPair.getKey() + "] " + nextPair.getValue());
+			}
 			writer.append("Request:\n");
 			String formatedRequest = formatMessage(next.myRequestBody);
 			writer.append(formatedRequest);
@@ -227,70 +293,8 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 		}
 	}
 
-	public void forceFlush() throws ProcessingException, UnexpectedFailureException {
-		flushWithinLockedContext();
-	}
-
 	private CharSequence formatParamValue(String theValue) {
 		return PARAM_VALUE_WHITESPACE.matcher(theValue).replaceAll(" ");
-	}
-
-	@PostConstruct
-	public void initialize() throws ProcessingException {
-		ourLog.info("Initializing filesystem audit logger service");
-
-		String path = myConfigSvc.getFilesystemAuditLoggerPath();
-		if (StringUtils.isBlank(path)) {
-			path = new File("sr-audit").getAbsolutePath();
-			ourLog.info("No filesystem audit path specified, going to use the following path: {}", path);
-		}
-
-		myAuditPath = new File(path);
-		if (!myAuditPath.exists()) {
-			ourLog.info("Path does not exist, going to create it: {}", myAuditPath.getAbsolutePath());
-			if (!myAuditPath.mkdirs()) {
-				throw new ProcessingException("Failed to create path (do we have permission?): " + myAuditPath.getAbsoluteFile());
-			}
-		}
-
-		if (!myAuditPath.isDirectory()) {
-			throw new ProcessingException("Path exists but is not a directory: " + myAuditPath.getAbsoluteFile());
-		}
-
-	}
-
-	@Override
-	public void recordServiceTransaction(HttpRequestBean theRequest, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody,
-			InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome)
-			throws ProcessingException, UnexpectedFailureException {
-
-		validateQueueSize();
-
-		UnflushedAuditRecord auditLog = new UnflushedAuditRecord(theRequest.getRequestTime(), theRequest, theSvcVer, theMethod, theUser, theRequestBody, theInvocationResponse, theImplementationUrl,
-				theHttpResponse, theAuthorizationOutcome, AuditLogTypeEnum.SVCVER);
-		myUnflushedAuditRecord.add(auditLog);
-
-		flushIfNeccesary();
-	}
-
-	@Override
-	public void recordUserTransaction(HttpRequestBean theRequest, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody,
-			InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome)
-			throws ProcessingException, UnexpectedFailureException {
-
-		validateQueueSize();
-
-		UnflushedAuditRecord auditLog = new UnflushedAuditRecord(theRequest.getRequestTime(), theRequest, theSvcVer, theMethod, theUser, theRequestBody, theInvocationResponse, theImplementationUrl,
-				theHttpResponse, theAuthorizationOutcome, AuditLogTypeEnum.USER);
-		myUnflushedAuditRecord.add(auditLog);
-
-		flushIfNeccesary();
-	}
-
-	@VisibleForTesting
-	public void setConfigServiceForUnitTests(IConfigService theCfgSvc) {
-		myConfigSvc = theCfgSvc;
-
 	}
 
 	private void validateQueueSize() throws ProcessingException {
@@ -300,7 +304,8 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 	}
 
 	/**
-	 * Cleans up line separators and indents each line of the string by two spaces
+	 * Cleans up line separators and indents each line of the string by two
+	 * spaces
 	 */
 	@SuppressWarnings("fallthrough")
 	static String formatMessage(String theInput) {
@@ -354,7 +359,7 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 		SVCVER {
 			@Override
 			public String createLogFileName(UnflushedAuditRecord theRecord) {
-				return "svcver_" + theRecord.getServiceVersionPid() + "_" + theRecord.getServiceVersionId() + ".log_" + theRecord.formatEventDateForLogFilename();
+				return "svcver_" + theRecord.getServiceVersionPid() + "_" + theRecord.getServiceId() + "_" + theRecord.getServiceVersionId() + ".log_" + theRecord.formatEventDateForLogFilename();
 			}
 		},
 
@@ -406,10 +411,10 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 		private Long myTransactionMillis;
 		private String myUsername;
 		private Long myUserPid;
+		private Map<String, String> myPropertyCaptures;
 
-		public UnflushedAuditRecord(Date theRequestTime, HttpRequestBean theRequest, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody,
-				InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome,
-				AuditLogTypeEnum theType) {
+		public UnflushedAuditRecord(Date theRequestTime, HttpRequestBean theRequest, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, InvocationResultsBean theInvocationResults,
+				InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, AuditLogTypeEnum theType) {
 
 			if (theType == AuditLogTypeEnum.USER && theUser == null) {
 				throw new IllegalArgumentException("No user provided for USER record");
@@ -441,6 +446,11 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 			myDomainId = theSvcVer.getService().getDomain().getDomainId();
 			myServiceVersionPid = theSvcVer.getPid();
 			myTransactionMillis = theHttpResponse != null ? theHttpResponse.getResponseTime() : 0;
+			if (theInvocationResults == null || theInvocationResults.getPropertyCaptures() == null) {
+				myPropertyCaptures = Collections.emptyMap();
+			} else {
+				myPropertyCaptures = theInvocationResults.getPropertyCaptures();
+			}
 
 			assert myAuditRecordType != null;
 			assert myRequestTime != null;
@@ -458,12 +468,20 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 			assert myResponseBody == null || myResponseHeaders != null;
 		}
 
+		public String getServiceId() {
+			return myServiceId;
+		}
+
 		public String createLogFile() {
 			return myAuditRecordType.createLogFileName(this);
 		}
 
 		public String formatEventDateForLogFilename() {
 			return ourLogDateFormat.format(myRequestTime);
+		}
+
+		public Map<String, String> getPropertyCaptures() {
+			return myPropertyCaptures;
 		}
 
 		public String getServiceVersionId() {

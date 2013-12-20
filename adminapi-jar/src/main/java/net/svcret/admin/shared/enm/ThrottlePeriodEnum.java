@@ -6,26 +6,42 @@ import java.util.List;
 public enum ThrottlePeriodEnum {
 	DAY("Day") {
 		@Override
-		public double toRequestsPerSecond(Integer theInterval) {
+		public double intervalToRequestsPerSecond(Integer theInterval) {
 			return 1.0 / (theInterval * 60.0 * 60.0 * 24.0);
+		}
+		@Override
+		public double numRequestsToRequestsPerSecond(Integer theNumRequests) {
+			return theNumRequests / (60.0 * 60.0 * 24.0);
 		}
 	},
 	HOUR("Hour") {
 		@Override
-		public double toRequestsPerSecond(Integer theInterval) {
+		public double intervalToRequestsPerSecond(Integer theInterval) {
 			return 1.0 / (theInterval * 60.0 * 60.0);
+		}
+		@Override
+		public double numRequestsToRequestsPerSecond(Integer theNumRequests) {
+			return theNumRequests / (60.0 * 60.0);
 		}
 	},
 	MINUTE("Minute") {
 		@Override
-		public double toRequestsPerSecond(Integer theInterval) {
+		public double intervalToRequestsPerSecond(Integer theInterval) {
 			return 1.0 / (theInterval * 60.0);
+		}
+		@Override
+		public double numRequestsToRequestsPerSecond(Integer theNumRequests) {
+			return theNumRequests / 60.0;
 		}
 	},
 	SECOND("Second") {
 		@Override
-		public double toRequestsPerSecond(Integer theInterval) {
+		public double intervalToRequestsPerSecond(Integer theInterval) {
 			return 1.0 / theInterval;
+		}
+		@Override
+		public double numRequestsToRequestsPerSecond(Integer theNumRequests) {
+			return theNumRequests;
 		}
 	};
 
@@ -39,7 +55,9 @@ public enum ThrottlePeriodEnum {
 		myDescription = theDescription;
 	}
 
-	public abstract double toRequestsPerSecond(Integer theInterval);
+	public abstract double numRequestsToRequestsPerSecond(Integer theNumRequests);
+
+	public abstract double intervalToRequestsPerSecond(Integer theInterval);
 
 	public String getFriendlyName(int theForNumber) {
 		if (theForNumber == 1) {

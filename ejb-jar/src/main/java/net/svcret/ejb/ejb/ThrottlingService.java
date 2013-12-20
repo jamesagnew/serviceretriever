@@ -24,7 +24,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
-import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.ejb.api.HttpRequestBean;
 import net.svcret.ejb.api.HttpResponseBean;
 import net.svcret.ejb.api.IRuntimeStatus;
@@ -81,7 +80,7 @@ public class ThrottlingService implements IThrottlingService {
 			return;
 		}
 
-		double requestsPerSecond = user.getThrottlePeriod().toRequestsPerSecond(user.getThrottleMaxRequests());
+		double requestsPerSecond = user.getThrottlePeriod().numRequestsToRequestsPerSecond(user.getThrottleMaxRequests());
 		RateLimiter rateLimiter = myUserRateLimiters.get(user);
 		if (rateLimiter == null) {
 
@@ -301,11 +300,5 @@ public class ThrottlingService implements IThrottlingService {
 		}
 	}
 
-	public static void main(String[] args) {
-
-		double requestsPerSecond = ThrottlePeriodEnum.MINUTE.toRequestsPerSecond(5);
-		System.out.println(requestsPerSecond);
-
-	}
 
 }
