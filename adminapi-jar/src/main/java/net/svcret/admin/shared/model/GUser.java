@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class GUser extends BaseDtoDashboardObject implements IHasPermissions {
+public class GUser extends BaseDtoDashboardObject implements IHasPermissions , IHasThrottle<GThrottle> {
 
 	private static final long serialVersionUID = 1L;
 
@@ -285,6 +285,11 @@ public class GUser extends BaseDtoDashboardObject implements IHasPermissions {
 	@Override
 	public List<BaseDtoServiceVersion> getAllServiceVersions() {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public GThrottle instantiateNew() {
+		return new GThrottle();
 	}
 
 }

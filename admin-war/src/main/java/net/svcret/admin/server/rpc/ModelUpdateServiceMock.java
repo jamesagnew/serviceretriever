@@ -56,6 +56,7 @@ import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
 import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
+import net.svcret.admin.shared.model.GThrottle;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.model.GUserDomainPermission;
 import net.svcret.admin.shared.model.GUserList;
@@ -257,6 +258,9 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		user.setAllowableSourceIps(new ArrayList<String>());
 		user.getAllowableSourceIps().add("127.0.0.1");
 		user.getAllowableSourceIps().add("192.168.1.1");
+		user.setThrottle(new GThrottle());
+		user.getThrottle().setThrottleMaxRequests(5);
+		user.getThrottle().setThrottlePeriod(ThrottlePeriodEnum.MINUTE);
 		myUserList.add(user);
 
 		myMonitorRuleList = new GMonitorRuleList();

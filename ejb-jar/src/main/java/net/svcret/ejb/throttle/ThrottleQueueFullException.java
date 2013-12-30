@@ -1,4 +1,4 @@
-package net.svcret.ejb.ejb;
+package net.svcret.ejb.throttle;
 
 public class ThrottleQueueFullException extends Exception {
 

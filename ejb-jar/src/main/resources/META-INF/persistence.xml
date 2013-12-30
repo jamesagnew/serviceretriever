@@ -35,6 +35,7 @@
 		<class>net.svcret.ejb.model.entity.PersNodeStatus</class>
 		<class>net.svcret.ejb.model.entity.PersPropertyCapture</class>
 		<class>net.svcret.ejb.model.entity.PersServiceVersionMethod</class>
+		<class>net.svcret.ejb.model.entity.PersServiceVersionThrottle</class>
 		<class>net.svcret.ejb.model.entity.PersService</class>
 		<class>net.svcret.ejb.model.entity.PersStickySessionUrlBinding</class>
 		<class>net.svcret.ejb.model.entity.PersUser</class>
@@ -130,6 +131,7 @@
 		<class>net.svcret.ejb.model.entity.PersNodeStatus</class>
 		<class>net.svcret.ejb.model.entity.PersPropertyCapture</class>
 		<class>net.svcret.ejb.model.entity.PersServiceVersionMethod</class>
+		<class>net.svcret.ejb.model.entity.PersServiceVersionThrottle</class>
 		<class>net.svcret.ejb.model.entity.PersService</class>
 		<class>net.svcret.ejb.model.entity.PersUser</class>
 		<class>net.svcret.ejb.model.entity.PersUserStatus</class>

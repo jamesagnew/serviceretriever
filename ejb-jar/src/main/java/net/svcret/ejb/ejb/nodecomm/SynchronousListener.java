@@ -14,7 +14,7 @@ import javax.jws.soap.SOAPBinding.Style;
 import javax.jws.soap.SOAPBinding.Use;
 
 import net.svcret.ejb.api.IRuntimeStatus;
-import net.svcret.ejb.ejb.log.ITransactionLogger;
+import net.svcret.ejb.log.ITransactionLogger;
 
 @WebService(targetNamespace = SynchronousListener.SVC_NS, serviceName = SynchronousListener.SVC_SVCNAME, portName = SynchronousListener.SVC_PORT)
 @Stateless

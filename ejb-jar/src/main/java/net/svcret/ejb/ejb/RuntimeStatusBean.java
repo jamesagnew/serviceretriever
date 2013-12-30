@@ -33,8 +33,10 @@ import javax.ejb.TransactionAttributeType;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
+import net.svcret.admin.shared.model.IThrottleable;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.Messages;
+import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.SrBeanIncomingResponse.Failure;
 import net.svcret.ejb.api.IConfigService;
@@ -44,13 +46,13 @@ import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
+import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStatsPk;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.BasePersStats;
 import net.svcret.ejb.model.entity.BasePersStatsPk;
-import net.svcret.ejb.model.entity.IThrottleable;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
@@ -195,16 +197,26 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		myNodeStatus = myDao.getOrCreateNodeStatus(myConfigSvc.getNodeId());
 	}
 
+	@EJB
+	private IServiceRegistry mySvcRegistry;
+	
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override
-	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, PersServiceVersionMethod theMethod, PersUser theUser, SrBeanIncomingResponse theHttpResponse,
-			InvocationResponseResultsBean theInvocationResponseResultsBean, Long theThrottleFullIfAny) throws UnexpectedFailureException {
+	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, InvocationResultsBean results, PersUser theUser, SrBeanIncomingResponse theHttpResponse,
+			InvocationResponseResultsBean theInvocationResponseResultsBean) throws UnexpectedFailureException, InvocationFailedDueToInternalErrorException {
 		Validate.notNull(theInvocationTime, "InvocationTime");
-		Validate.notNull(theMethod, "Method");
+		Validate.notNull(results, "InvocationResults");
 		Validate.notNull(theInvocationResponseResultsBean, "InvocationResponseResults");
 
 		ourLog.trace("Going to record method invocation");
 
+		PersServiceVersionMethod method;
+		if (results.getMethodDefinition() != null) {
+			method = results.getMethodDefinition();
+		} else {
+			method = mySvcRegistry.getOrCreateUnknownMethodEntryForServiceVersion(results.getServiceVersion());
+		}
+		
 		switch (theInvocationResponseResultsBean.getResponseType()) {
 		case SUCCESS:
 			myUnflushedNodeSuccessMethodInvocations.incrementAndGet();
@@ -230,17 +242,17 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		 * Record method statistics
 		 */
 		InvocationStatsIntervalEnum interval = MINUTE;
-		PersInvocationMethodSvcverStatsPk statsPk = new PersInvocationMethodSvcverStatsPk(interval, theInvocationTime, theMethod);
-		doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, statsPk, theThrottleFullIfAny);
+		PersInvocationMethodSvcverStatsPk statsPk = new PersInvocationMethodSvcverStatsPk(interval, theInvocationTime, method);
+		doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, statsPk, results.getThrottleTimeIfAny());
 
 		/*
 		 * Record user/anon method statistics
 		 */
 		if (theUser != null) {
-			PersInvocationMethodUserStatsPk uStatsPk = new PersInvocationMethodUserStatsPk(interval, theInvocationTime, theMethod, theUser);
-			doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, uStatsPk, theThrottleFullIfAny);
+			PersInvocationMethodUserStatsPk uStatsPk = new PersInvocationMethodUserStatsPk(interval, theInvocationTime, method, theUser);
+			doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, uStatsPk, results.getThrottleTimeIfAny());
 
-			doUpdateUserStatus(theMethod, theInvocationResponseResultsBean, theUser, theInvocationTime);
+			doUpdateUserStatus(method, theInvocationResponseResultsBean, theUser, theInvocationTime);
 		}
 
 		if (theHttpResponse != null) {
@@ -263,7 +275,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				doRecordUrlStatus(true, wasFault, status, message, theHttpResponse.getContentType(), theHttpResponse.getCode());
 
 				// Handle sticky sessions if needed
-				BasePersServiceVersion svcVer = theMethod.getServiceVersion();
+				BasePersServiceVersion svcVer = method.getServiceVersion();
 				PersHttpClientConfig clientCfg = svcVer.getHttpClientConfig();
 				switch (clientCfg.getUrlSelectionPolicy()) {
 				case PREFER_LOCAL:
@@ -320,7 +332,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		/*
 		 * Record Service Version status
 		 */
-		PersServiceVersionStatus serviceVersionStatus = theMethod.getServiceVersion().getStatus();
+		PersServiceVersionStatus serviceVersionStatus = method.getServiceVersion().getStatus();
 		serviceVersionStatus = getStatusForPk(serviceVersionStatus, serviceVersionStatus.getPid());
 
 		switch (theInvocationResponseResultsBean.getResponseType()) {

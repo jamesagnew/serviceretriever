@@ -33,14 +33,14 @@ import net.svcret.admin.shared.model.DtoAuthenticationHostLocalDatabase;
 import net.svcret.admin.shared.model.DtoClientSecurityJsonRpcNamedParameter;
 import net.svcret.admin.shared.model.DtoConfig;
 import net.svcret.admin.shared.model.DtoDomain;
+import net.svcret.admin.shared.model.DtoDomainList;
+import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoPropertyCapture;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
-import net.svcret.admin.shared.model.DtoDomainList;
-import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
@@ -71,7 +71,6 @@ import net.svcret.admin.shared.model.Pair;
 import net.svcret.admin.shared.model.PartialUserListRequest;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.model.TimeRange;
-import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IKeystoreService;
@@ -83,6 +82,7 @@ import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.RequestType;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.StatusesBean;
 import net.svcret.ejb.ejb.DaoBean;
 import net.svcret.ejb.ejb.RuntimeStatusBean;
@@ -128,6 +128,7 @@ import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
+import net.svcret.ejb.model.entity.PersServiceVersionThrottle;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.ejb.model.entity.PersStickySessionUrlBinding;
@@ -649,9 +650,11 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			retVal.setPassword(theUser.getChangePassword());
 		}
 
-		retVal.setThrottleMaxRequests(theUser.getThrottle().getMaxRequests());
-		retVal.setThrottlePeriod(theUser.getThrottle().getPeriod());
-		retVal.setThrottleMaxQueueDepth(theUser.getThrottle().getQueue());
+		if (theUser.getThrottle() != null) {
+			retVal.setThrottleMaxRequests(theUser.getThrottle().getThrottleMaxRequests());
+			retVal.setThrottlePeriod(theUser.getThrottle().getThrottlePeriod());
+			retVal.setThrottleMaxQueueDepth(theUser.getThrottle().getThrottleMaxQueueDepth());
+		}
 
 		retVal.populateKeepRecentTransactionsFromDto(theUser);
 
@@ -1410,6 +1413,16 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		BasePersServiceVersion existingVersion = BasePersServiceVersion.fromDto(theVersion, service, myDao, myServiceRegistry);
 
+		// Throttle
+		if (existingVersion.getThrottle() != null && theVersion.getThrottle() == null) {
+			existingVersion.setThrottle(null);
+		} else if (existingVersion.getThrottle() == null && theVersion.getThrottle() != null) {
+			existingVersion.setThrottle(PersServiceVersionThrottle.fromDto(theVersion.getThrottle(), existingVersion));
+		} else if (existingVersion.getThrottle() != null && theVersion.getThrottle() != null) {
+			existingVersion.getThrottle().merge(theVersion.getThrottle());
+		}
+
+		// Resources
 		Map<String, PersServiceVersionResource> uriToResource = existingVersion.getUriToResource();
 		Set<String> urls = new HashSet<String>();
 		for (GResource next : theResources) {
@@ -1880,6 +1893,13 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		retVal.setContactEmails(thePersUser.getContact().getEmailAddresses());
 		thePersUser.populateKeepRecentTransactionsToDto(retVal);
 
+		if (thePersUser.getThrottleMaxRequests() != null) {
+			retVal.setThrottle(new GThrottle());
+			retVal.getThrottle().setThrottleMaxRequests(thePersUser.getThrottleMaxRequests());
+			retVal.getThrottle().setThrottlePeriod(thePersUser.getThrottlePeriod());
+			retVal.getThrottle().setThrottleMaxQueueDepth(thePersUser.getThrottleMaxQueueDepth());
+		}
+
 		if (theLoadStats) {
 			PersUserStatus status = thePersUser.getStatus();
 			retVal.setStatsInitialized(new Date());
@@ -1889,11 +1909,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			myRuntimeStatusQuerySvc.extract60MinuteUserStats(thePersUser, accumulator);
 
 			accumulator.populateDto(retVal);
-
-			retVal.setThrottle(new GThrottle());
-			retVal.getThrottle().setMaxRequests(thePersUser.getThrottleMaxRequests());
-			retVal.getThrottle().setPeriod(thePersUser.getThrottlePeriod());
-			retVal.getThrottle().setQueue(thePersUser.getThrottleMaxQueueDepth());
 
 		}
 

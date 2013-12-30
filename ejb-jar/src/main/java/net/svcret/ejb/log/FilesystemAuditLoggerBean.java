@@ -1,4 +1,4 @@
-package net.svcret.ejb.ejb.log;
+package net.svcret.ejb.log;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -252,6 +252,9 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 
 			addItem(writer, "Date", myItemDateFormat.format(next.myRequestTime));
 			addItem(writer, "Latency", Long.toString(next.myTransactionMillis));
+			if (next.myThrottleTimeIfAny != null) {
+				addItem(writer, "ThrottleLatency", Long.toString(next.myThrottleTimeIfAny));
+			}
 			addItem(writer, "ResponseType", next.myResponseType.name());
 			if (StringUtils.isNotBlank(next.myFailureDescription)) {
 				addItem(writer, "FailureDescription", next.myFailureDescription);
@@ -412,6 +415,7 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 		private String myUsername;
 		private Long myUserPid;
 		private Map<String, String> myPropertyCaptures;
+		private Long myThrottleTimeIfAny;
 
 		public UnflushedAuditRecord(Date theRequestTime, SrBeanIncomingRequest theRequest, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, InvocationResultsBean theInvocationResults,
 				InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl, SrBeanIncomingResponse theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, AuditLogTypeEnum theType) {
@@ -451,6 +455,7 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 			} else {
 				myPropertyCaptures = theInvocationResults.getPropertyCaptures();
 			}
+			myThrottleTimeIfAny = theInvocationResults != null ? theInvocationResults.getThrottleTimeIfAny() : null;
 
 			assert myAuditRecordType != null;
 			assert myRequestTime != null;

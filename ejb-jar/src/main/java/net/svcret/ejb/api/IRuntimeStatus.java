@@ -8,6 +8,7 @@ import javax.ejb.Local;
 
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.ejb.api.SrBeanIncomingResponse.Failure;
+import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -39,9 +40,10 @@ public interface IRuntimeStatus {
 	 * @param theInvocationResponseResultsBean
 	 * @throws ProcessingException
 	 * @throws UnexpectedFailureException
+	 * @throws InvocationFailedDueToInternalErrorException 
 	 */
-	void recordInvocationMethod(Date theInvocationTime, int theRequestLength, PersServiceVersionMethod theMethod, PersUser theAuthorizedUser, SrBeanIncomingResponse theHttpResponse,
-			InvocationResponseResultsBean theInvocationResponseResultsBean, Long theThrottleDelayIfAny) throws UnexpectedFailureException;
+	void recordInvocationMethod(Date theInvocationTime, int theRequestLength, InvocationResultsBean results, PersUser theAuthorizedUser, SrBeanIncomingResponse theHttpResponse,
+			InvocationResponseResultsBean theInvocationResponseResultsBean) throws UnexpectedFailureException, InvocationFailedDueToInternalErrorException;
 
 	/**
 	 * Records a single invocation requesting a static resource
@@ -60,5 +62,6 @@ public interface IRuntimeStatus {
 	void updatedStickySessionBinding(DtoStickySessionUrlBinding theBinding);
 
 	void recordUrlSuccess(PersServiceVersionUrl theUrl, boolean theWasFault, String theMessage, String theContentType, int theResponseCode);
+
 
 }

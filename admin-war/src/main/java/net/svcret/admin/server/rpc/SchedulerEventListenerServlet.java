@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IScheduler;
-import net.svcret.ejb.ejb.log.ITransactionLogger;
+import net.svcret.ejb.log.ITransactionLogger;
 
 @WebServlet(urlPatterns = { "/doSecondaryFlush" })
 public class SchedulerEventListenerServlet extends HttpServlet {

@@ -4,11 +4,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 
 import org.apache.commons.lang3.Validate;
+
+import com.google.common.annotations.VisibleForTesting;
 
 public class InvocationResultsBean {
 
@@ -17,13 +20,15 @@ public class InvocationResultsBean {
 	private PersServiceVersionMethod myMethodDefinition;
 	private Map<String, List<String>> myMethodHeaders;
 	private String myMethodRequestBody;
+	private Map<String, String> myPropertyCaptures;
 	private ResultTypeEnum myResultType;
+	private BasePersServiceVersion myServiceVersion;
 	private String myStaticResourceContentTyoe;
 	private PersServiceVersionResource myStaticResourceDefinition;
 	private Map<String, List<String>> myStaticResourceHeaders;
 	private String myStaticResourceText;
 	private String myStaticResourceUrl;
-	private Map<String, String> myPropertyCaptures;
+	private Long myThrottleTimeIfAny;
 
 	public void addCredentials(PersBaseServerAuth<?, ?> theServerAuth, ICredentialGrabber theCredentials) {
 		Validate.notNull(theCredentials);
@@ -39,7 +44,7 @@ public class InvocationResultsBean {
 		if (myPropertyCaptures == null) {
 			myPropertyCaptures = new HashMap<String, String>();
 		}
-		myPropertyCaptures.put(thePropertyName,theResult);
+		myPropertyCaptures.put(thePropertyName, theResult);
 	}
 
 	/**
@@ -80,7 +85,6 @@ public class InvocationResultsBean {
 		return myMethodRequestBody;
 	}
 
-
 	public Map<String, String> getPropertyCaptures() {
 		return myPropertyCaptures;
 	}
@@ -90,6 +94,10 @@ public class InvocationResultsBean {
 	 */
 	public ResultTypeEnum getResultType() {
 		return myResultType;
+	}
+
+	public BasePersServiceVersion getServiceVersion() {
+		return myServiceVersion;
 	}
 
 	/**
@@ -127,6 +135,10 @@ public class InvocationResultsBean {
 		return myStaticResourceUrl;
 	}
 
+	public Long getThrottleTimeIfAny() {
+		return myThrottleTimeIfAny;
+	}
+
 	public void setMethodHeaders(Map<String, List<String>> theMethodHeaders) {
 		myMethodHeaders = theMethodHeaders;
 	}
@@ -135,6 +147,7 @@ public class InvocationResultsBean {
 		validateResultTypeNotSet();
 		myResultType = ResultTypeEnum.METHOD;
 		myMethodDefinition = theMethod;
+		myServiceVersion = theMethod.getServiceVersion();
 		myMethodRequestBody = theRequestBody;
 		myMethodContentType = theContentType;
 	}
@@ -149,6 +162,14 @@ public class InvocationResultsBean {
 		myStaticResourceText = theResourceText;
 	}
 
+	public void setServiceVersion(BasePersServiceVersion theServiceVersion) {
+		myServiceVersion = theServiceVersion;
+	}
+
+	public void setThrottleTimeIfAny(Long theThrottleTimeIfAny) {
+		myThrottleTimeIfAny = theThrottleTimeIfAny;
+	}
+
 	private void validateResultTypeNotSet() {
 		if (myResultType != null) {
 			throw new IllegalStateException("Request type already set");
@@ -161,6 +182,14 @@ public class InvocationResultsBean {
 
 		STATIC_RESOURCE
 
+	}
+
+	@VisibleForTesting
+	public static InvocationResultsBean forUnitTest(PersServiceVersionMethod theM1) {
+		InvocationResultsBean retVal = new InvocationResultsBean();
+		retVal.myMethodDefinition=theM1;
+		retVal.myServiceVersion = theM1.getServiceVersion();
+		return retVal;
 	}
 
 }

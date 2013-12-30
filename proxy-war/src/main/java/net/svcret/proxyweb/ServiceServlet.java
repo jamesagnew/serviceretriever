@@ -28,13 +28,13 @@ import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.SrBeanOutgoingResponse;
 import net.svcret.ejb.api.RequestType;
-import net.svcret.ejb.ejb.ThrottleQueueFullException;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestOrResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
-import net.svcret.ejb.ex.ThrottleException;
 import net.svcret.ejb.ex.UnknownRequestException;
+import net.svcret.ejb.throttle.ThrottleException;
+import net.svcret.ejb.throttle.ThrottleQueueFullException;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.net.URLCodec;
@@ -140,10 +140,9 @@ public class ServiceServlet extends HttpServlet {
 		} catch (ThrottleException e) {
 
 			AsyncContext asyncContext = theReq.startAsync();
-			e.setAsyncContext(asyncContext);
 
 			try {
-				myOrch.enqueueThrottledRequest(e);
+				myOrch.enqueueThrottledRequest(e, asyncContext);
 			} catch (ThrottleQueueFullException e1) {
 				ourLog.info("Request was throttled and queue was full for URL: {}", theReq.getRequestURL());
 				sendThrottleQueueFullFailure(theResp);

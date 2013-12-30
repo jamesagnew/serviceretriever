@@ -117,7 +117,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myServiceVersion")
 	private Collection<PersMonitorAppliesTo> myMonitorRules;
 
-	@OneToOne(optional=true, mappedBy="mySvcVer", orphanRemoval=true)
+	@OneToOne(optional=true, mappedBy="myServiceVersion", orphanRemoval=true, cascade=CascadeType.ALL)
 	private PersServiceVersionThrottle myThrottle;
 
 	@Transient
@@ -914,7 +914,6 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		myVersionId = theVersionId;
 	}
 
-	// TODO: rename this method
 	public BaseDtoServiceVersion toDto() throws UnexpectedFailureException {
 		Set<Long> emptySet = Collections.emptySet();
 		return toDto(emptySet, null, null, emptySet, emptySet);
@@ -936,6 +935,10 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		retVal.setParentServicePid(this.getService().getPid());
 		retVal.setDescription(this.getDescription());
 		retVal.setServerSecurityMode(this.getServerSecurityMode());
+		
+		if (this.getThrottle() != null) {
+			retVal.setThrottle(this.getThrottle().toDto());
+		}
 
 		populateKeepRecentTransactionsToDto(retVal);
 		populateServiceCatalogItemToDto(retVal);

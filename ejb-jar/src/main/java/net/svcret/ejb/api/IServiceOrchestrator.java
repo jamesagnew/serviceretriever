@@ -1,7 +1,6 @@
 package net.svcret.ejb.api;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -9,31 +8,32 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ejb.Local;
-
-import org.apache.commons.lang3.builder.ToStringBuilder;
+import javax.servlet.AsyncContext;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
-import net.svcret.ejb.ejb.ThrottleQueueFullException;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestOrResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
-import net.svcret.ejb.ex.ThrottleException;
 import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.invoker.IServiceInvoker;
 import net.svcret.ejb.invoker.soap.InvocationFailedException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
+import net.svcret.ejb.throttle.ThrottleException;
+import net.svcret.ejb.throttle.ThrottleQueueFullException;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 @Local
 public interface IServiceOrchestrator {
 
-	void enqueueThrottledRequest(ThrottleException theE) throws ThrottleQueueFullException;
+	void enqueueThrottledRequest(ThrottleException theE, AsyncContext theAsyncContext) throws ThrottleQueueFullException;
 
 	IServiceInvoker getServiceInvoker(BasePersServiceVersion theServiceVersion);
 
-	SrBeanOutgoingResponse handlePreviouslyThrottledRequest(InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization, SrBeanIncomingRequest theRequest, long theThrottleTime)
+	SrBeanOutgoingResponse handlePreviouslyThrottledRequest(InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization, SrBeanIncomingRequest theRequest)
 			throws ProcessingException, SecurityFailureException, InvocationFailedDueToInternalErrorException;
 
 	/**

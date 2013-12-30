@@ -1,15 +1,16 @@
-package net.svcret.ejb.api;
+package net.svcret.ejb.throttle;
 
 import java.util.concurrent.Future;
 
+import javax.servlet.AsyncContext;
+
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
-import net.svcret.ejb.ejb.ThrottleQueueFullException;
-import net.svcret.ejb.ejb.ThrottlingService.ThrottledTaskQueue;
-import net.svcret.ejb.ex.ThrottleException;
+import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
 
 public interface IThrottlingService {
 
-	void scheduleThrottledTaskForLaterExecution(ThrottleException theTask) throws ThrottleQueueFullException;
+	void scheduleThrottledTaskForLaterExecution(ThrottleException theTask, AsyncContext theAsyncContext) throws ThrottleQueueFullException;
 
 	Future<Void> serviceThrottledRequests(ThrottledTaskQueue theTaskQueue);
 

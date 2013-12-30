@@ -23,6 +23,7 @@ public class DtoDomain extends BaseDtoServiceCatalogItem {
 	@XmlElement(name = "config_ServiceList")
 	private GServiceList myServiceList = new GServiceList();
 
+	@XmlElement(name = "config_Description")
 	private String myDescription;
 
 	public GServiceList getServiceList() {

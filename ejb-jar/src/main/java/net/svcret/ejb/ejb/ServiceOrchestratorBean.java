@@ -16,6 +16,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.servlet.AsyncContext;
 
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
@@ -31,21 +32,18 @@ import net.svcret.ejb.api.ISecurityService.AuthorizationRequestBean;
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceRegistry;
-import net.svcret.ejb.api.IThrottlingService;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean.ResultTypeEnum;
 import net.svcret.ejb.api.SrBeanOutgoingResponse;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.UrlPoolBean;
-import net.svcret.ejb.ejb.log.ITransactionLogger;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationRequestOrResponseFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
-import net.svcret.ejb.ex.ThrottleException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.ex.UnknownRequestException;
 import net.svcret.ejb.invoker.IServiceInvoker;
@@ -55,6 +53,7 @@ import net.svcret.ejb.invoker.jsonrpc.IServiceInvokerJsonRpc20;
 import net.svcret.ejb.invoker.soap.IServiceInvokerSoap11;
 import net.svcret.ejb.invoker.soap.InvocationFailedException;
 import net.svcret.ejb.invoker.virtual.IServiceInvokerVirtual;
+import net.svcret.ejb.log.ITransactionLogger;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
@@ -68,6 +67,9 @@ import net.svcret.ejb.model.entity.http.PersHttpBasicClientAuth;
 import net.svcret.ejb.model.entity.http.PersHttpBasicCredentialGrabber;
 import net.svcret.ejb.model.entity.http.PersHttpBasicServerAuth;
 import net.svcret.ejb.propcap.IPropertyCaptureService;
+import net.svcret.ejb.throttle.IThrottlingService;
+import net.svcret.ejb.throttle.ThrottleException;
+import net.svcret.ejb.throttle.ThrottleQueueFullException;
 import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.codec.binary.Base64;
@@ -138,7 +140,9 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		/*
 		 * Process request
 		 */
-		InvocationResultsBean results = null;
+		InvocationResultsBean results = new InvocationResultsBean();
+		results.setServiceVersion(serviceVersion);
+		
 		AuthorizationResultsBean authorized;
 		PersServiceVersionMethod invokingMethod = null;
 		try {
@@ -165,15 +169,15 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 		} catch (UnknownRequestException e) {
 			ourLog.debug("Exception occurred", e);
-			handleInvocationFailure(theRequest, serviceVersion, invokingMethod, new InvocationRequestFailedException(e), null, null, ResponseTypeEnum.FAIL, results);
+			handleInvocationFailure(theRequest, results, new InvocationRequestFailedException(e), null, ResponseTypeEnum.FAIL);
 			throw e;
 		} catch (InvocationRequestOrResponseFailedException e) {
 			ourLog.debug("Exception occurred", e);
-			handleInvocationFailure(theRequest, serviceVersion, invokingMethod, e, null, null, ResponseTypeEnum.FAIL, results);
+			handleInvocationFailure(theRequest, results, e, null, ResponseTypeEnum.FAIL);
 			throw e;
 		} catch (InvocationFailedDueToInternalErrorException e) {
 			ourLog.debug("Exception occurred", e);
-			handleInvocationFailure(theRequest, serviceVersion, invokingMethod, e, null, null, ResponseTypeEnum.FAIL, results);
+			handleInvocationFailure(theRequest, results, e, null, ResponseTypeEnum.FAIL);
 			throw e;
 		} catch (ThrottleException e) {
 			ourLog.debug("Exception occurred", e);
@@ -189,11 +193,11 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			throw e;
 		} catch (SecurityFailureException e) {
 			ourLog.debug("Exception occurred", e);
-			handleInvocationFailure(theRequest, serviceVersion, invokingMethod, new InvocationRequestFailedException(e), null, null, ResponseTypeEnum.SECURITY_FAIL, results);
+			handleInvocationFailure(theRequest, results, new InvocationRequestFailedException(e), null, ResponseTypeEnum.SECURITY_FAIL);
 			throw e;
 		} catch (Exception e) {
 			ourLog.error("Unexpected failure", e);
-			handleInvocationFailure(theRequest, serviceVersion, invokingMethod, new InvocationRequestFailedException(e), null, null, ResponseTypeEnum.FAIL, results);
+			handleInvocationFailure(theRequest, results, new InvocationRequestFailedException(e), null, ResponseTypeEnum.FAIL);
 			throw new ProcessingException(e);
 		}
 
@@ -203,7 +207,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		ourLog.debug("Request is of type: {}", results.getResultType());
 		SrBeanOutgoingResponse retVal;
 		try {
-			retVal = invokeProxiedService(theRequest, results, authorized, null);
+			retVal = invokeProxiedService(theRequest, results, authorized);
 		} catch (InvocationFailedDueToInternalErrorException e) {
 			throw new ProcessingException(e);
 		}
@@ -211,21 +215,14 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		return retVal;
 	}
 
-	private void handleInvocationFailure(SrBeanIncomingRequest theRequest, BasePersServiceVersion serviceVersion, PersServiceVersionMethod theMethodIfKnown, InvocationFailedException theInvocationFailure,
-			PersUser theUserIfKnown, Long theThrottleDelayIfAnyAndKnown, ResponseTypeEnum theResponseType, InvocationResultsBean theInvocationResults) throws ProcessingException {
+	private void handleInvocationFailure(SrBeanIncomingRequest theRequest, InvocationResultsBean results, InvocationFailedException theInvocationFailure,
+			PersUser theUserIfKnown,ResponseTypeEnum theResponseType) throws ProcessingException {
 		theRequest.drainInputMessage();
 
 		try {
-			PersServiceVersionMethod method;
-			if (theMethodIfKnown != null) {
-				method = theMethodIfKnown;
-			} else {
-				method = mySvcRegistry.getOrCreateUnknownMethodEntryForServiceVersion(serviceVersion);
-			}
 			InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
 			invocationResponseResultsBean.setResponseType(theResponseType);
-			myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), theRequest.getRequestBody().length(), method, theUserIfKnown, null, invocationResponseResultsBean,
-					theThrottleDelayIfAnyAndKnown);
+			myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), theRequest.getRequestBody().length(), results, theUserIfKnown, null, invocationResponseResultsBean);
 		} catch (UnexpectedFailureException e) {
 			// Don't do anything except log here since we're already handling a failure by the
 			// time we get here so this is pretty much the last resort..
@@ -245,19 +242,19 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			}
 
 			// Try to obscure
-			if (theMethodIfKnown != null) {
+			if (results.getMethodDefinition() != null) {
 				try {
-					BasePersServiceVersion svcVer = theMethodIfKnown.getServiceVersion();
+					BasePersServiceVersion svcVer = results.getMethodDefinition().getServiceVersion();
 					IServiceInvoker svcInvoker = getServiceInvoker(svcVer);
-					requestBody = svcInvoker.obscureMessageForLogs(svcVer, requestBody, theMethodIfKnown.getServiceVersion().determineObscureRequestElements());
-					responseBody = svcInvoker.obscureMessageForLogs(svcVer, responseBody, theMethodIfKnown.getServiceVersion().determineObscureResponseElements());
+					requestBody = svcInvoker.obscureMessageForLogs(svcVer, requestBody, svcVer.determineObscureRequestElements());
+					responseBody = svcInvoker.obscureMessageForLogs(svcVer, responseBody, svcVer.determineObscureResponseElements());
 				} catch (Exception e) {
 					ourLog.debug("Failed to obscure message", e);
 				}
 			}
 
-			myTransactionLogger.logTransaction(theRequest, serviceVersion, null, theUserIfKnown, requestBody, theInvocationFailure.toInvocationResponse(), theInvocationFailure.getImplementationUrl(),
-					theInvocationFailure.getHttpResponse(), null, responseBody, theInvocationResults);
+			myTransactionLogger.logTransaction(theRequest, results.getServiceVersion(), null, theUserIfKnown, requestBody, theInvocationFailure.toInvocationResponse(), theInvocationFailure.getImplementationUrl(),
+					theInvocationFailure.getHttpResponse(), null, responseBody, results);
 		} catch (UnexpectedFailureException e1) {
 			// Don't do anything except log here since we're already handling a failure by the
 			// time we get here so this is pretty much the last resort..
@@ -268,9 +265,9 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public SrBeanOutgoingResponse handlePreviouslyThrottledRequest(InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization, SrBeanIncomingRequest theRequest,
-			long theThrottleTime) throws ProcessingException, SecurityFailureException, InvocationFailedDueToInternalErrorException {
-		return invokeProxiedService(theRequest, theInvocationRequest, theAuthorization, theThrottleTime);
+	public SrBeanOutgoingResponse handlePreviouslyThrottledRequest(InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization, SrBeanIncomingRequest theRequest
+			) throws ProcessingException, SecurityFailureException, InvocationFailedDueToInternalErrorException {
+		return invokeProxiedService(theRequest, theInvocationRequest, theAuthorization);
 	}
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
@@ -322,7 +319,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		results = processInvokeService(request, svcVer);
 
 		SidechannelOrchestratorResponseBean retVal;
-		retVal = processRequestMethod(request, results, authorized, null, false, theForceUrl, new Date());
+		retVal = processRequestMethod(request, results, authorized, false, theForceUrl, new Date());
 		
 		return retVal;
 	}
@@ -352,7 +349,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		}
 	}
 
-	private SrBeanOutgoingResponse invokeProxiedService(SrBeanIncomingRequest theRequest, InvocationResultsBean results, AuthorizationResultsBean theAuthorized, Long theThrottleTimeIfAny)
+	private SrBeanOutgoingResponse invokeProxiedService(SrBeanIncomingRequest theRequest, InvocationResultsBean results, AuthorizationResultsBean theAuthorized)
 			throws ProcessingException, SecurityFailureException, InvocationFailedDueToInternalErrorException {
 
 		if (theAuthorized != null && theAuthorized.isAuthorized() != AuthorizationOutcomeEnum.AUTHORIZED) {
@@ -362,7 +359,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			// TODO: also pass authorization outcome to save it
 			try {
 				myRuntimeStatus
-						.recordInvocationMethod(theRequest.getRequestTime(), 0, results.getMethodDefinition(), theAuthorized.getAuthorizedUser(), null, invocationResponse, theThrottleTimeIfAny);
+						.recordInvocationMethod(theRequest.getRequestTime(), 0, results, theAuthorized.getAuthorizedUser(), null, invocationResponse);
 			} catch (UnexpectedFailureException e) {
 				throw new InvocationFailedDueToInternalErrorException(e);
 			}
@@ -381,13 +378,13 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		case METHOD:
 			PersUser user = theAuthorized != null ? theAuthorized.getAuthorizedUser() : null;
 			try {
-				retVal = processRequestMethod(theRequest, results, theAuthorized, theThrottleTimeIfAny, true, null, theRequest.getRequestTime());
+				retVal = processRequestMethod(theRequest, results, theAuthorized, true, null, theRequest.getRequestTime());
 			} catch (InvocationResponseFailedException e) {
-				handleInvocationFailure(theRequest, results.getMethodDefinition().getServiceVersion(), results.getMethodDefinition(), e, user, theThrottleTimeIfAny, ResponseTypeEnum.FAIL, results);
+				handleInvocationFailure(theRequest, results, e, user, ResponseTypeEnum.FAIL);
 				throw new ProcessingException(e);
 			} catch (RuntimeException e) {
-				handleInvocationFailure(theRequest, results.getMethodDefinition().getServiceVersion(), results.getMethodDefinition(), new InvocationResponseFailedException(e,
-						"Invocation failed due to ServiceRetriever internal error: " + e.getMessage(), null), user, theThrottleTimeIfAny, ResponseTypeEnum.FAIL, results);
+				handleInvocationFailure(theRequest, results, new InvocationResponseFailedException(e,
+						"Invocation failed due to ServiceRetriever internal error: " + e.getMessage(), null), user, ResponseTypeEnum.FAIL);
 				throw new ProcessingException(e);
 			}
 			break;
@@ -463,7 +460,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		return svcInvoker;
 	}
 
-	private SidechannelOrchestratorResponseBean processRequestMethod(SrBeanIncomingRequest theRequest, InvocationResultsBean results, AuthorizationResultsBean authorized, Long theThrottleDelayIfAny,
+	private SidechannelOrchestratorResponseBean processRequestMethod(SrBeanIncomingRequest theRequest, InvocationResultsBean results, AuthorizationResultsBean authorized, 
 			boolean theRecordOutcome, PersServiceVersionUrl theForceUrl, Date theRequestStartedTime) throws InvocationResponseFailedException, InvocationFailedDueToInternalErrorException {
 		SidechannelOrchestratorResponseBean retVal;
 		PersServiceVersionMethod method = results.getMethodDefinition();
@@ -521,7 +518,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 		if (theRecordOutcome) {
 			try {
-				myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), requestLength, method, user, httpResponse, invocationResponse, theThrottleDelayIfAny);
+				myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), requestLength, results, user, httpResponse, invocationResponse);
 			} catch (UnexpectedFailureException e) {
 				throw new InvocationFailedDueToInternalErrorException(e);
 			}
@@ -633,8 +630,8 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	}
 
 	@Override
-	public void enqueueThrottledRequest(ThrottleException theE) throws ThrottleQueueFullException {
-		myThrottlingService.scheduleThrottledTaskForLaterExecution(theE);
+	public void enqueueThrottledRequest(ThrottleException theE, AsyncContext theAsyncContext) throws ThrottleQueueFullException {
+		myThrottlingService.scheduleThrottledTaskForLaterExecution(theE, theAsyncContext);
 	}
 
 	/**

@@ -1,8 +1,14 @@
 package net.svcret.ejb.ejb;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.FileReader;
@@ -23,19 +29,15 @@ import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
-import net.svcret.ejb.api.SrBeanIncomingRequest;
-import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IResponseValidator;
-import net.svcret.ejb.api.IThrottlingService;
-import net.svcret.ejb.api.SrBeanOutgoingResponse;
 import net.svcret.ejb.api.RequestType;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
+import net.svcret.ejb.api.SrBeanOutgoingResponse;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
-import net.svcret.ejb.ejb.log.FilesystemAuditLoggerBean;
-import net.svcret.ejb.ejb.log.ITransactionLogger;
-import net.svcret.ejb.ejb.log.TransactionLoggerBean;
 import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
@@ -44,6 +46,9 @@ import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.invoker.hl7.ServiceInvokerHl7OverHttp;
 import net.svcret.ejb.invoker.soap.ServiceInvokerSoap11;
 import net.svcret.ejb.invoker.virtual.ServiceInvokerVirtual;
+import net.svcret.ejb.log.FilesystemAuditLoggerBean;
+import net.svcret.ejb.log.ITransactionLogger;
+import net.svcret.ejb.log.TransactionLoggerBean;
 import net.svcret.ejb.model.entity.BasePersObject;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.BasePersStats;
@@ -63,6 +68,7 @@ import net.svcret.ejb.model.entity.http.PersHttpBasicServerAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
 import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
+import net.svcret.ejb.throttle.IThrottlingService;
 
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
@@ -156,10 +162,10 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		ITransactionLogger transactionLogger = mock(ITransactionLogger.class);
 		mySvc.setTransactionLogger(transactionLogger);
 
-		SrBeanOutgoingResponse resp = null;
+		SrBeanOutgoingResponse resp = provideNull(); // avoid a warning about potential null
 		int reps = 100;
 		long start = System.currentTimeMillis();
-		for (int i = 0; i < reps; i++) {
+		for (int i = 0; i < 100; i++) {
 			String query = "";
 			Reader reader = new StringReader(request);
 			SrBeanIncomingRequest req = new SrBeanIncomingRequest();
@@ -177,6 +183,10 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 
 		ourLog.info("Did {} reps in {}ms for {}ms/rep", new Object[] { reps, delay, (delay / reps) });
 
+	}
+
+	private SrBeanOutgoingResponse provideNull() {
+		return null;
 	}
 
 	@Test

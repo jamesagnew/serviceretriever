@@ -37,6 +37,7 @@ import net.svcret.admin.shared.model.DtoPropertyCapture;
 import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoHttpClientConfig;
+import net.svcret.admin.shared.model.DtoServiceVersionThrottle;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GMonitorRulePassive;
 import net.svcret.admin.shared.model.GResource;
@@ -56,14 +57,15 @@ import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.admin.AdminServiceBean;
+import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.ejb.log.TransactionLoggerBean;
 import net.svcret.ejb.ejb.monitor.MonitorServiceBean;
 import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
 import net.svcret.ejb.invoker.soap.IServiceInvokerSoap11;
+import net.svcret.ejb.log.TransactionLoggerBean;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
@@ -246,7 +248,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		bean.setResponseType(ResponseTypeEnum.SUCCESS);
 
 		myEverythingInvocationTime = new Date();
-		myStatsSvc.recordInvocationMethod(myEverythingInvocationTime, 100, m1, null, httpResponse, bean, null);
+		myStatsSvc.recordInvocationMethod(myEverythingInvocationTime, 100, InvocationResultsBean.forUnitTest(m1), null, httpResponse, bean);
 
 		newEntityManager();
 
@@ -953,6 +955,87 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 	}
 
+	
+	@Test
+	public void testLoadAndSaveSvcVerThrottle() throws Exception {
+
+		newEntityManager();
+
+		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
+		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
+		myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
+
+		newEntityManager();
+
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setHttpClientConfigPid(hcc.getPid());
+		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		// Add one
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertNull(d1s1v1.getThrottle());
+		
+		DtoServiceVersionThrottle dtoThrottle = new DtoServiceVersionThrottle();
+		dtoThrottle.setApplyPerUser(true);
+		dtoThrottle.setThrottleMaxRequests(5);
+		dtoThrottle.setThrottlePeriod(ThrottlePeriodEnum.SECOND);
+		d1s1v1.setThrottle(dtoThrottle);
+		
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertNotNull(d1s1v1.getThrottle());
+		assertEquals(true, d1s1v1.getThrottle().isApplyPerUser());
+		assertEquals(5, d1s1v1.getThrottle().getThrottleMaxRequests().intValue());
+		assertEquals(ThrottlePeriodEnum.SECOND, d1s1v1.getThrottle().getThrottlePeriod());
+
+		newEntityManager();
+
+		// Modify one
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertNotNull(d1s1v1.getThrottle());
+		
+		dtoThrottle = d1s1v1.getThrottle();
+		dtoThrottle.setApplyPerUser(false);
+		dtoThrottle.setThrottleMaxRequests(6);
+		dtoThrottle.setThrottlePeriod(ThrottlePeriodEnum.SECOND);
+		d1s1v1.setThrottle(dtoThrottle);
+		
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertNotNull(d1s1v1.getThrottle());
+		assertEquals(false, d1s1v1.getThrottle().isApplyPerUser());
+		assertEquals(6, d1s1v1.getThrottle().getThrottleMaxRequests().intValue());
+		assertEquals(ThrottlePeriodEnum.SECOND, d1s1v1.getThrottle().getThrottlePeriod());
+
+		newEntityManager();
+
+		// Remove it
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		d1s1v1.setThrottle(null);
+		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertNull(d1s1v1.getThrottle());
+		
+	}
 	
 	@Test
 	public void testLoadAndSaveSvcVerJsonRpc20() throws Exception {

@@ -33,6 +33,7 @@ import javax.persistence.Transient;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
+import net.svcret.admin.shared.model.IThrottleable;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.util.Password;

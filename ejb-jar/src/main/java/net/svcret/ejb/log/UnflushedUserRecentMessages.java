@@ -1,4 +1,4 @@
-package net.svcret.ejb.ejb.log;
+package net.svcret.ejb.log;
 
 import java.util.Date;
 

@@ -20,6 +20,7 @@ import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.admin.AdminServiceBean;
+import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
@@ -161,7 +162,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		httpResponse.setBody("successful response");
 		InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
 		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
-		myStatsSvc.recordInvocationMethod(new Date(), 100, myD1S1V1M1, null, httpResponse, invocationResponseResultsBean, null);
+		myStatsSvc.recordInvocationMethod(new Date(), 100, InvocationResultsBean.forUnitTest(myD1S1V1M1), null, httpResponse, invocationResponseResultsBean);
 		newEntityManager();
 		myStatsSvc.flushStatus();
 		newEntityManager();
@@ -181,7 +182,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		httpResponse.setBody("successful response");
 		invocationResponseResultsBean = new InvocationResponseResultsBean();
 		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
-		myStatsSvc.recordInvocationMethod(new Date(), 100, myD1S1V1M1, null, httpResponse, invocationResponseResultsBean, null);
+		myStatsSvc.recordInvocationMethod(new Date(), 100, InvocationResultsBean.forUnitTest(myD1S1V1M1), null, httpResponse, invocationResponseResultsBean);
 		newEntityManager();
 		myStatsSvc.flushStatus();
 		newEntityManager();
@@ -219,7 +220,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		httpResponse.setBody("successful response");
 		InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
 		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
-		myStatsSvc.recordInvocationMethod(new Date(), 100, myD1S1V1M1, null, httpResponse, invocationResponseResultsBean, null);
+		myStatsSvc.recordInvocationMethod(new Date(), 100, InvocationResultsBean.forUnitTest(myD1S1V1M1), null, httpResponse, invocationResponseResultsBean);
 		newEntityManager();
 		myStatsSvc.flushStatus();
 		newEntityManager();
@@ -236,7 +237,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		httpResponse.setBody("successful response");
 		invocationResponseResultsBean = new InvocationResponseResultsBean();
 		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
-		myStatsSvc.recordInvocationMethod(new Date(), 100, myD1S1V1M1, null, httpResponse, invocationResponseResultsBean, null);
+		myStatsSvc.recordInvocationMethod(new Date(), 100, InvocationResultsBean.forUnitTest(myD1S1V1M1), null, httpResponse, invocationResponseResultsBean);
 		newEntityManager();
 		myStatsSvc.flushStatus();
 		newEntityManager();

@@ -1,4 +1,4 @@
-package net.svcret.ejb.ejb.log;
+package net.svcret.ejb.log;
 
 import static org.mockito.Mockito.*;
 
@@ -12,9 +12,9 @@ import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
-import net.svcret.ejb.ejb.log.FilesystemAuditLoggerBean;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
+import net.svcret.ejb.log.FilesystemAuditLoggerBean;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;

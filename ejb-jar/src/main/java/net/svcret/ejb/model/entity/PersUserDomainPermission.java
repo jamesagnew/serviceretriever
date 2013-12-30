@@ -20,6 +20,8 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
+import net.svcret.admin.shared.model.IThrottleable;
+
 @Table(name = "PX_USER_PERM_DOMAIN", uniqueConstraints = { // -
 @UniqueConstraint(columnNames = { "SVC_DOMAIN_PID", "USER_PID" }) } // -
 )

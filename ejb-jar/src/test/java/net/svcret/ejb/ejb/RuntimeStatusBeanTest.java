@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
+import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
@@ -428,8 +429,8 @@ public class RuntimeStatusBeanTest {
 		invocationResponse.setResponseType(ResponseTypeEnum.SECURITY_FAIL);
 		invocationResponse.setResponseStatusMessage("Security fail");
 
-		svc.recordInvocationMethod(ts1, 0, method, user, null, invocationResponse, null);
-		svc.recordInvocationMethod(ts2, 0, method, user, null, invocationResponse, null);
+		svc.recordInvocationMethod(ts1, 0, InvocationResultsBean.forUnitTest(method), user, null, invocationResponse);
+		svc.recordInvocationMethod(ts2, 0, InvocationResultsBean.forUnitTest(method), user, null, invocationResponse);
 
 		svc.flushStatus();
 
@@ -487,7 +488,7 @@ public class RuntimeStatusBeanTest {
 		SrBeanIncomingResponse httpResponse = null;
 		InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
 		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.THROTTLE_REJ);
-		svc.recordInvocationMethod(invocationTime, requestLength, method, user, httpResponse, invocationResponseResultsBean, null);
+		svc.recordInvocationMethod(invocationTime, requestLength, InvocationResultsBean.forUnitTest(method), user, httpResponse, invocationResponseResultsBean);
 
 		svc.flushStatus();
 

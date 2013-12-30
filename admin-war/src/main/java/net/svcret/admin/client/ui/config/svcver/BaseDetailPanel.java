@@ -1,6 +1,7 @@
 package net.svcret.admin.client.ui.config.svcver;
 
-import static net.svcret.admin.client.AdminPortal.*;
+import static net.svcret.admin.client.AdminPortal.IMAGES;
+import static net.svcret.admin.client.AdminPortal.MSGS;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -22,6 +23,7 @@ import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.PButtonCell;
 import net.svcret.admin.client.ui.components.PCellTable;
 import net.svcret.admin.client.ui.components.PSelectionCell;
+import net.svcret.admin.client.ui.components.ThrottleEditorGrid;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.client.ui.components.UsageSparkline;
 import net.svcret.admin.client.ui.config.KeepRecentTransactionsPanel;
@@ -44,6 +46,8 @@ import net.svcret.admin.shared.model.DtoServerSecurityList;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
+import net.svcret.admin.shared.model.IHasThrottle;
+import net.svcret.admin.shared.model.IThrottleable;
 import net.svcret.admin.shared.model.ServerSecurityEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.util.StringUtil;
@@ -157,6 +161,10 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		add(propCapPanel, "Captures");
 		initPropertyCapturePanel(propCapPanel);
 
+		FlowPanel trottlePanel = new FlowPanel();
+		add(trottlePanel, "Throttle");
+		initThrottlePanel(trottlePanel);
+
 		addSelectionHandler(new SelectionHandler<Integer>() {
 			@Override
 			public void onSelection(SelectionEvent<Integer> theEvent) {
@@ -178,6 +186,89 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 
 		selectTab(0);
 
+	}
+
+
+	private void initThrottlePanel(FlowPanel thePanel) {
+
+		String instructions = "IIf enabled, requests to this service will be throttled per the parameters below.";
+		Label intro = new Label(instructions);
+		thePanel.add(intro);
+
+		/*
+		 * Access URLs
+		 */
+
+		ThrottleEditorGrid grid = new ThrottleEditorGrid() {
+
+			private CheckBox myPerUserCheckbox = new CheckBox("");
+			private CheckBox myPropCapCheckbox = new CheckBox("Per Property Capture: ");
+			private TextBox myPropCapName = new TextBox();
+			
+			@Override
+			public <T2 extends IThrottleable> void setThrottle(IHasThrottle<T2> theThrottle) {
+				super.setThrottle(theThrottle);
+				
+				addRow("Per User", myPerUserCheckbox);
+				addDescription("If enabled, this throttle will be individually applied to each user accessing this service");
+				myPerUserCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+					@Override
+					public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
+						myServiceVersion.getThrottle().setApplyPerUser(theEvent.getValue());
+					}
+				});
+				
+				addRow(myPropCapCheckbox, myPropCapName);
+				addDescription("If enabled, this throttle will be individually applied to the value of the property capture named here");
+				myPropCapCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+					@Override
+					public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
+						if (theEvent.getValue() == true && StringUtil.isBlank(myServiceVersion.getThrottle().getApplyPropCapName())) {
+							myServiceVersion.getThrottle().setApplyPropCapName("PropertyName");
+							updateControls();
+						}else if (theEvent.getValue() == false && StringUtil.isNotBlank(myServiceVersion.getThrottle().getApplyPropCapName())) {
+							myServiceVersion.getThrottle().setApplyPropCapName(null);
+							updateControls();
+						}
+					}
+				});
+				myPropCapName.addValueChangeHandler(new ValueChangeHandler<String>() {
+					@Override
+					public void onValueChange(ValueChangeEvent<String> theEvent) {
+						myServiceVersion.getThrottle().setApplyPropCapName(theEvent.getValue());
+					}
+				});
+			}
+
+			@Override
+			protected void updateControls() {
+				super.updateControls();
+
+				myPerUserCheckbox.setEnabled(myServiceVersion.getThrottle() != null);
+				myPropCapName.setEnabled(myServiceVersion.getThrottle() != null);
+				myPropCapCheckbox.setEnabled(myServiceVersion.getThrottle() != null);
+				
+				if (myServiceVersion.getThrottle() != null) {
+					myPerUserCheckbox.setValue(myServiceVersion.getThrottle().isApplyPerUser(),false);
+					if (StringUtil.isNotBlank(myServiceVersion.getThrottle().getApplyPropCapName())) {
+						myPropCapName.setValue(myServiceVersion.getThrottle().getApplyPropCapName(), false);
+						myPropCapCheckbox.setValue(true, false);
+						myPropCapName.setEnabled(true);
+					}else {
+						myPropCapCheckbox.setValue(false, false);
+						myPropCapName.setEnabled(false);
+					}
+				}
+
+			}
+			
+			
+		};
+		thePanel.add(grid);
+
+		grid.setThrottle(myServiceVersion);
+		
+		
 	}
 
 

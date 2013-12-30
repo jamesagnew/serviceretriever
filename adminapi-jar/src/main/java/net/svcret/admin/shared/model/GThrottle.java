@@ -2,38 +2,46 @@ package net.svcret.admin.shared.model;
 
 import java.io.Serializable;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 
-public class GThrottle implements Serializable {
+@XmlAccessorType(XmlAccessType.FIELD)
+public class GThrottle implements Serializable, IThrottleable {
 
 	private static final long serialVersionUID = 1L;
 
-	private Integer myMaxRequests;
-	private ThrottlePeriodEnum myPeriod;
-	private Integer myQueue;
+	@XmlElement(name = "config_ThrottleMaxQueueDepth")
+	private Integer myThrottleMaxQueueDepth;
+	@XmlElement(name = "config_ThrottleMaxRequests")
+	private Integer myThrottleMaxRequests;
+	@XmlElement(name = "config_ThrottlePeriod")
+	private ThrottlePeriodEnum myThrottlePeriod;
 
-	public Integer getMaxRequests() {
-		return myMaxRequests;
+	public Integer getThrottleMaxQueueDepth() {
+		return myThrottleMaxQueueDepth;
 	}
 
-	public void setMaxRequests(Integer theMaxRequests) {
-		myMaxRequests = theMaxRequests;
+	public Integer getThrottleMaxRequests() {
+		return myThrottleMaxRequests;
 	}
 
-	public ThrottlePeriodEnum getPeriod() {
-		return myPeriod;
+	public ThrottlePeriodEnum getThrottlePeriod() {
+		return myThrottlePeriod;
 	}
 
-	public void setPeriod(ThrottlePeriodEnum thePeriod) {
-		myPeriod = thePeriod;
+	public void setThrottleMaxQueueDepth(Integer theThrottleMaxQueueDepth) {
+		myThrottleMaxQueueDepth = theThrottleMaxQueueDepth;
 	}
 
-	public Integer getQueue() {
-		return myQueue;
+	public void setThrottleMaxRequests(Integer theThrottleMaxRequests) {
+		myThrottleMaxRequests = theThrottleMaxRequests;
 	}
 
-	public void setQueue(Integer theQueue) {
-		myQueue = theQueue;
+	public void setThrottlePeriod(ThrottlePeriodEnum theThrottlePeriod) {
+		myThrottlePeriod = theThrottlePeriod;
 	}
 
 }

@@ -10,7 +10,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 
-public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem implements IProvidesUrlCount {
+public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem implements IProvidesUrlCount, IHasThrottle<DtoServiceVersionThrottle> {
 
 	public static final String METHOD_NAME_UNKNOWN = "SVCRETUNKNOWNMETHOD";
 
@@ -67,6 +67,8 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 
 	@XmlElement(name = "config_Urls")
 	private DtoServiceVersionUrlList myServiceUrlList;
+
+	private DtoServiceVersionThrottle myThrottle;
 
 	@XmlElement(name = "config_UseDefaultProxyPath")
 	private boolean myUseDefaultProxyPath = true;
@@ -138,6 +140,10 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 		return myServiceMethodList;
 	}
 
+	public String getParentServiceName() {
+		return myParentServiceName;
+	}
+
 	// public Set<String> getObscureRequestElementsInLog() {
 	// return myObscureRequestElementsInLog;
 	// }
@@ -145,10 +151,6 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 	// public Set<String> getObscureResponseElementsInLog() {
 	// return myObscureResponseElementsInLog;
 	// }
-
-	public String getParentServiceName() {
-		return myParentServiceName;
-	}
 
 	public long getParentServicePid() {
 		return myParentServicePid;
@@ -181,6 +183,10 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 		return myServerSecurityMode;
 	}
 
+	public DtoServiceVersionThrottle getThrottle() {
+		return myThrottle;
+	}
+
 	public DtoServiceVersionUrlList getUrlList() {
 		return myServiceUrlList;
 	}
@@ -206,6 +212,11 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 	@Override
 	public boolean hideDashboardRowWhenExpanded() {
 		return false;
+	}
+
+	@Override
+	public DtoServiceVersionThrottle instantiateNew() {
+		return new DtoServiceVersionThrottle();
 	}
 
 	/**
@@ -253,6 +264,8 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 		if (obj.getResourcePointerList() != null) {
 			getResourcePointerList().mergeResults(obj.getResourcePointerList());
 		}
+
+		setThrottle(obj.getThrottle());
 		
 		getPropertyCaptures().clear();
 		getPropertyCaptures().addAll(obj.getPropertyCaptures());
@@ -321,6 +334,10 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 
 	public void setServerSecurityMode(ServerSecurityModeEnum theServerSecurityMode) {
 		myServerSecurityMode = theServerSecurityMode;
+	}
+
+	public void setThrottle(DtoServiceVersionThrottle theThrottle) {
+		myThrottle = theThrottle;
 	}
 
 	public void setUseDefaultProxyPath(boolean theDefaultProxyPath) {
