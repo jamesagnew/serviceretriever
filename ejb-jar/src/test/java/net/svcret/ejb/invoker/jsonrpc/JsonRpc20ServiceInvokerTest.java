@@ -9,8 +9,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
-import net.svcret.ejb.api.HttpRequestBean;
-import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
@@ -114,7 +114,7 @@ public class JsonRpc20ServiceInvokerTest {
 		when(def.getMethod("getCanonicalMappings")).thenReturn(method);
 
 		DefaultAnswer.setRunTime();
-		HttpRequestBean req = new HttpRequestBean();
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
 		req.setPath("/");
 		req.setQuery("");
 		req.addHeader("Content-Type", "application/json");
@@ -165,7 +165,7 @@ public class JsonRpc20ServiceInvokerTest {
 		when(def.getMethod("getCanonicalMappings")).thenReturn(method);
 
 		DefaultAnswer.setRunTime();
-		HttpRequestBean req = new HttpRequestBean();
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
 		req.setPath("/");
 		req.setQuery("");
 		req.addHeader("Content-Type", "application/json");
@@ -218,7 +218,7 @@ public class JsonRpc20ServiceInvokerTest {
 		when(def.getMethod("getCanonicalMappings")).thenReturn(method);
 
 		DefaultAnswer.setRunTime();
-		req = new HttpRequestBean();
+		req = new SrBeanIncomingRequest();
 		req.setPath("/");
 		req.setQuery("");
 		req.addHeader("Content-Type", "application/json");
@@ -261,7 +261,7 @@ public class JsonRpc20ServiceInvokerTest {
 		when(def.getServerAuths()).thenReturn(new ArrayList<PersBaseServerAuth<?, ?>>());
 
 		DefaultAnswer.setRunTime();
-		HttpRequestBean req = new HttpRequestBean();
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
 		req.setPath("/");
 		req.setQuery("");
 		req.addHeader("Content-Type", "application/json");
@@ -302,7 +302,7 @@ public class JsonRpc20ServiceInvokerTest {
 			when(def.getServerAuths()).thenReturn(new ArrayList<PersBaseServerAuth<?, ?>>());
 
 			try {
-				HttpRequestBean req = new HttpRequestBean();
+				SrBeanIncomingRequest req = new SrBeanIncomingRequest();
 				req.setPath("/");
 				req.setQuery("");
 				req.addHeader("Content-Type", "application/json");
@@ -351,7 +351,7 @@ public class JsonRpc20ServiceInvokerTest {
 				"}"; // -
 		//@formatter:on
 
-		HttpRequestBean req = new HttpRequestBean();
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
 		req.setPath("/");
 		req.setQuery("");
 		req.addHeader("Content-Type", "application/json");
@@ -431,7 +431,7 @@ public class JsonRpc20ServiceInvokerTest {
 		when(def.getServerAuths()).thenReturn(new ArrayList<PersBaseServerAuth<?, ?>>());
 
 		DefaultAnswer.setRunTime();
-		HttpRequestBean req = new HttpRequestBean();
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
 		req.setPath("/");
 		req.setQuery("");
 		req.addHeader("Content-Type", "application/json");
@@ -485,7 +485,7 @@ public class JsonRpc20ServiceInvokerTest {
 	public void testProcessInvocationResponse() throws Exception{
 
 		JsonRpc20ServiceInvoker svc = new JsonRpc20ServiceInvoker();
-		HttpResponseBean respBean = new HttpResponseBean();
+		SrBeanIncomingResponse respBean = new SrBeanIncomingResponse();
 
 		String response = "{\"jsonrpc\": \"2.0\", \"result\": -19, \"id\": 2}";
 		respBean.setBody(response);
@@ -505,7 +505,7 @@ public class JsonRpc20ServiceInvokerTest {
 	public void testProcessInvocationResponseWithNumbers() throws Exception{
 
 		JsonRpc20ServiceInvoker svc = new JsonRpc20ServiceInvoker();
-		HttpResponseBean respBean = new HttpResponseBean();
+		SrBeanIncomingResponse respBean = new SrBeanIncomingResponse();
 
 		respBean.setBody("{\"jsonrpc\": \"2.0\", \"result\": -19, \"id\": 2}");
 		InvocationResponseResultsBean resp = svc.processInvocationResponse(null, respBean);
@@ -529,7 +529,7 @@ public class JsonRpc20ServiceInvokerTest {
 	public void testProcessLargeInvocationResponse() throws Exception{
 
 		JsonRpc20ServiceInvoker svc = new JsonRpc20ServiceInvoker();
-		HttpResponseBean respBean = new HttpResponseBean();
+		SrBeanIncomingResponse respBean = new SrBeanIncomingResponse();
 
 		String response = IOUtils.toString(JsonRpc20ResponseValidatorTest.class.getResourceAsStream("/badjsonresponse.json"));
 		respBean.setBody(response);

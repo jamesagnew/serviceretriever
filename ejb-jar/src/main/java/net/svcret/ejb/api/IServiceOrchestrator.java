@@ -33,13 +33,13 @@ public interface IServiceOrchestrator {
 
 	IServiceInvoker getServiceInvoker(BasePersServiceVersion theServiceVersion);
 
-	OrchestratorResponseBean handlePreviouslyThrottledRequest(InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization, HttpRequestBean theRequest, long theThrottleTime)
+	SrBeanOutgoingResponse handlePreviouslyThrottledRequest(InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization, SrBeanIncomingRequest theRequest, long theThrottleTime)
 			throws ProcessingException, SecurityFailureException, InvocationFailedDueToInternalErrorException;
 
 	/**
 	 * Process a normal request
 	 */
-	OrchestratorResponseBean handleServiceRequest(HttpRequestBean theRequest) throws UnknownRequestException, ProcessingException, IOException, SecurityFailureException, ThrottleException,
+	SrBeanOutgoingResponse handleServiceRequest(SrBeanIncomingRequest theRequest) throws UnknownRequestException, ProcessingException, IOException, SecurityFailureException, ThrottleException,
 			ThrottleQueueFullException, InvocationRequestOrResponseFailedException, InvocationFailedDueToInternalErrorException;
 
 	/**
@@ -50,58 +50,14 @@ public interface IServiceOrchestrator {
 
 	Collection<SidechannelOrchestratorResponseBean> handleSidechannelRequestForEachUrl(long theServiceVersionPid, String theRequestBody, String theContentType, String theRequestedByString);
 
-	/**
-	 * Response type for {@link IServiceOrchestrator#handle(RequestType, String, String, Reader)}
-	 */
-	public static class OrchestratorResponseBean {
-		private HttpResponseBean myHttpResponse;
-		private String myResponseBody;
-		private String myResponseContentType;
-		private Map<String, List<String>> myResponseHeaders;
-
-		public OrchestratorResponseBean(String theResponseBody, String theResponseContentType, Map<String, List<String>> theResponseHeaders, HttpResponseBean theHttpResponse) {
-			super();
-			myResponseBody = theResponseBody;
-			myResponseContentType = theResponseContentType;
-			myResponseHeaders = theResponseHeaders;
-			myHttpResponse = theHttpResponse;
-		}
-
-		public HttpResponseBean getHttpResponse() {
-			return myHttpResponse;
-		}
-
-		/**
-		 * @return the responseBody
-		 */
-		public String getResponseBody() {
-			return myResponseBody;
-		}
-
-		/**
-		 * @return the responseContentType
-		 */
-		public String getResponseContentType() {
-			return myResponseContentType;
-		}
-
-		/**
-		 * @return the responseHeaders
-		 */
-		public Map<String, List<String>> getResponseHeaders() {
-			return myResponseHeaders;
-		}
-
-	}
-
-	public static class SidechannelOrchestratorResponseBean extends OrchestratorResponseBean {
+	public static class SidechannelOrchestratorResponseBean extends SrBeanOutgoingResponse {
 
 		private PersServiceVersionUrl myApplicableUrl;
 		private String myFailureDescription;
 		private Date myRequestStartedTime;
 		private ResponseTypeEnum myResponseType;
 
-		public SidechannelOrchestratorResponseBean(String theResponseBody, String theResponseContentType, Map<String, List<String>> theResponseHeaders, HttpResponseBean theHttpResponse,
+		public SidechannelOrchestratorResponseBean(String theResponseBody, String theResponseContentType, Map<String, List<String>> theResponseHeaders, SrBeanIncomingResponse theHttpResponse,
 				ResponseTypeEnum theResponseType, Date theRequestStartedTime) {
 			super(theResponseBody, theResponseContentType, theResponseHeaders, theHttpResponse);
 
@@ -141,7 +97,7 @@ public interface IServiceOrchestrator {
 			String responseBody = null;
 			String responseContentType = null;
 			HashMap<String, List<String>> responseHeaders = new HashMap<String, List<String>>();
-			HttpResponseBean httpResponse = null;
+			SrBeanIncomingResponse httpResponse = null;
 			SidechannelOrchestratorResponseBean retVal = new SidechannelOrchestratorResponseBean(responseBody, responseContentType, responseHeaders, httpResponse, ResponseTypeEnum.FAIL, theRequestStartedTime);
 			retVal.setFailureDescription(theException.toString());
 			retVal.setApplicableUrl(theApplicableUrl);

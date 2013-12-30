@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.invoker.soap.Soap11ResponseValidator;
@@ -95,7 +95,7 @@ public class HttpClientBeanTest {
 			UrlPoolBean urlPool = new UrlPoolBean();
 			urlPool.setPreferredUrl(new PersServiceVersionUrl(123, "https://127.0.0.1:" + port + "/path"));
 			HashMap<String, List<String>> headers = new HashMap<String, List<String>>();
-			HttpResponseBean resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
+			SrBeanIncomingResponse resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
 
 			ourLog.info("Resp was: " + resp.getBody());
 			assertEquals(1,resp.getFailedUrls().size());
@@ -163,7 +163,7 @@ public class HttpClientBeanTest {
 			UrlPoolBean urlPool = new UrlPoolBean();
 			urlPool.setPreferredUrl(new PersServiceVersionUrl(123, "https://127.0.0.1:" + port + "/path"));
 			HashMap<String, List<String>> headers = new HashMap<String, List<String>>();
-			HttpResponseBean resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
+			SrBeanIncomingResponse resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
 
 			ourLog.info("Resp was: " + resp.getBody());
 			assertEquals(1,resp.getFailedUrls().size());
@@ -243,7 +243,7 @@ public class HttpClientBeanTest {
 		resp.start();
 		resp.waitToStart();
 
-		HttpResponseBean respBean = mySvc.get("http://localhost:" + port + "/Uri");
+		SrBeanIncomingResponse respBean = mySvc.get("http://localhost:" + port + "/Uri");
 
 		assertEquals(body.trim(), respBean.getBody().trim());
 		assertEquals("text/xml", respBean.getContentType());
@@ -267,7 +267,7 @@ public class HttpClientBeanTest {
 		resp.start();
 		resp.waitToStart();
 
-		HttpResponseBean respBean = mySvc.get("http://localhost:" + port + "/Uri");
+		SrBeanIncomingResponse respBean = mySvc.get("http://localhost:" + port + "/Uri");
 
 		assertEquals(body.trim(), respBean.getBody().trim());
 		assertEquals("text/xml", respBean.getContentType());
@@ -300,7 +300,7 @@ public class HttpClientBeanTest {
 
 		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
 		String reqContentType = "text/xml";
-		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
+		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
 		assertEquals(urlPool.getPreferredUrl(), respBean.getSuccessfulUrl());
 		assertEquals(0, respBean.getFailedUrls().size());
@@ -326,7 +326,7 @@ public class HttpClientBeanTest {
 
 		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
 		String reqContentType = "text/xml";
-		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
+		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
 		assertEquals(null, respBean.getSuccessfulUrl());
 		assertEquals(1, respBean.getFailedUrls().size());
@@ -356,7 +356,7 @@ public class HttpClientBeanTest {
 
 		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
 		String reqContentType = "text/xml";
-		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
+		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
 		assertEquals(urlPool.getPreferredUrl(), respBean.getSuccessfulUrl());
 		assertEquals(0, respBean.getFailedUrls().size());
@@ -389,7 +389,7 @@ public class HttpClientBeanTest {
 
 		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
 		String reqContentType = "text/xml";
-		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
+		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
 		assertEquals(null, respBean.getSuccessfulUrl());
 		assertEquals(1, respBean.getFailedUrls().size());
@@ -422,7 +422,7 @@ public class HttpClientBeanTest {
 
 		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
 		String reqContentType = "text/xml";
-		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
+		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
 		assertEquals(urlPool.getPreferredUrl(), respBean.getSuccessfulUrl());
 		assertEquals(0, respBean.getFailedUrls().size());
@@ -462,7 +462,7 @@ public class HttpClientBeanTest {
 
 		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
 		String reqContentType = "text/xml";
-		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
+		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
 		assertEquals(null, respBean.getSuccessfulUrl());
 		assertEquals(2, respBean.getFailedUrls().size());
@@ -508,7 +508,7 @@ public class HttpClientBeanTest {
 
 		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
 		String reqContentType = "text/xml";
-		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
+		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
 		assertEquals(urlPool.getAlternateUrls().get(0), respBean.getSuccessfulUrl());
 		assertEquals(1, respBean.getFailedUrls().size());
@@ -548,7 +548,7 @@ public class HttpClientBeanTest {
 
 		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
 		String reqContentType = "text/xml";
-		HttpResponseBean respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
+		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
 		assertEquals(urlPool.getPreferredUrl(), respBean.getSuccessfulUrl());
 		assertEquals(0, respBean.getFailedUrls().size());

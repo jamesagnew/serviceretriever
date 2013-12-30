@@ -2,10 +2,13 @@ package net.svcret.admin.client.ui.config.svcver;
 
 import static net.svcret.admin.client.AdminPortal.*;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.MyResources;
@@ -45,7 +48,6 @@ import net.svcret.admin.shared.model.ServerSecurityEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.util.StringUtil;
 
-import com.google.gwt.cell.client.Cell;
 import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.cell.client.SafeHtmlCell;
 import com.google.gwt.core.shared.GWT;
@@ -106,6 +108,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 	private CheckBox myStandardProxyPathEnabledCheckbox;
 	private Label myStandardProxyPathLabel;
 	private ServiceVersionUrlGrid myUrlGrid;
+	private int myPropertyCaptureTabIndex;
 
 	public BaseDetailPanel(AbstractServiceVersionPanel theParent, T theServiceVersion) {
 		myServiceVersion = theServiceVersion;
@@ -149,6 +152,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		add(loggingPanel, "Logging");
 		initLoggingPanel(loggingPanel);
 
+		myPropertyCaptureTabIndex = getWidgetCount();
 		FlowPanel propCapPanel = new FlowPanel();
 		add(propCapPanel, "Captures");
 		initPropertyCapturePanel(propCapPanel);
@@ -929,7 +933,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 			}
 			if (!newPath.startsWith("/") || newPath.length() < 2) {
 				selectTab(myAccessPanelTabIndex);
-				Window.alert("Explicit proxy path must be of the form /[path[/more path]]");
+				Window.alert("Invalid explicit proxy path");
 				myExplicitProxyPathTextbox.setEditorMode();
 				return false;
 			}
@@ -938,6 +942,21 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 			myServiceVersion.setExplicitProxyPath(null);
 		}
 
+		
+		Set<String> propCapNames = new HashSet<String>(); 
+		for (DtoPropertyCapture next : new ArrayList<DtoPropertyCapture>(myServiceVersion.getPropertyCaptures())) {
+			if (next.isBlank()) {
+				myServiceVersion.getPropertyCaptures().remove(next);
+				continue;
+			}
+			if (propCapNames.contains(next.getPropertyName())) {
+				selectTab(myPropertyCaptureTabIndex);
+				Window.alert("Can not have two property captures named: "+next.getPropertyName());
+				return false;
+			}
+			propCapNames.add(next.getPropertyName());
+		}
+		
 		return retVal;
 	}
 

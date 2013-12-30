@@ -71,7 +71,7 @@ import net.svcret.admin.shared.model.Pair;
 import net.svcret.admin.shared.model.PartialUserListRequest;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.model.TimeRange;
-import net.svcret.ejb.api.HttpRequestBean;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IKeystoreService;
@@ -1696,7 +1696,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			throw new IllegalArgumentException("Unknown service version: " + thePid);
 		}
 
-		HttpRequestBean request = new HttpRequestBean();
+		SrBeanIncomingRequest request = new SrBeanIncomingRequest();
 		request.setInputReader(new StringReader(theMessageText));
 		request.setPath(svcVer.getDefaultProxyPath());
 		request.setQuery("");

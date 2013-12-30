@@ -2,7 +2,7 @@ package net.svcret.ejb.propcap;
 
 import java.io.StringReader;
 
-import net.svcret.ejb.api.HttpRequestBean;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.invoker.soap.InvocationFailedException;
 import net.svcret.ejb.invoker.soap.RequestPipelineTest;
@@ -33,7 +33,7 @@ public class PropertyCaptureBeanTest {
 		cap2.setXpathExpression("//*[local-name()='Envelope2']/*[local-name()='Body2']/*[local-name()='someMethod']/*[local-name()='theMrn2']");
 		svcVer.getPropertyCaptures().add(cap2);
 		
-		HttpRequestBean request=new HttpRequestBean();
+		SrBeanIncomingRequest request=new SrBeanIncomingRequest();
 		String inputString = RequestPipelineTest.createRequest("someMethod", true);
 		request.setInputReader(new StringReader(inputString));
 		request.drainInputMessage();

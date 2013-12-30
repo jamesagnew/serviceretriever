@@ -24,9 +24,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.svcret.ejb.api.HttpRequestBean;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.IServiceOrchestrator;
-import net.svcret.ejb.api.IServiceOrchestrator.OrchestratorResponseBean;
+import net.svcret.ejb.api.SrBeanOutgoingResponse;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.ejb.ThrottleQueueFullException;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
@@ -94,9 +94,9 @@ public class ServiceServlet extends HttpServlet {
 
 		ourLog.debug("New {} request at path[{}] and base[{}] and context path[{}]", new Object[] { requestAction.name(), path, base, contextPath });
 
-		OrchestratorResponseBean response;
+		SrBeanOutgoingResponse response;
 		try {
-			HttpRequestBean request = new HttpRequestBean();
+			SrBeanIncomingRequest request = new SrBeanIncomingRequest();
 			request.setRequestType(requestAction);
 			request.setRequestHostIp(StringUtils.defaultString(requestHostIp, "UNKNOWN"));
 			request.setPath(path);

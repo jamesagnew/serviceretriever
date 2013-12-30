@@ -23,13 +23,13 @@ import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
-import net.svcret.ejb.api.HttpRequestBean;
-import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IResponseValidator;
-import net.svcret.ejb.api.IServiceOrchestrator.OrchestratorResponseBean;
 import net.svcret.ejb.api.IThrottlingService;
+import net.svcret.ejb.api.SrBeanOutgoingResponse;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
@@ -143,7 +143,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		String theContentBody = any();
 		Map<String, List<String>> theHeaders = any();
 		String theContentType = any();
-		HttpResponseBean respBean = new HttpResponseBean();
+		SrBeanIncomingResponse respBean = new SrBeanIncomingResponse();
 		respBean.setCode(200);
 		respBean.setBody(response);
 		respBean.setContentType("text/xml");
@@ -156,13 +156,13 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		ITransactionLogger transactionLogger = mock(ITransactionLogger.class);
 		mySvc.setTransactionLogger(transactionLogger);
 
-		OrchestratorResponseBean resp = null;
+		SrBeanOutgoingResponse resp = null;
 		int reps = 100;
 		long start = System.currentTimeMillis();
 		for (int i = 0; i < reps; i++) {
 			String query = "";
 			Reader reader = new StringReader(request);
-			HttpRequestBean req = new HttpRequestBean();
+			SrBeanIncomingRequest req = new SrBeanIncomingRequest();
 			req.setRequestType(RequestType.POST);
 			req.setRequestHostIp("127.0.0.1");
 			req.setPath("/d0/d0s0/d0s0v0");
@@ -220,7 +220,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		String theContentBody = any();
 		Map<String, List<String>> theHeaders = any();
 		String theContentType = any();
-		HttpResponseBean respBean = new HttpResponseBean();
+		SrBeanIncomingResponse respBean = new SrBeanIncomingResponse();
 		respBean.setCode(200);
 		respBean.setBody(response);
 		respBean.setContentType("text/xml");
@@ -245,7 +245,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		HttpRequestBean req = new HttpRequestBean();
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
 		req.setRequestType(RequestType.POST);
 		req.setRequestHostIp("127.0.0.1");
 		req.setPath("/d0/d0s0/d0s0v0");
@@ -307,7 +307,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		//@formatter:on
 
 		ArgumentCaptor<String> contentBodyCaptor = ArgumentCaptor.forClass(String.class);
-		HttpResponseBean respBean = new HttpResponseBean();
+		SrBeanIncomingResponse respBean = new SrBeanIncomingResponse();
 		respBean.setCode(200);
 		respBean.setBody(response);
 		respBean.setContentType("text/xml");
@@ -339,10 +339,10 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		OrchestratorResponseBean resp = null;
+		SrBeanOutgoingResponse resp = null;
 		String query = "";
 		Reader reader = new StringReader(request);
-		HttpRequestBean req = new HttpRequestBean();
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
 		req.setRequestType(RequestType.POST);
 		req.setRequestHostIp("127.0.0.1");
 		req.setPath("/d0/d0s0/d0s0v1");
@@ -411,7 +411,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		String theContentBody = any();
 		Map<String, List<String>> theHeaders = any();
 		String theContentType = any();
-		HttpResponseBean respBean = new HttpResponseBean();
+		SrBeanIncomingResponse respBean = new SrBeanIncomingResponse();
 		respBean.setCode(200);
 		respBean.setBody(response);
 		respBean.setContentType("text/xml");
@@ -431,10 +431,10 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		fsAuditLogger.initialize();
 		logger.setFilesystemAuditLoggerForUnitTests(fsAuditLogger);
 
-		OrchestratorResponseBean resp = null;
+		SrBeanOutgoingResponse resp = null;
 		String query = "";
 		Reader reader = new StringReader(request);
-		HttpRequestBean req = new HttpRequestBean();
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
 		req.setRequestType(RequestType.POST);
 		req.setRequestHostIp("127.0.0.1");
 		req.setPath("/d0/d0s0/d0s0v0");
@@ -512,7 +512,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		String theContentBody = any();
 		Map<String, List<String>> theHeaders = any();
 		String theContentType = any();
-		HttpResponseBean respBean = new HttpResponseBean();
+		SrBeanIncomingResponse respBean = new SrBeanIncomingResponse();
 		respBean.setCode(200);
 		respBean.setBody(response);
 		respBean.setContentType("text/xml");
@@ -533,10 +533,10 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		fsAuditLogger.initialize();
 		logger.setFilesystemAuditLoggerForUnitTests(fsAuditLogger);
 
-		OrchestratorResponseBean resp = null;
+		SrBeanOutgoingResponse resp = null;
 		String query = "";
 		Reader reader = new StringReader(request);
-		HttpRequestBean req = new HttpRequestBean();
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
 		req.setRequestType(RequestType.POST);
 		req.setRequestHostIp("127.0.0.1");
 		req.setPath("/d0/d0s0/d0s0v0");
@@ -617,7 +617,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		String theContentBody = any();
 		Map<String, List<String>> theHeaders = any();
 		String theContentType = any();
-		HttpResponseBean respBean = new HttpResponseBean();
+		SrBeanIncomingResponse respBean = new SrBeanIncomingResponse();
 		respBean.setCode(500);
 		respBean.setBody(response);
 		respBean.setContentType("text/xml");
@@ -643,7 +643,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 
 		String query = "";
 		Reader reader = new StringReader(request);
-		HttpRequestBean req = new HttpRequestBean();
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
 		req.setRequestType(RequestType.POST);
 		req.setRequestHostIp("127.0.0.1");
 		req.setPath("/d0/d0s0/d0s0v0");
@@ -695,12 +695,12 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 
 		ServiceInvokerSoap11 invoker = mock(ServiceInvokerSoap11.class);
 		mySvc.setSoap11ServiceInvoker(invoker);
-		when(invoker.processInvocation(any(HttpRequestBean.class), any(BasePersServiceVersion.class))).thenThrow(NullPointerException.class);
+		when(invoker.processInvocation(any(SrBeanIncomingRequest.class), any(BasePersServiceVersion.class))).thenThrow(NullPointerException.class);
 
-		OrchestratorResponseBean resp = null;
+		SrBeanOutgoingResponse resp = null;
 		String query = "";
 		Reader reader = new StringReader(request);
-		HttpRequestBean req = new HttpRequestBean();
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
 		req.setRequestType(RequestType.POST);
 		req.setRequestHostIp("127.0.0.1");
 		req.setPath("/d0/d0s0/d0s0v0");
@@ -792,7 +792,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		String theContentBody = any();
 		Map<String, List<String>> theHeaders = any();
 		String theContentType = any();
-		HttpResponseBean respBean = new HttpResponseBean();
+		SrBeanIncomingResponse respBean = new SrBeanIncomingResponse();
 		respBean.setCode(200);
 		respBean.setBody(response);
 		respBean.setContentType("text/xml");
@@ -803,7 +803,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		when(myHttpClient.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
 
 		String query = "";
-		HttpRequestBean req = new HttpRequestBean();
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
 		req.setRequestType(RequestType.POST);
 		req.setRequestHostIp("127.0.0.1");
 		req.setPath("/d0/d0s0/d0s0v0");
@@ -1038,7 +1038,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		String response = new PipeParser().parse(request).generateACK().encode();
 
 		Reader reader = new StringReader(request);
-		HttpRequestBean req = new HttpRequestBean();
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
 		req.setRequestType(RequestType.POST);
 		req.setRequestHostIp("127.0.0.1");
 		req.setPath("/d0/d0s0/d0s0v1");
@@ -1053,7 +1053,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		String theContentBody = any();
 		Map<String, List<String>> theHeaders = any();
 		String theContentType = any();
-		HttpResponseBean respBean = new HttpResponseBean();
+		SrBeanIncomingResponse respBean = new SrBeanIncomingResponse();
 		respBean.setCode(200);
 		respBean.setBody(response);
 		respBean.setContentType("application/hl7-v2");

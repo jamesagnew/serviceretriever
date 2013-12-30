@@ -12,8 +12,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
-import net.svcret.ejb.api.HttpResponseBean;
-import net.svcret.ejb.api.HttpResponseBean.Failure;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
+import net.svcret.ejb.api.SrBeanIncomingResponse.Failure;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.UrlPoolBean;
@@ -33,7 +33,7 @@ import org.junit.Test;
 public class RuntimeStatusBeanCircuitBreakerTest {
 
 	private PersHttpClientConfig httpConfig;
-	private HttpResponseBean httpResponse;
+	private SrBeanIncomingResponse httpResponse;
 	private InvocationResponseResultsBean invocationResponse;
 	private RuntimeStatusBean myBean;
 	private IDao myDao;
@@ -62,7 +62,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		
 		when(user.getStatus()).thenReturn(new PersUserStatus(1L));
 		
-		httpResponse = mock(HttpResponseBean.class, new DefaultAnswer());
+		httpResponse = mock(SrBeanIncomingResponse.class, new DefaultAnswer());
 		when(httpResponse.getResponseTime()).thenReturn(200L);
 		when(httpResponse.getBody()).thenReturn("          ");
 		
@@ -117,7 +117,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		when(httpConfig.getUrlSelectionPolicy()).thenReturn(UrlSelectionPolicy.PREFER_LOCAL);
 
 		when(httpResponse.getSuccessfulUrl()).thenReturn(persUrl1);
-		when(httpResponse.getFailedUrls()).thenReturn(new HashMap<PersServiceVersionUrl, HttpResponseBean.Failure>());
+		when(httpResponse.getFailedUrls()).thenReturn(new HashMap<PersServiceVersionUrl, SrBeanIncomingResponse.Failure>());
 		when(httpConfig.isCircuitBreakerEnabled()).thenReturn(true);
 		when(httpConfig.getCircuitBreakerTimeBetweenResetAttempts()).thenReturn(200);
 		
@@ -146,7 +146,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		 * Mark a failure
 		 */
 		DefaultAnswer.setDesignTime();
-		HashMap<PersServiceVersionUrl, Failure> failures = new HashMap<PersServiceVersionUrl, HttpResponseBean.Failure>();
+		HashMap<PersServiceVersionUrl, Failure> failures = new HashMap<PersServiceVersionUrl, SrBeanIncomingResponse.Failure>();
 		failures.put(persUrl1, new Failure("aaa", "", "Excplanation", 400,0, null));
 		when(httpResponse.getFailedUrls()).thenReturn(failures);
 		when(httpResponse.getSuccessfulUrl()).thenReturn(persUrl2);
@@ -194,7 +194,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		when(httpConfig.getUrlSelectionPolicy()).thenReturn(UrlSelectionPolicy.PREFER_LOCAL);
 
 		when(httpResponse.getSuccessfulUrl()).thenReturn(persUrl1);
-		when(httpResponse.getFailedUrls()).thenReturn(new HashMap<PersServiceVersionUrl, HttpResponseBean.Failure>());
+		when(httpResponse.getFailedUrls()).thenReturn(new HashMap<PersServiceVersionUrl, SrBeanIncomingResponse.Failure>());
 		when(httpConfig.isCircuitBreakerEnabled()).thenReturn(true);
 		when(httpConfig.getCircuitBreakerTimeBetweenResetAttempts()).thenReturn(200);
 		
@@ -209,7 +209,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		/*
 		 * Mark a failure
 		 */
-		HashMap<PersServiceVersionUrl, Failure> failures = new HashMap<PersServiceVersionUrl, HttpResponseBean.Failure>();
+		HashMap<PersServiceVersionUrl, Failure> failures = new HashMap<PersServiceVersionUrl, SrBeanIncomingResponse.Failure>();
 		failures.put(persUrl1, new Failure("aaa", "", "Excplanation", 400,0, null));
 		failures.put(persUrl2, new Failure("aaa", "", "Excplanation", 400,0, null));
 		when(httpResponse.getFailedUrls()).thenReturn(failures);
@@ -243,7 +243,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		when(svcVersion.getUrlCounter()).thenReturn(new AtomicInteger());
 
 		when(httpResponse.getSuccessfulUrl()).thenReturn(persUrl1);
-		when(httpResponse.getFailedUrls()).thenReturn(new HashMap<PersServiceVersionUrl, HttpResponseBean.Failure>());
+		when(httpResponse.getFailedUrls()).thenReturn(new HashMap<PersServiceVersionUrl, SrBeanIncomingResponse.Failure>());
 		when(httpConfig.isCircuitBreakerEnabled()).thenReturn(true);
 		when(httpConfig.getCircuitBreakerTimeBetweenResetAttempts()).thenReturn(200);
 		
@@ -287,7 +287,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		 * Mark a failure
 		 */
 		DefaultAnswer.setDesignTime();
-		HashMap<PersServiceVersionUrl, Failure> failures = new HashMap<PersServiceVersionUrl, HttpResponseBean.Failure>();
+		HashMap<PersServiceVersionUrl, Failure> failures = new HashMap<PersServiceVersionUrl, SrBeanIncomingResponse.Failure>();
 		failures.put(persUrl1, new Failure("aaa", "", "Excplanation", 400,0, null));
 		when(httpResponse.getFailedUrls()).thenReturn(failures);
 		when(httpResponse.getSuccessfulUrl()).thenReturn(persUrl2);
@@ -335,7 +335,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		when(httpConfig.getUrlSelectionPolicy()).thenReturn(UrlSelectionPolicy.ROUND_ROBIN);
 
 		when(httpResponse.getSuccessfulUrl()).thenReturn(persUrl1);
-		when(httpResponse.getFailedUrls()).thenReturn(new HashMap<PersServiceVersionUrl, HttpResponseBean.Failure>());
+		when(httpResponse.getFailedUrls()).thenReturn(new HashMap<PersServiceVersionUrl, SrBeanIncomingResponse.Failure>());
 		when(httpConfig.isCircuitBreakerEnabled()).thenReturn(true);
 		when(httpConfig.getCircuitBreakerTimeBetweenResetAttempts()).thenReturn(200);
 		when(svcVersion.getUrlCounter()).thenReturn(new AtomicInteger());
@@ -351,7 +351,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		/*
 		 * Mark a failure
 		 */
-		HashMap<PersServiceVersionUrl, Failure> failures = new HashMap<PersServiceVersionUrl, HttpResponseBean.Failure>();
+		HashMap<PersServiceVersionUrl, Failure> failures = new HashMap<PersServiceVersionUrl, SrBeanIncomingResponse.Failure>();
 		failures.put(persUrl1, new Failure("aaa", "", "Excplanation", 400,0, null));
 		failures.put(persUrl2, new Failure("aaa", "", "Excplanation", 400,0, null));
 		when(httpResponse.getFailedUrls()).thenReturn(failures);

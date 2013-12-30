@@ -13,6 +13,6 @@ public interface IThrottlingService {
 
 	Future<Void> serviceThrottledRequests(ThrottledTaskQueue theTaskQueue);
 
-	void applyThrottle(HttpRequestBean theHttpRequest, InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization) throws ThrottleException, ThrottleQueueFullException;
+	void applyThrottle(SrBeanIncomingRequest theHttpRequest, InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization) throws ThrottleException, ThrottleQueueFullException;
 
 }

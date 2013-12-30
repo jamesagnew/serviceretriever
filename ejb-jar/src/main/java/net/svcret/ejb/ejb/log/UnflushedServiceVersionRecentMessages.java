@@ -3,8 +3,8 @@ package net.svcret.ejb.ejb.log;
 import java.util.Date;
 
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
-import net.svcret.ejb.api.HttpRequestBean;
-import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersConfig;
@@ -27,7 +27,7 @@ public class UnflushedServiceVersionRecentMessages extends BaseUnflushed<PersSer
 	}
 
 	public synchronized void recordTransaction(PersConfig theConfig, Date theTransactionTime, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody,
-			InvocationResponseResultsBean theInvocationResponse, HttpRequestBean theRequest, PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse,
+			InvocationResponseResultsBean theInvocationResponse, SrBeanIncomingRequest theRequest, PersServiceVersionUrl theImplementationUrl, SrBeanIncomingResponse theHttpResponse,
 			AuthorizationOutcomeEnum theAuthorizationOutcome, String theResponseBody) {
 		Validate.notNull(theInvocationResponse);
 		Validate.notNull(theTransactionTime);

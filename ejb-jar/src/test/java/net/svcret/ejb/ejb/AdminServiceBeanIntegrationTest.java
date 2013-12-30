@@ -56,8 +56,8 @@ import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.admin.AdminServiceBean;
-import net.svcret.ejb.api.HttpRequestBean;
-import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.ejb.log.TransactionLoggerBean;
@@ -239,7 +239,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		// Record invocation
-		HttpResponseBean httpResponse = new HttpResponseBean();
+		SrBeanIncomingResponse httpResponse = new SrBeanIncomingResponse();
 		httpResponse.setBody("1234");
 		httpResponse.setResponseTime(123);
 		InvocationResponseResultsBean bean = new InvocationResponseResultsBean();
@@ -256,7 +256,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		persVer = myDao.getServiceVersionByPid(ver.getPid());
 
-		HttpRequestBean request = new HttpRequestBean();
+		SrBeanIncomingRequest request = new SrBeanIncomingRequest();
 		request.setRequestHostIp("127.0.0.1");
 		request.setRequestHeaders(new HashMap<String, List<String>>());
 		request.setRequestTime(new Date());

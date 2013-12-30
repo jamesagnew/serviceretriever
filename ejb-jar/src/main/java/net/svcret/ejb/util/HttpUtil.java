@@ -9,7 +9,7 @@ import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletResponse;
 
-import net.svcret.ejb.api.IServiceOrchestrator.OrchestratorResponseBean;
+import net.svcret.ejb.api.SrBeanOutgoingResponse;
 import net.svcret.ejb.ex.UnknownRequestException;
 
 public class HttpUtil {
@@ -54,7 +54,7 @@ public class HttpUtil {
 		w.close();
 	}
 
-	public static void sendSuccessfulResponse(HttpServletResponse theHttpResponse, OrchestratorResponseBean theServiceResponse) throws IOException {
+	public static void sendSuccessfulResponse(HttpServletResponse theHttpResponse, SrBeanOutgoingResponse theServiceResponse) throws IOException {
 		theHttpResponse.setStatus(200);
 
 		Map<String, List<String>> responseHeaders = theServiceResponse.getResponseHeaders();

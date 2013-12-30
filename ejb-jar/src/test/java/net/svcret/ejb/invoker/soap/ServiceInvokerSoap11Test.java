@@ -14,8 +14,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
-import net.svcret.ejb.api.HttpRequestBean;
-import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
@@ -96,7 +96,7 @@ public class ServiceInvokerSoap11Test {
 		 * Load WSDL
 		 */
 		
-		HttpRequestBean req = new HttpRequestBean();
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
 		req.setInputReader(new StringReader(""));
 		req.setRequestType(RequestType.GET);
 		req.setPath("/Some/Path");
@@ -120,7 +120,7 @@ public class ServiceInvokerSoap11Test {
 		 * Load XSD
 		 */
 		
-		req = new HttpRequestBean();
+		req = new SrBeanIncomingRequest();
 		req.setInputReader(new StringReader(""));
 		req.setRequestType(RequestType.GET);
 		req.setPath("/Some/Path");
@@ -221,7 +221,7 @@ public class ServiceInvokerSoap11Test {
 
 		ServiceInvokerSoap11 svc = new ServiceInvokerSoap11();
 
-		HttpRequestBean req = new HttpRequestBean();
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
 		req.setInputReader(new StringReader(""));
 		req.setRequestType(RequestType.GET);
 		req.setPath("/Some/Path");
@@ -263,7 +263,7 @@ public class ServiceInvokerSoap11Test {
 
 		ServiceInvokerSoap11 svc = new ServiceInvokerSoap11();
 		try {
-			HttpRequestBean req = new HttpRequestBean();
+			SrBeanIncomingRequest req = new SrBeanIncomingRequest();
 			req.setInputReader(reader);
 			req.setRequestType(RequestType.POST);
 			req.setPath("/Some/Path");
@@ -307,7 +307,7 @@ public class ServiceInvokerSoap11Test {
 
 		ServiceInvokerSoap11 svc = new ServiceInvokerSoap11();
 		
-		HttpRequestBean req = new HttpRequestBean();
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
 		req.setInputReader(reader);
 		req.setRequestType(RequestType.POST);
 		req.setPath("/Some/Path");
@@ -379,7 +379,7 @@ public class ServiceInvokerSoap11Test {
 				"   </SOAP-ENV:Body>\n" + //- 
 				"</SOAP-ENV:Envelope>"; //-
 		
-		HttpResponseBean httpResponse = mock(HttpResponseBean.class);
+		SrBeanIncomingResponse httpResponse = mock(SrBeanIncomingResponse.class);
 		when(httpResponse.getBody()).thenReturn(msg);
 		when(httpResponse.getContentType()).thenReturn("text/xml");
 		
@@ -422,7 +422,7 @@ public class ServiceInvokerSoap11Test {
 				"   </SOAP-ENV:Body>\n" + //- 
 				"</SOAP-ENV:Envelope>"; //-
 		
-		HttpResponseBean httpResponse = mock(HttpResponseBean.class);
+		SrBeanIncomingResponse httpResponse = mock(SrBeanIncomingResponse.class);
 		when(httpResponse.getBody()).thenReturn(msg);
 		when(httpResponse.getContentType()).thenReturn("text/xml");
 		
@@ -464,7 +464,7 @@ public class ServiceInvokerSoap11Test {
 				"   </SOAP-ENV:Body>\n" + //- 
 				"</SOAP-ENV:Envelope>"; //-
 		
-		HttpResponseBean httpResponse = mock(HttpResponseBean.class);
+		SrBeanIncomingResponse httpResponse = mock(SrBeanIncomingResponse.class);
 		when(httpResponse.getBody()).thenReturn(msg);
 		when(httpResponse.getContentType()).thenReturn("text/xml");
 		
@@ -509,11 +509,11 @@ public class ServiceInvokerSoap11Test {
 
 		String wsdlBody = IOUtils.readClasspathIntoString("/test_simple.wsdl");
 		String wsdlUrl = "http://foo/wsdl.wsdl";
-		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq(wsdlUrl))).thenReturn(new HttpResponseBean(null, "text/xml", 200, wsdlBody));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq(wsdlUrl))).thenReturn(new SrBeanIncomingResponse(null, "text/xml", 200, wsdlBody));
 
 		String xsdBody = IOUtils.readClasspathIntoString("/basic_schema.xsd");
 		String xsdUrl = "http://foo/bar.xsd";
-		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq(xsdUrl))).thenReturn(new HttpResponseBean(null, "text/xml", 200, xsdBody));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq(xsdUrl))).thenReturn(new SrBeanIncomingResponse(null, "text/xml", 200, xsdBody));
 		
 		
 		
@@ -544,7 +544,7 @@ public class ServiceInvokerSoap11Test {
 
 		String wsdlBody = IOUtils.readClasspathIntoString("/THIP.wsdl");
 		String wsdlUrl = "http://foo/wsdl.wsdl";
-		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq(wsdlUrl))).thenReturn(new HttpResponseBean(null, "text/xml", 200, wsdlBody));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq(wsdlUrl))).thenReturn(new SrBeanIncomingResponse(null, "text/xml", 200, wsdlBody));
 
 		PersServiceVersionSoap11 def=null;
 		def = svc.introspectServiceFromUrl(myHttpConfig,wsdlUrl);
@@ -564,11 +564,11 @@ public class ServiceInvokerSoap11Test {
 
 		String wsdlBody = IOUtils.readClasspathIntoString("/test_simple2.wsdl");
 		String wsdlUrl = "http://foo/wsdl.wsdl";
-		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq(wsdlUrl))).thenReturn(new HttpResponseBean(null, "text/xml", 200, wsdlBody));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq(wsdlUrl))).thenReturn(new SrBeanIncomingResponse(null, "text/xml", 200, wsdlBody));
 
 		String xsdBody = IOUtils.readClasspathIntoString("/basic_schema2.xsd");
 		String xsdUrl = "http://192.168.1.3:8081/DemoServiceSvc/StringConcatService?xsd=1";
-		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq(xsdUrl))).thenReturn(new HttpResponseBean(null, "text/xml", 200, xsdBody));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq(xsdUrl))).thenReturn(new SrBeanIncomingResponse(null, "text/xml", 200, xsdBody));
 		
 		PersServiceVersionSoap11 def=null;
 		def = svc.introspectServiceFromUrl(myHttpConfig,wsdlUrl);
@@ -594,7 +594,7 @@ public class ServiceInvokerSoap11Test {
 
 		String wsdlBody = IOUtils.readClasspathIntoString("/cdyne_weatherws.wsdl");
 		String wsdlUrl = "http://foo/wsdl.wsdl";
-		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq(wsdlUrl))).thenReturn(new HttpResponseBean(null, "text/xml", 200, wsdlBody));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq(wsdlUrl))).thenReturn(new SrBeanIncomingResponse(null, "text/xml", 200, wsdlBody));
 
 		PersServiceVersionSoap11 def=null;
 		def = svc.introspectServiceFromUrl(myHttpConfig,wsdlUrl);
@@ -615,14 +615,14 @@ public class ServiceInvokerSoap11Test {
 
 		String wsdlBody = IOUtils.readClasspathIntoString("/wsdl/journal.wsdl");
 		String wsdlUrl = "http://foo/wsdl.wsdl";
-		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq(wsdlUrl))).thenReturn(new HttpResponseBean(null, "text/xml", 200, wsdlBody));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq(wsdlUrl))).thenReturn(new SrBeanIncomingResponse(null, "text/xml", 200, wsdlBody));
 
-		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq("http://foo/journal_1.xsd"))).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_1.xsd")));
-		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq("http://foo/journal_12.xsd"))).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_12.xsd")));
-		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq("http://foo/journal_14.xsd"))).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_14.xsd")));
-		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq("http://foo/journal_4.xsd"))).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_4.xsd")));
-		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq("http://foo/journal_5.xsd"))).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_5.xsd")));
-		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq("http://foo/journal_7.xsd"))).thenReturn(new HttpResponseBean(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_7.xsd")));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq("http://foo/journal_1.xsd"))).thenReturn(new SrBeanIncomingResponse(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_1.xsd")));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq("http://foo/journal_12.xsd"))).thenReturn(new SrBeanIncomingResponse(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_12.xsd")));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq("http://foo/journal_14.xsd"))).thenReturn(new SrBeanIncomingResponse(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_14.xsd")));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq("http://foo/journal_4.xsd"))).thenReturn(new SrBeanIncomingResponse(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_4.xsd")));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq("http://foo/journal_5.xsd"))).thenReturn(new SrBeanIncomingResponse(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_5.xsd")));
+		when(httpClient.getOneTime(any(PersHttpClientConfig.class), eq("http://foo/journal_7.xsd"))).thenReturn(new SrBeanIncomingResponse(null, "text/xml", 200, IOUtils.readClasspathIntoString("/wsdl/journal_7.xsd")));
 		
 		
 		

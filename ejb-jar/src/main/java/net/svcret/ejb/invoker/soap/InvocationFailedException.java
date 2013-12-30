@@ -2,7 +2,7 @@ package net.svcret.ejb.invoker.soap;
 
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
-import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
@@ -16,7 +16,7 @@ public abstract class InvocationFailedException extends Exception {
 	private PersUser myUser;
 	private InvocationResponseResultsBean myInvocationResponse;
 	private PersServiceVersionUrl myImplementationUrl;
-	private HttpResponseBean myHttpResponse;
+	private SrBeanIncomingResponse myHttpResponse;
 	private AuthorizationOutcomeEnum myAuthorizationOutcome;
 
 	public InvocationFailedException(Throwable theCause, PersUser theUser) {
@@ -31,7 +31,7 @@ public abstract class InvocationFailedException extends Exception {
 		myUser = null;
 	}
 
-	public InvocationFailedException(Throwable theCause, String theMessage, HttpResponseBean theResponse) {
+	public InvocationFailedException(Throwable theCause, String theMessage, SrBeanIncomingResponse theResponse) {
 		super(theMessage, theCause);
 		myHttpResponse = theResponse;
 	}
@@ -45,7 +45,7 @@ public abstract class InvocationFailedException extends Exception {
 		assert theCause != null;
 	}
 
-	public InvocationFailedException(String theMessage, HttpResponseBean theHttpResponse) {
+	public InvocationFailedException(String theMessage, SrBeanIncomingResponse theHttpResponse) {
 		super(theMessage);
 		myHttpResponse = theHttpResponse;
 	}
@@ -69,7 +69,7 @@ public abstract class InvocationFailedException extends Exception {
 		return myImplementationUrl;
 	}
 
-	public HttpResponseBean getHttpResponse() {
+	public SrBeanIncomingResponse getHttpResponse() {
 		return myHttpResponse;
 	}
 

@@ -35,8 +35,8 @@ import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.Messages;
-import net.svcret.ejb.api.HttpResponseBean;
-import net.svcret.ejb.api.HttpResponseBean.Failure;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
+import net.svcret.ejb.api.SrBeanIncomingResponse.Failure;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatus;
@@ -197,7 +197,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override
-	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, PersServiceVersionMethod theMethod, PersUser theUser, HttpResponseBean theHttpResponse,
+	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, PersServiceVersionMethod theMethod, PersUser theUser, SrBeanIncomingResponse theHttpResponse,
 			InvocationResponseResultsBean theInvocationResponseResultsBean, Long theThrottleFullIfAny) throws UnexpectedFailureException {
 		Validate.notNull(theInvocationTime, "InvocationTime");
 		Validate.notNull(theMethod, "Method");
@@ -809,7 +809,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		
 	}
 
-	private void doRecordInvocationForUrls(int theRequestLengthChars, HttpResponseBean theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, Date theInvocationTime) {
+	private void doRecordInvocationForUrls(int theRequestLengthChars, SrBeanIncomingResponse theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, Date theInvocationTime) {
 		if (theHttpResponse == null) {
 			return;
 		}
@@ -846,7 +846,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	}
 
-	private <P extends BasePersInvocationStatsPk<P, O>, O extends BasePersInvocationStats<P, O>> void doRecordInvocationMethod(int theRequestLengthChars, HttpResponseBean theHttpResponse,
+	private <P extends BasePersInvocationStatsPk<P, O>, O extends BasePersInvocationStats<P, O>> void doRecordInvocationMethod(int theRequestLengthChars, SrBeanIncomingResponse theHttpResponse,
 			InvocationResponseResultsBean theInvocationResponseResultsBean, P theStatsPk, Long theThrottleFullIfAny) {
 		Validate.notNull(theInvocationResponseResultsBean.getResponseType(), "responseType");
 

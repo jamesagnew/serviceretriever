@@ -23,7 +23,7 @@ import javax.persistence.TemporalType;
 import com.google.common.annotations.VisibleForTesting;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
-import net.svcret.ejb.api.HttpRequestBean;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.RequestType;
 
@@ -153,7 +153,7 @@ public abstract class BasePersSavedTransaction implements Serializable {
 		return myResponseBodyTruncated;
 	}
 
-	public void populate(PersConfig theConfig, Date theTransactionTime, HttpRequestBean theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, InvocationResponseResultsBean theInvocationResult,
+	public void populate(PersConfig theConfig, Date theTransactionTime, SrBeanIncomingRequest theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, InvocationResponseResultsBean theInvocationResult,
 			String theResponseBody) {
 		setRequestBody(extractHeadersForBody(theRequest) + theRequestBody, theConfig);
 		setImplementationUrl(theImplementationUrl);
@@ -252,7 +252,7 @@ public abstract class BasePersSavedTransaction implements Serializable {
 		myTransactionTime = theTransactionTime;
 	}
 
-	private String extractHeadersForBody(HttpRequestBean theRequest) {
+	private String extractHeadersForBody(SrBeanIncomingRequest theRequest) {
 		StringBuilder b = new StringBuilder();
 
 		RequestType requestType = theRequest.getRequestType();

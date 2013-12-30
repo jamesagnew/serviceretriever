@@ -19,6 +19,8 @@
   alert email should ideally contain the last few latency checks too, and really it would be nice if the alert email showed 
   the non-failing URLs too.
 
+* Get rid of svc_desc column in SvcVer because it's redundant
+
 * recreate URL statuses if they disappear
 
 * Replace service version status bean with method status bean and update UI to display the method last

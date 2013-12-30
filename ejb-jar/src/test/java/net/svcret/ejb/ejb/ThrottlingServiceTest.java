@@ -13,8 +13,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
-import net.svcret.ejb.api.HttpRequestBean;
-import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
 import net.svcret.ejb.api.IThrottlingService;
@@ -48,7 +48,7 @@ public class ThrottlingServiceTest {
 
 	@Test
 	public void testRecordStatsForQueueFull() throws Exception {
-		HttpRequestBean httpRequest=new HttpRequestBean();
+		SrBeanIncomingRequest httpRequest=new SrBeanIncomingRequest();
 		httpRequest.setInputReader(new StringReader(""));
 		
 		RateLimiter rateLimiter=RateLimiter.create(2);
@@ -77,7 +77,7 @@ public class ThrottlingServiceTest {
 			//expected
 		}
 		
-		verify(myRuntimeStatusSvc).recordInvocationMethod((Date)any(), eq(0), (PersServiceVersionMethod)any(), (PersUser)any(), (HttpResponseBean)any(), (InvocationResponseResultsBean)any(), anyLong());
+		verify(myRuntimeStatusSvc).recordInvocationMethod((Date)any(), eq(0), (PersServiceVersionMethod)any(), (PersUser)any(), (SrBeanIncomingResponse)any(), (InvocationResponseResultsBean)any(), anyLong());
 		
 	}
 	
@@ -91,7 +91,7 @@ public class ThrottlingServiceTest {
 		user.setThrottlePeriod(ThrottlePeriodEnum.SECOND);
 		user.setThrottleMaxQueueDepth(2);
 
-		HttpRequestBean httpRequest = new HttpRequestBean();
+		SrBeanIncomingRequest httpRequest = new SrBeanIncomingRequest();
 		httpRequest.setInputReader(new StringReader(""));
 		
 		InvocationResultsBean invocationRequest = new InvocationResultsBean();

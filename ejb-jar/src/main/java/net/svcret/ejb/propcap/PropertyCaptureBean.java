@@ -15,7 +15,7 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import net.svcret.ejb.api.HttpRequestBean;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
@@ -43,19 +43,19 @@ public class PropertyCaptureBean implements IPropertyCaptureService {
 	}
 
 	@Override
-	public void captureRequestProperties(BasePersServiceVersion theServiceVersion, HttpRequestBean theRequest, InvocationResultsBean theInvocationResult) throws InvocationFailedException {
+	public void captureRequestProperties(BasePersServiceVersion theServiceVersion, SrBeanIncomingRequest theRequest, InvocationResultsBean theInvocationResult) throws InvocationFailedException {
 		for (PersPropertyCapture next : theServiceVersion.getPropertyCaptures()) {
 			captureRequestProperty(next, theRequest, theInvocationResult);
 		}
 	}
 
-	private void captureRequestProperty(PersPropertyCapture theCapture, HttpRequestBean theRequest, InvocationResultsBean theInvocationResult) throws InvocationFailedException {
+	private void captureRequestProperty(PersPropertyCapture theCapture, SrBeanIncomingRequest theRequest, InvocationResultsBean theInvocationResult) throws InvocationFailedException {
 		if (StringUtils.isNotBlank(theCapture.getXpathExpression())) {
 			captureRequestPropertyXpath(theCapture, theRequest, theInvocationResult);
 		}
 	}
 
-	private void captureRequestPropertyXpath(PersPropertyCapture theCapture, HttpRequestBean theRequest, InvocationResultsBean theInvocationResult) throws InvocationFailedException {
+	private void captureRequestPropertyXpath(PersPropertyCapture theCapture, SrBeanIncomingRequest theRequest, InvocationResultsBean theInvocationResult) throws InvocationFailedException {
 
 		XPath xpath = myXpathFactory.newXPath();
 		XPathExpression expr = theCapture.getCompiledXpathExpression();

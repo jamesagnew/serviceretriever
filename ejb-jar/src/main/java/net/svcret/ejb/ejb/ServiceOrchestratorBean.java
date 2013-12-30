@@ -19,9 +19,9 @@ import javax.ejb.TransactionAttributeType;
 
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
-import net.svcret.ejb.api.HttpRequestBean;
-import net.svcret.ejb.api.HttpResponseBean;
-import net.svcret.ejb.api.HttpResponseBean.Failure;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
+import net.svcret.ejb.api.SrBeanIncomingResponse.Failure;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IResponseValidator;
@@ -35,6 +35,7 @@ import net.svcret.ejb.api.IThrottlingService;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean.ResultTypeEnum;
+import net.svcret.ejb.api.SrBeanOutgoingResponse;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ejb.log.ITransactionLogger;
@@ -112,7 +113,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	@EJB
 	private IServiceInvokerVirtual myServiceInvokerVirtual;
 
-	private OrchestratorResponseBean doHandleServiceRequest(HttpRequestBean theRequest) throws UnknownRequestException, SecurityFailureException, ThrottleException, ThrottleQueueFullException,
+	private SrBeanOutgoingResponse doHandleServiceRequest(SrBeanIncomingRequest theRequest) throws UnknownRequestException, SecurityFailureException, ThrottleException, ThrottleQueueFullException,
 			InvocationRequestOrResponseFailedException, InvocationFailedDueToInternalErrorException, ProcessingException {
 		if (theRequest.getQuery().length() > 0 && theRequest.getQuery().charAt(0) != '?') {
 			throw new IllegalArgumentException("Path must be blank or start with '?'");
@@ -200,7 +201,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		 * Forward request to backend implementation
 		 */
 		ourLog.debug("Request is of type: {}", results.getResultType());
-		OrchestratorResponseBean retVal;
+		SrBeanOutgoingResponse retVal;
 		try {
 			retVal = invokeProxiedService(theRequest, results, authorized, null);
 		} catch (InvocationFailedDueToInternalErrorException e) {
@@ -210,7 +211,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		return retVal;
 	}
 
-	private void handleInvocationFailure(HttpRequestBean theRequest, BasePersServiceVersion serviceVersion, PersServiceVersionMethod theMethodIfKnown, InvocationFailedException theInvocationFailure,
+	private void handleInvocationFailure(SrBeanIncomingRequest theRequest, BasePersServiceVersion serviceVersion, PersServiceVersionMethod theMethodIfKnown, InvocationFailedException theInvocationFailure,
 			PersUser theUserIfKnown, Long theThrottleDelayIfAnyAndKnown, ResponseTypeEnum theResponseType, InvocationResultsBean theInvocationResults) throws ProcessingException {
 		theRequest.drainInputMessage();
 
@@ -267,14 +268,14 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public OrchestratorResponseBean handlePreviouslyThrottledRequest(InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization, HttpRequestBean theRequest,
+	public SrBeanOutgoingResponse handlePreviouslyThrottledRequest(InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization, SrBeanIncomingRequest theRequest,
 			long theThrottleTime) throws ProcessingException, SecurityFailureException, InvocationFailedDueToInternalErrorException {
 		return invokeProxiedService(theRequest, theInvocationRequest, theAuthorization, theThrottleTime);
 	}
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public OrchestratorResponseBean handleServiceRequest(HttpRequestBean theRequest) throws UnknownRequestException, ProcessingException, SecurityFailureException, ThrottleException,
+	public SrBeanOutgoingResponse handleServiceRequest(SrBeanIncomingRequest theRequest) throws UnknownRequestException, ProcessingException, SecurityFailureException, ThrottleException,
 			ThrottleQueueFullException, InvocationRequestOrResponseFailedException, InvocationFailedDueToInternalErrorException {
 		Validate.notNull(theRequest.getRequestType(), "RequestType");
 		Validate.notNull(theRequest.getPath(), "Path");
@@ -306,7 +307,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 		StringReader reader = (new StringReader(theRequestBody));
 
-		HttpRequestBean request = new HttpRequestBean();
+		SrBeanIncomingRequest request = new SrBeanIncomingRequest();
 		request.setRequestTime(startTime);
 		request.setInputReader(reader);
 		request.setRequestHostIp("127.0.0.1");
@@ -326,7 +327,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		return retVal;
 	}
 
-	private void logTransaction(HttpRequestBean theRequest, PersServiceVersionMethod method, AuthorizationResultsBean authorized, HttpResponseBean httpResponse,
+	private void logTransaction(SrBeanIncomingRequest theRequest, PersServiceVersionMethod method, AuthorizationResultsBean authorized, SrBeanIncomingResponse httpResponse,
 			InvocationResponseResultsBean invocationResponse, InvocationResultsBean theInvocationResults) throws InvocationFailedDueToInternalErrorException {
 		PersUser user = authorized.getAuthorizedUser();
 
@@ -351,7 +352,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		}
 	}
 
-	private OrchestratorResponseBean invokeProxiedService(HttpRequestBean theRequest, InvocationResultsBean results, AuthorizationResultsBean theAuthorized, Long theThrottleTimeIfAny)
+	private SrBeanOutgoingResponse invokeProxiedService(SrBeanIncomingRequest theRequest, InvocationResultsBean results, AuthorizationResultsBean theAuthorized, Long theThrottleTimeIfAny)
 			throws ProcessingException, SecurityFailureException, InvocationFailedDueToInternalErrorException {
 
 		if (theAuthorized != null && theAuthorized.isAuthorized() != AuthorizationOutcomeEnum.AUTHORIZED) {
@@ -372,7 +373,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			throw new SecurityFailureException(theAuthorized.isAuthorized(), invocationResponse.getResponseStatusMessage());
 		}
 
-		OrchestratorResponseBean retVal;
+		SrBeanOutgoingResponse retVal;
 		switch (results.getResultType()) {
 		case STATIC_RESOURCE:
 			retVal = processRequestResource(theRequest, results);
@@ -404,7 +405,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		}
 	}
 
-	private InvocationResultsBean processInvokeService(HttpRequestBean theRequest, BasePersServiceVersion serviceVersion) throws InvocationFailedException, UnknownRequestException {
+	private InvocationResultsBean processInvokeService(SrBeanIncomingRequest theRequest, BasePersServiceVersion serviceVersion) throws InvocationFailedException, UnknownRequestException {
 		InvocationResultsBean results = null;
 		IServiceInvoker svcInvoker = getServiceInvoker(serviceVersion);
 		ourLog.trace("Handling service with invoker {}", svcInvoker);
@@ -462,7 +463,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		return svcInvoker;
 	}
 
-	private SidechannelOrchestratorResponseBean processRequestMethod(HttpRequestBean theRequest, InvocationResultsBean results, AuthorizationResultsBean authorized, Long theThrottleDelayIfAny,
+	private SidechannelOrchestratorResponseBean processRequestMethod(SrBeanIncomingRequest theRequest, InvocationResultsBean results, AuthorizationResultsBean authorized, Long theThrottleDelayIfAny,
 			boolean theRecordOutcome, PersServiceVersionUrl theForceUrl, Date theRequestStartedTime) throws InvocationResponseFailedException, InvocationFailedDueToInternalErrorException {
 		SidechannelOrchestratorResponseBean retVal;
 		PersServiceVersionMethod method = results.getMethodDefinition();
@@ -490,7 +491,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		}
 
 		PersHttpClientConfig clientConfig = serviceVersion.getHttpClientConfig();
-		HttpResponseBean httpResponse;
+		SrBeanIncomingResponse httpResponse;
 		httpResponse = myHttpClient.post(clientConfig, responseValidator, urlPool, contentBody, headers, contentType);
 		markUrlsFailed(httpResponse.getFailedUrls());
 
@@ -532,12 +533,12 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		return retVal;
 	}
 
-	private OrchestratorResponseBean processRequestResource(HttpRequestBean theRequest, InvocationResultsBean results) {
-		OrchestratorResponseBean retVal;
+	private SrBeanOutgoingResponse processRequestResource(SrBeanIncomingRequest theRequest, InvocationResultsBean results) {
+		SrBeanOutgoingResponse retVal;
 		String responseBody = results.getStaticResourceText();
 		String responseContentType = results.getStaticResourceContentTyoe();
 		Map<String, List<String>> responseHeaders = results.getStaticResourceHeaders();
-		retVal = new OrchestratorResponseBean(responseBody, responseContentType, responseHeaders, null);
+		retVal = new SrBeanOutgoingResponse(responseBody, responseContentType, responseHeaders, null);
 
 		PersServiceVersionResource resource = results.getStaticResourceDefinition();
 		myRuntimeStatus.recordInvocationStaticResource(theRequest.getRequestTime(), resource);
@@ -546,7 +547,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		return retVal;
 	}
 
-	private AuthorizationResultsBean processSecurity(HttpRequestBean theRequest, List<PersBaseServerAuth<?, ?>> theServerAuths, InvocationResultsBean results) throws SecurityFailureException,
+	private AuthorizationResultsBean processSecurity(SrBeanIncomingRequest theRequest, List<PersBaseServerAuth<?, ?>> theServerAuths, InvocationResultsBean results) throws SecurityFailureException,
 			ProcessingException {
 		AuthorizationResultsBean authorized = null;
 		if (results.getResultType() == ResultTypeEnum.METHOD) {

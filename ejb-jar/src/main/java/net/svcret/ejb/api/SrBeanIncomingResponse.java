@@ -10,7 +10,7 @@ import java.util.Map.Entry;
 import net.svcret.admin.shared.model.Pair;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 
-public class HttpResponseBean {
+public class SrBeanIncomingResponse {
 
 	private String myBody;
 	private int myCode;
@@ -35,11 +35,11 @@ public class HttpResponseBean {
 		mySuccessfulUrl = theSuccessfulUrl;
 	}
 
-	public HttpResponseBean() {
+	public SrBeanIncomingResponse() {
 		super();
 	}
 
-	public HttpResponseBean(PersServiceVersionUrl theSuccessfulUrl, String theContentType, int theCode, String theBody) {
+	public SrBeanIncomingResponse(PersServiceVersionUrl theSuccessfulUrl, String theContentType, int theCode, String theBody) {
 		super();
 		mySuccessfulUrl = theSuccessfulUrl;
 		myCode = theCode;

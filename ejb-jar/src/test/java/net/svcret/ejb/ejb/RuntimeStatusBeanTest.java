@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
-import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatus;
@@ -484,7 +484,7 @@ public class RuntimeStatusBeanTest {
 
 		Date invocationTime = ts1;
 		int requestLength = 1001;
-		HttpResponseBean httpResponse = null;
+		SrBeanIncomingResponse httpResponse = null;
 		InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
 		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.THROTTLE_REJ);
 		svc.recordInvocationMethod(invocationTime, requestLength, method, user, httpResponse, invocationResponseResultsBean, null);
@@ -517,7 +517,7 @@ public class RuntimeStatusBeanTest {
 		 */
 
 		PersServiceVersionResource resource = mock(PersServiceVersionResource.class);
-		HttpResponseBean httpResponse = mock(HttpResponseBean.class);
+		SrBeanIncomingResponse httpResponse = mock(SrBeanIncomingResponse.class);
 		InvocationResponseResultsBean orchResponse = mock(InvocationResponseResultsBean.class);
 
 		DefaultAnswer.setDesignTime();

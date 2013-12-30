@@ -1,6 +1,6 @@
 package net.svcret.ejb.ex;
 
-import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.invoker.soap.InvocationFailedException;
 import net.svcret.ejb.model.entity.PersUser;
 
@@ -24,11 +24,11 @@ public abstract class InvocationRequestOrResponseFailedException extends Invocat
 		super(theCause, theMessage);
 	}
 
-	public InvocationRequestOrResponseFailedException(Throwable theCause, String theMessage, HttpResponseBean theResponse) {
+	public InvocationRequestOrResponseFailedException(Throwable theCause, String theMessage, SrBeanIncomingResponse theResponse) {
 		super(theCause, theMessage, theResponse);
 	}
 
-	public InvocationRequestOrResponseFailedException(String theMessage, HttpResponseBean theHttpResponse) {
+	public InvocationRequestOrResponseFailedException(String theMessage, SrBeanIncomingResponse theHttpResponse) {
 		super(theMessage, theHttpResponse);
 	}
 

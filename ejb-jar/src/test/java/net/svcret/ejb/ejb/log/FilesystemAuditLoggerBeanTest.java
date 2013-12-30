@@ -7,8 +7,8 @@ import java.io.IOException;
 
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
-import net.svcret.ejb.api.HttpRequestBean;
-import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
 import net.svcret.ejb.api.InvocationResultsBean;
@@ -56,7 +56,7 @@ public class FilesystemAuditLoggerBeanTest {
 	@Test
 	public void testRollFilesAsNeeded() throws Exception {
 
-		HttpRequestBean request = mock(HttpRequestBean.class, new ReturnsDeepStubs());
+		SrBeanIncomingRequest request = mock(SrBeanIncomingRequest.class, new ReturnsDeepStubs());
 		when(request.getRequestHostIp()).thenReturn("127.0.0.2");
 		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class, new ReturnsDeepStubs());
 		when(method.getServiceVersion().getVersionId()).thenReturn("1.2");
@@ -69,7 +69,7 @@ public class FilesystemAuditLoggerBeanTest {
 		PersServiceVersionUrl implementationUrl = mock(PersServiceVersionUrl.class, new ReturnsDeepStubs());
 		when(implementationUrl.getUrlId()).thenReturn("url1");
 		when(implementationUrl.getUrl()).thenReturn("http://foo");
-		HttpResponseBean httpResponse = mock(HttpResponseBean.class, new ReturnsDeepStubs());
+		SrBeanIncomingResponse httpResponse = mock(SrBeanIncomingResponse.class, new ReturnsDeepStubs());
 		AuthorizationOutcomeEnum authorizationOutcome = AuthorizationOutcomeEnum.AUTHORIZED;
 		InvocationResultsBean req = new InvocationResultsBean();
 		mySvc.recordServiceTransaction(request, method.getServiceVersion(), method, user, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome, req);

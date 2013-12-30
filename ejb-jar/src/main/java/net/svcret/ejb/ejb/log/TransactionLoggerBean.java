@@ -14,8 +14,8 @@ import javax.ejb.TransactionAttributeType;
 
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
-import net.svcret.ejb.api.HttpRequestBean;
-import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IDao.ByteDelta;
@@ -79,8 +79,8 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	 * @throws UnexpectedFailureException 
 	 */
 	@Override
-	public void logTransaction(HttpRequestBean theRequest,BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse,
-			PersServiceVersionUrl theImplementationUrl, HttpResponseBean theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, String theResponseBody, InvocationResultsBean theInvocationResults) throws ProcessingException, UnexpectedFailureException {
+	public void logTransaction(SrBeanIncomingRequest theRequest,BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse,
+			PersServiceVersionUrl theImplementationUrl, SrBeanIncomingResponse theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, String theResponseBody, InvocationResultsBean theInvocationResults) throws ProcessingException, UnexpectedFailureException {
 		Validate.notNull(theSvcVer);
 		Validate.notNull(theInvocationResponse);
 		if (theInvocationResponse.getResponseType() != ResponseTypeEnum.FAIL) {

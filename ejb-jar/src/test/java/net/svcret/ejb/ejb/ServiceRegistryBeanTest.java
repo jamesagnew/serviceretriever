@@ -2,7 +2,7 @@ package net.svcret.ejb.ejb;
 
 import static org.mockito.Mockito.*;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
-import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.model.entity.PersDomain;
@@ -57,7 +57,7 @@ public class ServiceRegistryBeanTest {
 
 		
 		String wsdlBody = IOUtils.readClasspathIntoString("/test_simple.wsdl");
-		when(myHttpClient.get("http://foo/wsdl.wsdl")).thenReturn(new HttpResponseBean(null, "text/xml", 200, wsdlBody));
+		when(myHttpClient.get("http://foo/wsdl.wsdl")).thenReturn(new SrBeanIncomingResponse(null, "text/xml", 200, wsdlBody));
 
 		PersDomain domain = new PersDomain(1L, "DOMAIN");
 		when(myPersistence.getOrCreateDomainWithId("DOMAIN")).thenReturn(domain);

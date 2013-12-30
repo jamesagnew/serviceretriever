@@ -8,8 +8,8 @@ import java.io.StringReader;
 import java.util.HashMap;
 import java.util.List;
 
-import net.svcret.ejb.api.HttpRequestBean;
-import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
@@ -55,7 +55,7 @@ public class ServiceInvokerHl7OverHttpTest {
 		when(myDao.getServiceVersionByPid(111L)).thenReturn(dbSvcVer);
 		when(myServiceRegistry.saveServiceVersion(dbSvcVer)).thenReturn(dbSvcVer);
 		
-		HttpRequestBean req = new HttpRequestBean();
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
 		req.setPath("/Some/System");
 		req.setQuery("");
 		req.addHeader("Content-Type", "application/hl7-v2; charset=UTF-8");
@@ -85,7 +85,7 @@ public class ServiceInvokerHl7OverHttpTest {
 		when(myDao.getServiceVersionByPid(111L)).thenReturn(dbSvcVer);
 		when(myServiceRegistry.saveServiceVersion(dbSvcVer)).thenReturn(dbSvcVer);
 		
-		HttpResponseBean response=new HttpResponseBean();
+		SrBeanIncomingResponse response=new SrBeanIncomingResponse();
 		response.setBody(msgS);
 		response.setCode(200);
 		response.setContentType("application/hl7-v2");
@@ -112,7 +112,7 @@ public class ServiceInvokerHl7OverHttpTest {
 		when(myDao.getServiceVersionByPid(111L)).thenReturn(dbSvcVer);
 		when(myServiceRegistry.saveServiceVersion(dbSvcVer)).thenReturn(dbSvcVer);
 		
-		HttpResponseBean response=new HttpResponseBean();
+		SrBeanIncomingResponse response=new SrBeanIncomingResponse();
 		response.setBody(msgS);
 		response.setCode(200);
 		response.setContentType("application/hl7-v2");

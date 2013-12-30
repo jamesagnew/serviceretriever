@@ -15,10 +15,10 @@ import org.apache.http.client.ClientProtocolException;
 @Local
 public interface IHttpClient {
 
-	HttpResponseBean get(String theUrl) throws ClientProtocolException, IOException;
+	SrBeanIncomingResponse get(String theUrl) throws ClientProtocolException, IOException;
 
-	HttpResponseBean getOneTime(PersHttpClientConfig theHttpClientConfig, String theUrl) throws ClientProtocolException, IOException, ClientConfigException;
+	SrBeanIncomingResponse getOneTime(PersHttpClientConfig theHttpClientConfig, String theUrl) throws ClientProtocolException, IOException, ClientConfigException;
 
-	HttpResponseBean post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody, Map<String, List<String>> theHeaders, String theContentType);
+	SrBeanIncomingResponse post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody, Map<String, List<String>> theHeaders, String theContentType);
 	
 }

@@ -25,7 +25,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
 import net.svcret.ejb.Messages;
-import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IKeystoreService;
 import net.svcret.ejb.api.IResponseValidator;
@@ -93,14 +93,14 @@ public class HttpClientBean implements IHttpClient {
 
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override
-	public HttpResponseBean get(String theUrl) throws ClientProtocolException, IOException {
+	public SrBeanIncomingResponse get(String theUrl) throws ClientProtocolException, IOException {
 		Validate.notBlank(theUrl, "URL");
 		ourLog.debug("Requesting URL: {}", theUrl);
 
 		HttpUriRequest httpReq = new HttpGet(theUrl);
 
 		HttpEntity entity = null;
-		HttpResponseBean retVal = new HttpResponseBean();
+		SrBeanIncomingResponse retVal = new SrBeanIncomingResponse();
 		try {
 			long start = System.currentTimeMillis();
 			HttpResponse httpResp = myDefaultSimpleGetClient.execute(httpReq);
@@ -133,7 +133,7 @@ public class HttpClientBean implements IHttpClient {
 
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override
-	public HttpResponseBean post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody, Map<String, List<String>> theHeaders,
+	public SrBeanIncomingResponse post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody, Map<String, List<String>> theHeaders,
 			String theContentType) {
 		if (theClientConfig.getConnectTimeoutMillis() <= 0) {
 			throw new IllegalArgumentException("ConnectTimeout may not be <= 0");
@@ -156,7 +156,7 @@ public class HttpClientBean implements IHttpClient {
 				client = new HttpClientImpl(theClientConfig);
 			} catch (ClientConfigException e) {
 				ourLog.error("Failed to initialize HTTP client", e);
-				HttpResponseBean retVal = new HttpResponseBean();
+				SrBeanIncomingResponse retVal = new SrBeanIncomingResponse();
 				retVal.addFailedUrl(theUrlPool.getPreferredUrl(), "ServiceRetriever failed to initialize HTTP client, problem was: " + e.getMessage(), 0, "", "", 0,null);
 				return retVal;
 			}
@@ -188,7 +188,7 @@ public class HttpClientBean implements IHttpClient {
 		myDefaultSimpleGetClient = new DefaultHttpClient(mySimpleClientConMgr, params);
 	}
 
-	private void doPost(HttpResponseBean theResponse, IResponseValidator theResponseValidator, Map<String, List<String>> theHeaders, HttpEntity postEntity, DefaultHttpClient client,
+	private void doPost(SrBeanIncomingResponse theResponse, IResponseValidator theResponseValidator, Map<String, List<String>> theHeaders, HttpEntity postEntity, DefaultHttpClient client,
 			PersServiceVersionUrl theNextUrl, int theFailureRetries) {
 		int failuresRemaining = theFailureRetries + 1;
 		for (;;) {
@@ -369,14 +369,14 @@ public class HttpClientBean implements IHttpClient {
 			return myConMgr;
 		}
 
-		public HttpResponseBean get(String theUrl) throws ClientProtocolException, IOException {
+		public SrBeanIncomingResponse get(String theUrl) throws ClientProtocolException, IOException {
 			HttpParams params = createHttpParams(myClientConfig);
 
 			DefaultHttpClient client = new DefaultHttpClient(myConMgr, params);
 
 			HttpGet httpReq = new HttpGet(theUrl);
 			HttpEntity entity = null;
-			HttpResponseBean retVal = new HttpResponseBean();
+			SrBeanIncomingResponse retVal = new SrBeanIncomingResponse();
 			try {
 				long start = System.currentTimeMillis();
 				HttpResponse httpResp = client.execute(httpReq);
@@ -406,7 +406,7 @@ public class HttpClientBean implements IHttpClient {
 			}
 		}
 
-		public HttpResponseBean post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody,
+		public SrBeanIncomingResponse post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody,
 				Map<String, List<String>> theHeaders, String theContentType) {
 			HttpParams params = createHttpParams(theClientConfig);
 
@@ -414,7 +414,7 @@ public class HttpClientBean implements IHttpClient {
 			HttpEntity postEntity = new StringEntity(theContentBody, contentType);
 
 			DefaultHttpClient client = new DefaultHttpClient(myConMgr, params);
-			HttpResponseBean retVal = new HttpResponseBean();
+			SrBeanIncomingResponse retVal = new SrBeanIncomingResponse();
 
 			PersServiceVersionUrl url = theUrlPool.getPreferredUrl();
 			int failureRetries = theClientConfig.getFailureRetriesBeforeAborting();
@@ -460,7 +460,7 @@ public class HttpClientBean implements IHttpClient {
 	}
 
 	@Override
-	public HttpResponseBean getOneTime(PersHttpClientConfig theHttpClientConfig, String theUrl) throws ClientProtocolException, IOException, ClientConfigException {
+	public SrBeanIncomingResponse getOneTime(PersHttpClientConfig theHttpClientConfig, String theUrl) throws ClientProtocolException, IOException, ClientConfigException {
 		return new HttpClientImpl(theHttpClientConfig).get(theUrl);
 	}
 

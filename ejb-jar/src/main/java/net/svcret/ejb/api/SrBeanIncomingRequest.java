@@ -12,7 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import net.svcret.ejb.ejb.CapturingReader;
 
-public class HttpRequestBean {
+public class SrBeanIncomingRequest {
 
 	private String myBase;
 	private transient String myContentType;

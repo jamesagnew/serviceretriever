@@ -6,6 +6,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
+import net.svcret.admin.shared.util.StringUtil;
+
 @XmlAccessorType(XmlAccessType.FIELD)
 public class DtoPropertyCapture implements Serializable {
 
@@ -31,6 +33,15 @@ public class DtoPropertyCapture implements Serializable {
 
 	public void setXpathExpression(String theXpathExpression) {
 		myXpathExpression = theXpathExpression;
+	}
+
+	public boolean isBlank() {
+		if (StringUtil.isBlank(getPropertyName())) {
+			if (StringUtil.isBlank(getXpathExpression())) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 }

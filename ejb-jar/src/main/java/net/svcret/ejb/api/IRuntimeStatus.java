@@ -7,7 +7,7 @@ import java.util.Map;
 import javax.ejb.Local;
 
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
-import net.svcret.ejb.api.HttpResponseBean.Failure;
+import net.svcret.ejb.api.SrBeanIncomingResponse.Failure;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -40,7 +40,7 @@ public interface IRuntimeStatus {
 	 * @throws ProcessingException
 	 * @throws UnexpectedFailureException
 	 */
-	void recordInvocationMethod(Date theInvocationTime, int theRequestLength, PersServiceVersionMethod theMethod, PersUser theAuthorizedUser, HttpResponseBean theHttpResponse,
+	void recordInvocationMethod(Date theInvocationTime, int theRequestLength, PersServiceVersionMethod theMethod, PersUser theAuthorizedUser, SrBeanIncomingResponse theHttpResponse,
 			InvocationResponseResultsBean theInvocationResponseResultsBean, Long theThrottleDelayIfAny) throws UnexpectedFailureException;
 
 	/**

@@ -20,7 +20,7 @@ import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.admin.AdminServiceBean;
-import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
 import net.svcret.ejb.api.InvocationResponseResultsBean;
@@ -155,7 +155,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 
 		// Fail one of the URLs
 		newEntityManager();
-		HttpResponseBean httpResponse = new HttpResponseBean();
+		SrBeanIncomingResponse httpResponse = new SrBeanIncomingResponse();
 		httpResponse.setSuccessfulUrl(myD1M1S1U1);
 		httpResponse.addFailedUrl(myD1M1S1U2, "failure explanation", 500, "text/plain", "response body",0, null);
 		httpResponse.setBody("successful response");
@@ -176,7 +176,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 
 		// Succeed the URL again
 		newEntityManager();
-		httpResponse = new HttpResponseBean();
+		httpResponse = new SrBeanIncomingResponse();
 		httpResponse.setSuccessfulUrl(myD1M1S1U2);
 		httpResponse.setBody("successful response");
 		invocationResponseResultsBean = new InvocationResponseResultsBean();
@@ -213,7 +213,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 
 		// Fail one of the URLs
 		newEntityManager();
-		HttpResponseBean httpResponse = new HttpResponseBean();
+		SrBeanIncomingResponse httpResponse = new SrBeanIncomingResponse();
 		httpResponse.setSuccessfulUrl(myD1M1S1U1);
 		httpResponse.addFailedUrl(myD1M1S1U2, "failure explanation", 500, "text/plain", "response body",0, null);
 		httpResponse.setBody("successful response");
@@ -231,7 +231,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 
 		// Succeed the URL again
 		newEntityManager();
-		httpResponse = new HttpResponseBean();
+		httpResponse = new SrBeanIncomingResponse();
 		httpResponse.setSuccessfulUrl(myD1M1S1U2);
 		httpResponse.setBody("successful response");
 		invocationResponseResultsBean = new InvocationResponseResultsBean();
@@ -299,7 +299,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		check = myDao.getAllMonitorRuleActiveChecks().iterator().next();
 
 		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<IServiceOrchestrator.SidechannelOrchestratorResponseBean>();
-		HttpResponseBean httpResponse=new HttpResponseBean();
+		SrBeanIncomingResponse httpResponse=new SrBeanIncomingResponse();
 		httpResponse.setSuccessfulUrl(myD1M1S1U1);
 		httpResponse.setResponseTime(1000);
 		responses.add(new SidechannelOrchestratorResponseBean("", "", new HashMap<String, List<String>>(), httpResponse, ResponseTypeEnum.SUCCESS, new Date()));
@@ -464,7 +464,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 //		newEntityManager();
 //		myStatsSvc.flushStatus();
 
-		HttpResponseBean httpResponse=new HttpResponseBean();
+		SrBeanIncomingResponse httpResponse=new SrBeanIncomingResponse();
 		httpResponse.setSuccessfulUrl(myD1M1S1U1);
 		httpResponse.setResponseTime(1);
 		responses.clear();
@@ -712,7 +712,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		check2 = myDao.getAllMonitorRuleActiveChecks().iterator().next();
 
 		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<IServiceOrchestrator.SidechannelOrchestratorResponseBean>();
-		HttpResponseBean httpResponse=new HttpResponseBean();
+		SrBeanIncomingResponse httpResponse=new SrBeanIncomingResponse();
 		httpResponse.setSuccessfulUrl(myD1M1S1U1);
 		httpResponse.setResponseTime(1000); // This is too long
 		responses.add(new SidechannelOrchestratorResponseBean("", "", new HashMap<String, List<String>>(), httpResponse, ResponseTypeEnum.SUCCESS, new Date()));

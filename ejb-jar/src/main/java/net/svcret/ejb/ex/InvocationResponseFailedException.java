@@ -1,10 +1,10 @@
 package net.svcret.ejb.ex;
 
-import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 
 public class InvocationResponseFailedException extends InvocationRequestOrResponseFailedException {
 
-	public InvocationResponseFailedException(Throwable theCause, String theMessage, HttpResponseBean theHttpResponse) {
+	public InvocationResponseFailedException(Throwable theCause, String theMessage, SrBeanIncomingResponse theHttpResponse) {
 		super(theCause, theMessage, theHttpResponse);
 	}
 
@@ -12,7 +12,7 @@ public class InvocationResponseFailedException extends InvocationRequestOrRespon
 		super(theMessage);
 	}
 
-	public InvocationResponseFailedException(String theMessage, HttpResponseBean theHttpResponse) {
+	public InvocationResponseFailedException(String theMessage, SrBeanIncomingResponse theHttpResponse) {
 		super(theMessage, theHttpResponse);
 	}
 

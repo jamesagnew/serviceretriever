@@ -30,8 +30,8 @@ import javax.xml.stream.events.XMLEvent;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.Messages;
-import net.svcret.ejb.api.HttpRequestBean;
-import net.svcret.ejb.api.HttpResponseBean;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IHttpClient;
@@ -147,7 +147,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 		}
 	}
 
-	private void doHandleGet(HttpRequestBean theRequest, InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, String thePath, String theQuery) throws UnknownRequestException,
+	private void doHandleGet(SrBeanIncomingRequest theRequest, InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, String thePath, String theQuery) throws UnknownRequestException,
 			InvocationFailedDueToInternalErrorException {
 
 		if (theQuery.toLowerCase().equals("?wsdl")) {
@@ -160,7 +160,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 
 	}
 
-	private void doHandleGetWsdl(final HttpRequestBean theRequest, InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition) throws InvocationFailedDueToInternalErrorException {
+	private void doHandleGetWsdl(final SrBeanIncomingRequest theRequest, InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition) throws InvocationFailedDueToInternalErrorException {
 		final String pathBase = toPathBase(theRequest);
 		
 		ICreatesImportUrl urlCreator = new ICreatesImportUrl() {
@@ -179,14 +179,14 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 
 	}
 
-	private String toPathBase(final HttpRequestBean theRequest) {
+	private String toPathBase(final SrBeanIncomingRequest theRequest) {
 		String base = theRequest.getBase();
 		String contextPath = theRequest.getContextPath();
 		final String pathBase = base + contextPath + urlEncode(theRequest.getPath());
 		return pathBase;
 	}
 
-	private void doHandleGetXsd(HttpRequestBean theRequest, InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition) throws UnknownRequestException, InvocationFailedDueToInternalErrorException {
+	private void doHandleGetXsd(SrBeanIncomingRequest theRequest, InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition) throws UnknownRequestException, InvocationFailedDueToInternalErrorException {
 		Validate.notNull(theRequest);
 		
 		StringTokenizer tok = new StringTokenizer(theRequest.getQuery(), "&");
@@ -422,7 +422,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 		// text and we want to ignore it
 
 		ourLog.info("Loading WSDL URL: {}", theUrl);
-		HttpResponseBean wsdlHttpResponse;
+		SrBeanIncomingResponse wsdlHttpResponse;
 		try {
 			wsdlHttpResponse = myHttpClient.getOneTime(theHttpClientConfig, theUrl);
 		} catch (ClientProtocolException e1) {
@@ -475,7 +475,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 					}
 					ourLog.info("Retrieving Import - Parent: {} - Location: {} - Normalized: {}", new Object[] { theUrl, importLocation, norm });
 
-					HttpResponseBean schemaHttpResponse;
+					SrBeanIncomingResponse schemaHttpResponse;
 					try {
 						schemaHttpResponse = myHttpClient.getOneTime(theHttpClientConfig, norm);
 					} catch (ClientProtocolException e1) {
@@ -703,7 +703,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 	 */
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public InvocationResultsBean processInvocation(HttpRequestBean theRequest, BasePersServiceVersion theServiceDefinition)
+	public InvocationResultsBean processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition)
 			throws UnknownRequestException, InvocationRequestFailedException, InvocationFailedDueToInternalErrorException {
 		InvocationResultsBean retVal = new InvocationResultsBean();
 
@@ -724,7 +724,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 	}
 
 	@Override
-	public InvocationResponseResultsBean processInvocationResponse(BasePersServiceVersion theServiceDefinition, HttpResponseBean theResponse) throws InvocationResponseFailedException, InvocationFailedDueToInternalErrorException {
+	public InvocationResponseResultsBean processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingResponse theResponse) throws InvocationResponseFailedException, InvocationFailedDueToInternalErrorException {
 		InvocationResponseResultsBean retVal = new InvocationResponseResultsBean();
 		retVal.setResponseHeaders(theResponse.getHeaders());
 

@@ -117,6 +117,9 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myServiceVersion")
 	private Collection<PersMonitorAppliesTo> myMonitorRules;
 
+	@OneToOne(optional=true, mappedBy="mySvcVer", orphanRemoval=true)
+	private PersServiceVersionThrottle myThrottle;
+
 	@Transient
 	private transient volatile Map<String, PersServiceVersionMethod> myNameToMethod;
 
@@ -554,6 +557,10 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		return myStatus;
 	}
 
+	public PersServiceVersionThrottle getThrottle() {
+		return myThrottle;
+	}
+
 	/**
 	 * @return the uriToResource
 	 */
@@ -675,6 +682,10 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 
 		myHttpClientConfig.loadAllAssociations();
 
+		if (myThrottle != null) {
+			myThrottle.loadAllAssociations();
+		}
+		
 	}
 
 	public void populateDtoWithMonitorRules(BaseDtoServiceCatalogItem theDto) {
@@ -884,6 +895,10 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	public void setStatus(PersServiceVersionStatus theStatus) {
 		Validate.notNull(theStatus, "Status");
 		myStatus = theStatus;
+	}
+
+	public void setThrottle(PersServiceVersionThrottle theThrottle) {
+		myThrottle = theThrottle;
 	};
 
 	public void setUseDefaultProxyPath(boolean theDefaultProxyPath) {
