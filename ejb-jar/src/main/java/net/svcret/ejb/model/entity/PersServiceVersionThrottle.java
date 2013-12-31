@@ -11,6 +11,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.ForeignKey;
+
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.DtoServiceVersionThrottle;
 
@@ -33,6 +35,7 @@ public class PersServiceVersionThrottle extends BasePersObject {
 
 	@OneToOne(optional=false)
 	@JoinColumn(name = "SVC_VER_PID", nullable=false, updatable=false)
+	@ForeignKey(name = "FK_PERS_SVCVERTHT_SVCVERPID")
 	private BasePersServiceVersion myServiceVersion;
 
 	@Column(name = "THROTTLE_MAX_QUEUE", nullable = true)

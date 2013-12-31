@@ -21,10 +21,10 @@ import javax.servlet.http.HttpServletResponse;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
-import net.svcret.ejb.api.SrBeanProcessedResponse;
-import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersUser;
 
@@ -34,7 +34,6 @@ import org.junit.Test;
 import org.mockito.internal.stubbing.defaultanswers.ReturnsDeepStubs;
 
 import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.RateLimiter;
 
 public class ThrottlingServiceTest {
 
@@ -53,6 +52,63 @@ public class ThrottlingServiceTest {
 		mySvc.setRuntimeStatusSvcForTesting(myRuntimeStatusSvc);
 	}
 
+	
+	@Test
+	public void testExecuteSlowRate() throws ThrottleException, ThrottleQueueFullException, InterruptedException {
+
+		when(myThis.serviceThrottledRequests((ThrottledTaskQueue) any())).thenReturn(new AsyncResult<Void>(null));
+		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class, new ReturnsDeepStubs());
+		when(method.getServiceVersion().getThrottle()).thenReturn(null);
+		
+		/*
+		 * Rate is less than one per second
+		 */
+		
+		PersUser user = new PersUser();
+		user.setThrottleMaxRequests(40);
+		user.setThrottlePeriod(ThrottlePeriodEnum.MINUTE);
+		user.setThrottleMaxQueueDepth(0);
+
+		SrBeanIncomingRequest httpRequest = new SrBeanIncomingRequest();
+		httpRequest.setInputReader(new StringReader(""));
+
+		SrBeanProcessedRequest invocationRequest = new SrBeanProcessedRequest();
+		invocationRequest.setResultMethod(method, "", "");
+		AuthorizationResultsBean authorization = new AuthorizationResultsBean();
+
+		authorization.setAuthorizedUser(user);
+
+		mySvc.applyThrottle(httpRequest, invocationRequest, authorization);
+		applyThrottleAndExpectQueueFull(httpRequest, invocationRequest, authorization);
+		applyThrottleAndExpectQueueFull(httpRequest, invocationRequest, authorization);
+		applyThrottleAndExpectQueueFull(httpRequest, invocationRequest, authorization);
+		
+		Thread.sleep(1501);
+		
+		mySvc.applyThrottle(httpRequest, invocationRequest, authorization);
+		applyThrottleAndExpectQueueFull(httpRequest, invocationRequest, authorization);
+		applyThrottleAndExpectQueueFull(httpRequest, invocationRequest, authorization);
+		applyThrottleAndExpectQueueFull(httpRequest, invocationRequest, authorization);
+
+		Thread.sleep(1501);
+		
+		mySvc.applyThrottle(httpRequest, invocationRequest, authorization);
+		applyThrottleAndExpectQueueFull(httpRequest, invocationRequest, authorization);
+		applyThrottleAndExpectQueueFull(httpRequest, invocationRequest, authorization);
+		applyThrottleAndExpectQueueFull(httpRequest, invocationRequest, authorization);
+
+	}
+
+
+	private void applyThrottleAndExpectQueueFull(SrBeanIncomingRequest httpRequest, SrBeanProcessedRequest invocationRequest, AuthorizationResultsBean authorization) throws ThrottleException {
+		try {
+		mySvc.applyThrottle(httpRequest, invocationRequest, authorization);
+		fail();
+		} catch (ThrottleQueueFullException e) {
+			// expected
+		}
+	}
+	
 	@Test
 	public void testExecuteThrottledUser() throws ThrottleException, ThrottleQueueFullException, InterruptedException {
 
@@ -185,8 +241,8 @@ public class ThrottlingServiceTest {
 		SrBeanIncomingRequest httpRequest = new SrBeanIncomingRequest();
 		httpRequest.setInputReader(new StringReader(""));
 
-		RateLimiter rateLimiter = RateLimiter.create(2);
-		ArrayList<RateLimiter> rateLimiters = Lists.newArrayList(rateLimiter);
+		FlexibleRateLimiter rateLimiter = new FlexibleRateLimiter(2);
+		ArrayList<FlexibleRateLimiter> rateLimiters = Lists.newArrayList(rateLimiter);
 
 		SrBeanProcessedRequest invocationRequest = new SrBeanProcessedRequest();
 		invocationRequest.setResultMethod(new PersServiceVersionMethod(), null, null);

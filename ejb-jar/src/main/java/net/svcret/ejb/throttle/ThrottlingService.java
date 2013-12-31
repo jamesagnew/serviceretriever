@@ -65,11 +65,11 @@ public class ThrottlingService implements IThrottlingService {
 	private IThrottlingService myThis;
 
 	private Map<LimiterKey, ThrottledTaskQueue> myThrottleQueues = new HashMap<LimiterKey, ThrottledTaskQueue>();
-	private ConcurrentHashMap<LimiterKey, RateLimiter> myUserRateLimiters = new ConcurrentHashMap<LimiterKey, RateLimiter>();
+	private ConcurrentHashMap<LimiterKey, FlexibleRateLimiter> myUserRateLimiters = new ConcurrentHashMap<LimiterKey, FlexibleRateLimiter>();
 
 	private void applyThrottle(SrBeanIncomingRequest theHttpRequest, SrBeanProcessedRequest theInvocationRequest, AuthorizationResultsBean theAuthorization, Collection<LimiterKey> theRemainingThrottles) throws ThrottleQueueFullException, ThrottleException {
 		
-		List<RateLimiter> rateLimiters = Lists.newArrayList();
+		List<FlexibleRateLimiter> rateLimiters = Lists.newArrayList();
 		LimiterKey firstThrottleKey = null;
 		
 		for (LimiterKey nextKey : theRemainingThrottles) {
@@ -77,12 +77,12 @@ public class ThrottlingService implements IThrottlingService {
 			double requestsPerSecond = nextKey.getRequestsPerSecond();
 			Integer maxQueueDepth = nextKey.getMaxQueuedRequests();
 			
-			RateLimiter rateLimiter = myUserRateLimiters.get(nextKey);
+			FlexibleRateLimiter rateLimiter = myUserRateLimiters.get(nextKey);
 			if (rateLimiter == null) {
 
 				ourLog.debug("Creating rate limiter with {} reqs/second", requestsPerSecond);
 
-				RateLimiter newRateLimiter = RateLimiter.create(requestsPerSecond);
+				FlexibleRateLimiter newRateLimiter = new FlexibleRateLimiter(requestsPerSecond);
 				rateLimiter = myUserRateLimiters.putIfAbsent(nextKey, newRateLimiter);
 				if (rateLimiter == null) {
 					ourLog.info("Creating new RateLimiter for {} with {} reqs/second", nextKey, requestsPerSecond);

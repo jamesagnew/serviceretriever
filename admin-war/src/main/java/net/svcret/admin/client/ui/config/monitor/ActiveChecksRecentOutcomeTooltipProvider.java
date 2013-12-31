@@ -19,6 +19,7 @@ public final class ActiveChecksRecentOutcomeTooltipProvider implements IProvides
 	@Override
 	public Widget getTooltip(DtoMonitorRuleActiveCheck theObject) {
 		FlowPanel retVal = new FlowPanel();
+		
 		if (theObject.getRecentOutcomesForUrl().isEmpty() || theObject.getRecentOutcomesForUrl().get(0).getOutcomes().isEmpty()) {
 			retVal.add(new Label("This check has not yet fired"));
 			return retVal;

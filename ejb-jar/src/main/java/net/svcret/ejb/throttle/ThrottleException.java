@@ -7,13 +7,10 @@ import java.util.List;
 
 import javax.servlet.AsyncContext;
 
-import net.svcret.admin.shared.model.IThrottleable;
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
-import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.model.entity.PersUser;
-
-import com.google.common.util.concurrent.RateLimiter;
 
 /**
  * Note that this exception is public since it is passed to the Orchestration
@@ -27,7 +24,7 @@ public class ThrottleException extends Exception {
 	private AuthorizationResultsBean myAuthorization;
 	private SrBeanIncomingRequest myHttpRequest;
 	private SrBeanProcessedRequest myInvocationRequest;
-	private List<RateLimiter> myRateLimiters;
+	private List<FlexibleRateLimiter> myRateLimiters;
 	private Date myThrottleStartedException;
 	private LimiterKey myThrottleKey;
 
@@ -40,9 +37,9 @@ public class ThrottleException extends Exception {
 	 * @param theThrottleKey
 	 *            The service catalog object whose throttling is being applied
 	 */
-	ThrottleException(SrBeanIncomingRequest theHttpRequest, List<RateLimiter> theRateLimiters, SrBeanProcessedRequest theInvocationRequest, AuthorizationResultsBean theAuthorization, LimiterKey theFirstThrottleKey) {
+	ThrottleException(SrBeanIncomingRequest theHttpRequest, List<FlexibleRateLimiter> theRateLimiters, SrBeanProcessedRequest theInvocationRequest, AuthorizationResultsBean theAuthorization, LimiterKey theFirstThrottleKey) {
 		myHttpRequest = theHttpRequest;
-		myRateLimiters = new ArrayList<RateLimiter>(theRateLimiters);
+		myRateLimiters = new ArrayList<FlexibleRateLimiter>(theRateLimiters);
 		myInvocationRequest = theInvocationRequest;
 		myAuthorization = theAuthorization;
 		myThrottleStartedException = new Date();
@@ -73,7 +70,7 @@ public class ThrottleException extends Exception {
 		return myInvocationRequest;
 	}
 
-	List<RateLimiter> getRateLimiters() {
+	List<FlexibleRateLimiter> getRateLimiters() {
 		return myRateLimiters;
 	}
 
@@ -86,8 +83,8 @@ public class ThrottleException extends Exception {
 	}
 
 	public boolean tryToAquireAllRateLimitersAndRemoveAnyWhichAreAquired() {
-		for (Iterator<RateLimiter> iterator = myRateLimiters.iterator(); iterator.hasNext();) {
-			RateLimiter next = iterator.next();
+		for (Iterator<FlexibleRateLimiter> iterator = myRateLimiters.iterator(); iterator.hasNext();) {
+			FlexibleRateLimiter next = iterator.next();
 			if (!next.tryAcquire()) {
 				return false;
 			}

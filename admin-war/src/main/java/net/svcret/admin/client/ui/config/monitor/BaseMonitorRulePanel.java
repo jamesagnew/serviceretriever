@@ -4,6 +4,8 @@ import static net.svcret.admin.client.AdminPortal.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -306,10 +308,13 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 				// Target
 				b.appendHtmlConstant("<div class=\"" + MyResources.CSS.monitorRuleActiveTargetKey() + "\">Target</div>");
 				b.appendHtmlConstant("<div class=\"" + MyResources.CSS.monitorRuleActiveTargetValue() + "\">");
+				DtoDomain domain = myDomainList.getDomainWithServiceVersion(theObject.getServiceVersionPid());
 				GService service = myDomainList.getServiceWithServiceVersion(theObject.getServiceVersionPid());
 				BaseDtoServiceVersion svcVer = service.getVersionList().getVersionByPid(theObject.getServiceVersionPid());
+				b.appendEscaped(domain.getName());
+				b.appendHtmlConstant("<br/>");
 				b.appendEscaped(service.getName());
-				b.appendHtmlConstant(" / ");
+				b.appendHtmlConstant("<br/>");
 				b.appendEscaped(svcVer.getId());
 				b.appendHtmlConstant("</div>");
 
@@ -440,10 +445,11 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 				b.appendHtmlConstant("<table cellpadding='2' cellspacing='2' border='0'>");
 
 				for (DtoMonitorRuleActiveCheckOutcomeList nextList : theObject.getRecentOutcomesForUrl()) {
-					b.appendHtmlConstant("<tr><td>");
-					b.appendHtmlConstant("<a href=\"" + nextList.getUrl() + "\">");
+					b.appendHtmlConstant("<tr><td>Endpoint: ");
 					b.appendEscaped(nextList.getUrlId());
-					b.appendHtmlConstant("</a></td><td>");
+					b.appendHtmlConstant("</td><td>");
+					b.appendHtmlConstant("<a href=\"" + nextList.getUrl() + "\">(impl)</a>");
+					b.appendHtmlConstant("</td><td>");
 
 					int[] values = new int[nextList.getOutcomes().size()];
 					for (int i = 0; i < values.length; i++) {
@@ -794,8 +800,28 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 	}
 
 	private void initActiveValues(DtoMonitorRuleActive theRule) {
+		List<DtoMonitorRuleActiveCheck> checks = new ArrayList<DtoMonitorRuleActiveCheck>(theRule.getCheckList().toCollection());
+		Collections.sort(checks, new Comparator<DtoMonitorRuleActiveCheck>() {
+			@Override
+			public int compare(DtoMonitorRuleActiveCheck theO1, DtoMonitorRuleActiveCheck theO2) {
+				DtoDomain domain1 = myDomainList.getDomainWithServiceVersion(theO1.getServiceVersionPid());
+				DtoDomain domain2 = myDomainList.getDomainWithServiceVersion(theO2.getServiceVersionPid());
+				int retVal = StringUtil.compare(domain1.getName(), domain2.getName());
+				if (retVal == 0) {
+					GService service1 = myDomainList.getServiceWithServiceVersion(theO1.getServiceVersionPid());
+					GService service2 = myDomainList.getServiceWithServiceVersion(theO2.getServiceVersionPid());
+					retVal = StringUtil.compare(service1.getName(), service2.getName());
+					if (retVal == 0) {
+						BaseDtoServiceVersion version1 = myDomainList.getServiceVersionByPid(theO1.getServiceVersionPid());
+						BaseDtoServiceVersion version2 = myDomainList.getServiceVersionByPid(theO2.getServiceVersionPid());
+						retVal = StringUtil.compare(version1.getId(), version2.getId());
+					}
+				}
+				return retVal;
+			}});
+
 		myActiveChecksDataProvider.getList().clear();
-		myActiveChecksDataProvider.getList().addAll(theRule.getCheckList().toCollection());
+		myActiveChecksDataProvider.getList().addAll(checks);
 		myActiveChecksDataProvider.refresh();
 	}
 

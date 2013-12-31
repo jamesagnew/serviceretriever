@@ -6,12 +6,14 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import net.svcret.ejb.model.entity.PersUser;
 
 class LimiterKey {
+	
 	private Integer myHashCode;
 	private Integer myMaxQueuedRequests;
 	private String myPropertyCaptureKey;
 	private String myPropertyCaptureValue;
 	private double myRequestsPerSecond;
 	private PersUser myUser;
+	private volatile long myLastUsed;
 
 	public LimiterKey(PersUser theUser, String thePropertyCaptureKey, String thePropertyCaptureValue, double theRequestsPerSecond, Integer theMaxQueueDepth) {
 		super();
