@@ -18,8 +18,8 @@ import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IHttpClient;
-import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.ejb.HttpClientBean.ClientConfigException;
 import net.svcret.ejb.ex.ProcessingException;
@@ -104,9 +104,9 @@ public class ServiceInvokerSoap11Test {
 		req.addHeader("Content-Type", "text/xml");
 		req.setBase("http://localhost:26080");
 		req.setContextPath("");
-		InvocationResultsBean result = svc.processInvocation(req, svcVersion);
+		SrBeanProcessedRequest result = svc.processInvocation(req, svcVersion);
 
-		assertEquals(InvocationResultsBean.ResultTypeEnum.STATIC_RESOURCE, result.getResultType());
+		assertEquals(SrBeanProcessedRequest.ResultTypeEnum.STATIC_RESOURCE, result.getResultType());
 		assertEquals(Constants.CONTENT_TYPE_XML, result.getStaticResourceContentTyoe());
 
 //		ourLog.info("Wsdl Outputted:\n{}", result.getStaticResourceText());
@@ -130,7 +130,7 @@ public class ServiceInvokerSoap11Test {
 		req.setContextPath("");
 		result = svc.processInvocation(req, svcVersion);
 
-		assertEquals(InvocationResultsBean.ResultTypeEnum.STATIC_RESOURCE, result.getResultType());
+		assertEquals(SrBeanProcessedRequest.ResultTypeEnum.STATIC_RESOURCE, result.getResultType());
 		assertEquals(Constants.CONTENT_TYPE_XML, result.getStaticResourceContentTyoe());
 
 		ourLog.info("XSD Outputted:\n{}", result.getStaticResourceText());
@@ -226,10 +226,10 @@ public class ServiceInvokerSoap11Test {
 		req.setRequestType(RequestType.GET);
 		req.setPath("/Some/Path");
 		req.setQuery("?xsd&xsdnum=100");
-		InvocationResultsBean result = svc.processInvocation(req, svcVersion);
+		SrBeanProcessedRequest result = svc.processInvocation(req, svcVersion);
 
 		
-		assertEquals(InvocationResultsBean.ResultTypeEnum.STATIC_RESOURCE, result.getResultType());
+		assertEquals(SrBeanProcessedRequest.ResultTypeEnum.STATIC_RESOURCE, result.getResultType());
 		assertEquals(Constants.CONTENT_TYPE_XML, result.getStaticResourceContentTyoe());
 
 		ourLog.info("Xsd Outputted:\n{}", result.getStaticResourceDefinition().getResourceText());
@@ -313,13 +313,13 @@ public class ServiceInvokerSoap11Test {
 		req.setPath("/Some/Path");
 		req.setQuery("");
 		req.addHeader("Content-Type", "text/xml");
-		InvocationResultsBean result = svc.processInvocation(req, serviceVer);
+		SrBeanProcessedRequest result = svc.processInvocation(req, serviceVer);
 
 		
 		assertEquals("user", result.getCredentialsInRequest(serverAuths.get(0)).getUsername());
 		assertEquals("pass", result.getCredentialsInRequest(serverAuths.get(0)).getPassword());
 		
-		assertEquals(InvocationResultsBean.ResultTypeEnum.METHOD, result.getResultType());
+		assertEquals(SrBeanProcessedRequest.ResultTypeEnum.METHOD, result.getResultType());
 		
 		// Security header doesn't match so don't compare it
 		String expected = msg.replace("\n", "").replaceAll(".*<soapenv:Body>", "<soapenv:Body>");
@@ -335,6 +335,7 @@ public class ServiceInvokerSoap11Test {
 		verify(serviceVer, atLeastOnce()).getClientAuths();
 		verify(serviceVer, atLeastOnce()).getServerAuths();
 		verify(serviceVer, atLeastOnce()).getMethodForRootElementName("http://ws.ehr.uhn.ca:getPatientByMrn");
+		verify(method, atLeast(0)).getServiceVersion();
 		verifyNoMoreInteractions(serviceVer, service, method);
 	}
 
@@ -387,7 +388,7 @@ public class ServiceInvokerSoap11Test {
 		when(httpResponse.getHeaders()).thenReturn(headers);
 		
 		ServiceInvokerSoap11 svc = new ServiceInvokerSoap11();
-		InvocationResponseResultsBean response = svc.processInvocationResponse(null, httpResponse);
+		SrBeanProcessedResponse response = svc.processInvocationResponse(null, httpResponse);
 		
 		assertEquals(ResponseTypeEnum.FAULT, response.getResponseType());
 		assertEquals("SOAP-ENV:Server", response.getResponseFaultCode());
@@ -430,7 +431,7 @@ public class ServiceInvokerSoap11Test {
 		when(httpResponse.getHeaders()).thenReturn(headers);
 		
 		ServiceInvokerSoap11 svc = new ServiceInvokerSoap11();
-		InvocationResponseResultsBean response = svc.processInvocationResponse(null, httpResponse);
+		SrBeanProcessedResponse response = svc.processInvocationResponse(null, httpResponse);
 		
 		assertEquals(ResponseTypeEnum.FAULT, response.getResponseType());
 		assertEquals(null, response.getResponseFaultCode());
@@ -472,7 +473,7 @@ public class ServiceInvokerSoap11Test {
 		when(httpResponse.getHeaders()).thenReturn(headers);
 		
 		ServiceInvokerSoap11 svc = new ServiceInvokerSoap11();
-		InvocationResponseResultsBean response = svc.processInvocationResponse(null, httpResponse);
+		SrBeanProcessedResponse response = svc.processInvocationResponse(null, httpResponse);
 		
 		assertEquals(ResponseTypeEnum.FAULT, response.getResponseType());
 		assertEquals("", response.getResponseFaultCode());

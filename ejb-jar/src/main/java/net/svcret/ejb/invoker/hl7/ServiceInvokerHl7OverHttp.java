@@ -16,8 +16,8 @@ import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.IServiceRegistry;
-import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
@@ -61,7 +61,7 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 	}
 
 	@Override
-	public InvocationResultsBean processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition) throws UnknownRequestException, InvocationRequestFailedException {
+	public SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition) throws UnknownRequestException, InvocationRequestFailedException {
 		PersServiceVersionHl7OverHttp svc = (PersServiceVersionHl7OverHttp)theServiceDefinition;
 		
 		if (theRequest.getRequestType() != RequestType.POST) {
@@ -116,14 +116,14 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 			ourLog.info("Created new method '{}' and got PID {}", messageType, method.getPid());
 		}
 
-		InvocationResultsBean retVal = new InvocationResultsBean();
+		SrBeanProcessedRequest retVal = new SrBeanProcessedRequest();
 		retVal.setResultMethod(method, message, contentType);
 		
 		return retVal;
 	}
 
 	@Override
-	public InvocationResponseResultsBean processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingResponse theResponse) throws InvocationResponseFailedException  {
+	public SrBeanProcessedResponse processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingResponse theResponse) throws InvocationResponseFailedException  {
 		
 		String responseBody = theResponse.getBody();
 		String responseCode;
@@ -133,7 +133,7 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 			throw new InvocationResponseFailedException(e, "Failed to parse response: "+e.getMessage(), theResponse);
 		}
 		
-		InvocationResponseResultsBean retVal=new InvocationResponseResultsBean();
+		SrBeanProcessedResponse retVal=new SrBeanProcessedResponse();
 		retVal.setResponseBody(responseBody);
 		retVal.setResponseContentType(theResponse.getContentType());
 		retVal.setResponseHeaders(new HashMap<String, List<String>>());

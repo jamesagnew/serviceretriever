@@ -12,9 +12,9 @@ import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.ICredentialGrabber;
-import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.api.InvocationResultsBean;
-import net.svcret.ejb.api.InvocationResultsBean.ResultTypeEnum;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
+import net.svcret.ejb.api.SrBeanProcessedRequest.ResultTypeEnum;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.ejb.DefaultAnswer;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
@@ -120,7 +120,7 @@ public class JsonRpc20ServiceInvokerTest {
 		req.addHeader("Content-Type", "application/json");
 		req.setRequestType(RequestType.POST);
 		req.setInputReader(reader);
-		InvocationResultsBean resp = svc.processInvocation(req,def);
+		SrBeanProcessedRequest resp = svc.processInvocation(req,def);
 
 		ICredentialGrabber grabber = resp.getCredentialsInRequest(serverAuths.get(0));
 		assertEquals("mockpass", grabber.getPassword());
@@ -151,7 +151,7 @@ public class JsonRpc20ServiceInvokerTest {
 
 		JsonRpc20ServiceInvoker svc = new JsonRpc20ServiceInvoker();
 
-		PersServiceVersionJsonRpc20 def = mock(PersServiceVersionJsonRpc20.class, new DefaultAnswer());
+		PersServiceVersionJsonRpc20 def = mock(PersServiceVersionJsonRpc20.class);
 		ArrayList<PersBaseServerAuth<?, ?>> serverAuths = new ArrayList<PersBaseServerAuth<?, ?>>();
 		serverAuths.add(new NamedParameterJsonRpcServerAuth("clientId", "clientPass"));
 		when(def.getServerAuths()).thenReturn(serverAuths);
@@ -160,7 +160,7 @@ public class JsonRpc20ServiceInvokerTest {
 		clientAuths.add(new NamedParameterJsonRpcClientAuth("newUsername", "clientId", "newPassword", "clientPass"));
 		when(def.getClientAuths()).thenReturn(clientAuths);
 
-		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class, new DefaultAnswer());
+		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class);
 
 		when(def.getMethod("getCanonicalMappings")).thenReturn(method);
 
@@ -171,7 +171,7 @@ public class JsonRpc20ServiceInvokerTest {
 		req.addHeader("Content-Type", "application/json");
 		req.setRequestType(RequestType.POST);
 		req.setInputReader(reader);
-		InvocationResultsBean resp = svc.processInvocation(req,def);
+		SrBeanProcessedRequest resp = svc.processInvocation(req,def);
 
 		ICredentialGrabber grabber = resp.getCredentialsInRequest(serverAuths.get(0));
 		assertEquals("mockpass", grabber.getPassword());
@@ -267,7 +267,7 @@ public class JsonRpc20ServiceInvokerTest {
 		req.addHeader("Content-Type", "application/json");
 		req.setRequestType(RequestType.POST);
 		req.setInputReader(reader);
-		InvocationResultsBean resp = svc.processInvocation(req,def);
+		SrBeanProcessedRequest resp = svc.processInvocation(req,def);
 
 		Assert.assertEquals("application/json", resp.getMethodContentType());
 		Assert.assertEquals(ResultTypeEnum.METHOD, resp.getResultType());
@@ -341,7 +341,7 @@ public class JsonRpc20ServiceInvokerTest {
 		DefaultAnswer.setRunTime();
 
 		@SuppressWarnings("unused")
-		InvocationResultsBean resp;
+		SrBeanProcessedRequest resp;
 
 		//@formatter:off
 		String request = // -
@@ -437,7 +437,7 @@ public class JsonRpc20ServiceInvokerTest {
 		req.addHeader("Content-Type", "application/json");
 		req.setRequestType(RequestType.POST);
 		req.setInputReader(new StringReader(request));
-		InvocationResultsBean resp = svc.processInvocation(req,def);
+		SrBeanProcessedRequest resp = svc.processInvocation(req,def);
 
 		String actualBody = resp.getMethodRequestBody();
 		Assert.assertEquals(request, actualBody);
@@ -489,7 +489,7 @@ public class JsonRpc20ServiceInvokerTest {
 
 		String response = "{\"jsonrpc\": \"2.0\", \"result\": -19, \"id\": 2}";
 		respBean.setBody(response);
-		InvocationResponseResultsBean resp = svc.processInvocationResponse(null, respBean);
+		SrBeanProcessedResponse resp = svc.processInvocationResponse(null, respBean);
 		Assert.assertEquals(ResponseTypeEnum.SUCCESS, resp.getResponseType());
 
 		response = "{\"jsonrpc\": \"2.0\", \"error\": {\"code\": -32601, \"message\": \"Method not found\"}, \"id\": \"1\"}";
@@ -508,7 +508,7 @@ public class JsonRpc20ServiceInvokerTest {
 		SrBeanIncomingResponse respBean = new SrBeanIncomingResponse();
 
 		respBean.setBody("{\"jsonrpc\": \"2.0\", \"result\": -19, \"id\": 2}");
-		InvocationResponseResultsBean resp = svc.processInvocationResponse(null, respBean);
+		SrBeanProcessedResponse resp = svc.processInvocationResponse(null, respBean);
 		Assert.assertEquals(ResponseTypeEnum.SUCCESS, resp.getResponseType());
 
 		respBean.setBody("{\"jsonrpc\": \"2.0\", \"result\": -19.9, \"id\": 2}");
@@ -533,7 +533,7 @@ public class JsonRpc20ServiceInvokerTest {
 
 		String response = IOUtils.toString(JsonRpc20ResponseValidatorTest.class.getResourceAsStream("/badjsonresponse.json"));
 		respBean.setBody(response);
-		InvocationResponseResultsBean resp = svc.processInvocationResponse(null, respBean);
+		SrBeanProcessedResponse resp = svc.processInvocationResponse(null, respBean);
 		Assert.assertEquals(ResponseTypeEnum.SUCCESS, resp.getResponseType());
 
 		String actual = resp.getResponseBody();

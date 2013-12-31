@@ -57,11 +57,11 @@ import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.admin.AdminServiceBean;
-import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IScheduler;
-import net.svcret.ejb.api.InvocationResponseResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.ejb.monitor.MonitorServiceBean;
 import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
 import net.svcret.ejb.invoker.soap.IServiceInvokerSoap11;
@@ -244,11 +244,11 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		SrBeanIncomingResponse httpResponse = new SrBeanIncomingResponse();
 		httpResponse.setBody("1234");
 		httpResponse.setResponseTime(123);
-		InvocationResponseResultsBean bean = new InvocationResponseResultsBean();
+		SrBeanProcessedResponse bean = new SrBeanProcessedResponse();
 		bean.setResponseType(ResponseTypeEnum.SUCCESS);
 
 		myEverythingInvocationTime = new Date();
-		myStatsSvc.recordInvocationMethod(myEverythingInvocationTime, 100, InvocationResultsBean.forUnitTest(m1), null, httpResponse, bean);
+		myStatsSvc.recordInvocationMethod(myEverythingInvocationTime, 100, SrBeanProcessedRequest.forUnitTest(m1), null, httpResponse, bean);
 
 		newEntityManager();
 
@@ -263,7 +263,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		request.setRequestHeaders(new HashMap<String, List<String>>());
 		request.setRequestTime(new Date());
 		String requestBody = "request body";
-		InvocationResponseResultsBean invocationResponse = new InvocationResponseResultsBean();
+		SrBeanProcessedResponse invocationResponse = new SrBeanProcessedResponse();
 		invocationResponse.setResponseHeaders(new HashMap<String, List<String>>());
 		invocationResponse.setResponseType(ResponseTypeEnum.SUCCESS);
 		PersServiceVersionUrl implementationUrl = persVer.getUrls().get(0);

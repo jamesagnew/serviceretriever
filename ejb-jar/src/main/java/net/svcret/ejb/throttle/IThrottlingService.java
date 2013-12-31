@@ -5,7 +5,7 @@ import java.util.concurrent.Future;
 import javax.servlet.AsyncContext;
 
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
-import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 
 public interface IThrottlingService {
@@ -14,6 +14,6 @@ public interface IThrottlingService {
 
 	Future<Void> serviceThrottledRequests(ThrottledTaskQueue theTaskQueue);
 
-	void applyThrottle(SrBeanIncomingRequest theHttpRequest, InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization) throws ThrottleException, ThrottleQueueFullException;
+	void applyThrottle(SrBeanIncomingRequest theHttpRequest, SrBeanProcessedRequest theInvocationRequest, AuthorizationResultsBean theAuthorization) throws ThrottleException, ThrottleQueueFullException;
 
 }

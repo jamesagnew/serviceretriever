@@ -12,8 +12,8 @@ import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IResponseValidator;
-import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
@@ -246,12 +246,12 @@ public class JsonRpc20ServiceInvoker extends BaseServiceInvoker implements IServ
 	}
 
 	@Override
-	public InvocationResultsBean processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition)	throws UnknownRequestException, InvocationRequestFailedException {
+	public SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition)	throws UnknownRequestException, InvocationRequestFailedException {
 		if (theRequest.getRequestType() != RequestType.POST) {
 			throw new UnknownRequestException("This service requires all requests to be of type HTTP POST");
 		}
 
-		InvocationResultsBean retVal;
+		SrBeanProcessedRequest retVal;
 		try {
 			retVal = doProcessInvocation((PersServiceVersionJsonRpc20) theServiceDefinition, theRequest.getInputReader());
 		} catch (IOException e) {
@@ -261,8 +261,8 @@ public class JsonRpc20ServiceInvoker extends BaseServiceInvoker implements IServ
 		return retVal;
 	}
 
-	private InvocationResultsBean doProcessInvocation(PersServiceVersionJsonRpc20 theServiceDefinition, Reader theReader) throws IOException, InvocationRequestFailedException {
-		InvocationResultsBean retVal = new InvocationResultsBean();
+	private SrBeanProcessedRequest doProcessInvocation(PersServiceVersionJsonRpc20 theServiceDefinition, Reader theReader) throws IOException, InvocationRequestFailedException {
+		SrBeanProcessedRequest retVal = new SrBeanProcessedRequest();
 
 		// Writer
 		StringWriter stringWriter = new StringWriter();
@@ -368,8 +368,8 @@ public class JsonRpc20ServiceInvoker extends BaseServiceInvoker implements IServ
 	}
 
 	@Override
-	public InvocationResponseResultsBean processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingResponse theResponse) throws InvocationResponseFailedException {
-		InvocationResponseResultsBean retVal = new InvocationResponseResultsBean();
+	public SrBeanProcessedResponse processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingResponse theResponse) throws InvocationResponseFailedException {
+		SrBeanProcessedResponse retVal = new SrBeanProcessedResponse();
 		retVal.setResponseHeaders(theResponse.getHeaders());
 
 		String body = theResponse.getBody();

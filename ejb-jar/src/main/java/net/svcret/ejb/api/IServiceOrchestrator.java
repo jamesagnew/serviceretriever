@@ -33,7 +33,7 @@ public interface IServiceOrchestrator {
 
 	IServiceInvoker getServiceInvoker(BasePersServiceVersion theServiceVersion);
 
-	SrBeanOutgoingResponse handlePreviouslyThrottledRequest(InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization, SrBeanIncomingRequest theRequest)
+	SrBeanOutgoingResponse handlePreviouslyThrottledRequest(SrBeanProcessedRequest theInvocationRequest, AuthorizationResultsBean theAuthorization, SrBeanIncomingRequest theRequest)
 			throws ProcessingException, SecurityFailureException, InvocationFailedDueToInternalErrorException;
 
 	/**

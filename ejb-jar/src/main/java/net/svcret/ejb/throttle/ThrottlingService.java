@@ -31,8 +31,8 @@ import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
 import net.svcret.ejb.api.IServiceOrchestrator;
-import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.SrBeanOutgoingResponse;
@@ -67,7 +67,7 @@ public class ThrottlingService implements IThrottlingService {
 	private Map<LimiterKey, ThrottledTaskQueue> myThrottleQueues = new HashMap<LimiterKey, ThrottledTaskQueue>();
 	private ConcurrentHashMap<LimiterKey, RateLimiter> myUserRateLimiters = new ConcurrentHashMap<LimiterKey, RateLimiter>();
 
-	private void applyThrottle(SrBeanIncomingRequest theHttpRequest, InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization, Collection<LimiterKey> theRemainingThrottles) throws ThrottleQueueFullException, ThrottleException {
+	private void applyThrottle(SrBeanIncomingRequest theHttpRequest, SrBeanProcessedRequest theInvocationRequest, AuthorizationResultsBean theAuthorization, Collection<LimiterKey> theRemainingThrottles) throws ThrottleQueueFullException, ThrottleException {
 		
 		List<RateLimiter> rateLimiters = Lists.newArrayList();
 		LimiterKey firstThrottleKey = null;
@@ -125,7 +125,7 @@ public class ThrottlingService implements IThrottlingService {
 	}
 
 	@Override
-	public void applyThrottle(SrBeanIncomingRequest theHttpRequest, InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization) throws ThrottleException, ThrottleQueueFullException {
+	public void applyThrottle(SrBeanIncomingRequest theHttpRequest, SrBeanProcessedRequest theInvocationRequest, AuthorizationResultsBean theAuthorization) throws ThrottleException, ThrottleQueueFullException {
 		PersUser user = theAuthorization != null ? theAuthorization.getAuthorizedUser() : null;
 		Set<LimiterKey> throttleKeys = new HashSet<LimiterKey>();
 		
@@ -160,14 +160,14 @@ public class ThrottlingService implements IThrottlingService {
 		applyThrottle(theHttpRequest, theInvocationRequest, theAuthorization, throttleKeys);
 	}
 
-	private void recordInvocationForThrottleQueueFull(SrBeanIncomingRequest theHttpRequest, InvocationResultsBean theInvocationRequest, PersUser user) {
+	private void recordInvocationForThrottleQueueFull(SrBeanIncomingRequest theHttpRequest, SrBeanProcessedRequest theInvocationRequest, PersUser user) {
 
 		switch (theInvocationRequest.getResultType()) {
 		case METHOD:
 			Date invocationTime = theHttpRequest.getRequestTime();
 			int requestLength = theHttpRequest.getRequestBody().length();
 			SrBeanIncomingResponse httpResponse = null;
-			InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
+			SrBeanProcessedResponse invocationResponseResultsBean = new SrBeanProcessedResponse();
 			invocationResponseResultsBean.setResponseType(ResponseTypeEnum.THROTTLE_REJ);
 			try {
 				myRuntimeStatusSvc.recordInvocationMethod(invocationTime, requestLength, theInvocationRequest, user, httpResponse, invocationResponseResultsBean);
@@ -247,7 +247,7 @@ public class ThrottlingService implements IThrottlingService {
 							SrBeanIncomingRequest request = taskToExecute.getHttpRequest();
 							try {
 
-								InvocationResultsBean invocationRequest = taskToExecute.getInvocationRequest();
+								SrBeanProcessedRequest invocationRequest = taskToExecute.getInvocationRequest();
 								AuthorizationResultsBean authorization = taskToExecute.getAuthorization();
 								SrBeanIncomingRequest httpRequest = taskToExecute.getHttpRequest();
 								

@@ -36,14 +36,14 @@ import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.admin.shared.model.IThrottleable;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.Messages;
-import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.SrBeanIncomingResponse.Failure;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IServiceRegistry;
-import net.svcret.ejb.api.InvocationResponseResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
@@ -202,8 +202,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override
-	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, InvocationResultsBean results, PersUser theUser, SrBeanIncomingResponse theHttpResponse,
-			InvocationResponseResultsBean theInvocationResponseResultsBean) throws UnexpectedFailureException, InvocationFailedDueToInternalErrorException {
+	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, SrBeanProcessedRequest results, PersUser theUser, SrBeanIncomingResponse theHttpResponse,
+			SrBeanProcessedResponse theInvocationResponseResultsBean) throws UnexpectedFailureException, InvocationFailedDueToInternalErrorException {
 		Validate.notNull(theInvocationTime, "InvocationTime");
 		Validate.notNull(results, "InvocationResults");
 		Validate.notNull(theInvocationResponseResultsBean, "InvocationResponseResults");
@@ -353,6 +353,11 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			break;
 		}
 
+	}
+
+	@VisibleForTesting
+	public void setSvcRegistryForUnitTests(IServiceRegistry theSvcRegistry) {
+		mySvcRegistry = theSvcRegistry;
 	}
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
@@ -821,7 +826,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		
 	}
 
-	private void doRecordInvocationForUrls(int theRequestLengthChars, SrBeanIncomingResponse theHttpResponse, InvocationResponseResultsBean theInvocationResponseResultsBean, Date theInvocationTime) {
+	private void doRecordInvocationForUrls(int theRequestLengthChars, SrBeanIncomingResponse theHttpResponse, SrBeanProcessedResponse theInvocationResponseResultsBean, Date theInvocationTime) {
 		if (theHttpResponse == null) {
 			return;
 		}
@@ -859,7 +864,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	}
 
 	private <P extends BasePersInvocationStatsPk<P, O>, O extends BasePersInvocationStats<P, O>> void doRecordInvocationMethod(int theRequestLengthChars, SrBeanIncomingResponse theHttpResponse,
-			InvocationResponseResultsBean theInvocationResponseResultsBean, P theStatsPk, Long theThrottleFullIfAny) {
+			SrBeanProcessedResponse theInvocationResponseResultsBean, P theStatsPk, Long theThrottleFullIfAny) {
 		Validate.notNull(theInvocationResponseResultsBean.getResponseType(), "responseType");
 
 		O stats = getStatsForPk(theStatsPk);
@@ -954,7 +959,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 	}
 
-	private void doUpdateUserStatus(PersServiceVersionMethod theMethod, InvocationResponseResultsBean theInvocationResponseResultsBean, PersUser theUser, Date theTransactionTime) {
+	private void doUpdateUserStatus(PersServiceVersionMethod theMethod, SrBeanProcessedResponse theInvocationResponseResultsBean, PersUser theUser, Date theTransactionTime) {
 		PersUserStatus status = getUserStatusForUser(theUser);
 
 		PersUserMethodStatus methodStatus = status.getOrCreateUserMethodStatus(theMethod);

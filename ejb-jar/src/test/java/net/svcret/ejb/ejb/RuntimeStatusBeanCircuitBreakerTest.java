@@ -15,8 +15,8 @@ import net.svcret.admin.shared.model.UrlSelectionPolicy;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.SrBeanIncomingResponse.Failure;
 import net.svcret.ejb.api.IDao;
-import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
@@ -35,7 +35,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 
 	private PersHttpClientConfig httpConfig;
 	private SrBeanIncomingResponse httpResponse;
-	private InvocationResponseResultsBean invocationResponse;
+	private SrBeanProcessedResponse invocationResponse;
 	private RuntimeStatusBean myBean;
 	private IDao myDao;
 	private PersServiceVersionMethod myMethod;
@@ -67,7 +67,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		when(httpResponse.getResponseTime()).thenReturn(200L);
 		when(httpResponse.getBody()).thenReturn("          ");
 		
-		invocationResponse = mock(InvocationResponseResultsBean.class, new DefaultAnswer());
+		invocationResponse = mock(SrBeanProcessedResponse.class, new DefaultAnswer());
 		when(invocationResponse.getResponseType()).thenReturn(ResponseTypeEnum.SUCCESS);
 		
 		svcVersion = mock(PersServiceVersionSoap11.class, new DefaultAnswer());
@@ -135,7 +135,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		/*
 		 * Mark a success and try again
 		 */
-		myBean.recordInvocationMethod(new Date(), 100, InvocationResultsBean.forUnitTest(myMethod), user, httpResponse, invocationResponse);
+		myBean.recordInvocationMethod(new Date(), 100, SrBeanProcessedRequest.forUnitTest(myMethod), user, httpResponse, invocationResponse);
 		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl1, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(1));
@@ -153,7 +153,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		when(httpResponse.getSuccessfulUrl()).thenReturn(persUrl2);
 
 //		DefaultAnswer.setRunTime();
-		myBean.recordInvocationMethod(new Date(), 100, InvocationResultsBean.forUnitTest(myMethod), user, httpResponse, invocationResponse);
+		myBean.recordInvocationMethod(new Date(), 100, SrBeanProcessedRequest.forUnitTest(myMethod), user, httpResponse, invocationResponse);
 		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl2, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
@@ -216,7 +216,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		when(httpResponse.getFailedUrls()).thenReturn(failures);
 		when(httpResponse.getSuccessfulUrl()).thenReturn(null);
 
-		myBean.recordInvocationMethod(new Date(), 100, InvocationResultsBean.forUnitTest(myMethod), user, httpResponse, invocationResponse);
+		myBean.recordInvocationMethod(new Date(), 100, SrBeanProcessedRequest.forUnitTest(myMethod), user, httpResponse, invocationResponse);
 		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(null, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
@@ -276,7 +276,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		/*
 		 * Mark a success and try again
 		 */
-		myBean.recordInvocationMethod(new Date(), 100, InvocationResultsBean.forUnitTest(myMethod), user, httpResponse, invocationResponse);
+		myBean.recordInvocationMethod(new Date(), 100, SrBeanProcessedRequest.forUnitTest(myMethod), user, httpResponse, invocationResponse);
 		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl1, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(1));
@@ -294,7 +294,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		when(httpResponse.getSuccessfulUrl()).thenReturn(persUrl2);
 
 //		DefaultAnswer.setRunTime();
-		myBean.recordInvocationMethod(new Date(), 100, InvocationResultsBean.forUnitTest(myMethod), user, httpResponse, invocationResponse);
+		myBean.recordInvocationMethod(new Date(), 100, SrBeanProcessedRequest.forUnitTest(myMethod), user, httpResponse, invocationResponse);
 		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(persUrl2, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));
@@ -358,7 +358,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		when(httpResponse.getFailedUrls()).thenReturn(failures);
 		when(httpResponse.getSuccessfulUrl()).thenReturn(null);
 
-		myBean.recordInvocationMethod(new Date(), 100, InvocationResultsBean.forUnitTest(myMethod), user, httpResponse, invocationResponse);
+		myBean.recordInvocationMethod(new Date(), 100, SrBeanProcessedRequest.forUnitTest(myMethod), user, httpResponse, invocationResponse);
 		pool = myBean.buildUrlPool(svcVersion,null);
 		assertEquals(null, pool.getPreferredUrl());
 		assertThat(pool.getAlternateUrls(), Matchers.hasSize(0));

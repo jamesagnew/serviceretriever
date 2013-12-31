@@ -9,7 +9,7 @@ import javax.servlet.AsyncContext;
 
 import net.svcret.admin.shared.model.IThrottleable;
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
-import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.model.entity.PersUser;
 
@@ -26,7 +26,7 @@ public class ThrottleException extends Exception {
 	private AsyncContext myAsyncContext;
 	private AuthorizationResultsBean myAuthorization;
 	private SrBeanIncomingRequest myHttpRequest;
-	private InvocationResultsBean myInvocationRequest;
+	private SrBeanProcessedRequest myInvocationRequest;
 	private List<RateLimiter> myRateLimiters;
 	private Date myThrottleStartedException;
 	private LimiterKey myThrottleKey;
@@ -40,7 +40,7 @@ public class ThrottleException extends Exception {
 	 * @param theThrottleKey
 	 *            The service catalog object whose throttling is being applied
 	 */
-	ThrottleException(SrBeanIncomingRequest theHttpRequest, List<RateLimiter> theRateLimiters, InvocationResultsBean theInvocationRequest, AuthorizationResultsBean theAuthorization, LimiterKey theFirstThrottleKey) {
+	ThrottleException(SrBeanIncomingRequest theHttpRequest, List<RateLimiter> theRateLimiters, SrBeanProcessedRequest theInvocationRequest, AuthorizationResultsBean theAuthorization, LimiterKey theFirstThrottleKey) {
 		myHttpRequest = theHttpRequest;
 		myRateLimiters = new ArrayList<RateLimiter>(theRateLimiters);
 		myInvocationRequest = theInvocationRequest;
@@ -69,7 +69,7 @@ public class ThrottleException extends Exception {
 		return myHttpRequest;
 	}
 
-	InvocationResultsBean getInvocationRequest() {
+	SrBeanProcessedRequest getInvocationRequest() {
 		return myInvocationRequest;
 	}
 

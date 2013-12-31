@@ -35,8 +35,8 @@ import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IHttpClient;
-import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.ejb.HttpClientBean.ClientConfigException;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
@@ -147,7 +147,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 		}
 	}
 
-	private void doHandleGet(SrBeanIncomingRequest theRequest, InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, String thePath, String theQuery) throws UnknownRequestException,
+	private void doHandleGet(SrBeanIncomingRequest theRequest, SrBeanProcessedRequest theResults, PersServiceVersionSoap11 theServiceDefinition, String thePath, String theQuery) throws UnknownRequestException,
 			InvocationFailedDueToInternalErrorException {
 
 		if (theQuery.toLowerCase().equals("?wsdl")) {
@@ -160,7 +160,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 
 	}
 
-	private void doHandleGetWsdl(final SrBeanIncomingRequest theRequest, InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition) throws InvocationFailedDueToInternalErrorException {
+	private void doHandleGetWsdl(final SrBeanIncomingRequest theRequest, SrBeanProcessedRequest theResults, PersServiceVersionSoap11 theServiceDefinition) throws InvocationFailedDueToInternalErrorException {
 		final String pathBase = toPathBase(theRequest);
 		
 		ICreatesImportUrl urlCreator = new ICreatesImportUrl() {
@@ -186,7 +186,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 		return pathBase;
 	}
 
-	private void doHandleGetXsd(SrBeanIncomingRequest theRequest, InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition) throws UnknownRequestException, InvocationFailedDueToInternalErrorException {
+	private void doHandleGetXsd(SrBeanIncomingRequest theRequest, SrBeanProcessedRequest theResults, PersServiceVersionSoap11 theServiceDefinition) throws UnknownRequestException, InvocationFailedDueToInternalErrorException {
 		Validate.notNull(theRequest);
 		
 		StringTokenizer tok = new StringTokenizer(theRequest.getQuery(), "&");
@@ -285,7 +285,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 
 	}
 
-	private void doHandlePost(InvocationResultsBean theResults, PersServiceVersionSoap11 theServiceDefinition, Reader theReader) throws UnknownRequestException, InvocationRequestFailedException,
+	private void doHandlePost(SrBeanProcessedRequest theResults, PersServiceVersionSoap11 theServiceDefinition, Reader theReader) throws UnknownRequestException, InvocationRequestFailedException,
 			InvocationFailedDueToInternalErrorException {
 		// TODO: should we check for SOAPAction header?
 
@@ -703,9 +703,9 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 	 */
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public InvocationResultsBean processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition)
+	public SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition)
 			throws UnknownRequestException, InvocationRequestFailedException, InvocationFailedDueToInternalErrorException {
-		InvocationResultsBean retVal = new InvocationResultsBean();
+		SrBeanProcessedRequest retVal = new SrBeanProcessedRequest();
 
 		// TODO: verify that content type is correct
 
@@ -724,8 +724,8 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 	}
 
 	@Override
-	public InvocationResponseResultsBean processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingResponse theResponse) throws InvocationResponseFailedException, InvocationFailedDueToInternalErrorException {
-		InvocationResponseResultsBean retVal = new InvocationResponseResultsBean();
+	public SrBeanProcessedResponse processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingResponse theResponse) throws InvocationResponseFailedException, InvocationFailedDueToInternalErrorException {
+		SrBeanProcessedResponse retVal = new SrBeanProcessedResponse();
 		retVal.setResponseHeaders(theResponse.getHeaders());
 
 		String contentType = theResponse.getContentType();

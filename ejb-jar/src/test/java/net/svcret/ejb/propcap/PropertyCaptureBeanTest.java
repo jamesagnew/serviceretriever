@@ -3,7 +3,7 @@ package net.svcret.ejb.propcap;
 import java.io.StringReader;
 
 import net.svcret.ejb.api.SrBeanIncomingRequest;
-import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.invoker.soap.InvocationFailedException;
 import net.svcret.ejb.invoker.soap.RequestPipelineTest;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -37,7 +37,7 @@ public class PropertyCaptureBeanTest {
 		String inputString = RequestPipelineTest.createRequest("someMethod", true);
 		request.setInputReader(new StringReader(inputString));
 		request.drainInputMessage();
-		InvocationResultsBean invocationResult = new InvocationResultsBean();
+		SrBeanProcessedRequest invocationResult = new SrBeanProcessedRequest();
 		
 		svc.captureRequestProperties(svcVer, request, invocationResult);
 		

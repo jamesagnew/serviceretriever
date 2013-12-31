@@ -68,6 +68,7 @@ import net.svcret.ejb.model.entity.http.PersHttpBasicServerAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
 import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
+import net.svcret.ejb.propcap.PropertyCaptureBean;
 import net.svcret.ejb.throttle.IThrottlingService;
 
 import org.apache.commons.io.FileUtils;
@@ -106,6 +107,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 	private ServiceInvokerHl7OverHttp myHl7Invoker;
 	private ServiceInvokerVirtual myVirtualInvoker;
 	private PersAuthenticationHostLocalDatabase myAuthHost;
+	private PropertyCaptureBean myPropertyCapture;
 
 	@SuppressWarnings("null")
 	@Test
@@ -908,11 +910,6 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		myDao = new DaoBean();
 		myDao.setThisForUnitTest();
 
-		myRuntimeStatus = new RuntimeStatusBean();
-		myRuntimeStatus.setDao(myDao);
-		myRuntimeStatus.setBroadcastSender(myBroadcastSender);
-		myRuntimeStatus.setConfigSvc(myConfigService);
-
 		myRuntimeQuerySvc = new RuntimeStatusQueryBean();
 		myRuntimeQuerySvc.setDaoForUnitTests(myDao);
 		myRuntimeQuerySvc.setConfigSvcForUnitTests(myConfigService);
@@ -930,6 +927,12 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		myServiceRegistry.setDao(myDao);
 		myServiceRegistry.setSvcHttpClient(myHttpClient);
 
+		myRuntimeStatus = new RuntimeStatusBean();
+		myRuntimeStatus.setDao(myDao);
+		myRuntimeStatus.setBroadcastSender(myBroadcastSender);
+		myRuntimeStatus.setConfigSvc(myConfigService);
+		myRuntimeStatus.setSvcRegistryForUnitTests(myServiceRegistry);
+		
 		mySoapInvoker = new ServiceInvokerSoap11();
 		mySoapInvoker.setConfigService(myConfigService);
 		mySoapInvoker.setHttpClient(myHttpClient);
@@ -940,6 +943,8 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 
 		myVirtualInvoker = new ServiceInvokerVirtual();
 
+		myPropertyCapture = new PropertyCaptureBean();
+		
 		mySvc = new ServiceOrchestratorBean();
 		mySvc.setHttpClient(myHttpClient);
 		mySvc.setRuntimeStatus(myRuntimeStatus);
@@ -949,6 +954,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		mySvc.setServiceInvokerHl7OverhttpForUnitTests(myHl7Invoker);
 		mySvc.setServiceInvokerVirtualForUnitTests(myVirtualInvoker);
 		mySvc.setThrottlingService(mock(IThrottlingService.class));
+		mySvc.setPropertyCaptureForUnitTests(myPropertyCapture);
 
 		myVirtualInvoker.setOrchestratorForUnitTests(mySvc);
 

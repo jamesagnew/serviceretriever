@@ -8,8 +8,8 @@ import java.util.Set;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IResponseValidator;
-import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
@@ -72,10 +72,10 @@ public interface IServiceInvoker {
 	 * @throws ProcessingException
 	 * @throws InvocationFailedException
 	 */
-	InvocationResultsBean processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition) throws UnknownRequestException, InvocationRequestFailedException,
+	SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition) throws UnknownRequestException, InvocationRequestFailedException,
 			InvocationFailedException;
 
-	InvocationResponseResultsBean processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingResponse theResponse) throws InvocationResponseFailedException,
+	SrBeanProcessedResponse processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingResponse theResponse) throws InvocationResponseFailedException,
 			InvocationFailedDueToInternalErrorException;
 
 	IResponseValidator provideInvocationResponseValidator(BasePersServiceVersion theServiceDefinition);

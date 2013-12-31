@@ -42,8 +42,8 @@ public interface IRuntimeStatus {
 	 * @throws UnexpectedFailureException
 	 * @throws InvocationFailedDueToInternalErrorException 
 	 */
-	void recordInvocationMethod(Date theInvocationTime, int theRequestLength, InvocationResultsBean results, PersUser theAuthorizedUser, SrBeanIncomingResponse theHttpResponse,
-			InvocationResponseResultsBean theInvocationResponseResultsBean) throws UnexpectedFailureException, InvocationFailedDueToInternalErrorException;
+	void recordInvocationMethod(Date theInvocationTime, int theRequestLength, SrBeanProcessedRequest results, PersUser theAuthorizedUser, SrBeanIncomingResponse theHttpResponse,
+			SrBeanProcessedResponse theInvocationResponseResultsBean) throws UnexpectedFailureException, InvocationFailedDueToInternalErrorException;
 
 	/**
 	 * Records a single invocation requesting a static resource

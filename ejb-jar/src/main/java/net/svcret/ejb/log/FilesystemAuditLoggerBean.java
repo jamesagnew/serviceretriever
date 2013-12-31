@@ -30,8 +30,8 @@ import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IConfigService;
-import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -105,8 +105,8 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 	}
 
 	@Override
-	public void recordServiceTransaction(SrBeanIncomingRequest theRequest, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl,
-			SrBeanIncomingResponse theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, InvocationResultsBean theInvocationResults) throws ProcessingException, UnexpectedFailureException {
+	public void recordServiceTransaction(SrBeanIncomingRequest theRequest, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, SrBeanProcessedResponse theInvocationResponse, PersServiceVersionUrl theImplementationUrl,
+			SrBeanIncomingResponse theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, SrBeanProcessedRequest theInvocationResults) throws ProcessingException, UnexpectedFailureException {
 
 		validateQueueSize();
 
@@ -118,8 +118,8 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 	}
 
 	@Override
-	public void recordUserTransaction(SrBeanIncomingRequest theRequest, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl,
-			SrBeanIncomingResponse theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, InvocationResultsBean theInvocationResults) throws ProcessingException, UnexpectedFailureException {
+	public void recordUserTransaction(SrBeanIncomingRequest theRequest, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, SrBeanProcessedResponse theInvocationResponse, PersServiceVersionUrl theImplementationUrl,
+			SrBeanIncomingResponse theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, SrBeanProcessedRequest theInvocationResults) throws ProcessingException, UnexpectedFailureException {
 
 		validateQueueSize();
 
@@ -417,8 +417,8 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 		private Map<String, String> myPropertyCaptures;
 		private Long myThrottleTimeIfAny;
 
-		public UnflushedAuditRecord(Date theRequestTime, SrBeanIncomingRequest theRequest, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, InvocationResultsBean theInvocationResults,
-				InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl, SrBeanIncomingResponse theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, AuditLogTypeEnum theType) {
+		public UnflushedAuditRecord(Date theRequestTime, SrBeanIncomingRequest theRequest, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, SrBeanProcessedRequest theInvocationResults,
+				SrBeanProcessedResponse theInvocationResponse, PersServiceVersionUrl theImplementationUrl, SrBeanIncomingResponse theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, AuditLogTypeEnum theType) {
 
 			if (theType == AuditLogTypeEnum.USER && theUser == null) {
 				throw new IllegalArgumentException("No user provided for USER record");

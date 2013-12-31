@@ -10,8 +10,8 @@ import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IConfigService;
-import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.log.FilesystemAuditLoggerBean;
@@ -64,14 +64,14 @@ public class FilesystemAuditLoggerBeanTest {
 		when(method.getServiceVersion().getService().getDomain().getDomainId()).thenReturn("service1.0");
 		PersUser user = mock(PersUser.class, new ReturnsDeepStubs());
 		String requestBody = "this is the request body\nthis is line 2";
-		InvocationResponseResultsBean invocationResponse = mock(InvocationResponseResultsBean.class, new ReturnsDeepStubs());
+		SrBeanProcessedResponse invocationResponse = mock(SrBeanProcessedResponse.class, new ReturnsDeepStubs());
 		when(invocationResponse.getResponseType()).thenReturn(ResponseTypeEnum.FAULT);
 		PersServiceVersionUrl implementationUrl = mock(PersServiceVersionUrl.class, new ReturnsDeepStubs());
 		when(implementationUrl.getUrlId()).thenReturn("url1");
 		when(implementationUrl.getUrl()).thenReturn("http://foo");
 		SrBeanIncomingResponse httpResponse = mock(SrBeanIncomingResponse.class, new ReturnsDeepStubs());
 		AuthorizationOutcomeEnum authorizationOutcome = AuthorizationOutcomeEnum.AUTHORIZED;
-		InvocationResultsBean req = new InvocationResultsBean();
+		SrBeanProcessedRequest req = new SrBeanProcessedRequest();
 		mySvc.recordServiceTransaction(request, method.getServiceVersion(), method, user, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome, req);
 
 		mySvc.recordServiceTransaction(request, method.getServiceVersion(), method, user, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome, req);

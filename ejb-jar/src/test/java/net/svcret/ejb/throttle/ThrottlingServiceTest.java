@@ -21,8 +21,8 @@ import javax.servlet.http.HttpServletResponse;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
-import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
@@ -42,6 +42,8 @@ public class ThrottlingServiceTest {
 	private IThrottlingService myThis;
 	private IRuntimeStatus myRuntimeStatusSvc;
 
+	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ThrottlingServiceTest.class);
+
 	@Before
 	public void setUp() {
 		mySvc = new ThrottlingService();
@@ -49,41 +51,6 @@ public class ThrottlingServiceTest {
 		mySvc.setThisForTesting(myThis);
 		myRuntimeStatusSvc = mock(IRuntimeStatus.class);
 		mySvc.setRuntimeStatusSvcForTesting(myRuntimeStatusSvc);
-	}
-
-	@Test
-	public void testRecordStatsForQueueFull() throws Exception {
-		SrBeanIncomingRequest httpRequest = new SrBeanIncomingRequest();
-		httpRequest.setInputReader(new StringReader(""));
-
-		RateLimiter rateLimiter = RateLimiter.create(2);
-		ArrayList<RateLimiter> rateLimiters = Lists.newArrayList(rateLimiter);
-
-		InvocationResultsBean invocationRequest = new InvocationResultsBean();
-		invocationRequest.setResultMethod(null, null, null);
-		AuthorizationResultsBean authorization = new AuthorizationResultsBean();
-
-		LimiterKey throttleKey = new LimiterKey(null, null, null, 12, 2);
-
-		ThrottleException e = new ThrottleException(httpRequest, rateLimiters, invocationRequest, authorization, throttleKey);
-
-		AsyncContext asyncContext = mock(AsyncContext.class);
-		when(asyncContext.getRequest()).thenReturn(mock(HttpServletRequest.class));
-		when(asyncContext.getResponse()).thenReturn(mock(HttpServletResponse.class));
-		e.setAsyncContext(asyncContext);
-
-		mySvc.scheduleThrottledTaskForLaterExecution(e, asyncContext);
-		mySvc.scheduleThrottledTaskForLaterExecution(e, asyncContext);
-
-		try {
-			mySvc.scheduleThrottledTaskForLaterExecution(e, asyncContext);
-			fail();
-		} catch (ThrottleQueueFullException e2) {
-			// expected
-		}
-
-		verify(myRuntimeStatusSvc).recordInvocationMethod((Date) any(), eq(0), (InvocationResultsBean) any(), (PersUser) any(), (SrBeanIncomingResponse)any(), (InvocationResponseResultsBean) any());
-
 	}
 
 	@Test
@@ -101,7 +68,7 @@ public class ThrottlingServiceTest {
 		SrBeanIncomingRequest httpRequest = new SrBeanIncomingRequest();
 		httpRequest.setInputReader(new StringReader(""));
 
-		InvocationResultsBean invocationRequest = new InvocationResultsBean();
+		SrBeanProcessedRequest invocationRequest = new SrBeanProcessedRequest();
 		invocationRequest.setResultMethod(method, "", "");
 		AuthorizationResultsBean authorization = new AuthorizationResultsBean();
 
@@ -155,7 +122,6 @@ public class ThrottlingServiceTest {
 
 	}
 
-	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ThrottlingServiceTest.class);
 	@Test
 	public void testExecuteThrottledUserAndPropertyCapture() throws ThrottleException, ThrottleQueueFullException, InterruptedException {
 
@@ -174,7 +140,7 @@ public class ThrottlingServiceTest {
 		SrBeanIncomingRequest httpRequest = new SrBeanIncomingRequest();
 		httpRequest.setInputReader(new StringReader(""));
 
-		InvocationResultsBean invocationRequest = new InvocationResultsBean();
+		SrBeanProcessedRequest invocationRequest = new SrBeanProcessedRequest();
 		invocationRequest.setResultMethod(method, "", "");
 		invocationRequest.addPropertyCapture("propCapName", "propCapValue");
 		AuthorizationResultsBean authorization = new AuthorizationResultsBean();
@@ -212,6 +178,40 @@ public class ThrottlingServiceTest {
 		}
 
 
+
+	}
+	@Test
+	public void testRecordStatsForQueueFull() throws Exception {
+		SrBeanIncomingRequest httpRequest = new SrBeanIncomingRequest();
+		httpRequest.setInputReader(new StringReader(""));
+
+		RateLimiter rateLimiter = RateLimiter.create(2);
+		ArrayList<RateLimiter> rateLimiters = Lists.newArrayList(rateLimiter);
+
+		SrBeanProcessedRequest invocationRequest = new SrBeanProcessedRequest();
+		invocationRequest.setResultMethod(new PersServiceVersionMethod(), null, null);
+		AuthorizationResultsBean authorization = new AuthorizationResultsBean();
+
+		LimiterKey throttleKey = new LimiterKey(null, null, null, 12, 2);
+
+		ThrottleException e = new ThrottleException(httpRequest, rateLimiters, invocationRequest, authorization, throttleKey);
+
+		AsyncContext asyncContext = mock(AsyncContext.class);
+		when(asyncContext.getRequest()).thenReturn(mock(HttpServletRequest.class));
+		when(asyncContext.getResponse()).thenReturn(mock(HttpServletResponse.class));
+		e.setAsyncContext(asyncContext);
+
+		mySvc.scheduleThrottledTaskForLaterExecution(e, asyncContext);
+		mySvc.scheduleThrottledTaskForLaterExecution(e, asyncContext);
+
+		try {
+			mySvc.scheduleThrottledTaskForLaterExecution(e, asyncContext);
+			fail();
+		} catch (ThrottleQueueFullException e2) {
+			// expected
+		}
+
+		verify(myRuntimeStatusSvc).recordInvocationMethod((Date) any(), eq(0), (SrBeanProcessedRequest) any(), (PersUser) any(), (SrBeanIncomingResponse)any(), (SrBeanProcessedResponse) any());
 
 	}
 	

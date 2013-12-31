@@ -8,7 +8,7 @@ import net.svcret.admin.shared.enm.ResponseTypeEnum;
 /**
  * Return type for {@link IServiceInvoker#}
  */
-public class InvocationResponseResultsBean {
+public class SrBeanProcessedResponse {
 
 	private String myResponseBody;
 	private String myResponseContentType;

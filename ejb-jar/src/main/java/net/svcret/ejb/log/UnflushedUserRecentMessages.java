@@ -5,7 +5,7 @@ import java.util.Date;
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
-import net.svcret.ejb.api.InvocationResponseResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
@@ -25,7 +25,7 @@ public class UnflushedUserRecentMessages extends BaseUnflushed<PersUserRecentMes
 	}
 private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(UnflushedUserRecentMessages.class);
 	public synchronized void recordTransaction(PersConfig theConfig, Date theTransactionTime, SrBeanIncomingRequest theRequest, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody,
-			InvocationResponseResultsBean theInvocationResponse, PersServiceVersionUrl theImplementationUrl, SrBeanIncomingResponse theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome,
+			SrBeanProcessedResponse theInvocationResponse, PersServiceVersionUrl theImplementationUrl, SrBeanIncomingResponse theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome,
 			String theResponseBody) {
 		Validate.notNull(theInvocationResponse);
 

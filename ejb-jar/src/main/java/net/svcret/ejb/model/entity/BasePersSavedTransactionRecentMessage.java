@@ -15,7 +15,7 @@ import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.admin.shared.model.Pair;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.IDao;
-import net.svcret.ejb.api.InvocationResponseResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
 
 import org.apache.commons.lang3.Validate;
 
@@ -55,7 +55,7 @@ public abstract class BasePersSavedTransactionRecentMessage extends BasePersSave
 	public abstract BasePersServiceVersion getServiceVersion();
 
 	@Override
-	public void populate(PersConfig theConfig, Date theTransactionTime, SrBeanIncomingRequest theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, InvocationResponseResultsBean theInvocationResult, String theResponseBody) {
+	public void populate(PersConfig theConfig, Date theTransactionTime, SrBeanIncomingRequest theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, SrBeanProcessedResponse theInvocationResult, String theResponseBody) {
 		setRequestHostIp(theRequest.getRequestHostIp());
 		super.populate(theConfig, theTransactionTime, theRequest, theImplementationUrl, theRequestBody, theInvocationResult, theResponseBody);
 	}

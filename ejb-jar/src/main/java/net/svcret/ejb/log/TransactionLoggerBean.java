@@ -19,8 +19,8 @@ import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IDao.ByteDelta;
-import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersSavedTransactionRecentMessage;
@@ -79,8 +79,8 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	 * @throws UnexpectedFailureException 
 	 */
 	@Override
-	public void logTransaction(SrBeanIncomingRequest theRequest,BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, InvocationResponseResultsBean theInvocationResponse,
-			PersServiceVersionUrl theImplementationUrl, SrBeanIncomingResponse theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, String theResponseBody, InvocationResultsBean theInvocationResults) throws ProcessingException, UnexpectedFailureException {
+	public void logTransaction(SrBeanIncomingRequest theRequest,BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, SrBeanProcessedResponse theInvocationResponse,
+			PersServiceVersionUrl theImplementationUrl, SrBeanIncomingResponse theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, String theResponseBody, SrBeanProcessedRequest theInvocationResults) throws ProcessingException, UnexpectedFailureException {
 		Validate.notNull(theSvcVer);
 		Validate.notNull(theInvocationResponse);
 		if (theInvocationResponse.getResponseType() != ResponseTypeEnum.FAIL) {

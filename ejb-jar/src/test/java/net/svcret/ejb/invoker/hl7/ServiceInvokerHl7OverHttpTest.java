@@ -12,8 +12,8 @@ import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IServiceRegistry;
-import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp;
@@ -61,7 +61,7 @@ public class ServiceInvokerHl7OverHttpTest {
 		req.addHeader("Content-Type", "application/hl7-v2; charset=UTF-8");
 		req.setRequestType(RequestType.POST);
 		req.setInputReader(new StringReader(msgS));
-		InvocationResultsBean result = mySvc.processInvocation(req,svcVer);
+		SrBeanProcessedRequest result = mySvc.processInvocation(req,svcVer);
 
 		
 		verify(myServiceRegistry).saveServiceVersion(eq(dbSvcVer));
@@ -91,7 +91,7 @@ public class ServiceInvokerHl7OverHttpTest {
 		response.setContentType("application/hl7-v2");
 		response.setHeaders(new HashMap<String, List<String>>());
 		response.setResponseTime(123);
-		InvocationResponseResultsBean result = mySvc.processInvocationResponse(dbSvcVer, response);
+		SrBeanProcessedResponse result = mySvc.processInvocationResponse(dbSvcVer, response);
 
 		assertEquals(msgS,result.getResponseBody());
 		assertNull(result.getResponseFaultCode());
@@ -118,7 +118,7 @@ public class ServiceInvokerHl7OverHttpTest {
 		response.setContentType("application/hl7-v2");
 		response.setHeaders(new HashMap<String, List<String>>());
 		response.setResponseTime(123);
-		InvocationResponseResultsBean result = mySvc.processInvocationResponse(dbSvcVer, response);
+		SrBeanProcessedResponse result = mySvc.processInvocationResponse(dbSvcVer, response);
 
 		assertEquals(msgS,result.getResponseBody());
 		assertEquals("AE",result.getResponseFaultCode());

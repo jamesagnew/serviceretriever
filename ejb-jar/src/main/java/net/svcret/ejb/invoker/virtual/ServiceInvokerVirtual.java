@@ -10,8 +10,8 @@ import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.IServiceOrchestrator;
-import net.svcret.ejb.api.InvocationResponseResultsBean;
-import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
@@ -37,13 +37,13 @@ public class ServiceInvokerVirtual extends BaseServiceInvoker implements IServic
 	}
 
 	@Override
-	public InvocationResultsBean processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition) throws UnknownRequestException, InvocationRequestFailedException,
+	public SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition) throws UnknownRequestException, InvocationRequestFailedException,
 			InvocationFailedException {
 		return determineInvoker(theServiceDefinition).processInvocation(theRequest, determineTarget(theServiceDefinition));
 	}
 
 	@Override
-	public InvocationResponseResultsBean processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingResponse theResponse) throws InvocationResponseFailedException,
+	public SrBeanProcessedResponse processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingResponse theResponse) throws InvocationResponseFailedException,
 			InvocationFailedDueToInternalErrorException {
 		return determineInvoker(theServiceDefinition).processInvocationResponse(determineTarget(theServiceDefinition), theResponse);
 	}

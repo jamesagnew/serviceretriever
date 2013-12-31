@@ -15,12 +15,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
-import net.svcret.ejb.api.InvocationResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatus;
-import net.svcret.ejb.api.InvocationResponseResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.BasePersStats;
@@ -425,12 +425,12 @@ public class RuntimeStatusBeanTest {
 		PersUser user = new PersUser(32L);
 		user.setStatus(new PersUserStatus(33L));
 
-		InvocationResponseResultsBean invocationResponse = new InvocationResponseResultsBean();
+		SrBeanProcessedResponse invocationResponse = new SrBeanProcessedResponse();
 		invocationResponse.setResponseType(ResponseTypeEnum.SECURITY_FAIL);
 		invocationResponse.setResponseStatusMessage("Security fail");
 
-		svc.recordInvocationMethod(ts1, 0, InvocationResultsBean.forUnitTest(method), user, null, invocationResponse);
-		svc.recordInvocationMethod(ts2, 0, InvocationResultsBean.forUnitTest(method), user, null, invocationResponse);
+		svc.recordInvocationMethod(ts1, 0, SrBeanProcessedRequest.forUnitTest(method), user, null, invocationResponse);
+		svc.recordInvocationMethod(ts2, 0, SrBeanProcessedRequest.forUnitTest(method), user, null, invocationResponse);
 
 		svc.flushStatus();
 
@@ -486,9 +486,9 @@ public class RuntimeStatusBeanTest {
 		Date invocationTime = ts1;
 		int requestLength = 1001;
 		SrBeanIncomingResponse httpResponse = null;
-		InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
+		SrBeanProcessedResponse invocationResponseResultsBean = new SrBeanProcessedResponse();
 		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.THROTTLE_REJ);
-		svc.recordInvocationMethod(invocationTime, requestLength, InvocationResultsBean.forUnitTest(method), user, httpResponse, invocationResponseResultsBean);
+		svc.recordInvocationMethod(invocationTime, requestLength, SrBeanProcessedRequest.forUnitTest(method), user, httpResponse, invocationResponseResultsBean);
 
 		svc.flushStatus();
 
@@ -519,7 +519,7 @@ public class RuntimeStatusBeanTest {
 
 		PersServiceVersionResource resource = mock(PersServiceVersionResource.class);
 		SrBeanIncomingResponse httpResponse = mock(SrBeanIncomingResponse.class);
-		InvocationResponseResultsBean orchResponse = mock(InvocationResponseResultsBean.class);
+		SrBeanProcessedResponse orchResponse = mock(SrBeanProcessedResponse.class);
 
 		DefaultAnswer.setDesignTime();
 		when(resource.getPid()).thenReturn(123L);

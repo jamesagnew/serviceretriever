@@ -13,7 +13,7 @@ import org.apache.commons.lang3.Validate;
 
 import com.google.common.annotations.VisibleForTesting;
 
-public class InvocationResultsBean {
+public class SrBeanProcessedRequest {
 
 	private Map<PersBaseServerAuth<?, ?>, ICredentialGrabber> myCredentialsInRequest = new HashMap<PersBaseServerAuth<?, ?>, ICredentialGrabber>();
 	private String myMethodContentType;
@@ -185,8 +185,8 @@ public class InvocationResultsBean {
 	}
 
 	@VisibleForTesting
-	public static InvocationResultsBean forUnitTest(PersServiceVersionMethod theM1) {
-		InvocationResultsBean retVal = new InvocationResultsBean();
+	public static SrBeanProcessedRequest forUnitTest(PersServiceVersionMethod theM1) {
+		SrBeanProcessedRequest retVal = new SrBeanProcessedRequest();
 		retVal.myMethodDefinition=theM1;
 		retVal.myServiceVersion = theM1.getServiceVersion();
 		return retVal;

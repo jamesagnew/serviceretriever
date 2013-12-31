@@ -3,7 +3,7 @@ package net.svcret.ejb.invoker.soap;
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
-import net.svcret.ejb.api.InvocationResponseResultsBean;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 
@@ -14,7 +14,7 @@ public abstract class InvocationFailedException extends Exception {
 	private static final long serialVersionUID = 1L;
 
 	private PersUser myUser;
-	private InvocationResponseResultsBean myInvocationResponse;
+	private SrBeanProcessedResponse myInvocationResponse;
 	private PersServiceVersionUrl myImplementationUrl;
 	private SrBeanIncomingResponse myHttpResponse;
 	private AuthorizationOutcomeEnum myAuthorizationOutcome;
@@ -61,7 +61,7 @@ public abstract class InvocationFailedException extends Exception {
 		return myUser;
 	}
 
-	public InvocationResponseResultsBean getInvocationResponse() {
+	public SrBeanProcessedResponse getInvocationResponse() {
 		return myInvocationResponse;
 	}
 
@@ -77,8 +77,8 @@ public abstract class InvocationFailedException extends Exception {
 		return myAuthorizationOutcome;
 	}
 
-	public InvocationResponseResultsBean toInvocationResponse() {
-		InvocationResponseResultsBean retVal = new InvocationResponseResultsBean();
+	public SrBeanProcessedResponse toInvocationResponse() {
+		SrBeanProcessedResponse retVal = new SrBeanProcessedResponse();
 		retVal.setResponseFailureDescription(getMessage());
 		retVal.setResponseType(ResponseTypeEnum.FAIL);
 		if (getHttpResponse() != null) {
