@@ -25,7 +25,7 @@ import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanProcessedResponse;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersUser;
 
 import org.junit.Assert;
@@ -57,7 +57,7 @@ public class ThrottlingServiceTest {
 	public void testExecuteSlowRate() throws ThrottleException, ThrottleQueueFullException, InterruptedException {
 
 		when(myThis.serviceThrottledRequests((ThrottledTaskQueue) any())).thenReturn(new AsyncResult<Void>(null));
-		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class, new ReturnsDeepStubs());
+		PersMethod method = mock(PersMethod.class, new ReturnsDeepStubs());
 		when(method.getServiceVersion().getThrottle()).thenReturn(null);
 		
 		/*
@@ -113,7 +113,7 @@ public class ThrottlingServiceTest {
 	public void testExecuteThrottledUser() throws ThrottleException, ThrottleQueueFullException, InterruptedException {
 
 		when(myThis.serviceThrottledRequests((ThrottledTaskQueue) any())).thenReturn(new AsyncResult<Void>(null));
-		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class, new ReturnsDeepStubs());
+		PersMethod method = mock(PersMethod.class, new ReturnsDeepStubs());
 		when(method.getServiceVersion().getThrottle()).thenReturn(null);
 		
 		PersUser user = new PersUser();
@@ -182,7 +182,7 @@ public class ThrottlingServiceTest {
 	public void testExecuteThrottledUserAndPropertyCapture() throws ThrottleException, ThrottleQueueFullException, InterruptedException {
 
 		when(myThis.serviceThrottledRequests((ThrottledTaskQueue) any())).thenReturn(new AsyncResult<Void>(null));
-		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class, new ReturnsDeepStubs());
+		PersMethod method = mock(PersMethod.class, new ReturnsDeepStubs());
 		when(method.getServiceVersion().getThrottle().getApplyPropCapName()).thenReturn("propCapName");
 		when(method.getServiceVersion().getThrottle().getThrottleMaxQueueDepth()).thenReturn(2);
 		when(method.getServiceVersion().getThrottle().getThrottleMaxRequests()).thenReturn(2);
@@ -245,7 +245,7 @@ public class ThrottlingServiceTest {
 		ArrayList<FlexibleRateLimiter> rateLimiters = Lists.newArrayList(rateLimiter);
 
 		SrBeanProcessedRequest invocationRequest = new SrBeanProcessedRequest();
-		invocationRequest.setResultMethod(new PersServiceVersionMethod(), null, null);
+		invocationRequest.setResultMethod(new PersMethod(), null, null);
 		AuthorizationResultsBean authorization = new AuthorizationResultsBean();
 
 		LimiterKey throttleKey = new LimiterKey(null, null, null, 12, 2);

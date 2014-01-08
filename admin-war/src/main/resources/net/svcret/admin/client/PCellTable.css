@@ -130,6 +130,15 @@
 	/* border: selectionBorderWidth solid #D0D0D0; */
 }
 
+.cellTableSelectedRow {
+  background: #628cd5;
+  color: white;
+  font-weight: bold;
+  height: auto;
+  overflow: auto;
+}
+
+
 /*
 .cellTableHoveredRow {
   background: #eee;

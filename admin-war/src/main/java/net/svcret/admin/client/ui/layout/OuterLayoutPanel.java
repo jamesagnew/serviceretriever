@@ -30,7 +30,7 @@ public class OuterLayoutPanel extends DockLayoutPanel {
 		String initPage = Cookies.getCookie("sr-first-page");
 		if (StringUtil.isNotBlank(initPage)) {
 			History.newItem(initPage, false);
-			Cookies.setCookie("sr-first-page", "");
+			Cookies.removeCookie("sr-first-page");
 			LeftBarPanel.getInstance().updateStyles();
 		}
 		

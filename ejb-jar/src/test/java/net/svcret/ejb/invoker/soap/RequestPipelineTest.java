@@ -15,7 +15,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
@@ -48,7 +48,7 @@ public class RequestPipelineTest {
 		serverAuths.get(0).setPid(123L);
 		
 		PersServiceVersionSoap11 serviceVer = mock(PersServiceVersionSoap11.class);
-		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class);
+		PersMethod method = mock(PersMethod.class);
 		when(serviceVer.getMethod("getPatientByMrn")).thenReturn(method);
 
 		RequestPipeline p = new RequestPipeline(serverAuths, clientAuths);
@@ -88,7 +88,7 @@ public class RequestPipelineTest {
 		serverAuths.get(0).setPid(123L);
 		
 		PersServiceVersionSoap11 serviceVer = mock(PersServiceVersionSoap11.class);
-		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class);
+		PersMethod method = mock(PersMethod.class);
 		when(serviceVer.getMethod("getPatientByMrn")).thenReturn(method);
 
 		RequestPipeline p = new RequestPipeline(serverAuths, clientAuths);
@@ -160,7 +160,7 @@ public class RequestPipelineTest {
 		serverAuths.add(new PersWsSecUsernameTokenServerAuth());
 
 		PersServiceVersionSoap11 serviceVer = mock(PersServiceVersionSoap11.class);
-		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class);
+		PersMethod method = mock(PersMethod.class);
 		when(serviceVer.getMethod("getPatientByMrn")).thenReturn(method);
 
 		RequestPipeline p = new RequestPipeline(serverAuths, clientAuths);
@@ -193,7 +193,7 @@ public class RequestPipelineTest {
 		serverAuths.add(new PersWsSecUsernameTokenServerAuth());
 
 		PersServiceVersionSoap11 serviceVer = mock(PersServiceVersionSoap11.class);
-		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class);
+		PersMethod method = mock(PersMethod.class);
 		when(serviceVer.getMethod("getPatientByMrn")).thenReturn(method);
 
 		RequestPipeline p = new RequestPipeline(serverAuths, clientAuths);

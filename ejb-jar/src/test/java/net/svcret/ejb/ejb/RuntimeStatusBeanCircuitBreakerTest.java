@@ -19,7 +19,7 @@ import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
@@ -38,7 +38,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 	private SrBeanProcessedResponse invocationResponse;
 	private RuntimeStatusBean myBean;
 	private IDao myDao;
-	private PersServiceVersionMethod myMethod;
+	private PersMethod myMethod;
 	private PersServiceVersionUrl persUrl1;
 	private PersServiceVersionUrl persUrl2;
 	private PersServiceVersionSoap11 svcVersion;
@@ -57,7 +57,7 @@ public class RuntimeStatusBeanCircuitBreakerTest {
 		myDao = mock(IDao.class, new DefaultAnswer());
 		myBean.setDao(myDao);
 		
-		myMethod = mock(PersServiceVersionMethod.class, new DefaultAnswer());
+		myMethod = mock(PersMethod.class, new DefaultAnswer());
 		
 		user = mock(PersUser.class, new DefaultAnswer());
 		

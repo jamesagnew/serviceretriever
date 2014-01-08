@@ -24,7 +24,7 @@ public abstract class BasePersServiceVersionSingleMethod extends BasePersService
 	}
 	
 	@Override
-	public void addMethod(PersServiceVersionMethod theMethod) {
+	public void addMethod(PersMethod theMethod) {
 		throw new UnsupportedOperationException();
 	}
 

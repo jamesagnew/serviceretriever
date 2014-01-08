@@ -2,7 +2,6 @@ package net.svcret.admin.client.ui.config.service;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
-import net.svcret.admin.client.ui.config.EditServiceBasicPropertiesPanel;
 import net.svcret.admin.client.ui.config.domain.EditDomainServicesPanel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
@@ -25,9 +24,11 @@ public class AddServicePanel extends FlowPanel {
 	private EditServiceBasicPropertiesPanel myServicePropertiesPanel;
 	private LoadingSpinner mySpinner;
 	private DtoDomainList myDomainList;
+	private GService myService;
 	
 	public AddServicePanel(Long theDomainPid) {
 		myDomainPid = theDomainPid;
+		myService = new GService();
 		
 		setStylePrimaryName("mainPanel");
 
@@ -60,7 +61,7 @@ public class AddServicePanel extends FlowPanel {
 		 */
 		
 		ClickHandler addHandler = new MyAddHandler();
-		myServicePropertiesPanel = new EditServiceBasicPropertiesPanel(AdminPortal.MSGS.actions_Add(), addHandler, AdminPortal.IMAGES.iconAdd());
+		myServicePropertiesPanel = new EditServiceBasicPropertiesPanel(myService, AdminPortal.MSGS.actions_Add(), addHandler, AdminPortal.IMAGES.iconAdd(), true);
 		myServicePropertiesPanel.setVisible(false);
 		contentPanel.add(myServicePropertiesPanel);
 		
@@ -100,9 +101,6 @@ public class AddServicePanel extends FlowPanel {
 			final long domainPid = Long.parseLong(domainPidStr);
 			
 			if (myServicePropertiesPanel.validateValues()) {
-				String id = myServicePropertiesPanel.getId();
-				String name = myServicePropertiesPanel.getName();
-				boolean active = myServicePropertiesPanel.isActive();
 				AsyncCallback<GService> callback = new AsyncCallback<GService>() {
 					@Override
 					public void onFailure(Throwable theCaught) {
@@ -118,7 +116,7 @@ public class AddServicePanel extends FlowPanel {
 				};
 				
 				mySpinner.show();
-				AdminPortal.MODEL_SVC.addService(domainPid, id, name, active, callback);
+				AdminPortal.MODEL_SVC.addService(domainPid, myService, callback);
 			}
 			
 		}

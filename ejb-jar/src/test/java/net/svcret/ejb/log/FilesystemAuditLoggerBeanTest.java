@@ -16,7 +16,7 @@ import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.log.FilesystemAuditLoggerBean;
 import net.svcret.ejb.model.entity.PersConfig;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 
@@ -58,7 +58,7 @@ public class FilesystemAuditLoggerBeanTest {
 
 		SrBeanIncomingRequest request = mock(SrBeanIncomingRequest.class, new ReturnsDeepStubs());
 		when(request.getRequestHostIp()).thenReturn("127.0.0.2");
-		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class, new ReturnsDeepStubs());
+		PersMethod method = mock(PersMethod.class, new ReturnsDeepStubs());
 		when(method.getServiceVersion().getVersionId()).thenReturn("1.2");
 		when(method.getServiceVersion().getService().getServiceId()).thenReturn("service1.0");
 		when(method.getServiceVersion().getService().getDomain().getDomainId()).thenReturn("service1.0");

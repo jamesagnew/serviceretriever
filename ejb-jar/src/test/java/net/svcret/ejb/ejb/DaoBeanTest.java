@@ -43,7 +43,7 @@ import net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem;
 import net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact;
 import net.svcret.ejb.model.entity.PersMonitorRulePassive;
 import net.svcret.ejb.model.entity.PersService;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
@@ -63,6 +63,22 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class DaoBeanTest extends BaseJpaTest {
+
+	private static final String HTTP_BAZ = "http://127.0.0.1";
+
+	private static final String HTTP_BAR = "http://127.0.0.2";
+
+	private static final String HTTP_FOO = "http://127.0.0.3";
+
+	private static final String HTTP_FOOURL1B = "http://127.0.0.11";
+
+	private static final String HTTP_FOOURL0B = "http://127.0.0.12";
+
+	private static final String HTTP_FOOURL2 = "http://127.0.0.13";
+
+	private static final String HTTP_FOOURL1 = "http://127.0.0.14";
+
+	private static final String HTTP_FOOURL0 = "http://127.0.0.15";
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(DaoBeanTest.class);
 
@@ -225,16 +241,16 @@ public class DaoBeanTest extends BaseJpaTest {
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
 		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
-		PersServiceVersionMethod method = new PersServiceVersionMethod();
+		PersMethod method = new PersMethod();
 		method.setName("method0");
 		ver.addMethod(method);
 
 		PersServiceVersionUrl url1 = new PersServiceVersionUrl();
-		url1.setUrl("http://foo");
+		url1.setUrl(HTTP_FOO);
 		url1.setUrlId("url1");
 		ver.addUrl(url1);
 		PersServiceVersionUrl url2 = new PersServiceVersionUrl();
-		url2.setUrl("http://bar");
+		url2.setUrl(HTTP_BAR);
 		url2.setUrlId("url2");
 		ver.addUrl(url2);
 		ver = (PersServiceVersionSoap11) mySvc.saveServiceVersion(ver);
@@ -276,12 +292,12 @@ public class DaoBeanTest extends BaseJpaTest {
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
 		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
-		PersServiceVersionMethod method = new PersServiceVersionMethod();
+		PersMethod method = new PersMethod();
 		method.setName("method0");
 		ver.addMethod(method);
 
 		PersServiceVersionUrl url = new PersServiceVersionUrl();
-		url.setUrl("http://foo");
+		url.setUrl(HTTP_FOO);
 		url.setUrlId("url");
 		ver.addUrl(url);
 		ver = (PersServiceVersionSoap11) mySvc.saveServiceVersion(ver);
@@ -364,12 +380,12 @@ public class DaoBeanTest extends BaseJpaTest {
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
 		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
-		PersServiceVersionMethod method = new PersServiceVersionMethod();
+		PersMethod method = new PersMethod();
 		method.setName("method0");
 		ver.addMethod(method);
 
 		PersServiceVersionUrl url = new PersServiceVersionUrl();
-		url.setUrl("http://foo");
+		url.setUrl(HTTP_FOO);
 		url.setUrlId("url");
 		ver.addUrl(url);
 		ver = (PersServiceVersionSoap11) mySvc.saveServiceVersion(ver);
@@ -449,7 +465,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
 		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
-		PersServiceVersionMethod method = new PersServiceVersionMethod();
+		PersMethod method = new PersMethod();
 		method.setName("method0");
 		ver.addMethod(method);
 
@@ -508,8 +524,8 @@ public class DaoBeanTest extends BaseJpaTest {
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
 		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
-		PersServiceVersionMethod method = ver.getOrCreateAndAddMethodWithName("METHOD0");
-		// PersServiceVersionMethod method = new PersServiceVersionMethod();
+		PersMethod method = ver.getOrCreateAndAddMethodWithName("METHOD0");
+		// PersMethod method = new PersMethod();
 		// method.setName("method0");
 		// ver.addMethod(method);
 
@@ -647,7 +663,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
 		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
-		PersServiceVersionMethod method = ver.getOrCreateAndAddMethodWithName("MethodName");
+		PersMethod method = ver.getOrCreateAndAddMethodWithName("MethodName");
 
 		mySvc.saveServiceVersion(ver);
 
@@ -731,14 +747,14 @@ public class DaoBeanTest extends BaseJpaTest {
 		assertNotNull(user.getStatus());
 		assertNotNull(user.getStatus().getMethodStatuses());
 
-		PersServiceVersionMethod method1 = ver.getMethod("method1");
-		PersServiceVersionMethod method2 = ver.getMethod("method2");
+		PersMethod method1 = ver.getMethod("method1");
+		PersMethod method2 = ver.getMethod("method2");
 
 		PersUserMethodStatus status1 = user.getStatus().getOrCreateUserMethodStatus(method1);
-		status1.setLastSuccessfulInvocationIfNewer(date1);
+		status1.setValuesSuccessfulInvocation(date1);
 
 		PersUserMethodStatus status2 = user.getStatus().getOrCreateUserMethodStatus(method2);
-		status2.setLastSuccessfulInvocationIfNewer(date2);
+		status2.setValuesSuccessfulInvocation(date2);
 
 		mySvc.saveUserStatus(Collections.singleton(user.getStatus()));
 
@@ -767,7 +783,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		PersDomain domain = mySvc.getOrCreateDomainWithId("DOMAIN_ID");
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
 		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
-		PersServiceVersionMethod method = ver.getOrCreateAndAddMethodWithName("MNAME");
+		PersMethod method = ver.getOrCreateAndAddMethodWithName("MNAME");
 		PersUser user = mySvc.getOrCreateUser(mySvc.getAuthenticationHost("ah0"), "Username");
 
 		mySvc.saveServiceVersion(ver);
@@ -825,7 +841,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		return retVal;
 	}
 
-	public static PersInvocationMethodUserStatsPk createEntryPk(InvocationStatsIntervalEnum theInterval, Date theTimestamp, PersServiceVersionMethod theMethod, PersUser theUser) {
+	public static PersInvocationMethodUserStatsPk createEntryPk(InvocationStatsIntervalEnum theInterval, Date theTimestamp, PersMethod theMethod, PersUser theUser) {
 		Validate.notNull(theInterval, "Interval");
 		Validate.notNull(theTimestamp, "Timestamp");
 
@@ -981,9 +997,9 @@ public class DaoBeanTest extends BaseJpaTest {
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
 		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
 
-		ver.addResource("http://foo", "text/plain", "foo contents");
-		ver.addResource("http://bar", "text/plain", "bar contents");
-		ver.addResource("http://baz", "text/plain", "baz contents");
+		ver.addResource(HTTP_FOO, "text/plain", "foo contents");
+		ver.addResource(HTTP_BAR, "text/plain", "bar contents");
+		ver.addResource(HTTP_BAZ, "text/plain", "baz contents");
 
 		mySvc.saveServiceVersion(ver);
 
@@ -991,18 +1007,18 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		ver = mySvc.getAllServiceVersions().iterator().next();
 		assertEquals(3, ver.getUriToResource().size());
-		assertEquals("foo contents", ver.getUriToResource().get("http://foo").getResourceText());
-		assertEquals("bar contents", ver.getUriToResource().get("http://bar").getResourceText());
-		assertEquals("baz contents", ver.getUriToResource().get("http://baz").getResourceText());
+		assertEquals("foo contents", ver.getUriToResource().get(HTTP_FOO).getResourceText());
+		assertEquals("bar contents", ver.getUriToResource().get(HTTP_BAR).getResourceText());
+		assertEquals("baz contents", ver.getUriToResource().get(HTTP_BAZ).getResourceText());
 
-		ver.getUriToResource().remove("http://foo");
+		ver.getUriToResource().remove(HTTP_FOO);
 		mySvc.saveServiceVersion(ver);
 
 		ver = mySvc.getAllServiceVersions().iterator().next();
 		assertEquals(2, ver.getUriToResource().size());
-		assertNull(ver.getUriToResource().get("http://foo"));
-		assertEquals("bar contents", ver.getUriToResource().get("http://bar").getResourceText());
-		assertEquals("baz contents", ver.getUriToResource().get("http://baz").getResourceText());
+		assertNull(ver.getUriToResource().get(HTTP_FOO));
+		assertEquals("bar contents", ver.getUriToResource().get(HTTP_BAR).getResourceText());
+		assertEquals("baz contents", ver.getUriToResource().get(HTTP_BAZ).getResourceText());
 
 	}
 
@@ -1016,17 +1032,17 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		PersServiceVersionUrl url0 = new PersServiceVersionUrl();
 		url0.setUrlId("url0");
-		url0.setUrl("http://foourl0");
+		url0.setUrl(HTTP_FOOURL0);
 		ver.getUrls().add(url0);
 
 		PersServiceVersionUrl url1 = new PersServiceVersionUrl();
 		url1.setUrlId("url1");
-		url1.setUrl("http://foourl1");
+		url1.setUrl(HTTP_FOOURL1);
 		ver.getUrls().add(url1);
 
 		PersServiceVersionUrl url2 = new PersServiceVersionUrl();
 		url2.setUrlId("url2");
-		url2.setUrl("http://foourl2");
+		url2.setUrl(HTTP_FOOURL2);
 		ver.getUrls().add(url2);
 
 		mySvc.saveServiceVersion(ver);
@@ -1038,7 +1054,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		assertNotNull(ver.getUrls().get(0).getStatus());
 
 		ver.retainOnlyUrlsWithIds("url0", "url2");
-		ver.getUrlWithId("url0").setUrl("http://foourl0b");
+		ver.getUrlWithId("url0").setUrl(HTTP_FOOURL0B);
 
 		mySvc.saveServiceVersion(ver);
 
@@ -1047,8 +1063,8 @@ public class DaoBeanTest extends BaseJpaTest {
 		ver = mySvc.getAllServiceVersions().iterator().next();
 		assertEquals(2, ver.getUrls().size());
 		Iterator<PersServiceVersionUrl> iter = ver.getUrls().iterator();
-		assertEquals("http://foourl0b", iter.next().getUrl());
-		assertEquals("http://foourl2", iter.next().getUrl());
+		assertEquals(HTTP_FOOURL0B, iter.next().getUrl());
+		assertEquals(HTTP_FOOURL2, iter.next().getUrl());
 
 		newEntityManager();
 
@@ -1056,7 +1072,7 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		PersServiceVersionUrl url1b = new PersServiceVersionUrl();
 		url1b.setUrlId("url1b");
-		url1b.setUrl("http://foourl1b");
+		url1b.setUrl(HTTP_FOOURL1B);
 		ver.getUrls().add(1, url1b);
 
 		mySvc.saveServiceVersion(ver);
@@ -1066,9 +1082,9 @@ public class DaoBeanTest extends BaseJpaTest {
 		ver = mySvc.getAllServiceVersions().iterator().next();
 		assertEquals(3, ver.getUrls().size());
 		iter = ver.getUrls().iterator();
-		assertEquals("http://foourl0b", iter.next().getUrl());
-		assertEquals("http://foourl1b", iter.next().getUrl());
-		assertEquals("http://foourl2", iter.next().getUrl());
+		assertEquals(HTTP_FOOURL0B, iter.next().getUrl());
+		assertEquals(HTTP_FOOURL1B, iter.next().getUrl());
+		assertEquals(HTTP_FOOURL2, iter.next().getUrl());
 
 	}
 
@@ -1282,19 +1298,19 @@ public class DaoBeanTest extends BaseJpaTest {
 		// Update the service version properties
 		version0 = (PersServiceVersionSoap11) mySvc.getServiceVersionByPid(version0.getPid());
 		assertNotNull(version0.getStatus().getPid());
-		version0.setWsdlUrl("http://foo");
+		version0.setWsdlUrl(HTTP_FOO);
 		mySvc.saveServiceVersion(version0);
 
 		version1 = (PersServiceVersionSoap11) mySvc.getServiceVersionByPid(version1.getPid());
 		assertNotNull(version1.getStatus().getPid());
-		version1.setWsdlUrl("http://bar");
+		version1.setWsdlUrl(HTTP_BAR);
 		mySvc.saveServiceVersion(version1);
 
 		newEntityManager();
 
 		allVersions = mySvc.getAllServiceVersions();
 		assertEquals(2, allVersions.size());
-		assertEquals("http://foo", allVersions.iterator().next().getWsdlUrl());
+		assertEquals(HTTP_FOO, allVersions.iterator().next().getWsdlUrl());
 
 		// Remove a service version
 		mySvc.removeServiceVersion(version0.getPid());
@@ -1303,12 +1319,12 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		allVersions = mySvc.getAllServiceVersions();
 		assertEquals(1, allVersions.size());
-		assertEquals("http://bar", allVersions.iterator().next().getWsdlUrl());
+		assertEquals(HTTP_BAR, allVersions.iterator().next().getWsdlUrl());
 
 		service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
 		assertEquals(2, service.getVersions().size());
 		PersServiceVersionSoap11 next = (PersServiceVersionSoap11) service.getVersions().iterator().next();
-		assertEquals("http://bar", next.getWsdlUrl());
+		assertEquals(HTTP_BAR, next.getWsdlUrl());
 
 		assertEquals(PersHttpClientConfig.DEFAULT_ID, service.getVersions().iterator().next().getHttpClientConfig().getId());
 

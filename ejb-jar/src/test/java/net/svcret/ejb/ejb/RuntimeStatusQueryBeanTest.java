@@ -23,7 +23,7 @@ import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
 import net.svcret.ejb.model.entity.PersService;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 
 import org.apache.commons.lang3.time.DateUtils;
@@ -40,7 +40,7 @@ public class RuntimeStatusQueryBeanTest {
 		PersDomain domain = new PersDomain(ourNextPid++, "d");
 		PersService service = new PersService(ourNextPid++, domain, "s", "s");
 		PersServiceVersionSoap11 sv = new PersServiceVersionSoap11(ourNextPid++, service, "v");
-		PersServiceVersionMethod method = new PersServiceVersionMethod(ourNextPid++, sv, "m");
+		PersMethod method = new PersMethod(ourNextPid++, sv, "m");
 
 		PersConfig config = new PersConfig();
 		config.setDefaults();
@@ -131,7 +131,7 @@ public class RuntimeStatusQueryBeanTest {
 
 		});
 
-		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class, DefaultAnswer.INSTANCE);
+		PersMethod method = mock(PersMethod.class, DefaultAnswer.INSTANCE);
 		when(method.getPid()).thenReturn(123L);
 
 		final Set<BasePersStatsPk> all = new HashSet<BasePersStatsPk>();

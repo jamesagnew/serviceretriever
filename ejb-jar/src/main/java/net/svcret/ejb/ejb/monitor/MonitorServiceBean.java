@@ -42,7 +42,7 @@ import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheckOutcome;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem;
 import net.svcret.ejb.model.entity.PersMonitorRulePassive;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 
 import org.apache.commons.lang3.StringUtils;
@@ -522,7 +522,7 @@ public class MonitorServiceBean implements IMonitorService {
 
 				long totalTime = 0;
 				long totalInvocations = 0;
-				for (PersServiceVersionMethod nextMethod : nextSvcVer.getMethods()) {
+				for (PersMethod nextMethod : nextSvcVer.getMethods()) {
 					for (long nextTime : times) {
 						PersInvocationMethodSvcverStatsPk statsPk = new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.MINUTE, nextTime, nextMethod);
 						PersInvocationMethodSvcverStats stats = myRuntimeStatusQuery.getInvocationStatsSynchronously(statsPk);

@@ -12,6 +12,7 @@ import net.svcret.admin.shared.model.BaseDtoMonitorRule;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.DtoConfig;
@@ -45,7 +46,7 @@ public interface ModelUpdateService extends RemoteService {
 
 	DtoDomain addDomain(DtoDomain theDomain) throws ServiceFailureException;
 
-	GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ServiceFailureException;
+	GService addService(long theDomainPid, GService theService) throws ServiceFailureException;
 
 	AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseDtoServiceVersion theVersion)
 			throws ServiceFailureException;
@@ -174,5 +175,7 @@ public interface ModelUpdateService extends RemoteService {
 			myUser = theUser;
 		}
 	}
+
+	DtoMonitorRuleActiveCheckOutcome loadMonitorRuleActiveCheckOutcomeDetails(long thePid) throws ServiceFailureException;
 
 }

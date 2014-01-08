@@ -74,7 +74,7 @@ import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersLibraryMessage;
 import net.svcret.ejb.model.entity.PersService;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
@@ -88,6 +88,18 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
+
+	private static final String HTTP_ZZZZZZ = "http://127.0.0.6";
+
+	private static final String HTTP_URL2 = "http://127.0.0.4";
+
+	private static final String HTTP_URL1 = "http://127.0.0.5";
+
+	private static final String HTTP_SVCURL = "http://127.0.0.3";
+
+	private static final String HTTP_BAR = "http://127.0.0.1";
+
+	private static final String HTTP_FOO = "http://127.0.0.2";
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(AdminServiceBeanIntegrationTest.class);
 
@@ -179,7 +191,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		GService d1s1 = mySvc.addService(d1.getPid(), createTestService());
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 
 		newEntityManager();
@@ -188,7 +200,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setWsdlLocation(HTTP_FOO);
 		d1s1v1.setHttpClientConfigPid(hcc.getPid());
 
 		d1s1v1.setKeepNumRecentTransactionsFail(100);
@@ -201,12 +213,12 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		d1s1v1.getMethodList().add(d1s1v1m1);
 
 		List<GResource> resources = new ArrayList<GResource>();
-		resources.add(new GResource("http://foo", "text/xml", "contents1"));
-		resources.add(new GResource("http://bar", "text/xml", "contents2"));
+		resources.add(new GResource(HTTP_FOO, "text/xml", "contents1"));
+		resources.add(new GResource(HTTP_BAR, "text/xml", "contents2"));
 
 		DtoServiceVersionSoap11 ver = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
 
-		ver.getUrlList().add(new GServiceVersionUrl("url1", "http://foo"));
+		ver.getUrlList().add(new GServiceVersionUrl("url1", HTTP_FOO));
 		ver = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), ver, resources);
 
 		newEntityManager();
@@ -236,7 +248,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		PersServiceVersionStatus status = persVer.getStatus();
 		assertNotNull(status);
 
-		PersServiceVersionMethod m1 = persVer.getMethods().iterator().next();
+		PersMethod m1 = persVer.getMethods().iterator().next();
 
 		newEntityManager();
 
@@ -247,7 +259,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		SrBeanProcessedResponse bean = new SrBeanProcessedResponse();
 		bean.setResponseType(ResponseTypeEnum.SUCCESS);
 
-		myEverythingInvocationTime = new Date();
+		myEverythingInvocationTime = new Date(System.currentTimeMillis() - (60 * 1000L));
 		myStatsSvc.recordInvocationMethod(myEverythingInvocationTime, 100, SrBeanProcessedRequest.forUnitTest(m1), null, httpResponse, bean);
 
 		newEntityManager();
@@ -298,12 +310,12 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		DtoDomain domain = mySvc.unitTestMethod_addDomain("domain_id3", "domain_name");
 		newEntityManager();
 
-		GService service = mySvc.addService(domain.getPid(), "svc_id", "svc_name", true);
+		GService service = mySvc.addService(domain.getPid(), createTestService());
 
 		newEntityManager();
 
-		assertEquals("svc_id", service.getId());
-		assertEquals("svc_name", service.getName());
+		assertEquals(createTestService().getId(), service.getId());
+		assertEquals(createTestService().getName(), service.getName());
 
 		assertFalse(service.isStatsInitialized());
 
@@ -314,8 +326,6 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 	}
 
-
-	
 	@Test
 	public void testAddDomain() throws Exception {
 		newEntityManager();
@@ -342,11 +352,11 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 	@Test
 	public void testAddMonitorRuleActive() throws Exception {
-		
+
 		newEntityManager();
 
 		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		GService d1s1 = mySvc.addService(d1.getPid(), createTestService());
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpServer");
 		myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
 
@@ -356,7 +366,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setWsdlLocation(HTTP_FOO);
 		d1s1v1.setHttpClientConfigPid(hcc.getPid());
 		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
 
@@ -364,7 +374,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		d1s1v2.setActive(true);
 		d1s1v2.setId("ASV_SV2");
 		d1s1v2.setName("ASV_SV2_Name");
-		d1s1v2.setWsdlLocation("http://foo");
+		d1s1v2.setWsdlLocation(HTTP_FOO);
 		d1s1v2.setHttpClientConfigPid(hcc.getPid());
 		d1s1v2 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v2, new ArrayList<GResource>());
 
@@ -377,7 +387,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		msg1.setMessage("message text1");
 		mySvc.saveLibraryMessage(msg1);
 
-		DtoLibraryMessage msg2= new DtoLibraryMessage();
+		DtoLibraryMessage msg2 = new DtoLibraryMessage();
 		msg2.setAppliesToServiceVersionPids(d1s1v1.getPid());
 		msg2.setContentType("text/xml");
 		msg2.setDescription("desc2");
@@ -385,10 +395,10 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		mySvc.saveLibraryMessage(msg2);
 
 		newEntityManager();
-		
+
 		List<DtoLibraryMessage> msgs = new ArrayList<DtoLibraryMessage>(mySvc.getLibraryMessages(HierarchyEnum.VERSION, d1s1v1.getPid(), false));
 		assertEquals(2, msgs.size());
-		
+
 		DtoMonitorRuleActive rule = new DtoMonitorRuleActive();
 		rule.setName("ruleName");
 		rule.setActive(true);
@@ -398,21 +408,21 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		rule.getCheckList().get(0).setMessagePid(msgs.get(0).getPid());
 		rule.getCheckList().get(0).setServiceVersionPid(d1s1v1.getPid());
 		rule.getCheckList().get(0).setExpectResponseType(ResponseTypeEnum.SUCCESS);
-		
+
 		mySvc.saveMonitorRule(rule);
-		
+
 		newEntityManager();
-		
+
 		/*
 		 * Add a second active check
 		 */
-		
+
 		GMonitorRuleList ruleList = mySvc.loadMonitorRuleList();
 		assertEquals(1, ruleList.size());
-		
+
 		rule = (DtoMonitorRuleActive) ruleList.get(0);
 		assertEquals(1, rule.getCheckList().size());
-		
+
 		rule.getCheckList().add(new DtoMonitorRuleActiveCheck());
 		rule.getCheckList().get(1).setCheckFrequencyNum(6);
 		rule.getCheckList().get(1).setCheckFrequencyUnit(ThrottlePeriodEnum.MINUTE);
@@ -421,21 +431,21 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		rule.getCheckList().get(1).setExpectResponseType(ResponseTypeEnum.SUCCESS);
 
 		mySvc.saveMonitorRule(rule);
-		
+
 		newEntityManager();
 
 		ruleList = mySvc.loadMonitorRuleList();
 		assertEquals(1, ruleList.size());
-		
+
 		rule = (DtoMonitorRuleActive) ruleList.get(0);
 		assertEquals(2, rule.getCheckList().size());
 		assertEquals(5, rule.getCheckList().get(0).getCheckFrequencyNum());
 		assertEquals(6, rule.getCheckList().get(1).getCheckFrequencyNum());
-		
+
 		mySvcReg.reloadRegistryFromDatabase();
-		
+
 		newEntityManager();
-		
+
 		Collection<BasePersServiceVersion> svcVerList = mySvcReg.getAllDomains().iterator().next().getServices().iterator().next().getVersions();
 		assertEquals(2, svcVerList.size());
 		Iterator<BasePersServiceVersion> iterator = svcVerList.iterator();
@@ -443,7 +453,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		BasePersServiceVersion v2 = iterator.next();
 		assertEquals(1, v1.getActiveChecks().size());
 		assertEquals(1, v2.getActiveChecks().size());
-		
+
 	}
 
 	@Test
@@ -452,7 +462,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		GService d1s1 = mySvc.addService(d1.getPid(), createTestService());
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 		myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
 
@@ -462,7 +472,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setWsdlLocation(HTTP_FOO);
 		d1s1v1.setHttpClientConfigPid(hcc.getPid());
 		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
 
@@ -525,7 +535,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		GService d1s1 = mySvc.addService(d1.getPid(), createTestService());
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 
 		newEntityManager();
@@ -534,15 +544,15 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setWsdlLocation(HTTP_FOO);
 		d1s1v1.setHttpClientConfigPid(hcc.getPid());
 
 		List<GResource> resources = new ArrayList<GResource>();
-		resources.add(new GResource("http://foo", "text/xml", "contents1"));
-		resources.add(new GResource("http://bar", "text/xml", "contents2"));
+		resources.add(new GResource(HTTP_FOO, "text/xml", "contents1"));
+		resources.add(new GResource(HTTP_BAR, "text/xml", "contents2"));
 
-		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", "http://url1"));
-		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", "http://url2"));
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", HTTP_URL1));
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", HTTP_URL2));
 
 		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
 
@@ -555,17 +565,17 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		PersServiceVersionSoap11 pVersion = (PersServiceVersionSoap11) versions.iterator().next();
 		assertEquals("ASV_SV1", pVersion.getVersionId());
-		assertEquals("http://foo", pVersion.getWsdlUrl());
+		assertEquals(HTTP_FOO, pVersion.getWsdlUrl());
 		assertEquals(2, pVersion.getUriToResource().size());
-		assertEquals("contents1", pVersion.getUriToResource().get("http://foo").getResourceText());
-		assertEquals("contents2", pVersion.getUriToResource().get("http://bar").getResourceText());
+		assertEquals("contents1", pVersion.getUriToResource().get(HTTP_FOO).getResourceText());
+		assertEquals("contents2", pVersion.getUriToResource().get(HTTP_BAR).getResourceText());
 
 		assertEquals(2, pVersion.getUrls().size());
 		assertEquals("url1", pVersion.getUrls().get(0).getUrlId());
 		assertEquals("url2", pVersion.getUrls().get(1).getUrlId());
 
 	}
-	
+
 	@Test(expected = IllegalArgumentException.class)
 	public void testAddServiceWithDuplicates() throws Exception {
 		newEntityManager();
@@ -573,11 +583,11 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		DtoDomain domain = mySvc.unitTestMethod_addDomain("domain_id4", "domain_name");
 		newEntityManager();
 
-		mySvc.addService(domain.getPid(), "svc_id2", "svc_name", true);
+		mySvc.addService(domain.getPid(), createTestService());
 
 		newEntityManager();
 
-		mySvc.addService(domain.getPid(), "svc_id2", "svc_name", true);
+		mySvc.addService(domain.getPid(), createTestService());
 	}
 
 	@Test
@@ -602,7 +612,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		GService d1s1 = mySvc.addService(d1.getPid(), createTestService());
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 
 		newEntityManager();
@@ -611,15 +621,15 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setWsdlLocation(HTTP_FOO);
 		d1s1v1.setHttpClientConfigPid(hcc.getPid());
 
 		List<GResource> resources = new ArrayList<GResource>();
-		resources.add(new GResource("http://foo", "text/xml", "contents1"));
-		resources.add(new GResource("http://bar", "text/xml", "contents2"));
+		resources.add(new GResource(HTTP_FOO, "text/xml", "contents1"));
+		resources.add(new GResource(HTTP_BAR, "text/xml", "contents2"));
 
-		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", "http://url1"));
-		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", "http://url2"));
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", HTTP_URL1));
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", HTTP_URL2));
 
 		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
 
@@ -782,7 +792,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		testLoad60MinuteStats_CheckStats(svcVer);
 
 		// Try again.. should we clear cache?
-		
+
 		request = new ModelUpdateRequest();
 		request.addDomainToLoadStats(domain.getPid());
 		request.addServiceToLoadStats(svc.getPid());
@@ -805,8 +815,9 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		Date expected = InvocationStatsIntervalEnum.MINUTE.truncate(new Date(System.currentTimeMillis() - (59 * DateUtils.MILLIS_PER_MINUTE)));
 		assertEquals(expected, firstDate);
 		assertEquals(60, trans.length);
-		assertEquals(1, trans[59]);
-		assertEquals(0, trans[58]);
+		assertEquals(0, trans[59]);
+		assertEquals(1, trans[58]);
+		assertEquals(0, trans[57]);
 	}
 
 	@Test
@@ -815,7 +826,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		GService d1s1 = mySvc.addService(d1.getPid(), createTestService());
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 		myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
 
@@ -825,7 +836,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setWsdlLocation(HTTP_FOO);
 		d1s1v1.setHttpClientConfigPid(hcc.getPid());
 		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
 
@@ -887,7 +898,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		GService d1s1 = mySvc.addService(d1.getPid(), createTestService());
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 		myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
 
@@ -897,7 +908,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setWsdlLocation(HTTP_FOO);
 		d1s1v1.setHttpClientConfigPid(hcc.getPid());
 		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
 
@@ -955,14 +966,13 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 	}
 
-	
 	@Test
 	public void testLoadAndSaveSvcVerThrottle() throws Exception {
 
 		newEntityManager();
 
 		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		GService d1s1 = mySvc.addService(d1.getPid(), createTestService());
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 		myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
 
@@ -972,7 +982,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setWsdlLocation(HTTP_FOO);
 		d1s1v1.setHttpClientConfigPid(hcc.getPid());
 		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
 
@@ -982,13 +992,13 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
 		assertNull(d1s1v1.getThrottle());
-		
+
 		DtoServiceVersionThrottle dtoThrottle = new DtoServiceVersionThrottle();
 		dtoThrottle.setApplyPerUser(true);
 		dtoThrottle.setThrottleMaxRequests(5);
 		dtoThrottle.setThrottlePeriod(ThrottlePeriodEnum.SECOND);
 		d1s1v1.setThrottle(dtoThrottle);
-		
+
 		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
 
 		newEntityManager();
@@ -1005,13 +1015,13 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
 		assertNotNull(d1s1v1.getThrottle());
-		
+
 		dtoThrottle = d1s1v1.getThrottle();
 		dtoThrottle.setApplyPerUser(false);
 		dtoThrottle.setThrottleMaxRequests(6);
 		dtoThrottle.setThrottlePeriod(ThrottlePeriodEnum.SECOND);
 		d1s1v1.setThrottle(dtoThrottle);
-		
+
 		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
 
 		newEntityManager();
@@ -1034,16 +1044,16 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		d1s1v1 = (DtoServiceVersionSoap11) mySvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
 		assertNull(d1s1v1.getThrottle());
-		
+
 	}
-	
+
 	@Test
 	public void testLoadAndSaveSvcVerJsonRpc20() throws Exception {
 
 		newEntityManager();
 
 		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		GService d1s1 = mySvc.addService(d1.getPid(), createTestService());
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 
 		newEntityManager();
@@ -1055,11 +1065,11 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		d1s1v1.setHttpClientConfigPid(hcc.getPid());
 
 		List<GResource> resources = new ArrayList<GResource>();
-		resources.add(new GResource("http://foo", "text/xml", "contents1"));
-		resources.add(new GResource("http://bar", "text/xml", "contents2"));
+		resources.add(new GResource(HTTP_FOO, "text/xml", "contents1"));
+		resources.add(new GResource(HTTP_BAR, "text/xml", "contents2"));
 
-		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", "http://url1"));
-		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", "http://url2"));
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", HTTP_URL1));
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", HTTP_URL2));
 
 		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
 
@@ -1091,7 +1101,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		GService d1s1 = mySvc.addService(d1.getPid(), createTestService());
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 
 		newEntityManager();
@@ -1100,7 +1110,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setWsdlLocation(HTTP_FOO);
 		d1s1v1.setHttpClientConfigPid(hcc.getPid());
 		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
 
@@ -1157,7 +1167,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		GService d1s1 = mySvc.addService(d1.getPid(), createTestService());
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpServer");
 		PersAuthenticationHostLocalDatabase auth = myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
 		PersAuthenticationHostLocalDatabase auth2 = myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST2");
@@ -1168,7 +1178,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setWsdlLocation(HTTP_FOO);
 		d1s1v1.setHttpClientConfigPid(hcc.getPid());
 		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
 
@@ -1227,7 +1237,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		GService d1s1 = mySvc.addService(d1.getPid(), createTestService());
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpServer");
 		myDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
 
@@ -1237,7 +1247,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setWsdlLocation(HTTP_FOO);
 		d1s1v1.setHttpClientConfigPid(hcc.getPid());
 		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
 
@@ -1261,7 +1271,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		GService d1s1 = mySvc.addService(d1.getPid(), createTestService());
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 
 		newEntityManager();
@@ -1270,32 +1280,33 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setWsdlLocation(HTTP_FOO);
 		d1s1v1.setHttpClientConfigPid(hcc.getPid());
 
 		List<GResource> resources = new ArrayList<GResource>();
-		resources.add(new GResource("http://foo", "text/xml", "contents1"));
-		resources.add(new GResource("http://bar", "text/xml", "contents2"));
+		resources.add(new GResource(HTTP_FOO, "text/xml", "contents1"));
+		resources.add(new GResource(HTTP_BAR, "text/xml", "contents2"));
 
-		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", "http://url1"));
-		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", "http://url2"));
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", HTTP_URL1));
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", HTTP_URL2));
 
 		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
 
 		newEntityManager();
 
 		/*
-		 * Putting in the same old resources, but they look new because they don't have IDs
+		 * Putting in the same old resources, but they look new because they
+		 * don't have IDs
 		 */
 
-		d1s1v1.setWsdlLocation("http://bar");
+		d1s1v1.setWsdlLocation(HTTP_BAR);
 		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
 
 		newEntityManager();
 
 		GSoap11ServiceVersionAndResources copy = mySvc.loadServiceVersion(d1s1v1.getPid());
 		DtoServiceVersionSoap11 svcVer = (DtoServiceVersionSoap11) copy.getServiceVersion();
-		assertEquals("http://bar", svcVer.getWsdlLocation());
+		assertEquals(HTTP_BAR, svcVer.getWsdlLocation());
 		assertEquals(2, copy.getResource().size());
 
 		/*
@@ -1327,7 +1338,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		 * Now change the URL
 		 */
 
-		svcVer.getUrlList().get(0).setUrl("http://zzzzzz");
+		svcVer.getUrlList().get(0).setUrl(HTTP_ZZZZZZ);
 		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), svcVer, resource);
 
 		newEntityManager();
@@ -1336,12 +1347,12 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		svcVer = (DtoServiceVersionSoap11) copy.getServiceVersion();
 		assertEquals(2, svcVer.getUrlList().size());
 		assertEquals("url1", svcVer.getUrlList().get(0).getId());
-		assertEquals("http://zzzzzz", svcVer.getUrlList().get(0).getUrl());
+		assertEquals(HTTP_ZZZZZZ, svcVer.getUrlList().get(0).getUrl());
 
 		/*
 		 * Now change a URL ID
 		 */
-		
+
 		svcVer.getUrlList().get(0).setId("aaaaa");
 		mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), svcVer, resource);
 
@@ -1351,25 +1362,24 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		svcVer = (DtoServiceVersionSoap11) copy.getServiceVersion();
 		assertEquals(2, svcVer.getUrlList().size());
 		assertEquals("aaaaa", svcVer.getUrlList().get(0).getId());
-		assertEquals("http://zzzzzz", svcVer.getUrlList().get(0).getUrl());
-		
-		
+		assertEquals(HTTP_ZZZZZZ, svcVer.getUrlList().get(0).getUrl());
+
 	}
 
 	@Test
 	public void testLoadWsdl() throws Exception {
 
 		DtoServiceVersionSoap11 ver = new DtoServiceVersionSoap11();
-		
+
 		PersServiceVersionSoap11 persSvcVer = new PersServiceVersionSoap11();
 		persSvcVer.setPid(ver.getPid());
 		persSvcVer.setWsdlUrl("http://wsdlurl");
 
-		PersServiceVersionMethod m1 = new PersServiceVersionMethod();
+		PersMethod m1 = new PersMethod();
 		m1.setName("m1");
 		persSvcVer.addMethod(m1);
 
-		PersServiceVersionMethod m2 = new PersServiceVersionMethod();
+		PersMethod m2 = new PersMethod();
 		m2.setName("m2");
 		persSvcVer.addMethod(m2);
 
@@ -1378,7 +1388,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		PersServiceVersionUrl url = new PersServiceVersionUrl();
 		url.setUrlId("url1");
-		url.setUrl("http://svcurl");
+		url.setUrl(HTTP_SVCURL);
 		url.setServiceVersion(persSvcVer);
 		persSvcVer.addUrl(url);
 
@@ -1401,25 +1411,25 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		// Load stats
 		newEntityManager();
-		
+
 		PersDomain d0 = myDao.getOrCreateDomainWithId("d0");
 		PersService s0 = myDao.getOrCreateServiceWithId(d0, "s0");
 		verAndRes.getServiceVersion().setId("v0");
 		verAndRes.getServiceVersion().setHttpClientConfigPid(myDao.getHttpClientConfigs().iterator().next().getPid());
-		
+
 		BaseDtoServiceVersion newVer = mySvc.saveServiceVersion(d0.getPid(), s0.getPid(), verAndRes.getServiceVersion(), verAndRes.getResource());
-		
+
 		newEntityManager();
-		
+
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(newVer.getPid());
 		PersServiceVersionResource res = svcVer.getResourceForUri("http://wsdlurl");
 		myStatsSvc.recordInvocationStaticResource(new Date(), res);
 		myStatsSvc.flushStatus();
-		
+
 		newEntityManager();
-		
+
 		// Now change the WSDL URL
-		
+
 		persSvcVer = new PersServiceVersionSoap11();
 		persSvcVer.setPid(ver.getPid());
 		persSvcVer.addMethod(m1);
@@ -1432,7 +1442,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		newVer = mySvc.saveServiceVersion(d0.getPid(), s0.getPid(), verAndRes.getServiceVersion(), verAndRes.getResource());
 
 		newEntityManager();
-		
+
 	}
 
 	// @Test
@@ -1480,7 +1490,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did", "asv_did");
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		GService d1s1 = mySvc.addService(d1.getPid(), createTestService());
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 
 		newEntityManager();
@@ -1489,7 +1499,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setWsdlLocation(HTTP_FOO);
 		d1s1v1.setHttpClientConfigPid(hcc.getPid());
 
 		List<GResource> resources = new ArrayList<GResource>();
@@ -1523,7 +1533,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		config.getProxyUrlBases().clear();
-		config.getProxyUrlBases().add("http://foo");
+		config.getProxyUrlBases().add(HTTP_FOO);
 
 		config = mySvc.saveConfig(config);
 
@@ -1531,7 +1541,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 
 		config = mySvc.loadConfig();
 		assertEquals(1, config.getProxyUrlBases().size());
-		assertEquals("http://foo", config.getProxyUrlBases().get(0));
+		assertEquals(HTTP_FOO, config.getProxyUrlBases().get(0));
 
 	}
 
@@ -1650,26 +1660,26 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		DtoDomain d1 = mySvc.unitTestMethod_addDomain("asv_did1", "asv_did1");
 		DtoDomain d2 = mySvc.unitTestMethod_addDomain("asv_did2", "asv_did2");
 
-		GService d1s1 = mySvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
-		GService d2s1 = mySvc.addService(d2.getPid(), "d2s1", "d2s1", true);
+		GService d1s1 = mySvc.addService(d1.getPid(), createTestService());
+		GService d2s1 = mySvc.addService(d2.getPid(), new GService("d2s1", "d2s1", true));
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 
 		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
 		d1s1v1.setActive(true);
 		d1s1v1.setId("D1S1V1");
 		d1s1v1.setName("D1S1V1");
-		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setWsdlLocation(HTTP_FOO);
 		d1s1v1.setHttpClientConfigPid(hcc.getPid());
 		List<GResource> resources = new ArrayList<GResource>();
-		resources.add(new GResource("http://foo", "text/xml", "contents1"));
-		resources.add(new GResource("http://bar", "text/xml", "contents2"));
+		resources.add(new GResource(HTTP_FOO, "text/xml", "contents1"));
+		resources.add(new GResource(HTTP_BAR, "text/xml", "contents2"));
 		d1s1v1 = mySvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
 
 		DtoServiceVersionSoap11 d2s1v1 = new DtoServiceVersionSoap11();
 		d2s1v1.setActive(true);
 		d2s1v1.setId("D2S1V1");
 		d2s1v1.setName("D2S1V1");
-		d2s1v1.setWsdlLocation("http://foo");
+		d2s1v1.setWsdlLocation(HTTP_FOO);
 		d2s1v1.setHttpClientConfigPid(hcc.getPid());
 		d2s1v1 = mySvc.saveServiceVersion(d2.getPid(), d2s1.getPid(), d2s1v1, resources);
 
@@ -1780,20 +1790,16 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		 * Add method to each version perm
 		 */
 
-		user.getDomainPermissions().get(0).getOrCreateServicePermission(d1s1.getPid()).getOrCreateServiceVersionPermission(d1s1v1.getPid())
-				.getOrCreateServiceVersionMethodPermission(d1s1v1m1.getPid());
-		user.getDomainPermissions().get(1).getOrCreateServicePermission(d2s1.getPid()).getOrCreateServiceVersionPermission(d2s1v1.getPid())
-				.getOrCreateServiceVersionMethodPermission(d2s1v1m1.getPid());
+		user.getDomainPermissions().get(0).getOrCreateServicePermission(d1s1.getPid()).getOrCreateServiceVersionPermission(d1s1v1.getPid()).getOrCreateServiceVersionMethodPermission(d1s1v1m1.getPid());
+		user.getDomainPermissions().get(1).getOrCreateServicePermission(d2s1.getPid()).getOrCreateServiceVersionPermission(d2s1v1.getPid()).getOrCreateServiceVersionMethodPermission(d2s1v1m1.getPid());
 		mySvc.saveUser(user);
 		newEntityManager();
 		user = mySvc.loadUser(user.getPid(), false);
 		assertEquals(2, user.getDomainPermissions().size());
 		assertEquals(1, user.getDomainPermissions().get(0).getServicePermissions().get(0).getServiceVersionPermissions().get(0).getServiceVersionMethodPermissions().size());
 		assertEquals(1, user.getDomainPermissions().get(1).getServicePermissions().get(0).getServiceVersionPermissions().get(0).getServiceVersionMethodPermissions().size());
-		assertEquals(d1s1v1m1.getPid(), user.getDomainPermissions().get(0).getServicePermissions().get(0).getServiceVersionPermissions().get(0).getServiceVersionMethodPermissions().get(0)
-				.getServiceVersionMethodPid());
-		assertEquals(d2s1v1m1.getPid(), user.getDomainPermissions().get(1).getServicePermissions().get(0).getServiceVersionPermissions().get(0).getServiceVersionMethodPermissions().get(0)
-				.getServiceVersionMethodPid());
+		assertEquals(d1s1v1m1.getPid(), user.getDomainPermissions().get(0).getServicePermissions().get(0).getServiceVersionPermissions().get(0).getServiceVersionMethodPermissions().get(0).getServiceVersionMethodPid());
+		assertEquals(d2s1v1m1.getPid(), user.getDomainPermissions().get(1).getServicePermissions().get(0).getServiceVersionPermissions().get(0).getServiceVersionMethodPermissions().get(0).getServiceVersionMethodPid());
 
 		/*
 		 * Remove domain permission
@@ -1803,9 +1809,16 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		mySvc.saveUser(user);
 		assertEquals(1, user.getDomainPermissions().size());
 		assertEquals(1, user.getDomainPermissions().get(0).getServicePermissions().get(0).getServiceVersionPermissions().get(0).getServiceVersionMethodPermissions().size());
-		assertEquals(d2s1v1m1.getPid(), user.getDomainPermissions().get(0).getServicePermissions().get(0).getServiceVersionPermissions().get(0).getServiceVersionMethodPermissions().get(0)
-				.getServiceVersionMethodPid());
+		assertEquals(d2s1v1m1.getPid(), user.getDomainPermissions().get(0).getServicePermissions().get(0).getServiceVersionPermissions().get(0).getServiceVersionMethodPermissions().get(0).getServiceVersionMethodPid());
 
+	}
+
+	private GService createTestService() {
+		GService retVal = new GService();
+		retVal.setId("asv_sid");
+		retVal.setName("asv_sname");
+		retVal.setActive(true);
+		return retVal;
 	}
 
 	private static final class RetrieverThread extends Thread {

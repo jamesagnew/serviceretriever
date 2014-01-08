@@ -14,7 +14,7 @@ import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnknownRequestException;
+import net.svcret.ejb.ex.InvalidRequestException;
 import net.svcret.ejb.invoker.soap.InvocationFailedException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
@@ -67,12 +67,12 @@ public interface IServiceInvoker {
 	 *            The URL Pool to pass to the HTTP client which will process service requests as they are proxied
 	 * @return
 	 * @throws InternalErrorException
-	 * @throws UnknownRequestException
+	 * @throws InvalidRequestException
 	 * @throws IOException
 	 * @throws ProcessingException
 	 * @throws InvocationFailedException
 	 */
-	SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition) throws UnknownRequestException, InvocationRequestFailedException,
+	SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition) throws InvalidRequestException, InvocationRequestFailedException,
 			InvocationFailedException;
 
 	SrBeanProcessedResponse processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingResponse theResponse) throws InvocationResponseFailedException,

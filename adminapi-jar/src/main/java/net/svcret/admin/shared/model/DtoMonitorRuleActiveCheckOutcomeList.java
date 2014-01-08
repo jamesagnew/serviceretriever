@@ -1,6 +1,7 @@
 package net.svcret.admin.shared.model;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -68,9 +69,15 @@ public class DtoMonitorRuleActiveCheckOutcomeList extends BaseDtoObject {
 		Collections.sort(myOutcomes, new Comparator<DtoMonitorRuleActiveCheckOutcome>() {
 			@Override
 			public int compare(DtoMonitorRuleActiveCheckOutcome theO1, DtoMonitorRuleActiveCheckOutcome theO2) {
-				return theO1.getTimestamp().compareTo(theO2.getTimestamp());
+				return theO1.getTransactionTime().compareTo(theO2.getTransactionTime());
 			}
 		});
+	}
+
+	public Collection<DtoMonitorRuleActiveCheckOutcome> getOutcomesFromMostRecent() {
+		ArrayList<DtoMonitorRuleActiveCheckOutcome> retVal = new ArrayList<DtoMonitorRuleActiveCheckOutcome>(myOutcomes);
+		Collections.reverse(retVal);
+		return retVal;
 	}
 
 }

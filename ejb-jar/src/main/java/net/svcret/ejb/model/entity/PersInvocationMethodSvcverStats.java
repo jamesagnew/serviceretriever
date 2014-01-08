@@ -37,7 +37,7 @@ public class PersInvocationMethodSvcverStats extends BasePersInvocationMethodSta
 		myPk = thePk;
 	}
 
-	public PersInvocationMethodSvcverStats(InvocationStatsIntervalEnum theInterval, Date theStartTime, PersServiceVersionMethod theMethod) {
+	public PersInvocationMethodSvcverStats(InvocationStatsIntervalEnum theInterval, Date theStartTime, PersMethod theMethod) {
 		myPk = new PersInvocationMethodSvcverStatsPk(theInterval, theStartTime, theMethod);
 	}
 

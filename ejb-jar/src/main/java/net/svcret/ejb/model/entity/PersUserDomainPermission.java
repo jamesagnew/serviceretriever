@@ -75,8 +75,8 @@ public class PersUserDomainPermission extends BasePersObject {
 		thePerm.setDomainPermission(this);
 	}
 
-	public Collection<PersServiceVersionMethod> getAllAllowedMethods() {
-		ArrayList<PersServiceVersionMethod> retVal = new ArrayList<PersServiceVersionMethod>();
+	public Collection<PersMethod> getAllAllowedMethods() {
+		ArrayList<PersMethod> retVal = new ArrayList<PersMethod>();
 
 		if (myAllowAllServices) {
 			retVal.addAll(getServiceDomain().getAllServiceVersionMethods());

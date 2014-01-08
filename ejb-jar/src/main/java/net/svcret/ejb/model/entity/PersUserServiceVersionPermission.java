@@ -64,7 +64,7 @@ public class PersUserServiceVersionPermission extends BasePersObject {
 	 *            the servicePermissions to set
 	 * @return
 	 */
-	public PersUserServiceVersionMethodPermission addPermission(PersServiceVersionMethod theMethod) {
+	public PersUserServiceVersionMethodPermission addPermission(PersMethod theMethod) {
 		PersUserServiceVersionMethodPermission permission = new PersUserServiceVersionMethodPermission();
 		permission.setServiceVersionPermission(this);
 		permission.setNewlyCreated(true);
@@ -129,7 +129,7 @@ public class PersUserServiceVersionPermission extends BasePersObject {
 
 	}
 
-	public void removePermission(PersServiceVersionMethod theMethod) {
+	public void removePermission(PersMethod theMethod) {
 		Validate.notNull(theMethod);
 
 		getServiceVersionMethodPermissions();
@@ -184,8 +184,8 @@ public class PersUserServiceVersionPermission extends BasePersObject {
 		}
 	}
 
-	Collection<PersServiceVersionMethod> getAllAllowedMethods() {
-		ArrayList<PersServiceVersionMethod> retVal = new ArrayList<PersServiceVersionMethod>();
+	Collection<PersMethod> getAllAllowedMethods() {
+		ArrayList<PersMethod> retVal = new ArrayList<PersMethod>();
 
 		if (myAllowAllServiceVersionMethods) {
 			retVal.addAll(getServiceVersion().getMethods());

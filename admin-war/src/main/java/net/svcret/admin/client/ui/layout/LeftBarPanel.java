@@ -177,6 +177,7 @@ public class LeftBarPanel extends FlowPanel {
 			mySvcCatalogBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
 			buttons.remove(mySvcCatalogBtn);
 			break;
+		case VAC:
 		case MRL:
 			myEditRulesBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
 			buttons.remove(myEditRulesBtn);

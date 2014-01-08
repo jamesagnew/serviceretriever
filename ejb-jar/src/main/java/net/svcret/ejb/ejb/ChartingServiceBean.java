@@ -38,7 +38,7 @@ import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationMethodUserStats;
 import net.svcret.ejb.model.entity.PersService;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.util.Validate;
 
@@ -90,7 +90,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
 //		StatsAccumulator accumulator = new StatsAccumulator();
 		
-		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
+		for (PersMethod nextMethod : svcVer.getMethods()) {
 			
 			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats>() {
 				@Override
@@ -120,7 +120,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		final List<Long> timestamps = new ArrayList<Long>();
 
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
-		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
+		for (PersMethod nextMethod : svcVer.getMethods()) {
 			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats>() {
 				@Override
 				public void withStats(int theIndex, PersInvocationMethodSvcverStats theStats) {
@@ -158,7 +158,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		final List<Long> timestamps = new ArrayList<Long>();
 
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
-		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
+		for (PersMethod nextMethod : svcVer.getMethods()) {
 			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats>() {
 				@Override
 				public void withStats(int theIndex, PersInvocationMethodSvcverStats theStats) {
@@ -190,7 +190,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		final List<Long> timestamps = new ArrayList<Long>();
 
 		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
-		for (PersServiceVersionMethod nextMethod : svcVer.getMethods()) {
+		for (PersMethod nextMethod : svcVer.getMethods()) {
 			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats>() {
 				@Override
 				public void withStats(int theIndex, PersInvocationMethodSvcverStats theStats) {
@@ -307,9 +307,9 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		ourLog.debug("Found {} entries for {} methods", new Object[] { foundEntries, methods.size() });
 
 		// Come up with a good order
-		final Map<Long, PersServiceVersionMethod> pidToMethod = new HashMap<Long, PersServiceVersionMethod>();
+		final Map<Long, PersMethod> pidToMethod = new HashMap<Long, PersMethod>();
 		for (long nextPid : methods.keySet()) {
-			PersServiceVersionMethod method = myDao.getServiceVersionMethodByPid(nextPid);
+			PersMethod method = myDao.getServiceVersionMethodByPid(nextPid);
 			if (method != null) {
 				pidToMethod.put(nextPid, method);
 			} else {
@@ -320,8 +320,8 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		Collections.sort(pids, new Comparator<Long>() {
 			@Override
 			public int compare(Long theO1, Long theO2) {
-				PersServiceVersionMethod m1 = pidToMethod.get(theO1);
-				PersServiceVersionMethod m2 = pidToMethod.get(theO2);
+				PersMethod m1 = pidToMethod.get(theO1);
+				PersMethod m2 = pidToMethod.get(theO2);
 				return MethodComparator.INSTANCE.compare(m1, m2);
 			}
 		});
@@ -340,7 +340,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		graphDef.setTextAntiAliasing(true);
 
 		int longestName = 0;
-		for (PersServiceVersionMethod next : pidToMethod.values()) {
+		for (PersMethod next : pidToMethod.values()) {
 			longestName = Math.max(longestName, next.getName().length());
 		}
 
@@ -349,7 +349,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		List<Color> colours = createStackColours(pids.size());
 		for (int i = 0; i < pids.size(); i++) {
 			Long nextPid = pids.get(i);
-			PersServiceVersionMethod nextMethod = pidToMethod.get(nextPid);
+			PersMethod nextMethod = pidToMethod.get(nextPid);
 			List<Double> values = methods.get(nextPid);
 
 			LinearInterpolator avgPlot = new LinearInterpolator(graphTimestamps, toDoublesFromDoubles(values));
@@ -682,11 +682,11 @@ public class ChartingServiceBean implements IChartingServiceBean {
 
 	}
 
-	private static final class MethodComparator implements Comparator<PersServiceVersionMethod> {
+	private static final class MethodComparator implements Comparator<PersMethod> {
 		public static final MethodComparator INSTANCE = new MethodComparator();
 
 		@Override
-		public int compare(PersServiceVersionMethod theO1, PersServiceVersionMethod theO2) {
+		public int compare(PersMethod theO1, PersMethod theO2) {
 			BasePersServiceVersion v1 = theO1.getServiceVersion();
 			BasePersServiceVersion v2 = theO2.getServiceVersion();
 			PersService s1 = v1.getService();

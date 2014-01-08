@@ -4,7 +4,7 @@ import static net.svcret.ejb.util.HttpUtil.sendFailure;
 import static net.svcret.ejb.util.HttpUtil.sendSecurityFailure;
 import static net.svcret.ejb.util.HttpUtil.sendSuccessfulResponse;
 import static net.svcret.ejb.util.HttpUtil.sendThrottleQueueFullFailure;
-import static net.svcret.ejb.util.HttpUtil.sendUnknownLocation;
+import static net.svcret.ejb.util.HttpUtil.sendInvalidRequest;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.SrBeanOutgoingResponse;
@@ -32,7 +33,7 @@ import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestOrResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
-import net.svcret.ejb.ex.UnknownRequestException;
+import net.svcret.ejb.ex.InvalidRequestException;
 import net.svcret.ejb.throttle.ThrottleException;
 import net.svcret.ejb.throttle.ThrottleQueueFullException;
 
@@ -52,6 +53,9 @@ public class ServiceServlet extends HttpServlet {
 	@EJB
 	private IServiceOrchestrator myOrch;
 
+	@EJB
+	private IServiceRegistry myServiceRegistry;
+	
 	@Override
 	protected void doGet(HttpServletRequest theReq, HttpServletResponse theResp) throws ServletException, IOException {
 		handle(theReq, theResp, RequestType.GET);
@@ -117,9 +121,9 @@ public class ServiceServlet extends HttpServlet {
 			request.setRequestHeaders(requestHeaders);
 
 			response = myOrch.handleServiceRequest(request);
-		} catch (UnknownRequestException e) {
-			ourLog.info("Unknown request location: {} - Message {}", path, e.getMessage());
-			sendUnknownLocation(theResp, e);
+		} catch (InvalidRequestException e) {
+			ourLog.info("Invalid Request Detected ({}) : {} - Message {}", new Object[] {e.getIssue().name(), e.getArgument(), e.getMessage()});
+			sendInvalidRequest(theResp, e, myServiceRegistry);
 			return;
 		} catch (ProcessingException e) {
 			ourLog.info("Processing Failure", e);

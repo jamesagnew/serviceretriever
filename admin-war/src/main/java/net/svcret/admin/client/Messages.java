@@ -167,23 +167,23 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Never")
 	String dashboard_LastInvocNever();
 
-	@DefaultMessage("{0,number} days ago")
-	@AlternateMessage({ "one", "1 day ago" })
+	@DefaultMessage("{0,number} days")
+	@AlternateMessage({ "one", "1 day" })
 	String dashboard_LastInvocOver1Day(@PluralCount(DefaultRule_en.class) int theDay);
 
-	@DefaultMessage("{0,number} hrs ago")
-	@AlternateMessage({ "one", "1 hr ago" })
+	@DefaultMessage("{0,number} hrs")
+	@AlternateMessage({ "one", "1 hr" })
 	String dashboard_LastInvocUnder1Day(@PluralCount(DefaultRule_en.class) int theHour);
 
-	@DefaultMessage("{0,number} mins ago")
-	@AlternateMessage({ "one", "1 min ago" })
+	@DefaultMessage("{0,number} mins")
+	@AlternateMessage({ "one", "1 min" })
 	String dashboard_LastInvocUnder1Hour(@PluralCount(DefaultRule_en.class) int theMins);
 
 	@DefaultMessage("< 1min")
 	String dashboard_LastInvocUnder60Secs();
 
-	@DefaultMessage("{0,number} secs ago")
-	@AlternateMessage({ "one", "1 sec ago" })
+	@DefaultMessage("{0,number} secs")
+	@AlternateMessage({ "one", "1 sec" })
 	String dashboard_LastInvocExactUnder60Secs(@PluralCount(DefaultRule_en.class) int theSecs);
 
 	@DefaultMessage("Secured")
@@ -428,21 +428,21 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	String keepRecentTransactionsPanel_Description();
 
 	@DefaultMessage("Fail")
-	String keepRecentTransactionsPanel_OutcomeFail();
+	String generic_OutcomeFail();
 
 	@DefaultMessage("Put the number of recent failed transactions to store here. If you do not " + "wish to store transactions with this outcome, put zero or leave this field blank. Failed "
 			+ "transactions are transactions where underlying service implementation failed to produce " + "a valid response, or was unavailable.")
 	String keepRecentTransactionsPanel_OutcomeFailDesc();
 
 	@DefaultMessage("Fault")
-	String keepRecentTransactionsPanel_OutcomeFault();
+	String generic_OutcomeFault();
 
 	@DefaultMessage("Put the number of recent fault transactions to store here. If you do not " + "wish to store transactions with this outcome, put zero or leave this field blank. Fault "
 			+ "transactions are transactions where the underlying service implementation produced a result " + "which was valid, but which constituted a non-successful response.")
 	String keepRecentTransactionsPanel_OutcomeFaultDesc();
 
 	@DefaultMessage("Security Fail")
-	String keepRecentTransactionsPanel_OutcomeSecurityFail();
+	String generic_OutcomeSecurityFail();
 
 	@DefaultMessage("Put the number of recent security failure transactions to store here. If you do not "
 			+ "wish to store transactions with this outcome, put zero or leave this field blank. Security failure "
@@ -451,7 +451,7 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	String keepRecentTransactionsPanel_OutcomeSecurityFailDesc();
 
 	@DefaultMessage("Success")
-	String keepRecentTransactionsPanel_OutcomeSuccess();
+	String generic_OutcomeSuccess();
 
 	@DefaultMessage("Put the number of recent successful transactions to store here. If you do not " + "wish to store transactions with this outcome, put zero or leave this field blank. Successful "
 			+ "transactions are transactions where the underlying service implementation successfully returned " + "a result.")
@@ -844,5 +844,14 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("Refresh")
 	String actions_Refresh();
+
+	@DefaultMessage("Active Check Outcome")
+	String viewActiveCheckOutcome_Breadcrumb();
+
+	@DefaultMessage("Yes")
+	String yes();
+
+	@DefaultMessage("No")
+	String no();
 	
 }

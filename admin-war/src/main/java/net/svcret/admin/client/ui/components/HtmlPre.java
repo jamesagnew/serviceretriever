@@ -5,10 +5,14 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class HtmlPre extends Widget {
 
-    public HtmlPre(String theText) {
-        setElement(Document.get().createPreElement());
-        setText(theText);
-    }
+	public HtmlPre(String theText) {
+		this();
+		setText(theText);
+	}
+
+	public HtmlPre() {
+		setElement(Document.get().createPreElement());
+	}
 
 	public void setText(String theText) {
 		getElement().setInnerText(theText);

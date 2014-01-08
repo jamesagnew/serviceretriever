@@ -2,23 +2,30 @@ package net.svcret.ejb.model.entity;
 
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
+//@formatter:off
 @Entity()
-@Table(name = "PX_USER_METHOD_STATUS")
-public class PersUserMethodStatus extends BasePersMethodStatus {
+@Table(name = "PX_METHOD_STATUS")
+@NamedQueries({ 
+	@NamedQuery(name = Queries.METHODSTATUS_FINDALL, query = Queries.METHODSTATUS_FINDALL_Q), 
+})
+//@formatter:on
+public class PersMethodStatus extends BasePersMethodStatus {
 
 	private static final long serialVersionUID = 1L;
 
-
 	@EmbeddedId
-	private PersUserMethodStatusPk myPk;
+	private PersMethodStatusPk myPk;
 
-	public PersUserMethodStatus() {
+	public PersMethodStatus() {
+		// nothing
 	}
 
-	public PersUserMethodStatus(PersUserStatus thePersUserStatus, PersMethod theMethod) {
-		myPk = new PersUserMethodStatusPk(thePersUserStatus, theMethod);
+	public PersMethodStatus(PersMethod theMethod) {
+		myPk = new PersMethodStatusPk(theMethod);
 	}
 
 	@Override
@@ -29,10 +36,10 @@ public class PersUserMethodStatus extends BasePersMethodStatus {
 		if (obj == null) {
 			return false;
 		}
-		if (!(obj instanceof PersUserMethodStatus)) {
+		if (!(obj instanceof PersMethodStatus)) {
 			return false;
 		}
-		PersUserMethodStatus other = (PersUserMethodStatus) obj;
+		PersMethodStatus other = (PersMethodStatus) obj;
 		if (myPk == null) {
 			if (other.myPk != null) {
 				return false;
@@ -43,12 +50,8 @@ public class PersUserMethodStatus extends BasePersMethodStatus {
 		return true;
 	}
 
-
-	/**
-	 * @return the pk
-	 */
-	public PersUserMethodStatusPk getPk() {
-		return myPk;
+	public PersMethod getMethod() {
+		return myPk.getMethod();
 	}
 
 	@Override
@@ -58,6 +61,5 @@ public class PersUserMethodStatus extends BasePersMethodStatus {
 		result = prime * result + ((myPk == null) ? 0 : myPk.hashCode());
 		return result;
 	}
-
 
 }

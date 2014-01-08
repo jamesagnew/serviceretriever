@@ -6,7 +6,7 @@ import java.util.Map;
 
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 
 import org.apache.commons.lang3.Validate;
@@ -17,7 +17,7 @@ public class SrBeanProcessedRequest {
 
 	private Map<PersBaseServerAuth<?, ?>, ICredentialGrabber> myCredentialsInRequest = new HashMap<PersBaseServerAuth<?, ?>, ICredentialGrabber>();
 	private String myMethodContentType;
-	private PersServiceVersionMethod myMethodDefinition;
+	private PersMethod myMethodDefinition;
 	private Map<String, List<String>> myMethodHeaders;
 	private String myMethodRequestBody;
 	private Map<String, String> myPropertyCaptures;
@@ -64,7 +64,7 @@ public class SrBeanProcessedRequest {
 	/**
 	 * @return the methodDefinition
 	 */
-	public PersServiceVersionMethod getMethodDefinition() {
+	public PersMethod getMethodDefinition() {
 		return myMethodDefinition;
 	}
 
@@ -143,7 +143,7 @@ public class SrBeanProcessedRequest {
 		myMethodHeaders = theMethodHeaders;
 	}
 
-	public void setResultMethod(PersServiceVersionMethod theMethod, String theRequestBody, String theContentType) {
+	public void setResultMethod(PersMethod theMethod, String theRequestBody, String theContentType) {
 		validateResultTypeNotSet();
 		myResultType = ResultTypeEnum.METHOD;
 		myMethodDefinition = theMethod;
@@ -185,7 +185,7 @@ public class SrBeanProcessedRequest {
 	}
 
 	@VisibleForTesting
-	public static SrBeanProcessedRequest forUnitTest(PersServiceVersionMethod theM1) {
+	public static SrBeanProcessedRequest forUnitTest(PersMethod theM1) {
 		SrBeanProcessedRequest retVal = new SrBeanProcessedRequest();
 		retVal.myMethodDefinition=theM1;
 		retVal.myServiceVersion = theM1.getServiceVersion();

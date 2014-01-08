@@ -14,22 +14,31 @@ import javax.xml.bind.annotation.XmlType;
 
 import net.svcret.admin.shared.util.XmlConstants;
 
-@XmlType(namespace=XmlConstants.DTO_NAMESPACE, name="Service")
-@XmlRootElement(namespace=XmlConstants.DTO_NAMESPACE, name="Service")
+@XmlType(namespace = XmlConstants.DTO_NAMESPACE, name = "Service")
+@XmlRootElement(namespace = XmlConstants.DTO_NAMESPACE, name = "Service")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class GService extends BaseDtoServiceCatalogItem {
 
 	private static final long serialVersionUID = 1L;
-	
-	@XmlElement(name="config_Active")
+
+	@XmlElement(name = "config_Active")
 	private boolean myActive;
-	
-	@XmlElement(name="config_VersionList")
+
+	@XmlElement(name = "config_VersionList")
 	private GServiceVersionList myVersionList = new GServiceVersionList();;
-	
+
 	private transient Set<Long> myServiceVersionPids = new HashSet<Long>();
 
 	private String myDescription;
+
+	public GService() {
+	}
+
+	public GService(String theId, String theName, boolean theActive) {
+		setId(theId);
+		setName(theName);
+		setActive(theActive);
+	}
 
 	public GServiceVersionList getVersionList() {
 		return myVersionList;
@@ -46,7 +55,7 @@ public class GService extends BaseDtoServiceCatalogItem {
 	public void merge(BaseDtoObject theObject) {
 		super.merge(theObject);
 
-		GService obj = (GService)theObject;
+		GService obj = (GService) theObject;
 		if (obj.getVersionList() != null) {
 			getVersionList().mergeResults(obj.getVersionList());
 		}
@@ -61,7 +70,6 @@ public class GService extends BaseDtoServiceCatalogItem {
 	public void setActive(boolean theActive) {
 		myActive = theActive;
 	}
-
 
 	public boolean allVersionPidsInThisServiceAreAmongThesePids(Set<Long> theAffectedSvcVerPids) {
 		populateSvcVerPids();
@@ -103,13 +111,12 @@ public class GService extends BaseDtoServiceCatalogItem {
 		return retVal;
 	}
 
-
 	public void removeVersionList() {
-		myVersionList=null;
+		myVersionList = null;
 	}
 
 	public void setDescription(String theDescription) {
-		myDescription=theDescription;
+		myDescription = theDescription;
 	}
 
 	public String getDescription() {

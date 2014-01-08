@@ -14,4 +14,13 @@ public class DtoMonitorRuleActiveCheckList extends BaseDtoList<DtoMonitorRuleAct
 		return super.getListForJaxb();
 	}
 
+	public DtoMonitorRuleActiveCheck getCheckWithPid(long theActiveCheckPid) {
+		for (DtoMonitorRuleActiveCheck next : this) {
+			if (next.getPid() == theActiveCheckPid) {
+				return next;
+			}
+		}
+		return null;
+	}
+
 }

@@ -75,6 +75,9 @@ public class Queries {
 
 	public static final String USER_RECENTMSGS_COUNT = "PersUserRecentMessage.count";
 	public static final String USER_RECENTMSGS_COUNT_Q = "SELECT COUNT(s) FROM PersUserRecentMessage s WHERE s.myUser = :USER AND s.myResponseType = :RESP_TYPE";
+	
+	public static final String METHODSTATUS_FINDALL = "PersMethodStatus.find";
+	public static final String METHODSTATUS_FINDALL_Q="SELECT s FROM PersMethodStatus s";
 
 
 }

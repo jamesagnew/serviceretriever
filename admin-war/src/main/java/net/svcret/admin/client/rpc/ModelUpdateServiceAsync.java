@@ -11,6 +11,7 @@ import net.svcret.admin.shared.model.BaseDtoMonitorRule;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.DtoConfig;
@@ -39,7 +40,7 @@ public interface ModelUpdateServiceAsync {
 
 	void addDomain(DtoDomain theDomain, AsyncCallback<DtoDomain> callback);
 
-	void addService(long theDomainPid, String theId, String theName, boolean theActive, AsyncCallback<GService> theCallback);
+	void addService(long theDomainPid, GService theService, AsyncCallback<GService> theCallback);
 
 	void addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseDtoServiceVersion theVersion, AsyncCallback<AddServiceVersionResponse> theCallback);
 
@@ -114,5 +115,7 @@ public interface ModelUpdateServiceAsync {
 	void saveUser(GUser theUser, AsyncCallback<GUser> theAsyncCallback);
 
 	void testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long theServiceVersionPid, AsyncCallback<GServiceVersionSingleFireResponse> theAsyncCallback);
+
+	void loadMonitorRuleActiveCheckOutcomeDetails(long thePid, AsyncCallback<DtoMonitorRuleActiveCheckOutcome> theAsyncCallback);
 
 }

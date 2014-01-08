@@ -31,14 +31,16 @@ import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationMethodUserStats;
+import net.svcret.ejb.model.entity.PersMethodStatus;
 import net.svcret.ejb.model.entity.PersService;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.ejb.model.entity.PersStaticResourceStats;
 import net.svcret.ejb.model.entity.PersUser;
+import net.svcret.ejb.model.entity.PersUserMethodStatus;
 import net.svcret.ejb.model.entity.PersUserStatus;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 
@@ -366,7 +368,7 @@ public class RuntimeStatusBeanTest {
 		PersDomain domain = new PersDomain(ourNextPid++, "domain_id");
 		PersService service = new PersService(ourNextPid++, domain, "service_id", "service_name");
 		BasePersServiceVersion version = new PersServiceVersionSoap11(ourNextPid++, service, "1.0");
-		PersServiceVersionMethod method = new PersServiceVersionMethod(ourNextPid++, version, "method1");
+		PersMethod method = new PersMethod(ourNextPid++, version, "method1");
 
 		List<PersInvocationMethodSvcverStats> minuteStats = new ArrayList<PersInvocationMethodSvcverStats>();
 		PersInvocationMethodSvcverStats stats = new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.MINUTE, myFmt.parse("2013-01-01 00:03:00"), method));
@@ -418,7 +420,7 @@ public class RuntimeStatusBeanTest {
 		PersDomain domain = new PersDomain(ourNextPid++, "domain_id");
 		PersService service = new PersService(ourNextPid++, domain, "service_id", "service_name");
 		BasePersServiceVersion version = new PersServiceVersionSoap11(ourNextPid++, service, "1.0");
-		PersServiceVersionMethod method = new PersServiceVersionMethod(ourNextPid++, version, "method1");
+		PersMethod method = new PersMethod(ourNextPid++, version, "method1");
 		PersServiceVersionStatus status = new PersServiceVersionStatus(ourNextPid++, version);
 		version.setStatus(status);
 
@@ -459,6 +461,57 @@ public class RuntimeStatusBeanTest {
 	}
 
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Test
+	public void testRecordMethodStatus() throws Exception {
+		Date ts1 = myFmt.parse("2013-01-01 10:00:09");
+		Date ts2 = myFmt.parse("2013-01-01 10:00:10");
+
+
+		PersDomain domain = new PersDomain(ourNextPid++, "domain_id");
+		PersService service = new PersService(ourNextPid++, domain, "service_id", "service_name");
+		BasePersServiceVersion version = new PersServiceVersionSoap11(ourNextPid++, service, "1.0");
+		PersMethod method = new PersMethod(ourNextPid++, version, "method1");
+		PersServiceVersionStatus status = new PersServiceVersionStatus(ourNextPid++, version);
+		version.setStatus(status);
+
+		PersUser user = new PersUser(32L);
+		user.setStatus(new PersUserStatus(33L));
+
+		SrBeanProcessedResponse invocationResponse = new SrBeanProcessedResponse();
+		invocationResponse.setResponseType(ResponseTypeEnum.SUCCESS);
+		invocationResponse.setResponseStatusMessage("Msg");
+
+		SrBeanIncomingResponse httpResp=new SrBeanIncomingResponse();
+		httpResp.setBody("http response body");
+		svc.recordInvocationMethod(ts1, 0, SrBeanProcessedRequest.forUnitTest(method), user, httpResp, invocationResponse);
+		svc.recordInvocationMethod(ts2, 0, SrBeanProcessedRequest.forUnitTest(method), user, httpResp, invocationResponse);
+
+		svc.flushStatus();
+
+		ArgumentCaptor<List> forUserStatus = ArgumentCaptor.forClass(List.class);
+		verify(dao, times(1)).saveUserStatus(forUserStatus.capture());
+		List<PersUserStatus> userStatus = forUserStatus.getValue();
+
+		ArgumentCaptor<List> forMethodStatus = ArgumentCaptor.forClass(List.class);
+		verify(dao, times(1)).saveMethodStatuses(forMethodStatus.capture());
+		List<PersMethodStatus> methodStatus = forMethodStatus.getValue();
+
+		assertEquals(1, userStatus.size());
+		assertEquals(1, userStatus.get(0).getMethodStatuses().size());
+		assertTrue(userStatus.get(0).getMethodStatuses().containsKey(method));
+		
+		PersUserMethodStatus userMethodStatus = userStatus.get(0).getMethodStatuses().get(method);
+		assertEquals(ts1, userMethodStatus.getFirstSuccessfulInvocation());
+		assertEquals(ts2, userStatus.get(0).getMethodStatuses().get(method).getLastSuccessfulInvocation());
+
+		assertEquals(1, methodStatus.size());
+		assertEquals(ts1, methodStatus.get(0).getFirstSuccessfulInvocation());
+		assertEquals(ts2, methodStatus.get(0).getLastSuccessfulInvocation());
+
+	}
+
+	
 	
 	@SuppressWarnings({ "rawtypes", "unchecked", "unused" })
 	@Test
@@ -469,7 +522,7 @@ public class RuntimeStatusBeanTest {
 		PersDomain domain = new PersDomain(ourNextPid++, "domain_id");
 		PersService service = new PersService(ourNextPid++, domain, "service_id", "service_name");
 		BasePersServiceVersion version = new PersServiceVersionSoap11(ourNextPid++, service, "1.0");
-		PersServiceVersionMethod method = new PersServiceVersionMethod(ourNextPid++, version, "method1");
+		PersMethod method = new PersMethod(ourNextPid++, version, "method1");
 		PersServiceVersionStatus status = new PersServiceVersionStatus(ourNextPid++, version);
 		version.setStatus(status);
 

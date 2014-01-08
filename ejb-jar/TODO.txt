@@ -11,8 +11,6 @@
 
 * Clicking save a second time on Add user dialog should update the newly created user
 
-* Should log transactions where the rerquest type is GET as failed transactions (as well as other reasons to throw ProcessingException?)
-
 * client and server auths should know what type of service versions they can apply to
 
 * Active checks should average latency over more than one subsequent call somehow.. This is hard because it's URL specific. The
@@ -27,8 +25,6 @@
   invocation time
 
 * Allow recent transactions to be pinned 
-
-* edit keystore and truststore in HTTP client config are upside down (keystore should be first)
 
 * edit keystore and truststore should show key info, maybe allow download?
 

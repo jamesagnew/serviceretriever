@@ -360,6 +360,7 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 			retVal.setStatsLastFaultContentType(status.getLastFaultContentType());
 		
 			retVal.setStatus(status.getStatus());
+			retVal.setStatusTimestamp(status.getStatusTimestamp());
 		
 			StatsAccumulator accumulator = new StatsAccumulator();
 			theRuntimeStatusQuerySvc.extract60MinuteServiceVersionUrlStatistics(this, accumulator);

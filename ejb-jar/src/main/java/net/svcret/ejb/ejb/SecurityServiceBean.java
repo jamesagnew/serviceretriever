@@ -27,7 +27,7 @@ import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersUser;
 
 import org.apache.commons.lang3.Validate;
@@ -57,7 +57,7 @@ public class SecurityServiceBean implements ISecurityService {
 	@EJB
 	private ILocalDatabaseAuthorizationService myLocalDbAuthService;
 
-	public AuthorizationResultsBean authorizeMethodInvocation(List<AuthorizationRequestBean> theAuthRequests, PersServiceVersionMethod theMethod, String theRequestHostIp) throws ProcessingException {
+	public AuthorizationResultsBean authorizeMethodInvocation(List<AuthorizationRequestBean> theAuthRequests, PersMethod theMethod, String theRequestHostIp) throws ProcessingException {
 		Validate.notNull(theAuthRequests, "AuthRequests");
 
 		if (myInMemoryUserCatalog == null) {

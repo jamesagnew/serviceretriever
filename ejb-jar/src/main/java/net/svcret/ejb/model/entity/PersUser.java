@@ -285,7 +285,7 @@ public class PersUser extends BasePersKeepsRecentTransactions implements IThrott
 	/**
 	 * Does this user have access to the specified method
 	 */
-	public boolean hasPermission(PersServiceVersionMethod theMethod, boolean theRequireExplicitly) {
+	public boolean hasPermission(PersMethod theMethod, boolean theRequireExplicitly) {
 		if (myDomainPidToDomainPermission == null) {
 			throw new IllegalStateException("Associations have not been loaded");
 		}

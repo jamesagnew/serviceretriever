@@ -38,6 +38,7 @@ import net.svcret.ejb.api.SrBeanProcessedRequest.ResultTypeEnum;
 import net.svcret.ejb.api.SrBeanOutgoingResponse;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.UrlPoolBean;
+import net.svcret.ejb.ex.InvalidRequestException.IssueEnum;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationRequestOrResponseFailedException;
@@ -45,7 +46,7 @@ import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
-import net.svcret.ejb.ex.UnknownRequestException;
+import net.svcret.ejb.ex.InvalidRequestException;
 import net.svcret.ejb.invoker.IServiceInvoker;
 import net.svcret.ejb.invoker.hl7.IServiceInvokerHl7OverHttp;
 import net.svcret.ejb.invoker.hl7.ServiceInvokerHl7OverHttp;
@@ -59,7 +60,7 @@ import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
@@ -116,7 +117,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	@EJB
 	private IServiceInvokerVirtual myServiceInvokerVirtual;
 
-	private SrBeanOutgoingResponse doHandleServiceRequest(SrBeanIncomingRequest theRequest) throws UnknownRequestException, SecurityFailureException, ThrottleException, ThrottleQueueFullException,
+	private SrBeanOutgoingResponse doHandleServiceRequest(SrBeanIncomingRequest theRequest) throws InvalidRequestException, SecurityFailureException, ThrottleException, ThrottleQueueFullException,
 			InvocationRequestOrResponseFailedException, InvocationFailedDueToInternalErrorException, ProcessingException {
 		if (theRequest.getQuery().length() > 0 && theRequest.getQuery().charAt(0) != '?') {
 			throw new IllegalArgumentException("Path must be blank or start with '?'");
@@ -132,8 +133,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		BasePersServiceVersion serviceVersion = mySvcRegistry.getServiceVersionForPath(path);
 		if (serviceVersion == null) {
 			ourLog.debug("Request did not match any known paths: {}", path);
-			List<String> validPaths = mySvcRegistry.getValidPaths();
-			throw new UnknownRequestException(path, validPaths);
+			throw new InvalidRequestException(IssueEnum.INVALID_REQUEST_PATH, path, "Request did not match any known paths: "+path);
 		}
 
 		ourLog.trace("Request corresponds to service version {}", serviceVersion.getPid());
@@ -145,7 +145,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		results.setServiceVersion(serviceVersion);
 		
 		AuthorizationResultsBean authorized;
-		PersServiceVersionMethod invokingMethod = null;
+		PersMethod invokingMethod = null;
 		try {
 
 			/*
@@ -168,7 +168,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			 */
 			myThrottlingService.applyThrottle(theRequest, results, authorized);
 
-		} catch (UnknownRequestException e) {
+		} catch (InvalidRequestException e) {
 			ourLog.debug("Exception occurred", e);
 			handleInvocationFailure(theRequest, results, new InvocationRequestFailedException(e), null, ResponseTypeEnum.FAIL);
 			throw e;
@@ -273,7 +273,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
-	public SrBeanOutgoingResponse handleServiceRequest(SrBeanIncomingRequest theRequest) throws UnknownRequestException, ProcessingException, SecurityFailureException, ThrottleException,
+	public SrBeanOutgoingResponse handleServiceRequest(SrBeanIncomingRequest theRequest) throws InvalidRequestException, ProcessingException, SecurityFailureException, ThrottleException,
 			ThrottleQueueFullException, InvocationRequestOrResponseFailedException, InvocationFailedDueToInternalErrorException {
 		Validate.notNull(theRequest.getRequestType(), "RequestType");
 		Validate.notNull(theRequest.getPath(), "Path");
@@ -294,12 +294,12 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override
 	public SidechannelOrchestratorResponseBean handleSidechannelRequest(long theServiceVersionPid, String theRequestBody, String theContentType, String theRequestedByString)
-			throws UnknownRequestException, InvocationFailedException {
+			throws InvalidRequestException, InvocationFailedException {
 		return doHandleSideChannelRequest(theServiceVersionPid, theRequestBody, theContentType, theRequestedByString, null);
 	}
 
 	private SidechannelOrchestratorResponseBean doHandleSideChannelRequest(long theServiceVersionPid, String theRequestBody, String theContentType, String theRequestedByString,
-			PersServiceVersionUrl theForceUrl) throws UnknownRequestException, InvocationFailedException {
+			PersServiceVersionUrl theForceUrl) throws InvalidRequestException, InvocationFailedException {
 		Date startTime = new Date();
 		BasePersServiceVersion svcVer = mySvcRegistry.getServiceVersionByPid(theServiceVersionPid);
 
@@ -325,7 +325,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		return retVal;
 	}
 
-	private void logTransaction(SrBeanIncomingRequest theRequest, PersServiceVersionMethod method, AuthorizationResultsBean authorized, SrBeanIncomingResponse httpResponse,
+	private void logTransaction(SrBeanIncomingRequest theRequest, PersMethod method, AuthorizationResultsBean authorized, SrBeanIncomingResponse httpResponse,
 			SrBeanProcessedResponse invocationResponse, SrBeanProcessedRequest theInvocationResults) throws InvocationFailedDueToInternalErrorException {
 		PersUser user = authorized.getAuthorizedUser();
 
@@ -403,7 +403,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		}
 	}
 
-	private SrBeanProcessedRequest processInvokeService(SrBeanIncomingRequest theRequest, BasePersServiceVersion serviceVersion) throws InvocationFailedException, UnknownRequestException {
+	private SrBeanProcessedRequest processInvokeService(SrBeanIncomingRequest theRequest, BasePersServiceVersion serviceVersion) throws InvocationFailedException, InvalidRequestException {
 		SrBeanProcessedRequest results = null;
 		IServiceInvoker svcInvoker = getServiceInvoker(serviceVersion);
 		ourLog.trace("Handling service with invoker {}", svcInvoker);
@@ -464,7 +464,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	private SidechannelOrchestratorResponseBean processRequestMethod(SrBeanIncomingRequest theRequest, SrBeanProcessedRequest results, AuthorizationResultsBean authorized, 
 			boolean theRecordOutcome, PersServiceVersionUrl theForceUrl, Date theRequestStartedTime) throws InvocationResponseFailedException, InvocationFailedDueToInternalErrorException {
 		SidechannelOrchestratorResponseBean retVal;
-		PersServiceVersionMethod method = results.getMethodDefinition();
+		PersMethod method = results.getMethodDefinition();
 		BasePersServiceVersion serviceVersion = method.getServiceVersion();
 		Map<String, List<String>> headers = results.getMethodHeaders();
 		String contentType = results.getMethodContentType();
@@ -557,7 +557,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 				}
 			}
 
-			PersServiceVersionMethod method = results.getMethodDefinition();
+			PersMethod method = results.getMethodDefinition();
 			List<AuthorizationRequestBean> authRequests = new ArrayList<ISecurityService.AuthorizationRequestBean>();
 			for (PersBaseServerAuth<?, ?> nextServerAuth : theServerAuths) {
 				ICredentialGrabber credentials;
@@ -662,7 +662,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			try {
 				responseBean = doHandleSideChannelRequest(theServiceVersionPid, theRequestBody, theContentType, theRequestedByString, nextUrl);
 				retVal.add(responseBean);
-			} catch (UnknownRequestException e) {
+			} catch (InvalidRequestException e) {
 				ourLog.debug("Failed to execute sidechannel request for URL", e);
 				responseBean = SidechannelOrchestratorResponseBean.forFailure(e, startedTime, nextUrl);
 				retVal.add(responseBean);

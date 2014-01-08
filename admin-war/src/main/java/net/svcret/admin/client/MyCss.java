@@ -65,4 +65,11 @@ public interface MyCss extends CssResource {
 	String outcomeLabelFault();
 	String outcomeLabelSecFail();
 
+	String usageTooltipActiveCheckPassed();
+
+	String usageTooltipActiveCheckFailed();
+
+	String activeCheckViewOutcomesListSuccess();
+	String activeCheckViewOutcomesListFailure();
+
 }

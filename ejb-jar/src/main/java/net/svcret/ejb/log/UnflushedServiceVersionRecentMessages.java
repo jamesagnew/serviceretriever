@@ -8,7 +8,7 @@ import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersConfig;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
@@ -26,7 +26,7 @@ public class UnflushedServiceVersionRecentMessages extends BaseUnflushed<PersSer
 		myServiceVersion = theServiceVersion;
 	}
 
-	public synchronized void recordTransaction(PersConfig theConfig, Date theTransactionTime, BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody,
+	public synchronized void recordTransaction(PersConfig theConfig, Date theTransactionTime, BasePersServiceVersion theSvcVer, PersMethod theMethod, PersUser theUser, String theRequestBody,
 			SrBeanProcessedResponse theInvocationResponse, SrBeanIncomingRequest theRequest, PersServiceVersionUrl theImplementationUrl, SrBeanIncomingResponse theHttpResponse,
 			AuthorizationOutcomeEnum theAuthorizationOutcome, String theResponseBody) {
 		Validate.notNull(theInvocationResponse);

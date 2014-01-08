@@ -2,6 +2,8 @@ package net.svcret.ejb.util;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -9,8 +11,10 @@ import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletResponse;
 
+import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.SrBeanOutgoingResponse;
-import net.svcret.ejb.ex.UnknownRequestException;
+import net.svcret.ejb.ex.InvalidRequestException;
+import net.svcret.ejb.ex.InvalidRequestException.IssueEnum;
 
 public class HttpUtil {
 	private static HashSet<String> ourFilterHeaders;
@@ -43,7 +47,7 @@ public class HttpUtil {
 
 		w.close();
 	}
-	
+
 	public static void sendThrottleQueueFullFailure(HttpServletResponse theResp) throws IOException {
 		theResp.setStatus(429);
 		theResp.setContentType("text/plain");
@@ -77,23 +81,49 @@ public class HttpUtil {
 		w.close();
 	}
 
-	public static void sendUnknownLocation(HttpServletResponse theResp, UnknownRequestException theE) throws IOException {
-		theResp.setStatus(404);
+	public static void sendInvalidRequest(HttpServletResponse theResp, InvalidRequestException theE, IServiceRegistry theServiceRegistry) throws IOException {
+
+		// Sensible default
+		theResp.setStatus(400);
+
+		switch (theE.getIssue()) {
+		case INVALID_QUERY_PARAMETERS:
+			theResp.setStatus(404);
+			break;
+		case INVALID_REQUEST_CONTENT_TYPE:
+			theResp.setStatus(415);
+			break;
+		case INVALID_REQUEST_MESSAGE_BODY:
+			theResp.setStatus(400);
+			break;
+		case INVALID_REQUEST_PATH:
+			theResp.setStatus(404);
+			break;
+		case UNKNOWN_METHOD:
+			theResp.setStatus(400);
+			break;
+		case UNSUPPORTED_ACTION:
+			theResp.setStatus(405);
+			break;
+		}
+
 		theResp.setContentType("text/plain");
 
 		PrintWriter w = theResp.getWriter();
-		w.append("HTTP 404 - ServiceRetriever\n\n");
-		w.append("Unknown Request Location: ");
-		w.append(theE.getPath());
+		w.append("HTTP " + theResp.getStatus() + " - ServiceRetriever\n\n");
+		w.append("Request failed with error code: " + theE.getIssue().name() + "\n");
+		w.append("Argument: " + theE.getArgument() + "\n\n");
 
-		if (theE.getValidPaths() != null) {
-			w.append("\nValid Paths: ");
-			w.append(theE.getValidPaths().toString());
-		}
+		w.append(theE.getMessage());
 
-		if (theE.getMessage() != null) {
-			w.append("\nMessage: ");
-			w.append(theE.getMessage());
+		if (theE.getIssue() == IssueEnum.INVALID_REQUEST_PATH) {
+			w.append("\n\nValid Paths: ");
+
+			List<String> validPaths = new ArrayList<String>(theServiceRegistry.getValidPaths());
+			Collections.sort(validPaths);
+			for (String string : validPaths) {
+				w.append("\n * " + string);
+			}
 		}
 
 		w.close();

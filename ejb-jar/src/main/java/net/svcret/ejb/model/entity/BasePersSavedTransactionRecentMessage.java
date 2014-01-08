@@ -1,8 +1,6 @@
 package net.svcret.ejb.model.entity;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.EnumType;
@@ -12,9 +10,8 @@ import javax.persistence.MappedSuperclass;
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
 import net.svcret.admin.shared.model.GRecentMessage;
-import net.svcret.admin.shared.model.Pair;
-import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.IDao;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanProcessedResponse;
 
 import org.apache.commons.lang3.Validate;
@@ -41,7 +38,7 @@ public abstract class BasePersSavedTransactionRecentMessage extends BasePersSave
 		return myAuthorizationOutcome;
 	}
 
-	public abstract PersServiceVersionMethod getMethod();
+	public abstract PersMethod getMethod();
 
 	public abstract RecentMessageTypeEnum getRecentMessageType();
 
@@ -51,8 +48,6 @@ public abstract class BasePersSavedTransactionRecentMessage extends BasePersSave
 	public String getRequestHostIp() {
 		return myRequestHostIp;
 	}
-
-	public abstract BasePersServiceVersion getServiceVersion();
 
 	@Override
 	public void populate(PersConfig theConfig, Date theTransactionTime, SrBeanIncomingRequest theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, SrBeanProcessedResponse theInvocationResult, String theResponseBody) {
@@ -85,13 +80,7 @@ public abstract class BasePersSavedTransactionRecentMessage extends BasePersSave
 	public GRecentMessage toDto(boolean theLoadMessageContents) {
 		GRecentMessage retVal = new GRecentMessage();
 
-		retVal.setPid(this.getPid());
-		PersServiceVersionUrl implementationUrl = this.getImplementationUrl();
-		if (implementationUrl != null) {
-			retVal.setImplementationUrlId(implementationUrl.getUrlId());
-			retVal.setImplementationUrlHref(implementationUrl.getUrl());
-			retVal.setImplementationUrlPid(implementationUrl.getPid());
-		}
+		super.populateDto(retVal, theLoadMessageContents);
 
 		BasePersServiceVersion svcVer = this.getServiceVersion();
 		if (svcVer != null) {
@@ -105,7 +94,7 @@ public abstract class BasePersSavedTransactionRecentMessage extends BasePersSave
 			retVal.setServiceVersionId(svcVer.getVersionId());
 		}
 
-		PersServiceVersionMethod method = this.getMethod();
+		PersMethod method = this.getMethod();
 		if (method != null) {
 			retVal.setMethodPid(method.getPid());
 			retVal.setMethodName(method.getName());
@@ -113,37 +102,7 @@ public abstract class BasePersSavedTransactionRecentMessage extends BasePersSave
 
 		retVal.setRecentMessageType(this.getRecentMessageType());
 		retVal.setRequestHostIp(this.getRequestHostIp());
-		retVal.setTransactionTime(this.getTransactionTime());
-		retVal.setTransactionMillis(this.getTransactionMillis());
 		retVal.setAuthorizationOutcome(this.getAuthorizationOutcome());
-		retVal.setFailDescription(this.getFailDescription());
-		retVal.setResponseType(this.getResponseType());
-
-		if (theLoadMessageContents) {
-			int bodyIdx = this.getRequestBody().indexOf("\r\n\r\n");
-			if (bodyIdx == -1) {
-				retVal.setRequestMessage(this.getRequestBody());
-				retVal.setRequestHeaders(new ArrayList<Pair<String>>());
-				retVal.setRequestContentType("unknown");
-			} else {
-				retVal.setRequestMessage(this.getRequestBody().substring(bodyIdx + 4));
-				retVal.setRequestActionLine(toActionLine(this.getRequestBody()));
-				retVal.setRequestHeaders(toHeaders(this.getRequestBody().substring(0, bodyIdx)));
-				retVal.setRequestContentType(toHeaderContentType(retVal.getRequestHeaders()));
-			}
-
-			bodyIdx = this.getResponseBody().indexOf("\r\n\r\n");
-			if (bodyIdx == -1) {
-				retVal.setResponseMessage(this.getResponseBody());
-				retVal.setResponseHeaders(new ArrayList<Pair<String>>());
-				retVal.setResponseContentType("unknown");
-			} else {
-				retVal.setResponseMessage(this.getResponseBody().substring(bodyIdx + 4));
-				retVal.setResponseHeaders(toHeaders(this.getResponseBody().substring(0, bodyIdx)));
-				retVal.setResponseContentType(toHeaderContentType(retVal.getResponseHeaders()));
-			}
-
-		}
 
 		if (this instanceof PersServiceVersionRecentMessage) {
 			PersServiceVersionRecentMessage msg = (PersServiceVersionRecentMessage) this;
@@ -162,46 +121,6 @@ public abstract class BasePersSavedTransactionRecentMessage extends BasePersSave
 		return retVal;
 	}
 
-	private static String toActionLine(String theRequestBody) {
-		int idx = theRequestBody.indexOf("\r\n");
-		if (idx == -1) {
-			return null;
-		}
-
-		String firstLine = theRequestBody.substring(0, idx);
-		idx = firstLine.indexOf(": ");
-		if (idx == -1) {
-			// If the first line has no colon, it's the action line
-			return firstLine;
-		} else {
-			return null;
-		}
-	}
-
 	public abstract long trimUsingDao(IDao theDaoBean);
-
-	private static String toHeaderContentType(List<Pair<String>> theResponseHeaders) {
-		for (Pair<String> pair : theResponseHeaders) {
-			if (pair.getFirst().equalsIgnoreCase("content-type")) {
-				return pair.getSecond().split(";")[0].trim();
-			}
-		}
-		return null;
-	}
-
-	private static List<Pair<String>> toHeaders(String theHeaders) {
-		ArrayList<Pair<String>> retVal = new ArrayList<Pair<String>>();
-		int index = 0;
-		for (String next : theHeaders.split("\\r\\n")) {
-			int colonIndex = next.indexOf(": ");
-			if (index == 0 && colonIndex == -1) {
-				// First line is generally the action line for request messages
-				continue;
-			}
-			retVal.add(new Pair<String>(next.substring(0, colonIndex), next.substring(colonIndex + 2)));
-			index++;
-		}
-		return retVal;
-	}
 
 }

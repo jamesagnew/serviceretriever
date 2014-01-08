@@ -212,7 +212,7 @@ public class PersServiceVersionStatus extends BasePersObject {
 
 	// public static PersInvocationStatsPk
 	// createEntryPk(InvocationStatsIntervalEnum theInterval, Date theTimestamp,
-	// PersServiceVersionMethod theMethod) {
+	// PersMethod theMethod) {
 	// Validate.throwIllegalArgumentExceptionIfNull("Interval", theInterval);
 	// Validate.throwIllegalArgumentExceptionIfNull("Timestamp", theTimestamp);
 	//

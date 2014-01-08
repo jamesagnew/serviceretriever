@@ -21,7 +21,7 @@ import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersService;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserDomainPermission;
 import net.svcret.ejb.model.entity.PersUserServicePermission;
@@ -46,8 +46,8 @@ public class SecurityServiceBeanTest {
 	private PersDomain myD0;
 	private PersService myD0S0;
 	private PersServiceVersionSoap11 myD0S0V0;
-	private PersServiceVersionMethod myD0S0V0M0;
-	private PersServiceVersionMethod myD0S0V0M1;
+	private PersMethod myD0S0V0M0;
+	private PersMethod myD0S0V0M1;
 	private PersUser myUser2;
 	private MyCredentialGrabber myGoodGrabber2;
 	private MyCredentialGrabber myBadGrabber;
@@ -108,9 +108,9 @@ public class SecurityServiceBeanTest {
 		myD0S0V0 = new PersServiceVersionSoap11(ourNextPid++, myD0S0, "d0s0v0");
 		myD0S0V0.setServerSecurityMode(ServerSecurityModeEnum.REQUIRE_ANY);
 		
-		myD0S0V0M0 = new PersServiceVersionMethod(ourNextPid++, myD0S0V0, "d0s0v0m0");
+		myD0S0V0M0 = new PersMethod(ourNextPid++, myD0S0V0, "d0s0v0m0");
 		myD0S0V0.addMethod(myD0S0V0M0);
-		myD0S0V0M1 = new PersServiceVersionMethod(ourNextPid++, myD0S0V0, "d0s0v0m1");
+		myD0S0V0M1 = new PersMethod(ourNextPid++, myD0S0V0, "d0s0v0m1");
 		myD0S0V0.addMethod(myD0S0V0M1);
 		
 	}

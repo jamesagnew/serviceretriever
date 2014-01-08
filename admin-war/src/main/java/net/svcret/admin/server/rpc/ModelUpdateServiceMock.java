@@ -21,6 +21,7 @@ import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
+import net.svcret.admin.shared.model.BaseDtoSavedTransaction;
 import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
 import net.svcret.admin.shared.model.BaseDtoDashboardObject;
@@ -135,6 +136,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 			url.setStatsLastSuccess(new Date());
 			url.setStatsLastSuccessMessage("This is a success message");
 			url.setStatus(StatusEnum.ACTIVE);
+			url.setStatusTimestamp(new Date(System.currentTimeMillis() - 30000));
 			ver.getUrlList().add(url);
 
 			url = new GServiceVersionUrl();
@@ -146,6 +148,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 			url.setStatsLastSuccess(new Date());
 			url.setStatsLastSuccessMessage("This is a success message");
 			url.setStatus(StatusEnum.DOWN);
+			url.setStatusTimestamp(new Date(System.currentTimeMillis() - 30000));
 			url.setStatsNextCircuitBreakerReset(new Date(System.currentTimeMillis() + 100000));
 			ver.getUrlList().add(url);
 
@@ -315,21 +318,21 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		List<DtoMonitorRuleActiveCheckOutcome> outcomes = new ArrayList<DtoMonitorRuleActiveCheckOutcome>(check.getRecentOutcomesForUrl().get(0).getOutcomes());
 		outcomes.add(new DtoMonitorRuleActiveCheckOutcome());
 		outcomes.add(new DtoMonitorRuleActiveCheckOutcome());
-		outcomes.get(outcomes.size() - 2).setSuccess(true);
-		outcomes.get(outcomes.size() - 2).setTimestamp(new Date(System.currentTimeMillis() - 10000));
-		outcomes.get(outcomes.size() - 1).setSuccess(false);
-		outcomes.get(outcomes.size() - 1).setTimestamp(new Date(System.currentTimeMillis() - 5000));
-		outcomes.get(outcomes.size() - 1).setFailureMessage("Failed for some reason");
+		outcomes.get(outcomes.size() - 2).setFailed(!true);
+		outcomes.get(outcomes.size() - 2).setTransactionTime(new Date(System.currentTimeMillis() - 10000));
+		outcomes.get(outcomes.size() - 1).setFailed(!false);
+		outcomes.get(outcomes.size() - 1).setTransactionTime(new Date(System.currentTimeMillis() - 5000));
+		outcomes.get(outcomes.size() - 1).setFailDescription("Failed for some reason");
 		check.getRecentOutcomesForUrl().get(0).setOutcomes(outcomes);
 
 		outcomes = new ArrayList<DtoMonitorRuleActiveCheckOutcome>(check.getRecentOutcomesForUrl().get(1).getOutcomes());
 		outcomes.add(new DtoMonitorRuleActiveCheckOutcome());
 		outcomes.add(new DtoMonitorRuleActiveCheckOutcome());
-		outcomes.get(outcomes.size() - 2).setSuccess(false);
-		outcomes.get(outcomes.size() - 2).setTimestamp(new Date(System.currentTimeMillis() - 5000));
-		outcomes.get(outcomes.size() - 2).setFailureMessage("Failed for some reason");
-		outcomes.get(outcomes.size() - 1).setSuccess(true);
-		outcomes.get(outcomes.size() - 1).setTimestamp(new Date(System.currentTimeMillis() - 10000));
+		outcomes.get(outcomes.size() - 2).setFailed(!false);
+		outcomes.get(outcomes.size() - 2).setTransactionTime(new Date(System.currentTimeMillis() - 5000));
+		outcomes.get(outcomes.size() - 2).setFailDescription("Failed for some reason");
+		outcomes.get(outcomes.size() - 1).setFailed(!true);
+		outcomes.get(outcomes.size() - 1).setTransactionTime(new Date(System.currentTimeMillis() - 10000));
 		check.getRecentOutcomesForUrl().get(1).setOutcomes(outcomes);
 	}
 
@@ -341,23 +344,19 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	}
 
 	@Override
-	public GService addService(long theDomainPid, String theId, String theName, boolean theActive) {
+	public GService addService(long theDomainPid, GService theService) {
 
 		DtoDomain dom = myDomainList.getDomainByPid(theDomainPid);
 
-		GService svc = new GService();
-		svc.setCanInheritKeepNumRecentTransactions(true);
-		svc.setPid(ourNextPid++);
-		svc.setId(theId);
-		svc.setName(theName);
-		svc.setStatus(StatusEnum.ACTIVE);
-		svc.setTransactions60mins(random60mins());
-		svc.setLatency60mins(random60mins());
-		svc.setActive(theActive);
+		theService.setCanInheritKeepNumRecentTransactions(true);
+		theService.setPid(ourNextPid++);
+		theService.setStatus(StatusEnum.ACTIVE);
+		theService.setTransactions60mins(random60mins());
+		theService.setLatency60mins(random60mins());
 
-		dom.getServiceList().add(svc);
+		dom.getServiceList().add(theService);
 
-		return svc;
+		return theService;
 	}
 
 	@Override
@@ -412,10 +411,21 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	private GRecentMessage createMessage(boolean theIncludeContents, RecentMessageTypeEnum theType) {
 		GRecentMessage retVal = new GRecentMessage();
 
-		return createMessage(theIncludeContents, retVal, theType);
+		createMessage(theIncludeContents, retVal);
+		
+		retVal.setRecentMessageType(theType);
+		retVal.setRequestHostIp("http://foo");
+		retVal.setDomainPid(0l);
+		retVal.setDomainName("DomainName1");
+		retVal.setServicePid(0l);
+		retVal.setServiceName("ServiceName1");
+		retVal.setServiceVersionPid(SVCVER_PID);
+		retVal.setServiceVersionId("1.0");
+
+		return retVal;
 	}
 
-	private GRecentMessage createMessage(boolean theIncludeContents, GRecentMessage retVal, RecentMessageTypeEnum theType) {
+	private void createMessage(boolean theIncludeContents, BaseDtoSavedTransaction retVal) {
 		String responseMessage = "<req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req></req>";
 		String requestMessage = "{\"aaaa\":444, \"bbb\": 555}";
 		List<Pair<String>> reqHeaders = new ArrayList<Pair<String>>();
@@ -440,7 +450,6 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		long offset = ((long) (1000000.0 * Math.random()));
 
 		retVal.setTransactionTime(new Date(System.currentTimeMillis() - offset));
-		retVal.setRequestHostIp("http://foo");
 		retVal.setRequestMessage(requestMessage);
 		retVal.setResponseMessage(responseMessage);
 		retVal.setRequestHeaders(reqHeaders);
@@ -451,14 +460,8 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		retVal.setImplementationUrlPid(999L);
 		retVal.setImplementationUrlId("dev1");
 		retVal.setImplementationUrlHref("http://foo");
-		retVal.setDomainPid(0l);
-		retVal.setDomainName("DomainName1");
-		retVal.setServicePid(0l);
-		retVal.setServiceName("ServiceName1");
-		retVal.setServiceVersionPid(SVCVER_PID);
 		retVal.setMethodPid(MET1_PID);
 		retVal.setMethodName("SomeMethod");
-		retVal.setServiceVersionId("1.0");
 		
 		switch ((int)(5.0 * Math.random())) {
 		case 0:
@@ -478,10 +481,6 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 			break;
 		}
 		
-
-		retVal.setRecentMessageType(theType);
-
-		return retVal;
 	}
 
 	@Override
@@ -914,7 +913,9 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 
 	@Override
 	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long theServiceVersionPid) {
-		return (GServiceVersionSingleFireResponse) createMessage(true, new GServiceVersionSingleFireResponse(), RecentMessageTypeEnum.SVCVER);
+		GServiceVersionSingleFireResponse retVal = new GServiceVersionSingleFireResponse();
+		createMessage(true, retVal);
+		return retVal;
 	}
 
 	@Override
@@ -1080,6 +1081,13 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		url.setStatus(StatusEnum.ACTIVE);
 		retVal.getUrlList().add(url);
 
+		return retVal;
+	}
+
+	@Override
+	public DtoMonitorRuleActiveCheckOutcome loadMonitorRuleActiveCheckOutcomeDetails(long thePid) {
+		DtoMonitorRuleActiveCheckOutcome retVal = new DtoMonitorRuleActiveCheckOutcome();
+		createMessage(true, retVal);
 		return retVal;
 	}
 

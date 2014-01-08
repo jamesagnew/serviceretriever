@@ -8,13 +8,13 @@ import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersUser;
 
 @Local
 public interface ISecurityService {
 
-	AuthorizationResultsBean authorizeMethodInvocation(List<AuthorizationRequestBean> theAuthorizationRequests, PersServiceVersionMethod theMethod, String theRequestHostIp) throws ProcessingException;
+	AuthorizationResultsBean authorizeMethodInvocation(List<AuthorizationRequestBean> theAuthorizationRequests, PersMethod theMethod, String theRequestHostIp) throws ProcessingException;
 
 	void loadUserCatalogIfNeeded();
 

@@ -61,6 +61,9 @@ import net.svcret.ejb.model.entity.PersInvocationUrlStats;
 import net.svcret.ejb.model.entity.PersInvocationUrlStatsPk;
 import net.svcret.ejb.model.entity.PersLibraryMessage;
 import net.svcret.ejb.model.entity.PersLibraryMessageAppliesTo;
+import net.svcret.ejb.model.entity.PersMethod;
+import net.svcret.ejb.model.entity.PersMethodStatus;
+import net.svcret.ejb.model.entity.PersMethodStatusPk;
 import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorRuleActive;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
@@ -73,7 +76,6 @@ import net.svcret.ejb.model.entity.PersNodeStats;
 import net.svcret.ejb.model.entity.PersNodeStatsPk;
 import net.svcret.ejb.model.entity.PersNodeStatus;
 import net.svcret.ejb.model.entity.PersService;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
@@ -191,8 +193,23 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
+	public Collection<PersMethodStatus> getAllMethodStatus() {
+		TypedQuery<PersMethodStatus> q = myEntityManager.createNamedQuery(Queries.METHODSTATUS_FINDALL, PersMethodStatus.class);
+		Collection<PersMethodStatus> retVal = q.getResultList();
+		return retVal;
+	}
+
+	@Override
 	public Collection<PersMonitorRuleActiveCheck> getAllMonitorRuleActiveChecks() {
 		return myEntityManager.createNamedQuery(Queries.PERSACTIVECHECK_FINDALL, PersMonitorRuleActiveCheck.class).getResultList();
+	}
+
+	@Override
+	public List<PersMonitorRuleFiring> getAllMonitorRuleFiringsWhichAreActive() {
+		TypedQuery<PersMonitorRuleFiring> q = myEntityManager.createNamedQuery(Queries.RULEFIRING_FINDACTIVE, PersMonitorRuleFiring.class);
+		q.setParameter("NULLDATE", PersMonitorRuleFiring.NULL_DATE);
+		List<PersMonitorRuleFiring> activeRuleFailures = q.getResultList();
+		return activeRuleFailures;
 	}
 
 	@Override
@@ -586,8 +603,7 @@ public class DaoBean implements IDao {
 		Validate.notNull(theService, "PersService");
 		Validate.notBlank(theVersionId, "The ID may not be blank");
 
-		TypedQuery<BasePersServiceVersion> q = myEntityManager.createQuery("SELECT v FROM BasePersServiceVersion v WHERE v.myService.myPid = :SERVICE_PID AND v.myVersionId = :VERSION_ID",
-				BasePersServiceVersion.class);
+		TypedQuery<BasePersServiceVersion> q = myEntityManager.createQuery("SELECT v FROM BasePersServiceVersion v WHERE v.myService.myPid = :SERVICE_PID AND v.myVersionId = :VERSION_ID", BasePersServiceVersion.class);
 		q.setParameter("SERVICE_PID", theService.getPid());
 		q.setParameter("VERSION_ID", theVersionId);
 		BasePersServiceVersion retVal = null;
@@ -768,8 +784,8 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	public PersServiceVersionMethod getServiceVersionMethodByPid(long theServiceVersionMethodPid) {
-		return myEntityManager.find(PersServiceVersionMethod.class, theServiceVersionMethodPid);
+	public PersMethod getServiceVersionMethodByPid(long theServiceVersionMethodPid) {
+		return myEntityManager.find(PersMethod.class, theServiceVersionMethodPid);
 	}
 
 	@Override
@@ -876,14 +892,12 @@ public class DaoBean implements IDao {
 	public StatusesBean loadAllStatuses(PersConfig theConfig) {
 		StatusesBean statusesBean = new StatusesBean(theConfig);
 
-		List<PersServiceVersionUrlStatus> urlStatuses = myEntityManager.createQuery("SELECT c FROM " + PersServiceVersionUrlStatus.class.getSimpleName() + " c", PersServiceVersionUrlStatus.class)
-				.getResultList();
+		List<PersServiceVersionUrlStatus> urlStatuses = myEntityManager.createQuery("SELECT c FROM " + PersServiceVersionUrlStatus.class.getSimpleName() + " c", PersServiceVersionUrlStatus.class).getResultList();
 		for (PersServiceVersionUrlStatus next : urlStatuses) {
 			statusesBean.getUrlPidToStatus().put(next.getUrlPid(), next);
 		}
 
-		List<PersServiceVersionStatus> verStatuses = myEntityManager.createQuery("SELECT c FROM " + PersServiceVersionStatus.class.getSimpleName() + " c", PersServiceVersionStatus.class)
-				.getResultList();
+		List<PersServiceVersionStatus> verStatuses = myEntityManager.createQuery("SELECT c FROM " + PersServiceVersionStatus.class.getSimpleName() + " c", PersServiceVersionStatus.class).getResultList();
 		for (PersServiceVersionStatus next : verStatuses) {
 			statusesBean.getServiceVersionPidToStatus().put(next.getServiceVersionPid(), next);
 		}
@@ -902,6 +916,11 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
+	public PersMonitorRuleActiveCheckOutcome loadMonitorRuleActiveCheckOutcome(long thePid) {
+		return myEntityManager.find(PersMonitorRuleActiveCheckOutcome.class, thePid);
+	}
+
+	@Override
 	public List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<? extends BasePersServiceVersion> theAllSvcVers, int theStart) {
 
 		TypedQuery<PersMonitorRuleFiring> q = myEntityManager.createNamedQuery(Queries.RULEFIRING, PersMonitorRuleFiring.class);
@@ -910,14 +929,6 @@ public class DaoBean implements IDao {
 		q.setMaxResults(10);
 
 		return q.getResultList();
-	}
-
-	@Override
-	public List<PersMonitorRuleFiring> getAllMonitorRuleFiringsWhichAreActive() {
-		TypedQuery<PersMonitorRuleFiring> q = myEntityManager.createNamedQuery(Queries.RULEFIRING_FINDACTIVE, PersMonitorRuleFiring.class);
-		q.setParameter("NULLDATE", PersMonitorRuleFiring.NULL_DATE);
-		List<PersMonitorRuleFiring> activeRuleFailures = q.getResultList();
-		return activeRuleFailures;
 	}
 
 	@Override
@@ -939,7 +950,7 @@ public class DaoBean implements IDao {
 	@Override
 	public void removeDomain(PersDomain theDomain) {
 		for (BasePersServiceVersion nextSv : theDomain.getAllServiceVersions()) {
-			for (PersServiceVersionMethod nextMethod : nextSv.getMethods()) {
+			for (PersMethod nextMethod : nextSv.getMethods()) {
 				for (PersUserServiceVersionMethodPermission nextMethodPerm : nextMethod.getUserPermissions()) {
 					myEntityManager.remove(nextMethodPerm);
 				}
@@ -1130,27 +1141,17 @@ public class DaoBean implements IDao {
 		}
 	}
 
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	@Override
-	public BasePersMonitorRule saveMonitorRuleInNewTransaction(BasePersMonitorRule theRule) {
-
-		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
-			next.setRule(theRule);
-		}
-
-		if (theRule instanceof PersMonitorRuleActive) {
-			for (PersMonitorRuleActiveCheck next : ((PersMonitorRuleActive) theRule).getActiveChecks()) {
-				next.setRule((PersMonitorRuleActive) theRule);
+	public void saveMethodStatuses(List<PersMethodStatus> theMethodStatuses) {
+		for (PersMethodStatus next : theMethodStatuses) {
+			PersMethodStatus existing = myEntityManager.find(PersMethodStatus.class, new PersMethodStatusPk(next.getMethod()));
+			if (existing == null) {
+				myEntityManager.merge(next);
+			} else {
+				existing.merge(next);
+				myEntityManager.merge(existing);
 			}
 		}
-
-		if (theRule instanceof PersMonitorRulePassive) {
-			for (PersMonitorAppliesTo next : ((PersMonitorRulePassive) theRule).getAppliesTo()) {
-				next.setRule((PersMonitorRulePassive) theRule);
-			}
-		}
-
-		return myEntityManager.merge(theRule);
 	}
 
 	@Override
@@ -1174,6 +1175,29 @@ public class DaoBean implements IDao {
 		firing.getProblems().addAll(newProblems);
 
 		return firing;
+	}
+
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	@Override
+	public BasePersMonitorRule saveMonitorRuleInNewTransaction(BasePersMonitorRule theRule) {
+
+		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
+			next.setRule(theRule);
+		}
+
+		if (theRule instanceof PersMonitorRuleActive) {
+			for (PersMonitorRuleActiveCheck next : ((PersMonitorRuleActive) theRule).getActiveChecks()) {
+				next.setRule((PersMonitorRuleActive) theRule);
+			}
+		}
+
+		if (theRule instanceof PersMonitorRulePassive) {
+			for (PersMonitorAppliesTo next : ((PersMonitorRulePassive) theRule).getAppliesTo()) {
+				next.setRule((PersMonitorRulePassive) theRule);
+			}
+		}
+
+		return myEntityManager.merge(theRule);
 	}
 
 	@Override
@@ -1286,7 +1310,7 @@ public class DaoBean implements IDao {
 		}
 
 		i = 0;
-		for (PersServiceVersionMethod next : theVersion.getMethods()) {
+		for (PersMethod next : theVersion.getMethods()) {
 			Validate.throwProcessingExceptionIfBlank(next.getName(), "Method is missing name");
 			next.setOrder(i++);
 			next.setServiceVersion(theVersion);

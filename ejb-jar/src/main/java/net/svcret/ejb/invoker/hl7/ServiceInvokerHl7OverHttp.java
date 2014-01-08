@@ -23,10 +23,11 @@ import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
-import net.svcret.ejb.ex.UnknownRequestException;
+import net.svcret.ejb.ex.InvalidRequestException;
+import net.svcret.ejb.ex.InvalidRequestException.IssueEnum;
 import net.svcret.ejb.invoker.BaseServiceInvoker;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp;
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.preparser.PreParser;
@@ -35,6 +36,9 @@ import com.google.common.annotations.VisibleForTesting;
 
 @Stateless
 public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements IServiceInvokerHl7OverHttp {
+
+	private static final String CT_XML = "application/hl7-v2+xml";
+	private static final String CT_ER7 = "application/hl7-v2";
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceInvokerHl7OverHttp.class);
 
@@ -61,11 +65,11 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 	}
 
 	@Override
-	public SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition) throws UnknownRequestException, InvocationRequestFailedException {
+	public SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition) throws InvalidRequestException, InvocationRequestFailedException {
 		PersServiceVersionHl7OverHttp svc = (PersServiceVersionHl7OverHttp)theServiceDefinition;
 		
 		if (theRequest.getRequestType() != RequestType.POST) {
-			throw new UnknownRequestException(theRequest.getPath(), "HL7 over HTTP service at " + theRequest.getPath() + " requires all requests to be of type POST");
+			throw new InvalidRequestException(IssueEnum.UNSUPPORTED_ACTION, theRequest.getRequestType().name(), "Requests to HL7 over HTTP services must use HTTP POST.");
 		}
 
 		String contentType = theRequest.getContentType();
@@ -75,12 +79,12 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 			contentType = contentType.substring(0, semicolonIndex).trim();
 		}
 		
-		if ("application/hl7-v2".equals(contentType)) {
+		if (CT_ER7.equals(contentType)) {
 			ourLog.debug("Content type is {}", contentType);
-		} else if ("application/hl7-v2+xml".equals(contentType)) {
+		} else if (CT_XML.equals(contentType)) {
 			ourLog.debug("Content type is {}", contentType);
 		} else {
-			throw new UnknownRequestException(theRequest.getPath(),"HL7 over HTTP service cannot accept content type: " + contentType);
+			throw new InvalidRequestException(IssueEnum.INVALID_REQUEST_CONTENT_TYPE, contentType, "Requests to HL7 over HTTP services must use a valid content-type: " + CT_ER7 + " or " + CT_XML);
 		}
 
 		String message;
@@ -98,7 +102,7 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 			throw new InvocationRequestFailedException(e,"Failed to parse message, error was: " + e.getMessage());
 		}
 
-		PersServiceVersionMethod method = theServiceDefinition.getMethod(messageType);
+		PersMethod method = theServiceDefinition.getMethod(messageType);
 		if (method == null) {
 			ourLog.info("Creating new method '{}' for service version {}", messageType, theServiceDefinition.getPid());
 			BasePersServiceVersion dbSvcVer = myDao.getServiceVersionByPid(theServiceDefinition.getPid());

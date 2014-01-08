@@ -35,13 +35,14 @@ import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
 import net.svcret.ejb.model.entity.PersInvocationMethodUserStats;
 import net.svcret.ejb.model.entity.PersInvocationUrlStats;
 import net.svcret.ejb.model.entity.PersLibraryMessage;
+import net.svcret.ejb.model.entity.PersMethod;
+import net.svcret.ejb.model.entity.PersMethodStatus;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheckOutcome;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersNodeStats;
 import net.svcret.ejb.model.entity.PersNodeStatus;
 import net.svcret.ejb.model.entity.PersService;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
@@ -75,6 +76,8 @@ public interface IDao {
 	Collection<PersDomain> getAllDomains();
 
 	Collection<PersMonitorRuleActiveCheck> getAllMonitorRuleActiveChecks();
+
+	List<PersMonitorRuleFiring> getAllMonitorRuleFiringsWhichAreActive();
 
 	Collection<PersNodeStatus> getAllNodeStatuses();
 
@@ -159,7 +162,7 @@ public interface IDao {
 
 	BasePersServiceVersion getServiceVersionByPid(long theServiceVersionPid);
 
-	PersServiceVersionMethod getServiceVersionMethodByPid(long theServiceVersionMethodPid);
+	PersMethod getServiceVersionMethodByPid(long theServiceVersionMethodPid);
 
 	List<PersServiceVersionRecentMessage> getServiceVersionRecentMessages(BasePersServiceVersion theSvcVer, ResponseTypeEnum theResponseType);
 
@@ -183,11 +186,13 @@ public interface IDao {
 
 	List<PersLibraryMessage> loadLibraryMessages();
 
+	// List<PersMonitorRuleFiring>
+	// loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int
+	// theStart);
+
+	PersMonitorRuleActiveCheckOutcome loadMonitorRuleActiveCheckOutcome(long thePid);
+
 	List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<? extends BasePersServiceVersion> theAllSvcVers, int theStart);
-
-	// List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int theStart);
-
-	List<PersMonitorRuleFiring> getAllMonitorRuleFiringsWhichAreActive();
 
 	PersServiceVersionRecentMessage loadRecentMessageForServiceVersion(long thePid);
 
@@ -212,6 +217,8 @@ public interface IDao {
 	void saveInvocationStats(Collection<? extends BasePersStats<?, ?>> theStats, List<? extends BasePersStats<?, ?>> theStatsToDelete);
 
 	PersLibraryMessage saveLibraryMessage(PersLibraryMessage theMessage);
+
+	void saveMethodStatuses(List<PersMethodStatus> theMethodStatuses);
 
 	PersMonitorRuleActiveCheckOutcome saveMonitorRuleActiveCheckOutcome(PersMonitorRuleActiveCheckOutcome theRecentOutcome);
 
@@ -311,5 +318,7 @@ public interface IDao {
 		}
 
 	}
+
+	Collection<PersMethodStatus> getAllMethodStatus();
 
 }

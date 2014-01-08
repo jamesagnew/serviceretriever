@@ -43,13 +43,14 @@ import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.ProcessingRuntimeException;
-import net.svcret.ejb.ex.UnknownRequestException;
+import net.svcret.ejb.ex.InvalidRequestException;
+import net.svcret.ejb.ex.InvalidRequestException.IssueEnum;
 import net.svcret.ejb.invoker.BaseServiceInvoker;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
@@ -147,7 +148,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 		}
 	}
 
-	private void doHandleGet(SrBeanIncomingRequest theRequest, SrBeanProcessedRequest theResults, PersServiceVersionSoap11 theServiceDefinition, String thePath, String theQuery) throws UnknownRequestException,
+	private void doHandleGet(SrBeanIncomingRequest theRequest, SrBeanProcessedRequest theResults, PersServiceVersionSoap11 theServiceDefinition, String theQuery) throws InvalidRequestException,
 			InvocationFailedDueToInternalErrorException {
 
 		if (theQuery.toLowerCase().equals("?wsdl")) {
@@ -155,9 +156,13 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 		} else if (theQuery.startsWith("?xsd")) {
 			doHandleGetXsd(theRequest, theResults, theServiceDefinition);
 		} else {
-			throw new UnknownRequestException("Unknown service request: " + thePath + theQuery);
+			throwUnsupportedActionException(theRequest);
 		}
 
+	}
+
+	private void throwUnsupportedActionException(SrBeanIncomingRequest theRequest) throws InvalidRequestException {
+		throw new InvalidRequestException(IssueEnum.UNSUPPORTED_ACTION, theRequest.getRequestType().name(), "Requests to SOAP services must use HTTP POST. Note that HTTP GET is not supported, except to obtain service WSDL and supporting XSDs.");
 	}
 
 	private void doHandleGetWsdl(final SrBeanIncomingRequest theRequest, SrBeanProcessedRequest theResults, PersServiceVersionSoap11 theServiceDefinition) throws InvocationFailedDueToInternalErrorException {
@@ -186,7 +191,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 		return pathBase;
 	}
 
-	private void doHandleGetXsd(SrBeanIncomingRequest theRequest, SrBeanProcessedRequest theResults, PersServiceVersionSoap11 theServiceDefinition) throws UnknownRequestException, InvocationFailedDueToInternalErrorException {
+	private void doHandleGetXsd(SrBeanIncomingRequest theRequest, SrBeanProcessedRequest theResults, PersServiceVersionSoap11 theServiceDefinition) throws InvalidRequestException, InvocationFailedDueToInternalErrorException {
 		Validate.notNull(theRequest);
 		
 		StringTokenizer tok = new StringTokenizer(theRequest.getQuery(), "&");
@@ -202,18 +207,18 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 		// TODO: handle xsd imports
 		
 		if (xsdNumString == null) {
-			throw new UnknownRequestException("Invalid XSD query, no 'xsdnum' parameter found");
+			throw new InvalidRequestException(IssueEnum.INVALID_QUERY_PARAMETERS, theRequest.getQuery(), "No 'xsdnum' parameter found");
 		}
 
 		if (!Validate.isNotBlankSimpleInteger(xsdNumString)) {
-			throw new UnknownRequestException("Invalid XSD query, invalid 'xsdnum' parameter found: " + xsdNumString);
+			throw new InvalidRequestException(IssueEnum.INVALID_QUERY_PARAMETERS, theRequest.getQuery(), "Invalid XSD query, invalid 'xsdnum' parameter found: " + xsdNumString);
 		}
 
 		long xsdNum = Long.parseLong(xsdNumString);
 		PersServiceVersionResource res = theServiceDefinition.getResourceWithPid(xsdNum);
 
 		if (res == null) {
-			throw new UnknownRequestException(theRequest.getPath() + theRequest.getQuery(), "Invalid XSD query, invalid 'xsdnum' parameter found: " + xsdNumString);
+			throw new InvalidRequestException(IssueEnum.INVALID_QUERY_PARAMETERS, theRequest.getQuery(), "Invalid XSD query, invalid 'xsdnum' parameter found: " + xsdNumString);
 		}
 
 		final String pathBase = toPathBase(theRequest);
@@ -285,7 +290,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 
 	}
 
-	private void doHandlePost(SrBeanProcessedRequest theResults, PersServiceVersionSoap11 theServiceDefinition, Reader theReader) throws UnknownRequestException, InvocationRequestFailedException,
+	private void doHandlePost(SrBeanProcessedRequest theResults, PersServiceVersionSoap11 theServiceDefinition, Reader theReader) throws InvalidRequestException, InvocationRequestFailedException,
 			InvocationFailedDueToInternalErrorException {
 		// TODO: should we check for SOAPAction header?
 
@@ -308,12 +313,12 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 
 		String methodName = pipeline.getMethodName();
 		if (methodName == null) {
-			throw new UnknownRequestException("No method found in request message for Service \"" + theServiceDefinition.getService().getServiceName() + "\"");
+			throw new InvalidRequestException(IssueEnum.INVALID_REQUEST_MESSAGE_BODY, "", "Request message does not appear to contain a valid SOAP request");
 		}
 
-		PersServiceVersionMethod method = theServiceDefinition.getMethodForRootElementName(methodName);
+		PersMethod method = theServiceDefinition.getMethodForRootElementName(methodName);
 		if (method == null) {
-			throw new UnknownRequestException("Unknown method \"" + methodName + "\" for Service \"" + theServiceDefinition.getService().getServiceName() + "\"");
+			throw new InvalidRequestException(IssueEnum.UNKNOWN_METHOD, methodName, "Unknown method \"" + methodName + "\" for Service \"" + theServiceDefinition.getService().getServiceName() + "\"");
 		}
 
 		Map<String, String> headers = Maps.newHashMap();
@@ -396,7 +401,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 
 			StyleEnum styleEnum = introspectBindingForStyle(wsdlDocument);
 
-			PersServiceVersionMethod method = null;
+			PersMethod method = null;
 			switch (styleEnum) {
 			case DOCUMENT:
 				method = introspectWsdlForDocumentOperation(retVal, wsdlDocument, nextOperationElem, opName);
@@ -596,7 +601,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 		return retVal;
 	}
 
-	private PersServiceVersionMethod introspectWsdlForDocumentOperation(PersServiceVersionSoap11 retVal, Document wsdlDocument, Element nextOperationElem, String opName) {
+	private PersMethod introspectWsdlForDocumentOperation(PersServiceVersionSoap11 retVal, Document wsdlDocument, Element nextOperationElem, String opName) {
 		String rootElementNs = null;
 		String rootElementName = null;
 
@@ -658,12 +663,12 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 
 		}
 
-		PersServiceVersionMethod method = retVal.getOrCreateAndAddMethodWithName(opName);
+		PersMethod method = retVal.getOrCreateAndAddMethodWithName(opName);
 		method.setRootElements(rootElementNs + ":" + rootElementName);
 		return method;
 	}
 
-	private PersServiceVersionMethod introspectWsdlForRpcOperation(Document theWsdlDocument, String theOpName, PersServiceVersionSoap11 retVal) throws ProcessingException {
+	private PersMethod introspectWsdlForRpcOperation(Document theWsdlDocument, String theOpName, PersServiceVersionSoap11 retVal) throws ProcessingException {
 		Element binding = findWsdlBindingInDocument(theWsdlDocument);
 		NodeList operationList = binding.getElementsByTagNameNS(Constants.NS_WSDL, "operation");
 		for (int operationIdx = 0; operationIdx < operationList.getLength(); operationIdx++) {
@@ -686,7 +691,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 
 			String ns = bodyElement.getAttribute("namespace");
 
-			PersServiceVersionMethod method = retVal.getOrCreateAndAddMethodWithName(theOpName);
+			PersMethod method = retVal.getOrCreateAndAddMethodWithName(theOpName);
 			method.setRootElements(ns + ":" + theOpName);
 			return method;
 
@@ -704,20 +709,20 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
 	public SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition)
-			throws UnknownRequestException, InvocationRequestFailedException, InvocationFailedDueToInternalErrorException {
+			throws InvalidRequestException, InvocationRequestFailedException, InvocationFailedDueToInternalErrorException {
 		SrBeanProcessedRequest retVal = new SrBeanProcessedRequest();
 
 		// TODO: verify that content type is correct
 
 		switch (theRequest.getRequestType()) {
 		case GET:
-			doHandleGet(theRequest, retVal, (PersServiceVersionSoap11) theServiceDefinition, theRequest.getPath(), theRequest.getQuery());
+			doHandleGet(theRequest, retVal, (PersServiceVersionSoap11) theServiceDefinition, theRequest.getQuery());
 			break;
 		case POST:
 			doHandlePost(retVal, (PersServiceVersionSoap11) theServiceDefinition, theRequest.getInputReader());
 			break;
 		default:
-			throw new InvocationFailedDueToInternalErrorException("Unsupported request type: " + theRequest.getRequestType());
+			throwUnsupportedActionException(theRequest);
 		}
 
 		return retVal;

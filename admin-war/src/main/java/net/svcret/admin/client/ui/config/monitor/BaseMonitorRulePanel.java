@@ -426,7 +426,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 
 					} else {
 						DtoMonitorRuleActiveCheckOutcome outcome = outcomeList.getOutcomes().get(outcomeList.getOutcomes().size() - 1);
-						b.append(DateUtil.formatTimeElapsedForMessage(outcome.getTimestamp()));
+						b.append(DateUtil.formatTimeElapsedForMessage(outcome.getTransactionTime()));
 					}
 				}
 				return b.toSafeHtml();
@@ -450,10 +450,12 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 					b.appendHtmlConstant("</td><td>");
 					b.appendHtmlConstant("<a href=\"" + nextList.getUrl() + "\">(impl)</a>");
 					b.appendHtmlConstant("</td><td>");
+					PButtonCell.render(b, AdminPortal.IMAGES.iconTransactions(), AdminPortal.MSGS.actions_View(), null, "location.href='#" +NavProcessor.getTokenViewActiveCheckOutcomes(myRule.getPid(), theObject.getPid(), nextList.getUrlPid()) +"';");
+					b.appendHtmlConstant("</td><td>");
 
 					int[] values = new int[nextList.getOutcomes().size()];
 					for (int i = 0; i < values.length; i++) {
-						values[i] = nextList.getOutcomes().get(i).isSuccess() ? 1 : -1;
+						values[i] = nextList.getOutcomes().get(i).isFailed() ? -1 : 1;
 					}
 
 					RecentMonitorTestsSparkline sparkline = new RecentMonitorTestsSparkline(values, "");

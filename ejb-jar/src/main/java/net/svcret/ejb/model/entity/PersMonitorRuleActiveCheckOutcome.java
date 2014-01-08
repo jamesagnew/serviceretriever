@@ -50,20 +50,25 @@ public class PersMonitorRuleActiveCheckOutcome extends BasePersSavedTransaction 
 		myFailed = theFailed;
 	}
 
-	public DtoMonitorRuleActiveCheckOutcome toDto() {
+	public DtoMonitorRuleActiveCheckOutcome toDto(boolean theLoadMessage) {
 		DtoMonitorRuleActiveCheckOutcome retVal = new DtoMonitorRuleActiveCheckOutcome();
 		if (getPid() != null) {
 			retVal.setPid(getPid());
 		}
-		retVal.setSuccess(!Boolean.TRUE.equals(myFailed));
-		retVal.setTimestamp(getTransactionTime());
-		retVal.setLatency(getTransactionMillis());
+		retVal.setFailed(Boolean.TRUE.equals(myFailed));
 
+		super.populateDto(retVal, theLoadMessage);
+		
 		// TODO: should we be storing the reason the check failed so that we have
-		// something here even if the call itself doesn't fail (i.e. latency issue)
-		retVal.setFailureMessage(getFailDescription());
+		// something here even if the call itself doesn't fail (i.e. latency issue).
+		// Otherwise it's just an actual cause for a FAIL outcome here (i.e. can't connect)
 
 		return retVal;
+	}
+
+	@Override
+	public BasePersServiceVersion getServiceVersion() {
+		return getCheck().getServiceVersion();
 	}
 
 }

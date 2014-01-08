@@ -11,6 +11,7 @@ import net.svcret.admin.shared.model.BaseDtoMonitorRule;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.admin.shared.model.DtoAuthenticationHostList;
@@ -43,7 +44,7 @@ public interface IAdminServiceLocal {
 
 	DtoDomain addDomain(DtoDomain theDomain) throws ProcessingException, UnexpectedFailureException;
 
-	GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ProcessingException, UnexpectedFailureException;
+	GService addService(long theDomainPid, GService theService) throws ProcessingException, UnexpectedFailureException;
 
 	byte[] createWsdlBundle(long theServiceVersionPid) throws ProcessingException, IOException;
 
@@ -136,5 +137,7 @@ public interface IAdminServiceLocal {
 	String suggestNewVersionNumber(Long theDomainPid, Long theServicePid);
 
 	GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long thePid, String theRequestedByString) throws ProcessingException;
+
+	DtoMonitorRuleActiveCheckOutcome loadMonitorRuleActiveCheckOutcomeDetails(long thePid) throws UnexpectedFailureException;
 
 }

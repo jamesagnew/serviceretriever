@@ -38,6 +38,7 @@ import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
 import net.svcret.admin.shared.model.DtoPropertyCapture;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
@@ -95,7 +96,7 @@ import net.svcret.ejb.ejb.nodecomm.ISynchronousNodeIpcClient;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
-import net.svcret.ejb.ex.UnknownRequestException;
+import net.svcret.ejb.ex.InvalidRequestException;
 import net.svcret.ejb.invoker.soap.IServiceInvokerSoap11;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
@@ -119,13 +120,14 @@ import net.svcret.ejb.model.entity.PersLibraryMessageAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorRuleActive;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
+import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheckOutcome;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersMonitorRuleNotifyContact;
 import net.svcret.ejb.model.entity.PersMonitorRulePassive;
 import net.svcret.ejb.model.entity.PersNodeStatus;
 import net.svcret.ejb.model.entity.PersPropertyCapture;
 import net.svcret.ejb.model.entity.PersService;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionThrottle;
@@ -228,24 +230,24 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ProcessingException, UnexpectedFailureException {
-		Validate.notBlank(theId, "ID");
-		Validate.notBlank(theName, "Name");
+	public GService addService(long theDomainPid, GService theService) throws ProcessingException, UnexpectedFailureException {
+		Validate.notBlank(theService.getId(), "ID");
+		Validate.notBlank(theService.getName(), "Name");
 
-		ourLog.info("Adding service with ID[{}] and NAME[{}] to domain PID[{}]", new Object[] { theId, theName, theDomainPid });
+		ourLog.info("Adding service with ID[{}] and NAME[{}] to domain PID[{}]", new Object[] { theService.getId(), theService.getName(), theDomainPid });
 
 		PersDomain domain = myDao.getDomainByPid(theDomainPid);
 		if (domain == null) {
 			throw new IllegalArgumentException("Unknown Domain PID: " + theDomainPid);
 		}
 
-		PersService service = myServiceRegistry.getOrCreateServiceWithId(domain, theId);
+		PersService service = myServiceRegistry.getOrCreateServiceWithId(domain, theService.getId());
 		if (!service.isNewlyCreated()) {
-			throw new IllegalArgumentException("Service " + theId + " already exists for domain: " + domain.getDomainId());
+			throw new IllegalArgumentException("Service " + theService.getId() + " already exists for domain: " + domain.getDomainId());
 		}
 
-		service.setServiceName(theName);
-		service.setActive(theActive);
+		service.merge(PersService.fromDto(theService));
+		
 		myServiceRegistry.saveService(service);
 
 		return service.toDto();
@@ -255,7 +257,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		ourLog.info("Adding method {} to service version {}", theMethod.getName(), theServiceVersionPid);
 
 		BasePersServiceVersion sv = myDao.getServiceVersionByPid(theServiceVersionPid);
-		PersServiceVersionMethod ui = fromUi(theMethod, theServiceVersionPid);
+		PersMethod ui = fromUi(theMethod, theServiceVersionPid);
 		sv.addMethod(ui);
 		sv = myServiceRegistry.saveServiceVersion(sv);
 		return sv.getMethod(theMethod.getName()).toDto(false, myRuntimeStatusQuerySvc);
@@ -602,8 +604,8 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private PersServiceVersionMethod fromUi(GServiceMethod theMethod, long theServiceVersionPid) {
-		PersServiceVersionMethod retVal = new PersServiceVersionMethod();
+	private PersMethod fromUi(GServiceMethod theMethod, long theServiceVersionPid) {
+		PersMethod retVal = new PersMethod();
 		retVal.setName(theMethod.getName());
 		retVal.setPid(theMethod.getPidOrNull());
 		retVal.setServiceVersion(myDao.getServiceVersionByPid(theServiceVersionPid));
@@ -914,7 +916,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	// private void extractStatus(int theNumMinsBack, List<Integer>
-	// the60MinInvCount, List<Long> the60minTime, PersServiceVersionMethod
+	// the60MinInvCount, List<Long> the60minTime, PersMethod
 	// nextMethod) throws ProcessingException {
 	// IRuntimeStatus statusSvc = myStatusSvc;
 	// extractSuccessfulInvocationInvocationTimes(myConfigSvc.getConfig(),
@@ -1074,7 +1076,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 
 		Set<Long> methodPids = new HashSet<Long>();
-		for (PersServiceVersionMethod next : svcVer.getMethods()) {
+		for (PersMethod next : svcVer.getMethods()) {
 			methodPids.add(next.getPid());
 		}
 
@@ -1103,7 +1105,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		final List<Long> statsTimestamps = new ArrayList<Long>();
 
-		for (final PersServiceVersionMethod nextMethod : ver.getMethods()) {
+		for (final PersMethod nextMethod : ver.getMethods()) {
 
 			StatsAccumulator accumulator = new StatsAccumulator();
 			myRuntimeStatusQuerySvc.extract60MinuteMethodStats(nextMethod, accumulator);
@@ -1136,7 +1138,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		PersServiceVersionSoap11 def = (PersServiceVersionSoap11) myInvokerSoap11.introspectServiceFromUrl(httpConfig, theWsdlUrl);
 
 		theService.getMethodList().clear();
-		for (PersServiceVersionMethod next : def.getMethods()) {
+		for (PersMethod next : def.getMethods()) {
 			theService.getMethodList().add(next.toDto(false, myRuntimeStatusQuerySvc));
 		}
 
@@ -1506,7 +1508,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		HashSet<String> methods = new HashSet<String>();
 		for (GServiceMethod next : theVersion.getMethodList()) {
 			methods.add(next.getName());
-			PersServiceVersionMethod existing = existingVersion.getMethod(next.getName());
+			PersMethod existing = existingVersion.getMethod(next.getName());
 			if (existing != null) {
 				existing.merge(fromUi(next, existingVersion.getPid()));
 			} else {
@@ -1515,7 +1517,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 		existingVersion.retainOnlyMethodsWithNamesAndUnknownMethod(methods);
 		index = 0;
-		for (PersServiceVersionMethod next : existingVersion.getMethods()) {
+		for (PersMethod next : existingVersion.getMethods()) {
 			next.setOrder(index++);
 		}
 
@@ -1747,7 +1749,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			retVal.setTransactionMillis(response.getHttpResponse().getResponseTime());
 			retVal.setTransactionTime(transactionTime);
 
-		} catch (UnknownRequestException e) {
+		} catch (InvalidRequestException e) {
 			ourLog.error("Failed to invoke service", e);
 			retVal.setOutcomeDescription(e.getMessage());
 		} catch (InvocationResponseFailedException e) {
@@ -1975,7 +1977,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	// public static void doWithStatsByMinute(PersConfig theConfig, TimeRange
-	// theRange, IRuntimeStatus theStatus, PersServiceVersionMethod
+	// theRange, IRuntimeStatus theStatus, PersMethod
 	// theNextMethod, IWithStats theOperator, Date end) {
 	// Date start = new Date(end.getTime() -
 	// (theRange.getWithPresetRange().getNumMins() * 60 * 1000L));
@@ -1988,14 +1990,14 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return newValue;
 	}
 
-	public static void doWithStatsByMinute(PersConfig theConfig, int theNumberOfMinutes, IRuntimeStatusQueryLocal statusSvc, PersServiceVersionMethod theMethod, IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator) {
+	public static void doWithStatsByMinute(PersConfig theConfig, int theNumberOfMinutes, IRuntimeStatusQueryLocal statusSvc, PersMethod theMethod, IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator) {
 		Date start = getDateXMinsAgoTruncatedToMinute(theNumberOfMinutes);
 		Date end = new Date();
 
 		doWithStatsByMinute(theConfig, statusSvc, theMethod, theOperator, start, end);
 	}
 
-	public static void doWithStatsByMinute(PersConfig theConfig, IRuntimeStatusQueryLocal statusSvc, PersServiceVersionMethod theMethod, IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator, Date start, Date end) {
+	public static void doWithStatsByMinute(PersConfig theConfig, IRuntimeStatusQueryLocal statusSvc, PersMethod theMethod, IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator, Date start, Date end) {
 		Date date = start;
 		for (int min = 0; date.before(end); min++) {
 
@@ -2011,7 +2013,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 	}
 
-	public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatusQueryLocal theStatus, PersServiceVersionMethod theNextMethod, IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator) {
+	public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatusQueryLocal theStatus, PersMethod theNextMethod, IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator) {
 		Date end;
 		Date start;
 		if (theRange.getWithPresetRange() != null) {
@@ -2142,6 +2144,15 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		void withStats(int theIndex, O theStats);
 
+	}
+
+	@Override
+	public DtoMonitorRuleActiveCheckOutcome loadMonitorRuleActiveCheckOutcomeDetails(long thePid) throws UnexpectedFailureException {
+		PersMonitorRuleActiveCheckOutcome retVal = myDao.loadMonitorRuleActiveCheckOutcome(thePid);
+		if (retVal== null) {
+			throw new UnexpectedFailureException("Unknown PID: " + thePid);
+		}
+		return retVal.toDto(true);
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {

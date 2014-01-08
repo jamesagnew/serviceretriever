@@ -10,14 +10,14 @@ import net.svcret.ejb.model.entity.BasePersServiceCatalogItem;
 import net.svcret.ejb.model.entity.BasePersStats;
 import net.svcret.ejb.model.entity.BasePersStatsPk;
 import net.svcret.ejb.model.entity.PersNodeStatus;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 
 @Local
 public interface IRuntimeStatusQueryLocal {
 
-	void extract60MinuteMethodStats(PersServiceVersionMethod theMethod, StatsAccumulator theAccumulator) throws UnexpectedFailureException;
+	void extract60MinuteMethodStats(PersMethod theMethod, StatsAccumulator theAccumulator) throws UnexpectedFailureException;
 
 	void extract60MinuteServiceVersionUrlStatistics(PersServiceVersionUrl theUrl, StatsAccumulator theAccumulator) throws UnexpectedFailureException;
 

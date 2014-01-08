@@ -27,7 +27,7 @@ public class PersServiceVersionRecentMessage extends BasePersSavedTransactionRec
 	@ManyToOne()
 	@JoinColumn(name = "METHOD_PID", referencedColumnName = "PID", nullable = true)
 	@ForeignKey(name="FK_SVCVER_RCNTMSG_METHOD")
-	private PersServiceVersionMethod myMethod;
+	private PersMethod myMethod;
 
 	@ManyToOne()
 	@JoinColumn(name = "SVC_VERSION_PID", referencedColumnName = "PID", nullable = false)
@@ -46,7 +46,7 @@ public class PersServiceVersionRecentMessage extends BasePersSavedTransactionRec
 		theDaoBean.saveServiceVersionRecentMessage(this);
 	}
 
-	public PersServiceVersionMethod getMethod() {
+	public PersMethod getMethod() {
 		return myMethod;
 	}
 
@@ -69,7 +69,7 @@ public class PersServiceVersionRecentMessage extends BasePersSavedTransactionRec
 		return myUser;
 	}
 
-	public void setMethod(PersServiceVersionMethod theMethod) {
+	public void setMethod(PersMethod theMethod) {
 		myMethod = theMethod;
 	}
 

@@ -49,6 +49,8 @@ public class GServiceVersionUrl extends BaseDtoDashboardObject {
 	@XmlElement(name = "config_Url")
 	private String myUrl;
 
+	private Date myStatusTimestamp;
+
 	public GServiceVersionUrl() {
 		// nothing
 	}
@@ -239,6 +241,14 @@ public class GServiceVersionUrl extends BaseDtoDashboardObject {
 	@Override
 	public List<BaseDtoServiceVersion> getAllServiceVersions() {
 		throw new UnsupportedOperationException();
+	}
+
+	public void setStatusTimestamp(Date theStatusTimestamp) {
+		myStatusTimestamp = theStatusTimestamp;
+	}
+
+	public Date getStatusTimestamp() {
+		return myStatusTimestamp;
 	}
 
 }

@@ -37,7 +37,7 @@ public class PersInvocationMethodUserStatsPk extends BasePersInvocationMethodSta
 		myUserPid = theUser;
 	}
 
-	public PersInvocationMethodUserStatsPk(InvocationStatsIntervalEnum theInterval, Date theStartTime, PersServiceVersionMethod theMethod, PersUser theUser) {
+	public PersInvocationMethodUserStatsPk(InvocationStatsIntervalEnum theInterval, Date theStartTime, PersMethod theMethod, PersUser theUser) {
 		super(theInterval, theStartTime, theMethod.getPid());
 		myUserPid = theUser.getPid();
 	}

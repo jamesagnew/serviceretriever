@@ -13,7 +13,7 @@ public class PersUserMethodStatusPk implements Serializable {
 
 	@ManyToOne(cascade = {})
 	@JoinColumn(name = "METHOD_PID")
-	private PersServiceVersionMethod myMethod;
+	private PersMethod myMethod;
 
 	@ManyToOne(cascade = {})
 	@JoinColumn(name = "USER_STATUS_PID")
@@ -23,7 +23,7 @@ public class PersUserMethodStatusPk implements Serializable {
 		super();
 	}
 
-	public PersUserMethodStatusPk(PersUserStatus theUserStatus, PersServiceVersionMethod theMethod) {
+	public PersUserMethodStatusPk(PersUserStatus theUserStatus, PersMethod theMethod) {
 		super();
 		myUserStatus = theUserStatus;
 		myMethod = theMethod;
@@ -69,7 +69,7 @@ public class PersUserMethodStatusPk implements Serializable {
 	/**
 	 * @return the method
 	 */
-	public PersServiceVersionMethod getMethod() {
+	public PersMethod getMethod() {
 		return myMethod;
 	}
 
@@ -96,7 +96,7 @@ public class PersUserMethodStatusPk implements Serializable {
 	 * @param theMethod
 	 *            the method to set
 	 */
-	public void setMethod(PersServiceVersionMethod theMethod) {
+	public void setMethod(PersMethod theMethod) {
 		myMethod = theMethod;
 	}
 

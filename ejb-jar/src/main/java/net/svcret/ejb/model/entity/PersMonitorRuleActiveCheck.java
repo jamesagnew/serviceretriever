@@ -219,7 +219,7 @@ public class PersMonitorRuleActiveCheck extends BasePersObject {
 				outcomeList.setUrlId(nextEntry.getKey().getUrlId());
 				List<DtoMonitorRuleActiveCheckOutcome> outcomesList = new ArrayList<DtoMonitorRuleActiveCheckOutcome>();
 				for (PersMonitorRuleActiveCheckOutcome next : nextEntry.getValue()) {
-					outcomesList.add(next.toDto());
+					outcomesList.add(next.toDto(false));
 				}
 				outcomeList.setOutcomes(outcomesList);
 				retVal.getRecentOutcomesForUrl().add(outcomeList);

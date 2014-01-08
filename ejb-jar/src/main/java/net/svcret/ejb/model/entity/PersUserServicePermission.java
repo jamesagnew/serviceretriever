@@ -73,8 +73,8 @@ public class PersUserServicePermission extends BasePersObject {
 		thePerm.setServicePermission(this);
 	}
 
-	public Collection<PersServiceVersionMethod> getAllAllowedMethods() {
-		ArrayList<PersServiceVersionMethod> retVal = new ArrayList<PersServiceVersionMethod>();
+	public Collection<PersMethod> getAllAllowedMethods() {
+		ArrayList<PersMethod> retVal = new ArrayList<PersMethod>();
 
 		if (myAllowAllServiceVersions) {
 			retVal.addAll(getService().getAllServiceVersionMethods());

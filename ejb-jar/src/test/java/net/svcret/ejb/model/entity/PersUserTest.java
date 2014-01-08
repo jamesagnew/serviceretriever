@@ -26,11 +26,11 @@ public class PersUserTest extends BaseJpaTest {
 	private PersServiceVersionSoap11 d0s0v1;
 	private PersServiceVersionSoap11 d0s1v0;
 	private PersServiceVersionSoap11 d0s1v1;
-	private PersServiceVersionMethod d0s0v0m0;
+	private PersMethod d0s0v0m0;
 	private PersDomain d1;
 	private PersService d1s0;
 	private PersServiceVersionSoap11 d1s0v0;
-	private PersServiceVersionMethod d1s0v0m0;
+	private PersMethod d1s0v0m0;
 	private PersAuthenticationHostLocalDatabase myAh;
 
 	@Before

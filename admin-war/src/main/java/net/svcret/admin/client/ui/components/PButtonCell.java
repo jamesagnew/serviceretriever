@@ -58,7 +58,12 @@ public class PButtonCell extends ButtonCell {
 	}
 
 	public static void render(SafeHtmlBuilder sb, ImageResource icon, String theText, List<String> theStyles) {
+		String onClick = null;
 		
+		render(sb, icon, theText, theStyles, onClick);
+	}
+
+	public static void render(SafeHtmlBuilder sb, ImageResource icon, String theText, List<String> theStyles, String theOnClick) {
 		StringBuilder styles = new StringBuilder();
 		if (theStyles!=null) {
 			for (String nextStyle : theStyles) {
@@ -66,7 +71,14 @@ public class PButtonCell extends ButtonCell {
 			}
 		}
 		
-		sb.appendHtmlConstant("<button type=\"button\" class=\"" + CssConstants.PUSHBUTTON + styles.toString() + "\" tabindex=\"-1\">");
+		String onClick;
+		if (theOnClick == null) {
+			onClick = "";
+		}else {
+			onClick = " onclick=\"" + theOnClick + "\" ";
+		}
+		
+		sb.appendHtmlConstant("<button " + onClick + " type=\"button\" class=\"" + CssConstants.PUSHBUTTON + styles.toString() + "\" tabindex=\"-1\">");
 		sb.appendHtmlConstant("<img src=\"" + icon.getSafeUri().asString() + "\"/>");
 		sb.appendHtmlConstant("<span class='"+CssConstants.PUSHBUTTON_TEXT+"'>");
 		sb.appendHtmlConstant(theText);

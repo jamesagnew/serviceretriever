@@ -201,8 +201,8 @@ public class PersService extends BasePersServiceCatalogItem {
 		return Objects.equal(myPid, obj.myPid);
 	}
 
-	public Collection<PersServiceVersionMethod> getAllServiceVersionMethods() {
-		List<PersServiceVersionMethod> retVal = new ArrayList<PersServiceVersionMethod>();
+	public Collection<PersMethod> getAllServiceVersionMethods() {
+		List<PersMethod> retVal = new ArrayList<PersMethod>();
 		for (BasePersServiceVersion nextServicVersion : getVersions()) {
 			retVal.addAll(nextServicVersion.getMethods());
 		}
@@ -330,6 +330,7 @@ public class PersService extends BasePersServiceCatalogItem {
 		super.merge(theService);
 		setServiceId(theService.getServiceId());
 		setServiceName(theService.getServiceName());
+		setDescription(theService.getDescription());
 		setActive(theService.isActive());
 	}
 
@@ -487,6 +488,15 @@ public class PersService extends BasePersServiceCatalogItem {
 
 		}
 
+		return retVal;
+	}
+
+	public static PersService fromDto(GService theService) {
+		PersService retVal = new PersService();
+		retVal.setServiceId(theService.getId());
+		retVal.setServiceName(theService.getName());
+		retVal.setDescription(theService.getDescription());
+		retVal.setActive(theService.isActive());
 		return retVal;
 	}
 

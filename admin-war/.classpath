@@ -3,10 +3,10 @@
 	<classpathentry kind="src" output="src/main/webapp/WEB-INF/classes" path="src/main/java"/>
 	<classpathentry kind="src" path="src/dev/java"/>
 	<classpathentry kind="src" output="src/main/webapp/WEB-INF/classes" path="src/main/resources"/>
-	<classpathentry kind="con" path="com.google.gwt.eclipse.core.GWT_CONTAINER"/>
+	<classpathentry exported="true" kind="con" path="com.google.gwt.eclipse.core.GWT_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.web.container"/>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.module.container"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/svcret-ejb-jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/svcret-adminapi-jar"/>
 	<classpathentry kind="lib" path="src/main/webapp/WEB-INF/lib/slf4j-api-1.7.2.jar"/>

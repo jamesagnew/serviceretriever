@@ -21,6 +21,7 @@ import net.svcret.admin.shared.model.BaseDtoObject;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
 import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
 import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
@@ -87,15 +88,15 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	}
 
 	@Override
-	public GService addService(long theDomainPid, String theId, String theName, boolean theActive) throws ServiceFailureException {
-		ourLog.info("Adding new service to domain {} with ID[{}] and name: {}", new Object[] { theDomainPid, theId, theName });
+	public GService addService(long theDomainPid, GService theService) throws ServiceFailureException {
+		ourLog.info("Adding new service to domain {} with ID[{}] and name: {}", new Object[] { theDomainPid, theService.getId(), theService.getName() });
 
 		if (isMockMode()) {
-			return getMock().addService(theDomainPid, theId, theName, theActive);
+			return getMock().addService(theDomainPid, theService);
 		}
 
 		try {
-			return myAdminSvc.addService(theDomainPid, theId, theName, theActive);
+			return myAdminSvc.addService(theDomainPid, theService);
 		} catch (ProcessingException e) {
 			ourLog.warn("Failed to add domain", e);
 			throw new ServiceFailureException("Failed to add domain: " + e.getMessage());
@@ -157,7 +158,11 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		long service;
 		if (isNotBlank(theCreateServiceId)) {
 			try {
-				service = myAdminSvc.addService(domain, theCreateServiceId, theCreateServiceId, true).getPid();
+				GService svc = new GService();
+				svc.setId(theCreateServiceId);
+				svc.setName(theCreateServiceId);
+				svc.setActive(true);
+				service = myAdminSvc.addService(domain, svc).getPid();
 			} catch (ProcessingException e) {
 				ourLog.error("Failed to create service " + theCreateServiceId, e);
 				throw new ServiceFailureException("Failed to create service: " + theCreateDomainId + " - " + e.getMessage());
@@ -906,6 +911,19 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	@Override
 	public BaseDtoServiceVersion cloneServiceVersion(long thePidToClone) throws ServiceFailureException {
 		return loadServiceVersionIntoSession(thePidToClone,true);
+	}
+
+	@Override
+	public DtoMonitorRuleActiveCheckOutcome loadMonitorRuleActiveCheckOutcomeDetails(long thePid) throws ServiceFailureException {
+		if (isMockMode()) {
+			return getMock().loadMonitorRuleActiveCheckOutcomeDetails(thePid);
+		}
+		try {
+			return myAdminSvc.loadMonitorRuleActiveCheckOutcomeDetails(thePid);
+		} catch (UnexpectedFailureException e) {
+			ourLog.error("Failed to load outcome details", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
 	}
 
 }

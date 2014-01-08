@@ -1,6 +1,7 @@
 package net.svcret.ejb.model.entity;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -20,12 +21,14 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
+import net.svcret.admin.shared.model.BaseDtoSavedTransaction;
+import net.svcret.admin.shared.model.Pair;
+import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanProcessedResponse;
-import net.svcret.ejb.api.RequestType;
+
+import com.google.common.annotations.VisibleForTesting;
 
 @MappedSuperclass()
 public abstract class BasePersSavedTransaction implements Serializable {
@@ -83,6 +86,8 @@ public abstract class BasePersSavedTransaction implements Serializable {
 		return myFailDescription;
 	}
 
+	public abstract BasePersServiceVersion getServiceVersion();
+
 	/**
 	 * @return the implementationUrl
 	 */
@@ -95,11 +100,6 @@ public abstract class BasePersSavedTransaction implements Serializable {
 	 */
 	public Long getPid() {
 		return myPid;
-	}
-
-	@VisibleForTesting
-	public void setPidForUnitTest(Long thePid) {
-		myPid = thePid;
 	}
 
 	/**
@@ -153,14 +153,55 @@ public abstract class BasePersSavedTransaction implements Serializable {
 		return myResponseBodyTruncated;
 	}
 
-	public void populate(PersConfig theConfig, Date theTransactionTime, SrBeanIncomingRequest theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, SrBeanProcessedResponse theInvocationResult,
-			String theResponseBody) {
+	public void populate(PersConfig theConfig, Date theTransactionTime, SrBeanIncomingRequest theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, SrBeanProcessedResponse theInvocationResult, String theResponseBody) {
 		setRequestBody(extractHeadersForBody(theRequest) + theRequestBody, theConfig);
 		setImplementationUrl(theImplementationUrl);
 		setResponseBody(extractHeadersForBody(theInvocationResult.getResponseHeaders()) + theResponseBody, theConfig);
 		setResponseType(theInvocationResult.getResponseType());
 		setTransactionTime(theTransactionTime);
 		setFailDescription(theInvocationResult.getResponseFailureDescription());
+	}
+
+	public void populateDto(BaseDtoSavedTransaction retVal, boolean theLoadMessageContents) {
+		retVal.setPid(this.getPid());
+		PersServiceVersionUrl implementationUrl = this.getImplementationUrl();
+		if (implementationUrl != null) {
+			retVal.setImplementationUrlId(implementationUrl.getUrlId());
+			retVal.setImplementationUrlHref(implementationUrl.getUrl());
+			retVal.setImplementationUrlPid(implementationUrl.getPid());
+		}
+
+		retVal.setTransactionTime(this.getTransactionTime());
+		retVal.setTransactionMillis(this.getTransactionMillis());
+		retVal.setFailDescription(this.getFailDescription());
+		retVal.setResponseType(this.getResponseType());
+
+		if (theLoadMessageContents) {
+			int bodyIdx = this.getRequestBody().indexOf("\r\n\r\n");
+			if (bodyIdx == -1) {
+				retVal.setRequestMessage(this.getRequestBody());
+				retVal.setRequestHeaders(new ArrayList<Pair<String>>());
+				retVal.setRequestContentType("unknown");
+			} else {
+				retVal.setRequestMessage(this.getRequestBody().substring(bodyIdx + 4));
+				retVal.setRequestActionLine(toActionLine(this.getRequestBody()));
+				retVal.setRequestHeaders(toHeaders(this.getRequestBody().substring(0, bodyIdx)));
+				retVal.setRequestContentType(toHeaderContentType(retVal.getRequestHeaders()));
+			}
+
+			bodyIdx = this.getResponseBody().indexOf("\r\n\r\n");
+			if (bodyIdx == -1) {
+				retVal.setResponseMessage(this.getResponseBody());
+				retVal.setResponseHeaders(new ArrayList<Pair<String>>());
+				retVal.setResponseContentType("unknown");
+			} else {
+				retVal.setResponseMessage(this.getResponseBody().substring(bodyIdx + 4));
+				retVal.setResponseHeaders(toHeaders(this.getResponseBody().substring(0, bodyIdx)));
+				retVal.setResponseContentType(toHeaderContentType(retVal.getResponseHeaders()));
+			}
+
+		}
+
 	}
 
 	public void setFailDescription(String theFailDescription) {
@@ -179,13 +220,19 @@ public abstract class BasePersSavedTransaction implements Serializable {
 		myImplementationUrl = theImplementationUrl;
 	}
 
+	@VisibleForTesting
+	public void setPidForUnitTest(Long thePid) {
+		myPid = thePid;
+	}
+
 	/**
 	 * @param theRequestBody
 	 *            the requestBody to set
 	 */
 	public void setRequestBody(String theRequestBody, PersConfig theConfig) {
 		if (theRequestBody != null) {
-			String requestBody = BasePersObject.trimClobForUnitTest(theRequestBody);;
+			String requestBody = BasePersObject.trimClobForUnitTest(theRequestBody);
+			;
 			if (theConfig.getTruncateRecentDatabaseTransactionsToBytes() != null) {
 				if (requestBody.length() > theConfig.getTruncateRecentDatabaseTransactionsToBytes()) {
 					requestBody = requestBody.substring(0, theConfig.getTruncateRecentDatabaseTransactionsToBytes());
@@ -224,7 +271,6 @@ public abstract class BasePersSavedTransaction implements Serializable {
 		}
 	}
 
-	
 	/**
 	 * @param theResponseType
 	 *            the responseType to set
@@ -252,20 +298,6 @@ public abstract class BasePersSavedTransaction implements Serializable {
 		myTransactionTime = theTransactionTime;
 	}
 
-	private String extractHeadersForBody(SrBeanIncomingRequest theRequest) {
-		StringBuilder b = new StringBuilder();
-
-		RequestType requestType = theRequest.getRequestType();
-		if (requestType != null) {
-			b.append(requestType.name()).append(' ');
-			b.append(theRequest.getRequestFullUri()).append(' ');
-			b.append(theRequest.getProtocol()).append("\r\n");
-		}
-
-		Map<String, List<String>> headers = theRequest.getRequestHeaders();
-		return extractHeadersForBody(headers, b);
-	}
-
 	private String extractHeadersForBody(Map<String, List<String>> theResponseHeaders) {
 		return extractHeadersForBody(theResponseHeaders, new StringBuilder());
 	}
@@ -280,6 +312,60 @@ public abstract class BasePersSavedTransaction implements Serializable {
 		}
 		b.append("\r\n");
 		return b.toString();
+	}
+
+	private String extractHeadersForBody(SrBeanIncomingRequest theRequest) {
+		StringBuilder b = new StringBuilder();
+
+		RequestType requestType = theRequest.getRequestType();
+		if (requestType != null) {
+			b.append(requestType.name()).append(' ');
+			b.append(theRequest.getRequestFullUri()).append(' ');
+			b.append(theRequest.getProtocol()).append("\r\n");
+		}
+
+		Map<String, List<String>> headers = theRequest.getRequestHeaders();
+		return extractHeadersForBody(headers, b);
+	}
+
+	private static String toActionLine(String theRequestBody) {
+		int idx = theRequestBody.indexOf("\r\n");
+		if (idx == -1) {
+			return null;
+		}
+
+		String firstLine = theRequestBody.substring(0, idx);
+		idx = firstLine.indexOf(": ");
+		if (idx == -1) {
+			// If the first line has no colon, it's the action line
+			return firstLine;
+		} else {
+			return null;
+		}
+	}
+
+	private static String toHeaderContentType(List<Pair<String>> theResponseHeaders) {
+		for (Pair<String> pair : theResponseHeaders) {
+			if (pair.getFirst().equalsIgnoreCase("content-type")) {
+				return pair.getSecond().split(";")[0].trim();
+			}
+		}
+		return null;
+	}
+
+	private static List<Pair<String>> toHeaders(String theHeaders) {
+		ArrayList<Pair<String>> retVal = new ArrayList<Pair<String>>();
+		int index = 0;
+		for (String next : theHeaders.split("\\r\\n")) {
+			int colonIndex = next.indexOf(": ");
+			if (index == 0 && colonIndex == -1) {
+				// First line is generally the action line for request messages
+				continue;
+			}
+			retVal.add(new Pair<String>(next.substring(0, colonIndex), next.substring(colonIndex + 2)));
+			index++;
+		}
+		return retVal;
 	}
 
 }

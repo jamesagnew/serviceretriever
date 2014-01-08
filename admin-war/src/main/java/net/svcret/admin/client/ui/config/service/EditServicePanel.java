@@ -79,7 +79,7 @@ public class EditServicePanel extends FlowPanel {
 	}
 
 	private void initUi() {
-		myEditServiceBasicPropertiesPanel = new EditServiceBasicPropertiesPanel(myService, "Save", new MySaveButtonHandler(myService), AdminPortal.IMAGES.iconSave());
+		myEditServiceBasicPropertiesPanel = new EditServiceBasicPropertiesPanel(myService, "Save", new MySaveButtonHandler(myService), AdminPortal.IMAGES.iconSave(),false);
 		myTopContentPanel.add(myEditServiceBasicPropertiesPanel);
 
 		TabPanel domainTabs = new TabPanel();

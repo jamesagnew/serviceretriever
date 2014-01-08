@@ -34,7 +34,10 @@ public enum PagesEnum {
 
 	/** Create library message */
 	CLM(MSGS.createLibraryMessage_Breadcrumb()),
-	
+
+	/** Clone service version */
+	CSV(MSGS.cloneServiceVersion_Title()),
+
 	/** Delete domain */
 	DDO(MSGS.deleteDomainPanel_Breadcrumb()),
 
@@ -143,9 +146,9 @@ public enum PagesEnum {
 	UST(MSGS.userStats_Breadcrumb()), 
 	
 	/**
-	 * Clone service version
+	 * View active check outcome
 	 */
-	CSV(MSGS.cloneServiceVersion_Title())
+	VAC(MSGS.viewActiveCheckOutcome_Breadcrumb())
 	;
 	
 	private String myBreadcrumb;

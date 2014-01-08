@@ -32,7 +32,7 @@ public class PersUserRecentMessage extends BasePersSavedTransactionRecentMessage
 	@ManyToOne()
 	@JoinColumn(name = "METHOD_PID", referencedColumnName = "PID", nullable = true)
 	@ForeignKey(name="FK_USER_RCNTMSG_METHOD")
-	private PersServiceVersionMethod myMethod;
+	private PersMethod myMethod;
 
 	@ManyToOne()
 	@JoinColumn(name = "SVC_VER_PID", referencedColumnName = "PID", nullable = false)
@@ -47,7 +47,7 @@ public class PersUserRecentMessage extends BasePersSavedTransactionRecentMessage
 		theDaoBean.saveUserRecentMessage(this);
 	}
 
-	public PersServiceVersionMethod getMethod() {
+	public PersMethod getMethod() {
 		return myMethod;
 	}
 
@@ -70,7 +70,7 @@ public class PersUserRecentMessage extends BasePersSavedTransactionRecentMessage
 		return myUser;
 	}
 
-	public void setMethod(PersServiceVersionMethod theMethod) {
+	public void setMethod(PersMethod theMethod) {
 		myMethod = theMethod;
 	}
 

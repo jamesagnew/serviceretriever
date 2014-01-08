@@ -37,7 +37,7 @@ public class PersUserStatus extends BasePersObject {
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, targetEntity = PersUserMethodStatus.class, mappedBy = "myPk.myUserStatus")
 	@MapKey(name = "myPk.myMethod")
-	private Map<PersServiceVersionMethod, PersUserMethodStatus> myMethodStatuses;
+	private Map<PersMethod, PersUserMethodStatus> myMethodStatuses;
 
 	@Column(name = "PID")
 	@Id
@@ -72,18 +72,18 @@ public class PersUserStatus extends BasePersObject {
 	/**
 	 * @return the methodStatuses
 	 */
-	public Map<PersServiceVersionMethod, PersUserMethodStatus> getMethodStatuses() {
+	public Map<PersMethod, PersUserMethodStatus> getMethodStatuses() {
 		if (myMethodStatuses == null) {
-			myMethodStatuses = new HashMap<PersServiceVersionMethod, PersUserMethodStatus>();
+			myMethodStatuses = new HashMap<PersMethod, PersUserMethodStatus>();
 		}
 		return myMethodStatuses;
 	}
 
-	public PersUserMethodStatus getOrCreateUserMethodStatus(PersServiceVersionMethod theMethod) {
+	public PersUserMethodStatus getOrCreateUserMethodStatus(PersMethod theMethod) {
 		Validate.notNull(theMethod);
 
 		PersUserMethodStatus retVal;
-		Map<PersServiceVersionMethod, PersUserMethodStatus> statuses = getMethodStatuses();
+		Map<PersMethod, PersUserMethodStatus> statuses = getMethodStatuses();
 		synchronized (statuses) {
 			retVal = statuses.get(theMethod);
 			if (retVal == null) {

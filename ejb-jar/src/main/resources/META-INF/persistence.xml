@@ -23,6 +23,8 @@
 		<class>net.svcret.ejb.model.entity.PersLibraryMessage</class>
 		<class>net.svcret.ejb.model.entity.PersLibraryMessageAppliesTo</class>
 		<class>net.svcret.ejb.model.entity.PersLocks</class>
+		<class>net.svcret.ejb.model.entity.PersMethod</class>
+		<class>net.svcret.ejb.model.entity.PersMethodStatus</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorRuleActiveCheckOutcome</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorAppliesTo</class>
@@ -34,7 +36,6 @@
 		<class>net.svcret.ejb.model.entity.PersNodeStats</class>
 		<class>net.svcret.ejb.model.entity.PersNodeStatus</class>
 		<class>net.svcret.ejb.model.entity.PersPropertyCapture</class>
-		<class>net.svcret.ejb.model.entity.PersServiceVersionMethod</class>
 		<class>net.svcret.ejb.model.entity.PersServiceVersionThrottle</class>
 		<class>net.svcret.ejb.model.entity.PersService</class>
 		<class>net.svcret.ejb.model.entity.PersStickySessionUrlBinding</class>
@@ -119,6 +120,8 @@
 		<class>net.svcret.ejb.model.entity.PersLibraryMessage</class>
 		<class>net.svcret.ejb.model.entity.PersLibraryMessageAppliesTo</class>
 		<class>net.svcret.ejb.model.entity.PersLocks</class>
+		<class>net.svcret.ejb.model.entity.PersMethod</class>
+		<class>net.svcret.ejb.model.entity.PersMethodStatus</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorRuleActiveCheckOutcome</class>
 		<class>net.svcret.ejb.model.entity.PersMonitorAppliesTo</class>
@@ -130,7 +133,6 @@
 		<class>net.svcret.ejb.model.entity.PersNodeStats</class>
 		<class>net.svcret.ejb.model.entity.PersNodeStatus</class>
 		<class>net.svcret.ejb.model.entity.PersPropertyCapture</class>
-		<class>net.svcret.ejb.model.entity.PersServiceVersionMethod</class>
 		<class>net.svcret.ejb.model.entity.PersServiceVersionThrottle</class>
 		<class>net.svcret.ejb.model.entity.PersService</class>
 		<class>net.svcret.ejb.model.entity.PersUser</class>

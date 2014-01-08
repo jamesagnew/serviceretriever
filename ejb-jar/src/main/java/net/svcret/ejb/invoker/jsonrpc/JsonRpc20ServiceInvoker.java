@@ -19,12 +19,13 @@ import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnknownRequestException;
+import net.svcret.ejb.ex.InvalidRequestException;
+import net.svcret.ejb.ex.InvalidRequestException.IssueEnum;
 import net.svcret.ejb.invoker.BaseServiceInvoker;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcClientAuth;
 import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcCredentialGrabber;
 import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcServerAuth;
@@ -246,9 +247,9 @@ public class JsonRpc20ServiceInvoker extends BaseServiceInvoker implements IServ
 	}
 
 	@Override
-	public SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition)	throws UnknownRequestException, InvocationRequestFailedException {
+	public SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition)	throws InvalidRequestException, InvocationRequestFailedException {
 		if (theRequest.getRequestType() != RequestType.POST) {
-			throw new UnknownRequestException("This service requires all requests to be of type HTTP POST");
+			throw new InvalidRequestException(IssueEnum.UNSUPPORTED_ACTION, theRequest.getRequestType().name(), "Requests to JSON-RPC 2.0 services must use HTTP POST.");
 		}
 
 		SrBeanProcessedRequest retVal;
@@ -358,7 +359,7 @@ public class JsonRpc20ServiceInvoker extends BaseServiceInvoker implements IServ
 
 		String requestBody = stringWriter.toString();
 		String contentType = "application/json";
-		PersServiceVersionMethod methodDef = theServiceDefinition.getMethod(method);
+		PersMethod methodDef = theServiceDefinition.getMethod(method);
 		if (methodDef == null) {
 			throw new InvocationRequestFailedException("Unknown method \"" + method + "\" for Service \"" + theServiceDefinition.getService().getServiceName() + "\"");
 		}

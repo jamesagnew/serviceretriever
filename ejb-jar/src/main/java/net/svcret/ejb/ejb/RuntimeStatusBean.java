@@ -60,9 +60,10 @@ import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationMethodUserStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUrlStats;
 import net.svcret.ejb.model.entity.PersInvocationUrlStatsPk;
+import net.svcret.ejb.model.entity.PersMethodStatus;
 import net.svcret.ejb.model.entity.PersNodeStats;
 import net.svcret.ejb.model.entity.PersNodeStatus;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
@@ -120,12 +121,14 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private final AtomicLong myUnflushedNodeSuccessMethodInvocations = new AtomicLong();
 	private final ConcurrentHashMap<Long, PersServiceVersionStatus> myUnflushedServiceVersionStatus;
 	private final ConcurrentHashMap<PersUser, PersUserStatus> myUnflushedUserStatus;
+	private final ConcurrentHashMap<PersMethod, PersMethodStatus> myUnflushedMethodStatus;
 	private final ConcurrentHashMap<Long, PersServiceVersionUrlStatus> myUrlStatus;
 
 	public RuntimeStatusBean() {
 		myUnflushedInvocationStats = new ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>>();
 		myUnflushedServiceVersionStatus = new ConcurrentHashMap<Long, PersServiceVersionStatus>();
 		myUnflushedUserStatus = new ConcurrentHashMap<PersUser, PersUserStatus>();
+		myUnflushedMethodStatus = new ConcurrentHashMap<PersMethod, PersMethodStatus>();
 		myUrlStatus = new ConcurrentHashMap<Long, PersServiceVersionUrlStatus>();
 		myStickySessionUrlBindings = new HashMap<PersStickySessionUrlBindingPk, PersStickySessionUrlBinding>();
 	}
@@ -199,24 +202,24 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	@EJB
 	private IServiceRegistry mySvcRegistry;
-	
+
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override
-	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, SrBeanProcessedRequest results, PersUser theUser, SrBeanIncomingResponse theHttpResponse,
-			SrBeanProcessedResponse theInvocationResponseResultsBean) throws UnexpectedFailureException, InvocationFailedDueToInternalErrorException {
+	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, SrBeanProcessedRequest results, PersUser theUser, SrBeanIncomingResponse theHttpResponse, SrBeanProcessedResponse theInvocationResponseResultsBean) throws UnexpectedFailureException,
+			InvocationFailedDueToInternalErrorException {
 		Validate.notNull(theInvocationTime, "InvocationTime");
 		Validate.notNull(results, "InvocationResults");
 		Validate.notNull(theInvocationResponseResultsBean, "InvocationResponseResults");
 
 		ourLog.trace("Going to record method invocation");
 
-		PersServiceVersionMethod method;
+		PersMethod method;
 		if (results.getMethodDefinition() != null) {
 			method = results.getMethodDefinition();
 		} else {
 			method = mySvcRegistry.getOrCreateUnknownMethodEntryForServiceVersion(results.getServiceVersion());
 		}
-		
+
 		switch (theInvocationResponseResultsBean.getResponseType()) {
 		case SUCCESS:
 			myUnflushedNodeSuccessMethodInvocations.incrementAndGet();
@@ -252,8 +255,9 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			PersInvocationMethodUserStatsPk uStatsPk = new PersInvocationMethodUserStatsPk(interval, theInvocationTime, method, theUser);
 			doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, uStatsPk, results.getThrottleTimeIfAny());
 
-			doUpdateUserStatus(method, theInvocationResponseResultsBean, theUser, theInvocationTime);
 		}
+		
+		doUpdateMethodAndUserStatus(method, theInvocationResponseResultsBean, theUser, theInvocationTime);
 
 		if (theHttpResponse != null) {
 			/*
@@ -267,8 +271,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 				String message;
 				if (wasFault) {
-					message = Messages.getString("RuntimeStatusBean.faultUrl", theHttpResponse.getResponseTime(), theInvocationResponseResultsBean.getResponseFaultCode(),
-							theInvocationResponseResultsBean.getResponseFaultDescription());
+					message = Messages.getString("RuntimeStatusBean.faultUrl", theHttpResponse.getResponseTime(), theInvocationResponseResultsBean.getResponseFaultCode(), theInvocationResponseResultsBean.getResponseFaultDescription());
 				} else {
 					message = Messages.getString("RuntimeStatusBean.successfulUrl", theHttpResponse.getResponseTime());
 				}
@@ -391,8 +394,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			PersNodeStats stats = new PersNodeStats(InvocationStatsIntervalEnum.MINUTE, date, myConfigSvc.getNodeId());
 			stats.collectMemoryStats();
 
-			stats.addMethodInvocations(myUnflushedNodeSuccessMethodInvocations.getAndSet(0), myUnflushedNodeFaultMethodInvocations.getAndSet(0), myUnflushedNodeFailMethodInvocations.getAndSet(0),
-					myUnflushedNodeSecFailMethodInvocations.getAndSet(0));
+			stats.addMethodInvocations(myUnflushedNodeSuccessMethodInvocations.getAndSet(0), myUnflushedNodeFaultMethodInvocations.getAndSet(0), myUnflushedNodeFailMethodInvocations.getAndSet(0), myUnflushedNodeSecFailMethodInvocations.getAndSet(0));
 
 			myDao.saveInvocationStats(Collections.singletonList(stats));
 
@@ -418,7 +420,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			status.setStatus(StatusEnum.DOWN);
 			logUrlStatusDown(status);
 		}
-		
+
 	}
 
 	@Override
@@ -566,7 +568,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				case DOWN:
 					if (retVal.getPreferredUrl() != null) {
 						/*
-						 * We don't try to reset the circuit breaker on more than one URL at a time
+						 * We don't try to reset the circuit breaker on more
+						 * than one URL at a time
 						 */
 					} else if (status.attemptToResetCircuitBreaker()) {
 						if (retVal.getPreferredUrl() != null) {
@@ -575,7 +578,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 						retVal.setPreferredUrl(next);
 					} else {
 						/*
-						 * we just won't try this one of it's down and it's not time to try resetting the CB
+						 * we just won't try this one of it's down and it's not
+						 * time to try resetting the CB
 						 */
 					}
 				}
@@ -667,7 +671,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 	}
 
-
 	private void doFlushStatus() {
 
 		ourLog.debug("Going to flush status entries");
@@ -740,6 +743,25 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 
 		/*
+		 * Flush Method Status
+		 */
+		
+		ArrayList<PersMethodStatus> methodStatuses = new ArrayList<PersMethodStatus>(myUnflushedMethodStatus.values());
+		for (Iterator<PersMethodStatus> iter = methodStatuses.iterator(); iter.hasNext();) {
+			PersMethodStatus next = iter.next();
+			if (!next.isDirty()) {
+				iter.remove();
+			} else {
+				next.clearDirty();
+			}
+		}
+
+		if (!methodStatuses.isEmpty()) {
+			ourLog.info("Going to persist {} method statuses", methodStatuses.size());
+			myDao.saveMethodStatuses(methodStatuses);
+		}
+		
+		/*
 		 * Flush Service Version Status
 		 */
 
@@ -756,7 +778,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 
 		if (!serviceVersionStatuses.isEmpty()) {
-			ourLog.info("Going to persist {} URL statuses", serviceVersionStatuses.size());
+			ourLog.info("Going to persist {} service version statuses", serviceVersionStatuses.size());
 			myDao.saveServiceVersionStatuses(serviceVersionStatuses);
 		}
 
@@ -806,12 +828,12 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				}
 			}
 		}
-		
+
 		/*
 		 * Flush Node status
 		 */
 		if (myNodeStatus == null) {
-			myNodeStatus= myDao.getOrCreateNodeStatus(myConfigSvc.getNodeId());
+			myNodeStatus = myDao.getOrCreateNodeStatus(myConfigSvc.getNodeId());
 		}
 		myNodeStatus.setStatusTimestamp(new Date());
 		myNodeStatus.setCurrentTransactionsPerMinuteSuccessful(myInMemoryRecentTransactionSuccessCounter.getTransactionsPerMinute());
@@ -823,7 +845,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		myDao.saveNodeStatus(myNodeStatus);
 
 		ourLog.debug("Node status {} successful transactions with {} in bean total", myInMemoryRecentTransactionSuccessCounter.getTransactionsPerMinute(), myInMemoryRecentTransactionSuccessCounter.getSize());
-		
+
 	}
 
 	private void doRecordInvocationForUrls(int theRequestLengthChars, SrBeanIncomingResponse theHttpResponse, SrBeanProcessedResponse theInvocationResponseResultsBean, Date theInvocationTime) {
@@ -863,8 +885,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	}
 
-	private <P extends BasePersInvocationStatsPk<P, O>, O extends BasePersInvocationStats<P, O>> void doRecordInvocationMethod(int theRequestLengthChars, SrBeanIncomingResponse theHttpResponse,
-			SrBeanProcessedResponse theInvocationResponseResultsBean, P theStatsPk, Long theThrottleFullIfAny) {
+	private <P extends BasePersInvocationStatsPk<P, O>, O extends BasePersInvocationStats<P, O>> void doRecordInvocationMethod(int theRequestLengthChars, SrBeanIncomingResponse theHttpResponse, SrBeanProcessedResponse theInvocationResponseResultsBean, P theStatsPk,
+			Long theThrottleFullIfAny) {
 		Validate.notNull(theInvocationResponseResultsBean.getResponseType(), "responseType");
 
 		O stats = getStatsForPk(theStatsPk);
@@ -952,37 +974,65 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private void logUrlStatusDown(PersServiceVersionUrlStatus theUrlStatusBean) {
 		Date nextReset = theUrlStatusBean.getNextCircuitBreakerReset();
 		if (nextReset != null) {
-			ourLog.info("URL[{}] is DOWN, Next circuit breaker reset attempt is {} - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), myTimeFormat.format(nextReset),
-					theUrlStatusBean.getUrl().getUrl() });
+			ourLog.info("URL[{}] is DOWN, Next circuit breaker reset attempt is {} - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), myTimeFormat.format(nextReset), theUrlStatusBean.getUrl().getUrl() });
 		} else {
 			ourLog.info("URL[{}] is DOWN - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), theUrlStatusBean.getUrl().getUrl() });
 		}
 	}
 
-	private void doUpdateUserStatus(PersServiceVersionMethod theMethod, SrBeanProcessedResponse theInvocationResponseResultsBean, PersUser theUser, Date theTransactionTime) {
-		PersUserStatus status = getUserStatusForUser(theUser);
-
-		PersUserMethodStatus methodStatus = status.getOrCreateUserMethodStatus(theMethod);
-
+	private void doUpdateMethodAndUserStatus(PersMethod theMethod, SrBeanProcessedResponse theInvocationResponseResultsBean, PersUser theUser, Date theTransactionTime) {
+		PersMethodStatus methodStatus = getMethodStatusForMethod(theMethod);
+		PersUserStatus userStatus;
+		PersUserMethodStatus userMethodStatus;
+		if (theUser != null) {
+			userStatus = getUserStatusForUser(theUser);
+			userMethodStatus = userStatus.getOrCreateUserMethodStatus(theMethod);
+		} else {
+			userStatus = null;
+			userMethodStatus = null;
+		}
 		switch (theInvocationResponseResultsBean.getResponseType()) {
 		case SUCCESS:
-			status.setLastAccessIfNewer(theTransactionTime);
-			methodStatus.setLastSuccessfulInvocationIfNewer(theTransactionTime);
+			if (userStatus != null) {
+				userStatus.setLastAccessIfNewer(theTransactionTime);
+			}
+			if (userMethodStatus != null) {
+				userMethodStatus.setValuesSuccessfulInvocation(theTransactionTime);
+			}
+			methodStatus.setValuesSuccessfulInvocation(theTransactionTime);
 			break;
 		case FAULT:
-			status.setLastAccessIfNewer(theTransactionTime);
-			methodStatus.setLastFaultInvocationIfNewer(theTransactionTime);
+			if (userStatus != null) {
+				userStatus.setLastAccessIfNewer(theTransactionTime);
+			}
+			if (userMethodStatus != null) {
+				userMethodStatus.setValuesFaultInvocation(theTransactionTime);
+			}
+			methodStatus.setValuesFaultInvocation(theTransactionTime);
 			break;
 		case SECURITY_FAIL:
-			status.setLastSecurityFailIfNewer(theTransactionTime);
-			methodStatus.setLastSecurityFailInvocationIfNewer(theTransactionTime);
+			if (userStatus != null) {
+				userStatus.setLastSecurityFailIfNewer(theTransactionTime);
+			}
+			if (userMethodStatus != null) {
+				userMethodStatus.setValuesSecurityFailInvocation(theTransactionTime);
+			}
+			methodStatus.setValuesSecurityFailInvocation(theTransactionTime);
 			break;
 		case FAIL:
-			status.setLastAccessIfNewer(theTransactionTime);
-			methodStatus.setLastFailInvocationIfNewer(theTransactionTime);
+			if (userStatus != null) {
+				userStatus.setLastAccessIfNewer(theTransactionTime);
+			}
+			if (userMethodStatus != null) {
+				userMethodStatus.setValuesFailInvocation(theTransactionTime);
+			}
+			methodStatus.setValuesFailInvocation(theTransactionTime);
 			break;
 		case THROTTLE_REJ:
-			methodStatus.setLastThrottleRejectIfNewer(theTransactionTime);
+			if (userMethodStatus != null) {
+				userMethodStatus.setValuesThrottleReject(theTransactionTime);
+			}
+			methodStatus.setValuesThrottleReject(theTransactionTime);
 			break;
 		}
 
@@ -1037,6 +1087,16 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private PersUserStatus getUserStatusForUser(PersUser theUser) {
 		PersUserStatus tryNew = theUser.getStatus();
 		PersUserStatus status = myUnflushedUserStatus.putIfAbsent(theUser, tryNew);
+		if (status == null) {
+			status = tryNew;
+		}
+
+		return status;
+	}
+
+	private PersMethodStatus getMethodStatusForMethod(PersMethod theMethod) {
+		PersMethodStatus tryNew = new PersMethodStatus(theMethod);
+		PersMethodStatus status = myUnflushedMethodStatus.putIfAbsent(theMethod, tryNew);
 		if (status == null) {
 			status = tryNew;
 		}

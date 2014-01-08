@@ -140,7 +140,8 @@ TD.monitorRuleActiveCheckTooltipTableColumnHeader {
     font-weight: bold !important;	
 }
 
-TD.usageTooltipTableSuccessColumn, .outcomeLabelSuccess {
+TD.usageTooltipTableSuccessColumn, .outcomeLabelSuccess, .usageTooltipActiveCheckPassed, 
+.activeCheckViewOutcomesListSuccess {
 	color: #0C0;
 }
 
@@ -148,7 +149,8 @@ TD.usageTooltipTableFaultColumn, .outcomeLabelFault {
 	color: #66C;
 }
 
-TD.usageTooltipTableFailColumn, .outcomeLabelFail {
+TD.usageTooltipTableFailColumn, .outcomeLabelFail, .usageTooltipActiveCheckFailed,
+.activeCheckViewOutcomesListFailure {
 	color: #F00;
 }
 
@@ -166,11 +168,15 @@ TD.usageTooltipTableLatencyColumn, TD.usageTooltipTableNormalColumn {
 	background: #444;
 }
 
-.usageTooltipTableValueColumn, .usageTooltipTableValueWrappingColumn {
+.usageTooltipTableValueColumn, .usageTooltipTableValueWrappingColumn, .usageTooltipActiveCheckPassed, 
+.usageTooltipActiveCheckFailed {
     font-size: 0.8em !important;
 	background: #444;
-	color: #AAA;
 	text-align: center;
+}
+
+.usageTooltipTableValueColumn, .usageTooltipTableValueWrappingColumn {
+	color: #AAA;
 }
 
 .usageTooltipTableValueWrappingColumn {

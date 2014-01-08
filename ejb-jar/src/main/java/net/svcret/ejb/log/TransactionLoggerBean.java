@@ -25,7 +25,7 @@ import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersSavedTransactionRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.util.LogUtil;
@@ -79,7 +79,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	 * @throws UnexpectedFailureException 
 	 */
 	@Override
-	public void logTransaction(SrBeanIncomingRequest theRequest,BasePersServiceVersion theSvcVer, PersServiceVersionMethod theMethod, PersUser theUser, String theRequestBody, SrBeanProcessedResponse theInvocationResponse,
+	public void logTransaction(SrBeanIncomingRequest theRequest,BasePersServiceVersion theSvcVer, PersMethod theMethod, PersUser theUser, String theRequestBody, SrBeanProcessedResponse theInvocationResponse,
 			PersServiceVersionUrl theImplementationUrl, SrBeanIncomingResponse theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, String theResponseBody, SrBeanProcessedRequest theInvocationResults) throws ProcessingException, UnexpectedFailureException {
 		Validate.notNull(theSvcVer);
 		Validate.notNull(theInvocationResponse);

@@ -20,7 +20,7 @@ import net.svcret.ejb.ejb.DefaultAnswer;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcClientAuth;
 import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcServerAuth;
 import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
@@ -109,7 +109,7 @@ public class JsonRpc20ServiceInvokerTest {
 		ArrayList<PersBaseServerAuth<?, ?>> serverAuths = new ArrayList<PersBaseServerAuth<?, ?>>();
 		serverAuths.add(new NamedParameterJsonRpcServerAuth("clientId", "clientPass"));
 		when(def.getServerAuths()).thenReturn(serverAuths);
-		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class);
+		PersMethod method = mock(PersMethod.class);
 
 		when(def.getMethod("getCanonicalMappings")).thenReturn(method);
 
@@ -160,7 +160,7 @@ public class JsonRpc20ServiceInvokerTest {
 		clientAuths.add(new NamedParameterJsonRpcClientAuth("newUsername", "clientId", "newPassword", "clientPass"));
 		when(def.getClientAuths()).thenReturn(clientAuths);
 
-		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class);
+		PersMethod method = mock(PersMethod.class);
 
 		when(def.getMethod("getCanonicalMappings")).thenReturn(method);
 
@@ -213,7 +213,7 @@ public class JsonRpc20ServiceInvokerTest {
 		clientAuths.add(new NamedParameterJsonRpcClientAuth("newUsername", "clientId", "newPassword", "clientPass"));
 		when(def.getClientAuths()).thenReturn(clientAuths);
 
-		method = mock(PersServiceVersionMethod.class);
+		method = mock(PersMethod.class);
 
 		when(def.getMethod("getCanonicalMappings")).thenReturn(method);
 
@@ -255,7 +255,7 @@ public class JsonRpc20ServiceInvokerTest {
 
 		JsonRpc20ServiceInvoker svc = new JsonRpc20ServiceInvoker();
 		PersServiceVersionJsonRpc20 def = mock(PersServiceVersionJsonRpc20.class);
-		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class);
+		PersMethod method = mock(PersMethod.class);
 
 		when(def.getMethod("getActsByVisit")).thenReturn(method);
 		when(def.getServerAuths()).thenReturn(new ArrayList<PersBaseServerAuth<?, ?>>());
@@ -296,7 +296,7 @@ public class JsonRpc20ServiceInvokerTest {
 
 			JsonRpc20ServiceInvoker svc = new JsonRpc20ServiceInvoker();
 			PersServiceVersionJsonRpc20 def = mock(PersServiceVersionJsonRpc20.class, new DefaultAnswer());
-			PersServiceVersionMethod method = mock(PersServiceVersionMethod.class, new DefaultAnswer());
+			PersMethod method = mock(PersMethod.class, new DefaultAnswer());
 
 			when(def.getMethod("getActsByVisit")).thenReturn(method);
 			when(def.getServerAuths()).thenReturn(new ArrayList<PersBaseServerAuth<?, ?>>());
@@ -333,7 +333,7 @@ public class JsonRpc20ServiceInvokerTest {
 
 		JsonRpc20ServiceInvoker svc = new JsonRpc20ServiceInvoker();
 		PersServiceVersionJsonRpc20 def = mock(PersServiceVersionJsonRpc20.class);
-		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class);
+		PersMethod method = mock(PersMethod.class);
 
 		when(def.getMethod("someMethod")).thenReturn(method);
 		when(def.getServerAuths()).thenReturn(new ArrayList<PersBaseServerAuth<?, ?>>());
@@ -425,7 +425,7 @@ public class JsonRpc20ServiceInvokerTest {
 
 		JsonRpc20ServiceInvoker svc = new JsonRpc20ServiceInvoker();
 		PersServiceVersionJsonRpc20 def = mock(PersServiceVersionJsonRpc20.class);
-		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class);
+		PersMethod method = mock(PersMethod.class);
 
 		when(def.getMethod("getCanonicalMappings")).thenReturn(method);
 		when(def.getServerAuths()).thenReturn(new ArrayList<PersBaseServerAuth<?, ?>>());

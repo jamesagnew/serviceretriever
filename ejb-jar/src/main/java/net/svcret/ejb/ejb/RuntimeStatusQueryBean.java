@@ -40,9 +40,10 @@ import net.svcret.ejb.model.entity.PersInvocationMethodUserStats;
 import net.svcret.ejb.model.entity.PersInvocationMethodUserStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUrlStats;
 import net.svcret.ejb.model.entity.PersInvocationUrlStatsPk;
+import net.svcret.ejb.model.entity.PersMethodStatus;
 import net.svcret.ejb.model.entity.PersNodeStatus;
 import net.svcret.ejb.model.entity.PersService;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserMethodStatus;
@@ -87,9 +88,8 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 	}
 
 	@Override
-	public void extract60MinuteMethodStats(final PersServiceVersionMethod theMethod, StatsAccumulator theAccumulator) throws UnexpectedFailureException {
-		IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> operator = new StatsAdderOperator<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats>(
-				theAccumulator);
+	public void extract60MinuteMethodStats(final PersMethod theMethod, StatsAccumulator theAccumulator) throws UnexpectedFailureException {
+		IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> operator = new StatsAdderOperator<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats>(theAccumulator);
 		IStatsPkBuilder<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> builder = new MethodBuilder(theMethod);
 		doWithStatsByMinute(0, 59, theAccumulator, operator, builder);
 	}
@@ -110,6 +110,12 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 	@Override
 	public StatsAccumulator extract60MinuteStats(BasePersServiceCatalogItem theItem) throws UnexpectedFailureException {
 
+		Collection<PersMethodStatus> methodStatuses = myDao.getAllMethodStatus();
+		Map<PersMethod, PersMethodStatus> methodToMethodStatus = new HashMap<PersMethod, PersMethodStatus>();
+		for (PersMethodStatus next : methodStatuses) {
+			methodToMethodStatus.put(next.getMethod(), next);
+		}
+		
 		StatsAccumulator accumulator = new StatsAccumulator();
 		synchronized (myCache60MinAccumulators) {
 			Date wantStartTime = AdminServiceBean.getDateXMinsAgoTruncatedToMinute(59);
@@ -118,48 +124,10 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 			Date endTime = AdminServiceBean.getDateXMinsAgoTruncatedToMinute(0);
 			accumulator.setFirstDate(startTime);
 
-			extractMinuteStats(theItem, accumulator, startTime, endTime);
+			extractMinuteStats(theItem, accumulator, startTime, endTime, methodToMethodStatus);
 		}
 
 		return accumulator;
-		// if (!myCachedServiceVersionAccumulators.containsKey(theNextVersion.getPid())) {
-		//
-		// StatsAccumulator acc = new StatsAccumulator();
-		// for (PersServiceVersionMethod nextMethod : theNextVersion.getMethods()) {
-		// extract60MinuteMethodStats(nextMethod, acc);
-		// }
-		// if (theNextVersion.getMethods().size() == 0) {
-		// return;
-		// }
-		// myCachedServiceVersionAccumulators.put(theNextVersion.getPid(), acc);
-		// theAccumulator.populateFromLast(60, acc);
-		//
-		// } else {
-		//
-		// StatsAccumulator acc = myCachedServiceVersionAccumulators.get(theNextVersion.getPid());
-		//
-		// Date end = AdminServiceBean.getDateXMinsAgo(0);
-		// Long lastTimestamp = acc.getTimestamps().get(acc.getTimestamps().size() - 1);
-		//
-		// long numNeeded = (end.getTime() - lastTimestamp) / DateUtils.MILLIS_PER_DAY;
-		// if (numNeeded > 59) {
-		// numNeeded = 59;
-		// } else if (numNeeded < 0) {
-		// numNeeded=0;
-		// }
-		//
-		// Date start = AdminServiceBean.getDateXMinsAgo((int) numNeeded);
-		//
-		// StatsAdderOperator<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> operator = new StatsAdderOperator<PersInvocationMethodSvcverStatsPk,
-		// PersInvocationMethodSvcverStats>(acc);
-		// for (PersServiceVersionMethod nextMethod : theNextVersion.getMethods()) {
-		// doWithStatsByMinute(acc.getTimestamps().size(), operator, new MethodBuilder(nextMethod), start, end);
-		// }
-		//
-		// theAccumulator.populateFromLast(59, acc);
-		//
-		// }
-		//
 	}
 
 	@Override
@@ -288,8 +256,7 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 		myStatusSvc = theStatusSvc;
 	}
 
-	private <P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> Date doWithStatsByMinute(int theStartMinuteIndex, int theNumberOfMinutes, IWithStats<P, O> theOperator,
-			IStatsPkBuilder<P, O> theBuilder) throws UnexpectedFailureException {
+	private <P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> Date doWithStatsByMinute(int theStartMinuteIndex, int theNumberOfMinutes, IWithStats<P, O> theOperator, IStatsPkBuilder<P, O> theBuilder) throws UnexpectedFailureException {
 		Date start = AdminServiceBean.getDateXMinsAgoTruncatedToMinute(theNumberOfMinutes);
 		Date end = new Date();
 		doWithStatsByMinute(theStartMinuteIndex, theOperator, theBuilder, start, end);
@@ -297,14 +264,12 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 		return start;
 	}
 
-	private <P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> void doWithStatsByMinute(int theStartMinuteIndex, int theMinutes, StatsAccumulator theAccumulator,
-			IWithStats<P, O> operator, IStatsPkBuilder<P, O> builder) throws UnexpectedFailureException {
+	private <P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> void doWithStatsByMinute(int theStartMinuteIndex, int theMinutes, StatsAccumulator theAccumulator, IWithStats<P, O> operator, IStatsPkBuilder<P, O> builder) throws UnexpectedFailureException {
 		Date startTime = doWithStatsByMinute(theStartMinuteIndex, theMinutes, operator, builder);
 		theAccumulator.setFirstDate(startTime);
 	}
 
-	private <P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> void doWithStatsByMinute(int theStartMinuteIndex, IWithStats<P, O> theOperator, IStatsPkBuilder<P, O> thePkBuilder,
-			Date start, Date end) throws UnexpectedFailureException {
+	private <P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> void doWithStatsByMinute(int theStartMinuteIndex, IWithStats<P, O> theOperator, IStatsPkBuilder<P, O> thePkBuilder, Date start, Date end) throws UnexpectedFailureException {
 		PersConfig config = myConfigSvc.getConfig();
 
 		Date date = start;
@@ -324,7 +289,7 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 		}
 	}
 
-	private void extractMinuteStats(BasePersServiceCatalogItem theItem, StatsAccumulator theAccumulator, Date theStartTime, Date endTime) throws UnexpectedFailureException {
+	private void extractMinuteStats(BasePersServiceCatalogItem theItem, StatsAccumulator theAccumulator, Date theStartTime, Date endTime, Map<PersMethod, PersMethodStatus> theMethodToMethodStatus) throws UnexpectedFailureException {
 		CachedStatsKey key = new CachedStatsKey(theItem.getClass(), theItem.getPid());
 
 		StatsAccumulator cachedAccum;
@@ -354,21 +319,29 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 			if (theItem instanceof PersDomain) {
 				childAccum = new StatsAccumulator(startTime, endTime, InvocationStatsIntervalEnum.MINUTE);
 				for (PersService next : ((PersDomain) theItem).getServices()) {
-					extractMinuteStats(next, childAccum, startTime, endTime);
+					extractMinuteStats(next, childAccum, startTime, endTime, theMethodToMethodStatus);
 				}
 			} else if (theItem instanceof PersService) {
 				childAccum = new StatsAccumulator(startTime, endTime, InvocationStatsIntervalEnum.MINUTE);
 				for (BasePersServiceVersion next : ((PersService) theItem).getVersions()) {
-					extractMinuteStats(next, childAccum, startTime, endTime);
+					extractMinuteStats(next, childAccum, startTime, endTime, theMethodToMethodStatus);
 				}
 			} else if (theItem instanceof BasePersServiceVersion) {
 				childAccum = new StatsAccumulator(startTime, endTime, InvocationStatsIntervalEnum.MINUTE);
-				for (PersServiceVersionMethod next : ((BasePersServiceVersion) theItem).getMethods()) {
-					int numMins = (int) ((endTime.getTime() - startTime.getTime()) / DateUtils.MILLIS_PER_MINUTE);
-					IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> operator = new StatsAdderOperator<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats>(
-							childAccum);
+				for (PersMethod next : ((BasePersServiceVersion) theItem).getMethods()) {
+					PersMethodStatus status = theMethodToMethodStatus.get(next);
+					if (status == null) {
+						continue;
+					}
+					if (!status.doesRangeOverlapWithAnyOfMyRanges(startTime, endTime)) {
+						continue;
+					}
+					
+					IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> operator = new StatsAdderOperator<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats>(childAccum);
 					IStatsPkBuilder<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> builder = new MethodBuilder(next);
-					doWithStatsByMinute(0, numMins, childAccum, operator, builder);
+					doWithStatsByMinute(0, operator, builder, startTime, endTime);
+					
+					childAccum.setFirstDate(startTime);
 				}
 			} else {
 				throw new IllegalArgumentException(); // Should not happen..
@@ -383,7 +356,6 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 		cachedAccum.deleteOnOrAfter(provideNoCacheCutoff());
 
 	}
-
 
 	private Date provideNoCacheCutoff() {
 		return DateUtils.truncate(new Date(System.currentTimeMillis() - DateUtils.MILLIS_PER_MINUTE), Calendar.MINUTE);
@@ -550,7 +522,7 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 		}
 
 		private <T extends Number> ArrayList<T> trimFirstNEntries(int theCountToDelete, ArrayList<T> theValues) {
-			return new ArrayList<T>( theValues.subList(theCountToDelete, theValues.size()));
+			return new ArrayList<T>(theValues.subList(theCountToDelete, theValues.size()));
 		}
 
 		private <T extends Number> ArrayList<T> trimLastNEntries(int theCountToDelete, ArrayList<T> theValues) {
@@ -642,15 +614,15 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 			return myHashCode;
 		}
 	}
+
 	private interface IStatsPkBuilder<P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> {
 		Collection<P> createPk(InvocationStatsIntervalEnum theInterval, Date theDate);
 	}
 
-	
 	private final class MethodBuilder implements IStatsPkBuilder<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> {
-		private final PersServiceVersionMethod myMethod;
+		private final PersMethod myMethod;
 
-		private MethodBuilder(PersServiceVersionMethod theMethod) {
+		private MethodBuilder(PersMethod theMethod) {
 			myMethod = theMethod;
 		}
 

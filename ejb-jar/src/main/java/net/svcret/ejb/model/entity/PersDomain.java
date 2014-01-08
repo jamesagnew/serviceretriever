@@ -142,8 +142,8 @@ public class PersDomain extends BasePersServiceCatalogItem {
 		return retVal;
 	}
 
-	public Collection<PersServiceVersionMethod> getAllServiceVersionMethods() {
-		List<PersServiceVersionMethod> retVal = new ArrayList<PersServiceVersionMethod>();
+	public Collection<PersMethod> getAllServiceVersionMethods() {
+		List<PersMethod> retVal = new ArrayList<PersMethod>();
 		for (PersService nextService : getServices()) {
 			retVal.addAll(nextService.getAllServiceVersionMethods());
 		}

@@ -18,7 +18,7 @@ import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersInvocationMethodUserStats;
 import net.svcret.ejb.model.entity.PersInvocationMethodUserStatsPk;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersUser;
 
 import org.junit.Before;
@@ -71,19 +71,19 @@ public class ChartingServiceBeanTest {
 		range.setNoPresetFrom(myFmtSecs.parse("04:00:01"));
 		range.setNoPresetTo(myFmtSecs.parse("14:00:01"));
 		
-		PersServiceVersionMethod m1 = mock(PersServiceVersionMethod.class, new ReturnsDeepStubs());
+		PersMethod m1 = mock(PersMethod.class, new ReturnsDeepStubs());
 		when(m1.getPid()).thenReturn(11L);
 		when(m1.getName()).thenReturn("MethodName123");
 		when(m1.getServiceVersion().getVersionId()).thenReturn("Version1");
 		when(m1.getServiceVersion().getService().getServiceId()).thenReturn("Service1");
 		when(m1.getServiceVersion().getService().getDomain().getDomainId()).thenReturn("Domain1");
-		PersServiceVersionMethod m2 = mock(PersServiceVersionMethod.class, new ReturnsDeepStubs());
+		PersMethod m2 = mock(PersMethod.class, new ReturnsDeepStubs());
 		when(m2.getPid()).thenReturn(21L);
 		when(m2.getName()).thenReturn("MethodName22");
 		when(m2.getServiceVersion().getVersionId()).thenReturn("Version1");
 		when(m2.getServiceVersion().getService().getServiceId()).thenReturn("Service1");
 		when(m2.getServiceVersion().getService().getDomain().getDomainId()).thenReturn("Domain1");
-		PersServiceVersionMethod m3 = mock(PersServiceVersionMethod.class, new ReturnsDeepStubs());
+		PersMethod m3 = mock(PersMethod.class, new ReturnsDeepStubs());
 		when(m3.getPid()).thenReturn(31L);
 		when(m3.getName()).thenReturn("MethodName3");
 		when(m3.getServiceVersion().getVersionId()).thenReturn("Version2");

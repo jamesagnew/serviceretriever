@@ -37,6 +37,7 @@ import net.svcret.admin.client.ui.config.lib.MessageLibraryPanel;
 import net.svcret.admin.client.ui.config.monitor.AddMonitorRulePanel;
 import net.svcret.admin.client.ui.config.monitor.EditMonitorRulePanel;
 import net.svcret.admin.client.ui.config.monitor.MonitorRulesPanel;
+import net.svcret.admin.client.ui.config.monitor.ViewActiveCheckOutcomePanel;
 import net.svcret.admin.client.ui.config.service.AddServicePanel;
 import net.svcret.admin.client.ui.config.service.DeleteServicePanel;
 import net.svcret.admin.client.ui.config.service.EditServicePanel;
@@ -382,6 +383,10 @@ public class NavProcessor {
 		case SRM:
 			argsSplit = args.split("_");
 			panel = new ServiceVersionRecentMessagePanel(Long.parseLong(argsSplit[0]), Boolean.parseBoolean(argsSplit[1]));
+			break;
+		case VAC:
+			argsSplit = args.split("_");
+			panel = new ViewActiveCheckOutcomePanel(Long.parseLong(argsSplit[0]), Long.parseLong(argsSplit[1]), Long.parseLong(argsSplit[2]));
 			break;
 		case AHL:
 			panel = new AuthenticationHostsPanel();
@@ -734,6 +739,10 @@ public class NavProcessor {
 		}
 
 		return retVal.toString();
+	}
+
+	public static String getTokenViewActiveCheckOutcomes(long theRulePid, long theActiveCheckPid, long theUrlPid) {
+		return createArgumentToken(PagesEnum.VAC, theRulePid, theActiveCheckPid, theUrlPid);
 	}
 
 }

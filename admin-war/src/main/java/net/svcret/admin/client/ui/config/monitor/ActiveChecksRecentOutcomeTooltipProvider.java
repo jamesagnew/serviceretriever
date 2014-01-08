@@ -46,7 +46,7 @@ public final class ActiveChecksRecentOutcomeTooltipProvider implements IProvides
 
 		for (int row = 0; row < theObject.getRecentOutcomesForUrl().get(0).getOutcomes().size(); row++) {
 			DtoMonitorRuleActiveCheckOutcome rowModelWhole = theObject.getRecentOutcomesForUrl().get(0).getOutcomes().get(row);
-			grid.setText(row + 1, 0, DateUtil.formatTimeOnly(rowModelWhole.getTimestamp()));
+			grid.setText(row + 1, 0, DateUtil.formatTimeOnly(rowModelWhole.getTransactionTime()));
 			grid.getFlexCellFormatter().addStyleName(row+1, 0, MyResources.CSS.usageTooltipTableDateColumn());
 
 			for (int col = 0; col < theObject.getRecentOutcomesForUrl().size(); col++) {
@@ -54,18 +54,22 @@ public final class ActiveChecksRecentOutcomeTooltipProvider implements IProvides
 				int column = (col*2) + 1;
 
 				String message;
-				if (rowModel.isSuccess()) {
+				if (!rowModel.isFailed()) {
 					message = "Passed";
 				} else {
-					message = rowModel.getFailureMessage();
+					message = rowModel.getFailDescription();
 					if (StringUtil.isBlank(message)) {
 						message = "Failure";
 					}
 				}
 				grid.setText(row + 1, column, message);
-				grid.getFlexCellFormatter().addStyleName(row+1, column, MyResources.CSS.usageTooltipTableValueColumn());
+				if (!rowModel.isFailed()) {
+					grid.getFlexCellFormatter().addStyleName(row+1, column, MyResources.CSS.usageTooltipActiveCheckPassed());
+				} else {
+					grid.getFlexCellFormatter().addStyleName(row+1, column, MyResources.CSS.usageTooltipActiveCheckFailed());
+				}
 
-				grid.setText(row + 1, column+1, rowModel.getLatency() + "ms");
+				grid.setText(row + 1, column+1, rowModel.getTransactionMillis() + "ms");
 				grid.getFlexCellFormatter().addStyleName(row+1, column+1, MyResources.CSS.usageTooltipTableValueColumn());
 
 			}

@@ -15,7 +15,7 @@ import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
-import net.svcret.ejb.ex.UnknownRequestException;
+import net.svcret.ejb.ex.InvalidRequestException;
 import net.svcret.ejb.invoker.BaseServiceInvoker;
 import net.svcret.ejb.invoker.IServiceInvoker;
 import net.svcret.ejb.invoker.soap.InvocationFailedException;
@@ -37,7 +37,7 @@ public class ServiceInvokerVirtual extends BaseServiceInvoker implements IServic
 	}
 
 	@Override
-	public SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition) throws UnknownRequestException, InvocationRequestFailedException,
+	public SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition) throws InvalidRequestException, InvocationRequestFailedException,
 			InvocationFailedException {
 		return determineInvoker(theServiceDefinition).processInvocation(theRequest, determineTarget(theServiceDefinition));
 	}

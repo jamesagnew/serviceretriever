@@ -42,7 +42,7 @@ import net.svcret.ejb.model.entity.PersMonitorRuleActive;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersMonitorRulePassive;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 
 import org.junit.Before;
@@ -50,6 +50,12 @@ import org.junit.Test;
 
 public class MonitorServiceBeanTest extends BaseJpaTest {
 
+	private static final String HTTP_BAR2 = "http://127.0.0.1";
+	private static final String HTTP_FOO2 = "http://127.0.0.2";
+	private static final String HTTP_URL2 = "http://127.0.0.3";
+	private static final String HTTP_URL1 = "http://127.0.0.4";
+	private static final String HTTP_BAR = "http://127.0.0.5";
+	private static final String HTTP_FOO = "http://127.0.0.6";
 	private DaoBean myDao;
 	private IBroadcastSender myBroadcastSender;
 	private ConfigServiceBean myConfigSvc;
@@ -61,7 +67,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 	private MonitorServiceBean mySvc;
 	private DtoServiceVersionSoap11 mySvcVer1G;
 	private BasePersServiceVersion myD1S1V1;
-	private PersServiceVersionMethod myD1S1V1M1;
+	private PersMethod myD1S1V1M1;
 	private PersServiceVersionUrl myD1M1S1U1;
 	private PersServiceVersionUrl myD1M1S1U2;
 	private RuntimeStatusQueryBean myQuerySvc;
@@ -72,7 +78,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 	private DtoServiceVersionSoap11 mySvcVer2G;
 	private BasePersServiceVersion myD1S1V2;
 	@SuppressWarnings("unused")
-	private PersServiceVersionMethod myD1S1V2M1;
+	private PersMethod myD1S1V2M1;
 	@SuppressWarnings("unused")
 	private PersServiceVersionUrl myD1M1S2U1;
 	@SuppressWarnings("unused")
@@ -590,7 +596,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		newEntityManager();
 
 		DtoDomain d1 = myOrchSvc.unitTestMethod_addDomain("asv_did", "asv_did");
-		GService d1s1 = myOrchSvc.addService(d1.getPid(), "asv_sid", "asv_sid", true);
+		GService d1s1 = myOrchSvc.addService(d1.getPid(), new GService("asv_sid", "asv_sid", true));
 		PersHttpClientConfig hcc = myDao.getOrCreateHttpClientConfig("httpclient");
 
 		newEntityManager();
@@ -599,15 +605,15 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		d1s1v1.setActive(true);
 		d1s1v1.setId("ASV_SV1");
 		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation("http://foo");
+		d1s1v1.setWsdlLocation(HTTP_FOO);
 		d1s1v1.setHttpClientConfigPid(hcc.getPid());
 
 		List<GResource> resources = new ArrayList<GResource>();
-		resources.add(new GResource("http://foo", "text/xml", "contents1"));
-		resources.add(new GResource("http://bar", "text/xml", "contents2"));
+		resources.add(new GResource(HTTP_FOO, "text/xml", "contents1"));
+		resources.add(new GResource(HTTP_BAR, "text/xml", "contents2"));
 
-		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", "http://url1"));
-		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", "http://url2"));
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", HTTP_URL1));
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", HTTP_URL2));
 
 		d1s1v1.getMethodList().add(new GServiceMethod("methodName"));
 
@@ -619,15 +625,15 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		d1s2v1.setActive(true);
 		d1s2v1.setId("ASV_SV2");
 		d1s2v1.setName("ASV_SV2_Name");
-		d1s2v1.setWsdlLocation("http://foo2");
+		d1s2v1.setWsdlLocation(HTTP_FOO2);
 		d1s2v1.setHttpClientConfigPid(hcc.getPid());
 
 		List<GResource> resources2 = new ArrayList<GResource>();
-		resources2.add(new GResource("http://foo2", "text/xml", "contents1"));
-		resources2.add(new GResource("http://bar2", "text/xml", "contents2"));
+		resources2.add(new GResource(HTTP_FOO2, "text/xml", "contents1"));
+		resources2.add(new GResource(HTTP_BAR2, "text/xml", "contents2"));
 
-		d1s2v1.getUrlList().add(new GServiceVersionUrl("url1", "http://url1"));
-		d1s2v1.getUrlList().add(new GServiceVersionUrl("url2", "http://url2"));
+		d1s2v1.getUrlList().add(new GServiceVersionUrl("url1", HTTP_URL1));
+		d1s2v1.getUrlList().add(new GServiceVersionUrl("url2", HTTP_URL2));
 
 		d1s2v1.getMethodList().add(new GServiceMethod("methodName"));
 

@@ -17,6 +17,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
@@ -31,7 +32,7 @@ import org.apache.commons.lang3.Validate;
 
 @Table(name = "PX_SVC_VER_METHOD")
 @Entity
-public class PersServiceVersionMethod extends BasePersObject {
+public class PersMethod extends BasePersObject {
 
 	private static final long serialVersionUID = 1L;
 
@@ -56,6 +57,9 @@ public class PersServiceVersionMethod extends BasePersObject {
 	@Enumerated(EnumType.STRING)
 	private MethodSecurityPolicyEnum mySecurityPolicy=MethodSecurityPolicyEnum.getDefault();
 
+	@OneToOne(cascade={CascadeType.REMOVE}, fetch=FetchType.LAZY, orphanRemoval=true, mappedBy="myPk.myMethod")
+	private PersMethodStatus myStatus;
+	
 	@ManyToOne()
 	@JoinColumn(name = "SVC_VERSION_PID", referencedColumnName = "PID", nullable = false)
 	private BasePersServiceVersion myServiceVersion;
@@ -76,14 +80,14 @@ public class PersServiceVersionMethod extends BasePersObject {
 	/**
 	 * Constructor
 	 */
-	public PersServiceVersionMethod() {
+	public PersMethod() {
 		super();
 	}
 
 	/**
 	 * Constructor
 	 */
-	public PersServiceVersionMethod(long thePid, BasePersServiceVersion theServiceVersion, String theMethodName) {
+	public PersMethod(long thePid, BasePersServiceVersion theServiceVersion, String theMethodName) {
 		setPid(thePid);
 		setServiceVersion(theServiceVersion);
 		setName(theMethodName);
@@ -147,7 +151,7 @@ public class PersServiceVersionMethod extends BasePersObject {
 		}
 	}
 
-	public void merge(PersServiceVersionMethod theObj) {
+	public void merge(PersMethod theObj) {
 		setName(theObj.getName());
 		setRootElements(theObj.getRootElements());
 	}

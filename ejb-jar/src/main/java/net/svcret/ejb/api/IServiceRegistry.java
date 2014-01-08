@@ -13,7 +13,7 @@ import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersService;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
 
@@ -72,7 +72,7 @@ public interface IServiceRegistry {
 
 	BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, ServiceProtocolEnum theProtocol, String theVersionId, PersServiceVersionVirtual theSvcVerToUseIfCreatingNew) throws UnexpectedFailureException;
 
-	PersServiceVersionMethod getOrCreateUnknownMethodEntryForServiceVersion(BasePersServiceVersion theServiceVersion) throws InvocationFailedDueToInternalErrorException;
+	PersMethod getOrCreateUnknownMethodEntryForServiceVersion(BasePersServiceVersion theServiceVersion) throws InvocationFailedDueToInternalErrorException;
 
 	void deleteServiceVersion(long thePid) throws ProcessingException, UnexpectedFailureException;
 

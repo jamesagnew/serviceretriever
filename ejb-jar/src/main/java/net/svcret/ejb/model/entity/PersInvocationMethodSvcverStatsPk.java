@@ -20,7 +20,7 @@ public class PersInvocationMethodSvcverStatsPk extends BasePersInvocationMethodS
 	}
 
 
-	public PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum theInterval, Date theStartTime, PersServiceVersionMethod theMethod) {
+	public PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum theInterval, Date theStartTime, PersMethod theMethod) {
 		super(theInterval, theStartTime, theMethod.getPid());
 	}
 
@@ -28,7 +28,7 @@ public class PersInvocationMethodSvcverStatsPk extends BasePersInvocationMethodS
 		super(theInterval, new Date(theStartTime), theMethodPid);
 	}
 
-	public PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum theInterval, long theStartTime, PersServiceVersionMethod theMethod) {
+	public PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum theInterval, long theStartTime, PersMethod theMethod) {
 		super(theInterval, new Date(theStartTime), theMethod.getPid());
 	}
 

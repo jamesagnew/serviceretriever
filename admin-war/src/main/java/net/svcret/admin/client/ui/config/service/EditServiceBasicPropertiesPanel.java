@@ -1,5 +1,6 @@
 package net.svcret.admin.client.ui.config.service;
 
+import net.svcret.admin.client.ui.components.EditableField;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
@@ -10,16 +11,19 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.HasValue;
 import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.Widget;
 
 public class EditServiceBasicPropertiesPanel extends FlowPanel {
 
-	private TextBox myIdTextBox;
-	private TextBox myNameTextBox;
+	private HasValue<String> myIdTextBox;
+	private HasValue<String> myNameTextBox;
 	private LoadingSpinner mySpinner;
 	private GService myService;
+	private HasValue<String> myDescriptionTextBox;
 
-	public EditServiceBasicPropertiesPanel(final GService theService, String theButtonText, ClickHandler theButtonHandler, ImageResource theButtonIcon) {
+	public EditServiceBasicPropertiesPanel(final GService theService, String theButtonText, ClickHandler theButtonHandler, ImageResource theButtonIcon, boolean theNewService) {
 		myService = theService;
 
 		TwoColumnGrid formGrid = new TwoColumnGrid();
@@ -28,16 +32,23 @@ public class EditServiceBasicPropertiesPanel extends FlowPanel {
 		/*
 		 * Id
 		 */
-		myIdTextBox = new TextBox();
+		myIdTextBox = theNewService ? new TextBox() : new EditableField();
 		myIdTextBox.setValue(theService.getId());
-		formGrid.addRow("ID", myIdTextBox);
+		formGrid.addRow("ID", (Widget)myIdTextBox);
 
 		/*
 		 * Name
 		 */
-		myNameTextBox = new TextBox();
+		myNameTextBox = theNewService ? new TextBox() : new EditableField();
 		myNameTextBox.setValue(theService.getName());
-		formGrid.addRow("Name", myNameTextBox);
+		formGrid.addRow("Name", (Widget)myNameTextBox);
+
+		/*
+		 * Name
+		 */
+		myDescriptionTextBox = theNewService ? new TextBox() : new EditableField();
+		myDescriptionTextBox.setValue(theService.getDescription());
+		formGrid.addRow("Description", (Widget)myDescriptionTextBox);
 
 		mySpinner = new LoadingSpinner();
 		mySpinner.hideCompletely();
@@ -60,12 +71,12 @@ public class EditServiceBasicPropertiesPanel extends FlowPanel {
 
 		String name = myNameTextBox.getValue();
 		if (StringUtil.isBlank(name)) {
-			showError("You must supply a name");
-			return false;
+			name = id;
 		}
 
 		myService.setName(myNameTextBox.getValue());
 		myService.setId(myIdTextBox.getValue());
+		myService.setDescription(myDescriptionTextBox.getValue());
 
 		return true;
 	}

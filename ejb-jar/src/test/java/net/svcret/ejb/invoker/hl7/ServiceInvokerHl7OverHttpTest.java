@@ -15,7 +15,7 @@ import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.RequestType;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp;
 
 import org.junit.Before;
@@ -65,7 +65,7 @@ public class ServiceInvokerHl7OverHttpTest {
 
 		
 		verify(myServiceRegistry).saveServiceVersion(eq(dbSvcVer));
-		PersServiceVersionMethod method = dbSvcVer.getMethod("ADT");
+		PersMethod method = dbSvcVer.getMethod("ADT");
 		assertNotNull(method);
 		assertSame(method, result.getMethodDefinition());
 	}

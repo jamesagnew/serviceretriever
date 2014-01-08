@@ -28,7 +28,7 @@ public class PersUserServiceVersionMethodPermission extends BasePersObject {
 	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
 	@JoinColumn(name = "SVCVER_METHOD_PID", referencedColumnName = "PID", nullable = false)
 	@ForeignKey(name="FK_UPSM_METHOD")
-	private PersServiceVersionMethod myServiceVersionMethod;
+	private PersMethod myServiceVersionMethod;
 
 	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
 	@JoinColumn(name = "USER_PERM_SVCVER_PID", referencedColumnName = "PID", nullable = false)
@@ -45,7 +45,7 @@ public class PersUserServiceVersionMethodPermission extends BasePersObject {
 	/**
 	 * @return the serviceDomain
 	 */
-	public PersServiceVersionMethod getServiceVersionMethod() {
+	public PersMethod getServiceVersionMethod() {
 		return myServiceVersionMethod;
 	}
 
@@ -68,7 +68,7 @@ public class PersUserServiceVersionMethodPermission extends BasePersObject {
 	 * @param theServiceVersionMethod
 	 *            the serviceDomain to set
 	 */
-	public void setServiceVersionMethod(PersServiceVersionMethod theServiceVersionMethod) {
+	public void setServiceVersionMethod(PersMethod theServiceVersionMethod) {
 		myServiceVersionMethod = theServiceVersionMethod;
 	}
 

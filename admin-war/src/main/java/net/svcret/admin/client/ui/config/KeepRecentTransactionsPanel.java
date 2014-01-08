@@ -51,7 +51,7 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 		{
 			mySuccessTextbox = new IntegerBox();
 			mySuccessTextbox.setValue(theKeepsRecentTransactions.getKeepNumRecentTransactionsSuccess());
-			myGrid.addRow(MSGS.keepRecentTransactionsPanel_OutcomeSuccess(), mySuccessTextbox);
+			myGrid.addRow(MSGS.generic_OutcomeSuccess(), mySuccessTextbox);
 			myGrid.addDescriptionToRight(MSGS.keepRecentTransactionsPanel_OutcomeSuccessDesc(), descRows);
 			if (canInherit) {
 				Integer inherited = theKeepsRecentTransactions.getInheritedKeepNumRecentTransactionsSuccess();
@@ -63,7 +63,7 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 		{
 			myFaultTextbox = new IntegerBox();
 			myFaultTextbox.setValue(theKeepsRecentTransactions.getKeepNumRecentTransactionsFault());
-			myGrid.addRow(MSGS.keepRecentTransactionsPanel_OutcomeFault(), myFaultTextbox);
+			myGrid.addRow(MSGS.generic_OutcomeFault(), myFaultTextbox);
 			myGrid.addDescriptionToRight(MSGS.keepRecentTransactionsPanel_OutcomeFaultDesc(), descRows);
 			if (canInherit) {
 				Integer inherited = theKeepsRecentTransactions.getInheritedKeepNumRecentTransactionsFault();
@@ -75,7 +75,7 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 		{
 			myFailTextbox = new IntegerBox();
 			myFailTextbox.setValue(theKeepsRecentTransactions.getKeepNumRecentTransactionsFail());
-			myGrid.addRow(MSGS.keepRecentTransactionsPanel_OutcomeFail(), myFailTextbox);
+			myGrid.addRow(MSGS.generic_OutcomeFail(), myFailTextbox);
 			myGrid.addDescriptionToRight(MSGS.keepRecentTransactionsPanel_OutcomeFailDesc(), descRows);
 			if (canInherit) {
 				Integer inherited = theKeepsRecentTransactions.getInheritedKeepNumRecentTransactionsFail();
@@ -87,7 +87,7 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 		{
 			mySecurityFailTextbox = new IntegerBox();
 			mySecurityFailTextbox.setValue(theKeepsRecentTransactions.getKeepNumRecentTransactionsSecurityFail());
-			myGrid.addRow(MSGS.keepRecentTransactionsPanel_OutcomeSecurityFail(), mySecurityFailTextbox);
+			myGrid.addRow(MSGS.generic_OutcomeSecurityFail(), mySecurityFailTextbox);
 			myGrid.addDescriptionToRight(MSGS.keepRecentTransactionsPanel_OutcomeSecurityFailDesc(), descRows);
 			if (canInherit) {
 				Integer inherited = theKeepsRecentTransactions.getInheritedKeepNumRecentTransactionsSecurityFail();

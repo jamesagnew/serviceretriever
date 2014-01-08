@@ -23,13 +23,13 @@ import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.ejb.HttpClientBean.ClientConfigException;
 import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnknownRequestException;
+import net.svcret.ejb.ex.InvalidRequestException;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersService;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
@@ -271,7 +271,7 @@ public class ServiceInvokerSoap11Test {
 			svc.processInvocation(req, serviceVer);
 
 			fail();
-		} catch (UnknownRequestException e) {
+		} catch (InvalidRequestException e) {
 			// good!
 		}
 
@@ -300,7 +300,7 @@ public class ServiceInvokerSoap11Test {
 		
 		PersServiceVersionSoap11 serviceVer = mock(PersServiceVersionSoap11.class);
 		PersService service = mock(PersService.class);
-		PersServiceVersionMethod method = mock(PersServiceVersionMethod.class);
+		PersMethod method = mock(PersMethod.class);
 		when(serviceVer.getMethodForRootElementName("http://ws.ehr.uhn.ca:getPatientByMrn")).thenReturn(method);
 		when(serviceVer.getClientAuths()).thenReturn(clientAuths);
 		when(serviceVer.getServerAuths()).thenReturn(serverAuths);

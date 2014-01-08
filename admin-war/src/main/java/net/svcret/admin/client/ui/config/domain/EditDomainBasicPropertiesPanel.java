@@ -22,6 +22,7 @@ public class EditDomainBasicPropertiesPanel extends FlowPanel {
 	private LoadingSpinner mySpinner;
 //	private KeepRecentTransactionsPanel myKeepRecentTransactionsPanel;
 	private DtoDomain myDomain;
+	private HasValue<String> myDescriptionTextBox;
 
 	public EditDomainBasicPropertiesPanel(final DtoDomain theDomain, String theButtonText, ClickHandler theButtonHandler, ImageResource theButtonIcon, boolean theNewDomain) {
 		myDomain = theDomain;
@@ -41,7 +42,14 @@ public class EditDomainBasicPropertiesPanel extends FlowPanel {
 		 */
 		myNameTextBox = theNewDomain ? new TextBox() : new EditableField();
 		myNameTextBox.setValue(theDomain.getName());
-		formGrid.addRow("Name",(Widget)myNameTextBox);
+		formGrid.addRow("Name", (Widget)myNameTextBox);
+
+		/*
+		 * Name
+		 */
+		myDescriptionTextBox = theNewDomain ? new TextBox() : new EditableField();
+		myDescriptionTextBox.setValue(theDomain.getDescription());
+		formGrid.addRow("Description", (Widget)myDescriptionTextBox);
 
 		mySpinner = new LoadingSpinner();
 		mySpinner.hideCompletely();
@@ -70,12 +78,13 @@ public class EditDomainBasicPropertiesPanel extends FlowPanel {
 
 		String name = myNameTextBox.getValue();
 		if (StringUtil.isBlank(name)) {
-			showError("You must supply a name");
-			return false;
+			name = id;
 		}
 
 		myDomain.setId(myIdTextBox.getValue());
 		myDomain.setName(myNameTextBox.getValue());
+		myDomain.setDescription(myDescriptionTextBox.getValue());
+		
 //		myKeepRecentTransactionsPanel.populateDto(myDomain);
 
 		return true;

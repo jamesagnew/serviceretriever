@@ -108,7 +108,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("METHOD_ORDER")
-	private List<PersServiceVersionMethod> myMethods;
+	private List<PersMethod> myMethods;
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myPk.myServiceVersion")
 	@OrderBy("CAPTURE_ORDER")
@@ -121,7 +121,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	private PersServiceVersionThrottle myThrottle;
 
 	@Transient
-	private transient volatile Map<String, PersServiceVersionMethod> myNameToMethod;
+	private transient volatile Map<String, PersMethod> myNameToMethod;
 
 	@Version()
 	@Column(name = "OPTLOCK")
@@ -139,7 +139,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	private List<PersServiceVersionRecentMessage> myRecentMessages;
 
 	@Transient
-	private transient volatile HashMap<String, PersServiceVersionMethod> myRootElementNameToMethod;
+	private transient volatile HashMap<String, PersMethod> myRootElementNameToMethod;
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "myServiceVersion")
 	@OrderBy("SAUTH_ORDER")
@@ -198,7 +198,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		myClientAuths.add(theAuth);
 	}
 
-	public void addMethod(PersServiceVersionMethod method) {
+	public void addMethod(PersMethod method) {
 		getMethods();
 		myMethods.add(method);
 
@@ -362,15 +362,15 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		return myHttpClientConfig;
 	}
 
-	public PersServiceVersionMethod getMethod(String theName) {
+	public PersMethod getMethod(String theName) {
 		/*
 		 * We avoid synchronization here at the expense of the small chance
 		 * we'll create the nameToMethod map more than once..
 		 */
 
 		if (myNameToMethod == null) {
-			HashMap<String, PersServiceVersionMethod> nameToMethod = new HashMap<String, PersServiceVersionMethod>();
-			for (PersServiceVersionMethod next : getMethods()) {
+			HashMap<String, PersMethod> nameToMethod = new HashMap<String, PersMethod>();
+			for (PersMethod next : getMethods()) {
 				nameToMethod.put(next.getName(), next);
 			}
 			myNameToMethod = nameToMethod;
@@ -380,15 +380,15 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		return myNameToMethod.get(theName);
 	}
 
-	public PersServiceVersionMethod getMethodForRootElementName(String theName) {
+	public PersMethod getMethodForRootElementName(String theName) {
 		/*
 		 * We avoid synchronization here at the expense of the small chance
 		 * we'll create the nameToMethod map more than once..
 		 */
 
 		if (myRootElementNameToMethod == null) {
-			HashMap<String, PersServiceVersionMethod> nameToMethod = new HashMap<String, PersServiceVersionMethod>();
-			for (PersServiceVersionMethod next : getMethods()) {
+			HashMap<String, PersMethod> nameToMethod = new HashMap<String, PersMethod>();
+			for (PersMethod next : getMethods()) {
 				nameToMethod.put(next.getRootElements(), next);
 			}
 			myRootElementNameToMethod = nameToMethod;
@@ -400,7 +400,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 
 	public List<String> getMethodNames() {
 		ArrayList<String> retVal = new ArrayList<String>();
-		for (PersServiceVersionMethod nextMethod : getMethods()) {
+		for (PersMethod nextMethod : getMethods()) {
 			retVal.add(nextMethod.getName());
 		}
 		Collections.sort(retVal);
@@ -410,9 +410,9 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	/**
 	 * @return the methods
 	 */
-	public List<PersServiceVersionMethod> getMethods() {
+	public List<PersMethod> getMethods() {
 		if (myMethods == null) {
-			myMethods = new ArrayList<PersServiceVersionMethod>();
+			myMethods = new ArrayList<PersMethod>();
 		}
 
 		return Collections.unmodifiableList(myMethods);
@@ -432,16 +432,16 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		return myOptLock;
 	}
 
-	public PersServiceVersionMethod getOrCreateAndAddMethodWithName(String theName) {
-		List<PersServiceVersionMethod> methods = getMethods();
-		for (PersServiceVersionMethod next : methods) {
+	public PersMethod getOrCreateAndAddMethodWithName(String theName) {
+		List<PersMethod> methods = getMethods();
+		for (PersMethod next : methods) {
 			String name = next.getName();
 			if (name.equals(theName)) {
 				return next;
 			}
 		}
 
-		PersServiceVersionMethod method = new PersServiceVersionMethod();
+		PersMethod method = new PersMethod();
 		method.setName(theName);
 		method.setServiceVersion(this);
 
@@ -656,7 +656,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 			next.loadAllAssociations();
 		}
 
-		for (PersServiceVersionMethod next : getMethods()) {
+		for (PersMethod next : getMethods()) {
 			next.loadAllAssociations();
 		}
 
@@ -745,7 +745,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		// nothing
 	}
 
-	public void putMethodAtIndex(PersServiceVersionMethod theMethod, int theIndex) {
+	public void putMethodAtIndex(PersMethod theMethod, int theIndex) {
 		getMethods();
 
 		if (!myMethods.contains(theMethod)) {
@@ -790,8 +790,8 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		getMethods();
 
 		HashSet<String> ids = new HashSet<String>(theIds);
-		for (Iterator<PersServiceVersionMethod> iter = myMethods.iterator(); iter.hasNext();) {
-			PersServiceVersionMethod next = iter.next();
+		for (Iterator<PersMethod> iter = myMethods.iterator(); iter.hasNext();) {
+			PersMethod next = iter.next();
 			if (!BaseDtoServiceVersion.METHOD_NAME_UNKNOWN.equals(next.getName()) && !ids.contains(next.getName())) {
 				ourLog.info("Removing Method with ID[{}] and NAME[{}] from Service Version with ID[{}/{}]", new Object[] { next.getPid(), next.getName(), getPid(), getVersionId() });
 				iter.remove();
@@ -944,7 +944,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		populateServiceCatalogItemToDto(retVal);
 		populateDtoWithMonitorRules(retVal);
 
-		for (PersServiceVersionMethod nextMethod : this.getMethods()) {
+		for (PersMethod nextMethod : this.getMethods()) {
 			if (!BaseDtoServiceVersion.METHOD_NAME_UNKNOWN.equals(nextMethod.getName())) {
 				boolean loadStats = theLoadMethodStats != null && theLoadMethodStats.contains(nextMethod.getPid());
 				GServiceMethod gMethod = nextMethod.toDto(loadStats, theQuerySvc);

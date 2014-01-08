@@ -32,7 +32,7 @@ import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersService;
-import net.svcret.ejb.model.entity.PersServiceVersionMethod;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.ejb.model.entity.PersUser;
@@ -225,8 +225,8 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	}
 
 	@Override
-	public PersServiceVersionMethod getOrCreateUnknownMethodEntryForServiceVersion(BasePersServiceVersion theServiceVersion) throws InvocationFailedDueToInternalErrorException {
-		PersServiceVersionMethod method = theServiceVersion.getMethod(BaseDtoServiceVersion.METHOD_NAME_UNKNOWN);
+	public PersMethod getOrCreateUnknownMethodEntryForServiceVersion(BasePersServiceVersion theServiceVersion) throws InvocationFailedDueToInternalErrorException {
+		PersMethod method = theServiceVersion.getMethod(BaseDtoServiceVersion.METHOD_NAME_UNKNOWN);
 		if (method == null) {
 			ourLog.info("Creating 'unknown' method for service version {} to store statistics against", theServiceVersion.getPid());
 			BasePersServiceVersion dbSvcVer = myDao.getServiceVersionByPid(theServiceVersion.getPid());

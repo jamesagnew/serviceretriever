@@ -16,7 +16,7 @@ import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestOrResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
-import net.svcret.ejb.ex.UnknownRequestException;
+import net.svcret.ejb.ex.InvalidRequestException;
 import net.svcret.ejb.invoker.IServiceInvoker;
 import net.svcret.ejb.invoker.soap.InvocationFailedException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -39,14 +39,14 @@ public interface IServiceOrchestrator {
 	/**
 	 * Process a normal request
 	 */
-	SrBeanOutgoingResponse handleServiceRequest(SrBeanIncomingRequest theRequest) throws UnknownRequestException, ProcessingException, IOException, SecurityFailureException, ThrottleException,
+	SrBeanOutgoingResponse handleServiceRequest(SrBeanIncomingRequest theRequest) throws InvalidRequestException, ProcessingException, IOException, SecurityFailureException, ThrottleException,
 			ThrottleQueueFullException, InvocationRequestOrResponseFailedException, InvocationFailedDueToInternalErrorException;
 
 	/**
 	 * Process a request invoked through a means other than the proxy itself (e.g. monitoring, management console, etc.)
 	 * @throws InvocationFailedException 
 	 */
-	SidechannelOrchestratorResponseBean handleSidechannelRequest(long theServiceVersionPid, String theRequestBody, String theContentType, String theRequestedByString) throws UnknownRequestException, InvocationFailedException;
+	SidechannelOrchestratorResponseBean handleSidechannelRequest(long theServiceVersionPid, String theRequestBody, String theContentType, String theRequestedByString) throws InvalidRequestException, InvocationFailedException;
 
 	Collection<SidechannelOrchestratorResponseBean> handleSidechannelRequestForEachUrl(long theServiceVersionPid, String theRequestBody, String theContentType, String theRequestedByString);
 
