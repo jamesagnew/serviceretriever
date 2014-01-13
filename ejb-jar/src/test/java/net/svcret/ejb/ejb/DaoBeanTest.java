@@ -315,8 +315,8 @@ public class DaoBeanTest extends BaseJpaTest {
 			msg.setUser(user);
 			msg.setServiceVersion(ver);
 			msg.setResponseType(ResponseTypeEnum.FAULT);
-			msg.setRequestBody("req" + i, myConfig);
-			msg.setResponseBody("resp" + i, myConfig);
+			msg.setRequestBodyForUnitTest("req" + i, myConfig);
+			msg.setResponseBodyForUnitTest("resp" + i, myConfig);
 			msg.setRequestHostIp("127.0.0.1");
 			msg.setImplementationUrl(url);
 			msg.setTransactionTime(new Date(System.currentTimeMillis() + (1000 * i)));
@@ -340,8 +340,8 @@ public class DaoBeanTest extends BaseJpaTest {
 			msg.setUser(user);
 			msg.setServiceVersion(ver);
 			msg.setResponseType(ResponseTypeEnum.FAULT);
-			msg.setRequestBody("req" + i, myConfig);
-			msg.setResponseBody("resp" + i, myConfig);
+			msg.setRequestBodyForUnitTest("req" + i, myConfig);
+			msg.setResponseBodyForUnitTest("resp" + i, myConfig);
 			msg.setRequestHostIp("127.0.0.1");
 			msg.setImplementationUrl(url);
 			msg.setTransactionTime(new Date(System.currentTimeMillis() + (1000 * i)));
@@ -401,8 +401,8 @@ public class DaoBeanTest extends BaseJpaTest {
 			PersServiceVersionRecentMessage msg = new PersServiceVersionRecentMessage();
 			msg.setServiceVersion(ver);
 			msg.setResponseType(ResponseTypeEnum.FAULT);
-			msg.setRequestBody("req" + i, myConfig);
-			msg.setResponseBody("resp" + i, myConfig);
+			msg.setRequestBodyForUnitTest("req" + i, myConfig);
+			msg.setResponseBodyForUnitTest("resp" + i, myConfig);
 			msg.setRequestHostIp("127.0.0.1");
 			msg.setImplementationUrl(url);
 			msg.setTransactionTime(new Date(System.currentTimeMillis() + (1000 * i)));
@@ -425,8 +425,8 @@ public class DaoBeanTest extends BaseJpaTest {
 			PersServiceVersionRecentMessage msg = new PersServiceVersionRecentMessage();
 			msg.setServiceVersion(ver);
 			msg.setResponseType(ResponseTypeEnum.FAULT);
-			msg.setRequestBody("req" + i, myConfig);
-			msg.setResponseBody("resp" + i, myConfig);
+			msg.setRequestBodyForUnitTest("req" + i, myConfig);
+			msg.setResponseBodyForUnitTest("resp" + i, myConfig);
 			msg.setRequestHostIp("127.0.0.1");
 			msg.setImplementationUrl(url);
 			msg.setMethod(method);

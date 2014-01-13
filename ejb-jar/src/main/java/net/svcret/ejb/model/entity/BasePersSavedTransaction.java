@@ -234,11 +234,21 @@ public abstract class BasePersSavedTransaction implements Serializable {
 		myPid = thePid;
 	}
 
+	@VisibleForTesting
+	public void setRequestBodyForUnitTest(String theRequestBody, PersConfig theConfig) {
+		setRequestBody(theRequestBody, theConfig);
+	}
+
+	@VisibleForTesting
+	public void setResponseBodyForUnitTest(String theResponseBody, PersConfig theConfig) {
+		setResponseBody(theResponseBody, theConfig);
+	}
+
 	/**
 	 * @param theRequestBody
 	 *            the requestBody to set
 	 */
-	private void setRequestBody(String theRequestBody, PersConfig theConfig) {
+	void setRequestBody(String theRequestBody, PersConfig theConfig) {
 		if (theRequestBody != null) {
 			String requestBody = BasePersObject.trimClobForUnitTest(theRequestBody);
 			;
@@ -262,7 +272,7 @@ public abstract class BasePersSavedTransaction implements Serializable {
 	 * @param theResponseBody
 	 *            the responseBody to set
 	 */
-	private void setResponseBody(String theResponseBody, PersConfig theConfig) {
+	void setResponseBody(String theResponseBody, PersConfig theConfig) {
 		if (theResponseBody != null) {
 			String responseBody = BasePersObject.trimClobForUnitTest(theResponseBody);
 			if (theConfig.getTruncateRecentDatabaseTransactionsToBytes() != null) {

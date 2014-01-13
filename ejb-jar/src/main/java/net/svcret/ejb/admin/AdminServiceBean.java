@@ -1730,10 +1730,10 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			SidechannelOrchestratorResponseBean response = myOrchestrator.handleSidechannelRequest(thePid, theMessageText, theContentType, theRequestedByString);
 
 			retVal.setAuthorizationOutcome(AuthorizationOutcomeEnum.AUTHORIZED);
-			if (response.getHttpResponse().getSuccessfulUrl() != null) {
-				retVal.setImplementationUrlHref(response.getHttpResponse().getSuccessfulUrl().getUrl());
-				retVal.setImplementationUrlId(response.getHttpResponse().getSuccessfulUrl().getUrlId());
-				retVal.setImplementationUrlPid(response.getHttpResponse().getSuccessfulUrl().getPid());
+			if (response.getIncomingResponse().getSuccessfulUrl() != null) {
+				retVal.setImplementationUrlHref(response.getIncomingResponse().getSuccessfulUrl().getUrl());
+				retVal.setImplementationUrlId(response.getIncomingResponse().getSuccessfulUrl().getUrlId());
+				retVal.setImplementationUrlPid(response.getIncomingResponse().getSuccessfulUrl().getPid());
 			}
 
 			List<Pair<String>> requestHeaders = new ArrayList<Pair<String>>();
@@ -1744,9 +1744,9 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 			retVal.setRequestMessage(theMessageText);
 			retVal.setResponseContentType(response.getResponseContentType());
-			retVal.setResponseHeaders(response.getHttpResponse().getResponseHeadersAsPairList());
+			retVal.setResponseHeaders(response.getIncomingResponse().getResponseHeadersAsPairList());
 			retVal.setResponseMessage(response.getResponseBody());
-			retVal.setTransactionMillis(response.getHttpResponse().getResponseTime());
+			retVal.setTransactionMillis(response.getIncomingResponse().getResponseTime());
 			retVal.setTransactionTime(transactionTime);
 
 		} catch (InvalidRequestException e) {
