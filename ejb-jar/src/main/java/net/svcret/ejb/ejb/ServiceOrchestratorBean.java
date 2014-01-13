@@ -254,8 +254,8 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 				}
 			}
 
-			myTransactionLogger.logTransaction(theRequest, results.getServiceVersion(), null, theUserIfKnown, requestBody, theInvocationFailure.toInvocationResponse(), theInvocationFailure.getImplementationUrl(),
-					theInvocationFailure.getHttpResponse(), null, responseBody, results);
+			myTransactionLogger.logTransaction(theRequest, theUserIfKnown, theInvocationFailure.toInvocationResponse(), theInvocationFailure.getImplementationUrl(),
+					theInvocationFailure.getHttpResponse(), null, results);
 		} catch (UnexpectedFailureException e1) {
 			// Don't do anything except log here since we're already handling a failure by the
 			// time we get here so this is pretty much the last resort..
@@ -316,33 +316,23 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		request.setRequestType(RequestType.POST); // TODO this should be configurable, maybe method specific or something?
 		AuthorizationResultsBean authorized = null;
 
-		SrBeanProcessedRequest results;
-		results = processInvokeService(request, svcVer);
-
-		SidechannelOrchestratorResponseBean retVal;
-		retVal = processRequestMethod(request, results, authorized, false, theForceUrl, new Date());
+		SrBeanProcessedRequest results = processInvokeService(request, svcVer);
+		SidechannelOrchestratorResponseBean retVal = processRequestMethod(request, results, authorized, false, theForceUrl);
+		retVal.setSimulatedIncomingRequest(request);
+		retVal.setSimulatedProcessedRequest(results);
 		
 		return retVal;
 	}
 
-	private void logTransaction(SrBeanIncomingRequest theRequest, PersMethod method, AuthorizationResultsBean authorized, SrBeanIncomingResponse httpResponse,
-			SrBeanProcessedResponse invocationResponse, SrBeanProcessedRequest theInvocationResults) throws InvocationFailedDueToInternalErrorException {
+	private void logTransaction(SrBeanIncomingRequest theIncomingRequest, PersMethod method, AuthorizationResultsBean authorized, SrBeanIncomingResponse httpResponse,
+			SrBeanProcessedResponse theProcessedResponse, SrBeanProcessedRequest theProcessedRequest) throws InvocationFailedDueToInternalErrorException {
 		PersUser user = authorized.getAuthorizedUser();
-
-		String requestBody = theRequest.getRequestBody();
-		String responseBody = invocationResponse.getResponseBody();
-
-		// Obscure
-		BasePersServiceVersion svcVer = method.getServiceVersion();
-		IServiceInvoker svcInvoker = getServiceInvoker(svcVer);
-		requestBody = svcInvoker.obscureMessageForLogs(svcVer, requestBody, method.getServiceVersion().determineObscureRequestElements());
-		responseBody = svcInvoker.obscureMessageForLogs(svcVer, responseBody, method.getServiceVersion().determineObscureResponseElements());
-
+		
 		// Log
 		PersServiceVersionUrl successfulUrl = httpResponse != null ? httpResponse.getSuccessfulUrl() : null;
 		AuthorizationOutcomeEnum authorizationOutcome = authorized.isAuthorized();
 		try {
-			myTransactionLogger.logTransaction(theRequest, method.getServiceVersion(), method, user, requestBody, invocationResponse, successfulUrl, httpResponse, authorizationOutcome, responseBody, theInvocationResults);
+			myTransactionLogger.logTransaction(theIncomingRequest, user, theProcessedResponse, successfulUrl, httpResponse, authorizationOutcome, theProcessedRequest);
 		} catch (ProcessingException e) {
 			throw new InvocationFailedDueToInternalErrorException(e);
 		} catch (UnexpectedFailureException e) {
@@ -379,7 +369,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		case METHOD:
 			PersUser user = theAuthorized != null ? theAuthorized.getAuthorizedUser() : null;
 			try {
-				retVal = processRequestMethod(theRequest, results, theAuthorized, true, null, theRequest.getRequestTime());
+				retVal = processRequestMethod(theRequest, results, theAuthorized, true, null);
 			} catch (InvocationResponseFailedException e) {
 				handleInvocationFailure(theRequest, results, e, user, ResponseTypeEnum.FAIL);
 				throw new ProcessingException(e);
@@ -461,14 +451,13 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		return svcInvoker;
 	}
 
-	private SidechannelOrchestratorResponseBean processRequestMethod(SrBeanIncomingRequest theRequest, SrBeanProcessedRequest results, AuthorizationResultsBean authorized, 
-			boolean theRecordOutcome, PersServiceVersionUrl theForceUrl, Date theRequestStartedTime) throws InvocationResponseFailedException, InvocationFailedDueToInternalErrorException {
-		SidechannelOrchestratorResponseBean retVal;
-		PersMethod method = results.getMethodDefinition();
+	private SidechannelOrchestratorResponseBean processRequestMethod(SrBeanIncomingRequest theIncomingRequest, SrBeanProcessedRequest theProcessedRequest, AuthorizationResultsBean authorized, 
+			boolean theRecordOutcome, PersServiceVersionUrl theForceUrl) throws InvocationResponseFailedException, InvocationFailedDueToInternalErrorException {
+		PersMethod method = theProcessedRequest.getMethodDefinition();
 		BasePersServiceVersion serviceVersion = method.getServiceVersion();
-		Map<String, List<String>> headers = results.getMethodHeaders();
-		String contentType = results.getMethodContentType();
-		String contentBody = results.getMethodRequestBody();
+		Map<String, List<String>> headers = theProcessedRequest.getMethodHeaders();
+		String contentType = theProcessedRequest.getMethodContentType();
+		String contentBody = theProcessedRequest.getMethodRequestBody();
 
 		IServiceInvoker invoker = getServiceInvoker(method.getServiceVersion());
 		IResponseValidator responseValidator = invoker.provideInvocationResponseValidator(serviceVersion);
@@ -511,24 +500,40 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		SrBeanProcessedResponse invocationResponse = invoker.processInvocationResponse(serviceVersion, httpResponse);
 		invocationResponse.validate();
 
+		/*
+		 * Obscure request and response
+		 */
+		BasePersServiceVersion svcVer = method.getServiceVersion();
+		IServiceInvoker svcInvoker = getServiceInvoker(svcVer);
+		
+		String requestBody = theIncomingRequest.getRequestBody();
+		String obscuredRequestBody = svcInvoker.obscureMessageForLogs(svcVer, requestBody, method.getServiceVersion().determineObscureRequestElements());
+		theProcessedRequest.setObscuredRequestBody(obscuredRequestBody);
+		
 		String responseBody = invocationResponse.getResponseBody();
-		String responseContentType = invocationResponse.getResponseContentType();
-		Map<String, List<String>> responseHeaders = invocationResponse.getResponseHeaders();
+		String obscuredResponseBody = svcInvoker.obscureMessageForLogs(svcVer, responseBody, method.getServiceVersion().determineObscureResponseElements());
+		invocationResponse.setObscuredResponseBody(obscuredResponseBody);
+
+		/*
+		 * Logging/Auditing
+		 */
 		int requestLength = contentBody.length();
 		PersUser user = ((authorized != null && authorized.isAuthorized() == AuthorizationOutcomeEnum.AUTHORIZED) ? authorized.getAuthorizedUser() : null);
 
 		if (theRecordOutcome) {
 			try {
-				myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), requestLength, results, user, httpResponse, invocationResponse);
+				myRuntimeStatus.recordInvocationMethod(theIncomingRequest.getRequestTime(), requestLength, theProcessedRequest, user, httpResponse, invocationResponse);
 			} catch (UnexpectedFailureException e) {
 				throw new InvocationFailedDueToInternalErrorException(e);
 			}
-			logTransaction(theRequest, method, authorized, httpResponse, invocationResponse, results);
+			logTransaction(theIncomingRequest, method, authorized, httpResponse, invocationResponse, theProcessedRequest);
 		}
 
-		ResponseTypeEnum responseType = invocationResponse.getResponseType();
-		retVal = new SidechannelOrchestratorResponseBean(responseBody, responseContentType, responseHeaders, httpResponse, responseType, theRequestStartedTime);
-		return retVal;
+		/*
+		 * Return the results back to the incoming client
+		 */
+		return new SidechannelOrchestratorResponseBean(theIncomingRequest, invocationResponse, httpResponse);
+
 	}
 
 	private SrBeanOutgoingResponse processRequestResource(SrBeanIncomingRequest theRequest, SrBeanProcessedRequest results) {
@@ -536,7 +541,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		String responseBody = results.getStaticResourceText();
 		String responseContentType = results.getStaticResourceContentTyoe();
 		Map<String, List<String>> responseHeaders = results.getStaticResourceHeaders();
-		retVal = new SrBeanOutgoingResponse(responseBody, responseContentType, responseHeaders, null);
+		retVal = new SrBeanOutgoingResponse(responseBody, responseContentType, responseHeaders);
 
 		PersServiceVersionResource resource = results.getStaticResourceDefinition();
 		myRuntimeStatus.recordInvocationStaticResource(theRequest.getRequestTime(), resource);
@@ -657,18 +662,27 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		for (PersServiceVersionUrl nextUrl : svcVer.getUrls()) {
 			ourLog.debug("About to perform sidechannel request for URL: {} / {}", nextUrl.getPid(), nextUrl.getUrl());
 
-			SidechannelOrchestratorResponseBean responseBean;
+			SrBeanIncomingRequest incomingRequest=new SrBeanIncomingRequest();
 			Date startedTime = new Date();
+			incomingRequest.setRequestTime(startedTime);
+
+			SrBeanProcessedResponse processedResponse=new SrBeanProcessedResponse();
+			processedResponse.setResponseHeaders(new HashMap<String, List<String>>());
+			processedResponse.setResponseType(ResponseTypeEnum.FAIL);
+			
+			SrBeanIncomingResponse incomingResponse=new SrBeanIncomingResponse();
+
+			SidechannelOrchestratorResponseBean responseBean;
 			try {
 				responseBean = doHandleSideChannelRequest(theServiceVersionPid, theRequestBody, theContentType, theRequestedByString, nextUrl);
 				retVal.add(responseBean);
 			} catch (InvalidRequestException e) {
 				ourLog.debug("Failed to execute sidechannel request for URL", e);
-				responseBean = SidechannelOrchestratorResponseBean.forFailure(e, startedTime, nextUrl);
+				responseBean = SidechannelOrchestratorResponseBean.forFailure(e, nextUrl, incomingRequest, processedResponse, incomingResponse);
 				retVal.add(responseBean);
 			} catch (InvocationFailedException e) {
 				ourLog.debug("Failed to execute sidechannel request for URL", e);
-				responseBean = SidechannelOrchestratorResponseBean.forFailure(e, startedTime, nextUrl);
+				responseBean = SidechannelOrchestratorResponseBean.forFailure(e, nextUrl, incomingRequest, processedResponse, incomingResponse);
 				retVal.add(responseBean);
 			}
 		}

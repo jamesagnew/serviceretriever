@@ -46,7 +46,7 @@ public class EditServiceBasicPropertiesPanel extends FlowPanel {
 		/*
 		 * Name
 		 */
-		myDescriptionTextBox = theNewService ? new TextBox() : new EditableField();
+		myDescriptionTextBox = theNewService ? new TextBox() : new EditableField().setMultiline(true).setProcessHtml(true);
 		myDescriptionTextBox.setValue(theService.getDescription());
 		formGrid.addRow("Description", (Widget)myDescriptionTextBox);
 

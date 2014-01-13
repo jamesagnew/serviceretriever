@@ -17,6 +17,10 @@ import net.svcret.ejb.model.entity.PersUser;
 @Local
 public interface IFilesystemAuditLogger {
 
+	//TODO: these methods shouldn't take SVCVER and METHOD, they can get those from the processed request 
+	// they also shouldn't take the raw message, since they can get the obscured request/response from
+	// the beans
+	
 	void recordServiceTransaction(SrBeanIncomingRequest theRequest, BasePersServiceVersion theSvcVer, PersMethod theMethod, PersUser theUser, String theRequestBody,
 			SrBeanProcessedResponse theInvocationResponse, PersServiceVersionUrl theImplementationUrl, SrBeanIncomingResponse theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, SrBeanProcessedRequest theInvocationResults)
 			throws ProcessingException, UnexpectedFailureException;

@@ -1,10 +1,9 @@
 package net.svcret.ejb.log;
 
-import java.util.Date;
-
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersConfig;
@@ -26,26 +25,26 @@ public class UnflushedServiceVersionRecentMessages extends BaseUnflushed<PersSer
 		myServiceVersion = theServiceVersion;
 	}
 
-	public synchronized void recordTransaction(PersConfig theConfig, Date theTransactionTime, BasePersServiceVersion theSvcVer, PersMethod theMethod, PersUser theUser, String theRequestBody,
-			SrBeanProcessedResponse theInvocationResponse, SrBeanIncomingRequest theRequest, PersServiceVersionUrl theImplementationUrl, SrBeanIncomingResponse theHttpResponse,
-			AuthorizationOutcomeEnum theAuthorizationOutcome, String theResponseBody) {
+	public synchronized void recordTransaction(PersConfig theConfig, PersUser theUser, SrBeanProcessedResponse theInvocationResponse, SrBeanIncomingRequest theRequest, PersServiceVersionUrl theImplementationUrl, SrBeanIncomingResponse theHttpResponse,
+			AuthorizationOutcomeEnum theAuthorizationOutcome, SrBeanProcessedRequest theProcessedRequest) {
 		Validate.notNull(theInvocationResponse);
-		Validate.notNull(theTransactionTime);
+		Validate.notNull(theRequest.getRequestTime());
 
 		initIfNeeded();
 
-		Integer keepRecent = theSvcVer.determineKeepNumRecentTransactions(theInvocationResponse.getResponseType());
+		BasePersServiceVersion svcVer = theProcessedRequest.getServiceVersion(); 
+		PersMethod method=theProcessedRequest.getMethodDefinition(); 
+		Integer keepRecent = svcVer.determineKeepNumRecentTransactions(theInvocationResponse.getResponseType());
 
 		ourLog.debug("Keeping {} recent SvcVer transactions for response type {}", keepRecent, theInvocationResponse.getResponseType());
 
 		if (keepRecent != null && keepRecent > 0) {
 
 			PersServiceVersionRecentMessage message = new PersServiceVersionRecentMessage();
-			message.populate(theConfig, theTransactionTime, theRequest, theImplementationUrl, theRequestBody, theInvocationResponse, theResponseBody);
-			message.setServiceVersion(theSvcVer);
-			message.setMethod(theMethod);
+			message.populate(theConfig, theRequest, theImplementationUrl, theInvocationResponse, theProcessedRequest);
+			message.setServiceVersion(svcVer);
+			message.setMethod(method);
 			message.setUser(theUser);
-			message.setTransactionTime(theTransactionTime);
 			message.setAuthorizationOutcome(theAuthorizationOutcome);
 
 			long responseTime = theHttpResponse != null ? theHttpResponse.getResponseTime() : 0;

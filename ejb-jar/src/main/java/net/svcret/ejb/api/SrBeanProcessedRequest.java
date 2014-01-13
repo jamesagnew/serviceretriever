@@ -20,6 +20,7 @@ public class SrBeanProcessedRequest {
 	private PersMethod myMethodDefinition;
 	private Map<String, List<String>> myMethodHeaders;
 	private String myMethodRequestBody;
+	private String myObscuredRequestBody;
 	private Map<String, String> myPropertyCaptures;
 	private ResultTypeEnum myResultType;
 	private BasePersServiceVersion myServiceVersion;
@@ -85,6 +86,10 @@ public class SrBeanProcessedRequest {
 		return myMethodRequestBody;
 	}
 
+	public String getObscuredRequestBody() {
+		return myObscuredRequestBody;
+	}
+
 	public Map<String, String> getPropertyCaptures() {
 		return myPropertyCaptures;
 	}
@@ -143,6 +148,10 @@ public class SrBeanProcessedRequest {
 		myMethodHeaders = theMethodHeaders;
 	}
 
+	public void setObscuredRequestBody(String theObscuredRequestBody) {
+		myObscuredRequestBody = theObscuredRequestBody;
+	}
+
 	public void setResultMethod(PersMethod theMethod, String theRequestBody, String theContentType) {
 		validateResultTypeNotSet();
 		myResultType = ResultTypeEnum.METHOD;
@@ -176,20 +185,20 @@ public class SrBeanProcessedRequest {
 		}
 	}
 
+	@VisibleForTesting
+	public static SrBeanProcessedRequest forUnitTest(PersMethod theM1) {
+		SrBeanProcessedRequest retVal = new SrBeanProcessedRequest();
+		retVal.myMethodDefinition = theM1;
+		retVal.myServiceVersion = theM1.getServiceVersion();
+		return retVal;
+	}
+
 	public static enum ResultTypeEnum {
 
 		METHOD,
 
 		STATIC_RESOURCE
 
-	}
-
-	@VisibleForTesting
-	public static SrBeanProcessedRequest forUnitTest(PersMethod theM1) {
-		SrBeanProcessedRequest retVal = new SrBeanProcessedRequest();
-		retVal.myMethodDefinition=theM1;
-		retVal.myServiceVersion = theM1.getServiceVersion();
-		return retVal;
 	}
 
 }

@@ -1,0 +1,2 @@
+serviceClass: net.svcret.admin.client.rpc.HttpClientConfigService
+path: 9F782D1F81ECCD122BE24D638ED2557A.gwt.rpc

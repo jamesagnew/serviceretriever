@@ -1,7 +1,5 @@
 package net.svcret.ejb.model.entity;
 
-import java.util.Date;
-
 import javax.persistence.Column;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -12,6 +10,7 @@ import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
 import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanProcessedResponse;
 
 import org.apache.commons.lang3.Validate;
@@ -50,9 +49,9 @@ public abstract class BasePersSavedTransactionRecentMessage extends BasePersSave
 	}
 
 	@Override
-	public void populate(PersConfig theConfig, Date theTransactionTime, SrBeanIncomingRequest theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, SrBeanProcessedResponse theInvocationResult, String theResponseBody) {
+	public void populate(PersConfig theConfig, SrBeanIncomingRequest theRequest, PersServiceVersionUrl theImplementationUrl, SrBeanProcessedResponse theInvocationResult, SrBeanProcessedRequest theProcessedRequest) {
 		setRequestHostIp(theRequest.getRequestHostIp());
-		super.populate(theConfig, theTransactionTime, theRequest, theImplementationUrl, theRequestBody, theInvocationResult, theResponseBody);
+		super.populate(theConfig, theRequest, theImplementationUrl, theInvocationResult, theProcessedRequest);
 	}
 
 	/**

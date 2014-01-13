@@ -93,6 +93,12 @@
 			<version>1.5.4</version>
 		</dependency>
 		<dependency>
+		    <groupId>com.google.gwt</groupId>
+		    <artifactId>gwt-dev</artifactId>
+		    <version>${gwtVersion}</version>
+		    <scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.7</version>
@@ -143,22 +149,18 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>gwt-maven-plugin</artifactId>
-				<version>2.5.1</version>
+				<version>${gwtVersion}</version>
 				<executions>
 					<execution>
 						<goals>
 							<goal>compile</goal>
 							<goal>test</goal>
 							<goal>i18n</goal>
-              <!-- 
-              <goal>generateAsync</goal>
-               -->
 						</goals>
 					</execution>
 				</executions>
-        <!-- Plugin configuration. There are many available options, see 
-          gwt-maven-plugin documentation at codehaus.org -->
 				<configuration>
+					<mode>htmlunit</mode>
 					<runTarget>AdminPortal.html</runTarget>
 					<hostedWebapp>${webappDirectory}</hostedWebapp>
 					<i18nMessagesBundle>net.svcret.admin.client.Messages123</i18nMessagesBundle>

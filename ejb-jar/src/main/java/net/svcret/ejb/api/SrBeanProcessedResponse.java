@@ -10,6 +10,7 @@ import net.svcret.admin.shared.enm.ResponseTypeEnum;
  */
 public class SrBeanProcessedResponse {
 
+	private String myObscuredResponseBody;
 	private String myResponseBody;
 	private String myResponseContentType;
 	private String myResponseFailureDescription;
@@ -18,6 +19,10 @@ public class SrBeanProcessedResponse {
 	private Map<String, List<String>> myResponseHeaders;
 	private String myResponseStatusMessage;
 	private ResponseTypeEnum myResponseType;
+
+	public String getObscuredResponseBody() {
+		return myObscuredResponseBody;
+	}
 
 	public String getResponseBody() {
 		return myResponseBody;
@@ -61,6 +66,10 @@ public class SrBeanProcessedResponse {
 	 */
 	public ResponseTypeEnum getResponseType() {
 		return myResponseType;
+	}
+
+	public void setObscuredResponseBody(String theObscuredResponseBody) {
+		myObscuredResponseBody = theObscuredResponseBody;
 	}
 
 	/**
@@ -108,7 +117,7 @@ public class SrBeanProcessedResponse {
 	}
 
 	public void validate() {
-		if (myResponseHeaders==null) {
+		if (myResponseHeaders == null) {
 			throw new IllegalStateException("Invocation response contains no headers");
 		}
 	}

@@ -114,7 +114,7 @@
 	<security-constraint>
 		<web-resource-collection>
 			<web-resource-name>Secured Content</web-resource-name>
-			<url-pattern>/__admin/*</url-pattern>
+			<url-pattern>/admin/*</url-pattern>
 		</web-resource-collection>
 		<auth-constraint>
 			<role-name>USER</role-name>

@@ -1,10 +1,9 @@
 package net.svcret.ejb.log;
 
-import java.util.Date;
-
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersConfig;
@@ -24,9 +23,8 @@ public class UnflushedUserRecentMessages extends BaseUnflushed<PersUserRecentMes
 		myUser = theUser;
 	}
 private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(UnflushedUserRecentMessages.class);
-	public synchronized void recordTransaction(PersConfig theConfig, Date theTransactionTime, SrBeanIncomingRequest theRequest, BasePersServiceVersion theSvcVer, PersMethod theMethod, PersUser theUser, String theRequestBody,
-			SrBeanProcessedResponse theInvocationResponse, PersServiceVersionUrl theImplementationUrl, SrBeanIncomingResponse theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome,
-			String theResponseBody) {
+	public synchronized void recordTransaction(PersConfig theConfig, SrBeanIncomingRequest theRequest, PersUser theUser, SrBeanProcessedResponse theInvocationResponse, PersServiceVersionUrl theImplementationUrl, SrBeanIncomingResponse theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome,
+			SrBeanProcessedRequest theProcessedRequest) {
 		Validate.notNull(theInvocationResponse);
 
 		initIfNeeded();
@@ -37,13 +35,16 @@ private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger
 
 		if (keepNum != null && keepNum > 0) {
 
+			BasePersServiceVersion svcVer = theProcessedRequest.getServiceVersion(); 
+			PersMethod method=theProcessedRequest.getMethodDefinition(); 
+
 			PersUserRecentMessage userMessage = new PersUserRecentMessage();
-			userMessage.populate(theConfig, theTransactionTime, theRequest, theImplementationUrl, theRequestBody, theInvocationResponse, theResponseBody);
+			userMessage.populate(theConfig, theRequest, theImplementationUrl, theInvocationResponse, theProcessedRequest);
 			userMessage.setUser(theUser);
-			userMessage.setServiceVersion(theSvcVer);
-			userMessage.setMethod(theMethod);
-			userMessage.setTransactionTime(theTransactionTime);
+			userMessage.setServiceVersion(svcVer);
+			userMessage.setMethod(method);
 			userMessage.setAuthorizationOutcome(theAuthorizationOutcome);
+			
 			long responseTime = theHttpResponse != null ? theHttpResponse.getResponseTime() : 0;
 			userMessage.setTransactionMillis(responseTime);
 

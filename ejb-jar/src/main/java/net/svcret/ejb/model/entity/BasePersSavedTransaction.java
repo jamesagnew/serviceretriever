@@ -26,6 +26,7 @@ import net.svcret.admin.shared.model.BaseDtoSavedTransaction;
 import net.svcret.admin.shared.model.Pair;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanProcessedResponse;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -153,13 +154,21 @@ public abstract class BasePersSavedTransaction implements Serializable {
 		return myResponseBodyTruncated;
 	}
 
-	public void populate(PersConfig theConfig, Date theTransactionTime, SrBeanIncomingRequest theRequest, PersServiceVersionUrl theImplementationUrl, String theRequestBody, SrBeanProcessedResponse theInvocationResult, String theResponseBody) {
-		setRequestBody(extractHeadersForBody(theRequest) + theRequestBody, theConfig);
+	public void populate(PersConfig theConfig, SrBeanIncomingRequest theRequest, PersServiceVersionUrl theImplementationUrl, SrBeanProcessedResponse theProcessedResponse, SrBeanProcessedRequest theProcessedRequest) {
+		setRequestBody(theConfig, theRequest, theProcessedRequest);
 		setImplementationUrl(theImplementationUrl);
-		setResponseBody(extractHeadersForBody(theInvocationResult.getResponseHeaders()) + theResponseBody, theConfig);
-		setResponseType(theInvocationResult.getResponseType());
-		setTransactionTime(theTransactionTime);
-		setFailDescription(theInvocationResult.getResponseFailureDescription());
+		setResponseBody(theConfig, theProcessedResponse);
+		setResponseType(theProcessedResponse.getResponseType());
+		setTransactionTime(theRequest.getRequestTime());
+		setFailDescription(theProcessedResponse.getResponseFailureDescription());
+	}
+
+	public void setResponseBody(PersConfig theConfig, SrBeanProcessedResponse theProcessedResponse) {
+		setResponseBody(extractHeadersForBody(theProcessedResponse.getResponseHeaders()) + theProcessedResponse.getObscuredResponseBody(), theConfig);
+	}
+
+	public void setRequestBody(PersConfig theConfig, SrBeanIncomingRequest theRequest, SrBeanProcessedRequest theProcessedRequest) {
+		setRequestBody(extractHeadersForBody(theRequest) + theProcessedRequest.getObscuredRequestBody(), theConfig);
 	}
 
 	public void populateDto(BaseDtoSavedTransaction retVal, boolean theLoadMessageContents) {
@@ -229,7 +238,7 @@ public abstract class BasePersSavedTransaction implements Serializable {
 	 * @param theRequestBody
 	 *            the requestBody to set
 	 */
-	public void setRequestBody(String theRequestBody, PersConfig theConfig) {
+	private void setRequestBody(String theRequestBody, PersConfig theConfig) {
 		if (theRequestBody != null) {
 			String requestBody = BasePersObject.trimClobForUnitTest(theRequestBody);
 			;
@@ -253,7 +262,7 @@ public abstract class BasePersSavedTransaction implements Serializable {
 	 * @param theResponseBody
 	 *            the responseBody to set
 	 */
-	public void setResponseBody(String theResponseBody, PersConfig theConfig) {
+	private void setResponseBody(String theResponseBody, PersConfig theConfig) {
 		if (theResponseBody != null) {
 			String responseBody = BasePersObject.trimClobForUnitTest(theResponseBody);
 			if (theConfig.getTruncateRecentDatabaseTransactionsToBytes() != null) {
@@ -367,5 +376,6 @@ public abstract class BasePersSavedTransaction implements Serializable {
 		}
 		return retVal;
 	}
+
 
 }

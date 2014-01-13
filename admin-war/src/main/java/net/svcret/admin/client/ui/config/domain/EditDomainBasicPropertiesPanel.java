@@ -47,7 +47,7 @@ public class EditDomainBasicPropertiesPanel extends FlowPanel {
 		/*
 		 * Name
 		 */
-		myDescriptionTextBox = theNewDomain ? new TextBox() : new EditableField();
+		myDescriptionTextBox = theNewDomain ? new TextBox() : new EditableField().setMultiline(true).setProcessHtml(true);
 		myDescriptionTextBox.setValue(theDomain.getDescription());
 		formGrid.addRow("Description", (Widget)myDescriptionTextBox);
 

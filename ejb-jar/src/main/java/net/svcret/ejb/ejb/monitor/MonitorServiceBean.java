@@ -244,17 +244,18 @@ public class MonitorServiceBean implements IMonitorService {
 			 * Save the outcome with the check
 			 */
 			for (SidechannelOrchestratorResponseBean nextOutcome : urlResponses) {
+				
 				PersMonitorRuleActiveCheckOutcome recentOutcome = new PersMonitorRuleActiveCheckOutcome();
 				recentOutcome.setCheck(theCheck);
 				recentOutcome.setImplementationUrl(nextOutcome.getApplicableUrl());
-				recentOutcome.setRequestBody(theCheck.getMessage().getMessageBody(), myConfigSvc.getConfig());
-				recentOutcome.setResponseBody(nextOutcome.getResponseBody(), myConfigSvc.getConfig());
+				recentOutcome.setRequestBody(myConfigSvc.getConfig(), nextOutcome.getSimulatedIncomingRequest(), nextOutcome.getSimulatedProcessedRequest());
+				recentOutcome.setResponseBody(myConfigSvc.getConfig(), nextOutcome.getProcessedResponse());
 				recentOutcome.setResponseType(nextOutcome.getResponseType());
 				recentOutcome.setFailDescription(nextOutcome.getFailureDescription());
-				if (nextOutcome.getHttpResponse() != null) {
-					recentOutcome.setTransactionMillis(nextOutcome.getHttpResponse().getResponseTime());
+				if (nextOutcome.getIncomingResponse() != null) {
+					recentOutcome.setTransactionMillis(nextOutcome.getIncomingResponse().getResponseTime());
 				}
-				recentOutcome.setTransactionTime(nextOutcome.getRequestStartedTime());
+				recentOutcome.setTransactionTime(nextOutcome.getIncomingRequest().getRequestTime());
 
 				for (PersMonitorRuleFiringProblem next : outcome.getProblems()) {
 					if (next.getUrl() == null || next.getUrl().equals(recentOutcome.getImplementationUrl())) {
@@ -263,15 +264,15 @@ public class MonitorServiceBean implements IMonitorService {
 				}
 
 				if (nextOutcome.getResponseType() == ResponseTypeEnum.FAIL) {
-					int code = nextOutcome.getHttpResponse() != null ? nextOutcome.getHttpResponse().getCode() : 0;
-					long latency = nextOutcome.getHttpResponse() != null ? nextOutcome.getHttpResponse().getResponseTime() : 0;
+					int code = nextOutcome.getIncomingResponse() != null ? nextOutcome.getIncomingResponse().getCode() : 0;
+					long latency = nextOutcome.getIncomingResponse() != null ? nextOutcome.getIncomingResponse().getResponseTime() : 0;
 					Failure failure = new Failure(nextOutcome.getResponseBody(), nextOutcome.getResponseContentType(), nextOutcome.getFailureDescription(), code, latency, null);
 					myRuntimeStatus.recordUrlFailure(recentOutcome.getImplementationUrl(), failure);
 				} else if (recentOutcome.getFailed() != Boolean.TRUE) {
 					boolean wasFault = nextOutcome.getResponseType() == ResponseTypeEnum.FAULT;
 					
-					String message = Messages.getString("MonitorServiceBean.successfulUrl", nextOutcome.getHttpResponse().getResponseTime());
-					int responseCode = nextOutcome.getHttpResponse().getCode();
+					String message = Messages.getString("MonitorServiceBean.successfulUrl", nextOutcome.getIncomingResponse().getResponseTime());
+					int responseCode = nextOutcome.getIncomingResponse().getCode();
 					myRuntimeStatus.recordUrlSuccess(recentOutcome.getImplementationUrl(), wasFault, message, contentType, responseCode);
 				}
 
@@ -281,7 +282,9 @@ public class MonitorServiceBean implements IMonitorService {
 			}
 
 			if (thePersistResults) {
-				Date cutoff = new Date(System.currentTimeMillis() - (10 * DateUtils.MILLIS_PER_MINUTE));
+				// Generally keep the last 10 invocations
+				long delayMillis = theCheck.getCheckFrequencyUnit().toMillis() * theCheck.getCheckFrequencyNum();
+				Date cutoff = new Date(System.currentTimeMillis() - (10 * delayMillis));
 				myDao.deleteMonitorRuleActiveCheckOutcomesBeforeCutoff(theCheck, cutoff);
 			}
 
@@ -383,12 +386,12 @@ public class MonitorServiceBean implements IMonitorService {
 				problems.add(prob);
 			}
 
-			if (nextOutcome.getHttpResponse() != null) {
+			if (nextOutcome.getIncomingResponse() != null) {
 				if (theCheck.getExpectLatencyUnderMillis() != null) {
-					long latency = nextOutcome.getHttpResponse().getResponseTime();
+					long latency = nextOutcome.getIncomingResponse().getResponseTime();
 					ourLog.debug("Active check testing if latency of {} exceeds target of {}", latency, theCheck.getExpectLatencyUnderMillis());
 					if (latency > theCheck.getExpectLatencyUnderMillis()) {
-						PersServiceVersionUrl url = nextOutcome.getHttpResponse().getSingleUrlOrThrow();
+						PersServiceVersionUrl url = nextOutcome.getIncomingResponse().getSingleUrlOrThrow();
 						PersMonitorRuleFiringProblem prob = PersMonitorRuleFiringProblem.getInstanceForServiceLatency(theCheck.getServiceVersion(), latency, theCheck.getExpectLatencyUnderMillis(), null, url);
 						prob.setActiveCheck(theCheck);
 						problems.add(prob);
@@ -400,7 +403,7 @@ public class MonitorServiceBean implements IMonitorService {
 					ourLog.debug("Active check testing if response contains \"{}\": {}", theCheck.getExpectResponseContainsText(), contains);
 
 					if (!contains) {
-						PersServiceVersionUrl url = nextOutcome.getHttpResponse().getSingleUrlOrThrow();
+						PersServiceVersionUrl url = nextOutcome.getIncomingResponse().getSingleUrlOrThrow();
 						String message = Messages.getString("MonitorServiceBean.failedActiveCheckExpectText", theCheck.getExpectResponseContainsText());
 						PersMonitorRuleFiringProblem prob = PersMonitorRuleFiringProblem.getInstanceForUrlDown(theCheck.getServiceVersion(), url, message);
 						prob.setActiveCheck(theCheck);
@@ -409,7 +412,7 @@ public class MonitorServiceBean implements IMonitorService {
 
 				ourLog.debug("Active check testing if outcome of {} matches expected {}", nextOutcome.getResponseType(), theCheck.getExpectResponseType());
 				if (nextOutcome.getResponseType() != theCheck.getExpectResponseType()) {
-					PersServiceVersionUrl url = nextOutcome.getHttpResponse().getSingleUrlOrThrow();
+					PersServiceVersionUrl url = nextOutcome.getIncomingResponse().getSingleUrlOrThrow();
 					String message = Messages.getString("MonitorServiceBean.failedActiveCheckExpectResponseType", nextOutcome.getResponseType(), theCheck.getExpectResponseType());
 					PersMonitorRuleFiringProblem prob = PersMonitorRuleFiringProblem.getInstanceForUrlDown(theCheck.getServiceVersion(), url, message);
 					prob.setActiveCheck(theCheck);

@@ -12,17 +12,24 @@ public class SrBeanOutgoingResponse {
 	private String myResponseContentType;
 	private Map<String, List<String>> myResponseHeaders;
 
-	public SrBeanOutgoingResponse(String theResponseBody, String theResponseContentType, Map<String, List<String>> theResponseHeaders, SrBeanIncomingResponse theHttpResponse) {
+	public SrBeanOutgoingResponse(String theResponseBody, String theResponseContentType, Map<String, List<String>> theResponseHeaders) {
 		super();
 		myResponseBody = theResponseBody;
 		myResponseContentType = theResponseContentType;
 		myResponseHeaders = theResponseHeaders;
-		myHttpResponse = theHttpResponse;
 	}
 
-	public SrBeanIncomingResponse getHttpResponse() {
-		return myHttpResponse;
+	public SrBeanOutgoingResponse(SrBeanProcessedResponse theProcessedResponse, SrBeanIncomingResponse theIncomingResponse) {
+		super();
+		myResponseBody = theProcessedResponse.getResponseBody();
+		myResponseContentType = theProcessedResponse.getResponseContentType();
+		myResponseHeaders = theProcessedResponse.getResponseHeaders();
+		myHttpResponse = theIncomingResponse;
 	}
+
+//	public SrBeanIncomingResponse getHttpResponse() {
+//		return myHttpResponse;
+//	}
 
 	/**
 	 * @return the responseBody

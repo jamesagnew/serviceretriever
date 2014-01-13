@@ -6,6 +6,8 @@ import javax.persistence.Embeddable;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 
+import org.hibernate.annotations.ForeignKey;
+
 @Embeddable
 public class PersMethodStatusPk implements Serializable {
 
@@ -13,6 +15,7 @@ public class PersMethodStatusPk implements Serializable {
 	
 	@OneToOne(cascade = {})
 	@JoinColumn(name = "METHOD_PID")
+	@ForeignKey(name = "PX_METSTAT_METHOD")
 	private PersMethod myMethod;
 
 	public PersMethodStatusPk() {

@@ -5,6 +5,7 @@ import java.util.List;
 
 import net.svcret.admin.shared.util.StringUtil;
 
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.BlurEvent;
 import com.google.gwt.event.dom.client.BlurHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -67,6 +68,7 @@ public class EditableField extends FlowPanel implements HasValue<String> {
 			} else {
 				myEditorComponent = new TextBox();
 			}
+			myEditorComponent.getElement().getStyle().setWidth(100, Unit.PCT);
 
 			myEditorComponent.addKeyDownHandler(new KeyDownHandler() {
 				@Override
@@ -176,12 +178,14 @@ public class EditableField extends FlowPanel implements HasValue<String> {
 		myMaxFieldWidth = theMaxFieldWidth;
 	}
 
-	public void setMultiline(boolean theMultiline) {
+	public EditableField setMultiline(boolean theMultiline) {
 		myMultiline = theMultiline;
+		return this;
 	}
 
-	public void setProcessHtml(boolean theB) {
+	public EditableField setProcessHtml(boolean theB) {
 		myProcessHtml = theB;
+		return this;
 	}
 
 	public void setShowTooltip(boolean theShowTooltip) {

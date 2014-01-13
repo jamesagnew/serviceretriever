@@ -434,7 +434,7 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 			}
 			myRequestHostIp = theRequest.getRequestHostIp();
 			myResponseHeaders = theInvocationResponse.getResponseHeaders();
-			myResponseBody = theInvocationResponse.getResponseBody();
+			myResponseBody = theInvocationResponse.getObscuredResponseBody();
 			myResponseType = theInvocationResponse.getResponseType();
 			myFailureDescription = theInvocationResponse.getResponseFailureDescription();
 			myAuthorizationOutcome = theAuthorizationOutcome;

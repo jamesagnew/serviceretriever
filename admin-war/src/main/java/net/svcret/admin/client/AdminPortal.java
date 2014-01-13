@@ -38,6 +38,7 @@ public class AdminPortal implements EntryPoint, UncaughtExceptionHandler {
 
 	public static final MiscConfigServiceAsync SVC_MISCCONFIG = GWT.create(MiscConfigService.class);
 
+	
 	/**
 	 * This is the entry point method.
 	 */

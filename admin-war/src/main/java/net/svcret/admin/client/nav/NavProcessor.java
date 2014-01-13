@@ -78,6 +78,7 @@ public class NavProcessor {
 
 	private static List<String> ourInMemoryTokens = new ArrayList<String>();
 	private static List<Panel> ourInMemoryPages = new ArrayList<Panel>();
+	private static String ourCurrentTokenForUnitTest;
 
 	static {
 		History.addValueChangeHandler(new ValueChangeHandler<String>() {
@@ -621,6 +622,9 @@ public class NavProcessor {
 				break;
 			}
 			
+			if (b.length() > 0) {
+				b.append(SEPARATOR);
+			}
 			b.append(nextToken);
 		}
 		
@@ -650,9 +654,17 @@ public class NavProcessor {
 
 
 	private static String getCurrentToken() {
+		if (ourCurrentTokenForUnitTest != null) {
+			return ourCurrentTokenForUnitTest;
+		}
+		
 		String token = History.getToken();
 		token = StringUtil.defaultString(token, DEFAULT_PAGE.name());
 		return token;
+	}
+
+	static void setCurrentTokenForUnitTest(String theCurrentTokenForUnitTest) {
+		ourCurrentTokenForUnitTest = theCurrentTokenForUnitTest;
 	}
 
 	private static void navigateToDefault() {
