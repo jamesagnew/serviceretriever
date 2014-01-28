@@ -29,10 +29,10 @@ import com.google.gwt.user.client.ui.ScrollPanel;
 public abstract class BaseViewSavedTransactionPanel extends FlowPanel {
 
 	private boolean myHideRequest;
-	private final FlowPanel myReqPanel=new FlowPanel();
-	private final HtmlPre myReqPre= new HtmlPre();
-	private final FlowPanel myRespPanel=new FlowPanel();
-	private final HtmlPre myRespPre = new HtmlPre();
+	private FlowPanel myReqPanel;
+	private HtmlPre myReqPre;
+	private FlowPanel myRespPanel;
+	private HtmlPre myRespPre;
 	private TwoColumnGrid myTopGrid;
 	private LoadingSpinner myTopLoadingSpinner;
 	private FlowPanel myTopPanel;
@@ -60,18 +60,18 @@ public abstract class BaseViewSavedTransactionPanel extends FlowPanel {
 		topContentPanel.add(myTopGrid);
 
 	}
-	public FlowPanel getReqPanel() {
+	private FlowPanel getReqPanel() {
 		return myReqPanel;
 	}
-	public HtmlPre getReqPre() {
+	private HtmlPre getReqPre() {
 		return myReqPre;
 	}
 
-	public FlowPanel getRespPanel() {
+	private FlowPanel getRespPanel() {
 		return myRespPanel;
 	}
 
-	public HtmlPre getRespPre() {
+	private HtmlPre getRespPre() {
 		return myRespPre;
 	}
 	public TwoColumnGrid getTopGrid() {
@@ -144,6 +144,11 @@ public abstract class BaseViewSavedTransactionPanel extends FlowPanel {
 	}
 
 	protected void setSavedTransaction(BaseDtoSavedTransaction theSavedTransaction, BaseDtoServiceVersion theServiceVersionIfKnown) {
+		myReqPanel=new FlowPanel();
+		myReqPre= new HtmlPre();
+		myRespPanel=new FlowPanel();
+		myRespPre = new HtmlPre();
+
 		getTopLoadingSpinner().hideCompletely();
 
 		while (getTopGrid().getRowCount() > 0) {
