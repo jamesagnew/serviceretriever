@@ -274,14 +274,16 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		request.setRequestHostIp("127.0.0.1");
 		request.setRequestHeaders(new HashMap<String, List<String>>());
 		request.setRequestTime(new Date());
-		String requestBody = "request body";
 		SrBeanProcessedResponse invocationResponse = new SrBeanProcessedResponse();
 		invocationResponse.setResponseHeaders(new HashMap<String, List<String>>());
 		invocationResponse.setResponseType(ResponseTypeEnum.SUCCESS);
 		PersServiceVersionUrl implementationUrl = persVer.getUrls().get(0);
 		AuthorizationOutcomeEnum authorizationOutcome = AuthorizationOutcomeEnum.AUTHORIZED;
 		PersUser persUser = myDao.getUser(user.getPidOrNull());
-		myTransactionLogSvc.logTransaction(request, m1.getServiceVersion(), m1, persUser, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome, "response Body", null);
+		SrBeanProcessedRequest processedRequest=new SrBeanProcessedRequest();
+		String requestBody = "request body";
+		processedRequest.setObscuredRequestBody(requestBody);
+		myTransactionLogSvc.logTransaction(request, persUser, invocationResponse, implementationUrl, httpResponse, authorizationOutcome, processedRequest);
 
 		newEntityManager();
 

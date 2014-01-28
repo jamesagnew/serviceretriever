@@ -20,6 +20,7 @@ import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.admin.AdminServiceBean;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IServiceOrchestrator;
@@ -309,7 +310,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		SrBeanIncomingResponse httpResponse=new SrBeanIncomingResponse();
 		httpResponse.setSuccessfulUrl(myD1M1S1U1);
 		httpResponse.setResponseTime(1000);
-		responses.add(new SidechannelOrchestratorResponseBean("", "", new HashMap<String, List<String>>(), httpResponse, ResponseTypeEnum.SUCCESS, new Date()));
+		responses.add(createFailResponse(ResponseTypeEnum.SUCCESS));
 		when(orch.handleSidechannelRequestForEachUrl(eq(myD1S1V1.getPid()), (String)any(), (String)any(), (String)any())).thenReturn(responses);
 		mySvc.runActiveChecks();
 		
@@ -422,7 +423,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		check = myDao.getAllMonitorRuleActiveChecks().iterator().next();
 
 		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<IServiceOrchestrator.SidechannelOrchestratorResponseBean>();
-		SidechannelOrchestratorResponseBean rsp = new SidechannelOrchestratorResponseBean("", "", new HashMap<String, List<String>>(), null, ResponseTypeEnum.FAIL, new Date());
+		SidechannelOrchestratorResponseBean rsp = createFailResponse(ResponseTypeEnum.FAIL);
 		rsp.setApplicableUrl(myD1M1S1U1);
 		responses.add(rsp);
 		when(orch.handleSidechannelRequestForEachUrl(eq(myD1S1V1.getPid()), (String)any(), (String)any(), (String)any())).thenReturn(responses);
@@ -475,7 +476,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		httpResponse.setSuccessfulUrl(myD1M1S1U1);
 		httpResponse.setResponseTime(1);
 		responses.clear();
-		responses.add(new SidechannelOrchestratorResponseBean("", "", new HashMap<String, List<String>>(), httpResponse, ResponseTypeEnum.SUCCESS, new Date()));
+		responses.add(createFailResponse(ResponseTypeEnum.SUCCESS));
 		mySvc.clearRateLimitersForUnitTests();
 		mySvc.runActiveChecks();
 
@@ -537,7 +538,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		check = myDao.getAllMonitorRuleActiveChecks().iterator().next();
 
 		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<IServiceOrchestrator.SidechannelOrchestratorResponseBean>();
-		SidechannelOrchestratorResponseBean bean = new SidechannelOrchestratorResponseBean("", "", new HashMap<String, List<String>>(), null, ResponseTypeEnum.FAIL, new Date());
+		SidechannelOrchestratorResponseBean bean = createFailResponse(ResponseTypeEnum.FAIL);
 		bean.setApplicableUrl(myD1M1S1U1);
 		responses.add(bean);
 		when(orch.handleSidechannelRequestForEachUrl(eq(myD1S1V1.getPid()), (String)any(), (String)any(), (String)any())).thenReturn(responses);
@@ -577,6 +578,17 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		
 		
 		
+	}
+
+	private SidechannelOrchestratorResponseBean createFailResponse(ResponseTypeEnum theResponseType) {
+		SrBeanIncomingRequest incomingRequest=new SrBeanIncomingRequest();
+		incomingRequest.setRequestTime(new Date());
+		SrBeanProcessedResponse processedResponse=new SrBeanProcessedResponse();
+		processedResponse.setResponseType(theResponseType);
+		SrBeanIncomingResponse incomingResponse=new SrBeanIncomingResponse();
+		incomingResponse.setHeaders(new HashMap<String, List<String>>());
+		SidechannelOrchestratorResponseBean bean = new SidechannelOrchestratorResponseBean(incomingRequest, processedResponse, incomingResponse);
+		return bean;
 	}
 
 	
@@ -722,7 +734,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		SrBeanIncomingResponse httpResponse=new SrBeanIncomingResponse();
 		httpResponse.setSuccessfulUrl(myD1M1S1U1);
 		httpResponse.setResponseTime(1000); // This is too long
-		responses.add(new SidechannelOrchestratorResponseBean("", "", new HashMap<String, List<String>>(), httpResponse, ResponseTypeEnum.SUCCESS, new Date()));
+		responses.add(createFailResponse(ResponseTypeEnum.SUCCESS));
 		when(orch.handleSidechannelRequestForEachUrl(eq(myD1S1V1.getPid()), (String)any(), (String)any(), (String)any())).thenReturn(responses);
 		
 		mySvc.clearRateLimitersForUnitTests();
