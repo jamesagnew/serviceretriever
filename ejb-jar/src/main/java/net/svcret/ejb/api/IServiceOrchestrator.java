@@ -57,7 +57,6 @@ public interface IServiceOrchestrator {
 		private SrBeanIncomingRequest myIncomingRequest;
 		private SrBeanIncomingResponse myIncomingResponse;
 		private SrBeanProcessedResponse myProcessedResponse;
-		private Date myRequestStartedTime;
 		private ResponseTypeEnum myResponseType;
 		private SrBeanIncomingRequest mySimulatedIncomingRequest;
 		private SrBeanProcessedRequest mySimulatedProcessedRequest;
@@ -70,7 +69,6 @@ public interface IServiceOrchestrator {
 			myProcessedResponse = theProcessedResponse;
 
 			myResponseType = theProcessedResponse.getResponseType();
-			myRequestStartedTime = theIncomingRequest.getRequestTime();
 
 		}
 

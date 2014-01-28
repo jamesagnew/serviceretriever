@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -20,6 +21,8 @@ import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.admin.AdminServiceBean;
+import net.svcret.ejb.api.RequestType;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IServiceOrchestrator;
@@ -309,7 +312,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		SrBeanIncomingResponse httpResponse=new SrBeanIncomingResponse();
 		httpResponse.setSuccessfulUrl(myD1M1S1U1);
 		httpResponse.setResponseTime(1000);
-		responses.add(new SidechannelOrchestratorResponseBean("", "", new HashMap<String, List<String>>(), httpResponse, ResponseTypeEnum.SUCCESS, new Date()));
+		responses.add(createOrchestratorResponse(ResponseTypeEnum.SUCCESS));
 		when(orch.handleSidechannelRequestForEachUrl(eq(myD1S1V1.getPid()), (String)any(), (String)any(), (String)any())).thenReturn(responses);
 		mySvc.runActiveChecks();
 		
@@ -422,8 +425,10 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		check = myDao.getAllMonitorRuleActiveChecks().iterator().next();
 
 		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<IServiceOrchestrator.SidechannelOrchestratorResponseBean>();
-		SidechannelOrchestratorResponseBean rsp = new SidechannelOrchestratorResponseBean("", "", new HashMap<String, List<String>>(), null, ResponseTypeEnum.FAIL, new Date());
+		SidechannelOrchestratorResponseBean rsp = createOrchestratorResponse(ResponseTypeEnum.FAIL);
 		rsp.setApplicableUrl(myD1M1S1U1);
+		rsp.getIncomingResponse().setResponseTime(100);
+		rsp.getIncomingResponse().setSuccessfulUrl(myD1M1S1U1);
 		responses.add(rsp);
 		when(orch.handleSidechannelRequestForEachUrl(eq(myD1S1V1.getPid()), (String)any(), (String)any(), (String)any())).thenReturn(responses);
 		mySvc.runActiveChecks();
@@ -474,8 +479,16 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		SrBeanIncomingResponse httpResponse=new SrBeanIncomingResponse();
 		httpResponse.setSuccessfulUrl(myD1M1S1U1);
 		httpResponse.setResponseTime(1);
+		
+		rsp = createOrchestratorResponse(ResponseTypeEnum.SUCCESS);
+		rsp.getIncomingResponse().setResponseTime(1);
+		rsp.getIncomingResponse().setSuccessfulUrl(myD1M1S1U1);
+
 		responses.clear();
-		responses.add(new SidechannelOrchestratorResponseBean("", "", new HashMap<String, List<String>>(), httpResponse, ResponseTypeEnum.SUCCESS, new Date()));
+		responses.add(rsp);
+		
+		ourLog.info("Making a success");
+		
 		mySvc.clearRateLimitersForUnitTests();
 		mySvc.runActiveChecks();
 
@@ -487,6 +500,29 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		assertEquals(StatusEnum.ACTIVE, svcVer.getUrls().get(0).getStatus().getStatus());
 
 		
+	}
+private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(MonitorServiceBeanTest.class);
+	private SidechannelOrchestratorResponseBean createOrchestratorResponse(ResponseTypeEnum theResponseType) {
+		SrBeanIncomingRequest request=new SrBeanIncomingRequest();
+		request.setRequestTime(new Date());
+		request.setRequestHeaders(new HashMap<String, List<String>>());
+		request.setInputReader(new StringReader(""));
+		request.setRequestType(RequestType.POST);
+		SrBeanProcessedResponse resp=new SrBeanProcessedResponse();
+		resp.setResponseType(theResponseType);
+		SrBeanIncomingResponse incResp=new SrBeanIncomingResponse();
+		incResp.setHeaders(new HashMap<String, List<String>>());
+		
+		SidechannelOrchestratorResponseBean rsp = new SidechannelOrchestratorResponseBean(request, resp, incResp);
+		
+		SrBeanIncomingRequest simReq = new SrBeanIncomingRequest();
+		simReq.setRequestType(RequestType.POST);
+		rsp.setSimulatedIncomingRequest(simReq);
+		
+		SrBeanProcessedRequest simPrc=new SrBeanProcessedRequest();
+		rsp.setSimulatedProcessedRequest(simPrc);
+		
+		return rsp;
 	}
 
 	@Test
@@ -537,7 +573,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		check = myDao.getAllMonitorRuleActiveChecks().iterator().next();
 
 		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<IServiceOrchestrator.SidechannelOrchestratorResponseBean>();
-		SidechannelOrchestratorResponseBean bean = new SidechannelOrchestratorResponseBean("", "", new HashMap<String, List<String>>(), null, ResponseTypeEnum.FAIL, new Date());
+		SidechannelOrchestratorResponseBean bean = createOrchestratorResponse(ResponseTypeEnum.FAIL);
 		bean.setApplicableUrl(myD1M1S1U1);
 		responses.add(bean);
 		when(orch.handleSidechannelRequestForEachUrl(eq(myD1S1V1.getPid()), (String)any(), (String)any(), (String)any())).thenReturn(responses);
@@ -719,10 +755,11 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		check2 = myDao.getAllMonitorRuleActiveChecks().iterator().next();
 
 		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<IServiceOrchestrator.SidechannelOrchestratorResponseBean>();
-		SrBeanIncomingResponse httpResponse=new SrBeanIncomingResponse();
-		httpResponse.setSuccessfulUrl(myD1M1S1U1);
-		httpResponse.setResponseTime(1000); // This is too long
-		responses.add(new SidechannelOrchestratorResponseBean("", "", new HashMap<String, List<String>>(), httpResponse, ResponseTypeEnum.SUCCESS, new Date()));
+		SidechannelOrchestratorResponseBean rsp = createOrchestratorResponse(ResponseTypeEnum.SUCCESS);
+		rsp.getIncomingResponse().setResponseTime(1000); // too long
+		rsp.getIncomingResponse().setSuccessfulUrl(myD1M1S1U1);
+		responses.add(rsp);
+		
 		when(orch.handleSidechannelRequestForEachUrl(eq(myD1S1V1.getPid()), (String)any(), (String)any(), (String)any())).thenReturn(responses);
 		
 		mySvc.clearRateLimitersForUnitTests();

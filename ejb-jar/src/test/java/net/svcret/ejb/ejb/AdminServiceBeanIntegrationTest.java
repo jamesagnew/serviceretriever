@@ -13,6 +13,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -275,13 +276,14 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		request.setRequestHeaders(new HashMap<String, List<String>>());
 		request.setRequestTime(new Date());
 		String requestBody = "request body";
+		request.setInputReader(new StringReader(requestBody));
 		SrBeanProcessedResponse invocationResponse = new SrBeanProcessedResponse();
 		invocationResponse.setResponseHeaders(new HashMap<String, List<String>>());
 		invocationResponse.setResponseType(ResponseTypeEnum.SUCCESS);
 		PersServiceVersionUrl implementationUrl = persVer.getUrls().get(0);
 		AuthorizationOutcomeEnum authorizationOutcome = AuthorizationOutcomeEnum.AUTHORIZED;
 		PersUser persUser = myDao.getUser(user.getPidOrNull());
-		myTransactionLogSvc.logTransaction(request, m1.getServiceVersion(), m1, persUser, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome, "response Body", null);
+		myTransactionLogSvc.logTransaction(request, persUser, invocationResponse, implementationUrl, httpResponse, authorizationOutcome, null);
 
 		newEntityManager();
 
