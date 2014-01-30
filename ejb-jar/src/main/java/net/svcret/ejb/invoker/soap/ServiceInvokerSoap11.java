@@ -17,7 +17,10 @@ import java.util.TreeSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
+import javax.ejb.Singleton;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -68,7 +71,9 @@ import org.w3c.dom.NodeList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-@Stateless()
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+@Singleton
+@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IServiceInvokerSoap11 {
 
 	private static XMLEventFactory ourEventFactory;

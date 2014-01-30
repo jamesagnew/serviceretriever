@@ -25,7 +25,7 @@ public class ServiceRegistryBeanTest {
 	private IDao myPersistence;
 
 	@Before
-	public void before()  throws Exception {
+	public void before() {
 
 		mySvc = new ServiceRegistryBean();
 

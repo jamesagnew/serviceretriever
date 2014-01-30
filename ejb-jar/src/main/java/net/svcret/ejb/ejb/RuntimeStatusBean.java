@@ -133,7 +133,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		myStickySessionUrlBindings = new HashMap<PersStickySessionUrlBindingPk, PersStickySessionUrlBinding>();
 	}
 
-	@TransactionAttribute(TransactionAttributeType.NEVER)
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	@Override
 	public UrlPoolBean buildUrlPool(BasePersServiceVersion theServiceVersion, Map<String, List<String>> theRequestHeaders) throws UnexpectedFailureException {
 		UrlPoolBean retVal = new UrlPoolBean();
@@ -205,19 +205,20 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override
-	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, SrBeanProcessedRequest results, PersUser theUser, SrBeanIncomingResponse theHttpResponse, SrBeanProcessedResponse theInvocationResponseResultsBean) throws UnexpectedFailureException,
+	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, SrBeanProcessedRequest theProcessedRequest, PersUser theUser, SrBeanIncomingResponse theHttpResponse, SrBeanProcessedResponse theInvocationResponseResultsBean) throws UnexpectedFailureException,
 			InvocationFailedDueToInternalErrorException {
 		Validate.notNull(theInvocationTime, "InvocationTime");
-		Validate.notNull(results, "InvocationResults");
+		Validate.notNull(theProcessedRequest, "InvocationResults");
 		Validate.notNull(theInvocationResponseResultsBean, "InvocationResponseResults");
+		Validate.notNull(theProcessedRequest.getServiceVersion(), "SrBeanProcessedRequest#ServiceVersion");
 
 		ourLog.trace("Going to record method invocation");
 
 		PersMethod method;
-		if (results.getMethodDefinition() != null) {
-			method = results.getMethodDefinition();
+		if (theProcessedRequest.getMethodDefinition() != null) {
+			method = theProcessedRequest.getMethodDefinition();
 		} else {
-			method = mySvcRegistry.getOrCreateUnknownMethodEntryForServiceVersion(results.getServiceVersion());
+			method = mySvcRegistry.getOrCreateUnknownMethodEntryForServiceVersion(theProcessedRequest.getServiceVersion());
 		}
 
 		switch (theInvocationResponseResultsBean.getResponseType()) {
@@ -246,14 +247,14 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		 */
 		InvocationStatsIntervalEnum interval = MINUTE;
 		PersInvocationMethodSvcverStatsPk statsPk = new PersInvocationMethodSvcverStatsPk(interval, theInvocationTime, method);
-		doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, statsPk, results.getThrottleTimeIfAny());
+		doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, statsPk, theProcessedRequest.getThrottleTimeIfAny());
 
 		/*
 		 * Record user/anon method statistics
 		 */
 		if (theUser != null) {
 			PersInvocationMethodUserStatsPk uStatsPk = new PersInvocationMethodUserStatsPk(interval, theInvocationTime, method, theUser);
-			doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, uStatsPk, results.getThrottleTimeIfAny());
+			doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, uStatsPk, theProcessedRequest.getThrottleTimeIfAny());
 
 		}
 		
@@ -363,7 +364,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		mySvcRegistry = theSvcRegistry;
 	}
 
-	@TransactionAttribute(TransactionAttributeType.NEVER)
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	@Override
 	public void recordInvocationStaticResource(Date theInvocationTime, PersServiceVersionResource theResource) {
 		Validate.notNull(theInvocationTime, "InvocationTime");
@@ -404,6 +405,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 	}
 
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	@Override
 	public void recordUrlFailure(PersServiceVersionUrl theUrl, Failure theFailure) {
 		Validate.notNull(theUrl, "Url");
@@ -423,6 +425,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	}
 
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	@Override
 	public void recordUrlSuccess(PersServiceVersionUrl theUrl, boolean theWasFault, String theMessage, String theContentType, int theResponseCode) {
 		Validate.notNull(theUrl, "Url");
@@ -866,6 +869,9 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				break;
 			case SUCCESS:
 				stats.addSuccessInvocation(responseTime, theRequestLengthChars, responseBytes);
+				break;
+			case FAIL:
+				stats.addFailInvocation(responseTime, theRequestLengthChars, responseBytes);
 				break;
 			default:
 				break;

@@ -3,19 +3,23 @@ package net.svcret.ejb.invoker.virtual;
 import java.util.List;
 import java.util.Set;
 
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
-import javax.ejb.Stateless;
+import javax.ejb.Singleton;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
-import net.svcret.ejb.api.SrBeanIncomingRequest;
-import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.IServiceOrchestrator;
-import net.svcret.ejb.api.SrBeanProcessedResponse;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.SrBeanProcessedRequest;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
+import net.svcret.ejb.ex.InvalidRequestException;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
-import net.svcret.ejb.ex.InvalidRequestException;
 import net.svcret.ejb.invoker.BaseServiceInvoker;
 import net.svcret.ejb.invoker.IServiceInvoker;
 import net.svcret.ejb.invoker.soap.InvocationFailedException;
@@ -25,7 +29,9 @@ import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
 
 import com.google.common.annotations.VisibleForTesting;
 
-@Stateless
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+@Singleton
+@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 public class ServiceInvokerVirtual extends BaseServiceInvoker implements IServiceInvokerVirtual {
 
 	@EJB

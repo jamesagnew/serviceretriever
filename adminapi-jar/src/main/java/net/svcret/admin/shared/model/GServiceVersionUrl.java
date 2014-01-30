@@ -171,6 +171,8 @@ public class GServiceVersionUrl extends BaseDtoDashboardObject {
 			setStatsLastFailureMessage(obj.getStatsLastFailureMessage());
 			setStatsLastFault(obj.getStatsLastFault());
 			setStatsLastFaultMessage(obj.getStatsLastFaultMessage());
+			setStatusTimestamp(obj.getStatusTimestamp());
+			setStatsNextCircuitBreakerReset(obj.getStatsNextCircuitBreakerReset());
 		}
 	}
 

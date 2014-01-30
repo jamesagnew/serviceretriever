@@ -1,14 +1,19 @@
 package net.svcret.ejb.ejb;
 
-import static net.svcret.admin.shared.enm.AuthorizationOutcomeEnum.*;
+import static net.svcret.admin.shared.enm.AuthorizationOutcomeEnum.AUTHORIZED;
+import static net.svcret.admin.shared.enm.AuthorizationOutcomeEnum.FAILED_BAD_CREDENTIALS_IN_REQUEST;
+import static net.svcret.admin.shared.enm.AuthorizationOutcomeEnum.FAILED_INTERNAL_ERROR;
+import static net.svcret.admin.shared.enm.AuthorizationOutcomeEnum.FAILED_USER_NO_PERMISSIONS;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
-import javax.ejb.Stateless;
+import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
@@ -34,7 +39,9 @@ import org.apache.commons.lang3.Validate;
 
 import com.google.common.annotations.VisibleForTesting;
 
-@Stateless
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+@Singleton
+@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 public class SecurityServiceBean implements ISecurityService {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(SecurityServiceBean.class);

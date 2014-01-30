@@ -4,7 +4,6 @@ import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.SrBeanProcessedResponse;
-import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 
 import org.apache.commons.lang3.StringUtils;
@@ -15,7 +14,6 @@ public abstract class InvocationFailedException extends Exception {
 
 	private PersUser myUser;
 	private SrBeanProcessedResponse myInvocationResponse;
-	private PersServiceVersionUrl myImplementationUrl;
 	private SrBeanIncomingResponse myHttpResponse;
 	private AuthorizationOutcomeEnum myAuthorizationOutcome;
 
@@ -63,10 +61,6 @@ public abstract class InvocationFailedException extends Exception {
 
 	public SrBeanProcessedResponse getInvocationResponse() {
 		return myInvocationResponse;
-	}
-
-	public PersServiceVersionUrl getImplementationUrl() {
-		return myImplementationUrl;
 	}
 
 	public SrBeanIncomingResponse getHttpResponse() {

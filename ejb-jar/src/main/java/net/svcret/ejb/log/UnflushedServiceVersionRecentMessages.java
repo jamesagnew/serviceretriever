@@ -9,7 +9,6 @@ import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
-import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.util.Validate;
 
@@ -25,7 +24,7 @@ public class UnflushedServiceVersionRecentMessages extends BaseUnflushed<PersSer
 		myServiceVersion = theServiceVersion;
 	}
 
-	public synchronized void recordTransaction(PersConfig theConfig, PersUser theUser, SrBeanProcessedResponse theInvocationResponse, SrBeanIncomingRequest theRequest, PersServiceVersionUrl theImplementationUrl, SrBeanIncomingResponse theHttpResponse,
+	public synchronized void recordTransaction(PersConfig theConfig, PersUser theUser, SrBeanProcessedResponse theInvocationResponse, SrBeanIncomingRequest theRequest, SrBeanIncomingResponse theHttpResponse,
 			AuthorizationOutcomeEnum theAuthorizationOutcome, SrBeanProcessedRequest theProcessedRequest) {
 		Validate.notNull(theInvocationResponse);
 		Validate.notNull(theRequest.getRequestTime());
@@ -41,7 +40,7 @@ public class UnflushedServiceVersionRecentMessages extends BaseUnflushed<PersSer
 		if (keepRecent != null && keepRecent > 0) {
 
 			PersServiceVersionRecentMessage message = new PersServiceVersionRecentMessage();
-			message.populate(theConfig, theRequest, theImplementationUrl, theInvocationResponse, theProcessedRequest);
+			message.populate(theConfig, theRequest, theInvocationResponse, theProcessedRequest, theHttpResponse);
 			message.setServiceVersion(svcVer);
 			message.setMethod(method);
 			message.setUser(theUser);

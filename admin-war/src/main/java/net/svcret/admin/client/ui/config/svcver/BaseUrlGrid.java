@@ -259,7 +259,13 @@ public abstract class BaseUrlGrid extends FlowPanel {
 		case DOWN:
 			text = "Down for " + DateUtil.formatTimeElapsed(next.getStatusTimestamp(), false, "");
 			if (next.getStatsNextCircuitBreakerReset() != null) {
-				text = text + " (next circuit breaker reset at " + DateUtil.formatTimeOnly(next.getStatsNextCircuitBreakerReset()) + ")";
+				if (next.getStatsNextCircuitBreakerReset().before(new Date())) {
+					text = text + " (circuit breaker reset on next call)";
+				}else {
+					text = text + " (next circuit breaker reset at " + DateUtil.formatTimeOnly(next.getStatsNextCircuitBreakerReset()) + ")";
+				}
+			} else {
+				text = text + " (no circuit breaker enabled)";
 			}
 			break;
 		case UNKNOWN:

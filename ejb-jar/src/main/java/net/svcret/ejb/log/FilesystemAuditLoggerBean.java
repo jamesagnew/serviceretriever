@@ -27,17 +27,16 @@ import javax.ejb.TransactionAttributeType;
 
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
+import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
-import net.svcret.ejb.api.IConfigService;
-import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.api.SrBeanProcessedRequest;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersMethod;
-import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 
 import org.apache.commons.io.FileUtils;
@@ -105,12 +104,12 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 	}
 
 	@Override
-	public void recordServiceTransaction(SrBeanIncomingRequest theRequest, BasePersServiceVersion theSvcVer, PersMethod theMethod, PersUser theUser, String theRequestBody, SrBeanProcessedResponse theInvocationResponse, PersServiceVersionUrl theImplementationUrl,
+	public void recordServiceTransaction(SrBeanIncomingRequest theRequest, BasePersServiceVersion theSvcVer, PersMethod theMethod, PersUser theUser, String theRequestBody, SrBeanProcessedResponse theInvocationResponse, 
 			SrBeanIncomingResponse theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, SrBeanProcessedRequest theInvocationResults) throws ProcessingException, UnexpectedFailureException {
 
 		validateQueueSize();
 
-		UnflushedAuditRecord auditLog = new UnflushedAuditRecord(theRequest.getRequestTime(), theRequest, theSvcVer, theMethod, theUser, theRequestBody, theInvocationResults, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome,
+		UnflushedAuditRecord auditLog = new UnflushedAuditRecord(theRequest.getRequestTime(), theRequest, theSvcVer, theMethod, theUser, theRequestBody, theInvocationResults, theInvocationResponse, theHttpResponse, theAuthorizationOutcome,
 				AuditLogTypeEnum.SVCVER);
 		myUnflushedAuditRecord.add(auditLog);
 
@@ -118,12 +117,12 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 	}
 
 	@Override
-	public void recordUserTransaction(SrBeanIncomingRequest theRequest, BasePersServiceVersion theSvcVer, PersMethod theMethod, PersUser theUser, String theRequestBody, SrBeanProcessedResponse theInvocationResponse, PersServiceVersionUrl theImplementationUrl,
+	public void recordUserTransaction(SrBeanIncomingRequest theRequest, BasePersServiceVersion theSvcVer, PersMethod theMethod, PersUser theUser, String theRequestBody, SrBeanProcessedResponse theInvocationResponse, 
 			SrBeanIncomingResponse theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, SrBeanProcessedRequest theInvocationResults) throws ProcessingException, UnexpectedFailureException {
 
 		validateQueueSize();
 
-		UnflushedAuditRecord auditLog = new UnflushedAuditRecord(theRequest.getRequestTime(), theRequest, theSvcVer, theMethod, theUser, theRequestBody, theInvocationResults, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome,
+		UnflushedAuditRecord auditLog = new UnflushedAuditRecord(theRequest.getRequestTime(), theRequest, theSvcVer, theMethod, theUser, theRequestBody, theInvocationResults, theInvocationResponse, theHttpResponse, theAuthorizationOutcome,
 				AuditLogTypeEnum.USER);
 		myUnflushedAuditRecord.add(auditLog);
 
@@ -267,8 +266,8 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 			if (StringUtils.isNotBlank(next.myMethodName)) {
 				addItem(writer, "MethodName", next.myMethodName);
 			}
-			if (next.myImplementationUrl != null) {
-				addItem(writer, "HandledByUrl", "[" + next.myImplementationUrlId + "] " + next.myImplementationUrl);
+			if (next.mySuccessImplementationUrl != null) {
+				addItem(writer, "HandledByUrl", "[" + next.mySuccessImplementationUrlId + "] " + next.mySuccessImplementationUrl);
 			}
 			if (next.myUserPid == null) {
 				addItem(writer, "User", "none");
@@ -399,8 +398,8 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 		private String myDomainId;
 		private String myFailureDescription;
 		private Map<String, List<String>> myHeaders;
-		public String myImplementationUrl;
-		private String myImplementationUrlId;
+		private String mySuccessImplementationUrl;
+		private String mySuccessImplementationUrlId;
 		private String myMethodName;
 		private String myRequestBody;
 		private String myRequestHostIp;
@@ -418,7 +417,7 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 		private Long myThrottleTimeIfAny;
 
 		public UnflushedAuditRecord(Date theRequestTime, SrBeanIncomingRequest theRequest, BasePersServiceVersion theSvcVer, PersMethod theMethod, PersUser theUser, String theRequestBody, SrBeanProcessedRequest theInvocationResults,
-				SrBeanProcessedResponse theInvocationResponse, PersServiceVersionUrl theImplementationUrl, SrBeanIncomingResponse theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, AuditLogTypeEnum theType) {
+				SrBeanProcessedResponse theInvocationResponse, SrBeanIncomingResponse theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, AuditLogTypeEnum theType) {
 
 			if (theType == AuditLogTypeEnum.USER && theUser == null) {
 				throw new IllegalArgumentException("No user provided for USER record");
@@ -428,9 +427,9 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 			myRequestTime = theRequestTime;
 			myHeaders = theRequest.getRequestHeaders();
 			myRequestBody = theRequestBody;
-			if (theImplementationUrl != null) {
-				myImplementationUrlId = theImplementationUrl.getUrlId();
-				myImplementationUrl = theImplementationUrl.getUrl();
+			if (theHttpResponse != null && theHttpResponse.getSuccessfulUrl() != null) {
+				mySuccessImplementationUrlId = theHttpResponse.getSuccessfulUrl().getUrlId();
+				mySuccessImplementationUrl = theHttpResponse.getSuccessfulUrl().getUrl();
 			}
 			myRequestHostIp = theRequest.getRequestHostIp();
 			myResponseHeaders = theInvocationResponse.getResponseHeaders();
@@ -460,8 +459,6 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 			assert myAuditRecordType != null;
 			assert myRequestTime != null;
 			assert myHeaders != null;
-			assert theImplementationUrl == null || StringUtils.isNotBlank(myImplementationUrl);
-			assert theImplementationUrl == null || StringUtils.isNotBlank(myImplementationUrlId);
 			assert myRequestHostIp != null;
 			assert StringUtils.isNotBlank(myDomainId);
 			assert StringUtils.isNotBlank(myServiceId);

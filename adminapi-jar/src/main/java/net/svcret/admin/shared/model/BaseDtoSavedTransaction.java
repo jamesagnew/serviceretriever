@@ -16,51 +16,52 @@ public class BaseDtoSavedTransaction extends BaseDtoObject {
 
 	private static final long serialVersionUID = 1L;
 
-	@XmlElement(name="FailDescription", nillable=true)
+	@XmlElement(name = "FailDescription", nillable = true)
 	private String myFailDescription;
-	@XmlElement(name="ImplementationUrlHref")
+	@XmlElement(name = "ImplementationUrlHref")
 	private String myImplementationUrlHref;
-	@XmlElement(name="ImplementationUrlId")
+	@XmlElement(name = "ImplementationUrlId")
 	private String myImplementationUrlId;
-	@XmlElement(name="ImplementationUrlPid")
+	@XmlElement(name = "ImplementationUrlPid")
 	private long myImplementationUrlPid;
-	@XmlElement(name="MethodName")
+	@XmlElement(name = "MethodName")
 	private String myMethodName;
-	@XmlElement(name="MethodPid")
+	@XmlElement(name = "MethodPid")
 	private Long myMethodPid;
-	@XmlElement(name="OutcomeDescription")
+	@XmlElement(name = "OutcomeDescription")
 	private String myOutcomeDescription;
-	@XmlElement(name="RequestActionLine")
+	@XmlElement(name = "RequestActionLine")
 	private String myRequestActionLine;
-	@XmlElement(name="RequestContentType")
+	@XmlElement(name = "RequestContentType")
 	private String myRequestContentType;
-	@XmlElementWrapper(name="RequestHeaders")
-	@XmlElement(name="Header")
+	@XmlElementWrapper(name = "RequestHeaders")
+	@XmlElement(name = "Header")
 	private List<Pair<String>> myRequestHeaders;
-	@XmlElement(name="RequestMessage")
+	@XmlElement(name = "RequestMessage")
 	private String myRequestMessage;
-	@XmlElement(name="RequestUsername")
+	@XmlElement(name = "RequestUsername")
 	private String myRequestUsername;
-	@XmlElement(name="RequestUserPid")
+	@XmlElement(name = "RequestUserPid")
 	private Long myRequestUserPid;
-	@XmlElement(name="ResponseContentType")
+	@XmlElement(name = "ResponseContentType")
 	private String myResponseContentType;
-	@XmlElementWrapper(name="ResponseHeaders")
-	@XmlElement(name="Header")
+	@XmlElementWrapper(name = "ResponseHeaders")
+	@XmlElement(name = "Header")
 	private List<Pair<String>> myResponseHeaders;
-	@XmlElement(name="ResponseMessage")
+	@XmlElement(name = "ResponseMessage")
 	private String myResponseMessage;
-	@XmlElement(name="ResponseType")
+	@XmlElement(name = "ResponseType")
 	private ResponseTypeEnum myResponseType;
-	@XmlElement(name="TransactionMillis")
+	@XmlElement(name = "StatusLine")
+	private String myResponseStatusLine;
+	@XmlElement(name = "TransactionMillis")
 	private long myTransactionMillis;
-	@XmlElement(name="TransactionTime")
+	@XmlElement(name = "TransactionTime")
 	private Date myTransactionTime;
 
 	public BaseDtoSavedTransaction() {
 		super();
 	}
-
 
 	// public GRecentMessage(long thePid, Date theDate, String theRequestHostIp,
 	// String theRequestMessage, String theResponseMessage, String
@@ -78,7 +79,6 @@ public class BaseDtoSavedTransaction extends BaseDtoObject {
 	// myResponseContentType = theResponseContentType;
 	// myRequestActionLine = theRequestActionLine;
 	// }
-
 
 	public String getFailDescription() {
 		return myFailDescription;
@@ -107,7 +107,6 @@ public class BaseDtoSavedTransaction extends BaseDtoObject {
 	public String getOutcomeDescription() {
 		return myOutcomeDescription;
 	}
-
 
 	public String getRequestActionLine() {
 		return myRequestActionLine;
@@ -176,8 +175,10 @@ public class BaseDtoSavedTransaction extends BaseDtoObject {
 		return myResponseType;
 	}
 
+	public String getResponseStatusLine() {
+		return myResponseStatusLine;
+	}
 
-	
 	/**
 	 * @return the transactionMillis
 	 */
@@ -219,7 +220,6 @@ public class BaseDtoSavedTransaction extends BaseDtoObject {
 	public void setOutcomeDescription(String theOutcomeDescription) {
 		myOutcomeDescription = theOutcomeDescription;
 	}
-
 
 	public void setRequestActionLine(String theRequestActionLine) {
 		myRequestActionLine = theRequestActionLine;
@@ -285,6 +285,9 @@ public class BaseDtoSavedTransaction extends BaseDtoObject {
 		myResponseType = theResponseType;
 	}
 
+	public void setResponseStatusLine(String theStatusLine) {
+		myResponseStatusLine = theStatusLine;
+	}
 
 	public void setTransactionMillis(long theTransactionMillis) {
 		myTransactionMillis = theTransactionMillis;

@@ -18,6 +18,7 @@ public abstract class BaseServiceInvoker implements IServiceInvoker {
 		return theServiceVersion.getServerAuths();
 	}
 
+	@SuppressWarnings("unused")
 	@Override
 	public BasePersServiceVersion introspectServiceFromUrl(PersHttpClientConfig theHttpConfig, String theUrl) throws ProcessingException {
 		throw new UnsupportedOperationException();

@@ -6,21 +6,25 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Set;
 
-import javax.ejb.Stateless;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.Singleton;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
+import net.svcret.ejb.api.IResponseValidator;
+import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
-import net.svcret.ejb.api.IResponseValidator;
-import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.api.SrBeanProcessedRequest;
-import net.svcret.ejb.api.RequestType;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
+import net.svcret.ejb.ex.InvalidRequestException;
+import net.svcret.ejb.ex.InvalidRequestException.IssueEnum;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.InvalidRequestException;
-import net.svcret.ejb.ex.InvalidRequestException.IssueEnum;
 import net.svcret.ejb.invoker.BaseServiceInvoker;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
@@ -39,7 +43,9 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
-@Stateless()
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+@Singleton
+@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 public class JsonRpc20ServiceInvoker extends BaseServiceInvoker implements IServiceInvokerJsonRpc20 {
 
 	static final String TOKEN_ID = "id";

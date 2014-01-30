@@ -5,7 +5,6 @@ import java.nio.charset.Charset;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.SecureRandom;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,11 +24,11 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
 import net.svcret.ejb.Messages;
-import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IKeystoreService;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.IResponseValidator.ValidationResponse;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
@@ -56,6 +55,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.apache.http.impl.conn.SchemeRegistryFactory;
+import org.apache.http.message.BasicLineFormatter;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.HttpParams;
@@ -179,7 +179,7 @@ public class HttpClientBean implements IHttpClient {
 		SchemeRegistry sr = mySimpleClientConMgr.getSchemeRegistry();
 		SchemeSocketFactory ssf = new SSLSocketFactory(new TrustStrategy() {
 			@Override
-			public boolean isTrusted(X509Certificate[] theChain, String theAuthType) throws CertificateException {
+			public boolean isTrusted(X509Certificate[] theChain, String theAuthType) {
 				return true;
 			}
 		});
@@ -227,6 +227,9 @@ public class HttpClientBean implements IHttpClient {
 
 				Map<String, List<String>> headerMap = toHeaderMap(resp.getAllHeaders());
 
+		        String statusLine = BasicLineFormatter.DEFAULT.formatStatusLine(null, resp.getStatusLine()).toString();
+		        theResponse.setStatusLine(statusLine);
+				
 				theResponse.setBody(body);
 				theResponse.setCode(statusCode);
 				theResponse.setContentType(contentType);

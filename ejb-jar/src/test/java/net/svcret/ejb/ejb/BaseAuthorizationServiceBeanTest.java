@@ -80,7 +80,7 @@ public class BaseAuthorizationServiceBeanTest {
 		private int myInvocationCount = 0;
 
 		@Override
-		protected UserOrFailure doAuthorize(PersAuthenticationHostLdap theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException {
+		protected UserOrFailure doAuthorize(PersAuthenticationHostLdap theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) {
 			myInvocationCount++;
 
 			if (!theCredentialGrabber.getUsername().equals("username123")) {

@@ -486,7 +486,7 @@ public class ServiceInvokerSoap11Test {
 	
 
 	@Before
-	public void before()  throws Exception {
+	public void before() {
 		
 		
 		myHttpConfig = new PersHttpClientConfig();

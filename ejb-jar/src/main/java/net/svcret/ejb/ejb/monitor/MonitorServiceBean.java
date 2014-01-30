@@ -249,7 +249,7 @@ public class MonitorServiceBean implements IMonitorService {
 				recentOutcome.setCheck(theCheck);
 				recentOutcome.setImplementationUrl(nextOutcome.getApplicableUrl());
 				recentOutcome.setRequestBody(myConfigSvc.getConfig(), nextOutcome.getSimulatedIncomingRequest(), nextOutcome.getSimulatedProcessedRequest());
-				recentOutcome.setResponseBody(myConfigSvc.getConfig(), nextOutcome.getProcessedResponse());
+				recentOutcome.setResponseBody(myConfigSvc.getConfig(), nextOutcome.getIncomingResponse(), nextOutcome.getProcessedResponse());
 				recentOutcome.setResponseType(nextOutcome.getResponseType());
 				recentOutcome.setFailDescription(nextOutcome.getFailureDescription());
 				if (nextOutcome.getIncomingResponse() != null) {

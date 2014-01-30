@@ -275,20 +275,25 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		request.setRequestHostIp("127.0.0.1");
 		request.setRequestHeaders(new HashMap<String, List<String>>());
 		request.setRequestTime(new Date());
+<<<<<<< HEAD
 		String requestBody = "request body";
 		request.setInputReader(new StringReader(requestBody));
-		
+=======
+>>>>>>> 4e1801711b4a1de3c654ee1ca0fdb8a6db800222
 		SrBeanProcessedResponse invocationResponse = new SrBeanProcessedResponse();
 		invocationResponse.setResponseHeaders(new HashMap<String, List<String>>());
 		invocationResponse.setResponseType(ResponseTypeEnum.SUCCESS);
-		httpResponse.setSuccessfulUrl(persVer.getUrls().get(0));
+		PersServiceVersionUrl implementationUrl = persVer.getUrls().get(0);
 		AuthorizationOutcomeEnum authorizationOutcome = AuthorizationOutcomeEnum.AUTHORIZED;
 		PersUser persUser = myDao.getUser(user.getPidOrNull());
+<<<<<<< HEAD
+		myTransactionLogSvc.logTransaction(request, persUser, invocationResponse, implementationUrl, httpResponse, authorizationOutcome, null);
+=======
 		SrBeanProcessedRequest processedRequest=new SrBeanProcessedRequest();
+		String requestBody = "request body";
 		processedRequest.setObscuredRequestBody(requestBody);
-		processedRequest.setServiceVersion(persVer);
-		processedRequest.setResultMethod(m1, requestBody, "text/plain");
-		myTransactionLogSvc.logTransaction(request, persUser, invocationResponse, httpResponse, authorizationOutcome, processedRequest);
+		myTransactionLogSvc.logTransaction(request, persUser, invocationResponse, implementationUrl, httpResponse, authorizationOutcome, processedRequest);
+>>>>>>> 4e1801711b4a1de3c654ee1ca0fdb8a6db800222
 
 		newEntityManager();
 

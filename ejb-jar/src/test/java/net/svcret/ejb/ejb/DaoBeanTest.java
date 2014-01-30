@@ -850,7 +850,7 @@ public class DaoBeanTest extends BaseJpaTest {
 	}
 
 	@Before
-	public void before2() throws Exception {
+	public void before2() {
 		System.setProperty(BasePersObject.NET_SVCRET_UNITTESTMODE,"true");
 		mySvc = new DaoBean();
 		

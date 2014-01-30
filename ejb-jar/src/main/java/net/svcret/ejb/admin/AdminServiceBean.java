@@ -1,6 +1,5 @@
 package net.svcret.ejb.admin;
 
-import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -93,10 +92,10 @@ import net.svcret.ejb.ejb.ServiceRegistryBean;
 import net.svcret.ejb.ejb.monitor.IMonitorService;
 import net.svcret.ejb.ejb.monitor.MonitorServiceBean;
 import net.svcret.ejb.ejb.nodecomm.ISynchronousNodeIpcClient;
+import net.svcret.ejb.ex.InvalidRequestException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
-import net.svcret.ejb.ex.InvalidRequestException;
 import net.svcret.ejb.invoker.soap.IServiceInvokerSoap11;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
@@ -117,6 +116,7 @@ import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
 import net.svcret.ejb.model.entity.PersLibraryMessage;
 import net.svcret.ejb.model.entity.PersLibraryMessageAppliesTo;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersMonitorAppliesTo;
 import net.svcret.ejb.model.entity.PersMonitorRuleActive;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
@@ -127,7 +127,6 @@ import net.svcret.ejb.model.entity.PersMonitorRulePassive;
 import net.svcret.ejb.model.entity.PersNodeStatus;
 import net.svcret.ejb.model.entity.PersPropertyCapture;
 import net.svcret.ejb.model.entity.PersService;
-import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionRecentMessage;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionThrottle;
@@ -264,7 +263,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public byte[] createWsdlBundle(long theServiceVersionPid) throws ProcessingException, IOException {
+	public byte[] createWsdlBundle(long theServiceVersionPid) throws ProcessingException {
 		BasePersServiceVersion svcVer = myServiceRegistry.getServiceVersionByPid(theServiceVersionPid);
 		if (svcVer == null) {
 			throw new IllegalArgumentException("Unknown version: " + theServiceVersionPid);
@@ -733,7 +732,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public DtoDomain getDomainByPid(long theDomain) throws ProcessingException, UnexpectedFailureException {
+	public DtoDomain getDomainByPid(long theDomain) throws UnexpectedFailureException {
 		PersDomain domain = myDao.getDomainByPid(theDomain);
 		if (domain != null) {
 			return domain.toDto();
@@ -751,12 +750,12 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public DtoLibraryMessage getLibraryMessage(long theMessagePid) throws ProcessingException {
+	public DtoLibraryMessage getLibraryMessage(long theMessagePid) {
 		return toUi(myDao.getLibraryMessageByPid(theMessagePid), true);
 	}
 
 	@Override
-	public Collection<DtoLibraryMessage> getLibraryMessages(HierarchyEnum theType, long thePid, boolean theLoadContents) throws ProcessingException {
+	public Collection<DtoLibraryMessage> getLibraryMessages(HierarchyEnum theType, long thePid, boolean theLoadContents) {
 
 		Collection<PersLibraryMessage> msgs = null;
 		switch (theType) {
@@ -781,7 +780,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public Collection<DtoLibraryMessage> getLibraryMessagesForService(long thePid, boolean theLoadContents) throws ProcessingException {
+	public Collection<DtoLibraryMessage> getLibraryMessagesForService(long thePid, boolean theLoadContents) {
 		Collection<PersLibraryMessage> msgs = myDao.getLibraryMessagesWhichApplyToService(thePid);
 		return toUiCollectionLibraryMessages(msgs, theLoadContents);
 	}
@@ -836,7 +835,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public DtoDomainList loadDomainList() throws ProcessingException, UnexpectedFailureException {
+	public DtoDomainList loadDomainList() throws UnexpectedFailureException {
 		Set<Long> empty = Collections.emptySet();
 		return loadDomainList(empty, empty, empty, empty, empty, null);
 	}
@@ -860,7 +859,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public Collection<DtoLibraryMessage> loadLibraryMessages() throws ProcessingException {
+	public Collection<DtoLibraryMessage> loadLibraryMessages() {
 		ArrayList<DtoLibraryMessage> retVal = new ArrayList<DtoLibraryMessage>();
 		for (PersLibraryMessage next : myDao.loadLibraryMessages()) {
 			retVal.add(toUi(next, false));
@@ -965,7 +964,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GMonitorRuleList loadMonitorRuleList() throws ProcessingException, UnexpectedFailureException {
+	public GMonitorRuleList loadMonitorRuleList() {
 		GMonitorRuleList retVal = new GMonitorRuleList();
 
 		Collection<BasePersMonitorRule> allRules = myDao.getMonitorRules();
@@ -1175,7 +1174,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GPartialUserList loadUsers(PartialUserListRequest theRequest) throws ProcessingException, UnexpectedFailureException {
+	public GPartialUserList loadUsers(PartialUserListRequest theRequest) throws UnexpectedFailureException {
 		GPartialUserList retVal = new GPartialUserList();
 
 		ourLog.info("Loading user list: " + theRequest.toString());
@@ -1253,7 +1252,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	// }
 
 	@Override
-	public DtoAuthenticationHostList saveAuthenticationHost(BaseDtoAuthenticationHost theAuthHost) throws ProcessingException {
+	public DtoAuthenticationHostList saveAuthenticationHost(BaseDtoAuthenticationHost theAuthHost) {
 		Validate.notNull(theAuthHost);
 
 		BasePersAuthenticationHost host = fromUi(theAuthHost);
@@ -1702,7 +1701,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long thePid, String theRequestedByString) throws ProcessingException {
+	public GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long thePid, String theRequestedByString) {
 		ourLog.info("Testing single fire of service version {}", thePid);
 		Date transactionTime = new Date();
 

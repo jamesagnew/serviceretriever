@@ -230,6 +230,9 @@ public abstract class BaseViewSavedTransactionPanel extends FlowPanel {
 		getRespPanel().add(respContentPanel);
 
 		Panel respHeaderPanel = new FlowPanel();
+		if (StringUtil.isNotBlank(theSavedTransaction.getResponseStatusLine())) {
+			respHeaderPanel.add(new HTML(formatActionLine(theSavedTransaction.getResponseStatusLine())));
+		}
 		for (Pair<String> next : theSavedTransaction.getResponseHeaders()) {
 			respHeaderPanel.add(new HTML(formatHeader(next)));
 		}

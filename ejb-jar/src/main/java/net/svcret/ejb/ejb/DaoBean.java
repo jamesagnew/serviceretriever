@@ -13,8 +13,10 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
-import javax.ejb.Stateless;
+import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
@@ -102,7 +104,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 
-@Stateless
+@Singleton
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class DaoBean implements IDao {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(DaoBean.class);
@@ -572,7 +575,7 @@ public class DaoBean implements IDao {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, String theVersionId, ServiceProtocolEnum theProtocol) throws ProcessingException {
+	public BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, String theVersionId, ServiceProtocolEnum theProtocol) {
 		BasePersServiceVersion retVal = null;
 		switch (theProtocol) {
 		case SOAP11:
@@ -719,7 +722,7 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	public PersUser getOrCreateUser(BasePersAuthenticationHost theAuthHost, String theUsername) throws ProcessingException {
+	public PersUser getOrCreateUser(BasePersAuthenticationHost theAuthHost, String theUsername) {
 		Validate.notNull(theAuthHost, "AuthenticationHost");
 		Validate.notBlank(theUsername, "Username");
 

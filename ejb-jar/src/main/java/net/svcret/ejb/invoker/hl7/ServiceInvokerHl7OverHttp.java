@@ -5,36 +5,43 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
-import javax.ejb.Stateless;
-
-import org.apache.commons.lang3.StringUtils;
+import javax.ejb.Singleton;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
-import net.svcret.ejb.api.SrBeanIncomingRequest;
-import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.IServiceRegistry;
-import net.svcret.ejb.api.SrBeanProcessedResponse;
-import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.RequestType;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
+import net.svcret.ejb.ex.InvalidRequestException;
+import net.svcret.ejb.ex.InvalidRequestException.IssueEnum;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
-import net.svcret.ejb.ex.InvalidRequestException;
-import net.svcret.ejb.ex.InvalidRequestException.IssueEnum;
 import net.svcret.ejb.invoker.BaseServiceInvoker;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp;
+
+import org.apache.commons.lang3.StringUtils;
+
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.preparser.PreParser;
 
 import com.google.common.annotations.VisibleForTesting;
 
-@Stateless
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+@Singleton
+@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements IServiceInvokerHl7OverHttp {
 
 	private static final String CT_XML = "application/hl7-v2+xml";

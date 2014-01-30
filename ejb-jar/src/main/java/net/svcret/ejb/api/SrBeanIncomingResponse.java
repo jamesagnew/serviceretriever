@@ -18,27 +18,12 @@ public class SrBeanIncomingResponse {
 	private Map<PersServiceVersionUrl, Failure> myFailedUrls;
 	private Map<String, List<String>> myHeaders;
 	private long myResponseTime;
+	private String myStatusLine;
 	private PersServiceVersionUrl mySuccessfulUrl;
-
-	/**
-	 * @return the successfulUrl
-	 */
-	public PersServiceVersionUrl getSuccessfulUrl() {
-		return mySuccessfulUrl;
-	}
-
-	/**
-	 * @param theSuccessfulUrl
-	 *            the successfulUrl to set
-	 */
-	public void setSuccessfulUrl(PersServiceVersionUrl theSuccessfulUrl) {
-		mySuccessfulUrl = theSuccessfulUrl;
-	}
-
+	
 	public SrBeanIncomingResponse() {
 		super();
 	}
-
 	public SrBeanIncomingResponse(PersServiceVersionUrl theSuccessfulUrl, String theContentType, int theCode, String theBody) {
 		super();
 		mySuccessfulUrl = theSuccessfulUrl;
@@ -86,6 +71,13 @@ public class SrBeanIncomingResponse {
 		return myFailedUrls;
 	}
 
+	public String getFailingResponseBody() {
+		for (Failure next : myFailedUrls.values()) {
+			return next.getBody();
+		}
+		return null;
+	}
+
 	public Map<String, List<String>> getHeaders() {
 		if (myHeaders != null) {
 			return myHeaders;
@@ -94,8 +86,48 @@ public class SrBeanIncomingResponse {
 		}
 	}
 
+	public List<Pair<String>> getResponseHeadersAsPairList() {
+		ArrayList<Pair<String>> retVal = new ArrayList<Pair<String>>();
+		for (Entry<String, List<String>> next : getHeaders().entrySet()) {
+			for (String nextValue : next.getValue()) {
+				retVal.add(new Pair<String>(next.getKey(), nextValue));
+			}
+		}
+		return retVal;
+	}
+
 	public long getResponseTime() {
 		return myResponseTime;
+	}
+
+	/**
+	 * This method expects to have only one URL (either sucessful or failing) and returns that URL. If no URLS, or more than one, throws an exception.
+	 */
+	public PersServiceVersionUrl getSingleUrlOrThrow() {
+		if (getSuccessfulUrl() != null) {
+			if (getFailedUrls().size() > 0) {
+				throw new IllegalStateException("HTTP Response bean contains more than one URL");
+			}
+			return getSuccessfulUrl();
+		}
+		if (getFailedUrls().size() > 1) {
+			throw new IllegalStateException("HTTP Response bean contains more than one URL");
+		}
+		if (getFailedUrls().size() == 0) {
+			throw new IllegalStateException("HTTP Response bean contains no URLs");
+		}
+		return getFailedUrls().keySet().iterator().next();
+	}
+
+	public String getStatusLine() {
+		return myStatusLine;
+	}
+
+	/**
+	 * @return the successfulUrl
+	 */
+	public PersServiceVersionUrl getSuccessfulUrl() {
+		return mySuccessfulUrl;
 	}
 
 	/**
@@ -143,13 +175,25 @@ public class SrBeanIncomingResponse {
 		myResponseTime = theResponseTime;
 	}
 
+	public void setStatusLine(String theStatusLine) {
+		myStatusLine = theStatusLine;
+	}
+
+	/**
+	 * @param theSuccessfulUrl
+	 *            the successfulUrl to set
+	 */
+	public void setSuccessfulUrl(PersServiceVersionUrl theSuccessfulUrl) {
+		mySuccessfulUrl = theSuccessfulUrl;
+	}
+
 	public static class Failure {
 		private String myBody;
 		private String myContentType;
 		private String myExplanation;
-		private int myStatusCode;
-		private long myInvocationMillis;
 		private Map<String, List<String>> myHeaders;
+		private long myInvocationMillis;
+		private int myStatusCode;
 
 		public Failure(String theBody, String theContentType, String theExplanation, int theStatusCode, long theInvocationMillis, Map<String, List<String>> theHeaders) {
 			super();
@@ -160,14 +204,6 @@ public class SrBeanIncomingResponse {
 			myStatusCode = theStatusCode;
 			myInvocationMillis = theInvocationMillis;
 			myHeaders = theHeaders;
-		}
-
-		public Map<String, List<String>> getHeaders() {
-			return myHeaders;
-		}
-
-		public long getInvocationMillis() {
-			return myInvocationMillis;
 		}
 
 		/**
@@ -191,47 +227,19 @@ public class SrBeanIncomingResponse {
 			return myExplanation;
 		}
 
+		public Map<String, List<String>> getHeaders() {
+			return myHeaders;
+		}
+
+		public long getInvocationMillis() {
+			return myInvocationMillis;
+		}
+
 		/**
 		 * @return the statusCode
 		 */
 		public int getStatusCode() {
 			return myStatusCode;
 		}
-	}
-
-	public List<Pair<String>> getResponseHeadersAsPairList() {
-		ArrayList<Pair<String>> retVal = new ArrayList<Pair<String>>();
-		for (Entry<String, List<String>> next : getHeaders().entrySet()) {
-			for (String nextValue : next.getValue()) {
-				retVal.add(new Pair<String>(next.getKey(), nextValue));
-			}
-		}
-		return retVal;
-	}
-
-	/**
-	 * This method expects to have only one URL (either sucessful or failing) and returns that URL. If no URLS, or more than one, throws an exception.
-	 */
-	public PersServiceVersionUrl getSingleUrlOrThrow() {
-		if (getSuccessfulUrl() != null) {
-			if (getFailedUrls().size() > 0) {
-				throw new IllegalStateException("HTTP Response bean contains more than one URL");
-			}
-			return getSuccessfulUrl();
-		}
-		if (getFailedUrls().size() > 1) {
-			throw new IllegalStateException("HTTP Response bean contains more than one URL");
-		}
-		if (getFailedUrls().size() == 0) {
-			throw new IllegalStateException("HTTP Response bean contains no URLs");
-		}
-		return getFailedUrls().keySet().iterator().next();
-	}
-
-	public String getFailingResponseBody() {
-		for (Failure next : myFailedUrls.values()) {
-			return next.getBody();
-		}
-		return null;
 	}
 }

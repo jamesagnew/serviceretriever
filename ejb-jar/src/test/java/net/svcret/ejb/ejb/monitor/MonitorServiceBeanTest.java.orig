@@ -21,7 +21,10 @@ import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.admin.AdminServiceBean;
+<<<<<<< HEAD
 import net.svcret.ejb.api.RequestType;
+=======
+>>>>>>> 4e1801711b4a1de3c654ee1ca0fdb8a6db800222
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
@@ -303,22 +306,31 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		svcVer = myDao.getServiceVersionByPid(myD1S1V1.getPid());
 		assertNull(getMostRecentMonitorRuleFiring());
 
-		// Fail the rule
+		// Fail one of the URLs
 		newEntityManager();
 		
 		check = myDao.getAllMonitorRuleActiveChecks().iterator().next();
 
 		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<IServiceOrchestrator.SidechannelOrchestratorResponseBean>();
-		
-		SidechannelOrchestratorResponseBean rsp = createOrchestratorResponse(ResponseTypeEnum.SUCCESS);
-		rsp.setApplicableUrl(myD1M1S1U1);
-		rsp.getIncomingResponse().setResponseTime(1000L);
-		rsp.getIncomingResponse().setSuccessfulUrl(myD1M1S1U1);
-		responses.add(rsp);
-		
+		SrBeanIncomingResponse httpResponse=new SrBeanIncomingResponse();
+		httpResponse.setSuccessfulUrl(myD1M1S1U1);
+		httpResponse.setResponseTime(1000);
+<<<<<<< HEAD
+		responses.add(createOrchestratorResponse(ResponseTypeEnum.SUCCESS));
+=======
+		responses.add(createFailResponse(ResponseTypeEnum.SUCCESS));
+>>>>>>> 4e1801711b4a1de3c654ee1ca0fdb8a6db800222
 		when(orch.handleSidechannelRequestForEachUrl(eq(myD1S1V1.getPid()), (String)any(), (String)any(), (String)any())).thenReturn(responses);
 		mySvc.runActiveChecks();
 		
+//		HttpResponseBean httpResponse = new HttpResponseBean();
+//		httpResponse.setSuccessfulUrl(myUrl1);
+//		httpResponse.addFailedUrl(myUrl2, "failure explanation", 500, "text/plain", "response body");
+//		httpResponse.setBody("successful response");
+//		InvocationResponseResultsBean invocationResponseResultsBean = new InvocationResponseResultsBean();
+//		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
+//		myStatsSvc.recordInvocationMethod(new Date(), 100, myMethod, null, httpResponse, invocationResponseResultsBean, null);
+//		newEntityManager();
 		myStatsSvc.flushStatus();
 		newEntityManager();
 
@@ -353,7 +365,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 //		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
 //		myStatsSvc.recordInvocationMethod(new Date(), 100, myMethod, null, httpResponse, invocationResponseResultsBean, null);
 
-		rsp.getIncomingResponse().setResponseTime(1L);
+		httpResponse.setResponseTime(1);
 		mySvc.clearRateLimitersForUnitTests();
 		mySvc.runActiveChecks();
 
@@ -420,7 +432,11 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		check = myDao.getAllMonitorRuleActiveChecks().iterator().next();
 
 		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<IServiceOrchestrator.SidechannelOrchestratorResponseBean>();
+<<<<<<< HEAD
 		SidechannelOrchestratorResponseBean rsp = createOrchestratorResponse(ResponseTypeEnum.FAIL);
+=======
+		SidechannelOrchestratorResponseBean rsp = createFailResponse(ResponseTypeEnum.FAIL);
+>>>>>>> 4e1801711b4a1de3c654ee1ca0fdb8a6db800222
 		rsp.setApplicableUrl(myD1M1S1U1);
 		rsp.getIncomingResponse().setResponseTime(100);
 		rsp.getIncomingResponse().setSuccessfulUrl(myD1M1S1U1);
@@ -480,10 +496,14 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		rsp.getIncomingResponse().setSuccessfulUrl(myD1M1S1U1);
 
 		responses.clear();
+<<<<<<< HEAD
 		responses.add(rsp);
 		
 		ourLog.info("Making a success");
 		
+=======
+		responses.add(createFailResponse(ResponseTypeEnum.SUCCESS));
+>>>>>>> 4e1801711b4a1de3c654ee1ca0fdb8a6db800222
 		mySvc.clearRateLimitersForUnitTests();
 		mySvc.runActiveChecks();
 
@@ -568,9 +588,12 @@ private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger
 		check = myDao.getAllMonitorRuleActiveChecks().iterator().next();
 
 		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<IServiceOrchestrator.SidechannelOrchestratorResponseBean>();
+<<<<<<< HEAD
 		SidechannelOrchestratorResponseBean bean = createOrchestratorResponse(ResponseTypeEnum.FAIL);
+=======
+		SidechannelOrchestratorResponseBean bean = createFailResponse(ResponseTypeEnum.FAIL);
+>>>>>>> 4e1801711b4a1de3c654ee1ca0fdb8a6db800222
 		bean.setApplicableUrl(myD1M1S1U1);
-		bean.getIncomingResponse().addFailedUrl(myD1M1S1U1, "Failed", 200, "text/plain", "", 100, new HashMap<String, List<String>>());
 		responses.add(bean);
 		when(orch.handleSidechannelRequestForEachUrl(eq(myD1S1V1.getPid()), (String)any(), (String)any(), (String)any())).thenReturn(responses);
 		mySvc.runActiveChecks();
@@ -586,6 +609,7 @@ private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger
 //		myStatsSvc.flushStatus();
 		newEntityManager();
 
+//		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(myD1S1V1.getPid());
 		assertNotNull(getMostRecentMonitorRuleFiring());
 		assertNull(getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage(), getMostRecentMonitorRuleFiring().getProblems().iterator().next().getCheckFailureMessage());
 		assertNull(getMostRecentMonitorRuleFiring().getEndDate());
@@ -608,6 +632,17 @@ private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger
 		
 		
 		
+	}
+
+	private SidechannelOrchestratorResponseBean createFailResponse(ResponseTypeEnum theResponseType) {
+		SrBeanIncomingRequest incomingRequest=new SrBeanIncomingRequest();
+		incomingRequest.setRequestTime(new Date());
+		SrBeanProcessedResponse processedResponse=new SrBeanProcessedResponse();
+		processedResponse.setResponseType(theResponseType);
+		SrBeanIncomingResponse incomingResponse=new SrBeanIncomingResponse();
+		incomingResponse.setHeaders(new HashMap<String, List<String>>());
+		SidechannelOrchestratorResponseBean bean = new SidechannelOrchestratorResponseBean(incomingRequest, processedResponse, incomingResponse);
+		return bean;
 	}
 
 	
@@ -750,11 +785,18 @@ private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger
 		check2 = myDao.getAllMonitorRuleActiveChecks().iterator().next();
 
 		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<IServiceOrchestrator.SidechannelOrchestratorResponseBean>();
+<<<<<<< HEAD
 		SidechannelOrchestratorResponseBean rsp = createOrchestratorResponse(ResponseTypeEnum.SUCCESS);
 		rsp.getIncomingResponse().setResponseTime(1000); // too long
 		rsp.getIncomingResponse().setSuccessfulUrl(myD1M1S1U1);
 		responses.add(rsp);
 		
+=======
+		SrBeanIncomingResponse httpResponse=new SrBeanIncomingResponse();
+		httpResponse.setSuccessfulUrl(myD1M1S1U1);
+		httpResponse.setResponseTime(1000); // This is too long
+		responses.add(createFailResponse(ResponseTypeEnum.SUCCESS));
+>>>>>>> 4e1801711b4a1de3c654ee1ca0fdb8a6db800222
 		when(orch.handleSidechannelRequestForEachUrl(eq(myD1S1V1.getPid()), (String)any(), (String)any(), (String)any())).thenReturn(responses);
 		
 		mySvc.clearRateLimitersForUnitTests();

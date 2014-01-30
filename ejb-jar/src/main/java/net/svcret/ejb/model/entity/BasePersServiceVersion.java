@@ -88,8 +88,8 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	@OrderBy("CAUTH_ORDER")
 	private List<PersBaseClientAuth<?>> myClientAuths;
 
-	@Column(name = "SVC_DESC", length = 2000, nullable = true)
-	private String myDescription;
+//	@Column(name = "SVC_DESC", length = 2000, nullable = true)
+//	private String myDescription;
 
 	@Lob()
 	@Column(name = "SVC_DESC_EXT", nullable = true)
@@ -345,10 +345,10 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	}
 
 	public String getDescription() {
-		if (myDescriptionExtended != null) {
+//		if (myDescriptionExtended != null) {
 			return myDescriptionExtended;
-		}
-		return myDescription;
+//		}
+//		return myDescription;
 	}
 
 	public String getExplicitProxyPath() {
@@ -832,16 +832,16 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	}
 
 	public void setDescription(String theDescription) {
-		if (theDescription == null) {
-			myDescription = null;
-			myDescriptionExtended = null;
-		} else if (theDescription.length() < 2000) {
-			myDescription = theDescription;
-			myDescriptionExtended = null;
-		} else {
+//		if (theDescription == null) {
+//			myDescription = null;
+//			myDescriptionExtended = null;
+//		} else if (theDescription.length() < 2000) {
+//			myDescription = theDescription;
+//			myDescriptionExtended = null;
+//		} else {
 			myDescriptionExtended = theDescription;
-			myDescription = null;
-		}
+//			myDescription = null;
+//		}
 	}
 
 	public void setExplicitProxyPath(String theExplicitProxyPath) throws ProcessingException {

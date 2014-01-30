@@ -51,6 +51,9 @@ public class FilesystemAuditLoggerBeanTest {
 		when(cfgSvc.getConfig()).thenReturn(new PersConfig());
 
 		mySvc.initialize();
+		
+		ourLog.info("Writing temporary audit logs to: {}", myTempPath.getAbsolutePath());
+		
 	}
 
 	@Test
@@ -72,9 +75,9 @@ public class FilesystemAuditLoggerBeanTest {
 		SrBeanIncomingResponse httpResponse = mock(SrBeanIncomingResponse.class, new ReturnsDeepStubs());
 		AuthorizationOutcomeEnum authorizationOutcome = AuthorizationOutcomeEnum.AUTHORIZED;
 		SrBeanProcessedRequest req = new SrBeanProcessedRequest();
-		mySvc.recordServiceTransaction(request, method.getServiceVersion(), method, user, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome, req);
+		mySvc.recordServiceTransaction(request, method.getServiceVersion(), method, user, requestBody, invocationResponse, httpResponse, authorizationOutcome, req);
 
-		mySvc.recordServiceTransaction(request, method.getServiceVersion(), method, user, requestBody, invocationResponse, implementationUrl, httpResponse, authorizationOutcome, req);
+		mySvc.recordServiceTransaction(request, method.getServiceVersion(), method, user, requestBody, invocationResponse, httpResponse, authorizationOutcome, req);
 
 		mySvc.forceFlush();
 	}

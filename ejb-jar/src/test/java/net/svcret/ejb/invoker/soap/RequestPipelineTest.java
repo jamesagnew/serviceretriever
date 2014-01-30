@@ -121,19 +121,19 @@ public class RequestPipelineTest {
 		builder.setErrorHandler(new ErrorHandler() {
 			
 			@Override
-			public void warning(SAXParseException theException) throws SAXException {
+			public void warning(SAXParseException theException) {
 				ourLog.error("Failed", theException);
 				fail(theException.toString());
 			}
 			
 			@Override
-			public void fatalError(SAXParseException theException) throws SAXException {
+			public void fatalError(SAXParseException theException) {
 				ourLog.error("Failed", theException);
 				fail(theException.toString());
 			}
 			
 			@Override
-			public void error(SAXParseException theException) throws SAXException {
+			public void error(SAXParseException theException) {
 				ourLog.error("Failed", theException);
 				fail(theException.toString());
 			}

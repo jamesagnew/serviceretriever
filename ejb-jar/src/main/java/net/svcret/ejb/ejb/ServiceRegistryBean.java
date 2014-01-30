@@ -95,7 +95,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	}
 
 	@Override
-	public void deleteHttpClientConfig(PersHttpClientConfig theConfig) throws ProcessingException, UnexpectedFailureException {
+	public void deleteHttpClientConfig(PersHttpClientConfig theConfig) throws UnexpectedFailureException {
 		catalogHasChanged();
 		myDao.deleteHttpClientConfig(theConfig);
 	}
@@ -261,6 +261,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	 * {@inheritDoc}
 	 */
 	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public BasePersServiceVersion getServiceVersionForPath(String thePath) {
 		if (thePath == null) {
 			throw new IllegalArgumentException("Path can not be null");
@@ -325,7 +326,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	}
 
 	@Override
-	public void removeDomain(PersDomain theDomain) throws ProcessingException, UnexpectedFailureException {
+	public void removeDomain(PersDomain theDomain) throws UnexpectedFailureException {
 		catalogHasChanged();
 		myDao.removeDomain(theDomain);
 	}
@@ -346,7 +347,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	}
 
 	@Override
-	public PersDomain saveDomain(PersDomain theDomain) throws ProcessingException, UnexpectedFailureException {
+	public PersDomain saveDomain(PersDomain theDomain) throws UnexpectedFailureException {
 		catalogHasChanged();
 		PersDomain retVal = myDao.saveDomain(theDomain);
 		reloadRegistryFromDatabase();
@@ -354,13 +355,13 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	}
 
 	@Override
-	public PersHttpClientConfig saveHttpClientConfig(PersHttpClientConfig theConfig) throws ProcessingException, UnexpectedFailureException {
+	public PersHttpClientConfig saveHttpClientConfig(PersHttpClientConfig theConfig) throws UnexpectedFailureException {
 		catalogHasChanged();
 		return myDao.saveHttpClientConfig(theConfig);
 	}
 
 	@Override
-	public void saveService(PersService theService) throws ProcessingException, UnexpectedFailureException {
+	public void saveService(PersService theService) throws UnexpectedFailureException {
 		catalogHasChanged();
 		myDao.saveService(theService);
 		reloadRegistryFromDatabase();

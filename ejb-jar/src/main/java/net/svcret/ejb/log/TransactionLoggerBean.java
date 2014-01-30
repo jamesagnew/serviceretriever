@@ -25,7 +25,6 @@ import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersSavedTransactionRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
-import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.util.LogUtil;
 import net.svcret.ejb.util.Validate;
@@ -71,29 +70,30 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	 * {@inheritDoc}
 	 * 
 	 * @param theImplementationUrl
-	 * @param theHttpResponse
+	 * @param theIncomingResponse
 	 * @param theResponseBody
-	 * @param theInvocationResults
+	 * @param theProcessedRequest
 	 * @throws ProcessingException
 	 * @throws UnexpectedFailureException
 	 */
 	@Override
-	public void logTransaction(SrBeanIncomingRequest theRequest, PersUser theUser, SrBeanProcessedResponse theInvocationResponse, PersServiceVersionUrl theImplementationUrl, SrBeanIncomingResponse theHttpResponse, AuthorizationOutcomeEnum theAuthorizationOutcome,
-			SrBeanProcessedRequest theInvocationResults) throws ProcessingException, UnexpectedFailureException {
-		Validate.notNull(theInvocationResults.getServiceVersion());
-		Validate.notNull(theInvocationResponse);
-		if (theInvocationResponse.getResponseType() != ResponseTypeEnum.FAIL) {
-			Validate.notNull(theInvocationResults.getMethodDefinition());
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public void logTransaction(SrBeanIncomingRequest theIncomingRequest, PersUser theUser, SrBeanProcessedResponse theProcessedResponse, SrBeanIncomingResponse theIncomingResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, SrBeanProcessedRequest theProcessedRequest)
+			throws ProcessingException, UnexpectedFailureException {
+		Validate.notNull(theProcessedRequest.getServiceVersion());
+		Validate.notNull(theProcessedResponse);
+		if (theProcessedResponse.getResponseType() != ResponseTypeEnum.FAIL) {
+			Validate.notNull(theProcessedRequest.getMethodDefinition());
 		}
 
 		// Log to database
 		{
-			UnflushedServiceVersionRecentMessages newValue = new UnflushedServiceVersionRecentMessages(theInvocationResults.getServiceVersion());
-			UnflushedServiceVersionRecentMessages existing = myUnflushedMessages.putIfAbsent(theInvocationResults.getServiceVersion(), newValue);
+			UnflushedServiceVersionRecentMessages newValue = new UnflushedServiceVersionRecentMessages(theProcessedRequest.getServiceVersion());
+			UnflushedServiceVersionRecentMessages existing = myUnflushedMessages.putIfAbsent(theProcessedRequest.getServiceVersion(), newValue);
 			if (existing == null) {
 				existing = newValue;
 			}
-			existing.recordTransaction(myConfigSvc.getConfig(), theUser, theInvocationResponse, theRequest, theImplementationUrl, theHttpResponse, theAuthorizationOutcome, theInvocationResults);
+			existing.recordTransaction(myConfigSvc.getConfig(), theUser, theProcessedResponse, theIncomingRequest, theIncomingResponse, theAuthorizationOutcome, theProcessedRequest);
 		}
 
 		if (theUser != null) {
@@ -103,18 +103,20 @@ public class TransactionLoggerBean implements ITransactionLogger {
 				existing = newValue;
 			}
 
-			existing.recordTransaction(myConfigSvc.getConfig(), theRequest, theUser, theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome, theInvocationResults);
+			existing.recordTransaction(myConfigSvc.getConfig(), theIncomingRequest, theUser, theProcessedResponse, theIncomingResponse, theAuthorizationOutcome, theProcessedRequest);
 
 			// Audit log
 			if (theUser.determineInheritedAuditLogEnable()) {
-				myFilesystemAuditLogger.recordUserTransaction(theRequest, theInvocationResults.getServiceVersion(), theInvocationResults.getMethodDefinition(), theUser, theInvocationResults.getObscuredRequestBody(), theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome, theInvocationResults);
+				myFilesystemAuditLogger.recordUserTransaction(theIncomingRequest, theProcessedRequest.getServiceVersion(), theProcessedRequest.getMethodDefinition(), theUser, theProcessedRequest.getObscuredRequestBody(), theProcessedResponse, theIncomingResponse,
+						theAuthorizationOutcome, theProcessedRequest);
 			}
 
 		}
 
 		// Audit Log
-		if (theInvocationResults.getServiceVersion().determineInheritedAuditLogEnable() == true) {
-			myFilesystemAuditLogger.recordServiceTransaction(theRequest, theInvocationResults.getServiceVersion(), theInvocationResults.getMethodDefinition(), theUser, theInvocationResults.getObscuredRequestBody(), theInvocationResponse, theImplementationUrl, theHttpResponse, theAuthorizationOutcome, theInvocationResults);
+		if (theProcessedRequest.getServiceVersion().determineInheritedAuditLogEnable() == true) {
+			myFilesystemAuditLogger.recordServiceTransaction(theIncomingRequest, theProcessedRequest.getServiceVersion(), theProcessedRequest.getMethodDefinition(), theUser, theProcessedRequest.getObscuredRequestBody(), theProcessedResponse, theIncomingResponse,
+					theAuthorizationOutcome, theProcessedRequest);
 		}
 
 	}
@@ -169,6 +171,5 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	public void setConfigServiceForUnitTests(IConfigService theConfigSvc) {
 		myConfigSvc = theConfigSvc;
 	}
-
 
 }

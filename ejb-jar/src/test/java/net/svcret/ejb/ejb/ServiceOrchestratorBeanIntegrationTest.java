@@ -1,8 +1,16 @@
 package net.svcret.ejb.ejb;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.FileReader;
@@ -17,6 +25,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
@@ -26,19 +35,22 @@ import net.svcret.admin.shared.model.UrlSelectionPolicy;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IResponseValidator;
+import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.SrBeanOutgoingResponse;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
 import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
 import net.svcret.ejb.ex.InvalidRequestException;
-import net.svcret.ejb.ex.InvocationRequestFailedException;
-import net.svcret.ejb.ex.InvocationResponseFailedException;
-import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.ex.InvalidRequestException.IssueEnum;
+import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
+import net.svcret.ejb.ex.InvocationRequestFailedException;
+import net.svcret.ejb.ex.InvocationRequestOrResponseFailedException;
+import net.svcret.ejb.ex.InvocationResponseFailedException;
+import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.invoker.hl7.ServiceInvokerHl7OverHttp;
 import net.svcret.ejb.invoker.soap.ServiceInvokerSoap11;
 import net.svcret.ejb.invoker.virtual.ServiceInvokerVirtual;
@@ -61,11 +73,15 @@ import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersStickySessionUrlBinding;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.http.PersHttpBasicServerAuth;
+import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
 import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
 import net.svcret.ejb.propcap.PropertyCaptureBean;
 import net.svcret.ejb.throttle.IThrottlingService;
+import net.svcret.ejb.throttle.ThrottleException;
+import net.svcret.ejb.throttle.ThrottleQueueFullException;
+import net.svcret.ejb.throttle.ThrottlingService;
 
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.collection.IsIterableContainingInAnyOrder;
@@ -82,6 +98,7 @@ import ca.uhn.hl7v2.parser.PipeParser;
 
 public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 
+	private static final String WSDL_URL = "http://127.0.0.1/example.wsdl";
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceOrchestratorBeanIntegrationTest.class);
 	private IBroadcastSender myBroadcastSender;
 	private IConfigService myConfigService;
@@ -104,6 +121,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 	private ServiceInvokerVirtual myVirtualInvoker;
 	private PersAuthenticationHostLocalDatabase myAuthHost;
 	private PropertyCaptureBean myPropertyCapture;
+	private IThrottlingService myThrottlingServiceMock;
 
 	@SuppressWarnings("null")
 	@Test
@@ -160,7 +178,8 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		ITransactionLogger transactionLogger = mock(ITransactionLogger.class);
 		mySvc.setTransactionLogger(transactionLogger);
 
-		SrBeanOutgoingResponse resp = provideNull(); // avoid a warning about potential null
+		SrBeanOutgoingResponse resp = provideNull(); // avoid a warning about
+														// potential null
 		int reps = 100;
 		long start = System.currentTimeMillis();
 		for (int i = 0; i < 100; i++) {
@@ -322,8 +341,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		respBean.setResponseTime(100);
 		respBean.setSuccessfulUrl(myUrl);
 		respBean.setHeaders(new HashMap<String, List<String>>());
-		when(myHttpClient.post(any(PersHttpClientConfig.class), any(IResponseValidator.class), any(UrlPoolBean.class), contentBodyCaptor.capture(), any(Map.class), any(String.class))).thenReturn(
-				respBean);
+		when(myHttpClient.post(any(PersHttpClientConfig.class), any(IResponseValidator.class), any(UrlPoolBean.class), contentBodyCaptor.capture(), any(Map.class), any(String.class))).thenReturn(respBean);
 
 		ITransactionLogger transactionLogger = mock(ITransactionLogger.class);
 		mySvc.setTransactionLogger(transactionLogger);
@@ -336,7 +354,8 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		// PersWsSecUsernameTokenServerAuth sa = new PersWsSecUsernameTokenServerAuth();
+		// PersWsSecUsernameTokenServerAuth sa = new
+		// PersWsSecUsernameTokenServerAuth();
 		// sa.setAuthenticationHost(myDao.getOrCreateAuthenticationHostLocalDatabase("TEST"));
 		// mySvcVer.addServerAuth(sa);
 
@@ -396,20 +415,21 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		 * Make request
 		 */
 
-//		IResponseValidator theResponseValidator = any();
-//		UrlPoolBean theUrlPool = any();
-//		String theContentBody = any();
-//		Map<String, List<String>> theHeaders = any();
-//		String theContentType = any();
-//		SrBeanIncomingResponse respBean = new SrBeanIncomingResponse();
-//		respBean.setCode(200);
-//		respBean.setBody(response);
-//		respBean.setContentType("text/xml");
-//		respBean.setResponseTime(100);
-//		respBean.setSuccessfulUrl(myUrl);
-//		respBean.setHeaders(new HashMap<String, List<String>>());
-//		PersHttpClientConfig httpClient = any();
-//		when(myHttpClient.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
+		// IResponseValidator theResponseValidator = any();
+		// UrlPoolBean theUrlPool = any();
+		// String theContentBody = any();
+		// Map<String, List<String>> theHeaders = any();
+		// String theContentType = any();
+		// SrBeanIncomingResponse respBean = new SrBeanIncomingResponse();
+		// respBean.setCode(200);
+		// respBean.setBody(response);
+		// respBean.setContentType("text/xml");
+		// respBean.setResponseTime(100);
+		// respBean.setSuccessfulUrl(myUrl);
+		// respBean.setHeaders(new HashMap<String, List<String>>());
+		// PersHttpClientConfig httpClient = any();
+		// when(myHttpClient.post(httpClient, theResponseValidator, theUrlPool,
+		// theContentBody, theHeaders, theContentType)).thenReturn(respBean);
 
 		TransactionLoggerBean logger = new TransactionLoggerBean();
 		logger.setDao(myDao);
@@ -430,7 +450,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		req.setPath("/d0/d0s0/d0s0v0");
 		req.setQuery(query);
 		req.setInputReader(reader);
-		req.setRequestTime(new Date(System.currentTimeMillis() - (60L*1000L)));
+		req.setRequestTime(new Date(System.currentTimeMillis() - (60L * 1000L)));
 		req.setRequestHeaders(new HashMap<String, List<String>>());
 		try {
 			resp = mySvc.handleServiceRequest(req);
@@ -465,7 +485,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		StatsAccumulator stats = myRuntimeQuerySvc.extract60MinuteStats(mySvcVer);
 		assertEquals(stats.getFailCounts().toString(), 1, stats.getFailCounts().get(58).intValue());
 	}
-	
+
 	@Test
 	public void testSoap11InvalidPostRequest() throws Exception {
 
@@ -569,7 +589,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		d0s0v0.setServerSecurityMode(ServerSecurityModeEnum.ALLOW_ANY);
 		myServiceRegistry.saveServiceVersion(d0s0v0);
 		newEntityManager();
-		
+
 		/*
 		 * Make request
 		 */
@@ -632,7 +652,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		try {
 			resp = mySvc.handleServiceRequest(req);
 			fail();
-		} catch (ProcessingException e) {
+		} catch (InvocationFailedDueToInternalErrorException e) {
 			ourLog.info("Message: " + e.getMessage());
 			assertThat(e.getMessage(), IsNot.not(IsEmptyString.isEmptyOrNullString()));
 		}
@@ -712,7 +732,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		headers.get("Header0").add("Header0Value");
 		respBean.addFailedUrl(myUrl, "This is the failure explanation", 500, "text/xml", response, 100, headers);
 		respBean.setHeaders(headers);
-		
+
 		PersHttpClientConfig httpClient = any();
 		when(myHttpClient.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
 
@@ -781,6 +801,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		ServiceInvokerSoap11 invoker = mock(ServiceInvokerSoap11.class);
 		mySvc.setSoap11ServiceInvoker(invoker);
 		when(invoker.processInvocation(any(SrBeanIncomingRequest.class), any(BasePersServiceVersion.class))).thenThrow(NullPointerException.class);
+		when(invoker.obscureMessageForLogs(any(BasePersServiceVersion.class), eq(request), any(Set.class))).thenReturn("OBSCURED METHOD BODY");
 
 		SrBeanOutgoingResponse resp = null;
 		String query = "";
@@ -796,7 +817,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		try {
 			resp = mySvc.handleServiceRequest(req);
 			fail();
-		} catch (ProcessingException e) {
+		} catch (InvocationFailedDueToInternalErrorException e) {
 			ourLog.info("Message: " + e.getMessage());
 			assertThat(e.getMessage(), IsNot.not(IsEmptyString.isEmptyOrNullString()));
 		}
@@ -813,7 +834,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		String entireLog = org.apache.commons.io.IOUtils.toString(fr);
 		ourLog.info("Journal file: {}", entireLog);
 
-		assertThat(entireLog, StringContains.containsString("</soapenv:Envelope>"));
+		assertThat(entireLog, StringContains.containsString("OBSCURED METHOD BODY"));
 	}
 
 	private String getSvcVerFileName() {
@@ -823,6 +844,61 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 			}
 		}
 		throw new Error("Failed with: " + Arrays.asList(new File(myTempPath).listFiles()));
+	}
+
+	/**
+	 * Test that we recover gracefully when a backing service fails
+	 */
+	@Test
+	public void testUnexpectedServiceFailure() throws ThrottleException, ThrottleQueueFullException, InvocationRequestOrResponseFailedException, InvalidRequestException, SecurityFailureException {
+		newEntityManager();
+
+		doThrow(NullPointerException.class).when(myThrottlingServiceMock).applyThrottle(any(SrBeanIncomingRequest.class), any(SrBeanProcessedRequest.class), any(AuthorizationResultsBean.class));
+
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
+		req.setRequestType(RequestType.GET);
+		req.setRequestHostIp("127.0.0.1");
+		req.setPath("/d0/d0s0/d0s0v0");
+		req.setQuery("?wsdl");
+		req.setInputReader(new StringReader(""));
+		req.setRequestTime(new Date());
+		req.setRequestHeaders(new HashMap<String, List<String>>());
+
+		try {
+			mySvc.handleServiceRequest(req);
+			fail();
+		} catch (InvocationFailedDueToInternalErrorException e) {
+			assertThat(e.getMessage(), StringContains.containsString("NullPointerEx"));
+		}
+
+	}
+
+	/**
+	 * Test that we recover gracefully when a backing service fails
+	 */
+	@Test
+	public void testSoap11GetWsdl() throws Exception {
+		newEntityManager();
+
+		ThrottlingService throttlingSvc = new ThrottlingService();
+		throttlingSvc.setThisForTesting(throttlingSvc);
+		throttlingSvc.setRuntimeStatusSvcForTesting(myRuntimeStatus);
+		throttlingSvc.setServiceOrchestratorForTesting(mySvc);
+		
+		mySvc.setThrottlingService(throttlingSvc);
+		
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
+		req.setRequestType(RequestType.GET);
+		req.setRequestHostIp("127.0.0.1");
+		req.setPath("/d0/d0s0/d0s0v0");
+		req.setQuery("?wsdl");
+		req.setInputReader(new StringReader(""));
+		req.setRequestTime(new Date());
+		req.setRequestHeaders(new HashMap<String, List<String>>());
+
+		SrBeanOutgoingResponse rsp = mySvc.handleServiceRequest(req);
+		assertThat(rsp.getResponseBody(), StringContains.containsString("<wsdl/>"));
+
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -911,7 +987,8 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		/*
-		 * Second query, no sesion cookie still so we should round robin the URLs. This one will return a cookie though
+		 * Second query, no sesion cookie still so we should round robin the
+		 * URLs. This one will return a cookie though
 		 */
 
 		req.setInputReader(new StringReader(request));
@@ -934,7 +1011,8 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 
 		/*
-		 * Third query, should use the second URL because we have a sticky session now
+		 * Third query, should use the second URL because we have a sticky
+		 * session now
 		 */
 
 		req.setInputReader(new StringReader(request));
@@ -966,7 +1044,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 	@Before
 	public void before() throws Exception {
 		System.setProperty(BasePersObject.NET_SVCRET_UNITTESTMODE, "true");
-		
+
 		myHttpClient = mock(IHttpClient.class, new ReturnsDeepStubs());
 		myBroadcastSender = mock(IBroadcastSender.class);
 
@@ -1005,7 +1083,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		myRuntimeStatus.setBroadcastSender(myBroadcastSender);
 		myRuntimeStatus.setConfigSvc(myConfigService);
 		myRuntimeStatus.setSvcRegistryForUnitTests(myServiceRegistry);
-		
+
 		mySoapInvoker = new ServiceInvokerSoap11();
 		mySoapInvoker.setConfigService(myConfigService);
 		mySoapInvoker.setHttpClient(myHttpClient);
@@ -1017,7 +1095,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		myVirtualInvoker = new ServiceInvokerVirtual();
 
 		myPropertyCapture = new PropertyCaptureBean();
-		
+
 		mySvc = new ServiceOrchestratorBean();
 		mySvc.setHttpClient(myHttpClient);
 		mySvc.setRuntimeStatus(myRuntimeStatus);
@@ -1026,7 +1104,9 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		mySvc.setSvcRegistry(myServiceRegistry);
 		mySvc.setServiceInvokerHl7OverhttpForUnitTests(myHl7Invoker);
 		mySvc.setServiceInvokerVirtualForUnitTests(myVirtualInvoker);
-		mySvc.setThrottlingService(mock(IThrottlingService.class));
+
+		myThrottlingServiceMock = mock(IThrottlingService.class);
+		mySvc.setThrottlingService(myThrottlingServiceMock);
 		mySvc.setPropertyCaptureForUnitTests(myPropertyCapture);
 
 		myVirtualInvoker.setOrchestratorForUnitTests(mySvc);
@@ -1050,7 +1130,7 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		newEntityManager();
 		PersDomain d0 = myServiceRegistry.getOrCreateDomainWithId("d0");
 		PersService d0s0 = myServiceRegistry.getOrCreateServiceWithId(d0, "d0s0");
-		BasePersServiceVersion d0s0v0 = myServiceRegistry.getOrCreateServiceVersionWithId(d0s0, ServiceProtocolEnum.SOAP11, "d0s0v0");
+		PersServiceVersionSoap11 d0s0v0 = (PersServiceVersionSoap11) myServiceRegistry.getOrCreateServiceVersionWithId(d0s0, ServiceProtocolEnum.SOAP11, "d0s0v0");
 		d0s0v0.setServerSecurityMode(ServerSecurityModeEnum.REQUIRE_ANY);
 		PersMethod d0s0v0m0 = new PersMethod();
 		d0s0v0m0.setName("d0s0v0m0");
@@ -1075,7 +1155,10 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 		d0s0v0.setKeepNumRecentTransactionsSuccess(100);
 		d0s0v0.setAuditLogEnable(true);
 
-		d0s0v0 = myServiceRegistry.saveServiceVersion(d0s0v0);
+		d0s0v0.setWsdlUrl(WSDL_URL);
+		d0s0v0.addResource(WSDL_URL, "application/xml", "<wsdl/>");
+
+		d0s0v0 = (PersServiceVersionSoap11) myServiceRegistry.saveServiceVersion(d0s0v0);
 		newEntityManager();
 
 		myServiceRegistry.reloadRegistryFromDatabase();

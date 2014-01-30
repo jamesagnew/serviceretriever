@@ -31,16 +31,15 @@ import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
 import net.svcret.ejb.api.IServiceOrchestrator;
-import net.svcret.ejb.api.SrBeanProcessedResponse;
-import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.SrBeanOutgoingResponse;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.ex.UnexpectedFailureException;
-import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionThrottle;
 import net.svcret.ejb.model.entity.PersUser;
 
@@ -48,10 +47,10 @@ import org.apache.commons.lang3.Validate;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.RateLimiter;
 
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 public class ThrottlingService implements IThrottlingService {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ThrottlingService.class);
@@ -64,8 +63,8 @@ public class ThrottlingService implements IThrottlingService {
 	@EJB
 	private IThrottlingService myThis;
 
-	private Map<LimiterKey, ThrottledTaskQueue> myThrottleQueues = new HashMap<LimiterKey, ThrottledTaskQueue>();
-	private ConcurrentHashMap<LimiterKey, FlexibleRateLimiter> myUserRateLimiters = new ConcurrentHashMap<LimiterKey, FlexibleRateLimiter>();
+	private final Map<LimiterKey, ThrottledTaskQueue> myThrottleQueues = new HashMap<LimiterKey, ThrottledTaskQueue>();
+	private final ConcurrentHashMap<LimiterKey, FlexibleRateLimiter> myUserRateLimiters = new ConcurrentHashMap<LimiterKey, FlexibleRateLimiter>();
 
 	private void applyThrottle(SrBeanIncomingRequest theHttpRequest, SrBeanProcessedRequest theInvocationRequest, AuthorizationResultsBean theAuthorization, Collection<LimiterKey> theRemainingThrottles) throws ThrottleQueueFullException, ThrottleException {
 		
@@ -130,18 +129,19 @@ public class ThrottlingService implements IThrottlingService {
 		Set<LimiterKey> throttleKeys = new HashSet<LimiterKey>();
 		
 		/*
-		 * Service specific throttle
+		 * Service specific throttle for method
 		 */
-		
-		PersServiceVersionThrottle svcThrottle = theInvocationRequest.getMethodDefinition().getServiceVersion().getThrottle();
-		if (svcThrottle != null) {
-			double requestsPerSecond = svcThrottle.getThrottlePeriod().numRequestsToRequestsPerSecond(svcThrottle.getThrottleMaxRequests());
-			Integer maxQueueDepth = svcThrottle.getThrottleMaxQueueDepth();
-			PersUser svcThrottleUser = svcThrottle.isApplyPerUser() ? user : null;
-			String propCapName = svcThrottle.getApplyPropCapName();
-			String propCapValue = propCapName != null ? theInvocationRequest.getPropertyCaptures().get(propCapName) : null;
-			LimiterKey key = new LimiterKey(svcThrottleUser, propCapName, propCapValue, requestsPerSecond, maxQueueDepth);
-			throttleKeys.add(key);
+		if (theInvocationRequest.getMethodDefinition() != null) {
+			PersServiceVersionThrottle svcThrottle = theInvocationRequest.getMethodDefinition().getServiceVersion().getThrottle();
+			if (svcThrottle != null) {
+				double requestsPerSecond = svcThrottle.getThrottlePeriod().numRequestsToRequestsPerSecond(svcThrottle.getThrottleMaxRequests());
+				Integer maxQueueDepth = svcThrottle.getThrottleMaxQueueDepth();
+				PersUser svcThrottleUser = svcThrottle.isApplyPerUser() ? user : null;
+				String propCapName = svcThrottle.getApplyPropCapName();
+				String propCapValue = propCapName != null ? theInvocationRequest.getPropertyCaptures().get(propCapName) : null;
+				LimiterKey key = new LimiterKey(svcThrottleUser, propCapName, propCapValue, requestsPerSecond, maxQueueDepth);
+				throttleKeys.add(key);
+			}
 		}
 		
 		/*
@@ -310,17 +310,17 @@ public class ThrottlingService implements IThrottlingService {
 	}
 
 	@VisibleForTesting
-	void setRuntimeStatusSvcForTesting(IRuntimeStatus theRuntimeStatusSvc) {
+	public void setRuntimeStatusSvcForTesting(IRuntimeStatus theRuntimeStatusSvc) {
 		myRuntimeStatusSvc = theRuntimeStatusSvc;
 	}
 
 	@VisibleForTesting
-	void setServiceOrchestratorForTesting(IServiceOrchestrator theServiceOrchestrator) {
+	public void setServiceOrchestratorForTesting(IServiceOrchestrator theServiceOrchestrator) {
 		myServiceOrchestrator = theServiceOrchestrator;
 	}
 
 	@VisibleForTesting
-	void setThisForTesting(IThrottlingService theThis) {
+	public void setThisForTesting(IThrottlingService theThis) {
 		myThis = theThis;
 	}
 

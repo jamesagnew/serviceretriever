@@ -10,6 +10,7 @@ import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
 import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanProcessedResponse;
 
@@ -49,9 +50,9 @@ public abstract class BasePersSavedTransactionRecentMessage extends BasePersSave
 	}
 
 	@Override
-	public void populate(PersConfig theConfig, SrBeanIncomingRequest theRequest, PersServiceVersionUrl theImplementationUrl, SrBeanProcessedResponse theInvocationResult, SrBeanProcessedRequest theProcessedRequest) {
+	public void populate(PersConfig theConfig, SrBeanIncomingRequest theRequest, SrBeanProcessedResponse theInvocationResult, SrBeanProcessedRequest theProcessedRequest, SrBeanIncomingResponse theIncomingResponse) {
 		setRequestHostIp(theRequest.getRequestHostIp());
-		super.populate(theConfig, theRequest, theImplementationUrl, theInvocationResult, theProcessedRequest);
+		super.populate(theConfig, theRequest, theInvocationResult, theProcessedRequest, theIncomingResponse);
 	}
 
 	/**
