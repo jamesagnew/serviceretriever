@@ -234,9 +234,22 @@ public class PersMethod extends BasePersObject {
 			accumulator.populateDto(retVal);
 
 			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
+			
+			PersMethodStatus methodStatus = getStatus();
+			if (methodStatus != null) {
+				retVal.setLastSuccessfulInvocation(methodStatus.getLastSuccessfulInvocation());
+				retVal.setLastFaultInvocation(methodStatus.getLastFaultInvocation());
+				retVal.setLastFailInvocation(methodStatus.getLastFailInvocation());
+				retVal.setLastServerSecurityFailure(methodStatus.getLastSecurityFailInvocation());
+			}
+			
 		}
 
 		return retVal;
+	}
+
+	public PersMethodStatus getStatus() {
+		return myStatus;
 	}
 
 }

@@ -5,7 +5,7 @@ import org.junit.Test;
 public class LdapAuthorizationProviderTest {
 
 	@Test
-	public void testIt() throws Exception {
+	public void testIt() {
 		
 //		DefaultDirectoryService service = new DefaultDirectoryService();
 //	    service.getChangeLog().setEnabled( false );

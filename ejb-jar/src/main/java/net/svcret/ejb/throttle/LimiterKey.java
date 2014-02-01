@@ -13,7 +13,6 @@ class LimiterKey {
 	private String myPropertyCaptureValue;
 	private double myRequestsPerSecond;
 	private PersUser myUser;
-	private volatile long myLastUsed;
 
 	public LimiterKey(PersUser theUser, String thePropertyCaptureKey, String thePropertyCaptureValue, double theRequestsPerSecond, Integer theMaxQueueDepth) {
 		super();

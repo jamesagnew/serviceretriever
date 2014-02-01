@@ -2,9 +2,6 @@ package net.svcret.ejb.api;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
 
 import javax.ejb.Local;
 import javax.servlet.AsyncContext;
@@ -62,7 +59,7 @@ public interface IServiceOrchestrator {
 		private SrBeanProcessedRequest mySimulatedProcessedRequest;
 
 		public SidechannelOrchestratorResponseBean(SrBeanIncomingRequest theIncomingRequest, SrBeanProcessedResponse theProcessedResponse, SrBeanIncomingResponse theIncomingResponse) {
-			super(theProcessedResponse, theIncomingResponse);
+			super(theProcessedResponse);
 
 			myIncomingRequest = theIncomingRequest;
 			myIncomingResponse = theIncomingResponse;
@@ -132,10 +129,10 @@ public interface IServiceOrchestrator {
 		}
 
 		public static SidechannelOrchestratorResponseBean forFailure(Exception theException, PersServiceVersionUrl theApplicableUrl, SrBeanIncomingRequest theIncomingRequest, SrBeanProcessedResponse theProcessedResponse, SrBeanIncomingResponse theIncomingResponse) {
-			String responseBody = null;
-			String responseContentType = null;
-			HashMap<String, List<String>> responseHeaders = new HashMap<String, List<String>>();
-			SrBeanIncomingResponse httpResponse = null;
+//			String responseBody = null;
+//			String responseContentType = null;
+//			HashMap<String, List<String>> responseHeaders = new HashMap<String, List<String>>();
+//			SrBeanIncomingResponse httpResponse = null;
 			SidechannelOrchestratorResponseBean retVal = new SidechannelOrchestratorResponseBean(theIncomingRequest, theProcessedResponse, theIncomingResponse);
 			// SidechannelOrchestratorResponseBean retVal = new
 			// SidechannelOrchestratorResponseBean(responseBody,

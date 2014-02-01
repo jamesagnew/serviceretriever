@@ -39,4 +39,6 @@ public interface IDashModel {
 	IProvidesTooltip<BaseDtoDashboardObject> getUsageTooltip();
 
 	IProvidesTooltip<BaseDtoDashboardObject> getUrlsTooltip();
+
+	IProvidesTooltip<BaseDtoDashboardObject> getLastInvocationTooltip();
 }

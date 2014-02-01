@@ -48,8 +48,10 @@ public class DateUtil {
 	public static String formatTimeElapsed(Date theLastInvoc, boolean theExactForUnder60Secs, String theSuffix) {
 		long age = theLastInvoc != null ? System.currentTimeMillis() - theLastInvoc.getTime() : 0;
 		String text;
+		String suffix;
 		if (theLastInvoc == null) {
 			text = MSGS.dashboard_LastInvocNever();
+			suffix = "";
 		} else if (age < MILLIS_PER_MINUTE) {
 			if (theExactForUnder60Secs) {
 				int ageSecs = (int) (age / MILLIS_PER_SECOND);
@@ -60,15 +62,19 @@ public class DateUtil {
 			} else {
 				text = (MSGS.dashboard_LastInvocUnder60Secs());
 			}
+			suffix = theSuffix;
 		} else if (age < MILLIS_PER_HOUR) {
 			text = (MSGS.dashboard_LastInvocUnder1Hour((int) (age / MILLIS_PER_MINUTE)));
+			suffix = theSuffix;
 		} else if (age < MILLIS_PER_DAY) {
 			text = (MSGS.dashboard_LastInvocUnder1Day((int) (age / MILLIS_PER_HOUR)));
+			suffix = theSuffix;
 		} else {
 			text = (MSGS.dashboard_LastInvocOver1Day((int) (age / MILLIS_PER_DAY)));
+			suffix = theSuffix;
 		}
 
-		return text + theSuffix;
+		return text + suffix;
 	}
 
 	public static SafeHtml formatTimeElapsedForMessage(Date theTransactionTime) {

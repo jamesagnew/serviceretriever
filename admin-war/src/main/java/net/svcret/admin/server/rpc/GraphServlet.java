@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import net.svcret.admin.shared.model.TimeRange;
 import net.svcret.admin.shared.util.ChartParams;
 import net.svcret.admin.shared.util.ChartTypeEnum;
-import net.svcret.ejb.api.IChartingServiceBean;
+import net.svcret.ejb.chart.IChartingServiceBean;
 import net.svcret.ejb.ex.UnexpectedFailureException;
 
 import org.apache.commons.io.IOUtils;
@@ -28,14 +28,14 @@ public class GraphServlet extends HttpServlet {
 	@EJB
 	private IChartingServiceBean myChartSvc;
 
-	private byte[] renderLatency(HttpServletRequest theReq, TimeRange theRange) throws IOException, ServletException {
+	private byte[] renderLatency(HttpServletRequest theReq, TimeRange theRange, boolean theIndividualMethod) throws IOException, ServletException {
 		long pid = getPid(theReq);
 
 		ourLog.info("Rendering latency graph for service version {}", pid);
 
 		byte[] graph;
 		try {
-			graph = myChartSvc.renderLatencyGraphForServiceVersion(pid, theRange);
+			graph = myChartSvc.renderSvcVerLatencyMethodGraph(pid, theRange, theIndividualMethod);
 		} catch (UnexpectedFailureException e) {
 			throw new ServletException(e);
 		}
@@ -69,7 +69,8 @@ public class GraphServlet extends HttpServlet {
 		} else {
 			switch (chartType) {
 			case LATENCY:
-				bytes = renderLatency(theReq, range);
+				boolean individualMethod = ChartParams.VALUE_TRUE.equals(theReq.getParameter(ChartParams.BY_METHOD));
+				bytes = renderLatency(theReq, range, individualMethod);
 				break;
 			case USAGE:
 				bytes = renderUsage(theReq, range);
@@ -118,7 +119,7 @@ public class GraphServlet extends HttpServlet {
 
 		byte[] graph;
 		try {
-			graph = myChartSvc.renderPayloadSizeGraphForServiceVersion(pid, theRange);
+			graph = myChartSvc.renderSvcVerPayloadSizeGraph(pid, theRange);
 		} catch (UnexpectedFailureException e) {
 			throw new ServletException(e);
 		}
@@ -133,7 +134,7 @@ public class GraphServlet extends HttpServlet {
 
 		byte[] graph;
 		try {
-			graph = myChartSvc.renderThrottlingGraphForServiceVersion(pid, theRange);
+			graph = myChartSvc.renderSvcVerThrottlingGraph(pid, theRange);
 		} catch (UnexpectedFailureException e) {
 			throw new ServletException(e);
 		}
@@ -148,7 +149,7 @@ public class GraphServlet extends HttpServlet {
 
 		byte[] graph;
 		try {
-			graph = myChartSvc.renderUsageGraphForServiceVersion(pid, theRange);
+			graph = myChartSvc.renderSvcVerUsageGraph(pid, theRange);
 		} catch (UnexpectedFailureException e) {
 			throw new ServletException(e);
 		}

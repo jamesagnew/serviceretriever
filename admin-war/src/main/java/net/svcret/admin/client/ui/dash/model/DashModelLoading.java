@@ -90,4 +90,9 @@ public class DashModelLoading implements IDashModel {
 		return null;
 	}
 
+	@Override
+	public IProvidesTooltip<BaseDtoDashboardObject> getLastInvocationTooltip() {
+		return null;
+	}
+
 }

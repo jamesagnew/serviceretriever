@@ -7,7 +7,6 @@ import java.util.Map;
  * Response type for {@link IServiceOrchestrator#handle(RequestType, String, String, Reader)}
  */
 public class SrBeanOutgoingResponse {
-	private SrBeanIncomingResponse myHttpResponse;
 	private String myResponseBody;
 	private String myResponseContentType;
 	private Map<String, List<String>> myResponseHeaders;
@@ -19,12 +18,11 @@ public class SrBeanOutgoingResponse {
 		myResponseHeaders = theResponseHeaders;
 	}
 
-	public SrBeanOutgoingResponse(SrBeanProcessedResponse theProcessedResponse, SrBeanIncomingResponse theIncomingResponse) {
+	public SrBeanOutgoingResponse(SrBeanProcessedResponse theProcessedResponse) {
 		super();
 		myResponseBody = theProcessedResponse.getResponseBody();
 		myResponseContentType = theProcessedResponse.getResponseContentType();
 		myResponseHeaders = theProcessedResponse.getResponseHeaders();
-		myHttpResponse = theIncomingResponse;
 	}
 
 //	public SrBeanIncomingResponse getHttpResponse() {

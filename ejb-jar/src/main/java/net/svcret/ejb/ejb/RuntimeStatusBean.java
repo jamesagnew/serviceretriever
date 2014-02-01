@@ -731,6 +731,11 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		for (Iterator<PersServiceVersionUrlStatus> iter = urlStatuses.iterator(); iter.hasNext();) {
 			PersServiceVersionUrlStatus nextToMerge = iter.next();
 			PersServiceVersionUrlStatus nextExisting = myDao.getServiceVersionUrlStatusByPid(nextToMerge.getPid());
+			if (nextExisting == null) {
+				ourLog.info("Not flushing URL status {} because it doesn't exist in the database", nextToMerge.getPid());
+				continue;
+			}
+			
 			boolean toSave = nextToMerge.mergeNewer(nextExisting);
 			if (!toSave) {
 				ourLog.trace("Not saving URL status {} because it has no new values", nextToMerge.getPid());

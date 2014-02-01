@@ -96,7 +96,7 @@ public class ServiceVersionStatsPanel extends FlowPanel {
 		addStatsImage(myChartsPanel, img);
 
 		myChartsPanel.add(new HtmlH1(MSGS.serviceVersionStats_LatencyTitle()));
-		img = new Image(ServiceVersionStatsPanel.GRAPH_FILENAME + "?ct=" + ChartTypeEnum.LATENCY.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.toUrlValue());
+		img = new Image(ServiceVersionStatsPanel.GRAPH_FILENAME + "?ct=" + ChartTypeEnum.LATENCY.name() + "&pid=" + myServiceVersionPid + "&" + ChartParams.RANGE + "=" + theTimeRange.toUrlValue() + "&" + ChartParams.BY_METHOD + "=" + ChartParams.VALUE_TRUE);
 		addStatsImage(myChartsPanel, img);
 
 		myChartsPanel.add(new HtmlH1(MSGS.serviceVersionStats_MessageSizeTitle()));

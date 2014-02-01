@@ -10,7 +10,7 @@ public class GServiceMethod extends BaseDtoDashboardObject {
 
 	private static final long serialVersionUID = 1L;
 
-	private Date myLastAccess;
+	
 	private String myRootElements;
 	private MethodSecurityPolicyEnum mySecurityPolicy = MethodSecurityPolicyEnum.getDefault();
 
@@ -23,9 +23,6 @@ public class GServiceMethod extends BaseDtoDashboardObject {
 		setName(theId);
 	}
 
-	public Date getLastAccess() {
-		return myLastAccess;
-	}
 
 	public String getRootElements() {
 		return myRootElements;
@@ -43,14 +40,8 @@ public class GServiceMethod extends BaseDtoDashboardObject {
 		myRootElements = obj.getRootElements();
 		mySecurityPolicy = obj.getSecurityPolicy();
 
-		if (obj.isStatsInitialized()) {
-			myLastAccess = obj.getLastAccess();
-		}
 	}
 
-	public void setLastAccess(Date theLastAccess) {
-		myLastAccess = theLastAccess;
-	}
 
 	public void setRootElements(String theRootElements) {
 		myRootElements = theRootElements;

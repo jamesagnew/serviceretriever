@@ -2005,6 +2005,8 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 			PersInvocationMethodSvcverStatsPk pk = new PersInvocationMethodSvcverStatsPk(interval, date, theMethod.getPid());
 			PersInvocationMethodSvcverStats stats = statusSvc.getInvocationStatsSynchronously(pk);
+			assert stats != null : pk.toString();
+			
 			theOperator.withStats(min, stats);
 
 			date = doWithStatsSupportIncrement(date, interval);

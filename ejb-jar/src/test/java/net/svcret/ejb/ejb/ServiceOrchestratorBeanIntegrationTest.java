@@ -123,7 +123,6 @@ public class ServiceOrchestratorBeanIntegrationTest extends BaseJpaTest {
 	private PropertyCaptureBean myPropertyCapture;
 	private IThrottlingService myThrottlingServiceMock;
 
-	@SuppressWarnings("null")
 	@Test
 	public void testSoap11GoodRequest() throws Exception {
 

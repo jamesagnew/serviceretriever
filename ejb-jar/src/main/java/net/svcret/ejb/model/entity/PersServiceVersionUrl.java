@@ -72,6 +72,9 @@ public class PersServiceVersionUrl extends BasePersObject implements Comparable<
 	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myImplementationUrl")
 	private List<PersMonitorRuleActiveCheckOutcome> myMonitorRuleActiveCheckOutcomes;
 
+	@OneToMany(fetch = FetchType.LAZY, cascade = {}, orphanRemoval = true, mappedBy = "myUrl")
+	private List<PersMonitorRuleFiringProblem> myMonitorRuleFiringProblems;
+
 	@Column(name = "URL", length = MAX_URL_LENGTH, nullable = false)
 	private String myUrl;
 

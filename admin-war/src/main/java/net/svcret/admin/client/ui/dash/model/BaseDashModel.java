@@ -58,11 +58,12 @@ public abstract class BaseDashModel implements IDashModel {
 	}
 
 	@Override
+	public IProvidesTooltip<BaseDtoDashboardObject> getLastInvocationTooltip() {
+		return new LastUsageTooltipProvider<BaseDtoDashboardObject>();
+	}
+	
+	@Override
 	public Widget renderLastInvocation() {
-		if (!(myModel instanceof BaseDtoServiceCatalogItem)) {
-			return null;
-		}
-
 		Date lastInvoc = myModel.getLastSuccessfulInvocation();
 		String text = DateUtil.formatTimeElapsedForLastInvocation(lastInvoc);
 
@@ -75,21 +76,20 @@ public abstract class BaseDashModel implements IDashModel {
 		}
 
 		return label;
-
 	}
 
 	@Override
 	public final Widget renderLatency(int thePeakLatency) {
 		Integer averageLatency60min = myModel.getAverageLatency60min();
-		if (averageLatency60min==null) {
+		if (averageLatency60min == null) {
 			averageLatency60min = 0;
 		}
-		
+
 		Integer maxLatency60min = myModel.getMaxLatency60min();
 		if (maxLatency60min == null) {
-			maxLatency60min=0;
+			maxLatency60min = 0;
 		}
-		
+
 		return returnSparklineFor60minsLatency(myModel.getLatency60mins(), averageLatency60min, maxLatency60min, thePeakLatency);
 	}
 
@@ -121,7 +121,7 @@ public abstract class BaseDashModel implements IDashModel {
 		if (serverSecured == null) {
 			serverSecured = ServerSecuredEnum.NONE;
 		}
-		
+
 		switch (serverSecured) {
 		case FULLY:
 			image = AdminPortal.IMAGES.dashSecure();
@@ -242,7 +242,7 @@ public abstract class BaseDashModel implements IDashModel {
 	}
 
 	public static Widget returnSparklineFor60minsLatency(int[] theList, Integer theAvgValue, int theMaxValue, int thePeakLatency) {
-		
+
 		if (theList == null) {
 			GWT.log(new Date() + " - No 60 minutes data");
 			return null;
@@ -253,10 +253,10 @@ public abstract class BaseDashModel implements IDashModel {
 		}
 
 		Integer avgValue = theAvgValue != null ? theAvgValue : 0;
-		
+
 		String text = "Avg:" + avgValue + " Max:" + theMaxValue + "ms";
 		int peakValue = Math.max(1, thePeakLatency);
-		
+
 		Sparkline retVal = new Sparkline(theList, text, peakValue);
 		retVal.setWidth("100px");
 		retVal.addStyleName(CssConstants.DASHBOARD_SPARKLINE);

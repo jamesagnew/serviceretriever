@@ -21,7 +21,6 @@ import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
-import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.xml.stream.FactoryConfigurationError;
@@ -33,21 +32,21 @@ import javax.xml.stream.events.XMLEvent;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.Messages;
-import net.svcret.ejb.api.SrBeanIncomingRequest;
-import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IHttpClient;
-import net.svcret.ejb.api.SrBeanProcessedResponse;
+import net.svcret.ejb.api.SrBeanIncomingRequest;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.SrBeanProcessedRequest;
+import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.ejb.HttpClientBean.ClientConfigException;
+import net.svcret.ejb.ex.InvalidRequestException;
+import net.svcret.ejb.ex.InvalidRequestException.IssueEnum;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.ProcessingRuntimeException;
-import net.svcret.ejb.ex.InvalidRequestException;
-import net.svcret.ejb.ex.InvalidRequestException.IssueEnum;
 import net.svcret.ejb.invoker.BaseServiceInvoker;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
@@ -175,7 +174,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 		
 		ICreatesImportUrl urlCreator = new ICreatesImportUrl() {
 			@Override
-			public String createImportUrlForSchemaImport(PersServiceVersionResource theResource) throws InvocationFailedDueToInternalErrorException {
+			public String createImportUrlForSchemaImport(PersServiceVersionResource theResource) {
 				return pathBase + "?xsd&xsdnum=" + theResource.getPid();
 			}
 		};
@@ -229,7 +228,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 		final String pathBase = toPathBase(theRequest);
 		ICreatesImportUrl urlCreator = new ICreatesImportUrl() {
 			@Override
-			public String createImportUrlForSchemaImport(PersServiceVersionResource theResource) throws InvocationFailedDueToInternalErrorException {
+			public String createImportUrlForSchemaImport(PersServiceVersionResource theResource) {
 				return pathBase + "?xsd&xsdnum=" + theResource.getPid();
 			}
 		};
