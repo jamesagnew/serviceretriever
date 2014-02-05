@@ -2003,6 +2003,8 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			InvocationStatsIntervalEnum interval = doWithStatsSupportFindInterval(theConfig, date);
 			date = doWithStatsSupportFindDate(date, interval);
 
+			ourLog.info("Next stats: {} - {}", interval, date);
+
 			PersInvocationMethodSvcverStatsPk pk = new PersInvocationMethodSvcverStatsPk(interval, date, theMethod.getPid());
 			PersInvocationMethodSvcverStats stats = statusSvc.getInvocationStatsSynchronously(pk);
 			assert stats != null : pk.toString();
@@ -2058,8 +2060,26 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	public static Date doWithStatsSupportIncrement(Date date, InvocationStatsIntervalEnum interval) {
-		Date retVal = new Date(date.getTime() + interval.millis());
-		return retVal;
+		/*
+		 * Note: don't just add millis to the date object, because that
+		 * fails when adding a day when daylight savings starts/ends
+		 */
+		Calendar cal = DateUtils.toCalendar(date);
+		switch (interval) {
+		case DAY:
+			cal.add(Calendar.DATE, 1);
+			break;
+		case HOUR:
+			cal.add(Calendar.HOUR, 1);
+			break;
+		case MINUTE:
+			cal.add(Calendar.MINUTE, 1);
+			break;
+		case TEN_MINUTE:
+			cal.add(Calendar.MINUTE, 10);
+			break;
+		}
+		return cal.getTime();
 	}
 
 	public static Date getDateXMinsAgoTruncatedToMinute(int theNumberOfMinutes) {
