@@ -5,14 +5,20 @@ import static org.mockito.Mockito.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.admin.shared.model.TimeRange;
+import net.svcret.admin.shared.model.TimeRangeEnum;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
+import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.chart.ChartingServiceBean;
@@ -25,6 +31,7 @@ import net.svcret.ejb.model.entity.PersInvocationMethodUserStatsPk;
 import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersUser;
 
+import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.stubbing.defaultanswers.ReturnsDeepStubs;
@@ -235,6 +242,69 @@ public class ChartingServiceBeanTest {
 		fos.close();
 
 	}
+
+	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ChartingServiceBeanTest.class);
+	@Test
+	public void testRenderSvcVerLatencyMethodGraphForLongTimerange() throws Exception {
+		myConfig.setNow(new Date().getTime());
+
+		TimeRange range = new TimeRange();
+		range.setWithPresetRange(TimeRangeEnum.SIX_MONTH);
+		
+		PersMethod m1 = mock(PersMethod.class, new ReturnsDeepStubs());
+		when(m1.getPid()).thenReturn(11L);
+		when(m1.getName()).thenReturn("MethodName123");
+		when(m1.getServiceVersion().getVersionId()).thenReturn("Version1");
+		when(m1.getServiceVersion().getService().getServiceId()).thenReturn("Service1");
+		when(m1.getServiceVersion().getService().getDomain().getDomainId()).thenReturn("Domain1");
+	
+		BasePersServiceVersion svcVer = mock(BasePersServiceVersion.class, new ReturnsDeepStubs());
+		when(svcVer.getVersionId()).thenReturn("1.0");
+		when(svcVer.getService().getServiceId()).thenReturn("ServiceId");
+		when(svcVer.getService().getDomain().getDomainId()).thenReturn("DomainId");
+		
+		ArrayList<PersMethod> methodList = new ArrayList<PersMethod>();
+		methodList.add(m1);
+		when(svcVer.getMethods()).thenReturn(methodList);
+		
+		when(myDao.getServiceVersionByPid(eq(999L))).thenReturn(svcVer);
+		when(myDao.getServiceVersionMethodByPid(eq(11L))).thenReturn(m1);
+		
+		List<PersInvocationMethodSvcverStats> statsList=new ArrayList<PersInvocationMethodSvcverStats>();
+		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:00"), m1)));
+		statsList.get(statsList.size()-1).addSuccessInvocation((int)(100.0 * Math.random()), (int)(100.0 * Math.random()), (int)(100.0 * Math.random()));
+		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:10"), m1)));
+		statsList.get(statsList.size()-1).addSuccessInvocation((int)(100.0 * Math.random()), (int)(100.0 * Math.random()), (int)(100.0 * Math.random()));
+		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:20"), m1)));
+		statsList.get(statsList.size()-1).addSuccessInvocation((int)(100.0 * Math.random()), (int)(100.0 * Math.random()), (int)(100.0 * Math.random()));
+		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:30"), m1)));
+		statsList.get(statsList.size()-1).addSuccessInvocation((int)(100.0 * Math.random()), (int)(100.0 * Math.random()), (int)(100.0 * Math.random()));
+		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:40"), m1)));
+		statsList.get(statsList.size()-1).addSuccessInvocation((int)(100.0 * Math.random()), (int)(100.0 * Math.random()), (int)(100.0 * Math.random()));
+		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:50"), m1)));
+		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("05:00"), m1)));
+
+		InvocationHandler h = new InvocationHandler() {
+			@Override
+			public Object invoke(Object theProxy, Method theMethod, Object[] theArgs) throws Throwable {
+				if (!"getInvocationStatsSynchronously".equals(theMethod.getName())) {
+					throw new Exception("Unexpected method: " + theMethod.getName());
+				}
+				PersInvocationMethodSvcverStatsPk pk = (PersInvocationMethodSvcverStatsPk) theArgs[0];
+				return new PersInvocationMethodSvcverStats(pk);
+			}
+		};
+		IRuntimeStatusQueryLocal p = (IRuntimeStatusQueryLocal) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {IRuntimeStatusQueryLocal.class}, h);
+		mySvc.setStatusForUnitTest(p);
+
+		byte[] bytes = mySvc.renderSvcVerLatencyMethodGraph(999L, range, true);
+		
+		FileOutputStream fos = new FileOutputStream("target/test-pngs/sixmonth.png", false);
+		fos.write(bytes);
+		fos.close();
+
+	}
+
 	
 	
 	@Test
