@@ -1,6 +1,6 @@
 package net.svcret.ejb.ejb;
 
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.*;
+import static net.svcret.admin.shared.enm.InvocationStatsIntervalEnum.*;
 import static org.junit.Assert.*;
 
 import java.text.DateFormat;
@@ -12,18 +12,19 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import net.svcret.admin.api.ProcessingException;
+import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
+import net.svcret.admin.shared.util.Validate;
 import net.svcret.ejb.api.StatusesBean;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.BasePersObject;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.BasePersStats;
-import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
@@ -56,7 +57,6 @@ import net.svcret.ejb.model.entity.PersUserRecentMessage;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
-import net.svcret.ejb.util.Validate;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;

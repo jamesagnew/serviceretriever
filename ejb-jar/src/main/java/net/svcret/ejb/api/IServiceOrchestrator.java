@@ -6,12 +6,12 @@ import java.util.Collection;
 import javax.ejb.Local;
 import javax.servlet.AsyncContext;
 
+import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
 import net.svcret.ejb.ex.InvalidRequestException;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestOrResponseFailedException;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.invoker.IServiceInvoker;
 import net.svcret.ejb.invoker.soap.InvocationFailedException;

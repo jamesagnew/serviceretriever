@@ -11,6 +11,8 @@ import javax.xml.ws.Binding;
 import javax.xml.ws.BindingProvider;
 import javax.xml.ws.handler.Handler;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.log.ITransactionLogger;
 
@@ -21,11 +23,13 @@ public class SynchronousClientBean implements ISynchronousNodeIpcClient {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(SynchronousClientBean.class);
 
 	@EJB
+	@Autowired
 	private IConfigService myConfigSvc;
 
 	private Map<String, SynchronousInvokerClient> myRemoteClients = new HashMap<String, SynchronousInvokerClient>();
 
 	@EJB
+	@Autowired
 	private ITransactionLogger myTransactionLogger;
 
 	private ISynchronousInvoker getClient(String nextUrl) throws MalformedURLException {

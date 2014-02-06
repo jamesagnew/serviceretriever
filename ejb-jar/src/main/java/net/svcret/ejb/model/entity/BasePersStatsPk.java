@@ -11,6 +11,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
+import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.BasePersStats.IStatsVisitor;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;

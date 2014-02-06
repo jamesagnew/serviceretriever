@@ -24,14 +24,14 @@ import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
+import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.StatusEnum;
+import net.svcret.admin.shared.util.Validate;
 import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.StatusesBean;
 import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.util.UrlUtils;
-import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;

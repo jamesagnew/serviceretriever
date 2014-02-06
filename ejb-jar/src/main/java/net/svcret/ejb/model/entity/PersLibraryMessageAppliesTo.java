@@ -6,7 +6,7 @@ import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
-import net.svcret.ejb.util.Validate;
+import net.svcret.admin.shared.util.Validate;
 
 @Entity
 @Table(name = "PX_LIB_MSG_APPLIESTO")

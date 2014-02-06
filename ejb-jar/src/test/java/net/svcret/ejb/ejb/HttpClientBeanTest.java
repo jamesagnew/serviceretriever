@@ -14,8 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IResponseValidator;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.invoker.soap.Soap11ResponseValidator;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
@@ -68,9 +68,6 @@ public class HttpClientBeanTest {
 	@Test
 	public void testTlsWithTruststore() throws Exception {
 
-		KeystoreServiceBean kss = new KeystoreServiceBean();
-		mySvc.setKeystoreServiceForUnitTest(kss);
-		
 		int port = RandomServerPortProvider.findFreePort();
 		Server server = new Server();
 		SslSocketConnector sslConnector = new SslSocketConnector();
@@ -124,9 +121,6 @@ public class HttpClientBeanTest {
 	@Test
 	public void testTlsWithTruststoreAndKeystore() throws Exception {
 
-		KeystoreServiceBean kss = new KeystoreServiceBean();
-		mySvc.setKeystoreServiceForUnitTest(kss);
-		
 		int port = RandomServerPortProvider.findFreePort();
 		Server server = new Server();
 		SslSocketConnector sslConnector = new SslSocketConnector();

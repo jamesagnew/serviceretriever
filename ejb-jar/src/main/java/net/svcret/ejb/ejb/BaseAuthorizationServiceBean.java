@@ -9,12 +9,12 @@ import javax.ejb.Schedule;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import net.svcret.admin.api.ProcessingException;
+import net.svcret.admin.shared.util.Validate;
 import net.svcret.ejb.api.IAuthorizationService;
 import net.svcret.ejb.api.ICredentialGrabber;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.PersUser;
-import net.svcret.ejb.util.Validate;
 
 public abstract class BaseAuthorizationServiceBean<T extends BasePersAuthenticationHost> implements IAuthorizationService {
 

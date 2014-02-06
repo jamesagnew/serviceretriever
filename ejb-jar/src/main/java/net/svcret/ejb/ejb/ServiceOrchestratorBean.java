@@ -20,8 +20,11 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.servlet.AsyncContext;
 
+import net.svcret.admin.api.ProcessingException;
+import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
+import net.svcret.admin.shared.util.Validate;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IResponseValidator;
@@ -46,9 +49,7 @@ import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationRequestOrResponseFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.invoker.IServiceInvoker;
 import net.svcret.ejb.invoker.hl7.IServiceInvokerHl7OverHttp;
 import net.svcret.ejb.invoker.hl7.ServiceInvokerHl7OverHttp;
@@ -74,10 +75,10 @@ import net.svcret.ejb.propcap.PropertyCaptureBean;
 import net.svcret.ejb.throttle.IThrottlingService;
 import net.svcret.ejb.throttle.ThrottleException;
 import net.svcret.ejb.throttle.ThrottleQueueFullException;
-import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -88,36 +89,47 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceOrchestratorBean.class);
 
 	@EJB
+	@Autowired
 	private IHttpClient myHttpClient;
 
 	@EJB
+	@Autowired
 	private IPropertyCaptureService myPropertyCapture;
 
 	@EJB
+	@Autowired
 	private IServiceInvokerJsonRpc20 myServiceInvokerJsonRpc20;
 
 	@EJB
+	@Autowired
 	private IServiceInvokerHl7OverHttp myServiceInvokerHl7OverHttp;
 
 	@EJB
+	@Autowired
 	private IRuntimeStatus myRuntimeStatus;
 
 	@EJB
+	@Autowired
 	private ISecurityService mySecuritySvc;
 
 	@EJB
+	@Autowired
 	private IServiceInvokerSoap11 myServiceInvokerSoap11;
 
 	@EJB
+	@Autowired
 	private IServiceRegistry mySvcRegistry;
 
 	@EJB
+	@Autowired
 	private IThrottlingService myThrottlingService;
 
 	@EJB
+	@Autowired
 	private ITransactionLogger myTransactionLogger;
 
 	@EJB
+	@Autowired
 	private IServiceInvokerVirtual myServiceInvokerVirtual;
 
 	private SrBeanOutgoingResponse doHandleServiceRequest(SrBeanIncomingRequest theRequest) throws InvalidRequestException, SecurityFailureException, ThrottleException, ThrottleQueueFullException, InvocationRequestOrResponseFailedException,

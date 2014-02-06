@@ -1,6 +1,7 @@
 package net.svcret.ejb.log;
 
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
+import net.svcret.admin.shared.util.Validate;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.SrBeanProcessedRequest;
@@ -10,7 +11,6 @@ import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserRecentMessage;
-import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;

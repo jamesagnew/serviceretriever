@@ -1,6 +1,6 @@
 package net.svcret.ejb.api;
 
-import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.admin.api.ProcessingException;
 
 
 public interface ICredentialGrabber {

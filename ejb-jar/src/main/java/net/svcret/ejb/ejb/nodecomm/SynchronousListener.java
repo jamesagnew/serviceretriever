@@ -13,6 +13,8 @@ import javax.jws.soap.SOAPBinding.ParameterStyle;
 import javax.jws.soap.SOAPBinding.Style;
 import javax.jws.soap.SOAPBinding.Use;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.log.ITransactionLogger;
 
@@ -32,9 +34,11 @@ public class SynchronousListener implements ISynchronousInvoker {
 	static final String SVC_SVCNAME = "ServiceRetriever_NodeCommService";
 
 	@EJB
+	@Autowired
 	private IRuntimeStatus myRuntimeStatusService;
 
 	@EJB
+	@Autowired
 	private ITransactionLogger myTransactionLoggerService;
 
 	/* (non-Javadoc)

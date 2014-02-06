@@ -2,7 +2,7 @@ package net.svcret.ejb.ejb.monitor;
 
 import javax.ejb.Local;
 
-import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.admin.api.ProcessingException;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 
 @Local

@@ -15,25 +15,19 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.EJB;
-import javax.ejb.PrePassivate;
-import javax.ejb.Singleton;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
+import javax.annotation.PreDestroy;
 
+import net.svcret.admin.api.ProcessingException;
+import net.svcret.admin.shared.util.KeystoreUtils;
+import net.svcret.admin.shared.util.Validate;
 import net.svcret.ejb.Messages;
 import net.svcret.ejb.api.IHttpClient;
-import net.svcret.ejb.api.IKeystoreService;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.IResponseValidator.ValidationResponse;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.UrlPoolBean;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
-import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.collections.EnumerationUtils;
 import org.apache.commons.io.IOUtils;
@@ -59,26 +53,24 @@ import org.apache.http.message.BasicLineFormatter;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.HttpParams;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.google.common.annotations.VisibleForTesting;
-
-@Singleton
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+@Service
 public class HttpClientBean implements IHttpClient {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(HttpClientBean.class);
 
 	private ConcurrentHashMap<Long, HttpClientImpl> myClientConfigPidToClient = new ConcurrentHashMap<Long, HttpClientBean.HttpClientImpl>();
 	private DefaultHttpClient myDefaultSimpleGetClient;
-	@EJB
-	private IKeystoreService myKeystoreService;
 	private PoolingClientConnectionManager mySimpleClientConMgr;
 	private Charset ourDefaultCharset = Charset.forName("UTF-8");
 
 	public HttpClientBean() {
 	}
 
-	@PrePassivate
+	@PreDestroy
 	public void cleanUp() {
 		ourLog.info("Shuting down HttpClient");
 
@@ -91,7 +83,7 @@ public class HttpClientBean implements IHttpClient {
 		mySimpleClientConMgr = null;
 	}
 
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	@Transactional(propagation=Propagation.NOT_SUPPORTED)
 	@Override
 	public SrBeanIncomingResponse get(String theUrl) throws ClientProtocolException, IOException {
 		Validate.notBlank(theUrl, "URL");
@@ -131,7 +123,7 @@ public class HttpClientBean implements IHttpClient {
 
 	}
 
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	@Transactional(propagation=Propagation.NOT_SUPPORTED)
 	@Override
 	public SrBeanIncomingResponse post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody, Map<String, List<String>> theHeaders,
 			String theContentType) {
@@ -325,7 +317,7 @@ public class HttpClientBean implements IHttpClient {
 			if (myClientConfig.getTlsKeystore() != null) {
 				ourLog.info("Initializing HTTP client keystore");
 				try {
-					keystore = myKeystoreService.loadKeystore(myClientConfig.getTlsKeystore(), myClientConfig.getTlsKeystorePassword());
+					keystore = KeystoreUtils.loadKeystore(myClientConfig.getTlsKeystore(), myClientConfig.getTlsKeystorePassword());
 					ourLog.info("Keystore contains the following aliases: {}", EnumerationUtils.toList(keystore.aliases()));
 				} catch (ProcessingException e) {
 					throw new ClientConfigException("Failed to initialize keystore", e);
@@ -340,7 +332,7 @@ public class HttpClientBean implements IHttpClient {
 			if (myClientConfig.getTlsTruststore() != null) {
 				try {
 					ourLog.info("Initializing HTTP client truststore");
-					truststore = myKeystoreService.loadKeystore(myClientConfig.getTlsTruststore(), myClientConfig.getTlsTruststorePassword());
+					truststore = KeystoreUtils.loadKeystore(myClientConfig.getTlsTruststore(), myClientConfig.getTlsTruststorePassword());
 					ourLog.info("Truststore contains the following aliases: {}", EnumerationUtils.toList(truststore.aliases()));
 				} catch (ProcessingException e) {
 					throw new ClientConfigException("Failed to initialize truststore", e);
@@ -455,11 +447,6 @@ public class HttpClientBean implements IHttpClient {
 
 		private static final long serialVersionUID = 5053765957107834824L;
 
-	}
-
-	@VisibleForTesting
-	void setKeystoreServiceForUnitTest(KeystoreServiceBean theKss) {
-		myKeystoreService = theKss;
 	}
 
 	@Override

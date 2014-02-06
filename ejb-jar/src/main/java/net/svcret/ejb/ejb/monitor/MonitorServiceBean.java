@@ -18,6 +18,8 @@ import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import net.svcret.admin.api.UnexpectedFailureException;
+import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.Messages;
@@ -30,10 +32,8 @@ import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
 import net.svcret.ejb.ejb.RuntimeStatusBean;
 import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
-import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
 import net.svcret.ejb.model.entity.PersMonitorRuleActive;
@@ -47,6 +47,7 @@ import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.RateLimiter;
@@ -60,27 +61,33 @@ public class MonitorServiceBean implements IMonitorService {
 	private Map<PersMonitorRuleActiveCheck, RateLimiter> myCheckToRateLimiter = new HashMap<PersMonitorRuleActiveCheck, RateLimiter>();
 
 	@EJB
+	@Autowired
 	private IDao myDao;
 
 	@EJB
+	@Autowired
 	private IConfigService myConfigSvc;
 
 	@EJB
+	@Autowired
 	private IRuntimeStatusQueryLocal myRuntimeStatusQuery;
 
 	@EJB
+	@Autowired
 	private IRuntimeStatus myRuntimeStatus;
 
 	@EJB
+	@Autowired
 	private IBroadcastSender myBroadcastSender;
 
 	@EJB
+	@Autowired
 	private IServiceOrchestrator myServiceOrchestrator;
 
-	@EJB
-	private IMonitorService myThis;
+	private IMonitorService myThis = this; // FIXME: fix this
 
 	@EJB
+	@Autowired
 	private IMonitorNotifier myMonitorNotifier;
 
 	@Override

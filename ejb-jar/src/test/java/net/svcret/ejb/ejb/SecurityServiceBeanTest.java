@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
@@ -16,7 +17,6 @@ import net.svcret.ejb.api.IAuthorizationService.UserOrFailure;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.ISecurityService.AuthorizationRequestBean;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersDomain;

@@ -10,6 +10,10 @@ import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 
+import org.apache.commons.lang3.time.DateUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+
 import net.svcret.admin.shared.model.RetrieverNodeTypeEnum;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IRuntimeStatus;
@@ -28,9 +32,11 @@ public class SchedulerBean implements IScheduler {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(SchedulerBean.class);
 
 	@EJB
+	@Autowired
 	private IConfigService myConfigSvc;
 
 	@EJB
+	@Autowired
 	private IFilesystemAuditLogger myFilesystemAuditLogger;
 
 	private long myLastRecentMessagesFlush;
@@ -38,22 +44,28 @@ public class SchedulerBean implements IScheduler {
 	private long myLastStatsFlush;
 
 	@EJB
+	@Autowired
 	private IMonitorService myMonitorSvc;
 
 	@EJB
+	@Autowired
 	private ISecurityService mySecuritySvc;
 
 	@EJB
+	@Autowired
 	private IRuntimeStatus myStatsSvc;
 	
 	@EJB
+	@Autowired
 	private ISynchronousNodeIpcClient mySynchronousNodeIpcClient;
 
 	@EJB
+	@Autowired
 	private ITransactionLogger myTransactionLogger;
 
 	@Override
 	@Schedule(second = "0", minute = "*", hour = "*", persistent = false)
+	@Scheduled(fixedDelay=DateUtils.MILLIS_PER_HOUR)
 	public void collapseStats() {
 		try {
 			if (myConfigSvc.getNodeType() != RetrieverNodeTypeEnum.PRIMARY) {
@@ -69,6 +81,7 @@ public class SchedulerBean implements IScheduler {
 
 	@Override
 	@Schedule(second = "0", minute = "*", hour = "*", persistent = false)
+	@Scheduled(fixedDelay=DateUtils.MILLIS_PER_MINUTE)
 	public void flushFilesystemAuditEvents() {
 		try {
 			ourLog.debug("flushFilesystemAuditEvents()");
@@ -79,7 +92,7 @@ public class SchedulerBean implements IScheduler {
 	}
 
 	@Override
-	@Schedule(second = "0", minute = "0/15", hour = "*", persistent = false)
+	@Scheduled(fixedDelay=15L * DateUtils.MILLIS_PER_MINUTE)
 	public synchronized void flushInMemoryRecentMessagesUnlessItHasHappenedVeryRecently() {
 		if ((myLastRecentMessagesFlush + 5000) > System.currentTimeMillis()) {
 			ourLog.debug("Last stats flush was at {}, not going to do another", new Date(myLastStatsFlush));
@@ -108,6 +121,7 @@ public class SchedulerBean implements IScheduler {
 
 	@Override
 	@Schedule(second = "0", minute = "*", hour = "*", persistent = false)
+	@Scheduled(fixedDelay=DateUtils.MILLIS_PER_MINUTE)
 	public synchronized void flushInMemoryStatisticsUnlessItHasHappenedVeryRecently() {
 		if ((myLastStatsFlush + 5000) > System.currentTimeMillis()) {
 			ourLog.debug("Last stats flush was at {}, not going to do another", new Date(myLastStatsFlush));
@@ -136,6 +150,7 @@ public class SchedulerBean implements IScheduler {
 
 	@Override
 	@Schedule(second = "0", minute = "*", hour = "*", persistent = false)
+	@Scheduled(fixedDelay=DateUtils.MILLIS_PER_MINUTE)
 	public void monitorRunChecks() {
 		try {
 			if (myConfigSvc.getNodeType() != RetrieverNodeTypeEnum.PRIMARY) {
@@ -149,14 +164,10 @@ public class SchedulerBean implements IScheduler {
 		}
 	}
 
-	@PostConstruct
-	public void postConstruct() {
-		ourLog.info("Scheduler has started");
-		mySecuritySvc.loadUserCatalogIfNeeded();
-	}
 
 	@Override
 	@Schedule(second = "0", minute = "*", hour = "*", persistent = false)
+	@Scheduled(fixedDelay=DateUtils.MILLIS_PER_MINUTE)
 	public void recordNodeStats() {
 		try {
 			myStatsSvc.recordNodeStatistics();
@@ -167,6 +178,7 @@ public class SchedulerBean implements IScheduler {
 
 	@Override
 	@Schedule(second = "0", minute = "*", hour = "*", persistent = false)
+	@Scheduled(fixedDelay=DateUtils.MILLIS_PER_MINUTE)
 	public void reloadUserRegistry() {
 		try {
 			mySecuritySvc.loadUserCatalogIfNeeded();

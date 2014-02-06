@@ -1,6 +1,6 @@
 package net.svcret.ejb.ejb;
 
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.*;
+import static net.svcret.admin.shared.enm.InvocationStatsIntervalEnum.*;
 import static org.junit.Assert.*;
 
 import java.text.DateFormat;
@@ -22,7 +22,7 @@ import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.BasePersStats;
-import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
+import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
@@ -55,7 +55,7 @@ import net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
-import net.svcret.ejb.util.Validate;
+import net.svcret.admin.shared.util.Validate;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;

@@ -4,10 +4,9 @@
              xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
              version="2.0">
 
-	<persistence-unit name="ServiceProxy_EJBPU" transaction-type="JTA">
+	<!-- <persistence-unit name="ServiceProxy_EJBPU" transaction-type="JTA"> -->
+	<persistence-unit name="ServiceProxy_EJBPU" transaction-type="RESOURCE_LOCAL">
 		<provider>org.hibernate.ejb.HibernatePersistence</provider>
-		<jta-data-source>jdbc/svcret</jta-data-source>
-		
 		<class>net.svcret.ejb.model.entity.PersConfig</class>
 		<class>net.svcret.ejb.model.entity.PersConfigProxyUrlBase</class>
 		<class>net.svcret.ejb.model.entity.BasePersServiceVersion</class>
@@ -86,7 +85,6 @@
 			<property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect" />
 -->
   			
-			<property name="hibernate.transaction.jta.platform" value="org.hibernate.service.jta.platform.internal.SunOneJtaPlatform" />
 			<property name="hibernate.jdbc.batch_size" value="30" />
 			<property name="hibernate.cache.use_minimal_puts" value="false" />
 			<property name="hibernate.show_sql" value="false" />

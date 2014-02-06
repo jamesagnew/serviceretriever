@@ -35,8 +35,7 @@ public class PersServiceVersionResource extends BasePersObject {
 	private String myResourceContentType;
 
 	@Lob()
-	@Basic(fetch = FetchType.LAZY)
-	@Column(name = "RES_TEXT", nullable = false)
+	@Column(name = "RES_TEXT", nullable = false, length=65000)
 	private String myResourceText;
 
 	@Column(name = "RES_URL", length = 200, nullable = false)

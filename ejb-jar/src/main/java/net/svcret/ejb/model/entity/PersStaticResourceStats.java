@@ -7,6 +7,8 @@ import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
+import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
+
 import org.hibernate.annotations.Index;
 
 @org.hibernate.annotations.Table(indexes = { @Index(columnNames = { "START_TIME" }, name = "IDX_SRS_START_TIME") }, appliesTo = "PX_STATIC_RES_STATS")

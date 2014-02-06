@@ -3,21 +3,18 @@ package net.svcret.ejb.api;
 import java.util.Collection;
 import java.util.List;
 
-import javax.ejb.Local;
-
+import net.svcret.admin.api.ProcessingException;
+import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
-import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
-import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersMethod;
+import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
 
-@Local
 public interface IServiceRegistry {
 
 	/**

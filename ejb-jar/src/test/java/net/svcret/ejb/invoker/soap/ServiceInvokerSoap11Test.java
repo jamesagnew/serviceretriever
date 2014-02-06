@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
@@ -22,7 +23,6 @@ import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.ejb.HttpClientBean.ClientConfigException;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.InvalidRequestException;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
@@ -398,7 +398,45 @@ public class ServiceInvokerSoap11Test {
 		verify(httpResponse, atLeastOnce()).getHeaders();
 		verifyNoMoreInteractions(httpResponse);
 	}
+
 	
+	
+	@Test
+	public void testProcessInvocationResponseWrongSoapVersion() throws Exception {
+		
+		String msg = "<?xml version=\"1.0\"?>\n" +  //-
+				"<env:Envelope  xmlns:env=\"http://www.w3.org/2001/12/soap-envelope\" >\n" + //- 
+				"    <env:Body>\n" +  //-
+				"        <env:Fault>\n" + //- 
+				"\n" +  //-
+				"          <env:Code>\n" +  //-
+				"            <env:Value>SomeCode</env:Value>\n" + //- 
+				"          </env:Code>\n" + //- 
+				"\n" +  //-
+				"          <env:Reason>\n" +  //-
+				"            <env:Text xml:lang=\"en-US\">ColorfulIssue</env:Text>\n" +  //-
+				"            <env:Text xml:lang=\"en-GB\">ColourfulIssue</env:Text>\n" + //- 
+				"          </env:Reason>\n" + //- 
+				"\n" + //-
+				"        </env:Fault>\n" + //- 
+				"    </env:Body>\n" + //- 
+				"</env:Envelope>"; //-
+		
+		
+		SrBeanIncomingResponse httpResponse = mock(SrBeanIncomingResponse.class);
+		when(httpResponse.getBody()).thenReturn(msg);
+		when(httpResponse.getContentType()).thenReturn("text/xml");
+		
+		Map<String, List<String>> headers = new HashMap<String, List<String>>();
+		when(httpResponse.getHeaders()).thenReturn(headers);
+		
+		ServiceInvokerSoap11 svc = new ServiceInvokerSoap11();
+		SrBeanProcessedResponse response = svc.processInvocationResponse(null, httpResponse);
+		
+		assertEquals(ResponseTypeEnum.FAIL, response.getResponseType());
+		
+	}
+
 	
 	@Test
 	public void testProcessInvocationResponseFaultWithNoCode() throws Exception {

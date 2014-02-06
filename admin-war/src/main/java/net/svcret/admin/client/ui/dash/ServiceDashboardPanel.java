@@ -192,7 +192,7 @@ public class ServiceDashboardPanel extends BaseDashboardPanel{
 			Widget lastInvoc = EmptyCell.defaultWidget(model.renderLastInvocation());
 			myGrid.setWidget(i + rowOffset, offset + COL_LAST_INVOC + 1, lastInvoc);
 			myGrid.getCellFormatter().setStyleName(i + rowOffset, offset + COL_LAST_INVOC + 1, styleName);
-			myGrid.setTooltipProvider(i + rowOffset, offset + COL_BACKING_URLS + 1, model.getLastInvocationTooltip());
+			myGrid.setTooltipProvider(i + rowOffset, offset + COL_LAST_INVOC + 1, model.getLastInvocationTooltip());
 
 			Widget actions = EmptyCell.defaultWidget(model.renderActions());
 			myGrid.setWidget(i + rowOffset, offset + COL_ACTIONS + 1, actions);

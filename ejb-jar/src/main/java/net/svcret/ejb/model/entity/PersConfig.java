@@ -1,6 +1,6 @@
 package net.svcret.ejb.model.entity;
 
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.*;
+import static net.svcret.admin.shared.enm.InvocationStatsIntervalEnum.*;
 
 import java.util.ArrayList;
 import java.util.Collection;

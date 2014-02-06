@@ -3,18 +3,22 @@ package net.svcret.ejb.ejb;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
+import net.svcret.ejb.api.SrBeanIncomingResponse.Failure;
 import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IConfigService;
@@ -24,7 +28,6 @@ import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.BasePersStats;
-import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
@@ -48,7 +51,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.internal.matchers.CapturingMatcher;
 import org.mockito.internal.stubbing.defaultanswers.ReturnsDeepStubs;
+
+import com.google.common.collect.Maps;
 
 public class RuntimeStatusBeanTest {
 
@@ -563,6 +569,42 @@ public class RuntimeStatusBeanTest {
 
 	}
 
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testRecordUrlStatus() {
+		
+		BasePersServiceVersion svcVer = mock(BasePersServiceVersion.class, new ReturnsDeepStubs());
+		
+		PersServiceVersionUrl url = new PersServiceVersionUrl();
+		url.setServiceVersion(svcVer);
+		url.setPid(1L);
+		PersServiceVersionUrlStatus status = new PersServiceVersionUrlStatus(10L);
+		url.setStatus(status);
+		
+		PersServiceVersionUrlStatus savedStatus = new PersServiceVersionUrlStatus(10L);
+		when(dao.getServiceVersionUrlStatusByPid(10L)).thenReturn(savedStatus);
+		
+		svc.recordUrlFailure(url, new Failure("fail body", "text/plain", "fail reason", 404, 123L, new HashMap<String, List<String>>()));
+		svc.flushStatus();
+		
+		ArgumentCaptor<List> capt = ArgumentCaptor.forClass(List.class);
+		verify(dao, times(1)).saveServiceVersionUrlStatus(capt.capture());
+
+		/*
+		 * Timestamps coming back have a datatype of "Timestamp"
+		 */
+		PersServiceVersionUrlStatus saved = (PersServiceVersionUrlStatus) capt.getValue().get(0);
+		savedStatus.setLastFail(new Timestamp(saved.getLastFail().getTime()));
+		savedStatus.setStatusTimestamp(new Timestamp(saved.getStatusTimestamp().getTime()));
+		
+		svc.flushStatus();
+		verify(dao, times(1)).saveServiceVersionUrlStatus(any(List.class));
+		
+	}
+	
+	
+	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testRecordStaticResource() throws ParseException {

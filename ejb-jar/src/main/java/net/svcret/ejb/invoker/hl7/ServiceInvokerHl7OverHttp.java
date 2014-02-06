@@ -12,6 +12,8 @@ import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import net.svcret.admin.api.ProcessingException;
+import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IResponseValidator;
@@ -25,14 +27,13 @@ import net.svcret.ejb.ex.InvalidRequestException;
 import net.svcret.ejb.ex.InvalidRequestException.IssueEnum;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
-import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.invoker.BaseServiceInvoker;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.preparser.PreParser;
@@ -50,9 +51,11 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceInvokerHl7OverHttp.class);
 
 	@EJB
+	@Autowired
 	private IDao myDao;
 
 	@EJB
+	@Autowired
 	private IServiceRegistry myServiceRegistry;
 
 	public ServiceInvokerHl7OverHttp() {

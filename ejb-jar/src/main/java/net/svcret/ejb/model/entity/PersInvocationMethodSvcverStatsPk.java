@@ -4,6 +4,7 @@ import java.util.Date;
 
 import javax.persistence.Embeddable;
 
+import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.BasePersStats.IStatsVisitor;
 
 @Embeddable

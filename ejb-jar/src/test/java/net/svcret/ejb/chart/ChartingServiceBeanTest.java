@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.admin.shared.model.TimeRange;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
@@ -16,7 +17,6 @@ import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.chart.ChartingServiceBean;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
-import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;

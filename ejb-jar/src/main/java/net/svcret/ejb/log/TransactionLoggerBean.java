@@ -12,8 +12,11 @@ import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import net.svcret.admin.api.ProcessingException;
+import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
+import net.svcret.admin.shared.util.Validate;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IDao.ByteDelta;
@@ -21,13 +24,10 @@ import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanProcessedResponse;
-import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersSavedTransactionRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.util.LogUtil;
-import net.svcret.ejb.util.Validate;
 
 import com.google.common.annotations.VisibleForTesting;
 

@@ -19,7 +19,12 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import net.svcret.admin.api.IAdminServiceLocal;
+import net.svcret.admin.api.ProcessingException;
+import net.svcret.admin.api.UnexpectedFailureException;
+import net.svcret.admin.api.UnknownPidException;
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
+import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
 import net.svcret.admin.shared.model.BaseDtoClientSecurity;
@@ -71,9 +76,9 @@ import net.svcret.admin.shared.model.Pair;
 import net.svcret.admin.shared.model.PartialUserListRequest;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.model.TimeRange;
+import net.svcret.admin.shared.util.Validate;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
-import net.svcret.ejb.api.IKeystoreService;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.IScheduler;
@@ -94,8 +99,6 @@ import net.svcret.ejb.ejb.monitor.MonitorServiceBean;
 import net.svcret.ejb.ejb.nodecomm.ISynchronousNodeIpcClient;
 import net.svcret.ejb.ex.InvalidRequestException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
-import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.invoker.soap.IServiceInvokerSoap11;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
@@ -103,7 +106,6 @@ import net.svcret.ejb.model.entity.BasePersSavedTransactionRecentMessage;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.BasePersStats;
 import net.svcret.ejb.model.entity.BasePersStatsPk;
-import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
@@ -147,52 +149,51 @@ import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcServerAuth;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenClientAuth;
 import net.svcret.ejb.model.entity.soap.PersWsSecUsernameTokenServerAuth;
-import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.annotations.VisibleForTesting;
 
-@TransactionAttribute(TransactionAttributeType.REQUIRED)
-@Stateless
+@Service
+@Transactional
 public class AdminServiceBean implements IAdminServiceLocal {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(AdminServiceBean.class);
 
 	public static final long URL_PID_TO_LOAD_ALL = -1;
 
-	@EJB
+	@Autowired
 	private IConfigService myConfigSvc;
 
-	@EJB
+	@Autowired
 	private IDao myDao;
 
-	@EJB
+	@Autowired
 	private IServiceInvokerSoap11 myInvokerSoap11;
 
-	@EJB
-	private IKeystoreService myKeystoreSvc;
-
-	@EJB
+	@Autowired
 	private IMonitorService myMonitorSvc;
 
-	@EJB
+	@Autowired
 	private IServiceOrchestrator myOrchestrator;
 
-	@EJB
+	@Autowired
 	private IRuntimeStatusQueryLocal myRuntimeStatusQuerySvc;
 
-	@EJB
+	@Autowired
 	private IScheduler myScheduler;
 
-	@EJB
+	@Autowired
 	private ISecurityService mySecurityService;
 
-	@EJB
+	@Autowired
 	private IServiceRegistry myServiceRegistry;
 
-	@EJB
+	@Autowired
 	private IRuntimeStatus myStatusSvc;
 
 	@Override
@@ -853,7 +854,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	private GHttpClientConfigList loadHttpClientConfigList() throws ProcessingException {
 		GHttpClientConfigList configList = new GHttpClientConfigList();
 		for (PersHttpClientConfig next : myDao.getHttpClientConfigs()) {
-			configList.add(next.toDto(myKeystoreSvc));
+			configList.add(next.toDto());
 		}
 		return configList;
 	}
@@ -1356,7 +1357,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			config.setTlsKeystorePassword(null);
 		}
 
-		return myServiceRegistry.saveHttpClientConfig(config).toDto(myKeystoreSvc);
+		return myServiceRegistry.saveHttpClientConfig(config).toDto();
 	}
 
 	@Override

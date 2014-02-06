@@ -25,6 +25,8 @@ import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import net.svcret.admin.api.ProcessingException;
+import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.IConfigService;
@@ -32,8 +34,6 @@ import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanProcessedResponse;
-import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersMethod;
@@ -42,6 +42,7 @@ import net.svcret.ejb.model.entity.PersUser;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -54,6 +55,7 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 	private static final Pattern PARAM_VALUE_WHITESPACE = Pattern.compile("\\r|\\n", Pattern.MULTILINE);
 	private File myAuditPath;
 	@EJB
+	@Autowired
 	private IConfigService myConfigSvc;
 	private volatile int myFailIfQueueExceedsSize = 10000;
 	private ReentrantLock myFlushLockAuditRecord = new ReentrantLock();

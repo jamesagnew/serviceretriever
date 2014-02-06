@@ -24,6 +24,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
+import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.BaseDtoDashboardObject;
@@ -69,7 +70,6 @@ import net.svcret.ejb.invoker.soap.IServiceInvokerSoap11;
 import net.svcret.ejb.log.TransactionLoggerBean;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
-import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
@@ -1403,7 +1403,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		cfg.setDefaults();
 		when(mySoapInvoker.introspectServiceFromUrl(cfg, "http://wsdlurl")).thenReturn(persSvcVer);
 
-		GSoap11ServiceVersionAndResources verAndRes = mySvc.loadSoap11ServiceVersionFromWsdl(ver, cfg.toDto(null), "http://wsdlurl");
+		GSoap11ServiceVersionAndResources verAndRes = mySvc.loadSoap11ServiceVersionFromWsdl(ver, cfg.toDto(), "http://wsdlurl");
 
 		assertEquals(2, verAndRes.getResource().size());
 		assertEquals("http://wsdlurl", verAndRes.getResource().get(0).getUrl());
@@ -1445,7 +1445,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		persSvcVer.addResource("http://xsdurl", "application/xml", "xsdcontents");
 		persSvcVer.setWsdlUrl("http://wsdlurl2");
 		when(mySoapInvoker.introspectServiceFromUrl(cfg, "http://wsdlurl2")).thenReturn(persSvcVer);
-		verAndRes = mySvc.loadSoap11ServiceVersionFromWsdl((DtoServiceVersionSoap11) newVer, cfg.toDto(null), "http://wsdlurl2");
+		verAndRes = mySvc.loadSoap11ServiceVersionFromWsdl((DtoServiceVersionSoap11) newVer, cfg.toDto(), "http://wsdlurl2");
 		newVer = mySvc.saveServiceVersion(d0.getPid(), s0.getPid(), verAndRes.getServiceVersion(), verAndRes.getResource());
 
 		newEntityManager();

@@ -6,11 +6,11 @@ import java.util.Map;
 
 import javax.ejb.Local;
 
+import net.svcret.admin.api.ProcessingException;
+import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.ejb.api.SrBeanIncomingResponse.Failure;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
-import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;

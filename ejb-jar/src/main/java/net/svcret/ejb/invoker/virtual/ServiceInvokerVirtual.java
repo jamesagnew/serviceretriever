@@ -10,6 +10,8 @@ import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
@@ -35,6 +37,7 @@ import com.google.common.annotations.VisibleForTesting;
 public class ServiceInvokerVirtual extends BaseServiceInvoker implements IServiceInvokerVirtual {
 
 	@EJB
+	@Autowired
 	public IServiceOrchestrator myOrchestrator;
 
 	@Override

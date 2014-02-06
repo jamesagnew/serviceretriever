@@ -7,11 +7,11 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.naming.directory.DirContext;
 
+import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.IAuthorizationService.ILdapAuthorizationService;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.ISecurityService;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
 import net.svcret.ejb.model.entity.PersUser;

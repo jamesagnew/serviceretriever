@@ -6,13 +6,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import javax.ejb.Local;
-
+import net.svcret.admin.api.ProcessingException;
+import net.svcret.admin.api.UnexpectedFailureException;
+import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.IThrottleable;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
-import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.log.BaseUnflushed;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
@@ -22,7 +21,6 @@ import net.svcret.ejb.model.entity.BasePersServiceCatalogItem;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.BasePersStats;
 import net.svcret.ejb.model.entity.BasePersStatsPk;
-import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
@@ -54,7 +52,6 @@ import net.svcret.ejb.model.entity.PersUserRecentMessage;
 import net.svcret.ejb.model.entity.PersUserStatus;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 
-@Local
 public interface IDao {
 
 	void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost);

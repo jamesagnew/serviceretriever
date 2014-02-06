@@ -5,7 +5,7 @@ import static org.junit.Assert.*;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.admin.api.ProcessingException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersUser;

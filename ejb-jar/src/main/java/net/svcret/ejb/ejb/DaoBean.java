@@ -15,7 +15,6 @@ import java.util.Set;
 import javax.annotation.PostConstruct;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -27,16 +26,18 @@ import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 
+import net.svcret.admin.api.ProcessingException;
+import net.svcret.admin.api.UnexpectedFailureException;
+import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.model.IThrottleable;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.util.IntegerHolder;
+import net.svcret.admin.shared.util.Validate;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.StatusesBean;
-import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.log.BaseUnflushed;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
@@ -46,7 +47,6 @@ import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.BasePersStats;
 import net.svcret.ejb.model.entity.BasePersStats.IStatsVisitor;
 import net.svcret.ejb.model.entity.BasePersStatsPk;
-import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLdap;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;
@@ -98,9 +98,10 @@ import net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp;
 import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
-import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -115,8 +116,7 @@ public class DaoBean implements IDao {
 
 	private Map<Long, Long> myServiceVersionPidToStatusPid = new HashMap<Long, Long>();
 
-	@EJB
-	private IDao myThis;
+	private IDao myThis=this; //FIXME: inject?
 
 	@Override
 	public void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost) {
@@ -708,6 +708,7 @@ public class DaoBean implements IDao {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	public PersStickySessionUrlBinding getOrCreateStickySessionUrlBindingInNewTransaction(PersStickySessionUrlBindingPk theBindingPk, PersServiceVersionUrl theUrlToUseIfNoneExists) {
 		PersStickySessionUrlBinding retVal = myEntityManager.find(PersStickySessionUrlBinding.class, theBindingPk);
 		if (retVal == null) {
@@ -1039,6 +1040,7 @@ public class DaoBean implements IDao {
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	@Override
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	public void saveInvocationStats(Collection<? extends BasePersStats<?, ?>> theStats) {
 		List<? extends BasePersStats<?, ?>> emptyList = Collections.emptyList();
 		saveInvocationStats(theStats, emptyList);
@@ -1145,6 +1147,7 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	public void saveMethodStatuses(List<PersMethodStatus> theMethodStatuses) {
 		for (PersMethodStatus next : theMethodStatuses) {
 			PersMethodStatus existing = myEntityManager.find(PersMethodStatus.class, new PersMethodStatusPk(next.getMethod()));
@@ -1182,6 +1185,7 @@ public class DaoBean implements IDao {
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	@Override
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	public BasePersMonitorRule saveMonitorRuleInNewTransaction(BasePersMonitorRule theRule) {
 
 		for (PersMonitorRuleNotifyContact next : theRule.getNotifyContact()) {
@@ -1225,7 +1229,7 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	public ByteDelta saveRecentMessagesAndTrimInNewTransaction(BaseUnflushed<? extends BasePersSavedTransactionRecentMessage> theNextTransactions) {
 
 		ByteDelta delta = doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getSuccessAndRemove());
@@ -1349,6 +1353,7 @@ public class DaoBean implements IDao {
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	@Override
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	public void saveServiceVersionStatuses(ArrayList<PersServiceVersionStatus> theStatuses) {
 		Validate.notNull(theStatuses);
 
@@ -1371,6 +1376,7 @@ public class DaoBean implements IDao {
 
 	}
 
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	@Override
 	public void saveServiceVersionUrlStatus(List<PersServiceVersionUrlStatus> theStatuses) {
 
@@ -1412,7 +1418,7 @@ public class DaoBean implements IDao {
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	@Override
+	@Override	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	public void saveUserStatus(Collection<PersUserStatus> theStatus) {
 		ourLog.info("Flushing {} user status entries", theStatus.size());
 
@@ -1516,6 +1522,8 @@ public class DaoBean implements IDao {
 
 		retVal = myEntityManager.merge(retVal);
 
+//		myEntityManager.flush();
+		
 		return retVal;
 	}
 

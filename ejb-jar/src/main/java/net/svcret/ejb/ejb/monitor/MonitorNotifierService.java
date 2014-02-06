@@ -17,8 +17,8 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.shared.enm.MonitorRuleTypeEnum;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem;
 import net.svcret.ejb.util.SLF4JLogChute;
@@ -36,8 +36,8 @@ import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 public class MonitorNotifierService implements IMonitorNotifier {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(MonitorNotifierService.class);
 
-	@Resource(name = "mail/svcret")
-	private Session mySession;
+//	@Resource(name = "mail/svcret")
+	private Session mySession; // FIXME: fix this
 
 	String generateEmail(PersMonitorRuleFiring theFiring) {
 		VelocityEngine ve = new VelocityEngine();

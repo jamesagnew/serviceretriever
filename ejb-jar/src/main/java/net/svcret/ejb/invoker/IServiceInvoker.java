@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import net.svcret.admin.api.ProcessingException;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IResponseValidator;
@@ -13,7 +14,6 @@ import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.InvalidRequestException;
 import net.svcret.ejb.invoker.soap.InvocationFailedException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;

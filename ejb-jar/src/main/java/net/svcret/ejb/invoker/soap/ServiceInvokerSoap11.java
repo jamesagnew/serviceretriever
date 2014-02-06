@@ -30,7 +30,9 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.XMLEvent;
 
+import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
+import net.svcret.admin.shared.util.Validate;
 import net.svcret.ejb.Messages;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.ICredentialGrabber;
@@ -45,7 +47,6 @@ import net.svcret.ejb.ex.InvalidRequestException.IssueEnum;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.ProcessingRuntimeException;
 import net.svcret.ejb.invoker.BaseServiceInvoker;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
@@ -57,11 +58,11 @@ import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.util.UrlUtil;
-import net.svcret.ejb.util.Validate;
 import net.svcret.ejb.util.XMLUtils;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.ClientProtocolException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -88,9 +89,11 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 	}
 	
 	@EJB
+	@Autowired
 	private IConfigService myConfigService;
 
 	@EJB
+	@Autowired
 	private IHttpClient myHttpClient;
 
 	private BaseResponseValidator myInvocationResultsBean;

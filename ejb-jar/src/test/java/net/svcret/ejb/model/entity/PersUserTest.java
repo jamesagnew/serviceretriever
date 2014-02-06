@@ -4,10 +4,10 @@ import static org.junit.Assert.*;
 
 import java.sql.SQLException;
 
+import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.ejb.ejb.BaseJpaTest;
 import net.svcret.ejb.ejb.DaoBean;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 
 import org.junit.Before;

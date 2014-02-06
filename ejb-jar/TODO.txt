@@ -1,4 +1,6 @@
 
+* Make ProcessingException and UnexpectedFailureException only apply to Admin API (and maybe merge them?)
+
 * In replay existing message dialog, allow save button to update saved message, and maybe "save as new" (also change the title of this dialog to better explain that's it's replaying from liibrary)
 
 * In manual test dialod, button to save transaction to library

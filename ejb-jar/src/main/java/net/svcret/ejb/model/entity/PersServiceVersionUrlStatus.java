@@ -1,6 +1,7 @@
 package net.svcret.ejb.model.entity;
 
 import static org.apache.commons.lang3.StringUtils.*;
+import static net.svcret.ejb.util.DateUtil.*;
 
 import java.util.Date;
 
@@ -20,8 +21,8 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import net.svcret.admin.shared.model.StatusEnum;
+import net.svcret.admin.shared.util.Validate;
 import net.svcret.ejb.util.LogUtil;
-import net.svcret.ejb.util.Validate;
 
 import com.google.common.base.Objects;
 
@@ -149,7 +150,7 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 			ourLog.trace("Checking if {} is after {}", LogUtil.formatTime(now), LogUtil.formatTime(nextReset));
 		}
 
-		if (now.after(nextReset)) {
+		if (nextReset == null || after(now,nextReset)) {
 			myNextCircuitBreakerReset = null;
 			tripCircuitBreaker();
 			return true;
@@ -332,46 +333,46 @@ public class PersServiceVersionUrlStatus extends BasePersObject {
 
 		boolean retVal = false;
 
-		if (getLastSuccess() == null || (theExisting.getLastSuccess() != null && theExisting.getLastSuccess().after(getLastSuccess()))) {
+		if (getLastSuccess() == null || (theExisting.getLastSuccess() != null && after(theExisting.getLastSuccess(),getLastSuccess()))) {
 			setLastSuccess(theExisting.getLastSuccess());
 			setLastSuccessContentType(theExisting.getLastSuccessContentType());
 			setLastSuccessMessage(theExisting.getLastSuccessMessage());
 			setLastSuccessStatusCode(theExisting.getLastSuccessStatusCode());
-		} else if (getLastSuccess() != null && (theExisting.getLastSuccess() == null || theExisting.getLastSuccess().before(getLastSuccess()))) {
+		} else if (getLastSuccess() != null && (theExisting.getLastSuccess() == null || before(theExisting.getLastSuccess(),getLastSuccess()))) {
 			retVal = true;
 		}
 
-		if (getLastFault() == null || (theExisting.getLastFault() != null && theExisting.getLastFault().after(getLastFault()))) {
+		if (getLastFault() == null || (theExisting.getLastFault() != null && after(theExisting.getLastFault(),getLastFault()))) {
 			setLastFault(theExisting.getLastFault());
 			setLastFaultContentType(theExisting.getLastFaultContentType());
 			setLastFaultMessage(theExisting.getLastFaultMessage());
 			setLastFaultStatusCode(theExisting.getLastFaultStatusCode());
-		} else if (getLastFault() != null && (theExisting.getLastFault() == null || theExisting.getLastFault().before(getLastFault()))) {
+		} else if (getLastFault() != null && (theExisting.getLastFault() == null || before(theExisting.getLastFault(),getLastFault()))) {
 			retVal = true;
 		}
 
-		if (getLastFail() == null || (theExisting.getLastFail() != null && theExisting.getLastFail().after(getLastFail()))) {
+		if (getLastFail() == null || (theExisting.getLastFail() != null && after(theExisting.getLastFail(),getLastFail()))) {
 			setLastFail(theExisting.getLastFail());
 			setLastFailContentType(theExisting.getLastFailContentType());
 			setLastFailMessage(theExisting.getLastFailMessage());
 			setLastFailStatusCode(theExisting.getLastFailStatusCode());
-		} else if (getLastFail() != null && (theExisting.getLastFail() == null || theExisting.getLastFail().before(getLastFail()))) {
+		} else if (getLastFail() != null && (theExisting.getLastFail() == null || before(theExisting.getLastFail(),getLastFail()))) {
 			retVal = true;
 		}
 
-		if (getStatusTimestamp() == null || (theExisting.getStatusTimestamp() != null && theExisting.getStatusTimestamp().after(getStatusTimestamp()))) {
+		if (getStatusTimestamp() == null || (theExisting.getStatusTimestamp() != null && after(theExisting.getStatusTimestamp(),getStatusTimestamp()))) {
 			myStatus = theExisting.getStatus(); // Setter will trip the CB here!
 			setStatusTimestamp(theExisting.getStatusTimestamp());
-		} else if (getStatusTimestamp() != null && (theExisting.getStatusTimestamp() == null || theExisting.getStatusTimestamp().before(getStatusTimestamp()))) {
+		} else if (getStatusTimestamp() != null && (theExisting.getStatusTimestamp() == null || before(theExisting.getStatusTimestamp(),getStatusTimestamp()))) {
 			retVal = true;
 		}
 
 		if (getNextCircuitBreakerResetTimestamp() == null
-				|| (theExisting.getNextCircuitBreakerResetTimestamp() != null && theExisting.getNextCircuitBreakerResetTimestamp().after(getNextCircuitBreakerResetTimestamp()))) {
+				|| (theExisting.getNextCircuitBreakerResetTimestamp() != null && after(theExisting.getNextCircuitBreakerResetTimestamp(),getNextCircuitBreakerResetTimestamp()))) {
 			myNextCircuitBreakerReset = theExisting.getNextCircuitBreakerReset(); // Setter will trip the CB here!
 			setNextCircuitBreakerResetTimestamp(theExisting.getNextCircuitBreakerResetTimestamp());
 		} else if (getNextCircuitBreakerResetTimestamp() != null
-				&& (theExisting.getNextCircuitBreakerResetTimestamp() == null || theExisting.getNextCircuitBreakerResetTimestamp().before(getNextCircuitBreakerResetTimestamp()))) {
+				&& (theExisting.getNextCircuitBreakerResetTimestamp() == null || before(theExisting.getNextCircuitBreakerResetTimestamp(),getNextCircuitBreakerResetTimestamp()))) {
 			retVal = true;
 		}
 

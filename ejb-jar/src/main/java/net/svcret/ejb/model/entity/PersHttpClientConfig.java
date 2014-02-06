@@ -12,12 +12,12 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 
-import net.svcret.admin.shared.model.DtoKeystoreAnalysis;
+import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.shared.model.DtoHttpClientConfig;
+import net.svcret.admin.shared.model.DtoKeystoreAnalysis;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
+import net.svcret.admin.shared.util.KeystoreUtils;
 import net.svcret.ejb.api.IDao;
-import net.svcret.ejb.api.IKeystoreService;
-import net.svcret.ejb.ex.ProcessingException;
 
 import com.google.common.base.Objects;
 
@@ -333,7 +333,7 @@ public class PersHttpClientConfig extends BasePersObject {
 		myUrlSelectionPolicy = theUrlSelectionPolicy;
 	}
 
-	public DtoHttpClientConfig toDto(IKeystoreService theKeystoreSvc) throws ProcessingException {
+	public DtoHttpClientConfig toDto() throws ProcessingException {
 		DtoHttpClientConfig retVal = new DtoHttpClientConfig();
 
 		if (getPid() != null) {
@@ -354,14 +354,14 @@ public class PersHttpClientConfig extends BasePersObject {
 
 		if (this.getTlsKeystore() != null) {
 			if (myKeystoreAnalysis == null) {
-				myKeystoreAnalysis = theKeystoreSvc.analyzeKeystore(this.getTlsKeystore(), this.getTlsKeystorePassword());
+				myKeystoreAnalysis = KeystoreUtils.analyzeKeystore(this.getTlsKeystore(), this.getTlsKeystorePassword());
 			}
 			retVal.setTlsKeystore(myKeystoreAnalysis);
 		}
 
 		if (this.getTlsTruststore() != null) {
 			if (myTruststoreAnalysis == null) {
-				myTruststoreAnalysis = theKeystoreSvc.analyzeKeystore(this.getTlsTruststore(), this.getTlsTruststorePassword());
+				myTruststoreAnalysis = KeystoreUtils.analyzeKeystore(this.getTlsTruststore(), this.getTlsTruststorePassword());
 			}
 			retVal.setTlsTruststore(myTruststoreAnalysis);
 		}

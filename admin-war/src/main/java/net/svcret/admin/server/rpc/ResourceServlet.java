@@ -4,13 +4,13 @@ import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.ejb.EJB;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.svcret.ejb.admin.IAdminServiceLocal;
+import net.svcret.admin.api.AdminServiceProvider;
+import net.svcret.admin.api.IAdminServiceLocal;
 
 //@WebServlet(urlPatterns = { "/resources/*" })
 public class ResourceServlet extends HttpServlet {
@@ -19,8 +19,14 @@ public class ResourceServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 
-	@EJB
 	private IAdminServiceLocal myAdminSvc;
+
+	@Override
+	public void init() throws ServletException {
+		super.init();
+		
+		myAdminSvc = AdminServiceProvider.getInstance().getAdminService();
+	}
 
 	@Override
 	protected void doGet(HttpServletRequest theReq, HttpServletResponse theResp) throws ServletException, IOException {

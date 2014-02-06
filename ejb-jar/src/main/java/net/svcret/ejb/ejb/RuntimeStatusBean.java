@@ -1,6 +1,6 @@
 package net.svcret.ejb.ejb;
 
-import static net.svcret.ejb.model.entity.InvocationStatsIntervalEnum.*;
+import static net.svcret.admin.shared.enm.InvocationStatsIntervalEnum.*;
 
 import java.net.HttpCookie;
 import java.text.DateFormat;
@@ -31,10 +31,13 @@ import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import net.svcret.admin.api.UnexpectedFailureException;
+import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.admin.shared.model.IThrottleable;
 import net.svcret.admin.shared.model.StatusEnum;
+import net.svcret.admin.shared.util.Validate;
 import net.svcret.ejb.Messages;
 import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
@@ -47,13 +50,11 @@ import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStatsPk;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.BasePersStats;
 import net.svcret.ejb.model.entity.BasePersStatsPk;
-import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
@@ -76,10 +77,12 @@ import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserMethodStatus;
 import net.svcret.ejb.model.entity.PersUserStatus;
 import net.svcret.ejb.runtimestatus.RecentTransactionQueue;
-import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -92,14 +95,17 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(RuntimeStatusBean.class);
 
 	@EJB
+	@Autowired
 	private IBroadcastSender myBroadcastSender;
 
 	private final ReentrantLock myCollapseLock = new ReentrantLock();
 
 	@EJB
+	@Autowired
 	private IConfigService myConfigSvc;
 
 	@EJB
+	@Autowired
 	private IDao myDao;
 	private final ReentrantLock myFlushLock = new ReentrantLock();
 	private final RecentTransactionQueue myInMemoryRecentTransactionFailCounter = new RecentTransactionQueue();
@@ -111,6 +117,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private PersNodeStatus myNodeStatus;
 	private Date myNowForUnitTests;
 	@EJB
+	@Autowired
 	private IServiceRegistry myServiceRegistry;
 	private final Map<PersStickySessionUrlBindingPk, PersStickySessionUrlBinding> myStickySessionUrlBindings;
 	private final DateFormat myTimeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
@@ -123,6 +130,10 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private final ConcurrentHashMap<PersUser, PersUserStatus> myUnflushedUserStatus;
 	private final ConcurrentHashMap<PersMethod, PersMethodStatus> myUnflushedMethodStatus;
 	private final ConcurrentHashMap<Long, PersServiceVersionUrlStatus> myUrlStatus;
+
+	@EJB
+	@Autowired
+	private IServiceRegistry mySvcRegistry;
 
 	public RuntimeStatusBean() {
 		myUnflushedInvocationStats = new ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>>();
@@ -174,6 +185,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	@Transactional(propagation=Propagation.NOT_SUPPORTED)
 	public void flushStatus() {
 
 		/*
@@ -199,9 +211,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	public void initializeNodeStat() {
 		myNodeStatus = myDao.getOrCreateNodeStatus(myConfigSvc.getNodeId());
 	}
-
-	@EJB
-	private IServiceRegistry mySvcRegistry;
 
 	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Override
@@ -359,11 +368,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	}
 
-	@VisibleForTesting
-	public void setSvcRegistryForUnitTests(IServiceRegistry theSvcRegistry) {
-		mySvcRegistry = theSvcRegistry;
-	}
-
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	@Override
 	public void recordInvocationStaticResource(Date theInvocationTime, PersServiceVersionResource theResource) {
@@ -443,6 +447,26 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 		inMemory.mergeNewer(fromDisk);
 
+	}
+
+	@VisibleForTesting
+	public void setConfigSvc(IConfigService theConfigSvc) {
+		myConfigSvc = theConfigSvc;
+	}
+
+	@VisibleForTesting
+	public void setDao(IDao thePersistence) {
+		myDao = thePersistence;
+	}
+
+	@VisibleForTesting
+	public void setNowForUnitTests(Date theNow) {
+		myNowForUnitTests = theNow;
+	}
+
+	@VisibleForTesting
+	public void setSvcRegistryForUnitTests(IServiceRegistry theSvcRegistry) {
+		mySvcRegistry = theSvcRegistry;
 	}
 
 	@Override
@@ -982,15 +1006,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 	}
 
-	private void logUrlStatusDown(PersServiceVersionUrlStatus theUrlStatusBean) {
-		Date nextReset = theUrlStatusBean.getNextCircuitBreakerReset();
-		if (nextReset != null) {
-			ourLog.info("URL[{}] is DOWN, Next circuit breaker reset attempt is {} - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), myTimeFormat.format(nextReset), theUrlStatusBean.getUrl().getUrl() });
-		} else {
-			ourLog.info("URL[{}] is DOWN - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), theUrlStatusBean.getUrl().getUrl() });
-		}
-	}
-
 	private void doUpdateMethodAndUserStatus(PersMethod theMethod, SrBeanProcessedResponse theInvocationResponseResultsBean, PersUser theUser, Date theTransactionTime) {
 		PersMethodStatus methodStatus = getMethodStatusForMethod(theMethod);
 		PersUserStatus userStatus;
@@ -1049,6 +1064,16 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	}
 
+	private PersMethodStatus getMethodStatusForMethod(PersMethod theMethod) {
+		PersMethodStatus tryNew = new PersMethodStatus(theMethod);
+		PersMethodStatus status = myUnflushedMethodStatus.putIfAbsent(theMethod, tryNew);
+		if (status == null) {
+			status = tryNew;
+		}
+
+		return status;
+	}
+
 	private Date getNow() {
 		if (myNowForUnitTests != null) {
 			return myNowForUnitTests;
@@ -1105,14 +1130,13 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		return status;
 	}
 
-	private PersMethodStatus getMethodStatusForMethod(PersMethod theMethod) {
-		PersMethodStatus tryNew = new PersMethodStatus(theMethod);
-		PersMethodStatus status = myUnflushedMethodStatus.putIfAbsent(theMethod, tryNew);
-		if (status == null) {
-			status = tryNew;
+	private void logUrlStatusDown(PersServiceVersionUrlStatus theUrlStatusBean) {
+		Date nextReset = theUrlStatusBean.getNextCircuitBreakerReset();
+		if (nextReset != null) {
+			ourLog.info("URL[{}] is DOWN, Next circuit breaker reset attempt is {} - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), myTimeFormat.format(nextReset), theUrlStatusBean.getUrl().getUrl() });
+		} else {
+			ourLog.info("URL[{}] is DOWN - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), theUrlStatusBean.getUrl().getUrl() });
 		}
-
-		return status;
 	}
 
 	private void shuffleUrlPoolBasedOnStickySessionPolicy(String theSesionId, UrlPoolBean theUrlPool, BasePersServiceVersion theServiceVersion) throws UnexpectedFailureException {
@@ -1198,21 +1222,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	@VisibleForTesting
 	void setBroadcastSender(IBroadcastSender theBroadcastSender) {
 		myBroadcastSender = theBroadcastSender;
-	}
-
-	@VisibleForTesting
-	public void setConfigSvc(IConfigService theConfigSvc) {
-		myConfigSvc = theConfigSvc;
-	}
-
-	@VisibleForTesting
-	public void setDao(IDao thePersistence) {
-		myDao = thePersistence;
-	}
-
-	@VisibleForTesting
-	public void setNowForUnitTests(Date theNow) {
-		myNowForUnitTests = theNow;
 	}
 
 }

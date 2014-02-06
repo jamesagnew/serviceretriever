@@ -31,13 +31,13 @@ import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.IThrottleable;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
-import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.admin.shared.util.Validate;
 import net.svcret.ejb.util.Password;
-import net.svcret.ejb.util.Validate;
 
 import com.google.common.base.Objects;
 

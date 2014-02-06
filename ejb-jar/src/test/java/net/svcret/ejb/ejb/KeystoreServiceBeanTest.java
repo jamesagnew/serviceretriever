@@ -6,9 +6,10 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
+import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.shared.model.DtoKeystoreAnalysis;
 import net.svcret.admin.shared.model.DtoKeystoreToSave;
-import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.admin.shared.util.KeystoreUtils;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
@@ -20,17 +21,17 @@ public class KeystoreServiceBeanTest {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(KeystoreServiceBeanTest.class);
 
-	private KeystoreServiceBean mySvc;
+	private KeystoreUtils mySvc;
 
 	@Before
 	public void extracted() {
-		mySvc = new KeystoreServiceBean();
+		mySvc = new KeystoreUtils();
 	}
 
 	@Test
 	public void testExamineKeystore() throws IOException, ProcessingException, ParseException {
 
-		byte[] bytes = IOUtils.toByteArray(KeystoreServiceBean.class.getResourceAsStream("/keystore/keystore.jks"));
+		byte[] bytes = IOUtils.toByteArray(KeystoreUtils.class.getResourceAsStream("/keystore/keystore.jks"));
 
 		DtoKeystoreToSave request = new DtoKeystoreToSave();
 		request.setKeystore(bytes);
@@ -49,7 +50,7 @@ public class KeystoreServiceBeanTest {
 	@Test
 	public void testExamineKeystoreBadPassword() throws Exception {
 
-		byte[] bytes = IOUtils.toByteArray(KeystoreServiceBean.class.getResourceAsStream("/keystore/keystore.jks"));
+		byte[] bytes = IOUtils.toByteArray(KeystoreUtils.class.getResourceAsStream("/keystore/keystore.jks"));
 
 		DtoKeystoreToSave request = new DtoKeystoreToSave();
 		request.setKeystore(bytes);
@@ -63,7 +64,7 @@ public class KeystoreServiceBeanTest {
 	@Test
 	public void testExamineKeystoreBadFile() throws Exception {
 
-		byte[] bytes = IOUtils.toByteArray(KeystoreServiceBean.class.getResourceAsStream("/logback-test.xml"));
+		byte[] bytes = IOUtils.toByteArray(KeystoreUtils.class.getResourceAsStream("/logback-test.xml"));
 
 		DtoKeystoreToSave request = new DtoKeystoreToSave();
 		request.setKeystore(bytes);
@@ -77,7 +78,7 @@ public class KeystoreServiceBeanTest {
 	@Test
 	public void testExamineTruststore() throws IOException, ProcessingException, ParseException {
 
-		byte[] bytes = IOUtils.toByteArray(KeystoreServiceBean.class.getResourceAsStream("/keystore/truststore.jks"));
+		byte[] bytes = IOUtils.toByteArray(KeystoreUtils.class.getResourceAsStream("/keystore/truststore.jks"));
 
 		DtoKeystoreToSave request = new DtoKeystoreToSave();
 		request.setKeystore(bytes);

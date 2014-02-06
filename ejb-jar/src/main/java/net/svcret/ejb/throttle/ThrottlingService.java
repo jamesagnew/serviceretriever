@@ -27,6 +27,8 @@ import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.svcret.admin.api.ProcessingException;
+import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.ISecurityService.AuthorizationResultsBean;
@@ -37,13 +39,12 @@ import net.svcret.ejb.api.SrBeanOutgoingResponse;
 import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.PersServiceVersionThrottle;
 import net.svcret.ejb.model.entity.PersUser;
 
 import org.apache.commons.lang3.Validate;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -55,13 +56,14 @@ public class ThrottlingService implements IThrottlingService {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ThrottlingService.class);
 	@EJB
+	@Autowired
 	private IRuntimeStatus myRuntimeStatusSvc;
 
 	@EJB
+	@Autowired
 	private IServiceOrchestrator myServiceOrchestrator;
 
-	@EJB
-	private IThrottlingService myThis;
+	private IThrottlingService myThis = this; // FIXME: fix this
 
 	private final Map<LimiterKey, ThrottledTaskQueue> myThrottleQueues = new HashMap<LimiterKey, ThrottledTaskQueue>();
 	private final ConcurrentHashMap<LimiterKey, FlexibleRateLimiter> myUserRateLimiters = new ConcurrentHashMap<LimiterKey, FlexibleRateLimiter>();

@@ -20,14 +20,14 @@ public abstract class BaseXmlResponseValidator extends BaseResponseValidator {
 	public BaseXmlResponseValidator() {
 		myXmlInputFactory = XMLInputFactory.newInstance();
 	}
-	
+
 	public void setRequiredXmlElements(QName... theQNames) {
 		myRequiredXmlElements = new HashSet<QName>();
 		for (QName qName : theQNames) {
 			myRequiredXmlElements.add(qName);
 		}
 	}
-
+	
 	@Override
 	public ValidationResponse validate(String theBody, int theStatusCode, String theContentType) {
 		if (myRequiredXmlElements != null) {
@@ -48,6 +48,11 @@ public abstract class BaseXmlResponseValidator extends BaseResponseValidator {
 					}
 				}
 	
+				ValidationResponse retVal = requiredElementsNotFound(theBody);
+				if (retVal != null) {
+					return retVal;
+				}
+				
 				return new ValidationResponse(false, Messages.getString("Soap11ResponseValidator.requiredXmlElementFail", rNames));
 	
 			} catch (XMLStreamException e) {
@@ -56,6 +61,18 @@ public abstract class BaseXmlResponseValidator extends BaseResponseValidator {
 		}
 
 		return super.validate(theBody, theStatusCode, theContentType);
+	}
+
+	protected XMLInputFactory getXmlInputFactory() {
+		return myXmlInputFactory;
+	}
+
+	/**
+	 * Subclasses may override
+	 * @return 
+	 */
+	protected ValidationResponse requiredElementsNotFound(@SuppressWarnings("unused") String theBody) {
+		return null;
 	}
 
 }

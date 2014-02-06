@@ -27,6 +27,7 @@ import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
+import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
@@ -36,7 +37,6 @@ import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.StatusesBean;
 import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.ForeignKey;

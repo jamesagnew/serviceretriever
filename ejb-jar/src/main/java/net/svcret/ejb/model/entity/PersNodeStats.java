@@ -12,6 +12,8 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
+import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.hibernate.annotations.Index;
 

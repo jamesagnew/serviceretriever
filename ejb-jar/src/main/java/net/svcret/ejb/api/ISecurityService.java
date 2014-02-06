@@ -4,9 +4,9 @@ import java.util.List;
 
 import javax.ejb.Local;
 
+import net.svcret.admin.api.ProcessingException;
+import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
-import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersUser;

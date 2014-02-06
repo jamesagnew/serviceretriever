@@ -2,24 +2,30 @@ package net.svcret.admin.server.pub;
 
 import java.io.IOException;
 
-import javax.ejb.EJB;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.svcret.admin.api.AdminServiceProvider;
+import net.svcret.admin.api.IAdminServiceLocal;
+import net.svcret.admin.api.ProcessingException;
+import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.server.rpc.BaseRpcServlet;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
-import net.svcret.ejb.admin.IAdminServiceLocal;
-import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 
 public class PublicRegistryServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 	
-	@EJB
-	private IAdminServiceLocal myAdminService;
+	private IAdminServiceLocal myAdminSvc;
+
+	@Override
+	public void init() throws ServletException {
+		super.init();
+		
+		myAdminSvc = AdminServiceProvider.getInstance().getAdminService();
+	}
 
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -39,8 +45,8 @@ public class PublicRegistryServlet extends HttpServlet {
 			request.setAttribute("config", BaseRpcServlet.getMock().loadConfig());
 		}else {
 			try {
-				request.setAttribute("domainList", myAdminService.loadModelUpdate(req).getDomainList());
-				request.setAttribute("config", myAdminService.loadConfig());
+				request.setAttribute("domainList", myAdminSvc.loadModelUpdate(req).getDomainList());
+				request.setAttribute("config", myAdminSvc.loadConfig());
 			} catch (ProcessingException e) {
 				throw new ServletException(e);
 			} catch (UnexpectedFailureException e) {

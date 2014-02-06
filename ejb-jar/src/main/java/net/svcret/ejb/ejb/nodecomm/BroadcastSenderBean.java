@@ -13,7 +13,7 @@ import javax.jms.TopicConnectionFactory;
 import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 
-import net.svcret.ejb.ex.UnexpectedFailureException;
+import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.PersStickySessionUrlBinding;
 
 import org.apache.commons.lang3.Validate;

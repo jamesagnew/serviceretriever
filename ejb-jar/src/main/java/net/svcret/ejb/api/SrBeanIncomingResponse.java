@@ -206,6 +206,7 @@ public class SrBeanIncomingResponse {
 			myHeaders = theHeaders;
 		}
 
+
 		/**
 		 * @return the body
 		 */

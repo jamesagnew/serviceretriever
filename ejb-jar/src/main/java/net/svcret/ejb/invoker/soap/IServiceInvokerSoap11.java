@@ -1,6 +1,6 @@
 package net.svcret.ejb.invoker.soap;
 
-import net.svcret.ejb.ex.ProcessingException;
+import net.svcret.admin.api.ProcessingException;
 import net.svcret.ejb.invoker.IServiceInvoker;
 import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 

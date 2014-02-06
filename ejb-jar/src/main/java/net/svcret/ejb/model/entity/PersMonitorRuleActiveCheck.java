@@ -27,13 +27,13 @@ import javax.persistence.Table;
 
 import org.hibernate.annotations.ForeignKey;
 
+import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcomeList;
 import net.svcret.ejb.api.IDao;
-import net.svcret.ejb.ex.ProcessingException;
 
 //@formatter:off
 @Entity

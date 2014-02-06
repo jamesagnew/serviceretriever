@@ -3,21 +3,22 @@ package net.svcret.admin.server.rpc;
 import java.io.Serializable;
 import java.util.Collection;
 
-import javax.ejb.EJB;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
+import net.svcret.admin.api.AdminServiceProvider;
+import net.svcret.admin.api.IAdminServiceLocal;
+import net.svcret.admin.api.ProcessingException;
+import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.client.rpc.HttpClientConfigService;
 import net.svcret.admin.shared.ServiceFailureException;
+import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.DtoKeystoreAnalysis;
 import net.svcret.admin.shared.model.DtoKeystoreToSave;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
-import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
-import net.svcret.ejb.admin.IAdminServiceLocal;
-import net.svcret.ejb.api.IKeystoreService;
-import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnexpectedFailureException;
-import net.svcret.ejb.util.Validate;
+import net.svcret.admin.shared.util.KeystoreUtils;
+import net.svcret.admin.shared.util.Validate;
 
 public class HttpClientConfigServiceImpl extends BaseRpcServlet implements HttpClientConfigService {
 
@@ -26,11 +27,15 @@ public class HttpClientConfigServiceImpl extends BaseRpcServlet implements HttpC
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(HttpClientConfigServiceImpl.class);
 	private static final long serialVersionUID = 1L;
 
-	@EJB
 	private IAdminServiceLocal myAdminSvc;
 
-	@EJB
-	private IKeystoreService myKeystoreService;
+	@Override
+	public void init() throws ServletException {
+		super.init();
+		
+		myAdminSvc = AdminServiceProvider.getInstance().getAdminService();
+	}
+
 
 	@Override
 	public GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ServiceFailureException {
@@ -176,7 +181,7 @@ public class HttpClientConfigServiceImpl extends BaseRpcServlet implements HttpC
 		request.setPassword(theKs.getPassword());
 
 		try {
-			return myKeystoreService.analyzeKeystore(request);
+			return KeystoreUtils.analyzeKeystore(request);
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to examine keystore", e);
 			throw new ServiceFailureException(e.getMessage());

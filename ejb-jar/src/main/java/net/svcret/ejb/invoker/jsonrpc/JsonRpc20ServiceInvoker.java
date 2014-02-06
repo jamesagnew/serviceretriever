@@ -12,6 +12,7 @@ import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.RequestType;
@@ -24,7 +25,6 @@ import net.svcret.ejb.ex.InvalidRequestException.IssueEnum;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestFailedException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.invoker.BaseServiceInvoker;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersBaseClientAuth;

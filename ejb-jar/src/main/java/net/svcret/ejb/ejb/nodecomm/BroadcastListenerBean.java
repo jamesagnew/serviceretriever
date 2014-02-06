@@ -10,6 +10,8 @@ import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.TextMessage;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IRuntimeStatus;
@@ -38,15 +40,19 @@ public class BroadcastListenerBean implements MessageListener {
 	private MessageDrivenContext mdc;
 
 	@EJB
+	@Autowired
 	private IConfigService myConfigService;
 
 	@EJB
+	@Autowired
 	private IRuntimeStatus myRuntimeStatus;
 
 	@EJB
+	@Autowired
 	private ISecurityService mySecurityService;
 
 	@EJB
+	@Autowired
 	private IServiceRegistry myServiceRegistry;
 
 	@Override

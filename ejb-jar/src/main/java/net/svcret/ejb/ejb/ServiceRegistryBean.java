@@ -1,6 +1,5 @@
 package net.svcret.ejb.ejb;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,33 +17,33 @@ import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import net.svcret.admin.api.ProcessingException;
+import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
-import net.svcret.ejb.admin.AdminServiceBean;
+import net.svcret.admin.shared.util.Validate;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IHttpClient;
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
-import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
-import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersMethod;
+import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
-import net.svcret.ejb.util.Validate;
 
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallbackWithoutResult;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.google.common.annotations.VisibleForTesting;
-
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.joran.JoranConfigurator;
 
 @Startup
 @Singleton
@@ -61,14 +60,17 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	private static final String STATE_KEY = ServiceRegistryBean.class.getName() + "_VERSION";
 
 	@EJB
+	@Autowired
 	private IBroadcastSender myBroadcastSender;
 
 	private long myCurrentVersion;
 
 	@EJB
+	@Autowired
 	private IDao myDao;
 
 	@EJB
+	@Autowired
 	private IHttpClient mySvcHttpClient;
 
 	/**
@@ -286,28 +288,38 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		ourLog.debug("State counter is now {}", newVersion);
 	}
 
+	@Autowired
+    protected PlatformTransactionManager myPlatformTransactionManager;
+	
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	@PostConstruct
 	public void postConstruct() {
-		reloadRegistryFromDatabase();
-
+		TransactionTemplate tmpl = new TransactionTemplate(myPlatformTransactionManager);
+        tmpl.execute(new TransactionCallbackWithoutResult() {
+            @Override
+            protected void doInTransactionWithoutResult(TransactionStatus status) {
+            	reloadRegistryFromDatabase();
+            }
+        });
+		
 		ourLog.info("Setting up Logback");
 
-		try {
-
-			LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-			JoranConfigurator jc = new JoranConfigurator();
-			jc.setContext(context);
-			context.reset();
-
-			InputStream inputStream = AdminServiceBean.class.getResourceAsStream("/svcret-ejb-logback.xml");
-			ourLog.info("Configuring using {}", inputStream);
-
-			jc.doConfigure(inputStream);
-
-		} catch (Exception e) {
-			ourLog.error("Failed to set up logback", e);
-		}
+		// FIXME: move this to main app
+//		try {
+//
+//			LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+//			JoranConfigurator jc = new JoranConfigurator();
+//			jc.setContext(context);
+//			context.reset();
+//
+//			InputStream inputStream = AdminServiceBean.class.getResourceAsStream("/svcret-ejb-logback.xml");
+//			ourLog.info("Configuring using {}", inputStream);
+//
+//			jc.doConfigure(inputStream);
+//
+//		} catch (Exception e) {
+//			ourLog.error("Failed to set up logback", e);
+//		}
 
 	}
 

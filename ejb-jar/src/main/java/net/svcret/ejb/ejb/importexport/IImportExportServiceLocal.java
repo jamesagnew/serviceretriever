@@ -2,7 +2,7 @@ package net.svcret.ejb.ejb.importexport;
 
 import javax.ejb.Local;
 
-import net.svcret.ejb.ex.UnexpectedFailureException;
+import net.svcret.admin.api.UnexpectedFailureException;
 
 @Local
 public interface IImportExportServiceLocal {

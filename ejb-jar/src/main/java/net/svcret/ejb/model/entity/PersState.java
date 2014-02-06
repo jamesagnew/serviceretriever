@@ -9,7 +9,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
-import net.svcret.ejb.util.Validate;
+import net.svcret.admin.shared.util.Validate;
 
 @Entity
 @Table(name = "PX_STATE")

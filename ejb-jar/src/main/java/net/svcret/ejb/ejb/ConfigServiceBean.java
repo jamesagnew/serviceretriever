@@ -6,14 +6,15 @@ import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
+import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.model.RetrieverNodeTypeEnum;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.PersConfig;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -30,6 +31,7 @@ public class ConfigServiceBean implements IConfigService {
 	private static final String STATE_KEY = SecurityServiceBean.class.getName() + "_VERSION";
 
 	@EJB
+	@Autowired
 	private IBroadcastSender myBroadcastSender;
 
 	private transient PersConfig myConfig;
@@ -37,6 +39,7 @@ public class ConfigServiceBean implements IConfigService {
 	private long myCurrentVersion;
 
 	@EJB
+	@Autowired
 	private IDao myDao;
 
 	@Override

@@ -17,21 +17,22 @@ import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 
+import net.svcret.admin.api.UnexpectedFailureException;
+import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.admin.shared.model.BaseDtoDashboardObject;
+import net.svcret.admin.shared.util.Validate;
 import net.svcret.ejb.admin.AdminServiceBean;
 import net.svcret.ejb.admin.AdminServiceBean.IWithStats;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersInvocationStats;
 import net.svcret.ejb.model.entity.BasePersInvocationStatsPk;
 import net.svcret.ejb.model.entity.BasePersServiceCatalogItem;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.BasePersStats;
 import net.svcret.ejb.model.entity.BasePersStatsPk;
-import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
@@ -47,10 +48,10 @@ import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserMethodStatus;
-import net.svcret.ejb.util.Validate;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.time.DateUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -67,15 +68,18 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 	private final ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>> myCacheInvocationStats;
 
 	@EJB
+	@Autowired
 	private IConfigService myConfigSvc;
 
 	@EJB
+	@Autowired
 	private IDao myDao;
 	private int myMaxNullCachedEntries = INITIAL_CACHED_ENTRIES;
 
 	private int myMaxPopulatedCachedEntries = INITIAL_CACHED_ENTRIES;
 
 	@EJB
+	@Autowired
 	private IRuntimeStatus myStatusSvc;
 
 	private final BasePersStats<?, ?> PLACEHOLDER = new Placeholder();
@@ -465,8 +469,40 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 			return retVal;
 		}
 
+		public ArrayList<Integer> getFailCounts() {
+			return myFailCounts;
+		}
+
+		public ArrayList<Integer> getFaultCounts() {
+			return myFaultCounts;
+		}
+
 		public Date getFirstDate() {
 			return myFirstDate;
+		}
+
+		public ArrayList<Integer> getSecurityFailCounts() {
+			return mySecFailCounts;
+		}
+
+		public ArrayList<Integer> getSuccessCounts() {
+			return mySuccessCounts;
+		}
+
+		public ArrayList<Integer> getThrottleAcceptCounts() {
+			return myThrottleAcceptCounts;
+		}
+
+		public ArrayList<Integer> getThrottleRejectCounts() {
+			return myThrottleRejectCounts;
+		}
+
+		public ArrayList<Long> getTimes() {
+			return myTimes;
+		}
+
+		public List<Long> getTimestamps() {
+			return myTimestamps;
 		}
 
 		public void populateDto(BaseDtoDashboardObject theObject) {
@@ -502,6 +538,10 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 			ourLog.trace("Copied {} values", count);
 		}
 
+		public void setFirstDate(Date theFirstTime) {
+			myFirstDate = theFirstTime;
+		}
+
 		private void addToListOfInts(int theThisIndex, int theTheirIndex, ArrayList<Integer> theMine, ArrayList<Integer> theTheirs) {
 			Integer newValue = theTheirIndex == -1 ? 0 : theTheirs.get(theTheirIndex);
 
@@ -527,42 +567,6 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 
 		private <T extends Number> ArrayList<T> trimLastNEntries(int theCountToDelete, ArrayList<T> theValues) {
 			return new ArrayList<T>(theValues.subList(0, theValues.size() - theCountToDelete));
-		}
-
-		public ArrayList<Integer> getFailCounts() {
-			return myFailCounts;
-		}
-
-		public ArrayList<Integer> getFaultCounts() {
-			return myFaultCounts;
-		}
-
-		public ArrayList<Integer> getSecurityFailCounts() {
-			return mySecFailCounts;
-		}
-
-		public ArrayList<Integer> getSuccessCounts() {
-			return mySuccessCounts;
-		}
-
-		public ArrayList<Integer> getThrottleAcceptCounts() {
-			return myThrottleAcceptCounts;
-		}
-
-		public ArrayList<Integer> getThrottleRejectCounts() {
-			return myThrottleRejectCounts;
-		}
-
-		public ArrayList<Long> getTimes() {
-			return myTimes;
-		}
-
-		public List<Long> getTimestamps() {
-			return myTimestamps;
-		}
-
-		public void setFirstDate(Date theFirstTime) {
-			myFirstDate = theFirstTime;
 		}
 
 	}

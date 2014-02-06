@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.svcret.admin.api.ProcessingException;
 import net.svcret.ejb.api.IServiceRegistry;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.IServiceOrchestrator;
@@ -31,7 +32,6 @@ import net.svcret.ejb.api.SrBeanOutgoingResponse;
 import net.svcret.ejb.api.RequestType;
 import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.ejb.ex.InvocationRequestOrResponseFailedException;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.ex.SecurityFailureException;
 import net.svcret.ejb.ex.InvalidRequestException;
 import net.svcret.ejb.throttle.ThrottleException;
@@ -51,36 +51,32 @@ public class ServiceServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
 	@EJB
-	private IServiceOrchestrator myOrch;
+	private IServiceOrchestrator myServiceOrchestrator;
 
 	@EJB
 	private IServiceRegistry myServiceRegistry;
+
+	@Override
+	public void init(ServletConfig theConfig) throws ServletException {
+		ourLog.info("Starting servlet with path: " + theConfig.getServletContext().getContextPath());
+		ourLog.info("Real path: " + theConfig.getServletContext().getRealPath("/"));
+	}
+
+	public void setServiceOrchestrator(IServiceOrchestrator theServiceOrchestrator) {
+		myServiceOrchestrator = theServiceOrchestrator;
+	}
 	
-	@Override
-	protected void doGet(HttpServletRequest theReq, HttpServletResponse theResp) throws ServletException, IOException {
-		handle(theReq, theResp, RequestType.GET);
-	}
-
-	@Override
-	protected void doPost(HttpServletRequest theReq, HttpServletResponse theResp) throws ServletException, IOException {
-		handle(theReq, theResp, RequestType.POST);
-	}
-
-	private void handle(HttpServletRequest theReq, HttpServletResponse theResp, RequestType get) throws IOException, ServletException {
-		try {
-			doHandle(theReq, theResp, get);
-		} catch (IOException e) {
-			throw e;
-		} catch (Throwable e) {
-			ourLog.error("Failed to process service request", e);
-			throw new ServletException(e);
-		}
+	public void setServiceRegistry(IServiceRegistry theServiceRegistry) {
+		myServiceRegistry = theServiceRegistry;
 	}
 
 	private void doHandle(HttpServletRequest theReq, HttpServletResponse theResp, RequestType requestAction) throws IOException {
 		long start = System.currentTimeMillis();
 
-		String path = theReq.getRequestURI().substring(theReq.getContextPath().length());
+		String requestURI = theReq.getRequestURI();
+		String contextPath = theReq.getContextPath();
+		contextPath = StringUtils.defaultIfBlank(contextPath, "");
+		String path = requestURI.substring(contextPath.length());
 		try {
 			path = new URLCodec().decode(path);
 		} catch (DecoderException e1) {
@@ -88,12 +84,10 @@ public class ServiceServlet extends HttpServlet {
 			sendFailure(theResp, "Failed to decode path: " + e1.getMessage());
 		}
 
-		String contextPath = theReq.getContextPath();
 		String query = "?" + theReq.getQueryString();
 		String requestURL = theReq.getRequestURL().toString();
 		String requestHostIp = theReq.getRemoteAddr();
 		String protocol = theReq.getProtocol();
-		String requestURI = theReq.getRequestURI();
 		String base = extractBase(contextPath, requestURL);
 
 		ourLog.debug("New {} request at path[{}] and base[{}] and context path[{}]", new Object[] { requestAction.name(), path, base, contextPath });
@@ -120,7 +114,7 @@ public class ServiceServlet extends HttpServlet {
 			}
 			request.setRequestHeaders(requestHeaders);
 
-			response = myOrch.handleServiceRequest(request);
+			response = myServiceOrchestrator.handleServiceRequest(request);
 		} catch (InvalidRequestException e) {
 			ourLog.info("Invalid Request Detected ({}) : {} - Message {}", new Object[] {e.getIssue().name(), e.getArgument(), e.getMessage()});
 			sendInvalidRequest(theResp, e, myServiceRegistry);
@@ -146,7 +140,7 @@ public class ServiceServlet extends HttpServlet {
 			AsyncContext asyncContext = theReq.startAsync();
 
 			try {
-				myOrch.enqueueThrottledRequest(e, asyncContext);
+				myServiceOrchestrator.enqueueThrottledRequest(e, asyncContext);
 			} catch (ThrottleQueueFullException e1) {
 				ourLog.info("Request was throttled and queue was full for URL: {}", theReq.getRequestURL());
 				sendThrottleQueueFullFailure(theResp);
@@ -169,10 +163,25 @@ public class ServiceServlet extends HttpServlet {
 		ourLog.info("Handled {} request at path[{}] with {} byte response in {} ms", new Object[] { requestAction.name(), path, response.getResponseBody().length(), delay });
 	}
 
+	private void handle(HttpServletRequest theReq, HttpServletResponse theResp, RequestType get) throws IOException, ServletException {
+		try {
+			doHandle(theReq, theResp, get);
+		} catch (IOException e) {
+			throw e;
+		} catch (Throwable e) {
+			ourLog.error("Failed to process service request", e);
+			throw new ServletException(e);
+		}
+	}
+
 	@Override
-	public void init(ServletConfig theConfig) throws ServletException {
-		ourLog.info("Starting servlet with path: " + theConfig.getServletContext().getContextPath());
-		ourLog.info("Real path: " + theConfig.getServletContext().getRealPath("/"));
+	protected void doGet(HttpServletRequest theReq, HttpServletResponse theResp) throws ServletException, IOException {
+		handle(theReq, theResp, RequestType.GET);
+	}
+
+	@Override
+	protected void doPost(HttpServletRequest theReq, HttpServletResponse theResp) throws ServletException, IOException {
+		handle(theReq, theResp, RequestType.POST);
 	}
 
 	private static String extractBase(String contextPath, String requestURL) {

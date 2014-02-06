@@ -2,7 +2,7 @@ package net.svcret.ejb.ejb.monitor;
 
 import javax.ejb.Local;
 
-import net.svcret.ejb.ex.UnexpectedFailureException;
+import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;

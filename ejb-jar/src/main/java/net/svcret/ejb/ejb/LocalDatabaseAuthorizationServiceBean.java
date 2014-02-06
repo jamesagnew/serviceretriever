@@ -3,11 +3,11 @@ package net.svcret.ejb.ejb;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
+import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.IAuthorizationService.ILocalDatabaseAuthorizationService;
 import net.svcret.ejb.api.ICredentialGrabber;
 import net.svcret.ejb.api.IDao;
-import net.svcret.ejb.ex.ProcessingException;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersUser;
 

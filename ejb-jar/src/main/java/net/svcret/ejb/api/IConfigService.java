@@ -4,8 +4,8 @@ import java.util.List;
 
 import javax.ejb.Local;
 
+import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.model.RetrieverNodeTypeEnum;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.PersConfig;
 
 @Local

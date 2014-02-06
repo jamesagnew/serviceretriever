@@ -7,6 +7,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 
+import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.ejb.model.entity.BasePersStats.IStatsVisitor;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;

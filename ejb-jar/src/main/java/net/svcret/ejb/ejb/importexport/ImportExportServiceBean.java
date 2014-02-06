@@ -10,11 +10,11 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
+import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.util.ScanDtoUtil;
 import net.svcret.ejb.api.IServiceRegistry;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.PersDomain;
 
 import com.google.common.annotations.VisibleForTesting;

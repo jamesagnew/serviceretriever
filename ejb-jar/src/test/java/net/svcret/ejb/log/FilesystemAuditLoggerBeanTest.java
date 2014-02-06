@@ -5,6 +5,8 @@ import static org.mockito.Mockito.*;
 import java.io.File;
 import java.io.IOException;
 
+import net.svcret.admin.api.ProcessingException;
+import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
@@ -12,8 +14,6 @@ import net.svcret.ejb.api.SrBeanIncomingResponse;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.api.SrBeanProcessedRequest;
-import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.log.FilesystemAuditLoggerBean;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersMethod;

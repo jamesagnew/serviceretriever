@@ -2,19 +2,16 @@ package net.svcret.ejb.api;
 
 import java.util.Collection;
 
-import javax.ejb.Local;
-
+import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.ejb.ejb.RuntimeStatusQueryBean.StatsAccumulator;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.BasePersServiceCatalogItem;
 import net.svcret.ejb.model.entity.BasePersStats;
 import net.svcret.ejb.model.entity.BasePersStatsPk;
-import net.svcret.ejb.model.entity.PersNodeStatus;
 import net.svcret.ejb.model.entity.PersMethod;
+import net.svcret.ejb.model.entity.PersNodeStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 
-@Local
 public interface IRuntimeStatusQueryLocal {
 
 	void extract60MinuteMethodStats(PersMethod theMethod, StatsAccumulator theAccumulator) throws UnexpectedFailureException;

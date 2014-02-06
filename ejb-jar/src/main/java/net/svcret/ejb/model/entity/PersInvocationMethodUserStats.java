@@ -8,6 +8,8 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
+import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
+
 import org.hibernate.annotations.Index;
 
 //@formatter:off

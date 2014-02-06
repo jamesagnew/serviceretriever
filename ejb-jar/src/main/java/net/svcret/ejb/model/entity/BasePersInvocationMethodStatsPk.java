@@ -7,6 +7,8 @@ import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
+
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
