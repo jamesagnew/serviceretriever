@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 
 import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
@@ -75,8 +76,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionCallbackWithoutResult;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -106,21 +111,24 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private PersNodeStatus myNodeStatus;
 	private Date myNowForUnitTests;
 	@Autowired
+    private PlatformTransactionManager myPlatformTransactionManager;
+	@Autowired
 	private IServiceRegistry myServiceRegistry;
 	private final Map<PersStickySessionUrlBindingPk, PersStickySessionUrlBinding> myStickySessionUrlBindings;
+	@Autowired
+	private IServiceRegistry mySvcRegistry;
 	private final DateFormat myTimeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
 	private final ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>> myUnflushedInvocationStats;
+	private final ConcurrentHashMap<PersMethod, PersMethodStatus> myUnflushedMethodStatus;
 	private final AtomicLong myUnflushedNodeFailMethodInvocations = new AtomicLong();
 	private final AtomicLong myUnflushedNodeFaultMethodInvocations = new AtomicLong();
 	private final AtomicLong myUnflushedNodeSecFailMethodInvocations = new AtomicLong();
 	private final AtomicLong myUnflushedNodeSuccessMethodInvocations = new AtomicLong();
 	private final ConcurrentHashMap<Long, PersServiceVersionStatus> myUnflushedServiceVersionStatus;
-	private final ConcurrentHashMap<PersUser, PersUserStatus> myUnflushedUserStatus;
-	private final ConcurrentHashMap<PersMethod, PersMethodStatus> myUnflushedMethodStatus;
-	private final ConcurrentHashMap<Long, PersServiceVersionUrlStatus> myUrlStatus;
 
-	@Autowired
-	private IServiceRegistry mySvcRegistry;
+	private final ConcurrentHashMap<PersUser, PersUserStatus> myUnflushedUserStatus;
+
+	private final ConcurrentHashMap<Long, PersServiceVersionUrlStatus> myUrlStatus;
 
 	public RuntimeStatusBean() {
 		myUnflushedInvocationStats = new ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>>();
@@ -151,333 +159,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 
 		return retVal;
-	}
-
-	@Transactional(propagation=Propagation.NOT_SUPPORTED)
-	@Override
-	public void collapseStats() throws UnexpectedFailureException {
-		/*
-		 * Make sure the flush only happens once per minute
-		 */
-		if (!myCollapseLock.tryLock()) {
-			return;
-		}
-		try {
-			doCollapseStats();
-		} finally {
-			myCollapseLock.unlock();
-		}
-
-	}
-
-	@Override
-	@Transactional(propagation=Propagation.NOT_SUPPORTED)
-	public void flushStatus() {
-
-		/*
-		 * Make sure the flush only happens once at a time
-		 */
-		if (!myFlushLock.tryLock()) {
-			return;
-		}
-		try {
-			doFlushStatus();
-		} finally {
-			myFlushLock.unlock();
-		}
-
-	}
-
-	@VisibleForTesting
-	public ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>> getUnflushedInvocationStatsForUnitTests() {
-		return myUnflushedInvocationStats;
-	}
-
-	@PostConstruct
-	public void initializeNodeStat() {
-		myNodeStatus = myDao.getOrCreateNodeStatus(myConfigSvc.getNodeId());
-	}
-
-	@Transactional(propagation=Propagation.NOT_SUPPORTED)
-	@Override
-	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, SrBeanProcessedRequest theProcessedRequest, PersUser theUser, SrBeanIncomingResponse theHttpResponse, SrBeanProcessedResponse theInvocationResponseResultsBean) throws UnexpectedFailureException,
-			InvocationFailedDueToInternalErrorException {
-		Validate.notNull(theInvocationTime, "InvocationTime");
-		Validate.notNull(theProcessedRequest, "InvocationResults");
-		Validate.notNull(theInvocationResponseResultsBean, "InvocationResponseResults");
-		Validate.notNull(theProcessedRequest.getServiceVersion(), "SrBeanProcessedRequest#ServiceVersion");
-
-		ourLog.trace("Going to record method invocation");
-
-		PersMethod method;
-		if (theProcessedRequest.getMethodDefinition() != null) {
-			method = theProcessedRequest.getMethodDefinition();
-		} else {
-			method = mySvcRegistry.getOrCreateUnknownMethodEntryForServiceVersion(theProcessedRequest.getServiceVersion());
-		}
-
-		switch (theInvocationResponseResultsBean.getResponseType()) {
-		case SUCCESS:
-			myUnflushedNodeSuccessMethodInvocations.incrementAndGet();
-			myInMemoryRecentTransactionSuccessCounter.addDate(new Date());
-			break;
-		case FAULT:
-			myUnflushedNodeFaultMethodInvocations.incrementAndGet();
-			myInMemoryRecentTransactionFaultCounter.addDate(new Date());
-			break;
-		case FAIL:
-			myUnflushedNodeFailMethodInvocations.incrementAndGet();
-			myInMemoryRecentTransactionFailCounter.addDate(new Date());
-			break;
-		case SECURITY_FAIL:
-			myUnflushedNodeSecFailMethodInvocations.incrementAndGet();
-			myInMemoryRecentTransactionSecFailCounter.addDate(new Date());
-			break;
-		case THROTTLE_REJ:
-			break;
-		}
-
-		/*
-		 * Record method statistics
-		 */
-		InvocationStatsIntervalEnum interval = MINUTE;
-		PersInvocationMethodSvcverStatsPk statsPk = new PersInvocationMethodSvcverStatsPk(interval, theInvocationTime, method);
-		doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, statsPk, theProcessedRequest.getThrottleTimeIfAny());
-
-		/*
-		 * Record user/anon method statistics
-		 */
-		if (theUser != null) {
-			PersInvocationMethodUserStatsPk uStatsPk = new PersInvocationMethodUserStatsPk(interval, theInvocationTime, method, theUser);
-			doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, uStatsPk, theProcessedRequest.getThrottleTimeIfAny());
-
-		}
-		
-		doUpdateMethodAndUserStatus(method, theInvocationResponseResultsBean, theUser, theInvocationTime);
-
-		if (theHttpResponse != null) {
-			/*
-			 * Record URL status for successful URLs
-			 */
-			PersServiceVersionUrl successfulUrl = theHttpResponse.getSuccessfulUrl();
-			if (successfulUrl != null) {
-				PersServiceVersionUrlStatus status = getUrlStatus(successfulUrl);
-				boolean wasFault = theInvocationResponseResultsBean.getResponseType() == ResponseTypeEnum.FAULT;
-				ourLog.debug("Recording successful invocation (fault={}) for URL {}/{}", new Object[] { wasFault, successfulUrl.getPid(), successfulUrl.getUrlId() });
-
-				String message;
-				if (wasFault) {
-					message = Messages.getString("RuntimeStatusBean.faultUrl", theHttpResponse.getResponseTime(), theInvocationResponseResultsBean.getResponseFaultCode(), theInvocationResponseResultsBean.getResponseFaultDescription());
-				} else {
-					message = Messages.getString("RuntimeStatusBean.successfulUrl", theHttpResponse.getResponseTime());
-				}
-				doRecordUrlStatus(true, wasFault, status, message, theHttpResponse.getContentType(), theHttpResponse.getCode());
-
-				// Handle sticky sessions if needed
-				BasePersServiceVersion svcVer = method.getServiceVersion();
-				PersHttpClientConfig clientCfg = svcVer.getHttpClientConfig();
-				switch (clientCfg.getUrlSelectionPolicy()) {
-				case PREFER_LOCAL:
-				case ROUND_ROBIN:
-					break;
-				case RR_STICKY_SESSION:
-					synchronized (myStickySessionUrlBindings) {
-
-						Map<String, List<String>> headers = theInvocationResponseResultsBean.getResponseHeaders();
-						PersHttpClientConfig clientConfig = svcVer.getHttpClientConfig();
-						if (StringUtils.isNotBlank(clientConfig.getStickySessionHeaderForSessionId())) {
-							List<String> sessionKeyValues = headers.get(clientConfig.getStickySessionHeaderForSessionId());
-							if (sessionKeyValues.size() > 0) {
-								updateStickySession(sessionKeyValues.get(0), svcVer, successfulUrl);
-							}
-						} else if (StringUtils.isNotBlank(clientConfig.getStickySessionCookieForSessionId())) {
-							List<String> cookieHeaders = headers.get("Set-Cookie");
-							if (cookieHeaders != null) {
-								for (String nextCookieHeader : cookieHeaders) {
-									List<HttpCookie> cookies = HttpCookie.parse(nextCookieHeader);
-									for (HttpCookie nextCookie : cookies) {
-										if (nextCookie.getName().equals(clientConfig.getStickySessionCookieForSessionId())) {
-											updateStickySession(nextCookie.getValue(), svcVer, successfulUrl);
-											break;
-										}
-									}
-								}
-							}
-						}
-
-					}
-					break;
-				}
-
-			}
-
-			/*
-			 * Recurd URL status for any failed URLs
-			 */
-			Map<PersServiceVersionUrl, Failure> failedUrlsMap = theHttpResponse.getFailedUrls();
-			for (Entry<PersServiceVersionUrl, Failure> nextFailedUrlEntry : failedUrlsMap.entrySet()) {
-				PersServiceVersionUrl nextFailedUrl = nextFailedUrlEntry.getKey();
-				Failure failure = nextFailedUrlEntry.getValue();
-				PersServiceVersionUrlStatus failedStatus = getUrlStatus(nextFailedUrl);
-				doRecordUrlStatus(false, false, failedStatus, failure.getExplanation(), failure.getContentType(), failure.getStatusCode());
-			}
-
-			/*
-			 * Record URL stats
-			 */
-			doRecordInvocationForUrls(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, theInvocationTime);
-		}
-
-		/*
-		 * Record Service Version status
-		 */
-		PersServiceVersionStatus serviceVersionStatus = method.getServiceVersion().getStatus();
-		serviceVersionStatus = getStatusForPk(serviceVersionStatus, serviceVersionStatus.getPid());
-
-		switch (theInvocationResponseResultsBean.getResponseType()) {
-		case SUCCESS:
-			serviceVersionStatus.setLastSuccessfulInvocation(theInvocationTime);
-			break;
-		case SECURITY_FAIL:
-			serviceVersionStatus.setLastServerSecurityFailure(theInvocationTime);
-			break;
-		case FAIL:
-			serviceVersionStatus.setLastFailInvocation(theInvocationTime);
-			break;
-		case FAULT:
-			serviceVersionStatus.setLastFaultInvocation(theInvocationTime);
-			break;
-		case THROTTLE_REJ:
-			serviceVersionStatus.setLastThrottleReject(theInvocationTime);
-			break;
-		}
-
-	}
-
-	@Transactional(propagation=Propagation.SUPPORTS)
-	@Override
-	public void recordInvocationStaticResource(Date theInvocationTime, PersServiceVersionResource theResource) {
-		Validate.notNull(theInvocationTime, "InvocationTime");
-		Validate.notNull(theResource, "ServiceVersionResource");
-
-		InvocationStatsIntervalEnum interval = MINUTE;
-
-		PersStaticResourceStatsPk statsPk = new PersStaticResourceStatsPk(interval, theInvocationTime, theResource);
-		PersStaticResourceStats stats = getStatsForPk(statsPk);
-
-		stats.addAccess();
-	}
-
-	@Transactional(propagation=Propagation.REQUIRES_NEW)
-	@Override
-	public void recordNodeStatistics() {
-		if (!myNodeStatisticsLock.tryLock()) {
-			return;
-		}
-		try {
-			ourLog.debug("Recording node statistics");
-
-			Date date = InvocationStatsIntervalEnum.MINUTE.truncate(new Date());
-			if (date.equals(myNodeStatisticsDate)) {
-				return;
-			}
-
-			PersNodeStats stats = new PersNodeStats(InvocationStatsIntervalEnum.MINUTE, date, myConfigSvc.getNodeId());
-			stats.collectMemoryStats();
-
-			stats.addMethodInvocations(myUnflushedNodeSuccessMethodInvocations.getAndSet(0), myUnflushedNodeFaultMethodInvocations.getAndSet(0), myUnflushedNodeFailMethodInvocations.getAndSet(0), myUnflushedNodeSecFailMethodInvocations.getAndSet(0));
-
-			myDao.saveInvocationStats(Collections.singletonList(stats));
-
-			myNodeStatisticsDate = date;
-		} finally {
-			myNodeStatisticsLock.unlock();
-		}
-	}
-
-	@Transactional(propagation=Propagation.SUPPORTS)
-	@Override
-	public void recordUrlFailure(PersServiceVersionUrl theUrl, Failure theFailure) {
-		Validate.notNull(theUrl, "Url");
-		Validate.notNull(theFailure, "Failure");
-
-		PersServiceVersionUrlStatus status = getUrlStatus(theUrl);
-		status.setLastFail(new Date());
-		status.setLastFailContentType(theFailure.getContentType());
-		status.setLastFailMessage(theFailure.getExplanation());
-		status.setLastFailStatusCode(theFailure.getStatusCode());
-
-		// Do this last since it triggers a state change
-		if (status.getStatus() != StatusEnum.DOWN) {
-			status.setStatus(StatusEnum.DOWN);
-			logUrlStatusDown(status);
-		}
-
-	}
-
-	@Transactional(propagation=Propagation.SUPPORTS)
-	@Override
-	public void recordUrlSuccess(PersServiceVersionUrl theUrl, boolean theWasFault, String theMessage, String theContentType, int theResponseCode) {
-		Validate.notNull(theUrl, "Url");
-		PersServiceVersionUrlStatus status = getUrlStatus(theUrl);
-
-		doRecordUrlStatus(true, theWasFault, status, theMessage, theContentType, theResponseCode);
-	}
-
-	@Override
-	public void reloadUrlStatus(Long thePid) {
-		PersServiceVersionUrl url = myDao.getServiceVersionUrlByPid(thePid);
-
-		PersServiceVersionUrlStatus inMemory = getUrlStatus(url);
-		PersServiceVersionUrlStatus fromDisk = url.getStatus();
-
-		inMemory.mergeNewer(fromDisk);
-
-	}
-
-	@VisibleForTesting
-	public void setConfigSvc(IConfigService theConfigSvc) {
-		myConfigSvc = theConfigSvc;
-	}
-
-	@VisibleForTesting
-	public void setDao(IDao thePersistence) {
-		myDao = thePersistence;
-	}
-
-	@VisibleForTesting
-	public void setNowForUnitTests(Date theNow) {
-		myNowForUnitTests = theNow;
-	}
-
-	@VisibleForTesting
-	public void setSvcRegistryForUnitTests(IServiceRegistry theSvcRegistry) {
-		mySvcRegistry = theSvcRegistry;
-	}
-
-	@Override
-	public void updatedStickySessionBinding(DtoStickySessionUrlBinding theBinding) {
-		BasePersServiceVersion svcVer = myServiceRegistry.getServiceVersionByPid(theBinding.getServiceVersionPid());
-		if (svcVer == null) {
-			ourLog.warn("Unknown service version from update: {}", theBinding.getServiceVersionPid());
-			return;
-		}
-
-		PersServiceVersionUrl url = svcVer.getUrlWithPid(theBinding.getUrlPid());
-		if (url == null) {
-			ourLog.warn("Unknown URL from update: {}", theBinding.getServiceVersionPid());
-			return;
-		}
-
-		synchronized (myStickySessionUrlBindings) {
-			PersStickySessionUrlBindingPk pk = new PersStickySessionUrlBindingPk(theBinding.getSessionId(), svcVer);
-			PersStickySessionUrlBinding existing = myStickySessionUrlBindings.get(pk);
-			if (existing != null) {
-				existing.setUrl(url);
-			} else {
-				myStickySessionUrlBindings.put(pk, new PersStickySessionUrlBinding(pk, url));
-			}
-		}
 	}
 
 	private void chooseUrlRoundRobin(BasePersServiceVersion theServiceVersion, UrlPoolBean theRetVal) {
@@ -603,7 +284,24 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			retVal.setPreferredUrl(urls.remove(0));
 		}
 	}
+	
+	@Transactional(propagation=Propagation.NOT_SUPPORTED)
+	@Override
+	public void collapseStats() throws UnexpectedFailureException {
+		/*
+		 * Make sure the flush only happens once per minute
+		 */
+		if (!myCollapseLock.tryLock()) {
+			return;
+		}
+		try {
+			doCollapseStats();
+		} finally {
+			myCollapseLock.unlock();
+		}
 
+	}
+	
 	private void doCollapseStats() throws UnexpectedFailureException {
 		ourLog.debug("Doing a stats collapse pass");
 
@@ -1050,6 +748,24 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	}
 
+	@Override
+	@Transactional(propagation=Propagation.NOT_SUPPORTED)
+	public void flushStatus() {
+
+		/*
+		 * Make sure the flush only happens once at a time
+		 */
+		if (!myFlushLock.tryLock()) {
+			return;
+		}
+		try {
+			doFlushStatus();
+		} finally {
+			myFlushLock.unlock();
+		}
+
+	}
+
 	private PersMethodStatus getMethodStatusForMethod(PersMethod theMethod) {
 		PersMethodStatus tryNew = new PersMethodStatus(theMethod);
 		PersMethodStatus status = myUnflushedMethodStatus.putIfAbsent(theMethod, tryNew);
@@ -1094,6 +810,11 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		return status;
 	}
 
+	@VisibleForTesting
+	public ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>> getUnflushedInvocationStatsForUnitTests() {
+		return myUnflushedInvocationStats;
+	}
+
 	private PersServiceVersionUrlStatus getUrlStatus(PersServiceVersionUrl theSuccessfulUrl) {
 		PersServiceVersionUrlStatus savedStatus = theSuccessfulUrl.getStatus();
 		assert savedStatus != null;
@@ -1116,6 +837,11 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		return status;
 	}
 
+	@PostConstruct
+	public void initializeNodeStat() {
+		myNodeStatus = myDao.getOrCreateNodeStatus(myConfigSvc.getNodeId());
+	}
+
 	private void logUrlStatusDown(PersServiceVersionUrlStatus theUrlStatusBean) {
 		Date nextReset = theUrlStatusBean.getNextCircuitBreakerReset();
 		if (nextReset != null) {
@@ -1123,6 +849,280 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		} else {
 			ourLog.info("URL[{}] is DOWN - {}", new Object[] { theUrlStatusBean.getUrl().getPid(), theUrlStatusBean.getUrl().getUrl() });
 		}
+	}
+
+	@PreDestroy
+	public void postConstruct() {
+		ourLog.info("Flushing remaining unflushed statistics");
+		TransactionTemplate tmpl = new TransactionTemplate(myPlatformTransactionManager);
+        tmpl.execute(new TransactionCallbackWithoutResult() {
+            @Override
+            protected void doInTransactionWithoutResult(TransactionStatus status) {
+            	doFlushStatus();
+            }
+        });
+	}
+
+	@Transactional(propagation=Propagation.NOT_SUPPORTED)
+	@Override
+	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, SrBeanProcessedRequest theProcessedRequest, PersUser theUser, SrBeanIncomingResponse theHttpResponse, SrBeanProcessedResponse theInvocationResponseResultsBean) throws UnexpectedFailureException,
+			InvocationFailedDueToInternalErrorException {
+		Validate.notNull(theInvocationTime, "InvocationTime");
+		Validate.notNull(theProcessedRequest, "InvocationResults");
+		Validate.notNull(theInvocationResponseResultsBean, "InvocationResponseResults");
+		Validate.notNull(theProcessedRequest.getServiceVersion(), "SrBeanProcessedRequest#ServiceVersion");
+
+		ourLog.trace("Going to record method invocation");
+
+		PersMethod method;
+		if (theProcessedRequest.getMethodDefinition() != null) {
+			method = theProcessedRequest.getMethodDefinition();
+		} else {
+			method = mySvcRegistry.getOrCreateUnknownMethodEntryForServiceVersion(theProcessedRequest.getServiceVersion());
+		}
+
+		switch (theInvocationResponseResultsBean.getResponseType()) {
+		case SUCCESS:
+			myUnflushedNodeSuccessMethodInvocations.incrementAndGet();
+			myInMemoryRecentTransactionSuccessCounter.addDate(new Date());
+			break;
+		case FAULT:
+			myUnflushedNodeFaultMethodInvocations.incrementAndGet();
+			myInMemoryRecentTransactionFaultCounter.addDate(new Date());
+			break;
+		case FAIL:
+			myUnflushedNodeFailMethodInvocations.incrementAndGet();
+			myInMemoryRecentTransactionFailCounter.addDate(new Date());
+			break;
+		case SECURITY_FAIL:
+			myUnflushedNodeSecFailMethodInvocations.incrementAndGet();
+			myInMemoryRecentTransactionSecFailCounter.addDate(new Date());
+			break;
+		case THROTTLE_REJ:
+			break;
+		}
+
+		/*
+		 * Record method statistics
+		 */
+		InvocationStatsIntervalEnum interval = MINUTE;
+		PersInvocationMethodSvcverStatsPk statsPk = new PersInvocationMethodSvcverStatsPk(interval, theInvocationTime, method);
+		doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, statsPk, theProcessedRequest.getThrottleTimeIfAny());
+
+		/*
+		 * Record user/anon method statistics
+		 */
+		if (theUser != null) {
+			PersInvocationMethodUserStatsPk uStatsPk = new PersInvocationMethodUserStatsPk(interval, theInvocationTime, method, theUser);
+			doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, uStatsPk, theProcessedRequest.getThrottleTimeIfAny());
+
+		}
+		
+		doUpdateMethodAndUserStatus(method, theInvocationResponseResultsBean, theUser, theInvocationTime);
+
+		if (theHttpResponse != null) {
+			/*
+			 * Record URL status for successful URLs
+			 */
+			PersServiceVersionUrl successfulUrl = theHttpResponse.getSuccessfulUrl();
+			if (successfulUrl != null) {
+				PersServiceVersionUrlStatus status = getUrlStatus(successfulUrl);
+				boolean wasFault = theInvocationResponseResultsBean.getResponseType() == ResponseTypeEnum.FAULT;
+				ourLog.debug("Recording successful invocation (fault={}) for URL {}/{}", new Object[] { wasFault, successfulUrl.getPid(), successfulUrl.getUrlId() });
+
+				String message;
+				if (wasFault) {
+					message = Messages.getString("RuntimeStatusBean.faultUrl", theHttpResponse.getResponseTime(), theInvocationResponseResultsBean.getResponseFaultCode(), theInvocationResponseResultsBean.getResponseFaultDescription());
+				} else {
+					message = Messages.getString("RuntimeStatusBean.successfulUrl", theHttpResponse.getResponseTime());
+				}
+				doRecordUrlStatus(true, wasFault, status, message, theHttpResponse.getContentType(), theHttpResponse.getCode());
+
+				// Handle sticky sessions if needed
+				BasePersServiceVersion svcVer = method.getServiceVersion();
+				PersHttpClientConfig clientCfg = svcVer.getHttpClientConfig();
+				switch (clientCfg.getUrlSelectionPolicy()) {
+				case PREFER_LOCAL:
+				case ROUND_ROBIN:
+					break;
+				case RR_STICKY_SESSION:
+					synchronized (myStickySessionUrlBindings) {
+
+						Map<String, List<String>> headers = theInvocationResponseResultsBean.getResponseHeaders();
+						PersHttpClientConfig clientConfig = svcVer.getHttpClientConfig();
+						if (StringUtils.isNotBlank(clientConfig.getStickySessionHeaderForSessionId())) {
+							List<String> sessionKeyValues = headers.get(clientConfig.getStickySessionHeaderForSessionId());
+							if (sessionKeyValues.size() > 0) {
+								updateStickySession(sessionKeyValues.get(0), svcVer, successfulUrl);
+							}
+						} else if (StringUtils.isNotBlank(clientConfig.getStickySessionCookieForSessionId())) {
+							List<String> cookieHeaders = headers.get("Set-Cookie");
+							if (cookieHeaders != null) {
+								for (String nextCookieHeader : cookieHeaders) {
+									List<HttpCookie> cookies = HttpCookie.parse(nextCookieHeader);
+									for (HttpCookie nextCookie : cookies) {
+										if (nextCookie.getName().equals(clientConfig.getStickySessionCookieForSessionId())) {
+											updateStickySession(nextCookie.getValue(), svcVer, successfulUrl);
+											break;
+										}
+									}
+								}
+							}
+						}
+
+					}
+					break;
+				}
+
+			}
+
+			/*
+			 * Recurd URL status for any failed URLs
+			 */
+			Map<PersServiceVersionUrl, Failure> failedUrlsMap = theHttpResponse.getFailedUrls();
+			for (Entry<PersServiceVersionUrl, Failure> nextFailedUrlEntry : failedUrlsMap.entrySet()) {
+				PersServiceVersionUrl nextFailedUrl = nextFailedUrlEntry.getKey();
+				Failure failure = nextFailedUrlEntry.getValue();
+				PersServiceVersionUrlStatus failedStatus = getUrlStatus(nextFailedUrl);
+				doRecordUrlStatus(false, false, failedStatus, failure.getExplanation(), failure.getContentType(), failure.getStatusCode());
+			}
+
+			/*
+			 * Record URL stats
+			 */
+			doRecordInvocationForUrls(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, theInvocationTime);
+		}
+
+		/*
+		 * Record Service Version status
+		 */
+		PersServiceVersionStatus serviceVersionStatus = method.getServiceVersion().getStatus();
+		serviceVersionStatus = getStatusForPk(serviceVersionStatus, serviceVersionStatus.getPid());
+
+		switch (theInvocationResponseResultsBean.getResponseType()) {
+		case SUCCESS:
+			serviceVersionStatus.setLastSuccessfulInvocation(theInvocationTime);
+			break;
+		case SECURITY_FAIL:
+			serviceVersionStatus.setLastServerSecurityFailure(theInvocationTime);
+			break;
+		case FAIL:
+			serviceVersionStatus.setLastFailInvocation(theInvocationTime);
+			break;
+		case FAULT:
+			serviceVersionStatus.setLastFaultInvocation(theInvocationTime);
+			break;
+		case THROTTLE_REJ:
+			serviceVersionStatus.setLastThrottleReject(theInvocationTime);
+			break;
+		}
+
+	}
+
+	@Transactional(propagation=Propagation.SUPPORTS)
+	@Override
+	public void recordInvocationStaticResource(Date theInvocationTime, PersServiceVersionResource theResource) {
+		Validate.notNull(theInvocationTime, "InvocationTime");
+		Validate.notNull(theResource, "ServiceVersionResource");
+
+		InvocationStatsIntervalEnum interval = MINUTE;
+
+		PersStaticResourceStatsPk statsPk = new PersStaticResourceStatsPk(interval, theInvocationTime, theResource);
+		PersStaticResourceStats stats = getStatsForPk(statsPk);
+
+		stats.addAccess();
+	}
+
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
+	@Override
+	public void recordNodeStatistics() {
+		if (!myNodeStatisticsLock.tryLock()) {
+			return;
+		}
+		try {
+			ourLog.debug("Recording node statistics");
+
+			Date date = InvocationStatsIntervalEnum.MINUTE.truncate(new Date());
+			if (date.equals(myNodeStatisticsDate)) {
+				return;
+			}
+
+			PersNodeStats stats = new PersNodeStats(InvocationStatsIntervalEnum.MINUTE, date, myConfigSvc.getNodeId());
+			stats.collectMemoryStats();
+
+			stats.addMethodInvocations(myUnflushedNodeSuccessMethodInvocations.getAndSet(0), myUnflushedNodeFaultMethodInvocations.getAndSet(0), myUnflushedNodeFailMethodInvocations.getAndSet(0), myUnflushedNodeSecFailMethodInvocations.getAndSet(0));
+
+			myDao.saveInvocationStats(Collections.singletonList(stats));
+
+			myNodeStatisticsDate = date;
+		} finally {
+			myNodeStatisticsLock.unlock();
+		}
+	}
+
+	@Transactional(propagation=Propagation.SUPPORTS)
+	@Override
+	public void recordUrlFailure(PersServiceVersionUrl theUrl, Failure theFailure) {
+		Validate.notNull(theUrl, "Url");
+		Validate.notNull(theFailure, "Failure");
+
+		PersServiceVersionUrlStatus status = getUrlStatus(theUrl);
+		status.setLastFail(new Date());
+		status.setLastFailContentType(theFailure.getContentType());
+		status.setLastFailMessage(theFailure.getExplanation());
+		status.setLastFailStatusCode(theFailure.getStatusCode());
+
+		// Do this last since it triggers a state change
+		if (status.getStatus() != StatusEnum.DOWN) {
+			status.setStatus(StatusEnum.DOWN);
+			logUrlStatusDown(status);
+		}
+
+	}
+
+	@Transactional(propagation=Propagation.SUPPORTS)
+	@Override
+	public void recordUrlSuccess(PersServiceVersionUrl theUrl, boolean theWasFault, String theMessage, String theContentType, int theResponseCode) {
+		Validate.notNull(theUrl, "Url");
+		PersServiceVersionUrlStatus status = getUrlStatus(theUrl);
+
+		doRecordUrlStatus(true, theWasFault, status, theMessage, theContentType, theResponseCode);
+	}
+
+	@Override
+	public void reloadUrlStatus(Long thePid) {
+		PersServiceVersionUrl url = myDao.getServiceVersionUrlByPid(thePid);
+
+		PersServiceVersionUrlStatus inMemory = getUrlStatus(url);
+		PersServiceVersionUrlStatus fromDisk = url.getStatus();
+
+		inMemory.mergeNewer(fromDisk);
+
+	}
+
+	@VisibleForTesting
+	void setBroadcastSender(IBroadcastSender theBroadcastSender) {
+		myBroadcastSender = theBroadcastSender;
+	}
+
+	@VisibleForTesting
+	public void setConfigSvc(IConfigService theConfigSvc) {
+		myConfigSvc = theConfigSvc;
+	}
+
+	@VisibleForTesting
+	public void setDao(IDao thePersistence) {
+		myDao = thePersistence;
+	}
+
+	@VisibleForTesting
+	public void setNowForUnitTests(Date theNow) {
+		myNowForUnitTests = theNow;
+	}
+
+	@VisibleForTesting
+	public void setSvcRegistryForUnitTests(IServiceRegistry theSvcRegistry) {
+		mySvcRegistry = theSvcRegistry;
 	}
 
 	private void shuffleUrlPoolBasedOnStickySessionPolicy(String theSesionId, UrlPoolBean theUrlPool, BasePersServiceVersion theServiceVersion) throws UnexpectedFailureException {
@@ -1183,6 +1183,31 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 	}
 
+	@Override
+	public void updatedStickySessionBinding(DtoStickySessionUrlBinding theBinding) {
+		BasePersServiceVersion svcVer = myServiceRegistry.getServiceVersionByPid(theBinding.getServiceVersionPid());
+		if (svcVer == null) {
+			ourLog.warn("Unknown service version from update: {}", theBinding.getServiceVersionPid());
+			return;
+		}
+
+		PersServiceVersionUrl url = svcVer.getUrlWithPid(theBinding.getUrlPid());
+		if (url == null) {
+			ourLog.warn("Unknown URL from update: {}", theBinding.getServiceVersionPid());
+			return;
+		}
+
+		synchronized (myStickySessionUrlBindings) {
+			PersStickySessionUrlBindingPk pk = new PersStickySessionUrlBindingPk(theBinding.getSessionId(), svcVer);
+			PersStickySessionUrlBinding existing = myStickySessionUrlBindings.get(pk);
+			if (existing != null) {
+				existing.setUrl(url);
+			} else {
+				myStickySessionUrlBindings.put(pk, new PersStickySessionUrlBinding(pk, url));
+			}
+		}
+	}
+
 	private void updateStickySession(String theSessionId, BasePersServiceVersion theSvcVer, PersServiceVersionUrl theSuccessfulUrl) throws UnexpectedFailureException {
 		if (StringUtils.isBlank(theSessionId)) {
 			return;
@@ -1203,11 +1228,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			myBroadcastSender.notifyNewStickySession(existing);
 		}
 
-	}
-
-	@VisibleForTesting
-	void setBroadcastSender(IBroadcastSender theBroadcastSender) {
-		myBroadcastSender = theBroadcastSender;
 	}
 
 }

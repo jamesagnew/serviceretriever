@@ -19,9 +19,9 @@ import net.svcret.ejb.log.ITransactionLogger;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.SerializationUtils;
-import org.mortbay.jetty.Server;
-import org.mortbay.jetty.servlet.ServletHandler;
-import org.mortbay.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Required;
 

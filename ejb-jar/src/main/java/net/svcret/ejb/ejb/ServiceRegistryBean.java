@@ -44,7 +44,6 @@ import com.google.common.annotations.VisibleForTesting;
 @Service
 public class ServiceRegistryBean implements IServiceRegistry {
 
-	
 	private static Map<String, PersDomain> ourDomainMap;
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceRegistryBean.class);
 	private static volatile Map<Long, PersDomain> ourPidToDomains;
@@ -63,6 +62,9 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	private IDao myDao;
 
 	@Autowired
+	private PlatformTransactionManager myPlatformTransactionManager;
+
+	@Autowired
 	private IHttpClient mySvcHttpClient;
 
 	/**
@@ -72,12 +74,11 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		super();
 	}
 
-	private void addProxyPath(Map<String, BasePersServiceVersion> pathToServiceVersions, Map<Long, BasePersServiceVersion> pidToServiceVersions, BasePersServiceVersion nextVersion,
-			String nextProxyPath) {
+	private void addProxyPath(Map<String, BasePersServiceVersion> pathToServiceVersions, Map<Long, BasePersServiceVersion> pidToServiceVersions, BasePersServiceVersion nextVersion, String nextProxyPath) {
 		pidToServiceVersions.put(nextVersion.getPid(), nextVersion);
 		if (pathToServiceVersions.containsKey(nextProxyPath)) {
-			ourLog.warn("Service version {} ({}/{}/{}) created duplicate proxy path '{}', so it will be ignored!", new Object[] { nextVersion.getPid(),
-					nextVersion.getService().getDomain().getDomainId(), nextVersion.getService().getServiceId(), nextVersion.getVersionId(), nextProxyPath });
+			ourLog.warn("Service version {} ({}/{}/{}) created duplicate proxy path '{}', so it will be ignored!", new Object[] { nextVersion.getPid(), nextVersion.getService().getDomain().getDomainId(), nextVersion.getService().getServiceId(), nextVersion.getVersionId(),
+					nextProxyPath });
 		} else {
 			pathToServiceVersions.put(nextProxyPath, nextVersion);
 		}
@@ -101,7 +102,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 			throw new ProcessingException("Unknown service PID:" + thePid);
 		}
 		myDao.deleteServiceInNewTransaction(srv);
-		
+
 		catalogHasChanged();
 		reloadRegistryFromDatabase();
 	}
@@ -113,7 +114,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 			throw new ProcessingException("Unknown service version ID:" + thePid);
 		}
 		myDao.deleteServiceVersionInNewTransaction(sv);
-		
+
 		catalogHasChanged();
 		reloadRegistryFromDatabase();
 	}
@@ -192,7 +193,6 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		return retVal;
 	}
 
-	
 	@Override
 	public BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, ServiceProtocolEnum theProtocol, String theVersionId, PersServiceVersionVirtual theSvcVerToUseIfCreatingNew) {
 		BasePersServiceVersion retVal = myDao.getOrCreateServiceVersionWithId(theService, theVersionId, theProtocol, theSvcVerToUseIfCreatingNew);
@@ -242,7 +242,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	 * {@inheritDoc}
 	 */
 	@Override
-	@Transactional(propagation=Propagation.SUPPORTS)
+	@Transactional(propagation = Propagation.SUPPORTS)
 	public BasePersServiceVersion getServiceVersionForPath(String thePath) {
 		if (thePath == null) {
 			throw new IllegalArgumentException("Path can not be null");
@@ -267,41 +267,40 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		ourLog.debug("State counter is now {}", newVersion);
 	}
 
-	@Autowired
-    protected PlatformTransactionManager myPlatformTransactionManager;
-	
 	@PostConstruct
 	public void postConstruct() {
 		TransactionTemplate tmpl = new TransactionTemplate(myPlatformTransactionManager);
-        tmpl.execute(new TransactionCallbackWithoutResult() {
-            @Override
-            protected void doInTransactionWithoutResult(TransactionStatus status) {
-            	reloadRegistryFromDatabase();
-            }
-        });
-		
+		tmpl.execute(new TransactionCallbackWithoutResult() {
+			@Override
+			protected void doInTransactionWithoutResult(TransactionStatus status) {
+				reloadRegistryFromDatabase();
+			}
+		});
+
 		ourLog.info("Setting up Logback");
 
 		// FIXME: move this to main app
-//		try {
-//
-//			LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-//			JoranConfigurator jc = new JoranConfigurator();
-//			jc.setContext(context);
-//			context.reset();
-//
-//			InputStream inputStream = AdminServiceBean.class.getResourceAsStream("/svcret-ejb-logback.xml");
-//			ourLog.info("Configuring using {}", inputStream);
-//
-//			jc.doConfigure(inputStream);
-//
-//		} catch (Exception e) {
-//			ourLog.error("Failed to set up logback", e);
-//		}
+		// try {
+		//
+		// LoggerContext context = (LoggerContext)
+		// LoggerFactory.getILoggerFactory();
+		// JoranConfigurator jc = new JoranConfigurator();
+		// jc.setContext(context);
+		// context.reset();
+		//
+		// InputStream inputStream =
+		// AdminServiceBean.class.getResourceAsStream("/svcret-ejb-logback.xml");
+		// ourLog.info("Configuring using {}", inputStream);
+		//
+		// jc.doConfigure(inputStream);
+		//
+		// } catch (Exception e) {
+		// ourLog.error("Failed to set up logback", e);
+		// }
 
 	}
 
-	@Transactional(propagation=Propagation.REQUIRED)
+	@Transactional(propagation = Propagation.REQUIRED)
 	@Override
 	public void reloadRegistryFromDatabase() {
 

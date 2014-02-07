@@ -5,6 +5,8 @@ import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.annotation.PreDestroy;
+
 import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
@@ -24,8 +26,12 @@ import net.svcret.ejb.util.LogUtil;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionCallbackWithoutResult;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -35,16 +41,50 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(TransactionLoggerBean.class);
 
 	@Autowired
+	private IConfigService myConfigSvc;
+	@Autowired
 	private IDao myDao;
 	@Autowired
 	private IFilesystemAuditLogger myFilesystemAuditLogger;
-	@Autowired
-	private IConfigService myConfigSvc;
 
 	private final ReentrantLock myFlushLock = new ReentrantLock();
+	@Autowired
+    private PlatformTransactionManager myPlatformTransactionManager;
 	private final ConcurrentHashMap<BasePersServiceVersion, UnflushedServiceVersionRecentMessages> myUnflushedMessages = new ConcurrentHashMap<BasePersServiceVersion, UnflushedServiceVersionRecentMessages>();
+
 	private final ConcurrentHashMap<PersUser, UnflushedUserRecentMessages> myUnflushedUserMessages = new ConcurrentHashMap<PersUser, UnflushedUserRecentMessages>();
 
+	private void doFlush() {
+		ourLog.debug("Flushing recent transactions");
+
+		doFlush(myUnflushedMessages);
+		doFlush(myUnflushedUserMessages);
+	}
+	
+	private void doFlush(ConcurrentHashMap<?, ? extends BaseUnflushed<? extends BasePersSavedTransactionRecentMessage>> unflushedMessages) {
+		if (unflushedMessages.isEmpty()) {
+			return;
+		}
+
+		ourLog.debug("Going to flush recent transactions to database: {}", unflushedMessages.values());
+		long start = System.currentTimeMillis();
+
+		ByteDelta byteDelta = new ByteDelta();
+		int saveCount = 0;
+		for (Object next : new HashSet<Object>(unflushedMessages.keySet())) {
+			BaseUnflushed<? extends BasePersSavedTransactionRecentMessage> nextTransactions = unflushedMessages.remove(next);
+			if (nextTransactions != null) {
+				ByteDelta nextByteDelta = myDao.saveRecentMessagesAndTrimInNewTransaction(nextTransactions);
+				byteDelta.add(nextByteDelta);
+				saveCount += nextTransactions.getCount();
+			}
+		}
+
+		long delay = System.currentTimeMillis() - start;
+		ourLog.info("Done saving {} recent transactions to database in {}ms. Added {} / Removed {}", new Object[] { saveCount, delay, LogUtil.formatByteCount(byteDelta.getAdded(), false), LogUtil.formatByteCount(byteDelta.getRemoved(), false) });
+	}
+
+	
 	@Transactional(propagation=Propagation.NOT_SUPPORTED)
 	@Override
 	public void flush() {
@@ -118,39 +158,26 @@ public class TransactionLoggerBean implements ITransactionLogger {
 
 	}
 
+	@PreDestroy
+	public void postConstruct() {
+		ourLog.info("Flushing remaining unflushed statistics");
+		TransactionTemplate tmpl = new TransactionTemplate(myPlatformTransactionManager);
+        tmpl.execute(new TransactionCallbackWithoutResult() {
+            @Override
+            protected void doInTransactionWithoutResult(TransactionStatus status) {
+            	doFlush();
+            }
+        });
+	}
+
+	@VisibleForTesting
+	public void setConfigServiceForUnitTests(IConfigService theConfigSvc) {
+		myConfigSvc = theConfigSvc;
+	}
+
 	@VisibleForTesting
 	public void setDao(IDao theDao) {
 		myDao = theDao;
-	}
-
-	private void doFlush() {
-		ourLog.debug("Flushing recent transactions");
-
-		doFlush(myUnflushedMessages);
-		doFlush(myUnflushedUserMessages);
-	}
-
-	private void doFlush(ConcurrentHashMap<?, ? extends BaseUnflushed<? extends BasePersSavedTransactionRecentMessage>> unflushedMessages) {
-		if (unflushedMessages.isEmpty()) {
-			return;
-		}
-
-		ourLog.debug("Going to flush recent transactions to database: {}", unflushedMessages.values());
-		long start = System.currentTimeMillis();
-
-		ByteDelta byteDelta = new ByteDelta();
-		int saveCount = 0;
-		for (Object next : new HashSet<Object>(unflushedMessages.keySet())) {
-			BaseUnflushed<? extends BasePersSavedTransactionRecentMessage> nextTransactions = unflushedMessages.remove(next);
-			if (nextTransactions != null) {
-				ByteDelta nextByteDelta = myDao.saveRecentMessagesAndTrimInNewTransaction(nextTransactions);
-				byteDelta.add(nextByteDelta);
-				saveCount += nextTransactions.getCount();
-			}
-		}
-
-		long delay = System.currentTimeMillis() - start;
-		ourLog.info("Done saving {} recent transactions to database in {}ms. Added {} / Removed {}", new Object[] { saveCount, delay, LogUtil.formatByteCount(byteDelta.getAdded(), false), LogUtil.formatByteCount(byteDelta.getRemoved(), false) });
 	}
 
 	@VisibleForTesting
@@ -162,11 +189,6 @@ public class TransactionLoggerBean implements ITransactionLogger {
 		while (theList.size() > theSize) {
 			theList.pop();
 		}
-	}
-
-	@VisibleForTesting
-	public void setConfigServiceForUnitTests(IConfigService theConfigSvc) {
-		myConfigSvc = theConfigSvc;
 	}
 
 }

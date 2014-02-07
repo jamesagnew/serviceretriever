@@ -13,7 +13,7 @@
 			<attribute name="javadoc_location" value="jar:file:/Users/james/.m2/repository/com/google/guava/guava/13.0.1/guava-13.0.1-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry combineaccessrules="false" kind="src" path="/svcret-ejb-jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/svcret-admin-war"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

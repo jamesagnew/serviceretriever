@@ -1,7 +1,12 @@
 package net.svcret.ejb.ejb;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -24,13 +29,17 @@ import net.svcret.ejb.util.RandomServerPortProvider;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SslConnectionFactory;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mortbay.jetty.Server;
-import org.mortbay.jetty.security.SslSocketConnector;
 import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.Level;
@@ -70,11 +79,12 @@ public class HttpClientBeanTest {
 
 		int port = RandomServerPortProvider.findFreePort();
 		Server server = new Server();
-		SslSocketConnector sslConnector = new SslSocketConnector();
-		sslConnector.setPort(port);
-		sslConnector.setKeystore("src/test/resources/keystore/keystore.jks");
-		sslConnector.setKeyPassword("changeit");
-		server.addConnector(sslConnector);
+
+		SslContextFactory sslCtx = new SslContextFactory();
+		sslCtx.setKeyStorePath("src/test/resources/keystore/keystore.jks");
+		sslCtx.setKeyStorePassword("changeit");
+
+		addConnector(port, server, sslCtx);
 
 		server.start();
 		Thread.sleep(500);
@@ -87,7 +97,7 @@ public class HttpClientBeanTest {
 			config.setReadTimeoutMillis(1000);
 			config.setPid(111L);
 			config.setOptLock(1);
-			
+
 			IResponseValidator validator = new NullResponseValidator();
 			UrlPoolBean urlPool = new UrlPoolBean();
 			urlPool.setPreferredUrl(new PersServiceVersionUrl(123, "https://127.0.0.1:" + port + "/path"));
@@ -95,10 +105,10 @@ public class HttpClientBeanTest {
 			SrBeanIncomingResponse resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
 
 			ourLog.info("Resp was: " + resp.getBody());
-			assertEquals(1,resp.getFailedUrls().size());
+			assertEquals(1, resp.getFailedUrls().size());
 			assertNull(resp.getSuccessfulUrl());
 			assertThat(resp.getFailedUrls().values().iterator().next().getExplanation(), containsString("PKIX"));
-			
+
 			config = new PersHttpClientConfig();
 			config.setConnectTimeoutMillis(1000);
 			config.setReadTimeoutMillis(1000);
@@ -110,7 +120,7 @@ public class HttpClientBeanTest {
 			resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
 
 			ourLog.info("Resp was: " + resp.getBody());
-			assertEquals(0,resp.getFailedUrls().size());
+			assertEquals(0, resp.getFailedUrls().size());
 			assertNotNull(resp.getSuccessfulUrl());
 
 		} finally {
@@ -118,22 +128,38 @@ public class HttpClientBeanTest {
 		}
 	}
 
+	public static void addConnector(int port, Server server, SslContextFactory sslCtx) {
+		HttpConfiguration httpConfig = new HttpConfiguration();
+		httpConfig.setSecureScheme("https");
+		httpConfig.setSecurePort(8443);
+		httpConfig.setOutputBufferSize(32768);
+		httpConfig.setRequestHeaderSize(8192);
+		httpConfig.setResponseHeaderSize(8192);
+		httpConfig.setSendServerVersion(true);
+		httpConfig.setSendDateHeader(false);
+		HttpConfiguration https_config = new HttpConfiguration(httpConfig);
+		ServerConnector sslConnector = new ServerConnector(server, new SslConnectionFactory(sslCtx, "http/1.1"), new HttpConnectionFactory(https_config));
+		sslConnector.setPort(port);
+		server.addConnector(sslConnector);
+	}
+
 	@Test
 	public void testTlsWithTruststoreAndKeystore() throws Exception {
 
 		int port = RandomServerPortProvider.findFreePort();
 		Server server = new Server();
-		SslSocketConnector sslConnector = new SslSocketConnector();
-		sslConnector.setPort(port);
-		sslConnector.setKeystore("src/test/resources/keystore/keystore.jks");
-		sslConnector.setKeyPassword("changeit");
-		sslConnector.setTruststore("src/test/resources/keystore/truststore2.jks");
-		sslConnector.setTrustPassword("changeit");
-		sslConnector.setNeedClientAuth(true);
-		server.addConnector(sslConnector);
+		
+		SslContextFactory sslCtx = new SslContextFactory();
+		sslCtx.setKeyStorePath("src/test/resources/keystore/keystore.jks");
+		sslCtx.setKeyStorePassword("changeit");
+		sslCtx.setTrustStorePath("src/test/resources/keystore/truststore2.jks");
+		sslCtx.setTrustStorePassword("changeit");
+		sslCtx.setNeedClientAuth(true);
+
+		addConnector(port, server, sslCtx);
 
 		server.start();
-		
+
 		long start = System.currentTimeMillis();
 		while (!server.isStarted()) {
 			ourLog.info("Server hasn't started yet, going to sleep for 500ms");
@@ -152,7 +178,7 @@ public class HttpClientBeanTest {
 			config.setReadTimeoutMillis(1000);
 			config.setPid(111L);
 			config.setOptLock(1);
-			
+
 			IResponseValidator validator = new NullResponseValidator();
 			UrlPoolBean urlPool = new UrlPoolBean();
 			urlPool.setPreferredUrl(new PersServiceVersionUrl(123, "https://127.0.0.1:" + port + "/path"));
@@ -160,10 +186,10 @@ public class HttpClientBeanTest {
 			SrBeanIncomingResponse resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
 
 			ourLog.info("Resp was: " + resp.getBody());
-			assertEquals(1,resp.getFailedUrls().size());
+			assertEquals(1, resp.getFailedUrls().size());
 			assertNull(resp.getSuccessfulUrl());
 			assertThat(resp.getFailedUrls().values().iterator().next().getExplanation(), containsString("PKIX"));
-			
+
 			config = new PersHttpClientConfig();
 			config.setConnectTimeoutMillis(1000);
 			config.setReadTimeoutMillis(1000);
@@ -175,11 +201,11 @@ public class HttpClientBeanTest {
 			resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
 
 			ourLog.info("Resp was: " + resp.getBody());
-			assertEquals(1,resp.getFailedUrls().size());
+			assertEquals(1, resp.getFailedUrls().size());
 			assertNull(resp.getSuccessfulUrl());
 
 			// Now with client keystore
-			
+
 			config = new PersHttpClientConfig();
 			config.setConnectTimeoutMillis(1000);
 			config.setReadTimeoutMillis(1000);
@@ -193,14 +219,14 @@ public class HttpClientBeanTest {
 			resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
 
 			ourLog.info("Resp was: " + resp.getBody());
-			assertEquals(0,resp.getFailedUrls().size());
+			assertEquals(0, resp.getFailedUrls().size());
 			assertNotNull(resp.getSuccessfulUrl());
 
 		} finally {
 			server.stop();
 		}
 	}
-	
+
 	private String provideXmlRequest() {
 		String reqBody = "<SOAP-ENV:Envelope\n" + // -
 				"  xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n" + // -
@@ -215,8 +241,7 @@ public class HttpClientBeanTest {
 	}
 
 	private String provideXmlResponse() {
-		String body = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-				+ "<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" + // -
+		String body = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" + "<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" + // -
 				"  <soap:Body>\n" + // -
 				"  <EnlightenResponse xmlns=\"http://clearforest.com/\">\n" + // -
 				"  <EnlightenResult>string</EnlightenResult>\n" + // -

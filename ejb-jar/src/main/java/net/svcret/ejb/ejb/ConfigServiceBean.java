@@ -5,6 +5,7 @@ import java.util.List;
 
 import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.model.RetrieverNodeTypeEnum;
+import net.svcret.admin.shared.util.Validate;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
@@ -12,6 +13,7 @@ import net.svcret.ejb.model.entity.PersConfig;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Required;
 import org.springframework.stereotype.Service;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -19,14 +21,14 @@ import com.google.common.annotations.VisibleForTesting;
 @Service
 public class ConfigServiceBean implements IConfigService {
 
-	public static final String SYSTEM_PROPERTY_NODEID = "net.svcret.nodeid";
-	public static final String SYSTEM_PROPERTY_NODETYPE = "net.svcret.nodetype";
-	public static final String SYSTEM_PROPERTY_AUDITLOG_PATH = "net.svcret.auditlog.path";
-	public static final String SYSTEM_PROPERTY_SECONDARY_REFRESHURLS = "net.svcret.secondarynodes.refreshurls";
-
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ConfigServiceBean.class);
-
 	private static final String STATE_KEY = SecurityServiceBean.class.getName() + "_VERSION";
+	public static final String SYSTEM_PROPERTY_AUDITLOG_PATH = "net.svcret.auditlog.path";
+	public static final String SYSTEM_PROPERTY_NODEID = "net.svcret.nodeid";
+
+	public static final String SYSTEM_PROPERTY_NODETYPE = "net.svcret.nodetype";
+
+	public static final String SYSTEM_PROPERTY_SECONDARY_REFRESHURLS = "net.svcret.secondarynodes.refreshurls";
 
 	@Autowired
 	private IBroadcastSender myBroadcastSender;
@@ -34,9 +36,39 @@ public class ConfigServiceBean implements IConfigService {
 	private transient PersConfig myConfig;
 
 	private long myCurrentVersion;
-
 	@Autowired
 	private IDao myDao;
+	private String myNodeId;
+
+	private RetrieverNodeTypeEnum myNodeType;
+
+	@Override
+	public PersConfig getConfig() throws UnexpectedFailureException {
+		if (myConfig != null) {
+			return myConfig;
+		}
+		PersConfig retVal = myDao.getConfigByPid(PersConfig.DEFAULT_ID);
+		if (retVal == null) {
+			retVal = new PersConfig();
+			retVal.setDefaults();
+			retVal = saveConfig(retVal);
+		}
+
+		return retVal;
+	}
+
+	@Override
+	public String getFilesystemAuditLoggerPath() {
+		return System.getProperty(SYSTEM_PROPERTY_AUDITLOG_PATH);
+	}
+
+	public String getNodeId() {
+		return myNodeId;
+	}
+
+	public RetrieverNodeTypeEnum getNodeType() {
+		return myNodeType;
+	}
 
 	@Override
 	public List<String> getSecondaryNodeRefreshUrls() {
@@ -52,19 +84,14 @@ public class ConfigServiceBean implements IConfigService {
 		return retVal;
 	}
 
-	@Override
-	public PersConfig getConfig() throws UnexpectedFailureException {
-		if (myConfig != null) {
-			return myConfig;
-		}
-		PersConfig retVal = myDao.getConfigByPid(PersConfig.DEFAULT_ID);
-		if (retVal == null) {
-			retVal = new PersConfig();
-			retVal.setDefaults();
-			retVal = saveConfig(retVal);
-		}
+	private void incrementStateVersion() {
+		long newVersion = myDao.incrementStateCounter(STATE_KEY);
+		ourLog.debug("State counter is now {}", newVersion);
+	}
 
-		return retVal;
+	private void loadConfig() {
+		myConfig = myDao.getConfigByPid(PersConfig.DEFAULT_ID);
+		myCurrentVersion = myDao.getStateCounter(STATE_KEY);
 	}
 
 	@Override
@@ -83,14 +110,12 @@ public class ConfigServiceBean implements IConfigService {
 		return retVal;
 	}
 
-	private void incrementStateVersion() {
-		long newVersion = myDao.incrementStateCounter(STATE_KEY);
-		ourLog.debug("State counter is now {}", newVersion);
-	}
-
-	private void loadConfig() {
-		myConfig = myDao.getConfigByPid(PersConfig.DEFAULT_ID);
-		myCurrentVersion = myDao.getStateCounter(STATE_KEY);
+	/**
+	 * For unit tests only
+	 */
+	@VisibleForTesting
+	public void setBroadcastSender(IBroadcastSender theBroadcastSender) {
+		myBroadcastSender = theBroadcastSender;
 	}
 
 	/**
@@ -101,39 +126,15 @@ public class ConfigServiceBean implements IConfigService {
 		myDao = theDao;
 	}
 
-	/**
-	 * For unit tests only
-	 */
-	@VisibleForTesting
-	public void setBroadcastSender(IBroadcastSender theBroadcastSender) {
-		myBroadcastSender = theBroadcastSender;
+	@Required
+	public void setNodeId(String theNodeId) {
+		Validate.notBlank(theNodeId, "NodeType");
+		myNodeId = theNodeId;
 	}
 
-	@Override
-	public RetrieverNodeTypeEnum getNodeType() {
-		String nodetype = System.getProperty(SYSTEM_PROPERTY_NODETYPE);
-		if (StringUtils.isBlank(nodetype)) {
-			throw new IllegalStateException("Can't find system property: " + SYSTEM_PROPERTY_NODETYPE);
-		}
-
-		try {
-			return RetrieverNodeTypeEnum.valueOf(nodetype);
-		} catch (IllegalArgumentException e) {
-			throw new IllegalStateException("Invalid value for system property '" + SYSTEM_PROPERTY_NODETYPE + "': " + nodetype);
-		}
-	}
-
-	@Override
-	public String getNodeId() {
-		String retVal = System.getProperty(SYSTEM_PROPERTY_NODEID);
-		if (retVal == null) {
-			throw new IllegalStateException("Missing system property: " + SYSTEM_PROPERTY_NODEID);
-		}
-		return retVal;
-	}
-
-	@Override
-	public String getFilesystemAuditLoggerPath() {
-		return System.getProperty(SYSTEM_PROPERTY_AUDITLOG_PATH);
+	@Required
+	public void setNodeType(RetrieverNodeTypeEnum theNodeType) {
+		Validate.notNull(theNodeType, "NodeType");
+		myNodeType = theNodeType;
 	}
 }
