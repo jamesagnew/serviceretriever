@@ -3,9 +3,6 @@ package net.svcret.ejb.propcap;
 import java.io.IOException;
 import java.io.StringReader;
 
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.Singleton;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -24,12 +21,12 @@ import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersPropertyCapture;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-@Singleton
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+@Service
 public class PropertyCaptureBean implements IPropertyCaptureService {
 
 	private DocumentBuilderFactory myDocumentBuilderFactory;

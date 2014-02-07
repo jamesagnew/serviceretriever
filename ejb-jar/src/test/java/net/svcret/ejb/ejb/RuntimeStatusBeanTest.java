@@ -589,7 +589,7 @@ public class RuntimeStatusBeanTest {
 		svc.flushStatus();
 		
 		ArgumentCaptor<List> capt = ArgumentCaptor.forClass(List.class);
-		verify(dao, times(1)).saveServiceVersionUrlStatus(capt.capture());
+		verify(dao, times(1)).saveServiceVersionUrlStatusInNewTransaction(capt.capture());
 
 		/*
 		 * Timestamps coming back have a datatype of "Timestamp"
@@ -599,7 +599,7 @@ public class RuntimeStatusBeanTest {
 		savedStatus.setStatusTimestamp(new Timestamp(saved.getStatusTimestamp().getTime()));
 		
 		svc.flushStatus();
-		verify(dao, times(1)).saveServiceVersionUrlStatus(any(List.class));
+		verify(dao, times(1)).saveServiceVersionUrlStatusInNewTransaction(any(List.class));
 		
 	}
 	

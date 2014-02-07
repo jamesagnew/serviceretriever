@@ -50,7 +50,7 @@ public class PersUserTest extends BaseJpaTest {
 		d0s1v1 = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(d0s0, "D0S1V1", ServiceProtocolEnum.SOAP11);
 
 		d0s0v0m0 = d0s0v0.getOrCreateAndAddMethodWithName("D0S0V0M0");
-		mySvc.saveServiceVersion(d0s0v0);
+		mySvc.saveServiceVersionInNewTransaction(d0s0v0);
 
 		d1 = mySvc.getOrCreateDomainWithId("D1");
 		d1s0 = mySvc.getOrCreateServiceWithId(d1, "D1S0");

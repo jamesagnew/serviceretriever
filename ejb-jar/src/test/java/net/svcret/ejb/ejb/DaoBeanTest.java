@@ -253,7 +253,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		url2.setUrl(HTTP_BAR);
 		url2.setUrlId("url2");
 		ver.addUrl(url2);
-		ver = (PersServiceVersionSoap11) mySvc.saveServiceVersion(ver);
+		ver = (PersServiceVersionSoap11) mySvc.saveServiceVersionInNewTransaction(ver);
 
 		newEntityManager();
 
@@ -300,7 +300,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		url.setUrl(HTTP_FOO);
 		url.setUrlId("url");
 		ver.addUrl(url);
-		ver = (PersServiceVersionSoap11) mySvc.saveServiceVersion(ver);
+		ver = (PersServiceVersionSoap11) mySvc.saveServiceVersionInNewTransaction(ver);
 
 		newEntityManager();
 
@@ -388,7 +388,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		url.setUrl(HTTP_FOO);
 		url.setUrlId("url");
 		ver.addUrl(url);
-		ver = (PersServiceVersionSoap11) mySvc.saveServiceVersion(ver);
+		ver = (PersServiceVersionSoap11) mySvc.saveServiceVersionInNewTransaction(ver);
 
 		newEntityManager();
 
@@ -469,7 +469,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		method.setName("method0");
 		ver.addMethod(method);
 
-		mySvc.saveServiceVersion(ver);
+		mySvc.saveServiceVersionInNewTransaction(ver);
 
 		newEntityManager();
 
@@ -529,7 +529,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		// method.setName("method0");
 		// ver.addMethod(method);
 
-		mySvc.saveServiceVersion(ver);
+		mySvc.saveServiceVersionInNewTransaction(ver);
 
 		newEntityManager();
 
@@ -665,7 +665,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
 		PersMethod method = ver.getOrCreateAndAddMethodWithName("MethodName");
 
-		mySvc.saveServiceVersion(ver);
+		mySvc.saveServiceVersionInNewTransaction(ver);
 
 		newEntityManager();
 
@@ -735,7 +735,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
 		ver.getOrCreateAndAddMethodWithName("method1");
 		ver.getOrCreateAndAddMethodWithName("method2");
-		mySvc.saveServiceVersion(ver);
+		mySvc.saveServiceVersionInNewTransaction(ver);
 
 		PersUser user = mySvc.getOrCreateUser(mySvc.getAuthenticationHost("ah0"), "Username");
 
@@ -786,7 +786,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		PersMethod method = ver.getOrCreateAndAddMethodWithName("MNAME");
 		PersUser user = mySvc.getOrCreateUser(mySvc.getAuthenticationHost("ah0"), "Username");
 
-		mySvc.saveServiceVersion(ver);
+		mySvc.saveServiceVersionInNewTransaction(ver);
 
 		newEntityManager();
 
@@ -973,7 +973,7 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
 		service.setServiceName("ServiceName");
-		mySvc.saveService(service);
+		mySvc.saveServiceInNewTransaction(service);
 		assertEquals("ServiceName", service.getServiceName());
 
 		newEntityManager();
@@ -1001,7 +1001,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		ver.addResource(HTTP_BAR, "text/plain", "bar contents");
 		ver.addResource(HTTP_BAZ, "text/plain", "baz contents");
 
-		mySvc.saveServiceVersion(ver);
+		mySvc.saveServiceVersionInNewTransaction(ver);
 
 		newEntityManager();
 
@@ -1012,7 +1012,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		assertEquals("baz contents", ver.getUriToResource().get(HTTP_BAZ).getResourceText());
 
 		ver.getUriToResource().remove(HTTP_FOO);
-		mySvc.saveServiceVersion(ver);
+		mySvc.saveServiceVersionInNewTransaction(ver);
 
 		ver = mySvc.getAllServiceVersions().iterator().next();
 		assertEquals(2, ver.getUriToResource().size());
@@ -1045,7 +1045,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		url2.setUrl(HTTP_FOOURL2);
 		ver.getUrls().add(url2);
 
-		mySvc.saveServiceVersion(ver);
+		mySvc.saveServiceVersionInNewTransaction(ver);
 
 		newEntityManager();
 
@@ -1056,7 +1056,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		ver.retainOnlyUrlsWithIds("url0", "url2");
 		ver.getUrlWithId("url0").setUrl(HTTP_FOOURL0B);
 
-		mySvc.saveServiceVersion(ver);
+		mySvc.saveServiceVersionInNewTransaction(ver);
 
 		newEntityManager();
 
@@ -1075,7 +1075,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		url1b.setUrl(HTTP_FOOURL1B);
 		ver.getUrls().add(1, url1b);
 
-		mySvc.saveServiceVersion(ver);
+		mySvc.saveServiceVersionInNewTransaction(ver);
 
 		newEntityManager();
 
@@ -1096,7 +1096,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		PersService service = mySvc.getOrCreateServiceWithId(domain, "SERVICE_ID");
 		PersServiceVersionSoap11 ver = (PersServiceVersionSoap11) mySvc.getOrCreateServiceVersionWithId(service, "VersionId0", ServiceProtocolEnum.SOAP11);
 
-		mySvc.saveServiceVersion(ver);
+		mySvc.saveServiceVersionInNewTransaction(ver);
 		newEntityManager();
 
 		// mySvc.saveServiceVersion(ver);
@@ -1106,7 +1106,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		ver.setKeepNumRecentTransactionsFail(5);
 		ver.setKeepNumRecentTransactionsFault(10);
 
-		ver = (PersServiceVersionSoap11) mySvc.saveServiceVersion(ver);
+		ver = (PersServiceVersionSoap11) mySvc.saveServiceVersionInNewTransaction(ver);
 		newEntityManager();
 
 		ver = (PersServiceVersionSoap11) mySvc.getServiceVersionByPid(ver.getPid());
@@ -1136,7 +1136,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		ca2.setUsername("un2");
 		ver.addClientAuth(ca2);
 
-		mySvc.saveServiceVersion(ver);
+		mySvc.saveServiceVersionInNewTransaction(ver);
 
 		newEntityManager();
 
@@ -1145,7 +1145,7 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		ver.removeClientAuth(ver.getClientAuths().get(1));
 
-		mySvc.saveServiceVersion(ver);
+		mySvc.saveServiceVersionInNewTransaction(ver);
 
 		newEntityManager();
 
@@ -1163,7 +1163,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		url1b.setUsername("un1b");
 		ver.addClientAuth(1, url1b);
 
-		mySvc.saveServiceVersion(ver);
+		mySvc.saveServiceVersionInNewTransaction(ver);
 
 		newEntityManager();
 
@@ -1191,7 +1191,7 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		ver.addServerAuth(auth);
 
-		mySvc.saveServiceVersion(ver);
+		mySvc.saveServiceVersionInNewTransaction(ver);
 
 		newEntityManager();
 
@@ -1299,12 +1299,12 @@ public class DaoBeanTest extends BaseJpaTest {
 		version0 = (PersServiceVersionSoap11) mySvc.getServiceVersionByPid(version0.getPid());
 		assertNotNull(version0.getStatus().getPid());
 		version0.setWsdlUrl(HTTP_FOO);
-		mySvc.saveServiceVersion(version0);
+		mySvc.saveServiceVersionInNewTransaction(version0);
 
 		version1 = (PersServiceVersionSoap11) mySvc.getServiceVersionByPid(version1.getPid());
 		assertNotNull(version1.getStatus().getPid());
 		version1.setWsdlUrl(HTTP_BAR);
-		mySvc.saveServiceVersion(version1);
+		mySvc.saveServiceVersionInNewTransaction(version1);
 
 		newEntityManager();
 
@@ -1313,7 +1313,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		assertEquals(HTTP_FOO, allVersions.iterator().next().getWsdlUrl());
 
 		// Remove a service version
-		mySvc.removeServiceVersion(version0.getPid());
+		mySvc.deleteServiceVersionInNewTransaction(version0);
 
 		newEntityManager();
 

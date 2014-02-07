@@ -1,10 +1,7 @@
 package net.svcret.ejb.ejb;
 
-import java.text.MessageFormat;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
 import javax.naming.directory.DirContext;
 
 import net.svcret.admin.api.ProcessingException;
@@ -18,20 +15,23 @@ import net.svcret.ejb.model.entity.PersUser;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
-import org.springframework.ldap.core.AuthenticatedLdapEntryContextCallback;
-import org.springframework.ldap.core.LdapEncoder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.ldap.core.AuthenticatedLdapEntryContextMapper;
 import org.springframework.ldap.core.LdapEntryIdentification;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
+import org.springframework.ldap.query.LdapQuery;
+import org.springframework.ldap.query.LdapQueryBuilder;
+import org.springframework.stereotype.Service;
 
-@Stateless
+@Service
 public class LdapAuthorizationServiceBean extends BaseAuthorizationServiceBean<PersAuthenticationHostLdap> implements ILdapAuthorizationService {
 
 	private ConcurrentHashMap<BasePersAuthenticationHost, MyLdapNetworkConnection> myHostToConnection = new ConcurrentHashMap<BasePersAuthenticationHost, MyLdapNetworkConnection>();
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(LdapAuthorizationServiceBean.class);
 
-	@EJB
+	@Autowired
 	private ISecurityService mySecuritySvc;
 
 	@Override
@@ -90,7 +90,6 @@ public class LdapAuthorizationServiceBean extends BaseAuthorizationServiceBean<P
 	private static class MyLdapNetworkConnection {
 
 		private PersAuthenticationHostLdap myLdapHost;
-		private MessageFormat myFilterFormat;
 		private String myAuthenticateFilter;
 
 		public MyLdapNetworkConnection(PersAuthenticationHostLdap theLdapHost) {
@@ -101,7 +100,6 @@ public class LdapAuthorizationServiceBean extends BaseAuthorizationServiceBean<P
 		private void updateFilterFormat() {
 			if (!StringUtils.equals(myAuthenticateFilter, myLdapHost.getAuthenticateFilter())) {
 				myAuthenticateFilter = myLdapHost.getAuthenticateFilter();
-				myFilterFormat = new MessageFormat(myAuthenticateFilter);
 			}
 		}
 
@@ -109,44 +107,17 @@ public class LdapAuthorizationServiceBean extends BaseAuthorizationServiceBean<P
 			try {
 				LdapTemplate template = getLdapTemplate();
 
-				AuthenticatedLdapEntryContextCallback callback = new AuthenticatedLdapEntryContextCallback() {
-
+				AuthenticatedLdapEntryContextMapper<Boolean> callback = new AuthenticatedLdapEntryContextMapper<Boolean>() {
 					@Override
-					public void executeWithContext(DirContext theDc, LdapEntryIdentification theId) {
-						// try {
-						// NamingEnumeration<NameClassPair> list =
-						// theDc.list(theId.getAbsoluteDn());
-						// while (list.hasMore()) {
-						// NameClassPair next = list.next();
-						// System.out.println("nexT: " + next.getName());
-						// }
-						//
-						// Attributes attrList =
-						// theDc.getAttributes(theId.getAbsoluteDn(), new
-						// String[]{"memberOf"});
-						// NamingEnumeration<? extends Attribute> attrEnum =
-						// attrList.getAll();
-						// while (attrEnum.hasMore()) {
-						// Attribute next = attrEnum.next();
-						// NamingEnumeration<?> allValues = next.getAll();
-						// while (allValues.hasMore()) {
-						// System.out.println("Attr: "+
-						// allValues.next().toString());
-						// }
-						// }
-						//
-						// } catch (NamingException e) {
-						// e.printStackTrace();
-						// }
-						//
+					public Boolean mapWithContext(DirContext theCtx, LdapEntryIdentification theLdapEntryIdentification) {
+						return true;
 					}
 				};
 
-				String usernameEncoded = LdapEncoder.filterEncode(theUsername);
-				String filter = myFilterFormat.format(new Object[] {usernameEncoded});
+				LdapQuery q = LdapQueryBuilder.query().base(myLdapHost.getAuthenticateBaseDn()).filter(myAuthenticateFilter, theUsername);
 				
-				ourLog.debug("Querying LDAP with filter: {}", filter);
-				boolean authenticate = template.authenticate(myLdapHost.getAuthenticateBaseDn(), filter, thePassword, callback);
+				ourLog.debug("Querying LDAP with filter: {}", q.toString());
+				boolean authenticate = template.authenticate(q, thePassword, callback);
 				ourLog.debug("LDAP authentication results: {}", authenticate);
 				
 				return authenticate;
@@ -156,7 +127,7 @@ public class LdapAuthorizationServiceBean extends BaseAuthorizationServiceBean<P
 			}
 		}
 
-		private LdapTemplate getLdapTemplate() throws Exception {
+		private LdapTemplate getLdapTemplate() {
 			LdapContextSource src = new LdapContextSource();
 			src.setUrl(myLdapHost.getUrl());
 			src.setUserDn(myLdapHost.getBindUserDn());

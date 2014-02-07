@@ -3,9 +3,6 @@ package net.svcret.ejb.ejb;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-
 import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.model.RetrieverNodeTypeEnum;
 import net.svcret.ejb.api.IConfigService;
@@ -15,10 +12,11 @@ import net.svcret.ejb.model.entity.PersConfig;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.google.common.annotations.VisibleForTesting;
 
-@Stateless
+@Service
 public class ConfigServiceBean implements IConfigService {
 
 	public static final String SYSTEM_PROPERTY_NODEID = "net.svcret.nodeid";
@@ -30,7 +28,6 @@ public class ConfigServiceBean implements IConfigService {
 
 	private static final String STATE_KEY = SecurityServiceBean.class.getName() + "_VERSION";
 
-	@EJB
 	@Autowired
 	private IBroadcastSender myBroadcastSender;
 
@@ -38,7 +35,6 @@ public class ConfigServiceBean implements IConfigService {
 
 	private long myCurrentVersion;
 
-	@EJB
 	@Autowired
 	private IDao myDao;
 
@@ -81,7 +77,7 @@ public class ConfigServiceBean implements IConfigService {
 
 	@Override
 	public PersConfig saveConfig(PersConfig theConfig) throws UnexpectedFailureException {
-		PersConfig retVal = myDao.saveConfig(theConfig);
+		PersConfig retVal = myDao.saveConfigInNewTransaction(theConfig);
 		myBroadcastSender.notifyConfigChanged();
 		incrementStateVersion();
 		return retVal;

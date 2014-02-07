@@ -1,7 +1,5 @@
 package net.svcret.ejb.log;
 
-import javax.ejb.Local;
-
 import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
@@ -13,7 +11,6 @@ import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersUser;
 
-@Local
 public interface IFilesystemAuditLogger {
 
 	//TODO: these methods shouldn't take SVCVER and METHOD, they can get those from the processed request 

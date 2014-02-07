@@ -4,11 +4,12 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
 
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.model.DtoDomain;
@@ -19,12 +20,12 @@ import net.svcret.ejb.model.entity.PersDomain;
 
 import com.google.common.annotations.VisibleForTesting;
 
-@Stateless
+@Service
 public class ImportExportServiceBean implements IImportExportServiceLocal {
 
 	private final JAXBContext myJaxbContext;
 
-	@EJB
+	@Autowired
 	private IServiceRegistry myServiceRegistry;
 
 	public ImportExportServiceBean() throws JAXBException, IOException, ClassNotFoundException {

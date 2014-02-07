@@ -14,11 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-
 import net.svcret.admin.api.IAdminServiceLocal;
 import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.api.UnexpectedFailureException;
@@ -81,7 +76,6 @@ import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
-import net.svcret.ejb.api.IScheduler;
 import net.svcret.ejb.api.ISecurityService;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
@@ -96,7 +90,7 @@ import net.svcret.ejb.ejb.SecurityServiceBean;
 import net.svcret.ejb.ejb.ServiceRegistryBean;
 import net.svcret.ejb.ejb.monitor.IMonitorService;
 import net.svcret.ejb.ejb.monitor.MonitorServiceBean;
-import net.svcret.ejb.ejb.nodecomm.ISynchronousNodeIpcClient;
+import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
 import net.svcret.ejb.ex.InvalidRequestException;
 import net.svcret.ejb.ex.InvocationResponseFailedException;
 import net.svcret.ejb.invoker.soap.IServiceInvokerSoap11;
@@ -162,9 +156,12 @@ import com.google.common.annotations.VisibleForTesting;
 @Transactional
 public class AdminServiceBean implements IAdminServiceLocal {
 
+	public static final long URL_PID_TO_LOAD_ALL = -1;
+
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(AdminServiceBean.class);
 
-	public static final long URL_PID_TO_LOAD_ALL = -1;
+	@Autowired
+	private IBroadcastSender myBroadcastSender;
 
 	@Autowired
 	private IConfigService myConfigSvc;
@@ -185,9 +182,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	private IRuntimeStatusQueryLocal myRuntimeStatusQuerySvc;
 
 	@Autowired
-	private IScheduler myScheduler;
-
-	@Autowired
 	private ISecurityService mySecurityService;
 
 	@Autowired
@@ -195,6 +189,9 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 	@Autowired
 	private IRuntimeStatus myStatusSvc;
+
+	@Autowired
+	private IBroadcastSender mySynchronousNodeIpcClient;
 
 	@Override
 	public DtoDomain addDomain(DtoDomain theDomain) throws ProcessingException, UnexpectedFailureException {
@@ -217,18 +214,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return domain.toDto();
 	}
 
-	/**
-	 * Convenience for Unit Tests
-	 */
-	@VisibleForTesting
-	public DtoDomain unitTestMethod_addDomain(String theId, String theName) throws ProcessingException, UnexpectedFailureException {
-		DtoDomain domain = new DtoDomain();
-		domain.setId(theId);
-		domain.setName(theName);
-		DtoDomain retVal = addDomain(domain);
-		return retVal;
-	}
-
 	@Override
 	public GService addService(long theDomainPid, GService theService) throws ProcessingException, UnexpectedFailureException {
 		Validate.notBlank(theService.getId(), "ID");
@@ -247,7 +232,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 
 		service.merge(PersService.fromDto(theService));
-		
+
 		myServiceRegistry.saveService(service);
 
 		return service.toDto();
@@ -280,10 +265,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 
 		throw new IllegalArgumentException("Service " + theServiceVersionPid + " is of type " + svcVer.getProtocol() + " which does not support WSDL bundles");
-	}
-
-	private int defaultInteger(Integer theInt) {
-		return theInt != null ? theInt : 0;
 	}
 
 	@Override
@@ -387,334 +368,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return check.toDto(true);
 	}
 
-	private void flushOutstandingStats() {
-		ourLog.debug("Beginning loadModelUpdate - Going to flush stats");
-		myScheduler.flushInMemoryStatisticsUnlessItHasHappenedVeryRecently();
-		ourLog.debug("Done flushing stats");
-	}
-
-	private BasePersAuthenticationHost fromUi(BaseDtoAuthenticationHost theAuthHost) {
-		BasePersAuthenticationHost retVal = null;
-
-		switch (theAuthHost.getType()) {
-		case LDAP:
-			PersAuthenticationHostLdap pLdap = new PersAuthenticationHostLdap();
-			DtoAuthenticationHostLdap uiLdap = (DtoAuthenticationHostLdap) theAuthHost;
-			pLdap.setAuthenticateBaseDn(uiLdap.getAuthenticateBaseDn());
-			pLdap.setAuthenticateFilter(uiLdap.getAuthenticateFilter());
-			pLdap.setBindPassword(uiLdap.getBindUserPassword());
-			pLdap.setBindUserDn(uiLdap.getBindUserDn());
-			pLdap.setUrl(uiLdap.getUrl());
-			retVal = pLdap;
-			break;
-		case LOCAL_DATABASE:
-			retVal = new PersAuthenticationHostLocalDatabase();
-			break;
-		}
-
-		if (retVal == null) {
-			throw new IllegalStateException("Unknown type:" + theAuthHost.getType());
-		}
-
-		retVal.populateKeepRecentTransactionsFromDto(theAuthHost);
-		retVal.setAutoCreateAuthorizedUsers(theAuthHost.isAutoCreateAuthorizedUsers());
-		retVal.setCacheSuccessfulCredentialsForMillis(theAuthHost.getCacheSuccessesForMillis());
-		retVal.setModuleId(theAuthHost.getModuleId());
-		retVal.setModuleName(theAuthHost.getModuleName());
-		retVal.setPid(theAuthHost.getPidOrNull());
-		retVal.setSupportsPasswordChange(theAuthHost.isSupportsPasswordChange());
-
-		return retVal;
-	}
-
-	private PersBaseClientAuth<?> fromUi(BaseDtoClientSecurity theObj, BasePersServiceVersion theServiceVersion) {
-
-		PersBaseClientAuth<?> retVal = null;
-		switch (theObj.getType()) {
-		case WSSEC_UT: {
-			retVal = new PersWsSecUsernameTokenClientAuth();
-			break;
-		}
-		case HTTP_BASICAUTH: {
-			retVal = new PersHttpBasicClientAuth();
-			break;
-		}
-		case JSONRPC_NAMPARM: {
-			DtoClientSecurityJsonRpcNamedParameter obj = (DtoClientSecurityJsonRpcNamedParameter) theObj;
-			retVal = new NamedParameterJsonRpcClientAuth();
-			((NamedParameterJsonRpcClientAuth) retVal).setUsernameParameterName(obj.getUsernameParameterName());
-			((NamedParameterJsonRpcClientAuth) retVal).setPasswordParameterName(obj.getPasswordParameterName());
-			break;
-		}
-		}
-
-		if (retVal == null) {
-			throw new IllegalArgumentException("Unknown service type: " + theObj.getType());
-		}
-
-		retVal.setPid(theObj.getPidOrNull());
-		retVal.setUsername(theObj.getUsername());
-		retVal.setPassword(theObj.getPassword());
-		retVal.setServiceVersion(theServiceVersion);
-
-		return retVal;
-	}
-
-	@Override
-	public DtoConfig loadConfig() throws UnexpectedFailureException {
-		return myConfigSvc.getConfig().toDto();
-	}
-
-	private BasePersMonitorRule fromUi(BaseDtoMonitorRule theRule) throws ProcessingException {
-
-		BasePersMonitorRule retVal = null;
-
-		switch (theRule.getRuleType()) {
-		case PASSIVE: {
-			PersMonitorRulePassive persRule = new PersMonitorRulePassive();
-			GMonitorRulePassive rule = (GMonitorRulePassive) theRule;
-			persRule.setPassiveFireForBackingServiceLatencyIsAboveMillis(rule.getPassiveFireForBackingServiceLatencyIsAboveMillis());
-			persRule.setPassiveFireForBackingServiceLatencySustainTimeMins(rule.getPassiveFireForBackingServiceLatencySustainTimeMins());
-			persRule.setPassiveFireIfAllBackingUrlsAreUnavailable(rule.isPassiveFireIfAllBackingUrlsAreUnavailable());
-			persRule.setPassiveFireIfSingleBackingUrlIsUnavailable(rule.isPassiveFireIfSingleBackingUrlIsUnavailable());
-			for (GMonitorRuleAppliesTo next : rule.getAppliesTo()) {
-				if (next.getServiceVersionPid() != null) {
-					persRule.getAppliesTo().add(new PersMonitorAppliesTo(persRule, myDao.getServiceVersionByPid(next.getServiceVersionPid())));
-				} else if (next.getServicePid() != null) {
-					persRule.getAppliesTo().add(new PersMonitorAppliesTo(persRule, myDao.getServiceByPid(next.getServicePid())));
-				} else {
-					persRule.getAppliesTo().add(new PersMonitorAppliesTo(persRule, myDao.getDomainByPid(next.getDomainPid())));
-				}
-			}
-
-			retVal = persRule;
-			break;
-		}
-		case ACTIVE: {
-			PersMonitorRuleActive persRule = new PersMonitorRuleActive();
-			DtoMonitorRuleActive rule = (DtoMonitorRuleActive) theRule;
-			for (DtoMonitorRuleActiveCheck next : rule.getCheckList()) {
-				persRule.getActiveChecks().add(PersMonitorRuleActiveCheck.fromDto(next, persRule, myDao));
-			}
-			retVal = persRule;
-			break;
-		}
-		}
-
-		if (retVal == null) {
-			throw new IllegalStateException("Unknown type: " + theRule.getRuleType());
-		}
-
-		retVal.setRuleActive(theRule.isActive());
-		retVal.setRuleName(theRule.getName());
-		retVal.setPid(theRule.getPidOrNull());
-
-		for (String next : theRule.getNotifyEmailContacts()) {
-			retVal.getNotifyContact().add(new PersMonitorRuleNotifyContact(next));
-		}
-
-		return retVal;
-	}
-
-	private PersBaseServerAuth<?, ?> fromUi(BaseDtoServerSecurity theObj, BasePersServiceVersion theSvcVer) {
-		switch (theObj.getType()) {
-		case WSSEC_UT: {
-			PersWsSecUsernameTokenServerAuth retVal = new PersWsSecUsernameTokenServerAuth();
-			retVal.setAuthenticationHost(myDao.getAuthenticationHostByPid(theObj.getAuthHostPid()));
-			retVal.setServiceVersion(theSvcVer);
-			return retVal;
-		}
-		case HTTP_BASIC_AUTH: {
-			PersHttpBasicServerAuth retVal = new PersHttpBasicServerAuth();
-			retVal.setAuthenticationHost(myDao.getAuthenticationHostByPid(theObj.getAuthHostPid()));
-			retVal.setServiceVersion(theSvcVer);
-			return retVal;
-		}
-		case JSONRPC_NAMED_PARAMETER: {
-			GNamedParameterJsonRpcServerAuth obj = (GNamedParameterJsonRpcServerAuth) theObj;
-			NamedParameterJsonRpcServerAuth retVal = new NamedParameterJsonRpcServerAuth();
-			retVal.setAuthenticationHost(myDao.getAuthenticationHostByPid(theObj.getAuthHostPid()));
-			retVal.setServiceVersion(theSvcVer);
-			retVal.setUsernameParameterName(obj.getUsernameParameterName());
-			retVal.setPasswordParameterName(obj.getPasswordParameterName());
-			return retVal;
-		}
-		}
-		throw new IllegalArgumentException("Unknown type: " + theObj.getType());
-	}
-
-	private PersLibraryMessage fromUi(DtoLibraryMessage theMessage) throws ProcessingException {
-		PersLibraryMessage retVal = new PersLibraryMessage();
-
-		retVal.setPid(theMessage.getPid());
-		retVal.setContentType(theMessage.getContentType());
-		retVal.setDescription(theMessage.getDescription());
-		retVal.setMessage(theMessage.getMessage());
-
-		for (Long next : theMessage.getAppliesToServiceVersionPids()) {
-			BasePersServiceVersion ver = myDao.getServiceVersionByPid(next);
-			if (ver == null) {
-				throw new ProcessingException("Unknown svcver PID: " + next);
-			}
-			retVal.getAppliesTo().add(new PersLibraryMessageAppliesTo(retVal, ver));
-		}
-
-		return retVal;
-	}
-
-	private PersConfig fromUi(DtoConfig theConfig) {
-		PersConfig retVal = new PersConfig();
-
-		for (String next : theConfig.getProxyUrlBases()) {
-			retVal.addProxyUrlBase(new PersConfigProxyUrlBase(next));
-		}
-
-		return retVal;
-	}
-
-	private PersDomain fromUi(DtoDomain theDomain) {
-		PersDomain retVal = new PersDomain();
-		retVal.setPid(theDomain.getPidOrNull());
-		retVal.setDomainId(theDomain.getId());
-		retVal.setDomainName(theDomain.getName());
-		retVal.populateKeepRecentTransactionsFromDto(theDomain);
-		retVal.populateServiceCatalogItemFromDto(theDomain);
-		retVal.setDescription(theDomain.getDescription());
-		return retVal;
-	}
-
-	private PersServiceVersionResource fromUi(GResource theRes, BasePersServiceVersion theServiceVersion) {
-		PersServiceVersionResource retVal = new PersServiceVersionResource();
-		retVal.setResourceContentType(theRes.getContentType());
-		retVal.setResourceText(theRes.getText());
-		retVal.setResourceUrl(theRes.getUrl());
-		retVal.setServiceVersion(theServiceVersion);
-		return retVal;
-	}
-
-	private PersService fromUi(GService theService) {
-		PersService retVal = new PersService();
-		retVal.setPid(theService.getPidOrNull());
-		retVal.setActive(theService.isActive());
-		retVal.setServiceId(theService.getId());
-		retVal.setServiceName(theService.getName());
-		retVal.setDescription(theService.getDescription());
-		retVal.populateKeepRecentTransactionsFromDto(theService);
-		retVal.populateServiceCatalogItemFromDto(theService);
-		return retVal;
-	}
-
-	private PersMethod fromUi(GServiceMethod theMethod, long theServiceVersionPid) {
-		PersMethod retVal = new PersMethod();
-		retVal.setName(theMethod.getName());
-		retVal.setPid(theMethod.getPidOrNull());
-		retVal.setServiceVersion(myDao.getServiceVersionByPid(theServiceVersionPid));
-		retVal.setRootElements(theMethod.getRootElements());
-		retVal.setSecurityPolicy(theMethod.getSecurityPolicy());
-		return retVal;
-	}
-
-	private PersUser fromUi(GUser theUser) throws ProcessingException {
-		PersUser retVal;
-
-		if (theUser.getPidOrNull() == null) {
-			BasePersAuthenticationHost authHost = myDao.getAuthenticationHostByPid(theUser.getAuthHostPid());
-			if (authHost == null) {
-				throw new ProcessingException("Unknown authentication host PID " + theUser.getAuthHostPid());
-			}
-			retVal = myDao.getOrCreateUser(authHost, theUser.getUsername());
-			if (retVal.isNewlyCreated() == false) {
-				throw new ProcessingException("User '" + theUser.getUsername() + "' already exists!");
-			}
-		} else {
-			retVal = myDao.getUser(theUser.getPid());
-		}
-
-		retVal.setAllowSourceIpsAsStrings(theUser.getAllowableSourceIps());
-		retVal.setAllowAllDomains(theUser.isAllowAllDomains());
-		retVal.setPermissions(theUser.getGlobalPermissions());
-		retVal.setUsername(theUser.getUsername());
-		retVal.setDomainPermissions(fromUi(theUser.getDomainPermissions(), retVal.getDomainPermissions()));
-		retVal.setAuthenticationHost(myDao.getAuthenticationHostByPid(theUser.getAuthHostPid()));
-		retVal.setDescription(theUser.getDescription());
-
-		// Contact Notes
-		retVal.getContact().setNotes(theUser.getContactNotes());
-		retVal.getContact().setEmailAddresses(theUser.getContactEmails());
-
-		if (theUser.getPidOrNull() != null && theUser.getChangePassword() == null) {
-			PersUser existing = myDao.getUser(theUser.getPid());
-			if (StringUtils.isNotBlank(existing.getPasswordHash())) {
-				retVal.setPasswordHash(existing.getPasswordHash());
-			}
-		} else if (theUser.getChangePassword() != null) {
-			ourLog.info("Changing password for user {}", theUser.getPidOrNull());
-			retVal.setPassword(theUser.getChangePassword());
-		}
-
-		if (theUser.getThrottle() != null) {
-			retVal.setThrottleMaxRequests(theUser.getThrottle().getThrottleMaxRequests());
-			retVal.setThrottlePeriod(theUser.getThrottle().getThrottlePeriod());
-			retVal.setThrottleMaxQueueDepth(theUser.getThrottle().getThrottleMaxQueueDepth());
-		}
-
-		retVal.populateKeepRecentTransactionsFromDto(theUser);
-
-		return retVal;
-	}
-
-	private PersUserDomainPermission fromUi(GUserDomainPermission theObj) {
-		PersUserDomainPermission retVal = new PersUserDomainPermission();
-		retVal.setPid(theObj.getPidOrNull());
-		retVal.setAllowAllServices(theObj.isAllowAllServices());
-		retVal.setServiceDomain(myDao.getDomainByPid(theObj.getDomainPid()));
-		retVal.setServicePermissions(new ArrayList<PersUserServicePermission>());
-		for (GUserServicePermission next : theObj.getServicePermissions()) {
-			retVal.addServicePermission(fromUi(next));
-		}
-		return retVal;
-	}
-
-	private PersUserServicePermission fromUi(GUserServicePermission theObj) {
-		PersUserServicePermission retVal = new PersUserServicePermission();
-		retVal.setPid(theObj.getPidOrNull());
-		retVal.setAllowAllServiceVersions(theObj.isAllowAllServiceVersions());
-		retVal.setService(myDao.getServiceByPid(theObj.getServicePid()));
-		retVal.setServiceVersionPermissions(new ArrayList<PersUserServiceVersionPermission>());
-		for (GUserServiceVersionPermission next : theObj.getServiceVersionPermissions()) {
-			retVal.addServiceVersionPermission(fromUi(next));
-		}
-		return retVal;
-	}
-
-	private PersUserServiceVersionMethodPermission fromUi(GUserServiceVersionMethodPermission theObj) {
-		PersUserServiceVersionMethodPermission retVal = new PersUserServiceVersionMethodPermission();
-		retVal.setPid(theObj.getPidOrNull());
-		retVal.setServiceVersionMethod(myDao.getServiceVersionMethodByPid(theObj.getServiceVersionMethodPid()));
-		return retVal;
-	}
-
-	private PersUserServiceVersionPermission fromUi(GUserServiceVersionPermission theObj) {
-		PersUserServiceVersionPermission retVal = new PersUserServiceVersionPermission();
-		retVal.setPid(theObj.getPidOrNull());
-		retVal.setAllowAllServiceVersionMethods(theObj.isAllowAllServiceVersionMethods());
-		retVal.setServiceVersion(myDao.getServiceVersionByPid(theObj.getServiceVersionPid()));
-		retVal.setServiceVersionMethodPermissions(new ArrayList<PersUserServiceVersionMethodPermission>());
-		for (GUserServiceVersionMethodPermission next : theObj.getServiceVersionMethodPermissions()) {
-			retVal.addServiceVersionMethodPermissions(fromUi(next));
-		}
-		return retVal;
-	}
-
-	private Collection<PersUserDomainPermission> fromUi(List<GUserDomainPermission> theDomainPermissions, Collection<PersUserDomainPermission> theExisting) {
-		Collection<PersUserDomainPermission> retVal = theExisting;
-		retVal.clear();
-		for (GUserDomainPermission next : theDomainPermissions) {
-			retVal.add(fromUi(next));
-		}
-		return retVal;
-	}
-
 	@Override
 	public Collection<DtoStickySessionUrlBinding> getAllStickySessions() {
 		flushOutstandingStats();
@@ -795,15 +448,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return service.getPid();
 	}
 
-	private boolean hasAnything(Set<?>... theSets) {
-		for (Set<?> next : theSets) {
-			if (next != null && next.isEmpty() == false) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	@Override
 	public Collection<GMonitorRuleFiring> loadAllActiveRuleFirings() {
 		Collection<GMonitorRuleFiring> retVal = new ArrayList<GMonitorRuleFiring>();
@@ -826,37 +470,15 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return toUi(authHost);
 	}
 
-	private DtoAuthenticationHostList loadAuthHostList() {
-		DtoAuthenticationHostList retVal = new DtoAuthenticationHostList();
-		for (BasePersAuthenticationHost next : myDao.getAllAuthenticationHosts()) {
-			BaseDtoAuthenticationHost uiObject = toUi(next);
-			retVal.add(uiObject);
-		}
-		return retVal;
+	@Override
+	public DtoConfig loadConfig() throws UnexpectedFailureException {
+		return myConfigSvc.getConfig().toDto();
 	}
 
 	@Override
 	public DtoDomainList loadDomainList() throws UnexpectedFailureException {
 		Set<Long> empty = Collections.emptySet();
 		return loadDomainList(empty, empty, empty, empty, empty, null);
-	}
-
-	private DtoDomainList loadDomainList(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, Set<Long> theLoadUrlStats, StatusesBean theStatuses) throws UnexpectedFailureException {
-		DtoDomainList domainList = new DtoDomainList();
-
-		for (PersDomain nextDomain : myServiceRegistry.getAllDomains()) {
-			DtoDomain gDomain = nextDomain.toDto(theLoadDomStats, theLoadSvcStats, theLoadVerStats, theLoadVerMethodStats, theLoadUrlStats, theStatuses, myRuntimeStatusQuerySvc);
-			domainList.add(gDomain);
-		} // for domains
-		return domainList;
-	}
-
-	private GHttpClientConfigList loadHttpClientConfigList() throws ProcessingException {
-		GHttpClientConfigList configList = new GHttpClientConfigList();
-		for (PersHttpClientConfig next : myDao.getHttpClientConfigs()) {
-			configList.add(next.toDto());
-		}
-		return configList;
 	}
 
 	@Override
@@ -915,13 +537,14 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	// private void extractStatus(int theNumMinsBack, List<Integer>
-	// the60MinInvCount, List<Long> the60minTime, PersMethod
-	// nextMethod) throws ProcessingException {
-	// IRuntimeStatus statusSvc = myStatusSvc;
-	// extractSuccessfulInvocationInvocationTimes(myConfigSvc.getConfig(),
-	// theNumMinsBack, the60MinInvCount, the60minTime, nextMethod, statusSvc);
-	// }
+	@Override
+	public DtoMonitorRuleActiveCheckOutcome loadMonitorRuleActiveCheckOutcomeDetails(long thePid) throws UnexpectedFailureException {
+		PersMonitorRuleActiveCheckOutcome retVal = myDao.loadMonitorRuleActiveCheckOutcome(thePid);
+		if (retVal == null) {
+			throw new UnexpectedFailureException("Unknown PID: " + thePid);
+		}
+		return retVal.toDto(true);
+	}
 
 	@Override
 	public BaseDtoMonitorRule loadMonitorRuleAndDetailedSatistics(long theRulePid) {
@@ -994,9 +617,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return msg.toDto(true);
 	}
 
-	@EJB
-	private ISynchronousNodeIpcClient mySynchronousNodeIpcClient;
-
 	@Override
 	public GRecentMessageLists loadRecentTransactionListForServiceVersion(long theServiceVersionPid) {
 		flushRecentTransactions();
@@ -1028,10 +648,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		ourLog.info("Returning recent message list for service version {} - {}", theServiceVersionPid, retVal);
 
 		return retVal;
-	}
-
-	private void flushRecentTransactions() {
-		mySynchronousNodeIpcClient.invokeFlushTransactionLogs();
 	}
 
 	@Override
@@ -1165,15 +781,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return toUi(persUser, theLoadStats);
 	}
 
-	private GUserList loadUserList(boolean theLoadStats) throws UnexpectedFailureException {
-		GUserList retVal = new GUserList();
-		Collection<PersUser> users = myDao.getAllUsersAndInitializeThem();
-		for (PersUser persUser : users) {
-			retVal.add(toUi(persUser, theLoadStats));
-		}
-		return retVal;
-	}
-
 	@Override
 	public GPartialUserList loadUsers(PartialUserListRequest theRequest) throws UnexpectedFailureException {
 		GPartialUserList retVal = new GPartialUserList();
@@ -1232,25 +839,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 		return retVal;
 	}
-
-	// private GHttpClientConfig toUi(PersHttpClientConfig theConfig) {
-	// GHttpClientConfig retVal = new GHttpClientConfig();
-	//
-	// if (theConfig.getPid() > 0) {
-	// retVal.setPid(theConfig.getPid());
-	// }
-	//
-	// retVal.setId(theConfig.getId());
-	// retVal.setName(theConfig.getName());
-	// retVal.setCircuitBreakerEnabled(theConfig.isCircuitBreakerEnabled());
-	// retVal.setCircuitBreakerTimeBetweenResetAttempts(theConfig.getCircuitBreakerTimeBetweenResetAttempts());
-	// retVal.setConnectTimeoutMillis(theConfig.getConnectTimeoutMillis());
-	// retVal.setFailureRetriesBeforeAborting(theConfig.getFailureRetriesBeforeAborting());
-	// retVal.setReadTimeoutMillis(theConfig.getReadTimeoutMillis());
-	// retVal.setUrlSelectionPolicy(theConfig.getUrlSelectionPolicy());
-	//
-	// return retVal;
-	// }
 
 	@Override
 	public DtoAuthenticationHostList saveAuthenticationHost(BaseDtoAuthenticationHost theAuthHost) {
@@ -1615,6 +1203,14 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
+	// private void extractStatus(int theNumMinsBack, List<Integer>
+	// the60MinInvCount, List<Long> the60minTime, PersMethod
+	// nextMethod) throws ProcessingException {
+	// IRuntimeStatus statusSvc = myStatusSvc;
+	// extractSuccessfulInvocationInvocationTimes(myConfigSvc.getConfig(),
+	// theNumMinsBack, the60MinInvCount, the60minTime, nextMethod, statusSvc);
+	// }
+
 	@Override
 	public GUser saveUser(GUser theUser) throws UnexpectedFailureException, ProcessingException {
 		ourLog.info("Saving user with PID {}", theUser.getPid());
@@ -1664,11 +1260,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	@VisibleForTesting
 	public void setRuntimeStatusSvc(RuntimeStatusBean theRs) {
 		myStatusSvc = theRs;
-	}
-
-	@VisibleForTesting
-	public void setSchedulerServiceForTesting(IScheduler theMock) {
-		myScheduler = theMock;
 	}
 
 	/**
@@ -1765,6 +1356,413 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			retVal.setOutcomeDescription("Failed with internal exception: " + e.getMessage());
 		}
 
+		return retVal;
+	}
+
+	/**
+	 * Convenience for Unit Tests
+	 */
+	@VisibleForTesting
+	public DtoDomain unitTestMethod_addDomain(String theId, String theName) throws ProcessingException, UnexpectedFailureException {
+		DtoDomain domain = new DtoDomain();
+		domain.setId(theId);
+		domain.setName(theName);
+		DtoDomain retVal = addDomain(domain);
+		return retVal;
+	}
+
+	private int defaultInteger(Integer theInt) {
+		return theInt != null ? theInt : 0;
+	}
+
+	private void flushOutstandingStats() {
+		ourLog.debug("Beginning loadModelUpdate - Going to flush stats");
+		myBroadcastSender.requestFlushQueuedStats();
+		ourLog.debug("Done flushing stats");
+	}
+
+	private void flushRecentTransactions() {
+		mySynchronousNodeIpcClient.requestFlushTransactionLogs();
+	}
+
+	private BasePersAuthenticationHost fromUi(BaseDtoAuthenticationHost theAuthHost) {
+		BasePersAuthenticationHost retVal = null;
+
+		switch (theAuthHost.getType()) {
+		case LDAP:
+			PersAuthenticationHostLdap pLdap = new PersAuthenticationHostLdap();
+			DtoAuthenticationHostLdap uiLdap = (DtoAuthenticationHostLdap) theAuthHost;
+			pLdap.setAuthenticateBaseDn(uiLdap.getAuthenticateBaseDn());
+			pLdap.setAuthenticateFilter(uiLdap.getAuthenticateFilter());
+			pLdap.setBindPassword(uiLdap.getBindUserPassword());
+			pLdap.setBindUserDn(uiLdap.getBindUserDn());
+			pLdap.setUrl(uiLdap.getUrl());
+			retVal = pLdap;
+			break;
+		case LOCAL_DATABASE:
+			retVal = new PersAuthenticationHostLocalDatabase();
+			break;
+		}
+
+		if (retVal == null) {
+			throw new IllegalStateException("Unknown type:" + theAuthHost.getType());
+		}
+
+		retVal.populateKeepRecentTransactionsFromDto(theAuthHost);
+		retVal.setAutoCreateAuthorizedUsers(theAuthHost.isAutoCreateAuthorizedUsers());
+		retVal.setCacheSuccessfulCredentialsForMillis(theAuthHost.getCacheSuccessesForMillis());
+		retVal.setModuleId(theAuthHost.getModuleId());
+		retVal.setModuleName(theAuthHost.getModuleName());
+		retVal.setPid(theAuthHost.getPidOrNull());
+		retVal.setSupportsPasswordChange(theAuthHost.isSupportsPasswordChange());
+
+		return retVal;
+	}
+
+	// private GHttpClientConfig toUi(PersHttpClientConfig theConfig) {
+	// GHttpClientConfig retVal = new GHttpClientConfig();
+	//
+	// if (theConfig.getPid() > 0) {
+	// retVal.setPid(theConfig.getPid());
+	// }
+	//
+	// retVal.setId(theConfig.getId());
+	// retVal.setName(theConfig.getName());
+	// retVal.setCircuitBreakerEnabled(theConfig.isCircuitBreakerEnabled());
+	// retVal.setCircuitBreakerTimeBetweenResetAttempts(theConfig.getCircuitBreakerTimeBetweenResetAttempts());
+	// retVal.setConnectTimeoutMillis(theConfig.getConnectTimeoutMillis());
+	// retVal.setFailureRetriesBeforeAborting(theConfig.getFailureRetriesBeforeAborting());
+	// retVal.setReadTimeoutMillis(theConfig.getReadTimeoutMillis());
+	// retVal.setUrlSelectionPolicy(theConfig.getUrlSelectionPolicy());
+	//
+	// return retVal;
+	// }
+
+	private PersBaseClientAuth<?> fromUi(BaseDtoClientSecurity theObj, BasePersServiceVersion theServiceVersion) {
+
+		PersBaseClientAuth<?> retVal = null;
+		switch (theObj.getType()) {
+		case WSSEC_UT: {
+			retVal = new PersWsSecUsernameTokenClientAuth();
+			break;
+		}
+		case HTTP_BASICAUTH: {
+			retVal = new PersHttpBasicClientAuth();
+			break;
+		}
+		case JSONRPC_NAMPARM: {
+			DtoClientSecurityJsonRpcNamedParameter obj = (DtoClientSecurityJsonRpcNamedParameter) theObj;
+			retVal = new NamedParameterJsonRpcClientAuth();
+			((NamedParameterJsonRpcClientAuth) retVal).setUsernameParameterName(obj.getUsernameParameterName());
+			((NamedParameterJsonRpcClientAuth) retVal).setPasswordParameterName(obj.getPasswordParameterName());
+			break;
+		}
+		}
+
+		if (retVal == null) {
+			throw new IllegalArgumentException("Unknown service type: " + theObj.getType());
+		}
+
+		retVal.setPid(theObj.getPidOrNull());
+		retVal.setUsername(theObj.getUsername());
+		retVal.setPassword(theObj.getPassword());
+		retVal.setServiceVersion(theServiceVersion);
+
+		return retVal;
+	}
+
+	private BasePersMonitorRule fromUi(BaseDtoMonitorRule theRule) throws ProcessingException {
+
+		BasePersMonitorRule retVal = null;
+
+		switch (theRule.getRuleType()) {
+		case PASSIVE: {
+			PersMonitorRulePassive persRule = new PersMonitorRulePassive();
+			GMonitorRulePassive rule = (GMonitorRulePassive) theRule;
+			persRule.setPassiveFireForBackingServiceLatencyIsAboveMillis(rule.getPassiveFireForBackingServiceLatencyIsAboveMillis());
+			persRule.setPassiveFireForBackingServiceLatencySustainTimeMins(rule.getPassiveFireForBackingServiceLatencySustainTimeMins());
+			persRule.setPassiveFireIfAllBackingUrlsAreUnavailable(rule.isPassiveFireIfAllBackingUrlsAreUnavailable());
+			persRule.setPassiveFireIfSingleBackingUrlIsUnavailable(rule.isPassiveFireIfSingleBackingUrlIsUnavailable());
+			for (GMonitorRuleAppliesTo next : rule.getAppliesTo()) {
+				if (next.getServiceVersionPid() != null) {
+					persRule.getAppliesTo().add(new PersMonitorAppliesTo(persRule, myDao.getServiceVersionByPid(next.getServiceVersionPid())));
+				} else if (next.getServicePid() != null) {
+					persRule.getAppliesTo().add(new PersMonitorAppliesTo(persRule, myDao.getServiceByPid(next.getServicePid())));
+				} else {
+					persRule.getAppliesTo().add(new PersMonitorAppliesTo(persRule, myDao.getDomainByPid(next.getDomainPid())));
+				}
+			}
+
+			retVal = persRule;
+			break;
+		}
+		case ACTIVE: {
+			PersMonitorRuleActive persRule = new PersMonitorRuleActive();
+			DtoMonitorRuleActive rule = (DtoMonitorRuleActive) theRule;
+			for (DtoMonitorRuleActiveCheck next : rule.getCheckList()) {
+				persRule.getActiveChecks().add(PersMonitorRuleActiveCheck.fromDto(next, persRule, myDao));
+			}
+			retVal = persRule;
+			break;
+		}
+		}
+
+		if (retVal == null) {
+			throw new IllegalStateException("Unknown type: " + theRule.getRuleType());
+		}
+
+		retVal.setRuleActive(theRule.isActive());
+		retVal.setRuleName(theRule.getName());
+		retVal.setPid(theRule.getPidOrNull());
+
+		for (String next : theRule.getNotifyEmailContacts()) {
+			retVal.getNotifyContact().add(new PersMonitorRuleNotifyContact(next));
+		}
+
+		return retVal;
+	}
+
+	private PersBaseServerAuth<?, ?> fromUi(BaseDtoServerSecurity theObj, BasePersServiceVersion theSvcVer) {
+		switch (theObj.getType()) {
+		case WSSEC_UT: {
+			PersWsSecUsernameTokenServerAuth retVal = new PersWsSecUsernameTokenServerAuth();
+			retVal.setAuthenticationHost(myDao.getAuthenticationHostByPid(theObj.getAuthHostPid()));
+			retVal.setServiceVersion(theSvcVer);
+			return retVal;
+		}
+		case HTTP_BASIC_AUTH: {
+			PersHttpBasicServerAuth retVal = new PersHttpBasicServerAuth();
+			retVal.setAuthenticationHost(myDao.getAuthenticationHostByPid(theObj.getAuthHostPid()));
+			retVal.setServiceVersion(theSvcVer);
+			return retVal;
+		}
+		case JSONRPC_NAMED_PARAMETER: {
+			GNamedParameterJsonRpcServerAuth obj = (GNamedParameterJsonRpcServerAuth) theObj;
+			NamedParameterJsonRpcServerAuth retVal = new NamedParameterJsonRpcServerAuth();
+			retVal.setAuthenticationHost(myDao.getAuthenticationHostByPid(theObj.getAuthHostPid()));
+			retVal.setServiceVersion(theSvcVer);
+			retVal.setUsernameParameterName(obj.getUsernameParameterName());
+			retVal.setPasswordParameterName(obj.getPasswordParameterName());
+			return retVal;
+		}
+		}
+		throw new IllegalArgumentException("Unknown type: " + theObj.getType());
+	}
+
+	private PersConfig fromUi(DtoConfig theConfig) {
+		PersConfig retVal = new PersConfig();
+
+		for (String next : theConfig.getProxyUrlBases()) {
+			retVal.addProxyUrlBase(new PersConfigProxyUrlBase(next));
+		}
+
+		return retVal;
+	}
+
+	private PersDomain fromUi(DtoDomain theDomain) {
+		PersDomain retVal = new PersDomain();
+		retVal.setPid(theDomain.getPidOrNull());
+		retVal.setDomainId(theDomain.getId());
+		retVal.setDomainName(theDomain.getName());
+		retVal.populateKeepRecentTransactionsFromDto(theDomain);
+		retVal.populateServiceCatalogItemFromDto(theDomain);
+		retVal.setDescription(theDomain.getDescription());
+		return retVal;
+	}
+
+	private PersLibraryMessage fromUi(DtoLibraryMessage theMessage) throws ProcessingException {
+		PersLibraryMessage retVal = new PersLibraryMessage();
+
+		retVal.setPid(theMessage.getPid());
+		retVal.setContentType(theMessage.getContentType());
+		retVal.setDescription(theMessage.getDescription());
+		retVal.setMessage(theMessage.getMessage());
+
+		for (Long next : theMessage.getAppliesToServiceVersionPids()) {
+			BasePersServiceVersion ver = myDao.getServiceVersionByPid(next);
+			if (ver == null) {
+				throw new ProcessingException("Unknown svcver PID: " + next);
+			}
+			retVal.getAppliesTo().add(new PersLibraryMessageAppliesTo(retVal, ver));
+		}
+
+		return retVal;
+	}
+
+	private PersServiceVersionResource fromUi(GResource theRes, BasePersServiceVersion theServiceVersion) {
+		PersServiceVersionResource retVal = new PersServiceVersionResource();
+		retVal.setResourceContentType(theRes.getContentType());
+		retVal.setResourceText(theRes.getText());
+		retVal.setResourceUrl(theRes.getUrl());
+		retVal.setServiceVersion(theServiceVersion);
+		return retVal;
+	}
+
+	private PersService fromUi(GService theService) {
+		PersService retVal = new PersService();
+		retVal.setPid(theService.getPidOrNull());
+		retVal.setActive(theService.isActive());
+		retVal.setServiceId(theService.getId());
+		retVal.setServiceName(theService.getName());
+		retVal.setDescription(theService.getDescription());
+		retVal.populateKeepRecentTransactionsFromDto(theService);
+		retVal.populateServiceCatalogItemFromDto(theService);
+		return retVal;
+	}
+
+	private PersMethod fromUi(GServiceMethod theMethod, long theServiceVersionPid) {
+		PersMethod retVal = new PersMethod();
+		retVal.setName(theMethod.getName());
+		retVal.setPid(theMethod.getPidOrNull());
+		retVal.setServiceVersion(myDao.getServiceVersionByPid(theServiceVersionPid));
+		retVal.setRootElements(theMethod.getRootElements());
+		retVal.setSecurityPolicy(theMethod.getSecurityPolicy());
+		return retVal;
+	}
+
+	private PersUser fromUi(GUser theUser) throws ProcessingException {
+		PersUser retVal;
+
+		if (theUser.getPidOrNull() == null) {
+			BasePersAuthenticationHost authHost = myDao.getAuthenticationHostByPid(theUser.getAuthHostPid());
+			if (authHost == null) {
+				throw new ProcessingException("Unknown authentication host PID " + theUser.getAuthHostPid());
+			}
+			retVal = myDao.getOrCreateUser(authHost, theUser.getUsername());
+			if (retVal.isNewlyCreated() == false) {
+				throw new ProcessingException("User '" + theUser.getUsername() + "' already exists!");
+			}
+		} else {
+			retVal = myDao.getUser(theUser.getPid());
+		}
+
+		retVal.setAllowSourceIpsAsStrings(theUser.getAllowableSourceIps());
+		retVal.setAllowAllDomains(theUser.isAllowAllDomains());
+		retVal.setPermissions(theUser.getGlobalPermissions());
+		retVal.setUsername(theUser.getUsername());
+		retVal.setDomainPermissions(fromUi(theUser.getDomainPermissions(), retVal.getDomainPermissions()));
+		retVal.setAuthenticationHost(myDao.getAuthenticationHostByPid(theUser.getAuthHostPid()));
+		retVal.setDescription(theUser.getDescription());
+
+		// Contact Notes
+		retVal.getContact().setNotes(theUser.getContactNotes());
+		retVal.getContact().setEmailAddresses(theUser.getContactEmails());
+
+		if (theUser.getPidOrNull() != null && theUser.getChangePassword() == null) {
+			PersUser existing = myDao.getUser(theUser.getPid());
+			if (StringUtils.isNotBlank(existing.getPasswordHash())) {
+				retVal.setPasswordHash(existing.getPasswordHash());
+			}
+		} else if (theUser.getChangePassword() != null) {
+			ourLog.info("Changing password for user {}", theUser.getPidOrNull());
+			retVal.setPassword(theUser.getChangePassword());
+		}
+
+		if (theUser.getThrottle() != null) {
+			retVal.setThrottleMaxRequests(theUser.getThrottle().getThrottleMaxRequests());
+			retVal.setThrottlePeriod(theUser.getThrottle().getThrottlePeriod());
+			retVal.setThrottleMaxQueueDepth(theUser.getThrottle().getThrottleMaxQueueDepth());
+		}
+
+		retVal.populateKeepRecentTransactionsFromDto(theUser);
+
+		return retVal;
+	}
+
+	private PersUserDomainPermission fromUi(GUserDomainPermission theObj) {
+		PersUserDomainPermission retVal = new PersUserDomainPermission();
+		retVal.setPid(theObj.getPidOrNull());
+		retVal.setAllowAllServices(theObj.isAllowAllServices());
+		retVal.setServiceDomain(myDao.getDomainByPid(theObj.getDomainPid()));
+		retVal.setServicePermissions(new ArrayList<PersUserServicePermission>());
+		for (GUserServicePermission next : theObj.getServicePermissions()) {
+			retVal.addServicePermission(fromUi(next));
+		}
+		return retVal;
+	}
+
+	private PersUserServicePermission fromUi(GUserServicePermission theObj) {
+		PersUserServicePermission retVal = new PersUserServicePermission();
+		retVal.setPid(theObj.getPidOrNull());
+		retVal.setAllowAllServiceVersions(theObj.isAllowAllServiceVersions());
+		retVal.setService(myDao.getServiceByPid(theObj.getServicePid()));
+		retVal.setServiceVersionPermissions(new ArrayList<PersUserServiceVersionPermission>());
+		for (GUserServiceVersionPermission next : theObj.getServiceVersionPermissions()) {
+			retVal.addServiceVersionPermission(fromUi(next));
+		}
+		return retVal;
+	}
+
+	private PersUserServiceVersionMethodPermission fromUi(GUserServiceVersionMethodPermission theObj) {
+		PersUserServiceVersionMethodPermission retVal = new PersUserServiceVersionMethodPermission();
+		retVal.setPid(theObj.getPidOrNull());
+		retVal.setServiceVersionMethod(myDao.getServiceVersionMethodByPid(theObj.getServiceVersionMethodPid()));
+		return retVal;
+	}
+
+	private PersUserServiceVersionPermission fromUi(GUserServiceVersionPermission theObj) {
+		PersUserServiceVersionPermission retVal = new PersUserServiceVersionPermission();
+		retVal.setPid(theObj.getPidOrNull());
+		retVal.setAllowAllServiceVersionMethods(theObj.isAllowAllServiceVersionMethods());
+		retVal.setServiceVersion(myDao.getServiceVersionByPid(theObj.getServiceVersionPid()));
+		retVal.setServiceVersionMethodPermissions(new ArrayList<PersUserServiceVersionMethodPermission>());
+		for (GUserServiceVersionMethodPermission next : theObj.getServiceVersionMethodPermissions()) {
+			retVal.addServiceVersionMethodPermissions(fromUi(next));
+		}
+		return retVal;
+	}
+
+	private Collection<PersUserDomainPermission> fromUi(List<GUserDomainPermission> theDomainPermissions, Collection<PersUserDomainPermission> theExisting) {
+		Collection<PersUserDomainPermission> retVal = theExisting;
+		retVal.clear();
+		for (GUserDomainPermission next : theDomainPermissions) {
+			retVal.add(fromUi(next));
+		}
+		return retVal;
+	}
+
+	private boolean hasAnything(Set<?>... theSets) {
+		for (Set<?> next : theSets) {
+			if (next != null && next.isEmpty() == false) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private DtoAuthenticationHostList loadAuthHostList() {
+		DtoAuthenticationHostList retVal = new DtoAuthenticationHostList();
+		for (BasePersAuthenticationHost next : myDao.getAllAuthenticationHosts()) {
+			BaseDtoAuthenticationHost uiObject = toUi(next);
+			retVal.add(uiObject);
+		}
+		return retVal;
+	}
+
+	private DtoDomainList loadDomainList(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, Set<Long> theLoadUrlStats, StatusesBean theStatuses) throws UnexpectedFailureException {
+		DtoDomainList domainList = new DtoDomainList();
+
+		for (PersDomain nextDomain : myServiceRegistry.getAllDomains()) {
+			DtoDomain gDomain = nextDomain.toDto(theLoadDomStats, theLoadSvcStats, theLoadVerStats, theLoadVerMethodStats, theLoadUrlStats, theStatuses, myRuntimeStatusQuerySvc);
+			domainList.add(gDomain);
+		} // for domains
+		return domainList;
+	}
+
+	private GHttpClientConfigList loadHttpClientConfigList() throws ProcessingException {
+		GHttpClientConfigList configList = new GHttpClientConfigList();
+		for (PersHttpClientConfig next : myDao.getHttpClientConfigs()) {
+			configList.add(next.toDto());
+		}
+		return configList;
+	}
+
+	private GUserList loadUserList(boolean theLoadStats) throws UnexpectedFailureException {
+		GUserList retVal = new GUserList();
+		Collection<PersUser> users = myDao.getAllUsersAndInitializeThem();
+		for (PersUser persUser : users) {
+			retVal.add(toUi(persUser, theLoadStats));
+		}
 		return retVal;
 	}
 
@@ -1968,14 +1966,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	public static int addToInt(int theAddTo, long theNumberToAdd) {
-		long newValue = theAddTo + theNumberToAdd;
-		if (newValue > Integer.MAX_VALUE) {
-			return Integer.MAX_VALUE;
-		}
-		return (int) newValue;
-	}
-
 	// public static void doWithStatsByMinute(PersConfig theConfig, TimeRange
 	// theRange, IRuntimeStatus theStatus, PersMethod
 	// theNextMethod, IWithStats theOperator, Date end) {
@@ -1984,6 +1974,14 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	// doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator,
 	// start, end);
 	// }
+
+	public static int addToInt(int theAddTo, long theNumberToAdd) {
+		long newValue = theAddTo + theNumberToAdd;
+		if (newValue > Integer.MAX_VALUE) {
+			return Integer.MAX_VALUE;
+		}
+		return (int) newValue;
+	}
 
 	public static long addToLong(long theAddTo, long theNumberToAdd) {
 		long newValue = theAddTo + theNumberToAdd;
@@ -2009,7 +2007,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			PersInvocationMethodSvcverStatsPk pk = new PersInvocationMethodSvcverStatsPk(interval, date, theMethod.getPid());
 			PersInvocationMethodSvcverStats stats = statusSvc.getInvocationStatsSynchronously(pk);
 			assert stats != null : pk.toString();
-			
+
 			theOperator.withStats(min, stats);
 
 			date = doWithStatsSupportIncrement(date, interval);
@@ -2032,11 +2030,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			start = theRange.getNoPresetFrom();
 		}
 		doWithStatsByMinute(theConfig, theStatus, theNextMethod, theOperator, start, end);
-	}
-
-	private static Date doWithStatsSupportFindDate(Date date, InvocationStatsIntervalEnum interval) {
-		Date retVal = interval.truncate(date);
-		return retVal;
 	}
 
 	public static InvocationStatsIntervalEnum doWithStatsSupportFindInterval(PersConfig theConfig, Date date) {
@@ -2062,8 +2055,8 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 	public static Date doWithStatsSupportIncrement(Date date, InvocationStatsIntervalEnum interval) {
 		/*
-		 * Note: don't just add millis to the date object, because that
-		 * fails when adding a day when daylight savings starts/ends
+		 * Note: don't just add millis to the date object, because that fails
+		 * when adding a day when daylight savings starts/ends
 		 */
 		Calendar cal = DateUtils.toCalendar(date);
 		switch (interval) {
@@ -2120,6 +2113,11 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return toLatency(theTimes, theCountsEntry0, theCountsEntry1, theCountsEntry2, null);
 	}
 
+	private static Date doWithStatsSupportFindDate(Date date, InvocationStatsIntervalEnum interval) {
+		Date retVal = interval.truncate(date);
+		return retVal;
+	}
+
 	private static int[] toLatency(List<Long> theTimes, List<Integer> theCountsEntry0, List<Integer> theCountsEntry1, List<Integer> theCountsEntry2, List<Integer> theCountsEntry3) {
 		List<List<Integer>> entries = new ArrayList<List<Integer>>(3);
 		entries.add(theCountsEntry0);
@@ -2166,15 +2164,6 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		void withStats(int theIndex, O theStats);
 
-	}
-
-	@Override
-	public DtoMonitorRuleActiveCheckOutcome loadMonitorRuleActiveCheckOutcomeDetails(long thePid) throws UnexpectedFailureException {
-		PersMonitorRuleActiveCheckOutcome retVal = myDao.loadMonitorRuleActiveCheckOutcome(thePid);
-		if (retVal== null) {
-			throw new UnexpectedFailureException("Unknown PID: " + thePid);
-		}
-		return retVal.toDto(true);
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {

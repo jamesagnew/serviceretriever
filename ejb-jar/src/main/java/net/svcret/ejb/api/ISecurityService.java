@@ -2,8 +2,6 @@ package net.svcret.ejb.api;
 
 import java.util.List;
 
-import javax.ejb.Local;
-
 import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
@@ -11,7 +9,6 @@ import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
 import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersUser;
 
-@Local
 public interface ISecurityService {
 
 	AuthorizationResultsBean authorizeMethodInvocation(List<AuthorizationRequestBean> theAuthorizationRequests, PersMethod theMethod, String theRequestHostIp) throws ProcessingException;

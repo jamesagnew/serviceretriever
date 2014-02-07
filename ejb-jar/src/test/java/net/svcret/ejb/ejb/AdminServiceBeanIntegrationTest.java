@@ -1,17 +1,8 @@
 package net.svcret.ejb.ejb;
 
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.isOneOf;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -32,13 +23,13 @@ import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoAuthenticationHostLocalDatabase;
 import net.svcret.admin.shared.model.DtoConfig;
 import net.svcret.admin.shared.model.DtoDomain;
+import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoPropertyCapture;
 import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
-import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.DtoServiceVersionThrottle;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GMonitorRulePassive;
@@ -59,10 +50,9 @@ import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.ejb.admin.AdminServiceBean;
-import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
 import net.svcret.ejb.api.SrBeanIncomingResponse;
-import net.svcret.ejb.api.IScheduler;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.ejb.monitor.MonitorServiceBean;
 import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
@@ -74,8 +64,8 @@ import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersDomain;
 import net.svcret.ejb.model.entity.PersHttpClientConfig;
 import net.svcret.ejb.model.entity.PersLibraryMessage;
-import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersMethod;
+import net.svcret.ejb.model.entity.PersService;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
@@ -169,7 +159,6 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		mySvc.setInvokerSoap11(mySoapInvoker);
 		mySvc.setSecuritySvc(mySecSvc);
 		mySvc.setMonitorSvc(myMonitorSvc);
-		mySvc.setSchedulerServiceForTesting(mock(IScheduler.class));
 
 		myTransactionLogSvc = new TransactionLoggerBean();
 		myTransactionLogSvc.setDao(myDao);
@@ -1464,7 +1453,7 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 		PersService d0s0 = myDao.getOrCreateServiceWithId(d0, "d0s0");
 		PersServiceVersionSoap11 d0s0v0 = (PersServiceVersionSoap11) myDao.getOrCreateServiceVersionWithId(d0s0, "d0s0v0", ServiceProtocolEnum.SOAP11);
 		d0s0v0.getOrCreateAndAddMethodWithName("d0s0v0m0");
-		myDao.saveServiceVersion(d0s0v0);
+		myDao.saveServiceVersionInNewTransaction(d0s0v0);
 
 		newEntityManager();
 
@@ -1866,7 +1855,6 @@ public class AdminServiceBeanIntegrationTest extends BaseJpaTest {
 				sSvc.setRuntimeStatusQuerySvcForUnitTests(rqb);
 
 				RuntimeStatusBean statsSvc = new RuntimeStatusBean();
-				sSvc.setSchedulerServiceForTesting(mock(IScheduler.class));
 				statsSvc.setDao(dao);
 
 				sSvc.loadModelUpdate(myReq);

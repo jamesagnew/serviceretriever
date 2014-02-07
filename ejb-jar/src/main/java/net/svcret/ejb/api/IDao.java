@@ -56,13 +56,13 @@ public interface IDao {
 
 	void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost);
 
-	void deleteHttpClientConfig(PersHttpClientConfig theConfig);
+	void deleteHttpClientConfigInNewTransaction(PersHttpClientConfig theConfig);
 
 	void deleteMonitorRuleActiveCheckOutcomesBeforeCutoff(PersMonitorRuleActiveCheck theCheck, Date theCutoff);
 
-	void deleteService(PersService theService);
+	void deleteServiceInNewTransaction(PersService theService);
 
-	void deleteServiceVersion(BasePersServiceVersion theSv);
+	void deleteServiceVersionInNewTransaction(BasePersServiceVersion theSv);
 
 	void deleteStickySession(PersStickySessionUrlBinding theStickySession);
 
@@ -195,19 +195,17 @@ public interface IDao {
 
 	PersUserRecentMessage loadRecentMessageForUser(long thePid);
 
-	void removeDomain(PersDomain theDomain);
-
-	void removeServiceVersion(long thePid) throws ProcessingException;
+	void deleteDomainInNewTransaction(PersDomain theDomain);
 
 	void saveAuthenticationHost(BasePersAuthenticationHost theHost);
 
 	PersBaseClientAuth<?> saveClientAuth(PersBaseClientAuth<?> theNextPers);
 
-	PersConfig saveConfig(PersConfig theConfig);
+	PersConfig saveConfigInNewTransaction(PersConfig theConfig);
 
-	PersDomain saveDomain(PersDomain theDomain);
+	PersDomain saveDomainInNewTransaction(PersDomain theDomain);
 
-	PersHttpClientConfig saveHttpClientConfig(PersHttpClientConfig theConfig);
+	PersHttpClientConfig saveHttpClientConfigInNewTransaction(PersHttpClientConfig theConfig);
 
 	void saveInvocationStats(Collection<? extends BasePersStats<?, ?>> theStats);
 
@@ -231,19 +229,19 @@ public interface IDao {
 
 	PersBaseServerAuth<?, ?> saveServerAuth(PersBaseServerAuth<?, ?> theNextPers);
 
-	void saveService(PersService theService);
+	void saveServiceInNewTransaction(PersService theService);
 
 	BasePersServiceCatalogItem saveServiceCatalogItem(BasePersServiceCatalogItem theItem);
 
 	PersUser saveServiceUser(PersUser theUser);
 
-	BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theVersion) throws ProcessingException;
+	BasePersServiceVersion saveServiceVersionInNewTransaction(BasePersServiceVersion theVersion) throws ProcessingException;
 
 	void saveServiceVersionRecentMessage(PersServiceVersionRecentMessage theMsg);
 
 	void saveServiceVersionStatuses(ArrayList<PersServiceVersionStatus> theServiceVersionStatuses);
 
-	void saveServiceVersionUrlStatus(List<PersServiceVersionUrlStatus> theList);
+	void saveServiceVersionUrlStatusInNewTransaction(List<PersServiceVersionUrlStatus> theList);
 
 	void saveStickySessionUrlBinding(PersStickySessionUrlBinding theBinding);
 

@@ -23,13 +23,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 
 import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
@@ -39,13 +32,13 @@ import net.svcret.admin.shared.model.IThrottleable;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.util.Validate;
 import net.svcret.ejb.Messages;
-import net.svcret.ejb.api.SrBeanProcessedRequest;
-import net.svcret.ejb.api.SrBeanIncomingResponse;
-import net.svcret.ejb.api.SrBeanIncomingResponse.Failure;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IServiceRegistry;
+import net.svcret.ejb.api.SrBeanIncomingResponse;
+import net.svcret.ejb.api.SrBeanIncomingResponse.Failure;
+import net.svcret.ejb.api.SrBeanProcessedRequest;
 import net.svcret.ejb.api.SrBeanProcessedResponse;
 import net.svcret.ejb.api.UrlPoolBean;
 import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
@@ -61,10 +54,10 @@ import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationMethodUserStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUrlStats;
 import net.svcret.ejb.model.entity.PersInvocationUrlStatsPk;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersMethodStatus;
 import net.svcret.ejb.model.entity.PersNodeStats;
 import net.svcret.ejb.model.entity.PersNodeStatus;
-import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionResource;
 import net.svcret.ejb.model.entity.PersServiceVersionStatus;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
@@ -81,30 +74,26 @@ import net.svcret.ejb.runtimestatus.RecentTransactionQueue;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.annotations.VisibleForTesting;
 
-@Singleton
-@Startup
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+@Service
 public class RuntimeStatusBean implements IRuntimeStatus {
 
 	private static final int MAX_STATS_TO_FLUSH_AT_ONCE = 100;
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(RuntimeStatusBean.class);
 
-	@EJB
 	@Autowired
 	private IBroadcastSender myBroadcastSender;
 
 	private final ReentrantLock myCollapseLock = new ReentrantLock();
 
-	@EJB
 	@Autowired
 	private IConfigService myConfigSvc;
 
-	@EJB
 	@Autowired
 	private IDao myDao;
 	private final ReentrantLock myFlushLock = new ReentrantLock();
@@ -116,7 +105,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private final ReentrantLock myNodeStatisticsLock = new ReentrantLock();
 	private PersNodeStatus myNodeStatus;
 	private Date myNowForUnitTests;
-	@EJB
 	@Autowired
 	private IServiceRegistry myServiceRegistry;
 	private final Map<PersStickySessionUrlBindingPk, PersStickySessionUrlBinding> myStickySessionUrlBindings;
@@ -131,7 +119,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private final ConcurrentHashMap<PersMethod, PersMethodStatus> myUnflushedMethodStatus;
 	private final ConcurrentHashMap<Long, PersServiceVersionUrlStatus> myUrlStatus;
 
-	@EJB
 	@Autowired
 	private IServiceRegistry mySvcRegistry;
 
@@ -144,7 +131,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		myStickySessionUrlBindings = new HashMap<PersStickySessionUrlBindingPk, PersStickySessionUrlBinding>();
 	}
 
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	@Transactional(propagation=Propagation.SUPPORTS)
 	@Override
 	public UrlPoolBean buildUrlPool(BasePersServiceVersion theServiceVersion, Map<String, List<String>> theRequestHeaders) throws UnexpectedFailureException {
 		UrlPoolBean retVal = new UrlPoolBean();
@@ -166,7 +153,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		return retVal;
 	}
 
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	@Transactional(propagation=Propagation.NOT_SUPPORTED)
 	@Override
 	public void collapseStats() throws UnexpectedFailureException {
 		/*
@@ -184,7 +171,6 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	}
 
 	@Override
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 	@Transactional(propagation=Propagation.NOT_SUPPORTED)
 	public void flushStatus() {
 
@@ -212,7 +198,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		myNodeStatus = myDao.getOrCreateNodeStatus(myConfigSvc.getNodeId());
 	}
 
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	@Transactional(propagation=Propagation.NOT_SUPPORTED)
 	@Override
 	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, SrBeanProcessedRequest theProcessedRequest, PersUser theUser, SrBeanIncomingResponse theHttpResponse, SrBeanProcessedResponse theInvocationResponseResultsBean) throws UnexpectedFailureException,
 			InvocationFailedDueToInternalErrorException {
@@ -368,7 +354,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	}
 
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	@Transactional(propagation=Propagation.SUPPORTS)
 	@Override
 	public void recordInvocationStaticResource(Date theInvocationTime, PersServiceVersionResource theResource) {
 		Validate.notNull(theInvocationTime, "InvocationTime");
@@ -382,7 +368,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		stats.addAccess();
 	}
 
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	@Override
 	public void recordNodeStatistics() {
 		if (!myNodeStatisticsLock.tryLock()) {
@@ -409,7 +395,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 	}
 
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	@Transactional(propagation=Propagation.SUPPORTS)
 	@Override
 	public void recordUrlFailure(PersServiceVersionUrl theUrl, Failure theFailure) {
 		Validate.notNull(theUrl, "Url");
@@ -429,7 +415,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	}
 
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	@Transactional(propagation=Propagation.SUPPORTS)
 	@Override
 	public void recordUrlSuccess(PersServiceVersionUrl theUrl, boolean theWasFault, String theMessage, String theContentType, int theResponseCode) {
 		Validate.notNull(theUrl, "Url");
@@ -771,7 +757,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 		if (!urlStatuses.isEmpty()) {
 			ourLog.info("Going to persist {} URL statuses", urlStatuses.size());
-			myDao.saveServiceVersionUrlStatus(urlStatuses);
+			myDao.saveServiceVersionUrlStatusInNewTransaction(urlStatuses);
 		}
 
 		/*

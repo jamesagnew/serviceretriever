@@ -5,13 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-
 import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
@@ -34,15 +27,14 @@ import net.svcret.ejb.model.entity.hl7.PersServiceVersionHl7OverHttp;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.preparser.PreParser;
 
 import com.google.common.annotations.VisibleForTesting;
 
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
-@Singleton
-@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+@Service
 public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements IServiceInvokerHl7OverHttp {
 
 	private static final String CT_XML = "application/hl7-v2+xml";
@@ -50,11 +42,9 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceInvokerHl7OverHttp.class);
 
-	@EJB
 	@Autowired
 	private IDao myDao;
 
-	@EJB
 	@Autowired
 	private IServiceRegistry myServiceRegistry;
 

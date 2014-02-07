@@ -1,8 +1,6 @@
 package net.svcret.ejb.throttle;
 
-import static net.svcret.ejb.util.HttpUtil.sendFailure;
-import static net.svcret.ejb.util.HttpUtil.sendSecurityFailure;
-import static net.svcret.ejb.util.HttpUtil.sendSuccessfulResponse;
+import static net.svcret.ejb.util.HttpUtil.*;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -15,14 +13,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
-import javax.ejb.AsyncResult;
-import javax.ejb.Asynchronous;
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -45,21 +35,18 @@ import net.svcret.ejb.model.entity.PersUser;
 
 import org.apache.commons.lang3.Validate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
-@Singleton
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
-@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+@Service
 public class ThrottlingService implements IThrottlingService {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ThrottlingService.class);
-	@EJB
 	@Autowired
 	private IRuntimeStatus myRuntimeStatusSvc;
 
-	@EJB
 	@Autowired
 	private IServiceOrchestrator myServiceOrchestrator;
 
@@ -226,8 +213,6 @@ public class ThrottlingService implements IThrottlingService {
 	}
 
 	@Override
-	@Asynchronous
-	@TransactionAttribute(TransactionAttributeType.NEVER)
 	public Future<Void> serviceThrottledRequests(ThrottledTaskQueue theTaskQueue) {
 
 		for (;;) {
@@ -308,7 +293,7 @@ public class ThrottlingService implements IThrottlingService {
 
 		}
 
-		return new AsyncResult<Void>(null);
+		return null;
 	}
 
 	@VisibleForTesting

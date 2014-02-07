@@ -5,7 +5,6 @@ import java.util.Arrays;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
@@ -16,6 +15,7 @@ import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.ISecurityService;
 import net.svcret.ejb.api.IServiceRegistry;
+import net.svcret.ejb.log.ITransactionLogger;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.SerializationUtils;
@@ -44,6 +44,9 @@ public class HttpBroadcastListenerBean {
 
 	@Autowired
 	private IServiceRegistry myServiceRegistry;
+
+	@Autowired
+	private ITransactionLogger myTransactionLoggerService;
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(HttpBroadcastListenerBean.class);
 
@@ -78,7 +81,7 @@ public class HttpBroadcastListenerBean {
 	}
 
 	public enum ActionsEnum {
-		UPDATE_CONFIG, UPDATE_MONITOR_RULES, UPDATE_SERVICE_REGISTRY, UPDATE_USER_CATALOG, URL_STATUS_CHANGED, STICKY_SESSION_CHANGED,
+		UPDATE_CONFIG, UPDATE_MONITOR_RULES, UPDATE_SERVICE_REGISTRY, UPDATE_USER_CATALOG, URL_STATUS_CHANGED, STICKY_SESSION_CHANGED, FLUSH_TRANSACTION_LOGS, FLUSH_QUEUED_STATS,
 	}
 
 	private class MyServlet extends HttpServlet {
@@ -128,8 +131,18 @@ public class HttpBroadcastListenerBean {
 				ourLog.info("Received broadcast for updated URL status: {}", pid);
 				myRuntimeStatus.reloadUrlStatus(pid);
 				break;
+			case FLUSH_TRANSACTION_LOGS:
+				myTransactionLoggerService.flush();
+				break;
+			case FLUSH_QUEUED_STATS:
+				myRuntimeStatus.flushStatus();
+				break;
 			}
 
+			theResp.setContentType("text/plain");
+			theResp.getWriter().append("Ok");
+			theResp.getWriter().close();
+			
 		}
 
 		private Object decodeArgument(ServletRequest theArg0) {

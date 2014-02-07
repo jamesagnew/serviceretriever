@@ -1,8 +1,5 @@
 package net.svcret.ejb.ejb;
 
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-
 import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.ejb.api.IAuthorizationService.ILocalDatabaseAuthorizationService;
@@ -11,11 +8,17 @@ import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.ejb.model.entity.PersUser;
 
-@Stateless
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
 public class LocalDatabaseAuthorizationServiceBean extends BaseAuthorizationServiceBean<PersAuthenticationHostLocalDatabase> implements ILocalDatabaseAuthorizationService {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(LocalDatabaseAuthorizationServiceBean.class);
-	
+
+	@Autowired
+	private IDao myDao;
+
 	@Override
 	protected UserOrFailure doAuthorize(PersAuthenticationHostLocalDatabase theHost, InMemoryUserCatalog theUserCatalog, ICredentialGrabber theCredentialGrabber) throws ProcessingException {
 		PersUser user = theUserCatalog.findUser(theHost.getPid(), theCredentialGrabber.getUsername());
@@ -26,7 +29,7 @@ public class LocalDatabaseAuthorizationServiceBean extends BaseAuthorizationServ
 			ourLog.debug("Password does not match");
 			return new UserOrFailure(AuthorizationOutcomeEnum.FAILED_BAD_CREDENTIALS_IN_REQUEST);
 		}
-		
+
 		return new UserOrFailure(user);
 	}
 
@@ -39,9 +42,6 @@ public class LocalDatabaseAuthorizationServiceBean extends BaseAuthorizationServ
 	protected boolean shouldCache() {
 		return false;
 	}
-
-	@EJB
-	private IDao myDao;
 
 	/**
 	 * FOR UNIT TESTS ONLY

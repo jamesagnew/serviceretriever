@@ -2,7 +2,6 @@ package net.svcret.core.server;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.ejb.EJB;
 
 import net.svcret.admin.shared.util.Validate;
 import net.svcret.ejb.api.IServiceOrchestrator;

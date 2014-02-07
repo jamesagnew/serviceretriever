@@ -1,11 +1,8 @@
 package net.svcret.ejb.ejb.nodecomm;
 
-import javax.ejb.Local;
-
 import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.ejb.model.entity.PersStickySessionUrlBinding;
 
-@Local
 public interface IBroadcastSender {
 
 	void notifyUserCatalogChanged() throws UnexpectedFailureException;
@@ -14,10 +11,14 @@ public interface IBroadcastSender {
 
 	void notifyConfigChanged() throws UnexpectedFailureException;
 
-	void monitorRulesChanged() throws UnexpectedFailureException;
+	void notifyMonitorRulesChanged() throws UnexpectedFailureException;
 
 	void notifyUrlStatusChanged(Long thePid) throws UnexpectedFailureException;
 
 	void notifyNewStickySession(PersStickySessionUrlBinding theExisting) throws UnexpectedFailureException;
+
+	void requestFlushTransactionLogs();
+
+	void requestFlushQueuedStats();
 	
 }

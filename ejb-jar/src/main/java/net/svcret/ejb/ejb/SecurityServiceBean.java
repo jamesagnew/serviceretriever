@@ -1,9 +1,6 @@
 package net.svcret.ejb.ejb;
 
-import static net.svcret.admin.shared.enm.AuthorizationOutcomeEnum.AUTHORIZED;
-import static net.svcret.admin.shared.enm.AuthorizationOutcomeEnum.FAILED_BAD_CREDENTIALS_IN_REQUEST;
-import static net.svcret.admin.shared.enm.AuthorizationOutcomeEnum.FAILED_INTERNAL_ERROR;
-import static net.svcret.admin.shared.enm.AuthorizationOutcomeEnum.FAILED_USER_NO_PERMISSIONS;
+import static net.svcret.admin.shared.enm.AuthorizationOutcomeEnum.*;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -11,12 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 
 import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.api.UnexpectedFailureException;
@@ -38,46 +29,42 @@ import net.svcret.ejb.model.entity.PersUser;
 
 import org.apache.commons.lang3.Validate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.google.common.annotations.VisibleForTesting;
 
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
-@Singleton
-@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+@Service
 public class SecurityServiceBean implements ISecurityService {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(SecurityServiceBean.class);
 
 	private static final String STATE_KEY = SecurityServiceBean.class.getName() + "_VERSION";
 
-	@EJB
 	@Autowired
 	private IBroadcastSender myBroadcastSender;
 
 	private long myCurrentVersion;
 
-	@EJB
 	@Autowired
 	private IDao myDao;
 
 	private volatile InMemoryUserCatalog myInMemoryUserCatalog;
 
-	@EJB
 	@Autowired
 	private ILdapAuthorizationService myLdapAuthService;
 
-	@EJB
 	@Autowired
 	private ILocalDatabaseAuthorizationService myLocalDbAuthService;
 
 	@Autowired
     protected PlatformTransactionManager myPlatformTransactionManager;
 	
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	@PostConstruct
 	public void postConstruct() {
 		TransactionTemplate tmpl = new TransactionTemplate(myPlatformTransactionManager);
@@ -224,7 +211,7 @@ public class SecurityServiceBean implements ISecurityService {
 
 	}
 
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	public synchronized void loadUserCatalogIfNeeded() {
 		ourLog.debug("Checking for updated user catalog");
 

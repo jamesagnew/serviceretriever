@@ -4,22 +4,18 @@ import java.lang.management.ManagementFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 
-@Singleton
-@Startup
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
 public class RuntimeStatusMonitor implements RuntimeStatusMonitorMBean {
 
-	@EJB
+	@Autowired
 	private IRuntimeStatusQueryLocal myRuntimeStatusQuery;
 
 	private MBeanServer myPlatformMBeanServer;

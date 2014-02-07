@@ -79,39 +79,69 @@
 		    <version>${jetty_version}</version>
 		</dependency>
 
+		<dependency>
+		    <groupId>commons-dbcp</groupId>
+		    <artifactId>commons-dbcp</artifactId>
+		    <version>1.4</version>
+		</dependency>
+
 		<!-- Graphics -->
 		<dependency>
 			<groupId>org.rrd4j</groupId>
 			<artifactId>rrd4j</artifactId>
 			<version>2.2</version>
 		</dependency>
-		<dependency>
-			<groupId>org.rrd4j</groupId>
-			<artifactId>rrd4j</artifactId>
-			<version>2.2</version>
-			<classifier>sources</classifier>
-			<scope>provided</scope>
-		</dependency>
 
-		<!-- LDAP -->
+		<!-- Spring -->
 		<dependency>
 			<groupId>org.springframework.ldap</groupId>
 			<artifactId>spring-ldap-core</artifactId>
-			<version>1.3.1.RELEASE</version>
+			<!-- For some reason spring-ldap is on a different version schedule than the rest of spring.. -->
+			<version>2.0.0.RELEASE</version>
 		</dependency>
+		<dependency>
+		    <groupId>org.springframework</groupId>
+		    <artifactId>spring-core</artifactId>
+		    <version>${spring_version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.springframework</groupId>
+		    <artifactId>spring-orm</artifactId>
+		    <version>${spring_version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.springframework</groupId>
+		    <artifactId>spring-context</artifactId>
+		    <version>${spring_version}</version>
+		    <exclusions>
+		    	<exclusion>
+		    		<artifactId>xml-apis</artifactId>
+		    		<groupId>xml-apis</groupId>
+		    	</exclusion>
+		    </exclusions>
+		</dependency>
+		<dependency>
+		    <groupId>org.springframework</groupId>
+		    <artifactId>spring-beans</artifactId>
+		    <version>${spring_version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.springframework</groupId>
+		    <artifactId>spring-tx</artifactId>
+		    <version>${spring_version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.springframework</groupId>
+		    <artifactId>spring-context-support</artifactId>
+		    <version>${spring_version}</version>
+		</dependency>
+
 
 		<!-- JSON -->
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
 			<version>2.2.4</version>
-		</dependency>
-		<dependency>
-			<groupId>com.google.code.gson</groupId>
-			<artifactId>gson</artifactId>
-			<version>2.2.4</version>
-			<classifier>sources</classifier>
-			<scope>provided</scope>
 		</dependency>
 
 		<!-- HTTP -->
@@ -122,22 +152,8 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-			<version>4.2.3</version>
-			<classifier>sources</classifier>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpcore</artifactId>
 			<version>4.2.3</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpcore</artifactId>
-			<version>4.2.3</version>
-			<classifier>sources</classifier>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>mysql</groupId>
@@ -146,12 +162,12 @@
 		</dependency>
 
 		<!-- Hibernate -->
+		<!-- 
 		<dependency>
 			<groupId>net.sf.ehcache</groupId>
 			<artifactId>ehcache</artifactId>
 			<version>2.7.2</version>
 		</dependency>
-		<!-- 
 		<dependency>
 			<groupId>net.sf.ehcache</groupId>
 			<artifactId>ehcache-jgroupsreplication</artifactId>
@@ -167,30 +183,28 @@
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
-			<version>4.2.7.SP1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-core</artifactId>
-			<version>4.2.7.SP1</version>
-			<classifier>sources</classifier>
-			<scope>provided</scope>
+			<version>${hibernate_version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-entitymanager</artifactId>
-			<version>4.2.7.SP1</version>
+			<version>${hibernate_version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-ehcache</artifactId>
-			<version>4.2.7.SP1</version>
+			<version>${hibernate_version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>net.sf.ehcache</groupId>
 					<artifactId>ehcache-core</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-validator</artifactId>
+			<version>${hibernate_version}</version>
 		</dependency>
 		<dependency>
 			<groupId>javax.transaction</groupId>
@@ -205,21 +219,9 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-		    <groupId>javax.mail</groupId>
-		    <artifactId>javax.mail-api</artifactId>
-		    <version>1.5.0</version>
-		    <classifier>sources</classifier>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
 			<groupId>javax.validation</groupId>
 			<artifactId>validation-api</artifactId>
 			<version>1.0.0.GA</version>
-		</dependency>
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-validator</artifactId>
-			<version>4.3.1.Final</version>
 		</dependency>
 
 		<!-- Misc -->
@@ -273,26 +275,19 @@
 		</dependency>
 
 		<!-- Directory (LDAP server for unit tests) -->
+		<!-- 
 		<dependency>
 			<groupId>org.apache.directory.api</groupId>
 			<artifactId>api-all</artifactId>
 			<version>1.0.0-M16</version>
 		</dependency>
-		<dependency>
-			<groupId>org.apache.directory.api</groupId>
-			<artifactId>api-all</artifactId>
-			<version>1.0.0-M16</version>
-			<scope>provided</scope>
-			<classifier>sources</classifier>
-		</dependency>
-
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
 			<version>1.3.172</version>
 			<scope>test</scope>
 		</dependency>
-
+ 		-->
 		<!-- <dependency> <groupId>org.apache.directory.server</groupId> <artifactId>apacheds-core</artifactId> 
 			<version>2.0.0-M11</version> <scope>test</scope> </dependency> <dependency> 
 			<groupId>org.apache.directory.server</groupId> <artifactId>apacheds-protocol-ldap</artifactId> 

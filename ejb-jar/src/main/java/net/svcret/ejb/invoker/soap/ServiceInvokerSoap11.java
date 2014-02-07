@@ -17,12 +17,6 @@ import java.util.TreeSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
@@ -63,6 +57,9 @@ import net.svcret.ejb.util.XMLUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.ClientProtocolException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -71,9 +68,7 @@ import org.w3c.dom.NodeList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
-@Singleton
-@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+@Service
 public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IServiceInvokerSoap11 {
 
 	private static XMLEventFactory ourEventFactory;
@@ -88,11 +83,9 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 		ourValidContentTypes.add("application/soap+xml");
 	}
 	
-	@EJB
 	@Autowired
 	private IConfigService myConfigService;
 
-	@EJB
 	@Autowired
 	private IHttpClient myHttpClient;
 
@@ -713,7 +706,7 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 	 * @throws InvocationFailedException
 	 * @throws InternalErrorException
 	 */
-	@TransactionAttribute(TransactionAttributeType.NEVER)
+	@Transactional(propagation=Propagation.NEVER)
 	@Override
 	public SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition)
 			throws InvalidRequestException, InvocationRequestFailedException, InvocationFailedDueToInternalErrorException {

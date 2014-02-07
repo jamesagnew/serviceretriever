@@ -12,11 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.EJB;
-import javax.ejb.Singleton;
-
 import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.admin.shared.model.BaseDtoDashboardObject;
@@ -41,10 +36,10 @@ import net.svcret.ejb.model.entity.PersInvocationMethodUserStats;
 import net.svcret.ejb.model.entity.PersInvocationMethodUserStatsPk;
 import net.svcret.ejb.model.entity.PersInvocationUrlStats;
 import net.svcret.ejb.model.entity.PersInvocationUrlStatsPk;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersMethodStatus;
 import net.svcret.ejb.model.entity.PersNodeStatus;
 import net.svcret.ejb.model.entity.PersService;
-import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.PersUserMethodStatus;
@@ -52,11 +47,11 @@ import net.svcret.ejb.model.entity.PersUserMethodStatus;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.google.common.annotations.VisibleForTesting;
 
-@Singleton
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+@Service
 public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 	private static final int INITIAL_CACHED_ENTRIES = 80000;
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(RuntimeStatusQueryBean.class);
@@ -67,18 +62,15 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 
 	private final ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>> myCacheInvocationStats;
 
-	@EJB
 	@Autowired
 	private IConfigService myConfigSvc;
 
-	@EJB
 	@Autowired
 	private IDao myDao;
 	private int myMaxNullCachedEntries = INITIAL_CACHED_ENTRIES;
 
 	private int myMaxPopulatedCachedEntries = INITIAL_CACHED_ENTRIES;
 
-	@EJB
 	@Autowired
 	private IRuntimeStatus myStatusSvc;
 

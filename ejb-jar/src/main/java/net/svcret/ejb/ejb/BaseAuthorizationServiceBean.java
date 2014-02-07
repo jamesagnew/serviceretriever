@@ -5,9 +5,8 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import javax.ejb.Schedule;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
+import org.apache.commons.lang3.time.DateUtils;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.shared.util.Validate;
@@ -73,8 +72,7 @@ public abstract class BaseAuthorizationServiceBean<T extends BasePersAuthenticat
 	/**
 	 * Purge old entries from the cache
 	 */
-	@Schedule(second = "0", minute = "*", hour = "*")
-	@TransactionAttribute(TransactionAttributeType.NEVER)
+	@Scheduled(fixedDelay=DateUtils.MILLIS_PER_MINUTE)
 	public void clearCache() {
 		try {
 			long now = System.currentTimeMillis();

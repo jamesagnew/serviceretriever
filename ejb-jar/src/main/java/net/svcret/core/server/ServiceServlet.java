@@ -11,7 +11,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.ejb.EJB;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -41,13 +40,9 @@ import com.google.common.collect.Iterators;
 class ServiceServlet extends HttpServlet {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceServlet.class);
-
 	private static final long serialVersionUID = 1L;
 
-	@EJB
 	private IServiceOrchestrator myServiceOrchestrator;
-
-	@EJB
 	private IServiceRegistry myServiceRegistry;
 
 	@Override

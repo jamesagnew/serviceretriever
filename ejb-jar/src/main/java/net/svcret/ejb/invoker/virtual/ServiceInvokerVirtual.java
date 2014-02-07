@@ -3,15 +3,6 @@ package net.svcret.ejb.invoker.virtual;
 import java.util.List;
 import java.util.Set;
 
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import net.svcret.ejb.api.IResponseValidator;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.SrBeanIncomingRequest;
@@ -29,14 +20,14 @@ import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersBaseServerAuth;
 import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.google.common.annotations.VisibleForTesting;
 
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
-@Singleton
-@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+@Service
 public class ServiceInvokerVirtual extends BaseServiceInvoker implements IServiceInvokerVirtual {
 
-	@EJB
 	@Autowired
 	public IServiceOrchestrator myOrchestrator;
 

@@ -6,12 +6,6 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Set;
 
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.Singleton;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-
 import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.ejb.api.IResponseValidator;
@@ -36,6 +30,7 @@ import net.svcret.ejb.model.entity.jsonrpc.NamedParameterJsonRpcServerAuth;
 import net.svcret.ejb.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
 
 import org.apache.commons.io.IOUtils;
+import org.springframework.stereotype.Service;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -43,9 +38,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
-@Singleton
-@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+@Service
 public class JsonRpc20ServiceInvoker extends BaseServiceInvoker implements IServiceInvokerJsonRpc20 {
 
 	static final String TOKEN_ID = "id";

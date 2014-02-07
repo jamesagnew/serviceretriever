@@ -18,12 +18,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 
 import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.api.UnexpectedFailureException;
@@ -43,18 +37,19 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.annotations.VisibleForTesting;
 
-@Singleton()
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+@Service
 public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(FilesystemAuditLoggerBean.class);
 	private static SimpleDateFormat ourLogDateFormat = new SimpleDateFormat("yyyyMMdd-HH':00:00'");
 	private static final Pattern PARAM_VALUE_WHITESPACE = Pattern.compile("\\r|\\n", Pattern.MULTILINE);
 	private File myAuditPath;
-	@EJB
 	@Autowired
 	private IConfigService myConfigSvc;
 	private volatile int myFailIfQueueExceedsSize = 10000;
@@ -67,7 +62,7 @@ public class FilesystemAuditLoggerBean implements IFilesystemAuditLogger {
 
 	private ConcurrentLinkedQueue<UnflushedAuditRecord> myUnflushedAuditRecord = new ConcurrentLinkedQueue<UnflushedAuditRecord>();
 
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	@Override
 	public void flushAuditEventsIfNeeded() {
 		try {

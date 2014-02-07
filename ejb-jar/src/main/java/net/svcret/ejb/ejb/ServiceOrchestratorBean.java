@@ -12,12 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.servlet.AsyncContext;
 
 import net.svcret.admin.api.ProcessingException;
@@ -79,56 +73,47 @@ import net.svcret.ejb.throttle.ThrottleQueueFullException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.annotations.VisibleForTesting;
 
-@Singleton
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+@Service
 public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceOrchestratorBean.class);
 
-	@EJB
 	@Autowired
 	private IHttpClient myHttpClient;
 
-	@EJB
 	@Autowired
 	private IPropertyCaptureService myPropertyCapture;
 
-	@EJB
 	@Autowired
 	private IServiceInvokerJsonRpc20 myServiceInvokerJsonRpc20;
 
-	@EJB
 	@Autowired
 	private IServiceInvokerHl7OverHttp myServiceInvokerHl7OverHttp;
 
-	@EJB
 	@Autowired
 	private IRuntimeStatus myRuntimeStatus;
 
-	@EJB
 	@Autowired
 	private ISecurityService mySecuritySvc;
 
-	@EJB
 	@Autowired
 	private IServiceInvokerSoap11 myServiceInvokerSoap11;
 
-	@EJB
 	@Autowired
 	private IServiceRegistry mySvcRegistry;
 
-	@EJB
 	@Autowired
 	private IThrottlingService myThrottlingService;
 
-	@EJB
 	@Autowired
 	private ITransactionLogger myTransactionLogger;
 
-	@EJB
 	@Autowired
 	private IServiceInvokerVirtual myServiceInvokerVirtual;
 
@@ -294,13 +279,11 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 	}
 
-	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
 	public SrBeanOutgoingResponse handlePreviouslyThrottledRequest(SrBeanProcessedRequest theInvocationRequest, AuthorizationResultsBean theAuthorization, SrBeanIncomingRequest theRequest) throws SecurityFailureException, InvocationFailedDueToInternalErrorException {
 		return invokeProxiedService(theRequest, theInvocationRequest, theAuthorization);
 	}
 
-	@TransactionAttribute(TransactionAttributeType.NEVER)
 	@Override
 	public SrBeanOutgoingResponse handleServiceRequest(SrBeanIncomingRequest theRequest) throws InvalidRequestException, SecurityFailureException, ThrottleException, ThrottleQueueFullException, InvocationRequestOrResponseFailedException,
 			InvocationFailedDueToInternalErrorException {
@@ -320,7 +303,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		}
 	}
 
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	@Transactional(propagation=Propagation.NOT_SUPPORTED)
 	@Override
 	public SidechannelOrchestratorResponseBean handleSidechannelRequest(long theServiceVersionPid, String theRequestBody, String theContentType, String theRequestedByString) throws InvalidRequestException, InvocationFailedException {
 		return doHandleSideChannelRequest(theServiceVersionPid, theRequestBody, theContentType, theRequestedByString, null);
@@ -675,7 +658,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		myThrottlingService = theMock;
 	}
 
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	@Transactional(propagation=Propagation.NOT_SUPPORTED)
 	@Override
 	public Collection<SidechannelOrchestratorResponseBean> handleSidechannelRequestForEachUrl(long theServiceVersionPid, String theRequestBody, String theContentType, String theRequestedByString) {
 

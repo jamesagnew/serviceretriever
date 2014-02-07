@@ -14,6 +14,12 @@
 	default-autowire="no">
 	
 	<context:annotation-config />
+	
+	<!-- 
+	<context:component-scan base-package="net.svcret.ejb"></context:component-scan>
+	<context:component-scan base-package="net.svcret.core"></context:component-scan>
+	 -->
+	 
 	<task:annotation-driven executor="myTaskExecutor" scheduler="myTaskScheduler"/>
 	<task:executor id="myTaskExecutor" pool-size="5"/>
 	<task:scheduler id="myTaskScheduler" pool-size="10"/>
@@ -29,7 +35,11 @@
             </map>
         </property>
     </bean>
-	
+
+	<bean id="myMailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="host" value="mail.mycompany.com"/>
+	</bean>
+
 	<bean id="myHttpClient" class="net.svcret.ejb.ejb.HttpClientBean" />
 	<bean id="myConfigService" class="net.svcret.ejb.ejb.ConfigServiceBean" />
 	<bean id="myDao" class="net.svcret.ejb.ejb.DaoBean" />
@@ -52,9 +62,6 @@
 		</property>
 	</bean>
 	
-	<bean id="mySynchronousClient" class="net.svcret.ejb.ejb.nodecomm.SynchronousClientBean" />
-	<bean id="mySynchronousListener" class="net.svcret.ejb.ejb.nodecomm.SynchronousListener" />
-
 	<bean id="myFilesystemAuditLogger" class="net.svcret.ejb.log.FilesystemAuditLoggerBean" />
 	<bean id="myTransactionLogger" class="net.svcret.ejb.log.TransactionLoggerBean" />
 

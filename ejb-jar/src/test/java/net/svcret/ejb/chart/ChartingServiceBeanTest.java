@@ -18,10 +18,8 @@ import net.svcret.admin.shared.model.TimeRange;
 import net.svcret.admin.shared.model.TimeRangeEnum;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
-import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
-import net.svcret.ejb.api.IScheduler;
-import net.svcret.ejb.chart.ChartingServiceBean;
+import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersConfig;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
@@ -31,57 +29,55 @@ import net.svcret.ejb.model.entity.PersInvocationMethodUserStatsPk;
 import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersUser;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.stubbing.defaultanswers.ReturnsDeepStubs;
 
 public class ChartingServiceBeanTest {
 
-	private ChartingServiceBean mySvc;
+	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ChartingServiceBeanTest.class);
+	private PersConfig myConfig;
 	private IConfigService myConfigSvc;
 	private IDao myDao;
-	private IScheduler myScheduler;
-	private IRuntimeStatusQueryLocal myStatus;
 	private SimpleDateFormat myFmt;
-	private PersConfig myConfig;
 	private SimpleDateFormat myFmtSecs;
+	private IRuntimeStatusQueryLocal myStatus;
+
+	private ChartingServiceBean mySvc;
 
 	@Before
 	public void before() throws Exception {
 		myFmt = new SimpleDateFormat("HH:mm");
 		myFmtSecs = new SimpleDateFormat("HH:mm:ss");
-		
+
 		mySvc = new ChartingServiceBean();
-		
-		myConfigSvc=mock(IConfigService.class);
-		myConfig= new PersConfig();
+
+		myConfigSvc = mock(IConfigService.class);
+		myConfig = new PersConfig();
 		myConfig.setNow(myFmt.parse("14:05").getTime());
 		when(myConfigSvc.getConfig()).thenReturn(myConfig);
-		
+
 		mySvc.setConfigForUnitTest(myConfigSvc);
-		
+
 		myDao = mock(IDao.class);
 		mySvc.setDaoForUnitTest(myDao);
-		
-		myScheduler =mock(IScheduler.class);
-		mySvc.setSchedulerForUnitTest(myScheduler);
-		
-		myStatus=mock(IRuntimeStatusQueryLocal.class);
+
+		mySvc.setBroadcastSenderForUnitTest(mock(IBroadcastSender.class));
+		myStatus = mock(IRuntimeStatusQueryLocal.class);
 		mySvc.setStatusForUnitTest(myStatus);
-		
+
 	}
-	
+
 	@Test
 	public void testGenerateUserMethodGraph() throws Exception {
-		
+
 		PersUser user = new PersUser();
 		user.setPid(1L);
-		
+
 		TimeRange range = new TimeRange();
 		range.setNoPresetFrom(myFmtSecs.parse("04:00:01"));
 		range.setNoPresetTo(myFmtSecs.parse("14:00:01"));
-		
+
 		PersMethod m1 = mock(PersMethod.class, new ReturnsDeepStubs());
 		when(m1.getPid()).thenReturn(11L);
 		when(m1.getName()).thenReturn("MethodName123");
@@ -100,45 +96,68 @@ public class ChartingServiceBeanTest {
 		when(m3.getServiceVersion().getVersionId()).thenReturn("Version2");
 		when(m3.getServiceVersion().getService().getServiceId()).thenReturn("Service2");
 		when(m3.getServiceVersion().getService().getDomain().getDomainId()).thenReturn("Domain1");
-	
+
 		when(myDao.getUser(eq(1L))).thenReturn(user);
 		when(myDao.getServiceVersionMethodByPid(eq(11L))).thenReturn(m1);
 		when(myDao.getServiceVersionMethodByPid(eq(21L))).thenReturn(m2);
 		when(myDao.getServiceVersionMethodByPid(eq(31L))).thenReturn(m3);
-		
-		List<PersInvocationMethodUserStats> statsList=new ArrayList<PersInvocationMethodUserStats>();
+
+		List<PersInvocationMethodUserStats> statsList = new ArrayList<PersInvocationMethodUserStats>();
 		statsList.add(new PersInvocationMethodUserStats(new PersInvocationMethodUserStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:10"), m1, user)));
-		statsList.get(statsList.size()-1).addSuccessInvocation(100, 200, 300);
+		statsList.get(statsList.size() - 1).addSuccessInvocation(100, 200, 300);
 		statsList.add(new PersInvocationMethodUserStats(new PersInvocationMethodUserStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:20"), m1, user)));
-		statsList.get(statsList.size()-1).addSuccessInvocation(100, 200, 300);
+		statsList.get(statsList.size() - 1).addSuccessInvocation(100, 200, 300);
 		statsList.add(new PersInvocationMethodUserStats(new PersInvocationMethodUserStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:30"), m1, user)));
-		statsList.get(statsList.size()-1).addSuccessInvocation(100, 200, 300);
+		statsList.get(statsList.size() - 1).addSuccessInvocation(100, 200, 300);
 		statsList.add(new PersInvocationMethodUserStats(new PersInvocationMethodUserStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:30"), m2, user)));
-		statsList.get(statsList.size()-1).addSuccessInvocation(100, 200, 300);
+		statsList.get(statsList.size() - 1).addSuccessInvocation(100, 200, 300);
 		statsList.add(new PersInvocationMethodUserStats(new PersInvocationMethodUserStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:40"), m2, user)));
-		statsList.get(statsList.size()-1).addSuccessInvocation(100, 200, 300);
+		statsList.get(statsList.size() - 1).addSuccessInvocation(100, 200, 300);
 		statsList.add(new PersInvocationMethodUserStats(new PersInvocationMethodUserStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:40"), m3, user)));
-		statsList.get(statsList.size()-1).addSuccessInvocation(100, 200, 300);
-		
+		statsList.get(statsList.size() - 1).addSuccessInvocation(100, 200, 300);
+
 		when(myDao.getUserStatsWithinTimeRange(eq(user), eq(range.getNoPresetFrom()), eq(range.getNoPresetTo()))).thenReturn(statsList);
-		
+
 		byte[] bytes = mySvc.renderUserMethodGraphForUser(user.getPid(), range);
-		
+
 		new File("target/test-pngs").mkdirs();
 		FileOutputStream fos = new FileOutputStream("target/test-pngs/userMethod.png", false);
 		fos.write(bytes);
 		fos.close();
-		
+
 	}
-	
-	
+
+	@Test
+	public void testGenerateUserMethodGraphNoData() throws Exception {
+
+		PersUser user = new PersUser();
+		user.setPid(1L);
+
+		TimeRange range = new TimeRange();
+		range.setNoPresetFrom(myFmt.parse("04:00"));
+		range.setNoPresetTo(myFmt.parse("14:00"));
+
+		when(myDao.getUser(eq(1L))).thenReturn(user);
+
+		List<PersInvocationMethodUserStats> statsList = new ArrayList<PersInvocationMethodUserStats>();
+		when(myDao.getUserStatsWithinTimeRange(eq(user), eq(range.getNoPresetFrom()), eq(range.getNoPresetTo()))).thenReturn(statsList);
+
+		byte[] bytes = mySvc.renderUserMethodGraphForUser(user.getPid(), range);
+
+		new File("target/test-pngs").mkdirs();
+		FileOutputStream fos = new FileOutputStream("target/test-pngs/userMethodNoData.png", false);
+		fos.write(bytes);
+		fos.close();
+
+	}
+
 	@Test
 	public void testRenderSvcVerLatencyMethodGraph() throws Exception {
-		
+
 		TimeRange range = new TimeRange();
 		range.setNoPresetFrom(myFmtSecs.parse("04:00:01"));
 		range.setNoPresetTo(myFmtSecs.parse("05:00:01"));
-		
+
 		PersMethod m1 = mock(PersMethod.class, new ReturnsDeepStubs());
 		when(m1.getPid()).thenReturn(11L);
 		when(m1.getName()).thenReturn("MethodName123");
@@ -163,49 +182,49 @@ public class ChartingServiceBeanTest {
 		when(m4.getServiceVersion().getVersionId()).thenReturn("Version2");
 		when(m4.getServiceVersion().getService().getServiceId()).thenReturn("Service2");
 		when(m4.getServiceVersion().getService().getDomain().getDomainId()).thenReturn("Domain1");
-	
+
 		BasePersServiceVersion svcVer = mock(BasePersServiceVersion.class, new ReturnsDeepStubs());
 		when(svcVer.getVersionId()).thenReturn("1.0");
 		when(svcVer.getService().getServiceId()).thenReturn("ServiceId");
 		when(svcVer.getService().getDomain().getDomainId()).thenReturn("DomainId");
-		
+
 		ArrayList<PersMethod> methodList = new ArrayList<PersMethod>();
 		methodList.add(m1);
 		methodList.add(m2);
 		methodList.add(m3);
 		methodList.add(m4);
 		when(svcVer.getMethods()).thenReturn(methodList);
-		
+
 		when(myDao.getServiceVersionByPid(eq(999L))).thenReturn(svcVer);
 		when(myDao.getServiceVersionMethodByPid(eq(11L))).thenReturn(m1);
 		when(myDao.getServiceVersionMethodByPid(eq(21L))).thenReturn(m2);
 		when(myDao.getServiceVersionMethodByPid(eq(31L))).thenReturn(m3);
-		
-		List<PersInvocationMethodSvcverStats> statsList=new ArrayList<PersInvocationMethodSvcverStats>();
+
+		List<PersInvocationMethodSvcverStats> statsList = new ArrayList<PersInvocationMethodSvcverStats>();
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:00"), m1)));
-		statsList.get(statsList.size()-1).addSuccessInvocation((int)(100.0 * Math.random()), (int)(100.0 * Math.random()), (int)(100.0 * Math.random()));
+		statsList.get(statsList.size() - 1).addSuccessInvocation((int) (100.0 * Math.random()), (int) (100.0 * Math.random()), (int) (100.0 * Math.random()));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:00"), m2)));
-		statsList.get(statsList.size()-1).addSuccessInvocation((int)(100.0 * Math.random()), (int)(100.0 * Math.random()), (int)(100.0 * Math.random()));
+		statsList.get(statsList.size() - 1).addSuccessInvocation((int) (100.0 * Math.random()), (int) (100.0 * Math.random()), (int) (100.0 * Math.random()));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:00"), m3)));
-		statsList.get(statsList.size()-1).addSuccessInvocation((int)(100.0 * Math.random()), (int)(100.0 * Math.random()), (int)(100.0 * Math.random()));
+		statsList.get(statsList.size() - 1).addSuccessInvocation((int) (100.0 * Math.random()), (int) (100.0 * Math.random()), (int) (100.0 * Math.random()));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:10"), m1)));
-		statsList.get(statsList.size()-1).addSuccessInvocation((int)(100.0 * Math.random()), (int)(100.0 * Math.random()), (int)(100.0 * Math.random()));
+		statsList.get(statsList.size() - 1).addSuccessInvocation((int) (100.0 * Math.random()), (int) (100.0 * Math.random()), (int) (100.0 * Math.random()));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:10"), m2)));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:10"), m3)));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:20"), m1)));
-		statsList.get(statsList.size()-1).addSuccessInvocation((int)(100.0 * Math.random()), (int)(100.0 * Math.random()), (int)(100.0 * Math.random()));
+		statsList.get(statsList.size() - 1).addSuccessInvocation((int) (100.0 * Math.random()), (int) (100.0 * Math.random()), (int) (100.0 * Math.random()));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:20"), m2)));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:20"), m3)));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:30"), m1)));
-		statsList.get(statsList.size()-1).addSuccessInvocation((int)(100.0 * Math.random()), (int)(100.0 * Math.random()), (int)(100.0 * Math.random()));
+		statsList.get(statsList.size() - 1).addSuccessInvocation((int) (100.0 * Math.random()), (int) (100.0 * Math.random()), (int) (100.0 * Math.random()));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:30"), m2)));
-		statsList.get(statsList.size()-1).addSuccessInvocation((int)(100.0 * Math.random()), (int)(100.0 * Math.random()), (int)(100.0 * Math.random()));
+		statsList.get(statsList.size() - 1).addSuccessInvocation((int) (100.0 * Math.random()), (int) (100.0 * Math.random()), (int) (100.0 * Math.random()));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:30"), m3)));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:40"), m1)));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:40"), m2)));
-		statsList.get(statsList.size()-1).addSuccessInvocation((int)(100.0 * Math.random()), (int)(100.0 * Math.random()), (int)(100.0 * Math.random()));
+		statsList.get(statsList.size() - 1).addSuccessInvocation((int) (100.0 * Math.random()), (int) (100.0 * Math.random()), (int) (100.0 * Math.random()));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:40"), m3)));
-		statsList.get(statsList.size()-1).addSuccessInvocation((int)(100.0 * Math.random()), (int)(100.0 * Math.random()), (int)(100.0 * Math.random()));
+		statsList.get(statsList.size() - 1).addSuccessInvocation((int) (100.0 * Math.random()), (int) (100.0 * Math.random()), (int) (100.0 * Math.random()));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:50"), m1)));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:50"), m2)));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:50"), m3)));
@@ -220,15 +239,16 @@ public class ChartingServiceBeanTest {
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:40"), m4)));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:50"), m4)));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("05:00"), m4)));
-		
+
 		for (PersInvocationMethodSvcverStats next : statsList) {
 			when(myStatus.getInvocationStatsSynchronously(next.getPk())).thenReturn(next);
 		}
-		
-		
-//		myDao.getInvo
-//		when(myDao.getUserStatsWithinTimeRange(eq(user), eq(range.getNoPresetFrom()), eq(range.getNoPresetTo()))).thenReturn(statsList);
-		
+
+		// myDao.getInvo
+		// when(myDao.getUserStatsWithinTimeRange(eq(user),
+		// eq(range.getNoPresetFrom()),
+		// eq(range.getNoPresetTo()))).thenReturn(statsList);
+
 		new File("target/test-pngs").mkdirs();
 
 		byte[] bytes = mySvc.renderSvcVerLatencyMethodGraph(999L, range, true);
@@ -243,44 +263,43 @@ public class ChartingServiceBeanTest {
 
 	}
 
-	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ChartingServiceBeanTest.class);
 	@Test
 	public void testRenderSvcVerLatencyMethodGraphForLongTimerange() throws Exception {
 		myConfig.setNow(new Date().getTime());
 
 		TimeRange range = new TimeRange();
 		range.setWithPresetRange(TimeRangeEnum.SIX_MONTH);
-		
+
 		PersMethod m1 = mock(PersMethod.class, new ReturnsDeepStubs());
 		when(m1.getPid()).thenReturn(11L);
 		when(m1.getName()).thenReturn("MethodName123");
 		when(m1.getServiceVersion().getVersionId()).thenReturn("Version1");
 		when(m1.getServiceVersion().getService().getServiceId()).thenReturn("Service1");
 		when(m1.getServiceVersion().getService().getDomain().getDomainId()).thenReturn("Domain1");
-	
+
 		BasePersServiceVersion svcVer = mock(BasePersServiceVersion.class, new ReturnsDeepStubs());
 		when(svcVer.getVersionId()).thenReturn("1.0");
 		when(svcVer.getService().getServiceId()).thenReturn("ServiceId");
 		when(svcVer.getService().getDomain().getDomainId()).thenReturn("DomainId");
-		
+
 		ArrayList<PersMethod> methodList = new ArrayList<PersMethod>();
 		methodList.add(m1);
 		when(svcVer.getMethods()).thenReturn(methodList);
-		
+
 		when(myDao.getServiceVersionByPid(eq(999L))).thenReturn(svcVer);
 		when(myDao.getServiceVersionMethodByPid(eq(11L))).thenReturn(m1);
-		
-		List<PersInvocationMethodSvcverStats> statsList=new ArrayList<PersInvocationMethodSvcverStats>();
+
+		List<PersInvocationMethodSvcverStats> statsList = new ArrayList<PersInvocationMethodSvcverStats>();
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:00"), m1)));
-		statsList.get(statsList.size()-1).addSuccessInvocation((int)(100.0 * Math.random()), (int)(100.0 * Math.random()), (int)(100.0 * Math.random()));
+		statsList.get(statsList.size() - 1).addSuccessInvocation((int) (100.0 * Math.random()), (int) (100.0 * Math.random()), (int) (100.0 * Math.random()));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:10"), m1)));
-		statsList.get(statsList.size()-1).addSuccessInvocation((int)(100.0 * Math.random()), (int)(100.0 * Math.random()), (int)(100.0 * Math.random()));
+		statsList.get(statsList.size() - 1).addSuccessInvocation((int) (100.0 * Math.random()), (int) (100.0 * Math.random()), (int) (100.0 * Math.random()));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:20"), m1)));
-		statsList.get(statsList.size()-1).addSuccessInvocation((int)(100.0 * Math.random()), (int)(100.0 * Math.random()), (int)(100.0 * Math.random()));
+		statsList.get(statsList.size() - 1).addSuccessInvocation((int) (100.0 * Math.random()), (int) (100.0 * Math.random()), (int) (100.0 * Math.random()));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:30"), m1)));
-		statsList.get(statsList.size()-1).addSuccessInvocation((int)(100.0 * Math.random()), (int)(100.0 * Math.random()), (int)(100.0 * Math.random()));
+		statsList.get(statsList.size() - 1).addSuccessInvocation((int) (100.0 * Math.random()), (int) (100.0 * Math.random()), (int) (100.0 * Math.random()));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:40"), m1)));
-		statsList.get(statsList.size()-1).addSuccessInvocation((int)(100.0 * Math.random()), (int)(100.0 * Math.random()), (int)(100.0 * Math.random()));
+		statsList.get(statsList.size() - 1).addSuccessInvocation((int) (100.0 * Math.random()), (int) (100.0 * Math.random()), (int) (100.0 * Math.random()));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:50"), m1)));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("05:00"), m1)));
 
@@ -294,41 +313,15 @@ public class ChartingServiceBeanTest {
 				return new PersInvocationMethodSvcverStats(pk);
 			}
 		};
-		IRuntimeStatusQueryLocal p = (IRuntimeStatusQueryLocal) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {IRuntimeStatusQueryLocal.class}, h);
+		IRuntimeStatusQueryLocal p = (IRuntimeStatusQueryLocal) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] { IRuntimeStatusQueryLocal.class }, h);
 		mySvc.setStatusForUnitTest(p);
 
 		byte[] bytes = mySvc.renderSvcVerLatencyMethodGraph(999L, range, true);
-		
+
 		FileOutputStream fos = new FileOutputStream("target/test-pngs/sixmonth.png", false);
 		fos.write(bytes);
 		fos.close();
 
-	}
-
-	
-	
-	@Test
-	public void testGenerateUserMethodGraphNoData() throws Exception {
-		
-		PersUser user = new PersUser();
-		user.setPid(1L);
-		
-		TimeRange range = new TimeRange();
-		range.setNoPresetFrom(myFmt.parse("04:00"));
-		range.setNoPresetTo(myFmt.parse("14:00"));
-			
-		when(myDao.getUser(eq(1L))).thenReturn(user);
-		
-		List<PersInvocationMethodUserStats> statsList=new ArrayList<PersInvocationMethodUserStats>();
-		when(myDao.getUserStatsWithinTimeRange(eq(user), eq(range.getNoPresetFrom()), eq(range.getNoPresetTo()))).thenReturn(statsList);
-		
-		byte[] bytes = mySvc.renderUserMethodGraphForUser(user.getPid(), range);
-		
-		new File("target/test-pngs").mkdirs();
-		FileOutputStream fos = new FileOutputStream("target/test-pngs/userMethodNoData.png", false);
-		fos.write(bytes);
-		fos.close();
-		
 	}
 
 }

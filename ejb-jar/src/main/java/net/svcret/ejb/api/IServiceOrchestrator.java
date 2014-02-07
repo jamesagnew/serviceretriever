@@ -3,7 +3,6 @@ package net.svcret.ejb.api;
 import java.io.IOException;
 import java.util.Collection;
 
-import javax.ejb.Local;
 import javax.servlet.AsyncContext;
 
 import net.svcret.admin.api.ProcessingException;
@@ -22,7 +21,6 @@ import net.svcret.ejb.throttle.ThrottleQueueFullException;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-@Local
 public interface IServiceOrchestrator {
 
 	void enqueueThrottledRequest(ThrottleException theE, AsyncContext theAsyncContext) throws ThrottleQueueFullException;

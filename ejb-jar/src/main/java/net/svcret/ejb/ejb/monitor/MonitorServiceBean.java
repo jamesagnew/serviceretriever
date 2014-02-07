@@ -11,87 +11,75 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-
 import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.ejb.Messages;
-import net.svcret.ejb.api.SrBeanIncomingResponse.Failure;
 import net.svcret.ejb.api.IConfigService;
 import net.svcret.ejb.api.IDao;
 import net.svcret.ejb.api.IRuntimeStatus;
 import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
 import net.svcret.ejb.api.IServiceOrchestrator;
 import net.svcret.ejb.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
+import net.svcret.ejb.api.SrBeanIncomingResponse.Failure;
 import net.svcret.ejb.ejb.RuntimeStatusBean;
 import net.svcret.ejb.ejb.nodecomm.IBroadcastSender;
 import net.svcret.ejb.model.entity.BasePersMonitorRule;
 import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
 import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
+import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersMonitorRuleActive;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheck;
 import net.svcret.ejb.model.entity.PersMonitorRuleActiveCheckOutcome;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiring;
 import net.svcret.ejb.model.entity.PersMonitorRuleFiringProblem;
 import net.svcret.ejb.model.entity.PersMonitorRulePassive;
-import net.svcret.ejb.model.entity.PersMethod;
 import net.svcret.ejb.model.entity.PersServiceVersionUrl;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.RateLimiter;
 
-@Singleton
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+@Service
 public class MonitorServiceBean implements IMonitorService {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(MonitorServiceBean.class);
 
 	private Map<PersMonitorRuleActiveCheck, RateLimiter> myCheckToRateLimiter = new HashMap<PersMonitorRuleActiveCheck, RateLimiter>();
 
-	@EJB
 	@Autowired
 	private IDao myDao;
 
-	@EJB
 	@Autowired
 	private IConfigService myConfigSvc;
 
-	@EJB
 	@Autowired
 	private IRuntimeStatusQueryLocal myRuntimeStatusQuery;
 
-	@EJB
 	@Autowired
 	private IRuntimeStatus myRuntimeStatus;
 
-	@EJB
 	@Autowired
 	private IBroadcastSender myBroadcastSender;
 
-	@EJB
 	@Autowired
 	private IServiceOrchestrator myServiceOrchestrator;
 
 	private IMonitorService myThis = this; // FIXME: fix this
 
-	@EJB
 	@Autowired
 	private IMonitorNotifier myMonitorNotifier;
 
 	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	public void runActiveChecks() {
 
 		Collection<PersMonitorRuleActiveCheck> activeChecks = myDao.getAllMonitorRuleActiveChecks();
@@ -431,8 +419,7 @@ public class MonitorServiceBean implements IMonitorService {
 		return toFiring(theCheck.getRule(), problems);
 	}
 
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	public void runPassiveChecks() {
 		ourLog.debug("Beginning monitor checking pass");
 
@@ -584,7 +571,7 @@ public class MonitorServiceBean implements IMonitorService {
 
 		BasePersMonitorRule retVal = myDao.saveMonitorRuleInNewTransaction(rule);
 
-		myBroadcastSender.monitorRulesChanged();
+		myBroadcastSender.notifyMonitorRulesChanged();
 
 		// In case rules have been added or removed, so that the dashboard shows
 		// correctly

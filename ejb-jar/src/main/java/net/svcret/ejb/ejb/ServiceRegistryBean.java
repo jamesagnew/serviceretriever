@@ -9,13 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 
 import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.api.UnexpectedFailureException;
@@ -38,18 +31,20 @@ import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.google.common.annotations.VisibleForTesting;
 
-@Startup
-@Singleton
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+@Service
 public class ServiceRegistryBean implements IServiceRegistry {
 
+	
 	private static Map<String, PersDomain> ourDomainMap;
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceRegistryBean.class);
 	private static volatile Map<Long, PersDomain> ourPidToDomains;
@@ -59,17 +54,14 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	private static Object ourRegistryLock = new Object();
 	private static final String STATE_KEY = ServiceRegistryBean.class.getName() + "_VERSION";
 
-	@EJB
 	@Autowired
 	private IBroadcastSender myBroadcastSender;
 
 	private long myCurrentVersion;
 
-	@EJB
 	@Autowired
 	private IDao myDao;
 
-	@EJB
 	@Autowired
 	private IHttpClient mySvcHttpClient;
 
@@ -98,8 +90,8 @@ public class ServiceRegistryBean implements IServiceRegistry {
 
 	@Override
 	public void deleteHttpClientConfig(PersHttpClientConfig theConfig) throws UnexpectedFailureException {
+		myDao.deleteHttpClientConfigInNewTransaction(theConfig);
 		catalogHasChanged();
-		myDao.deleteHttpClientConfig(theConfig);
 	}
 
 	@Override
@@ -108,7 +100,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		if (srv == null) {
 			throw new ProcessingException("Unknown service PID:" + thePid);
 		}
-		myDao.deleteService(srv);
+		myDao.deleteServiceInNewTransaction(srv);
 		
 		catalogHasChanged();
 		reloadRegistryFromDatabase();
@@ -120,7 +112,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		if (sv == null) {
 			throw new ProcessingException("Unknown service version ID:" + thePid);
 		}
-		myDao.deleteServiceVersion(sv);
+		myDao.deleteServiceVersionInNewTransaction(sv);
 		
 		catalogHasChanged();
 		reloadRegistryFromDatabase();
@@ -189,40 +181,27 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	}
 
 	@Override
-	public PersDomain getOrCreateDomainWithId(String theId) throws ProcessingException, UnexpectedFailureException {
+	public PersDomain getOrCreateDomainWithId(String theId) throws ProcessingException {
 		PersDomain orCreateDomainWithId = myDao.getOrCreateDomainWithId(theId);
-		if (orCreateDomainWithId.isNewlyCreated()) {
-			catalogHasChanged();
-		}
 		return orCreateDomainWithId;
 	}
 
 	@Override
-	public BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, ServiceProtocolEnum theProtocol, String theVersionId) throws ProcessingException, UnexpectedFailureException {
+	public BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, ServiceProtocolEnum theProtocol, String theVersionId) throws ProcessingException {
 		BasePersServiceVersion retVal = myDao.getOrCreateServiceVersionWithId(theService, theVersionId, theProtocol);
-		if (retVal.isNewlyCreated()) {
-			catalogHasChanged();
-		}
 		return retVal;
 	}
 
 	
 	@Override
-	public BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, ServiceProtocolEnum theProtocol, String theVersionId, PersServiceVersionVirtual theSvcVerToUseIfCreatingNew)
-			throws UnexpectedFailureException {
+	public BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, ServiceProtocolEnum theProtocol, String theVersionId, PersServiceVersionVirtual theSvcVerToUseIfCreatingNew) {
 		BasePersServiceVersion retVal = myDao.getOrCreateServiceVersionWithId(theService, theVersionId, theProtocol, theSvcVerToUseIfCreatingNew);
-		if (retVal.isNewlyCreated()) {
-			catalogHasChanged();
-		}
 		return retVal;
 	}
 
 	@Override
-	public PersService getOrCreateServiceWithId(PersDomain theDomain, String theId) throws ProcessingException, UnexpectedFailureException {
+	public PersService getOrCreateServiceWithId(PersDomain theDomain, String theId) throws ProcessingException {
 		PersService retVal = myDao.getOrCreateServiceWithId(theDomain, theId);
-		if (retVal.isNewlyCreated()) {
-			catalogHasChanged();
-		}
 		return retVal;
 	}
 
@@ -263,7 +242,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	 * {@inheritDoc}
 	 */
 	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	@Transactional(propagation=Propagation.SUPPORTS)
 	public BasePersServiceVersion getServiceVersionForPath(String thePath) {
 		if (thePath == null) {
 			throw new IllegalArgumentException("Path can not be null");
@@ -291,7 +270,6 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	@Autowired
     protected PlatformTransactionManager myPlatformTransactionManager;
 	
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	@PostConstruct
 	public void postConstruct() {
 		TransactionTemplate tmpl = new TransactionTemplate(myPlatformTransactionManager);
@@ -323,7 +301,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 
 	}
 
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	@Transactional(propagation=Propagation.REQUIRED)
 	@Override
 	public void reloadRegistryFromDatabase() {
 
@@ -339,8 +317,8 @@ public class ServiceRegistryBean implements IServiceRegistry {
 
 	@Override
 	public void removeDomain(PersDomain theDomain) throws UnexpectedFailureException {
+		myDao.deleteDomainInNewTransaction(theDomain);
 		catalogHasChanged();
-		myDao.removeDomain(theDomain);
 	}
 
 	@Override
@@ -351,7 +329,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		status.setNextCircuitBreakerReset(new Date());
 		status.setNextCircuitBreakerResetTimestamp(new Date());
 
-		myDao.saveServiceVersionUrlStatus(Collections.singletonList(status));
+		myDao.saveServiceVersionUrlStatusInNewTransaction(Collections.singletonList(status));
 
 		myBroadcastSender.notifyUrlStatusChanged(url.getPid());
 
@@ -360,30 +338,32 @@ public class ServiceRegistryBean implements IServiceRegistry {
 
 	@Override
 	public PersDomain saveDomain(PersDomain theDomain) throws UnexpectedFailureException {
-		catalogHasChanged();
-		PersDomain retVal = myDao.saveDomain(theDomain);
+		PersDomain retVal = myDao.saveDomainInNewTransaction(theDomain);
 		reloadRegistryFromDatabase();
+		catalogHasChanged();
 		return retVal;
 	}
 
 	@Override
 	public PersHttpClientConfig saveHttpClientConfig(PersHttpClientConfig theConfig) throws UnexpectedFailureException {
+		PersHttpClientConfig retVal = myDao.saveHttpClientConfigInNewTransaction(theConfig);
 		catalogHasChanged();
-		return myDao.saveHttpClientConfig(theConfig);
+		return retVal;
 	}
 
 	@Override
 	public void saveService(PersService theService) throws UnexpectedFailureException {
-		catalogHasChanged();
-		myDao.saveService(theService);
+		myDao.saveServiceInNewTransaction(theService);
 		reloadRegistryFromDatabase();
+		catalogHasChanged();
 	}
 
 	@Override
 	public BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theSv) throws UnexpectedFailureException, ProcessingException {
-		catalogHasChanged();
 		// reloadRegistryFromDatabase();
-		return myDao.saveServiceVersion(theSv);
+		BasePersServiceVersion retVal = myDao.saveServiceVersionInNewTransaction(theSv);
+		catalogHasChanged();
+		return retVal;
 	}
 
 	@VisibleForTesting

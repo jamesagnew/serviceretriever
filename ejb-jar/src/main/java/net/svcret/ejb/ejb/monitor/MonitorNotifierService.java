@@ -8,11 +8,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.TreeSet;
 
-import javax.annotation.Resource;
-import javax.ejb.Stateless;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
@@ -31,13 +28,16 @@ import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.context.Context;
 import org.apache.velocity.runtime.RuntimeConstants;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.stereotype.Service;
 
-@Stateless
+@Service
 public class MonitorNotifierService implements IMonitorNotifier {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(MonitorNotifierService.class);
 
-//	@Resource(name = "mail/svcret")
-	private Session mySession; // FIXME: fix this
+	@Autowired
+	private JavaMailSender myMailSender;
 
 	String generateEmail(PersMonitorRuleFiring theFiring) {
 		VelocityEngine ve = new VelocityEngine();
@@ -72,9 +72,8 @@ public class MonitorNotifierService implements IMonitorNotifier {
 	public void notifyFailingRule(PersMonitorRuleFiring theFiring) throws ProcessingException {
 
 		try {
-			MimeMessage msg = new MimeMessage(mySession);
-			mySession.setDebug(true);
-
+			MimeMessage msg = myMailSender.createMimeMessage();
+			
 			Collection<String> notifyEmails = new TreeSet<String>(theFiring.getRule().getNotifyEmails());
 			for (String nextAddress : notifyEmails) {
 				InternetAddress addressTo = new InternetAddress(nextAddress);

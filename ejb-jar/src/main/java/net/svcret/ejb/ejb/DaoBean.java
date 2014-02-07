@@ -13,11 +13,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.Singleton;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -100,13 +95,19 @@ import net.svcret.ejb.model.entity.soap.PersServiceVersionSoap11;
 import net.svcret.ejb.model.entity.virtual.PersServiceVersionVirtual;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionException;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.google.common.annotations.VisibleForTesting;
 
-@Singleton
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+@Service
 public class DaoBean implements IDao {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(DaoBean.class);
@@ -116,16 +117,27 @@ public class DaoBean implements IDao {
 
 	private Map<Long, Long> myServiceVersionPidToStatusPid = new HashMap<Long, Long>();
 
-	private IDao myThis=this; //FIXME: inject?
+	@Autowired
+    protected PlatformTransactionManager myPlatformTransactionManager;
 
+	private TransactionTemplate myTransactionTemplate;
+
+	@PostConstruct
+	public void postConstruct() {
+		myTransactionTemplate = new TransactionTemplate(myPlatformTransactionManager);
+		// Create defaults
+		getOrCreateHttpClientConfig(PersHttpClientConfig.DEFAULT_ID);
+	}
+	
 	@Override
 	public void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost) {
 		Validate.notNull(theAuthHost, "AuthenticationHost");
 		myEntityManager.remove(theAuthHost);
 	}
 
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	@Override
-	public void deleteHttpClientConfig(PersHttpClientConfig theConfig) {
+	public void deleteHttpClientConfigInNewTransaction(PersHttpClientConfig theConfig) {
 		Validate.notNull(theConfig, "HttpClientConfig");
 		Validate.notNull(theConfig.getPid(), "HttpClientConfig#PID");
 
@@ -148,7 +160,8 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	public void deleteService(PersService theService) {
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
+	public void deleteServiceInNewTransaction(PersService theService) {
 		Validate.notNull(theService);
 		Validate.notNull(theService.getPid());
 
@@ -158,7 +171,8 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	public void deleteServiceVersion(BasePersServiceVersion theSv) {
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
+	public void deleteServiceVersionInNewTransaction(BasePersServiceVersion theSv) {
 		myEntityManager.remove(theSv);
 
 		PersService svc = theSv.getService();
@@ -686,10 +700,15 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	public PersStickySessionUrlBinding getOrCreateStickySessionUrlBinding(PersStickySessionUrlBindingPk theBindingPk, PersServiceVersionUrl theUrlToUseIfNoneExists) throws UnexpectedFailureException {
+	public PersStickySessionUrlBinding getOrCreateStickySessionUrlBinding(final PersStickySessionUrlBindingPk theBindingPk, final PersServiceVersionUrl theUrlToUseIfNoneExists) throws UnexpectedFailureException {
 		for (int i = 0; true; i++) {
 			try {
-				return myThis.getOrCreateStickySessionUrlBindingInNewTransaction(theBindingPk, theUrlToUseIfNoneExists);
+				return myTransactionTemplate.execute(new TransactionCallback<PersStickySessionUrlBinding>() {
+					@Override
+					public PersStickySessionUrlBinding doInTransaction(TransactionStatus theStatus) {
+						return getOrCreateStickySessionUrlBindingInNewTransaction(theBindingPk, theUrlToUseIfNoneExists);
+					}
+				});
 			} catch (Exception e) {
 				if (i < 5) {
 					ourLog.debug("Failed to create sticky session, will sleep and try again");
@@ -707,7 +726,6 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	public PersStickySessionUrlBinding getOrCreateStickySessionUrlBindingInNewTransaction(PersStickySessionUrlBindingPk theBindingPk, PersServiceVersionUrl theUrlToUseIfNoneExists) {
 		PersStickySessionUrlBinding retVal = myEntityManager.find(PersStickySessionUrlBinding.class, theBindingPk);
@@ -812,7 +830,7 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	@Transactional(propagation=Propagation.REQUIRED)
 	public long getStateCounter(String theKey) {
 		Validate.notBlank(theKey, "Key");
 
@@ -945,14 +963,10 @@ public class DaoBean implements IDao {
 		return myEntityManager.find(PersUserRecentMessage.class, thePid);
 	}
 
-	@PostConstruct
-	public void postConstruct() {
-		// Create defaults
-		getOrCreateHttpClientConfig(PersHttpClientConfig.DEFAULT_ID);
-	}
 
 	@Override
-	public void removeDomain(PersDomain theDomain) {
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
+	public void deleteDomainInNewTransaction(PersDomain theDomain) {
 		for (BasePersServiceVersion nextSv : theDomain.getAllServiceVersions()) {
 			for (PersMethod nextMethod : nextSv.getMethods()) {
 				for (PersUserServiceVersionMethodPermission nextMethodPerm : nextMethod.getUserPermissions()) {
@@ -964,25 +978,6 @@ public class DaoBean implements IDao {
 		myEntityManager.remove(theDomain);
 	}
 
-	@Override
-	public void removeServiceVersion(long thePid) throws ProcessingException {
-		Validate.greaterThanZero(thePid, "ServiceVersionPid");
-
-		BasePersServiceVersion version = myEntityManager.find(PersServiceVersionSoap11.class, thePid);
-		if (version == null) {
-			throw new ProcessingException("Unknown ServiceVersion[" + thePid + "]");
-		}
-
-		ourLog.info("Removing ServiceVersion[{}]", version.getPid());
-
-		PersService service = version.getService();
-		service.removeVersion(version);
-		myEntityManager.merge(service);
-
-		myEntityManager.remove(version);
-
-		myServiceVersionPidToStatusPid.remove(thePid);
-	}
 
 	@Override
 	public void saveAuthenticationHost(BasePersAuthenticationHost theAuthHost) {
@@ -998,13 +993,15 @@ public class DaoBean implements IDao {
 		return myEntityManager.merge(thePers);
 	}
 
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	@Override
-	public PersConfig saveConfig(PersConfig theConfig) {
+	public PersConfig saveConfigInNewTransaction(PersConfig theConfig) {
 		return myEntityManager.merge(theConfig);
 	}
 
 	@Override
-	public PersDomain saveDomain(PersDomain theDomain) {
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
+	public PersDomain saveDomainInNewTransaction(PersDomain theDomain) {
 		Validate.notNull(theDomain, "Domain");
 		Validate.notNull(theDomain.getPid(), "Domain#PID");
 
@@ -1014,7 +1011,8 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	public PersHttpClientConfig saveHttpClientConfig(PersHttpClientConfig theConfig) {
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
+	public PersHttpClientConfig saveHttpClientConfigInNewTransaction(PersHttpClientConfig theConfig) {
 		Validate.notNull(theConfig, "HttpClientConfig");
 
 		boolean isNew = false;
@@ -1038,7 +1036,6 @@ public class DaoBean implements IDao {
 		return retVal;
 	}
 
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	@Override
 	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	public void saveInvocationStats(Collection<? extends BasePersStats<?, ?>> theStats) {
@@ -1183,7 +1180,6 @@ public class DaoBean implements IDao {
 		return firing;
 	}
 
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	@Override
 	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	public BasePersMonitorRule saveMonitorRuleInNewTransaction(BasePersMonitorRule theRule) {
@@ -1229,7 +1225,7 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)	@Transactional(propagation=Propagation.REQUIRES_NEW)
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	public ByteDelta saveRecentMessagesAndTrimInNewTransaction(BaseUnflushed<? extends BasePersSavedTransactionRecentMessage> theNextTransactions) {
 
 		ByteDelta delta = doSaveRecentMessagesAndTrimInNewTransaction(theNextTransactions.getSuccessAndRemove());
@@ -1246,7 +1242,8 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	public void saveService(PersService theService) {
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
+	public void saveServiceInNewTransaction(PersService theService) {
 		Validate.notNull(theService, "Service");
 		Validate.notNull(theService.getPid(), "Service#PID");
 
@@ -1284,13 +1281,9 @@ public class DaoBean implements IDao {
 		return myEntityManager.merge(theUser);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @return
-	 */
 	@Override
-	public BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theVersion) throws ProcessingException {
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
+	public BasePersServiceVersion saveServiceVersionInNewTransaction(BasePersServiceVersion theVersion) throws ProcessingException {
 		Validate.notNull(theVersion, "ServiceVersion");
 		Validate.notNull(theVersion.getPid(), "ServiceVersion.myPid");
 		Validate.throwProcessingExceptionIfBlank(theVersion.getVersionId(), "ID may not be missing or null");
@@ -1351,7 +1344,6 @@ public class DaoBean implements IDao {
 		myEntityManager.merge(theMsg);
 	}
 
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	@Override
 	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	public void saveServiceVersionStatuses(ArrayList<PersServiceVersionStatus> theStatuses) {
@@ -1378,7 +1370,7 @@ public class DaoBean implements IDao {
 
 	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	@Override
-	public void saveServiceVersionUrlStatus(List<PersServiceVersionUrlStatus> theStatuses) {
+	public void saveServiceVersionUrlStatusInNewTransaction(List<PersServiceVersionUrlStatus> theStatuses) {
 
 		int count = 0;
 		if (theStatuses != null) {
@@ -1417,7 +1409,6 @@ public class DaoBean implements IDao {
 		myEntityManager.merge(theMsg);
 	}
 
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	@Override	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	public void saveUserStatus(Collection<PersUserStatus> theStatus) {
 		ourLog.info("Flushing {} user status entries", theStatus.size());
@@ -1543,7 +1534,12 @@ public class DaoBean implements IDao {
 
 	@VisibleForTesting
 	void setThisForUnitTest() {
-		myThis = this;
+		myTransactionTemplate = new TransactionTemplate() {
+			private static final long serialVersionUID = 1L;
+			@Override
+			public <T> T execute(TransactionCallback<T> theAction) throws TransactionException {
+				return theAction.doInTransaction(null);
+			}};
 	}
 
 }

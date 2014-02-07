@@ -13,7 +13,6 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Date;
 
-import javax.ejb.AsyncResult;
 import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -56,7 +55,7 @@ public class ThrottlingServiceTest {
 	@Test
 	public void testExecuteSlowRate() throws ThrottleException, ThrottleQueueFullException, InterruptedException {
 
-		when(myThis.serviceThrottledRequests((ThrottledTaskQueue) any())).thenReturn(new AsyncResult<Void>(null));
+		when(myThis.serviceThrottledRequests((ThrottledTaskQueue) any())).thenReturn(null);
 		PersMethod method = mock(PersMethod.class, new ReturnsDeepStubs());
 		when(method.getServiceVersion().getThrottle()).thenReturn(null);
 		
@@ -112,7 +111,7 @@ public class ThrottlingServiceTest {
 	@Test
 	public void testExecuteThrottledUser() throws ThrottleException, ThrottleQueueFullException, InterruptedException {
 
-		when(myThis.serviceThrottledRequests((ThrottledTaskQueue) any())).thenReturn(new AsyncResult<Void>(null));
+		when(myThis.serviceThrottledRequests((ThrottledTaskQueue) any())).thenReturn(null);
 		PersMethod method = mock(PersMethod.class, new ReturnsDeepStubs());
 		when(method.getServiceVersion().getThrottle()).thenReturn(null);
 		
@@ -181,7 +180,7 @@ public class ThrottlingServiceTest {
 	@Test
 	public void testExecuteThrottledUserAndPropertyCapture() throws ThrottleException, ThrottleQueueFullException, InterruptedException {
 
-		when(myThis.serviceThrottledRequests((ThrottledTaskQueue) any())).thenReturn(new AsyncResult<Void>(null));
+		when(myThis.serviceThrottledRequests((ThrottledTaskQueue) any())).thenReturn(null);
 		PersMethod method = mock(PersMethod.class, new ReturnsDeepStubs());
 		when(method.getServiceVersion().getThrottle().getApplyPropCapName()).thenReturn("propCapName");
 		when(method.getServiceVersion().getThrottle().getThrottleMaxQueueDepth()).thenReturn(2);

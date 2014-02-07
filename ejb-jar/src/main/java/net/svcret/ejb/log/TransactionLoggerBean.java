@@ -5,13 +5,6 @@ import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.EJB;
-import javax.ejb.Singleton;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-
 import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
@@ -29,26 +22,30 @@ import net.svcret.ejb.model.entity.BasePersServiceVersion;
 import net.svcret.ejb.model.entity.PersUser;
 import net.svcret.ejb.util.LogUtil;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.google.common.annotations.VisibleForTesting;
 
-@Singleton
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+@Service
 public class TransactionLoggerBean implements ITransactionLogger {
 
 	static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(TransactionLoggerBean.class);
 
-	@EJB
+	@Autowired
 	private IDao myDao;
-	@EJB
+	@Autowired
 	private IFilesystemAuditLogger myFilesystemAuditLogger;
-	@EJB
+	@Autowired
 	private IConfigService myConfigSvc;
 
 	private final ReentrantLock myFlushLock = new ReentrantLock();
 	private final ConcurrentHashMap<BasePersServiceVersion, UnflushedServiceVersionRecentMessages> myUnflushedMessages = new ConcurrentHashMap<BasePersServiceVersion, UnflushedServiceVersionRecentMessages>();
 	private final ConcurrentHashMap<PersUser, UnflushedUserRecentMessages> myUnflushedUserMessages = new ConcurrentHashMap<PersUser, UnflushedUserRecentMessages>();
 
-	@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+	@Transactional(propagation=Propagation.NOT_SUPPORTED)
 	@Override
 	public void flush() {
 
@@ -77,7 +74,7 @@ public class TransactionLoggerBean implements ITransactionLogger {
 	 * @throws UnexpectedFailureException
 	 */
 	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	@Transactional(propagation=Propagation.SUPPORTS)
 	public void logTransaction(SrBeanIncomingRequest theIncomingRequest, PersUser theUser, SrBeanProcessedResponse theProcessedResponse, SrBeanIncomingResponse theIncomingResponse, AuthorizationOutcomeEnum theAuthorizationOutcome, SrBeanProcessedRequest theProcessedRequest)
 			throws ProcessingException, UnexpectedFailureException {
 		Validate.notNull(theProcessedRequest.getServiceVersion());
