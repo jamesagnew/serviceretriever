@@ -33,7 +33,7 @@
 					<repositoryLayout>flat</repositoryLayout>
 					<target>${project.build.directory}/appassembler</target>
 					<assembleDirectory>${project.build.directory}/appassembler</assembleDirectory>
-					<!-- <configurationSourceDirectory>true</configurationSourceDirectory>-->
+					<!-- <configurationSourceDirectory>true</configurationSourceDirectory> -->
 					<copyConfigurationDirectory>true</copyConfigurationDirectory>
 					<configurationDirectory>conf</configurationDirectory>
 					<daemons>
@@ -129,6 +129,9 @@
 										<include name="*.*" />
 									</fileset>
 								</chmod>
+								<copy verbose="true" failonerror="true"
+								      file="${project.build.directory}/../../admin-war/src/main/webapp/WEB-INF/web.xml"
+								      tofile="${project.build.directory}/appassembler/jsw/svcret/conf/admin-web.xml" />
 							</target>
 						</configuration>
 						<goals>
@@ -156,7 +159,7 @@
 									<version>1.0</version>
 									<type>war</type>
 									<overWrite>true</overWrite>
-									<outputDirectory>${project.build.directory}/appassembler/jsw/svcret/admin/</outputDirectory>
+									<outputDirectory>${project.build.directory}/appassembler/jsw/svcret/lib/</outputDirectory>
 									<destFileName>admin.war</destFileName>
 								</artifactItem>
 							</artifactItems>

@@ -15,7 +15,7 @@
 	
 	<import resource="classpath:svcret-components.xml"/>
 
-	<bean id="myConfigService" class="net.svcret.ejb.ejb.ConfigServiceBean">
+	<bean id="myConfigService" class="net.svcret.core.ejb.ConfigServiceBean">
 		<property name="nodeId" value="dev1"/>
 		<property name="nodeType" value="PRIMARY"/>
 	</bean>
@@ -26,15 +26,15 @@
 	    		
 	<bean name="adminListener8881" class="net.svcret.app.beans.AdminServerBean">
 		<property name="port" value="8881"/>
-		<property name="war" value="file:admin/admin.war"/>
-		<property name="jaasConfig" value="conf/jaas.conf"/>
+		<property name="war" value="file:lib/admin.war"/>
+		<property name="jaasConfig" value="conf/admin-jaas.conf"/>
 	</bean>
 
-	<bean id="myBroadcastListener" class="net.svcret.ejb.ejb.nodecomm.HttpBroadcastListenerBean">
+	<bean id="myBroadcastListener" class="net.svcret.core.ejb.nodecomm.HttpBroadcastListenerBean">
 		<property name="port" value="8882" />
 	</bean>
 	
-	<bean id="myBroadcastNotifier" class="net.svcret.ejb.ejb.nodecomm.HttpBroadcastSenderBean">
+	<bean id="myBroadcastNotifier" class="net.svcret.core.ejb.nodecomm.HttpBroadcastSenderBean">
 		<property name="urls">
 			<list>
 				<value>http://localhost:8882/</value>
@@ -57,16 +57,29 @@
 
 	<bean id="myEntityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
 		<property name="dataSource" ref="myPersistenceDataSource" />
-		<!-- <property name="packagesToScan" value="net.svcret.ejb.model.entity" />  -->
 		<property name="persistenceUnitName" value="ServiceProxy_EJBPU" />
 		<property name="jpaVendorAdapter">
 			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
 				<property name="showSql" value="false" />
 				<property name="generateDdl" value="true" />
 				<!-- <property name="databasePlatform" value="org.hibernate.dialect.HSQLDialect" />  -->
-				<property name="databasePlatform" value="net.svcret.ejb.util.hibernate.MyDerbyTenSevenDialect" />
+				<property name="databasePlatform" value="net.svcret.core.util.hibernate.MyDerbyTenSevenDialect" />
 			</bean>
 		</property>
+	</bean>
+	<bean class="net.svcret.core.util.DerbyLogConfigurator">
+		<property name="logFileConfiguration" value="logs/derby.log"/>
+	</bean>
+
+	<!--
+	JMX 
+	-->
+	<bean class="org.springframework.jmx.support.ConnectorServerFactoryBean" depends-on="myRmiRegistry">
+		<property name="objectName" value="connector:name=rmi" />
+		<property name="serviceUrl"	value="service:jmx:rmi://127.0.0.1:8883/jndi/rmi://localhost:8883/myconnector" />
+	</bean>
+	<bean id="myRmiRegistry" class="org.springframework.remoting.rmi.RmiRegistryFactoryBean">
+		<property name="port" value="8883" />
 	</bean>
 
 </beans>

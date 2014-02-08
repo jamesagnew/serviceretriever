@@ -1,6 +1,6 @@
 package net.svcret.core.server;
 
-import static net.svcret.ejb.util.HttpUtil.*;
+import static net.svcret.core.util.HttpUtil.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,17 +19,17 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.svcret.admin.api.ProcessingException;
-import net.svcret.ejb.api.IServiceOrchestrator;
-import net.svcret.ejb.api.IServiceRegistry;
-import net.svcret.ejb.api.RequestType;
-import net.svcret.ejb.api.SrBeanIncomingRequest;
-import net.svcret.ejb.api.SrBeanOutgoingResponse;
-import net.svcret.ejb.ex.InvalidRequestException;
-import net.svcret.ejb.ex.InvocationFailedDueToInternalErrorException;
-import net.svcret.ejb.ex.InvocationRequestOrResponseFailedException;
-import net.svcret.ejb.ex.SecurityFailureException;
-import net.svcret.ejb.throttle.ThrottleException;
-import net.svcret.ejb.throttle.ThrottleQueueFullException;
+import net.svcret.core.api.IServiceOrchestrator;
+import net.svcret.core.api.IServiceRegistry;
+import net.svcret.core.api.RequestType;
+import net.svcret.core.api.SrBeanIncomingRequest;
+import net.svcret.core.api.SrBeanOutgoingResponse;
+import net.svcret.core.ex.InvalidRequestException;
+import net.svcret.core.ex.InvocationFailedDueToInternalErrorException;
+import net.svcret.core.ex.InvocationRequestOrResponseFailedException;
+import net.svcret.core.ex.SecurityFailureException;
+import net.svcret.core.throttle.ThrottleException;
+import net.svcret.core.throttle.ThrottleQueueFullException;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.net.URLCodec;

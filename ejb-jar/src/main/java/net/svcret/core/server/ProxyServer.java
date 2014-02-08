@@ -1,25 +1,13 @@
 package net.svcret.core.server;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
+import net.svcret.core.api.IServiceOrchestrator;
+import net.svcret.core.api.IServiceRegistry;
 
-import net.svcret.admin.shared.util.Validate;
-import net.svcret.ejb.api.IServiceOrchestrator;
-import net.svcret.ejb.api.IServiceRegistry;
-
-import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Required;
 
-public class ProxyServer implements BeanNameAware {
-
-	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ProxyServer.class);
-	
-	private String myBeanName;
-	private int myPort;
+public class ProxyServer extends BaseServerBean {
 
 	@Autowired
 	private IServiceOrchestrator myServiceOrchestrator;
@@ -27,31 +15,8 @@ public class ProxyServer implements BeanNameAware {
 	@Autowired
 	private IServiceRegistry myServiceRegistry;
 
-	private Server myProxyServer;
-
-	@PreDestroy
-	public void destroy() throws Exception {
-		ourLog.info("Shutting down proxy server on port: {}", myPort);
-		myProxyServer.stop();
-	}
-	
 	@Override
-	public void setBeanName(String theName) {
-		myBeanName = theName;
-	}
-
-	@Required
-	public void setPort(int thePort) {
-		Validate.greaterThanZero(thePort, "Port");
-		myPort = thePort;
-	}
-
-	@PostConstruct
-	public void startup() throws Exception {
-		ourLog.info("Starting up proxy listener on port {} with name: {}", myPort, myBeanName);
-		
-		myProxyServer = new Server(myPort);
-		
+	protected void configureServerBeforeStarting() {
 		ServletHandler proxyHandler = new ServletHandler();
 		ServiceServlet serviceServlet = new ServiceServlet();
 		serviceServlet.setServiceOrchestrator(myServiceOrchestrator);
@@ -59,9 +24,9 @@ public class ProxyServer implements BeanNameAware {
 		ServletHolder servletHolder = new ServletHolder(serviceServlet);
 		proxyHandler.addServletWithMapping(servletHolder, "/");
 
-		myProxyServer.setHandler(proxyHandler);
-		myProxyServer.start();
-
+		getProxyServer().setHandler(proxyHandler);
 	}
+
+
 
 }
