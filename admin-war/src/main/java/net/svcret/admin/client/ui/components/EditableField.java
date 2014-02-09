@@ -226,4 +226,8 @@ public class EditableField extends FlowPanel implements HasValue<String> {
 		return getValue() != null ? getValue() : "";
 	}
 
+	public String getValueOrNull() {
+		return StringUtil.isNotBlank(getValue()) ? getValue() : null;
+	}
+
 }

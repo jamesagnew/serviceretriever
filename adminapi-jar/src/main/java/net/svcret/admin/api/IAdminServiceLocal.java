@@ -25,6 +25,7 @@ import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
+import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
 import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
@@ -45,7 +46,7 @@ public interface IAdminServiceLocal  {
 
 	DtoAuthenticationHostList deleteAuthenticationHost(long thePid) throws ProcessingException;
 
-	void deleteDomain(long thePid) throws ProcessingException, UnexpectedFailureException;
+	DtoDomainList deleteDomain(long thePid) throws ProcessingException, UnexpectedFailureException;
 
 	GHttpClientConfigList deleteHttpClientConfig(long thePid) throws ProcessingException, UnexpectedFailureException;
 
@@ -134,5 +135,17 @@ public interface IAdminServiceLocal  {
 	GServiceVersionSingleFireResponse testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long thePid, String theRequestedByString) throws ProcessingException;
 
 	DtoMonitorRuleActiveCheckOutcome loadMonitorRuleActiveCheckOutcomeDetails(long thePid) throws UnexpectedFailureException;
+
+	void deleteUser(long thePid) throws ProcessingException;
+
+	GServiceMethod addServiceVersionMethod(long theSvcVerPid, GServiceMethod theMethod) throws ProcessingException, UnexpectedFailureException;
+
+	Collection<Long> getAllDomainPids();
+
+	Collection<Long> getAllMonitorRulePids();
+
+	void deleteMonitorRule(Long thePid) throws UnexpectedFailureException;
+
+	void deleteLibraryMessage(Long thePid);
 
 }

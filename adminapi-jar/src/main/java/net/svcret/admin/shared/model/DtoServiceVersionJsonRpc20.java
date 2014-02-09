@@ -13,6 +13,15 @@ public class DtoServiceVersionJsonRpc20 extends BaseDtoServiceVersion {
 
 	private static final long serialVersionUID = 1L;
 
+	public DtoServiceVersionJsonRpc20() {
+	}
+	
+	public DtoServiceVersionJsonRpc20(String theId, String theName, long theHttpClientPid) {
+		setId(theId);
+		setName(theName);
+		setHttpClientConfigPid(theHttpClientPid);
+	}
+
 	@Override
 	public ServiceProtocolEnum getProtocol() {
 		return ServiceProtocolEnum.JSONRPC20;

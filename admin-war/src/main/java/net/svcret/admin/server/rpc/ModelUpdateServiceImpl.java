@@ -643,7 +643,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		}
 
 		try {
-			myAdminSvc.deleteDomain(thePid);
+			return myAdminSvc.deleteDomain(thePid);
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to delete domain", e);
 			throw new ServiceFailureException(e.getMessage());
@@ -652,15 +652,6 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 			throw new ServiceFailureException(e.getMessage());
 		}
 
-		try {
-			return myAdminSvc.loadDomainList();
-		} catch (ProcessingException e) {
-			ourLog.error("Failed to load domain list", e);
-			throw new ServiceFailureException(e.getMessage());
-		} catch (UnexpectedFailureException e) {
-			ourLog.error("Failed to load domain list", e);
-			throw new ServiceFailureException(e.getMessage());
-		}
 	}
 
 	@Override

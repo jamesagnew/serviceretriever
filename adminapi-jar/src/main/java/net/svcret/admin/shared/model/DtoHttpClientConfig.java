@@ -11,7 +11,7 @@ import net.svcret.admin.shared.util.XmlConstants;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class DtoHttpClientConfig extends BaseDtoObject {
 
-	public static final UrlSelectionPolicy DEFAULT_URL_SELECTION_POLICY = UrlSelectionPolicy.ROUND_ROBIN;
+	public static final UrlSelectionPolicy DEFAULT_URL_SELECTION_POLICY = UrlSelectionPolicy.PREFER_LOCAL;
 	public static final int DEFAULT_CB_RESET_TIME = 60000;
 	public static final int DEFAULT_CONNECT_TIMEOUT = 10000;
 	public static final int DEFAULT_READ_TIMEOUT = 30000;
@@ -41,6 +41,15 @@ public class DtoHttpClientConfig extends BaseDtoObject {
 	private DtoKeystoreAnalysis myTlsTruststore;
 	@XmlElement(name = "config_UrlSelectionPolicy")
 	private UrlSelectionPolicy myUrlSelectionPolicy;
+
+	public DtoHttpClientConfig(String theId) {
+		setId(theId);
+		setDefaults();
+	}
+
+	public DtoHttpClientConfig() {
+	
+	}
 
 	/**
 	 * @return the circuitBreakerTimeBetweenResetAttempts

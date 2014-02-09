@@ -582,7 +582,7 @@ public class NavProcessor {
 						((IDestroyable) pageToDelete).destroy();
 					}
 				}
-				BodyPanel.getInstance().setContents(newContents);
+				doSetNewContents(newContents);
 				return;
 			}
 		}
@@ -593,13 +593,21 @@ public class NavProcessor {
 			}
 		}
 
-		BodyPanel.getInstance().setContents(panel);
+		doSetNewContents(panel);
 
 		// } catch (Exception e) {
 		// Model.handleFailure(e);
 		// navigateToDefault();
 		// }
 
+	}
+
+	private static void doSetNewContents(Panel panel) {
+		if (panel instanceof IRefreshable) {
+			((IRefreshable) panel).refresh();
+		}
+		
+		BodyPanel.getInstance().setContents(panel);
 	}
 
 	public static void navRoot(PagesEnum thePage) {

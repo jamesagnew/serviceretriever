@@ -13,7 +13,7 @@
 	<artifactId>proxy-app-jar</artifactId>
 	<packaging>jar</packaging>
 
-	<name>Proxy Application</name>
+	<name>ServiceRetriever Application</name>
 
 	<dependencies>
 		<dependency>

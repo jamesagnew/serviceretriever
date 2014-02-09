@@ -46,6 +46,10 @@
 		<property name="host" value="mail.mycompany.com"/>
 	</bean>
 
+	<bean class="net.svcret.core.util.DerbyLogConfigurator">
+		<property name="logFileLocation" value="logs/derby.log"/>
+	</bean>
+
 	<bean id="myPersistenceDataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
 		<!-- <property name="driverClassName" value="org.hsqldb.jdbcDriver" />  -->
 		<!--<property name="url" value="jdbc:hsqldb:mem:unit-testing-jpa"/> -->
@@ -66,9 +70,6 @@
 				<property name="databasePlatform" value="net.svcret.core.util.hibernate.MyDerbyTenSevenDialect" />
 			</bean>
 		</property>
-	</bean>
-	<bean class="net.svcret.core.util.DerbyLogConfigurator">
-		<property name="logFileConfiguration" value="logs/derby.log"/>
 	</bean>
 
 	<!--

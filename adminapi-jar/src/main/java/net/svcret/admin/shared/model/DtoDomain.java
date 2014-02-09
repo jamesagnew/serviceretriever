@@ -20,25 +20,18 @@ public class DtoDomain extends BaseDtoServiceCatalogItem {
 
 	private static final long serialVersionUID = 1L;
 
-	@XmlElement(name = "config_ServiceList")
-	private GServiceList myServiceList = new GServiceList();
-
 	@XmlElement(name = "config_Description")
 	private String myDescription;
 
-	public GServiceList getServiceList() {
-		return myServiceList;
+	@XmlElement(name = "config_ServiceList")
+	private GServiceList myServiceList = new GServiceList();
+
+	public DtoDomain() {
 	}
 
-	@Override
-	public void merge(BaseDtoObject theObject) {
-		super.merge(theObject);
-
-		DtoDomain obj = (DtoDomain) theObject;
-		if (obj.getServiceList() != null) {
-			getServiceList().mergeResults(obj.getServiceList());
-		}
-
+	public DtoDomain(String theId, String theName) {
+		setId(theId);
+		setName(theName);
 	}
 
 	public Set<Long> getAllServiceVersionPids() {
@@ -58,12 +51,32 @@ public class DtoDomain extends BaseDtoServiceCatalogItem {
 		return retVal;
 	}
 
+	public String getDescription() {
+		return myDescription;
+	}
+
+	public GServiceList getServiceList() {
+		return myServiceList;
+	}
+
+	@Override
+	public void merge(BaseDtoObject theObject) {
+		super.merge(theObject);
+
+		DtoDomain obj = (DtoDomain) theObject;
+		if (obj.getServiceList() != null) {
+			getServiceList().mergeResults(obj.getServiceList());
+		}
+
+	}
+
 	public void setDescription(String theDomainDescription) {
 		myDescription = theDomainDescription;
 	}
 
-	public String getDescription() {
-		return myDescription;
+	@Override
+	public String toString() {
+		return "Domain[" + getPidOrNull() + "/" + getId() + "]";
 	}
 
 }
