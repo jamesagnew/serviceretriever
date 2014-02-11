@@ -1,0 +1,7 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+	<wsdl:types>
+		<xsd:schema>
+			<xsd:import namespace="urn:sail:xsd:infrastructure:services:security" schemaLocation="basic_schema2_.xsd" />
+		</xsd:schema>
+	</wsdl:types>
+</xsd:schema>

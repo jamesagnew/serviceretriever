@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:soapjms="http://www.w3.org/2010/soapjms/" xmlns:tns="http://host/cGTAgetErrorQueue" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" name="cGTAgetErrorQueue" targetNamespace="http://host/cGTAgetErrorQueue">
+	<wsdl:types>
+		<xsd:schema targetNamespace="http://host/cGTAgetErrorQueue" xmlns:tns="http://host/cGTAgetErrorQueue" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+			<xsd:element name="getErrorQueueWS" type="tns:getErrorQueueWS"/>
+			<xsd:element name="getErrorQueueWSResponse" type="tns:getErrorQueueWSResponse"/>
+			<xsd:complexType name="getErrorQueueWS">
+				<xsd:sequence>
+					<xsd:element minOccurs="0" name="eventType" nillable="true" type="xsd:string"/>
+					<xsd:element minOccurs="0" name="transactionId" nillable="true" type="xsd:string"/>
+					<xsd:element minOccurs="0" name="startDate" nillable="true" type="xsd:date"/>
+					<xsd:element minOccurs="0" name="endDate" nillable="true" type="xsd:date"/>
+					<xsd:element minOccurs="0" name="errorCode" nillable="true" type="xsd:string"/>
+					<xsd:element minOccurs="0" name="senderId" nillable="true" type="xsd:string"/>
+					<xsd:element minOccurs="0" name="severity" nillable="true" type="xsd:string"/>
+					<xsd:element minOccurs="0" name="messageId" nillable="true" type="xsd:string"/>
+					<xsd:element name="senderOrganizationId" type="xsd:string"/>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:complexType name="getErrorQueueWSResponse">
+				<xsd:sequence>
+					<xsd:element maxOccurs="unbounded" minOccurs="0" name="errorOutput" nillable="true" type="tns:errorOutput"/>
+					<xsd:element minOccurs="0" name="error" nillable="true" type="xsd:string"/>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:complexType name="errorOutput">
+				<xsd:sequence>
+					<xsd:element minOccurs="0" name="eventType" nillable="true" type="xsd:string"/>
+					<xsd:element minOccurs="0" name="transactionId" nillable="true" type="xsd:string"/>
+					<xsd:element minOccurs="0" name="timestamp" nillable="true" type="xsd:string"/>
+					<xsd:element minOccurs="0" name="description" nillable="true" type="xsd:string"/>
+					<xsd:element minOccurs="0" name="errorCode" nillable="true" type="xsd:string"/>
+					<xsd:element minOccurs="0" name="severity" nillable="true" type="xsd:string"/>
+					<xsd:element minOccurs="0" name="senderId" nillable="true" type="xsd:string"/>
+					<xsd:element minOccurs="0" name="messageId" nillable="true" type="xsd:string"/>
+					<xsd:element name="senderOrganizationId" type="xsd:string"/>
+					<xsd:element maxOccurs="unbounded" minOccurs="0" name="errorList" nillable="true" type="tns:errorList"/>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:complexType name="errorList">
+				<xsd:sequence>
+					<xsd:element minOccurs="0" name="errorCode" nillable="true" type="xsd:string"/>
+					<xsd:element minOccurs="0" name="errorDescription" nillable="true" type="xsd:string"/>
+					<xsd:element minOccurs="0" name="errorLocation" nillable="true" type="xsd:string"/>
+				</xsd:sequence>
+			</xsd:complexType>
+		</xsd:schema>
+	</wsdl:types>
+	<wsdl:message name="cGTAgetErrorQueue_PortType_getErrorQueueWSResponse">
+		<wsdl:part name="parameters" element="tns:getErrorQueueWSResponse">
+    </wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="cGTAgetErrorQueue_PortType_getErrorQueueWS">
+		<wsdl:part name="parameters" element="tns:getErrorQueueWS">
+    </wsdl:part>
+	</wsdl:message>
+	<wsdl:portType name="cGTAgetErrorQueue_PortType">
+		<wsdl:operation name="getErrorQueueWS">
+			<wsdl:input message="tns:cGTAgetErrorQueue_PortType_getErrorQueueWS">
+    </wsdl:input>
+			<wsdl:output message="tns:cGTAgetErrorQueue_PortType_getErrorQueueWSResponse">
+    </wsdl:output>
+		</wsdl:operation>
+	</wsdl:portType>
+	<wsdl:binding name="cGTA_HIAL_ExceptionHandling_hial_common_general_exceptionHandling_webService_cGTAgetErrorQueue_Binder" type="tns:cGTAgetErrorQueue_PortType">
+		<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+		<wsdl:operation name="getErrorQueueWS">
+			<soap:operation soapAction="cGTA_HIAL_ExceptionHandling_hial_common_general_exceptionHandling_webService_cGTAgetErrorQueue_Binder_getErrorQueueWS" style="document"/>
+			<wsdl:input>
+				<soap:body parts="parameters" use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body parts="parameters" use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+	</wsdl:binding>
+	<wsdl:service name="cGTA_HIAL_ExceptionHandling.hial.common.general.exceptionHandling.webService.cGTAgetErrorQueue">
+		<wsdl:port name="cGTA_HIAL_ExceptionHandling_hial_common_general_exceptionHandling_webService_cGTAgetErrorQueue_Port" binding="tns:cGTA_HIAL_ExceptionHandling_hial_common_general_exceptionHandling_webService_cGTAgetErrorQueue_Binder">
+			<soap:address location="https://hello.com/soap"/>
+		</wsdl:port>
+	</wsdl:service>
+</wsdl:definitions>
