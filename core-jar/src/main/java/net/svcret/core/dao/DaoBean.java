@@ -705,13 +705,13 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	public PersStickySessionUrlBinding getOrCreateStickySessionUrlBinding(final PersStickySessionUrlBindingPk theBindingPk, final PersServiceVersionUrl theUrlToUseIfNoneExists) throws UnexpectedFailureException {
+	public PersStickySessionUrlBinding createOrUpdateExistingStickySessionUrlBindingInNewTransaction(final PersStickySessionUrlBinding theBinding) throws UnexpectedFailureException {
 		for (int i = 0; true; i++) {
 			try {
 				return myTransactionTemplate.execute(new TransactionCallback<PersStickySessionUrlBinding>() {
 					@Override
 					public PersStickySessionUrlBinding doInTransaction(TransactionStatus theStatus) {
-						return getOrCreateStickySessionUrlBindingInNewTransaction(theBindingPk, theUrlToUseIfNoneExists);
+						return getOrCreateStickySessionUrlBindingInNewTransaction(theBinding);
 					}
 				});
 			} catch (Exception e) {
@@ -730,24 +730,23 @@ public class DaoBean implements IDao {
 		}
 	}
 
-	@Override
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public PersStickySessionUrlBinding getOrCreateStickySessionUrlBindingInNewTransaction(PersStickySessionUrlBindingPk theBindingPk, PersServiceVersionUrl theUrlToUseIfNoneExists) {
+	private PersStickySessionUrlBinding getOrCreateStickySessionUrlBindingInNewTransaction(PersStickySessionUrlBinding theBinding) {
 
 		// SvcVer probably comes from the service registry so it needs to be
 		// refreshed
-		BasePersServiceVersion svcVer = myEntityManager.find(BasePersServiceVersion.class, theBindingPk.getServiceVersion().getPid());
-		PersStickySessionUrlBindingPk pk = new PersStickySessionUrlBindingPk(theBindingPk.getSessionId(), svcVer);
+		BasePersServiceVersion svcVer = myEntityManager.find(BasePersServiceVersion.class, theBinding.getPk().getServiceVersion().getPid());
+		PersStickySessionUrlBindingPk pk = new PersStickySessionUrlBindingPk(theBinding.getPk().getSessionId(), svcVer);
 
 		PersStickySessionUrlBinding retVal = myEntityManager.find(PersStickySessionUrlBinding.class, pk);
 		if (retVal == null) {
-			ourLog.debug("Creating new sticky session with ID '{}' for URL {}", pk.getSessionId(), theUrlToUseIfNoneExists.getPid());
-			PersStickySessionUrlBinding newEntity = new PersStickySessionUrlBinding(pk, theUrlToUseIfNoneExists);
-			newEntity.setCreated(new Date());
-			myEntityManager.persist(newEntity);
-			retVal = myEntityManager.find(PersStickySessionUrlBinding.class, pk);
-			retVal.setNewlyCreated(true);
+			ourLog.debug("Creating new sticky session with ID '{}' for URL {}", pk.getSessionId(), theBinding.getUrl().getPid());
+			myEntityManager.persist(theBinding);
+			theBinding.setNewlyCreated(true);
+			retVal=theBinding;
+		}else {
+			retVal.merge(theBinding);
 		}
+		
 		return retVal;
 	}
 

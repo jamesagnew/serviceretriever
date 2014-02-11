@@ -210,6 +210,10 @@ public class ServiceOrchestratorBeanIntegrationTest {
 	@Test
 	public void testSoap11WithHttpBasicAuth() throws Exception {
 
+		ModelUpdateResponse resp = ourAdminSvc.loadModelUpdate(new ModelUpdateRequest());
+		BaseDtoServiceVersion svcVer = resp.getDomainList().getServiceVersionByPid(mySvcVerPid);
+		assertEquals(1, svcVer.getServerSecurityList().size());
+		
 		/*
 		 * Make request
 		 */
@@ -268,8 +272,11 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		auth.setAuthHostPid(myAuthHost.getPid());
 		mySvcVer.addServerAuth(auth);
 		mySvcVer.setServerSecurityMode(ServerSecurityModeEnum.REQUIRE_ALL);
-
 		mySvcVer = ourAdminSvc.saveServiceVersion(d0.getPid(), d0s0.getPid(), mySvcVer, new ArrayList<GResource>());
+
+		resp = ourAdminSvc.loadModelUpdate(new ModelUpdateRequest());
+		svcVer = resp.getDomainList().getServiceVersionByPid(mySvcVerPid);
+		assertEquals(2, svcVer.getServerSecurityList().size());
 
 		newEntityManager();
 
@@ -1012,7 +1019,9 @@ public class ServiceOrchestratorBeanIntegrationTest {
 
 		newEntityManager();
 
-		ModelUpdateResponse modelUpdate = ourAdminSvc.loadModelUpdate(new ModelUpdateRequest());
+		ModelUpdateRequest req = new ModelUpdateRequest();
+		req.setLoadHttpClientConfigs(true);
+		ModelUpdateResponse modelUpdate = ourAdminSvc.loadModelUpdate(req);
 		GHttpClientConfigList clientConfigList = modelUpdate.getHttpClientConfigList();
 		DtoHttpClientConfig hc = clientConfigList.getConfigByPid(ourAdminSvc.getDefaultHttpClientConfigPid());
 		hc.setUrlSelectionPolicy(UrlSelectionPolicy.RR_STICKY_SESSION);
@@ -1035,21 +1044,22 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		when(ourHttpClientMock.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
 
 		String query = "";
-		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
-		req.setRequestType(RequestType.POST);
-		req.setRequestHostIp("127.0.0.1");
-		req.setPath("/d0/d0s0/d0s0v0");
-		req.setQuery(query);
+		SrBeanIncomingRequest ireq = new SrBeanIncomingRequest();
+		ireq.setRequestType(RequestType.POST);
+		ireq.setRequestHostIp("127.0.0.1");
+		ireq.setPath("/d0/d0s0/d0s0v0");
+		ireq.setQuery(query);
 
 		/*
 		 * First query
 		 */
 
-		req.setInputReader(new StringReader(request));
-		req.setRequestTime(new Date());
-		req.setRequestHeaders(new HashMap<String, List<String>>());
+		ireq.setInputReader(new StringReader(request));
+		Date requestTime = new Date();
+		ireq.setRequestTime(requestTime);
+		ireq.setRequestHeaders(new HashMap<String, List<String>>());
 
-		ourOrchSvc.handleServiceRequest(req);
+		ourOrchSvc.handleServiceRequest(ireq);
 
 		ArgumentCaptor<UrlPoolBean> urlPool = ArgumentCaptor.forClass(UrlPoolBean.class);
 		ArgumentCaptor<Map> headers = ArgumentCaptor.forClass(Map.class);
@@ -1062,13 +1072,15 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		 * URLs. This one will return a cookie though
 		 */
 
-		req.setInputReader(new StringReader(request));
-		req.setRequestTime(new Date());
-		req.setRequestHeaders(new HashMap<String, List<String>>());
+		ireq.setInputReader(new StringReader(request));
+		requestTime = new Date();
+		ireq.setRequestTime(requestTime);
+		ireq.setRequestHeaders(new HashMap<String, List<String>>());
+		ireq.setRequestHostIp("1.2.3.4");
 		respBean.getHeaders().put("Set-Cookie", Collections.singletonList("JSESSIONID=THE_SESSION_ID"));
 		respBean.setSuccessfulUrl(myUrl2);
 
-		ourOrchSvc.handleServiceRequest(req);
+		ourOrchSvc.handleServiceRequest(ireq);
 
 		urlPool = ArgumentCaptor.forClass(UrlPoolBean.class);
 		headers = ArgumentCaptor.forClass(Map.class);
@@ -1078,19 +1090,24 @@ public class ServiceOrchestratorBeanIntegrationTest {
 
 		Collection<PersStickySessionUrlBinding> stickySessions = ourDao.getAllStickySessions();
 		assertEquals(1, stickySessions.size());
-
-		newEntityManager();
+		assertEquals("1.2.3.4", stickySessions.iterator().next().getRequestingIp());
+		assertEquals(myUrl2.getPid(), stickySessions.iterator().next().getUrl().getPid());
+		assertEquals(requestTime, stickySessions.iterator().next().getCreated());
+		assertEquals(requestTime, stickySessions.iterator().next().getLastAccessed());
+		
+		Thread.sleep(10); // make sure request times are different
 
 		/*
 		 * Third query, should use the second URL because we have a sticky
 		 * session now
 		 */
 
-		req.setInputReader(new StringReader(request));
-		req.setRequestTime(new Date());
-		req.getRequestHeaders().put("Cookie", Collections.singletonList("JSESSIONID=THE_SESSION_ID"));
+		ireq.setInputReader(new StringReader(request));
+		Date requestTime2 = new Date();
+		ireq.setRequestTime(requestTime2);
+		ireq.getRequestHeaders().put("Cookie", Collections.singletonList("JSESSIONID=THE_SESSION_ID"));
 
-		ourOrchSvc.handleServiceRequest(req);
+		ourOrchSvc.handleServiceRequest(ireq);
 
 		urlPool = ArgumentCaptor.forClass(UrlPoolBean.class);
 		headers = ArgumentCaptor.forClass(Map.class);
@@ -1098,8 +1115,14 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		assertEquals(myUrl2, urlPool.getAllValues().get(2).getPreferredUrl());
 		newEntityManager();
 
+		why does this flush automatically?
+				
 		stickySessions = ourDao.getAllStickySessions();
 		assertEquals(1, stickySessions.size());
+		assertEquals("1.2.3.4", stickySessions.iterator().next().getRequestingIp());
+		assertEquals(myUrl2.getPid(), stickySessions.iterator().next().getUrl().getPid());
+		assertEquals(requestTime, stickySessions.iterator().next().getCreated());
+		assertEquals(requestTime2, stickySessions.iterator().next().getLastAccessed());
 
 		newEntityManager();
 
@@ -1149,65 +1172,6 @@ public class ServiceOrchestratorBeanIntegrationTest {
 
 		myOrchSvcUnwrapped = (ServiceOrchestratorBean) unwrapProxy(ourOrchSvc);
 
-		// myDao = new DaoBean();
-		// myDao.setTransactionTemplateForUnitTest(new TransactionTemplate() {
-		// private static final long serialVersionUID = 1L;
-		// @Override
-		// public <T> T execute(TransactionCallback<T> theAction) throws
-		// TransactionException {
-		// return theAction.doInTransaction(null);
-		// }});
-		//
-		// myRuntimeQuerySvc = new RuntimeStatusQueryBean();
-		// myRuntimeQuerySvc.setDaoForUnitTests(myDao);
-		// myRuntimeQuerySvc.setConfigSvcForUnitTests(myConfigService);
-		//
-		// myLocalDbAuthService = new LocalDatabaseAuthorizationServiceBean();
-		// myLocalDbAuthService.setDao(myDao);
-		//
-		// mySecurityService = new SecurityServiceBean();
-		// mySecurityService.setPersSvc(myDao);
-		// mySecurityService.setLocalDbAuthService(myLocalDbAuthService);
-		// mySecurityService.setBroadcastSender(myBroadcastSender);
-		//
-		// myServiceRegistry = new ServiceRegistryBean();
-		// myServiceRegistry.setBroadcastSender(myBroadcastSender);
-		// myServiceRegistry.setDao(myDao);
-		// myServiceRegistry.setSvcHttpClient(ourHttpClientMock);
-		//
-		// myRuntimeStatus = new RuntimeStatusBean();
-		// myRuntimeStatus.setDao(myDao);
-		// myRuntimeStatus.setBroadcastSender(myBroadcastSender);
-		// myRuntimeStatus.setConfigSvc(myConfigService);
-		// myRuntimeStatus.setSvcRegistryForUnitTests(myServiceRegistry);
-		//
-		// mySoapInvoker = new ServiceInvokerSoap11();
-		// mySoapInvoker.setConfigService(myConfigService);
-		// mySoapInvoker.setHttpClient(ourHttpClientMock);
-		//
-		// myHl7Invoker = new ServiceInvokerHl7OverHttp();
-		// myHl7Invoker.setDaoForUnitTest(myDao);
-		// myHl7Invoker.setServiceRegistryForUnitTest(myServiceRegistry);
-		//
-		// myVirtualInvoker = new ServiceInvokerVirtual();
-		//
-		// myPropertyCapture = new PropertyCaptureBean();
-		//
-		// mySvc = new ServiceOrchestratorBean();
-		// mySvc.setHttpClient(ourHttpClientMock);
-		// mySvc.setRuntimeStatus(myRuntimeStatus);
-		// mySvc.setSecuritySvc(mySecurityService);
-		// mySvc.setSoap11ServiceInvoker(mySoapInvoker);
-		// mySvc.setSvcRegistry(myServiceRegistry);
-		// mySvc.setServiceInvokerHl7OverhttpForUnitTests(myHl7Invoker);
-		// mySvc.setServiceInvokerVirtualForUnitTests(myVirtualInvoker);
-		//
-		// myThrottlingServiceMock = mock(IThrottlingService.class);
-		// mySvc.setThrottlingService(myThrottlingServiceMock);
-		// mySvc.setPropertyCaptureForUnitTests(myPropertyCapture);
-		//
-		// myVirtualInvoker.setOrchestratorForUnitTests(mySvc);
-
 		/*
 		 * Start test
 		 */
@@ -1236,7 +1200,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 					PersUser user = ourDao.getOrCreateUser(myAuthHost, "test");
 					user.setPassword("admin");
 					user.setAllowAllDomains(true);
-					user.setAllowSourceIpsAsStrings(Arrays.asList("127.0.0.1"));
+					user.setAllowSourceIpsAsStrings(Arrays.asList(new String[] {"127.0.0.1", "1.2.3.4"}));
 					ourDao.saveServiceUser(user);
 				} catch (ProcessingException e) {
 					throw new Error(e);
@@ -1320,7 +1284,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		});
 
 		myMethod = mySvcVer.getMethodList().get(0);
-		myAuthHost = (PersAuthenticationHostLocalDatabase) ourDao.getAllAuthenticationHosts().iterator().next();
+//		myAuthHost = (PersAuthenticationHostLocalDatabase) ourDao.getAllAuthenticationHosts().iterator().next();
 		mySvcVerPid = mySvcVer.getPid();
 
 		ourTxTemplate.execute(new TransactionCallbackWithoutResult() {

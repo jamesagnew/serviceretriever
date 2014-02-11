@@ -37,6 +37,7 @@ import net.svcret.core.api.IConfigService;
 import net.svcret.core.api.IDao;
 import net.svcret.core.api.IRuntimeStatus;
 import net.svcret.core.api.IServiceRegistry;
+import net.svcret.core.api.SrBeanIncomingRequest;
 import net.svcret.core.api.SrBeanIncomingResponse;
 import net.svcret.core.api.SrBeanProcessedRequest;
 import net.svcret.core.api.SrBeanProcessedResponse;
@@ -140,7 +141,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	@Transactional(propagation=Propagation.SUPPORTS)
 	@Override
-	public UrlPoolBean buildUrlPool(BasePersServiceVersion theServiceVersion, Map<String, List<String>> theRequestHeaders) throws UnexpectedFailureException {
+	public UrlPoolBean buildUrlPool(BasePersServiceVersion theServiceVersion, SrBeanIncomingRequest theIncomingRequest) throws UnexpectedFailureException {
 		UrlPoolBean retVal = new UrlPoolBean();
 
 		PersHttpClientConfig clientConfig = theServiceVersion.getHttpClientConfig();
@@ -153,7 +154,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			break;
 		case RR_STICKY_SESSION:
 			chooseUrlRoundRobin(theServiceVersion, retVal);
-			shuffleUrlPoolBasedOnStickySessionPolicy(retVal, theRequestHeaders, theServiceVersion);
+			shuffleUrlPoolBasedOnStickySessionPolicy(retVal, theIncomingRequest.getRequestHeaders(), theServiceVersion, theIncomingRequest);
 			break;
 		}
 
@@ -873,7 +874,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	@Transactional(propagation=Propagation.NOT_SUPPORTED)
 	@Override
-	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, SrBeanProcessedRequest theProcessedRequest, PersUser theUser, SrBeanIncomingResponse theHttpResponse, SrBeanProcessedResponse theInvocationResponseResultsBean) throws UnexpectedFailureException,
+	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, SrBeanProcessedRequest theProcessedRequest, PersUser theUser, SrBeanIncomingResponse theHttpResponse, SrBeanProcessedResponse theInvocationResponseResultsBean, SrBeanIncomingRequest theIncomingRequest) throws UnexpectedFailureException,
 			InvocationFailedDueToInternalErrorException {
 		Validate.notNull(theInvocationTime, "InvocationTime");
 		Validate.notNull(theProcessedRequest, "InvocationResults");
@@ -961,7 +962,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 						if (StringUtils.isNotBlank(clientConfig.getStickySessionHeaderForSessionId())) {
 							List<String> sessionKeyValues = headers.get(clientConfig.getStickySessionHeaderForSessionId());
 							if (sessionKeyValues.size() > 0) {
-								updateStickySession(sessionKeyValues.get(0), svcVer, successfulUrl);
+								updateStickySession(sessionKeyValues.get(0), svcVer, successfulUrl, theIncomingRequest);
 							}
 						} else if (StringUtils.isNotBlank(clientConfig.getStickySessionCookieForSessionId())) {
 							List<String> cookieHeaders = headers.get("Set-Cookie");
@@ -970,7 +971,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 									List<HttpCookie> cookies = HttpCookie.parse(nextCookieHeader);
 									for (HttpCookie nextCookie : cookies) {
 										if (nextCookie.getName().equals(clientConfig.getStickySessionCookieForSessionId())) {
-											updateStickySession(nextCookie.getValue(), svcVer, successfulUrl);
+											updateStickySession(nextCookie.getValue(), svcVer, successfulUrl, theIncomingRequest);
 											break;
 										}
 									}
@@ -1133,22 +1134,22 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		mySvcRegistry = theSvcRegistry;
 	}
 
-	private void shuffleUrlPoolBasedOnStickySessionPolicy(String theSesionId, UrlPoolBean theUrlPool, BasePersServiceVersion theServiceVersion) throws UnexpectedFailureException {
+	private void shuffleUrlPoolBasedOnStickySessionPolicy(String theSesionId, UrlPoolBean theUrlPool, BasePersServiceVersion theServiceVersion, SrBeanIncomingRequest theIncomingRequest) throws UnexpectedFailureException {
 		if (StringUtils.isBlank(theSesionId)) {
 			return;
 		}
 
 		PersStickySessionUrlBinding binding = myStickySessionUrlBindings.get(theSesionId);
 		if (binding == null) {
-			PersStickySessionUrlBindingPk bindingPk = new PersStickySessionUrlBindingPk(theSesionId, theServiceVersion);
-			binding = myDao.getOrCreateStickySessionUrlBinding(bindingPk, theUrlPool.getPreferredUrl());
+			binding = createStickySessionObject(theSesionId, theServiceVersion, theIncomingRequest,theUrlPool.getPreferredUrl());
+			binding = myDao.createOrUpdateExistingStickySessionUrlBindingInNewTransaction(binding);
 			if (binding.isNewlyCreated()) {
 				myBroadcastSender.notifyNewStickySession(binding);
 			}
-			myStickySessionUrlBindings.put(bindingPk, binding);
+			myStickySessionUrlBindings.put(binding.getPk(), binding);
 		}
 
-		binding.setLastAccessed(new Date());
+		binding.setLastAccessed(theIncomingRequest.getRequestTime());
 
 		if (binding.getUrl().equals(theUrlPool.getPreferredUrl())) {
 			return;
@@ -1164,14 +1165,24 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	}
 
-	private void shuffleUrlPoolBasedOnStickySessionPolicy(UrlPoolBean theUrlPool, Map<String, List<String>> theHeaders, BasePersServiceVersion theSvcVer) throws UnexpectedFailureException {
+	private PersStickySessionUrlBinding createStickySessionObject(String theSesionId, BasePersServiceVersion theServiceVersion, SrBeanIncomingRequest theIncomingRequest, PersServiceVersionUrl theUrl) {
+		PersStickySessionUrlBinding binding;
+		PersStickySessionUrlBindingPk bindingPk = new PersStickySessionUrlBindingPk(theSesionId, theServiceVersion);
+		binding = new PersStickySessionUrlBinding(bindingPk, theUrl);
+		binding.setRequestingIp(theIncomingRequest.getRequestHostIp());
+		binding.setCreated(theIncomingRequest.getRequestTime());
+		binding.setLastAccessed(theIncomingRequest.getRequestTime());
+		return binding;
+	}
+
+	private void shuffleUrlPoolBasedOnStickySessionPolicy(UrlPoolBean theUrlPool, Map<String, List<String>> theHeaders, BasePersServiceVersion theSvcVer, SrBeanIncomingRequest theIncomingRequest) throws UnexpectedFailureException {
 		synchronized (myStickySessionUrlBindings) {
 
 			PersHttpClientConfig clientConfig = theSvcVer.getHttpClientConfig();
 			if (StringUtils.isNotBlank(clientConfig.getStickySessionHeaderForSessionId())) {
 				List<String> sessionKeyValues = theHeaders.get(clientConfig.getStickySessionHeaderForSessionId());
 				if (sessionKeyValues.size() > 0) {
-					shuffleUrlPoolBasedOnStickySessionPolicy(sessionKeyValues.get(0), theUrlPool, theSvcVer);
+					shuffleUrlPoolBasedOnStickySessionPolicy(sessionKeyValues.get(0), theUrlPool, theSvcVer, theIncomingRequest);
 				}
 			} else if (StringUtils.isNotBlank(clientConfig.getStickySessionCookieForSessionId())) {
 				List<String> cookieHeaders = theHeaders.get("Cookie");
@@ -1180,7 +1191,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 						List<HttpCookie> cookies = HttpCookie.parse(nextCookieHeader);
 						for (HttpCookie nextCookie : cookies) {
 							if (nextCookie.getName().equals(clientConfig.getStickySessionCookieForSessionId())) {
-								shuffleUrlPoolBasedOnStickySessionPolicy(nextCookie.getValue(), theUrlPool, theSvcVer);
+								shuffleUrlPoolBasedOnStickySessionPolicy(nextCookie.getValue(), theUrlPool, theSvcVer, theIncomingRequest);
 								break;
 							}
 						}
@@ -1216,14 +1227,15 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 	}
 
-	private void updateStickySession(String theSessionId, BasePersServiceVersion theSvcVer, PersServiceVersionUrl theSuccessfulUrl) throws UnexpectedFailureException {
+	private void updateStickySession(String theSessionId, BasePersServiceVersion theSvcVer, PersServiceVersionUrl theSuccessfulUrl, SrBeanIncomingRequest theIncomingRequest) throws UnexpectedFailureException {
 		if (StringUtils.isBlank(theSessionId)) {
 			return;
 		}
 		PersStickySessionUrlBindingPk pk = new PersStickySessionUrlBindingPk(theSessionId, theSvcVer);
 		PersStickySessionUrlBinding existing = myStickySessionUrlBindings.get(pk);
 		if (existing == null) {
-			existing = myDao.getOrCreateStickySessionUrlBinding(pk, theSuccessfulUrl);
+			existing = createStickySessionObject(theSessionId, theSvcVer, theIncomingRequest, theSuccessfulUrl);
+			existing = myDao.createOrUpdateExistingStickySessionUrlBindingInNewTransaction(existing);
 			if (existing.isNewlyCreated()) {
 				myBroadcastSender.notifyNewStickySession(existing);
 			}

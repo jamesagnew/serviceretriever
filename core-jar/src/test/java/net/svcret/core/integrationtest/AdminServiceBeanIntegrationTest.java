@@ -235,6 +235,7 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 	}
 
 	private DtoDomain createEverything() throws Exception {
+		SrBeanIncomingRequest iReq = new SrBeanIncomingRequest();
 		newEntityManager();
 
 		ourSecSvc.loadUserCatalogIfNeeded();
@@ -318,7 +319,7 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 		bean.setResponseType(ResponseTypeEnum.SUCCESS);
 
 		myEverythingInvocationTime = new Date(System.currentTimeMillis() - (60 * 1000L));
-		ourStatsSvc.recordInvocationMethod(myEverythingInvocationTime, 100, SrBeanProcessedRequest.forUnitTest(m1), null, httpResponse, bean);
+		ourStatsSvc.recordInvocationMethod(myEverythingInvocationTime, 100, SrBeanProcessedRequest.forUnitTest(m1), null, httpResponse, bean, iReq);
 
 		newEntityManager();
 

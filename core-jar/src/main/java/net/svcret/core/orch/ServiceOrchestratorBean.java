@@ -225,7 +225,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		try {
 			SrBeanProcessedResponse invocationResponseResultsBean = new SrBeanProcessedResponse();
 			invocationResponseResultsBean.setResponseType(theResponseType);
-			myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), theRequest.getRequestBody().length(), theProcessedRequest, theUserIfKnown, null, invocationResponseResultsBean);
+			myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), theRequest.getRequestBody().length(), theProcessedRequest, theUserIfKnown, null, invocationResponseResultsBean, theRequest);
 		} catch (UnexpectedFailureException e) {
 			// Don't do anything except log here since we're already handling a
 			// failure by the
@@ -360,7 +360,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			invocationResponse.setResponseStatusMessage("Failed to authorize credentials");
 			// TODO: also pass authorization outcome to save it
 			try {
-				myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), 0, results, theAuthorized.getAuthorizedUser(), null, invocationResponse);
+				myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), 0, results, theAuthorized.getAuthorizedUser(), null, invocationResponse, theRequest);
 			} catch (UnexpectedFailureException e) {
 				throw new InvocationFailedDueToInternalErrorException(e);
 			}
@@ -476,7 +476,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		UrlPoolBean urlPool;
 		if (theForceUrl == null) {
 			try {
-				urlPool = myRuntimeStatus.buildUrlPool(method.getServiceVersion(), headers);
+				urlPool = myRuntimeStatus.buildUrlPool(method.getServiceVersion(), theIncomingRequest);
 			} catch (UnexpectedFailureException e) {
 				throw new InvocationFailedDueToInternalErrorException(e);
 			}
@@ -533,7 +533,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 		if (theRecordOutcome) {
 			try {
-				myRuntimeStatus.recordInvocationMethod(theIncomingRequest.getRequestTime(), requestLength, theProcessedRequest, user, httpResponse, invocationResponse);
+				myRuntimeStatus.recordInvocationMethod(theIncomingRequest.getRequestTime(), requestLength, theProcessedRequest, user, httpResponse, invocationResponse, theIncomingRequest);
 			} catch (UnexpectedFailureException e) {
 				throw new InvocationFailedDueToInternalErrorException(e);
 			}

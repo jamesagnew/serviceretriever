@@ -21,6 +21,7 @@ import net.svcret.admin.shared.model.UrlSelectionPolicy;
 import net.svcret.core.api.IConfigService;
 import net.svcret.core.api.IDao;
 import net.svcret.core.api.IRuntimeStatus;
+import net.svcret.core.api.SrBeanIncomingRequest;
 import net.svcret.core.api.SrBeanIncomingResponse;
 import net.svcret.core.api.SrBeanProcessedRequest;
 import net.svcret.core.api.SrBeanProcessedResponse;
@@ -420,6 +421,8 @@ public class RuntimeStatusBeanTest {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Test
 	public void testRecordServerSecurityFailure() throws Exception {
+		SrBeanIncomingRequest iReq = new SrBeanIncomingRequest();
+
 		Date ts1 = myFmt.parse("2013-01-01 10:00:09");
 		Date ts2 = myFmt.parse("2013-01-01 10:00:10");
 
@@ -438,8 +441,8 @@ public class RuntimeStatusBeanTest {
 		invocationResponse.setResponseType(ResponseTypeEnum.SECURITY_FAIL);
 		invocationResponse.setResponseStatusMessage("Security fail");
 
-		svc.recordInvocationMethod(ts1, 0, SrBeanProcessedRequest.forUnitTest(method), user, null, invocationResponse);
-		svc.recordInvocationMethod(ts2, 0, SrBeanProcessedRequest.forUnitTest(method), user, null, invocationResponse);
+		svc.recordInvocationMethod(ts1, 0, SrBeanProcessedRequest.forUnitTest(method), user, null, invocationResponse, iReq);
+		svc.recordInvocationMethod(ts2, 0, SrBeanProcessedRequest.forUnitTest(method), user, null, invocationResponse, iReq);
 
 		svc.flushStatus();
 
@@ -471,6 +474,8 @@ public class RuntimeStatusBeanTest {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Test
 	public void testRecordMethodStatus() throws Exception {
+		SrBeanIncomingRequest iReq = new SrBeanIncomingRequest();
+
 		Date ts1 = myFmt.parse("2013-01-01 10:00:09");
 		Date ts2 = myFmt.parse("2013-01-01 10:00:10");
 
@@ -491,8 +496,8 @@ public class RuntimeStatusBeanTest {
 
 		SrBeanIncomingResponse httpResp=new SrBeanIncomingResponse();
 		httpResp.setBody("http response body");
-		svc.recordInvocationMethod(ts1, 0, SrBeanProcessedRequest.forUnitTest(method), user, httpResp, invocationResponse);
-		svc.recordInvocationMethod(ts2, 0, SrBeanProcessedRequest.forUnitTest(method), user, httpResp, invocationResponse);
+		svc.recordInvocationMethod(ts1, 0, SrBeanProcessedRequest.forUnitTest(method), user, httpResp, invocationResponse, iReq);
+		svc.recordInvocationMethod(ts2, 0, SrBeanProcessedRequest.forUnitTest(method), user, httpResp, invocationResponse, iReq);
 
 		svc.flushStatus();
 
@@ -523,6 +528,8 @@ public class RuntimeStatusBeanTest {
 	@SuppressWarnings({ "rawtypes", "unchecked", "unused" })
 	@Test
 	public void testRecordThrottleReject() throws Exception {
+		SrBeanIncomingRequest iReq = new SrBeanIncomingRequest();
+
 		Date ts1 = myFmt.parse("2013-01-01 10:00:09");
 		Date ts2 = myFmt.parse("2013-01-01 10:00:10");
 
@@ -548,7 +555,7 @@ public class RuntimeStatusBeanTest {
 		SrBeanIncomingResponse httpResponse = null;
 		SrBeanProcessedResponse invocationResponseResultsBean = new SrBeanProcessedResponse();
 		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.THROTTLE_REJ);
-		svc.recordInvocationMethod(invocationTime, requestLength, SrBeanProcessedRequest.forUnitTest(method), user, httpResponse, invocationResponseResultsBean);
+		svc.recordInvocationMethod(invocationTime, requestLength, SrBeanProcessedRequest.forUnitTest(method), user, httpResponse, invocationResponseResultsBean, iReq);
 
 		svc.flushStatus();
 

@@ -46,7 +46,6 @@ import net.svcret.core.model.entity.PersServiceVersionStatus;
 import net.svcret.core.model.entity.PersServiceVersionUrl;
 import net.svcret.core.model.entity.PersServiceVersionUrlStatus;
 import net.svcret.core.model.entity.PersStickySessionUrlBinding;
-import net.svcret.core.model.entity.PersStickySessionUrlBindingPk;
 import net.svcret.core.model.entity.PersUser;
 import net.svcret.core.model.entity.PersUserRecentMessage;
 import net.svcret.core.model.entity.PersUserStatus;
@@ -147,9 +146,9 @@ public interface IDao {
 
 	<P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> O getOrCreateStats(P thePk);
 
-	PersStickySessionUrlBinding getOrCreateStickySessionUrlBinding(PersStickySessionUrlBindingPk theBindingPk, PersServiceVersionUrl theUrlToUseIfNoneExists) throws UnexpectedFailureException;
+	PersStickySessionUrlBinding createOrUpdateExistingStickySessionUrlBindingInNewTransaction(PersStickySessionUrlBinding theBinding) throws UnexpectedFailureException;
 
-	PersStickySessionUrlBinding getOrCreateStickySessionUrlBindingInNewTransaction(PersStickySessionUrlBindingPk theBindingPk, PersServiceVersionUrl theUrlToUseIfNoneExists);
+//	PersStickySessionUrlBinding getOrCreateStickySessionUrlBindingInNewTransaction(PersStickySessionUrlBindingPk theBindingPk, PersServiceVersionUrl theUrlToUseIfNoneExists);
 
 	PersUser getOrCreateUser(BasePersAuthenticationHost theAuthHost, String theUsername) throws ProcessingException;
 

@@ -149,8 +149,8 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 	public void testUrlUnavailable() throws Exception {
 		createCatalog();
 
-		newEntityManager();
-
+		SrBeanIncomingRequest iReq = new SrBeanIncomingRequest();
+		
 		PersMonitorRulePassive rule = new PersMonitorRulePassive();
 		rule.setRuleActive(true);
 		rule.setAppliesToItems(myD1S1V1);
@@ -171,7 +171,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		httpResponse.setBody("successful response");
 		SrBeanProcessedResponse invocationResponseResultsBean = new SrBeanProcessedResponse();
 		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
-		myStatsSvc.recordInvocationMethod(new Date(), 100, SrBeanProcessedRequest.forUnitTest(myD1S1V1M1), null, httpResponse, invocationResponseResultsBean);
+		myStatsSvc.recordInvocationMethod(new Date(), 100, SrBeanProcessedRequest.forUnitTest(myD1S1V1M1), null, httpResponse, invocationResponseResultsBean, iReq);
 		newEntityManager();
 		myStatsSvc.flushStatus();
 		newEntityManager();
@@ -191,7 +191,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		httpResponse.setBody("successful response");
 		invocationResponseResultsBean = new SrBeanProcessedResponse();
 		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
-		myStatsSvc.recordInvocationMethod(new Date(), 100, SrBeanProcessedRequest.forUnitTest(myD1S1V1M1), null, httpResponse, invocationResponseResultsBean);
+		myStatsSvc.recordInvocationMethod(new Date(), 100, SrBeanProcessedRequest.forUnitTest(myD1S1V1M1), null, httpResponse, invocationResponseResultsBean, iReq);
 		newEntityManager();
 		myStatsSvc.flushStatus();
 		newEntityManager();
@@ -207,7 +207,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 	public void testLatencyExceedsThreshold() throws Exception {
 		createCatalog();
 
-		newEntityManager();
+		SrBeanIncomingRequest iReq = new SrBeanIncomingRequest();
 
 		PersMonitorRulePassive rule = new PersMonitorRulePassive();
 		rule.setRuleActive(true);
@@ -229,7 +229,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		httpResponse.setBody("successful response");
 		SrBeanProcessedResponse invocationResponseResultsBean = new SrBeanProcessedResponse();
 		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
-		myStatsSvc.recordInvocationMethod(new Date(), 100, SrBeanProcessedRequest.forUnitTest(myD1S1V1M1), null, httpResponse, invocationResponseResultsBean);
+		myStatsSvc.recordInvocationMethod(new Date(), 100, SrBeanProcessedRequest.forUnitTest(myD1S1V1M1), null, httpResponse, invocationResponseResultsBean, iReq);
 		newEntityManager();
 		myStatsSvc.flushStatus();
 		newEntityManager();
@@ -246,7 +246,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		httpResponse.setBody("successful response");
 		invocationResponseResultsBean = new SrBeanProcessedResponse();
 		invocationResponseResultsBean.setResponseType(ResponseTypeEnum.SUCCESS);
-		myStatsSvc.recordInvocationMethod(new Date(), 100, SrBeanProcessedRequest.forUnitTest(myD1S1V1M1), null, httpResponse, invocationResponseResultsBean);
+		myStatsSvc.recordInvocationMethod(new Date(), 100, SrBeanProcessedRequest.forUnitTest(myD1S1V1M1), null, httpResponse, invocationResponseResultsBean, iReq);
 		newEntityManager();
 		myStatsSvc.flushStatus();
 		newEntityManager();

@@ -1130,7 +1130,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 				pids.add(nextPers.getPid());
 				existingVersion.addServerAuth(nextPers);
 			}
-			existingVersion.addServerAuth(nextPers);
+//			existingVersion.addServerAuth(nextPers);
 		}
 		index = 0;
 		for (PersBaseServerAuth<?, ?> next : new ArrayList<PersBaseServerAuth<?, ?>>(existingVersion.getServerAuths())) {

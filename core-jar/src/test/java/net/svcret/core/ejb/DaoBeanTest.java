@@ -262,7 +262,8 @@ public class DaoBeanTest extends BaseJpaTest {
 		url1 = ver.getUrls().get(0);
 		url2 = ver.getUrls().get(1);
 		PersStickySessionUrlBindingPk pk = new PersStickySessionUrlBindingPk("ABC", ver);
-		PersStickySessionUrlBinding newBinding = mySvc.getOrCreateStickySessionUrlBindingInNewTransaction(pk, url1);
+		PersStickySessionUrlBinding binding = new PersStickySessionUrlBinding(pk, url1);
+		PersStickySessionUrlBinding newBinding = mySvc.createOrUpdateExistingStickySessionUrlBindingInNewTransaction(binding);
 
 		assertEquals(pk, newBinding.getPk());
 		assertEquals(url1, newBinding.getUrl());
@@ -272,7 +273,8 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		ver = (PersServiceVersionSoap11) mySvc.getServiceVersionByPid(ver.getPid());
 		url1 = ver.getUrls().get(0);
-		PersStickySessionUrlBinding newBinding2 = mySvc.getOrCreateStickySessionUrlBindingInNewTransaction(pk, url2);
+		 binding = new PersStickySessionUrlBinding(pk, url2);
+		 PersStickySessionUrlBinding newBinding2 = mySvc.createOrUpdateExistingStickySessionUrlBindingInNewTransaction(binding);
 		assertEquals(pk, newBinding2.getPk());
 		assertEquals(url1, newBinding2.getUrl()); // should not have changed
 		assertNotNull(newBinding2.getLastAccessed());

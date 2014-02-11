@@ -159,7 +159,7 @@ public class ThrottlingService implements IThrottlingService {
 			SrBeanProcessedResponse invocationResponseResultsBean = new SrBeanProcessedResponse();
 			invocationResponseResultsBean.setResponseType(ResponseTypeEnum.THROTTLE_REJ);
 			try {
-				myRuntimeStatusSvc.recordInvocationMethod(invocationTime, requestLength, theInvocationRequest, user, httpResponse, invocationResponseResultsBean);
+				myRuntimeStatusSvc.recordInvocationMethod(invocationTime, requestLength, theInvocationRequest, user, httpResponse, invocationResponseResultsBean, theHttpRequest);
 			} catch (UnexpectedFailureException e) {
 				// We'll just log this and end it since we're throwing an error
 				// anyhow

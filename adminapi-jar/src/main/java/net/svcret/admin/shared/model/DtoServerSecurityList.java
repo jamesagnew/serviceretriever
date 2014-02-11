@@ -1,5 +1,6 @@
 package net.svcret.admin.shared.model;
 
+import java.util.Collection;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -15,6 +16,16 @@ public class DtoServerSecurityList extends BaseDtoList<BaseDtoServerSecurity> {
 	@Override
 	public List<BaseDtoServerSecurity> getListForJaxb() {
 		return super.getListForJaxb();
+	}
+
+	@Override
+	public void add(BaseDtoServerSecurity theObject) {
+		super.add(theObject);
+	}
+
+	@Override
+	public void addAll(Collection<BaseDtoServerSecurity> theList) {
+		super.addAll(theList);
 	}
 
 }

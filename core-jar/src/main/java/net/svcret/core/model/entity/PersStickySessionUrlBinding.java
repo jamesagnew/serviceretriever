@@ -142,4 +142,9 @@ public class PersStickySessionUrlBinding implements Serializable {
 		return retVal;
 	}
 
+	public void merge(PersStickySessionUrlBinding theBinding) {
+		setLastAccessed(theBinding.getLastAccessed());
+		setRequestingIp(theBinding.getRequestingIp());
+	}
+
 }
