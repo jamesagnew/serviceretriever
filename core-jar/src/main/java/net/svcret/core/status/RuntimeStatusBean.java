@@ -111,7 +111,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private PersNodeStatus myNodeStatus;
 	private Date myNowForUnitTests;
 	@Autowired
-    private PlatformTransactionManager myPlatformTransactionManager;
+	private PlatformTransactionManager myPlatformTransactionManager;
 	@Autowired
 	private IServiceRegistry myServiceRegistry;
 	private final Map<PersStickySessionUrlBindingPk, PersStickySessionUrlBinding> myStickySessionUrlBindings;
@@ -131,15 +131,15 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	private final ConcurrentHashMap<Long, PersServiceVersionUrlStatus> myUrlStatus;
 
 	public RuntimeStatusBean() {
-		myUnflushedInvocationStats = new ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>>();
-		myUnflushedServiceVersionStatus = new ConcurrentHashMap<Long, PersServiceVersionStatus>();
-		myUnflushedUserStatus = new ConcurrentHashMap<PersUser, PersUserStatus>();
-		myUnflushedMethodStatus = new ConcurrentHashMap<PersMethod, PersMethodStatus>();
-		myUrlStatus = new ConcurrentHashMap<Long, PersServiceVersionUrlStatus>();
-		myStickySessionUrlBindings = new HashMap<PersStickySessionUrlBindingPk, PersStickySessionUrlBinding>();
+		myUnflushedInvocationStats = new ConcurrentHashMap<>();
+		myUnflushedServiceVersionStatus = new ConcurrentHashMap<>();
+		myUnflushedUserStatus = new ConcurrentHashMap<>();
+		myUnflushedMethodStatus = new ConcurrentHashMap<>();
+		myUrlStatus = new ConcurrentHashMap<>();
+		myStickySessionUrlBindings = new HashMap<>();
 	}
 
-	@Transactional(propagation=Propagation.SUPPORTS)
+	@Transactional(propagation = Propagation.SUPPORTS)
 	@Override
 	public UrlPoolBean buildUrlPool(BasePersServiceVersion theServiceVersion, SrBeanIncomingRequest theIncomingRequest) throws UnexpectedFailureException {
 		UrlPoolBean retVal = new UrlPoolBean();
@@ -171,7 +171,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 		startIndex = startIndex % theServiceVersion.getUrls().size();
 
-		List<PersServiceVersionUrl> urls = new LinkedList<PersServiceVersionUrl>();
+		List<PersServiceVersionUrl> urls = new LinkedList<>();
 		urls.add(theServiceVersion.getUrls().get(startIndex));
 		for (int count = startIndex + 1; count < theServiceVersion.getUrls().size(); count++) {
 			urls.add(theServiceVersion.getUrls().get(count));
@@ -209,11 +209,11 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	}
 
 	private void choseUrlPreferLocal(BasePersServiceVersion theServiceVersion, UrlPoolBean retVal) {
-		List<PersServiceVersionUrl> urls = new ArrayList<PersServiceVersionUrl>(theServiceVersion.getUrls().size());
+		List<PersServiceVersionUrl> urls = new ArrayList<>(theServiceVersion.getUrls().size());
 		retVal.setAlternateUrls(urls);
 
-		List<PersServiceVersionUrl> urlsWithDownFirstThenLocal = new ArrayList<PersServiceVersionUrl>();
-		LinkedList<PersServiceVersionUrl> allUrlsCopy = new LinkedList<PersServiceVersionUrl>(theServiceVersion.getUrls());
+		List<PersServiceVersionUrl> urlsWithDownFirstThenLocal = new ArrayList<>();
+		LinkedList<PersServiceVersionUrl> allUrlsCopy = new LinkedList<>(theServiceVersion.getUrls());
 
 		for (Iterator<PersServiceVersionUrl> iter = allUrlsCopy.iterator(); iter.hasNext();) {
 			PersServiceVersionUrl next = iter.next();
@@ -284,8 +284,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			retVal.setPreferredUrl(urls.remove(0));
 		}
 	}
-	
-	@Transactional(propagation=Propagation.NOT_SUPPORTED)
+
+	@Transactional(propagation = Propagation.NOT_SUPPORTED)
 	@Override
 	public void collapseStats() throws UnexpectedFailureException {
 		/*
@@ -301,7 +301,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 
 	}
-	
+
 	private void doCollapseStats() throws UnexpectedFailureException {
 		ourLog.debug("Doing a stats collapse pass");
 
@@ -347,8 +347,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	}
 
 	private <P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> void doCollapseStats(List<O> theList, InvocationStatsIntervalEnum toIntervalTyoe) {
-		Map<P, O> statsToFlush = new HashMap<P, O>();
-		List<BasePersStats<P, O>> statsToDelete = new ArrayList<BasePersStats<P, O>>();
+		Map<P, O> statsToFlush = new HashMap<>();
+		List<BasePersStats<P, O>> statsToDelete = new ArrayList<>();
 		for (ListIterator<O> iter = theList.listIterator(); iter.hasNext();) {
 			O next = iter.next();
 			if (next == null) {
@@ -389,8 +389,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		/*
 		 * Flush method stats
 		 */
-		List<BasePersStats<?, ?>> stats = new ArrayList<BasePersStats<?, ?>>();
-		HashSet<BasePersStatsPk<?, ?>> keys = new HashSet<BasePersStatsPk<?, ?>>();
+		List<BasePersStats<?, ?>> stats = new ArrayList<>();
+		HashSet<BasePersStatsPk<?, ?>> keys = new HashSet<>();
 		keys.addAll(myUnflushedInvocationStats.keySet());
 
 		if (keys.isEmpty()) {
@@ -433,7 +433,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		 * Flush URL statuses
 		 */
 
-		ArrayList<PersServiceVersionUrlStatus> urlStatuses = new ArrayList<PersServiceVersionUrlStatus>(myUrlStatus.values());
+		ArrayList<PersServiceVersionUrlStatus> urlStatuses = new ArrayList<>(myUrlStatus.values());
 		ourLog.trace("Going to flush {} URL statuses", urlStatuses.size());
 
 		for (Iterator<PersServiceVersionUrlStatus> iter = urlStatuses.iterator(); iter.hasNext();) {
@@ -445,7 +445,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				myUrlStatus.remove(nextToMerge.getPid());
 				continue;
 			}
-			
+
 			boolean toSave = nextToMerge.mergeNewer(nextExisting);
 			if (!toSave) {
 				ourLog.trace("Not saving URL status {} because it has no new values", nextToMerge.getPid());
@@ -463,15 +463,15 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		/*
 		 * Flush Method Status
 		 */
-		
-		ArrayList<PersMethodStatus> methodStatuses = new ArrayList<PersMethodStatus>(myUnflushedMethodStatus.values());
+
+		ArrayList<PersMethodStatus> methodStatuses = new ArrayList<>(myUnflushedMethodStatus.values());
 		for (Iterator<PersMethodStatus> iter = methodStatuses.iterator(); iter.hasNext();) {
 			PersMethodStatus next = iter.next();
 			if (!next.isDirty()) {
 				iter.remove();
 			} else {
 				PersMethod nextMethod = myDao.getServiceVersionMethodByPid(next.getMethod().getPid());
-				if (nextMethod==null) {
+				if (nextMethod == null) {
 					ourLog.info("Not flushing method status {} because is no longer exists in the database", next);
 					myUnflushedMethodStatus.remove(next.getMethod());
 					iter.remove();
@@ -485,13 +485,13 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			ourLog.info("Going to persist {} method statuses", methodStatuses.size());
 			myDao.saveMethodStatuses(methodStatuses);
 		}
-		
+
 		/*
 		 * Flush Service Version Status
 		 */
 
 		// TODO: replace this with method status
-		ArrayList<PersServiceVersionStatus> serviceVersionStatuses = new ArrayList<PersServiceVersionStatus>(myUnflushedServiceVersionStatus.values());
+		ArrayList<PersServiceVersionStatus> serviceVersionStatuses = new ArrayList<>(myUnflushedServiceVersionStatus.values());
 		for (Iterator<PersServiceVersionStatus> iter = serviceVersionStatuses.iterator(); iter.hasNext();) {
 			PersServiceVersionStatus next = iter.next();
 			if (!next.isDirty()) {
@@ -511,8 +511,8 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		 * Flush user status
 		 */
 
-		List<PersUserStatus> userStatuses = new ArrayList<PersUserStatus>();
-		for (IThrottleable next : new HashSet<PersUser>(myUnflushedUserStatus.keySet())) {
+		List<PersUserStatus> userStatuses = new ArrayList<>();
+		for (IThrottleable next : new HashSet<>(myUnflushedUserStatus.keySet())) {
 			PersUserStatus nextStatus = myUnflushedUserStatus.remove(next);
 			userStatuses.add(nextStatus);
 		}
@@ -525,6 +525,16 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		 */
 		{
 			Date cutoff = new Date(System.currentTimeMillis() - DateUtils.MILLIS_PER_HOUR);
+
+			// First purge anything
+			synchronized (myStickySessionUrlBindings) {for (PersStickySessionUrlBindingPk nextPk : new ArrayList<>(myStickySessionUrlBindings.keySet())) {
+				PersStickySessionUrlBinding next = myStickySessionUrlBindings.get(nextPk);
+				if (next.getLastAccessed().before(cutoff)) {
+					myStickySessionUrlBindings.remove(nextPk);
+				}
+			}}
+
+			// Flush DB sessions
 			Collection<PersStickySessionUrlBinding> allStickySessions = myDao.getAllStickySessions();
 			for (PersStickySessionUrlBinding nextExisting : allStickySessions) {
 
@@ -543,7 +553,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 						nextExisting.setUrl(inMemory.getUrl());
 						nextExisting.setRequestingIp(inMemory.getRequestingIp());
 						ourLog.debug("Updating sticky session '{}'", nextExisting);
-						myDao.saveStickySessionUrlBinding(nextExisting);
+						myDao.saveStickySessionUrlBindingInNewTransaction(nextExisting);
 					}
 				}
 
@@ -594,6 +604,11 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 				break;
 			case FAIL:
 				stats.addFailInvocation(responseTime, theRequestLengthChars, responseBytes);
+				break;
+			case SECURITY_FAIL:
+			case THROTTLE_REJ:
+				// Shouldn't happen
+				ourLog.warn("Shouldn't get here: {} on URL status", theInvocationResponseResultsBean.getResponseType());
 				break;
 			default:
 				break;
@@ -758,7 +773,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	}
 
 	@Override
-	@Transactional(propagation=Propagation.NOT_SUPPORTED)
+	@Transactional(propagation = Propagation.NOT_SUPPORTED)
 	public void flushStatus() {
 
 		/*
@@ -801,7 +816,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 
 		if (ourLog.isTraceEnabled()) {
-			ourLog.trace("Now have the following {} stats: {}", myUnflushedInvocationStats.size(), new ArrayList<BasePersStatsPk<?, ?>>(myUnflushedInvocationStats.keySet()));
+			ourLog.trace("Now have the following {} stats: {}", myUnflushedInvocationStats.size(), new ArrayList<>(myUnflushedInvocationStats.keySet()));
 		}
 
 		return stats;
@@ -864,18 +879,18 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 	public void postConstruct() {
 		ourLog.info("Flushing remaining unflushed statistics");
 		TransactionTemplate tmpl = new TransactionTemplate(myPlatformTransactionManager);
-        tmpl.execute(new TransactionCallbackWithoutResult() {
-            @Override
-            protected void doInTransactionWithoutResult(TransactionStatus status) {
-            	doFlushStatus();
-            }
-        });
+		tmpl.execute(new TransactionCallbackWithoutResult() {
+			@Override
+			protected void doInTransactionWithoutResult(TransactionStatus status) {
+				doFlushStatus();
+			}
+		});
 	}
 
-	@Transactional(propagation=Propagation.NOT_SUPPORTED)
+	@Transactional(propagation = Propagation.NOT_SUPPORTED)
 	@Override
-	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, SrBeanProcessedRequest theProcessedRequest, PersUser theUser, SrBeanIncomingResponse theHttpResponse, SrBeanProcessedResponse theInvocationResponseResultsBean, SrBeanIncomingRequest theIncomingRequest) throws UnexpectedFailureException,
-			InvocationFailedDueToInternalErrorException {
+	public void recordInvocationMethod(Date theInvocationTime, int theRequestLengthChars, SrBeanProcessedRequest theProcessedRequest, PersUser theUser, SrBeanIncomingResponse theHttpResponse, SrBeanProcessedResponse theInvocationResponseResultsBean,
+			SrBeanIncomingRequest theIncomingRequest) throws UnexpectedFailureException, InvocationFailedDueToInternalErrorException {
 		Validate.notNull(theInvocationTime, "InvocationTime");
 		Validate.notNull(theProcessedRequest, "InvocationResults");
 		Validate.notNull(theInvocationResponseResultsBean, "InvocationResponseResults");
@@ -926,7 +941,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			doRecordInvocationMethod(theRequestLengthChars, theHttpResponse, theInvocationResponseResultsBean, uStatsPk, theProcessedRequest.getThrottleTimeIfAny());
 
 		}
-		
+
 		doUpdateMethodAndUserStatus(method, theInvocationResponseResultsBean, theUser, theInvocationTime);
 
 		if (theHttpResponse != null) {
@@ -1028,7 +1043,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	}
 
-	@Transactional(propagation=Propagation.SUPPORTS)
+	@Transactional(propagation = Propagation.SUPPORTS)
 	@Override
 	public void recordInvocationStaticResource(Date theInvocationTime, PersServiceVersionResource theResource) {
 		Validate.notNull(theInvocationTime, "InvocationTime");
@@ -1042,7 +1057,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		stats.addAccess();
 	}
 
-	@Transactional(propagation=Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	@Override
 	public void recordNodeStatistics() {
 		if (!myNodeStatisticsLock.tryLock()) {
@@ -1069,7 +1084,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 	}
 
-	@Transactional(propagation=Propagation.SUPPORTS)
+	@Transactional(propagation = Propagation.SUPPORTS)
 	@Override
 	public void recordUrlFailure(PersServiceVersionUrl theUrl, Failure theFailure) {
 		Validate.notNull(theUrl, "Url");
@@ -1089,7 +1104,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	}
 
-	@Transactional(propagation=Propagation.SUPPORTS)
+	@Transactional(propagation = Propagation.SUPPORTS)
 	@Override
 	public void recordUrlSuccess(PersServiceVersionUrl theUrl, boolean theWasFault, String theMessage, String theContentType, int theResponseCode) {
 		Validate.notNull(theUrl, "Url");
@@ -1134,14 +1149,15 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		mySvcRegistry = theSvcRegistry;
 	}
 
-	private void shuffleUrlPoolBasedOnStickySessionPolicy(String theSesionId, UrlPoolBean theUrlPool, BasePersServiceVersion theServiceVersion, SrBeanIncomingRequest theIncomingRequest) throws UnexpectedFailureException {
-		if (StringUtils.isBlank(theSesionId)) {
+	private void shuffleUrlPoolBasedOnStickySessionPolicy(String theSessionId, UrlPoolBean theUrlPool, BasePersServiceVersion theServiceVersion, SrBeanIncomingRequest theIncomingRequest) throws UnexpectedFailureException {
+		if (StringUtils.isBlank(theSessionId)) {
 			return;
 		}
 
-		PersStickySessionUrlBinding binding = myStickySessionUrlBindings.get(theSesionId);
+		PersStickySessionUrlBindingPk pk = new PersStickySessionUrlBindingPk(theSessionId, theServiceVersion);
+		PersStickySessionUrlBinding binding = myStickySessionUrlBindings.get(pk);
 		if (binding == null) {
-			binding = createStickySessionObject(theSesionId, theServiceVersion, theIncomingRequest,theUrlPool.getPreferredUrl());
+			binding = createStickySessionObject(theSessionId, theServiceVersion, theIncomingRequest, theUrlPool.getPreferredUrl());
 			binding = myDao.createOrUpdateExistingStickySessionUrlBindingInNewTransaction(binding);
 			if (binding.isNewlyCreated()) {
 				myBroadcastSender.notifyNewStickySession(binding);
@@ -1156,7 +1172,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		}
 
 		if (!theUrlPool.getAlternateUrls().contains(binding.getUrl())) {
-			ourLog.warn("Can't apply sticky session '{}' because URL {} is not in the target pool", theSesionId, binding.getUrl().getPid());
+			ourLog.warn("Can't apply sticky session '{}' because URL {} is not in the target pool", theSessionId, binding.getUrl().getPid());
 			return;
 		}
 
@@ -1165,7 +1181,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 	}
 
-	private PersStickySessionUrlBinding createStickySessionObject(String theSesionId, BasePersServiceVersion theServiceVersion, SrBeanIncomingRequest theIncomingRequest, PersServiceVersionUrl theUrl) {
+	private static PersStickySessionUrlBinding createStickySessionObject(String theSesionId, BasePersServiceVersion theServiceVersion, SrBeanIncomingRequest theIncomingRequest, PersServiceVersionUrl theUrl) {
 		PersStickySessionUrlBinding binding;
 		PersStickySessionUrlBindingPk bindingPk = new PersStickySessionUrlBindingPk(theSesionId, theServiceVersion);
 		binding = new PersStickySessionUrlBinding(bindingPk, theUrl);
@@ -1231,23 +1247,27 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		if (StringUtils.isBlank(theSessionId)) {
 			return;
 		}
-		PersStickySessionUrlBindingPk pk = new PersStickySessionUrlBindingPk(theSessionId, theSvcVer);
-		PersStickySessionUrlBinding existing = myStickySessionUrlBindings.get(pk);
-		if (existing == null) {
-			existing = createStickySessionObject(theSessionId, theSvcVer, theIncomingRequest, theSuccessfulUrl);
-			existing = myDao.createOrUpdateExistingStickySessionUrlBindingInNewTransaction(existing);
-			if (existing.isNewlyCreated()) {
-				myBroadcastSender.notifyNewStickySession(existing);
+
+		PersStickySessionUrlBinding existing;
+		synchronized (myStickySessionUrlBindings) {
+			PersStickySessionUrlBindingPk pk = new PersStickySessionUrlBindingPk(theSessionId, theSvcVer);
+			existing = myStickySessionUrlBindings.get(pk);
+			if (existing == null) {
+				existing = createStickySessionObject(theSessionId, theSvcVer, theIncomingRequest, theSuccessfulUrl);
+				existing = myDao.createOrUpdateExistingStickySessionUrlBindingInNewTransaction(existing);
+				if (existing.isNewlyCreated()) {
+					myBroadcastSender.notifyNewStickySession(existing);
+				}
+				myStickySessionUrlBindings.put(pk, existing);
 			}
 		}
-		
+
 		if (!existing.getUrl().equals(theSuccessfulUrl)) {
 			ourLog.debug("Changing sticky session URL binding for session {} to {}", theSessionId, theSuccessfulUrl.getPid());
 			existing.setUrl(theSuccessfulUrl);
-			myDao.saveStickySessionUrlBinding(existing);
+			myDao.saveStickySessionUrlBindingInNewTransaction(existing);
 			myBroadcastSender.notifyNewStickySession(existing);
 		}
-
 	}
 
 }

@@ -98,7 +98,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -116,7 +115,7 @@ public class DaoBean implements IDao {
 	@PersistenceContext(name = "ServiceProxy_EJBPU", type = PersistenceContextType.TRANSACTION, unitName = "ServiceProxy_EJBPU")
 	private EntityManager myEntityManager;
 
-	private Map<Long, Long> myServiceVersionPidToStatusPid = new HashMap<Long, Long>();
+	private Map<Long, Long> myServiceVersionPidToStatusPid = new HashMap<>();
 
 	@Autowired
 	protected PlatformTransactionManager myPlatformTransactionManager;
@@ -342,10 +341,11 @@ public class DaoBean implements IDao {
 		return results;
 	}
 
+	@Override
 	@SuppressWarnings({ "cast", "unchecked" })
-	public <P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> O getInvocationStats(P thePk) {
+	public <P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> O getInvocationStats(P thePkToVisit) {
 
-		return (O) thePk.accept(new IStatsVisitor<O>() {
+		return (O) thePkToVisit.accept(new IStatsVisitor<O>() {
 			@Override
 			public O visit(PersInvocationMethodSvcverStats theStats, PersInvocationMethodSvcverStatsPk thePk) {
 				return doVisit((P) thePk);
@@ -421,7 +421,7 @@ public class DaoBean implements IDao {
 
 		List<PersLibraryMessage> retVal = query.getResultList();
 
-		return new HashSet<PersLibraryMessage>(retVal);
+		return new HashSet<>(retVal);
 	}
 
 	@Override
@@ -436,7 +436,7 @@ public class DaoBean implements IDao {
 
 		List<PersLibraryMessage> retVal = query.getResultList();
 
-		return new HashSet<PersLibraryMessage>(retVal);
+		return new HashSet<>(retVal);
 	}
 
 	@Override
@@ -1065,18 +1065,18 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
-	public void saveInvocationStats(Collection<? extends BasePersStats<?, ?>> theStats, List<? extends BasePersStats<?, ?>> theStatsToDelete) {
-		Validate.notNull(theStats);
+	public void saveInvocationStats(Collection<? extends BasePersStats<?, ?>> theStatsToSave, List<? extends BasePersStats<?, ?>> theStatsToDelete) {
+		Validate.notNull(theStatsToSave);
 		Validate.notNull(theStatsToDelete);
 
-		ourLog.info("Going to save {} invocation stats entries and delete {} entries", theStats.size(), theStatsToDelete.size());
+		ourLog.info("Going to save {} invocation stats entries and delete {} entries", theStatsToSave.size(), theStatsToDelete.size());
 
 		ourLog.debug("Got lock on FLUSH_STATS");
 
 		final IntegerHolder count = new IntegerHolder();
 		final IntegerHolder ucount = new IntegerHolder();
 		IntegerHolder acount = new IntegerHolder();
-		for (Iterator<? extends BasePersStats<?, ?>> iter = theStats.iterator(); iter.hasNext();) {
+		for (Iterator<? extends BasePersStats<?, ?>> iter = theStatsToSave.iterator(); iter.hasNext();) {
 			BasePersStats<?, ?> nextToMerge = iter.next();
 			final BasePersStats<?, ?> existingPersisted = nextToMerge.accept(new IStatsVisitor<BasePersStats<?, ?>>() {
 				@Override
@@ -1189,7 +1189,7 @@ public class DaoBean implements IDao {
 
 		PersMonitorRuleFiring firing = myEntityManager.merge(theFiring);
 
-		List<PersMonitorRuleFiringProblem> newProblems = new ArrayList<PersMonitorRuleFiringProblem>();
+		List<PersMonitorRuleFiringProblem> newProblems = new ArrayList<>();
 		for (PersMonitorRuleFiringProblem next : theFiring.getProblems()) {
 			next.setFiring(firing);
 			PersMonitorRuleFiringProblem newProblem = myEntityManager.merge(next);
@@ -1230,6 +1230,7 @@ public class DaoBean implements IDao {
 		myEntityManager.merge(theNodeStatus);
 	}
 
+	@Override
 	public <T extends BasePersMonitorRule> T saveOrCreateMonitorRule(T theRule) {
 		Validate.notNull(theRule, "theRule");
 
@@ -1426,8 +1427,9 @@ public class DaoBean implements IDao {
 		ourLog.info("Persisted {} URL status entries", count);
 	}
 
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
 	@Override
-	public void saveStickySessionUrlBinding(PersStickySessionUrlBinding theBinding) {
+	public void saveStickySessionUrlBindingInNewTransaction(PersStickySessionUrlBinding theBinding) {
 		ourLog.debug("Saving sticky session with ID '{}' for URL {}", theBinding.getPk().getSessionId(), theBinding.getUrl().getPid());
 		myEntityManager.merge(theBinding);
 	}
@@ -1564,15 +1566,9 @@ public class DaoBean implements IDao {
 	}
 
 	@VisibleForTesting
-	void setThisForUnitTest() {
-		myTransactionTemplate = new TransactionTemplate() {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public <T> T execute(TransactionCallback<T> theAction) throws TransactionException {
-				return theAction.doInTransaction(null);
-			}
-		};
+	public
+	void setTransactionTemplateForUnitTest() {
+		myTransactionTemplate = new NullTransactionTemplateForUnitTests();
 	}
 
 	@VisibleForTesting

@@ -34,7 +34,8 @@ public class ServiceInvokerHl7OverHttpTest {
 		
 		myDao = mock(IDao.class);
 		mySvc.setDaoForUnitTest(myDao);
-		
+		mySvc.setTransactionTemplateForUnitTest();
+
 		myServiceRegistry = mock(IServiceRegistry.class);
 		mySvc.setServiceRegistryForUnitTest(myServiceRegistry);;
 		

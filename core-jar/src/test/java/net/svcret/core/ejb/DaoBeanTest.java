@@ -115,7 +115,7 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		newEntityManager();
 
-		List<PersMonitorRuleFiring> firings = new ArrayList<PersMonitorRuleFiring>();
+		List<PersMonitorRuleFiring> firings = new ArrayList<>();
 		for (int i = 0; i < 100; i++) {
 			PersMonitorRuleFiring firing = new PersMonitorRuleFiring();
 			firings.add(firing);
@@ -627,7 +627,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		assertEquals(2, user.getAllowSourceIpsAsStrings().size());
 		assertThat(user.getAllowSourceIpsAsStrings(), Matchers.contains("1.1.1.1", "1.1.1.2"));
 
-		List<String> strings = new ArrayList<String>();
+		List<String> strings = new ArrayList<>();
 		strings.add("1.1.1.1");
 		strings.add("1.1.1.3");
 		user.setAllowSourceIpsAsStrings(strings);
@@ -838,8 +838,8 @@ public class DaoBeanTest extends BaseJpaTest {
 
 	}
 
-	private Collection<BasePersStats<?, ?>> sing(BasePersStats<?, ?> theStats) {
-		ArrayList<BasePersStats<?, ?>> retVal = new ArrayList<BasePersStats<?, ?>>();
+	private static Collection<BasePersStats<?, ?>> sing(BasePersStats<?, ?> theStats) {
+		ArrayList<BasePersStats<?, ?>> retVal = new ArrayList<>();
 		retVal.add(theStats);
 		return retVal;
 	}
@@ -856,6 +856,7 @@ public class DaoBeanTest extends BaseJpaTest {
 	public void before2() {
 		System.setProperty(BasePersObject.NET_SVCRET_UNITTESTMODE,"true");
 		mySvc = new DaoBean();
+		mySvc.setTransactionTemplateForUnitTest();
 		
 		myConfig = new PersConfig();
 		

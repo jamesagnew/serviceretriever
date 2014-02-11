@@ -18,6 +18,7 @@ import net.svcret.core.api.SrBeanIncomingRequest;
 import net.svcret.core.api.SrBeanIncomingResponse;
 import net.svcret.core.api.SrBeanProcessedRequest;
 import net.svcret.core.api.SrBeanProcessedResponse;
+import net.svcret.core.dao.NullTransactionTemplateForUnitTests;
 import net.svcret.core.ex.InvalidRequestException;
 import net.svcret.core.ex.InvalidRequestException.IssueEnum;
 import net.svcret.core.ex.InvocationRequestFailedException;
@@ -53,17 +54,17 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 
 	@Autowired
 	private IServiceRegistry myServiceRegistry;
-	
+
 	@Autowired
 	private JpaTransactionManager myTxManager;
-	
+
 	private TransactionTemplate myTxTemplate;
 
 	@PostConstruct
 	public void setup() {
 		myTxTemplate = new TransactionTemplate(myTxManager);
 	}
-	
+
 	public ServiceInvokerHl7OverHttp() {
 		// DefaultHapiContext hapiContext = new DefaultHapiContext();
 		// hapiContext.setValidationContext(new ValidationContextImpl());
@@ -82,8 +83,8 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 
 	@Override
 	public SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, final BasePersServiceVersion theServiceDefinition) throws InvalidRequestException, InvocationRequestFailedException {
-		PersServiceVersionHl7OverHttp svc = (PersServiceVersionHl7OverHttp)theServiceDefinition;
-		
+		PersServiceVersionHl7OverHttp svc = (PersServiceVersionHl7OverHttp) theServiceDefinition;
+
 		if (theRequest.getRequestType() != RequestType.POST) {
 			throw new InvalidRequestException(IssueEnum.UNSUPPORTED_ACTION, theRequest.getRequestType().name(), "Requests to HL7 over HTTP services must use HTTP POST.");
 		}
@@ -94,7 +95,7 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 		if (semicolonIndex > -1) {
 			contentType = contentType.substring(0, semicolonIndex).trim();
 		}
-		
+
 		if (CT_ER7.equals(contentType)) {
 			ourLog.debug("Content type is {}", contentType);
 		} else if (CT_XML.equals(contentType)) {
@@ -115,13 +116,13 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 			String[] messageTypeParts = PreParser.getFields(message, "MSH-9-1", "MSH-9-2");
 			messageType = svc.getMethodNameTemplate().replace("${messageType}", messageTypeParts[0]).replace("${messageVersion}", messageTypeParts[1]);
 		} catch (HL7Exception e) {
-			throw new InvocationRequestFailedException(e,"Failed to parse message, error was: " + e.getMessage());
+			throw new InvocationRequestFailedException(e, "Failed to parse message, error was: " + e.getMessage());
 		}
 
 		PersMethod method = theServiceDefinition.getMethod(messageType);
 		if (method == null) {
-			
-			method			=myTxTemplate.execute(new TransactionCallback<PersMethod>() {
+
+			method = myTxTemplate.execute(new TransactionCallback<PersMethod>() {
 				@Override
 				public PersMethod doInTransaction(TransactionStatus status) {
 					try {
@@ -133,10 +134,10 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 							dbSvcVer = myServiceRegistry.saveServiceVersion(dbSvcVer);
 						} catch (ProcessingException e) {
 							ourLog.error("Failed to auto-create method", e);
-							throw new InvocationRequestFailedException(e, "Failed to auto-create method '" + messageType + "'. Error was: " + e.getMessage());		
+							throw new InvocationRequestFailedException(e, "Failed to auto-create method '" + messageType + "'. Error was: " + e.getMessage());
 						} catch (UnexpectedFailureException e) {
 							ourLog.error("Failed to auto-create method", e);
-							throw new InvocationRequestFailedException(e, "Failed to auto-create method '" + messageType + "'. Error was: " + e.getMessage());		
+							throw new InvocationRequestFailedException(e, "Failed to auto-create method '" + messageType + "'. Error was: " + e.getMessage());
 						}
 						PersMethod method1 = dbSvcVer.getMethod(messageType);
 						ourLog.info("Created new method '{}' and got PID {}", messageType, method1.getPid());
@@ -151,22 +152,22 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 
 		SrBeanProcessedRequest retVal = new SrBeanProcessedRequest();
 		retVal.setResultMethod(method, message, contentType);
-		
+
 		return retVal;
 	}
 
 	@Override
-	public SrBeanProcessedResponse processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingResponse theResponse) throws InvocationResponseFailedException  {
-		
+	public SrBeanProcessedResponse processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingResponse theResponse) throws InvocationResponseFailedException {
+
 		String responseBody = theResponse.getBody();
 		String responseCode;
 		try {
 			responseCode = PreParser.getFields(responseBody, "MSA-1")[0];
 		} catch (HL7Exception e) {
-			throw new InvocationResponseFailedException(e, "Failed to parse response: "+e.getMessage(), theResponse);
+			throw new InvocationResponseFailedException(e, "Failed to parse response: " + e.getMessage(), theResponse);
 		}
-		
-		SrBeanProcessedResponse retVal=new SrBeanProcessedResponse();
+
+		SrBeanProcessedResponse retVal = new SrBeanProcessedResponse();
 		retVal.setResponseBody(responseBody);
 		retVal.setResponseContentType(theResponse.getContentType());
 		retVal.setResponseHeaders(new HashMap<String, List<String>>());
@@ -174,12 +175,12 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 		ourLog.trace("Successful acknowledgement code: {}", ourLog);
 		if ("AA".equals(responseCode) || "CA".equals(responseCode)) {
 			retVal.setResponseType(ResponseTypeEnum.SUCCESS);
-		}else {
+		} else {
 			retVal.setResponseFaultCode(responseCode);
 			retVal.setResponseFaultDescription("Non successful acknowledgement code (MSA-2): " + responseCode);
 			retVal.setResponseType(ResponseTypeEnum.FAULT);
 		}
-		
+
 		return retVal;
 	}
 
@@ -189,9 +190,14 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 	}
 
 	@Override
-	public String obscureMessageForLogs(BasePersServiceVersion theServiceDefinition, String theMessage, Set<String> theElementNamesToRedact)  {
+	public String obscureMessageForLogs(BasePersServiceVersion theServiceDefinition, String theMessage, Set<String> theElementNamesToRedact) {
 		// TODO: implement
 		return theMessage;
+	}
+
+	@VisibleForTesting
+	public void setTransactionTemplateForUnitTest() {
+		myTxTemplate = new NullTransactionTemplateForUnitTests();
 	}
 
 }

@@ -242,7 +242,7 @@ public interface IDao {
 
 	void saveServiceVersionUrlStatusInNewTransaction(List<PersServiceVersionUrlStatus> theList);
 
-	void saveStickySessionUrlBinding(PersStickySessionUrlBinding theBinding);
+	void saveStickySessionUrlBindingInNewTransaction(PersStickySessionUrlBinding theBinding);
 
 	void saveUserRecentMessage(PersUserRecentMessage theMsg);
 

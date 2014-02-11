@@ -16,14 +16,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.activation.DataSource;
-import javax.persistence.EntityManager;
 
 import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.api.UnexpectedFailureException;
@@ -45,7 +41,6 @@ import net.svcret.admin.shared.model.GWsSecServerSecurity;
 import net.svcret.admin.shared.model.GWsSecUsernameTokenClientSecurity;
 import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
-import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
 import net.svcret.core.api.IResponseValidator;
 import net.svcret.core.api.ISecurityService.AuthorizationResultsBean;
@@ -55,7 +50,6 @@ import net.svcret.core.api.SrBeanIncomingResponse;
 import net.svcret.core.api.SrBeanOutgoingResponse;
 import net.svcret.core.api.SrBeanProcessedRequest;
 import net.svcret.core.api.UrlPoolBean;
-import net.svcret.core.ejb.BaseJpaTest;
 import net.svcret.core.ex.InvalidRequestException;
 import net.svcret.core.ex.InvalidRequestException.IssueEnum;
 import net.svcret.core.ex.InvocationFailedDueToInternalErrorException;
@@ -70,20 +64,14 @@ import net.svcret.core.model.entity.BasePersServiceVersion;
 import net.svcret.core.model.entity.BasePersStats;
 import net.svcret.core.model.entity.BasePersStatsPk;
 import net.svcret.core.model.entity.PersAuthenticationHostLocalDatabase;
-import net.svcret.core.model.entity.PersDomain;
 import net.svcret.core.model.entity.PersHttpClientConfig;
 import net.svcret.core.model.entity.PersInvocationMethodSvcverStats;
 import net.svcret.core.model.entity.PersMethod;
-import net.svcret.core.model.entity.PersService;
 import net.svcret.core.model.entity.PersServiceVersionRecentMessage;
 import net.svcret.core.model.entity.PersServiceVersionUrl;
 import net.svcret.core.model.entity.PersStickySessionUrlBinding;
 import net.svcret.core.model.entity.PersUser;
-import net.svcret.core.model.entity.http.PersHttpBasicServerAuth;
 import net.svcret.core.model.entity.soap.PersServiceVersionSoap11;
-import net.svcret.core.model.entity.soap.PersWsSecUsernameTokenClientAuth;
-import net.svcret.core.model.entity.soap.PersWsSecUsernameTokenServerAuth;
-import net.svcret.core.model.entity.virtual.PersServiceVersionVirtual;
 import net.svcret.core.orch.ServiceOrchestratorBean;
 import net.svcret.core.status.RuntimeStatusBean;
 import net.svcret.core.status.RuntimeStatusQueryBean.StatsAccumulator;
@@ -102,7 +90,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 
@@ -120,7 +107,6 @@ public class ServiceOrchestratorBeanIntegrationTest {
 	private DtoServiceVersionSoap11 mySvcVer;
 	private PersAuthenticationHostLocalDatabase myAuthHost;
 	private ServiceOrchestratorBean myOrchSvcUnwrapped;
-	private EntityManager ourEntityManager;
 	private DtoDomain d0;
 	private GService d0s0;
 
@@ -203,7 +189,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 
 	}
 
-	private SrBeanOutgoingResponse provideNull() {
+	private static SrBeanOutgoingResponse provideNull() {
 		return null;
 	}
 
@@ -408,7 +394,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		 */
 		RuntimeStatusBean statsSvc = (RuntimeStatusBean) unwrapProxy(ourStatsSvc);
 		ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>> stats = statsSvc.getUnflushedInvocationStatsForUnitTests();
-		Collection<BasePersStats<?, ?>> values = new ArrayList<BasePersStats<?, ?>>(stats.values());
+		Collection<BasePersStats<?, ?>> values = new ArrayList<>(stats.values());
 		assertEquals(3, stats.size());
 
 		for (BasePersStats<?, ?> next : values) {
@@ -1115,8 +1101,20 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		assertEquals(myUrl2, urlPool.getAllValues().get(2).getPreferredUrl());
 		newEntityManager();
 
-		why does this flush automatically?
-				
+		stickySessions = ourDao.getAllStickySessions();
+		assertEquals(1, stickySessions.size());
+		assertEquals("1.2.3.4", stickySessions.iterator().next().getRequestingIp());
+		assertEquals(myUrl2.getPid(), stickySessions.iterator().next().getUrl().getPid());
+		assertEquals(requestTime, stickySessions.iterator().next().getCreated());
+		assertEquals(requestTime, stickySessions.iterator().next().getLastAccessed());
+
+		ourTxTemplate.execute(new TransactionCallbackWithoutResult() {
+			@Override
+			protected void doInTransactionWithoutResult(TransactionStatus status) {
+				ourStatsSvc.flushStatus();
+			}
+		});
+		
 		stickySessions = ourDao.getAllStickySessions();
 		assertEquals(1, stickySessions.size());
 		assertEquals("1.2.3.4", stickySessions.iterator().next().getRequestingIp());
@@ -1124,8 +1122,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		assertEquals(requestTime, stickySessions.iterator().next().getCreated());
 		assertEquals(requestTime2, stickySessions.iterator().next().getLastAccessed());
 
-		newEntityManager();
-
+		
 	}
 
 	@BeforeClass
