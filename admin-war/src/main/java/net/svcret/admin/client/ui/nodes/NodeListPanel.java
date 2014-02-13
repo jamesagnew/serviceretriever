@@ -1,12 +1,10 @@
 package net.svcret.admin.client.ui.nodes;
 
 import net.svcret.admin.client.AdminPortal;
-import net.svcret.admin.client.MyResources;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PCellTable;
 import net.svcret.admin.shared.DateUtil;
-import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
 import net.svcret.admin.shared.model.DtoNodeStatus;
 
 import com.google.gwt.cell.client.SafeHtmlCell;
@@ -44,11 +42,13 @@ public class NodeListPanel extends FlowPanel {
 		myLoadingSpinner.show();
 		contentPanel.add(myLoadingSpinner);
 
+		initNodesList(contentPanel);
+		
 		
 	}
 	
 	
-	private void initOutcomesList(FlowPanel theContentPanel) {
+	private void initNodesList(FlowPanel theContentPanel) {
 
 		myListGrid = new PCellTable<>();
 		myListGrid.setEmptyTableWidget(new Label("This check has not yet been executed"));
@@ -83,11 +83,11 @@ public class NodeListPanel extends FlowPanel {
 			public SafeHtml getValue(DtoNodeStatus theObject) {
 				switch (theObject.getStatus()) {
 				case ACTIVE:
-					return SafeHtmlUtils.fromTrustedString("Active");
+					return SafeHtmlUtils.fromTrustedString("Alive");
 				case DOWN:
 					return SafeHtmlUtils.fromTrustedString("Down");
 				case NO_REQUESTS:
-					return SafeHtmlUtils.fromTrustedString("Alive but inactive");
+					return SafeHtmlUtils.fromTrustedString("Alive (no TX)");
 				case RECENTLY_STARTED:
 					return SafeHtmlUtils.fromTrustedString("Recently restarted");
 				}
@@ -106,7 +106,19 @@ public class NodeListPanel extends FlowPanel {
 				case RECENTLY_STARTED:
 					SafeHtmlBuilder b = new SafeHtmlBuilder();
 					b.append(theObject.getTransactionsSuccessfulPerMinute());
-					
+					if (theObject.getTransactionsFaultPerMinute() > 0.0) {
+						b.appendHtmlConstant("<br/>");
+						b.append(theObject.getTransactionsFaultPerMinute());
+					}
+					if (theObject.getTransactionsFailPerMinute() > 0.0) {
+						b.appendHtmlConstant("<br/>");
+						b.append(theObject.getTransactionsFailPerMinute());
+					}
+					if (theObject.getTransactionsSecurityFailPerMinute() > 0.0) {
+						b.appendHtmlConstant("<br/>");
+						b.append(theObject.getTransactionsSecurityFailPerMinute());
+					}
+					break;
 				case DOWN:
 					if (theObject.getTimeElapsedSinceDown() == null) {
 						return SafeHtmlUtils.fromTrustedString("");
