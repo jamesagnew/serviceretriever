@@ -803,6 +803,15 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 	@DefaultMessage("Failure Description")
 	String recentMessagesGrid_ColFailDescription();
 
+	@DefaultMessage("({0,number,#.#} successful tx/min)")
+	SafeHtml nodeStatusPanel_SuccessfulTransactions(double theMsgsPerMinute);
+	@DefaultMessage("({0,number,#.#} fault tx/min)")
+	SafeHtml nodeStatusPanel_SuccessfulTransactions(double theMsgsPerMinute);
+	@DefaultMessage("({0,number,#.#} failed tx/min)")
+	SafeHtml nodeStatusPanel_SuccessfulTransactions(double theMsgsPerMinute);
+	@DefaultMessage("({0,number,#.#} security failed tx/min)")
+	SafeHtml nodeStatusPanel_SuccessfulTransactions(double theMsgsPerMinute);
+
 	@DefaultMessage("Node {0}: Active ({1,number,#.#} tx/min)")
 	String topPanel_NodeActive(String theNodeId, double theMsgsPerMinute);
 

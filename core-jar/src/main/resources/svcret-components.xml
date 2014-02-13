@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
-	xmlns:p="http://www.springframework.org/schema/p" xmlns:tx="http://www.springframework.org/schema/tx"
-	xmlns:task="http://www.springframework.org/schema/task"
-	xmlns:util="http://www.springframework.org/schema/util"
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:tx="http://www.springframework.org/schema/tx" xmlns:task="http://www.springframework.org/schema/task" xmlns:util="http://www.springframework.org/schema/util"
 	xsi:schemaLocation="
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
@@ -14,13 +11,11 @@
 	default-autowire="no">
 
 	<context:annotation-config />
-	<context:mbean-server/>
+	<context:mbean-server />
 
-	<!-- <context:component-scan base-package="net.svcret.core"></context:component-scan> 
-		<context:component-scan base-package="net.svcret.core"></context:component-scan> -->
+	<!-- <context:component-scan base-package="net.svcret.core"></context:component-scan> <context:component-scan base-package="net.svcret.core"></context:component-scan> -->
 
-	<task:annotation-driven executor="myTaskExecutor"
-		scheduler="myTaskScheduler" />
+	<task:annotation-driven executor="myTaskExecutor" scheduler="myTaskScheduler" />
 	<task:executor id="myTaskExecutor" pool-size="5" />
 	<task:scheduler id="myTaskScheduler" pool-size="10" />
 
@@ -32,21 +27,23 @@
 		<property name="beans">
 			<map>
 				<entry key="net.svcret:name=AdminService" value-ref="myAdminService" />
+				<entry key="net.svcret:name=ChartingService" value-ref="myChartingService" />
 			</map>
 		</property>
 		<property name="assembler">
-			<bean
-				class="org.springframework.jmx.export.assembler.InterfaceBasedMBeanInfoAssembler">
+			<bean class="org.springframework.jmx.export.assembler.InterfaceBasedMBeanInfoAssembler">
 				<property name="managedInterfaces">
-					<value>net.svcret.admin.api.IAdminServiceLocal</value>
+					<array>
+						<value>net.svcret.admin.api.IAdminServiceLocal</value>
+						<value>net.svcret.admin.api.IChartingServiceBean</value>
+					</array>
 				</property>
 			</bean>
 		</property>
 	</bean>
 
 
-	<bean name="adminServiceProvider" class="net.svcret.admin.api.AdminServiceProvider"
-		factory-method="getInstance">
+	<bean name="adminServiceProvider" class="net.svcret.admin.api.AdminServiceProvider" factory-method="getInstance">
 		<property name="adminService">
 			<bean class="org.springframework.jmx.access.MBeanProxyFactoryBean">
 				<property name="objectName" value="net.svcret:name=AdminService" />
@@ -55,12 +52,13 @@
 		</property>
 		<property name="chartingService">
 			<bean class="org.springframework.jmx.access.MBeanProxyFactoryBean">
-				<property name="objectName" value="net.svcret:name=AdminService" />
+				<property name="objectName" value="net.svcret:name=ChartingService" />
 				<property name="proxyInterface" value="net.svcret.admin.api.IChartingServiceBean" />
 			</bean>
 		</property>
 	</bean>
 
+	<bean id="myChartingService" class="net.svcret.core.chart.ChartingServiceBean" />
 	<bean id="myHttpClient" class="net.svcret.core.ejb.HttpClientBean" />
 	<bean id="myDao" class="net.svcret.core.dao.DaoBean" />
 	<bean id="myRuntimeStatus" class="net.svcret.core.status.RuntimeStatusBean" />
@@ -84,15 +82,11 @@
 
 	<!-- Auth Service Modules -->
 	<bean id="myAuthServiceLdap" class="net.svcret.core.auth.LdapAuthorizationServiceBean" />
-	<bean id="myAuthServiceLocalDb"
-		class="net.svcret.core.auth.LocalDatabaseAuthorizationServiceBean" />
+	<bean id="myAuthServiceLocalDb" class="net.svcret.core.auth.LocalDatabaseAuthorizationServiceBean" />
 
-	<!-- <bean id="mySessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean"> 
-		<property name="dataSource" ref="myDataSource" /> <property name="packagesToScan"> 
-		<list> <value>net.svcret.core.model.entity</value> </list> </property> <property 
-		name="hibernateProperties"> <props> <prop key="hibernate.dialect">org.hibernate.dialect.HSQLDialect</prop> 
-		<prop key="hibernate.show_sql">true</prop> <prop key="hibernate.hbm2ddl.auto">update</prop> 
-		</props> </property> </bean> -->
+	<!-- <bean id="mySessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean"> <property name="dataSource" ref="myDataSource" /> <property name="packagesToScan"> 
+		<list> <value>net.svcret.core.model.entity</value> </list> </property> <property name="hibernateProperties"> <props> <prop key="hibernate.dialect">org.hibernate.dialect.HSQLDialect</prop> 
+		<prop key="hibernate.show_sql">true</prop> <prop key="hibernate.hbm2ddl.auto">update</prop> </props> </property> </bean> -->
 
 	<bean id="myTxManager" class="org.springframework.orm.jpa.JpaTransactionManager">
 		<property name="entityManagerFactory" ref="myEntityManagerFactory" />

@@ -20,7 +20,7 @@
             </div>
         </c:if>
  
-        <form action="j_security_check" method="post">
+        <form action="j_security_check" method="post" onsubmit="return prepareSubmit(this);">
           <fieldset>
             <legend>Login</legend>
                           
@@ -43,11 +43,23 @@
   </center>
   
   <script type="text/javascript">
-  		
-  		/*
-  		The following preserves the location hash, which is the specific
-  		page the user was trying to access
-  		*/
+  
+		function prepareSubmit(form) {
+		    // Extract the fragment from the browser's current location.
+		    var hash = decodeURIComponent(self.document.location.hash);
+		 
+		    // The fragment value may not contain a leading # symbol
+		    if (hash && hash.indexOf("#") === 0) {
+		        hash = hash.substring(1);
+		        setCookie("sr-first-page", hash);
+		    } else {
+		    	setCookie("sr-first-page", "");
+		    }
+		   
+		    // Append the fragment to the current action so that it persists to the redirected URL.
+		    form.action = form.action + hash;
+		    return true;
+		}
   
 		function setCookie(c_name,value,exdays) {
 			var exdate=new Date();
@@ -56,10 +68,6 @@
 			document.cookie=c_name + "=" + c_value;
 		}	
   
-		if (location.hash.match(/^\#[A-Z]{3}.*/)) {
-			var hash = location.hash.substring(1);
-			setCookie("sr-first-page", hash);
-		}
   </script>
   
 </body>

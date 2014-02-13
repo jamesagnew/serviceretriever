@@ -70,7 +70,7 @@ public abstract class BaseServerBean implements BeanNameAware {
 	public void startup() throws Exception {
 		ourLog.info("Starting up admin listener on port {} with name: {}", myPort, myBeanName);
 
-		QueuedThreadPool threadPool = new QueuedThreadPool(10, 2);
+		QueuedThreadPool threadPool = new QueuedThreadPool(10, 2) {};
 		threadPool.setName(myBeanName);
 		myProxyServer = new Server(threadPool);
 
