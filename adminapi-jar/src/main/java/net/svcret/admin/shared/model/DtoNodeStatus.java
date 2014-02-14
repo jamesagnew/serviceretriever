@@ -15,20 +15,27 @@ public class DtoNodeStatus implements Serializable {
 
 	@XmlElement(name = "NodeId")
 	private String myNodeId;
+
 	@XmlElement(name = "Status")
 	private NodeStatusEnum myStatus;
 	@XmlElement(name = "TimeElapsedSinceDown")
 	private Long myTimeElapsedSinceDown;
+
 	@XmlElement(name = "TimeElapsedSinceLastTx")
 	private Long myTimeElapsedSinceLastTx;
+
 	@XmlElement(name = "TransactionsFailPerMinute")
 	private double myTransactionsFailPerMinute;
+
 	@XmlElement(name = "TransactionsFaultPerMinute")
 	private double myTransactionsFaultPerMinute;
+
 	@XmlElement(name = "TransactionsSecurityFailPerMinute")
 	private double myTransactionsSecurityFailPerMinute;
+
 	@XmlElement(name = "TransactionsSuccessPerMinute")
 	private double myTransactionsSuccessfulPerMinute;
+
 
 	public String getNodeId() {
 		return myNodeId;
@@ -37,30 +44,26 @@ public class DtoNodeStatus implements Serializable {
 	public NodeStatusEnum getStatus() {
 		return myStatus;
 	}
-
 	public Long getTimeElapsedSinceDown() {
 		return myTimeElapsedSinceDown;
 	}
-
 	public Long getTimeElapsedSinceLastTx() {
 		return myTimeElapsedSinceLastTx;
 	}
-
 	public double getTransactionsFailPerMinute() {
 		return myTransactionsFailPerMinute;
 	}
-
 	public double getTransactionsFaultPerMinute() {
 		return myTransactionsFaultPerMinute;
 	}
-
 	public double getTransactionsSecurityFailPerMinute() {
 		return myTransactionsSecurityFailPerMinute;
 	}
-
+		
 	public double getTransactionsSuccessfulPerMinute() {
 		return myTransactionsSuccessfulPerMinute;
 	}
+
 
 	public void setNodeId(String theNodeId) {
 		myNodeId = theNodeId;

@@ -28,6 +28,7 @@ import net.svcret.core.admin.AdminServiceBean.IWithStats;
 import net.svcret.core.api.IConfigService;
 import net.svcret.core.api.IDao;
 import net.svcret.core.api.IRuntimeStatusQueryLocal;
+import net.svcret.core.api.IServiceRegistry;
 import net.svcret.core.ejb.nodecomm.IBroadcastSender;
 import net.svcret.core.model.entity.BasePersServiceVersion;
 import net.svcret.core.model.entity.PersDomain;
@@ -47,6 +48,7 @@ import org.rrd4j.graph.RrdGraph;
 import org.rrd4j.graph.RrdGraphDef;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -57,6 +59,7 @@ import com.google.common.annotations.VisibleForTesting;
  * they can be used to try things out.
  */
 @Service
+@Transactional(readOnly=true)
 public class ChartingServiceBean implements IChartingServiceBean {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ChartingServiceBean.class);
@@ -86,13 +89,16 @@ public class ChartingServiceBean implements IChartingServiceBean {
 	@Autowired
 	private IRuntimeStatusQueryLocal myStatus;
 
+	@Autowired
+	private IServiceRegistry myServiceRegistry;
+	
 	@Override
 	public byte[] renderSvcVerLatencyMethodGraph(long theSvcVerPid, TimeRange theRange, boolean theIndividualMethod) throws UnexpectedFailureException, IOException {
 		ourLog.info("Rendering user method graph for Service Version {}", theSvcVerPid);
 
 		myBroadcastSender.requestFlushQueuedStats();
 
-		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theSvcVerPid);
+		BasePersServiceVersion svcVer = myServiceRegistry.getServiceVersionByPid(theSvcVerPid);
 
 		/*
 		 * Init the graph
@@ -110,9 +116,9 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		/*
 		 * Loop through each method and load the latency stats
 		 */
-		final List<String> names = new ArrayList<String>();
-		final List<List<Long>> latencyLists = new ArrayList<List<Long>>();
-		final List<Long> timestamps = new ArrayList<Long>();
+		final List<String> names = new ArrayList<>();
+		final List<List<Long>> latencyLists = new ArrayList<>();
+		final List<Long> timestamps = new ArrayList<>();
 
 		for (PersMethod nextMethod : svcVer.getMethods()) {
 			if (BaseDtoServiceVersion.METHOD_NAME_UNKNOWN.equals(nextMethod.getName())) {
@@ -122,12 +128,12 @@ public class ChartingServiceBean implements IChartingServiceBean {
 			final List<Long> latencyMin;
 			if (theIndividualMethod) {
 				names.add(nextMethod.getName());
-				latencyMin = new ArrayList<Long>();
+				latencyMin = new ArrayList<>();
 				latencyLists.add(latencyMin);
 			} else {
 				if (names.isEmpty()) {
 					names.add("All Methods");
-					latencyMin = new ArrayList<Long>();
+					latencyMin = new ArrayList<>();
 					latencyLists.add(latencyMin);
 				} else {
 					latencyMin = latencyLists.get(0);
@@ -168,7 +174,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		 * Straighten
 		 */
 		int numWithValues = 0;
-		List<Boolean> hasValuesList = new ArrayList<Boolean>();
+		List<Boolean> hasValuesList = new ArrayList<>();
 		for (List<Long> nextList : latencyLists) {
 			boolean hasValues = false;
 			for (int i = 0; i < nextList.size(); i++) {
@@ -190,7 +196,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		/*
 		 * Figure out colours
 		 */
-		List<Color> colours = new ArrayList<Color>();
+		List<Color> colours = new ArrayList<>();
 		int colourIndex = 0;
 		for (int i = 0; i < hasValuesList.size(); i++) {
 			if (hasValuesList.get(i)) {
@@ -232,12 +238,12 @@ public class ChartingServiceBean implements IChartingServiceBean {
 
 		myBroadcastSender.requestFlushQueuedStats();
 
-		final List<Integer> invCount = new ArrayList<Integer>();
-		final List<Long> totalSuccessReqBytes = new ArrayList<Long>();
-		final List<Long> totalSuccessRespBytes = new ArrayList<Long>();
-		final List<Long> timestamps = new ArrayList<Long>();
+		final List<Integer> invCount = new ArrayList<>();
+		final List<Long> totalSuccessReqBytes = new ArrayList<>();
+		final List<Long> totalSuccessRespBytes = new ArrayList<>();
+		final List<Long> timestamps = new ArrayList<>();
 
-		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
+		BasePersServiceVersion svcVer = myServiceRegistry.getServiceVersionByPid(theServiceVersionPid);
 		for (PersMethod nextMethod : svcVer.getMethods()) {
 			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats>() {
 				@Override
@@ -309,11 +315,11 @@ public class ChartingServiceBean implements IChartingServiceBean {
 
 		myBroadcastSender.requestFlushQueuedStats();
 
-		final List<Long> throttleAcceptCount = new ArrayList<Long>();
-		final List<Long> throttleRejectCount = new ArrayList<Long>();
-		final List<Long> timestamps = new ArrayList<Long>();
+		final List<Long> throttleAcceptCount = new ArrayList<>();
+		final List<Long> throttleRejectCount = new ArrayList<>();
+		final List<Long> timestamps = new ArrayList<>();
 
-		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
+		BasePersServiceVersion svcVer = myServiceRegistry.getServiceVersionByPid(theServiceVersionPid);
 		for (PersMethod nextMethod : svcVer.getMethods()) {
 			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats>() {
 				@Override
@@ -368,13 +374,13 @@ public class ChartingServiceBean implements IChartingServiceBean {
 
 		myBroadcastSender.requestFlushQueuedStats();
 
-		final List<Double> invCount = new ArrayList<Double>();
-		final List<Double> invCountFault = new ArrayList<Double>();
-		final List<Double> invCountFail = new ArrayList<Double>();
-		final List<Double> invCountSecurityFail = new ArrayList<Double>();
-		final List<Long> timestamps = new ArrayList<Long>();
+		final List<Double> invCount = new ArrayList<>();
+		final List<Double> invCountFault = new ArrayList<>();
+		final List<Double> invCountFail = new ArrayList<>();
+		final List<Double> invCountSecurityFail = new ArrayList<>();
+		final List<Long> timestamps = new ArrayList<>();
 
-		BasePersServiceVersion svcVer = myDao.getServiceVersionByPid(theServiceVersionPid);
+		BasePersServiceVersion svcVer = myServiceRegistry.getServiceVersionByPid(theServiceVersionPid);
 		for (PersMethod nextMethod : svcVer.getMethods()) {
 			doWithStatsByMinute(myConfig.getConfig(), theRange, myStatus, nextMethod, new IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats>() {
 				@Override
@@ -420,7 +426,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 			graphDef.gprint("inv", ConsolFun.MIN, "Min %8.1f   ");
 			graphDef.gprint("inv", ConsolFun.MAX, "Max %8.1f\\l");
 		} else {
-			graphDef.area("inv", Color.decode("#00C000"), StringUtils.rightPad("No Successful calls during this time period", 20));
+			graphDef.area("inv", Color.decode("#00C000"), StringUtils.rightPad("No Successful calls during this time period\\l", 20));
 		}
 		
 		if (hasValues(invCountFault)) {
@@ -474,8 +480,8 @@ public class ChartingServiceBean implements IChartingServiceBean {
 			end = new Date();
 		}
 
-		HashMap<Long, List<Double>> methods = new HashMap<Long, List<Double>>();
-		List<Long> timestamps = new ArrayList<Long>();
+		HashMap<Long, List<Double>> methods = new HashMap<>();
+		List<Long> timestamps = new ArrayList<>();
 
 		InvocationStatsIntervalEnum nextInterval = doWithStatsSupportFindInterval(myConfig.getConfig(), start);
 		Date nextDate = nextInterval.truncate(start);
@@ -483,7 +489,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 
 		List<PersInvocationMethodUserStats> stats = myDao.getUserStatsWithinTimeRange(user, start, end);
 		Validate.notNull(stats);
-		stats = new ArrayList<PersInvocationMethodUserStats>(stats);
+		stats = new ArrayList<>(stats);
 		Collections.sort(stats, new Comparator<PersInvocationMethodUserStats>() {
 			@Override
 			public int compare(PersInvocationMethodUserStats theO1, PersInvocationMethodUserStats theO2) {
@@ -522,7 +528,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 					long methodPid = nextStat.getPk().getMethod();
 					List<Double> newList = methods.get(methodPid);
 					if (newList == null) {
-						newList = new ArrayList<Double>();
+						newList = new ArrayList<>();
 						for (int i = 0; i < timesPassed; i++) {
 							newList.add(ZERO_DOUBLE);
 						}
@@ -551,7 +557,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		ourLog.debug("Found {} entries for {} methods", new Object[] { foundEntries, methods.size() });
 
 		// Come up with a good order
-		final Map<Long, PersMethod> pidToMethod = new HashMap<Long, PersMethod>();
+		final Map<Long, PersMethod> pidToMethod = new HashMap<>();
 		for (long nextPid : methods.keySet()) {
 			PersMethod method = myDao.getServiceVersionMethodByPid(nextPid);
 			if (method != null) {
@@ -560,7 +566,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 				ourLog.debug("Discarding unknown method: {}", nextPid);
 			}
 		}
-		ArrayList<Long> pids = new ArrayList<Long>(pidToMethod.keySet());
+		ArrayList<Long> pids = new ArrayList<>(pidToMethod.keySet());
 		Collections.sort(pids, new Comparator<Long>() {
 			@Override
 			public int compare(Long theO1, Long theO2) {
@@ -640,7 +646,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		myBroadcastSender=theMock;
 	}
 
-	private Color createStackColour(int theNum, int theIndex) {
+	private static Color createStackColour(int theNum, int theIndex) {
 		if (theNum == 0) {
 			return Color.black;
 		}
@@ -659,8 +665,8 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		return (new Color(next));
 	}
 
-	private List<Color> createStackColours(int theNum) {
-		ArrayList<Color> retVal = new ArrayList<Color>();
+	private static List<Color> createStackColours(int theNum) {
+		ArrayList<Color> retVal = new ArrayList<>();
 		if (theNum == 0) {
 			return retVal;
 		}
@@ -682,7 +688,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		return retVal;
 	}
 
-	private boolean hasValues(List<Double> theInvCountFault) {
+	private static boolean hasValues(List<Double> theInvCountFault) {
 		for (Double next : theInvCountFault) {
 			if (next != null && next > 0.0) {
 				return true;
@@ -691,7 +697,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		return false;
 	}
 
-	private float[] provideNewRainbowHsb() {
+	private static float[] provideNewRainbowHsb() {
 		float[] retVal = new float[3];
 		retVal[0] = RAINBOW_BASE_HSB[0];
 		retVal[1] = RAINBOW_BASE_HSB[1];
@@ -699,7 +705,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		return retVal;
 	}
 
-	private byte[] render(RrdGraphDef graphDef) throws IOException {
+	private static byte[] render(RrdGraphDef graphDef) throws IOException {
 
 		graphDef.setImageFormat("PNG");
 		RrdGraph graph = new RrdGraph(graphDef);
@@ -713,7 +719,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		return bos.toByteArray();
 	}
 
-	private double sumDoubles(List<Double> theValues) {
+	private static double sumDoubles(List<Double> theValues) {
 		double retVal = 0.0;
 		for (Double next : theValues) {
 			retVal += next;
@@ -721,7 +727,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		return retVal;
 	}
 
-	private double[] toDoublesFromDoubles(List<Double> theInvCount) {
+	private static double[] toDoublesFromDoubles(List<Double> theInvCount) {
 		double[] retVal = new double[theInvCount.size()];
 		int i = 0;
 		for (Double next : theInvCount) {
@@ -730,7 +736,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		return retVal;
 	}
 
-	private double[] toDoublesFromLongs(List<Long> theInvCount) {
+	private static double[] toDoublesFromLongs(List<Long> theInvCount) {
 		double[] retVal = new double[theInvCount.size()];
 		int i = 0;
 		for (Long next : theInvCount) {

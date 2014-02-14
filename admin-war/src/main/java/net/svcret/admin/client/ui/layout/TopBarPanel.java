@@ -62,31 +62,36 @@ public class TopBarPanel extends DockLayoutPanel {
 		myNodesContentPanel.clear();
 		for (DtoNodeStatus nextStatus : nodeStatuses) {
 
-			String text = null;
-			switch (nextStatus.getStatus()) {
-			case ACTIVE:
-				text = AdminPortal.MSGS.topPanel_NodeActive(nextStatus.getNodeId(), nextStatus.getTransactionsSuccessfulPerMinute());
-				break;
-			case NO_REQUESTS:
-				if (nextStatus.getTimeElapsedSinceLastTx() != null) {
-					text = AdminPortal.MSGS.topPanel_NoRequests(nextStatus.getNodeId(), DateUtil.formatTimeElapsedForLastInvocation(new Date(System.currentTimeMillis() - nextStatus.getTimeElapsedSinceLastTx())));
-				} else {
-					text = AdminPortal.MSGS.topPanel_NoRequestsYes(nextStatus.getNodeId());
-				}
-				break;
-			case RECENTLY_STARTED:
-				text = AdminPortal.MSGS.topPanel_RecentlyRestarted(nextStatus.getNodeId());
-				break;
-			case DOWN:
-				text = AdminPortal.MSGS.topPanel_NodeDown(nextStatus.getNodeId(), DateUtil.formatTimeElapsedForLastInvocation(new Date(System.currentTimeMillis() - nextStatus.getTimeElapsedSinceDown())));
-				break;
-			}
+			String text = describeNodeStatus(nextStatus);
 
 			Label nodeStatusLabel = new Label(text);
 			nodeStatusLabel.addStyleName(MyResources.CSS.topPanelNodeStatusLabel());
 			myNodesContentPanel.add(nodeStatusLabel);
 
 		}
+	}
+
+	public static String describeNodeStatus(DtoNodeStatus nextStatus) {
+		String text = null;
+		switch (nextStatus.getStatus()) {
+		case ACTIVE:
+			text = AdminPortal.MSGS.topPanel_NodeActive(nextStatus.getNodeId(), nextStatus.getTransactionsSuccessfulPerMinute());
+			break;
+		case NO_REQUESTS:
+			if (nextStatus.getTimeElapsedSinceLastTx() != null) {
+				text = AdminPortal.MSGS.topPanel_NoRequests(nextStatus.getNodeId(), DateUtil.formatTimeElapsedForLastInvocation(new Date(System.currentTimeMillis() - nextStatus.getTimeElapsedSinceLastTx())));
+			} else {
+				text = AdminPortal.MSGS.topPanel_NoRequestsYes(nextStatus.getNodeId());
+			}
+			break;
+		case RECENTLY_STARTED:
+			text = AdminPortal.MSGS.topPanel_RecentlyRestarted(nextStatus.getNodeId());
+			break;
+		case DOWN:
+			text = AdminPortal.MSGS.topPanel_NodeDown(nextStatus.getNodeId(), DateUtil.formatTimeElapsedForLastInvocation(new Date(System.currentTimeMillis() - nextStatus.getTimeElapsedSinceDown())));
+			break;
+		}
+		return text;
 	}
 
 }

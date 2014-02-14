@@ -38,6 +38,7 @@ import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
+import net.svcret.admin.shared.model.DtoNodeStatus;
 import net.svcret.admin.shared.model.DtoPropertyCapture;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
@@ -503,8 +504,8 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		retVal.setDomainList(domainList);
 
-		for (PersNodeStatus next : myRuntimeStatusQuerySvc.getAllNodeStatuses()) {
-			retVal.getNodeStatuses().add(next.toDao());
+		for (DtoNodeStatus next : myRuntimeStatusQuerySvc.getAllNodeStatuses()) {
+			retVal.getNodeStatuses().add(next);
 		}
 
 		return retVal;
