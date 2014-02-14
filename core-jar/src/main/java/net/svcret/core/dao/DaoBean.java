@@ -478,6 +478,14 @@ public class DaoBean implements IDao {
 	}
 
 	@Override
+	public List<PersNodeStats> getNodeStatsWithinRange(Date theStartInclusive, Date theEndInclusive) {
+		TypedQuery<PersNodeStats> q = myEntityManager.createNamedQuery(Queries.PERS_NODESTATS_FINDRANGE, PersNodeStats.class);
+		q.setParameter("START_TIME", theStartInclusive, TemporalType.TIMESTAMP);
+		q.setParameter("END_TIME", theEndInclusive, TemporalType.TIMESTAMP);
+		return q.getResultList();
+	}
+
+	@Override
 	public PersAuthenticationHostLdap getOrCreateAuthenticationHostLdap(String theModuleId) throws ProcessingException {
 		BasePersAuthenticationHost retVal = getAuthenticationHost(theModuleId);
 
@@ -1063,13 +1071,14 @@ public class DaoBean implements IDao {
 
 	@Override
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void saveInvocationStats(Collection<? extends BasePersStats<?, ?>> theStats) {
+	public void saveStatsInNewTransaction(Collection<? extends BasePersStats<?, ?>> theStats) {
 		List<? extends BasePersStats<?, ?>> emptyList = Collections.emptyList();
-		saveInvocationStats(theStats, emptyList);
+		saveStatsInNewTransaction(theStats, emptyList);
 	}
 
 	@Override
-	public void saveInvocationStats(Collection<? extends BasePersStats<?, ?>> theStatsToSave, List<? extends BasePersStats<?, ?>> theStatsToDelete) {
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void saveStatsInNewTransaction(Collection<? extends BasePersStats<?, ?>> theStatsToSave, List<? extends BasePersStats<?, ?>> theStatsToDelete) {
 		Validate.notNull(theStatsToSave);
 		Validate.notNull(theStatsToDelete);
 

@@ -4,6 +4,7 @@ import static net.svcret.admin.shared.enm.InvocationStatsIntervalEnum.*;
 import static org.junit.Assert.*;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,6 +46,8 @@ import net.svcret.core.model.entity.PersMonitorRuleFiring;
 import net.svcret.core.model.entity.PersMonitorRuleFiringProblem;
 import net.svcret.core.model.entity.PersMonitorRuleNotifyContact;
 import net.svcret.core.model.entity.PersMonitorRulePassive;
+import net.svcret.core.model.entity.PersNodeStats;
+import net.svcret.core.model.entity.PersNodeStatus;
 import net.svcret.core.model.entity.PersService;
 import net.svcret.core.model.entity.PersServiceVersionRecentMessage;
 import net.svcret.core.model.entity.PersServiceVersionStatus;
@@ -687,7 +690,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		stats.addSuccessInvocation(100, 0, 0);
 		stats.addSuccessInvocation(200, 0, 0);
 
-		mySvc.saveInvocationStats(sing(stats));
+		mySvc.saveStatsInNewTransaction(sing(stats));
 
 		newEntityManager();
 
@@ -704,7 +707,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		stats = new PersInvocationMethodSvcverStats(InvocationStatsIntervalEnum.MINUTE, now, method);
 		stats.addSuccessInvocation(200, 0, 0);
 
-		mySvc.saveInvocationStats(sing(stats));
+		mySvc.saveStatsInNewTransaction(sing(stats));
 
 		newEntityManager();
 
@@ -807,7 +810,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		stats.addSuccessInvocation(100, 0, 0);
 		stats.addSuccessInvocation(200, 0, 0);
 
-		mySvc.saveInvocationStats(sing(stats));
+		mySvc.saveStatsInNewTransaction(sing(stats));
 
 		newEntityManager();
 
@@ -824,7 +827,7 @@ public class DaoBeanTest extends BaseJpaTest {
 		stats = new PersInvocationMethodUserStats(InvocationStatsIntervalEnum.MINUTE, now, method, user);
 		stats.addSuccessInvocation(200, 0, 0);
 
-		mySvc.saveInvocationStats(sing(stats));
+		mySvc.saveStatsInNewTransaction(sing(stats));
 
 		newEntityManager();
 
@@ -993,6 +996,51 @@ public class DaoBeanTest extends BaseJpaTest {
 
 	}
 
+	@Test
+	public void testGetNodeStatsWithinRange() throws ProcessingException, ParseException {
+		newEntityManager();
+
+		PersNodeStatus nodeStatus = new PersNodeStatus();
+		nodeStatus.setNodeActiveSince(new Date());
+		nodeStatus.setNodeLastTransactionIfNewer(new Date());
+		nodeStatus.setStatusTimestamp(new Date());
+		nodeStatus.setNodeId("nodeid");
+
+		PersNodeStatus nodeStatus2 = new PersNodeStatus();
+		nodeStatus2.setNodeActiveSince(new Date());
+		nodeStatus2.setNodeLastTransactionIfNewer(new Date());
+		nodeStatus2.setStatusTimestamp(new Date());
+		nodeStatus2.setNodeId("nodeid2");
+
+		mySvc.saveNodeStatusInNewTransaction(nodeStatus);
+		mySvc.saveNodeStatusInNewTransaction(nodeStatus2);
+		
+		newEntityManager();
+		
+		PersNodeStats stats = new PersNodeStats(InvocationStatsIntervalEnum.MINUTE, myTimeFormat.parse("12:13"), "nodeid");
+		stats.setCpuTime(100.0);
+		mySvc.saveStatsInNewTransaction(Collections.singleton(stats));
+		
+		stats = new PersNodeStats(InvocationStatsIntervalEnum.MINUTE, myTimeFormat.parse("12:14"), "nodeid");
+		stats.setCpuTime(200.0);
+		mySvc.saveStatsInNewTransaction(Collections.singleton(stats));
+
+		stats = new PersNodeStats(InvocationStatsIntervalEnum.MINUTE, myTimeFormat.parse("11:14"), "nodeid");
+		stats.setCpuTime(200.0);
+		mySvc.saveStatsInNewTransaction(Collections.singleton(stats));
+
+		stats = new PersNodeStats(InvocationStatsIntervalEnum.MINUTE, myTimeFormat.parse("12:14"), "nodeid2");
+		stats.setCpuTime(200.0);
+		mySvc.saveStatsInNewTransaction(Collections.singleton(stats));
+
+		newEntityManager();
+
+		List<PersNodeStats> statsList = mySvc.getNodeStatsWithinRange(myTimeFormat.parse("12:00"), myTimeFormat.parse("13:00"));
+		assertEquals(3, statsList.size());
+		
+	}
+	
+	
 	@Test
 	public void testGetOrCreateServiceVersionResource() throws ProcessingException {
 		newEntityManager();

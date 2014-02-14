@@ -41,6 +41,6 @@ public interface IRuntimeStatusQueryLocal {
 
 	Collection<DtoNodeStatus> getAllNodeStatuses();
 
-	DtoNodeStatusAndStatisticsList getAllNodeStatusesAndStatistics();
+	DtoNodeStatusAndStatisticsList getAllNodeStatusesAndStatistics() throws UnexpectedFailureException;
 
 }

@@ -400,7 +400,7 @@ public class RuntimeStatusBeanTest {
 		ArgumentCaptor<Collection> createCaptor = ArgumentCaptor.forClass(Collection.class);
 		ArgumentCaptor<List> deleteCaptor = ArgumentCaptor.forClass(List.class);
 
-		verify(dao).saveInvocationStats(createCaptor.capture(), deleteCaptor.capture());
+		verify(dao).saveStatsInNewTransaction(createCaptor.capture(), deleteCaptor.capture());
 
 		assertEquals(1, createCaptor.getAllValues().size());
 		PersInvocationMethodSvcverStats obj = (PersInvocationMethodSvcverStats) createCaptor.getValue().iterator().next();
@@ -453,7 +453,7 @@ public class RuntimeStatusBeanTest {
 		assertEquals(ts2, captSatus.getLastServerSecurityFailure());
 
 		ArgumentCaptor<Collection> forCollection = ArgumentCaptor.forClass(Collection.class);
-		verify(dao, times(1)).saveInvocationStats(forCollection.capture());
+		verify(dao, times(1)).saveStatsInNewTransaction(forCollection.capture());
 
 		Iterator statsIter = forCollection.getValue().iterator();
 
@@ -560,7 +560,7 @@ public class RuntimeStatusBeanTest {
 		svc.flushStatus();
 
 		ArgumentCaptor<Collection> forCollection = ArgumentCaptor.forClass(Collection.class);
-		verify(dao, times(1)).saveInvocationStats(forCollection.capture());
+		verify(dao, times(1)).saveStatsInNewTransaction(forCollection.capture());
 
 		Iterator statsIter = forCollection.getValue().iterator();
 
@@ -644,7 +644,7 @@ public class RuntimeStatusBeanTest {
 		svc.flushStatus();
 
 		ArgumentCaptor<List> capt = ArgumentCaptor.forClass(List.class);
-		verify(dao, times(1)).saveInvocationStats(capt.capture());
+		verify(dao, times(1)).saveStatsInNewTransaction(capt.capture());
 		verify(dao,times(1)).getAllStickySessions();
 //		verifyNoMoreInteractions(dao);
 		

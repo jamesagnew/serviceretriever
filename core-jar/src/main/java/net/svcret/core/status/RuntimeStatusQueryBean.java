@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.admin.shared.model.BaseDtoDashboardObject;
+import net.svcret.admin.shared.model.DtoNodeStatistics;
 import net.svcret.admin.shared.model.DtoNodeStatus;
 import net.svcret.admin.shared.model.DtoNodeStatusAndStatisticsList;
 import net.svcret.admin.shared.util.Validate;
@@ -40,6 +41,7 @@ import net.svcret.core.model.entity.PersInvocationUrlStats;
 import net.svcret.core.model.entity.PersInvocationUrlStatsPk;
 import net.svcret.core.model.entity.PersMethod;
 import net.svcret.core.model.entity.PersMethodStatus;
+import net.svcret.core.model.entity.PersNodeStats;
 import net.svcret.core.model.entity.PersNodeStatus;
 import net.svcret.core.model.entity.PersService;
 import net.svcret.core.model.entity.PersServiceVersionUrl;
@@ -77,6 +79,7 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 	private IRuntimeStatus myStatusSvc;
 
 	private final BasePersStats<?, ?> PLACEHOLDER = new Placeholder();
+	private Date myNowForUnitTests;
 
 	public RuntimeStatusQueryBean() {
 		myCache60MinAccumulators = new HashMap<>();
@@ -167,17 +170,69 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 	}
 	
 	@Override
-	public DtoNodeStatusAndStatisticsList getAllNodeStatusesAndStatistics() {
+	public DtoNodeStatusAndStatisticsList getAllNodeStatusesAndStatistics() throws UnexpectedFailureException {
 		DtoNodeStatusAndStatisticsList retVal = new DtoNodeStatusAndStatisticsList();
+		
+		long now = System.currentTimeMillis();
+		if (myNowForUnitTests !=null) {
+			now = myNowForUnitTests.getTime();
+		}
+		
+		Date start = new Date(now - DateUtils.MILLIS_PER_HOUR);
+		start = DateUtils.truncate(start, Calendar.MINUTE);
+		Date end = DateUtils.addHours(start, 1);
+				
+		
+		InvocationStatsIntervalEnum interval = myConfigSvc.getConfig().getCollapseStatsIntervalForDate(start);
+		start = interval.truncate(start);
+		end = interval.truncate(end);
+		
+		ArrayList<Long> timestamps = new ArrayList<>();
+		Map<Long, Integer> timestampToIndex = new HashMap<>();
+		for (Date next = start; !next.after(end); next = interval.add(next)) {
+			timestamps.add(next.getTime());
+			timestampToIndex.put(next.getTime(), timestampToIndex.size());
+		}
+
+		// Create 
 		
 		retVal.getNodeStatuses().addAll(getAllNodeStatuses());
 		Map<String, Integer> nodeIdToIndex = new HashMap<>();
 		int index = 0;
 		for (DtoNodeStatus next : retVal.getNodeStatuses()) {
 			nodeIdToIndex.put(next.getNodeId(), index++);
+			DtoNodeStatistics statistics = new DtoNodeStatistics();
+			statistics.setCpuTime(new double[timestamps.size()]);
+			statistics.setSuccessTransactions(new double[timestamps.size()]);
+			statistics.setFaultTransactions(new double[timestamps.size()]);
+			statistics.setFailTransactions(new double[timestamps.size()]);
+			statistics.setSecFailTransactions(new double[timestamps.size()]);
+			statistics.setMemoryMax(new double[timestamps.size()]);
+			statistics.setMemoryUsed(new double[timestamps.size()]);
+			retVal.getNodeStatistics().add(statistics);
 		}
-		
-		aa
+
+		Collection<PersNodeStats> stats = myDao.getNodeStatsWithinRange(start, end);
+		for (PersNodeStats nextStats : stats) {
+			Date startTime = nextStats.getPk().getStartTime();
+			startTime = interval.truncate(startTime);
+			Long startTimeLong = startTime.getTime();
+			Integer timestampIndex = timestampToIndex.get(startTimeLong);
+			Integer nodeIndex = nodeIdToIndex.get(nextStats.getPk().getNodeId());
+			
+			DtoNodeStatistics nodeStats = retVal.getNodeStatistics().get(nodeIndex);
+			
+			// These stats are cumulative
+			nodeStats.getSuccessTransactions()[timestampIndex] += nextStats.getMethodInvocations();
+			nodeStats.getFaultTransactions()[timestampIndex] += nextStats.getMethodFaultInvocations();
+			nodeStats.getFailTransactions()[timestampIndex] += nextStats.getMethodFailInvocations();
+			nodeStats.getSecFailTransactions()[timestampIndex] += nextStats.getMethodSecFailInvocations();
+			
+			// These stats are not cumulative
+			nodeStats.getCpuTime()[timestampIndex] = nextStats.getCpuTime();
+			nodeStats.getMemoryUsed()[timestampIndex] = nextStats.getMemoryUsed();
+			nodeStats.getMemoryMax()[timestampIndex] = nextStats.getMemoryMax();
+		}
 		
 		return retVal;
 	}
@@ -717,6 +772,11 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 			long totalTime = myTimes.get(theIndex) + theStats.getSuccessInvocationTotalTime() + theStats.getFaultInvocationTime() + theStats.getFailInvocationTime();
 			myTimes.set(theIndex, totalTime);
 		}
+	}
+
+	@VisibleForTesting
+	public void setNowForUnitTests(Date theParse) {
+		myNowForUnitTests = theParse;
 	}
 
 }

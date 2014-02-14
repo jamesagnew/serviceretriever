@@ -11,10 +11,10 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import org.apache.commons.lang3.time.DateUtils;
-
 import net.svcret.admin.shared.enm.NodeStatusEnum;
 import net.svcret.admin.shared.model.DtoNodeStatus;
+
+import org.apache.commons.lang3.time.DateUtils;
 
 //@formatter:off
 @Table(name = "PX_NODE_STATUS")

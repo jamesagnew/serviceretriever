@@ -17,6 +17,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 
+import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.admin.shared.model.DtoConfig;
 
 import org.apache.commons.lang3.time.DateUtils;
@@ -229,6 +230,19 @@ public class PersConfig {
 
 	public static void main(String[] args) {
 		System.out.println(3 * DateUtils.MILLIS_PER_DAY);
+	}
+
+	public InvocationStatsIntervalEnum getCollapseStatsIntervalForDate(Date theDate) {
+		if (getCollapseStatsToDaysCutoff().after(theDate)) {
+			return InvocationStatsIntervalEnum.DAY;
+		}
+		if (getCollapseStatsToHoursCutoff().after(theDate)) {
+			return InvocationStatsIntervalEnum.HOUR;
+		}
+		if (getCollapseStatsToTenMinutesCutoff().after(theDate)) {
+			return InvocationStatsIntervalEnum.TEN_MINUTE;
+		}
+		return MINUTE;
 	}
 	
 }

@@ -49,4 +49,19 @@ public enum InvocationStatsIntervalEnum {
 		return millis() / DateUtils.MILLIS_PER_MINUTE;
 	}
 
+	public Date add(Date theNext) {
+		switch (this) {
+		case DAY:
+			return DateUtils.addDays(theNext, 1);
+		case HOUR:
+			return DateUtils.addHours(theNext, 1);
+		case MINUTE:
+			return DateUtils.addMinutes(theNext, 1);
+		case TEN_MINUTE:
+			return DateUtils.addMinutes(theNext, 10);
+		}
+
+		throw new IllegalStateException("Unknown constant: " + this);
+	}
+
 }

@@ -369,7 +369,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			}
 
 			if (statsToFlush.size() > MAX_STATS_TO_FLUSH_AT_ONCE || statsToDelete.size() > MAX_STATS_TO_FLUSH_AT_ONCE) {
-				myDao.saveInvocationStats(statsToFlush.values(), statsToDelete);
+				myDao.saveStatsInNewTransaction(statsToFlush.values(), statsToDelete);
 				statsToDelete.clear();
 				statsToFlush.clear();
 			}
@@ -378,7 +378,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		ourLog.trace("Deleting stats {}", statsToDelete);
 
 		if (statsToFlush.size() > 0 || statsToDelete.size() > 0) {
-			myDao.saveInvocationStats(statsToFlush.values(), statsToDelete);
+			myDao.saveStatsInNewTransaction(statsToFlush.values(), statsToDelete);
 		}
 	}
 
@@ -422,7 +422,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			ourLog.trace("Flushing stats: {}", stats);
 			for (int index = 0; index < stats.size(); index += MAX_STATS_TO_FLUSH_AT_ONCE) {
 				int toIndex = Math.min(index + MAX_STATS_TO_FLUSH_AT_ONCE, stats.size());
-				myDao.saveInvocationStats(stats.subList(index, toIndex));
+				myDao.saveStatsInNewTransaction(stats.subList(index, toIndex));
 			}
 
 			ourLog.info("Done flushing stats");
@@ -1076,7 +1076,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 
 			stats.addMethodInvocations(myUnflushedNodeSuccessMethodInvocations.getAndSet(0), myUnflushedNodeFaultMethodInvocations.getAndSet(0), myUnflushedNodeFailMethodInvocations.getAndSet(0), myUnflushedNodeSecFailMethodInvocations.getAndSet(0));
 
-			myDao.saveInvocationStats(Collections.singletonList(stats));
+			myDao.saveStatsInNewTransaction(Collections.singletonList(stats));
 
 			myNodeStatisticsDate = date;
 		} finally {

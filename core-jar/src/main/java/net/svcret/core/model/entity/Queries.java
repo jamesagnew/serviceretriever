@@ -59,6 +59,9 @@ public class Queries {
 	public static final String PERS_NODESTATS_FINDINTERVAL = "PersNodeStats.findIntervalBeforeDate";
 	public static final String PERS_NODESTATS_FINDINTERVAL_Q = "SELECT s FROM PersNodeStats s WHERE s.myPk.myInterval = :INTERVAL AND s.myPk.myStartTime < :BEFORE_DATE";
 
+	public static final String PERS_NODESTATS_FINDRANGE = "PersNodeStats.findRange";
+	public static final String PERS_NODESTATS_FINDRANGE_Q = "SELECT s FROM PersNodeStats s WHERE s.myPk.myStartTime >= :START_TIME AND s.myPk.myStartTime <= :END_TIME";
+
 	public static final String PERSINVOC_ANONSTATS = "PersInvocationAnonStats.findBeforeDate";
 	public static final String PERSINVOC_ANONSTATS_Q = "SELECT s FROM PersInvocationAnonStats s WHERE s.myPk.myInterval = :INTERVAL AND s.myPk.myStartTime < :BEFORE_DATE";
 

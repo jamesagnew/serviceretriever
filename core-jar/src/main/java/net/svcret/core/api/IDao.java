@@ -53,9 +53,17 @@ import net.svcret.core.model.entity.soap.PersServiceVersionSoap11;
 
 public interface IDao {
 
+	PersStickySessionUrlBinding createOrUpdateExistingStickySessionUrlBindingInNewTransaction(PersStickySessionUrlBinding theBinding) throws UnexpectedFailureException;
+
 	void deleteAuthenticationHost(BasePersAuthenticationHost theAuthHost);
 
+	void deleteDomain(PersDomain theDomain);
+
 	void deleteHttpClientConfig(PersHttpClientConfig theConfig);
+
+	void deleteLibraryMessage(PersLibraryMessage theMsg);
+
+	void deleteMonitorRule(BasePersMonitorRule theRule);
 
 	void deleteMonitorRuleActiveCheckOutcomesBeforeCutoff(PersMonitorRuleActiveCheck theCheck, Date theCutoff);
 
@@ -70,6 +78,8 @@ public interface IDao {
 	Collection<BasePersAuthenticationHost> getAllAuthenticationHosts();
 
 	Collection<PersDomain> getAllDomains();
+
+	Collection<PersMethodStatus> getAllMethodStatus();
 
 	Collection<PersMonitorRuleActiveCheck> getAllMonitorRuleActiveChecks();
 
@@ -126,6 +136,8 @@ public interface IDao {
 
 	List<PersNodeStats> getNodeStatsBefore(InvocationStatsIntervalEnum theMinute, Date theHoursCutoff);
 
+	List<PersNodeStats> getNodeStatsWithinRange(Date theStartInclusive, Date theEndInclusive);
+
 	PersAuthenticationHostLdap getOrCreateAuthenticationHostLdap(String theModuleId) throws ProcessingException;
 
 	PersAuthenticationHostLocalDatabase getOrCreateAuthenticationHostLocalDatabase(String theModuleIdAdminAuth) throws ProcessingException;
@@ -136,6 +148,8 @@ public interface IDao {
 
 	PersHttpClientConfig getOrCreateHttpClientConfig(String theId);
 
+//	PersStickySessionUrlBinding getOrCreateStickySessionUrlBindingInNewTransaction(PersStickySessionUrlBindingPk theBindingPk, PersServiceVersionUrl theUrlToUseIfNoneExists);
+
 	PersNodeStatus getOrCreateNodeStatusInNewTransaction(String theNodeId);
 
 	BasePersServiceVersion getOrCreateServiceVersionWithId(PersService theService, String theVersionId, ServiceProtocolEnum theProtocol) throws ProcessingException;
@@ -145,10 +159,6 @@ public interface IDao {
 	PersService getOrCreateServiceWithId(PersDomain theDomain, String theServiceId) throws ProcessingException;
 
 	<P extends BasePersStatsPk<P, O>, O extends BasePersStats<P, O>> O getOrCreateStats(P thePk);
-
-	PersStickySessionUrlBinding createOrUpdateExistingStickySessionUrlBindingInNewTransaction(PersStickySessionUrlBinding theBinding) throws UnexpectedFailureException;
-
-//	PersStickySessionUrlBinding getOrCreateStickySessionUrlBindingInNewTransaction(PersStickySessionUrlBindingPk theBindingPk, PersServiceVersionUrl theUrlToUseIfNoneExists);
 
 	PersUser getOrCreateUser(BasePersAuthenticationHost theAuthHost, String theUsername) throws ProcessingException;
 
@@ -172,6 +182,10 @@ public interface IDao {
 
 	PersUser getUser(long thePid);
 
+	// List<PersMonitorRuleFiring>
+	// loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int
+	// theStart);
+
 	List<PersUserRecentMessage> getUserRecentMessages(IThrottleable theUser, ResponseTypeEnum theResponseType);
 
 	List<PersInvocationMethodUserStats> getUserStatsWithinTimeRange(PersUser theUser, Date theStart, Date theEnd);
@@ -182,10 +196,6 @@ public interface IDao {
 
 	List<PersLibraryMessage> loadLibraryMessages();
 
-	// List<PersMonitorRuleFiring>
-	// loadMonitorRuleFirings(Set<BasePersServiceVersion> theAllSvcVers, int
-	// theStart);
-
 	PersMonitorRuleActiveCheckOutcome loadMonitorRuleActiveCheckOutcome(long thePid);
 
 	List<PersMonitorRuleFiring> loadMonitorRuleFirings(Set<? extends BasePersServiceVersion> theAllSvcVers, int theStart);
@@ -193,8 +203,6 @@ public interface IDao {
 	PersServiceVersionRecentMessage loadRecentMessageForServiceVersion(long thePid);
 
 	PersUserRecentMessage loadRecentMessageForUser(long thePid);
-
-	void deleteDomain(PersDomain theDomain);
 
 	BasePersAuthenticationHost saveAuthenticationHost(BasePersAuthenticationHost theHost);
 
@@ -206,9 +214,9 @@ public interface IDao {
 
 	PersHttpClientConfig saveHttpClientConfigInNewTransaction(PersHttpClientConfig theConfig);
 
-	void saveInvocationStats(Collection<? extends BasePersStats<?, ?>> theStats);
+	void saveStatsInNewTransaction(Collection<? extends BasePersStats<?, ?>> theStats);
 
-	void saveInvocationStats(Collection<? extends BasePersStats<?, ?>> theStats, List<? extends BasePersStats<?, ?>> theStatsToDelete);
+	void saveStatsInNewTransaction(Collection<? extends BasePersStats<?, ?>> theStats, List<? extends BasePersStats<?, ?>> theStatsToDelete);
 
 	PersLibraryMessage saveLibraryMessage(PersLibraryMessage theMessage);
 
@@ -228,9 +236,9 @@ public interface IDao {
 
 	PersBaseServerAuth<?, ?> saveServerAuth(PersBaseServerAuth<?, ?> theNextPers);
 
-	PersService saveServiceInNewTransaction(PersService theService);
-
 	BasePersServiceCatalogItem saveServiceCatalogItem(BasePersServiceCatalogItem theItem);
+
+	PersService saveServiceInNewTransaction(PersService theService);
 
 	PersUser saveServiceUser(PersUser theUser);
 
@@ -289,7 +297,7 @@ public interface IDao {
 	}
 
 	public static class RecentMessagesAndMaxToKeep {
-		private List<BasePersSavedTransaction> myMessages = new ArrayList<BasePersSavedTransaction>();
+		private List<BasePersSavedTransaction> myMessages = new ArrayList<>();
 		private int myNumToKeep;
 
 		public void addMessages(Collection<? extends BasePersSavedTransaction> theMessages) {
@@ -312,11 +320,5 @@ public interface IDao {
 		}
 
 	}
-
-	Collection<PersMethodStatus> getAllMethodStatus();
-
-	void deleteMonitorRule(BasePersMonitorRule theRule);
-
-	void deleteLibraryMessage(PersLibraryMessage theMsg);
 
 }

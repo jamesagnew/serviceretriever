@@ -2,68 +2,68 @@ package net.svcret.admin.shared.model;
 
 public class DtoNodeStatistics {
 
-	private int[] myHistoryCpuTime;
-	private double[] myHistoryFailTransactions;
-	private double[] myHistoryFaultTransactions;
-	private double[] myHistoryMemoryMax;
-	private double[] myHistoryMemoryUsed;
-	private double[] myHistorySecFailTransactions;
-	private double[] myHistorySuccessTransactions;
+	private double[] myCpuTime;
+	private double[] myFailTransactions;
+	private double[] myFaultTransactions;
+	private double[] myMemoryMax;
+	private double[] myMemoryUsed;
+	private double[] mySecFailTransactions;
+	private double[] mySuccessTransactions;
 
-	public int[] getHistoryCpuTime() {
-		return myHistoryCpuTime;
+	public double[] getCpuTime() {
+		return myCpuTime;
 	}
 
-	public double[] getHistoryFailTransactions() {
-		return myHistoryFailTransactions;
+	public double[] getFailTransactions() {
+		return myFailTransactions;
 	}
 
-	public double[] getHistoryFaultTransactions() {
-		return myHistoryFaultTransactions;
+	public double[] getFaultTransactions() {
+		return myFaultTransactions;
 	}
 
-	public double[] getHistoryMemoryMax() {
-		return myHistoryMemoryMax;
+	public double[] getMemoryMax() {
+		return myMemoryMax;
 	}
 
-	public double[] getHistoryMemoryUsed() {
-		return myHistoryMemoryUsed;
+	public double[] getMemoryUsed() {
+		return myMemoryUsed;
 	}
 
-	public double[] getHistorySecFailTransactions() {
-		return myHistorySecFailTransactions;
+	public double[] getSecFailTransactions() {
+		return mySecFailTransactions;
 	}
 
-	public double[] getHistorySuccessTransactions() {
-		return myHistorySuccessTransactions;
+	public double[] getSuccessTransactions() {
+		return mySuccessTransactions;
 	}
 
-	public void setHistoryCpuTime(int[] theHistoryCpuTime) {
-		myHistoryCpuTime = theHistoryCpuTime;
+	public void setCpuTime(double[] theCpuTime) {
+		myCpuTime = theCpuTime;
 	}
 
-	public void setHistoryFailTransactions(double[] theHistoryFailTransactions) {
-		myHistoryFailTransactions = theHistoryFailTransactions;
+	public void setFailTransactions(double[] theFailTransactions) {
+		myFailTransactions = theFailTransactions;
 	}
 
-	public void setHistoryFaultTransactions(double[] theHistoryFaultTransactions) {
-		myHistoryFaultTransactions = theHistoryFaultTransactions;
+	public void setFaultTransactions(double[] theFaultTransactions) {
+		myFaultTransactions = theFaultTransactions;
 	}
 
-	public void setHistoryMemoryMax(double[] theHistoryMemoryMax) {
-		myHistoryMemoryMax = theHistoryMemoryMax;
+	public void setMemoryMax(double[] theMemoryMax) {
+		myMemoryMax = theMemoryMax;
 	}
 
-	public void setHistoryMemoryUsed(double[] theHistoryMemoryUsed) {
-		myHistoryMemoryUsed = theHistoryMemoryUsed;
+	public void setMemoryUsed(double[] theMemoryUsed) {
+		myMemoryUsed = theMemoryUsed;
 	}
 
-	public void setHistorySecFailTransactions(double[] theHistorySecFailTransactions) {
-		myHistorySecFailTransactions = theHistorySecFailTransactions;
+	public void setSecFailTransactions(double[] theSecFailTransactions) {
+		mySecFailTransactions = theSecFailTransactions;
 	}
 
-	public void setHistorySuccessTransactions(double[] theHistorySuccessTransactions) {
-		myHistorySuccessTransactions = theHistorySuccessTransactions;
+	public void setSuccessTransactions(double[] theSuccessTransactions) {
+		mySuccessTransactions = theSuccessTransactions;
 	}
 
 }

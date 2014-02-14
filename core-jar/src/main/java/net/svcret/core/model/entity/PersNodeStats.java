@@ -8,6 +8,7 @@ import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.Index;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -15,15 +16,14 @@ import javax.persistence.Table;
 import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.hibernate.annotations.Index;
 
 //@formatter:off
-@org.hibernate.annotations.Table(indexes = {
-	@Index(columnNames = { "START_TIME", "INTRVL" }, name = "IDX_PNS_TIME_AND_IVL")
-}, appliesTo = "PX_NODE_STATS")
-@Table(name = "PX_NODE_STATS")
+@Table(name = "PX_NODE_STATS", indexes= {
+	@Index(columnList = "START_TIME,INTRVL" , name = "IDX_PNS_TIME_AND_IVL")	
+})
 @NamedQueries(value = {
-	@NamedQuery(name=Queries.PERS_NODESTATS_FINDINTERVAL, query=Queries.PERS_NODESTATS_FINDINTERVAL_Q)
+	@NamedQuery(name=Queries.PERS_NODESTATS_FINDINTERVAL, query=Queries.PERS_NODESTATS_FINDINTERVAL_Q),
+	@NamedQuery(name=Queries.PERS_NODESTATS_FINDRANGE, query=Queries.PERS_NODESTATS_FINDRANGE_Q)
 })
 @Entity()
 // @formatter:on
@@ -136,6 +136,7 @@ public class PersNodeStats extends BasePersStats<PersNodeStatsPk, PersNodeStats>
 		return myMethodSuccessInvocations;
 	}
 
+	@Override
 	public PersNodeStatsPk getPk() {
 		return myPk;
 	}
