@@ -15,6 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.admin.shared.model.BaseDtoDashboardObject;
+import net.svcret.admin.shared.model.DtoNodeStatus;
+import net.svcret.admin.shared.model.DtoNodeStatusAndStatisticsList;
 import net.svcret.admin.shared.util.Validate;
 import net.svcret.core.admin.AdminServiceBean;
 import net.svcret.core.admin.AdminServiceBean.IWithStats;
@@ -77,22 +79,22 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 	private final BasePersStats<?, ?> PLACEHOLDER = new Placeholder();
 
 	public RuntimeStatusQueryBean() {
-		myCache60MinAccumulators = new HashMap<CachedStatsKey, RuntimeStatusQueryBean.StatsAccumulator>();
-		myCacheInvocationStats = new ConcurrentHashMap<BasePersStatsPk<?, ?>, BasePersStats<?, ?>>(myMaxNullCachedEntries + myMaxPopulatedCachedEntries);
-		myCacheInvocationStatEmptyKeys = new ArrayDeque<BasePersStatsPk<?, ?>>(myMaxNullCachedEntries);
-		myCacheInvocationStatPopulatedKeys = new ArrayDeque<BasePersStatsPk<?, ?>>(myMaxPopulatedCachedEntries);
+		myCache60MinAccumulators = new HashMap<>();
+		myCacheInvocationStats = new ConcurrentHashMap<>(myMaxNullCachedEntries + myMaxPopulatedCachedEntries);
+		myCacheInvocationStatEmptyKeys = new ArrayDeque<>(myMaxNullCachedEntries);
+		myCacheInvocationStatPopulatedKeys = new ArrayDeque<>(myMaxPopulatedCachedEntries);
 	}
 
 	@Override
 	public void extract60MinuteMethodStats(final PersMethod theMethod, StatsAccumulator theAccumulator) throws UnexpectedFailureException {
-		IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> operator = new StatsAdderOperator<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats>(theAccumulator);
+		IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> operator = new StatsAdderOperator<>(theAccumulator);
 		IStatsPkBuilder<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> builder = new MethodBuilder(theMethod);
 		doWithStatsByMinute(0, 59, theAccumulator, operator, builder);
 	}
 
 	@Override
 	public void extract60MinuteServiceVersionUrlStatistics(final PersServiceVersionUrl theUrl, StatsAccumulator theAccumulator) throws UnexpectedFailureException {
-		StatsAdderOperator<PersInvocationUrlStatsPk, PersInvocationUrlStats> operator = new StatsAdderOperator<PersInvocationUrlStatsPk, PersInvocationUrlStats>(theAccumulator);
+		StatsAdderOperator<PersInvocationUrlStatsPk, PersInvocationUrlStats> operator = new StatsAdderOperator<>(theAccumulator);
 		IStatsPkBuilder<PersInvocationUrlStatsPk, PersInvocationUrlStats> builder = new IStatsPkBuilder<PersInvocationUrlStatsPk, PersInvocationUrlStats>() {
 			@Override
 			public Collection<PersInvocationUrlStatsPk> createPk(InvocationStatsIntervalEnum theInterval, Date theDate) {
@@ -107,7 +109,7 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 	public StatsAccumulator extract60MinuteStats(BasePersServiceCatalogItem theItem) throws UnexpectedFailureException {
 
 		Collection<PersMethodStatus> methodStatuses = myDao.getAllMethodStatus();
-		Map<PersMethod, PersMethodStatus> methodToMethodStatus = new HashMap<PersMethod, PersMethodStatus>();
+		Map<PersMethod, PersMethodStatus> methodToMethodStatus = new HashMap<>();
 		for (PersMethodStatus next : methodStatuses) {
 			methodToMethodStatus.put(next.getMethod(), next);
 		}
@@ -135,11 +137,11 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 
 		final Collection<PersUserMethodStatus> methodStatuses = user.getStatus().getMethodStatuses().values();
 
-		IWithStats<PersInvocationMethodUserStatsPk, PersInvocationMethodUserStats> operator = new StatsAdderOperator<PersInvocationMethodUserStatsPk, PersInvocationMethodUserStats>(theAccumulator);
+		IWithStats<PersInvocationMethodUserStatsPk, PersInvocationMethodUserStats> operator = new StatsAdderOperator<>(theAccumulator);
 		IStatsPkBuilder<PersInvocationMethodUserStatsPk, PersInvocationMethodUserStats> builder = new IStatsPkBuilder<PersInvocationMethodUserStatsPk, PersInvocationMethodUserStats>() {
 			@Override
 			public Collection<PersInvocationMethodUserStatsPk> createPk(InvocationStatsIntervalEnum theInterval, Date theDate) {
-				ArrayList<PersInvocationMethodUserStatsPk> retVal = new ArrayList<PersInvocationMethodUserStatsPk>();
+				ArrayList<PersInvocationMethodUserStatsPk> retVal = new ArrayList<>();
 				for (PersUserMethodStatus next : methodStatuses) {
 					boolean applies = next.doesDateFallWithinAtLeastOneOfMyRanges(theDate);
 					if (applies) {
@@ -155,9 +157,31 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 	}
 
 	@Override
-	public Collection<PersNodeStatus> getAllNodeStatuses() {
-		return myDao.getAllNodeStatuses();
+	public Collection<DtoNodeStatus> getAllNodeStatuses() {
+		Collection<PersNodeStatus> statuses = myDao.getAllNodeStatuses();
+		ArrayList<DtoNodeStatus> retVal = new ArrayList<>(statuses.size());
+		for(PersNodeStatus next : statuses) {
+			retVal.add(next.toDao());
+		}
+		return retVal;
 	}
+	
+	@Override
+	public DtoNodeStatusAndStatisticsList getAllNodeStatusesAndStatistics() {
+		DtoNodeStatusAndStatisticsList retVal = new DtoNodeStatusAndStatisticsList();
+		
+		retVal.getNodeStatuses().addAll(getAllNodeStatuses());
+		Map<String, Integer> nodeIdToIndex = new HashMap<>();
+		int index = 0;
+		for (DtoNodeStatus next : retVal.getNodeStatuses()) {
+			nodeIdToIndex.put(next.getNodeId(), index++);
+		}
+		
+		aa
+		
+		return retVal;
+	}
+	
 
 	@Override
 	public int getCachedEmptyKeyCount() {
@@ -333,7 +357,7 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 						continue;
 					}
 					
-					IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> operator = new StatsAdderOperator<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats>(childAccum);
+					IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> operator = new StatsAdderOperator<>(childAccum);
 					IStatsPkBuilder<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> builder = new MethodBuilder(next);
 					doWithStatsByMinute(0, operator, builder, startTime, endTime);
 					
@@ -353,7 +377,7 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 
 	}
 
-	private Date provideNoCacheCutoff() {
+	private static Date provideNoCacheCutoff() {
 		return DateUtils.truncate(new Date(System.currentTimeMillis() - DateUtils.MILLIS_PER_MINUTE), Calendar.MINUTE);
 	}
 
@@ -371,15 +395,15 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 
 		private static final long serialVersionUID = 1L;
 
-		private ArrayList<Integer> myFailCounts = new ArrayList<Integer>();
-		private ArrayList<Integer> myFaultCounts = new ArrayList<Integer>();
+		private ArrayList<Integer> myFailCounts = new ArrayList<>();
+		private ArrayList<Integer> myFaultCounts = new ArrayList<>();
 		private Date myFirstDate;
-		private ArrayList<Integer> mySecFailCounts = new ArrayList<Integer>();
-		private ArrayList<Integer> mySuccessCounts = new ArrayList<Integer>();
-		private ArrayList<Integer> myThrottleAcceptCounts = new ArrayList<Integer>();
-		private ArrayList<Integer> myThrottleRejectCounts = new ArrayList<Integer>();
-		private ArrayList<Long> myTimes = new ArrayList<Long>();
-		private ArrayList<Long> myTimestamps = new ArrayList<Long>();
+		private ArrayList<Integer> mySecFailCounts = new ArrayList<>();
+		private ArrayList<Integer> mySuccessCounts = new ArrayList<>();
+		private ArrayList<Integer> myThrottleAcceptCounts = new ArrayList<>();
+		private ArrayList<Integer> myThrottleRejectCounts = new ArrayList<>();
+		private ArrayList<Long> myTimes = new ArrayList<>();
+		private ArrayList<Long> myTimestamps = new ArrayList<>();
 
 		public StatsAccumulator() {
 		}
@@ -439,7 +463,7 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 		}
 
 		public List<Integer> getAllTimingCounts() {
-			ArrayList<Integer> retVal = new ArrayList<Integer>();
+			ArrayList<Integer> retVal = new ArrayList<>();
 			for (Integer next : mySuccessCounts) {
 				retVal.add(next);
 			}
@@ -534,7 +558,7 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 			myFirstDate = theFirstTime;
 		}
 
-		private void addToListOfInts(int theThisIndex, int theTheirIndex, ArrayList<Integer> theMine, ArrayList<Integer> theTheirs) {
+		private static void addToListOfInts(int theThisIndex, int theTheirIndex, ArrayList<Integer> theMine, ArrayList<Integer> theTheirs) {
 			Integer newValue = theTheirIndex == -1 ? 0 : theTheirs.get(theTheirIndex);
 
 			if (theThisIndex == -1) {
@@ -544,7 +568,7 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 			}
 		}
 
-		private void addToListOfLongs(int theThisIndex, int theTheirIndex, ArrayList<Long> theMine, ArrayList<Long> theTheirs) {
+		private static void addToListOfLongs(int theThisIndex, int theTheirIndex, ArrayList<Long> theMine, ArrayList<Long> theTheirs) {
 			Long newValue = theTheirIndex == -1 ? 0 : theTheirs.get(theTheirIndex);
 			if (theThisIndex == -1) {
 				theMine.add(newValue);
@@ -553,12 +577,12 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 			}
 		}
 
-		private <T extends Number> ArrayList<T> trimFirstNEntries(int theCountToDelete, ArrayList<T> theValues) {
-			return new ArrayList<T>(theValues.subList(theCountToDelete, theValues.size()));
+		private static <T extends Number> ArrayList<T> trimFirstNEntries(int theCountToDelete, ArrayList<T> theValues) {
+			return new ArrayList<>(theValues.subList(theCountToDelete, theValues.size()));
 		}
 
-		private <T extends Number> ArrayList<T> trimLastNEntries(int theCountToDelete, ArrayList<T> theValues) {
-			return new ArrayList<T>(theValues.subList(0, theValues.size() - theCountToDelete));
+		private static <T extends Number> ArrayList<T> trimLastNEntries(int theCountToDelete, ArrayList<T> theValues) {
+			return new ArrayList<>(theValues.subList(0, theValues.size() - theCountToDelete));
 		}
 
 	}

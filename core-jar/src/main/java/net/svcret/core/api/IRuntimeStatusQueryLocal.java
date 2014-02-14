@@ -3,11 +3,12 @@ package net.svcret.core.api;
 import java.util.Collection;
 
 import net.svcret.admin.api.UnexpectedFailureException;
+import net.svcret.admin.shared.model.DtoNodeStatus;
+import net.svcret.admin.shared.model.DtoNodeStatusAndStatisticsList;
 import net.svcret.core.model.entity.BasePersServiceCatalogItem;
 import net.svcret.core.model.entity.BasePersStats;
 import net.svcret.core.model.entity.BasePersStatsPk;
 import net.svcret.core.model.entity.PersMethod;
-import net.svcret.core.model.entity.PersNodeStatus;
 import net.svcret.core.model.entity.PersServiceVersionUrl;
 import net.svcret.core.model.entity.PersUser;
 import net.svcret.core.status.RuntimeStatusQueryBean.StatsAccumulator;
@@ -38,6 +39,8 @@ public interface IRuntimeStatusQueryLocal {
 
 	StatsAccumulator extract60MinuteStats(BasePersServiceCatalogItem theItem) throws UnexpectedFailureException;
 
-	Collection<PersNodeStatus> getAllNodeStatuses();
+	Collection<DtoNodeStatus> getAllNodeStatuses();
+
+	DtoNodeStatusAndStatisticsList getAllNodeStatusesAndStatistics();
 
 }
