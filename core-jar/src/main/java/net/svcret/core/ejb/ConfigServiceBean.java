@@ -1,5 +1,7 @@
 package net.svcret.core.ejb;
 
+import javax.annotation.PostConstruct;
+
 import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.model.RetrieverNodeTypeEnum;
 import net.svcret.admin.shared.util.Validate;
@@ -13,6 +15,10 @@ import net.svcret.core.security.SecurityServiceBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallbackWithoutResult;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -34,26 +40,21 @@ public class ConfigServiceBean implements IConfigService {
 
 	private RetrieverNodeTypeEnum myNodeType;
 
+	@Autowired
+	private PlatformTransactionManager myPlatformTransactionManager;
+
 	@Override
 	public PersConfig getConfig() throws UnexpectedFailureException {
-		if (myConfig != null) {
-			return myConfig;
-		}
-		PersConfig retVal = myDao.getConfigByPid(PersConfig.DEFAULT_ID);
-		if (retVal == null) {
-			retVal = new PersConfig();
-			retVal.setDefaults();
-			retVal = saveConfig(retVal);
-		}
-
-		return retVal;
+		return myConfig;
 	}
 
 
+	@Override
 	public String getNodeId() {
 		return myNodeId;
 	}
-
+	
+	@Override
 	public RetrieverNodeTypeEnum getNodeType() {
 		return myNodeType;
 	}
@@ -66,6 +67,17 @@ public class ConfigServiceBean implements IConfigService {
 	private void loadConfig() {
 		myConfig = myDao.getConfigByPid(PersConfig.DEFAULT_ID);
 		myCurrentVersion = myDao.getStateCounter(STATE_KEY);
+	}
+
+	@PostConstruct
+	public void postConstruct() {
+		TransactionTemplate tmpl = new TransactionTemplate(myPlatformTransactionManager);
+		tmpl.execute(new TransactionCallbackWithoutResult() {
+			@Override
+			protected void doInTransactionWithoutResult(TransactionStatus status) {
+				loadConfig();
+			}
+		});
 	}
 
 	@Override

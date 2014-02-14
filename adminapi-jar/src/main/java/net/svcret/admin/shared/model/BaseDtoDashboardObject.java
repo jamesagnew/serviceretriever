@@ -271,6 +271,9 @@ public abstract class BaseDtoDashboardObject extends BaseDtoKeepsRecentMessages 
 			setLatency60mins(obj.getLatency60mins());
 			setLastServerSecurityFailure(obj.getLastServerSecurityFailure());
 			setLastSuccessfulInvocation(obj.getLastSuccessfulInvocation());
+			setLastFaultInvocation(obj.getLastFaultInvocation());
+			setLastFailInvocation(obj.getLastFailInvocation());
+			setLastServerSecurityFailure(obj.getLastServerSecurityFailure());
 			setStatistics60MinuteFirstDate(obj.getStatistics60MinuteFirstDate());
 		}
 	}

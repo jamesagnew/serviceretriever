@@ -548,11 +548,10 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	}
 
 	private SrBeanOutgoingResponse processRequestResource(SrBeanIncomingRequest theRequest, SrBeanProcessedRequest results) {
-		SrBeanOutgoingResponse retVal;
 		String responseBody = results.getStaticResourceText();
 		String responseContentType = results.getStaticResourceContentTyoe();
 		Map<String, List<String>> responseHeaders = results.getStaticResourceHeaders();
-		retVal = new SrBeanOutgoingResponse(responseBody, responseContentType, responseHeaders);
+		SrBeanOutgoingResponse retVal = new SrBeanOutgoingResponse(responseBody, responseContentType, responseHeaders);
 
 		PersServiceVersionResource resource = results.getStaticResourceDefinition();
 		myRuntimeStatus.recordInvocationStaticResource(theRequest.getRequestTime(), resource);

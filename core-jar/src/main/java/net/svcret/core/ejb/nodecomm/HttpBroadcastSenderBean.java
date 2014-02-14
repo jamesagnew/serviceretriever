@@ -1,6 +1,7 @@
 package net.svcret.core.ejb.nodecomm;
 
-import static net.svcret.core.ejb.nodecomm.HttpBroadcastListenerBean.*;
+import static net.svcret.core.ejb.nodecomm.HttpBroadcastListenerBean.ACTION_PARAM;
+import static net.svcret.core.ejb.nodecomm.HttpBroadcastListenerBean.ARG_PARAM;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -197,9 +198,9 @@ public class HttpBroadcastSenderBean implements IBroadcastSender {
 			try {
 				myHttpClient.get(nextUrl + argument);
 			} catch (ClientProtocolException e) {
-				ourLog.warn("Failed to invoke url: {}", nextUrl + argument, e);
+				ourLog.warn("Failed to connect to remote broadcast URL: {} - Error: {}", nextUrl, e.toString());
 			} catch (IOException e) {
-				ourLog.warn("Failed to invoke url: {}", nextUrl + argument, e);
+				ourLog.warn("Failed to connect to remote broadcast URL: {} - Error: {}", nextUrl, e.toString());
 			}
 		}
 	}

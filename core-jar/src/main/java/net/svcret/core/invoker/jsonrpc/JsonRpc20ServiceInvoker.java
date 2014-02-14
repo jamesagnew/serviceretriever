@@ -246,7 +246,7 @@ public class JsonRpc20ServiceInvoker extends BaseServiceInvoker implements IServ
 	}
 
 	@Override
-	public SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition)	throws InvalidRequestException, InvocationRequestFailedException {
+	public SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition) throws InvalidRequestException, InvocationRequestFailedException {
 		if (theRequest.getRequestType() != RequestType.POST) {
 			throw new InvalidRequestException(IssueEnum.UNSUPPORTED_ACTION, theRequest.getRequestType().name(), "Requests to JSON-RPC 2.0 services must use HTTP POST.");
 		}
@@ -264,107 +264,108 @@ public class JsonRpc20ServiceInvoker extends BaseServiceInvoker implements IServ
 	private SrBeanProcessedRequest doProcessInvocation(PersServiceVersionJsonRpc20 theServiceDefinition, Reader theReader) throws IOException, InvocationRequestFailedException {
 		SrBeanProcessedRequest retVal = new SrBeanProcessedRequest();
 
-		// Writer
-		StringWriter stringWriter = new StringWriter();
-		IJsonWriter jsonWriter = new MyJsonWriter(stringWriter);
-
 		// Reader
-		Reader inputReader;
-
 		String inputMessage = IOUtils.toString(theReader);
 		ourLog.trace("Input message:\n{}", inputMessage);
-		inputReader = new StringReader(inputMessage);
+		try (StringReader inputReader = new StringReader(inputMessage)) {
 
-		IJsonReader jsonReader = new MyJsonReader(inputReader);
-
-		/*
-		 * Create security pipeline if needed
-		 */
-		for (PersBaseServerAuth<?, ?> next : theServiceDefinition.getServerAuths()) {
-			if (next instanceof NamedParameterJsonRpcServerAuth) {
-				NamedParameterJsonRpcCredentialGrabber grabber = ((NamedParameterJsonRpcServerAuth) next).newCredentialGrabber(jsonReader, jsonWriter);
-				jsonWriter = grabber.getWrappedWriter();
-				jsonReader = grabber.getWrappedReader();
-				retVal.addCredentials(next, grabber);
-			} else {
-				jsonWriter.close();
-				jsonReader.close();
-				throw new InvocationRequestFailedException("Don't know how to handle server auth of type: " + next);
-			}
-		}
-
-		/*
-		 * client security
-		 */
-		for (PersBaseClientAuth<?> next : theServiceDefinition.getClientAuths()) {
-			if (next instanceof NamedParameterJsonRpcClientAuth) {
-				jsonWriter = ((NamedParameterJsonRpcClientAuth) next).createWrappedWriter(jsonWriter);
-			}
-		}
-
-		jsonWriter.setLenient(true);
-		jsonWriter.setSerializeNulls(true);
-		jsonWriter.setIndent("  ");
-
-		jsonReader.setLenient(true);
-
-		String method = null;
-
-		jsonReader.beginObject();
-		jsonWriter.beginObject();
-
-		while (jsonReader.hasNext()) {
-
-			String nextName = jsonReader.nextName();
-			jsonWriter.name(nextName);
-
-			if (TOKEN_JSONRPC.equals(nextName)) {
-
-				String rpcVal = jsonReader.nextString();
-				jsonWriter.value(rpcVal);
-				ourLog.debug("JsonRpc version in request: {}", rpcVal);
-
-			} else if (TOKEN_METHOD.equals(nextName)) {
-
-				method = jsonReader.nextString();
-				jsonWriter.value(method);
-				ourLog.debug("JsonRpc method name: {}", method);
-
-			} else if (TOKEN_PARAMS.equals(nextName)) {
-
-				jsonReader.beginJsonRpcParams();
+			// Writer
+			try (StringWriter stringWriter = new StringWriter()) {
+				IJsonWriter jsonWriter = new MyJsonWriter(stringWriter);
+				IJsonReader jsonReader = new MyJsonReader(inputReader);
 				try {
-					consumeEqually(jsonReader, jsonWriter);
-				} catch (ProcessingException e) {
-					throw new InvocationRequestFailedException(e);
+					/*
+					 * Create security pipeline if needed
+					 */
+					for (PersBaseServerAuth<?, ?> next : theServiceDefinition.getServerAuths()) {
+						if (next instanceof NamedParameterJsonRpcServerAuth) {
+							NamedParameterJsonRpcCredentialGrabber grabber = ((NamedParameterJsonRpcServerAuth) next).newCredentialGrabber(jsonReader, jsonWriter);
+							jsonWriter = grabber.getWrappedWriter();
+							jsonReader = grabber.getWrappedReader();
+							retVal.addCredentials(next, grabber);
+						} else {
+							jsonWriter.close();
+							jsonReader.close();
+							throw new InvocationRequestFailedException("Don't know how to handle server auth of type: " + next);
+						}
+					}
+
+					/*
+					 * client security
+					 */
+					for (PersBaseClientAuth<?> next : theServiceDefinition.getClientAuths()) {
+						if (next instanceof NamedParameterJsonRpcClientAuth) {
+							jsonWriter = ((NamedParameterJsonRpcClientAuth) next).createWrappedWriter(jsonWriter);
+						}
+					}
+
+					jsonWriter.setLenient(true);
+					jsonWriter.setSerializeNulls(true);
+					jsonWriter.setIndent("  ");
+
+					jsonReader.setLenient(true);
+
+					String method = null;
+
+					jsonReader.beginObject();
+					jsonWriter.beginObject();
+
+					while (jsonReader.hasNext()) {
+
+						String nextName = jsonReader.nextName();
+						jsonWriter.name(nextName);
+
+						if (TOKEN_JSONRPC.equals(nextName)) {
+
+							String rpcVal = jsonReader.nextString();
+							jsonWriter.value(rpcVal);
+							ourLog.debug("JsonRpc version in request: {}", rpcVal);
+
+						} else if (TOKEN_METHOD.equals(nextName)) {
+
+							method = jsonReader.nextString();
+							jsonWriter.value(method);
+							ourLog.debug("JsonRpc method name: {}", method);
+
+						} else if (TOKEN_PARAMS.equals(nextName)) {
+
+							jsonReader.beginJsonRpcParams();
+							try {
+								consumeEqually(jsonReader, jsonWriter);
+							} catch (ProcessingException e) {
+								throw new InvocationRequestFailedException(e);
+							}
+							jsonReader.endJsonRpcParams();
+
+						} else if (TOKEN_ID.equals(nextName)) {
+
+							String requestId = jsonReader.nextString();
+							jsonWriter.value(requestId);
+							ourLog.debug("JsonRpc request ID: {}", requestId);
+
+						}
+
+					}
+
+					jsonReader.endObject();
+					jsonWriter.endObject();
+
+					String requestBody = stringWriter.toString();
+					String contentType = "application/json";
+					PersMethod methodDef = theServiceDefinition.getMethod(method);
+					if (methodDef == null) {
+						throw new InvocationRequestFailedException("Unknown method \"" + method + "\" for Service \"" + theServiceDefinition.getService().getServiceName() + "\"");
+					}
+
+					retVal.setResultMethod(methodDef, requestBody, contentType);
+					return retVal;
+				} finally {
+					jsonWriter.close();
+					jsonReader.close();
 				}
-				jsonReader.endJsonRpcParams();
-
-			} else if (TOKEN_ID.equals(nextName)) {
-
-				String requestId = jsonReader.nextString();
-				jsonWriter.value(requestId);
-				ourLog.debug("JsonRpc request ID: {}", requestId);
-
 			}
-
 		}
 
-		jsonReader.endObject();
-		jsonWriter.endObject();
-
-		jsonReader.close();
-		jsonWriter.close();
-
-		String requestBody = stringWriter.toString();
-		String contentType = "application/json";
-		PersMethod methodDef = theServiceDefinition.getMethod(method);
-		if (methodDef == null) {
-			throw new InvocationRequestFailedException("Unknown method \"" + method + "\" for Service \"" + theServiceDefinition.getService().getServiceName() + "\"");
-		}
-
-		retVal.setResultMethod(methodDef, requestBody, contentType);
-		return retVal;
 	}
 
 	@Override

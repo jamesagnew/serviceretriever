@@ -406,6 +406,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 
 	}
 
+	@SuppressWarnings("resource")
 	@Test
 	public void testSoap11InvalidGetRequest() throws Exception {
 
@@ -518,6 +519,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		});
 	}
 
+	@SuppressWarnings("resource")
 	@Test
 	public void testSoap11InvalidPostRequest() throws Exception {
 
@@ -625,7 +627,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "resource" })
 	@Test
 	public void testSoap11FailingUrl() throws Exception {
 
@@ -784,7 +786,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		respBean.setBody(response);
 		respBean.setContentType("text/xml");
 		respBean.setResponseTime(100);
-		HashMap<String, List<String>> headers = new HashMap<String, List<String>>();
+		HashMap<String, List<String>> headers = new HashMap<>();
 		headers.put("Header0", new ArrayList<String>());
 		headers.get("Header0").add("Header0Value");
 		respBean.addFailedUrl(myUrl, "This is the failure explanation", 500, "text/xml", response, 100, headers);
@@ -829,7 +831,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 	/**
 	 * Have the invoker throw an NPE
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "resource" })
 	@Test
 	public void testSoap11InvokerThrowsException() throws Exception {
 
@@ -1242,7 +1244,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 
 		mySvcVer.setWsdlLocation(WSDL_URL);
 
-		ArrayList<GResource> resList = new ArrayList<GResource>();
+		ArrayList<GResource> resList = new ArrayList<>();
 		resList.add(new GResource(WSDL_URL, "application/xml", "<wsdl/>"));
 
 		mySvcVer = ourAdminSvc.saveServiceVersion(d0.getPid(), d0s0.getPid(), mySvcVer, resList);
@@ -1330,14 +1332,14 @@ public class ServiceOrchestratorBeanIntegrationTest {
 				"PID|1||397979797^^^SN^SN~4242^^^BKDMDM^PI~1000^^^YARDI^PI||Williams^Rory^H^^^^A||19641028000000-0600|M||||||||||31592^^^YARDI^AN\r";
 		String response = new PipeParser().parse(request).generateACK().encode();
 
-		Reader reader = new StringReader(request);
 		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
 		req.setRequestType(RequestType.POST);
 		req.setRequestHostIp("127.0.0.1");
 		req.setPath("/d0/d0s0/d0s0v1");
 		req.setQuery("");
-		req.setInputReader(reader);
-		req.setRequestTime(new Date());
+		req.setInputReader(new StringReader(request));
+		Date req1date = new Date();
+		req.setRequestTime(req1date);
 		req.setRequestHeaders(new HashMap<String, List<String>>());
 		req.getRequestHeaders().put("Content-Type", Collections.singletonList("application/hl7-v2"));
 
@@ -1358,22 +1360,60 @@ public class ServiceOrchestratorBeanIntegrationTest {
 
 		ourOrchSvc.handleServiceRequest(req);
 
-		newEntityManager();
-
 		ourTxTemplate.execute(new TransactionCallbackWithoutResult() {
 			@Override
 			protected void doInTransactionWithoutResult(TransactionStatus status) {
 				try {
 					ourSvcReg.reloadRegistryFromDatabase();
+					ourStatsSvc.flushStatus();
 				} catch (Exception e) {
 					throw new Error(e);
 				}
 			}
 		});
 
-		http = (DtoServiceVersionHl7OverHttp) ourAdminSvc.loadModelUpdate(new ModelUpdateRequest()).getDomainList().getServiceVersionByPid(http.getPid());
+		ModelUpdateRequest mur = new ModelUpdateRequest();
+		mur.addDomainToLoadStats(d0.getPid());
+		mur.addServiceToLoadStats(d0s0.getPid());
+		http = (DtoServiceVersionHl7OverHttp) ourAdminSvc.loadModelUpdate(mur).getDomainList().getServiceVersionByPid(http.getPid());
 		assertEquals(1, http.getMethodList().size());
 		assertEquals("ADT", http.getMethodList().get(0).getName());
+
+		mur = new ModelUpdateRequest();
+		mur.addDomainToLoadStats(d0.getPid());
+		mur.addServiceToLoadStats(d0s0.getPid());
+		mur.addVersionToLoadStats(http.getPid());
+		mur.addVersionMethodToLoadStats(http.getMethodList().get(0).getPid());
+		http = (DtoServiceVersionHl7OverHttp) ourAdminSvc.loadModelUpdate(mur).getDomainList().getServiceVersionByPid(http.getPid());
+		
+		assertEquals(req1date, http.getLastSuccessfulInvocation());
+		assertEquals(req1date, http.getMethodList().get(0).getLastSuccessfulInvocation());
+		
+		/*
+		 * One more invocation
+		 */
+		Date req2date = new Date();
+		req.setRequestTime(req2date);
+		req.setInputReader(new StringReader(request));
+
+		ourOrchSvc.handleServiceRequest(req);
+
+		ourTxTemplate.execute(new TransactionCallbackWithoutResult() {
+			@Override
+			protected void doInTransactionWithoutResult(TransactionStatus status) {
+				try {
+					ourSvcReg.reloadRegistryFromDatabase();
+					ourStatsSvc.flushStatus();
+				} catch (Exception e) {
+					throw new Error(e);
+				}
+			}
+		});
+
+		http = (DtoServiceVersionHl7OverHttp) ourAdminSvc.loadModelUpdate(mur).getDomainList().getServiceVersionByPid(http.getPid());
+		
+		assertEquals(req2date, http.getLastSuccessfulInvocation());
+		assertEquals(req2date, http.getMethodList().get(0).getLastSuccessfulInvocation());
 
 	}
 

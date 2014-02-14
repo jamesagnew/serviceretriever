@@ -339,8 +339,10 @@ public class PersDomain extends BasePersServiceCatalogItem {
 			int urlsActive = 0;
 			int urlsDown = 0;
 			int urlsUnknown = 0;
-			Date lastServerSecurityFail = null;
 			Date lastSuccess = null;
+			Date lastFault = null;
+			Date lastFail = null;
+			Date lastServerSecurityFail = null;
 			for (PersService nextService : this.getServices()) {
 				for (BasePersServiceVersion nextVersion : nextService.getVersions()) {
 					for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
@@ -363,8 +365,10 @@ public class PersDomain extends BasePersServiceCatalogItem {
 
 					PersServiceVersionStatus svcStatus = theStatuses.getServiceVersionStatus(nextVersion.getPid());
 					if (svcStatus != null) {
-						lastServerSecurityFail = PersServiceVersionStatus.newer(lastServerSecurityFail, svcStatus.getLastServerSecurityFailure());
 						lastSuccess = PersServiceVersionStatus.newer(lastSuccess, svcStatus.getLastSuccessfulInvocation());
+						lastFault = PersServiceVersionStatus.newer(lastFault, svcStatus.getLastFaultInvocation());
+						lastFail = PersServiceVersionStatus.newer(lastFail, svcStatus.getLastFailInvocation());
+						lastServerSecurityFail = PersServiceVersionStatus.newer(lastServerSecurityFail, svcStatus.getLastServerSecurityFailure());
 					}
 				}
 			}
@@ -372,8 +376,10 @@ public class PersDomain extends BasePersServiceCatalogItem {
 			retVal.setUrlsActive(urlsActive);
 			retVal.setUrlsDown(urlsDown);
 			retVal.setUrlsUnknown(urlsUnknown);
-			retVal.setLastServerSecurityFailure(lastServerSecurityFail);
 			retVal.setLastSuccessfulInvocation(lastSuccess);
+			retVal.setLastFaultInvocation(lastFault);
+			retVal.setLastFailInvocation(lastFail);
+			retVal.setLastServerSecurityFailure(lastServerSecurityFail);
 		}
 		// retVal.get
 

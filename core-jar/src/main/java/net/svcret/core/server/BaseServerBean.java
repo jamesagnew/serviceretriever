@@ -66,6 +66,7 @@ public abstract class BaseServerBean implements BeanNameAware {
 		mySslContextFactory = theSslContextFactory;
 	}
 
+	@SuppressWarnings("resource")
 	@PostConstruct
 	public void startup() throws Exception {
 		ourLog.info("Starting up admin listener on port {} with name: {}", myPort, myBeanName);

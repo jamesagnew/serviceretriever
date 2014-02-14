@@ -1,10 +1,11 @@
 package net.svcret.core.invoker.jsonrpc;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 import com.google.gson.stream.JsonWriter;
 
-public interface IJsonWriter {
+public interface IJsonWriter extends Closeable {
 
 	void setLenient(boolean theB);
 

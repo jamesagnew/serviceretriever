@@ -94,7 +94,7 @@ class ServiceServlet extends HttpServlet {
 			request.setInputReader(theReq.getReader());
 			request.setRequestTime(new Date(start));
 
-			Map<String, List<String>> requestHeaders = new HashMap<String, List<String>>();
+			Map<String, List<String>> requestHeaders = new HashMap<>();
 			for (Iterator<String> nameIter = Iterators.forEnumeration(theReq.getHeaderNames()); nameIter.hasNext();) {
 				String nextName = nameIter.next();
 				ArrayList<String> values = Collections.list(theReq.getHeaders(nextName));

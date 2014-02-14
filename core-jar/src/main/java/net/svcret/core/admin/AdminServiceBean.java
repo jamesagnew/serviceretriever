@@ -240,6 +240,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return service.toDto();
 	}
 
+	@Override
 	public GServiceMethod addServiceVersionMethod(long theServiceVersionPid, GServiceMethod theMethod) throws ProcessingException, UnexpectedFailureException {
 		ourLog.info("Adding method {} to service version {}", theMethod.getName(), theServiceVersionPid);
 
@@ -247,7 +248,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		PersMethod ui = fromUi(theMethod);
 		sv.addMethod(ui);
 		sv = myServiceRegistry.saveServiceVersion(sv);
-		return sv.getMethod(theMethod.getName()).toDto(false, myRuntimeStatusQuerySvc);
+		return sv.getMethod(theMethod.getName()).toDto();
 	}
 
 	@Override
@@ -345,7 +346,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		flushOutstandingStats();
 
 		Collection<PersStickySessionUrlBinding> sessions = myDao.getAllStickySessions();
-		Collection<DtoStickySessionUrlBinding> retVal = new ArrayList<DtoStickySessionUrlBinding>();
+		Collection<DtoStickySessionUrlBinding> retVal = new ArrayList<>();
 		for (PersStickySessionUrlBinding next : sessions) {
 			retVal.add(next.toDao());
 		}
@@ -422,7 +423,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 	@Override
 	public Collection<GMonitorRuleFiring> loadAllActiveRuleFirings() {
-		Collection<GMonitorRuleFiring> retVal = new ArrayList<GMonitorRuleFiring>();
+		Collection<GMonitorRuleFiring> retVal = new ArrayList<>();
 		List<PersMonitorRuleFiring> firings = myDao.getAllMonitorRuleFiringsWhichAreActive();
 		for (PersMonitorRuleFiring nextFiring : firings) {
 			retVal.add(nextFiring.toDto());
@@ -455,7 +456,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 	@Override
 	public Collection<DtoLibraryMessage> loadLibraryMessages() {
-		ArrayList<DtoLibraryMessage> retVal = new ArrayList<DtoLibraryMessage>();
+		ArrayList<DtoLibraryMessage> retVal = new ArrayList<>();
 		for (PersLibraryMessage next : myDao.loadLibraryMessages()) {
 			retVal.add(toUi(next, false));
 		}
@@ -545,7 +546,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			throw new NullPointerException("No domain/service/svcver pid provided!");
 		}
 
-		List<GMonitorRuleFiring> retVal = new ArrayList<GMonitorRuleFiring>();
+		List<GMonitorRuleFiring> retVal = new ArrayList<>();
 		List<PersMonitorRuleFiring> firings = myDao.loadMonitorRuleFirings(allSvcVers, theStart);
 		for (PersMonitorRuleFiring next : firings) {
 			retVal.add(next.toDto());
@@ -664,12 +665,12 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			throw new IllegalArgumentException("Unknown service version PID: " + theServiceVersionPid);
 		}
 
-		Set<Long> methodPids = new HashSet<Long>();
+		Set<Long> methodPids = new HashSet<>();
 		for (PersMethod next : svcVer.getMethods()) {
 			methodPids.add(next.getPid());
 		}
 
-		Set<Long> urlPids = new HashSet<Long>();
+		Set<Long> urlPids = new HashSet<>();
 		for (PersServiceVersionUrl next : svcVer.getUrls()) {
 			urlPids.add(next.getPid());
 		}
@@ -687,12 +688,12 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		BasePersServiceVersion ver = myDao.getServiceVersionByPid(theVersionPid);
 
-		final Map<Long, int[]> methodPidToSuccessCount = new HashMap<Long, int[]>();
-		final Map<Long, int[]> methodPidToFailCount = new HashMap<Long, int[]>();
-		final Map<Long, int[]> methodPidToSecurityFailCount = new HashMap<Long, int[]>();
-		final Map<Long, int[]> methodPidToFaultCount = new HashMap<Long, int[]>();
+		final Map<Long, int[]> methodPidToSuccessCount = new HashMap<>();
+		final Map<Long, int[]> methodPidToFailCount = new HashMap<>();
+		final Map<Long, int[]> methodPidToSecurityFailCount = new HashMap<>();
+		final Map<Long, int[]> methodPidToFaultCount = new HashMap<>();
 
-		final List<Long> statsTimestamps = new ArrayList<Long>();
+		final List<Long> statsTimestamps = new ArrayList<>();
 
 		for (final PersMethod nextMethod : ver.getMethods()) {
 
@@ -728,7 +729,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		theService.getMethodList().clear();
 		for (PersMethod next : def.getMethods()) {
-			theService.getMethodList().add(next.toDto(false, myRuntimeStatusQuerySvc));
+			theService.getMethodList().add(next.toDto());
 		}
 
 		// Only add URLs if there aren't any already defined for this version
@@ -983,7 +984,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		// Resources
 		Map<String, PersServiceVersionResource> uriToResource = existingVersion.getUriToResource();
-		Set<String> urls = new HashSet<String>();
+		Set<String> urls = new HashSet<>();
 		for (GResource next : theResources) {
 			urls.add(next.getUrl());
 
@@ -1003,7 +1004,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		/*
 		 * Urls
 		 */
-		Collection<PersServiceVersionUrl> urlsToAdd = new ArrayList<PersServiceVersionUrl>();
+		Collection<PersServiceVersionUrl> urlsToAdd = new ArrayList<>();
 		for (GServiceVersionUrl nextRequired : theVersion.getUrlList()) {
 			boolean alreadyExists = false;
 			for (PersServiceVersionUrl nextExisting : existingVersion.getUrls()) {
@@ -1062,7 +1063,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		 * Methods
 		 */
 
-		HashSet<String> methods = new HashSet<String>();
+		HashSet<String> methods = new HashSet<>();
 		for (GServiceMethod next : theVersion.getMethodList()) {
 			methods.add(next.getName());
 			PersMethod existing = existingVersion.getMethod(next.getName());
@@ -1081,7 +1082,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		/*
 		 * Client Auths
 		 */
-		Set<Long> pids = new HashSet<Long>();
+		Set<Long> pids = new HashSet<>();
 		for (BaseDtoClientSecurity next : theVersion.getClientSecurityList()) {
 			PersBaseClientAuth<?> nextPers = fromUi(next, existingVersion);
 			if (nextPers.getPid() != null) {
@@ -1099,7 +1100,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			}
 		}
 		index = 0;
-		for (PersBaseClientAuth<?> next : new ArrayList<PersBaseClientAuth<?>>(existingVersion.getClientAuths())) {
+		for (PersBaseClientAuth<?> next : new ArrayList<>(existingVersion.getClientAuths())) {
 			if (next.getPid() != null && !pids.contains(next.getPid())) {
 				existingVersion.removeClientAuth(next);
 			} else {
@@ -1110,7 +1111,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		/*
 		 * Server Auths
 		 */
-		pids = new HashSet<Long>();
+		pids = new HashSet<>();
 		for (BaseDtoServerSecurity next : theVersion.getServerSecurityList()) {
 			if (next.getAuthHostPid() <= 0) {
 				throw new IllegalArgumentException("No auth host PID specified");
@@ -1133,7 +1134,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 //			existingVersion.addServerAuth(nextPers);
 		}
 		index = 0;
-		for (PersBaseServerAuth<?, ?> next : new ArrayList<PersBaseServerAuth<?, ?>>(existingVersion.getServerAuths())) {
+		for (PersBaseServerAuth<?, ?> next : new ArrayList<>(existingVersion.getServerAuths())) {
 			if (next.getPid() != null && !pids.contains(next.getPid())) {
 				existingVersion.removeServerAuth(next);
 			} else {
@@ -1144,7 +1145,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		/*
 		 * Property Captures
 		 */
-		Set<String> propCaps = new HashSet<String>();
+		Set<String> propCaps = new HashSet<>();
 		for (DtoPropertyCapture next : theVersion.getPropertyCaptures()) {
 			PersPropertyCapture nextPers = PersPropertyCapture.fromDto(existingVersion, next);
 			PersPropertyCapture existing = existingVersion.getPropertyCaptureWithPropertyName(next.getPropertyName());
@@ -1156,7 +1157,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			propCaps.add(nextPers.getPk().getPropertyName());
 		}
 		index = 0;
-		for (PersPropertyCapture next : new ArrayList<PersPropertyCapture>(existingVersion.getPropertyCaptures())) {
+		for (PersPropertyCapture next : new ArrayList<>(existingVersion.getPropertyCaptures())) {
 			if (!propCaps.contains(next.getPk().getPropertyName())) {
 				existingVersion.removePropertyCapture(next);
 			} else {
@@ -1298,8 +1299,8 @@ public class AdminServiceBean implements IAdminServiceLocal {
 				retVal.setImplementationUrlPid(response.getIncomingResponse().getSuccessfulUrl().getPid());
 			}
 
-			List<Pair<String>> requestHeaders = new ArrayList<Pair<String>>();
-			requestHeaders.add(new Pair<String>("Content-Type", svcVer.getProtocol().getRequestContentType()));
+			List<Pair<String>> requestHeaders = new ArrayList<>();
+			requestHeaders.add(new Pair<>("Content-Type", svcVer.getProtocol().getRequestContentType()));
 
 			retVal.setRequestContentType(svcVer.getProtocol().getRequestContentType());
 			retVal.setRequestHeaders(requestHeaders);
@@ -1818,7 +1819,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	private List<GUserDomainPermission> toUi(Collection<PersUserDomainPermission> theDomainPermissions) {
-		List<GUserDomainPermission> retVal = new ArrayList<GUserDomainPermission>();
+		List<GUserDomainPermission> retVal = new ArrayList<>();
 		for (PersUserDomainPermission next : theDomainPermissions) {
 			retVal.add(toUi(next));
 		}
@@ -1826,7 +1827,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	private List<GRecentMessage> toUi(List<? extends BasePersSavedTransactionRecentMessage> theServiceVersionRecentMessages, boolean theLoadMessageContents) {
-		List<GRecentMessage> retVal = new ArrayList<GRecentMessage>();
+		List<GRecentMessage> retVal = new ArrayList<>();
 
 		for (BasePersSavedTransactionRecentMessage next : theServiceVersionRecentMessages) {
 			retVal.add(next.toDto(theLoadMessageContents));
@@ -1934,7 +1935,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	private Collection<DtoLibraryMessage> toUiCollectionLibraryMessages(Collection<PersLibraryMessage> theMsgs, boolean theLoadContents) {
-		ArrayList<DtoLibraryMessage> retVal = new ArrayList<DtoLibraryMessage>();
+		ArrayList<DtoLibraryMessage> retVal = new ArrayList<>();
 		for (PersLibraryMessage next : theMsgs) {
 			retVal.add(toUi(next, theLoadContents));
 		}
@@ -2095,7 +2096,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	private static int[] toLatency(List<Long> theTimes, List<Integer> theCountsEntry0, List<Integer> theCountsEntry1, List<Integer> theCountsEntry2, List<Integer> theCountsEntry3) {
-		List<List<Integer>> entries = new ArrayList<List<Integer>>(3);
+		List<List<Integer>> entries = new ArrayList<>(4);
 		entries.add(theCountsEntry0);
 		entries.add(theCountsEntry1);
 		entries.add(theCountsEntry2);
@@ -2149,7 +2150,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 	@Override
 	public Collection<Long> getAllDomainPids() {
-		ArrayList<Long> retVal = new ArrayList<Long>();
+		ArrayList<Long> retVal = new ArrayList<>();
 		for (PersDomain next :myDao.getAllDomains()) {
 			retVal.add(next.getPid());
 		}
@@ -2158,7 +2159,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 	@Override
 	public Collection<Long> getAllMonitorRulePids() {
-		ArrayList<Long> retVal = new ArrayList<Long>();
+		ArrayList<Long> retVal = new ArrayList<>();
 		for (BasePersMonitorRule next :myDao.getMonitorRules()) {
 			retVal.add(next.getPid());
 		}

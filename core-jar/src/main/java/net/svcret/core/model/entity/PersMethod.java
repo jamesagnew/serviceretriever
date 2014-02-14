@@ -27,6 +27,7 @@ import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 import net.svcret.admin.shared.model.GServiceMethod;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.core.api.IRuntimeStatusQueryLocal;
+import net.svcret.core.api.StatusesBean;
 import net.svcret.core.status.RuntimeStatusQueryBean.StatsAccumulator;
 
 import org.apache.commons.lang3.Validate;
@@ -219,7 +220,14 @@ public class PersMethod extends BasePersObject {
 //		theServiceVersion.addMethod(this);
 	}
 
-	public GServiceMethod toDto(boolean theLoadStats, IRuntimeStatusQueryLocal theRuntimeStatusQuerySvc) throws UnexpectedFailureException {
+	/**
+	 * No stats
+	 */
+	public GServiceMethod toDto() throws UnexpectedFailureException {
+		return toDto(false, null, null);
+	}
+		
+	public GServiceMethod toDto(boolean theLoadStats, IRuntimeStatusQueryLocal theRuntimeStatusQuerySvc, StatusesBean theStatuses) throws UnexpectedFailureException {
 		GServiceMethod retVal = new GServiceMethod();
 		if (this.getPid() != null) {
 			retVal.setPid(this.getPid());
@@ -239,7 +247,7 @@ public class PersMethod extends BasePersObject {
 
 			retVal.setStatus(net.svcret.admin.shared.model.StatusEnum.valueOf(status.name()));
 			
-			PersMethodStatus methodStatus = getStatus();
+			PersMethodStatus methodStatus = theStatuses.getMethodPidToStatus().get(retVal.getPid());
 			if (methodStatus != null) {
 				retVal.setLastSuccessfulInvocation(methodStatus.getLastSuccessfulInvocation());
 				retVal.setLastFaultInvocation(methodStatus.getLastFaultInvocation());

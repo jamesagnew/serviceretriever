@@ -21,6 +21,7 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -63,8 +64,7 @@ import net.svcret.core.api.StatusesBean;
 import net.svcret.core.status.RuntimeStatusQueryBean.StatsAccumulator;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.annotations.ForeignKey;
-
+ 
 @Entity
 @Table(name = "PX_SVC_VER", uniqueConstraints = { @UniqueConstraint(columnNames = { "SERVICE_PID", "VERSION_ID" }) })
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
@@ -99,8 +99,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	private String myExplicitProxyPath;
 
 	@ManyToOne(cascade = {}, fetch = FetchType.LAZY)
-	@ForeignKey(name = "PX_SVCVER_HTTP_CONFIG_PID")
-	@JoinColumn(name = "HTTP_CONFIG_PID", referencedColumnName = "PID", nullable = false)
+	@JoinColumn(name = "HTTP_CONFIG_PID", referencedColumnName = "PID", nullable = false, foreignKey=@ForeignKey(name = "PX_SVCVER_HTTP_CONFIG_PID"))
 	private PersHttpClientConfig myHttpClientConfig;
 
 	@Transient
@@ -150,8 +149,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	private ServerSecurityModeEnum myServerSecurityMode;
 
 	@ManyToOne()
-	@ForeignKey(name = "PX_SVCVER_SERVICE_PID")
-	@JoinColumn(name = "SERVICE_PID", referencedColumnName = "PID")
+	@JoinColumn(name = "SERVICE_PID", referencedColumnName = "PID", foreignKey=@ForeignKey(name = "PX_SVCVER_SERVICE_PID"))
 	private PersService myService;
 
 	@OneToOne(cascade = {}, fetch = FetchType.LAZY, mappedBy = "myServiceVersion", orphanRemoval = true)
@@ -313,7 +311,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 
 	public Collection<PersMonitorRuleActiveCheck> getActiveChecks() {
 		if (myActiveChecks == null) {
-			myActiveChecks = new ArrayList<PersMonitorRuleActiveCheck>();
+			myActiveChecks = new ArrayList<>();
 		}
 		return myActiveChecks;
 	}
@@ -328,7 +326,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	 */
 	public List<PersBaseClientAuth<?>> getClientAuths() {
 		if (myClientAuths == null) {
-			myClientAuths = new ArrayList<PersBaseClientAuth<?>>();
+			myClientAuths = new ArrayList<>();
 		}
 		return Collections.unmodifiableList(myClientAuths);
 	}
@@ -376,7 +374,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		 */
 
 		if (myNameToMethod == null) {
-			HashMap<String, PersMethod> nameToMethod = new HashMap<String, PersMethod>();
+			HashMap<String, PersMethod> nameToMethod = new HashMap<>();
 			for (PersMethod next : getMethods()) {
 				nameToMethod.put(next.getName(), next);
 			}
@@ -394,7 +392,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		 */
 
 		if (myRootElementNameToMethod == null) {
-			HashMap<String, PersMethod> nameToMethod = new HashMap<String, PersMethod>();
+			HashMap<String, PersMethod> nameToMethod = new HashMap<>();
 			for (PersMethod next : getMethods()) {
 				nameToMethod.put(next.getRootElements(), next);
 			}
@@ -406,7 +404,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	}
 
 	public List<String> getMethodNames() {
-		ArrayList<String> retVal = new ArrayList<String>();
+		ArrayList<String> retVal = new ArrayList<>();
 		for (PersMethod nextMethod : getMethods()) {
 			retVal.add(nextMethod.getName());
 		}
@@ -419,7 +417,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	 */
 	public List<PersMethod> getMethods() {
 		if (myMethods == null) {
-			myMethods = new ArrayList<PersMethod>();
+			myMethods = new ArrayList<>();
 		}
 
 		return Collections.unmodifiableList(myMethods);
@@ -427,7 +425,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 
 	public Collection<PersMonitorAppliesTo> getMonitorRules() {
 		if (myMonitorRules == null) {
-			myMonitorRules = new ArrayList<PersMonitorAppliesTo>();
+			myMonitorRules = new ArrayList<>();
 		}
 		return myMonitorRules;
 	}
@@ -461,13 +459,14 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	/**
 	 * @return the id
 	 */
+	@Override
 	public Long getPid() {
 		return myPid;
 	}
 
 	public Collection<PersPropertyCapture> getPropertyCaptures() {
 		if (myPropertyCaptures == null) {
-			myPropertyCaptures = new ArrayList<PersPropertyCapture>();
+			myPropertyCaptures = new ArrayList<>();
 		}
 		return myPropertyCaptures;
 	}
@@ -513,7 +512,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	 */
 	public List<PersBaseServerAuth<?, ?>> getServerAuths() {
 		if (myServerAuths == null) {
-			myServerAuths = new ArrayList<PersBaseServerAuth<?, ?>>();
+			myServerAuths = new ArrayList<>();
 		}
 		return Collections.unmodifiableList(myServerAuths);
 	}
@@ -573,7 +572,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	 */
 	public Map<String, PersServiceVersionResource> getUriToResource() {
 		if (myUriToResource == null) {
-			myUriToResource = new HashMap<String, PersServiceVersionResource>();
+			myUriToResource = new HashMap<>();
 		}
 		return myUriToResource;
 	}
@@ -590,7 +589,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	 */
 	public List<PersServiceVersionUrl> getUrls() {
 		if (myUrls == null) {
-			myUrls = new ArrayList<PersServiceVersionUrl>();
+			myUrls = new ArrayList<>();
 		}
 		return (myUrls);
 	}
@@ -598,7 +597,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	public PersServiceVersionUrl getUrlWithId(String theString) {
 		Map<String, PersServiceVersionUrl> map = myIdToUrl;
 		if (map == null) {
-			map = new HashMap<String, PersServiceVersionUrl>();
+			map = new HashMap<>();
 			for (PersServiceVersionUrl next : myUrls) {
 				map.put(next.getUrlId(), next);
 			}
@@ -610,7 +609,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	public PersServiceVersionUrl getUrlWithPid(long thePid) {
 		Map<Long, PersServiceVersionUrl> map = myPidToUrl;
 		if (map == null) {
-			map = new HashMap<Long, PersServiceVersionUrl>();
+			map = new HashMap<>();
 			for (PersServiceVersionUrl next : myUrls) {
 				map.put(next.getPid(), next);
 			}
@@ -622,7 +621,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	public PersServiceVersionUrl getUrlWithUrl(String theUrl) {
 		Map<String, PersServiceVersionUrl> map = myUrlToUrl;
 		if (map == null) {
-			map = new HashMap<String, PersServiceVersionUrl>();
+			map = new HashMap<>();
 			for (PersServiceVersionUrl next : getUrls()) {
 				map.put(next.getUrl(), next);
 			}
@@ -796,7 +795,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		ourLog.debug("Retaining method names: {}", theIds);
 		getMethods();
 
-		HashSet<String> ids = new HashSet<String>(theIds);
+		HashSet<String> ids = new HashSet<>(theIds);
 		for (Iterator<PersMethod> iter = myMethods.iterator(); iter.hasNext();) {
 			PersMethod next = iter.next();
 			if (!BaseDtoServiceVersion.METHOD_NAME_UNKNOWN.equals(next.getName()) && !ids.contains(next.getName())) {
@@ -810,7 +809,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	 * Remove any URLs whose ID doesn't appear in the given IDs
 	 */
 	public void retainOnlyUrlsWithIds(Collection<String> theIds) {
-		HashSet<String> ids = new HashSet<String>(theIds);
+		HashSet<String> ids = new HashSet<>(theIds);
 		int index = 0;
 		for (Iterator<PersServiceVersionUrl> iter = myUrls.iterator(); iter.hasNext();) {
 			PersServiceVersionUrl next = iter.next();
@@ -954,7 +953,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		for (PersMethod nextMethod : this.getMethods()) {
 			if (!BaseDtoServiceVersion.METHOD_NAME_UNKNOWN.equals(nextMethod.getName())) {
 				boolean loadStats = theLoadMethodStats != null && theLoadMethodStats.contains(nextMethod.getPid());
-				GServiceMethod gMethod = nextMethod.toDto(loadStats, theQuerySvc);
+				GServiceMethod gMethod = nextMethod.toDto(loadStats, theQuerySvc, theStatuses);
 				retVal.getMethodList().add(gMethod);
 			}
 		} // for methods
@@ -1064,7 +1063,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	/**
 	 * Subclasses may override
 	 */
-	protected void fromDto(@SuppressWarnings("unused") BaseDtoServiceVersion theDto, IDao theDao) throws ProcessingException {
+	protected void fromDto(BaseDtoServiceVersion theDto, IDao theDao) throws ProcessingException {
 	}
 
 	public static <T extends BaseDtoServiceVersion> BasePersServiceVersion fromDto(T theDto, PersService theService, IDao theDao, IServiceRegistry theServiceRegistry) throws ProcessingException, UnexpectedFailureException {

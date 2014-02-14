@@ -1,5 +1,6 @@
 package net.svcret.core.model.entity;
 
+import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.NamedQueries;
@@ -19,6 +20,9 @@ public class PersMethodStatus extends BasePersMethodStatus {
 
 	@EmbeddedId
 	private PersMethodStatusPk myPk;
+
+	@Column(name = "METHOD_PID", updatable = false, insertable = false)
+	private long myMethodPid;
 
 	public PersMethodStatus() {
 		// nothing
@@ -52,6 +56,10 @@ public class PersMethodStatus extends BasePersMethodStatus {
 
 	public PersMethod getMethod() {
 		return myPk.getMethod();
+	}
+
+	public long getMethodPid() {
+		return myMethodPid;
 	}
 
 	@Override

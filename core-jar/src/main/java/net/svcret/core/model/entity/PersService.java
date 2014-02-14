@@ -201,7 +201,7 @@ public class PersService extends BasePersServiceCatalogItem {
 	}
 
 	public Collection<PersMethod> getAllServiceVersionMethods() {
-		List<PersMethod> retVal = new ArrayList<PersMethod>();
+		List<PersMethod> retVal = new ArrayList<>();
 		for (BasePersServiceVersion nextServicVersion : getVersions()) {
 			retVal.addAll(nextServicVersion.getMethods());
 		}
@@ -210,7 +210,7 @@ public class PersService extends BasePersServiceCatalogItem {
 
 	@Override
 	public Set<BasePersServiceVersion> getAllServiceVersions() {
-		Set<BasePersServiceVersion> retVal = new HashSet<BasePersServiceVersion>();
+		Set<BasePersServiceVersion> retVal = new HashSet<>();
 		for (BasePersServiceVersion next : getVersions()) {
 			retVal.addAll(next.getAllServiceVersions());
 		}
@@ -226,7 +226,7 @@ public class PersService extends BasePersServiceCatalogItem {
 
 	public Collection<PersMonitorAppliesTo> getMonitorRules() {
 		if (myMonitorRules == null) {
-			myMonitorRules = new ArrayList<PersMonitorAppliesTo>();
+			myMonitorRules = new ArrayList<>();
 		}
 		return myMonitorRules;
 	}
@@ -241,6 +241,7 @@ public class PersService extends BasePersServiceCatalogItem {
 	/**
 	 * @return the id
 	 */
+	@Override
 	public Long getPid() {
 		return myPid;
 	}
@@ -280,7 +281,7 @@ public class PersService extends BasePersServiceCatalogItem {
 	 */
 	public Collection<BasePersServiceVersion> getVersions() {
 		if (myVersions == null) {
-			myVersions = new ArrayList<BasePersServiceVersion>();
+			myVersions = new ArrayList<>();
 		}
 		return Collections.unmodifiableCollection(myVersions);
 	}
@@ -313,7 +314,7 @@ public class PersService extends BasePersServiceCatalogItem {
 	}
 
 	public void loadAllAssociations() {
-		myIdToVersion = new HashMap<String, BasePersServiceVersion>();
+		myIdToVersion = new HashMap<>();
 		for (BasePersServiceVersion next : getVersions()) {
 			myIdToVersion.put(next.getVersionId(), next);
 			next.loadAllAssociations();
@@ -451,8 +452,10 @@ public class PersService extends BasePersServiceCatalogItem {
 			int urlsActive = 0;
 			int urlsDown = 0;
 			int urlsUnknown = 0;
-			Date lastServerSecurityFail = null;
 			Date lastSuccess = null;
+			Date lastFault = null;
+			Date lastFail = null;
+			Date lastServerSecurityFail = null;
 			for (BasePersServiceVersion nextVersion : this.getVersions()) {
 				for (PersServiceVersionUrl nextUrl : nextVersion.getUrls()) {
 					StatusEnum urlStatus = theStatuses.getUrlStatusEnum(nextUrl.getPid());
@@ -474,16 +477,20 @@ public class PersService extends BasePersServiceCatalogItem {
 
 				PersServiceVersionStatus svcStatus = theStatuses.getServiceVersionStatus(nextVersion.getPid());
 				if (svcStatus != null) {
-					lastServerSecurityFail = PersServiceVersionStatus.newer(lastServerSecurityFail, svcStatus.getLastServerSecurityFailure());
 					lastSuccess = PersServiceVersionStatus.newer(lastSuccess, svcStatus.getLastSuccessfulInvocation());
+					lastFault = PersServiceVersionStatus.newer(lastFault, svcStatus.getLastFaultInvocation());
+					lastFail = PersServiceVersionStatus.newer(lastFail, svcStatus.getLastFailInvocation());
+					lastServerSecurityFail = PersServiceVersionStatus.newer(lastServerSecurityFail, svcStatus.getLastServerSecurityFailure());
 				}
 			}
 
 			retVal.setUrlsActive(urlsActive);
 			retVal.setUrlsDown(urlsDown);
 			retVal.setUrlsUnknown(urlsUnknown);
-			retVal.setLastServerSecurityFailure(lastServerSecurityFail);
 			retVal.setLastSuccessfulInvocation(lastSuccess);
+			retVal.setLastFaultInvocation(lastFault);
+			retVal.setLastFailInvocation(lastFail);
+			retVal.setLastServerSecurityFailure(lastServerSecurityFail);
 
 		}
 
