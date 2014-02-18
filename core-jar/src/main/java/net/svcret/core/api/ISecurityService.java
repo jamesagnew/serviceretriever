@@ -4,6 +4,7 @@ import java.util.List;
 
 import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.api.UnexpectedFailureException;
+import net.svcret.admin.api.UnknownPidException;
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.core.model.entity.BasePersAuthenticationHost;
 import net.svcret.core.model.entity.PersMethod;
@@ -82,5 +83,9 @@ public interface ISecurityService {
 	void saveAuthenticationHost(BasePersAuthenticationHost theHost);
 
 	void forceLoadUserCatalog();
+
+	void deleteAuthenticationHost(long thePid) throws UnknownPidException;
+
+	List<BasePersAuthenticationHost> getAllAuthenticationHosts();
 
 }

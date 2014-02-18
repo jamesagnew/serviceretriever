@@ -792,4 +792,9 @@ public class ChartingServiceBean implements IChartingServiceBean {
 		}
 	}
 
+	@VisibleForTesting
+	public void setServiceRegistryForUnitTest(IServiceRegistry theSvcReg) {
+		myServiceRegistry=theSvcReg;
+	}
+
 }

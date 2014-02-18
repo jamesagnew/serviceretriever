@@ -18,6 +18,7 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -65,7 +66,7 @@ public class PersUser extends BasePersKeepsRecentTransactions implements IThrott
 	private List<PersUserAllowableSourceIps> myAllowSourceIps;
 	
 	@ManyToOne(cascade = {})
-	@JoinColumn(name = "AUTH_HOST_PID", referencedColumnName = "PID", nullable = false)
+	@JoinColumn(name = "AUTH_HOST_PID", referencedColumnName = "PID", nullable = false, foreignKey=@ForeignKey(name="FK_USER_AUTHHOST"))
 	private BasePersAuthenticationHost myAuthenticationHost;
 
 	@ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
@@ -173,13 +174,13 @@ public class PersUser extends BasePersKeepsRecentTransactions implements IThrott
 
 	public List<PersUserAllowableSourceIps> getAllowSourceIps() {
 		if (myAllowSourceIps == null) {
-			myAllowSourceIps = new ArrayList<PersUserAllowableSourceIps>();
+			myAllowSourceIps = new ArrayList<>();
 		}
 		return myAllowSourceIps;
 	}
 
 	public List<String> getAllowSourceIpsAsStrings() {
-		ArrayList<String> retVal = new ArrayList<String>();
+		ArrayList<String> retVal = new ArrayList<>();
 		for (PersUserAllowableSourceIps next : getAllowSourceIps()) {
 			retVal.add(next.getIp());
 		}
@@ -209,7 +210,7 @@ public class PersUser extends BasePersKeepsRecentTransactions implements IThrott
 	 */
 	public Collection<PersUserDomainPermission> getDomainPermissions() {
 		if (myDomainPermissions == null) {
-			myDomainPermissions = new ArrayList<PersUserDomainPermission>();
+			myDomainPermissions = new ArrayList<>();
 		}
 		return (myDomainPermissions);
 		// return Collections.unmodifiableCollection(myDomainPermissions);
@@ -224,7 +225,7 @@ public class PersUser extends BasePersKeepsRecentTransactions implements IThrott
 	 */
 	public Set<UserGlobalPermissionEnum> getPermissions() {
 		if (myPermissions == null) {
-			myPermissions = new HashSet<UserGlobalPermissionEnum>();
+			myPermissions = new HashSet<>();
 		}
 		return myPermissions;
 	}
@@ -232,6 +233,7 @@ public class PersUser extends BasePersKeepsRecentTransactions implements IThrott
 	/**
 	 * @return the pid
 	 */
+	@Override
 	public Long getPid() {
 		return myPid;
 	}
@@ -338,7 +340,7 @@ public class PersUser extends BasePersKeepsRecentTransactions implements IThrott
 	}
 
 	public void loadAllAssociations() {
-		myDomainPidToDomainPermission = new HashMap<Long, PersUserDomainPermission>();
+		myDomainPidToDomainPermission = new HashMap<>();
 		for (PersUserDomainPermission nextDomainPerm : getDomainPermissions()) {
 			myDomainPidToDomainPermission.put(nextDomainPerm.getServiceDomain().getPid(), nextDomainPerm);
 			nextDomainPerm.loadAllAssociations();
@@ -358,7 +360,7 @@ public class PersUser extends BasePersKeepsRecentTransactions implements IThrott
 	}
 
 	public void setAllowSourceIpsAsStrings(Collection<String> theStrings) {
-		ArrayList<String> toAdd = new ArrayList<String>();
+		ArrayList<String> toAdd = new ArrayList<>();
 		if (theStrings != null) {
 			toAdd.addAll(theStrings);
 		}
@@ -366,7 +368,7 @@ public class PersUser extends BasePersKeepsRecentTransactions implements IThrott
 			toAdd.remove(next.getIp());
 		}
 
-		ArrayList<PersUserAllowableSourceIps> toDelete = new ArrayList<PersUserAllowableSourceIps>(getAllowSourceIps());
+		ArrayList<PersUserAllowableSourceIps> toDelete = new ArrayList<>(getAllowSourceIps());
 		for (Iterator<PersUserAllowableSourceIps> iterator = toDelete.iterator(); iterator.hasNext();) {
 			PersUserAllowableSourceIps next = iterator.next();
 			if (theStrings != null && theStrings.contains(next.getIp())) {
@@ -379,7 +381,7 @@ public class PersUser extends BasePersKeepsRecentTransactions implements IThrott
 		}
 
 		if (myAllowableSourceIpsToDelete == null) {
-			myAllowableSourceIpsToDelete = new ArrayList<PersUserAllowableSourceIps>();
+			myAllowableSourceIpsToDelete = new ArrayList<>();
 		}
 		for (PersUserAllowableSourceIps next : toDelete) {
 			myAllowableSourceIpsToDelete.add(next);
@@ -456,14 +458,17 @@ public class PersUser extends BasePersKeepsRecentTransactions implements IThrott
 		myStatus = theStatus;
 	}
 
+	@Override
 	public void setThrottleMaxQueueDepth(Integer theThrottleMaxQueueDepth) {
 		myThrottleMaxQueueDepth = theThrottleMaxQueueDepth;
 	}
 
+	@Override
 	public void setThrottleMaxRequests(Integer theThrottleMaxRequests) {
 		myThrottleMaxRequests = theThrottleMaxRequests;
 	}
 
+	@Override
 	public void setThrottlePeriod(ThrottlePeriodEnum theThrottlePeriod) {
 		myThrottlePeriod = theThrottlePeriod;
 	}

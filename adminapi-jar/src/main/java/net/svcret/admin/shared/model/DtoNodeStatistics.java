@@ -1,68 +1,72 @@
 package net.svcret.admin.shared.model;
 
-public class DtoNodeStatistics {
+import java.io.Serializable;
 
-	private double[] myCpuTime;
-	private double[] myFailTransactions;
-	private double[] myFaultTransactions;
-	private double[] myMemoryMax;
-	private double[] myMemoryUsed;
-	private double[] mySecFailTransactions;
-	private double[] mySuccessTransactions;
+public class DtoNodeStatistics implements Serializable {
 
-	public double[] getCpuTime() {
+	private static final long serialVersionUID = 1L;
+	
+	private int[] myCpuTime;
+	private int[] myFailTransactions;
+	private int[] myFaultTransactions;
+	private int[] myMemoryMax;
+	private int[] myMemoryUsed;
+	private int[] mySecFailTransactions;
+	private int[] mySuccessTransactions;
+
+	public int[] getCpuTime() {
 		return myCpuTime;
 	}
 
-	public double[] getFailTransactions() {
+	public int[] getFailTransactions() {
 		return myFailTransactions;
 	}
 
-	public double[] getFaultTransactions() {
+	public int[] getFaultTransactions() {
 		return myFaultTransactions;
 	}
 
-	public double[] getMemoryMax() {
+	public int[] getMemoryMax() {
 		return myMemoryMax;
 	}
 
-	public double[] getMemoryUsed() {
+	public int[] getMemoryUsed() {
 		return myMemoryUsed;
 	}
 
-	public double[] getSecFailTransactions() {
+	public int[] getSecFailTransactions() {
 		return mySecFailTransactions;
 	}
 
-	public double[] getSuccessTransactions() {
+	public int[] getSuccessTransactions() {
 		return mySuccessTransactions;
 	}
 
-	public void setCpuTime(double[] theCpuTime) {
+	public void setCpuTime(int[] theCpuTime) {
 		myCpuTime = theCpuTime;
 	}
 
-	public void setFailTransactions(double[] theFailTransactions) {
+	public void setFailTransactions(int[] theFailTransactions) {
 		myFailTransactions = theFailTransactions;
 	}
 
-	public void setFaultTransactions(double[] theFaultTransactions) {
+	public void setFaultTransactions(int[] theFaultTransactions) {
 		myFaultTransactions = theFaultTransactions;
 	}
 
-	public void setMemoryMax(double[] theMemoryMax) {
+	public void setMemoryMax(int[] theMemoryMax) {
 		myMemoryMax = theMemoryMax;
 	}
 
-	public void setMemoryUsed(double[] theMemoryUsed) {
+	public void setMemoryUsed(int[] theMemoryUsed) {
 		myMemoryUsed = theMemoryUsed;
 	}
 
-	public void setSecFailTransactions(double[] theSecFailTransactions) {
+	public void setSecFailTransactions(int[] theSecFailTransactions) {
 		mySecFailTransactions = theSecFailTransactions;
 	}
 
-	public void setSuccessTransactions(double[] theSuccessTransactions) {
+	public void setSuccessTransactions(int[] theSuccessTransactions) {
 		mySuccessTransactions = theSuccessTransactions;
 	}
 

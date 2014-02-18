@@ -94,6 +94,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		myConfigSvc = new ConfigServiceBean();
 		myConfigSvc.setDao(myDao);
 		myConfigSvc.setBroadcastSender(myBroadcastSender);
+		myConfigSvc.setConfigForUnitTest();
 		AdminServiceBeanIntegrationTest.injectConfigServiceDefaults(myConfigSvc);
 		
 		myOrchSvc = new AdminServiceBean();
@@ -134,7 +135,6 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 //		my30SecsAgo = new Date(myNow.getTime() - (30 * DateUtils.MILLIS_PER_SECOND));
 //		my1Min30SecsAgo = new Date(myNow.getTime() - (DateUtils.MILLIS_PER_MINUTE) - (30 * DateUtils.MILLIS_PER_SECOND));
 //		my2Min30SecsAgo = new Date(myNow.getTime() - (2*DateUtils.MILLIS_PER_MINUTE) - (30 * DateUtils.MILLIS_PER_SECOND));
-		
 		
 	}
 
@@ -307,7 +307,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		
 		check = myDao.getAllMonitorRuleActiveChecks().iterator().next();
 
-		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<IServiceOrchestrator.SidechannelOrchestratorResponseBean>();
+		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<>();
 		
 		SidechannelOrchestratorResponseBean rsp = createOrchestratorResponse(ResponseTypeEnum.SUCCESS);
 		rsp.setApplicableUrl(myD1M1S1U1);
@@ -417,7 +417,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		
 		check = myDao.getAllMonitorRuleActiveChecks().iterator().next();
 
-		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<IServiceOrchestrator.SidechannelOrchestratorResponseBean>();
+		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<>();
 		SidechannelOrchestratorResponseBean rsp = createOrchestratorResponse(ResponseTypeEnum.FAIL);
 		rsp.setApplicableUrl(myD1M1S1U1);
 		rsp.getIncomingResponse().setResponseTime(100);
@@ -495,7 +495,7 @@ public class MonitorServiceBeanTest extends BaseJpaTest {
 		
 	}
 private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(MonitorServiceBeanTest.class);
-	private SidechannelOrchestratorResponseBean createOrchestratorResponse(ResponseTypeEnum theResponseType) {
+	private static SidechannelOrchestratorResponseBean createOrchestratorResponse(ResponseTypeEnum theResponseType) {
 		SrBeanIncomingRequest request=new SrBeanIncomingRequest();
 		request.setRequestTime(new Date());
 		request.setRequestHeaders(new HashMap<String, List<String>>());
@@ -564,7 +564,7 @@ private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger
 		
 		check = myDao.getAllMonitorRuleActiveChecks().iterator().next();
 
-		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<IServiceOrchestrator.SidechannelOrchestratorResponseBean>();
+		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<>();
 		SidechannelOrchestratorResponseBean bean = createOrchestratorResponse(ResponseTypeEnum.FAIL);
 		bean.setApplicableUrl(myD1M1S1U1);
 		bean.getIncomingResponse().addFailedUrl(myD1M1S1U1, "Failed", 200, "text/plain", "", 100, new HashMap<String, List<String>>());
@@ -639,7 +639,7 @@ private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger
 		d1s1v1.setWsdlLocation(HTTP_FOO);
 		d1s1v1.setHttpClientConfigPid(hcc.getPid());
 
-		List<GResource> resources = new ArrayList<GResource>();
+		List<GResource> resources = new ArrayList<>();
 		resources.add(new GResource(HTTP_FOO, "text/xml", "contents1"));
 		resources.add(new GResource(HTTP_BAR, "text/xml", "contents2"));
 
@@ -659,7 +659,7 @@ private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger
 		d1s2v1.setWsdlLocation(HTTP_FOO2);
 		d1s2v1.setHttpClientConfigPid(hcc.getPid());
 
-		List<GResource> resources2 = new ArrayList<GResource>();
+		List<GResource> resources2 = new ArrayList<>();
 		resources2.add(new GResource(HTTP_FOO2, "text/xml", "contents1"));
 		resources2.add(new GResource(HTTP_BAR2, "text/xml", "contents2"));
 
@@ -748,7 +748,7 @@ private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger
 		
 		check2 = myDao.getAllMonitorRuleActiveChecks().iterator().next();
 
-		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<IServiceOrchestrator.SidechannelOrchestratorResponseBean>();
+		Collection<SidechannelOrchestratorResponseBean> responses=new ArrayList<>();
 		SidechannelOrchestratorResponseBean rsp = createOrchestratorResponse(ResponseTypeEnum.SUCCESS);
 		rsp.getIncomingResponse().setResponseTime(1000); // too long
 		rsp.getIncomingResponse().setSuccessfulUrl(myD1M1S1U1);

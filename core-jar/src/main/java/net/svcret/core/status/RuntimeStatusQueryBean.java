@@ -170,7 +170,7 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 	}
 	
 	@Override
-	public DtoNodeStatusAndStatisticsList getAllNodeStatusesAndStatistics() throws UnexpectedFailureException {
+	public DtoNodeStatusAndStatisticsList getAllNodeStatusesAndStatistics()  {
 		DtoNodeStatusAndStatisticsList retVal = new DtoNodeStatusAndStatisticsList();
 		
 		long now = System.currentTimeMillis();
@@ -219,6 +219,10 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 			Long startTimeLong = startTime.getTime();
 			Integer timestampIndex = timestampToIndex.get(startTimeLong);
 			Integer nodeIndex = nodeIdToIndex.get(nextStats.getPk().getNodeId());
+			
+			if (timestampIndex == null) {
+				throw new Error(new Date(startTimeLong).toString());
+			}
 			
 			DtoNodeStatistics nodeStats = retVal.getNodeStatistics().get(nodeIndex);
 			

@@ -164,19 +164,19 @@ public class MessageLibraryPanel extends FlowPanel {
 		myDataLoadingSpinner = new LoadingSpinner();
 		myContentPanel.add(myDataLoadingSpinner);
 
-		myGrid = new PCellTable<DtoLibraryMessage>();
+		myGrid = new PCellTable<>();
 		myGrid.setWidth("100%");
 		myContentPanel.add(myGrid);
 
 		myGrid.setEmptyTableWidget(new Label("No messages found"));
 
-		myDataProvider = new ListDataProvider<DtoLibraryMessage>();
+		myDataProvider = new ListDataProvider<>();
 		myDataProvider.addDataDisplay(myGrid);
 
-		ListHandler<DtoLibraryMessage> sortHandler = new ListHandler<DtoLibraryMessage>(myDataProvider.getList());
+		ListHandler<DtoLibraryMessage> sortHandler = new ListHandler<>(myDataProvider.getList());
 		myGrid.addColumnSortHandler(sortHandler);
 		
-		Column<DtoLibraryMessage, String> editColumn = new NullColumn<DtoLibraryMessage>(new PButtonCell(IMAGES.iconEdit(), MSGS.actions_Edit()));
+		Column<DtoLibraryMessage, String> editColumn = new NullColumn<>(new PButtonCell(IMAGES.iconEdit(), MSGS.actions_Edit()));
 		editColumn.setFieldUpdater(new FieldUpdater<DtoLibraryMessage, String>() {
 			@Override
 			public void update(int theIndex, DtoLibraryMessage theObject, String theValue) {
@@ -184,7 +184,7 @@ public class MessageLibraryPanel extends FlowPanel {
 			}
 		});
 		editColumn.setCellStyleNames(CssConstants.PCELLTABLE_ACTION_COLUMN);
-		Column<DtoLibraryMessage, String> replayColumn = new NullColumn<DtoLibraryMessage>(new PButtonCell(IMAGES.iconPlay16(), MSGS.actions_Replay()));
+		Column<DtoLibraryMessage, String> replayColumn = new NullColumn<>(new PButtonCell(IMAGES.iconPlay16(), MSGS.actions_Replay()));
 		replayColumn.setFieldUpdater(new FieldUpdater<DtoLibraryMessage, String>() {
 			@Override
 			public void update(int theIndex, DtoLibraryMessage theObject, String theValue) {
@@ -194,10 +194,10 @@ public class MessageLibraryPanel extends FlowPanel {
 			}
 		});
 		replayColumn.setCellStyleNames(CssConstants.PCELLTABLE_ACTION_COLUMN);
-		List<HasCell<DtoLibraryMessage, ?>> actionsCells = new ArrayList<HasCell<DtoLibraryMessage, ?>>();
+		List<HasCell<DtoLibraryMessage, ?>> actionsCells = new ArrayList<>();
 		actionsCells.add(editColumn);
 		actionsCells.add(replayColumn);
-		IdentityColumn<DtoLibraryMessage> actionsColumn = new IdentityColumn<DtoLibraryMessage>(new CompositeCell<DtoLibraryMessage>(actionsCells));
+		IdentityColumn<DtoLibraryMessage> actionsColumn = new IdentityColumn<>(new CompositeCell<>(actionsCells));
 		myGrid.addColumn(actionsColumn, "");
 
 		// Applies To

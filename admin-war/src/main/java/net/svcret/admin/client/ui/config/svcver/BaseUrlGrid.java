@@ -44,7 +44,7 @@ public abstract class BaseUrlGrid extends FlowPanel {
 	private int myColUsage = -1;
 	private Label myNoUrlsLabel;
 	private FlexTableWithTooltips<GServiceVersionUrl> myUrlGrid;
-	private final List<GServiceVersionUrl> myUrlList = new ArrayList<GServiceVersionUrl>();
+	private final List<GServiceVersionUrl> myUrlList = new ArrayList<>();
 
 	public BaseUrlGrid() {
 		int next = 1;
@@ -212,7 +212,7 @@ public abstract class BaseUrlGrid extends FlowPanel {
 	}
 
 	protected void init() {
-		myUrlGrid = new FlexTableWithTooltips<GServiceVersionUrl>(myUrlList);
+		myUrlGrid = new FlexTableWithTooltips<>(myUrlList);
 		myUrlGrid.addStyleName(CssConstants.PROPERTY_TABLE);
 		this.add(myUrlGrid);
 

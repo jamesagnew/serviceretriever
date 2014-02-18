@@ -140,7 +140,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		myNotificationEditor.addValueChangeHandler(new ValueChangeHandler<String>() {
 			@Override
 			public void onValueChange(ValueChangeEvent<String> theEvent) {
-				Set<String> emails = new TreeSet<String>();
+				Set<String> emails = new TreeSet<>();
 				for (String next : myNotificationEditor.getValueOrBlank().split(",| ")) {
 					if (next.contains("@")) {
 						emails.add(next.trim());
@@ -201,16 +201,16 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		contentPanel.add(new Label("This rule is active, meaning that it manually sends messages to proxied " + "service implementations on a periodic basis and then checks the outcome. Each row in the "
 				+ "table below represents one message that will be sent to all backing URLs for one version " + "of one service. A rule may have multiple active checks."));
 
-		final PCellTable<DtoMonitorRuleActiveCheck> grid = new PCellTable<DtoMonitorRuleActiveCheck>();
+		final PCellTable<DtoMonitorRuleActiveCheck> grid = new PCellTable<>();
 		grid.setEmptyTableWidget(new Label("No checks have been defined for this rule."));
 		contentPanel.add(grid);
 
-		myActiveChecksDataProvider = new ListDataProvider<DtoMonitorRuleActiveCheck>();
-		myChecksCurrentlyExecuting = new HashSet<DtoMonitorRuleActiveCheck>();
+		myActiveChecksDataProvider = new ListDataProvider<>();
+		myChecksCurrentlyExecuting = new HashSet<>();
 
 		// Remove Button
 
-		Column<DtoMonitorRuleActiveCheck, String> removeColumn = new NullColumn<DtoMonitorRuleActiveCheck>(new PButtonCell(IMAGES.iconRemove(), MSGS.actions_Remove()));
+		Column<DtoMonitorRuleActiveCheck, String> removeColumn = new NullColumn<>(new PButtonCell(IMAGES.iconRemove(), MSGS.actions_Remove()));
 		final DtoMonitorRuleActiveCheckList checkList = ((DtoMonitorRuleActive) myRule).getCheckList();
 		removeColumn.setFieldUpdater(new FieldUpdater<DtoMonitorRuleActiveCheck, String>() {
 			@Override
@@ -251,14 +251,14 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		});
 		tryNowColumn.setCellStyleNames(CssConstants.PCELLTABLE_ACTION_COLUMN);
 
-		List<HasCell<DtoMonitorRuleActiveCheck, ?>> actionCells = new ArrayList<HasCell<DtoMonitorRuleActiveCheck, ?>>();
+		List<HasCell<DtoMonitorRuleActiveCheck, ?>> actionCells = new ArrayList<>();
 		actionCells.add(removeColumn);
 		actionCells.add(tryNowColumn);
-		grid.addColumn(new IdentityColumn<DtoMonitorRuleActiveCheck>(new CompositeCell<DtoMonitorRuleActiveCheck>(actionCells)), "");
+		grid.addColumn(new IdentityColumn<>(new CompositeCell<>(actionCells)), "");
 
 		// Frequency
 
-		List<HasCell<DtoMonitorRuleActiveCheck, ?>> frequencyCells = new ArrayList<HasCell<DtoMonitorRuleActiveCheck, ?>>();
+		List<HasCell<DtoMonitorRuleActiveCheck, ?>> frequencyCells = new ArrayList<>();
 		Column<DtoMonitorRuleActiveCheck, SafeHtml> frequencyEveryColumn = new Column<DtoMonitorRuleActiveCheck, SafeHtml>(new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(DtoMonitorRuleActiveCheck theObject) {
@@ -294,8 +294,8 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 			}
 		});
 		frequencyCells.add(frequencyUnitColumn);
-		CompositeCell<DtoMonitorRuleActiveCheck> frequencyCell = new CompositeCell<DtoMonitorRuleActiveCheck>(frequencyCells);
-		Column<DtoMonitorRuleActiveCheck, ?> frequencyColumn = new IdentityColumn<DtoMonitorRuleActiveCheck>(frequencyCell);
+		CompositeCell<DtoMonitorRuleActiveCheck> frequencyCell = new CompositeCell<>(frequencyCells);
+		Column<DtoMonitorRuleActiveCheck, ?> frequencyColumn = new IdentityColumn<>(frequencyCell);
 		grid.addColumn(frequencyColumn, "Frequency");
 
 		// Message
@@ -331,7 +331,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 
 		// Expect Response
 
-		List<HasCell<DtoMonitorRuleActiveCheck, ?>> expectCells = new ArrayList<HasCell<DtoMonitorRuleActiveCheck, ?>>();
+		List<HasCell<DtoMonitorRuleActiveCheck, ?>> expectCells = new ArrayList<>();
 		Column<DtoMonitorRuleActiveCheck, SafeHtml> expectHeaderCellColumn = new Column<DtoMonitorRuleActiveCheck, SafeHtml>(new SafeHtmlCell()) {
 			@Override
 			public SafeHtml getValue(DtoMonitorRuleActiveCheck theObject) {
@@ -408,8 +408,8 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 			}
 		});
 		expectCells.add(expectLatencyTextColumn);
-		CompositeCell<DtoMonitorRuleActiveCheck> expectCell = new CompositeCell<DtoMonitorRuleActiveCheck>(expectCells);
-		Column<DtoMonitorRuleActiveCheck, ?> expectColumn = new IdentityColumn<DtoMonitorRuleActiveCheck>(expectCell);
+		CompositeCell<DtoMonitorRuleActiveCheck> expectCell = new CompositeCell<>(expectCells);
+		Column<DtoMonitorRuleActiveCheck, ?> expectColumn = new IdentityColumn<>(expectCell);
 		grid.addColumn(expectColumn, "Expect");
 
 		// Last Outcome
@@ -437,7 +437,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		// Recent Outcomes
 
 		ActiveChecksRecentOutcomeTooltipProvider recentOutcomesTooltipProvider = new ActiveChecksRecentOutcomeTooltipProvider();
-		CellWithTooltip<DtoMonitorRuleActiveCheck> recentOutcomesCell = new CellWithTooltip<DtoMonitorRuleActiveCheck>(myActiveChecksDataProvider, recentOutcomesTooltipProvider);
+		CellWithTooltip<DtoMonitorRuleActiveCheck> recentOutcomesCell = new CellWithTooltip<>(myActiveChecksDataProvider, recentOutcomesTooltipProvider);
 		Column<DtoMonitorRuleActiveCheck, SafeHtml> recentOutcomesColumn = new Column<DtoMonitorRuleActiveCheck, SafeHtml>(recentOutcomesCell) {
 			@Override
 			public SafeHtml getValue(DtoMonitorRuleActiveCheck theObject) {
@@ -802,7 +802,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 	}
 
 	private void initActiveValues(DtoMonitorRuleActive theRule) {
-		List<DtoMonitorRuleActiveCheck> checks = new ArrayList<DtoMonitorRuleActiveCheck>(theRule.getCheckList().toCollection());
+		List<DtoMonitorRuleActiveCheck> checks = new ArrayList<>(theRule.getCheckList().toCollection());
 		Collections.sort(checks, new Comparator<DtoMonitorRuleActiveCheck>() {
 			@Override
 			public int compare(DtoMonitorRuleActiveCheck theO1, DtoMonitorRuleActiveCheck theO2) {

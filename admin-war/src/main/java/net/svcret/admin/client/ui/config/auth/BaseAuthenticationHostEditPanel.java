@@ -50,11 +50,11 @@ abstract class BaseAuthenticationHostEditPanel<T extends BaseDtoAuthenticationHo
 		switch (theAuthHost.getType()) {
 		case LOCAL_DATABASE:
 			myAuthHost = (T) new DtoAuthenticationHostLocalDatabase();
-			((T) myAuthHost).merge((T) theAuthHost);
+			myAuthHost.merge(theAuthHost);
 			break;
 		case LDAP:
 			myAuthHost = (T) new DtoAuthenticationHostLdap();
-			((T) myAuthHost).merge((T) theAuthHost);
+			myAuthHost.merge(theAuthHost);
 			break;
 		}
 

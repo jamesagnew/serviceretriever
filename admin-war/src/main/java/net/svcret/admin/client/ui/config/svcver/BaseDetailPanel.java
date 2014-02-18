@@ -5,7 +5,6 @@ import static net.svcret.admin.client.AdminPortal.MSGS;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +30,6 @@ import net.svcret.admin.client.ui.config.monitor.PEditTextCell;
 import net.svcret.admin.client.ui.config.sec.IProvidesViewAndEdit;
 import net.svcret.admin.client.ui.config.sec.IProvidesViewAndEdit.IValueChangeHandler;
 import net.svcret.admin.client.ui.config.sec.ViewAndEditFactory;
-import net.svcret.admin.shared.DateUtil;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.enm.ClientSecurityEnum;
@@ -469,21 +467,21 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 	}
 
 	private void initMethodPanel(FlowPanel theMethodPanel) {
-		final CellTable<GServiceMethod> grid = new PCellTable<GServiceMethod>();
+		final CellTable<GServiceMethod> grid = new PCellTable<>();
 		theMethodPanel.add(grid);
 		grid.setEmptyTableWidget(new Label("No methods defined."));
 
-		myMethodDataProvider = new ListDataProvider<GServiceMethod>();
+		myMethodDataProvider = new ListDataProvider<>();
 		myMethodDataProvider.addDataDisplay(grid);
 
-		ListHandler<GServiceMethod> sortHandler = new ListHandler<GServiceMethod>(myMethodDataProvider.getList());
+		ListHandler<GServiceMethod> sortHandler = new ListHandler<>(myMethodDataProvider.getList());
 		grid.addColumnSortHandler(sortHandler);
 
 		// Action
 
 		PButtonCell deleteCell = new PButtonCell(AdminPortal.IMAGES.iconRemove());
 
-		Column<GServiceMethod, String> action = new NullColumn<GServiceMethod>(deleteCell);
+		Column<GServiceMethod, String> action = new NullColumn<>(deleteCell);
 		grid.addColumn(action, "");
 		action.setFieldUpdater(new FieldUpdater<GServiceMethod, String>() {
 			@Override
@@ -604,7 +602,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 					int[] fail = detailedStats.getMethodPidToFailCount().get(theObject.getPid());
 					int[] secFail = detailedStats.getMethodPidToSecurityFailCount().get(theObject.getPid());
 
-					renderTransactionGraphsAsHtml(b, success, fault, fail, secFail, false, null);
+					UsageSparkline.renderTransactionGraphsAsHtml(b, success, fault, fail, secFail, false, null);
 				}
 				return b.toSafeHtml();
 			}
@@ -689,21 +687,21 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 				+ "the request or response message and can be used to apply decision criteria, logged, "
 				+ "audited, etc."));
 		
-		final CellTable<DtoPropertyCapture> grid = new PCellTable<DtoPropertyCapture>();
+		final CellTable<DtoPropertyCapture> grid = new PCellTable<>();
 		thePropertyCapturePanel.add(grid);
 		grid.setEmptyTableWidget(new Label("No Property Captures defined."));
 
-		myPropertyCaptureDataProvider = new ListDataProvider<DtoPropertyCapture>();
+		myPropertyCaptureDataProvider = new ListDataProvider<>();
 		myPropertyCaptureDataProvider.addDataDisplay(grid);
 
-		ListHandler<DtoPropertyCapture> sortHandler = new ListHandler<DtoPropertyCapture>(myPropertyCaptureDataProvider.getList());
+		ListHandler<DtoPropertyCapture> sortHandler = new ListHandler<>(myPropertyCaptureDataProvider.getList());
 		grid.addColumnSortHandler(sortHandler);
 
 		// Action
 
 		PButtonCell deleteCell = new PButtonCell(AdminPortal.IMAGES.iconRemove());
 
-		Column<DtoPropertyCapture, String> action = new NullColumn<DtoPropertyCapture>(deleteCell);
+		Column<DtoPropertyCapture, String> action = new NullColumn<>(deleteCell);
 		grid.addColumn(action, "");
 		action.setFieldUpdater(new FieldUpdater<DtoPropertyCapture, String>() {
 			@Override
@@ -1034,8 +1032,8 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		}
 
 		
-		Set<String> propCapNames = new HashSet<String>(); 
-		for (DtoPropertyCapture next : new ArrayList<DtoPropertyCapture>(myServiceVersion.getPropertyCaptures())) {
+		Set<String> propCapNames = new HashSet<>(); 
+		for (DtoPropertyCapture next : new ArrayList<>(myServiceVersion.getPropertyCaptures())) {
 			if (next.isBlank()) {
 				myServiceVersion.getPropertyCaptures().remove(next);
 				continue;
@@ -1051,35 +1049,8 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		return retVal;
 	}
 
-	private static boolean hasValues(int[] theSuccess) {
-		if (theSuccess != null) {
-			for (int integer : theSuccess) {
-				if (integer != 0) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
 	static long newUncommittedSessionId() {
 		return (long) (Math.random() * Long.MAX_VALUE);
-	}
-
-	public static void renderTransactionGraphsAsHtml(SafeHtmlBuilder b, int[] success, int[] fault, int[] fail, int[] secFail, boolean theLastUsageProvidedIfKnown, Date theLastUsage) {
-		if (hasValues(success) || hasValues(fault) || hasValues(fail) || hasValues(secFail)) {
-			UsageSparkline sparkline = new UsageSparkline(success, fault, fail, secFail, "");
-			b.appendHtmlConstant("<span id='" + sparkline.getId() + "'></span>");
-			b.appendHtmlConstant("<img src='images/empty.png' onload=\"" + sparkline.getNativeInvocation(sparkline.getId()) + "\" />");
-		} else {
-			if (!theLastUsageProvidedIfKnown) {
-				b.appendHtmlConstant("No usage within timeframe");
-			} else if (theLastUsage == null) {
-				b.appendHtmlConstant("Never used");
-			} else {
-				b.appendHtmlConstant("No Usage since " + DateUtil.formatTime(theLastUsage));
-			}
-		}
 	}
 
 	private final class AutosaveValueChangeHandler implements IValueChangeHandler {

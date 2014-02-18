@@ -20,7 +20,7 @@ public abstract class BaseAuthorizationServiceBean<T extends BasePersAuthenticat
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(BaseAuthorizationServiceBean.class);
 
-	private ConcurrentMap<String, CacheBean> myCredentialHashToExpiry = new ConcurrentHashMap<String, CacheBean>();
+	private ConcurrentMap<String, CacheBean> myCredentialHashToExpiry = new ConcurrentHashMap<>();
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -78,7 +78,7 @@ public abstract class BaseAuthorizationServiceBean<T extends BasePersAuthenticat
 		try {
 			long now = System.currentTimeMillis();
 			int count = 0;
-			for (Entry<String, CacheBean> nextEntry : new ArrayList<Entry<String, CacheBean>>(myCredentialHashToExpiry.entrySet())) {
+			for (Entry<String, CacheBean> nextEntry : new ArrayList<>(myCredentialHashToExpiry.entrySet())) {
 				if (now > nextEntry.getValue().getExpiry()) {
 					if (myCredentialHashToExpiry.remove(nextEntry.getKey(), nextEntry.getValue())) {
 						ourLog.debug("Removing cached entry for user {}", nextEntry.getValue().getUserPid());
@@ -101,6 +101,7 @@ public abstract class BaseAuthorizationServiceBean<T extends BasePersAuthenticat
 
 	protected abstract Class<T> getConfigType();
 
+	@SuppressWarnings("static-method")
 	protected boolean shouldCache() {
 		return true;
 	}

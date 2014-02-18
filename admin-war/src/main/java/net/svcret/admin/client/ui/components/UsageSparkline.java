@@ -1,5 +1,10 @@
 package net.svcret.admin.client.ui.components;
 
+import java.util.Date;
+
+import static net.svcret.admin.shared.ArrayUtil.*;
+import net.svcret.admin.shared.DateUtil;
+
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.client.JsArrayInteger;
 import com.google.gwt.core.client.JsArrayUtils;
@@ -10,6 +15,7 @@ import com.google.gwt.dom.client.LabelElement;
 import com.google.gwt.dom.client.SpanElement;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.client.ui.Widget;
 
 public class UsageSparkline extends Widget {
@@ -117,7 +123,7 @@ public class UsageSparkline extends Widget {
 
 		ensureArrays();
 		for (int col = 0; col < mySuccessValues.length; col++) {
-			if (col>0) {
+			if (col > 0) {
 				b.append(", ");
 			}
 			b.append("[");
@@ -210,6 +216,30 @@ public class UsageSparkline extends Widget {
 
 	public String getId() {
 		return myId;
+	}
+
+	public static void renderTransactionGraphsAsHtml(SafeHtmlBuilder b, int[] success, int[] fault, int[] fail, int[] secFail, boolean theLastUsageProvidedIfKnown, Date theLastUsage) {
+		if (hasValues(success) || hasValues(fault) || hasValues(fail) || hasValues(secFail)) {
+			UsageSparkline sparkline = new UsageSparkline(success, fault, fail, secFail, "");
+			b.appendHtmlConstant("<span id='" + sparkline.getId() + "'></span>");
+			b.appendHtmlConstant("<img src='images/empty.png' onload=\"" + sparkline.getNativeInvocation(sparkline.getId()) + "\" />");
+		} else {
+			if (!theLastUsageProvidedIfKnown) {
+				b.appendHtmlConstant("No usage within timeframe");
+			} else if (theLastUsage == null) {
+				b.appendHtmlConstant("Never used");
+			} else {
+				b.appendHtmlConstant("No Usage since " + DateUtil.formatTime(theLastUsage));
+			}
+		}
+	}
+
+	public static void renderTransactionGraphsAsHtml(SafeHtmlBuilder b, int[] success, int[] fault, int[] fail, int[] secFail, String theWidth, String theHeight) {
+		UsageSparkline sparkline = new UsageSparkline(success, fault, fail, secFail, "");
+		sparkline.setWidth(theWidth);
+		sparkline.setHeight(theHeight);
+		b.appendHtmlConstant("<span id='" + sparkline.getId() + "'></span>");
+		b.appendHtmlConstant("<img src='images/empty.png' onload=\"" + sparkline.getNativeInvocation(sparkline.getId()) + "\" />");
 	}
 
 }

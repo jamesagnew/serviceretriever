@@ -82,7 +82,7 @@ public class HttpClientBeanTest {
 		clientConfig.setConnectTimeoutMillis(1000);
 		clientConfig.setReadTimeoutMillis(1000);
 
-		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
+		HashMap<String, List<String>> reqHeaders = new HashMap<>();
 		String reqContentType = "text/xml";
 		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
@@ -157,7 +157,7 @@ public class HttpClientBeanTest {
 		clientConfig.setConnectTimeoutMillis(1000);
 		clientConfig.setReadTimeoutMillis(1000);
 
-		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
+		HashMap<String, List<String>> reqHeaders = new HashMap<>();
 		String reqContentType = "text/xml";
 		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
@@ -190,7 +190,7 @@ public class HttpClientBeanTest {
 		clientConfig.setConnectTimeoutMillis(1000);
 		clientConfig.setReadTimeoutMillis(1000);
 
-		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
+		HashMap<String, List<String>> reqHeaders = new HashMap<>();
 		String reqContentType = "text/xml";
 		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
@@ -223,7 +223,7 @@ public class HttpClientBeanTest {
 		clientConfig.setReadTimeoutMillis(1000);
 		clientConfig.setFailureRetriesBeforeAborting(1);
 
-		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
+		HashMap<String, List<String>> reqHeaders = new HashMap<>();
 		String reqContentType = "text/xml";
 		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
@@ -263,7 +263,7 @@ public class HttpClientBeanTest {
 		clientConfig.setReadTimeoutMillis(1000);
 		clientConfig.setFailureRetriesBeforeAborting(1);
 
-		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
+		HashMap<String, List<String>> reqHeaders = new HashMap<>();
 		String reqContentType = "text/xml";
 		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
@@ -301,7 +301,7 @@ public class HttpClientBeanTest {
 		clientConfig.setReadTimeoutMillis(1000);
 		clientConfig.setFailureRetriesBeforeAborting(1);
 
-		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
+		HashMap<String, List<String>> reqHeaders = new HashMap<>();
 		String reqContentType = "text/xml";
 		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
@@ -341,7 +341,7 @@ public class HttpClientBeanTest {
 		clientConfig.setReadTimeoutMillis(1000);
 		clientConfig.setFailureRetriesBeforeAborting(1);
 
-		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
+		HashMap<String, List<String>> reqHeaders = new HashMap<>();
 		String reqContentType = "text/xml";
 		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
@@ -374,7 +374,7 @@ public class HttpClientBeanTest {
 		clientConfig.setConnectTimeoutMillis(1000);
 		clientConfig.setReadTimeoutMillis(1000);
 
-		HashMap<String, List<String>> reqHeaders = new HashMap<String, List<String>>();
+		HashMap<String, List<String>> reqHeaders = new HashMap<>();
 		String reqContentType = "text/xml";
 		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
 
@@ -413,7 +413,7 @@ public class HttpClientBeanTest {
 			IResponseValidator validator = new NullResponseValidator();
 			UrlPoolBean urlPool = new UrlPoolBean();
 			urlPool.setPreferredUrl(new PersServiceVersionUrl(123, "https://127.0.0.1:" + port + "/path"));
-			HashMap<String, List<String>> headers = new HashMap<String, List<String>>();
+			HashMap<String, List<String>> headers = new HashMap<>();
 			SrBeanIncomingResponse resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
 
 			ourLog.info("Resp was: " + resp.getBody());
@@ -425,7 +425,8 @@ public class HttpClientBeanTest {
 			config.setConnectTimeoutMillis(1000);
 			config.setReadTimeoutMillis(1000);
 			config.setPid(111L);
-			config.setTlsTruststore(IOUtils.toByteArray(new FileInputStream("src/test/resources/keystore/truststore.jks")));
+			try (FileInputStream fis = new FileInputStream("src/test/resources/keystore/truststore.jks")){
+			config.setTlsTruststore(IOUtils.toByteArray(fis));}
 			config.setTlsTruststorePassword("changeit");
 			config.setOptLock(2);
 
@@ -459,9 +460,7 @@ public class HttpClientBeanTest {
 
 		long start = System.currentTimeMillis();
 		while (true) {
-			
-			Socket s = new Socket();
-			try {
+			try (Socket s = new Socket()) {
 				s.connect(new InetSocketAddress("localhost", port));
 				break;
 			} catch (IOException e) {
@@ -471,8 +470,6 @@ public class HttpClientBeanTest {
 				if (delay > 10 * 1000) {
 					fail("TOok more than 10 seconds to start server, aborting");
 				}
-			}finally {
-				s.close();
 			}
 		}
 
@@ -488,7 +485,7 @@ public class HttpClientBeanTest {
 			IResponseValidator validator = new NullResponseValidator();
 			UrlPoolBean urlPool = new UrlPoolBean();
 			urlPool.setPreferredUrl(new PersServiceVersionUrl(123, "https://127.0.0.1:" + port + "/path"));
-			HashMap<String, List<String>> headers = new HashMap<String, List<String>>();
+			HashMap<String, List<String>> headers = new HashMap<>();
 			SrBeanIncomingResponse resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
 
 			ourLog.info("Resp was: " + resp.getBody());
@@ -500,7 +497,9 @@ public class HttpClientBeanTest {
 			config.setConnectTimeoutMillis(1000);
 			config.setReadTimeoutMillis(1000);
 			config.setPid(111L);
-			config.setTlsTruststore(IOUtils.toByteArray(new FileInputStream("src/test/resources/keystore/truststore.jks")));
+			try (FileInputStream fis = new FileInputStream("src/test/resources/keystore/truststore.jks")) {
+			config.setTlsTruststore(IOUtils.toByteArray(fis));
+			}
 			config.setTlsTruststorePassword("changeit");
 			config.setOptLock(2);
 
@@ -516,9 +515,11 @@ public class HttpClientBeanTest {
 			config.setConnectTimeoutMillis(1000);
 			config.setReadTimeoutMillis(1000);
 			config.setPid(111L);
-			config.setTlsTruststore(IOUtils.toByteArray(new FileInputStream("src/test/resources/keystore/truststore.jks")));
+			try (FileInputStream fis = new FileInputStream("src/test/resources/keystore/truststore.jks")){
+			config.setTlsTruststore(IOUtils.toByteArray(fis));}
 			config.setTlsTruststorePassword("changeit");
-			config.setTlsKeystore(IOUtils.toByteArray(new FileInputStream("src/test/resources/keystore/keystore2.jks")));
+			try (FileInputStream fis = new FileInputStream("src/test/resources/keystore/keystore2.jks")){
+			config.setTlsKeystore(IOUtils.toByteArray(fis));}
 			config.setTlsKeystorePassword("changeit");
 			config.setOptLock(3);
 
@@ -533,24 +534,24 @@ public class HttpClientBeanTest {
 		}
 	}
 
-	private PersHttpClientConfig createHttpClientConfig() {
+	private static PersHttpClientConfig createHttpClientConfig() {
 		PersHttpClientConfig clientConfig = new PersHttpClientConfig();
 		clientConfig.setPid(1L);
 		return clientConfig;
 	}
 
-	private String provideGoodHeaders() {
+	private static String provideGoodHeaders() {
 		String headers = "Content-Type: text/xml; charset=utf-8\n" + // -
 				"SampleHeader: some value"; // -
 		return headers;
 	}
 
-	private String provideTextResponse() {
+	private static String provideTextResponse() {
 		String reqBody = "This is a text response";
 		return reqBody;
 	}
 
-	private String provideXmlRequest() {
+	private static String provideXmlRequest() {
 		String reqBody = "<SOAP-ENV:Envelope\n" + // -
 				"  xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n" + // -
 				"  SOAP-ENV:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">\n" + // -
@@ -563,7 +564,7 @@ public class HttpClientBeanTest {
 		return reqBody;
 	}
 
-	private String provideXmlResponse() {
+	private static String provideXmlResponse() {
 		String body = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" + "<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" + // -
 				"  <soap:Body>\n" + // -
 				"  <EnlightenResponse xmlns=\"http://clearforest.com/\">\n" + // -
@@ -574,6 +575,7 @@ public class HttpClientBeanTest {
 		return body;
 	}
 
+	@SuppressWarnings("resource")
 	public static void addConnector(int port, Server server, SslContextFactory sslCtx) {
 		HttpConfiguration httpConfig = new HttpConfiguration();
 		httpConfig.setSecureScheme("https");
@@ -613,18 +615,19 @@ public class HttpClientBeanTest {
 			setName("TcpResponder-" + thePort);
 			myPort = thePort;
 			myHeaders = theHeaders;
-			myBody = new ArrayList<String>(Arrays.asList(theResponseBodies));
+			myBody = new ArrayList<>(Arrays.asList(theResponseBodies));
 		}
 
+		@SuppressWarnings("resource")
 		@Override
 		public void run() {
 
-			ServerSocket ss;
-			try {
+			ourLog.info("Opening socket on port {}", myPort);
+			
+			try (ServerSocket ss = new ServerSocket(myPort)){
 
-				ourLog.info("Opening socket on port {}", myPort);
 
-				ss = new ServerSocket(myPort);
+				
 
 				ss.setSoTimeout(50);
 				try {

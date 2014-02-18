@@ -15,6 +15,7 @@ import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
+import net.svcret.admin.shared.model.DtoNodeStatusAndStatisticsList;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
@@ -147,5 +148,7 @@ public interface IAdminServiceLocal  {
 	void deleteMonitorRule(Long thePid) throws UnexpectedFailureException;
 
 	void deleteLibraryMessage(Long thePid);
+
+	DtoNodeStatusAndStatisticsList loadAllNodeStatuses();
 
 }

@@ -6,8 +6,8 @@ import java.util.List;
 import net.svcret.admin.client.ui.components.TooltipListener.Tooltip;
 
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.Widget;
@@ -20,7 +20,7 @@ public class FlexTableWithTooltips<T> extends FlexTable {
 		myBackingList=theBackingList;
 	}
 
-	private List<List<IProvidesTooltip<T>>> myTooltipProviders = new ArrayList<List<IProvidesTooltip<T>>>();
+	private List<List<IProvidesTooltip<T>>> myTooltipProviders = new ArrayList<>();
 
 	public void setTooltipProvider(int theRow, int theCol, IProvidesTooltip<T> theTooltipProvider) {
 		ensureTooltipRow(theRow);

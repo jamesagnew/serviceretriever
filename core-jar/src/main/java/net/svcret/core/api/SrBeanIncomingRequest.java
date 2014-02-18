@@ -2,15 +2,18 @@ package net.svcret.core.api;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
+import javax.net.ssl.SSLSession;
 
 import net.svcret.core.ejb.CapturingReader;
+
+import org.apache.commons.lang3.StringUtils;
 
 public class SrBeanIncomingRequest {
 
@@ -19,6 +22,7 @@ public class SrBeanIncomingRequest {
 	private String myContextPath;
 	private CapturingReader myInputReader;
 	private String myPath;
+	private int myPort;
 	private String myProtocol;
 	private String myQuery;
 	private String myRequestFullUri;
@@ -26,10 +30,14 @@ public class SrBeanIncomingRequest {
 	private String myRequestHostIp;
 	private Date myRequestTime;
 	private RequestType myRequestType;
+	private String myTlsCipherSuite;
+	private X509Certificate[] myTlsClientCertificates;
+	private Integer myTlsKeySize;
+	private SSLSession myTlsSession;
 
 	public void addHeader(String theHeader, String theValue) {
 		if (myRequestHeaders == null) {
-			myRequestHeaders = new CaseInsensitiveMap<List<String>>();
+			myRequestHeaders = new CaseInsensitiveMap<>();
 		}
 		if (!myRequestHeaders.containsKey(theHeader)) {
 			myRequestHeaders.put(theHeader, new ArrayList<String>());
@@ -108,6 +116,10 @@ public class SrBeanIncomingRequest {
 		return path;
 	}
 
+	public int getPort() {
+		return myPort;
+	}
+
 	public String getProtocol() {
 		return myProtocol;
 	}
@@ -152,6 +164,22 @@ public class SrBeanIncomingRequest {
 		return myRequestType;
 	}
 
+	public String getTlsCipherSuite() {
+		return myTlsCipherSuite;
+	}
+
+	public X509Certificate[] getTlsClientCertificates() {
+		return myTlsClientCertificates;
+	}
+
+	public Integer getTlsKeySize() {
+		return myTlsKeySize;
+	}
+
+	public SSLSession getTlsSession() {
+		return myTlsSession;
+	}
+
 	public void setBase(String theBase) {
 		myBase = theBase;
 	}
@@ -176,6 +204,10 @@ public class SrBeanIncomingRequest {
 		myPath = thePath;
 	}
 
+	public void setPort(int thePort) {
+		myPort = thePort;
+	}
+
 	public void setProtocol(String theProtocol) {
 		myProtocol = theProtocol;
 	}
@@ -193,7 +225,7 @@ public class SrBeanIncomingRequest {
 	}
 
 	public void setRequestHeaders(Map<String, List<String>> theRequestHeaders) {
-		myRequestHeaders = new CaseInsensitiveMap<List<String>>(theRequestHeaders);
+		myRequestHeaders = new CaseInsensitiveMap<>(theRequestHeaders);
 	}
 
 	/**
@@ -215,15 +247,30 @@ public class SrBeanIncomingRequest {
 	public void setRequestType(RequestType theRequestType) {
 		myRequestType = theRequestType;
 	}
-	
-	
+
+	public void setTlsCipherSuite(String theTlsCipherSuite) {
+		myTlsCipherSuite = theTlsCipherSuite;
+	}
+
+	public void setTlsClientCertificates(X509Certificate[] theTlsClientCertificates) {
+		myTlsClientCertificates = theTlsClientCertificates;
+	}
+
+	public void setTlsKeySize(Integer theTlsKeySize) {
+		myTlsKeySize = theTlsKeySize;
+	}
+
+	public void setTlsSession(SSLSession theTlsSession) {
+		myTlsSession = theTlsSession;
+	}
+
 	private static class CaseInsensitiveMap<T> extends HashMap<String, T> {
 
-	    private static final long serialVersionUID = 1L;
+		private static final long serialVersionUID = 1L;
 
 		public CaseInsensitiveMap() {
 		}
-		
+
 		public CaseInsensitiveMap(Map<String, T> theRequestHeaders) {
 			for (java.util.Map.Entry<String, T> nextEntry : theRequestHeaders.entrySet()) {
 				put(nextEntry.getKey(), nextEntry.getValue());
@@ -232,22 +279,22 @@ public class SrBeanIncomingRequest {
 
 		@Override
 		public boolean containsKey(Object theKey) {
-			return super.containsKey(((String)theKey).toLowerCase());
+			return super.containsKey(((String) theKey).toLowerCase());
+		}
+
+		@Override
+		public T get(Object theKey) {
+			return super.get(((String) theKey).toLowerCase());
+		}
+
+		@Override
+		public T put(String key, T value) {
+			return super.put(key.toLowerCase(), value);
 		}
 
 		@Override
 		public T remove(Object theKey) {
-			return super.remove(((String)theKey).toLowerCase());
-		}
-
-		@Override
-	    public T put(String key, T value) {
-	       return super.put(key.toLowerCase(), value);
-	    }
-
-	    @Override
-		public T get(Object theKey) {
-			return super.get(((String)theKey).toLowerCase());
+			return super.remove(((String) theKey).toLowerCase());
 		}
 
 	}

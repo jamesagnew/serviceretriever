@@ -110,6 +110,17 @@ public class ServiceOrchestratorBeanIntegrationTest {
 	private DtoDomain d0;
 	private GService d0s0;
 
+	public static void main(String[] args) throws Exception {
+		ServiceOrchestratorBeanIntegrationTest b = new ServiceOrchestratorBeanIntegrationTest();
+		ServiceOrchestratorBeanIntegrationTest.beforeClass();
+		b.before();
+		
+		b.mySvcVer.setAuditLogEnable(false);
+		ourAdminSvc.saveServiceVersion(b.d0.getPid(), b.d0s0.getPid(), b.mySvcVer, new ArrayList<GResource>());
+		
+		b.testSoap11GoodRequest();
+	}
+	
 	@Test
 	public void testSoap11GoodRequest() throws Exception {
 
@@ -169,7 +180,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 														// potential null
 		int reps = 100;
 		long start = System.currentTimeMillis();
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < 3; i++) {
 			String query = "";
 			Reader reader = new StringReader(request);
 			SrBeanIncomingRequest req = new SrBeanIncomingRequest();

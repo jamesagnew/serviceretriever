@@ -6,7 +6,7 @@ import net.svcret.core.model.entity.PersConfig;
 
 public interface IConfigService {
 
-	PersConfig getConfig() throws UnexpectedFailureException;
+	PersConfig getConfig();
 
 	PersConfig saveConfig(PersConfig theConfig) throws UnexpectedFailureException;
 

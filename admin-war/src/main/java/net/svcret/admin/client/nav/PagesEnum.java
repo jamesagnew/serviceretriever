@@ -83,6 +83,9 @@ public enum PagesEnum {
 	/** Add domain step 2 */
 	MRL(MSGS.MonitorRulesList_Breadcrumb()), 
 	
+	/** Node status */
+	NDS(MSGS.NodeStatus_name()),
+	
 	/**
 	 * Replay library message
 	 */
@@ -111,16 +114,16 @@ public enum PagesEnum {
 	/** Service Catalog */
 	SEC(MSGS.serviceCatalog_Breadcrumb()), 
 	
-	/** Sticky session List */
-	SSL(MSGS.stickySesionList_Breadcrumb()),
-	
 	/** Save recent message to library */
-	SML(MSGS.saveRecentMessageToLibrary_Breadcrumb()), 
+	SML(MSGS.saveRecentMessageToLibrary_Breadcrumb()),
 	
 	/**
 	 * Service version recent messages
 	 */
 	SRM(MSGS.serviceVersionRecentMessages_Breadcrumb()), 
+	
+	/** Sticky session List */
+	SSL(MSGS.stickySesionList_Breadcrumb()), 
 	
 	/** Service Version Status */
 	SVS(MSGS.serviceVersionStats_Breadcrumb()), 

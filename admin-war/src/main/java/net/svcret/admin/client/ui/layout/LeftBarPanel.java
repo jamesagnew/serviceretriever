@@ -33,11 +33,12 @@ public class LeftBarPanel extends FlowPanel {
 	private Hyperlink myProxyConfigBtn;
 	private Hyperlink myStickySessionsBtn;
 	private Hyperlink mySvcCatalogBtn;
+	private Hyperlink myNodesBtn;
 
 	private LeftBarPanel() {
 		setStylePrimaryName(MyResources.CSS.outerLayoutLeftBar());
 		
-		myAllButtons = new ArrayList<Hyperlink>();
+		myAllButtons = new ArrayList<>();
 		
 		/*
 		 * Dashboard submenu
@@ -57,6 +58,9 @@ public class LeftBarPanel extends FlowPanel {
 
 		myBackingServicesBtn = dashboard.addItem("Backing URLs", PagesEnum.UDS);
 		myAllButtons.add(myBackingServicesBtn);
+
+		myNodesBtn = dashboard.addItem("Nodes", PagesEnum.NDS);
+		myAllButtons.add(myNodesBtn);
 
 		/*
 		 * Configure Subment
@@ -130,9 +134,13 @@ public class LeftBarPanel extends FlowPanel {
 	public void updateStyles() {
 		PagesEnum current = NavProcessor.getCurrentPage();
 		
-		ArrayList<Hyperlink> buttons = new ArrayList<Hyperlink>(myAllButtons);
+		ArrayList<Hyperlink> buttons = new ArrayList<>(myAllButtons);
 		
 		switch (current) {
+		case NDS:
+			myNodesBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
+			buttons.remove(myNodesBtn);
+			break;
 		case AHL:
 			myAuthenticationHostsBtn.addStyleName(CssConstants.LEFTBAR_LINK_SELECTED);
 			buttons.remove(myAuthenticationHostsBtn);

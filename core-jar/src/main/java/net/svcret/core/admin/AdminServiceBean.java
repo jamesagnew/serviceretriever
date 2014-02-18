@@ -39,6 +39,7 @@ import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
 import net.svcret.admin.shared.model.DtoNodeStatus;
+import net.svcret.admin.shared.model.DtoNodeStatusAndStatisticsList;
 import net.svcret.admin.shared.model.DtoPropertyCapture;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
@@ -79,11 +80,11 @@ import net.svcret.core.api.IRuntimeStatus;
 import net.svcret.core.api.IRuntimeStatusQueryLocal;
 import net.svcret.core.api.ISecurityService;
 import net.svcret.core.api.IServiceOrchestrator;
+import net.svcret.core.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
 import net.svcret.core.api.IServiceRegistry;
 import net.svcret.core.api.RequestType;
 import net.svcret.core.api.SrBeanIncomingRequest;
 import net.svcret.core.api.StatusesBean;
-import net.svcret.core.api.IServiceOrchestrator.SidechannelOrchestratorResponseBean;
 import net.svcret.core.dao.DaoBean;
 import net.svcret.core.ejb.ServiceRegistryBean;
 import net.svcret.core.ejb.monitor.IMonitorService;
@@ -118,7 +119,6 @@ import net.svcret.core.model.entity.PersMonitorRuleActiveCheckOutcome;
 import net.svcret.core.model.entity.PersMonitorRuleFiring;
 import net.svcret.core.model.entity.PersMonitorRuleNotifyContact;
 import net.svcret.core.model.entity.PersMonitorRulePassive;
-import net.svcret.core.model.entity.PersNodeStatus;
 import net.svcret.core.model.entity.PersPropertyCapture;
 import net.svcret.core.model.entity.PersService;
 import net.svcret.core.model.entity.PersServiceVersionRecentMessage;
@@ -272,18 +272,12 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public DtoAuthenticationHostList deleteAuthenticationHost(long thePid) throws ProcessingException {
-
-		BasePersAuthenticationHost authHost = myDao.getAuthenticationHostByPid(thePid);
-		if (authHost == null) {
-			ourLog.info("Invalid request to delete unknown authentication host with PID {}", thePid);
-			throw new ProcessingException("Unknown authentication host: " + thePid);
+	public DtoAuthenticationHostList deleteAuthenticationHost(long thePid) {
+		try {
+			mySecurityService.deleteAuthenticationHost(thePid);
+		} catch (UnknownPidException e) {
+			ourLog.warn("Tried to delete unknown authentication host: {}", thePid);
 		}
-
-		ourLog.info("Removing authentication host {} / {}", thePid, authHost.getModuleId());
-
-		myDao.deleteAuthenticationHost(authHost);
-
 		return loadAuthHostList();
 	}
 
@@ -445,7 +439,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public DtoConfig loadConfig() throws UnexpectedFailureException {
+	public DtoConfig loadConfig() {
 		return myConfigSvc.getConfig().toDto();
 	}
 
@@ -1344,7 +1338,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private int defaultInteger(Integer theInt) {
+	private static int defaultInteger(Integer theInt) {
 		return theInt != null ? theInt : 0;
 	}
 
@@ -1358,7 +1352,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		mySynchronousNodeIpcClient.requestFlushTransactionLogs();
 	}
 
-	private BasePersAuthenticationHost fromUi(BaseDtoAuthenticationHost theAuthHost) {
+	private static BasePersAuthenticationHost fromUi(BaseDtoAuthenticationHost theAuthHost) {
 		BasePersAuthenticationHost retVal = null;
 
 		switch (theAuthHost.getType()) {
@@ -1411,7 +1405,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	// return retVal;
 	// }
 
-	private PersBaseClientAuth<?> fromUi(BaseDtoClientSecurity theObj, BasePersServiceVersion theServiceVersion) {
+	private static PersBaseClientAuth<?> fromUi(BaseDtoClientSecurity theObj, BasePersServiceVersion theServiceVersion) {
 
 		PersBaseClientAuth<?> retVal = null;
 		switch (theObj.getType()) {
@@ -1522,7 +1516,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		throw new IllegalArgumentException("Unknown type: " + theObj.getType());
 	}
 
-	private PersConfig fromUi(DtoConfig theConfig) {
+	private static PersConfig fromUi(DtoConfig theConfig) {
 		PersConfig retVal = new PersConfig();
 
 		for (String next : theConfig.getProxyUrlBases()) {
@@ -1562,7 +1556,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private PersServiceVersionResource fromUi(GResource theRes, BasePersServiceVersion theServiceVersion) {
+	private static PersServiceVersionResource fromUi(GResource theRes, BasePersServiceVersion theServiceVersion) {
 		PersServiceVersionResource retVal = new PersServiceVersionResource();
 		retVal.setResourceContentType(theRes.getContentType());
 		retVal.setResourceText(theRes.getText());
@@ -1571,7 +1565,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private PersService fromUi(GService theService) {
+	private static PersService fromUi(GService theService) {
 		PersService retVal = new PersService();
 		retVal.setPid(theService.getPidOrNull());
 		retVal.setActive(theService.isActive());
@@ -1583,7 +1577,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private PersMethod fromUi(GServiceMethod theMethod) {
+	private static PersMethod fromUi(GServiceMethod theMethod) {
 		PersMethod retVal = new PersMethod();
 		retVal.setName(theMethod.getName());
 		retVal.setPid(theMethod.getPidOrNull());
@@ -1698,7 +1692,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private boolean hasAnything(Set<?>... theSets) {
+	private static boolean hasAnything(Set<?>... theSets) {
 		for (Set<?> next : theSets) {
 			if (next != null && next.isEmpty() == false) {
 				return true;
@@ -1709,7 +1703,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 	private DtoAuthenticationHostList loadAuthHostList() {
 		DtoAuthenticationHostList retVal = new DtoAuthenticationHostList();
-		for (BasePersAuthenticationHost next : myDao.getAllAuthenticationHosts()) {
+		for (BasePersAuthenticationHost next : mySecurityService.getAllAuthenticationHosts()) {
 			BaseDtoAuthenticationHost uiObject = toUi(next);
 			retVal.add(uiObject);
 		}
@@ -1743,7 +1737,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private int[] toIntArray(ArrayList<Integer> theList) {
+	private static int[] toIntArray(ArrayList<Integer> theList) {
 		int[] retVal = new int[theList.size()];
 		for (int i = 0; i < theList.size(); i++) {
 			if (theList.get(i) != null) {
@@ -1753,7 +1747,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private GSoap11ServiceVersionAndResources toUi(BaseDtoServiceVersion theUiService, BasePersServiceVersion theSvcVer) {
+	private static GSoap11ServiceVersionAndResources toUi(BaseDtoServiceVersion theUiService, BasePersServiceVersion theSvcVer) {
 		GSoap11ServiceVersionAndResources retVal = new GSoap11ServiceVersionAndResources();
 
 		retVal.setServiceVersion(theUiService);
@@ -1785,7 +1779,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private BaseDtoAuthenticationHost toUi(BasePersAuthenticationHost thePersObj) {
+	private static BaseDtoAuthenticationHost toUi(BasePersAuthenticationHost thePersObj) {
 		BaseDtoAuthenticationHost retVal = null;
 		switch (thePersObj.getType()) {
 		case LOCAL_DATABASE:
@@ -1819,7 +1813,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private List<GUserDomainPermission> toUi(Collection<PersUserDomainPermission> theDomainPermissions) {
+	private static List<GUserDomainPermission> toUi(Collection<PersUserDomainPermission> theDomainPermissions) {
 		List<GUserDomainPermission> retVal = new ArrayList<>();
 		for (PersUserDomainPermission next : theDomainPermissions) {
 			retVal.add(toUi(next));
@@ -1827,7 +1821,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private List<GRecentMessage> toUi(List<? extends BasePersSavedTransactionRecentMessage> theServiceVersionRecentMessages, boolean theLoadMessageContents) {
+	private static List<GRecentMessage> toUi(List<? extends BasePersSavedTransactionRecentMessage> theServiceVersionRecentMessages, boolean theLoadMessageContents) {
 		List<GRecentMessage> retVal = new ArrayList<>();
 
 		for (BasePersSavedTransactionRecentMessage next : theServiceVersionRecentMessages) {
@@ -1837,7 +1831,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private DtoLibraryMessage toUi(PersLibraryMessage theMessage, boolean theLoadContents) {
+	private static DtoLibraryMessage toUi(PersLibraryMessage theMessage, boolean theLoadContents) {
 		DtoLibraryMessage retVal = new DtoLibraryMessage();
 
 		retVal.setContentType(theMessage.getContentType());
@@ -1892,7 +1886,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private GUserDomainPermission toUi(PersUserDomainPermission theObj) {
+	private static GUserDomainPermission toUi(PersUserDomainPermission theObj) {
 		GUserDomainPermission retVal = new GUserDomainPermission();
 		retVal.setPid(theObj.getPid());
 		retVal.setAllowAllServices(theObj.isAllowAllServices());
@@ -1904,7 +1898,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private GUserServicePermission toUi(PersUserServicePermission theObj) {
+	private static GUserServicePermission toUi(PersUserServicePermission theObj) {
 		GUserServicePermission retVal = new GUserServicePermission();
 		retVal.setPid(theObj.getPid());
 		retVal.setAllowAllServiceVersions(theObj.isAllowAllServiceVersions());
@@ -1916,14 +1910,14 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private GUserServiceVersionMethodPermission toUi(PersUserServiceVersionMethodPermission theObj) {
+	private static GUserServiceVersionMethodPermission toUi(PersUserServiceVersionMethodPermission theObj) {
 		GUserServiceVersionMethodPermission retVal = new GUserServiceVersionMethodPermission();
 		retVal.setPid(theObj.getPid());
 		retVal.setServiceVersionMethodPid(theObj.getServiceVersionMethod().getPid());
 		return retVal;
 	}
 
-	private GUserServiceVersionPermission toUi(PersUserServiceVersionPermission theObj) {
+	private static GUserServiceVersionPermission toUi(PersUserServiceVersionPermission theObj) {
 		GUserServiceVersionPermission retVal = new GUserServiceVersionPermission();
 		retVal.setPid(theObj.getPid());
 		retVal.setAllowAllServiceVersionMethods(theObj.isAllowAllServiceVersionMethods());
@@ -1935,7 +1929,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private Collection<DtoLibraryMessage> toUiCollectionLibraryMessages(Collection<PersLibraryMessage> theMsgs, boolean theLoadContents) {
+	private static Collection<DtoLibraryMessage> toUiCollectionLibraryMessages(Collection<PersLibraryMessage> theMsgs, boolean theLoadContents) {
 		ArrayList<DtoLibraryMessage> retVal = new ArrayList<>();
 		for (PersLibraryMessage next : theMsgs) {
 			retVal.add(toUi(next, theLoadContents));
@@ -2177,6 +2171,11 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	public void deleteLibraryMessage(Long thePid) {
 		PersLibraryMessage msg = myDao.getLibraryMessageByPid(thePid);
 		myDao.deleteLibraryMessage(msg);
+	}
+
+	@Override
+	public DtoNodeStatusAndStatisticsList loadAllNodeStatuses()  {
+		return myRuntimeStatusQuerySvc.getAllNodeStatusesAndStatistics();
 	}
 
 	// private GDomain toUi(PersDomain theDomain) {

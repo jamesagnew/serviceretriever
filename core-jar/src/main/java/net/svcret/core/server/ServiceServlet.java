@@ -10,7 +10,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.security.cert.X509Certificate;
 
+import javax.net.ssl.SSLSession;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -43,6 +45,7 @@ class ServiceServlet extends HttpServlet {
 
 	private IServiceOrchestrator myServiceOrchestrator;
 	private IServiceRegistry myServiceRegistry;
+	private int myPort;
 
 	@Override
 	public void init(ServletConfig theConfig) {
@@ -89,10 +92,15 @@ class ServiceServlet extends HttpServlet {
 			request.setRequestFullUri(requestURI);
 			request.setQuery(query);
 			request.setBase(base);
+			request.setPort(myPort);
 			request.setProtocol(protocol);
 			request.setContextPath(contextPath);
 			request.setInputReader(theReq.getReader());
 			request.setRequestTime(new Date(start));
+			request.setTlsClientCertificates((X509Certificate[]) theReq.getAttribute("javax.servlet.request.X509Certificate"));
+			request.setTlsCipherSuite((String) theReq.getAttribute("javax.servlet.request.cipher_suite"));
+			request.setTlsSession((SSLSession) theReq.getAttribute("javax.servlet.request.cipher_suite"));
+			request.setTlsKeySize((Integer) theReq.getAttribute("javax.servlet.request.key_size"));
 
 			Map<String, List<String>> requestHeaders = new HashMap<>();
 			for (Iterator<String> nameIter = Iterators.forEnumeration(theReq.getHeaderNames()); nameIter.hasNext();) {
@@ -172,6 +180,10 @@ class ServiceServlet extends HttpServlet {
 		int hostIndex = requestURL.indexOf("//") + 2;
 		int pathStart = requestURL.indexOf('/', hostIndex);
 		return requestURL.substring(0, pathStart) + contextPath;
+	}
+
+	public void setPort(int thePort) {
+		myPort=thePort;
 	}
 
 }

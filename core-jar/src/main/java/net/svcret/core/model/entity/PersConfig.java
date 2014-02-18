@@ -65,6 +65,10 @@ public class PersConfig {
 	@Column(name="TRUNC_RECENT_XACTS_BYTES", nullable=true)
 	private Integer myTruncateRecentDatabaseTransactionsToBytes;
 	
+	public PersConfig() {
+		super();
+	}
+	
 	public void addProxyUrlBase(PersConfigProxyUrlBase theBase) {
 		theBase.setConfig(this);
 		getProxyUrlBases();

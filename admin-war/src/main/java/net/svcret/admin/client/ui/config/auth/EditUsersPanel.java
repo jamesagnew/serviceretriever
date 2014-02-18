@@ -16,7 +16,7 @@ import net.svcret.admin.client.ui.components.LoadingSpinner;
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.PButtonCell;
 import net.svcret.admin.client.ui.components.PCellTable;
-import net.svcret.admin.client.ui.config.svcver.BaseDetailPanel;
+import net.svcret.admin.client.ui.components.UsageSparkline;
 import net.svcret.admin.client.ui.config.svcver.NullColumn;
 import net.svcret.admin.client.ui.dash.model.UsageSparklineTooltipProvider;
 import net.svcret.admin.shared.DateUtil;
@@ -83,8 +83,8 @@ public class EditUsersPanel extends FlowPanel {
 		myLoadingSpinner = new LoadingSpinner();
 		contentPanel.add(myLoadingSpinner);
 
-		myTable = new PCellTable<GUser>();
-		myMethodDataProvider = new ListDataProvider<GUser>();
+		myTable = new PCellTable<>();
+		myMethodDataProvider = new ListDataProvider<>();
 		contentPanel.add(myTable);
 
 		// Create a Pager to control the table.
@@ -95,7 +95,7 @@ public class EditUsersPanel extends FlowPanel {
 		contentPanel.add(pager);
 
 		PButtonCell editCell = new PButtonCell(AdminPortal.IMAGES.iconEdit(), AdminPortal.MSGS.actions_Edit());
-		Column<GUser, String> editColumn = new NullColumn<GUser>(editCell);
+		Column<GUser, String> editColumn = new NullColumn<>(editCell);
 		editColumn.setFieldUpdater(new FieldUpdater<GUser, String>() {
 			@Override
 			public void update(int theIndex, GUser theObject, String theValue) {
@@ -105,7 +105,7 @@ public class EditUsersPanel extends FlowPanel {
 		editCell.addStyle(CssConstants.USERS_ACTION_BUTTON);
 
 		PButtonCell viewRecentMessagesCell = new PButtonCell(AdminPortal.IMAGES.iconTransactions(), "Trans.");
-		Column<GUser, String> viewRecentMessagesColumn = new NullColumn<GUser>(viewRecentMessagesCell);
+		Column<GUser, String> viewRecentMessagesColumn = new NullColumn<>(viewRecentMessagesCell);
 		viewRecentMessagesColumn.setFieldUpdater(new FieldUpdater<GUser, String>() {
 			@Override
 			public void update(int theIndex, GUser theObject, String theValue) {
@@ -115,7 +115,7 @@ public class EditUsersPanel extends FlowPanel {
 		viewRecentMessagesCell.addStyle(CssConstants.USERS_ACTION_BUTTON);
 
 		PButtonCell statsCell = new PButtonCell(AdminPortal.IMAGES.iconStatus(), AdminPortal.MSGS.actions_Stats());
-		Column<GUser, String> statsColumn = new NullColumn<GUser>(statsCell);
+		Column<GUser, String> statsColumn = new NullColumn<>(statsCell);
 		statsColumn.setFieldUpdater(new FieldUpdater<GUser, String>() {
 			@Override
 			public void update(int theIndex, GUser theObject, String theValue) {
@@ -125,7 +125,7 @@ public class EditUsersPanel extends FlowPanel {
 		statsCell.addStyle(CssConstants.USERS_ACTION_BUTTON);
 
 		PButtonCell removeCell = new PButtonCell(AdminPortal.IMAGES.iconRemove(), AdminPortal.MSGS.actions_Remove());
-		Column<GUser, String> removeColumn = new NullColumn<GUser>(removeCell);
+		Column<GUser, String> removeColumn = new NullColumn<>(removeCell);
 		removeColumn.setFieldUpdater(new FieldUpdater<GUser, String>() {
 			@Override
 			public void update(int theIndex, GUser theObject, String theValue) {
@@ -150,13 +150,13 @@ public class EditUsersPanel extends FlowPanel {
 		});
 		removeCell.addStyle(CssConstants.USERS_ACTION_BUTTON);
 
-		List<HasCell<GUser, ?>> actionCells = new ArrayList<HasCell<GUser, ?>>();
+		List<HasCell<GUser, ?>> actionCells = new ArrayList<>();
 		actionCells.add(editColumn);
 		actionCells.add(viewRecentMessagesColumn);
 		actionCells.add(statsColumn);
 		actionCells.add(removeColumn);
-		CompositeCell<GUser> actionColumn = new CompositeCell<GUser>(actionCells);
-		myTable.addColumn(new IdentityColumn<GUser>(actionColumn), "");
+		CompositeCell<GUser> actionColumn = new CompositeCell<>(actionCells);
+		myTable.addColumn(new IdentityColumn<>(actionColumn), "");
 
 		// Auth Host
 
@@ -204,7 +204,7 @@ public class EditUsersPanel extends FlowPanel {
 
 		// Transactions
 
-		Column<GUser, SafeHtml> transactionsCol = new Column<GUser, SafeHtml>(new CellWithTooltip<GUser>(myMethodDataProvider, new UsageSparklineTooltipProvider<GUser>())) {
+		Column<GUser, SafeHtml> transactionsCol = new Column<GUser, SafeHtml>(new CellWithTooltip<>(myMethodDataProvider, new UsageSparklineTooltipProvider<GUser>())) {
 			@Override
 			public SafeHtml getValue(GUser theObject) {
 				SafeHtmlBuilder b = new SafeHtmlBuilder();
@@ -213,7 +213,7 @@ public class EditUsersPanel extends FlowPanel {
 				int[] fail = theObject.getTransactionsFail60mins();
 				int[] secFail = theObject.getTransactionsSecurityFail60mins();
 				Date lastAccess = theObject.getStatsLastAccess();
-				BaseDetailPanel.renderTransactionGraphsAsHtml(b, success, fault, fail, secFail, true,lastAccess);
+				UsageSparkline.renderTransactionGraphsAsHtml(b, success, fault, fail, secFail, true,lastAccess);
 
 				return b.toSafeHtml();
 			}
@@ -223,7 +223,7 @@ public class EditUsersPanel extends FlowPanel {
 		myMethodDataProvider.addDataDisplay(myTable);
 
 		// Sorting
-		ListHandler<GUser> columnSortHandler = new ListHandler<GUser>(myMethodDataProvider.getList());
+		ListHandler<GUser> columnSortHandler = new ListHandler<>(myMethodDataProvider.getList());
 
 		authHostCol.setSortable(true);
 		columnSortHandler.setComparator(authHostCol, new Comparator<GUser>() {
