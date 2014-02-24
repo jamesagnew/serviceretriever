@@ -538,12 +538,13 @@ public class NavProcessor {
 				if (pageToDelete instanceof IDestroyable) {
 					((IDestroyable) pageToDelete).destroy();
 				}
-			} else if (!nextExistingToken.equals(tokenParts[nextIndex])) {
+			} else if (nextExistingToken != null && !nextExistingToken.equals(tokenParts[nextIndex])) {
 				Panel pageToDelete = ourInMemoryPages.get(nextIndex);
 				if (pageToDelete instanceof IDestroyable) {
 					((IDestroyable) pageToDelete).destroy();
 				}
 				ourInMemoryPages.set(nextIndex, null);
+				ourInMemoryTokens.set(nextIndex, null);
 			}
 		}
 
@@ -557,7 +558,11 @@ public class NavProcessor {
 				}
 			} else if (!tokenParts[nextIndex].equals(ourInMemoryTokens.get(nextIndex))) {
 				ourInMemoryTokens.set(nextIndex, tokenParts[nextIndex]);
-				ourInMemoryPages.add(null);
+				if (nextIndex == tokenParts.length - 1) {
+					ourInMemoryPages.set(nextIndex, panel);
+				}else {
+					ourInMemoryPages.set(nextIndex, null);
+				}
 			} else if (tokenParts[nextIndex].equals(ourInMemoryTokens.get(nextIndex))) {
 				if (nextIndex == tokenParts.length - 1) {
 					if (ourInMemoryPages.get(nextIndex) == null) {

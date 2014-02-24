@@ -9,7 +9,9 @@ public class BodyPanel extends ScrollPanel {
 	private Panel myContents;
 
 	public BodyPanel() {
-		assert ourInstance == null;
+		if (ourInstance != null) {
+			throw new IllegalStateException();
+		}
 
 		ourInstance = this;
 		addStyleName("outerLayoutBody");
