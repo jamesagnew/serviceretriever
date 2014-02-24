@@ -12,13 +12,12 @@ import javax.imageio.ImageIO;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.mortbay.jetty.AbstractConnector;
-import org.mortbay.jetty.Server;
-import org.mortbay.jetty.handler.RequestLogHandler;
-import org.mortbay.jetty.security.HashUserRealm;
-import org.mortbay.jetty.security.UserRealm;
-import org.mortbay.jetty.webapp.WebAppContext;
-import org.mortbay.log.Log;
+import org.eclipse.jetty.security.HashLoginService;
+import org.eclipse.jetty.server.AbstractConnector;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.RequestLogHandler;
+import org.eclipse.jetty.util.log.Log;
+import org.eclipse.jetty.webapp.WebAppContext;
 
 import com.google.gwt.core.ext.ServletContainer;
 import com.google.gwt.core.ext.TreeLogger;
@@ -88,13 +87,9 @@ public class DevLauncher extends JettyLauncher {
 	}
 
 	private void initializeServer(Server server) throws Error {
-		UserRealm realm;
-		try {
-			realm = new HashUserRealm("svcret-realm", "WEB-INF/testusers.properties");
-		} catch (IOException e) {
-			throw new Error(e);
-		}
-		server.setUserRealms(new UserRealm[] { realm });
+		HashLoginService realm;
+		realm = new HashLoginService("svcret-realm", "WEB-INF/testusers.properties");
+		server.addBean(realm,true);
 	}
 
 	private void checkStartParams(TreeLogger logger, int port, File appRootDir) {

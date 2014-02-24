@@ -31,7 +31,7 @@ public class CellWithTooltip<T> extends AbstractCell<SafeHtml> {
 	}
 
 	private static Set<String> createEvents() {
-		Set<String> retVal = new HashSet<String>();
+		Set<String> retVal = new HashSet<>();
 		retVal.add(BrowserEvents.MOUSEOVER);
 		retVal.add(BrowserEvents.MOUSEOUT);
 		return retVal;

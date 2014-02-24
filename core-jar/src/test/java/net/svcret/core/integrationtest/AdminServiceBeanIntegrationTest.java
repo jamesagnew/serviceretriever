@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
 import javax.xml.ws.Holder;
@@ -108,264 +107,49 @@ import org.springframework.util.ResourceUtils;
 
 public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 
-	private static final String HTTP_ZZZZZZ = "http://127.0.0.6";
-
-	private static final String HTTP_URL2 = "http://127.0.0.4";
-
-	private static final String HTTP_URL1 = "http://127.0.0.5";
-
-	private static final String HTTP_SVCURL = "http://127.0.0.3";
-
 	private static final String HTTP_BAR = "http://127.0.0.1";
 
 	private static final String HTTP_FOO = "http://127.0.0.2";
 
+	private static final String HTTP_SVCURL = "http://127.0.0.3";
+
+	private static final String HTTP_URL1 = "http://127.0.0.5";
+
+	private static final String HTTP_URL2 = "http://127.0.0.4";
+
+	private static final String HTTP_ZZZZZZ = "http://127.0.0.6";
+
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(AdminServiceBeanIntegrationTest.class);
 
+	static IAdminServiceLocal ourAdminSvc;
+	static ClassPathXmlApplicationContext ourAppCtx;
 	static IConfigService ourConfigSvc;
 	static IDao ourDao;
-	private Date myEverythingInvocationTime;
+	static EntityManagerFactory ourEntityManagerFactory;
+	static IFilesystemAuditLogger ourFilesystemAuditLogger;
+	static IHttpClient ourHttpClientMock;
+	static IServiceOrchestrator ourOrchSvc;
 	static ISecurityService ourSecSvc;
 	static IServiceInvokerSoap11 ourSoapInvoker;
-	static IRuntimeStatus ourStatsSvc;
 	static IRuntimeStatusQueryLocal ourStatsQuerySvc;
-	static IAdminServiceLocal ourAdminSvc;
+	static IRuntimeStatus ourStatsSvc;
 	static IServiceRegistry ourSvcReg;
+	static IThrottlingService ourThrottlingService;
 	static ITransactionLogger ourTransactionLogSvc;
-	static ClassPathXmlApplicationContext ourAppCtx;
 	static JpaTransactionManager ourTxManager;
 	static TransactionTemplate ourTxTemplate;
-	static IHttpClient ourHttpClientMock;
-	static IFilesystemAuditLogger ourFilesystemAuditLogger;
-	static IThrottlingService ourThrottlingService;
-	static IServiceOrchestrator ourOrchSvc;
-	static EntityManagerFactory ourEntityManagerFactory;
+	private Date myEverythingInvocationTime;
 
-	@AfterClass
-	public static void afterClass() {
-
-		// newEntityManager();
-		//
-		// Query q = myEntityManager.createQuery("DELETE FROM PersDomain p");
-		// q.executeUpdate();
-		//
-		// newEntityManager();
-
-		ourAppCtx.close();
-
-	}
-
-	public static final Object unwrapProxy(Object bean) throws Exception {
-		  
-		 /*
-		  * If the given object is a proxy, set the return value as the object
-		  * being proxied, otherwise return the given object.
-		  */
-		 if (AopUtils.isAopProxy(bean) && bean instanceof Advised) {
-		   
-		  Advised advised = (Advised) bean;
-		   
-		  bean = advised.getTargetSource().getTarget();
-		 }
-		  
-		 return bean;
-		}
-	
-	@BeforeClass
-	public static void beforeClass() {
-		ourAppCtx = new ClassPathXmlApplicationContext("classpath:svcret-unittest.xml");
-
-		ourTxManager = (JpaTransactionManager) ourAppCtx.getBean("myTxManager");
-		ourAdminSvc = ourAppCtx.getBean(IAdminServiceLocal.class);
-		ourConfigSvc = ourAppCtx.getBean(IConfigService.class);
-		ourDao = ourAppCtx.getBean(IDao.class);
-		ourSecSvc = ourAppCtx.getBean(ISecurityService.class);
-		ourSoapInvoker = ourAppCtx.getBean(IServiceInvokerSoap11.class);
-		ourStatsSvc = ourAppCtx.getBean(IRuntimeStatus.class);
-		ourStatsQuerySvc = ourAppCtx.getBean(IRuntimeStatusQueryLocal.class);
-		ourSvcReg = ourAppCtx.getBean(IServiceRegistry.class);
-		ourTransactionLogSvc = ourAppCtx.getBean(ITransactionLogger.class);
-		ourHttpClientMock = ourAppCtx.getBean(IHttpClient.class);
-		ourFilesystemAuditLogger = ourAppCtx.getBean(IFilesystemAuditLogger.class);
-		ourOrchSvc = ourAppCtx.getBean(IServiceOrchestrator.class);
-		ourThrottlingService=ourAppCtx.getBean(IThrottlingService.class);
-		ourEntityManagerFactory = ourAppCtx.getBean(EntityManagerFactory.class);
-		ourTxTemplate = new TransactionTemplate(ourTxManager);
-	}
-
-	@Before
-	public void before() throws ProcessingException, UnexpectedFailureException {
-		deleteEverything();
-	}
-
+	@SuppressWarnings("static-method")
 	@After
 	public void after() throws ProcessingException, UnexpectedFailureException {
 		deleteEverything();
 	}
 
-	static void deleteEverything() throws ProcessingException, UnexpectedFailureException {
-		Collection<Long> pids = ourAdminSvc.getAllDomainPids();
-		for (Long dtoDomain : pids) {
-			ourAdminSvc.deleteDomain(dtoDomain);
-		}
-
-		pids = ourAdminSvc.getAllMonitorRulePids();
-		for (Long pid : pids) {
-			ourAdminSvc.deleteMonitorRule(pid);
-		}
-
-		PartialUserListRequest ureq = new PartialUserListRequest();
-		GPartialUserList users = ourAdminSvc.loadUsers(ureq);
-		for (GUser next : users) {
-			if (!next.getUsername().equals(PersUser.DEFAULT_ADMIN_USERNAME)) {
-				ourAdminSvc.deleteUser(next.getPid());
-			}
-		}
-
-		for (DtoLibraryMessage next : ourAdminSvc.loadLibraryMessages()) {
-			ourAdminSvc.deleteLibraryMessage(next.getPid());
-		}
-		
-		reset(ourHttpClientMock);
-	}
-
-	public static void injectConfigServiceDefaults(ConfigServiceBean theConfigService) {
-		theConfigService.setNodeType(RetrieverNodeTypeEnum.PRIMARY);
-		theConfigService.setNodeId("mock");
-	}
-
-	private DtoDomain createEverything() throws Exception {
-		SrBeanIncomingRequest iReq = new SrBeanIncomingRequest();
-		newEntityManager();
-
-		ourSecSvc.loadUserCatalogIfNeeded();
-
-		BasePersAuthenticationHost authHost = ourDao.getAuthenticationHost(BasePersAuthenticationHost.MODULE_ID_ADMIN_AUTH);
-		authHost.setKeepNumRecentTransactionsFail(100);
-		authHost.setKeepNumRecentTransactionsFault(100);
-		authHost.setKeepNumRecentTransactionsSecurityFail(100);
-		authHost.setKeepNumRecentTransactionsSuccess(100);
-		ourDao.saveAuthenticationHost(authHost);
-
-		newEntityManager();
-
-		DtoDomain d1 = ourAdminSvc.addDomain(new DtoDomain("asv_did", "asv_did"));
-		GService d1s1 = ourAdminSvc.addService(d1.getPid(), createTestService());
-
-		newEntityManager();
-
-		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
-		d1s1v1.setActive(true);
-		d1s1v1.setId("ASV_SV1");
-		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation(HTTP_FOO);
-		d1s1v1.setHttpClientConfigPid(ourAdminSvc.getDefaultHttpClientConfigPid());
-
-		d1s1v1.setKeepNumRecentTransactionsFail(100);
-		d1s1v1.setKeepNumRecentTransactionsFault(100);
-		d1s1v1.setKeepNumRecentTransactionsSecurityFail(100);
-		d1s1v1.setKeepNumRecentTransactionsSuccess(100);
-
-		GServiceMethod d1s1v1m1 = new GServiceMethod();
-		d1s1v1m1.setName("d1s1v1m1");
-		d1s1v1.getMethodList().add(d1s1v1m1);
-
-		List<GResource> resources = new ArrayList<GResource>();
-		resources.add(new GResource(HTTP_FOO, "text/xml", "contents1"));
-		resources.add(new GResource(HTTP_BAR, "text/xml", "contents2"));
-
-		DtoServiceVersionSoap11 ver = ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
-
-		ver.getUrlList().add(new GServiceVersionUrl("url1", HTTP_FOO));
-		ver = ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), ver, resources);
-
-		newEntityManager();
-		// BasePersServiceVersion persVer =
-		// myDao.getServiceVersionByPid(ver.getPid());
-
-		// Create a user with access
-		GUser user = new GUser();
-		user.setAuthHostPid(ourDao.getAllAuthenticationHosts().iterator().next().getPid());
-		user.setUsername("username2");
-		user.setDomainPermissions(new ArrayList<GUserDomainPermission>());
-		user.getDomainPermissions().add(new GUserDomainPermission());
-		user.getDomainPermissions().get(0).setDomainPid(d1.getPid());
-		user.getDomainPermissions().get(0).setServicePermissions(new ArrayList<GUserServicePermission>());
-		user.getDomainPermissions().get(0).getServicePermissions().add(new GUserServicePermission());
-		user.getDomainPermissions().get(0).getServicePermissions().get(0).setServicePid(d1s1.getPid());
-		user.getDomainPermissions().get(0).getServicePermissions().get(0).setServiceVersionPermissions(new ArrayList<GUserServiceVersionPermission>());
-		user.getDomainPermissions().get(0).getServicePermissions().get(0).getServiceVersionPermissions().add(new GUserServiceVersionPermission());
-		user.getDomainPermissions().get(0).getServicePermissions().get(0).getServiceVersionPermissions().get(0).setServiceVersionPid(ver.getPid());
-		user.getDomainPermissions().get(0).getServicePermissions().get(0).getServiceVersionPermissions().get(0).getOrCreateServiceVersionMethodPermission(ver.getMethodList().get(0).getPid());
-
-		user = ourAdminSvc.saveUser(user);
-
-		newEntityManager();
-
-		// Add stats
-		// persVer = myDao.getServiceVersionByPid(ver.getPid());
-		// PersServiceVersionStatus status = persVer.getStatus();
-		// assertNotNull(status);
-
-		PersMethod m1 = ourDao.getServiceVersionMethodByPid(ver.getMethodList().iterator().next().getPid());
-
-		newEntityManager();
-
-		// Record invocation
-		SrBeanIncomingResponse httpResponse = new SrBeanIncomingResponse();
-		httpResponse.setBody("1234");
-		httpResponse.setResponseTime(123);
-		SrBeanProcessedResponse bean = new SrBeanProcessedResponse();
-		bean.setResponseType(ResponseTypeEnum.SUCCESS);
-
-		myEverythingInvocationTime = new Date(System.currentTimeMillis() - (60 * 1000L));
-		ourStatsSvc.recordInvocationMethod(myEverythingInvocationTime, 100, SrBeanProcessedRequest.forUnitTest(m1), null, httpResponse, bean, iReq);
-
-		newEntityManager();
-
-		ourStatsSvc.flushStatus();
-
-		newEntityManager();
-
-		BasePersServiceVersion persVer = ourDao.getServiceVersionByPid(ver.getPid());
-
-		SrBeanIncomingRequest request = new SrBeanIncomingRequest();
-		request.setRequestHostIp("127.0.0.1");
-		request.setRequestHeaders(new HashMap<String, List<String>>());
-		request.setRequestTime(new Date());
-		String requestBody = "request body";
-		request.setInputReader(new StringReader(requestBody));
-
-		SrBeanProcessedResponse invocationResponse = new SrBeanProcessedResponse();
-		invocationResponse.setResponseHeaders(new HashMap<String, List<String>>());
-		invocationResponse.setResponseType(ResponseTypeEnum.SUCCESS);
-		httpResponse.setSuccessfulUrl(ourDao.getServiceVersionUrlByPid(ver.getUrlList().get(0).getPid()));
-		AuthorizationOutcomeEnum authorizationOutcome = AuthorizationOutcomeEnum.AUTHORIZED;
-		PersUser persUser = ourDao.getUser(user.getPidOrNull());
-		SrBeanProcessedRequest processedRequest = new SrBeanProcessedRequest();
-		processedRequest.setObscuredRequestBody(requestBody);
-		processedRequest.setServiceVersion(persVer);
-		processedRequest.setResultMethod(m1, requestBody, "text/plain");
-		ourTransactionLogSvc.logTransaction(request, persUser, invocationResponse, httpResponse, authorizationOutcome, processedRequest);
-
-		newEntityManager();
-
-		ourTransactionLogSvc.flush();
-
-		newEntityManager();
-
-		ourSvcReg.reloadRegistryFromDatabase();
-
-		newEntityManager();
-
-		return ourAdminSvc.getDomainByPid(d1.getPid());
-	}
-
-	protected void newEntityManager() {
-		// if (myTxManager.getTransaction(definition))
-		// super.newEntityManager();
-		//
-		// myDao.setEntityManager(myEntityManager);
+	@SuppressWarnings("static-method")
+	@Before
+	public void before() throws ProcessingException, UnexpectedFailureException {
+		deleteEverything();
 	}
 
 	@Test
@@ -458,7 +242,7 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 
 		newEntityManager();
 
-		List<DtoLibraryMessage> msgs = new ArrayList<DtoLibraryMessage>(ourAdminSvc.getLibraryMessages(HierarchyEnum.VERSION, d1s1v1.getPid(), false));
+		List<DtoLibraryMessage> msgs = new ArrayList<>(ourAdminSvc.getLibraryMessages(HierarchyEnum.VERSION, d1s1v1.getPid(), false));
 		assertEquals(2, msgs.size());
 
 		DtoMonitorRuleActive rule = new DtoMonitorRuleActive();
@@ -610,7 +394,7 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 		d1s1v1.setWsdlLocation(HTTP_FOO);
 		d1s1v1.setHttpClientConfigPid(ourAdminSvc.getDefaultHttpClientConfigPid());
 
-		List<GResource> resources = new ArrayList<GResource>();
+		List<GResource> resources = new ArrayList<>();
 		resources.add(new GResource(HTTP_FOO, "text/xml", "contents1"));
 		resources.add(new GResource(HTTP_BAR, "text/xml", "contents2"));
 
@@ -692,7 +476,7 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 		d1s1v1.setWsdlLocation(HTTP_FOO);
 		d1s1v1.setHttpClientConfigPid(ourAdminSvc.getDefaultHttpClientConfigPid());
 
-		List<GResource> resources = new ArrayList<GResource>();
+		List<GResource> resources = new ArrayList<>();
 		resources.add(new GResource(HTTP_FOO, "text/xml", "contents1"));
 		resources.add(new GResource(HTTP_BAR, "text/xml", "contents2"));
 
@@ -750,12 +534,44 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 
 	}
 
+	@SuppressWarnings("static-method")
+	@Test
+	public void testGetStatsOnEmptyObjects() throws Exception {
+		ModelUpdateRequest req = new ModelUpdateRequest();
+		ModelUpdateResponse resp = ourAdminSvc.loadModelUpdate(req);
+
+		DtoDomain d1 = ourAdminSvc.addDomain(new DtoDomain("asv_did", "asv_did"));
+
+		long d1pid = d1.getPid();
+		req.addDomainToLoadStats(d1pid);
+		resp = ourAdminSvc.loadModelUpdate(req);
+		d1.merge(resp.getDomainList().getDomainByPid(d1pid));
+
+		GService s1 = ourAdminSvc.addService(d1pid, new GService("s1", "s1", true));
+
+		long s1pid = s1.getPid();
+		req.addServiceToLoadStats(s1pid);
+		resp = ourAdminSvc.loadModelUpdate(req);
+		d1.merge(resp.getDomainList().getDomainByPid(d1pid));
+		s1.merge(resp.getDomainList().getDomainByPid(d1pid).getServiceList().getServiceByPid(s1pid));
+
+		DtoServiceVersionJsonRpc20 v1 = ourAdminSvc.saveServiceVersion(d1pid, s1pid, new DtoServiceVersionJsonRpc20("v1", "v1", ourAdminSvc.getDefaultHttpClientConfigPid()), new ArrayList<GResource>());
+
+		long v1pid = v1.getPid();
+		req.addVersionToLoadStats(v1pid);
+		resp = ourAdminSvc.loadModelUpdate(req);
+		d1.merge(resp.getDomainList().getDomainByPid(d1pid));
+		s1.merge(resp.getDomainList().getDomainByPid(d1pid).getServiceList().getServiceByPid(s1pid));
+		v1.merge(resp.getDomainList().getDomainByPid(d1pid).getServiceList().getServiceByPid(s1pid).getVersionList().getVersionByPid(v1pid));
+
+	}
+
 	@Test
 	public void testLibrary() throws Exception {
-		final Holder<Long> d0pid = new Holder<Long>();
-		final Holder<Long> v0pid = new Holder<Long>();
-		final Holder<Long> s0pid = new Holder<Long>();
-		final Holder<Long> v1pid = new Holder<Long>();
+		final Holder<Long> d0pid = new Holder<>();
+		final Holder<Long> v0pid = new Holder<>();
+		final Holder<Long> s0pid = new Holder<>();
+		final Holder<Long> v1pid = new Holder<>();
 
 		ourTxTemplate.execute(new TransactionCallbackWithoutResult() {
 			@Override
@@ -892,17 +708,6 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 
 	}
 
-	private void testLoad60MinuteStats_CheckStats(BaseDtoDashboardObject obj) {
-		int[] trans = obj.getTransactions60mins();
-		Date firstDate = obj.getStatistics60MinuteFirstDate();
-		Date expected = InvocationStatsIntervalEnum.MINUTE.truncate(new Date(System.currentTimeMillis() - (59 * DateUtils.MILLIS_PER_MINUTE)));
-		assertEquals(expected, firstDate);
-		assertEquals(60, trans.length);
-		assertEquals(0, trans[59]);
-		assertEquals(1, trans[58]);
-		assertEquals(0, trans[57]);
-	}
-
 	@Test
 	public void testLoadAndSaveSvcVerClientSecurity() throws Exception {
 
@@ -975,159 +780,6 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 	}
 
 	@Test
-	public void testLoadAndSaveSvcVerPropertyCaptures() throws Exception {
-
-		newEntityManager();
-
-		DtoDomain d1 = ourAdminSvc.addDomain(new DtoDomain("asv_did", "asv_did"));
-		GService d1s1 = ourAdminSvc.addService(d1.getPid(), createTestService());
-		ourDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
-
-		newEntityManager();
-
-		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
-		d1s1v1.setActive(true);
-		d1s1v1.setId("ASV_SV1");
-		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation(HTTP_FOO);
-		d1s1v1.setHttpClientConfigPid(ourAdminSvc.getDefaultHttpClientConfigPid());
-		d1s1v1 = ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		// Add one
-
-		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		DtoPropertyCapture cap1 = new DtoPropertyCapture();
-		cap1.setPropertyName("cap1");
-		cap1.setXpathExpression("//cap1");
-		d1s1v1.getPropertyCaptures().add(cap1);
-
-		ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		assertEquals(1, d1s1v1.getPropertyCaptures().size());
-		assertEquals("cap1", d1s1v1.getPropertyCaptures().iterator().next().getPropertyName());
-		ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		assertEquals(1, d1s1v1.getPropertyCaptures().size());
-		assertEquals("cap1", d1s1v1.getPropertyCaptures().iterator().next().getPropertyName());
-
-		newEntityManager();
-
-		// Add a second
-
-		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		DtoPropertyCapture cap2 = new DtoPropertyCapture();
-		cap2.setPropertyName("cap2");
-		cap2.setXpathExpression("//cap2");
-		d1s1v1.getPropertyCaptures().add(cap2);
-
-		ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		assertEquals(2, d1s1v1.getPropertyCaptures().size());
-		assertEquals("cap1", d1s1v1.getPropertyCaptures().get(0).getPropertyName());
-		assertEquals("cap2", d1s1v1.getPropertyCaptures().get(1).getPropertyName());
-
-		// Remove one
-
-		d1s1v1.getPropertyCaptures().remove(d1s1v1.getPropertyCaptures().get(0));
-		ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		assertEquals(1, d1s1v1.getPropertyCaptures().size());
-		assertEquals("cap2", d1s1v1.getPropertyCaptures().get(0).getPropertyName());
-
-	}
-
-	@Test
-	public void testLoadAndSaveSvcVerThrottle() throws Exception {
-
-		newEntityManager();
-
-		DtoDomain d1 = ourAdminSvc.addDomain(new DtoDomain("asv_did", "asv_did"));
-		GService d1s1 = ourAdminSvc.addService(d1.getPid(), createTestService());
-		ourDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
-
-		newEntityManager();
-
-		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
-		d1s1v1.setActive(true);
-		d1s1v1.setId("ASV_SV1");
-		d1s1v1.setName("ASV_SV1_Name");
-		d1s1v1.setWsdlLocation(HTTP_FOO);
-		d1s1v1.setHttpClientConfigPid(ourAdminSvc.getDefaultHttpClientConfigPid());
-		d1s1v1 = ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		// Add one
-
-		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		assertNull(d1s1v1.getThrottle());
-
-		DtoServiceVersionThrottle dtoThrottle = new DtoServiceVersionThrottle();
-		dtoThrottle.setApplyPerUser(true);
-		dtoThrottle.setThrottleMaxRequests(5);
-		dtoThrottle.setThrottlePeriod(ThrottlePeriodEnum.SECOND);
-		d1s1v1.setThrottle(dtoThrottle);
-
-		ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		assertNotNull(d1s1v1.getThrottle());
-		assertEquals(true, d1s1v1.getThrottle().isApplyPerUser());
-		assertEquals(5, d1s1v1.getThrottle().getThrottleMaxRequests().intValue());
-		assertEquals(ThrottlePeriodEnum.SECOND, d1s1v1.getThrottle().getThrottlePeriod());
-
-		newEntityManager();
-
-		// Modify one
-
-		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		assertNotNull(d1s1v1.getThrottle());
-
-		dtoThrottle = d1s1v1.getThrottle();
-		dtoThrottle.setApplyPerUser(false);
-		dtoThrottle.setThrottleMaxRequests(6);
-		dtoThrottle.setThrottlePeriod(ThrottlePeriodEnum.SECOND);
-		d1s1v1.setThrottle(dtoThrottle);
-
-		ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		assertNotNull(d1s1v1.getThrottle());
-		assertEquals(false, d1s1v1.getThrottle().isApplyPerUser());
-		assertEquals(6, d1s1v1.getThrottle().getThrottleMaxRequests().intValue());
-		assertEquals(ThrottlePeriodEnum.SECOND, d1s1v1.getThrottle().getThrottlePeriod());
-
-		newEntityManager();
-
-		// Remove it
-
-		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		d1s1v1.setThrottle(null);
-		ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
-
-		newEntityManager();
-
-		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		assertNull(d1s1v1.getThrottle());
-
-	}
-
-	@Test
 	public void testLoadAndSaveSvcVerJsonRpc20() throws Exception {
 
 		newEntityManager();
@@ -1143,7 +795,7 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 		d1s1v1.setName("ASV_SV1_Name");
 		d1s1v1.setHttpClientConfigPid(ourAdminSvc.getDefaultHttpClientConfigPid());
 
-		List<GResource> resources = new ArrayList<GResource>();
+		List<GResource> resources = new ArrayList<>();
 		resources.add(new GResource(HTTP_FOO, "text/xml", "contents1"));
 		resources.add(new GResource(HTTP_BAR, "text/xml", "contents2"));
 
@@ -1236,6 +888,79 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 		assertEquals(1, response.getDomainList().get(0).getServiceList().get(0).getVersionList().size());
 		assertEquals(1, response.getDomainList().get(0).getServiceList().get(0).getVersionList().get(0).getMethodList().size());
 		assertEquals(oldMethod.getPid(), response.getDomainList().get(0).getServiceList().get(0).getVersionList().get(0).getMethodList().get(0).getPid());
+
+	}
+
+	@Test
+	public void testLoadAndSaveSvcVerPropertyCaptures() throws Exception {
+
+		newEntityManager();
+
+		DtoDomain d1 = ourAdminSvc.addDomain(new DtoDomain("asv_did", "asv_did"));
+		GService d1s1 = ourAdminSvc.addService(d1.getPid(), createTestService());
+		ourDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
+
+		newEntityManager();
+
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation(HTTP_FOO);
+		d1s1v1.setHttpClientConfigPid(ourAdminSvc.getDefaultHttpClientConfigPid());
+		d1s1v1 = ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		// Add one
+
+		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		DtoPropertyCapture cap1 = new DtoPropertyCapture();
+		cap1.setPropertyName("cap1");
+		cap1.setXpathExpression("//cap1");
+		d1s1v1.getPropertyCaptures().add(cap1);
+
+		ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertEquals(1, d1s1v1.getPropertyCaptures().size());
+		assertEquals("cap1", d1s1v1.getPropertyCaptures().iterator().next().getPropertyName());
+		ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertEquals(1, d1s1v1.getPropertyCaptures().size());
+		assertEquals("cap1", d1s1v1.getPropertyCaptures().iterator().next().getPropertyName());
+
+		newEntityManager();
+
+		// Add a second
+
+		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		DtoPropertyCapture cap2 = new DtoPropertyCapture();
+		cap2.setPropertyName("cap2");
+		cap2.setXpathExpression("//cap2");
+		d1s1v1.getPropertyCaptures().add(cap2);
+
+		ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertEquals(2, d1s1v1.getPropertyCaptures().size());
+		assertEquals("cap1", d1s1v1.getPropertyCaptures().get(0).getPropertyName());
+		assertEquals("cap2", d1s1v1.getPropertyCaptures().get(1).getPropertyName());
+
+		// Remove one
+
+		d1s1v1.getPropertyCaptures().remove(d1s1v1.getPropertyCaptures().get(0));
+		ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertEquals(1, d1s1v1.getPropertyCaptures().size());
+		assertEquals("cap2", d1s1v1.getPropertyCaptures().get(0).getPropertyName());
 
 	}
 
@@ -1366,7 +1091,7 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 		d1s1v1.setWsdlLocation(HTTP_FOO);
 		d1s1v1.setHttpClientConfigPid(ourAdminSvc.getDefaultHttpClientConfigPid());
 
-		List<GResource> resources = new ArrayList<GResource>();
+		List<GResource> resources = new ArrayList<>();
 		resources.add(new GResource(HTTP_FOO, "text/xml", "contents1"));
 		resources.add(new GResource(HTTP_BAR, "text/xml", "contents2"));
 
@@ -1450,6 +1175,86 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 	}
 
 	@Test
+	public void testLoadAndSaveSvcVerThrottle() throws Exception {
+
+		newEntityManager();
+
+		DtoDomain d1 = ourAdminSvc.addDomain(new DtoDomain("asv_did", "asv_did"));
+		GService d1s1 = ourAdminSvc.addService(d1.getPid(), createTestService());
+		ourDao.getOrCreateAuthenticationHostLocalDatabase("AUTHHOST");
+
+		newEntityManager();
+
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation(HTTP_FOO);
+		d1s1v1.setHttpClientConfigPid(ourAdminSvc.getDefaultHttpClientConfigPid());
+		d1s1v1 = ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		// Add one
+
+		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertNull(d1s1v1.getThrottle());
+
+		DtoServiceVersionThrottle dtoThrottle = new DtoServiceVersionThrottle();
+		dtoThrottle.setApplyPerUser(true);
+		dtoThrottle.setThrottleMaxRequests(5);
+		dtoThrottle.setThrottlePeriod(ThrottlePeriodEnum.SECOND);
+		d1s1v1.setThrottle(dtoThrottle);
+
+		ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertNotNull(d1s1v1.getThrottle());
+		assertEquals(true, d1s1v1.getThrottle().isApplyPerUser());
+		assertEquals(5, d1s1v1.getThrottle().getThrottleMaxRequests().intValue());
+		assertEquals(ThrottlePeriodEnum.SECOND, d1s1v1.getThrottle().getThrottlePeriod());
+
+		newEntityManager();
+
+		// Modify one
+
+		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertNotNull(d1s1v1.getThrottle());
+
+		dtoThrottle = d1s1v1.getThrottle();
+		dtoThrottle.setApplyPerUser(false);
+		dtoThrottle.setThrottleMaxRequests(6);
+		dtoThrottle.setThrottlePeriod(ThrottlePeriodEnum.SECOND);
+		d1s1v1.setThrottle(dtoThrottle);
+
+		ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertNotNull(d1s1v1.getThrottle());
+		assertEquals(false, d1s1v1.getThrottle().isApplyPerUser());
+		assertEquals(6, d1s1v1.getThrottle().getThrottleMaxRequests().intValue());
+		assertEquals(ThrottlePeriodEnum.SECOND, d1s1v1.getThrottle().getThrottlePeriod());
+
+		newEntityManager();
+
+		// Remove it
+
+		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		d1s1v1.setThrottle(null);
+		ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
+		assertNull(d1s1v1.getThrottle());
+
+	}
+
+	@Test
 	public void testLoadWsdl() throws Exception {
 
 		DtoServiceVersionSoap11 ver = new DtoServiceVersionSoap11();
@@ -1483,20 +1288,20 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 		String wsdl0body = IOUtils.toString(ResourceUtils.getURL("classpath:test_simple.wsdl"));
 		String xsd0body = IOUtils.toString(ResourceUtils.getURL("classpath:basic_schema2.xsd"));
 		{
-		SrBeanIncomingResponse resp = new SrBeanIncomingResponse();
-		resp.setCode(200);
-		resp.setContentType("application/xml");
-		resp.setBody(wsdl0body);
-		when(ourHttpClientMock.getOneTime((PersHttpClientConfig) any(PersHttpClientConfig.class), eq("http://wsdlurl/wsdl.wsdl"))).thenReturn(resp);
+			SrBeanIncomingResponse resp = new SrBeanIncomingResponse();
+			resp.setCode(200);
+			resp.setContentType("application/xml");
+			resp.setBody(wsdl0body);
+			when(ourHttpClientMock.getOneTime((PersHttpClientConfig) any(PersHttpClientConfig.class), eq("http://wsdlurl/wsdl.wsdl"))).thenReturn(resp);
 		}
 		{
-		SrBeanIncomingResponse resp = new SrBeanIncomingResponse();
-		resp.setCode(200);
-		resp.setContentType("application/xml");
-		resp.setBody(xsd0body);
-		when(ourHttpClientMock.getOneTime((PersHttpClientConfig) any(PersHttpClientConfig.class), eq("http://wsdlurl/bar.xsd"))).thenReturn(resp);
+			SrBeanIncomingResponse resp = new SrBeanIncomingResponse();
+			resp.setCode(200);
+			resp.setContentType("application/xml");
+			resp.setBody(xsd0body);
+			when(ourHttpClientMock.getOneTime((PersHttpClientConfig) any(PersHttpClientConfig.class), eq("http://wsdlurl/bar.xsd"))).thenReturn(resp);
 		}
-		
+
 		GSoap11ServiceVersionAndResources verAndRes = ourAdminSvc.loadSoap11ServiceVersionFromWsdl(ver, cfg.toDto(), "http://wsdlurl/wsdl.wsdl");
 
 		assertEquals(2, verAndRes.getResource().size());
@@ -1572,7 +1377,7 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 		final ModelUpdateRequest req = new ModelUpdateRequest();
 		req.addServiceToLoadStats(d0s0.getPid());
 
-		List<RetrieverThread> ts = new ArrayList<RetrieverThread>();
+		List<RetrieverThread> ts = new ArrayList<>();
 		for (int i = 0; i < 3; i++) {
 			RetrieverThread t = new RetrieverThread(req, ourSvcReg);
 			t.start();
@@ -1605,7 +1410,7 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 		d1s1v1.setWsdlLocation(HTTP_FOO);
 		d1s1v1.setHttpClientConfigPid(ourAdminSvc.getDefaultHttpClientConfigPid());
 
-		List<GResource> resources = new ArrayList<GResource>();
+		List<GResource> resources = new ArrayList<>();
 		d1s1v1 = ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
 
 		newEntityManager();
@@ -1645,37 +1450,6 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 		config = ourAdminSvc.loadConfig();
 		assertEquals(1, config.getProxyUrlBases().size());
 		assertEquals(HTTP_FOO, config.getProxyUrlBases().get(0));
-
-	}
-
-	@Test
-	public void testGetStatsOnEmptyObjects() throws Exception {
-		ModelUpdateRequest req = new ModelUpdateRequest();
-		ModelUpdateResponse resp = ourAdminSvc.loadModelUpdate(req);
-
-		DtoDomain d1 = ourAdminSvc.addDomain(new DtoDomain("asv_did", "asv_did"));
-
-		long d1pid = d1.getPid();
-		req.addDomainToLoadStats(d1pid);
-		resp = ourAdminSvc.loadModelUpdate(req);
-		d1.merge(resp.getDomainList().getDomainByPid(d1pid));
-
-		GService s1 = ourAdminSvc.addService(d1pid, new GService("s1", "s1", true));
-
-		long s1pid = s1.getPid();
-		req.addServiceToLoadStats(s1pid);
-		resp = ourAdminSvc.loadModelUpdate(req);
-		d1.merge(resp.getDomainList().getDomainByPid(d1pid));
-		s1.merge(resp.getDomainList().getDomainByPid(d1pid).getServiceList().getServiceByPid(s1pid));
-
-		DtoServiceVersionJsonRpc20 v1 = ourAdminSvc.saveServiceVersion(d1pid, s1pid, new DtoServiceVersionJsonRpc20("v1", "v1", ourAdminSvc.getDefaultHttpClientConfigPid()), new ArrayList<GResource>());
-
-		long v1pid = v1.getPid();
-		req.addVersionToLoadStats(v1pid);
-		resp = ourAdminSvc.loadModelUpdate(req);
-		d1.merge(resp.getDomainList().getDomainByPid(d1pid));
-		s1.merge(resp.getDomainList().getDomainByPid(d1pid).getServiceList().getServiceByPid(s1pid));
-		v1.merge(resp.getDomainList().getDomainByPid(d1pid).getServiceList().getServiceByPid(s1pid).getVersionList().getVersionByPid(v1pid));
 
 	}
 
@@ -1803,7 +1577,7 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 		d1s1v1.setName("D1S1V1");
 		d1s1v1.setWsdlLocation(HTTP_FOO);
 		d1s1v1.setHttpClientConfigPid(ourAdminSvc.getDefaultHttpClientConfigPid());
-		List<GResource> resources = new ArrayList<GResource>();
+		List<GResource> resources = new ArrayList<>();
 		resources.add(new GResource(HTTP_FOO, "text/xml", "contents1"));
 		resources.add(new GResource(HTTP_BAR, "text/xml", "contents2"));
 		d1s1v1 = ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
@@ -1946,12 +1720,246 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 
 	}
 
-	private GService createTestService() {
+	private DtoDomain createEverything() throws Exception {
+		SrBeanIncomingRequest iReq = new SrBeanIncomingRequest();
+		newEntityManager();
+
+		ourSecSvc.loadUserCatalogIfNeeded();
+
+		BasePersAuthenticationHost authHost = ourDao.getAuthenticationHost(BasePersAuthenticationHost.MODULE_ID_ADMIN_AUTH);
+		authHost.setKeepNumRecentTransactionsFail(100);
+		authHost.setKeepNumRecentTransactionsFault(100);
+		authHost.setKeepNumRecentTransactionsSecurityFail(100);
+		authHost.setKeepNumRecentTransactionsSuccess(100);
+		ourDao.saveAuthenticationHost(authHost);
+
+		newEntityManager();
+
+		DtoDomain d1 = ourAdminSvc.addDomain(new DtoDomain("asv_did", "asv_did"));
+		GService d1s1 = ourAdminSvc.addService(d1.getPid(), createTestService());
+
+		newEntityManager();
+
+		DtoServiceVersionSoap11 d1s1v1 = new DtoServiceVersionSoap11();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setWsdlLocation(HTTP_FOO);
+		d1s1v1.setHttpClientConfigPid(ourAdminSvc.getDefaultHttpClientConfigPid());
+
+		d1s1v1.setKeepNumRecentTransactionsFail(100);
+		d1s1v1.setKeepNumRecentTransactionsFault(100);
+		d1s1v1.setKeepNumRecentTransactionsSecurityFail(100);
+		d1s1v1.setKeepNumRecentTransactionsSuccess(100);
+
+		GServiceMethod d1s1v1m1 = new GServiceMethod();
+		d1s1v1m1.setName("d1s1v1m1");
+		d1s1v1.getMethodList().add(d1s1v1m1);
+
+		List<GResource> resources = new ArrayList<>();
+		resources.add(new GResource(HTTP_FOO, "text/xml", "contents1"));
+		resources.add(new GResource(HTTP_BAR, "text/xml", "contents2"));
+
+		DtoServiceVersionSoap11 ver = ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
+
+		ver.getUrlList().add(new GServiceVersionUrl("url1", HTTP_FOO));
+		ver = ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), ver, resources);
+
+		newEntityManager();
+		// BasePersServiceVersion persVer =
+		// myDao.getServiceVersionByPid(ver.getPid());
+
+		// Create a user with access
+		GUser user = new GUser();
+		user.setAuthHostPid(ourDao.getAllAuthenticationHosts().iterator().next().getPid());
+		user.setUsername("username2");
+		user.setDomainPermissions(new ArrayList<GUserDomainPermission>());
+		user.getDomainPermissions().add(new GUserDomainPermission());
+		user.getDomainPermissions().get(0).setDomainPid(d1.getPid());
+		user.getDomainPermissions().get(0).setServicePermissions(new ArrayList<GUserServicePermission>());
+		user.getDomainPermissions().get(0).getServicePermissions().add(new GUserServicePermission());
+		user.getDomainPermissions().get(0).getServicePermissions().get(0).setServicePid(d1s1.getPid());
+		user.getDomainPermissions().get(0).getServicePermissions().get(0).setServiceVersionPermissions(new ArrayList<GUserServiceVersionPermission>());
+		user.getDomainPermissions().get(0).getServicePermissions().get(0).getServiceVersionPermissions().add(new GUserServiceVersionPermission());
+		user.getDomainPermissions().get(0).getServicePermissions().get(0).getServiceVersionPermissions().get(0).setServiceVersionPid(ver.getPid());
+		user.getDomainPermissions().get(0).getServicePermissions().get(0).getServiceVersionPermissions().get(0).getOrCreateServiceVersionMethodPermission(ver.getMethodList().get(0).getPid());
+
+		user = ourAdminSvc.saveUser(user);
+
+		newEntityManager();
+
+		// Add stats
+		// persVer = myDao.getServiceVersionByPid(ver.getPid());
+		// PersServiceVersionStatus status = persVer.getStatus();
+		// assertNotNull(status);
+
+		PersMethod m1 = ourDao.getServiceVersionMethodByPid(ver.getMethodList().iterator().next().getPid());
+
+		newEntityManager();
+
+		// Record invocation
+		SrBeanIncomingResponse httpResponse = new SrBeanIncomingResponse();
+		httpResponse.setBody("1234");
+		httpResponse.setResponseTime(123);
+		SrBeanProcessedResponse bean = new SrBeanProcessedResponse();
+		bean.setResponseType(ResponseTypeEnum.SUCCESS);
+
+		myEverythingInvocationTime = new Date(System.currentTimeMillis() - (60 * 1000L));
+		ourStatsSvc.recordInvocationMethod(myEverythingInvocationTime, 100, SrBeanProcessedRequest.forUnitTest(m1), null, httpResponse, bean, iReq);
+
+		newEntityManager();
+
+		ourStatsSvc.flushStatus();
+
+		newEntityManager();
+
+		BasePersServiceVersion persVer = ourDao.getServiceVersionByPid(ver.getPid());
+
+		SrBeanIncomingRequest request = new SrBeanIncomingRequest();
+		request.setRequestHostIp("127.0.0.1");
+		request.setRequestHeaders(new HashMap<String, List<String>>());
+		request.setRequestTime(new Date());
+		String requestBody = "request body";
+		request.setInputReader(new StringReader(requestBody));
+
+		SrBeanProcessedResponse invocationResponse = new SrBeanProcessedResponse();
+		invocationResponse.setResponseHeaders(new HashMap<String, List<String>>());
+		invocationResponse.setResponseType(ResponseTypeEnum.SUCCESS);
+		httpResponse.setSuccessfulUrl(ourDao.getServiceVersionUrlByPid(ver.getUrlList().get(0).getPid()));
+		AuthorizationOutcomeEnum authorizationOutcome = AuthorizationOutcomeEnum.AUTHORIZED;
+		PersUser persUser = ourDao.getUser(user.getPidOrNull());
+		SrBeanProcessedRequest processedRequest = new SrBeanProcessedRequest();
+		processedRequest.setObscuredRequestBody(requestBody);
+		processedRequest.setServiceVersion(persVer);
+		processedRequest.setResultMethod(m1, requestBody, "text/plain");
+		ourTransactionLogSvc.logTransaction(request, persUser, invocationResponse, httpResponse, authorizationOutcome, processedRequest);
+
+		newEntityManager();
+
+		ourTransactionLogSvc.flush();
+
+		newEntityManager();
+
+		ourSvcReg.reloadRegistryFromDatabase();
+
+		newEntityManager();
+
+		return ourAdminSvc.getDomainByPid(d1.getPid());
+	}
+
+	protected void newEntityManager() {
+		// if (myTxManager.getTransaction(definition))
+		// super.newEntityManager();
+		//
+		// myDao.setEntityManager(myEntityManager);
+	}
+
+	@AfterClass
+	public static void afterClass() {
+
+		// newEntityManager();
+		//
+		// Query q = myEntityManager.createQuery("DELETE FROM PersDomain p");
+		// q.executeUpdate();
+		//
+		// newEntityManager();
+
+		ourAppCtx.close();
+
+	}
+
+	@BeforeClass
+	public static void beforeClass() {
+		ourAppCtx = new ClassPathXmlApplicationContext("classpath:svcret-unittest.xml");
+
+		ourTxManager = (JpaTransactionManager) ourAppCtx.getBean("myTxManager");
+		ourAdminSvc = ourAppCtx.getBean(IAdminServiceLocal.class);
+		ourConfigSvc = ourAppCtx.getBean(IConfigService.class);
+		ourDao = ourAppCtx.getBean(IDao.class);
+		ourSecSvc = ourAppCtx.getBean(ISecurityService.class);
+		ourSoapInvoker = ourAppCtx.getBean(IServiceInvokerSoap11.class);
+		ourStatsSvc = ourAppCtx.getBean(IRuntimeStatus.class);
+		ourStatsQuerySvc = ourAppCtx.getBean(IRuntimeStatusQueryLocal.class);
+		ourSvcReg = ourAppCtx.getBean(IServiceRegistry.class);
+		ourTransactionLogSvc = ourAppCtx.getBean(ITransactionLogger.class);
+		ourHttpClientMock = ourAppCtx.getBean(IHttpClient.class);
+		ourFilesystemAuditLogger = ourAppCtx.getBean(IFilesystemAuditLogger.class);
+		ourOrchSvc = ourAppCtx.getBean(IServiceOrchestrator.class);
+		ourThrottlingService = ourAppCtx.getBean(IThrottlingService.class);
+		ourEntityManagerFactory = ourAppCtx.getBean(EntityManagerFactory.class);
+		ourTxTemplate = new TransactionTemplate(ourTxManager);
+	}
+
+	public static void injectConfigServiceDefaults(ConfigServiceBean theConfigService) {
+		theConfigService.setNodeType(RetrieverNodeTypeEnum.PRIMARY);
+		theConfigService.setNodeId("mock");
+	}
+
+	public static final Object unwrapProxy(Object theBean) throws Exception {
+		Object retVal = theBean;
+		/*
+		 * If the given object is a proxy, set the return value as the object
+		 * being proxied, otherwise return the given object.
+		 */
+		if (AopUtils.isAopProxy(theBean) && theBean instanceof Advised) {
+
+			Advised advised = (Advised) theBean;
+
+			retVal = advised.getTargetSource().getTarget();
+		}
+
+		return retVal;
+	}
+
+	private static GService createTestService() {
 		GService retVal = new GService();
 		retVal.setId("asv_sid");
 		retVal.setName("asv_sname");
 		retVal.setActive(true);
 		return retVal;
+	}
+
+	private static void testLoad60MinuteStats_CheckStats(BaseDtoDashboardObject obj) {
+		int[] trans = obj.getTransactions60mins();
+		Date firstDate = obj.getStatistics60MinuteFirstDate();
+		Date expected = InvocationStatsIntervalEnum.MINUTE.truncate(new Date(System.currentTimeMillis() - (59 * DateUtils.MILLIS_PER_MINUTE)));
+		assertEquals(expected, firstDate);
+		assertEquals(60, trans.length);
+		assertEquals(0, trans[59]);
+		assertEquals(1, trans[58]);
+		assertEquals(0, trans[57]);
+	}
+
+	static void deleteEverything() throws ProcessingException, UnexpectedFailureException {
+		Collection<Long> pids = ourAdminSvc.getAllDomainPids();
+		for (Long dtoDomain : pids) {
+			ourAdminSvc.deleteDomain(dtoDomain);
+		}
+
+		pids = ourAdminSvc.getAllMonitorRulePids();
+		for (Long pid : pids) {
+			ourAdminSvc.deleteMonitorRule(pid);
+		}
+
+		PartialUserListRequest ureq = new PartialUserListRequest();
+		GPartialUserList users = ourAdminSvc.loadUsers(ureq);
+		for (GUser next : users) {
+			if (!next.getUsername().equals(PersUser.DEFAULT_ADMIN_USERNAME)) {
+				ourAdminSvc.deleteUser(next.getPid());
+			}
+		}
+
+		for (DtoLibraryMessage next : ourAdminSvc.loadLibraryMessages()) {
+			ourAdminSvc.deleteLibraryMessage(next.getPid());
+		}
+
+		ModelUpdateRequest request = new ModelUpdateRequest();
+		request.setLoadAuthHosts(true);
+		for (BaseDtoAuthenticationHost next : ourAdminSvc.loadModelUpdate(request).getAuthenticationHostList()) {
+			ourAdminSvc.deleteAuthenticationHost(next.getPid());
+		}
+		
+		reset(ourHttpClientMock);
 	}
 
 	private final class RetrieverThread extends Thread {

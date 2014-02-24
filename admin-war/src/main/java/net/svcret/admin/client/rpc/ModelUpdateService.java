@@ -13,6 +13,7 @@ import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
+import net.svcret.admin.shared.model.DtoNodeStatusAndStatisticsList;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.DtoConfig;
@@ -177,5 +178,7 @@ public interface ModelUpdateService extends RemoteService {
 	}
 
 	DtoMonitorRuleActiveCheckOutcome loadMonitorRuleActiveCheckOutcomeDetails(long thePid) throws ServiceFailureException;
+
+	DtoNodeStatusAndStatisticsList loadNodeListAndStatistics();
 
 }

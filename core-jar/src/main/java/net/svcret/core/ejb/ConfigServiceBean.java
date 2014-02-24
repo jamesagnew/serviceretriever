@@ -44,7 +44,7 @@ public class ConfigServiceBean implements IConfigService {
 	private PlatformTransactionManager myPlatformTransactionManager;
 
 	@Override
-	public PersConfig getConfig() throws UnexpectedFailureException {
+	public PersConfig getConfig() {
 		return myConfig;
 	}
 
@@ -67,6 +67,10 @@ public class ConfigServiceBean implements IConfigService {
 	private void loadConfig() {
 		myConfig = myDao.getConfigByPid(PersConfig.DEFAULT_ID);
 		myCurrentVersion = myDao.getStateCounter(STATE_KEY);
+		if (myConfig == null) {
+			myConfig = new PersConfig();
+			myDao.saveConfigInNewTransaction(myConfig);
+		}
 	}
 
 	@PostConstruct
@@ -122,5 +126,11 @@ public class ConfigServiceBean implements IConfigService {
 	public void setNodeType(RetrieverNodeTypeEnum theNodeType) {
 		Validate.notNull(theNodeType, "NodeType");
 		myNodeType = theNodeType;
+	}
+
+
+	@VisibleForTesting
+	public void setConfigForUnitTest() {
+		myConfig = new PersConfig();
 	}
 }

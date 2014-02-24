@@ -19,6 +19,7 @@ import net.svcret.admin.shared.model.TimeRangeEnum;
 import net.svcret.core.api.IConfigService;
 import net.svcret.core.api.IDao;
 import net.svcret.core.api.IRuntimeStatusQueryLocal;
+import net.svcret.core.api.IServiceRegistry;
 import net.svcret.core.chart.ChartingServiceBean;
 import net.svcret.core.ejb.nodecomm.IBroadcastSender;
 import net.svcret.core.model.entity.BasePersServiceVersion;
@@ -36,7 +37,6 @@ import org.mockito.internal.stubbing.defaultanswers.ReturnsDeepStubs;
 
 public class ChartingServiceBeanTest {
 
-	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ChartingServiceBeanTest.class);
 	private PersConfig myConfig;
 	private IConfigService myConfigSvc;
 	private IDao myDao;
@@ -45,6 +45,7 @@ public class ChartingServiceBeanTest {
 	private IRuntimeStatusQueryLocal myStatus;
 
 	private ChartingServiceBean mySvc;
+	private IServiceRegistry mySvcReg;
 
 	@Before
 	public void before() throws Exception {
@@ -67,6 +68,9 @@ public class ChartingServiceBeanTest {
 		myStatus = mock(IRuntimeStatusQueryLocal.class);
 		mySvc.setStatusForUnitTest(myStatus);
 
+		mySvcReg = mock(IServiceRegistry.class);
+		mySvc.setServiceRegistryForUnitTest(mySvcReg);
+		
 	}
 
 	@Test
@@ -103,7 +107,7 @@ public class ChartingServiceBeanTest {
 		when(myDao.getServiceVersionMethodByPid(eq(21L))).thenReturn(m2);
 		when(myDao.getServiceVersionMethodByPid(eq(31L))).thenReturn(m3);
 
-		List<PersInvocationMethodUserStats> statsList = new ArrayList<PersInvocationMethodUserStats>();
+		List<PersInvocationMethodUserStats> statsList = new ArrayList<>();
 		statsList.add(new PersInvocationMethodUserStats(new PersInvocationMethodUserStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:10"), m1, user)));
 		statsList.get(statsList.size() - 1).addSuccessInvocation(100, 200, 300);
 		statsList.add(new PersInvocationMethodUserStats(new PersInvocationMethodUserStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:20"), m1, user)));
@@ -122,10 +126,9 @@ public class ChartingServiceBeanTest {
 		byte[] bytes = mySvc.renderUserMethodGraphForUser(user.getPid(), range);
 
 		new File("target/test-pngs").mkdirs();
-		FileOutputStream fos = new FileOutputStream("target/test-pngs/userMethod.png", false);
+		try (FileOutputStream fos = new FileOutputStream("target/test-pngs/userMethod.png", false)) {
 		fos.write(bytes);
-		fos.close();
-
+		}
 	}
 
 	@Test
@@ -140,15 +143,15 @@ public class ChartingServiceBeanTest {
 
 		when(myDao.getUser(eq(1L))).thenReturn(user);
 
-		List<PersInvocationMethodUserStats> statsList = new ArrayList<PersInvocationMethodUserStats>();
+		List<PersInvocationMethodUserStats> statsList = new ArrayList<>();
 		when(myDao.getUserStatsWithinTimeRange(eq(user), eq(range.getNoPresetFrom()), eq(range.getNoPresetTo()))).thenReturn(statsList);
 
 		byte[] bytes = mySvc.renderUserMethodGraphForUser(user.getPid(), range);
 
 		new File("target/test-pngs").mkdirs();
-		FileOutputStream fos = new FileOutputStream("target/test-pngs/userMethodNoData.png", false);
+		try(FileOutputStream fos = new FileOutputStream("target/test-pngs/userMethodNoData.png", false)){
 		fos.write(bytes);
-		fos.close();
+		}
 
 	}
 
@@ -189,19 +192,19 @@ public class ChartingServiceBeanTest {
 		when(svcVer.getService().getServiceId()).thenReturn("ServiceId");
 		when(svcVer.getService().getDomain().getDomainId()).thenReturn("DomainId");
 
-		ArrayList<PersMethod> methodList = new ArrayList<PersMethod>();
+		ArrayList<PersMethod> methodList = new ArrayList<>();
 		methodList.add(m1);
 		methodList.add(m2);
 		methodList.add(m3);
 		methodList.add(m4);
 		when(svcVer.getMethods()).thenReturn(methodList);
 
-		when(myDao.getServiceVersionByPid(eq(999L))).thenReturn(svcVer);
+		when(mySvcReg.getServiceVersionByPid(eq(999L))).thenReturn(svcVer);
 		when(myDao.getServiceVersionMethodByPid(eq(11L))).thenReturn(m1);
 		when(myDao.getServiceVersionMethodByPid(eq(21L))).thenReturn(m2);
 		when(myDao.getServiceVersionMethodByPid(eq(31L))).thenReturn(m3);
 
-		List<PersInvocationMethodSvcverStats> statsList = new ArrayList<PersInvocationMethodSvcverStats>();
+		List<PersInvocationMethodSvcverStats> statsList = new ArrayList<>();
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:00"), m1)));
 		statsList.get(statsList.size() - 1).addSuccessInvocation((int) (100.0 * Math.random()), (int) (100.0 * Math.random()), (int) (100.0 * Math.random()));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:00"), m2)));
@@ -253,14 +256,15 @@ public class ChartingServiceBeanTest {
 		new File("target/test-pngs").mkdirs();
 
 		byte[] bytes = mySvc.renderSvcVerLatencyMethodGraph(999L, range, true);
-		FileOutputStream fos = new FileOutputStream("target/test-pngs/svcVerLatency-bymethod.png", false);
+		
+		try(FileOutputStream fos = new FileOutputStream("target/test-pngs/svcVerLatency-bymethod.png", false)){
 		fos.write(bytes);
-		fos.close();
+		}
 
 		bytes = mySvc.renderSvcVerLatencyMethodGraph(999L, range, false);
-		fos = new FileOutputStream("target/test-pngs/svcVerLatency-avg.png", false);
+		try (FileOutputStream fos = new FileOutputStream("target/test-pngs/svcVerLatency-avg.png", false)){
 		fos.write(bytes);
-		fos.close();
+		}
 
 	}
 
@@ -283,14 +287,14 @@ public class ChartingServiceBeanTest {
 		when(svcVer.getService().getServiceId()).thenReturn("ServiceId");
 		when(svcVer.getService().getDomain().getDomainId()).thenReturn("DomainId");
 
-		ArrayList<PersMethod> methodList = new ArrayList<PersMethod>();
+		ArrayList<PersMethod> methodList = new ArrayList<>();
 		methodList.add(m1);
 		when(svcVer.getMethods()).thenReturn(methodList);
 
-		when(myDao.getServiceVersionByPid(eq(999L))).thenReturn(svcVer);
+		when(mySvcReg.getServiceVersionByPid(eq(999L))).thenReturn(svcVer);
 		when(myDao.getServiceVersionMethodByPid(eq(11L))).thenReturn(m1);
 
-		List<PersInvocationMethodSvcverStats> statsList = new ArrayList<PersInvocationMethodSvcverStats>();
+		List<PersInvocationMethodSvcverStats> statsList = new ArrayList<>();
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:00"), m1)));
 		statsList.get(statsList.size() - 1).addSuccessInvocation((int) (100.0 * Math.random()), (int) (100.0 * Math.random()), (int) (100.0 * Math.random()));
 		statsList.add(new PersInvocationMethodSvcverStats(new PersInvocationMethodSvcverStatsPk(InvocationStatsIntervalEnum.TEN_MINUTE, myFmt.parse("04:10"), m1)));
@@ -319,9 +323,9 @@ public class ChartingServiceBeanTest {
 
 		byte[] bytes = mySvc.renderSvcVerLatencyMethodGraph(999L, range, true);
 
-		FileOutputStream fos = new FileOutputStream("target/test-pngs/sixmonth.png", false);
+		try(FileOutputStream fos = new FileOutputStream("target/test-pngs/sixmonth.png", false)){
 		fos.write(bytes);
-		fos.close();
+		}
 
 	}
 

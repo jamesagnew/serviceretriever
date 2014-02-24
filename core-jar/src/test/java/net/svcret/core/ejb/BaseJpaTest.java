@@ -23,13 +23,13 @@ public abstract class BaseJpaTest {
 	static {
 		System.setProperty(Password.NET_SVCRET_SECURITY_PASSWORDSALT, "OPIHIOOPYPOIYPOIYPOIYPOIYPOIYPOIYPO");
 	}
-	
+
 	@After
 	public final void truncateDatabase() throws SQLException {
 		if (myEntityManager == null) {
 			return;
 		}
-		
+
 		try {
 			myEntityManager.getTransaction().rollback();
 		} catch (Exception e) {
@@ -37,12 +37,14 @@ public abstract class BaseJpaTest {
 		}
 		myEntityManager.clear();
 
-		Connection connection = DriverManager.getConnection("jdbc:hsqldb:mem:unit-testing-jpa", "sa", "");
-		connection.setAutoCommit(true);
-		Statement statement = connection.createStatement();
-		boolean result = statement.execute("TRUNCATE SCHEMA public AND COMMIT");
-		ourLog.info("Truncation result {}", result);
-		statement.close();
+		try (Connection connection = DriverManager.getConnection("jdbc:hsqldb:mem:unit-testing-jpa", "sa", "")) {
+			connection.setAutoCommit(true);
+			try (Statement statement = connection.createStatement()) {
+				boolean result = statement.execute("TRUNCATE SCHEMA public AND COMMIT");
+				ourLog.info("Truncation result {}", result);
+				statement.close();
+			}
+		}
 
 		myEntityManager.clear();
 
@@ -80,13 +82,13 @@ public abstract class BaseJpaTest {
 		myEntityManager.getTransaction().begin();
 	}
 
-//	// @Before
-//	public void before() {
-//		if (myEntityManager != null) {
-//			myEntityManager.getTransaction().commit();
-//			myEntityManager.close();
-//		}
-//		myEntityManager = null;
-//	}
+	// // @Before
+	// public void before() {
+	// if (myEntityManager != null) {
+	// myEntityManager.getTransaction().commit();
+	// myEntityManager.close();
+	// }
+	// myEntityManager = null;
+	// }
 
 }

@@ -65,7 +65,7 @@ public class AlertGrid extends FlowPanel {
 
 	private void initUi() {
 		// DataGrid<GMonitorRuleFiring> grid = new DataGrid<GMonitorRuleFiring>();
-		final CellTable<GMonitorRuleFiring> grid = new PCellTable<GMonitorRuleFiring>();
+		final CellTable<GMonitorRuleFiring> grid = new PCellTable<>();
 		add(grid);
 
 		grid.setEmptyTableWidget(new Label("No firings"));
@@ -145,7 +145,7 @@ public class AlertGrid extends FlowPanel {
 			public SafeHtml getValue(GMonitorRuleFiring theObject) {
 				SafeHtmlBuilder b = new SafeHtmlBuilder();
 
-				Set<Long> affectedSvcVerPids = new HashSet<Long>();
+				Set<Long> affectedSvcVerPids = new HashSet<>();
 				for (GMonitorRuleFiringProblem next : theObject.getProblems()) {
 					affectedSvcVerPids.add(next.getServiceVersionPid());
 				}
@@ -163,7 +163,7 @@ public class AlertGrid extends FlowPanel {
 		};
 		grid.addColumn(affectsColumn, "Affects Services");
 
-		final ListDataProvider<GMonitorRuleFiring> dp = new ListDataProvider<GMonitorRuleFiring>();
+		final ListDataProvider<GMonitorRuleFiring> dp = new ListDataProvider<>();
 		dp.addDataDisplay(grid);
 
 		int start = 0;

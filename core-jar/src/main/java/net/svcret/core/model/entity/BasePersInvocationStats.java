@@ -253,6 +253,7 @@ public abstract class BasePersInvocationStats<P extends BasePersInvocationStatsP
 		return myTotalSuccessResponseMessageBytes;
 	}
 
+	@Override
 	public synchronized void mergeUnsynchronizedEvents(O stats) {
 		synchronized (stats) {
 			myTotalSuccessInvocationCount += stats.getSuccessInvocationCount();

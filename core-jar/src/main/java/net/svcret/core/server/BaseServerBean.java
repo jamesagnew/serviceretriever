@@ -22,7 +22,7 @@ public abstract class BaseServerBean implements BeanNameAware {
 	private int myPort;
 	private Server myProxyServer;
 	private SslContextFactory mySslContextFactory;
-
+	
 	@PreDestroy
 	public void destroy() throws Exception {
 		ourLog.info("Shutting down server '{}' on port: {}", myBeanName, myPort);
@@ -35,6 +35,10 @@ public abstract class BaseServerBean implements BeanNameAware {
 
 	public int getMinThreads() {
 		return myMinThreads;
+	}
+
+	public int getPort() {
+		return myPort;
 	}
 
 	public Server getProxyServer() {

@@ -32,6 +32,7 @@ import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
+import net.svcret.admin.shared.model.DtoNodeStatusAndStatisticsList;
 import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
 import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
@@ -141,7 +142,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		List<GResource> resList = getServiceVersionResourcesFromSession(uncommittedSessionId);
 		if (resList == null) {
 			ourLog.info("Unable to find a resource collection in the session with ID " + uncommittedSessionId);
-			resList = new ArrayList<GResource>();
+			resList = new ArrayList<>();
 		}
 
 		long domain;
@@ -270,7 +271,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 			return getMock().getLatestFailingMonitorRuleFiringForRulePids();
 		}
 		try {
-			HashMap<Long, GMonitorRuleFiring> retVal = new HashMap<Long, GMonitorRuleFiring>();
+			HashMap<Long, GMonitorRuleFiring> retVal = new HashMap<>();
 
 			for (GMonitorRuleFiring next : myAdminSvc.loadAllActiveRuleFirings()) {
 				if (retVal.containsKey(next.getRulePid())) {
@@ -922,6 +923,14 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 			ourLog.error("Failed to load outcome details", e);
 			throw new ServiceFailureException(e.getMessage());
 		}
+	}
+
+	@Override
+	public DtoNodeStatusAndStatisticsList loadNodeListAndStatistics() {
+		if (isMockMode()) {
+			return getMock().loadNodeListAndStatistics();
+		}
+		return myAdminSvc.loadAllNodeStatuses();
 	}
 
 }

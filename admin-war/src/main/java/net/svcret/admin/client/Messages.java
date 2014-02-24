@@ -862,5 +862,8 @@ public interface Messages extends com.google.gwt.i18n.client.Messages {
 
 	@DefaultMessage("No")
 	String no();
+
+	@DefaultMessage("Node Status")
+	String NodeStatus_name();
 	
 }

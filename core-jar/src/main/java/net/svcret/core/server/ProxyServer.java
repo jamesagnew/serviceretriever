@@ -17,8 +17,10 @@ public class ProxyServer extends BaseServerBean {
 
 	@Override
 	protected void configureServerBeforeStarting() {
-		ServletHandler proxyHandler = new ServletHandler();
 		ServiceServlet serviceServlet = new ServiceServlet();
+		serviceServlet.setPort(getPort());
+
+		ServletHandler proxyHandler = new ServletHandler();
 		serviceServlet.setServiceOrchestrator(myServiceOrchestrator);
 		serviceServlet.setServiceRegistry(myServiceRegistry);
 		ServletHolder servletHolder = new ServletHolder(serviceServlet);

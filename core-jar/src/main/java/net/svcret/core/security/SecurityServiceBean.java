@@ -2,7 +2,9 @@ package net.svcret.core.security;
 
 import static net.svcret.admin.shared.enm.AuthorizationOutcomeEnum.*;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +13,7 @@ import javax.annotation.PostConstruct;
 
 import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.api.UnexpectedFailureException;
+import net.svcret.admin.api.UnknownPidException;
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
@@ -24,6 +27,7 @@ import net.svcret.core.api.ISecurityService;
 import net.svcret.core.ejb.InMemoryUserCatalog;
 import net.svcret.core.ejb.nodecomm.IBroadcastSender;
 import net.svcret.core.model.entity.BasePersAuthenticationHost;
+import net.svcret.core.model.entity.BasePersObject;
 import net.svcret.core.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.core.model.entity.PersMethod;
 import net.svcret.core.model.entity.PersUser;
@@ -69,6 +73,8 @@ public class SecurityServiceBean implements ISecurityService {
 	@Autowired
 	protected PlatformTransactionManager myPlatformTransactionManager;
 
+	private volatile List<BasePersAuthenticationHost> myInMemoryAuthenticationHostList;
+
 	@PostConstruct
 	public void postConstruct() {
 		TransactionTemplate tmpl = new TransactionTemplate(myPlatformTransactionManager);
@@ -80,6 +86,7 @@ public class SecurityServiceBean implements ISecurityService {
 		});
 	}
 
+	@Override
 	public AuthorizationResultsBean authorizeMethodInvocation(List<AuthorizationRequestBean> theAuthRequests, PersMethod theMethod, String theRequestHostIp) throws ProcessingException {
 		Validate.notNull(theAuthRequests, "AuthRequests");
 
@@ -216,6 +223,7 @@ public class SecurityServiceBean implements ISecurityService {
 
 	}
 
+	@Override
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public synchronized void loadUserCatalogIfNeeded() {
 		ourLog.debug("Checking for updated user catalog");
@@ -239,7 +247,7 @@ public class SecurityServiceBean implements ISecurityService {
 
 	@Override
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public PersUser saveServiceUser(PersUser theUser) throws UnexpectedFailureException {
+	public PersUser saveServiceUser(PersUser theUser) {
 
 		if (theUser.getPid() == null) {
 			theUser.setStatus(new PersUserStatus(theUser));
@@ -253,12 +261,8 @@ public class SecurityServiceBean implements ISecurityService {
 		return retVal;
 	}
 
-	private void synchronizeUserCatalogChanged() throws UnexpectedFailureException {
-		if (!TransactionSynchronizationManager.isSynchronizationActive()) {
-//			incrementStateVersion();
-//			loadUserCatalogIfNeeded();
-//			myBroadcastSender.notifyUserCatalogChanged();
-		} else {
+	private void synchronizeUserCatalogChanged() {
+		if (!BasePersObject.isUnitTestMode()) {
 			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
 				@Override
 				public void afterCommit() {
@@ -340,8 +344,10 @@ public class SecurityServiceBean implements ISecurityService {
 		ourLog.info("Loading entire user catalog from databse");
 		long newVersion = myDao.getStateCounter(STATE_KEY);
 
-		Map<Long, Map<String, PersUser>> hostPidToUsernameToUser = new HashMap<Long, Map<String, PersUser>>();
-		Map<Long, BasePersAuthenticationHost> pidToAuthHost = new HashMap<Long, BasePersAuthenticationHost>();
+		// Users
+
+		Map<Long, Map<String, PersUser>> hostPidToUsernameToUser = new HashMap<>();
+		Map<Long, BasePersAuthenticationHost> pidToAuthHost = new HashMap<>();
 
 		Collection<BasePersAuthenticationHost> allAuthHosts = myDao.getAllAuthenticationHosts();
 		for (BasePersAuthenticationHost nextHost : allAuthHosts) {
@@ -359,6 +365,15 @@ public class SecurityServiceBean implements ISecurityService {
 			map.put(nextUser.getUsername(), nextUser);
 		}
 
+		// Authentication hosts
+		List<BasePersAuthenticationHost> authHosts = new ArrayList<>();
+		for (BasePersAuthenticationHost next : myDao.getAllAuthenticationHosts()) {
+			authHosts.add(next);
+		}
+
+		// Done!
+		
+		myInMemoryAuthenticationHostList = Collections.unmodifiableList(authHosts);
 		myInMemoryUserCatalog = new InMemoryUserCatalog(hostPidToUsernameToUser, pidToAuthHost);
 		myCurrentVersion = newVersion;
 
@@ -412,6 +427,27 @@ public class SecurityServiceBean implements ISecurityService {
 	public void forceLoadUserCatalog() {
 		incrementStateVersion();
 		loadUserCatalogIfNeeded();
+	}
+
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	@Override
+	public void deleteAuthenticationHost(long thePid) throws UnknownPidException {
+		BasePersAuthenticationHost authHost = myDao.getAuthenticationHostByPid(thePid);
+		if (authHost == null) {
+			ourLog.info("Invalid request to delete unknown authentication host with PID {}", thePid);
+			throw new UnknownPidException("Unknown authentication host: " + thePid);
+		}
+
+		ourLog.info("Removing authentication host {} / {}", thePid, authHost.getModuleId());
+
+		myDao.deleteAuthenticationHost(authHost);
+
+		synchronizeUserCatalogChanged();
+	}
+
+	@Override
+	public List<BasePersAuthenticationHost> getAllAuthenticationHosts() {
+		return myInMemoryAuthenticationHostList;
 	}
 
 }

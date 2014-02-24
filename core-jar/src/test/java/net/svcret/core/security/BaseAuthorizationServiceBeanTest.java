@@ -35,10 +35,10 @@ public class BaseAuthorizationServiceBeanTest {
 		myUser.setPid(ourNextPid++);
 		myUser.setUsername("username123");
 
-		Map<Long, Map<String, PersUser>> users = new HashMap<Long, Map<String, PersUser>>();
+		Map<Long, Map<String, PersUser>> users = new HashMap<>();
 		users.put(myConfig.getPid(), new HashMap<String, PersUser>());
 		users.get(myConfig.getPid()).put(myUser.getUsername(), myUser);
-		Map<Long, BasePersAuthenticationHost> hosts = new HashMap<Long, BasePersAuthenticationHost>();
+		Map<Long, BasePersAuthenticationHost> hosts = new HashMap<>();
 		hosts.put(myConfig.getPid(), myConfig);
 		myUserCatalog = new InMemoryUserCatalog(users, hosts);
 	}

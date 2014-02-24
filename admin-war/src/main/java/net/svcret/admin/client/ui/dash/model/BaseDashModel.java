@@ -49,17 +49,17 @@ public abstract class BaseDashModel implements IDashModel {
 
 	@Override
 	public IProvidesTooltip<BaseDtoDashboardObject> getUsageTooltip() {
-		return new UsageSparklineTooltipProvider<BaseDtoDashboardObject>();
+		return new UsageSparklineTooltipProvider<>();
 	}
 
 	@Override
 	public IProvidesTooltip<BaseDtoDashboardObject> getUrlsTooltip() {
-		return new UrlStatusTooltipProvider<BaseDtoDashboardObject>();
+		return new UrlStatusTooltipProvider<>();
 	}
 
 	@Override
 	public IProvidesTooltip<BaseDtoDashboardObject> getLastInvocationTooltip() {
-		return new LastUsageTooltipProvider<BaseDtoDashboardObject>();
+		return new LastUsageTooltipProvider<>();
 	}
 	
 	@Override

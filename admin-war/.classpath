@@ -4,7 +4,6 @@
 	<classpathentry kind="src" path="src/dev/java"/>
 	<classpathentry kind="src" output="src/main/webapp/WEB-INF/classes" path="src/main/resources"/>
 	<classpathentry kind="src" path="src/test/java"/>
-	<classpathentry exported="true" kind="con" path="com.google.gwt.eclipse.core.GWT_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.web.container"/>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.module.container"/>
 	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
@@ -24,5 +23,6 @@
 			<attribute name="owner.project.facets" value="java"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="con" path="com.google.gwt.eclipse.core.GWT_CONTAINER/GWT (1)"/>
 	<classpathentry kind="output" path="src/main/webapp/WEB-INF/classes"/>
 </classpath>

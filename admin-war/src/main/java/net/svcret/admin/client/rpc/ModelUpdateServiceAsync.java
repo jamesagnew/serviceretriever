@@ -12,6 +12,7 @@ import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
+import net.svcret.admin.shared.model.DtoNodeStatusAndStatisticsList;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.DtoConfig;
@@ -117,5 +118,7 @@ public interface ModelUpdateServiceAsync {
 	void testServiceVersionWithSingleMessage(String theMessageText, String theContentType, long theServiceVersionPid, AsyncCallback<GServiceVersionSingleFireResponse> theAsyncCallback);
 
 	void loadMonitorRuleActiveCheckOutcomeDetails(long thePid, AsyncCallback<DtoMonitorRuleActiveCheckOutcome> theAsyncCallback);
+
+	void loadNodeListAndStatistics(AsyncCallback<DtoNodeStatusAndStatisticsList> theAsyncCallback);
 
 }

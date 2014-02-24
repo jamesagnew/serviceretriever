@@ -4,6 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -27,7 +28,7 @@ public abstract class PersBaseServerAuth<T extends PersBaseServerAuth<?, ?>, G e
 	private static final long serialVersionUID = 1L;
 
 	@ManyToOne(cascade = {})
-	@JoinColumn(name = "SERV_AUTH_PID", referencedColumnName = "PID")
+	@JoinColumn(name = "SERV_AUTH_PID", referencedColumnName = "PID", foreignKey=@ForeignKey(name="FK_BPSA_AUTHHOST"))
 	private BasePersAuthenticationHost myAuthenticationHost;
 
 	@Version()
@@ -74,6 +75,7 @@ public abstract class PersBaseServerAuth<T extends PersBaseServerAuth<?, ?>, G e
 	/**
 	 * @return the pid
 	 */
+	@Override
 	public Long getPid() {
 		return myPid;
 	}

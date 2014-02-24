@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -149,17 +149,12 @@ public class RuntimeStatusQueryBeanTest {
 		stats.addMethodInvocations(1, 2, 3, 4);
 		allStats.add(stats);
 
-		stats = new PersNodeStats(InvocationStatsIntervalEnum.MINUTE, myTimeFormat.parse("11:14:00"), "nodeid");
-		stats.setCpuTime(200.0);
-		stats.addMethodInvocations(1, 2, 3, 4);
-		allStats.add(stats);
-
 		stats = new PersNodeStats(InvocationStatsIntervalEnum.MINUTE, myTimeFormat.parse("12:14:00"), "nodeid2");
 		stats.setCpuTime(200.0);
 		stats.addMethodInvocations(1, 2, 3, 4);
 		allStats.add(stats);
 
-		when(dao.getNodeStatsWithinRange((Date)any(), (Date)any())).thenReturn(allStats);
+		when(dao.getNodeStatsWithinRange(eq(myTimeFormat.parse("12:00:00")), eq(myTimeFormat.parse("13:00:00")))).thenReturn(allStats);
 		
 		List <PersNodeStatus> nodeStatuses=new ArrayList<>();
 		PersNodeStatus nodeStatus = new PersNodeStatus();
@@ -181,8 +176,8 @@ public class RuntimeStatusQueryBeanTest {
 		
 		svc.setNowForUnitTests(myTimeFormat.parse("13:00:01"));
 		DtoNodeStatusAndStatisticsList actual = svc.getAllNodeStatusesAndStatistics();
-		assertEquals(100.0, actual.getNodeStatistics().get(0).getCpuTime()[14], 0.01);
-		assertEquals(200.0, actual.getNodeStatistics().get(0).getCpuTime()[15], 0.01);
+		assertEquals(100.0, actual.getNodeStatistics().get(0).getCpuTime()[13], 0.01);
+		assertEquals(200.0, actual.getNodeStatistics().get(0).getCpuTime()[14], 0.01);
 		
 	}
 
