@@ -99,7 +99,7 @@ class ServiceServlet extends HttpServlet {
 			request.setRequestTime(new Date(start));
 			request.setTlsClientCertificates((X509Certificate[]) theReq.getAttribute("javax.servlet.request.X509Certificate"));
 			request.setTlsCipherSuite((String) theReq.getAttribute("javax.servlet.request.cipher_suite"));
-			request.setTlsSession((SSLSession) theReq.getAttribute("javax.servlet.request.cipher_suite"));
+//			request.setTlsSession((SSLSession) theReq.getAttribute("javax.servlet.request.cipher_suite"));
 			request.setTlsKeySize((Integer) theReq.getAttribute("javax.servlet.request.key_size"));
 
 			Map<String, List<String>> requestHeaders = new HashMap<>();

@@ -202,13 +202,13 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 		for (DtoNodeStatus next : retVal.getNodeStatuses()) {
 			nodeIdToIndex.put(next.getNodeId(), index++);
 			DtoNodeStatistics statistics = new DtoNodeStatistics();
-			statistics.setCpuTime(new double[timestamps.size()]);
-			statistics.setSuccessTransactions(new double[timestamps.size()]);
-			statistics.setFaultTransactions(new double[timestamps.size()]);
-			statistics.setFailTransactions(new double[timestamps.size()]);
-			statistics.setSecFailTransactions(new double[timestamps.size()]);
-			statistics.setMemoryMax(new double[timestamps.size()]);
-			statistics.setMemoryUsed(new double[timestamps.size()]);
+			statistics.setCpuTime(new int[timestamps.size()]);
+			statistics.setSuccessTransactions(new int[timestamps.size()]);
+			statistics.setFaultTransactions(new int[timestamps.size()]);
+			statistics.setFailTransactions(new int[timestamps.size()]);
+			statistics.setSecFailTransactions(new int[timestamps.size()]);
+			statistics.setMemoryMax(new int[timestamps.size()]);
+			statistics.setMemoryUsed(new int[timestamps.size()]);
 			retVal.getNodeStatistics().add(statistics);
 		}
 
@@ -233,9 +233,9 @@ public class RuntimeStatusQueryBean implements IRuntimeStatusQueryLocal {
 			nodeStats.getSecFailTransactions()[timestampIndex] += nextStats.getMethodSecFailInvocations();
 			
 			// These stats are not cumulative
-			nodeStats.getCpuTime()[timestampIndex] = nextStats.getCpuTime();
-			nodeStats.getMemoryUsed()[timestampIndex] = nextStats.getMemoryUsed();
-			nodeStats.getMemoryMax()[timestampIndex] = nextStats.getMemoryMax();
+			nodeStats.getCpuTime()[timestampIndex] = (int) nextStats.getCpuTime();
+			nodeStats.getMemoryUsed()[timestampIndex] = (int) nextStats.getMemoryUsed();
+			nodeStats.getMemoryMax()[timestampIndex] = (int) nextStats.getMemoryMax();
 		}
 		
 		return retVal;

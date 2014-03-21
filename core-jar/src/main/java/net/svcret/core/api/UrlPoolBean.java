@@ -18,7 +18,7 @@ public class UrlPoolBean {
 	}
 	
 	public Collection<PersServiceVersionUrl> getAllUrls() {
-		ArrayList<PersServiceVersionUrl> retVal = new ArrayList<PersServiceVersionUrl>();
+		ArrayList<PersServiceVersionUrl> retVal = new ArrayList<>();
 		retVal.add(getPreferredUrl());
 		retVal.addAll(getAlternateUrls());
 		return retVal;
@@ -51,6 +51,8 @@ public class UrlPoolBean {
 		myAlternateUrls = theAlternateUrls;
 	}
 
+	
+
 	/**
 	 * @param theAlternateUrls
 	 *            the alternateUrls to set
@@ -58,8 +60,6 @@ public class UrlPoolBean {
 	public void setAlternateUrls(PersServiceVersionUrl... theAlternateUrls) {
 		myAlternateUrls = Arrays.asList(theAlternateUrls);
 	}
-
-	
 
 	/**
 	 * @param thePreferredUrl

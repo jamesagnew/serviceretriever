@@ -421,6 +421,8 @@ public class SecurityServiceBean implements ISecurityService {
 			ourLog.info("Saving new authentication host of type {} with id {} / {}", new Object[] { theAuthHost.getClass().getSimpleName(), theAuthHost.getPid(), theAuthHost.getModuleId() });
 			myDao.saveAuthenticationHost(theAuthHost);
 		}
+		
+		synchronizeUserCatalogChanged();
 	}
 
 	@Override

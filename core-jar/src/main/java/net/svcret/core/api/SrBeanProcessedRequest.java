@@ -15,7 +15,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 public class SrBeanProcessedRequest {
 
-	private Map<PersBaseServerAuth<?, ?>, ICredentialGrabber> myCredentialsInRequest = new HashMap<PersBaseServerAuth<?, ?>, ICredentialGrabber>();
+	private Map<PersBaseServerAuth<?, ?>, ICredentialGrabber> myCredentialsInRequest = new HashMap<>();
 	private String myMethodContentType;
 	private PersMethod myMethodDefinition;
 	private Map<String, List<String>> myMethodHeaders;
@@ -30,6 +30,7 @@ public class SrBeanProcessedRequest {
 	private String myStaticResourceText;
 	private String myStaticResourceUrl;
 	private Long myThrottleTimeIfAny;
+	private String myUrlSuffix;
 
 	public void addCredentials(PersBaseServerAuth<?, ?> theServerAuth, ICredentialGrabber theCredentials) {
 		Validate.notNull(theCredentials);
@@ -43,7 +44,7 @@ public class SrBeanProcessedRequest {
 
 	public void addPropertyCapture(String thePropertyName, String theResult) {
 		if (myPropertyCaptures == null) {
-			myPropertyCaptures = new HashMap<String, String>();
+			myPropertyCaptures = new HashMap<>();
 		}
 		myPropertyCaptures.put(thePropertyName, theResult);
 	}
@@ -74,7 +75,7 @@ public class SrBeanProcessedRequest {
 	 */
 	public Map<String, List<String>> getMethodHeaders() {
 		if (myMethodHeaders == null) {
-			myMethodHeaders = new HashMap<String, List<String>>();
+			myMethodHeaders = new HashMap<>();
 		}
 		return myMethodHeaders;
 	}
@@ -144,6 +145,10 @@ public class SrBeanProcessedRequest {
 		return myThrottleTimeIfAny;
 	}
 
+	public String getUrlSuffix() {
+		return myUrlSuffix;
+	}
+
 	public void setMethodHeaders(Map<String, List<String>> theMethodHeaders) {
 		myMethodHeaders = theMethodHeaders;
 	}
@@ -177,6 +182,10 @@ public class SrBeanProcessedRequest {
 
 	public void setThrottleTimeIfAny(Long theThrottleTimeIfAny) {
 		myThrottleTimeIfAny = theThrottleTimeIfAny;
+	}
+
+	public void setUrlSuffix(String theUrlSuffix) {
+		myUrlSuffix = theUrlSuffix;
 	}
 
 	private void validateResultTypeNotSet() {

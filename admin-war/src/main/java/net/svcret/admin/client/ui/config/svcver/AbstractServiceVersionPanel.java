@@ -14,6 +14,7 @@ import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
 import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
+import net.svcret.admin.shared.model.DtoServiceVersionRest;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoServiceVersionVirtual;
 import net.svcret.admin.shared.model.DtoDomain;
@@ -400,6 +401,9 @@ public abstract class AbstractServiceVersionPanel extends FlowPanel implements R
 			break;
 		case VIRTUAL:
 			myBottomContents = new DetailPanelVirtual(this, (DtoServiceVersionVirtual) theResult);
+			break;
+		case REST:
+			myBottomContents = new DetailPanelRest(this, (DtoServiceVersionRest) theResult);
 			break;
 		}
 

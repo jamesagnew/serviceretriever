@@ -3,8 +3,12 @@ package net.svcret.core.model.entity;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 //@formatter:off
@@ -18,18 +22,33 @@ public class PersMethodStatus extends BasePersMethodStatus {
 
 	private static final long serialVersionUID = 1L;
 
-	@EmbeddedId
-	private PersMethodStatusPk myPk;
+	@Id
+	@Column(name = "METHOD_PID", insertable=true, updatable=false)
+	private Long myPk;
 
-	@Column(name = "METHOD_PID", updatable = false, insertable = false)
-	private long myMethodPid;
+	@OneToOne(cascade = {})
+	@JoinColumn(name = "METHOD_PID", foreignKey=@ForeignKey(name="FK_METSTAT_METHOD"), updatable=false, insertable=false)
+	private PersMethod myMethod;
+
+	
+//	@Column(name = "METHOD_PID", updatable = false, insertable = false)
+//	private long myMethodPid;
+
+//	public PersMethodStatusPk getPk() {
+//		return myPk;
+//	}
+//
+//	public void setPk(PersMethodStatusPk thePk) {
+//		myPk = thePk;
+//	}
 
 	public PersMethodStatus() {
 		// nothing
 	}
 
 	public PersMethodStatus(PersMethod theMethod) {
-		myPk = new PersMethodStatusPk(theMethod);
+		myMethod = (theMethod);
+		myPk = theMethod.getPid();
 	}
 
 	@Override
@@ -55,12 +74,12 @@ public class PersMethodStatus extends BasePersMethodStatus {
 	}
 
 	public PersMethod getMethod() {
-		return myPk.getMethod();
+		return myMethod;
 	}
 
-	public long getMethodPid() {
-		return myMethodPid;
-	}
+//	public long getMethodPid() {
+//		return myMethodPid;
+//	}
 
 	@Override
 	public int hashCode() {

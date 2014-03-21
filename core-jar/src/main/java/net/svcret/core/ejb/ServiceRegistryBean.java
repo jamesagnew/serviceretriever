@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
 
@@ -55,6 +56,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	private static volatile Map<Long, PersService> ourPidToServices;
 	private static volatile Map<Long, BasePersServiceVersion> ourPidToServiceVersions;
 	private static volatile Map<String, BasePersServiceVersion> ourProxyPathToServices;
+	private static volatile Map<String, BasePersServiceVersion> ourProxyPathFuzzyToServices;
 	private static Object ourRegistryLock = new Object();
 	private static final String STATE_KEY = ServiceRegistryBean.class.getName() + "_VERSION";
 
@@ -80,8 +82,8 @@ public class ServiceRegistryBean implements IServiceRegistry {
 	}
 
 	@Override
-	@Transactional(propagation=Propagation.REQUIRES_NEW)
-	public void deleteDomain(long thePid) throws UnexpectedFailureException {
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void deleteDomain(long thePid) {
 		PersDomain domain = myDao.getDomainByPid(thePid);
 		if (domain == null) {
 			throw new IllegalArgumentException("Unknown domain PID: " + thePid);
@@ -89,7 +91,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 
 		ourLog.info("DELETING domain with PID {} and ID {}", thePid, domain.getDomainId());
 
-//		domain.loadAllAssociations();
+		// domain.loadAllAssociations();
 
 		myDao.deleteDomain(domain);
 
@@ -98,7 +100,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	@Override
-	public void deleteHttpClientConfig(long thePid) throws UnexpectedFailureException, ProcessingException {
+	public void deleteHttpClientConfig(long thePid) throws ProcessingException {
 		PersHttpClientConfig config = myDao.getHttpClientConfig(thePid);
 		if (config == null) {
 			throw new ProcessingException("Unknown HTTP Client Config PID: " + thePid);
@@ -112,15 +114,15 @@ public class ServiceRegistryBean implements IServiceRegistry {
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	@Override
-	public void deleteMonitorRule(Long thePid) throws UnexpectedFailureException {
+	public void deleteMonitorRule(Long thePid) {
 		BasePersMonitorRule rule = myDao.getMonitorRule(thePid);
 		myDao.deleteMonitorRule(rule);
 		synchronizeCatalogChange();
 	}
 
-	@Transactional(propagation=Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	@Override
-	public void deleteService(long thePid) throws ProcessingException, UnexpectedFailureException {
+	public void deleteService(long thePid) throws ProcessingException {
 		PersService srv = myDao.getServiceByPid(thePid);
 		if (srv == null) {
 			throw new ProcessingException("Unknown service PID:" + thePid);
@@ -130,9 +132,9 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		synchronizeCatalogChange();
 	}
 
-	@Transactional(propagation=Propagation.REQUIRES_NEW)
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	@Override
-	public void deleteServiceVersion(long thePid) throws ProcessingException, UnexpectedFailureException {
+	public void deleteServiceVersion(long thePid) throws ProcessingException {
 		BasePersServiceVersion sv = myDao.getServiceVersionByPid(thePid);
 		if (sv == null) {
 			throw new ProcessingException("Unknown service version ID:" + thePid);
@@ -193,9 +195,6 @@ public class ServiceRegistryBean implements IServiceRegistry {
 			} catch (ProcessingException e) {
 				ourLog.error("Failed to auto-create method", e);
 				throw new InvocationFailedDueToInternalErrorException(e, "Failed to auto-create method '" + BaseDtoServiceVersion.METHOD_NAME_UNKNOWN + "'. Error was: " + e.getMessage());
-			} catch (UnexpectedFailureException e) {
-				ourLog.error("Failed to auto-create method", e);
-				throw new InvocationFailedDueToInternalErrorException(e, "Failed to auto-create method '" + BaseDtoServiceVersion.METHOD_NAME_UNKNOWN + "'. Error was: " + e.getMessage());
 			}
 			method = dbSvcVer.getMethod(BaseDtoServiceVersion.METHOD_NAME_UNKNOWN);
 			ourLog.info("Created new method '{}' and got PID {}", BaseDtoServiceVersion.METHOD_NAME_UNKNOWN, method.getPid());
@@ -223,14 +222,20 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		if (thePath == null) {
 			throw new IllegalArgumentException("Path can not be null");
 		}
-		synchronized (ourRegistryLock) {
-			return ourProxyPathToServices.get(thePath);
+		BasePersServiceVersion retVal = ourProxyPathToServices.get(thePath);
+		if (retVal == null) {
+			for (Entry<String, BasePersServiceVersion> next : ourProxyPathFuzzyToServices.entrySet()) {
+				if (thePath.startsWith(next.getKey())) {
+					return next.getValue();
+				}
+			}
 		}
+		return retVal;
 	}
 
 	@Override
 	public List<String> getValidPaths() {
-		List<String> retVal = new ArrayList<String>();
+		List<String> retVal = new ArrayList<>();
 
 		retVal.addAll(ourProxyPathToServices.keySet());
 		Collections.sort(retVal);
@@ -302,7 +307,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	@Override
-	public PersDomain saveDomain(PersDomain theDomain) throws UnexpectedFailureException {
+	public PersDomain saveDomain(PersDomain theDomain) {
 		// TODO: not new transaction
 		PersDomain retVal = myDao.saveDomain(theDomain);
 
@@ -348,7 +353,7 @@ public class ServiceRegistryBean implements IServiceRegistry {
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	@Override
-	public PersService saveService(PersService theService) throws UnexpectedFailureException {
+	public PersService saveService(PersService theService) {
 		PersService retVal = myDao.saveServiceInNewTransaction(theService);
 		synchronizeCatalogChange();
 		return retVal;
@@ -356,11 +361,11 @@ public class ServiceRegistryBean implements IServiceRegistry {
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	@Override
-	public BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theSv) throws UnexpectedFailureException, ProcessingException {
+	public BasePersServiceVersion saveServiceVersion(BasePersServiceVersion theSv) throws ProcessingException {
 		// reloadRegistryFromDatabase();
 		BasePersServiceVersion retVal = myDao.saveServiceVersionInNewTransaction(theSv);
 
-synchronizeCatalogChange();
+		synchronizeCatalogChange();
 		return retVal;
 	}
 
@@ -381,13 +386,18 @@ synchronizeCatalogChange();
 		mySvcHttpClient = theSvcHttpClient;
 	}
 
-	private void addProxyPath(Map<String, BasePersServiceVersion> pathToServiceVersions, Map<Long, BasePersServiceVersion> pidToServiceVersions, BasePersServiceVersion nextVersion, String nextProxyPath) {
+	private static void addProxyPath(Map<String, BasePersServiceVersion> pathToServiceVersions, Map<String, BasePersServiceVersion> pathFuzzyToServiceVersions, Map<Long, BasePersServiceVersion> pidToServiceVersions, BasePersServiceVersion nextVersion,
+			String nextProxyPath) {
 		pidToServiceVersions.put(nextVersion.getPid(), nextVersion);
 		if (pathToServiceVersions.containsKey(nextProxyPath)) {
-			ourLog.warn("Service version {} ({}/{}/{}) created duplicate proxy path '{}', so it will be ignored!", new Object[] { nextVersion.getPid(), nextVersion.getService().getDomain().getDomainId(), nextVersion.getService().getServiceId(), nextVersion.getVersionId(),
-					nextProxyPath });
+			ourLog.warn("Service version {} ({}/{}/{}) created duplicate proxy path '{}', so it will be ignored!", new Object[] { nextVersion.getPid(),
+					nextVersion.getService().getDomain().getDomainId(), nextVersion.getService().getServiceId(), nextVersion.getVersionId(), nextProxyPath });
 		} else {
 			pathToServiceVersions.put(nextProxyPath, nextVersion);
+			if (nextVersion.isAllowSubUrls()) {
+				pathFuzzyToServiceVersions.put(nextProxyPath, nextVersion);
+			}
+			
 		}
 	}
 
@@ -402,11 +412,12 @@ synchronizeCatalogChange();
 
 		long newVersion = myDao.getStateCounter(STATE_KEY);
 
-		Map<String, PersDomain> domainMap = new HashMap<String, PersDomain>();
-		Map<String, BasePersServiceVersion> pathToServiceVersions = new HashMap<String, BasePersServiceVersion>();
-		Map<Long, BasePersServiceVersion> pidToServiceVersions = new HashMap<Long, BasePersServiceVersion>();
-		Map<Long, PersDomain> pidToDomains = new HashMap<Long, PersDomain>();
-		Map<Long, PersService> pidToServices = new HashMap<Long, PersService>();
+		Map<String, PersDomain> domainMap = new HashMap<>();
+		Map<String, BasePersServiceVersion> pathToServiceVersions = new HashMap<>();
+		Map<String, BasePersServiceVersion> pathFuzzyToServiceVersions = new HashMap<>();
+		Map<Long, BasePersServiceVersion> pidToServiceVersions = new HashMap<>();
+		Map<Long, PersDomain> pidToDomains = new HashMap<>();
+		Map<Long, PersService> pidToServices = new HashMap<>();
 
 		Collection<PersDomain> domains = myDao.getAllDomains();
 		for (PersDomain nextDomain : domains) {
@@ -419,19 +430,19 @@ synchronizeCatalogChange();
 				for (BasePersServiceVersion nextVersion : nextService.getVersions()) {
 
 					if (nextVersion.isUseDefaultProxyPath()) {
-						addProxyPath(pathToServiceVersions, pidToServiceVersions, nextVersion, nextVersion.getDefaultProxyPath());
+						addProxyPath(pathToServiceVersions, pathFuzzyToServiceVersions, pidToServiceVersions, nextVersion, nextVersion.getDefaultProxyPath());
 					}
 
 					if (nextVersion.getExplicitProxyPath() != null && nextVersion.getExplicitProxyPath().startsWith("/")) {
-						addProxyPath(pathToServiceVersions, pidToServiceVersions, nextVersion, nextVersion.getExplicitProxyPath());
+						addProxyPath(pathToServiceVersions,pathFuzzyToServiceVersions,  pidToServiceVersions, nextVersion, nextVersion.getExplicitProxyPath());
 					}
-
+					
 				}
 			}
 
 		}
 
-		Map<String, PersUser> serviceUserMap = new HashMap<String, PersUser>();
+		Map<String, PersUser> serviceUserMap = new HashMap<>();
 		Collection<PersUser> users = myDao.getAllUsersAndInitializeThem();
 		for (PersUser nextUser : users) {
 			serviceUserMap.put(nextUser.getUsername(), nextUser);
@@ -445,6 +456,7 @@ synchronizeCatalogChange();
 			ourPidToServices = pidToServices;
 			ourPidToServiceVersions = pidToServiceVersions;
 			ourProxyPathToServices = pathToServiceVersions;
+			ourProxyPathFuzzyToServices = pathFuzzyToServiceVersions;
 			myCurrentVersion = newVersion;
 		}
 	}
@@ -454,10 +466,10 @@ synchronizeCatalogChange();
 		ourLog.info("State counter is now {}", newVersion);
 	}
 
-	private void synchronizeCatalogChange() throws UnexpectedFailureException {
+	private void synchronizeCatalogChange() {
 		if (!TransactionSynchronizationManager.isSynchronizationActive()) {
-//			reloadRegistryFromDatabase();
-//			catalogHasChanged();
+			// reloadRegistryFromDatabase();
+			// catalogHasChanged();
 		} else {
 			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
 				@Override

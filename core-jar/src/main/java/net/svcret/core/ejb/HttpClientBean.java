@@ -83,7 +83,7 @@ public class HttpClientBean implements IHttpClient {
 		mySimpleClientConMgr = null;
 	}
 
-	@Transactional(propagation=Propagation.NOT_SUPPORTED)
+	@Transactional(propagation = Propagation.NOT_SUPPORTED)
 	@Override
 	public SrBeanIncomingResponse get(String theUrl) throws ClientProtocolException, IOException {
 		Validate.notBlank(theUrl, "URL");
@@ -126,10 +126,17 @@ public class HttpClientBean implements IHttpClient {
 
 	}
 
-	@Transactional(propagation=Propagation.NOT_SUPPORTED)
+	@Transactional(propagation = Propagation.NOT_SUPPORTED)
 	@Override
-	public SrBeanIncomingResponse post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody, Map<String, List<String>> theHeaders,
-			String theContentType) {
+	public SrBeanIncomingResponse post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody,
+			Map<String, List<String>> theHeaders, String theContentType) {
+		return post(theClientConfig, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType, null);
+	}
+
+	@Transactional(propagation = Propagation.NOT_SUPPORTED)
+	@Override
+	public SrBeanIncomingResponse post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody,
+			Map<String, List<String>> theHeaders, String theContentType, String theUrlSuffix) {
 		if (theClientConfig.getConnectTimeoutMillis() <= 0) {
 			throw new IllegalArgumentException("ConnectTimeout may not be <= 0");
 		}
@@ -152,13 +159,13 @@ public class HttpClientBean implements IHttpClient {
 			} catch (ClientConfigException e) {
 				ourLog.error("Failed to initialize HTTP client", e);
 				SrBeanIncomingResponse retVal = new SrBeanIncomingResponse();
-				retVal.addFailedUrl(theUrlPool.getPreferredUrl(), "ServiceRetriever failed to initialize HTTP client, problem was: " + e.getMessage(), 0, "", "", 0,null);
+				retVal.addFailedUrl(theUrlPool.getPreferredUrl(), "ServiceRetriever failed to initialize HTTP client, problem was: " + e.getMessage(), 0, "", "", 0, null);
 				return retVal;
 			}
 			myClientConfigPidToClient.put(theClientConfig.getPid(), client);
 		}
 
-		return client.post(theClientConfig, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType);
+		return client.post(theClientConfig, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType, theUrlSuffix);
 	}
 
 	@PostConstruct
@@ -184,13 +191,20 @@ public class HttpClientBean implements IHttpClient {
 	}
 
 	private void doPost(SrBeanIncomingResponse theResponse, IResponseValidator theResponseValidator, Map<String, List<String>> theHeaders, HttpEntity postEntity, DefaultHttpClient client,
-			PersServiceVersionUrl theNextUrl, int theFailureRetries) {
+			PersServiceVersionUrl theNextUrl, int theFailureRetries, String theUrlSuffix) {
 		int failuresRemaining = theFailureRetries + 1;
 		for (;;) {
 
 			failuresRemaining--;
 
-			HttpPost post = new HttpPost(theNextUrl.getUrl());
+			String url;
+			if (theUrlSuffix != null) {
+				url = theNextUrl.getUrl() + theUrlSuffix;
+			} else {
+				url = theNextUrl.getUrl();
+			}
+
+			HttpPost post = new HttpPost(url);
 			post.setEntity(postEntity);
 			if (theHeaders != null) {
 				for (Entry<String, List<String>> next : theHeaders.entrySet()) {
@@ -222,9 +236,9 @@ public class HttpClientBean implements IHttpClient {
 
 				Map<String, List<String>> headerMap = toHeaderMap(resp.getAllHeaders());
 
-		        String statusLine = BasicLineFormatter.DEFAULT.formatStatusLine(null, resp.getStatusLine()).toString();
-		        theResponse.setStatusLine(statusLine);
-				
+				String statusLine = BasicLineFormatter.DEFAULT.formatStatusLine(null, resp.getStatusLine()).toString();
+				theResponse.setStatusLine(statusLine);
+
 				theResponse.setBody(body);
 				theResponse.setCode(statusCode);
 				theResponse.setContentType(contentType);
@@ -247,7 +261,7 @@ public class HttpClientBean implements IHttpClient {
 
 					theResponse.setSuccessfulUrl(theNextUrl);
 					ourLog.debug("Invoked service at URL[{}] in {}ms", theNextUrl, delay);
-					
+
 					return;
 
 				}
@@ -261,7 +275,7 @@ public class HttpClientBean implements IHttpClient {
 				if (delay == 0) {
 					delay = System.currentTimeMillis() - start;
 				}
-				theResponse.addFailedUrl(theNextUrl, Messages.getString("HttpClientBean.postClientProtocolException", e.toString()), 0, null, null, delay,null);
+				theResponse.addFailedUrl(theNextUrl, Messages.getString("HttpClientBean.postClientProtocolException", e.toString()), 0, null, null, delay, null);
 				theResponse.setResponseTime(System.currentTimeMillis() - start);
 				return;
 			} catch (Exception e) {
@@ -405,7 +419,7 @@ public class HttpClientBean implements IHttpClient {
 		}
 
 		public SrBeanIncomingResponse post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody,
-				Map<String, List<String>> theHeaders, String theContentType) {
+				Map<String, List<String>> theHeaders, String theContentType, String theUrlSuffix) {
 			HttpParams params = createHttpParams(theClientConfig);
 
 			ContentType contentType = ContentType.create(theContentType, ourDefaultCharset);
@@ -417,11 +431,11 @@ public class HttpClientBean implements IHttpClient {
 			PersServiceVersionUrl url = theUrlPool.getPreferredUrl();
 			int failureRetries = theClientConfig.getFailureRetriesBeforeAborting();
 
-			doPost(retVal, theResponseValidator, theHeaders, postEntity, client, url, failureRetries);
+			doPost(retVal, theResponseValidator, theHeaders, postEntity, client, url, failureRetries, theUrlSuffix);
 
 			if (retVal.getSuccessfulUrl() == null) {
 				for (PersServiceVersionUrl nextUrl : theUrlPool.getAlternateUrls()) {
-					doPost(retVal, theResponseValidator, theHeaders, postEntity, client, nextUrl, failureRetries);
+					doPost(retVal, theResponseValidator, theHeaders, postEntity, client, nextUrl, failureRetries, theUrlSuffix);
 					if (retVal.getSuccessfulUrl() != null) {
 						break;
 					}

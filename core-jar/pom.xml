@@ -251,7 +251,7 @@
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-validator</artifactId>
-			<version>${hibernate_version}</version>
+			<version>${hibernate_validator_version}</version>
 		</dependency>
 		<dependency>
 			<groupId>javax.transaction</groupId>

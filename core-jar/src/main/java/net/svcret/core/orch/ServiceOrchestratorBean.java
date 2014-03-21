@@ -45,6 +45,7 @@ import net.svcret.core.ex.InvocationResponseFailedException;
 import net.svcret.core.ex.SecurityFailureException;
 import net.svcret.core.ex.InvalidRequestException.IssueEnum;
 import net.svcret.core.invoker.IServiceInvoker;
+import net.svcret.core.invoker.crud.IServiceInvokerRest;
 import net.svcret.core.invoker.hl7.IServiceInvokerHl7OverHttp;
 import net.svcret.core.invoker.hl7.ServiceInvokerHl7OverHttp;
 import net.svcret.core.invoker.jsonrpc.IServiceInvokerJsonRpc20;
@@ -92,6 +93,9 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 	@Autowired
 	private IServiceInvokerJsonRpc20 myServiceInvokerJsonRpc20;
+
+	@Autowired
+	private IServiceInvokerRest myServiceInvokerRest;
 
 	@Autowired
 	private IServiceInvokerHl7OverHttp myServiceInvokerHl7OverHttp;
@@ -458,6 +462,9 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		case VIRTUAL:
 			svcInvoker = myServiceInvokerVirtual;
 			break;
+		case REST:
+			svcInvoker = myServiceInvokerRest;
+			break;
 		}
 		return svcInvoker;
 	}
@@ -469,6 +476,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		Map<String, List<String>> headers = theProcessedRequest.getMethodHeaders();
 		String contentType = theProcessedRequest.getMethodContentType();
 		String contentBody = theProcessedRequest.getMethodRequestBody();
+		String urlSuffix = theProcessedRequest.getUrlSuffix();
 
 		IServiceInvoker invoker = getServiceInvoker(method.getServiceVersion());
 		IResponseValidator responseValidator = invoker.provideInvocationResponseValidator(serviceVersion);
@@ -490,7 +498,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 		PersHttpClientConfig clientConfig = serviceVersion.getHttpClientConfig();
 		SrBeanIncomingResponse httpResponse;
-		httpResponse = myHttpClient.post(clientConfig, responseValidator, urlPool, contentBody, headers, contentType);
+		httpResponse = myHttpClient.post(clientConfig, responseValidator, urlPool, contentBody, headers, contentType, urlSuffix);
 		markUrlsFailed(httpResponse.getFailedUrls());
 
 		if (httpResponse.getSuccessfulUrl() == null) {
@@ -572,7 +580,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			}
 
 			PersMethod method = results.getMethodDefinition();
-			List<AuthorizationRequestBean> authRequests = new ArrayList<ISecurityService.AuthorizationRequestBean>();
+			List<AuthorizationRequestBean> authRequests = new ArrayList<>();
 			for (PersBaseServerAuth<?, ?> nextServerAuth : theServerAuths) {
 				ICredentialGrabber credentials;
 				if (nextServerAuth instanceof PersHttpBasicServerAuth) {
@@ -670,7 +678,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			throw new IllegalArgumentException("Unknown service version " + theServiceVersionPid);
 		}
 
-		ArrayList<SidechannelOrchestratorResponseBean> retVal = new ArrayList<IServiceOrchestrator.SidechannelOrchestratorResponseBean>();
+		ArrayList<SidechannelOrchestratorResponseBean> retVal = new ArrayList<>();
 
 		for (PersServiceVersionUrl nextUrl : svcVer.getUrls()) {
 			ourLog.debug("About to perform sidechannel request for URL: {} / {}", nextUrl.getPid(), nextUrl.getUrl());

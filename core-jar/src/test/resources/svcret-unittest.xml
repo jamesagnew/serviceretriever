@@ -24,6 +24,7 @@
 	<bean id="myInvokerHl7OverHttp" class="net.svcret.core.invoker.hl7.ServiceInvokerHl7OverHttp" />
 	<bean id="myInvokerJsonRpc20" class="net.svcret.core.invoker.jsonrpc.JsonRpc20ServiceInvoker" />
 	<bean id="myInvokerVirtual" class="net.svcret.core.invoker.virtual.ServiceInvokerVirtual" />
+	<bean id="myInvokerRest" class="net.svcret.core.invoker.crud.ServiceInvokerRest" />
 
 	<bean id="myConfigService" class="net.svcret.core.ejb.ConfigServiceBean">
 		<property name="nodeId" value="dev1"/>

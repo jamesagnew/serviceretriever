@@ -17,5 +17,8 @@ public interface IHttpClient {
 	SrBeanIncomingResponse getOneTime(PersHttpClientConfig theHttpClientConfig, String theUrl) throws ClientProtocolException, IOException, ClientConfigException;
 
 	SrBeanIncomingResponse post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody, Map<String, List<String>> theHeaders, String theContentType);
+
+	SrBeanIncomingResponse post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody, Map<String, List<String>> theHeaders,
+			String theContentType, String theUrlSuffix);
 	
 }

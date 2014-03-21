@@ -30,6 +30,7 @@ import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.DtoHttpBasicAuthServerSecurity;
 import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
+import net.svcret.admin.shared.model.DtoServiceVersionRest;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoServiceVersionVirtual;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
@@ -114,13 +115,13 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		ServiceOrchestratorBeanIntegrationTest b = new ServiceOrchestratorBeanIntegrationTest();
 		ServiceOrchestratorBeanIntegrationTest.beforeClass();
 		b.before();
-		
+
 		b.mySvcVer.setAuditLogEnable(false);
 		ourAdminSvc.saveServiceVersion(b.d0.getPid(), b.d0s0.getPid(), b.mySvcVer, new ArrayList<GResource>());
-		
+
 		b.testSoap11GoodRequest();
 	}
-	
+
 	@Test
 	public void testSoap11GoodRequest() throws Exception {
 
@@ -200,6 +201,105 @@ public class ServiceOrchestratorBeanIntegrationTest {
 
 	}
 
+	/**
+	 * This caused an issue at one point- I believe it was actually a hibernate bug, but
+	 * the Pers
+	 */
+	@Test
+	public void testSoap11UnknownMethod() throws Exception {
+
+		/*
+		 * Make request
+		 */
+
+		//@formatter:off
+		String request = "<soapenv:Envelope xmlns:net=\"net:svcret:demo\" xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
+				+ "   <soapenv:Header>\n"
+				+ "      <wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\" xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\">\n"
+				+ "         <wsse:UsernameToken wsu:Id=\"UsernameToken-1\">\n" 
+				+ "            <wsse:Username>test</wsse:Username>\n"
+				+ "            <wsse:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">admin</wsse:Password>\n"
+				+ "            <wsse:Nonce EncodingType=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary\">P8ypSWlCHRqR4T1ABYHHbA==</wsse:Nonce>\n"
+				+ "            <wsu:Created>2013-04-20T21:18:55.025Z</wsu:Created>\n" 
+				+ "         </wsse:UsernameToken>\n" 
+				+ "      </wsse:Security>\n" 
+				+ "   </soapenv:Header>\n"
+				+ "   <soapenv:Body>\n" 
+				+ "      <net:d0s0v0m0AAAAAAAAAA>\n" 
+				+ "          <arg0>FAULT</arg0>\n" 
+				+ "          <arg1>?</arg1>\n" 
+				+ "      </net:d0s0v0m0AAAAAAAAAA>\n" 
+				+ "   </soapenv:Body>\n"
+				+ "</soapenv:Envelope>";
+
+		String response = "<S:Envelope xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" 
+				+ "   <S:Body>\n" 
+				+ "      <ns2:addStringsResponse xmlns:ns2=\"net:svcret:demo\">\n"
+				+ "         <return>aFAULT?</return>\n" 
+				+ "      </ns2:addStringsResponse>\n" 
+				+ "   </S:Body>\n" 
+				+ "</S:Envelope>";
+		//@formatter:on
+
+		IResponseValidator theResponseValidator = any();
+		UrlPoolBean theUrlPool = any();
+		String theContentBody = any();
+		Map<String, List<String>> theHeaders = any();
+		String theContentType = any();
+		SrBeanIncomingResponse respBean = new SrBeanIncomingResponse();
+		respBean.setCode(200);
+		respBean.setBody(response);
+		respBean.setContentType("text/xml");
+		respBean.setResponseTime(100);
+		respBean.setSuccessfulUrl(myUrl);
+		respBean.setHeaders(new HashMap<String, List<String>>());
+		PersHttpClientConfig httpClient = any();
+		when(ourHttpClientMock.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
+
+		// ITransactionLogger transactionLogger =
+		// mock(ITransactionLogger.class);
+		// ourOrchSvc.setTransactionLogger(transactionLogger);
+
+		SrBeanOutgoingResponse resp = provideNull(); // avoid a warning about
+														// potential null
+		String query = "";
+		Reader reader = new StringReader(request);
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
+		req.setRequestType(RequestType.POST);
+		req.setRequestHostIp("127.0.0.1");
+		req.setPath("/d0/d0s0/d0s0v0");
+		req.setQuery(query);
+		req.setInputReader(reader);
+		req.setRequestTime(new Date());
+		req.setRequestHeaders(new HashMap<String, List<String>>());
+
+		try {
+			ourOrchSvc.handleServiceRequest(req);
+			fail();
+		} catch (InvalidRequestException e) {
+			// expected
+		}
+
+		ourTxTemplate.execute(new TransactionCallbackWithoutResult() {
+			@Override
+			protected void doInTransactionWithoutResult(TransactionStatus status) {
+				try {
+					ourStatsSvc.flushStatus();
+				} catch (Exception e) {
+					throw new Error(e);
+				}
+			}
+		});
+
+		ModelUpdateRequest req2 = new ModelUpdateRequest();
+		ModelUpdateResponse resp2 = ourAdminSvc.loadModelUpdate(req2);
+		
+		BaseDtoServiceVersion svcVer = resp2.getDomainList().getServiceVersionByPid(mySvcVerPid);
+		
+		ourAdminSvc.saveServiceVersion(d0.getPid(), d0s0.getPid(), svcVer, new ArrayList<GResource>());
+		
+	}
+
 	private static SrBeanOutgoingResponse provideNull() {
 		return null;
 	}
@@ -210,7 +310,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		ModelUpdateResponse resp = ourAdminSvc.loadModelUpdate(new ModelUpdateRequest());
 		BaseDtoServiceVersion svcVer = resp.getDomainList().getServiceVersionByPid(mySvcVerPid);
 		assertEquals(1, svcVer.getServerSecurityList().size());
-		
+
 		/*
 		 * Make request
 		 */
@@ -346,7 +446,8 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		respBean.setResponseTime(100);
 		respBean.setSuccessfulUrl(myUrl);
 		respBean.setHeaders(new HashMap<String, List<String>>());
-		when(ourHttpClientMock.post(any(PersHttpClientConfig.class), any(IResponseValidator.class), any(UrlPoolBean.class), contentBodyCaptor.capture(), any(Map.class), any(String.class))).thenReturn(respBean);
+		when(ourHttpClientMock.post(any(PersHttpClientConfig.class), any(IResponseValidator.class), any(UrlPoolBean.class), contentBodyCaptor.capture(), any(Map.class), any(String.class)))
+				.thenReturn(respBean);
 
 		// ITransactionLogger transactionLogger =
 		// mock(ITransactionLogger.class);
@@ -1025,7 +1126,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		DtoHttpClientConfig hc = clientConfigList.getConfigByPid(ourAdminSvc.getDefaultHttpClientConfigPid());
 		hc.setUrlSelectionPolicy(UrlSelectionPolicy.RR_STICKY_SESSION);
 		hc.setStickySessionCookieForSessionId("JSESSIONID");
-		ourAdminSvc.saveHttpClientConfig(hc, null,null,null,null);
+		ourAdminSvc.saveHttpClientConfig(hc, null, null, null, null);
 
 		IResponseValidator theResponseValidator = any();
 		UrlPoolBean theUrlPool = any();
@@ -1067,8 +1168,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		newEntityManager();
 
 		/*
-		 * Second query, no sesion cookie still so we should round robin the
-		 * URLs. This one will return a cookie though
+		 * Second query, no sesion cookie still so we should round robin the URLs. This one will return a cookie though
 		 */
 
 		ireq.setInputReader(new StringReader(request));
@@ -1093,12 +1193,11 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		assertEquals(myUrl2.getPid(), stickySessions.iterator().next().getUrl().getPid());
 		assertEquals(requestTime, stickySessions.iterator().next().getCreated());
 		assertEquals(requestTime, stickySessions.iterator().next().getLastAccessed());
-		
+
 		Thread.sleep(10); // make sure request times are different
 
 		/*
-		 * Third query, should use the second URL because we have a sticky
-		 * session now
+		 * Third query, should use the second URL because we have a sticky session now
 		 */
 
 		ireq.setInputReader(new StringReader(request));
@@ -1127,7 +1226,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 				ourStatsSvc.flushStatus();
 			}
 		});
-		
+
 		stickySessions = ourDao.getAllStickySessions();
 		assertEquals(1, stickySessions.size());
 		assertEquals("1.2.3.4", stickySessions.iterator().next().getRequestingIp());
@@ -1135,12 +1234,11 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		assertEquals(requestTime, stickySessions.iterator().next().getCreated());
 		assertEquals(requestTime2, stickySessions.iterator().next().getLastAccessed());
 
-		
 	}
 
 	@BeforeClass
 	public static void beforeClass() {
-		AdminServiceBeanIntegrationTest.beforeClass();		
+		AdminServiceBeanIntegrationTest.beforeClass();
 	}
 
 	@AfterClass
@@ -1163,14 +1261,13 @@ public class ServiceOrchestratorBeanIntegrationTest {
 			}
 		});
 
-		
 		AdminServiceBeanIntegrationTest.deleteEverything();
 	}
 
 	@Before
 	public void before() throws Exception {
 		ourLog.info("***** Starting next test *******");
-		
+
 		System.setProperty(BasePersObject.NET_SVCRET_UNITTESTMODE, "true");
 		AdminServiceBeanIntegrationTest.deleteEverything();
 
@@ -1210,7 +1307,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 					PersUser user = ourDao.getOrCreateUser(myAuthHost, "test");
 					user.setPassword("admin");
 					user.setAllowAllDomains(true);
-					user.setAllowSourceIpsAsStrings(Arrays.asList(new String[] {"127.0.0.1", "1.2.3.4"}));
+					user.setAllowSourceIpsAsStrings(Arrays.asList(new String[] { "127.0.0.1", "1.2.3.4" }));
 					ourDao.saveServiceUser(user);
 				} catch (ProcessingException e) {
 					throw new Error(e);
@@ -1228,7 +1325,8 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		d0 = ourAdminSvc.addDomain(new DtoDomain("d0", "d0"));
 		d0s0 = ourAdminSvc.addService(d0.getPid(), new GService("d0s0", "d0s0", true));
 
-		mySvcVer = ourAdminSvc.saveServiceVersion(d0.getPid(), d0s0.getPid(), new DtoServiceVersionSoap11("d0s0v0", "http://wsdlurl", ourAdminSvc.getDefaultHttpClientConfigPid()), new ArrayList<GResource>());
+		mySvcVer = ourAdminSvc.saveServiceVersion(d0.getPid(), d0s0.getPid(), new DtoServiceVersionSoap11("d0s0v0", "http://wsdlurl", ourAdminSvc.getDefaultHttpClientConfigPid()),
+				new ArrayList<GResource>());
 		mySvcVer.setServerSecurityMode(ServerSecurityModeEnum.REQUIRE_ANY);
 		GServiceMethod d0s0v0m0 = new GServiceMethod();
 		d0s0v0m0.setName("d0s0v0m0");
@@ -1294,7 +1392,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		});
 
 		myMethod = mySvcVer.getMethodList().get(0);
-//		myAuthHost = (PersAuthenticationHostLocalDatabase) ourDao.getAllAuthenticationHosts().iterator().next();
+		// myAuthHost = (PersAuthenticationHostLocalDatabase) ourDao.getAllAuthenticationHosts().iterator().next();
 		mySvcVerPid = mySvcVer.getPid();
 
 		ourTxTemplate.execute(new TransactionCallbackWithoutResult() {
@@ -1396,10 +1494,10 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		mur.addVersionToLoadStats(http.getPid());
 		mur.addVersionMethodToLoadStats(http.getMethodList().get(0).getPid());
 		http = (DtoServiceVersionHl7OverHttp) ourAdminSvc.loadModelUpdate(mur).getDomainList().getServiceVersionByPid(http.getPid());
-		
+
 		assertEquals(req1date, http.getLastSuccessfulInvocation());
 		assertEquals(req1date, http.getMethodList().get(0).getLastSuccessfulInvocation());
-		
+
 		/*
 		 * One more invocation
 		 */
@@ -1422,7 +1520,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		});
 
 		http = (DtoServiceVersionHl7OverHttp) ourAdminSvc.loadModelUpdate(mur).getDomainList().getServiceVersionByPid(http.getPid());
-		
+
 		assertEquals(req2date, http.getLastSuccessfulInvocation());
 		assertEquals(req2date, http.getMethodList().get(0).getLastSuccessfulInvocation());
 
@@ -1440,4 +1538,89 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		//
 	}
 
+	
+	
+	
+	
+	
+	
+	
+	
+	@Test
+	public void testRestGoodRequest() throws Exception {
+		newEntityManager();
+
+		DtoServiceVersionRest http = new DtoServiceVersionRest();
+		http.setId("d0s0v1");
+		http.setName("d0s0v1");
+		http.setHttpClientConfigPid(ourAdminSvc.getDefaultHttpClientConfigPid());
+		http.getUrlList().add(new GServiceVersionUrl("url1", "http://example.com/foo"));
+		http.setRewriteUrls(true);
+		http = ourAdminSvc.saveServiceVersion(d0.getPid(), d0s0.getPid(), http, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		ourSvcReg.reloadRegistryFromDatabase();
+
+		newEntityManager();
+
+		String request = "{ \"reqUrl\" : \"http://svcret.com/d0/d0s0/d0s0v1/Resource/1?a=b\" }";
+		String response = "{ \"respUrl\" : \"http://example.com/foo/Resource/1?c=d\" }";
+
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
+		req.setRequestType(RequestType.POST);
+		req.setRequestHostIp("127.0.0.1");
+		req.setPath("/d0/d0s0/d0s0v1/Resource/1");
+		req.setBase("http://svcret.com");
+		req.setQuery("?param1=value1&param2=value2");
+		req.setInputReader(new StringReader(request));
+		Date req1date = new Date();
+		req.setRequestTime(req1date);
+		req.setRequestHeaders(new HashMap<String, List<String>>());
+		req.getRequestHeaders().put("Content-Type", Collections.singletonList("application/json"));
+
+		// ******
+		// NB: don't reorder these
+		PersHttpClientConfig httpClient = any();
+		IResponseValidator theResponseValidator = any();
+		UrlPoolBean urlPool = any();
+		ArgumentCaptor<String> cbCaptor = ArgumentCaptor.forClass(String.class);
+		String theContentBody = cbCaptor.capture();
+		Map<String, List<String>> theHeaders = any();
+		String theContentType = any();
+		ArgumentCaptor<String> suffixCaptor = ArgumentCaptor.forClass(String.class);
+		String suffix = suffixCaptor.capture();
+		// NB: don't reorder these
+		// ******
+		
+		SrBeanIncomingResponse respBean = new SrBeanIncomingResponse();
+		respBean.setCode(200);
+		respBean.setBody(response);
+		respBean.setContentType("application/hl7-v2");
+		respBean.setResponseTime(100);
+		respBean.setSuccessfulUrl(ourDao.getServiceVersionUrlByPid(http.getUrlList().get(0).getPid()));
+		respBean.setHeaders(new HashMap<String, List<String>>());
+		when(ourHttpClientMock.post(httpClient, theResponseValidator, urlPool, theContentBody, theHeaders, theContentType, suffix)).thenReturn(respBean);
+
+		ourOrchSvc.handleServiceRequest(req);
+
+		ourTxTemplate.execute(new TransactionCallbackWithoutResult() {
+			@Override
+			protected void doInTransactionWithoutResult(TransactionStatus status) {
+				try {
+					ourSvcReg.reloadRegistryFromDatabase();
+					ourStatsSvc.flushStatus();
+				} catch (Exception e) {
+					throw new Error(e);
+				}
+			}
+		});
+
+		String value = suffixCaptor.getValue();
+		assertEquals("/Resource/1?param1=value1&param2=value2", value);
+
+		assertThat(cbCaptor.getValue(), StringContains.containsString("http://svcret.com/d0/d0s0/d0s0v1/Resource/1?c=d"));
+		
+	}
+	
 }

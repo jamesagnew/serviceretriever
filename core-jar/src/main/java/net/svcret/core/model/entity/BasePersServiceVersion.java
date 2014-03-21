@@ -235,6 +235,14 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 			urlsChanged();
 		}
 	}
+	
+	/**
+	 * Should URLs with paths below (i.e. even longer) the target URL for this service be passed to the service
+	 */
+	public boolean isAllowSubUrls() {
+		return false;
+	}
+	
 
 	@Override
 	public boolean canInheritKeepNumRecentTransactions() {

@@ -1,5 +1,6 @@
 package net.svcret.app.beans;
 
+import java.io.File;
 import java.io.IOException;
 
 import net.svcret.core.api.IServiceOrchestrator;
@@ -22,9 +23,17 @@ public class AdminServerBean extends BaseServerBean {
 
 	private Resource myWar;
 
+	private String myBaseTempDir;
+
 	@Required
 	public void setJaasConfig(String theConfig) {
 		System.setProperty("java.security.auth.login.config", theConfig);
+	}
+
+	@Required
+	public void setBaseTempDir(String theDir) {
+		myBaseTempDir = theDir;
+		new File(myBaseTempDir).mkdirs();
 	}
 
 	@Required
@@ -39,6 +48,7 @@ public class AdminServerBean extends BaseServerBean {
 	@Override
 	protected void configureServerBeforeStarting() throws Exception {
 		WebAppContext adminCtx = new WebAppContext();
+		adminCtx.setAttribute(WebAppContext.BASETEMPDIR, myBaseTempDir);
 		adminCtx.setWar("file:" + myWar.getFile().getAbsolutePath());
 		adminCtx.setDescriptor("file:");
 		adminCtx.setContextPath("/");

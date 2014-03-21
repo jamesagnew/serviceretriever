@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -26,6 +27,7 @@ import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
 import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
 import net.svcret.admin.shared.model.BaseDtoDashboardObject;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
+import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.DtoAuthenticationHostLocalDatabase;
 import net.svcret.admin.shared.model.DtoConfig;
 import net.svcret.admin.shared.model.DtoDomain;
@@ -36,6 +38,7 @@ import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoPropertyCapture;
 import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
+import net.svcret.admin.shared.model.DtoServiceVersionRest;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoServiceVersionThrottle;
 import net.svcret.admin.shared.model.GMonitorRuleList;
@@ -91,6 +94,7 @@ import net.svcret.core.throttle.IThrottlingService;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.hamcrest.Matchers;
+import org.hamcrest.core.StringContains;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -975,7 +979,8 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 		DtoAuthenticationHostLocalDatabase authHost = new DtoAuthenticationHostLocalDatabase();
 		authHost.setModuleId("AUTHHOST");
 		authHost.setModuleName("AUTHHOST");
-		BaseDtoAuthenticationHost auth = ourAdminSvc.saveAuthenticationHost(authHost).getAuthHostById("AUTHHOST");
+		DtoAuthenticationHostList saveAuthenticationHost = ourAdminSvc.saveAuthenticationHost(authHost);
+		BaseDtoAuthenticationHost auth = saveAuthenticationHost.getAuthHostById("AUTHHOST");
 
 		authHost = new DtoAuthenticationHostLocalDatabase();
 		authHost.setModuleId("AUTHHOST2");
@@ -1174,6 +1179,51 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 
 	}
 
+	
+	@Test
+	public void testLoadAndSaveSvcVerRest() throws Exception {
+
+		newEntityManager();
+
+		DtoDomain d1 = ourAdminSvc.addDomain(new DtoDomain("asv_did", "asv_did"));
+		GService d1s1 = ourAdminSvc.addService(d1.getPid(), createTestService());
+
+		newEntityManager();
+
+		DtoServiceVersionRest d1s1v1 = new DtoServiceVersionRest();
+		d1s1v1.setActive(true);
+		d1s1v1.setId("ASV_SV1");
+		d1s1v1.setName("ASV_SV1_Name");
+		d1s1v1.setHttpClientConfigPid(ourAdminSvc.getDefaultHttpClientConfigPid());
+		d1s1v1.setRewriteUrls(true);
+		d1s1v1.setAcceptableRequestContentTypes(new HashSet<String>());
+		d1s1v1.setAcceptableResponseContentTypes(new HashSet<String>());
+		d1s1v1.getAcceptableRequestContentTypes().add("ct1");
+		d1s1v1.getAcceptableRequestContentTypes().add("ct2");
+		d1s1v1.getAcceptableResponseContentTypes().add("ct3");
+		d1s1v1.getAcceptableResponseContentTypes().add("ct4");
+		
+		List<GResource> resources = new ArrayList<>();
+		resources.add(new GResource(HTTP_FOO, "text/xml", "contents1"));
+		resources.add(new GResource(HTTP_BAR, "text/xml", "contents2"));
+
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", HTTP_URL1));
+		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", HTTP_URL2));
+
+		d1s1v1 = ourAdminSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
+
+		newEntityManager();
+
+		GSoap11ServiceVersionAndResources copy = ourAdminSvc.loadServiceVersion(d1s1v1.getPid());
+		DtoServiceVersionRest svcVer = (DtoServiceVersionRest) copy.getServiceVersion();
+		assertTrue(svcVer.isRewriteUrls());
+		assertThat(svcVer.getAcceptableRequestContentTypes().toString(), StringContains.containsString("ct1"));
+		assertThat(svcVer.getAcceptableRequestContentTypes().toString(), StringContains.containsString("ct2"));
+		assertThat(svcVer.getAcceptableResponseContentTypes().toString(), StringContains.containsString("ct3"));
+		assertThat(svcVer.getAcceptableResponseContentTypes().toString(), StringContains.containsString("ct4"));
+
+	}
+	
 	@Test
 	public void testLoadAndSaveSvcVerThrottle() throws Exception {
 
@@ -1956,6 +2006,9 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 		ModelUpdateRequest request = new ModelUpdateRequest();
 		request.setLoadAuthHosts(true);
 		for (BaseDtoAuthenticationHost next : ourAdminSvc.loadModelUpdate(request).getAuthenticationHostList()) {
+			if (next.getModuleId().equals("DEFAULT")) {
+				continue;
+			}
 			ourAdminSvc.deleteAuthenticationHost(next.getPid());
 		}
 		

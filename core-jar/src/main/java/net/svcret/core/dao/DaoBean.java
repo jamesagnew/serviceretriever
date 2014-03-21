@@ -89,6 +89,7 @@ import net.svcret.core.model.entity.PersUserRecentMessage;
 import net.svcret.core.model.entity.PersUserServiceVersionMethodPermission;
 import net.svcret.core.model.entity.PersUserStatus;
 import net.svcret.core.model.entity.Queries;
+import net.svcret.core.model.entity.crud.PersServiceVersionRest;
 import net.svcret.core.model.entity.hl7.PersServiceVersionHl7OverHttp;
 import net.svcret.core.model.entity.jsonrpc.PersServiceVersionJsonRpc20;
 import net.svcret.core.model.entity.soap.PersServiceVersionSoap11;
@@ -617,6 +618,9 @@ public class DaoBean implements IDao {
 		case VIRTUAL:
 			retVal = new PersServiceVersionVirtual();
 			break;
+		case REST:
+			retVal = new PersServiceVersionRest();
+			break;
 		}
 
 		if (retVal == null) {
@@ -950,7 +954,7 @@ public class DaoBean implements IDao {
 		}
 
 		for (PersMethodStatus next : myEntityManager.createQuery("SELECT c FROM " + PersMethodStatus.class.getSimpleName() + " c", PersMethodStatus.class).getResultList()) {
-			statusesBean.getMethodPidToStatus().put(next.getMethodPid(), next);
+			statusesBean.getMethodPidToStatus().put(next.getMethod().getPid(), next);
 		}
 
 		List<PersMonitorRuleFiring> activeRuleFailures = getAllMonitorRuleFiringsWhichAreActive();
@@ -1182,9 +1186,10 @@ public class DaoBean implements IDao {
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void saveMethodStatuses(List<PersMethodStatus> theMethodStatuses) {
 		for (PersMethodStatus next : theMethodStatuses) {
-			PersMethodStatus existing = myEntityManager.find(PersMethodStatus.class, new PersMethodStatusPk(next.getMethod()));
+//			PersMethodStatus existing = myEntityManager.find(PersMethodStatus.class, new PersMethodStatusPk(next.getMethod()));
+			PersMethodStatus existing = myEntityManager.find(PersMethodStatus.class, next.getMethod().getPid());
 			if (existing == null) {
-				myEntityManager.merge(next);
+				myEntityManager.persist(next);
 			} else {
 				existing.merge(next);
 				myEntityManager.merge(existing);

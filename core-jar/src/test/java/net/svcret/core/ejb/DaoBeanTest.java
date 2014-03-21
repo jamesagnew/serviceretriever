@@ -512,6 +512,7 @@ public class DaoBeanTest extends BaseJpaTest {
 
 		newEntityManager();
 
+		host = mySvc.getOrCreateAuthenticationHostLocalDatabase("mid");
 		host.setKeepNumRecentTransactionsFault(5);
 		host.setKeepNumRecentTransactionsFail(6);
 

@@ -76,6 +76,7 @@
 	<bean id="myInvokerJsonRpc20" class="net.svcret.core.invoker.jsonrpc.JsonRpc20ServiceInvoker" />
 	<bean id="myInvokerSoap11" class="net.svcret.core.invoker.soap.ServiceInvokerSoap11" />
 	<bean id="myInvokerVirtual" class="net.svcret.core.invoker.virtual.ServiceInvokerVirtual" />
+	<bean id="myInvokerRest" class="net.svcret.core.invoker.crud.ServiceInvokerRest" />
 
 	<bean id="myPropertyCaptureService" class="net.svcret.core.propcap.PropertyCaptureBean" />
 	<bean id="myThrottleService" class="net.svcret.core.throttle.ThrottlingService" />

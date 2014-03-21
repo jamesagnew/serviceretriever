@@ -20,6 +20,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
 import net.svcret.admin.api.UnexpectedFailureException;
@@ -32,12 +33,16 @@ import net.svcret.core.status.RuntimeStatusQueryBean.StatsAccumulator;
 
 import org.apache.commons.lang3.Validate;
 
-@Table(name = "PX_SVC_VER_METHOD")
+@Table(name = "PX_SVC_VER_METHOD", uniqueConstraints= {@UniqueConstraint(columnNames= {"SVC_VERSION_PID", "NAME"}, name="CONS_METHOD_VERNAME")})
 @Entity
 public class PersMethod extends BasePersObject {
 
 	private static final long serialVersionUID = 1L;
 
+	/*
+	 * This is disabled now because invocation stats don't actually have
+	 * a FK relationship to the method
+	 */
 //	@OneToMany(fetch=FetchType.LAZY, cascade= {CascadeType.REMOVE}, orphanRemoval=true, mappedBy="myPk.myMethod")
 //	private Collection<PersInvocationMethodSvcverStats> myInvocationStats;
 
@@ -59,7 +64,7 @@ public class PersMethod extends BasePersObject {
 	@Enumerated(EnumType.STRING)
 	private MethodSecurityPolicyEnum mySecurityPolicy=MethodSecurityPolicyEnum.getDefault();
 
-	@OneToOne(cascade={CascadeType.REMOVE}, fetch=FetchType.LAZY, orphanRemoval=true, mappedBy="myPk.myMethod")
+	@OneToOne(cascade={}, fetch=FetchType.LAZY, orphanRemoval=true, mappedBy="myMethod")
 	private PersMethodStatus myStatus;
 	
 	@ManyToOne()
