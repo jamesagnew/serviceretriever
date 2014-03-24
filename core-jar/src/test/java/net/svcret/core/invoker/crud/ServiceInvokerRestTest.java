@@ -52,6 +52,7 @@ public class ServiceInvokerRestTest {
 
 		PersServiceVersionRest svcVer = mock(PersServiceVersionRest.class);
 		when(svcVer.getPid()).thenReturn(111L);
+		when(svcVer.getDefaultProxyPath()).thenReturn("/d0/d0s0/d0s0v0");
 		
 		PersServiceVersionRest dbSvcVer = new PersServiceVersionRest();
 		dbSvcVer.setRewriteUrls(true);
@@ -60,7 +61,7 @@ public class ServiceInvokerRestTest {
 		when(myServiceRegistry.saveServiceVersion(dbSvcVer)).thenReturn(dbSvcVer);
 		
 		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
-		req.setPath("/Some/System");
+		req.setPath("/d0/d0s0/d0s0v0/Some/System");
 		req.setQuery("");
 		req.addHeader("Content-Type", "application/json; charset=UTF-8");
 		req.setRequestType(RequestType.POST);

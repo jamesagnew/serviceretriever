@@ -261,7 +261,8 @@ public class JsonRpc20ServiceInvoker extends BaseServiceInvoker implements IServ
 		return retVal;
 	}
 
-	private SrBeanProcessedRequest doProcessInvocation(PersServiceVersionJsonRpc20 theServiceDefinition, Reader theReader) throws IOException, InvocationRequestFailedException {
+	@SuppressWarnings("resource")
+	private static SrBeanProcessedRequest doProcessInvocation(PersServiceVersionJsonRpc20 theServiceDefinition, Reader theReader) throws IOException, InvocationRequestFailedException {
 		SrBeanProcessedRequest retVal = new SrBeanProcessedRequest();
 
 		// Reader
@@ -368,8 +369,9 @@ public class JsonRpc20ServiceInvoker extends BaseServiceInvoker implements IServ
 
 	}
 
+	@SuppressWarnings("resource")
 	@Override
-	public SrBeanProcessedResponse processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingResponse theResponse) throws InvocationResponseFailedException {
+	public SrBeanProcessedResponse processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingRequest theRequest, SrBeanIncomingResponse theResponse) throws InvocationResponseFailedException {
 		SrBeanProcessedResponse retVal = new SrBeanProcessedResponse();
 		retVal.setResponseHeaders(theResponse.getHeaders());
 
@@ -437,6 +439,7 @@ public class JsonRpc20ServiceInvoker extends BaseServiceInvoker implements IServ
 		return new JsonRpc20ResponseValidator();
 	}
 
+	@SuppressWarnings("resource")
 	@Override
 	public String obscureMessageForLogs(BasePersServiceVersion theServiceDefinition, String theMessage, Set<String> theElementNamesToRedact) throws InvocationFailedDueToInternalErrorException {
 		if (theElementNamesToRedact == null || theElementNamesToRedact.isEmpty()) {

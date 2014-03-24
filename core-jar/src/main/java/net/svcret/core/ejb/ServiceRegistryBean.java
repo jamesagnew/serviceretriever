@@ -213,12 +213,31 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		return ourPidToServiceVersions.get(theServiceVersionPid);
 	}
 
+	public static class FoundServiceVersionBean {
+		private BasePersServiceVersion mySvcVer;
+		private String myPath;
+
+		public BasePersServiceVersion getSvcVer() {
+			return mySvcVer;
+		}
+
+		public String getPath() {
+			return myPath;
+		}
+
+		public FoundServiceVersionBean(BasePersServiceVersion theSvcVer, String thePath) {
+			super();
+			mySvcVer = theSvcVer;
+			myPath = thePath;
+		}
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	@Transactional(propagation = Propagation.SUPPORTS)
-	public BasePersServiceVersion getServiceVersionForPath(String thePath) {
+	public FoundServiceVersionBean getServiceVersionForPath(String thePath) {
 		if (thePath == null) {
 			throw new IllegalArgumentException("Path can not be null");
 		}
@@ -226,11 +245,13 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		if (retVal == null) {
 			for (Entry<String, BasePersServiceVersion> next : ourProxyPathFuzzyToServices.entrySet()) {
 				if (thePath.startsWith(next.getKey())) {
-					return next.getValue();
+					return new FoundServiceVersionBean(next.getValue(), next.getKey());
 				}
 			}
+			return null;
+		} else {
+			return new FoundServiceVersionBean(retVal, thePath);
 		}
-		return retVal;
 	}
 
 	@Override
@@ -386,18 +407,17 @@ public class ServiceRegistryBean implements IServiceRegistry {
 		mySvcHttpClient = theSvcHttpClient;
 	}
 
-	private static void addProxyPath(Map<String, BasePersServiceVersion> pathToServiceVersions, Map<String, BasePersServiceVersion> pathFuzzyToServiceVersions, Map<Long, BasePersServiceVersion> pidToServiceVersions, BasePersServiceVersion nextVersion,
-			String nextProxyPath) {
+	private static void addProxyPath(Map<String, BasePersServiceVersion> pathToServiceVersions, Map<String, BasePersServiceVersion> pathFuzzyToServiceVersions, Map<Long, BasePersServiceVersion> pidToServiceVersions, BasePersServiceVersion nextVersion, String nextProxyPath) {
 		pidToServiceVersions.put(nextVersion.getPid(), nextVersion);
 		if (pathToServiceVersions.containsKey(nextProxyPath)) {
-			ourLog.warn("Service version {} ({}/{}/{}) created duplicate proxy path '{}', so it will be ignored!", new Object[] { nextVersion.getPid(),
-					nextVersion.getService().getDomain().getDomainId(), nextVersion.getService().getServiceId(), nextVersion.getVersionId(), nextProxyPath });
+			ourLog.warn("Service version {} ({}/{}/{}) created duplicate proxy path '{}', so it will be ignored!", new Object[] { nextVersion.getPid(), nextVersion.getService().getDomain().getDomainId(), nextVersion.getService().getServiceId(), nextVersion.getVersionId(),
+					nextProxyPath });
 		} else {
 			pathToServiceVersions.put(nextProxyPath, nextVersion);
 			if (nextVersion.isAllowSubUrls()) {
 				pathFuzzyToServiceVersions.put(nextProxyPath, nextVersion);
 			}
-			
+
 		}
 	}
 
@@ -434,9 +454,9 @@ public class ServiceRegistryBean implements IServiceRegistry {
 					}
 
 					if (nextVersion.getExplicitProxyPath() != null && nextVersion.getExplicitProxyPath().startsWith("/")) {
-						addProxyPath(pathToServiceVersions,pathFuzzyToServiceVersions,  pidToServiceVersions, nextVersion, nextVersion.getExplicitProxyPath());
+						addProxyPath(pathToServiceVersions, pathFuzzyToServiceVersions, pidToServiceVersions, nextVersion, nextVersion.getExplicitProxyPath());
 					}
-					
+
 				}
 			}
 

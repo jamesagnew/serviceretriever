@@ -981,7 +981,10 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 		authHost.setModuleName("AUTHHOST");
 		DtoAuthenticationHostList saveAuthenticationHost = ourAdminSvc.saveAuthenticationHost(authHost);
 		BaseDtoAuthenticationHost auth = saveAuthenticationHost.getAuthHostById("AUTHHOST");
-
+		if (auth==null) {
+			throw new NullPointerException("Can't find AUTHHOST, but found " + saveAuthenticationHost.getListForJaxb());
+		}
+		
 		authHost = new DtoAuthenticationHostLocalDatabase();
 		authHost.setModuleId("AUTHHOST2");
 		authHost.setModuleName("AUTHHOST2");

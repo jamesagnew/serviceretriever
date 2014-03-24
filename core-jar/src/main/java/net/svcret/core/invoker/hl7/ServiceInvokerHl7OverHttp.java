@@ -63,6 +63,7 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 	@PostConstruct
 	public void setup() {
 		myTxTemplate = new TransactionTemplate(myTxManager);
+		myTxTemplate.setReadOnly(true);
 	}
 
 	public ServiceInvokerHl7OverHttp() {
@@ -157,7 +158,7 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 	}
 
 	@Override
-	public SrBeanProcessedResponse processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingResponse theResponse) throws InvocationResponseFailedException {
+	public SrBeanProcessedResponse processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingRequest theRequest, SrBeanIncomingResponse theResponse) throws InvocationResponseFailedException {
 
 		String responseBody = theResponse.getBody();
 		String responseCode;
@@ -198,6 +199,7 @@ public class ServiceInvokerHl7OverHttp extends BaseServiceInvoker implements ISe
 	@VisibleForTesting
 	public void setTransactionTemplateForUnitTest() {
 		myTxTemplate = new NullTransactionTemplateForUnitTests();
+		myTxTemplate.setReadOnly(true);
 	}
 
 }

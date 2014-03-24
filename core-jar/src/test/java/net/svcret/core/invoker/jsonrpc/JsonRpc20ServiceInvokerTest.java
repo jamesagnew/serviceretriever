@@ -32,6 +32,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+@SuppressWarnings("static-method")
 public class JsonRpc20ServiceInvokerTest {
 
 	@Test
@@ -42,7 +43,7 @@ public class JsonRpc20ServiceInvokerTest {
 
 		JsonRpc20ServiceInvoker svc = new JsonRpc20ServiceInvoker();
 		svc.setPrettyPrintModeForUnitTest(true);
-		Set<String> obscure = new HashSet<String>();
+		Set<String> obscure = new HashSet<>();
 		String obscured = svc.obscureMessageForLogs(null, request, obscure);
 		ourLog.info("Not obscured: {}", obscured);
 
@@ -107,7 +108,7 @@ public class JsonRpc20ServiceInvokerTest {
 		JsonRpc20ServiceInvoker svc = new JsonRpc20ServiceInvoker();
 
 		PersServiceVersionJsonRpc20 def = mock(PersServiceVersionJsonRpc20.class);
-		ArrayList<PersBaseServerAuth<?, ?>> serverAuths = new ArrayList<PersBaseServerAuth<?, ?>>();
+		ArrayList<PersBaseServerAuth<?, ?>> serverAuths = new ArrayList<>();
 		serverAuths.add(new NamedParameterJsonRpcServerAuth("clientId", "clientPass"));
 		when(def.getServerAuths()).thenReturn(serverAuths);
 		PersMethod method = mock(PersMethod.class);
@@ -153,11 +154,11 @@ public class JsonRpc20ServiceInvokerTest {
 		JsonRpc20ServiceInvoker svc = new JsonRpc20ServiceInvoker();
 
 		PersServiceVersionJsonRpc20 def = mock(PersServiceVersionJsonRpc20.class);
-		ArrayList<PersBaseServerAuth<?, ?>> serverAuths = new ArrayList<PersBaseServerAuth<?, ?>>();
+		ArrayList<PersBaseServerAuth<?, ?>> serverAuths = new ArrayList<>();
 		serverAuths.add(new NamedParameterJsonRpcServerAuth("clientId", "clientPass"));
 		when(def.getServerAuths()).thenReturn(serverAuths);
 
-		ArrayList<PersBaseClientAuth<?>> clientAuths = new ArrayList<PersBaseClientAuth<?>>();
+		ArrayList<PersBaseClientAuth<?>> clientAuths = new ArrayList<>();
 		clientAuths.add(new NamedParameterJsonRpcClientAuth("newUsername", "clientId", "newPassword", "clientPass"));
 		when(def.getClientAuths()).thenReturn(clientAuths);
 
@@ -206,11 +207,11 @@ public class JsonRpc20ServiceInvokerTest {
 		svc = new JsonRpc20ServiceInvoker();
 
 		def = mock(PersServiceVersionJsonRpc20.class);
-		serverAuths = new ArrayList<PersBaseServerAuth<?, ?>>();
+		serverAuths = new ArrayList<>();
 		serverAuths.add(new NamedParameterJsonRpcServerAuth("clientId", "clientPass"));
 		when(def.getServerAuths()).thenReturn(serverAuths);
 
-		clientAuths = new ArrayList<PersBaseClientAuth<?>>();
+		clientAuths = new ArrayList<>();
 		clientAuths.add(new NamedParameterJsonRpcClientAuth("newUsername", "clientId", "newPassword", "clientPass"));
 		when(def.getClientAuths()).thenReturn(clientAuths);
 
@@ -320,8 +321,8 @@ public class JsonRpc20ServiceInvokerTest {
 
 	}
 
-	private Set<String> createObscureRequest(String... theStrings) {
-		HashSet<String> retVal = new HashSet<String>();
+	private static Set<String> createObscureRequest(String... theStrings) {
+		HashSet<String> retVal = new HashSet<>();
 		retVal.add("AAAA");
 		for (String string : theStrings) {
 			retVal.add(string);
@@ -490,12 +491,12 @@ public class JsonRpc20ServiceInvokerTest {
 
 		String response = "{\"jsonrpc\": \"2.0\", \"result\": -19, \"id\": 2}";
 		respBean.setBody(response);
-		SrBeanProcessedResponse resp = svc.processInvocationResponse(null, respBean);
+		SrBeanProcessedResponse resp = svc.processInvocationResponse(null, null, respBean);
 		Assert.assertEquals(ResponseTypeEnum.SUCCESS, resp.getResponseType());
 
 		response = "{\"jsonrpc\": \"2.0\", \"error\": {\"code\": -32601, \"message\": \"Method not found\"}, \"id\": \"1\"}";
 		respBean.setBody(response);
-		resp = svc.processInvocationResponse(null, respBean);
+		resp = svc.processInvocationResponse(null, null, respBean);
 		Assert.assertEquals(ResponseTypeEnum.FAULT, resp.getResponseType());
 		Assert.assertEquals("-32601", resp.getResponseFaultCode());
 		Assert.assertEquals("Method not found", resp.getResponseFaultDescription());
@@ -509,19 +510,19 @@ public class JsonRpc20ServiceInvokerTest {
 		SrBeanIncomingResponse respBean = new SrBeanIncomingResponse();
 
 		respBean.setBody("{\"jsonrpc\": \"2.0\", \"result\": -19, \"id\": 2}");
-		SrBeanProcessedResponse resp = svc.processInvocationResponse(null, respBean);
+		SrBeanProcessedResponse resp = svc.processInvocationResponse(null, null, respBean);
 		Assert.assertEquals(ResponseTypeEnum.SUCCESS, resp.getResponseType());
 
 		respBean.setBody("{\"jsonrpc\": \"2.0\", \"result\": -19.9, \"id\": 2}");
-		resp = svc.processInvocationResponse(null, respBean);
+		resp = svc.processInvocationResponse(null, null, respBean);
 		Assert.assertEquals(ResponseTypeEnum.SUCCESS, resp.getResponseType());
 
 		respBean.setBody("{\"jsonrpc\": \"2.0\", \"result\": [ -19.1, 22.2 ], \"id\": 2}");
-		resp = svc.processInvocationResponse(null, respBean);
+		resp = svc.processInvocationResponse(null, null, respBean);
 		Assert.assertEquals(ResponseTypeEnum.SUCCESS, resp.getResponseType());
 
 		respBean.setBody("{\"jsonrpc\": \"2.0\", \"result\": { \"hello\": 22.2 }, \"id\": 2}");
-		resp = svc.processInvocationResponse(null, respBean);
+		resp = svc.processInvocationResponse(null, null, respBean);
 		Assert.assertEquals(ResponseTypeEnum.SUCCESS, resp.getResponseType());
 
 	}
@@ -534,7 +535,7 @@ public class JsonRpc20ServiceInvokerTest {
 
 		String response = IOUtils.toString(JsonRpc20ResponseValidatorTest.class.getResourceAsStream("/badjsonresponse.json"));
 		respBean.setBody(response);
-		SrBeanProcessedResponse resp = svc.processInvocationResponse(null, respBean);
+		SrBeanProcessedResponse resp = svc.processInvocationResponse(null, null, respBean);
 		Assert.assertEquals(ResponseTypeEnum.SUCCESS, resp.getResponseType());
 
 		String actual = resp.getResponseBody();

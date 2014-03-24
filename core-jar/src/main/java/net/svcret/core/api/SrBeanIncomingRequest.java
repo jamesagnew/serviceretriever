@@ -17,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 
 public class SrBeanIncomingRequest {
 
+	private String myPathToSvcVer;
 	private String myBase;
 	private transient String myContentType;
 	private String myContextPath;
@@ -94,6 +95,15 @@ public class SrBeanIncomingRequest {
 			path = path.substring(0, path.length() - 1);
 		}
 		return path;
+	}
+
+	public String getPathToSvcVer() {
+		return myPathToSvcVer;
+	}
+
+
+	public void setPathToSvcVer(String thePathToSvcVer) {
+		myPathToSvcVer = thePathToSvcVer;
 	}
 
 	/**

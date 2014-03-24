@@ -37,6 +37,7 @@ import net.svcret.core.api.ISecurityService.AuthorizationRequestBean;
 import net.svcret.core.api.ISecurityService.AuthorizationResultsBean;
 import net.svcret.core.api.SrBeanIncomingResponse.Failure;
 import net.svcret.core.api.SrBeanProcessedRequest.ResultTypeEnum;
+import net.svcret.core.ejb.ServiceRegistryBean.FoundServiceVersionBean;
 import net.svcret.core.ex.InvalidRequestException;
 import net.svcret.core.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.core.ex.InvocationRequestFailedException;
@@ -133,12 +134,13 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		/*
 		 * Figure out who should handle this request
 		 */
-
-		BasePersServiceVersion serviceVersion = mySvcRegistry.getServiceVersionForPath(path);
-		if (serviceVersion == null) {
+		FoundServiceVersionBean matchingSvcVer = mySvcRegistry.getServiceVersionForPath(path);
+		if (matchingSvcVer == null) {
 			ourLog.debug("Request did not match any known paths: {}", path);
 			throw new InvalidRequestException(IssueEnum.INVALID_REQUEST_PATH, path, "Request did not match any known paths: " + path);
 		}
+		BasePersServiceVersion serviceVersion = matchingSvcVer.getSvcVer();
+		theRequest.setPathToSvcVer(matchingSvcVer.getPath());
 
 		ourLog.trace("Request corresponds to service version {}", serviceVersion.getPid());
 
@@ -516,7 +518,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			throw new InvocationResponseFailedException(b.toString(), httpResponse);
 		}
 
-		SrBeanProcessedResponse invocationResponse = invoker.processInvocationResponse(serviceVersion, httpResponse);
+		SrBeanProcessedResponse invocationResponse = invoker.processInvocationResponse(serviceVersion, theIncomingRequest, httpResponse);
 		invocationResponse.validate();
 
 		/*
@@ -608,8 +610,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	 * FOR UNIT TESTS ONLY
 	 */
 	@VisibleForTesting
-	public
-	void setHttpClient(IHttpClient theHttpClient) {
+	public void setHttpClient(IHttpClient theHttpClient) {
 		myHttpClient = theHttpClient;
 	}
 
@@ -617,8 +618,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	 * FOR UNIT TESTS ONLY
 	 */
 	@VisibleForTesting
-	public
-	void setRuntimeStatus(IRuntimeStatus theRuntimeStatus) {
+	public void setRuntimeStatus(IRuntimeStatus theRuntimeStatus) {
 		myRuntimeStatus = theRuntimeStatus;
 	}
 
@@ -626,8 +626,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	 * FOR UNIT TESTS ONLY
 	 */
 	@VisibleForTesting
-	public
-	void setSecuritySvc(ISecurityService theSecuritySvc) {
+	public void setSecuritySvc(ISecurityService theSecuritySvc) {
 		mySecuritySvc = theSecuritySvc;
 	}
 
@@ -643,8 +642,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	 * FOR UNIT TESTS ONLY
 	 */
 	@VisibleForTesting
-	public
-	void setSvcRegistry(IServiceRegistry theSvcRegistry) {
+	public void setSvcRegistry(IServiceRegistry theSvcRegistry) {
 		mySvcRegistry = theSvcRegistry;
 	}
 
@@ -712,8 +710,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 	}
 
 	@VisibleForTesting
-	public
-	void setServiceInvokerHl7OverhttpForUnitTests(ServiceInvokerHl7OverHttp theHl7Invoker) {
+	public void setServiceInvokerHl7OverhttpForUnitTests(ServiceInvokerHl7OverHttp theHl7Invoker) {
 		myServiceInvokerHl7OverHttp = theHl7Invoker;
 	}
 

@@ -50,7 +50,7 @@ public abstract class BasePersMonitorRule extends BasePersObject {
 
 	public Collection<PersMonitorRuleNotifyContact> getNotifyContact() {
 		if (myNotifyContact == null) {
-			myNotifyContact = new ArrayList<PersMonitorRuleNotifyContact>();
+			myNotifyContact = new ArrayList<>();
 		}
 		return myNotifyContact;
 	}
@@ -75,7 +75,7 @@ public abstract class BasePersMonitorRule extends BasePersObject {
 		setRuleName(rule.getRuleName());
 		setRuleActive(rule.isRuleActive());
 
-		for (PersMonitorRuleNotifyContact nextContact : new ArrayList<PersMonitorRuleNotifyContact>(rule.getNotifyContact())) {
+		for (PersMonitorRuleNotifyContact nextContact : new ArrayList<>(rule.getNotifyContact())) {
 			PersMonitorRuleNotifyContact existing = getContact(nextContact.getEmail());
 			if (existing == null) {
 				getNotifyContact().add(new PersMonitorRuleNotifyContact(nextContact.getEmail()));

@@ -93,7 +93,7 @@ public class ServiceInvokerHl7OverHttpTest {
 		response.setContentType("application/hl7-v2");
 		response.setHeaders(new HashMap<String, List<String>>());
 		response.setResponseTime(123);
-		SrBeanProcessedResponse result = mySvc.processInvocationResponse(dbSvcVer, response);
+		SrBeanProcessedResponse result = mySvc.processInvocationResponse(dbSvcVer, null, response);
 
 		assertEquals(msgS,result.getResponseBody());
 		assertNull(result.getResponseFaultCode());
@@ -120,7 +120,7 @@ public class ServiceInvokerHl7OverHttpTest {
 		response.setContentType("application/hl7-v2");
 		response.setHeaders(new HashMap<String, List<String>>());
 		response.setResponseTime(123);
-		SrBeanProcessedResponse result = mySvc.processInvocationResponse(dbSvcVer, response);
+		SrBeanProcessedResponse result = mySvc.processInvocationResponse(dbSvcVer, null, response);
 
 		assertEquals(msgS,result.getResponseBody());
 		assertEquals("AE",result.getResponseFaultCode());

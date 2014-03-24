@@ -1,5 +1,7 @@
 package net.svcret.core.invoker.crud;
 
+import static org.apache.commons.lang.StringUtils.*;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +25,7 @@ import net.svcret.core.ex.InvocationRequestFailedException;
 import net.svcret.core.invoker.BaseServiceInvoker;
 import net.svcret.core.model.entity.BasePersServiceVersion;
 import net.svcret.core.model.entity.PersMethod;
+import net.svcret.core.model.entity.PersServiceVersionUrl;
 import net.svcret.core.model.entity.crud.PersServiceVersionRest;
 
 import org.apache.commons.lang3.StringUtils;
@@ -72,8 +75,7 @@ public class ServiceInvokerRest extends BaseServiceInvoker implements IServiceIn
 	}
 
 	@Override
-	public SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, final BasePersServiceVersion theServiceDefinition) throws InvalidRequestException,
-			InvocationRequestFailedException {
+	public SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, final BasePersServiceVersion theServiceDefinition) throws InvalidRequestException, InvocationRequestFailedException {
 		PersServiceVersionRest svc = (PersServiceVersionRest) theServiceDefinition;
 
 		final String messageType = "method";
@@ -124,11 +126,33 @@ public class ServiceInvokerRest extends BaseServiceInvoker implements IServiceIn
 
 		}
 
+		if (Boolean.TRUE.equals(svc.getRewriteUrls())) {
+			if (svc.getUrls().size() == 0) {
+				ourLog.warn("Can't do URL substitution for SVC[{}], no URLs present", svc.getPid());
+			} else {
+				StringBuilder reqBuilder = new StringBuilder(message);
+				int idx = 0;
+				String replacementUrl = svc.getUrls().get(0).getUrl();
+				String base = theRequest.getBase() + defaultString(theRequest.getPathToSvcVer());
+				while (true) {
+					idx = reqBuilder.indexOf(base, idx);
+					if (idx == -1) {
+						break;
+					}
+
+					reqBuilder.replace(idx, idx + base.length(), replacementUrl);
+				}
+				message = reqBuilder.toString();
+			}
+		}
+
 		SrBeanProcessedRequest retVal = new SrBeanProcessedRequest();
 		retVal.setResultMethod(method, message, contentType);
 
 		String suffix = null;
-		if (theRequest.getPath().startsWith(svc.getDefaultProxyPath())) {
+		String defaultProxyPath = svc.getDefaultProxyPath();
+		String reqPath = theRequest.getPath();
+		if (reqPath.startsWith(defaultProxyPath)) {
 			suffix = theRequest.getPath().substring(svc.getDefaultProxyPath().length());
 		} else if (svc.getExplicitProxyPath() != null && theRequest.getPath().startsWith(svc.getExplicitProxyPath())) {
 			suffix = theRequest.getPath().substring(svc.getExplicitProxyPath().length());
@@ -137,14 +161,33 @@ public class ServiceInvokerRest extends BaseServiceInvoker implements IServiceIn
 		}
 
 		retVal.setUrlSuffix(suffix + theRequest.getQuery());
-		
+
 		return retVal;
 	}
 
 	@Override
-	public SrBeanProcessedResponse processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingResponse theResponse) {
+	public SrBeanProcessedResponse processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingRequest theRequest, SrBeanIncomingResponse theResponse) {
 
 		String responseBody = theResponse.getBody();
+
+		PersServiceVersionRest svc = (PersServiceVersionRest) theServiceDefinition;
+		if (Boolean.TRUE.equals(svc.getRewriteUrls())) {
+			StringBuilder reqBuilder = new StringBuilder(responseBody);
+			int idx = 0;
+			for (PersServiceVersionUrl next : svc.getUrls()) {
+				String targetUrl = svc.getUrls().get(0).getUrl();
+				String base = theRequest.getBase() + defaultString(theRequest.getPathToSvcVer());
+				while (true) {
+					idx = reqBuilder.indexOf(targetUrl, idx);
+					if (idx == -1) {
+						break;
+					}
+
+					reqBuilder.replace(idx, idx + targetUrl.length(), base);
+				}
+			}
+			responseBody = reqBuilder.toString();
+		}
 
 		SrBeanProcessedResponse retVal = new SrBeanProcessedResponse();
 		retVal.setResponseBody(responseBody);

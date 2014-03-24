@@ -6,6 +6,7 @@ import java.util.List;
 import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
+import net.svcret.core.ejb.ServiceRegistryBean.FoundServiceVersionBean;
 import net.svcret.core.ex.InvocationFailedDueToInternalErrorException;
 import net.svcret.core.model.entity.BasePersMonitorRule;
 import net.svcret.core.model.entity.BasePersServiceVersion;
@@ -52,7 +53,7 @@ public interface IServiceRegistry {
 	/**
 	 * Retrieves the specific service version definition for the given proxy path. Returns null if none exists.
 	 */
-	BasePersServiceVersion getServiceVersionForPath(String thePath);
+	FoundServiceVersionBean getServiceVersionForPath(String thePath);
 
 	/**
 	 * Provide a set of valid paths which can be used to access services

@@ -44,7 +44,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.stubbing.defaultanswers.ReturnsDeepStubs;
 
-
+@SuppressWarnings(value= {"static-method"})
 public class ServiceInvokerSoap11Test {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(ServiceInvokerSoap11Test.class);
@@ -249,10 +249,10 @@ public class ServiceInvokerSoap11Test {
 
 		StringReader reader = new StringReader(msg);
 
-		List<PersBaseClientAuth<?>> clientAuths = new ArrayList<PersBaseClientAuth<?>>();
+		List<PersBaseClientAuth<?>> clientAuths = new ArrayList<>();
 		clientAuths.add(new PersWsSecUsernameTokenClientAuth("theUsername", "thePassword"));
 
-		List<PersBaseServerAuth<?,?>> serverAuths = new ArrayList<PersBaseServerAuth<?,?>>();
+		List<PersBaseServerAuth<?,?>> serverAuths = new ArrayList<>();
 		serverAuths.add(new PersWsSecUsernameTokenServerAuth());
 
 		PersServiceVersionSoap11 serviceVer = mock(PersServiceVersionSoap11.class);
@@ -293,10 +293,10 @@ public class ServiceInvokerSoap11Test {
 
 		StringReader reader = new StringReader(msg);
 
-		List<PersBaseClientAuth<?>> clientAuths = new ArrayList<PersBaseClientAuth<?>>();
+		List<PersBaseClientAuth<?>> clientAuths = new ArrayList<>();
 		clientAuths.add(new PersWsSecUsernameTokenClientAuth("theUsername", "thePassword"));
 
-		List<PersBaseServerAuth<?,?>> serverAuths = new ArrayList<PersBaseServerAuth<?,?>>();
+		List<PersBaseServerAuth<?,?>> serverAuths = new ArrayList<>();
 		serverAuths.add(new PersWsSecUsernameTokenServerAuth());
 		serverAuths.get(0).setPid(124L);
 		
@@ -386,11 +386,11 @@ public class ServiceInvokerSoap11Test {
 		when(httpResponse.getBody()).thenReturn(msg);
 		when(httpResponse.getContentType()).thenReturn("text/xml");
 		
-		Map<String, List<String>> headers = new HashMap<String, List<String>>();
+		Map<String, List<String>> headers = new HashMap<>();
 		when(httpResponse.getHeaders()).thenReturn(headers);
 		
 		ServiceInvokerSoap11 svc = new ServiceInvokerSoap11();
-		SrBeanProcessedResponse response = svc.processInvocationResponse(null, httpResponse);
+		SrBeanProcessedResponse response = svc.processInvocationResponse(null, null, httpResponse);
 		
 		assertEquals(ResponseTypeEnum.FAULT, response.getResponseType());
 		assertEquals("SOAP-ENV:Server", response.getResponseFaultCode());
@@ -429,11 +429,11 @@ public class ServiceInvokerSoap11Test {
 		when(httpResponse.getBody()).thenReturn(msg);
 		when(httpResponse.getContentType()).thenReturn("text/xml");
 		
-		Map<String, List<String>> headers = new HashMap<String, List<String>>();
+		Map<String, List<String>> headers = new HashMap<>();
 		when(httpResponse.getHeaders()).thenReturn(headers);
 		
 		ServiceInvokerSoap11 svc = new ServiceInvokerSoap11();
-		SrBeanProcessedResponse response = svc.processInvocationResponse(null, httpResponse);
+		SrBeanProcessedResponse response = svc.processInvocationResponse(null, null, httpResponse);
 		
 		assertEquals(ResponseTypeEnum.FAIL, response.getResponseType());
 		
@@ -467,11 +467,11 @@ public class ServiceInvokerSoap11Test {
 		when(httpResponse.getBody()).thenReturn(msg);
 		when(httpResponse.getContentType()).thenReturn("text/xml");
 		
-		Map<String, List<String>> headers = new HashMap<String, List<String>>();
+		Map<String, List<String>> headers = new HashMap<>();
 		when(httpResponse.getHeaders()).thenReturn(headers);
 		
 		ServiceInvokerSoap11 svc = new ServiceInvokerSoap11();
-		SrBeanProcessedResponse response = svc.processInvocationResponse(null, httpResponse);
+		SrBeanProcessedResponse response = svc.processInvocationResponse(null, null, httpResponse);
 		
 		assertEquals(ResponseTypeEnum.FAULT, response.getResponseType());
 		assertEquals(null, response.getResponseFaultCode());
@@ -509,11 +509,11 @@ public class ServiceInvokerSoap11Test {
 		when(httpResponse.getBody()).thenReturn(msg);
 		when(httpResponse.getContentType()).thenReturn("text/xml");
 		
-		Map<String, List<String>> headers = new HashMap<String, List<String>>();
+		Map<String, List<String>> headers = new HashMap<>();
 		when(httpResponse.getHeaders()).thenReturn(headers);
 		
 		ServiceInvokerSoap11 svc = new ServiceInvokerSoap11();
-		SrBeanProcessedResponse response = svc.processInvocationResponse(null, httpResponse);
+		SrBeanProcessedResponse response = svc.processInvocationResponse(null, null, httpResponse);
 		
 		assertEquals(ResponseTypeEnum.FAULT, response.getResponseType());
 		assertEquals("", response.getResponseFaultCode());

@@ -43,9 +43,9 @@ public class ServiceInvokerVirtual extends BaseServiceInvoker implements IServic
 	}
 
 	@Override
-	public SrBeanProcessedResponse processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingResponse theResponse) throws InvocationResponseFailedException,
+	public SrBeanProcessedResponse processInvocationResponse(BasePersServiceVersion theServiceDefinition,SrBeanIncomingRequest theRequest, SrBeanIncomingResponse theResponse) throws InvocationResponseFailedException,
 			InvocationFailedDueToInternalErrorException {
-		return determineInvoker(theServiceDefinition).processInvocationResponse(determineTarget(theServiceDefinition), theResponse);
+		return determineInvoker(theServiceDefinition).processInvocationResponse(determineTarget(theServiceDefinition), theRequest, theResponse);
 	}
 
 	@Override
@@ -68,7 +68,7 @@ public class ServiceInvokerVirtual extends BaseServiceInvoker implements IServic
 		return myOrchestrator.getServiceInvoker(svcVer.getTarget());
 	}
 
-	private BasePersServiceVersion determineTarget(BasePersServiceVersion theServiceDefinition) {
+	private static BasePersServiceVersion determineTarget(BasePersServiceVersion theServiceDefinition) {
 		return ((PersServiceVersionVirtual)theServiceDefinition).getTarget();
 	}
 

@@ -86,7 +86,7 @@ public abstract class BasePersSavedTransaction implements Serializable {
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date myTransactionTime;
 
-	private String extractHeadersForBody(Map<String, List<String>> theHeaders, StringBuilder b) {
+	private static String extractHeadersForBody(Map<String, List<String>> theHeaders, StringBuilder b) {
 		if (theHeaders != null) {
 			for (String nextHeader : theHeaders.keySet()) {
 				for (String nextValue : theHeaders.get(nextHeader)) {
@@ -98,7 +98,7 @@ public abstract class BasePersSavedTransaction implements Serializable {
 		return b.toString();
 	}
 
-	private String extractHeadersForBody(SrBeanIncomingRequest theRequest) {
+	private static String extractHeadersForBody(SrBeanIncomingRequest theRequest) {
 		StringBuilder b = new StringBuilder();
 
 		RequestType requestType = theRequest.getRequestType();
@@ -112,7 +112,7 @@ public abstract class BasePersSavedTransaction implements Serializable {
 		return extractHeadersForBody(headers, b);
 	}
 
-	private String extractHeadersForBody(SrBeanIncomingResponse theResponse) {
+	private static String extractHeadersForBody(SrBeanIncomingResponse theResponse) {
 		if (theResponse == null) {
 			return "";
 		}
@@ -411,7 +411,7 @@ public abstract class BasePersSavedTransaction implements Serializable {
 	}
 
 	private static List<Pair<String>> toHeaders(String theHeaders) {
-		ArrayList<Pair<String>> retVal = new ArrayList<Pair<String>>();
+		ArrayList<Pair<String>> retVal = new ArrayList<>();
 		int index = 0;
 		for (String next : theHeaders.split("\\r\\n")) {
 			if (index == 0 && next.indexOf(": ") == -1) {
@@ -422,7 +422,7 @@ public abstract class BasePersSavedTransaction implements Serializable {
 				continue;
 			}
 
-			retVal.add(new Pair<String>(next.substring(0, next.indexOf(": ")), next.substring(next.indexOf(": ") + 2)));
+			retVal.add(new Pair<>(next.substring(0, next.indexOf(": ")), next.substring(next.indexOf(": ") + 2)));
 			index++;
 		}
 		return retVal;

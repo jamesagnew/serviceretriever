@@ -75,7 +75,7 @@ public interface IServiceInvoker {
 	SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, BasePersServiceVersion theServiceDefinition) throws InvalidRequestException, InvocationRequestFailedException,
 			InvocationFailedException;
 
-	SrBeanProcessedResponse processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingResponse theResponse) throws InvocationResponseFailedException,
+	SrBeanProcessedResponse processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingRequest theRequest, SrBeanIncomingResponse theResponse) throws InvocationResponseFailedException,
 			InvocationFailedDueToInternalErrorException;
 
 	IResponseValidator provideInvocationResponseValidator(BasePersServiceVersion theServiceDefinition);

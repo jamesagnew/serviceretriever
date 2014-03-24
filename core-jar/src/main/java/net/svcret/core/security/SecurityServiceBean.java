@@ -262,7 +262,7 @@ public class SecurityServiceBean implements ISecurityService {
 	}
 
 	private void synchronizeUserCatalogChanged() {
-		if (!BasePersObject.isUnitTestMode()) {
+//		if (!BasePersObject.isUnitTestMode()) {
 			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
 				@Override
 				public void afterCommit() {
@@ -275,7 +275,7 @@ public class SecurityServiceBean implements ISecurityService {
 					}
 				}
 			});
-		}
+//		}
 	}
 
 	private IAuthorizationService getAuthService(BasePersAuthenticationHost authHost) {
