@@ -133,7 +133,7 @@ public class UserStatsPanel extends FlowPanel {
 	}
 
 	private void updateUserPicker() {
-		List<GUser> userList = new ArrayList<GUser>(myUserList.toList());
+		List<GUser> userList = new ArrayList<>(myUserList.toList());
 		Collections.sort(userList, new Comparator<GUser>() {
 			@Override
 			public int compare(GUser theO1, GUser theO2) {

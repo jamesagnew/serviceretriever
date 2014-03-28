@@ -132,7 +132,8 @@
 	<!-- <bean id="myHttpClient" class="net.svcret.core.ejb.HttpClientBean" /> -->
 	<bean class="net.svcret.core.util.MockitoFactoryBean">
 		<property name="classToMock" value="net.svcret.core.api.IHttpClient" ></property>
-	</bean>
+		<property name="nonSingleton" value="true"/>
+ 	</bean>
 	
 	
 	<bean id="myDao" class="net.svcret.core.dao.DaoBean" />

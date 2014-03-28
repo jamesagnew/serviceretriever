@@ -37,7 +37,7 @@ public abstract class DomainTreePanel extends FlowPanel {
 	 */
 	public void addChangeHandler(ChangeHandler theHandler) {
 		if (myChangeHandlers==null) {
-			myChangeHandlers = new ArrayList<ChangeHandler>();
+			myChangeHandlers = new ArrayList<>();
 		}
 		myChangeHandlers.add(theHandler);
 	}

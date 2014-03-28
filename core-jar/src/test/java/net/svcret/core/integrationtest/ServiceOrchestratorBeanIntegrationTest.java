@@ -45,6 +45,7 @@ import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
 import net.svcret.core.api.IResponseValidator;
 import net.svcret.core.api.ISecurityService.AuthorizationResultsBean;
+import net.svcret.core.api.IHttpClient;
 import net.svcret.core.api.RequestType;
 import net.svcret.core.api.SrBeanIncomingRequest;
 import net.svcret.core.api.SrBeanIncomingResponse;
@@ -91,6 +92,12 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Matchers;
+import org.mockito.Mockito;
+import org.mockito.internal.stubbing.answers.ThrowsException;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import org.springframework.aop.framework.Advised;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 
@@ -158,6 +165,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 				+ "</S:Envelope>";
 		//@formatter:on
 
+		RequestType requestType = eq(RequestType.POST);
 		IResponseValidator theResponseValidator = any();
 		UrlPoolBean theUrlPool = any();
 		String theContentBody = any();
@@ -171,7 +179,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		respBean.setSuccessfulUrl(myUrl);
 		respBean.setHeaders(new HashMap<String, List<String>>());
 		PersHttpClientConfig httpClient = any();
-		when(ourHttpClientMock.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType, any(String.class))).thenReturn(respBean);
+		when(ourHttpClientMock.post(requestType, httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType, any(String.class))).thenReturn(respBean);
 
 		// ITransactionLogger transactionLogger =
 		// mock(ITransactionLogger.class);
@@ -241,6 +249,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 				+ "</S:Envelope>";
 		//@formatter:on
 
+		RequestType requestType = eq(RequestType.POST);
 		IResponseValidator theResponseValidator = any();
 		UrlPoolBean theUrlPool = any();
 		String theContentBody = any();
@@ -254,7 +263,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		respBean.setSuccessfulUrl(myUrl);
 		respBean.setHeaders(new HashMap<String, List<String>>());
 		PersHttpClientConfig httpClient = any();
-		when(ourHttpClientMock.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
+		when(ourHttpClientMock.post(requestType, httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType, any(String.class))).thenReturn(respBean);
 
 		// ITransactionLogger transactionLogger =
 		// mock(ITransactionLogger.class);
@@ -344,6 +353,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 				+ "</S:Envelope>";
 		//@formatter:on
 
+		RequestType requestType = eq(RequestType.POST);
 		IResponseValidator theResponseValidator = any();
 		UrlPoolBean theUrlPool = any();
 		String theContentBody = any();
@@ -357,7 +367,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		respBean.setSuccessfulUrl(myUrl);
 		respBean.setHeaders(new HashMap<String, List<String>>());
 		PersHttpClientConfig httpClient = any();
-		when(ourHttpClientMock.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType, any(String.class))).thenReturn(respBean);
+		when(ourHttpClientMock.post(requestType, httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType, any(String.class))).thenReturn(respBean);
 
 		// ITransactionLogger transactionLogger =
 		// mock(ITransactionLogger.class);
@@ -446,7 +456,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		respBean.setResponseTime(100);
 		respBean.setSuccessfulUrl(myUrl);
 		respBean.setHeaders(new HashMap<String, List<String>>());
-		when(ourHttpClientMock.post(any(PersHttpClientConfig.class), any(IResponseValidator.class), any(UrlPoolBean.class), contentBodyCaptor.capture(), any(Map.class), any(String.class), any(String.class)))
+		when(ourHttpClientMock.post(eq(RequestType.POST), any(PersHttpClientConfig.class), any(IResponseValidator.class), any(UrlPoolBean.class), contentBodyCaptor.capture(), any(Map.class), any(String.class), any(String.class)))
 				.thenReturn(respBean);
 
 		// ITransactionLogger transactionLogger =
@@ -539,7 +549,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		// respBean.setSuccessfulUrl(myUrl);
 		// respBean.setHeaders(new HashMap<String, List<String>>());
 		// PersHttpClientConfig httpClient = any();
-		// when(myHttpClient.post(httpClient, theResponseValidator, theUrlPool,
+		// when(myHttpClient.post(requestType, httpClient, theResponseValidator, theUrlPool,
 		// theContentBody, theHeaders, theContentType)).thenReturn(respBean);
 
 		// TransactionLoggerBean logger = new TransactionLoggerBean();
@@ -657,6 +667,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 				"</S:Envelope>";
 		//@formatter:on
 
+		RequestType requestType = eq(RequestType.POST);
 		IResponseValidator theResponseValidator = any();
 		UrlPoolBean theUrlPool = any();
 		String theContentBody = any();
@@ -670,7 +681,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		respBean.setSuccessfulUrl(myUrl);
 		respBean.setHeaders(new HashMap<String, List<String>>());
 		PersHttpClientConfig httpClient = any();
-		when(ourHttpClientMock.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType)).thenReturn(respBean);
+		when(ourHttpClientMock.post(requestType, httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType, any(String.class))).thenReturn(respBean);
 
 		// TransactionLoggerBean logger = new TransactionLoggerBean();
 		// logger.setDao(myDao);
@@ -770,6 +781,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 				"</S:Envelope>";
 		//@formatter:on
 
+		RequestType requestType = eq(RequestType.POST);
 		IResponseValidator theResponseValidator = any();
 		UrlPoolBean theUrlPool = any();
 		String theContentBody = any();
@@ -784,7 +796,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 
 		respBean.setHeaders(new HashMap<String, List<String>>());
 		PersHttpClientConfig httpClient = any();
-		when(ourHttpClientMock.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType, any(String.class))).thenReturn(respBean);
+		when(ourHttpClientMock.post(requestType, httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType, any(String.class))).thenReturn(respBean);
 
 		// TransactionLoggerBean logger = new TransactionLoggerBean();
 		// logger.setConfigServiceForUnitTests(myConfigService);
@@ -847,7 +859,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 			}
 		});
 
-		verify(ourHttpClientMock, times(1)).post(any(PersHttpClientConfig.class), any(IResponseValidator.class), any(UrlPoolBean.class), any(String.class), any(Map.class), any(String.class), any(String.class));
+		verify(ourHttpClientMock, times(1)).post(eq(RequestType.POST), any(PersHttpClientConfig.class), any(IResponseValidator.class), any(UrlPoolBean.class), any(String.class), any(Map.class), any(String.class), any(String.class));
 
 		String svcVerFileName = getSvcVerFileName();
 		FileReader fr = new FileReader(svcVerFileName);
@@ -888,6 +900,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 				"500 horrible internal exception";
 		//@formatter:on
 
+		RequestType requestType = eq(RequestType.POST);
 		IResponseValidator theResponseValidator = any();
 		UrlPoolBean theUrlPool = any();
 		String theContentBody = any();
@@ -905,7 +918,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		respBean.setHeaders(headers);
 
 		PersHttpClientConfig httpClient = any();
-		when(ourHttpClientMock.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType, any(String.class))).thenReturn(respBean);
+		when(ourHttpClientMock.post(requestType, httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType, any(String.class))).thenReturn(respBean);
 
 		// TransactionLoggerBean logger = new TransactionLoggerBean();
 		// logger.setConfigServiceForUnitTests(myConfigService);
@@ -1128,6 +1141,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		hc.setStickySessionCookieForSessionId("JSESSIONID");
 		ourAdminSvc.saveHttpClientConfig(hc, null, null, null, null);
 
+		RequestType requestType = eq(RequestType.POST);
 		IResponseValidator theResponseValidator = any();
 		UrlPoolBean theUrlPool = any();
 		String theContentBody = any();
@@ -1141,7 +1155,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		respBean.setSuccessfulUrl(myUrl);
 		respBean.setHeaders(new HashMap<String, List<String>>());
 		PersHttpClientConfig httpClient = any();
-		when(ourHttpClientMock.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType, any(String.class))).thenReturn(respBean);
+		when(ourHttpClientMock.post(requestType, httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType, any(String.class))).thenReturn(respBean);
 
 		String query = "";
 		SrBeanIncomingRequest ireq = new SrBeanIncomingRequest();
@@ -1163,7 +1177,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 
 		ArgumentCaptor<UrlPoolBean> urlPool = ArgumentCaptor.forClass(UrlPoolBean.class);
 		ArgumentCaptor<Map> headers = ArgumentCaptor.forClass(Map.class);
-		verify(ourHttpClientMock).post(any(PersHttpClientConfig.class), any(IResponseValidator.class), urlPool.capture(), any(String.class), headers.capture(), any(String.class), any(String.class));
+		verify(ourHttpClientMock).post(eq(RequestType.POST), any(PersHttpClientConfig.class), any(IResponseValidator.class), urlPool.capture(), any(String.class), headers.capture(), any(String.class), any(String.class));
 		assertEquals(myUrl, urlPool.getValue().getPreferredUrl());
 		newEntityManager();
 
@@ -1183,7 +1197,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 
 		urlPool = ArgumentCaptor.forClass(UrlPoolBean.class);
 		headers = ArgumentCaptor.forClass(Map.class);
-		verify(ourHttpClientMock, times(2)).post(any(PersHttpClientConfig.class), any(IResponseValidator.class), urlPool.capture(), any(String.class), headers.capture(), any(String.class), any(String.class));
+		verify(ourHttpClientMock, times(2)).post(eq(RequestType.POST), any(PersHttpClientConfig.class), any(IResponseValidator.class), urlPool.capture(), any(String.class), headers.capture(), any(String.class), any(String.class));
 		assertEquals(myUrl2, urlPool.getAllValues().get(1).getPreferredUrl());
 		newEntityManager();
 
@@ -1209,7 +1223,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 
 		urlPool = ArgumentCaptor.forClass(UrlPoolBean.class);
 		headers = ArgumentCaptor.forClass(Map.class);
-		verify(ourHttpClientMock, times(3)).post(any(PersHttpClientConfig.class), any(IResponseValidator.class), urlPool.capture(), any(String.class), headers.capture(), any(String.class), any(String.class));
+		verify(ourHttpClientMock, times(3)).post(eq(RequestType.POST), any(PersHttpClientConfig.class), any(IResponseValidator.class), urlPool.capture(), any(String.class), headers.capture(), any(String.class), any(String.class));
 		assertEquals(myUrl2, urlPool.getAllValues().get(2).getPreferredUrl());
 		newEntityManager();
 
@@ -1267,6 +1281,9 @@ public class ServiceOrchestratorBeanIntegrationTest {
 	@Before
 	public void before() throws Exception {
 		ourLog.info("***** Starting next test *******");
+
+		ourHttpClientMock = ourAppCtx.getBean(IHttpClient.class);
+		((ServiceOrchestratorBean)((Advised)ourOrchSvc).getTargetSource().getTarget()).setHttpClient(ourHttpClientMock);
 
 		System.setProperty(BasePersObject.NET_SVCRET_UNITTESTMODE, "true");
 		AdminServiceBeanIntegrationTest.deleteEverything();
@@ -1452,6 +1469,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		req.setRequestHeaders(new HashMap<String, List<String>>());
 		req.getRequestHeaders().put("Content-Type", Collections.singletonList("application/hl7-v2"));
 
+		RequestType requestType = eq(RequestType.POST);
 		IResponseValidator theResponseValidator = any();
 		UrlPoolBean theUrlPool = any();
 		String theContentBody = any();
@@ -1465,7 +1483,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		respBean.setSuccessfulUrl(ourDao.getServiceVersionUrlByPid(http.getUrlList().get(0).getPid()));
 		respBean.setHeaders(new HashMap<String, List<String>>());
 		PersHttpClientConfig httpClient = any();
-		when(ourHttpClientMock.post(httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType, any(String.class))).thenReturn(respBean);
+		when(ourHttpClientMock.post(requestType, httpClient, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType, any(String.class))).thenReturn(respBean);
 
 		ourOrchSvc.handleServiceRequest(req);
 
@@ -1547,7 +1565,74 @@ public class ServiceOrchestratorBeanIntegrationTest {
 	
 	
 	@Test
-	public void testRestGoodRequest() throws Exception {
+	public void testRestGoodGetRequest() throws Exception {
+		newEntityManager();
+
+		DtoServiceVersionRest http = new DtoServiceVersionRest();
+		http.setId("d0s0v1");
+		http.setName("d0s0v1");
+		http.setHttpClientConfigPid(ourAdminSvc.getDefaultHttpClientConfigPid());
+		http.getUrlList().add(new GServiceVersionUrl("url1", "http://example.com/foo"));
+		http.setRewriteUrls(true);
+		http = ourAdminSvc.saveServiceVersion(d0.getPid(), d0s0.getPid(), http, new ArrayList<GResource>());
+
+		newEntityManager();
+
+		ourSvcReg.reloadRegistryFromDatabase();
+
+		newEntityManager();
+
+		String response = "{ \"respUrl\" : \"http://example.com/foo/Resource/1?c=d\" }";
+
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
+		req.setRequestType(RequestType.GET);
+		req.setRequestHostIp("127.0.0.1");
+		req.setPath("/d0/d0s0/d0s0v1/Resource/1");
+		req.setBase("http://svcret.com");
+		req.setQuery("?param1=value1&param2=value2");
+		req.setInputReader(new StringReader(""));
+		Date req1date = new Date();
+		req.setRequestTime(req1date);
+		req.setRequestHeaders(new HashMap<String, List<String>>());
+//		req.getRequestHeaders().put("Content-Type", Collections.singletonList("application/json"));
+	
+		
+		SrBeanIncomingResponse respBean = new SrBeanIncomingResponse();
+		respBean.setCode(200);
+		respBean.setBody(response);
+		respBean.setContentType("application/text+hello");
+		respBean.setResponseTime(100);
+		respBean.setSuccessfulUrl(ourDao.getServiceVersionUrlByPid(http.getUrlList().get(0).getPid()));
+		respBean.setHeaders(new HashMap<String, List<String>>());
+		when(ourHttpClientMock.post(eq(RequestType.GET), any(PersHttpClientConfig.class), any(IResponseValidator.class), any(UrlPoolBean.class), eq(""), Matchers.<Map<String, List<String>>>any(), Matchers.<String>any(), any(String.class))).thenReturn(respBean);
+
+		SrBeanOutgoingResponse resp = ourOrchSvc.handleServiceRequest(req);
+
+		ArgumentCaptor<String> suffixCaptor = ArgumentCaptor.forClass(String.class);
+		verify(ourHttpClientMock).post(eq(RequestType.GET), any(PersHttpClientConfig.class), any(IResponseValidator.class), any(UrlPoolBean.class), eq(""), any(Map.class), eq(""), suffixCaptor.capture());
+		
+		ourTxTemplate.execute(new TransactionCallbackWithoutResult() {
+			@Override
+			protected void doInTransactionWithoutResult(TransactionStatus status) {
+				try {
+					ourSvcReg.reloadRegistryFromDatabase();
+					ourStatsSvc.flushStatus();
+				} catch (Exception e) {
+					throw new Error(e);
+				}
+			}
+		});
+
+		String value = suffixCaptor.getValue();
+		assertEquals("/Resource/1?param1=value1&param2=value2", value);
+
+		assertThat(resp.getResponseBody(), StringContains.containsString("http://svcret.com/d0/d0s0/d0s0v1/Resource/1?c=d"));
+		assertEquals("application/text+hello", resp.getResponseContentType());
+	}
+
+	
+	@Test
+	public void testRestGoodPostRequest() throws Exception {
 		newEntityManager();
 
 		DtoServiceVersionRest http = new DtoServiceVersionRest();
@@ -1581,6 +1666,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 
 		// ******
 		// NB: don't reorder these
+		RequestType requestType = eq(RequestType.POST);
 		PersHttpClientConfig httpClient = any();
 		IResponseValidator theResponseValidator = any();
 		UrlPoolBean urlPool = any();
@@ -1600,7 +1686,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		respBean.setResponseTime(100);
 		respBean.setSuccessfulUrl(ourDao.getServiceVersionUrlByPid(http.getUrlList().get(0).getPid()));
 		respBean.setHeaders(new HashMap<String, List<String>>());
-		when(ourHttpClientMock.post(httpClient, theResponseValidator, urlPool, theContentBody, theHeaders, theContentType, suffix)).thenReturn(respBean);
+		when(ourHttpClientMock.post(requestType, httpClient, theResponseValidator, urlPool, theContentBody, theHeaders, theContentType, suffix)).thenReturn(respBean);
 
 		SrBeanOutgoingResponse resp = ourOrchSvc.handleServiceRequest(req);
 
@@ -1623,5 +1709,6 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		assertThat(resp.getResponseBody(), StringContains.containsString("http://svcret.com/d0/d0s0/d0s0v1/Resource/1?c=d"));
 		
 	}
+
 	
 }

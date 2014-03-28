@@ -8,10 +8,7 @@ import org.springframework.beans.factory.FactoryBean;
 public class MockitoFactoryBean<T> implements FactoryBean<T> {
 
 	private Class<T> myClassToMock;
-
-	public void setClassToMock(Class<T> theClassToMock) {
-		myClassToMock = theClassToMock;
-	}
+	private boolean myNonSingleton;
 
 	@Override
 	public T getObject() throws Exception {
@@ -23,9 +20,21 @@ public class MockitoFactoryBean<T> implements FactoryBean<T> {
 		return myClassToMock;
 	}
 
+	public boolean isNonSingleton() {
+		return myNonSingleton;
+	}
+
 	@Override
 	public boolean isSingleton() {
-		return true;
+		return !myNonSingleton;
 	}
-	
+
+	public void setClassToMock(Class<T> theClassToMock) {
+		myClassToMock = theClassToMock;
+	}
+
+	public void setNonSingleton(boolean theNonSingleton) {
+		myNonSingleton = theNonSingleton;
+	}
+
 }

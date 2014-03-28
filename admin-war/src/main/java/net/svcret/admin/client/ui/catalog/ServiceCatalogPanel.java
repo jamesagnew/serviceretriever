@@ -6,6 +6,7 @@ import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
+import net.svcret.admin.shared.model.DtoServiceVersionRest;
 import net.svcret.admin.shared.model.DtoServiceVersionVirtual;
 import net.svcret.admin.shared.model.DtoConfig;
 import net.svcret.admin.shared.model.DtoDomain;
@@ -111,6 +112,9 @@ public class ServiceCatalogPanel extends FlowPanel {
 						break;
 					case VIRTUAL:
 						endpoint = new EndpointRendererVirtual(myConfig).render((DtoServiceVersionVirtual) nextVersion);
+						break;
+					case REST:
+						endpoint = new EndpointRendererRest(myConfig).render((DtoServiceVersionRest) nextVersion);
 						break;
 					}
 					

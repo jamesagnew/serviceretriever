@@ -24,7 +24,7 @@ public class PSelectionCell extends AbstractInputCell<String, String> {
 
   private static Template template;
 
-  private HashMap<String, Integer> indexForOptionValue = new HashMap<String, Integer>();
+  private HashMap<String, Integer> indexForOptionValue = new HashMap<>();
 
   private  String myDisableWithMessageOnNullValue;
   private final List<String> optionTexts;
@@ -39,8 +39,8 @@ public class PSelectionCell extends AbstractInputCell<String, String> {
     if (template == null) {
       template = GWT.create(Template.class);
     }
-    this.optionValues = new ArrayList<String>(optionValues);
-    this.optionTexts = new ArrayList<String>(optionTexts);
+    this.optionValues = new ArrayList<>(optionValues);
+    this.optionTexts = new ArrayList<>(optionTexts);
     
     int index = 0;
     for (String option : optionValues) {

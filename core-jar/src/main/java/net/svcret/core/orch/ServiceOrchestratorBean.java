@@ -500,7 +500,8 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 
 		PersHttpClientConfig clientConfig = serviceVersion.getHttpClientConfig();
 		SrBeanIncomingResponse httpResponse;
-		httpResponse = myHttpClient.post(clientConfig, responseValidator, urlPool, contentBody, headers, contentType, urlSuffix);
+		RequestType requestType = theIncomingRequest.getRequestType();
+		httpResponse = myHttpClient.post(requestType, clientConfig, responseValidator, urlPool, contentBody, headers, contentType, urlSuffix);
 		markUrlsFailed(httpResponse.getFailedUrls());
 
 		if (httpResponse.getSuccessfulUrl() == null) {

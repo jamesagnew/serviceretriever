@@ -32,6 +32,18 @@ public class ServiceRetrieverApp {
 		ourCtx = new ClassPathXmlApplicationContext("file:conf/svcret-app.xml");
 		ourCtx.start();
 
+		ourLog.info("ServiceRetriever has started");
+		
+		try {
+			JoranConfigurator configurator = new JoranConfigurator();
+			configurator.setContext(context);
+			context.reset();
+			configurator.doConfigure("conf/logback-runtime.xml");
+		} catch (JoranException je) {
+			// StatusPrinter will handle this
+		}
+		StatusPrinter.printInCaseOfErrorsOrWarnings(context);
+
 	}
 
 	private static void shutdown() {

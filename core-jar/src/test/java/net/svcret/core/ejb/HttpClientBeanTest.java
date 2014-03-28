@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import net.svcret.core.api.IResponseValidator;
+import net.svcret.core.api.RequestType;
 import net.svcret.core.api.SrBeanIncomingResponse;
 import net.svcret.core.api.UrlPoolBean;
 import net.svcret.core.ejb.HttpClientBean;
@@ -84,7 +85,7 @@ public class HttpClientBeanTest {
 
 		HashMap<String, List<String>> reqHeaders = new HashMap<>();
 		String reqContentType = "text/xml";
-		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
+		SrBeanIncomingResponse respBean = mySvc.post(RequestType.POST, clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType, "");
 
 		assertEquals(null, respBean.getSuccessfulUrl());
 		assertEquals(1, respBean.getFailedUrls().size());
@@ -159,7 +160,7 @@ public class HttpClientBeanTest {
 
 		HashMap<String, List<String>> reqHeaders = new HashMap<>();
 		String reqContentType = "text/xml";
-		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
+		SrBeanIncomingResponse respBean = mySvc.post(RequestType.POST, clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType, "");
 
 		assertEquals(urlPool.getPreferredUrl(), respBean.getSuccessfulUrl());
 		assertEquals(0, respBean.getFailedUrls().size());
@@ -192,7 +193,7 @@ public class HttpClientBeanTest {
 
 		HashMap<String, List<String>> reqHeaders = new HashMap<>();
 		String reqContentType = "text/xml";
-		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
+		SrBeanIncomingResponse respBean = mySvc.post(RequestType.POST, clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType, "");
 
 		assertEquals(null, respBean.getSuccessfulUrl());
 		assertEquals(1, respBean.getFailedUrls().size());
@@ -225,7 +226,7 @@ public class HttpClientBeanTest {
 
 		HashMap<String, List<String>> reqHeaders = new HashMap<>();
 		String reqContentType = "text/xml";
-		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
+		SrBeanIncomingResponse respBean = mySvc.post(RequestType.POST, clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType, "");
 
 		assertEquals(urlPool.getPreferredUrl(), respBean.getSuccessfulUrl());
 		assertEquals(0, respBean.getFailedUrls().size());
@@ -265,7 +266,7 @@ public class HttpClientBeanTest {
 
 		HashMap<String, List<String>> reqHeaders = new HashMap<>();
 		String reqContentType = "text/xml";
-		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
+		SrBeanIncomingResponse respBean = mySvc.post(RequestType.POST, clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType, "");
 
 		assertEquals(null, respBean.getSuccessfulUrl());
 		assertEquals(2, respBean.getFailedUrls().size());
@@ -303,7 +304,7 @@ public class HttpClientBeanTest {
 
 		HashMap<String, List<String>> reqHeaders = new HashMap<>();
 		String reqContentType = "text/xml";
-		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
+		SrBeanIncomingResponse respBean = mySvc.post(RequestType.POST, clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType, "");
 
 		assertEquals(urlPool.getPreferredUrl(), respBean.getSuccessfulUrl());
 		assertEquals(0, respBean.getFailedUrls().size());
@@ -343,7 +344,7 @@ public class HttpClientBeanTest {
 
 		HashMap<String, List<String>> reqHeaders = new HashMap<>();
 		String reqContentType = "text/xml";
-		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
+		SrBeanIncomingResponse respBean = mySvc.post(RequestType.POST, clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType, "");
 
 		assertEquals(urlPool.getAlternateUrls().get(0), respBean.getSuccessfulUrl());
 		assertEquals(1, respBean.getFailedUrls().size());
@@ -376,7 +377,7 @@ public class HttpClientBeanTest {
 
 		HashMap<String, List<String>> reqHeaders = new HashMap<>();
 		String reqContentType = "text/xml";
-		SrBeanIncomingResponse respBean = mySvc.post(clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType);
+		SrBeanIncomingResponse respBean = mySvc.post(RequestType.POST, clientConfig, validator, urlPool, reqBody, reqHeaders, reqContentType, "");
 
 		assertEquals(urlPool.getPreferredUrl(), respBean.getSuccessfulUrl());
 		assertEquals(0, respBean.getFailedUrls().size());
@@ -414,7 +415,7 @@ public class HttpClientBeanTest {
 			UrlPoolBean urlPool = new UrlPoolBean();
 			urlPool.setPreferredUrl(new PersServiceVersionUrl(123, "https://127.0.0.1:" + port + "/path"));
 			HashMap<String, List<String>> headers = new HashMap<>();
-			SrBeanIncomingResponse resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
+			SrBeanIncomingResponse resp = mySvc.post(RequestType.POST, config, validator, urlPool, "content body", headers, "text/plain", null);
 
 			ourLog.info("Resp was: " + resp.getBody());
 			assertEquals(1, resp.getFailedUrls().size());
@@ -430,7 +431,7 @@ public class HttpClientBeanTest {
 			config.setTlsTruststorePassword("changeit");
 			config.setOptLock(2);
 
-			resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
+			resp = mySvc.post(RequestType.POST, config, validator, urlPool, "content body", headers, "text/plain", null);
 
 			ourLog.info("Resp was: " + resp.getBody());
 			assertEquals(resp.getFailedUrls().toString(), 0, resp.getFailedUrls().size());
@@ -486,7 +487,7 @@ public class HttpClientBeanTest {
 			UrlPoolBean urlPool = new UrlPoolBean();
 			urlPool.setPreferredUrl(new PersServiceVersionUrl(123, "https://127.0.0.1:" + port + "/path"));
 			HashMap<String, List<String>> headers = new HashMap<>();
-			SrBeanIncomingResponse resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
+			SrBeanIncomingResponse resp = mySvc.post(RequestType.POST, config, validator, urlPool, "content body", headers, "text/plain", null);
 
 			ourLog.info("Resp was: " + resp.getBody());
 			assertEquals(1, resp.getFailedUrls().size());
@@ -503,7 +504,7 @@ public class HttpClientBeanTest {
 			config.setTlsTruststorePassword("changeit");
 			config.setOptLock(2);
 
-			resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
+			resp = mySvc.post(RequestType.POST, config, validator, urlPool, "content body", headers, "text/plain", null);
 
 			ourLog.info("Resp was: " + resp.getBody());
 			assertEquals(1, resp.getFailedUrls().size());
@@ -523,7 +524,7 @@ public class HttpClientBeanTest {
 			config.setTlsKeystorePassword("changeit");
 			config.setOptLock(3);
 
-			resp = mySvc.post(config, validator, urlPool, "content body", headers, "text/plain");
+			resp = mySvc.post(RequestType.POST, config, validator, urlPool, "content body", headers, "text/plain", null);
 
 			ourLog.info("Resp was: " + resp.getBody());
 			assertEquals(resp.getFailedUrls().toString(), 0, resp.getFailedUrls().size());

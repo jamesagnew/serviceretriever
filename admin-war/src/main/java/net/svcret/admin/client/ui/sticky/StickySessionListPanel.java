@@ -97,10 +97,10 @@ public class StickySessionListPanel extends FlowPanel {
 
 	private void initUi(final DtoDomainList theDomainList, Collection<DtoStickySessionUrlBinding> theStickySessions) {
 		if (myGrid == null) {
-			myGrid = new PCellTable<DtoStickySessionUrlBinding>();
+			myGrid = new PCellTable<>();
 			myContentPanel.add(myGrid);
 
-			myDataProvider = new ListDataProvider<DtoStickySessionUrlBinding>();
+			myDataProvider = new ListDataProvider<>();
 
 			myGrid.setEmptyTableWidget(new Label("No sticky sessions currently"));
 
@@ -187,7 +187,7 @@ public class StickySessionListPanel extends FlowPanel {
 			myDataProvider.addDataDisplay(myGrid);
 
 			// Sorting
-			ListHandler<DtoStickySessionUrlBinding> columnSortHandler = new ListHandler<DtoStickySessionUrlBinding>(myDataProvider.getList());
+			ListHandler<DtoStickySessionUrlBinding> columnSortHandler = new ListHandler<>(myDataProvider.getList());
 			createdColumn.setSortable(true);
 			columnSortHandler.setComparator(createdColumn, new Comparator<DtoStickySessionUrlBinding>() {
 				@Override

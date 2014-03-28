@@ -105,7 +105,7 @@ public class MonitorRulesPanel extends FlowPanel {
 		myDataProvider.refresh();
 	}
 
-	private Map<Long, List<String>> myAppliesTo = new HashMap<Long, List<String>>();
+	private Map<Long, List<String>> myAppliesTo = new HashMap<>();
 
 	private List<String> toAppliesTo(BaseDtoMonitorRule theNext) {
 		Long pid = theNext.getPidOrNull();
@@ -113,7 +113,7 @@ public class MonitorRulesPanel extends FlowPanel {
 			return myAppliesTo.get(pid);
 		}
 
-		ArrayList<String> retVal = new ArrayList<String>();
+		ArrayList<String> retVal = new ArrayList<>();
 		switch (theNext.getRuleType()) {
 		case PASSIVE: {
 			for (GMonitorRuleAppliesTo nextApplies : ((GMonitorRulePassive) theNext).getAppliesTo()) {
@@ -135,7 +135,7 @@ public class MonitorRulesPanel extends FlowPanel {
 			break;
 		}
 		case ACTIVE: {
-			Set<Long> svcVerPids = new HashSet<Long>();
+			Set<Long> svcVerPids = new HashSet<>();
 			for (DtoMonitorRuleActiveCheck next : ((DtoMonitorRuleActive) theNext).getCheckList()) {
 				svcVerPids.add(next.getServiceVersionPid());
 			}
@@ -252,20 +252,20 @@ public class MonitorRulesPanel extends FlowPanel {
 		// myRulesGrid.addStyleName(CssConstants.PROPERTY_TABLE);
 		// contentPanel.add(myRulesGrid);
 
-		myGrid = new PCellTable<BaseDtoMonitorRule>();
+		myGrid = new PCellTable<>();
 		myGrid.setWidth("100%");
 		contentPanel.add(myGrid);
 
 		myGrid.setEmptyTableWidget(new Label("No rules defined"));
 
-		myDataProvider = new ListDataProvider<BaseDtoMonitorRule>();
+		myDataProvider = new ListDataProvider<>();
 		myDataProvider.addDataDisplay(myGrid);
 
-		ListHandler<BaseDtoMonitorRule> sortHandler = new ListHandler<BaseDtoMonitorRule>(myDataProvider.getList());
+		ListHandler<BaseDtoMonitorRule> sortHandler = new ListHandler<>(myDataProvider.getList());
 		myGrid.addColumnSortHandler(sortHandler);
 
 		// Edit
-		Column<BaseDtoMonitorRule, String> editColumn = new NullColumn<BaseDtoMonitorRule>(new PButtonCell(IMAGES.iconEdit(), MSGS.actions_Edit()));
+		Column<BaseDtoMonitorRule, String> editColumn = new NullColumn<>(new PButtonCell(IMAGES.iconEdit(), MSGS.actions_Edit()));
 		myGrid.addColumn(editColumn, "");
 		editColumn.setFieldUpdater(new FieldUpdater<BaseDtoMonitorRule, String>() {
 			@Override

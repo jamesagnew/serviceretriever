@@ -1,8 +1,13 @@
 package net.svcret.core.server;
 
-import static net.svcret.core.util.HttpUtil.*;
+import static net.svcret.core.util.HttpUtil.sendFailure;
+import static net.svcret.core.util.HttpUtil.sendInvalidRequest;
+import static net.svcret.core.util.HttpUtil.sendSecurityFailure;
+import static net.svcret.core.util.HttpUtil.sendSuccessfulResponse;
+import static net.svcret.core.util.HttpUtil.sendThrottleQueueFullFailure;
 
 import java.io.IOException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -10,9 +15,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.security.cert.X509Certificate;
 
-import javax.net.ssl.SSLSession;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -56,7 +59,7 @@ class ServiceServlet extends HttpServlet {
 	public void setServiceOrchestrator(IServiceOrchestrator theServiceOrchestrator) {
 		myServiceOrchestrator = theServiceOrchestrator;
 	}
-	
+
 	public void setServiceRegistry(IServiceRegistry theServiceRegistry) {
 		myServiceRegistry = theServiceRegistry;
 	}
@@ -89,7 +92,11 @@ class ServiceServlet extends HttpServlet {
 			request.setRequestType(requestAction);
 			request.setRequestHostIp(StringUtils.defaultString(requestHostIp, "UNKNOWN"));
 			request.setPath(path);
-			request.setRequestFullUri(requestURI);
+			if (StringUtils.isNotBlank(theReq.getQueryString())) {
+				request.setRequestFullUri(requestURI + query);
+			} else {
+				request.setRequestFullUri(requestURI);
+			}
 			request.setQuery(query);
 			request.setBase(base);
 			request.setPort(myPort);
@@ -99,7 +106,7 @@ class ServiceServlet extends HttpServlet {
 			request.setRequestTime(new Date(start));
 			request.setTlsClientCertificates((X509Certificate[]) theReq.getAttribute("javax.servlet.request.X509Certificate"));
 			request.setTlsCipherSuite((String) theReq.getAttribute("javax.servlet.request.cipher_suite"));
-//			request.setTlsSession((SSLSession) theReq.getAttribute("javax.servlet.request.cipher_suite"));
+			// request.setTlsSession((SSLSession) theReq.getAttribute("javax.servlet.request.cipher_suite"));
 			request.setTlsKeySize((Integer) theReq.getAttribute("javax.servlet.request.key_size"));
 
 			Map<String, List<String>> requestHeaders = new HashMap<>();
@@ -112,7 +119,7 @@ class ServiceServlet extends HttpServlet {
 
 			response = myServiceOrchestrator.handleServiceRequest(request);
 		} catch (InvalidRequestException e) {
-			ourLog.info("Invalid Request Detected ({}) : {} - Message {}", new Object[] {e.getIssue().name(), e.getArgument(), e.getMessage()});
+			ourLog.info("Invalid Request Detected ({}) : {} - Message {}", new Object[] { e.getIssue().name(), e.getArgument(), e.getMessage() });
 			sendInvalidRequest(theResp, e, myServiceRegistry);
 			return;
 		} catch (InvocationRequestOrResponseFailedException e) {
@@ -183,7 +190,7 @@ class ServiceServlet extends HttpServlet {
 	}
 
 	public void setPort(int thePort) {
-		myPort=thePort;
+		myPort = thePort;
 	}
 
 }

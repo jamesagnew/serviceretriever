@@ -14,5 +14,14 @@ public class GUserList extends BaseDtoList<GUser> {
 		return null;
 	}
 
+	public void removeUserByPid(long thePid) {
+		for (GUser next : this) {
+			if (next.getPid()==thePid) {
+				remove(next);
+				break;
+			}
+		}
+	}
+
 
 }

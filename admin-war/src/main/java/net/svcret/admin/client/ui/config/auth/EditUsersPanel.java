@@ -66,6 +66,10 @@ public class EditUsersPanel extends FlowPanel {
 	private ListDataProvider<GUser> myMethodDataProvider;
 
 	public EditUsersPanel() {
+		initPanel();
+	}
+
+	private void initPanel() {
 		FlowPanel listPanel = new FlowPanel();
 		listPanel.setStylePrimaryName(CssConstants.MAIN_PANEL);
 		add(listPanel);
@@ -131,20 +135,19 @@ public class EditUsersPanel extends FlowPanel {
 			public void update(int theIndex, GUser theObject, String theValue) {
 				if (Window.confirm("Are you sure you want to delete the user '" + theObject.getUsername() + "'? This action can not be undone!")) {
 					myLoadingSpinner.showMessage("Deleting user...", true);
-//					AdminPortal.MODEL_SVC.removeUser(theObject.getPid(), new AsyncCallback<Void>() {
-//
-//						@Override
-//						public void onFailure(Throwable theCaught) {
-//							// TODO Auto-generated method stub
-//							
-//						}
-//
-//						@Override
-//						public void onSuccess(Void theResult) {
-//							// TODO Auto-generated method stub
-//							
-//						}
-//					});
+					AdminPortal.MODEL_SVC.removeUser(theObject.getPid(), new AsyncCallback<Void>() {
+
+						@Override
+						public void onFailure(Throwable theCaught) {
+							Model.handleFailure(theCaught);
+						}
+
+						@Override
+						public void onSuccess(Void theResult) {
+							EditUsersPanel.this.clear();
+							initPanel();
+						}
+					});
 				}
 			}
 		});
@@ -320,7 +323,6 @@ public class EditUsersPanel extends FlowPanel {
 		});
 
 		loadUserList();
-
 	}
 
 	private void viewUserStats(GUser theObject) {

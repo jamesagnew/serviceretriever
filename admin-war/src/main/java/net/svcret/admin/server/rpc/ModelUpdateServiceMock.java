@@ -1121,4 +1121,9 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		return retVal;
 	}
 
+	@Override
+	public void removeUser(long thePid) {
+		myUserList.removeUserByPid(thePid);
+	}
+
 }

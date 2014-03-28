@@ -1,6 +1,6 @@
 package net.svcret.core.invoker.crud;
 
-import static org.apache.commons.lang.StringUtils.*;
+import static org.apache.commons.lang.StringUtils.defaultString;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -20,7 +20,6 @@ import net.svcret.core.api.SrBeanIncomingResponse;
 import net.svcret.core.api.SrBeanProcessedRequest;
 import net.svcret.core.api.SrBeanProcessedResponse;
 import net.svcret.core.dao.NullTransactionTemplateForUnitTests;
-import net.svcret.core.ex.InvalidRequestException;
 import net.svcret.core.ex.InvocationRequestFailedException;
 import net.svcret.core.invoker.BaseServiceInvoker;
 import net.svcret.core.model.entity.BasePersServiceVersion;
@@ -75,7 +74,7 @@ public class ServiceInvokerRest extends BaseServiceInvoker implements IServiceIn
 	}
 
 	@Override
-	public SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, final BasePersServiceVersion theServiceDefinition) throws InvalidRequestException, InvocationRequestFailedException {
+	public SrBeanProcessedRequest processInvocation(SrBeanIncomingRequest theRequest, final BasePersServiceVersion theServiceDefinition) throws InvocationRequestFailedException {
 		PersServiceVersionRest svc = (PersServiceVersionRest) theServiceDefinition;
 
 		final String messageType = "method";
@@ -168,14 +167,14 @@ public class ServiceInvokerRest extends BaseServiceInvoker implements IServiceIn
 	@Override
 	public SrBeanProcessedResponse processInvocationResponse(BasePersServiceVersion theServiceDefinition, SrBeanIncomingRequest theRequest, SrBeanIncomingResponse theResponse) {
 
-		String responseBody = theResponse.getBody();
+		String responseBody = StringUtils.defaultString(theResponse.getBody());
 
 		PersServiceVersionRest svc = (PersServiceVersionRest) theServiceDefinition;
 		if (Boolean.TRUE.equals(svc.getRewriteUrls())) {
 			StringBuilder reqBuilder = new StringBuilder(responseBody);
 			int idx = 0;
 			for (PersServiceVersionUrl next : svc.getUrls()) {
-				String targetUrl = svc.getUrls().get(0).getUrl();
+				String targetUrl = next.getUrl();
 				String base = theRequest.getBase() + defaultString(theRequest.getPathToSvcVer());
 				while (true) {
 					idx = reqBuilder.indexOf(targetUrl, idx);
@@ -191,7 +190,9 @@ public class ServiceInvokerRest extends BaseServiceInvoker implements IServiceIn
 
 		SrBeanProcessedResponse retVal = new SrBeanProcessedResponse();
 		retVal.setResponseBody(responseBody);
+		
 		retVal.setResponseContentType(theResponse.getContentType());
+		
 		retVal.setResponseHeaders(new HashMap<String, List<String>>());
 		retVal.setResponseType(ResponseTypeEnum.SUCCESS);
 

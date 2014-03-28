@@ -594,7 +594,7 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 			PersInvocationUrlStatsPk statsPk = new PersInvocationUrlStatsPk(MINUTE, theInvocationTime, success.getPid());
 			PersInvocationUrlStats stats = getStatsForPk(statsPk);
 			long responseTime = theHttpResponse.getResponseTime();
-			int responseBytes = theHttpResponse.getBody().length();
+			int responseBytes = theHttpResponse.getBody()!=null?theHttpResponse.getBody().length():0;
 			switch (theInvocationResponseResultsBean.getResponseType()) {
 			case FAULT:
 				stats.addFaultInvocation(responseTime, theRequestLengthChars, responseBytes);
@@ -641,11 +641,12 @@ public class RuntimeStatusBean implements IRuntimeStatus {
 		long responseTime;
 		long responseBytes;
 		if (theHttpResponse != null) {
-			if (theHttpResponse.getBody() == null) {
-				throw new NullPointerException("HTTP Response is null");
-			}
 			responseTime = theHttpResponse.getResponseTime();
-			responseBytes = theHttpResponse.getBody().length();
+			if (theHttpResponse.getBody() == null) {
+				responseBytes=0;
+			}else {
+				responseBytes = theHttpResponse.getBody().length();
+			}
 		} else {
 			responseTime = 0;
 			responseBytes = 0;

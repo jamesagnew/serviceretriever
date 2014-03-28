@@ -57,7 +57,7 @@
 		    }
 		   
 		    // Append the fragment to the current action so that it persists to the redirected URL.
-		    form.action = form.action + hash;
+		    form.action = form.action + "#" + hash;
 		    return true;
 		}
   

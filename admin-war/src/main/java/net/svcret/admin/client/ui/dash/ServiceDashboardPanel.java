@@ -38,8 +38,8 @@ public class ServiceDashboardPanel extends BaseDashboardPanel implements IRefres
 	private static ServiceDashboardPanel ourInstance;
 
 	private FlexTableWithTooltips<BaseDtoDashboardObject> myGrid;
-	private List<IDashModel> myUiList = new ArrayList<IDashModel>();
-	private List<BaseDtoDashboardObject> myUiModelItems = new ArrayList<BaseDtoDashboardObject>();
+	private List<IDashModel> myUiList = new ArrayList<>();
+	private List<BaseDtoDashboardObject> myUiModelItems = new ArrayList<>();
 	private boolean myHaveUpdatedBefore;
 
 	/**
@@ -49,7 +49,7 @@ public class ServiceDashboardPanel extends BaseDashboardPanel implements IRefres
 	private ServiceDashboardPanel() {
 		super();
 		
-		myGrid = new FlexTableWithTooltips<BaseDtoDashboardObject>(myUiModelItems);
+		myGrid = new FlexTableWithTooltips<>(myUiModelItems);
 		myGrid.setCellPadding(2);
 		myGrid.setCellSpacing(0);
 		add(myGrid);
@@ -72,15 +72,16 @@ public class ServiceDashboardPanel extends BaseDashboardPanel implements IRefres
 	}
 	
 	private boolean addServiceVersionChildren(ArrayList<IDashModel> newUiList, boolean haveStatsToLoad, BaseDtoServiceVersion nextServiceVersion) {
+		boolean retVal = haveStatsToLoad;
 		for (GServiceMethod nextMethod : nextServiceVersion.getMethodList()) {
 			if (!nextMethod.isStatsInitialized()) {
 				addSpinnerToList(newUiList);
-				haveStatsToLoad = true;
+				retVal = true;
 			} else {
 				newUiList.add(new DashModelServiceMethod(nextMethod));
 			}
 		}
-		return haveStatsToLoad;
+		return retVal;
 	}
 
 
@@ -221,7 +222,7 @@ public class ServiceDashboardPanel extends BaseDashboardPanel implements IRefres
 	public void updateView(DtoDomainList theDomainList) {
 		myHaveUpdatedBefore = true;
 		
-		ArrayList<IDashModel> newUiList = new ArrayList<IDashModel>();
+		ArrayList<IDashModel> newUiList = new ArrayList<>();
 
 		boolean haveStatsToLoad = false;
 		for (DtoDomain nextDomain : theDomainList) {

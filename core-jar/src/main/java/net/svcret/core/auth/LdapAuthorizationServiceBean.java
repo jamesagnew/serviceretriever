@@ -2,6 +2,7 @@ package net.svcret.core.auth;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.naming.AuthenticationException;
 import javax.naming.directory.DirContext;
 
 import net.svcret.admin.api.ProcessingException;
@@ -118,7 +119,12 @@ public class LdapAuthorizationServiceBean extends BaseAuthorizationServiceBean<P
 				LdapQuery q = LdapQueryBuilder.query().base(myLdapHost.getAuthenticateBaseDn()).filter(myAuthenticateFilter, theUsername);
 				
 				ourLog.debug("Querying LDAP with filter: {}", q.toString());
-				boolean authenticate = template.authenticate(q, thePassword, callback);
+				boolean authenticate;
+				try {
+					authenticate = template.authenticate(q, thePassword, callback);
+				} catch (org.springframework.ldap.AuthenticationException e) {
+					authenticate = false;
+				}
 				ourLog.debug("LDAP authentication results: {}", authenticate);
 				
 				return authenticate;

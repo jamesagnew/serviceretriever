@@ -121,4 +121,6 @@ public interface ModelUpdateServiceAsync {
 
 	void loadNodeListAndStatistics(AsyncCallback<DtoNodeStatusAndStatisticsList> theAsyncCallback);
 
+	void removeUser(long thePid, AsyncCallback<Void> theAsyncCallback);
+
 }

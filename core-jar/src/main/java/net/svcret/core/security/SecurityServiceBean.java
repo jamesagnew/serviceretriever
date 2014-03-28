@@ -1,6 +1,9 @@
 package net.svcret.core.security;
 
-import static net.svcret.admin.shared.enm.AuthorizationOutcomeEnum.*;
+import static net.svcret.admin.shared.enm.AuthorizationOutcomeEnum.AUTHORIZED;
+import static net.svcret.admin.shared.enm.AuthorizationOutcomeEnum.FAILED_BAD_CREDENTIALS_IN_REQUEST;
+import static net.svcret.admin.shared.enm.AuthorizationOutcomeEnum.FAILED_INTERNAL_ERROR;
+import static net.svcret.admin.shared.enm.AuthorizationOutcomeEnum.FAILED_USER_NO_PERMISSIONS;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,7 +30,6 @@ import net.svcret.core.api.ISecurityService;
 import net.svcret.core.ejb.InMemoryUserCatalog;
 import net.svcret.core.ejb.nodecomm.IBroadcastSender;
 import net.svcret.core.model.entity.BasePersAuthenticationHost;
-import net.svcret.core.model.entity.BasePersObject;
 import net.svcret.core.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.core.model.entity.PersMethod;
 import net.svcret.core.model.entity.PersUser;
@@ -115,9 +117,7 @@ public class SecurityServiceBean implements ISecurityService {
 				UserOrFailure authorize = authService.authorize(authHost, myInMemoryUserCatalog, next.getCredentialGrabber());
 
 				/*
-				 * TODO: keep track of the failure reason by authrequest so that
-				 * we can display all of them in the UI (i.e. if the credentials
-				 * fail for different reasons for each service..)
+				 * TODO: keep track of the failure reason by authrequest so that we can display all of them in the UI (i.e. if the credentials fail for different reasons for each service..)
 				 */
 
 				PersUser authorizedUser = authorize.getUser();
@@ -229,9 +229,7 @@ public class SecurityServiceBean implements ISecurityService {
 		ourLog.debug("Checking for updated user catalog");
 
 		/*
-		 * If the state in the DB hasn't ever been incremented, assume we're in
-		 * a completely new installation, and create a default user database
-		 * with an admin user who can begin configuring things
+		 * If the state in the DB hasn't ever been incremented, assume we're in a completely new installation, and create a default user database with an admin user who can begin configuring things
 		 */
 
 		long newVersion = myDao.getStateCounter(STATE_KEY);
@@ -262,20 +260,18 @@ public class SecurityServiceBean implements ISecurityService {
 	}
 
 	private void synchronizeUserCatalogChanged() {
-//		if (!BasePersObject.isUnitTestMode()) {
-			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
-				@Override
-				public void afterCommit() {
-					try {
-						incrementStateVersion();
-						loadUserCatalogIfNeeded();
-						myBroadcastSender.notifyUserCatalogChanged();
-					} catch (UnexpectedFailureException e) {
-						ourLog.warn("Failed to notify peers of change", e);
-					}
+		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+			@Override
+			public void afterCommit() {
+				try {
+					incrementStateVersion();
+					loadUserCatalogIfNeeded();
+					myBroadcastSender.notifyUserCatalogChanged();
+				} catch (UnexpectedFailureException e) {
+					ourLog.warn("Failed to notify peers of change", e);
 				}
-			});
-//		}
+			}
+		});
 	}
 
 	private IAuthorizationService getAuthService(BasePersAuthenticationHost authHost) {
@@ -372,7 +368,7 @@ public class SecurityServiceBean implements ISecurityService {
 		}
 
 		// Done!
-		
+
 		myInMemoryAuthenticationHostList = Collections.unmodifiableList(authHosts);
 		myInMemoryUserCatalog = new InMemoryUserCatalog(hostPidToUsernameToUser, pidToAuthHost);
 		myCurrentVersion = newVersion;
@@ -406,7 +402,7 @@ public class SecurityServiceBean implements ISecurityService {
 		}
 
 		myDao.deleteUser(user);
-
+		synchronizeUserCatalogChanged();
 	}
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -421,7 +417,7 @@ public class SecurityServiceBean implements ISecurityService {
 			ourLog.info("Saving new authentication host of type {} with id {} / {}", new Object[] { theAuthHost.getClass().getSimpleName(), theAuthHost.getPid(), theAuthHost.getModuleId() });
 			myDao.saveAuthenticationHost(theAuthHost);
 		}
-		
+
 		synchronizeUserCatalogChanged();
 	}
 

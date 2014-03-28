@@ -265,6 +265,8 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		case JSONRPC20:
 		case HL7OVERHTTP:
 		case VIRTUAL:
+		case REST:
+			// ...Doesn't apply to these...
 			break;
 		}
 
@@ -1591,13 +1593,8 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		PersUser retVal;
 
 		if (theUser.getPidOrNull() == null) {
-			BasePersAuthenticationHost authHost = myDao.getAuthenticationHostByPid(theUser.getAuthHostPid());
-			if (authHost == null) {
-				throw new ProcessingException("Unknown authentication host PID " + theUser.getAuthHostPid());
-			}
 			retVal = new PersUser();
 			retVal.setUsername(theUser.getUsername());
-			retVal.setAuthenticationHost(authHost);
 			retVal.setContact(new PersUserContact(retVal));
 //			
 //			if (retVal.isNewlyCreated() == false) {
@@ -1607,6 +1604,14 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			retVal = myDao.getUser(theUser.getPid());
 		}
 
+		BasePersAuthenticationHost authHost = myDao.getAuthenticationHostByPid(theUser.getAuthHostPid());
+		if (authHost == null) {
+			throw new ProcessingException("Unknown authentication host PID " + theUser.getAuthHostPid());
+		}
+		if (!authHost.equals(retVal.getAuthenticationHost())) {
+			retVal.setAuthenticationHost(authHost);
+		}
+		
 		retVal.setAllowSourceIpsAsStrings(theUser.getAllowableSourceIps());
 		retVal.setAllowAllDomains(theUser.isAllowAllDomains());
 		retVal.setPermissions(theUser.getGlobalPermissions());

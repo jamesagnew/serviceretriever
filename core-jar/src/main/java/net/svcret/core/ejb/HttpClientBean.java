@@ -23,9 +23,10 @@ import net.svcret.admin.shared.util.Validate;
 import net.svcret.core.Messages;
 import net.svcret.core.api.IHttpClient;
 import net.svcret.core.api.IResponseValidator;
+import net.svcret.core.api.IResponseValidator.ValidationResponse;
+import net.svcret.core.api.RequestType;
 import net.svcret.core.api.SrBeanIncomingResponse;
 import net.svcret.core.api.UrlPoolBean;
-import net.svcret.core.api.IResponseValidator.ValidationResponse;
 import net.svcret.core.model.entity.PersHttpClientConfig;
 import net.svcret.core.model.entity.PersServiceVersionUrl;
 
@@ -35,6 +36,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -62,7 +64,7 @@ public class HttpClientBean implements IHttpClient {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(HttpClientBean.class);
 
-	private ConcurrentHashMap<Long, HttpClientImpl> myClientConfigPidToClient = new ConcurrentHashMap<Long, HttpClientBean.HttpClientImpl>();
+	private ConcurrentHashMap<Long, HttpClientImpl> myClientConfigPidToClient = new ConcurrentHashMap<>();
 	private DefaultHttpClient myDefaultSimpleGetClient;
 	private PoolingClientConnectionManager mySimpleClientConMgr;
 	private Charset ourDefaultCharset = Charset.forName("UTF-8");
@@ -128,14 +130,7 @@ public class HttpClientBean implements IHttpClient {
 
 	@Transactional(propagation = Propagation.NOT_SUPPORTED)
 	@Override
-	public SrBeanIncomingResponse post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody,
-			Map<String, List<String>> theHeaders, String theContentType) {
-		return post(theClientConfig, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType, null);
-	}
-
-	@Transactional(propagation = Propagation.NOT_SUPPORTED)
-	@Override
-	public SrBeanIncomingResponse post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody,
+	public SrBeanIncomingResponse post(RequestType theRequestType, PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody,
 			Map<String, List<String>> theHeaders, String theContentType, String theUrlSuffix) {
 		if (theClientConfig.getConnectTimeoutMillis() <= 0) {
 			throw new IllegalArgumentException("ConnectTimeout may not be <= 0");
@@ -156,16 +151,16 @@ public class HttpClientBean implements IHttpClient {
 			ourLog.info("Creating a new HTTP client instance for config PID {} (has version {})", theClientConfig.getPid(), theClientConfig.getOptLock());
 			try {
 				client = new HttpClientImpl(theClientConfig);
+				myClientConfigPidToClient.put(theClientConfig.getPid(), client);
 			} catch (ClientConfigException e) {
 				ourLog.error("Failed to initialize HTTP client", e);
 				SrBeanIncomingResponse retVal = new SrBeanIncomingResponse();
 				retVal.addFailedUrl(theUrlPool.getPreferredUrl(), "ServiceRetriever failed to initialize HTTP client, problem was: " + e.getMessage(), 0, "", "", 0, null);
 				return retVal;
 			}
-			myClientConfigPidToClient.put(theClientConfig.getPid(), client);
 		}
 
-		return client.post(theClientConfig, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType, theUrlSuffix);
+		return client.post(theRequestType, theClientConfig, theResponseValidator, theUrlPool, theContentBody, theHeaders, theContentType, theUrlSuffix);
 	}
 
 	@PostConstruct
@@ -190,8 +185,8 @@ public class HttpClientBean implements IHttpClient {
 		myDefaultSimpleGetClient = new DefaultHttpClient(mySimpleClientConMgr, params);
 	}
 
-	private void doPost(SrBeanIncomingResponse theResponse, IResponseValidator theResponseValidator, Map<String, List<String>> theHeaders, HttpEntity postEntity, DefaultHttpClient client,
-			PersServiceVersionUrl theNextUrl, int theFailureRetries, String theUrlSuffix) {
+	private static void doPost(RequestType theRequestType, SrBeanIncomingResponse theResponse, IResponseValidator theResponseValidator, Map<String, List<String>> theHeaders, HttpEntity postEntity,
+			DefaultHttpClient client, PersServiceVersionUrl theNextUrl, int theFailureRetries, String theUrlSuffix) {
 		int failuresRemaining = theFailureRetries + 1;
 		for (;;) {
 
@@ -204,13 +199,41 @@ public class HttpClientBean implements IHttpClient {
 				url = theNextUrl.getUrl();
 			}
 
-			HttpPost post = new HttpPost(url);
-			post.setEntity(postEntity);
+			HttpUriRequest request;
+			switch (theRequestType) {
+			case DELETE: {
+				HttpDelete post = new HttpDelete(url);
+				assert postEntity == null;
+				request = post;
+				break;
+			}
+			case GET: {
+				HttpGet post = new HttpGet(url);
+				assert postEntity == null;
+				request = post;
+				break;
+			}
+			case OPTIONS: {
+				HttpPost post = new HttpPost(url);
+				post.setEntity(postEntity);
+				request = post;
+				break;
+			}
+			case POST: {
+				HttpPost post = new HttpPost(url);
+				post.setEntity(postEntity);
+				request = post;
+				break;
+			}
+			default:
+				throw new IllegalArgumentException(theRequestType + "");
+			}
+
 			if (theHeaders != null) {
 				for (Entry<String, List<String>> next : theHeaders.entrySet()) {
 					if (next != null && next.getValue() != null) {
 						for (String nextValue : next.getValue()) {
-							post.addHeader(next.getKey(), nextValue);
+							request.addHeader(next.getKey(), nextValue);
 						}
 					}
 				}
@@ -220,7 +243,7 @@ public class HttpClientBean implements IHttpClient {
 			HttpEntity entity = null;
 			long delay = 0;
 			try {
-				HttpResponse resp = client.execute(post);
+				HttpResponse resp = client.execute(request);
 				delay = System.currentTimeMillis() - start;
 
 				entity = resp.getEntity();
@@ -305,12 +328,12 @@ public class HttpClientBean implements IHttpClient {
 
 	}
 
-	private Map<String, List<String>> toHeaderMap(Header[] theAllHeaders) {
-		HashMap<String, List<String>> retVal = new HashMap<String, List<String>>();
+	private static Map<String, List<String>> toHeaderMap(Header[] theAllHeaders) {
+		HashMap<String, List<String>> retVal = new HashMap<>();
 		for (Header header : theAllHeaders) {
 			List<String> list = retVal.get(header.getName());
 			if (list == null) {
-				list = new ArrayList<String>(2);
+				list = new ArrayList<>(2);
 				retVal.put(header.getName(), list);
 			}
 			list.add(header.getValue());
@@ -418,12 +441,22 @@ public class HttpClientBean implements IHttpClient {
 			}
 		}
 
-		public SrBeanIncomingResponse post(PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody,
+		public SrBeanIncomingResponse post(RequestType theRequestType, PersHttpClientConfig theClientConfig, IResponseValidator theResponseValidator, UrlPoolBean theUrlPool, String theContentBody,
 				Map<String, List<String>> theHeaders, String theContentType, String theUrlSuffix) {
 			HttpParams params = createHttpParams(theClientConfig);
 
-			ContentType contentType = ContentType.create(theContentType, ourDefaultCharset);
-			HttpEntity postEntity = new StringEntity(theContentBody, contentType);
+			HttpEntity postEntity = null;
+			switch (theRequestType) {
+			case DELETE:
+			case GET:
+				// Leave it null
+				break;
+			case OPTIONS:
+			case POST:
+				ContentType contentType = ContentType.create(theContentType, ourDefaultCharset);
+				postEntity = new StringEntity(theContentBody, contentType);
+				break;
+			}
 
 			DefaultHttpClient client = new DefaultHttpClient(myConMgr, params);
 			SrBeanIncomingResponse retVal = new SrBeanIncomingResponse();
@@ -431,11 +464,11 @@ public class HttpClientBean implements IHttpClient {
 			PersServiceVersionUrl url = theUrlPool.getPreferredUrl();
 			int failureRetries = theClientConfig.getFailureRetriesBeforeAborting();
 
-			doPost(retVal, theResponseValidator, theHeaders, postEntity, client, url, failureRetries, theUrlSuffix);
+			doPost(theRequestType, retVal, theResponseValidator, theHeaders, postEntity, client, url, failureRetries, theUrlSuffix);
 
 			if (retVal.getSuccessfulUrl() == null) {
 				for (PersServiceVersionUrl nextUrl : theUrlPool.getAlternateUrls()) {
-					doPost(retVal, theResponseValidator, theHeaders, postEntity, client, nextUrl, failureRetries, theUrlSuffix);
+					doPost(theRequestType, retVal, theResponseValidator, theHeaders, postEntity, client, nextUrl, failureRetries, theUrlSuffix);
 					if (retVal.getSuccessfulUrl() != null) {
 						break;
 					}

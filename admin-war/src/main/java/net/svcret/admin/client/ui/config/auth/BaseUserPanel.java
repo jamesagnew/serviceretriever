@@ -16,11 +16,15 @@ import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.client.ui.components.ThrottleEditorGrid;
 import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.client.ui.config.KeepRecentTransactionsPanel;
+import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
+import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.GUser;
 import net.svcret.admin.shared.util.StringUtil;
 
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -30,27 +34,29 @@ import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.TabPanel;
 import com.google.gwt.user.client.ui.TextBox;
 
 public abstract class BaseUserPanel extends FlowPanel {
 
-	private FlowPanel myContentPanel;
-	private LoadingSpinner myLoadingSpinner;
-	private CheckBox myPasswordCheckbox;
-	private TextBox myPasswordTextbox;
-	private PermissionsPanel myPermissionsPanel;
-	private GUser myUser;
-	private TwoColumnGrid myUsernamePasswordGrid;
-	private TextBox myUsernameTextBox;
-	private EditableField myNotesTextBox;
-	private Grid myIpsGrid;
+	private TabPanel myBottomTabPanel;
 	private EditableField myContactEmailsEditor;
+	private FlowPanel myContentPanel;
+	private Grid myIpsGrid;
 	private FlowPanel myKeepRecentTransactionsContainerPanel;
 	private KeepRecentTransactionsPanel myKeepRecentTransactionsPanel;
 	private int myKeepRecentTransactionsTabIndex;
-	private TabPanel myBottomTabPanel;
+	private LoadingSpinner myLoadingSpinner;
+	private EditableField myNotesTextBox;
+	private CheckBox myPasswordCheckbox;
+	private TextBox myPasswordTextbox;
+	private PermissionsPanel myPermissionsPanel;
 	private ThrottleEditorGrid myThrottleControlGrid;
+	private GUser myUser;
+	private TwoColumnGrid myUsernamePasswordGrid;
+
+	private TextBox myUsernameTextBox;
 
 	public BaseUserPanel() {
 		FlowPanel listPanel = new FlowPanel();
@@ -71,97 +77,8 @@ public abstract class BaseUserPanel extends FlowPanel {
 		myLoadingSpinner.show();
 
 	}
-
-	public void setUser(final GUser theResult, BaseDtoAuthenticationHost theAuthHost) {
-		myLoadingSpinner.hideCompletely();
-		myUser = theResult;
-		myPermissionsPanel.setPermissions(theResult);
-
-		myUsernamePasswordGrid.clear();
-
-		myNotesTextBox.setValue(theResult.getContactNotes());
-
-		myUsernameTextBox = new TextBox();
-		myUsernameTextBox.setValue(myUser.getUsername());
-		myUsernameTextBox.addValueChangeHandler(new ValueChangeHandler<String>() {
-			@Override
-			public void onValueChange(ValueChangeEvent<String> theEvent) {
-				theResult.setUsername(theEvent.getValue());
-			}
-		});
-		myUsernamePasswordGrid.addRow(MSGS.editUser_Username(), myUsernameTextBox);
-
-		final EditableField descriptionTextBox = new EditableField();
-		descriptionTextBox.setValue(theResult.getDescription());
-		descriptionTextBox.addValueChangeHandler(new ValueChangeHandler<String>() {
-			@Override
-			public void onValueChange(ValueChangeEvent<String> theEvent) {
-				theResult.setDescription(descriptionTextBox.getValue());
-			}
-		});
-		myUsernamePasswordGrid.addRow("Description", descriptionTextBox);
-
-		if (theAuthHost.isSupportsPasswordChange()) {
-			myPasswordCheckbox = new CheckBox(MSGS.editUser_Password());
-			myPasswordCheckbox.setStyleName(CssConstants.FORM_LABEL);
-			myPasswordCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
-				@Override
-				public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
-					if (myPasswordCheckbox.getValue()) {
-						myUser.setChangePassword(myPasswordTextbox.getValue());
-					} else {
-						myUser.setChangePassword(null);
-					}
-				}
-			});
-			myPasswordTextbox = new TextBox();
-			myPasswordTextbox.addValueChangeHandler(new ValueChangeHandler<String>() {
-				@Override
-				public void onValueChange(ValueChangeEvent<String> theEvent) {
-					myPasswordCheckbox.setValue(StringUtil.isNotBlank(myPasswordTextbox.getValue()));
-					if (myPasswordCheckbox.getValue()) {
-						myUser.setChangePassword(myPasswordTextbox.getValue());
-					} else {
-						myUser.setChangePassword(null);
-					}
-				}
-			});
-			if (this instanceof AddUserPanel) {
-				myPasswordCheckbox.setValue(true);
-				myPasswordCheckbox.setEnabled(false);
-			}
-			myUsernamePasswordGrid.addRow(myPasswordCheckbox, myPasswordTextbox);
-			
-		}
-
-		updateContactEmailEditor();
-
-		myThrottleControlGrid.setThrottle(myUser);
-
-		updateIpsGrid();
-
-		myKeepRecentTransactionsPanel = new KeepRecentTransactionsPanel(theResult);
-		myKeepRecentTransactionsContainerPanel.clear();
-		myKeepRecentTransactionsContainerPanel.add(myKeepRecentTransactionsPanel);
-		
-	}
-
+	
 	protected abstract String getPanelTitle();
-
-	private void updateContactEmailEditor() {
-		StringBuilder b = new StringBuilder();
-
-		HashSet<String> contactEmails = myUser.getContactEmails();
-		if (contactEmails != null) {
-			for (String next : contactEmails) {
-				if (b.length() > 0) {
-					b.append("\n");
-				}
-				b.append(next);
-			}
-		}
-		myContactEmailsEditor.setValue(b.toString());
-	}
 
 	protected void initContents() {
 		myUsernamePasswordGrid = new TwoColumnGrid();
@@ -209,7 +126,7 @@ public abstract class BaseUserPanel extends FlowPanel {
 		myContactEmailsEditor.addValueChangeHandler(new ValueChangeHandler<String>() {
 			@Override
 			public void onValueChange(ValueChangeEvent<String> theEvent) {
-				Set<String> emails = new TreeSet<String>();
+				Set<String> emails = new TreeSet<>();
 				for (String next : myContactEmailsEditor.getValueOrBlank().split(",| ")) {
 					if (next.contains("@")) {
 						emails.add(next.trim());
@@ -275,6 +192,160 @@ public abstract class BaseUserPanel extends FlowPanel {
 		
 	}
 
+	protected void save() {
+
+
+		if (!myKeepRecentTransactionsPanel.validateAndShowErrorIfNotValid()) {
+			myBottomTabPanel.selectTab(myKeepRecentTransactionsTabIndex);
+			return;
+		}
+		
+		myKeepRecentTransactionsPanel.populateDto(myUser);
+		
+		myLoadingSpinner.show();
+		AdminPortal.MODEL_SVC.saveUser(myUser, new AsyncCallback<GUser>() {
+			@Override
+			public void onFailure(Throwable theCaught) {
+				Model.handleFailure(theCaught);
+			}
+
+			@Override
+			public void onSuccess(GUser theResult) {
+				myUser.setPid(theResult.getPid());
+				myLoadingSpinner.showMessage(MSGS.editUser_DoneSaving(), false);
+			}
+		});
+
+	}
+
+	private void setAllowableIpToEdit(final int theIndex) {
+		TextBox editTextBox = new TextBox();
+		editTextBox.setValue(myUser.getAllowableSourceIps().get(theIndex));
+		editTextBox.addValueChangeHandler(new ValueChangeHandler<String>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<String> theEvent) {
+				myUser.getAllowableSourceIps().set(theIndex, theEvent.getValue());
+			}
+		});
+		myIpsGrid.setWidget(theIndex, 2, editTextBox);
+	}
+	private ListBox myAuthHostBox;
+
+	public void setUser(final GUser theResult, final BaseDtoAuthenticationHost theAuthHost) {
+		Model.getInstance().loadAuthenticationHosts(new IAsyncLoadCallback<DtoAuthenticationHostList>() {
+
+			
+			@Override
+			public void onSuccess(final DtoAuthenticationHostList theAuthHostList) {
+
+		myLoadingSpinner.hideCompletely();
+		myUser = theResult;
+		myPermissionsPanel.setPermissions(theResult);
+
+		myUsernamePasswordGrid.clear();
+
+		myNotesTextBox.setValue(theResult.getContactNotes());
+
+		// User Name
+		myUsernameTextBox = new TextBox();
+		myUsernameTextBox.setValue(myUser.getUsername());
+		myUsernameTextBox.addValueChangeHandler(new ValueChangeHandler<String>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<String> theEvent) {
+				theResult.setUsername(theEvent.getValue());
+			}
+		});
+		myUsernamePasswordGrid.addRow(MSGS.editUser_Username(), myUsernameTextBox);
+
+		// Auth Host
+		myAuthHostBox = new ListBox(false);
+		for (BaseDtoAuthenticationHost nextAuthHost : theAuthHostList) {
+			myAuthHostBox.addItem(nextAuthHost.getModuleId());
+			if (nextAuthHost.getPid()==theResult.getAuthHostPid()) {
+				myAuthHostBox.setSelectedIndex(myAuthHostBox.getItemCount()-1);
+			}
+		}
+		myAuthHostBox.addChangeHandler(new ChangeHandler() {
+			@Override
+			public void onChange(ChangeEvent theArg0) {
+				myUser.setAuthHostPid(theAuthHostList.get(myAuthHostBox.getSelectedIndex()).getPid());
+			}
+		});
+		myUsernamePasswordGrid.addRow(MSGS.name_AuthenticationHost(), myAuthHostBox);
+		
+		final EditableField descriptionTextBox = new EditableField();
+		descriptionTextBox.setValue(theResult.getDescription());
+		descriptionTextBox.addValueChangeHandler(new ValueChangeHandler<String>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<String> theEvent) {
+				theResult.setDescription(descriptionTextBox.getValue());
+			}
+		});
+		myUsernamePasswordGrid.addRow("Description", descriptionTextBox);
+
+		if (theAuthHost.isSupportsPasswordChange()) {
+			myPasswordCheckbox = new CheckBox(MSGS.editUser_Password());
+			myPasswordCheckbox.setStyleName(CssConstants.FORM_LABEL);
+			myPasswordCheckbox.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+				@Override
+				public void onValueChange(ValueChangeEvent<Boolean> theEvent) {
+					if (myPasswordCheckbox.getValue()) {
+						myUser.setChangePassword(myPasswordTextbox.getValue());
+					} else {
+						myUser.setChangePassword(null);
+					}
+				}
+			});
+			myPasswordTextbox = new TextBox();
+			myPasswordTextbox.addValueChangeHandler(new ValueChangeHandler<String>() {
+				@Override
+				public void onValueChange(ValueChangeEvent<String> theEvent) {
+					myPasswordCheckbox.setValue(StringUtil.isNotBlank(myPasswordTextbox.getValue()));
+					if (myPasswordCheckbox.getValue()) {
+						myUser.setChangePassword(myPasswordTextbox.getValue());
+					} else {
+						myUser.setChangePassword(null);
+					}
+				}
+			});
+			if (BaseUserPanel.this instanceof AddUserPanel) {
+				myPasswordCheckbox.setValue(true);
+				myPasswordCheckbox.setEnabled(false);
+			}
+			myUsernamePasswordGrid.addRow(myPasswordCheckbox, myPasswordTextbox);
+			
+		}
+
+		updateContactEmailEditor();
+
+		myThrottleControlGrid.setThrottle(myUser);
+
+		updateIpsGrid();
+
+		myKeepRecentTransactionsPanel = new KeepRecentTransactionsPanel(theResult);
+		myKeepRecentTransactionsContainerPanel.clear();
+		myKeepRecentTransactionsContainerPanel.add(myKeepRecentTransactionsPanel);
+
+			}
+		});
+		
+	}
+
+	private void updateContactEmailEditor() {
+		StringBuilder b = new StringBuilder();
+
+		HashSet<String> contactEmails = myUser.getContactEmails();
+		if (contactEmails != null) {
+			for (String next : contactEmails) {
+				if (b.length() > 0) {
+					b.append("\n");
+				}
+				b.append(next);
+			}
+		}
+		myContactEmailsEditor.setValue(b.toString());
+	}
+
 	private void updateIpsGrid() {
 		final List<String> allowableIps = myUser.getAllowableSourceIps();
 
@@ -324,44 +395,6 @@ public abstract class BaseUserPanel extends FlowPanel {
 			}
 		});
 		myIpsGrid.setWidget(allowableIps.size(), 0, addButton);
-
-	}
-
-	private void setAllowableIpToEdit(final int theIndex) {
-		TextBox editTextBox = new TextBox();
-		editTextBox.setValue(myUser.getAllowableSourceIps().get(theIndex));
-		editTextBox.addValueChangeHandler(new ValueChangeHandler<String>() {
-			@Override
-			public void onValueChange(ValueChangeEvent<String> theEvent) {
-				myUser.getAllowableSourceIps().set(theIndex, theEvent.getValue());
-			}
-		});
-		myIpsGrid.setWidget(theIndex, 2, editTextBox);
-	}
-
-	protected void save() {
-
-
-		if (!myKeepRecentTransactionsPanel.validateAndShowErrorIfNotValid()) {
-			myBottomTabPanel.selectTab(myKeepRecentTransactionsTabIndex);
-			return;
-		}
-		
-		myKeepRecentTransactionsPanel.populateDto(myUser);
-		
-		myLoadingSpinner.show();
-		AdminPortal.MODEL_SVC.saveUser(myUser, new AsyncCallback<GUser>() {
-			@Override
-			public void onFailure(Throwable theCaught) {
-				Model.handleFailure(theCaught);
-			}
-
-			@Override
-			public void onSuccess(GUser theResult) {
-				myUser.setPid(theResult.getPid());
-				myLoadingSpinner.showMessage(MSGS.editUser_DoneSaving(), false);
-			}
-		});
 
 	}
 	

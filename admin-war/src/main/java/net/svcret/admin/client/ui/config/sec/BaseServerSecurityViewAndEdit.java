@@ -60,7 +60,7 @@ public abstract class BaseServerSecurityViewAndEdit<T extends BaseDtoServerSecur
 		flowPanel.add(propertyGrid);
 		
 		final ListBox authHostList = new ListBox(false);
-		propertyGrid.addRow(AdminPortal.MSGS.wsSecServerSecurity_AuthenticationHost(), authHostList);
+		propertyGrid.addRow(AdminPortal.MSGS.name_AuthenticationHost(), authHostList);
 		
 		Model.getInstance().loadAuthenticationHosts(new IAsyncLoadCallback<DtoAuthenticationHostList>() {
 			@Override

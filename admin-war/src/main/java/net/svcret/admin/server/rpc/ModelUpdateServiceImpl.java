@@ -35,6 +35,7 @@ import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
 import net.svcret.admin.shared.model.DtoNodeStatusAndStatisticsList;
 import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
 import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
+import net.svcret.admin.shared.model.DtoServiceVersionRest;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoServiceVersionVirtual;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
@@ -235,6 +236,9 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 			break;
 		case VIRTUAL:
 			retVal= new DtoServiceVersionVirtual();
+			break;
+		case REST:
+			retVal= new DtoServiceVersionRest();
 			break;
 		}
 
@@ -931,6 +935,20 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 			return getMock().loadNodeListAndStatistics();
 		}
 		return myAdminSvc.loadAllNodeStatuses();
+	}
+
+	@Override
+	public void removeUser(long thePid) throws ServiceFailureException {
+		if (isMockMode()) {
+			getMock().removeUser(thePid);
+		}
+		
+		try {
+			myAdminSvc.deleteUser(thePid);
+		} catch (ProcessingException e) {
+			ourLog.error("Failed to load outcome details", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
 	}
 
 }

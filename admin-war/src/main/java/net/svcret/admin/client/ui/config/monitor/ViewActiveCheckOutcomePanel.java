@@ -113,11 +113,11 @@ public class ViewActiveCheckOutcomePanel extends FlowPanel {
 
 	private void initOutcomesList(FlowPanel theContentPanel) {
 
-		myOutcomeListGrid = new PCellTable<DtoMonitorRuleActiveCheckOutcome>();
+		myOutcomeListGrid = new PCellTable<>();
 		myOutcomeListGrid.setEmptyTableWidget(new Label("This check has not yet been executed"));
 		theContentPanel.add(myOutcomeListGrid);
 
-		final SingleSelectionModel<DtoMonitorRuleActiveCheckOutcome> selectionModel = new SingleSelectionModel<DtoMonitorRuleActiveCheckOutcome>();
+		final SingleSelectionModel<DtoMonitorRuleActiveCheckOutcome> selectionModel = new SingleSelectionModel<>();
 	    myOutcomeListGrid.setSelectionModel(selectionModel);
 	    selectionModel.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
 	      @Override
@@ -127,7 +127,7 @@ public class ViewActiveCheckOutcomePanel extends FlowPanel {
 	      }
 	    });
 	    
-		myOutcomesDataProvider = new ListDataProvider<DtoMonitorRuleActiveCheckOutcome>();
+		myOutcomesDataProvider = new ListDataProvider<>();
 				
 		// Time
 

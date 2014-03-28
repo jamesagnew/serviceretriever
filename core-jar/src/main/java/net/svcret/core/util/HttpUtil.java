@@ -22,7 +22,7 @@ public class HttpUtil {
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(HttpUtil.class);
 
 	static {
-		ourFilterHeaders = new HashSet<String>();
+		ourFilterHeaders = new HashSet<>();
 		ourFilterHeaders.add("Transfer-Encoding");
 		ourFilterHeaders.add("Content-Length");
 		ourFilterHeaders.add("server");
@@ -32,30 +32,29 @@ public class HttpUtil {
 		theResp.setStatus(500);
 		theResp.setContentType("text/plain");
 
-		PrintWriter w = theResp.getWriter();
+		try (PrintWriter w = theResp.getWriter()){
 		w.append("HTTP 500 - ServiceRetriever\n\n");
 		w.append("Failure: " + theMessage);
-		w.close();
+		}
 	}
 
 	public static void sendSecurityFailure(HttpServletResponse theResp) throws IOException {
 		theResp.setStatus(403);
 		theResp.setContentType("text/plain");
 
-		PrintWriter w = theResp.getWriter();
+		try (PrintWriter w = theResp.getWriter()) {
 		w.append("HTTP 403 - Forbidden (Invalid or unknown credentials, or user does not have access to this service)");
-
-		w.close();
+		}
+		
 	}
 
 	public static void sendThrottleQueueFullFailure(HttpServletResponse theResp) throws IOException {
 		theResp.setStatus(429);
 		theResp.setContentType("text/plain");
 
-		PrintWriter w = theResp.getWriter();
+		try (PrintWriter w = theResp.getWriter()) {
 		w.append("HTTP 429 - Too Many Requests (This service is subject to rate limiting)");
-
-		w.close();
+		}
 	}
 
 	public static void sendSuccessfulResponse(HttpServletResponse theHttpResponse, SrBeanOutgoingResponse theServiceResponse) throws IOException {
@@ -74,11 +73,13 @@ public class HttpUtil {
 			}
 		}
 
-		theHttpResponse.setContentType(theHttpResponse.getContentType());
+		theHttpResponse.addHeader("X-PoweredBy", "ServiceRetriever fetches your data!");
+		theHttpResponse.setContentType(theServiceResponse.getResponseContentType());
+		theHttpResponse.setCharacterEncoding("UTF-8");
 
-		PrintWriter w = theHttpResponse.getWriter();
-		w.append(theServiceResponse.getResponseBody());
-		w.close();
+		try (PrintWriter w = theHttpResponse.getWriter()) {
+			w.append(theServiceResponse.getResponseBody());
+		}
 	}
 
 	public static void sendInvalidRequest(HttpServletResponse theResp, InvalidRequestException theE, IServiceRegistry theServiceRegistry) throws IOException {
@@ -109,7 +110,7 @@ public class HttpUtil {
 
 		theResp.setContentType("text/plain");
 
-		PrintWriter w = theResp.getWriter();
+		try (PrintWriter w = theResp.getWriter()){
 		w.append("HTTP " + theResp.getStatus() + " - ServiceRetriever\n\n");
 		w.append("Request failed with error code: " + theE.getIssue().name() + "\n");
 		w.append("Argument: " + theE.getArgument() + "\n\n");
@@ -119,14 +120,14 @@ public class HttpUtil {
 		if (theE.getIssue() == IssueEnum.INVALID_REQUEST_PATH) {
 			w.append("\n\nValid Paths: ");
 
-			List<String> validPaths = new ArrayList<String>(theServiceRegistry.getValidPaths());
+			List<String> validPaths = new ArrayList<>(theServiceRegistry.getValidPaths());
 			Collections.sort(validPaths);
 			for (String string : validPaths) {
 				w.append("\n * " + string);
 			}
 		}
 
-		w.close();
+		}
 	}
 
 }

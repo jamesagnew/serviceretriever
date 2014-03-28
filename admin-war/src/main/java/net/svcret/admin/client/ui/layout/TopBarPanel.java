@@ -51,7 +51,7 @@ public class TopBarPanel extends DockLayoutPanel {
 	}
 
 	public void setNodeStatuses(List<DtoNodeStatus> theNodeStatuses) {
-		List<DtoNodeStatus> nodeStatuses = new ArrayList<DtoNodeStatus>(theNodeStatuses);
+		List<DtoNodeStatus> nodeStatuses = new ArrayList<>(theNodeStatuses);
 		Collections.sort(nodeStatuses, new Comparator<DtoNodeStatus>() {
 			@Override
 			public int compare(DtoNodeStatus theO1, DtoNodeStatus theO2) {

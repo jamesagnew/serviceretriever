@@ -266,7 +266,7 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 
 	private Set<String> getObscureResponseItems() {
 		Set<String> values;
-		values = new HashSet<String>();
+		values = new HashSet<>();
 		for (String next : myObscureResponseElementsInLogEditor.getValueOrBlank().split("\\n| ")) {
 			if (StringUtil.isNotBlank(next)) {
 				values.add(next);
@@ -276,7 +276,7 @@ public class KeepRecentTransactionsPanel extends FlowPanel {
 	}
 
 	private Set<String> getObscureRequestItems() {
-		Set<String> values = new HashSet<String>();
+		Set<String> values = new HashSet<>();
 		for (String next : myObscureRequestElementsInLogEditor.getValueOrBlank().split("\\n| ")) {
 			if (StringUtil.isNotBlank(next)) {
 				values.add(next);

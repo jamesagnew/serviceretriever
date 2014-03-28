@@ -37,12 +37,12 @@ public class SrBeanIncomingResponse {
 	public void addFailedUrl(PersServiceVersionUrl theUrl, String theFailureExplanation, int theStatusCode, String theContentType, String theBody, long theInvocationMillis,
 			Map<String, List<String>> theHeaders) {
 		if (myFailedUrls == null) {
-			myFailedUrls = new HashMap<PersServiceVersionUrl, Failure>();
+			myFailedUrls = new HashMap<>();
 		}
 
 		Map<String, List<String>> headers = theHeaders;
 		if (headers == null) {
-			headers = new HashMap<String, List<String>>();
+			headers = new HashMap<>();
 		}
 
 		myFailedUrls.put(theUrl, new Failure(theBody, theContentType, theFailureExplanation, theStatusCode, theInvocationMillis, headers));
@@ -89,10 +89,10 @@ public class SrBeanIncomingResponse {
 	}
 
 	public List<Pair<String>> getResponseHeadersAsPairList() {
-		ArrayList<Pair<String>> retVal = new ArrayList<Pair<String>>();
+		ArrayList<Pair<String>> retVal = new ArrayList<>();
 		for (Entry<String, List<String>> next : getHeaders().entrySet()) {
 			for (String nextValue : next.getValue()) {
-				retVal.add(new Pair<String>(next.getKey(), nextValue));
+				retVal.add(new Pair<>(next.getKey(), nextValue));
 			}
 		}
 		return retVal;

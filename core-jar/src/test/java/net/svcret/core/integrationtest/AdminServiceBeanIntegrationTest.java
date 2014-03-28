@@ -1,8 +1,15 @@
 package net.svcret.core.integrationtest;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
 
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -62,6 +69,7 @@ import net.svcret.admin.shared.model.PartialUserListRequest;
 import net.svcret.admin.shared.model.RetrieverNodeTypeEnum;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
+import net.svcret.core.admin.AdminServiceBean;
 import net.svcret.core.api.IConfigService;
 import net.svcret.core.api.IDao;
 import net.svcret.core.api.IHttpClient;
@@ -76,6 +84,7 @@ import net.svcret.core.api.SrBeanProcessedRequest;
 import net.svcret.core.api.SrBeanProcessedResponse;
 import net.svcret.core.ejb.ConfigServiceBean;
 import net.svcret.core.invoker.soap.IServiceInvokerSoap11;
+import net.svcret.core.invoker.soap.ServiceInvokerSoap11;
 import net.svcret.core.log.IFilesystemAuditLogger;
 import net.svcret.core.log.ITransactionLogger;
 import net.svcret.core.model.entity.BasePersAuthenticationHost;
@@ -89,6 +98,7 @@ import net.svcret.core.model.entity.PersServiceVersionResource;
 import net.svcret.core.model.entity.PersServiceVersionUrl;
 import net.svcret.core.model.entity.PersUser;
 import net.svcret.core.model.entity.soap.PersServiceVersionSoap11;
+import net.svcret.core.orch.ServiceOrchestratorBean;
 import net.svcret.core.throttle.IThrottlingService;
 
 import org.apache.commons.io.IOUtils;
@@ -152,7 +162,10 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 
 	@SuppressWarnings("static-method")
 	@Before
-	public void before() throws ProcessingException, UnexpectedFailureException {
+	public void before() throws Exception {
+		ourHttpClientMock = ourAppCtx.getBean(IHttpClient.class);
+		((ServiceOrchestratorBean)((Advised)ourOrchSvc).getTargetSource().getTarget()).setHttpClient(ourHttpClientMock);
+		((ServiceInvokerSoap11)((Advised)ourSoapInvoker).getTargetSource().getTarget()).setHttpClient(ourHttpClientMock);
 		deleteEverything();
 	}
 
@@ -1935,7 +1948,6 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 		ourStatsQuerySvc = ourAppCtx.getBean(IRuntimeStatusQueryLocal.class);
 		ourSvcReg = ourAppCtx.getBean(IServiceRegistry.class);
 		ourTransactionLogSvc = ourAppCtx.getBean(ITransactionLogger.class);
-		ourHttpClientMock = ourAppCtx.getBean(IHttpClient.class);
 		ourFilesystemAuditLogger = ourAppCtx.getBean(IFilesystemAuditLogger.class);
 		ourOrchSvc = ourAppCtx.getBean(IServiceOrchestrator.class);
 		ourThrottlingService = ourAppCtx.getBean(IThrottlingService.class);
@@ -2015,7 +2027,6 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 			ourAdminSvc.deleteAuthenticationHost(next.getPid());
 		}
 		
-		reset(ourHttpClientMock);
 	}
 
 	private final class RetrieverThread extends Thread {
