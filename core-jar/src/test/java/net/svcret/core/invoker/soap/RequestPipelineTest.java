@@ -32,6 +32,7 @@ public class RequestPipelineTest {
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(RequestPipelineTest.class);
 
+	@SuppressWarnings("static-method")
 	@Test
 	public void testRequestProcessor() throws Exception{
 
@@ -41,10 +42,10 @@ public class RequestPipelineTest {
 		StringReader reader = new StringReader(msg);
 		StringWriter writer = new StringWriter();
 
-		List<PersBaseClientAuth<?>> clientAuths = new ArrayList<PersBaseClientAuth<?>>();
+		List<PersBaseClientAuth<?>> clientAuths = new ArrayList<>();
 		clientAuths.add(new PersWsSecUsernameTokenClientAuth("theUsername", "thePassword"));
 
-		List<PersBaseServerAuth<?, ?>> serverAuths = new ArrayList<PersBaseServerAuth<?, ?>>();
+		List<PersBaseServerAuth<?, ?>> serverAuths = new ArrayList<>();
 		serverAuths.add(new PersWsSecUsernameTokenServerAuth());
 		serverAuths.get(0).setPid(123L);
 		
@@ -81,10 +82,10 @@ public class RequestPipelineTest {
 		StringReader reader = new StringReader(msg);
 		StringWriter writer = new StringWriter();
 
-		List<PersBaseClientAuth<?>> clientAuths = new ArrayList<PersBaseClientAuth<?>>();
+		List<PersBaseClientAuth<?>> clientAuths = new ArrayList<>();
 		clientAuths.add(new PersWsSecUsernameTokenClientAuth("theUsername", "thePassword"));
 
-		List<PersBaseServerAuth<?, ?>> serverAuths = new ArrayList<PersBaseServerAuth<?, ?>>();
+		List<PersBaseServerAuth<?, ?>> serverAuths = new ArrayList<>();
 		serverAuths.add(new PersWsSecUsernameTokenServerAuth());
 		serverAuths.get(0).setPid(123L);
 		
@@ -112,7 +113,7 @@ public class RequestPipelineTest {
 
 	}
 
-	private void validate(String theOut) throws SAXException, IOException, ParserConfigurationException {
+	private static void validate(String theOut) throws SAXException, IOException, ParserConfigurationException {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		factory.setValidating(false);
 		factory.setNamespaceAware(true);
@@ -145,6 +146,7 @@ public class RequestPipelineTest {
 		builder.parse(new InputSource(new StringReader(trim)));		
 	}
 
+	@SuppressWarnings("static-method")
 	@Test
 	public void testRequestWithoutHeaderElement() throws Exception{
 
@@ -154,10 +156,10 @@ public class RequestPipelineTest {
 		StringReader reader = new StringReader(msg);
 		StringWriter writer = new StringWriter();
 
-		List<PersBaseClientAuth<?>> clientAuths = new ArrayList<PersBaseClientAuth<?>>();
+		List<PersBaseClientAuth<?>> clientAuths = new ArrayList<>();
 //		clientAuths.add(new PersWsSecUsernameTokenClientAuth("theUsername", "thePassword"));
 
-		List<PersBaseServerAuth<?, ?>> serverAuths = new ArrayList<PersBaseServerAuth<?, ?>>();
+		List<PersBaseServerAuth<?, ?>> serverAuths = new ArrayList<>();
 		serverAuths.add(new PersWsSecUsernameTokenServerAuth());
 
 		PersServiceVersionSoap11 serviceVer = mock(PersServiceVersionSoap11.class);
@@ -178,6 +180,7 @@ public class RequestPipelineTest {
 
 	}
 	
+	@SuppressWarnings("static-method")
 	@Test
 	public void testRequestWithoutHeaderElementButCreateOne() throws Exception{
 
@@ -187,10 +190,10 @@ public class RequestPipelineTest {
 		StringReader reader = new StringReader(msg);
 		StringWriter writer = new StringWriter();
 
-		List<PersBaseClientAuth<?>> clientAuths = new ArrayList<PersBaseClientAuth<?>>();
+		List<PersBaseClientAuth<?>> clientAuths = new ArrayList<>();
 		clientAuths.add(new PersWsSecUsernameTokenClientAuth("theUsername", "thePassword"));
 
-		List<PersBaseServerAuth<?, ?>> serverAuths = new ArrayList<PersBaseServerAuth<?, ?>>();
+		List<PersBaseServerAuth<?, ?>> serverAuths = new ArrayList<>();
 		serverAuths.add(new PersWsSecUsernameTokenServerAuth());
 
 		PersServiceVersionSoap11 serviceVer = mock(PersServiceVersionSoap11.class);

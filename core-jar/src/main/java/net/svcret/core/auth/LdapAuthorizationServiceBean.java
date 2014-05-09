@@ -2,14 +2,13 @@ package net.svcret.core.auth;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.naming.AuthenticationException;
 import javax.naming.directory.DirContext;
 
 import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
+import net.svcret.core.api.IAuthorizationService.ILdapAuthorizationService;
 import net.svcret.core.api.ICredentialGrabber;
 import net.svcret.core.api.ISecurityService;
-import net.svcret.core.api.IAuthorizationService.ILdapAuthorizationService;
 import net.svcret.core.ejb.InMemoryUserCatalog;
 import net.svcret.core.model.entity.BasePersAuthenticationHost;
 import net.svcret.core.model.entity.PersAuthenticationHostLdap;
@@ -29,7 +28,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class LdapAuthorizationServiceBean extends BaseAuthorizationServiceBean<PersAuthenticationHostLdap> implements ILdapAuthorizationService {
 
-	private ConcurrentHashMap<BasePersAuthenticationHost, MyLdapNetworkConnection> myHostToConnection = new ConcurrentHashMap<BasePersAuthenticationHost, MyLdapNetworkConnection>();
+	private ConcurrentHashMap<BasePersAuthenticationHost, MyLdapNetworkConnection> myHostToConnection = new ConcurrentHashMap<>();
 
 	private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger(LdapAuthorizationServiceBean.class);
 
@@ -50,11 +49,11 @@ public class LdapAuthorizationServiceBean extends BaseAuthorizationServiceBean<P
 			connection = newConnection;
 		}
 
-		String username = theCredentialGrabber.getUsername();
-		String password = theCredentialGrabber.getPassword();
+		String username = StringUtils.defaultString(theCredentialGrabber.getUsername());
+		String password = StringUtils.defaultString(theCredentialGrabber.getPassword());
 
 		if (ourLog.isDebugEnabled()) {
-			ourLog.debug("Going to do an LDAP validation on user {} and password {}", username, StringUtils.repeat('*', password.length()));
+			ourLog.debug("Going to do an LDAP validation on user '{}' and password '{}'", username, StringUtils.repeat('*', password.length()));
 		}
 
 		if (StringUtils.isBlank(username)) {
@@ -62,7 +61,7 @@ public class LdapAuthorizationServiceBean extends BaseAuthorizationServiceBean<P
 		}
 
 		if (StringUtils.isBlank(password)) {
-			return new UserOrFailure(AuthorizationOutcomeEnum.FAILED_MISSING_USERNAME);
+			return new UserOrFailure(AuthorizationOutcomeEnum.FAILED_MISSING_PASSWORD);
 		}
 
 		PersUser user = theUserCatalog.findUser(theHost.getPid(), theCredentialGrabber.getUsername());

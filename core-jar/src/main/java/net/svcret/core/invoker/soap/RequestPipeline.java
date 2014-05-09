@@ -34,7 +34,7 @@ class RequestPipeline {
 	private static XMLInputFactory ourXmlInputFactory;
 	private static XMLOutputFactory ourXmlOutputFactory;
 	private final List<PersBaseClientAuth<?>> myClientAuths;
-	private Map<PersBaseServerAuth<?, ?>, ICredentialGrabber> myCredentialGrabbers = new HashMap<PersBaseServerAuth<?, ?>, ICredentialGrabber>();
+	private Map<PersBaseServerAuth<?, ?>, ICredentialGrabber> myCredentialGrabbers = new HashMap<>();
 	private boolean myPrettyPrint;
 	private boolean myUsed = false;
 	private List<PersBaseServerAuth<?, ?>> myServerAuths;
@@ -154,7 +154,7 @@ class RequestPipeline {
 		StartElement headerStart = ourEventFactory.createStartElement(Constants.getSoapenvHeaderQname(theXmlPrefix), null, null);
 		theStreamWriter.add(headerStart);
 
-		List<XMLEvent> headerEvents = new ArrayList<XMLEvent>();
+		List<XMLEvent> headerEvents = new ArrayList<>();
 		if (theStartElem != null) {
 			while (theStreamReader.hasNext()) {
 				XMLEvent nextEvent = theStreamReader.nextEvent();
@@ -218,7 +218,7 @@ class RequestPipeline {
 			if (nextAuth instanceof PersWsSecUsernameTokenClientAuth) {
 				PersWsSecUsernameTokenClientAuth auth = (PersWsSecUsernameTokenClientAuth) nextAuth;
 
-				ArrayList<Namespace> namespaces = new ArrayList<Namespace>();
+				ArrayList<Namespace> namespaces = new ArrayList<>();
 				Namespace wsuNs = ourEventFactory.createNamespace("svcretwsu", Constants.NS_WSSEC_UTIL);
 				namespaces.add(wsuNs);
 				theStreamWriter.add(wsuNs);

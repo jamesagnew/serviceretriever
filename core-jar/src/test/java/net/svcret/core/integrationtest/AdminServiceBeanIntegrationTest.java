@@ -1419,6 +1419,74 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 		assertEquals(1, newVer2.getResourcePointerList().size());
 
 	}
+	
+	
+	@Test
+	public void testLoadWsdlWithInvalidChar() throws Exception {
+
+		DtoServiceVersionSoap11 ver = new DtoServiceVersionSoap11();
+
+		PersServiceVersionSoap11 persSvcVer = new PersServiceVersionSoap11();
+		persSvcVer.setPid(ver.getPid());
+		persSvcVer.setWsdlUrl("http://wsdlurl");
+
+		PersMethod m1 = new PersMethod();
+		m1.setName("m1");
+		persSvcVer.addMethod(m1);
+
+		PersMethod m2 = new PersMethod();
+		m2.setName("m2");
+		persSvcVer.addMethod(m2);
+
+		persSvcVer.addResource("http://wsdlurl", "application/xml", "wsdlcontents");
+
+		PersServiceVersionUrl url = new PersServiceVersionUrl();
+		url.setUrlId("url1");
+		url.setUrl(HTTP_SVCURL);
+		url.setServiceVersion(persSvcVer);
+		persSvcVer.addUrl(url);
+
+		PersHttpClientConfig cfg = new PersHttpClientConfig();
+		cfg.setDefaults();
+		// when(ourSoapInvoker.introspectServiceFromUrl(cfg,
+		// "http://wsdlurl")).thenReturn(persSvcVer);
+
+		String wsdl0body = IOUtils.toString(ResourceUtils.getURL("classpath:test_simple.wsdl"));
+		String xsd0body = IOUtils.toString(ResourceUtils.getURL("classpath:basic_schema2.xsd"));
+		{
+			SrBeanIncomingResponse resp = new SrBeanIncomingResponse();
+			resp.setCode(200);
+			resp.setContentType("application/xml");
+			resp.setBody(wsdl0body);
+			when(ourHttpClientMock.getOneTime((PersHttpClientConfig) any(PersHttpClientConfig.class), eq("http://wsdlurl/wsdl.wsdl"))).thenReturn(resp);
+		}
+		{
+			SrBeanIncomingResponse resp = new SrBeanIncomingResponse();
+			resp.setCode(200);
+			resp.setContentType("application/xml");
+			resp.setBody(xsd0body);
+			when(ourHttpClientMock.getOneTime((PersHttpClientConfig) any(PersHttpClientConfig.class), eq("http://wsdlurl/bar.xsd"))).thenReturn(resp);
+		}
+
+		String badWsdlUrl = '\u200B' + "http://wsdlurl/wsdl.wsdl" + '\u200B';
+		GSoap11ServiceVersionAndResources verAndRes = ourAdminSvc.loadSoap11ServiceVersionFromWsdl(ver, cfg.toDto(), badWsdlUrl);
+
+		assertEquals(2, verAndRes.getResource().size());
+		assertEquals("http://wsdlurl/wsdl.wsdl", verAndRes.getResource().get(0).getUrl());
+		assertEquals(wsdl0body, verAndRes.getResource().get(0).getText());
+		assertEquals("bar.xsd", verAndRes.getResource().get(1).getUrl());
+		assertEquals(xsd0body, verAndRes.getResource().get(1).getText());
+		assertEquals("http://wsdlurl/wsdl.wsdl", verAndRes.getServiceVersion().getResourcePointerList().get(0).getUrl());
+		assertEquals("application/xml", verAndRes.getServiceVersion().getResourcePointerList().get(0).getType());
+		assertEquals(wsdl0body.length(), verAndRes.getServiceVersion().getResourcePointerList().get(0).getSize());
+		assertEquals("getActivePatientsByAttendingPhysicianId", verAndRes.getServiceVersion().getMethodList().get(0).getName());
+		assertEquals("getActivePatientsByAttendingPhysicianIdExtended", verAndRes.getServiceVersion().getMethodList().get(1).getName());
+
+		// Load stats
+		newEntityManager();
+
+		
+	}
 
 	// @Test
 	public void testMultipleStatsLoadsInParallel() throws Exception {

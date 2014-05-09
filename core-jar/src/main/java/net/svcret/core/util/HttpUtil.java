@@ -15,6 +15,7 @@ import net.svcret.core.api.IServiceRegistry;
 import net.svcret.core.api.SrBeanOutgoingResponse;
 import net.svcret.core.ex.InvalidRequestException;
 import net.svcret.core.ex.InvalidRequestException.IssueEnum;
+import net.svcret.core.ex.SecurityFailureException;
 
 public class HttpUtil {
 	private static HashSet<String> ourFilterHeaders;
@@ -32,20 +33,26 @@ public class HttpUtil {
 		theResp.setStatus(500);
 		theResp.setContentType("text/plain");
 
-		try (PrintWriter w = theResp.getWriter()){
-		w.append("HTTP 500 - ServiceRetriever\n\n");
-		w.append("Failure: " + theMessage);
+		try (PrintWriter w = theResp.getWriter()) {
+			w.append("HTTP 500 - ServiceRetriever\n\n");
+			w.append("Failure: " + theMessage);
 		}
 	}
 
-	public static void sendSecurityFailure(HttpServletResponse theResp) throws IOException {
-		theResp.setStatus(403);
+	public static void sendSecurityFailure(HttpServletResponse theResp, SecurityFailureException theException) throws IOException {
+		if (theException.getRequestNewAuthorizationWithDomain() != null) {
+			theResp.setStatus(401);
+			theResp.addHeader("WWW-Authenticate", "Basic realm=\"" + theException.getRequestNewAuthorizationWithDomain() + "\"");
+		} else {
+			theResp.setStatus(403);
+		}
+		
 		theResp.setContentType("text/plain");
 
 		try (PrintWriter w = theResp.getWriter()) {
-		w.append("HTTP 403 - Forbidden (Invalid or unknown credentials, or user does not have access to this service)");
+			w.append("HTTP 403 - Forbidden (Invalid or unknown credentials, or user does not have access to this service)");
 		}
-		
+
 	}
 
 	public static void sendThrottleQueueFullFailure(HttpServletResponse theResp) throws IOException {
@@ -53,7 +60,7 @@ public class HttpUtil {
 		theResp.setContentType("text/plain");
 
 		try (PrintWriter w = theResp.getWriter()) {
-		w.append("HTTP 429 - Too Many Requests (This service is subject to rate limiting)");
+			w.append("HTTP 429 - Too Many Requests (This service is subject to rate limiting)");
 		}
 	}
 
@@ -110,22 +117,22 @@ public class HttpUtil {
 
 		theResp.setContentType("text/plain");
 
-		try (PrintWriter w = theResp.getWriter()){
-		w.append("HTTP " + theResp.getStatus() + " - ServiceRetriever\n\n");
-		w.append("Request failed with error code: " + theE.getIssue().name() + "\n");
-		w.append("Argument: " + theE.getArgument() + "\n\n");
+		try (PrintWriter w = theResp.getWriter()) {
+			w.append("HTTP " + theResp.getStatus() + " - ServiceRetriever\n\n");
+			w.append("Request failed with error code: " + theE.getIssue().name() + "\n");
+			w.append("Argument: " + theE.getArgument() + "\n\n");
 
-		w.append(theE.getMessage());
+			w.append(theE.getMessage());
 
-		if (theE.getIssue() == IssueEnum.INVALID_REQUEST_PATH) {
-			w.append("\n\nValid Paths: ");
+			if (theE.getIssue() == IssueEnum.INVALID_REQUEST_PATH) {
+				w.append("\n\nValid Paths: ");
 
-			List<String> validPaths = new ArrayList<>(theServiceRegistry.getValidPaths());
-			Collections.sort(validPaths);
-			for (String string : validPaths) {
-				w.append("\n * " + string);
+				List<String> validPaths = new ArrayList<>(theServiceRegistry.getValidPaths());
+				Collections.sort(validPaths);
+				for (String string : validPaths) {
+					w.append("\n * " + string);
+				}
 			}
-		}
 
 		}
 	}

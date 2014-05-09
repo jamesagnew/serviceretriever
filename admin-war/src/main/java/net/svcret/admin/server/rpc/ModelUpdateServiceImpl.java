@@ -192,6 +192,9 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		} catch (UnexpectedFailureException e) {
 			ourLog.error("Failed to add service version", e);
 			throw new ServiceFailureException(e.getMessage());
+		} catch (IllegalArgumentException e) {
+			ourLog.error("Failed to add service version", e);
+			throw new ServiceFailureException(e.getMessage());
 		}
 
 		AddServiceVersionResponse retVal = new AddServiceVersionResponse();
@@ -606,6 +609,9 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 				ourLog.error("Failed to load service version from WSDL", e);
 				throw new ServiceFailureException(e.getMessage());
 			} catch (UnexpectedFailureException e) {
+				ourLog.error("Failed to load service version from WSDL", e);
+				throw new ServiceFailureException(e.getMessage());
+			} catch (IllegalArgumentException e) {
 				ourLog.error("Failed to load service version from WSDL", e);
 				throw new ServiceFailureException(e.getMessage());
 			}

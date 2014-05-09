@@ -909,7 +909,6 @@ public class ServiceInvokerSoap11 extends BaseServiceInvoker implements IService
 	 * UNIT TESTS ONLY
 	 */
 	public void setHttpClient(IHttpClient theHttpClient) {
-		assert myHttpClient == null;
 		myHttpClient = theHttpClient;
 	}
 

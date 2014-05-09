@@ -21,9 +21,9 @@ public class InMemoryUserCatalog {
 		myAuthHostToUsernameToUser = theAuthHostToUsernameToUser;
 		myPidToAuthHost = thePidToAuthHost;
 
-		myAuthHostToUserPidToUser = new HashMap<Long, Map<Long,PersUser>>();
+		myAuthHostToUserPidToUser = new HashMap<>();
 		for (Entry<Long, Map<String, PersUser>> nextHostEntry : theAuthHostToUsernameToUser.entrySet()) {
-			HashMap<Long, PersUser> nextHostMap = new HashMap<Long, PersUser>();
+			HashMap<Long, PersUser> nextHostMap = new HashMap<>();
 			myAuthHostToUserPidToUser.put(nextHostEntry.getKey(), nextHostMap);
 			for (PersUser nextUser : nextHostEntry.getValue().values()) {
 				nextHostMap.put(nextUser.getPid(), nextUser);

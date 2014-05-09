@@ -29,6 +29,7 @@ import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.DtoHttpBasicAuthServerSecurity;
 import net.svcret.admin.shared.model.DtoHttpClientConfig;
+import net.svcret.admin.shared.model.DtoPropertyCapture;
 import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
 import net.svcret.admin.shared.model.DtoServiceVersionRest;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
@@ -1063,9 +1064,6 @@ public class ServiceOrchestratorBeanIntegrationTest {
 
 	}
 
-	/**
-	 * Test that we recover gracefully when a backing service fails
-	 */
 	@Test
 	public void testSoap11GetWsdl() throws Exception {
 		newEntityManager();
@@ -1091,6 +1089,40 @@ public class ServiceOrchestratorBeanIntegrationTest {
 
 	}
 
+	
+	
+	@Test
+	public void testSoap11GetWsdlWithPropertyCapture() throws Exception {
+		newEntityManager();
+
+		DtoPropertyCapture propCap = new DtoPropertyCapture();
+		propCap.setPropertyName("prop");
+		propCap.setXpathExpression("//test");
+		mySvcVer.getPropertyCaptures().add(propCap);
+		mySvcVer = ourAdminSvc.saveServiceVersion(d0.getPid(), d0s0.getPid(), mySvcVer, createResList());
+		
+		// ThrottlingService throttlingSvc = new ThrottlingService();
+		// throttlingSvc.setThisForTesting(throttlingSvc);
+		// throttlingSvc.setRuntimeStatusSvcForTesting(ourStatsSvc);
+		// throttlingSvc.setServiceOrchestratorForTesting(ourOrchSvc);
+		//
+		// ourOrchSvc.setThrottlingService(throttlingSvc);
+
+		SrBeanIncomingRequest req = new SrBeanIncomingRequest();
+		req.setRequestType(RequestType.GET);
+		req.setRequestHostIp("127.0.0.1");
+		req.setPath("/d0/d0s0/d0s0v0");
+		req.setQuery("?wsdl");
+		req.setInputReader(new StringReader(""));
+		req.setRequestTime(new Date());
+		req.setRequestHeaders(new HashMap<String, List<String>>());
+
+		SrBeanOutgoingResponse rsp = ourOrchSvc.handleServiceRequest(req);
+		assertThat(rsp.getResponseBody(), StringContains.containsString("<wsdl/>"));
+
+	}
+
+	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testSoap11WithStickySession() throws Exception {
@@ -1370,10 +1402,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 
 		mySvcVer.setWsdlLocation(WSDL_URL);
 
-		ArrayList<GResource> resList = new ArrayList<>();
-		resList.add(new GResource(WSDL_URL, "application/xml", "<wsdl/>"));
-
-		mySvcVer = ourAdminSvc.saveServiceVersion(d0.getPid(), d0s0.getPid(), mySvcVer, resList);
+		mySvcVer = ourAdminSvc.saveServiceVersion(d0.getPid(), d0s0.getPid(), mySvcVer, createResList());
 
 		newEntityManager();
 
@@ -1434,6 +1463,12 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		// fsAuditLogger.initialize();
 		// ourTransactionLogSvc.setFilesystemAuditLoggerForUnitTests(fsAuditLogger);
 
+	}
+
+	private ArrayList<GResource> createResList() {
+		ArrayList<GResource> resList = new ArrayList<>();
+		resList.add(new GResource(WSDL_URL, "application/xml", "<wsdl/>"));
+		return resList;
 	}
 
 	@Test

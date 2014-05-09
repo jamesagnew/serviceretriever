@@ -188,14 +188,14 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			handleInvocationFailure(theRequest, results, e, null, ResponseTypeEnum.FAIL);
 			throw e;
 		} catch (ThrottleException e) {
-			ourLog.debug("Exception occurred", e);
+			ourLog.trace("Exception occurred", e);
 			/*
 			 * Don't handle this failure, it's the responsibility of the
 			 * throttling service to do so
 			 */
 			throw e;
 		} catch (ThrottleQueueFullException e) {
-			ourLog.debug("Exception occurred", e);
+			ourLog.trace("Exception occurred", e);
 			/*
 			 * Don't handle this failure, it's the responsibility of the
 			 * throttling service to do so
@@ -358,7 +358,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 		}
 	}
 
-	private SrBeanOutgoingResponse invokeProxiedService(SrBeanIncomingRequest theRequest, SrBeanProcessedRequest results, AuthorizationResultsBean theAuthorized) throws SecurityFailureException, InvocationFailedDueToInternalErrorException {
+	private SrBeanOutgoingResponse invokeProxiedService(SrBeanIncomingRequest theIncomingRequest, SrBeanProcessedRequest theProcessedRequest, AuthorizationResultsBean theAuthorized) throws SecurityFailureException, InvocationFailedDueToInternalErrorException {
 
 		if (theAuthorized != null && theAuthorized.isAuthorized() != AuthorizationOutcomeEnum.AUTHORIZED) {
 			SrBeanProcessedResponse invocationResponse = new SrBeanProcessedResponse();
@@ -366,36 +366,36 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 			invocationResponse.setResponseStatusMessage("Failed to authorize credentials");
 			// TODO: also pass authorization outcome to save it
 			try {
-				myRuntimeStatus.recordInvocationMethod(theRequest.getRequestTime(), 0, results, theAuthorized.getAuthorizedUser(), null, invocationResponse, theRequest);
+				myRuntimeStatus.recordInvocationMethod(theIncomingRequest.getRequestTime(), 0, theProcessedRequest, theAuthorized.getAuthorizedUser(), null, invocationResponse, theIncomingRequest);
 			} catch (UnexpectedFailureException e) {
 				throw new InvocationFailedDueToInternalErrorException(e);
 			}
 
 			// Log transaction
-			logTransaction(theRequest, theAuthorized, null, invocationResponse, results);
+			logTransaction(theIncomingRequest, theAuthorized, null, invocationResponse, theProcessedRequest);
 
-			throw new SecurityFailureException(theAuthorized.isAuthorized(), invocationResponse.getResponseStatusMessage());
+			throw new SecurityFailureException(theAuthorized.isAuthorized(), invocationResponse.getResponseStatusMessage(), theAuthorized.getRequestNewAuthorizationWithDomain());
 		}
 
 		SrBeanOutgoingResponse retVal;
-		switch (results.getResultType()) {
+		switch (theProcessedRequest.getResultType()) {
 		case STATIC_RESOURCE:
-			retVal = processRequestResource(theRequest, results);
+			retVal = processRequestResource(theIncomingRequest, theProcessedRequest);
 			break;
 		case METHOD:
 			PersUser user = theAuthorized != null ? theAuthorized.getAuthorizedUser() : null;
 			try {
-				retVal = processRequestMethod(theRequest, results, theAuthorized, true, null);
+				retVal = processRequestMethod(theIncomingRequest, theProcessedRequest, theAuthorized, true, null);
 			} catch (InvocationResponseFailedException e) {
-				handleInvocationFailure(theRequest, results, e, user, ResponseTypeEnum.FAIL);
+				handleInvocationFailure(theIncomingRequest, theProcessedRequest, e, user, ResponseTypeEnum.FAIL);
 				throw new InvocationFailedDueToInternalErrorException(e);
 			} catch (RuntimeException e) {
-				handleInvocationFailure(theRequest, results, new InvocationResponseFailedException(e, "Invocation failed due to ServiceRetriever internal error: " + e.getMessage(), null), user, ResponseTypeEnum.FAIL);
+				handleInvocationFailure(theIncomingRequest, theProcessedRequest, new InvocationResponseFailedException(e, "Invocation failed due to ServiceRetriever internal error: " + e.getMessage(), null), user, ResponseTypeEnum.FAIL);
 				throw new InvocationFailedDueToInternalErrorException(e);
 			}
 			break;
 		default:
-			throw new InvocationFailedDueToInternalErrorException("Unknown request type: " + results.getResultType());
+			throw new InvocationFailedDueToInternalErrorException("Unknown request type: " + theProcessedRequest.getResultType());
 		}
 		return retVal;
 	}
@@ -594,7 +594,7 @@ public class ServiceOrchestratorBean implements IServiceOrchestrator {
 				BasePersAuthenticationHost authHost = nextServerAuth.getAuthenticationHost();
 
 				if (credentials == null) {
-					throw new SecurityFailureException(AuthorizationOutcomeEnum.FAILED_INTERNAL_ERROR, "ServiceRetriever failed to extract credentials.");
+					throw new SecurityFailureException(AuthorizationOutcomeEnum.FAILED_INTERNAL_ERROR, "ServiceRetriever failed to extract credentials.", null);
 				}
 
 				authRequests.add(new AuthorizationRequestBean(authHost, credentials));

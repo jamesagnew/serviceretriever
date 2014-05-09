@@ -277,4 +277,52 @@ public class ThrottlingServiceTest {
 
 	}
 	
+	
+	
+	public void testExecuteWorks() throws ThrottleException, ThrottleQueueFullException, InterruptedException {
+
+		when(myThis.serviceThrottledRequests((ThrottledTaskQueue) any())).thenReturn(null);
+		PersMethod method = mock(PersMethod.class, new ReturnsDeepStubs());
+		when(method.getServiceVersion().getThrottle()).thenReturn(null);
+		
+		/*
+		 * Rate is less than one per second
+		 */
+		
+		PersUser user = new PersUser();
+		user.setThrottleMaxRequests(5);
+		user.setThrottlePeriod(ThrottlePeriodEnum.MINUTE);
+		user.setThrottleMaxQueueDepth(10);
+
+		SrBeanIncomingRequest httpRequest = new SrBeanIncomingRequest();
+		httpRequest.setInputReader(new StringReader(""));
+
+		SrBeanProcessedRequest invocationRequest = new SrBeanProcessedRequest();
+		invocationRequest.setResultMethod(method, "", "");
+		AuthorizationResultsBean authorization = new AuthorizationResultsBean();
+
+		authorization.setAuthorizedUser(user);
+
+		mySvc.applyThrottle(httpRequest, invocationRequest, authorization);
+		applyThrottleAndExpectQueueFull(httpRequest, invocationRequest, authorization);
+		applyThrottleAndExpectQueueFull(httpRequest, invocationRequest, authorization);
+		applyThrottleAndExpectQueueFull(httpRequest, invocationRequest, authorization);
+		
+		Thread.sleep(1501);
+		
+		mySvc.applyThrottle(httpRequest, invocationRequest, authorization);
+		applyThrottleAndExpectQueueFull(httpRequest, invocationRequest, authorization);
+		applyThrottleAndExpectQueueFull(httpRequest, invocationRequest, authorization);
+		applyThrottleAndExpectQueueFull(httpRequest, invocationRequest, authorization);
+
+		Thread.sleep(1501);
+		
+		mySvc.applyThrottle(httpRequest, invocationRequest, authorization);
+		applyThrottleAndExpectQueueFull(httpRequest, invocationRequest, authorization);
+		applyThrottleAndExpectQueueFull(httpRequest, invocationRequest, authorization);
+		applyThrottleAndExpectQueueFull(httpRequest, invocationRequest, authorization);
+
+	}
+	
+	
 }

@@ -1,6 +1,8 @@
 package net.svcret.core.admin;
 
 import java.io.StringReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -156,7 +158,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.google.common.annotations.VisibleForTesting;
 
 @Service
-@Transactional(propagation=Propagation.NOT_SUPPORTED)
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
 public class AdminServiceBean implements IAdminServiceLocal {
 
 	public static final long URL_PID_TO_LOAD_ALL = -1;
@@ -205,11 +207,11 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		ourLog.info("Creating domain {}/{}", theDomain.getId(), theDomain.getName());
 
-//		PersDomain domain = myServiceRegistry.getOrCreateDomainWithId(theDomain.getId());
-//		if (!domain.isNewlyCreated()) {
-//			throw new IllegalArgumentException("Domain with ID[" + theDomain.getId() + "] already exists");
-//		}
-//
+		// PersDomain domain = myServiceRegistry.getOrCreateDomainWithId(theDomain.getId());
+		// if (!domain.isNewlyCreated()) {
+		// throw new IllegalArgumentException("Domain with ID[" + theDomain.getId() + "] already exists");
+		// }
+		//
 		PersDomain domain = fromUi(theDomain);
 
 		domain = myServiceRegistry.saveDomain(domain);
@@ -229,10 +231,10 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			throw new IllegalArgumentException("Unknown Domain PID: " + theDomainPid);
 		}
 
-//		PersService service = myServiceRegistry.getOrCreateServiceWithId(domain, theService.getId());
-//		if (!service.isNewlyCreated()) {
-//			throw new IllegalArgumentException("Service " + theService.getId() + " already exists for domain: " + domain.getDomainId());
-//		}
+		// PersService service = myServiceRegistry.getOrCreateServiceWithId(domain, theService.getId());
+		// if (!service.isNewlyCreated()) {
+		// throw new IllegalArgumentException("Service " + theService.getId() + " already exists for domain: " + domain.getDomainId());
+		// }
 
 		PersService service = (PersService.fromDto(theService));
 		service.setDomain(domain);
@@ -557,7 +559,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	@Transactional(readOnly=true)
+	@Transactional(readOnly = true)
 	@Override
 	public GMonitorRuleList loadMonitorRuleList() {
 		GMonitorRuleList retVal = new GMonitorRuleList();
@@ -716,13 +718,24 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(DtoServiceVersionSoap11 theService, DtoHttpClientConfig theHttpClientConfig, String theWsdlUrl) throws ProcessingException, UnexpectedFailureException {
+	public GSoap11ServiceVersionAndResources loadSoap11ServiceVersionFromWsdl(DtoServiceVersionSoap11 theService, DtoHttpClientConfig theHttpClientConfig, String theWsdlUrl)
+			throws ProcessingException, UnexpectedFailureException {
 		Validate.notNull(theService, "Definition");
-		Validate.notBlank(theWsdlUrl, "URL");
 
-		ourLog.info("Loading service version from URL: {}", theWsdlUrl);
+		String wsdlUrl = cleanupUserSuppliedUrl(theWsdlUrl);
+		Validate.notBlank(wsdlUrl, "URL");
+
+		try {
+			// Test validity
+			@SuppressWarnings("unused")
+			URL url = new URL(wsdlUrl);
+		} catch (MalformedURLException e) {
+			throw new IllegalArgumentException("Invalid WSDL URL '" + wsdlUrl + "' - Error is: " + e.toString());
+		}
+
+		ourLog.info("Loading service version from URL: {}", wsdlUrl);
 		PersHttpClientConfig httpConfig = PersHttpClientConfig.fromDto(theHttpClientConfig, myDao);
-		PersServiceVersionSoap11 def = (PersServiceVersionSoap11) myInvokerSoap11.introspectServiceFromUrl(httpConfig, theWsdlUrl);
+		PersServiceVersionSoap11 def = (PersServiceVersionSoap11) myInvokerSoap11.introspectServiceFromUrl(httpConfig, wsdlUrl);
 
 		theService.getMethodList().clear();
 		for (PersMethod next : def.getMethods()) {
@@ -738,6 +751,21 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		GSoap11ServiceVersionAndResources retVal = toUi(theService, def);
 		return retVal;
+	}
+
+	private static String cleanupUserSuppliedUrl(String theInput) {
+		StringBuilder b = new StringBuilder();
+		for (int i = 0; i < theInput.length(); i++) {
+			int nextCodePoint = theInput.codePointAt(i);
+			if (Character.isWhitespace(nextCodePoint) || Character.isISOControl(nextCodePoint)) {
+				continue;
+			}
+			if (nextCodePoint == '\u200B') {
+				continue; // Unicode zero width space
+			}
+			b.appendCodePoint(nextCodePoint);
+		}
+		return b.toString();
 	}
 
 	@Override
@@ -818,7 +846,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		BasePersAuthenticationHost host = fromUi(theAuthHost);
 
 		mySecurityService.saveAuthenticationHost(host);
-		
+
 		return loadAuthHostList();
 	}
 
@@ -859,7 +887,8 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public DtoHttpClientConfig saveHttpClientConfig(DtoHttpClientConfig theConfig, byte[] theNewTruststore, String theNewTruststorePass, byte[] theNewKeystore, String theNewKeystorePass) throws ProcessingException, UnexpectedFailureException {
+	public DtoHttpClientConfig saveHttpClientConfig(DtoHttpClientConfig theConfig, byte[] theNewTruststore, String theNewTruststorePass, byte[] theNewKeystore, String theNewKeystorePass)
+			throws ProcessingException, UnexpectedFailureException {
 		Validate.notNull(theConfig, "HttpClientConfig");
 
 		PersHttpClientConfig existing = null;
@@ -911,7 +940,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return myServiceRegistry.saveHttpClientConfig(config).toDto();
 	}
 
-	@Transactional(propagation=Propagation.REQUIRED)
+	@Transactional(propagation = Propagation.REQUIRED)
 	@Override
 	public void saveLibraryMessage(DtoLibraryMessage theMessage) throws ProcessingException {
 		ourLog.info("Saving library message");
@@ -949,6 +978,18 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	public <T extends BaseDtoServiceVersion> T saveServiceVersion(long theDomain, long theService, T theVersion, List<GResource> theResources) throws ProcessingException, UnexpectedFailureException {
 		Validate.notBlank(theVersion.getId(), "Version#ID");
 
+		for (GServiceVersionUrl next : theVersion.getUrlList()) {
+			String newUrl = cleanupUserSuppliedUrl(next.getUrl());
+			try {
+				// Test validity
+				@SuppressWarnings("unused")
+				URL url = new URL(newUrl);
+			} catch (MalformedURLException e) {
+				throw new IllegalArgumentException("Invalid Service URL '" + newUrl + "' - Error is: " + e.toString());
+			}
+			next.setUrl(newUrl);
+		}
+
 		ourLog.info("Adding service version {} to domain {} / service {}", new Object[] { theVersion.getPid(), theDomain, theService });
 
 		PersDomain domain = myDao.getDomainByPid(theDomain);
@@ -967,9 +1008,9 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 		BasePersServiceVersion existingVersion = BasePersServiceVersion.fromDto(theVersion, service, myDao, myServiceRegistry);
 
-//		existingVersion = myDao.getServiceVersionByPid(existingVersion.getPid());
-//		existingVersion.me
-		
+		// existingVersion = myDao.getServiceVersionByPid(existingVersion.getPid());
+		// existingVersion.me
+
 		// Throttle
 		if (existingVersion.getThrottle() != null && theVersion.getThrottle() == null) {
 			existingVersion.setThrottle(null);
@@ -1128,7 +1169,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 				pids.add(nextPers.getPid());
 				existingVersion.addServerAuth(nextPers);
 			}
-//			existingVersion.addServerAuth(nextPers);
+			// existingVersion.addServerAuth(nextPers);
 		}
 		index = 0;
 		for (PersBaseServerAuth<?, ?> next : new ArrayList<>(existingVersion.getServerAuths())) {
@@ -1583,7 +1624,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		PersMethod retVal = new PersMethod();
 		retVal.setName(theMethod.getName());
 		retVal.setPid(theMethod.getPidOrNull());
-//		retVal.setServiceVersion(myDao.getServiceVersionByPid(theServiceVersionPid));
+		// retVal.setServiceVersion(myDao.getServiceVersionByPid(theServiceVersionPid));
 		retVal.setRootElements(theMethod.getRootElements());
 		retVal.setSecurityPolicy(theMethod.getSecurityPolicy());
 		return retVal;
@@ -1596,10 +1637,10 @@ public class AdminServiceBean implements IAdminServiceLocal {
 			retVal = new PersUser();
 			retVal.setUsername(theUser.getUsername());
 			retVal.setContact(new PersUserContact(retVal));
-//			
-//			if (retVal.isNewlyCreated() == false) {
-//				throw new ProcessingException("User '" + theUser.getUsername() + "' already exists!");
-//			}
+			//
+			// if (retVal.isNewlyCreated() == false) {
+			// throw new ProcessingException("User '" + theUser.getUsername() + "' already exists!");
+			// }
 		} else {
 			retVal = myDao.getUser(theUser.getPid());
 		}
@@ -1611,7 +1652,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		if (!authHost.equals(retVal.getAuthenticationHost())) {
 			retVal.setAuthenticationHost(authHost);
 		}
-		
+
 		retVal.setAllowSourceIpsAsStrings(theUser.getAllowableSourceIps());
 		retVal.setAllowAllDomains(theUser.isAllowAllDomains());
 		retVal.setPermissions(theUser.getGlobalPermissions());
@@ -1715,7 +1756,8 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private DtoDomainList loadDomainList(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, Set<Long> theLoadUrlStats, StatusesBean theStatuses) throws UnexpectedFailureException {
+	private DtoDomainList loadDomainList(Set<Long> theLoadDomStats, Set<Long> theLoadSvcStats, Set<Long> theLoadVerStats, Set<Long> theLoadVerMethodStats, Set<Long> theLoadUrlStats,
+			StatusesBean theStatuses) throws UnexpectedFailureException {
 		DtoDomainList domainList = new DtoDomainList();
 
 		for (PersDomain nextDomain : myServiceRegistry.getAllDomains()) {
@@ -1965,14 +2007,16 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return newValue;
 	}
 
-	public static void doWithStatsByMinute(PersConfig theConfig, int theNumberOfMinutes, IRuntimeStatusQueryLocal statusSvc, PersMethod theMethod, IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator) {
+	public static void doWithStatsByMinute(PersConfig theConfig, int theNumberOfMinutes, IRuntimeStatusQueryLocal statusSvc, PersMethod theMethod,
+			IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator) {
 		Date start = getDateXMinsAgoTruncatedToMinute(theNumberOfMinutes);
 		Date end = new Date();
 
 		doWithStatsByMinute(theConfig, statusSvc, theMethod, theOperator, start, end);
 	}
 
-	public static void doWithStatsByMinute(PersConfig theConfig, IRuntimeStatusQueryLocal statusSvc, PersMethod theMethod, IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator, Date start, Date end) {
+	public static void doWithStatsByMinute(PersConfig theConfig, IRuntimeStatusQueryLocal statusSvc, PersMethod theMethod,
+			IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator, Date start, Date end) {
 		Date date = start;
 		for (int min = 0; date.before(end); min++) {
 
@@ -1992,7 +2036,8 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		}
 	}
 
-	public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatusQueryLocal theStatus, PersMethod theNextMethod, IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator) {
+	public static void doWithStatsByMinute(PersConfig theConfig, TimeRange theRange, IRuntimeStatusQueryLocal theStatus, PersMethod theNextMethod,
+			IWithStats<PersInvocationMethodSvcverStatsPk, PersInvocationMethodSvcverStats> theOperator) {
 		Date end;
 		Date start;
 		if (theRange.getWithPresetRange() != null) {
@@ -2032,8 +2077,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 	public static Date doWithStatsSupportIncrement(Date date, InvocationStatsIntervalEnum interval) {
 		/*
-		 * Note: don't just add millis to the date object, because that fails
-		 * when adding a day when daylight savings starts/ends
+		 * Note: don't just add millis to the date object, because that fails when adding a day when daylight savings starts/ends
 		 */
 		Calendar cal = DateUtils.toCalendar(date);
 		switch (interval) {
@@ -2145,13 +2189,13 @@ public class AdminServiceBean implements IAdminServiceLocal {
 
 	@VisibleForTesting
 	public void setBroadcastSenderForUnitTests(IBroadcastSender theSvc) {
-		myBroadcastSender=theSvc;
+		myBroadcastSender = theSvc;
 	}
 
 	@Override
 	public Collection<Long> getAllDomainPids() {
 		ArrayList<Long> retVal = new ArrayList<>();
-		for (PersDomain next :myDao.getAllDomains()) {
+		for (PersDomain next : myDao.getAllDomains()) {
 			retVal.add(next.getPid());
 		}
 		return retVal;
@@ -2160,7 +2204,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	@Override
 	public Collection<Long> getAllMonitorRulePids() {
 		ArrayList<Long> retVal = new ArrayList<>();
-		for (BasePersMonitorRule next :myDao.getMonitorRules()) {
+		for (BasePersMonitorRule next : myDao.getMonitorRules()) {
 			retVal.add(next.getPid());
 		}
 		return retVal;
@@ -2171,7 +2215,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		myServiceRegistry.deleteMonitorRule(thePid);
 	}
 
-	@Transactional(propagation=Propagation.REQUIRED)
+	@Transactional(propagation = Propagation.REQUIRED)
 	@Override
 	public void deleteLibraryMessage(Long thePid) {
 		PersLibraryMessage msg = myDao.getLibraryMessageByPid(thePid);
@@ -2179,7 +2223,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public DtoNodeStatusAndStatisticsList loadAllNodeStatuses()  {
+	public DtoNodeStatusAndStatisticsList loadAllNodeStatuses() {
 		return myRuntimeStatusQuerySvc.getAllNodeStatusesAndStatistics();
 	}
 

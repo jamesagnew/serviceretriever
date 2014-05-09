@@ -18,6 +18,7 @@ import org.junit.Test;
 public class PropertyCaptureBeanTest {
 //	private static final Logger ourLog = LoggerFactory.getLogger(PropertyCaptureBeanTest.class);
 
+	@SuppressWarnings("static-method")
 	@Test
 	public void testCaptureXml() throws InvocationFailedException {
 		
@@ -46,5 +47,7 @@ public class PropertyCaptureBeanTest {
 		Assert.assertEquals("", invocationResult.getPropertyCaptures().get("prop2"));
 		
 	}
-	
+
+
+
 }

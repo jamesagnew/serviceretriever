@@ -274,27 +274,6 @@ public class ServiceRegistryBean implements IServiceRegistry {
 			}
 		});
 
-		ourLog.info("Setting up Logback");
-
-		// FIXME: move this to main app
-		// try {
-		//
-		// LoggerContext context = (LoggerContext)
-		// LoggerFactory.getILoggerFactory();
-		// JoranConfigurator jc = new JoranConfigurator();
-		// jc.setContext(context);
-		// context.reset();
-		//
-		// InputStream inputStream =
-		// AdminServiceBean.class.getResourceAsStream("/svcret-ejb-logback.xml");
-		// ourLog.info("Configuring using {}", inputStream);
-		//
-		// jc.doConfigure(inputStream);
-		//
-		// } catch (Exception e) {
-		// ourLog.error("Failed to set up logback", e);
-		// }
-
 	}
 
 	@Transactional(propagation = Propagation.REQUIRED)

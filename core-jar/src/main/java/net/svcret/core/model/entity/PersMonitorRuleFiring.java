@@ -22,21 +22,19 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
+import javax.persistence.Index;
 
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.hibernate.annotations.Index;
 
 //@formatter:off
-@org.hibernate.annotations.Table( 
-	indexes = {
-		@Index(columnNames = { "START_DATE" }, name = "IDX_PMRF_START_DATE"),
-		}, appliesTo = "PX_MONITOR_RULE_FIRING")
 @Entity()
 @Table(name = "PX_MONITOR_RULE_FIRING", uniqueConstraints= {
 		@UniqueConstraint(name="IDX_PMRF_RULEEND", columnNames= {"RULE_PID", "END_DATE"})
+}, indexes= {
+		@Index(columnList = "START_DATE", name = "IDX_PMRF_START_DATE")
 })
 @NamedQueries(value= {
 	@NamedQuery(name=Queries.RULEFIRING, query=Queries.RULEFIRING_Q),
@@ -87,13 +85,14 @@ public class PersMonitorRuleFiring extends BasePersObject {
 	/**
 	 * @return the pid
 	 */
+	@Override
 	public Long getPid() {
 		return myPid;
 	}
 
 	public Collection<PersMonitorRuleFiringProblem> getProblems() {
 		if (myProblems == null) {
-			myProblems = new ArrayList<PersMonitorRuleFiringProblem>();
+			myProblems = new ArrayList<>();
 		}
 		return myProblems;
 	}
@@ -141,7 +140,7 @@ public class PersMonitorRuleFiring extends BasePersObject {
 	}
 
 	public Set<Long> getAppliesToServiceVersionPids() {
-		HashSet<Long> retVal = new HashSet<Long>();
+		HashSet<Long> retVal = new HashSet<>();
 		for (PersMonitorRuleFiringProblem next : getProblems()) {
 			retVal.add(next.getServiceVersion().getPid());
 		}

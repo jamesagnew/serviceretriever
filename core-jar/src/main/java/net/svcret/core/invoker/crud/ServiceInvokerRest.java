@@ -148,6 +148,9 @@ public class ServiceInvokerRest extends BaseServiceInvoker implements IServiceIn
 		SrBeanProcessedRequest retVal = new SrBeanProcessedRequest();
 		retVal.setResultMethod(method, message, contentType);
 
+		copyHeaders(theRequest, retVal, "accept");
+		copyHeaders(theRequest, retVal, "user-agent");
+
 		String suffix = null;
 		String defaultProxyPath = svc.getDefaultProxyPath();
 		String reqPath = theRequest.getPath();
@@ -162,6 +165,13 @@ public class ServiceInvokerRest extends BaseServiceInvoker implements IServiceIn
 		retVal.setUrlSuffix(suffix + theRequest.getQuery());
 
 		return retVal;
+	}
+
+	private static void copyHeaders(SrBeanIncomingRequest theRequest, SrBeanProcessedRequest retVal, String theHeaderKey) {
+		List<String> headerValues = theRequest.getRequestHeaders().get(theHeaderKey);
+		if (headerValues != null) {
+			retVal.getMethodHeaders().put(theHeaderKey, headerValues);
+		}
 	}
 
 	@Override
@@ -190,9 +200,9 @@ public class ServiceInvokerRest extends BaseServiceInvoker implements IServiceIn
 
 		SrBeanProcessedResponse retVal = new SrBeanProcessedResponse();
 		retVal.setResponseBody(responseBody);
-		
+
 		retVal.setResponseContentType(theResponse.getContentType());
-		
+
 		retVal.setResponseHeaders(new HashMap<String, List<String>>());
 		retVal.setResponseType(ResponseTypeEnum.SUCCESS);
 

@@ -14,7 +14,17 @@ public interface ISecurityService {
 
 	AuthorizationResultsBean authorizeMethodInvocation(List<AuthorizationRequestBean> theAuthorizationRequests, PersMethod theMethod, String theRequestHostIp) throws ProcessingException;
 
+	void deleteAuthenticationHost(long thePid) throws UnknownPidException;
+
+	void deleteUser(long thePid) throws ProcessingException;
+
+	void forceLoadUserCatalog();
+
+	List<BasePersAuthenticationHost> getAllAuthenticationHosts();
+
 	void loadUserCatalogIfNeeded();
+
+	void saveAuthenticationHost(BasePersAuthenticationHost theHost);
 
 	PersUser saveServiceUser(PersUser theUser) throws UnexpectedFailureException;
 
@@ -41,12 +51,21 @@ public interface ISecurityService {
 
 		private AuthorizationOutcomeEnum myAuthorized;
 		private PersUser myAuthorizedUser;
+		private String myRequestNewAuthorizationWithDomain;
+
+		public AuthorizationOutcomeEnum getAuthorized() {
+			return myAuthorized;
+		}
 
 		/**
 		 * @return the user
 		 */
 		public PersUser getAuthorizedUser() {
 			return myAuthorizedUser;
+		}
+
+		public String getRequestNewAuthorizationWithDomain() {
+			return myRequestNewAuthorizationWithDomain;
 		}
 
 		/**
@@ -64,10 +83,6 @@ public interface ISecurityService {
 			myAuthorized = theAuthorized;
 		}
 
-		public AuthorizationOutcomeEnum getAuthorized() {
-			return myAuthorized;
-		}
-
 		/**
 		 * @param theUser
 		 *            the user to set
@@ -76,16 +91,10 @@ public interface ISecurityService {
 			myAuthorizedUser = (theUser);
 		}
 
+		public void setRequestNewAuthorizationWithDomain(String theRequestNewAuthorizationWithDomain) {
+			myRequestNewAuthorizationWithDomain = theRequestNewAuthorizationWithDomain;
+		}
+
 	}
-
-	void deleteUser(long thePid) throws ProcessingException;
-
-	void saveAuthenticationHost(BasePersAuthenticationHost theHost);
-
-	void forceLoadUserCatalog();
-
-	void deleteAuthenticationHost(long thePid) throws UnknownPidException;
-
-	List<BasePersAuthenticationHost> getAllAuthenticationHosts();
 
 }

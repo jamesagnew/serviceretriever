@@ -69,6 +69,10 @@ public class PropertyCaptureBean implements IPropertyCaptureService {
 		try {
 			builder = myDocumentBuilderFactory.newDocumentBuilder();
 			String requestBody = theRequest.getRequestBody();
+			if (StringUtils.isBlank(requestBody)) {
+				return;
+			}
+			
 			Document doc = builder.parse(new InputSource(new StringReader(requestBody)));
 			String result = (String) expr.evaluate(doc, XPathConstants.STRING);
 
@@ -76,12 +80,8 @@ public class PropertyCaptureBean implements IPropertyCaptureService {
 
 		} catch (ParserConfigurationException e) {
 			throw new InvocationFailedDueToInternalErrorException(e, "Failed to initialize DOM parser");
-		} catch (SAXException e) {
-			throw new InvocationRequestFailedException(e);
-		} catch (IOException e) {
-			throw new InvocationRequestFailedException(e);
-		} catch (XPathExpressionException e) {
-			throw new InvocationRequestFailedException(e);
+		} catch (Exception e) {
+			throw new InvocationRequestFailedException( e,"Failed to parse/read XPath expression for property capture. Error: "+e.getMessage());
 		}
 
 	}

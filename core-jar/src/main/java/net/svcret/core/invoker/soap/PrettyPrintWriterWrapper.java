@@ -16,7 +16,7 @@ public class PrettyPrintWriterWrapper implements XMLEventWriter {
 
 	private XMLEventWriter myTarget;
 	private int depth = 0;
-	private Map<Integer, Boolean> hasChildElement = new HashMap<Integer, Boolean>();
+	private Map<Integer, Boolean> hasChildElement = new HashMap<>();
 	private XMLEventFactory myXmlEventFactory;
 
 	private static final String INDENT_CHAR = " ";
@@ -27,7 +27,7 @@ public class PrettyPrintWriterWrapper implements XMLEventWriter {
 		myTarget = target;
 	}
 
-	private String repeat(int d, String s) {
+	private static String repeat(int d, String s) {
 		return StringUtils.repeat(s, d * 3);
 	}
 

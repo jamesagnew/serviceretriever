@@ -14,14 +14,14 @@ public abstract class BaseResponseValidator implements IResponseValidator {
 	private Collection<String> myRequiredBodyFragments;
 
 	public void setAcceptableContentTypes(String... theStrings) {
-		myAcceptableContentTypes = new HashSet<String>();
+		myAcceptableContentTypes = new HashSet<>();
 		for (String string : theStrings) {
 			myAcceptableContentTypes.add(string);
 		}
 	}
 
 	public void setAcceptableHttpStatusCodes(int... theCodes) {
-		myAcceptableHttpStatusCodes = new HashSet<Integer>();
+		myAcceptableHttpStatusCodes = new HashSet<>();
 		for (int i : theCodes) {
 			myAcceptableHttpStatusCodes.add(i);
 		}

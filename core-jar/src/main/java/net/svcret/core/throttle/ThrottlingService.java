@@ -52,19 +52,20 @@ public class ThrottlingService implements IThrottlingService {
 
 	private IThrottlingService myThis = this; // FIXME: fix this
 
-	private final Map<LimiterKey, ThrottledTaskQueue> myThrottleQueues = new HashMap<LimiterKey, ThrottledTaskQueue>();
-	private final ConcurrentHashMap<LimiterKey, FlexibleRateLimiter> myUserRateLimiters = new ConcurrentHashMap<LimiterKey, FlexibleRateLimiter>();
+	private final Map<LimiterKey, ThrottledTaskQueue> myThrottleQueues = new HashMap<>();
+	private final ConcurrentHashMap<LimiterKey, FlexibleRateLimiter> myUserRateLimiters = new ConcurrentHashMap<>();
 
-	private void applyThrottle(SrBeanIncomingRequest theHttpRequest, SrBeanProcessedRequest theInvocationRequest, AuthorizationResultsBean theAuthorization, Collection<LimiterKey> theRemainingThrottles) throws ThrottleQueueFullException, ThrottleException {
-		
+	private void applyThrottle(SrBeanIncomingRequest theHttpRequest, SrBeanProcessedRequest theInvocationRequest, AuthorizationResultsBean theAuthorization,
+			Collection<LimiterKey> theRemainingThrottles) throws ThrottleQueueFullException, ThrottleException {
+
 		List<FlexibleRateLimiter> rateLimiters = Lists.newArrayList();
 		LimiterKey firstThrottleKey = null;
-		
+
 		for (LimiterKey nextKey : theRemainingThrottles) {
-			
+
 			double requestsPerSecond = nextKey.getRequestsPerSecond();
 			Integer maxQueueDepth = nextKey.getMaxQueuedRequests();
-			
+
 			FlexibleRateLimiter rateLimiter = myUserRateLimiters.get(nextKey);
 			if (rateLimiter == null) {
 
@@ -93,30 +94,30 @@ public class ThrottlingService implements IThrottlingService {
 				recordInvocationForThrottleQueueFull(theHttpRequest, theInvocationRequest, nextKey.getUser());
 				throw new ThrottleQueueFullException();
 			}
-		
+
 			rateLimiters.add(rateLimiter);
-			
+
 			/*
-			 * Keep a copy of the first throttle we're applying. Currently the first throttle which fails is the one
-			 * whose queue depth is respected. This isn't optimal but it works..
+			 * Keep a copy of the first throttle we're applying. Currently the first throttle which fails is the one whose queue depth is respected. This isn't optimal but it works..
 			 */
 			if (firstThrottleKey == null) {
 				firstThrottleKey = nextKey;
 			}
-			
+
 		}
-	
+
 		if (rateLimiters.isEmpty() == false) {
 			throw new ThrottleException(theHttpRequest, rateLimiters, theInvocationRequest, theAuthorization, firstThrottleKey);
 		}
-		
+
 	}
 
 	@Override
-	public void applyThrottle(SrBeanIncomingRequest theHttpRequest, SrBeanProcessedRequest theInvocationRequest, AuthorizationResultsBean theAuthorization) throws ThrottleException, ThrottleQueueFullException {
+	public void applyThrottle(SrBeanIncomingRequest theHttpRequest, SrBeanProcessedRequest theInvocationRequest, AuthorizationResultsBean theAuthorization) throws ThrottleException,
+			ThrottleQueueFullException {
 		PersUser user = theAuthorization != null ? theAuthorization.getAuthorizedUser() : null;
-		Set<LimiterKey> throttleKeys = new HashSet<LimiterKey>();
-		
+		Set<LimiterKey> throttleKeys = new HashSet<>();
+
 		/*
 		 * Service specific throttle for method
 		 */
@@ -132,11 +133,11 @@ public class ThrottlingService implements IThrottlingService {
 				throttleKeys.add(key);
 			}
 		}
-		
+
 		/*
 		 * User specific throttle
 		 */
-		
+
 		if (user != null) {
 			if (user.getThrottleMaxRequests() != null && user.getThrottlePeriod() != null) {
 				double requestsPerSecond = user.getThrottlePeriod().numRequestsToRequestsPerSecond(user.getThrottleMaxRequests());
@@ -145,7 +146,7 @@ public class ThrottlingService implements IThrottlingService {
 				throttleKeys.add(key);
 			}
 		}
-		
+
 		applyThrottle(theHttpRequest, theInvocationRequest, theAuthorization, throttleKeys);
 	}
 
@@ -222,9 +223,9 @@ public class ThrottlingService implements IThrottlingService {
 					ThrottleException taskToExecute = theTaskQueue.pollTask();
 
 					if (taskToExecute == null) {
-						
+
 						// no task
-						
+
 					} else if (taskToExecute.tryToAquireAllRateLimitersAndRemoveAnyWhichAreAquired()) {
 
 						AsyncContext asyncContext = taskToExecute.getAsyncContext();
@@ -237,23 +238,24 @@ public class ThrottlingService implements IThrottlingService {
 								SrBeanProcessedRequest invocationRequest = taskToExecute.getInvocationRequest();
 								AuthorizationResultsBean authorization = taskToExecute.getAuthorization();
 								SrBeanIncomingRequest httpRequest = taskToExecute.getHttpRequest();
-								
+
 								long throttleTime = taskToExecute.getTimeSinceThrottleStarted();
 								invocationRequest.setThrottleTimeIfAny(throttleTime);
-								
+
 								SrBeanOutgoingResponse response = myServiceOrchestrator.handlePreviouslyThrottledRequest(invocationRequest, authorization, httpRequest);
 
 								sendSuccessfulResponse(theResp, response);
 
 								long delay = System.currentTimeMillis() - request.getRequestTime().getTime();
-								ourLog.info("Handled throttled {} request at path[{}] with {} byte response in {}ms ({}ms throttle time)", new Object[] { request.getRequestType().name(), request.getPath(), response.getResponseBody().length(), delay, throttleTime });
+								ourLog.info("Handled throttled {} request at path[{}] with {} byte response in {}ms ({}ms throttle time)",
+										new Object[] { request.getRequestType().name(), request.getPath(), response.getResponseBody().length(), delay, throttleTime });
 
 							} catch (ProcessingException e) {
 								ourLog.info("Processing Failure", e);
 								sendFailure(theResp, e.getMessage());
 							} catch (SecurityFailureException e) {
 								ourLog.info("Security Failure accessing URL: {}", theReq.getRequestURL());
-								sendSecurityFailure(theResp);
+								sendSecurityFailure(theResp, e);
 							} catch (InvocationFailedDueToInternalErrorException e) {
 								ourLog.info("Processing Failure", e);
 								sendFailure(theResp, e.getMessage());
@@ -263,14 +265,14 @@ public class ThrottlingService implements IThrottlingService {
 						} finally {
 							asyncContext.complete();
 						}
-						
+
 					} else {
-						
+
 						/*
 						 * Didn't get permission to proceed from the ratelimiter, so try again
 						 */
 						theTaskQueue.pushTask(taskToExecute);
-						
+
 					}
 
 				} finally {

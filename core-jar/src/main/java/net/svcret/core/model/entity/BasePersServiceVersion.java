@@ -239,6 +239,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	/**
 	 * Should URLs with paths below (i.e. even longer) the target URL for this service be passed to the service
 	 */
+	@SuppressWarnings("static-method")
 	public boolean isAllowSubUrls() {
 		return false;
 	}
@@ -1071,6 +1072,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 	/**
 	 * Subclasses may override
 	 */
+	@SuppressWarnings("unused")
 	protected void fromDto(BaseDtoServiceVersion theDto, IDao theDao) throws ProcessingException {
 	}
 
@@ -1119,6 +1121,16 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		retVal.populateServiceCatalogItemFromDto(theDto);
 
 		return retVal;
+	}
+
+	/**
+	 * Should this service request authorization using HTTP 401, which prompts a browser for 
+	 * credentials. This doesn't make sense for many services (e.g. SOAP) but might make
+	 * sense for RESTful services.
+	 */
+	@SuppressWarnings("static-method")
+	public boolean isRequestBrowserAuthentication() {
+		return false;
 	}
 
 }

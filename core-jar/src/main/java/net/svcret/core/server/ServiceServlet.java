@@ -132,7 +132,7 @@ class ServiceServlet extends HttpServlet {
 			return;
 		} catch (SecurityFailureException e) {
 			ourLog.info("Security Failure accessing URL: {}", theReq.getRequestURL());
-			sendSecurityFailure(theResp);
+			sendSecurityFailure(theResp, e);
 			return;
 		} catch (ThrottleException e) {
 
@@ -162,6 +162,7 @@ class ServiceServlet extends HttpServlet {
 		ourLog.info("Handled {} request at path[{}] with {} byte response in {} ms", new Object[] { requestAction.name(), path, response.getResponseBody().length(), delay });
 	}
 
+	
 	private void handle(HttpServletRequest theReq, HttpServletResponse theResp, RequestType get) throws IOException, ServletException {
 		try {
 			doHandle(theReq, theResp, get);

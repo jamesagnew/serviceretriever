@@ -30,6 +30,7 @@ import net.svcret.core.api.ISecurityService;
 import net.svcret.core.ejb.InMemoryUserCatalog;
 import net.svcret.core.ejb.nodecomm.IBroadcastSender;
 import net.svcret.core.model.entity.BasePersAuthenticationHost;
+import net.svcret.core.model.entity.BasePersServiceVersion;
 import net.svcret.core.model.entity.PersAuthenticationHostLocalDatabase;
 import net.svcret.core.model.entity.PersMethod;
 import net.svcret.core.model.entity.PersUser;
@@ -219,6 +220,24 @@ public class SecurityServiceBean implements ISecurityService {
 
 		}
 
+		switch (retVal.getAuthorized()) {
+		case FAILED_BAD_CREDENTIALS_IN_REQUEST:
+		case FAILED_MISSING_PASSWORD:
+		case FAILED_MISSING_USERNAME:
+			BasePersServiceVersion svcVer = theMethod.getServiceVersion();
+			if (svcVer.isRequestBrowserAuthentication()) {
+				retVal.setRequestNewAuthorizationWithDomain(svcVer.getService().getDomain().getDomainId() + '/' + svcVer.getService().getServiceId());
+			}
+			break;
+		case AUTHORIZED:
+		case FAILED_INTERNAL_ERROR:
+		case FAILED_IP_NOT_IN_WHITELIST:
+		case FAILED_USER_NO_PERMISSIONS:
+		case FAILED_USER_UNKNOWN_TO_SR:
+			break;
+		}
+		
+		
 		return retVal;
 
 	}

@@ -1,6 +1,13 @@
 package net.svcret.core.chart;
 
-import static net.svcret.core.admin.AdminServiceBean.*;
+import static net.svcret.core.admin.AdminServiceBean.addToInt;
+import static net.svcret.core.admin.AdminServiceBean.addToLong;
+import static net.svcret.core.admin.AdminServiceBean.doWithStatsByMinute;
+import static net.svcret.core.admin.AdminServiceBean.doWithStatsSupportFindInterval;
+import static net.svcret.core.admin.AdminServiceBean.doWithStatsSupportIncrement;
+import static net.svcret.core.admin.AdminServiceBean.growToSizeDouble;
+import static net.svcret.core.admin.AdminServiceBean.growToSizeInt;
+import static net.svcret.core.admin.AdminServiceBean.growToSizeLong;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -19,7 +26,6 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 
 import net.svcret.admin.api.IChartingServiceBean;
-import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.TimeRange;
@@ -93,7 +99,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 	private IServiceRegistry myServiceRegistry;
 	
 	@Override
-	public byte[] renderSvcVerLatencyMethodGraph(long theSvcVerPid, TimeRange theRange, boolean theIndividualMethod) throws UnexpectedFailureException, IOException {
+	public byte[] renderSvcVerLatencyMethodGraph(long theSvcVerPid, TimeRange theRange, boolean theIndividualMethod) throws IOException {
 		ourLog.info("Rendering user method graph for Service Version {}", theSvcVerPid);
 
 		myBroadcastSender.requestFlushQueuedStats();
@@ -233,7 +239,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 	}
 
 	@Override
-	public byte[] renderSvcVerPayloadSizeGraph(long theServiceVersionPid, TimeRange theRange) throws IOException, UnexpectedFailureException {
+	public byte[] renderSvcVerPayloadSizeGraph(long theServiceVersionPid, TimeRange theRange) throws IOException {
 		ourLog.info("Rendering payload size graph for service version {}", theServiceVersionPid);
 
 		myBroadcastSender.requestFlushQueuedStats();
@@ -310,7 +316,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 	}
 
 	@Override
-	public byte[] renderSvcVerThrottlingGraph(long theServiceVersionPid, TimeRange theRange) throws IOException, UnexpectedFailureException {
+	public byte[] renderSvcVerThrottlingGraph(long theServiceVersionPid, TimeRange theRange) throws IOException {
 		ourLog.info("Rendering throttling graph for service version {}", theServiceVersionPid);
 
 		myBroadcastSender.requestFlushQueuedStats();
@@ -328,8 +334,10 @@ public class ChartingServiceBean implements IChartingServiceBean {
 					growToSizeLong(throttleRejectCount, theIndex);
 					growToSizeLong(timestamps, theIndex);
 
-					throttleAcceptCount.set(theIndex, throttleAcceptCount.get(theIndex) + theStats.getTotalThrottleAccepts());
-					throttleRejectCount.set(theIndex, throttleRejectCount.get(theIndex) + theStats.getTotalThrottleRejections());
+					double numMinutes = theStats.getPk().getInterval().numMinutes();
+
+					throttleAcceptCount.set(theIndex, throttleAcceptCount.get(theIndex) + (int)(theStats.getTotalThrottleAccepts()/numMinutes));
+					throttleRejectCount.set(theIndex, throttleRejectCount.get(theIndex) + (int)(theStats.getTotalThrottleRejections()/numMinutes));
 					timestamps.set(theIndex, theStats.getPk().getStartTime().getTime());
 				}
 			});
@@ -369,7 +377,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 	}
 
 	@Override
-	public byte[] renderSvcVerUsageGraph(long theServiceVersionPid, TimeRange theRange) throws IOException, UnexpectedFailureException {
+	public byte[] renderSvcVerUsageGraph(long theServiceVersionPid, TimeRange theRange) throws IOException {
 		ourLog.info("Rendering latency graph for service version {}", theServiceVersionPid);
 
 		myBroadcastSender.requestFlushQueuedStats();
@@ -466,7 +474,7 @@ public class ChartingServiceBean implements IChartingServiceBean {
 	}
 
 	@Override
-	public byte[] renderUserMethodGraphForUser(long theUserPid, TimeRange theRange) throws UnexpectedFailureException, IOException {
+	public byte[] renderUserMethodGraphForUser(long theUserPid, TimeRange theRange) throws IOException {
 		ourLog.info("Rendering user method graph for user {}", theUserPid);
 
 		myBroadcastSender.requestFlushQueuedStats();

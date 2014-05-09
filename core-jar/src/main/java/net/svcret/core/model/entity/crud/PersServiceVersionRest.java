@@ -40,6 +40,11 @@ public class PersServiceVersionRest extends BasePersServiceVersion {
 	}
 
 	@Override
+	public boolean isRequestBrowserAuthentication() {
+		return true; // TODO make this configurable
+	}
+
+	@Override
 	public boolean isAllowSubUrls() {
 		return true;
 	}
