@@ -68,6 +68,12 @@ public class ThrottlingServiceTest {
 		
 		/*
 		 * Rate is less than one per second
+		 * **********************************
+		 * 
+		 * Note that this test currently depends on the "average per second" behaviour,
+		 * but this will change when the FlexibleRateLimiter is adjusted to work on
+		 * a "max per minute" mode...
+		 * 
 		 */
 		
 		PersUser user = new PersUser();
