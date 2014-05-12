@@ -70,16 +70,22 @@ class RequestPipeline {
 				ourXmlOutputFactory = XMLOutputFactory.newInstance();
 				ourEventFactory = XMLEventFactory.newInstance();
 			}
-			try {
-				streamReader = ourXmlInputFactory.createXMLEventReader(theReader);
-				streamWriter = ourXmlOutputFactory.createXMLEventWriter(theWriter);
-			} catch (XMLStreamException e) {
-				throw new InvocationFailedDueToInternalErrorException(e);
-			} catch (FactoryConfigurationError e) {
-				throw new InvocationFailedDueToInternalErrorException(e);
-			}
+		}
+		
+		long start = System.currentTimeMillis();
+		
+		try {
+			streamReader = ourXmlInputFactory.createXMLEventReader(theReader);
+			streamWriter = ourXmlOutputFactory.createXMLEventWriter(theWriter);
+		} catch (XMLStreamException e) {
+			throw new InvocationFailedDueToInternalErrorException(e);
+		} catch (FactoryConfigurationError e) {
+			throw new InvocationFailedDueToInternalErrorException(e);
 		}
 
+		long time = System.currentTimeMillis() - start;
+		ourLog.debug("Created XML reader/writer in {} ms", time);
+		
 		if (myPrettyPrint) {
 			streamWriter = new PrettyPrintWriterWrapper(ourEventFactory, streamWriter);
 		}
@@ -141,7 +147,8 @@ class RequestPipeline {
 	 * @param theXmlPrefix
 	 *            The element prefix. E.g. if the header element is &lt;soapenv:Header&gt; this string is "soapenv"
 	 */
-	private void processHeader(StartElement theStartElem, String theXmlPrefix, XMLEventReader theStreamReader, XMLEventWriter theStreamWriter) throws XMLStreamException, InvocationFailedDueToInternalErrorException {
+	private void processHeader(StartElement theStartElem, String theXmlPrefix, XMLEventReader theStreamReader, XMLEventWriter theStreamWriter) throws XMLStreamException,
+			InvocationFailedDueToInternalErrorException {
 
 		boolean haveClientSecurity = false;
 		for (PersBaseClientAuth<?> next : myClientAuths) {
