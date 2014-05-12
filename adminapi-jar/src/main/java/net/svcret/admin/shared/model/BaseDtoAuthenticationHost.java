@@ -97,6 +97,11 @@ public abstract class BaseDtoAuthenticationHost extends BaseDtoKeepsRecentMessag
 		myModuleName = theModuleName;
 	}
 
+	@Override
+	public String toString() {
+		return "BaseDtoAuthenticationHost [myModuleId=" + myModuleId + ", myModuleName=" + myModuleName + "]";
+	}
+
 	/**
 	 * @param theSupportsPasswordChange the supportsPasswordChange to set
 	 */

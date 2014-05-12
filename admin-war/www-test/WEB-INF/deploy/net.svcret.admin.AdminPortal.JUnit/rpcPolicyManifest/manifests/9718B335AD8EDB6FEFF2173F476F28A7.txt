@@ -1,2 +1,0 @@
-serviceClass: net.svcret.admin.client.rpc.MiscConfigService
-path: 14C552937BE7009C28831E03215297BB.gwt.rpc

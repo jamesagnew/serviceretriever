@@ -41,7 +41,7 @@ public class BreadcrumbPanel extends HorizontalPanel {
 			return;
 		}
 
-		ArrayList<String> parts = new ArrayList<String>(Arrays.asList(token.split(NavProcessor.SEPARATOR)));
+		ArrayList<String> parts = new ArrayList<>(Arrays.asList(token.split(NavProcessor.SEPARATOR)));
 		for (Iterator<String> iter = parts.iterator(); iter.hasNext();) {
 			String next = iter.next();
 			if (next == null || next.length() < 3) {

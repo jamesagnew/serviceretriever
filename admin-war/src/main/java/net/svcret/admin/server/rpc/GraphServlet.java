@@ -3,17 +3,17 @@ package net.svcret.admin.server.rpc;
 import java.io.IOException;
 import java.util.TimeZone;
 
-import javax.ejb.EJB;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.svcret.admin.api.AdminServiceProvider;
+import net.svcret.admin.api.IChartingServiceBean;
+import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.model.TimeRange;
 import net.svcret.admin.shared.util.ChartParams;
 import net.svcret.admin.shared.util.ChartTypeEnum;
-import net.svcret.ejb.chart.IChartingServiceBean;
-import net.svcret.ejb.ex.UnexpectedFailureException;
 
 import org.apache.commons.io.IOUtils;
 
@@ -25,9 +25,16 @@ public class GraphServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 
-	@EJB
 	private IChartingServiceBean myChartSvc;
 
+	@Override
+	public void init() throws ServletException {
+		super.init();
+		
+		myChartSvc = AdminServiceProvider.getInstance().getChartingService();
+	}
+
+	
 	private byte[] renderLatency(HttpServletRequest theReq, TimeRange theRange, boolean theIndividualMethod) throws IOException, ServletException {
 		long pid = getPid(theReq);
 

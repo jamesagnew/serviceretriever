@@ -15,7 +15,11 @@ public enum ServiceProtocolEnum {
 	
 	SOAP11("SOAP 1.1", "text/xml"), 
 	
-	VIRTUAL("Virtual Service", "");
+	VIRTUAL("Virtual Service", ""), 
+	
+	REST("REST", "")
+	
+	;
 
 	private static List<ServiceProtocolEnum> ourNaturalOrder;
 
@@ -24,6 +28,7 @@ public enum ServiceProtocolEnum {
 		naturalOrder.add(SOAP11);
 		naturalOrder.add(JSONRPC20);
 		naturalOrder.add(HL7OVERHTTP);
+		naturalOrder.add(REST);
 		naturalOrder.add(VIRTUAL);
 		ourNaturalOrder = Collections.unmodifiableList(naturalOrder);
 	}

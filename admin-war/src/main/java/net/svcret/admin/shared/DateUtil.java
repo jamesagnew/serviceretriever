@@ -96,4 +96,9 @@ public class DateUtil {
 
 	}
 
+	public static SafeHtml formatTimeElapsed(Long theTimeElapsedSinceDown, boolean theExactForUnder60Secs) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

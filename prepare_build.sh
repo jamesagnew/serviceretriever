@@ -1,1 +1,0 @@
-mvn install:install-file -Dfile=admin-war/lib/gwt-traction-1.5.4.jar -DgroupId=com.tractionsoftware.gwt -DartifactId=gwt-traction -Dversion=1.5.4 -DgeneratePom=true -DcreateChecksum=true -Dpackaging=jar

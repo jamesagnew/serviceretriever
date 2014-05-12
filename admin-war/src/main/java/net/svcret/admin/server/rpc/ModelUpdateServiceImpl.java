@@ -9,9 +9,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.ejb.EJB;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpSession;
 
+import net.svcret.admin.api.AdminServiceProvider;
+import net.svcret.admin.api.IAdminServiceLocal;
+import net.svcret.admin.api.ProcessingException;
+import net.svcret.admin.api.UnexpectedFailureException;
+import net.svcret.admin.api.UnknownPidException;
 import net.svcret.admin.client.rpc.ModelUpdateService;
 import net.svcret.admin.shared.AddServiceVersionResponse;
 import net.svcret.admin.shared.ServiceFailureException;
@@ -19,18 +24,20 @@ import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
 import net.svcret.admin.shared.model.BaseDtoMonitorRule;
 import net.svcret.admin.shared.model.BaseDtoObject;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.DtoLibraryMessage;
-import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
-import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
-import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
-import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
-import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
-import net.svcret.admin.shared.model.DtoServiceVersionVirtual;
 import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.DtoConfig;
 import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.DtoHttpClientConfig;
+import net.svcret.admin.shared.model.DtoLibraryMessage;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
+import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
+import net.svcret.admin.shared.model.DtoNodeStatusAndStatisticsList;
+import net.svcret.admin.shared.model.DtoServiceVersionHl7OverHttp;
+import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
+import net.svcret.admin.shared.model.DtoServiceVersionRest;
+import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
+import net.svcret.admin.shared.model.DtoServiceVersionVirtual;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleList;
 import net.svcret.admin.shared.model.GPartialUserList;
@@ -48,11 +55,7 @@ import net.svcret.admin.shared.model.ModelUpdateRequest;
 import net.svcret.admin.shared.model.ModelUpdateResponse;
 import net.svcret.admin.shared.model.PartialUserListRequest;
 import net.svcret.admin.shared.model.ServiceProtocolEnum;
-import net.svcret.ejb.admin.IAdminServiceLocal;
-import net.svcret.ejb.admin.UnknownPidException;
-import net.svcret.ejb.ex.ProcessingException;
-import net.svcret.ejb.ex.UnexpectedFailureException;
-import net.svcret.ejb.util.Validate;
+import net.svcret.admin.shared.util.Validate;
 
 /**
  * The server side implementation of the RPC service.
@@ -65,8 +68,14 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 	private static final String SESSION_PREFIX_UNCOMITTED_SVC_VER = "UNC_SVC_VER_";
 	private static final String SESSION_PREFIX_UNCOMITTED_SVC_VER_RES = "UNC_SVC_VER_RES_";
 
-	@EJB
 	private IAdminServiceLocal myAdminSvc;
+
+	@Override
+	public void init() throws ServletException {
+		super.init();
+		
+		myAdminSvc = AdminServiceProvider.getInstance().getAdminService();
+	}
 
 	@Override
 	public DtoDomain addDomain(DtoDomain theDomain) throws ServiceFailureException {
@@ -134,7 +143,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		List<GResource> resList = getServiceVersionResourcesFromSession(uncommittedSessionId);
 		if (resList == null) {
 			ourLog.info("Unable to find a resource collection in the session with ID " + uncommittedSessionId);
-			resList = new ArrayList<GResource>();
+			resList = new ArrayList<>();
 		}
 
 		long domain;
@@ -183,6 +192,9 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		} catch (UnexpectedFailureException e) {
 			ourLog.error("Failed to add service version", e);
 			throw new ServiceFailureException(e.getMessage());
+		} catch (IllegalArgumentException e) {
+			ourLog.error("Failed to add service version", e);
+			throw new ServiceFailureException(e.getMessage());
 		}
 
 		AddServiceVersionResponse retVal = new AddServiceVersionResponse();
@@ -228,6 +240,9 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		case VIRTUAL:
 			retVal= new DtoServiceVersionVirtual();
 			break;
+		case REST:
+			retVal= new DtoServiceVersionRest();
+			break;
 		}
 
 		if (retVal == null) {
@@ -263,7 +278,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 			return getMock().getLatestFailingMonitorRuleFiringForRulePids();
 		}
 		try {
-			HashMap<Long, GMonitorRuleFiring> retVal = new HashMap<Long, GMonitorRuleFiring>();
+			HashMap<Long, GMonitorRuleFiring> retVal = new HashMap<>();
 
 			for (GMonitorRuleFiring next : myAdminSvc.loadAllActiveRuleFirings()) {
 				if (retVal.containsKey(next.getRulePid())) {
@@ -596,6 +611,9 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 			} catch (UnexpectedFailureException e) {
 				ourLog.error("Failed to load service version from WSDL", e);
 				throw new ServiceFailureException(e.getMessage());
+			} catch (IllegalArgumentException e) {
+				ourLog.error("Failed to load service version from WSDL", e);
+				throw new ServiceFailureException(e.getMessage());
 			}
 
 			saveServiceVersionResourcesToSession(serviceAndResources);
@@ -636,7 +654,7 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		}
 
 		try {
-			myAdminSvc.deleteDomain(thePid);
+			return myAdminSvc.deleteDomain(thePid);
 		} catch (ProcessingException e) {
 			ourLog.error("Failed to delete domain", e);
 			throw new ServiceFailureException(e.getMessage());
@@ -645,15 +663,6 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 			throw new ServiceFailureException(e.getMessage());
 		}
 
-		try {
-			return myAdminSvc.loadDomainList();
-		} catch (ProcessingException e) {
-			ourLog.error("Failed to load domain list", e);
-			throw new ServiceFailureException(e.getMessage());
-		} catch (UnexpectedFailureException e) {
-			ourLog.error("Failed to load domain list", e);
-			throw new ServiceFailureException(e.getMessage());
-		}
 	}
 
 	@Override
@@ -921,6 +930,28 @@ public class ModelUpdateServiceImpl extends BaseRpcServlet implements ModelUpdat
 		try {
 			return myAdminSvc.loadMonitorRuleActiveCheckOutcomeDetails(thePid);
 		} catch (UnexpectedFailureException e) {
+			ourLog.error("Failed to load outcome details", e);
+			throw new ServiceFailureException(e.getMessage());
+		}
+	}
+
+	@Override
+	public DtoNodeStatusAndStatisticsList loadNodeListAndStatistics() {
+		if (isMockMode()) {
+			return getMock().loadNodeListAndStatistics();
+		}
+		return myAdminSvc.loadAllNodeStatuses();
+	}
+
+	@Override
+	public void removeUser(long thePid) throws ServiceFailureException {
+		if (isMockMode()) {
+			getMock().removeUser(thePid);
+		}
+		
+		try {
+			myAdminSvc.deleteUser(thePid);
+		} catch (ProcessingException e) {
 			ourLog.error("Failed to load outcome details", e);
 			throw new ServiceFailureException(e.getMessage());
 		}

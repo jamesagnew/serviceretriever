@@ -13,193 +13,159 @@
 	<artifactId>proxy-app-jar</artifactId>
 	<packaging>jar</packaging>
 
-	<name>Proxy Application</name>
+	<name>ServiceRetriever Application</name>
 
 	<dependencies>
-
 		<dependency>
-		    <groupId>org.springframework</groupId>
-		    <artifactId>spring-core</artifactId>
-		    <version>4.0.1.RELEASE</version>
+			<groupId>net.svcret</groupId>
+			<artifactId>serviceretriever-core</artifactId>
+			<version>1.0</version>
 		</dependency>
-		<dependency>
-		    <groupId>org.springframework</groupId>
-		    <artifactId>spring-core</artifactId>
-		    <version>4.0.1.RELEASE</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.springframework</groupId>
-		    <artifactId>spring-orm</artifactId>
-		    <version>4.0.1.RELEASE</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.springframework</groupId>
-		    <artifactId>spring-context</artifactId>
-		    <version>4.0.1.RELEASE</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.springframework</groupId>
-		    <artifactId>spring-context</artifactId>
-		    <version>4.0.1.RELEASE</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.mortbay.jetty</groupId>
-		    <artifactId>jetty</artifactId>
-		    <version>6.1.26</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.mortbay.jetty</groupId>
-		    <artifactId>jetty</artifactId>
-		    <version>6.1.26</version>
-		</dependency>
-
-		<dependency>
-		    <groupId>commons-dbcp</groupId>
-		    <artifactId>commons-dbcp</artifactId>
-		    <version>1.4</version>
-		</dependency>
-		<dependency>
-		    <groupId>commons-dbcp</groupId>
-		    <artifactId>commons-dbcp</artifactId>
-		    <version>1.4</version>
-		</dependency>
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-core</artifactId>
-			<version>4.2.7.SP1</version>
-		</dependency>
-
-		<!-- <dependency> <groupId>org.apache.directory.server</groupId> <artifactId>apacheds-core</artifactId> 
-			<version>2.0.0-M11</version> <scope>test</scope> </dependency> <dependency> 
-			<groupId>org.apache.directory.server</groupId> <artifactId>apacheds-protocol-ldap</artifactId> 
-			<version>2.0.0-M11</version> <scope>test</scope> </dependency> -->
-
 	</dependencies>
 
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-ejb-plugin</artifactId>
-				<version>2.3</version>
-				<configuration>
-					<ejbVersion>3.1</ejbVersion>
-					<generateClient>true</generateClient>
-					<archive>
-						<manifest>
-							<addClasspath>true</addClasspath>
-							<classpathPrefix>lib/</classpathPrefix>
-							<useUniqueVersions>false</useUniqueVersions>
-						</manifest>
-					</archive>
-				</configuration>
-			</plugin>
-			<!--<plugin>
-				<groupId>org.jvnet.jaxb2.maven2</groupId>
-				<artifactId>maven-jaxb2-plugin</artifactId>
-				<version>0.8.2</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>generate</goal>
-						</goals>
-						<configuration>
-							<extension>true</extension>
-							<schemaIncludes>
-								<schemaInclude>**/*.xsd</schemaInclude>
-							</schemaIncludes>
-							<strict>false</strict>
-							<arguments>-Xcommons-lang</arguments>
-						</configuration>
-					</execution>
-				</executions>
-				<configuration>
-					<generateDirectory>target/generated-sources/jaxb</generateDirectory>
-				</configuration>
-			</plugin>-->
-			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>buildnumber-maven-plugin</artifactId>
-				<version>1.2</version>
-				<executions>
-					<execution>
-						<id>num</id>
-						<phase>initialize</phase>
-						<goals>
-							<goal>create</goal>
-						</goals>
-						<configuration>
-							<doCheck>false</doCheck>
-							<doUpdate>false</doUpdate>
-							<format>{0} ({1,date,yyyy-MM-dd HH:mm:ss})</format>
-							<items>
-								<item>scmVersion</item>
-								<item>timestamp</item>
-							</items>
-						</configuration>
-					</execution>
-					<execution>
-						<id>ts</id>
-						<phase>initialize</phase>
-						<goals>
-							<goal>create-timestamp</goal>
-						</goals>
-						<configuration>
-							<doCheck>false</doCheck>
-							<doUpdate>false</doUpdate>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
-			<!-- <plugin> <groupId>org.codehaus.mojo</groupId> <artifactId>hibernate3-maven-plugin</artifactId> 
-				<version>2.2</version> <configuration> <components> <component> <name>hbm2ddl</name> 
-				<implementation>jpaconfiguration</implementation> </component> </components> 
-				<componentProperties> <drop>true</drop> <outputfilename>schema.ddl</outputfilename> 
-				<persistenceunit>MyPu</persistenceunit> </componentProperties> </configuration> 
-				<executions> <execution> <phase>process-classes</phase> <goals> <goal>hbm2ddl</goal> 
-				</goals> </execution> </executions> <dependencies> <dependency> <groupId>com.h2database</groupId> 
-				<artifactId>h2</artifactId> <version>1.3.172</version> </dependency> </dependencies> 
-				</plugin> -->
-
-			<plugin>
-				<groupId>de.juplo</groupId>
-				<artifactId>hibernate4-maven-plugin</artifactId>
-				<version>1.0.1</version>
+				<artifactId>appassembler-maven-plugin</artifactId>
+				<version>1.7</version>
 				<configuration>
-					<force>true</force>
-					<target>SCRIPT</target>
-					<skip>false</skip>
+					<repositoryLayout>flat</repositoryLayout>
+					<target>${project.build.directory}/appassembler</target>
+					<assembleDirectory>${project.build.directory}/appassembler</assembleDirectory>
+					<!-- <configurationSourceDirectory>true</configurationSourceDirectory> -->
+					<copyConfigurationDirectory>true</copyConfigurationDirectory>
+					<configurationDirectory>conf</configurationDirectory>
+					<daemons>
+						<daemon>
+							<id>svcret</id>
+							<mainClass>net.svcret.app.ServiceRetrieverApp</mainClass>
+							<commandLineArguments>
+							</commandLineArguments>
+							<platforms>
+								<platform>jsw</platform>
+							</platforms>
+							<generatorConfigurations>
+								<generatorConfiguration>
+									<generator>jsw</generator>
+									<configuration>
+										<property>
+											<name>wrapper.logfile</name>
+											<value>logs/startup.log</value>
+										</property>
+										<property>
+											<name>wrapper.console.title</name>
+											<value>Service Retriever</value>
+										</property>
+										<property>
+											<name>wrapper.ntservice.name</name>
+											<value>ServiceRetriever</value>
+										</property>
+										<property>
+											<name>wrapper.ntservice.displayname</name>
+											<value>ServiceRetriever</value>
+										</property>
+										<property>
+											<name>wrapper.console.loglevel</name>
+											<value>INFO</value>
+										</property>
+										<property>
+											<name>wrapper.ntservice.description</name>
+											<value></value>
+										</property>
+										<property>
+											<name>wrapper.logfile.maxsize</name>
+											<value>10m</value>
+										</property>
+										<property>
+											<name>wrapper.logfile.maxfiles</name>
+											<value>10</value>
+										</property>
+										<property>
+											<name>wrapper.logfile.format</name>
+											<value>TM</value>
+										</property>
+									</configuration>
+									<includes>
+										<include>aix-ppc-32</include>
+										<include>aix-ppc-64</include>
+										<include>hpux-parisc-64</include>
+										<include>linux-x86-32</include>
+										<include>linux-x86-64</include>
+										<include>macosx-universal-32</include>
+										<include>macosx-universal-64</include>
+										<include>solaris-sparc-32</include>
+										<include>solaris-sparc-64</include>
+										<include>windows-x86-32</include>
+										<include>windows-x86-64</include>
+									</includes>
+								</generatorConfiguration>
+							</generatorConfigurations>
+						</daemon>
+					</daemons>
 				</configuration>
 				<executions>
 					<execution>
-						<id>o10g</id>
+						<id>generate-jsw-scripts</id>
+						<phase>package</phase>
 						<goals>
-							<goal>export</goal>
+							<goal>generate-daemons</goal>
 						</goals>
-						<configuration>
-							<hibernateDialect>org.hibernate.dialect.Oracle10gDialect</hibernateDialect>
-							<outputFile>${project.build.directory}/schema_oracle_10g.sql</outputFile>
-						</configuration>
 					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.7</version>
+				<executions>
 					<execution>
-						<id>hsql</id>
-						<goals>
-							<goal>export</goal>
-						</goals>
+						<phase>package</phase>
 						<configuration>
-							<hibernateDialect>org.hibernate.dialect.HSQLDialect</hibernateDialect>
-							<outputFile>${project.build.directory}/schema_hsql.sql</outputFile>
+							<target>
+								<mkdir dir="${project.build.directory}/appassembler/jsw/svcret/logs" />
+								<chmod perm="ugo+rx" type="file" verbose="true">
+									<fileset dir="${project.build.directory}/appassembler/jsw/svcret/bin">
+										<include name="*" />
+										<include name="*.*" />
+									</fileset>
+								</chmod>
+								<copy verbose="true" failonerror="true"
+								      file="${project.build.directory}/../../admin-war/src/main/webapp/WEB-INF/web.xml"
+								      tofile="${project.build.directory}/appassembler/jsw/svcret/conf/admin-web.xml" />
+							</target>
 						</configuration>
-					</execution>
-					<execution>
-						<id>mysql5</id>
 						<goals>
-							<goal>export</goal>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>2.8</version>
+				<executions>
+					<execution>
+						<id>copy</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy</goal>
 						</goals>
 						<configuration>
-							<hibernateDialect>org.hibernate.dialect.MySQL5Dialect</hibernateDialect>
-							<outputFile>${project.build.directory}/schema_mysql_5.sql</outputFile>
+							<artifactItems>
+								<artifactItem>
+									<groupId>net.svcret</groupId>
+									<artifactId>serviceretriever-admin-war</artifactId>
+									<version>1.0</version>
+									<type>war</type>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.build.directory}/appassembler/jsw/svcret/lib/</outputDirectory>
+									<destFileName>admin.war</destFileName>
+								</artifactItem>
+							</artifactItems>
+							<outputDirectory>${project.build.directory}/wars</outputDirectory>
+							<overWriteReleases>false</overWriteReleases>
+							<overWriteSnapshots>true</overWriteSnapshots>
 						</configuration>
 					</execution>
 				</executions>

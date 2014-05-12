@@ -16,6 +16,12 @@ public class DtoServiceVersionVirtual extends BaseDtoServiceVersion {
 	@XmlElement(name = "TargetServiceVersionPid")
 	private long myTargetServiceVersionPid;
 
+	public DtoServiceVersionVirtual() {
+	}
+	public DtoServiceVersionVirtual(long theTargetPid) {
+		myTargetServiceVersionPid=theTargetPid;
+	}
+
 	@Override
 	public ServiceProtocolEnum getProtocol() {
 		return ServiceProtocolEnum.VIRTUAL;

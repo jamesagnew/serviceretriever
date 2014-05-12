@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p" 
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
+	"
+	default-autowire="no">
+	
+	<context:annotation-config />
+
+<!-- 	
+	<bean class="net.svcret.core.util.MockitoFactoryBean">
+		<property name="classToMock" value="net.svcret.core.invoker.soap.IServiceInvokerSoap11" ></property>
+	</bean>
+ -->
+	<bean id="myInvokerSoap11" class="net.svcret.core.invoker.soap.ServiceInvokerSoap11" />
+	<bean id="myInvokerHl7OverHttp" class="net.svcret.core.invoker.hl7.ServiceInvokerHl7OverHttp" />
+	<bean id="myInvokerJsonRpc20" class="net.svcret.core.invoker.jsonrpc.JsonRpc20ServiceInvoker" />
+	<bean id="myInvokerVirtual" class="net.svcret.core.invoker.virtual.ServiceInvokerVirtual" />
+	<bean id="myInvokerRest" class="net.svcret.core.invoker.crud.ServiceInvokerRest" />
+
+	<bean id="myConfigService" class="net.svcret.core.ejb.ConfigServiceBean">
+		<property name="nodeId" value="dev1"/>
+		<property name="nodeType" value="PRIMARY"/>
+	</bean>
+
+<!-- 	
+	<bean id="myBroadcastListener" class="net.svcret.core.ejb.nodecomm.HttpBroadcastListenerBean">
+		<property name="port" value="8882" />
+	</bean>
+	<bean id="myBroadcastNotifier" class="net.svcret.core.ejb.nodecomm.HttpBroadcastSenderBean">
+		<property name="urls">
+			<list>
+				<value>http://localhost:8882/</value>
+			</list>
+		</property>
+	</bean>
+-->
+
+	<bean class="net.svcret.core.util.MockitoFactoryBean">
+		<property name="classToMock" value="net.svcret.core.ejb.nodecomm.IBroadcastSender" ></property>
+	</bean>
+	
+	<!-- 
+	<bean class="net.svcret.core.util.MockitoFactoryBean">
+		<property name="classToMock" value="net.svcret.core.ejb.nodecomm.IBroadcastListener" ></property>
+	</bean>
+	-->
+	 
+	<bean class="net.svcret.core.util.MockitoFactoryBean">
+		<property name="classToMock" value="org.springframework.mail.javamail.JavaMailSender" ></property>
+	</bean>
+
+	<bean class="net.svcret.core.util.DerbyLogConfigurator">
+		<property name="logFileLocation" value="logs/derby.log"/>
+	</bean>
+
+	<bean id="myPersistenceDataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<!-- <property name="url" value="jdbc:hsqldb:mem:unit-testing-jpa"/>  -->
+		<!-- <property name="url" value="jdbc:hsqldb:file:svcret.hsqldb" /> -->
+		<property name="url" value="jdbc:derby:memory:myUnitTestDB;create=true" />
+		<property name="username" value="sa" />
+		<property name="password" value="" />
+	</bean>
+
+	<bean id="myEntityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+		<property name="dataSource" ref="myPersistenceDataSource" />
+		<property name="persistenceUnitName" value="ServiceProxy_EJBPU" />
+		<property name="jpaVendorAdapter">
+			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+				<property name="showSql" value="false" />
+				<property name="generateDdl" value="true" />
+				<!-- <property name="databasePlatform" value="org.hibernate.dialect.HSQLDialect" />  -->
+				<property name="databasePlatform" value="net.svcret.core.util.hibernate.MyDerbyTenSevenDialect" />
+			</bean>
+		</property>
+	</bean>
+
+	<!--
+	JMX 
+	-->
+
+	<task:annotation-driven executor="myTaskExecutor"
+		scheduler="myTaskScheduler" />
+	<task:executor id="myTaskExecutor" pool-size="5" />
+	<task:scheduler id="myTaskScheduler" pool-size="10" />
+
+	<bean id="myServiceOrchestrator" class="net.svcret.core.orch.ServiceOrchestratorBean">
+	</bean>
+
+	<bean id="myAdminService" class="net.svcret.core.admin.AdminServiceBean" />
+	<bean id="myAdminServiceExporter" class="org.springframework.jmx.export.MBeanExporter">
+		<property name="beans">
+			<map>
+				<entry key="net.svcret:name=AdminService" value-ref="myAdminService" />
+			</map>
+		</property>
+		<property name="assembler">
+			<bean
+				class="org.springframework.jmx.export.assembler.InterfaceBasedMBeanInfoAssembler">
+				<property name="managedInterfaces">
+					<value>net.svcret.admin.api.IAdminServiceLocal</value>
+				</property>
+			</bean>
+		</property>
+	</bean>
+
+
+	<bean name="adminServiceProvider" class="net.svcret.admin.api.AdminServiceProvider"
+		factory-method="getInstance">
+		<property name="adminService">
+			<bean class="org.springframework.jmx.access.MBeanProxyFactoryBean">
+				<property name="objectName" value="net.svcret:name=AdminService" />
+				<property name="proxyInterface" value="net.svcret.admin.api.IAdminServiceLocal" />
+			</bean>
+		</property>
+		<property name="chartingService">
+			<bean class="org.springframework.jmx.access.MBeanProxyFactoryBean">
+				<property name="objectName" value="net.svcret:name=AdminService" />
+				<property name="proxyInterface" value="net.svcret.admin.api.IChartingServiceBean" />
+			</bean>
+		</property>
+	</bean>
+
+	<!-- <bean id="myHttpClient" class="net.svcret.core.ejb.HttpClientBean" /> -->
+	<bean class="net.svcret.core.util.MockitoFactoryBean">
+		<property name="classToMock" value="net.svcret.core.api.IHttpClient" ></property>
+		<property name="nonSingleton" value="true"/>
+ 	</bean>
+	
+	
+	<bean id="myDao" class="net.svcret.core.dao.DaoBean" />
+	<bean id="myRuntimeStatus" class="net.svcret.core.status.RuntimeStatusBean" />
+	<bean id="myRuntimeStatusQuery" class="net.svcret.core.status.RuntimeStatusQueryBean" />
+	<!-- <bean id="myScheduler" class="net.svcret.core.ejb.SchedulerBean" />  -->
+	<bean id="mySecurityService" class="net.svcret.core.security.SecurityServiceBean" />
+	<bean id="myServiceRegistry" class="net.svcret.core.ejb.ServiceRegistryBean" />
+	<bean id="myMonitor" class="net.svcret.core.ejb.monitor.MonitorServiceBean" />
+	<bean id="myMonitorNotifier" class="net.svcret.core.ejb.monitor.MonitorNotifierService" />
+
+	<bean id="myFilesystemAuditLogger" class="net.svcret.core.log.FilesystemAuditLoggerBean" />
+	<bean id="myTransactionLogger" class="net.svcret.core.log.TransactionLoggerBean" />
+
+	<bean id="myPropertyCaptureService" class="net.svcret.core.propcap.PropertyCaptureBean" />
+	<bean id="myThrottleService" class="net.svcret.core.throttle.ThrottlingService" />
+
+	<!-- Auth Service Modules -->
+	<bean id="myAuthServiceLdap" class="net.svcret.core.auth.LdapAuthorizationServiceBean" />
+	<bean id="myAuthServiceLocalDb"
+		class="net.svcret.core.auth.LocalDatabaseAuthorizationServiceBean" />
+
+	<!-- <bean id="mySessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean"> 
+		<property name="dataSource" ref="myDataSource" /> <property name="packagesToScan"> 
+		<list> <value>net.svcret.core.model.entity</value> </list> </property> <property 
+		name="hibernateProperties"> <props> <prop key="hibernate.dialect">org.hibernate.dialect.HSQLDialect</prop> 
+		<prop key="hibernate.show_sql">true</prop> <prop key="hibernate.hbm2ddl.auto">update</prop> 
+		</props> </property> </bean> -->
+
+	<bean id="myTxManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="myEntityManagerFactory" />
+	</bean>
+	<tx:annotation-driven transaction-manager="myTxManager" />
+
+</beans>

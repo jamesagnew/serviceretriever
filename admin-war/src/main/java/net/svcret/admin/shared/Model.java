@@ -381,7 +381,7 @@ public class Model {
 		GWT.log("Failed to load data!", theCaught);
 		StringBuilder b = new StringBuilder();
 		b.append("Failure: ");
-		b.append(theCaught.toString());
+		b.append(theCaught.getMessage());
 		b.append("\n");
 
 		int i = 0;

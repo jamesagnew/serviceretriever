@@ -44,7 +44,7 @@ public abstract class BaseUrlGrid extends FlowPanel {
 	private int myColUsage = -1;
 	private Label myNoUrlsLabel;
 	private FlexTableWithTooltips<GServiceVersionUrl> myUrlGrid;
-	private final List<GServiceVersionUrl> myUrlList = new ArrayList<GServiceVersionUrl>();
+	private final List<GServiceVersionUrl> myUrlList = new ArrayList<>();
 
 	public BaseUrlGrid() {
 		int next = 1;
@@ -144,7 +144,7 @@ public abstract class BaseUrlGrid extends FlowPanel {
 					PButton cbResetButton = null;
 					String text = createUrlStatusText(next);
 
-					if (next.getStatus() == StatusEnum.DOWN && next.getStatsNextCircuitBreakerReset() != null) {
+					if (next.getStatus() == StatusEnum.DOWN && next.getStatsNextCircuitBreakerReset() != null && !next.isStatsNextCircuitBreakerResetImminent()) {
 						cbResetButton = new PButton("Reset CB");
 						cbResetButton.addClickHandler(new CircuitBreakerResetActionHandler(cbResetButton, next.getPid()));
 						cbResetButton.getElement().getStyle().setDisplay(Display.INLINE_BLOCK);
@@ -212,7 +212,7 @@ public abstract class BaseUrlGrid extends FlowPanel {
 	}
 
 	protected void init() {
-		myUrlGrid = new FlexTableWithTooltips<GServiceVersionUrl>(myUrlList);
+		myUrlGrid = new FlexTableWithTooltips<>(myUrlList);
 		myUrlGrid.addStyleName(CssConstants.PROPERTY_TABLE);
 		this.add(myUrlGrid);
 
@@ -259,8 +259,8 @@ public abstract class BaseUrlGrid extends FlowPanel {
 		case DOWN:
 			text = "Down for " + DateUtil.formatTimeElapsed(next.getStatusTimestamp(), false, "");
 			if (next.getStatsNextCircuitBreakerReset() != null) {
-				if (next.getStatsNextCircuitBreakerReset().before(new Date())) {
-					text = text + " (circuit breaker reset on next call)";
+				if (next.isStatsNextCircuitBreakerResetImminent()) {
+					text = text + " (circuit breaker will attempt to reset on next call)";
 				}else {
 					text = text + " (next circuit breaker reset at " + DateUtil.formatTimeOnly(next.getStatsNextCircuitBreakerReset()) + ")";
 				}

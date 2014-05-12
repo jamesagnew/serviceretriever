@@ -21,6 +21,11 @@ public class DtoDomainList extends BaseDtoList<DtoDomain> {
 	private transient Map<Long, BaseDtoServiceVersion> myPidToServiceVersion;
 	private transient Map<Long, GServiceVersionUrl> myPidToUrl;
 
+	@Override
+	public String toString() {
+		return super.getListForJaxb().toString();
+	}
+
 	public DtoDomainList() {
 		setComparator(new BaseGDashboardObjectComparator());
 	}

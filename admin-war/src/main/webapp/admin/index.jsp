@@ -42,6 +42,21 @@
 			$(theElement).sparkline(theValues, sparkOptions);
 		}
 		
+		function jsDrawMemorySparkline(theElement, theValues, theHeight, theWidth) {
+			var sparkOptions = new Array();
+			sparkOptions['chartRangeMin'] = 0;
+			sparkOptions['height'] = theHeight;
+			sparkOptions['width'] = theWidth;
+			sparkOptions['type'] = 'bar';
+			sparkOptions['stackedBarColor'] = ['#BB8', '#FFA'];
+			sparkOptions['barWidth'] = 2;
+			sparkOptions['barSpacing'] = 0;
+			sparkOptions['zeroColor'] = '#CCF';
+			sparkOptions['disableTooltips'] = true;
+			sparkOptions['disableInteraction'] = true;
+			$(theElement).sparkline(theValues, sparkOptions);
+		}
+
 		function jsDrawRecentMonitorTestsSparkline(theElement, theValues, theHeight, theWidth) {
 			var sparkOptions = new Array();
 			sparkOptions['height'] = theHeight;

@@ -2,3 +2,4 @@
 /admin-war/src/main/webapp/WEB-INF/classes
 .DS_Store
 *.log
+/target

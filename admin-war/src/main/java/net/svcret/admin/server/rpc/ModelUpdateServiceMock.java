@@ -15,34 +15,37 @@ import net.svcret.admin.client.rpc.ModelUpdateService;
 import net.svcret.admin.server.rpc.HttpClientConfigServiceImpl.SessionUploadedKeystore;
 import net.svcret.admin.shared.AddServiceVersionResponse;
 import net.svcret.admin.shared.ServiceFailureException;
+import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 import net.svcret.admin.shared.enm.NodeStatusEnum;
 import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
-import net.svcret.admin.shared.model.BaseDtoSavedTransaction;
-import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
 import net.svcret.admin.shared.model.BaseDtoDashboardObject;
 import net.svcret.admin.shared.model.BaseDtoMonitorRule;
+import net.svcret.admin.shared.model.BaseDtoSavedTransaction;
+import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
 import net.svcret.admin.shared.model.BaseDtoServiceVersion;
+import net.svcret.admin.shared.model.DtoAuthenticationHostList;
+import net.svcret.admin.shared.model.DtoAuthenticationHostLocalDatabase;
+import net.svcret.admin.shared.model.DtoConfig;
+import net.svcret.admin.shared.model.DtoDomain;
+import net.svcret.admin.shared.model.DtoDomainList;
+import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.DtoKeystoreAnalysis;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActive;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcomeList;
+import net.svcret.admin.shared.model.DtoNodeStatistics;
 import net.svcret.admin.shared.model.DtoNodeStatus;
+import net.svcret.admin.shared.model.DtoNodeStatusAndStatisticsList;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
-import net.svcret.admin.shared.model.DtoAuthenticationHostList;
-import net.svcret.admin.shared.model.DtoConfig;
-import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.DtoDomainList;
-import net.svcret.admin.shared.model.DtoHttpClientConfig;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
-import net.svcret.admin.shared.model.DtoAuthenticationHostLocalDatabase;
 import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
 import net.svcret.admin.shared.model.GMonitorRuleFiring;
 import net.svcret.admin.shared.model.GMonitorRuleFiringProblem;
@@ -72,8 +75,6 @@ import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.admin.shared.model.UrlSelectionPolicy;
 import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
 import net.svcret.admin.shared.util.StringUtil;
-import net.svcret.ejb.model.entity.BasePersAuthenticationHost;
-import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
 
 import org.apache.commons.lang3.time.DateUtils;
 
@@ -101,7 +102,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 			dom.setPid(ourNextPid++);
 			dom.setId("domain1");
 			dom.setName("Domain 1");
-			Set<String> obscure = new HashSet<String>();
+			Set<String> obscure = new HashSet<>();
 			obscure.add("clientId");
 			obscure.add("clientPass");
 			dom.setObscureRequestElementsInLogCache(obscure);
@@ -230,8 +231,9 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		myAuthHostList = new DtoAuthenticationHostList();
 		DtoAuthenticationHostLocalDatabase hostList = new DtoAuthenticationHostLocalDatabase();
 		hostList.setPid(ourNextPid++);
-		hostList.setModuleId(BasePersAuthenticationHost.MODULE_ID_ADMIN_AUTH);
-		hostList.setModuleName(BasePersAuthenticationHost.MODULE_DESC_ADMIN_AUTH);
+		hostList.setModuleId("DEFAULT");
+		hostList.setModuleName("Default authentication host");
+
 		hostList.setSupportsPasswordChange(true);
 		myAuthHostList.add(hostList);
 
@@ -315,7 +317,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 			check.getRecentOutcomesForUrl().get(1).setUrl("http://bar");
 		}
 
-		List<DtoMonitorRuleActiveCheckOutcome> outcomes = new ArrayList<DtoMonitorRuleActiveCheckOutcome>(check.getRecentOutcomesForUrl().get(0).getOutcomes());
+		List<DtoMonitorRuleActiveCheckOutcome> outcomes = new ArrayList<>(check.getRecentOutcomesForUrl().get(0).getOutcomes());
 		outcomes.add(new DtoMonitorRuleActiveCheckOutcome());
 		outcomes.add(new DtoMonitorRuleActiveCheckOutcome());
 		outcomes.get(outcomes.size() - 2).setFailed(!true);
@@ -325,7 +327,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		outcomes.get(outcomes.size() - 1).setFailDescription("Failed for some reason");
 		check.getRecentOutcomesForUrl().get(0).setOutcomes(outcomes);
 
-		outcomes = new ArrayList<DtoMonitorRuleActiveCheckOutcome>(check.getRecentOutcomesForUrl().get(1).getOutcomes());
+		outcomes = new ArrayList<>(check.getRecentOutcomesForUrl().get(1).getOutcomes());
 		outcomes.add(new DtoMonitorRuleActiveCheckOutcome());
 		outcomes.add(new DtoMonitorRuleActiveCheckOutcome());
 		outcomes.get(outcomes.size() - 2).setFailed(!false);
@@ -390,20 +392,21 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 			dom.getServiceList().add(svc);
 		}
 
-		if (theVersion.getPidOrNull() != null) {
-			BaseDtoServiceVersion ver = myDomainList.getServiceVersionByPid(theVersion.getPid());
-			ver.merge(theVersion);
-			theVersion = ver;
+		BaseDtoServiceVersion version = theVersion;
+		if (version.getPidOrNull() != null) {
+			BaseDtoServiceVersion ver = myDomainList.getServiceVersionByPid(version.getPid());
+			ver.merge(version);
+			version = ver;
 
 		} else {
-			theVersion.setPid(ourNextPid++);
-			svc.getVersionList().add(theVersion);
+			version.setPid(ourNextPid++);
+			svc.getVersionList().add(version);
 		}
 
 		AddServiceVersionResponse retVal = null;
 		retVal = new AddServiceVersionResponse();
 		retVal.setNewDomain(dom);
-		retVal.setNewServiceVersion(theVersion);
+		retVal.setNewServiceVersion(version);
 		return retVal;
 
 	}
@@ -412,7 +415,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		GRecentMessage retVal = new GRecentMessage();
 
 		createMessage(theIncludeContents, retVal);
-		
+
 		retVal.setRecentMessageType(theType);
 		retVal.setRequestHostIp("http://foo");
 		retVal.setDomainPid(0l);
@@ -428,12 +431,12 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	private void createMessage(boolean theIncludeContents, BaseDtoSavedTransaction retVal) {
 		String responseMessage = "<req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello><req><ello><req><ello><req><ello>some text</ello></req><req><ello><req><ello><req><ello>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req>some text</ello></req></req>";
 		String requestMessage = "{\"aaaa\":444, \"bbb\": 555}";
-		List<Pair<String>> reqHeaders = new ArrayList<Pair<String>>();
-		reqHeaders.add(new Pair<String>("Content-Type", "text/json"));
-		reqHeaders.add(new Pair<String>("Content-Encoding", "chunked"));
-		List<Pair<String>> respHeaders = new ArrayList<Pair<String>>();
-		respHeaders.add(new Pair<String>("Content-Type", "text/xml"));
-		respHeaders.add(new Pair<String>("X-Server", "Some Server"));
+		List<Pair<String>> reqHeaders = new ArrayList<>();
+		reqHeaders.add(new Pair<>("Content-Type", "text/json"));
+		reqHeaders.add(new Pair<>("Content-Encoding", "chunked"));
+		List<Pair<String>> respHeaders = new ArrayList<>();
+		respHeaders.add(new Pair<>("Content-Type", "text/xml"));
+		respHeaders.add(new Pair<>("X-Server", "Some Server"));
 		String reqCt = "text/json";
 		String respCt = "text/xml";
 		if (!theIncludeContents) {
@@ -462,8 +465,8 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		retVal.setImplementationUrlHref("http://foo");
 		retVal.setMethodPid(MET1_PID);
 		retVal.setMethodName("SomeMethod");
-		
-		switch ((int)(5.0 * Math.random())) {
+
+		switch ((int) (5.0 * Math.random())) {
 		case 0:
 			retVal.setResponseType(ResponseTypeEnum.SUCCESS);
 			break;
@@ -480,7 +483,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 			retVal.setResponseType(ResponseTypeEnum.THROTTLE_REJ);
 			break;
 		}
-		
+
 	}
 
 	@Override
@@ -539,7 +542,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		retVal.getNodeStatuses().get(2).setTransactionsFaultPerMinute(10.1);
 		retVal.getNodeStatuses().get(2).setTransactionsFailPerMinute(10.1);
 		retVal.getNodeStatuses().get(2).setTransactionsSecurityFailPerMinute(10.1);
-		
+
 		for (DtoDomain nextDomain : retVal.getDomainList()) {
 			Set<Long> domainsToLoadStats = theRequest.getDomainsToLoadStats();
 			long nextDomainPid = nextDomain.getPid();
@@ -599,7 +602,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 	private GRecentMessageLists loadRecentTransactionList(RecentMessageTypeEnum theType) {
 		GRecentMessageLists retVal = new GRecentMessageLists();
 
-		ArrayList<GRecentMessage> list = new ArrayList<GRecentMessage>();
+		ArrayList<GRecentMessage> list = new ArrayList<>();
 		// list.add(createMessage(false));
 		// list.add(createMessage(false));
 		// list.add(createMessage(false));
@@ -607,13 +610,13 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		// retVal.setSuccessList(list);
 		// retVal.setKeepSuccess(10);
 
-		list = new ArrayList<GRecentMessage>();
+		list = new ArrayList<>();
 		list.add(createMessage(false, theType));
 		list.add(createMessage(false, theType));
 		retVal.setFailList(list);
 		retVal.setKeepFail(10);
 
-		list = new ArrayList<GRecentMessage>();
+		list = new ArrayList<>();
 		list.add(createMessage(false, theType));
 		list.add(createMessage(false, theType));
 		list.add(createMessage(false, theType));
@@ -621,7 +624,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		retVal.setSecurityFailList(list);
 		retVal.setKeepSecurityFail(10);
 
-		list = new ArrayList<GRecentMessage>();
+		list = new ArrayList<>();
 		list.add(createMessage(false, theType));
 		list.add(createMessage(false, theType));
 		list.add(createMessage(false, theType));
@@ -644,10 +647,10 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 				for (BaseDtoServiceVersion nextVersion : nextService.getVersionList()) {
 					if (nextVersion.getPid() == theVersionPid) {
 						GServiceVersionDetailedStats retVal = new GServiceVersionDetailedStats();
-						Map<Long, int[]> fail = new HashMap<Long, int[]>();
-						Map<Long, int[]> fault = new HashMap<Long, int[]>();
-						Map<Long, int[]> securityFail = new HashMap<Long, int[]>();
-						Map<Long, int[]> success = new HashMap<Long, int[]>();
+						Map<Long, int[]> fail = new HashMap<>();
+						Map<Long, int[]> fault = new HashMap<>();
+						Map<Long, int[]> securityFail = new HashMap<>();
+						Map<Long, int[]> success = new HashMap<>();
 						for (GServiceMethod nextMethod : nextVersion.getMethodList()) {
 							success.put(nextMethod.getPid(), random60mins());
 							fail.put(nextMethod.getPid(), random60mins());
@@ -869,7 +872,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 
 	@Override
 	public List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart) {
-		ArrayList<GMonitorRuleFiring> list = new ArrayList<GMonitorRuleFiring>();
+		ArrayList<GMonitorRuleFiring> list = new ArrayList<>();
 		GMonitorRuleFiring firing = new GMonitorRuleFiring();
 		firing.setStartDate(new Date());
 		firing.setEndDate(new Date());
@@ -932,7 +935,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 
 	@Override
 	public Collection<DtoLibraryMessage> loadLibraryMessages(HierarchyEnum theHierarchy, long thePid) throws ServiceFailureException {
-		ArrayList<DtoLibraryMessage> retVal = new ArrayList<DtoLibraryMessage>();
+		ArrayList<DtoLibraryMessage> retVal = new ArrayList<>();
 
 		for (int i = 0; i < 10; i++) {
 			DtoLibraryMessage msg = new DtoLibraryMessage();
@@ -960,7 +963,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 
 	@Override
 	public Map<Long, GMonitorRuleFiring> getLatestFailingMonitorRuleFiringForRulePids() {
-		return new HashMap<Long, GMonitorRuleFiring>();
+		return new HashMap<>();
 	}
 
 	@Override
@@ -1013,7 +1016,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 
 	@Override
 	public Collection<DtoStickySessionUrlBinding> getAllStickySessions() {
-		List<DtoStickySessionUrlBinding> retVal = new ArrayList<DtoStickySessionUrlBinding>();
+		List<DtoStickySessionUrlBinding> retVal = new ArrayList<>();
 		retVal.add(new DtoStickySessionUrlBinding());
 		retVal.get(0).setCreated(new Date(System.currentTimeMillis() - 100000));
 		retVal.get(0).setLastAccessed(new Date(System.currentTimeMillis() - 600000));
@@ -1089,6 +1092,38 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		DtoMonitorRuleActiveCheckOutcome retVal = new DtoMonitorRuleActiveCheckOutcome();
 		createMessage(true, retVal);
 		return retVal;
+	}
+
+	@Override
+	public DtoNodeStatusAndStatisticsList loadNodeListAndStatistics() {
+		DtoNodeStatusAndStatisticsList retVal = new DtoNodeStatusAndStatisticsList();
+		retVal.getNodeStatuses().addAll(loadModelUpdate(new ModelUpdateRequest()).getNodeStatuses());
+		for (int j = 0; j < retVal.getNodeStatuses().size(); j++) {
+			DtoNodeStatistics stat = new DtoNodeStatistics();
+			stat.setCpuTime(new int[60]);
+			stat.setFailTransactions(new int[60]);
+			stat.setFaultTransactions(new int[60]);
+			stat.setMemoryMax(new int[60]);
+			stat.setMemoryUsed(new int[60]);
+			stat.setSecFailTransactions(new int[60]);
+			stat.setSuccessTransactions(new int[60]);
+			for (int i = 0; i < 60; i++) {
+				stat.getCpuTime()[i] = (int) (100.0 * Math.random());
+				stat.getFailTransactions()[i] = (int) (100.0 * Math.random());
+				stat.getFaultTransactions()[i] = (int) (100.0 * Math.random());
+				stat.getMemoryUsed()[i] = (int) (64000000.0 * Math.random());
+				stat.getMemoryMax()[i] = 128000000;
+				stat.getSecFailTransactions()[i] = (int) (100.0 * Math.random());
+				stat.getSuccessTransactions()[i] = (int) (100.0 * Math.random());
+			}
+			retVal.getNodeStatistics().add(stat);
+		}
+		return retVal;
+	}
+
+	@Override
+	public void removeUser(long thePid) {
+		myUserList.removeUserByPid(thePid);
 	}
 
 }

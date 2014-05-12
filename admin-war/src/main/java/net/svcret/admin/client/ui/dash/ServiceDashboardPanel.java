@@ -3,6 +3,7 @@ package net.svcret.admin.client.ui.dash;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.svcret.admin.client.nav.IRefreshable;
 import net.svcret.admin.client.ui.components.CssConstants;
 import net.svcret.admin.client.ui.components.EmptyCell;
 import net.svcret.admin.client.ui.components.FlexTableWithTooltips;
@@ -24,7 +25,7 @@ import net.svcret.admin.shared.model.HierarchyEnum;
 
 import com.google.gwt.user.client.ui.Widget;
 
-public class ServiceDashboardPanel extends BaseDashboardPanel{
+public class ServiceDashboardPanel extends BaseDashboardPanel implements IRefreshable {
 
 	private static final int COL_ACTIONS = 7;
 	private static final int COL_BACKING_URLS = 4;
@@ -37,8 +38,9 @@ public class ServiceDashboardPanel extends BaseDashboardPanel{
 	private static ServiceDashboardPanel ourInstance;
 
 	private FlexTableWithTooltips<BaseDtoDashboardObject> myGrid;
-	private List<IDashModel> myUiList = new ArrayList<IDashModel>();
-	private List<BaseDtoDashboardObject> myUiModelItems = new ArrayList<BaseDtoDashboardObject>();
+	private List<IDashModel> myUiList = new ArrayList<>();
+	private List<BaseDtoDashboardObject> myUiModelItems = new ArrayList<>();
+	private boolean myHaveUpdatedBefore;
 
 	/**
 	 * This class is a singleton so that it can keep updating
@@ -47,7 +49,7 @@ public class ServiceDashboardPanel extends BaseDashboardPanel{
 	private ServiceDashboardPanel() {
 		super();
 		
-		myGrid = new FlexTableWithTooltips<BaseDtoDashboardObject>(myUiModelItems);
+		myGrid = new FlexTableWithTooltips<>(myUiModelItems);
 		myGrid.setCellPadding(2);
 		myGrid.setCellSpacing(0);
 		add(myGrid);
@@ -70,15 +72,16 @@ public class ServiceDashboardPanel extends BaseDashboardPanel{
 	}
 	
 	private boolean addServiceVersionChildren(ArrayList<IDashModel> newUiList, boolean haveStatsToLoad, BaseDtoServiceVersion nextServiceVersion) {
+		boolean retVal = haveStatsToLoad;
 		for (GServiceMethod nextMethod : nextServiceVersion.getMethodList()) {
 			if (!nextMethod.isStatsInitialized()) {
 				addSpinnerToList(newUiList);
-				haveStatsToLoad = true;
+				retVal = true;
 			} else {
 				newUiList.add(new DashModelServiceMethod(nextMethod));
 			}
 		}
-		return haveStatsToLoad;
+		return retVal;
 	}
 
 
@@ -192,7 +195,7 @@ public class ServiceDashboardPanel extends BaseDashboardPanel{
 			Widget lastInvoc = EmptyCell.defaultWidget(model.renderLastInvocation());
 			myGrid.setWidget(i + rowOffset, offset + COL_LAST_INVOC + 1, lastInvoc);
 			myGrid.getCellFormatter().setStyleName(i + rowOffset, offset + COL_LAST_INVOC + 1, styleName);
-			myGrid.setTooltipProvider(i + rowOffset, offset + COL_BACKING_URLS + 1, model.getLastInvocationTooltip());
+			myGrid.setTooltipProvider(i + rowOffset, offset + COL_LAST_INVOC + 1, model.getLastInvocationTooltip());
 
 			Widget actions = EmptyCell.defaultWidget(model.renderActions());
 			myGrid.setWidget(i + rowOffset, offset + COL_ACTIONS + 1, actions);
@@ -217,7 +220,9 @@ public class ServiceDashboardPanel extends BaseDashboardPanel{
 
 	@Override
 	public void updateView(DtoDomainList theDomainList) {
-		ArrayList<IDashModel> newUiList = new ArrayList<IDashModel>();
+		myHaveUpdatedBefore = true;
+		
+		ArrayList<IDashModel> newUiList = new ArrayList<>();
 
 		boolean haveStatsToLoad = false;
 		for (DtoDomain nextDomain : theDomainList) {
@@ -285,6 +290,18 @@ public class ServiceDashboardPanel extends BaseDashboardPanel{
 			ourInstance = new ServiceDashboardPanel();
 		}
 		return ourInstance;
+	}
+
+	@Override
+	public void refresh() {
+		if (myHaveUpdatedBefore) {
+			Model.getInstance().loadDomainList(new IAsyncLoadCallback<DtoDomainList>() {
+				@Override
+				public void onSuccess(DtoDomainList theResult) {
+					updateView(theResult);
+				}
+			});
+		}
 	}
 
 

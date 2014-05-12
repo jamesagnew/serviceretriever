@@ -253,4 +253,8 @@ public class GServiceVersionUrl extends BaseDtoDashboardObject {
 		return myStatusTimestamp;
 	}
 
+	public boolean isStatsNextCircuitBreakerResetImminent() {
+		return getStatsNextCircuitBreakerReset() != null && getStatsNextCircuitBreakerReset().before(new Date());
+	}
+
 }

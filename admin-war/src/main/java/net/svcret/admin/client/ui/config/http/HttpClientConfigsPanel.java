@@ -230,6 +230,7 @@ public class HttpClientConfigsPanel extends FlowPanel {
 		DtoHttpClientConfig config = myConfigs.getConfigByPid(mySelectedConfig.getPid());
 		config.setId(myIdTextBox.getValue());
 		config.setName(myNameTextBox.getValue());
+		config.setStickySessionCookieForSessionId(myStickySessionCookieNameBox.getValueOrNull());
 
 		Integer connectTimeout = myTcpConnectTimeoutTb.getValue();
 		myTcpConnectTimeoutTb.removeStyleName(CssConstants.TEXTBOX_WITH_ERR);
@@ -673,9 +674,11 @@ public class HttpClientConfigsPanel extends FlowPanel {
 
 		myTcpConnectTimeoutTb.setValue((mySelectedConfig.getConnectTimeoutMillis()));
 		myTcpReadTimeoutTb.setValue((mySelectedConfig.getReadTimeoutMillis()));
-
+		
 		myRetriesTextBox.setValue((mySelectedConfig.getFailureRetriesBeforeAborting()));
 
+		myStickySessionCookieNameBox.setValue(mySelectedConfig.getStickySessionCookieForSessionId());
+		
 		myNewKeystore=null;
 		myClearKeystore=false;
 		myNewTruststore=null;

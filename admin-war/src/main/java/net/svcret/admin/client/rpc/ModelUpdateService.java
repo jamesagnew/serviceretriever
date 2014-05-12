@@ -13,6 +13,7 @@ import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoLibraryMessage;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
 import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
+import net.svcret.admin.shared.model.DtoNodeStatusAndStatisticsList;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.DtoAuthenticationHostList;
 import net.svcret.admin.shared.model.DtoConfig;
@@ -48,8 +49,7 @@ public interface ModelUpdateService extends RemoteService {
 
 	GService addService(long theDomainPid, GService theService) throws ServiceFailureException;
 
-	AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseDtoServiceVersion theVersion)
-			throws ServiceFailureException;
+	AddServiceVersionResponse addServiceVersion(Long theExistingDomainPid, String theCreateDomainId, Long theExistingServicePid, String theCreateServiceId, BaseDtoServiceVersion theVersion) throws ServiceFailureException;
 
 	BaseDtoServiceVersion cloneServiceVersion(long thePidToClone) throws ServiceFailureException;
 
@@ -71,9 +71,13 @@ public interface ModelUpdateService extends RemoteService {
 
 	BaseDtoMonitorRule loadMonitorRule(long theRulePid);
 
+	DtoMonitorRuleActiveCheckOutcome loadMonitorRuleActiveCheckOutcomeDetails(long thePid) throws ServiceFailureException;
+
 	List<GMonitorRuleFiring> loadMonitorRuleFirings(Long theDomainPid, Long theServicePid, Long theServiceVersionPid, int theStart);
 
 	GMonitorRuleList loadMonitorRuleList() throws ServiceFailureException;
+
+	DtoNodeStatusAndStatisticsList loadNodeListAndStatistics();
 
 	GRecentMessage loadRecentMessageForServiceVersion(long thePid) throws ServiceFailureException;
 
@@ -100,6 +104,8 @@ public interface ModelUpdateService extends RemoteService {
 	DtoDomainList removeService(long theDomainPid, long theServicePid) throws ServiceFailureException;
 
 	DtoDomainList removeServiceVersion(long thePid) throws ServiceFailureException;
+
+	void removeUser(long thePid) throws ServiceFailureException;
 
 	void reportClientError(String theMessage, Throwable theException);
 
@@ -175,7 +181,5 @@ public interface ModelUpdateService extends RemoteService {
 			myUser = theUser;
 		}
 	}
-
-	DtoMonitorRuleActiveCheckOutcome loadMonitorRuleActiveCheckOutcomeDetails(long thePid) throws ServiceFailureException;
 
 }

@@ -22,13 +22,13 @@ import net.svcret.admin.shared.model.GServiceVersionUrl;
 
 public class UrlDashboardGrid extends BaseUrlGrid {
 
-	private List<GServiceVersionUrl> myUrls = new ArrayList<GServiceVersionUrl>();
+	private List<GServiceVersionUrl> myUrls = new ArrayList<>();
 
-	private Map<Long, DtoDomain> myUrlToDomain = new HashMap<Long, DtoDomain>();
+	private Map<Long, DtoDomain> myUrlToDomain = new HashMap<>();
 
-	private Map<Long, GService> myUrlToService = new HashMap<Long, GService>();
+	private Map<Long, GService> myUrlToService = new HashMap<>();
 
-	private Map<Long, BaseDtoServiceVersion> myUrlToServiceVersion = new HashMap<Long, BaseDtoServiceVersion>();
+	private Map<Long, BaseDtoServiceVersion> myUrlToServiceVersion = new HashMap<>();
 
 	public UrlDashboardGrid(DtoDomainList theDomainList) {
 		init();

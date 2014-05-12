@@ -1,2 +1,0 @@
-serviceClass: net.svcret.admin.client.rpc.ModelUpdateService
-path: 8B3C3BD6B0F18259FA769A0D63D97D2B.gwt.rpc

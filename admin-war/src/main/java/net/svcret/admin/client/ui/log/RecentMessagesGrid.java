@@ -42,19 +42,19 @@ public class RecentMessagesGrid extends FlowPanel {
 	public RecentMessagesGrid(List<GRecentMessage> theList, boolean theShowOutcome) {
 		myShowOutcome = theShowOutcome;
 
-		final CellTable<GRecentMessage> grid = new PCellTable<GRecentMessage>();
+		final CellTable<GRecentMessage> grid = new PCellTable<>();
 		add(grid);
 		grid.setEmptyTableWidget(new Label("No messages"));
 
-		ListDataProvider<GRecentMessage> dataProvider = new ListDataProvider<GRecentMessage>();
+		ListDataProvider<GRecentMessage> dataProvider = new ListDataProvider<>();
 		dataProvider.addDataDisplay(grid);
 		
 		// Action
-		List<HasCell<GRecentMessage, ?>> actionCells = new ArrayList<HasCell<GRecentMessage, ?>>();
+		List<HasCell<GRecentMessage, ?>> actionCells = new ArrayList<>();
 		// View Button - TODO: better icon (view magnifying glass?)
 		PButtonCell viewCell = new PButtonCell(AdminPortal.IMAGES.iconEdit(), AdminPortal.MSGS.actions_View());
 		viewCell.addStyle(CssConstants.RECENT_TRANSACTIONS_ACTION_BUTTON);
-		Column<GRecentMessage, String> viewColumn = new NullColumn<GRecentMessage>(viewCell);
+		Column<GRecentMessage, String> viewColumn = new NullColumn<>(viewCell);
 		actionCells.add(viewColumn);
 		viewColumn.setFieldUpdater(new FieldUpdater<GRecentMessage, String>() {
 			@Override
@@ -72,7 +72,7 @@ public class RecentMessagesGrid extends FlowPanel {
 		// Replay Button
 		PButtonCell replayCell = new PButtonCell(AdminPortal.IMAGES.iconPlay16(), AdminPortal.MSGS.actions_Replay());
 		viewCell.addStyle(CssConstants.RECENT_TRANSACTIONS_ACTION_BUTTON);
-		Column<GRecentMessage, String> replayColumn = new NullColumn<GRecentMessage>(replayCell);
+		Column<GRecentMessage, String> replayColumn = new NullColumn<>(replayCell);
 		actionCells.add(replayColumn);
 		replayColumn.setFieldUpdater(new FieldUpdater<GRecentMessage, String>() {
 			@Override
@@ -90,7 +90,7 @@ public class RecentMessagesGrid extends FlowPanel {
 		// Save Button
 		PButtonCell saveCell = new PButtonCell(AdminPortal.IMAGES.iconSave(), AdminPortal.MSGS.actions_Save());
 		saveCell.addStyle(CssConstants.RECENT_TRANSACTIONS_ACTION_BUTTON);
-		Column<GRecentMessage, String> saveColumn = new NullColumn<GRecentMessage>(saveCell);
+		Column<GRecentMessage, String> saveColumn = new NullColumn<>(saveCell);
 		actionCells.add(saveColumn);
 		saveColumn.setFieldUpdater(new FieldUpdater<GRecentMessage, String>() {
 			@Override
@@ -98,8 +98,8 @@ public class RecentMessagesGrid extends FlowPanel {
 				History.newItem(NavProcessor.getTokenSaveRecentMessageToLibrary(theObject.getRecentMessageType(), theObject.getPid()));
 			}
 		});
-		CompositeCell<GRecentMessage> actionCell = new CompositeCell<GRecentMessage>(actionCells);
-		Column<GRecentMessage, GRecentMessage> actionColumn = new IdentityColumn<GRecentMessage>(actionCell);
+		CompositeCell<GRecentMessage> actionCell = new CompositeCell<>(actionCells);
+		Column<GRecentMessage, GRecentMessage> actionColumn = new IdentityColumn<>(actionCell);
 		grid.addColumn(actionColumn, "");
 
 		// Timestamp
@@ -227,7 +227,7 @@ public class RecentMessagesGrid extends FlowPanel {
 		grid.addColumn(userColumn, MSGS.recentMessagesGrid_ColUser());
 		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
 
-		ListHandler<GRecentMessage> sortHandler = new ListHandler<GRecentMessage>(dataProvider.getList());
+		ListHandler<GRecentMessage> sortHandler = new ListHandler<>(dataProvider.getList());
 		grid.addColumnSortHandler(sortHandler);
 		sortHandler.setComparator(timestampColumn, new Comparator<GRecentMessage>() {
 			@Override

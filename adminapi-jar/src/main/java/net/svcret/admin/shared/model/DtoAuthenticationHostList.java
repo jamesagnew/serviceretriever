@@ -23,4 +23,13 @@ public class DtoAuthenticationHostList extends BaseDtoList<BaseDtoAuthentication
 		return null;
 	}
 
+	public BaseDtoAuthenticationHost getAuthHostById(String theString) {
+		for (BaseDtoAuthenticationHost next : this) {
+			if (theString.equals(next.getModuleId())) {
+				return next;
+			}
+		}
+		return null;
+	}
+
 }

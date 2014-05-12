@@ -30,6 +30,10 @@ public class DtoStickySessionUrlBinding implements Serializable {
 	@XmlAttribute(name = "SessionId")
 	private String mySessionId;
 
+	private String myUrlHref;
+
+	private String myUrlId;
+
 	@XmlAttribute(name = "Url")
 	private Long myUrlPid;
 
@@ -51,6 +55,14 @@ public class DtoStickySessionUrlBinding implements Serializable {
 
 	public String getSessionId() {
 		return mySessionId;
+	}
+
+	public String getUrlHref() {
+		return myUrlHref;
+	}
+
+	public String getUrlId() {
+		return myUrlId;
 	}
 
 	public Long getUrlPid() {
@@ -75,6 +87,14 @@ public class DtoStickySessionUrlBinding implements Serializable {
 
 	public void setSessionId(String theSessionId) {
 		mySessionId = theSessionId;
+	}
+
+	public void setUrlHref(String theUrl) {
+		myUrlHref=theUrl;
+	}
+
+	public void setUrlId(String theUrlId) {
+		myUrlId=theUrlId;
 	}
 
 	public void setUrlPid(Long thePid) {

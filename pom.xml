@@ -5,57 +5,32 @@
 	<artifactId>svcret</artifactId>
 	<version>1.0</version>
 	<packaging>pom</packaging>
-	<name>SAIL_Service_Proxy</name>
+	<name>ServiceRetriever Base Project</name>
 
 	<scm>
 		<connection>scm:git:ssh://jamesagnew@git.code.sf.net/p/svcret/code</connection>
 	</scm>
 
 	<dependencies>
-
-		<!-- Logging -->
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.7.2</version>
-		</dependency>
-		<dependency>
-		    <groupId>ch.qos.logback</groupId>
-		    <artifactId>logback-classic</artifactId>
-		    <version>1.0.13</version>
-		</dependency>
-
-		<!-- JavaEE / EJB / Servlet -->
-		<!--<dependency>
-			<groupId>javax</groupId>
-			<artifactId>javaee-api</artifactId>
-			<version>6.0</version>
-			<scope>provided</scope>
-		</dependency>-->
-		<dependency>
-			<groupId>org.apache.openejb</groupId>
-			<artifactId>javaee-api</artifactId>
-			<version>6.0-4</version>
-			<scope>provided</scope>
-		</dependency>
-
 	</dependencies>
 
 	<modules>
 		<module>adminapi-jar</module>
-		<module>ejb-jar</module>
-		<module>proxy-war</module>
+		<module>core-jar</module>
 		<module>admin-war</module>
-		<module>demoservices-jar</module>
-		<module>ear</module>
+		<module>proxy-app-jar</module>
 	</modules>
 
 	<properties>
+		<gwt_version>2.6.0</gwt_version>
+		<guava_version>14.0.1</guava_version>
+		<hamcrest_version>1.3</hamcrest_version>
+		<hibernate_version>4.3.4.Final</hibernate_version>
+		<hibernate_validator_version>4.3.1.Final</hibernate_validator_version>
+		<jetty_version>9.1.5.v20140505</jetty_version>
 		<mockito_version>1.9.5</mockito_version>
 		<slf4j_version>1.7.2</slf4j_version>
-		<hamcrest_version>1.3</hamcrest_version>
-		<guava_version>14.0.1</guava_version>
-		<spring_version>3.2.4.RELEASE</spring_version>
+		<spring_version>4.0.1.RELEASE</spring_version>
 	</properties>
 
 	<build>
@@ -63,11 +38,11 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
+				<version>3.1</version>
 				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-					<!-- <compilerArguments> <endorseddirs>${endorsed.dir}</endorseddirs> </compilerArguments> -->
+					<source>1.7</source>
+					<target>1.7</target>
+					<showWarnings>true</showWarnings>
 				</configuration>
 			</plugin>
 		</plugins>

@@ -53,6 +53,7 @@ import net.svcret.admin.client.ui.log.ServiceVersionRecentMessagePanel;
 import net.svcret.admin.client.ui.log.UserRecentMessagesPanel;
 import net.svcret.admin.client.ui.log.ViewRecentMessageForServiceVersionPanel;
 import net.svcret.admin.client.ui.log.ViewRecentMessageForUserPanel;
+import net.svcret.admin.client.ui.nodes.NodeListPanel;
 import net.svcret.admin.client.ui.stats.ServiceVersionStatsPanel;
 import net.svcret.admin.client.ui.stats.UserStatsPanel;
 import net.svcret.admin.client.ui.sticky.StickySessionListPanel;
@@ -76,8 +77,8 @@ public class NavProcessor {
 	public static final PagesEnum DEFAULT_PAGE = PagesEnum.DSH;
 	public static final String SEPARATOR = "__";
 
-	private static List<String> ourInMemoryTokens = new ArrayList<String>();
-	private static List<Panel> ourInMemoryPages = new ArrayList<Panel>();
+	private static List<String> ourInMemoryTokens = new ArrayList<>();
+	private static List<Panel> ourInMemoryPages = new ArrayList<>();
 	private static String ourCurrentTokenForUnitTest;
 
 	static {
@@ -162,7 +163,7 @@ public class NavProcessor {
 	}
 
 	public static String getLastTokenBefore(PagesEnum... thePages) {
-		HashSet<String> names = new HashSet<String>();
+		HashSet<String> names = new HashSet<>();
 		for (PagesEnum pagesEnum : thePages) {
 			names.add(pagesEnum.name());
 		}
@@ -293,6 +294,10 @@ public class NavProcessor {
 		return createArgumentToken(PagesEnum.MLB);
 	}
 
+	public static String getTokenNodeStatus() {
+		return createArgumentToken(PagesEnum.NDS);
+	}
+
 	public static String getTokenMessageLibrary(HierarchyEnum theType, long thePid) {
 		return createArgumentToken(PagesEnum.MLB, theType, thePid);
 	}
@@ -341,6 +346,9 @@ public class NavProcessor {
 		// try {
 		Panel panel = null;
 		switch (page) {
+		case NDS:
+			panel = new NodeListPanel();
+			break;
 		case UDS:
 			panel = new UrlDashboardPanel();
 			break;
@@ -538,12 +546,13 @@ public class NavProcessor {
 				if (pageToDelete instanceof IDestroyable) {
 					((IDestroyable) pageToDelete).destroy();
 				}
-			} else if (!nextExistingToken.equals(tokenParts[nextIndex])) {
+			} else if (nextExistingToken != null && !nextExistingToken.equals(tokenParts[nextIndex])) {
 				Panel pageToDelete = ourInMemoryPages.get(nextIndex);
 				if (pageToDelete instanceof IDestroyable) {
 					((IDestroyable) pageToDelete).destroy();
 				}
 				ourInMemoryPages.set(nextIndex, null);
+				ourInMemoryTokens.set(nextIndex, null);
 			}
 		}
 
@@ -557,7 +566,11 @@ public class NavProcessor {
 				}
 			} else if (!tokenParts[nextIndex].equals(ourInMemoryTokens.get(nextIndex))) {
 				ourInMemoryTokens.set(nextIndex, tokenParts[nextIndex]);
-				ourInMemoryPages.add(null);
+				if (nextIndex == tokenParts.length - 1) {
+					ourInMemoryPages.set(nextIndex, panel);
+				}else {
+					ourInMemoryPages.set(nextIndex, null);
+				}
 			} else if (tokenParts[nextIndex].equals(ourInMemoryTokens.get(nextIndex))) {
 				if (nextIndex == tokenParts.length - 1) {
 					if (ourInMemoryPages.get(nextIndex) == null) {
@@ -582,7 +595,7 @@ public class NavProcessor {
 						((IDestroyable) pageToDelete).destroy();
 					}
 				}
-				BodyPanel.getInstance().setContents(newContents);
+				doSetNewContents(newContents);
 				return;
 			}
 		}
@@ -593,13 +606,21 @@ public class NavProcessor {
 			}
 		}
 
-		BodyPanel.getInstance().setContents(panel);
+		doSetNewContents(panel);
 
 		// } catch (Exception e) {
 		// Model.handleFailure(e);
 		// navigateToDefault();
 		// }
 
+	}
+
+	private static void doSetNewContents(Panel panel) {
+		if (panel instanceof IRefreshable) {
+			((IRefreshable) panel).refresh();
+		}
+		
+		BodyPanel.getInstance().setContents(panel);
 	}
 
 	public static void navRoot(PagesEnum thePage) {
@@ -726,7 +747,7 @@ public class NavProcessor {
 		List<PagesEnum> tokensList = Arrays.asList(theTokensToRemove);
 		
 		String[] parts = theToken.split(SEPARATOR);
-		List<String> newParts = new ArrayList<String>();
+		List<String> newParts = new ArrayList<>();
 
 		for (String nextToken : parts) {
 			if (nextToken.length() < 3) {

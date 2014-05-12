@@ -71,7 +71,7 @@ public abstract class BaseRecentMessagesPanel extends FlowPanel {
 		myTransactionTypes.clear();
 		
 		if (theLists.getSuccessList() != null || theLists.getFaultList() != null || theLists.getFailList() != null || theLists.getSecurityFailList() != null) {
-			List<GRecentMessage> list = new ArrayList<GRecentMessage>();
+			List<GRecentMessage> list = new ArrayList<>();
 			if (theLists.getSuccessList() != null) {
 				list.addAll(theLists.getSuccessList());
 			}
