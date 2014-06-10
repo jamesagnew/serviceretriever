@@ -1,6 +1,8 @@
 package net.svcret.core.invoker.soap;
 
+import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,6 +21,8 @@ import javax.xml.stream.events.EndElement;
 import javax.xml.stream.events.Namespace;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
+
+import org.apache.commons.io.IOUtils;
 
 import net.svcret.core.api.ICredentialGrabber;
 import net.svcret.core.ex.InvocationFailedDueToInternalErrorException;
@@ -72,10 +76,20 @@ class RequestPipeline {
 			}
 		}
 		
-		long start = System.currentTimeMillis();
-		
+		String incomingMessage;
 		try {
-			streamReader = ourXmlInputFactory.createXMLEventReader(theReader);
+			long start = System.currentTimeMillis();
+			incomingMessage = IOUtils.toString(theReader);
+			long delay = System.currentTimeMillis()-start;
+			ourLog.info("Loaded {} bytes input message in {}ms", incomingMessage.length(), delay);
+		} catch (IOException e1) {
+			throw new InvocationFailedDueToInternalErrorException(e1);
+		}
+		
+		long start = System.currentTimeMillis();
+
+		try {
+			streamReader = ourXmlInputFactory.createXMLEventReader(new StringReader(incomingMessage));
 			streamWriter = ourXmlOutputFactory.createXMLEventWriter(theWriter);
 		} catch (XMLStreamException e) {
 			throw new InvocationFailedDueToInternalErrorException(e);

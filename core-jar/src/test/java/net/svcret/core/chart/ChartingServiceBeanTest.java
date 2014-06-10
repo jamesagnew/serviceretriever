@@ -1,7 +1,8 @@
 package net.svcret.core.chart;
 
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -16,28 +17,10 @@ import java.util.List;
 import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.admin.shared.model.TimeRange;
 import net.svcret.admin.shared.model.TimeRangeEnum;
-<<<<<<< HEAD:ejb-jar/src/test/java/net/svcret/ejb/chart/ChartingServiceBeanTest.java
-import net.svcret.ejb.api.IConfigService;
-import net.svcret.ejb.api.IDao;
-import net.svcret.ejb.api.IRuntimeStatus;
-import net.svcret.ejb.api.IRuntimeStatusQueryLocal;
-import net.svcret.ejb.api.IScheduler;
-import net.svcret.ejb.chart.ChartingServiceBean;
-import net.svcret.ejb.model.entity.BasePersServiceVersion;
-import net.svcret.ejb.model.entity.InvocationStatsIntervalEnum;
-import net.svcret.ejb.model.entity.PersConfig;
-import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStats;
-import net.svcret.ejb.model.entity.PersInvocationMethodSvcverStatsPk;
-import net.svcret.ejb.model.entity.PersInvocationMethodUserStats;
-import net.svcret.ejb.model.entity.PersInvocationMethodUserStatsPk;
-import net.svcret.ejb.model.entity.PersMethod;
-import net.svcret.ejb.model.entity.PersUser;
-=======
 import net.svcret.core.api.IConfigService;
 import net.svcret.core.api.IDao;
 import net.svcret.core.api.IRuntimeStatusQueryLocal;
 import net.svcret.core.api.IServiceRegistry;
-import net.svcret.core.chart.ChartingServiceBean;
 import net.svcret.core.ejb.nodecomm.IBroadcastSender;
 import net.svcret.core.model.entity.BasePersServiceVersion;
 import net.svcret.core.model.entity.PersConfig;
@@ -47,9 +30,7 @@ import net.svcret.core.model.entity.PersInvocationMethodUserStats;
 import net.svcret.core.model.entity.PersInvocationMethodUserStatsPk;
 import net.svcret.core.model.entity.PersMethod;
 import net.svcret.core.model.entity.PersUser;
->>>>>>> spring:core-jar/src/test/java/net/svcret/core/chart/ChartingServiceBeanTest.java
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.stubbing.defaultanswers.ReturnsDeepStubs;

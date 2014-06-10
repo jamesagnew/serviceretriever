@@ -81,6 +81,7 @@ public abstract class BaseServerBean implements BeanNameAware {
 
 		ServerConnector connector = new ServerConnector(myProxyServer, mySslContextFactory);
 		connector.setPort(myPort);
+		
 		myProxyServer.setConnectors(new Connector[] { connector });
 
 		configureServerBeforeStarting();
