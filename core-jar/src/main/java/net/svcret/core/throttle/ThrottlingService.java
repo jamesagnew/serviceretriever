@@ -118,7 +118,7 @@ public class ThrottlingService implements IThrottlingService {
 		PersUser user = theAuthorization != null ? theAuthorization.getAuthorizedUser() : null;
 		Set<LimiterKey> throttleKeys = new HashSet<>();
 
-        if (!theInvocationRequest.isThrottleDisabled() == false) {
+        if (!theInvocationRequest.isThrottleDisabled()) {
             /*
              * Service specific throttle for method
              */
