@@ -43,17 +43,8 @@ import net.svcret.admin.api.ProcessingException;
 import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
-import net.svcret.admin.shared.model.BaseDtoClientSecurity;
-import net.svcret.admin.shared.model.BaseDtoServerSecurity;
-import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
-import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.DtoPropertyCapture;
-import net.svcret.admin.shared.model.GServiceMethod;
-import net.svcret.admin.shared.model.GServiceVersionResourcePointer;
-import net.svcret.admin.shared.model.GServiceVersionUrl;
-import net.svcret.admin.shared.model.ServerSecuredEnum;
-import net.svcret.admin.shared.model.ServiceProtocolEnum;
-import net.svcret.admin.shared.model.StatusEnum;
+import net.svcret.admin.shared.model.*;
+import net.svcret.admin.shared.model.DtoMethod;
 import net.svcret.admin.shared.util.ProxyUtil;
 import net.svcret.admin.shared.util.Validate;
 import net.svcret.core.admin.AdminServiceBean;
@@ -962,7 +953,7 @@ public abstract class BasePersServiceVersion extends BasePersServiceCatalogItem 
 		for (PersMethod nextMethod : this.getMethods()) {
 			if (!BaseDtoServiceVersion.METHOD_NAME_UNKNOWN.equals(nextMethod.getName())) {
 				boolean loadStats = theLoadMethodStats != null && theLoadMethodStats.contains(nextMethod.getPid());
-				GServiceMethod gMethod = nextMethod.toDto(loadStats, theQuerySvc, theStatuses);
+				DtoMethod gMethod = nextMethod.toDto(loadStats, theQuerySvc, theStatuses);
 				retVal.getMethodList().add(gMethod);
 			}
 		} // for methods

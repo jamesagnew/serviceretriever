@@ -37,7 +37,7 @@ import net.svcret.admin.shared.model.DtoServiceVersionVirtual;
 import net.svcret.admin.shared.model.GHttpClientConfigList;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
-import net.svcret.admin.shared.model.GServiceMethod;
+import net.svcret.admin.shared.model.DtoMethod;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.GWsSecServerSecurity;
 import net.svcret.admin.shared.model.GWsSecUsernameTokenClientSecurity;
@@ -94,10 +94,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Matchers;
-import org.mockito.Mockito;
-import org.mockito.internal.stubbing.answers.ThrowsException;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.springframework.aop.framework.Advised;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
@@ -112,7 +108,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 	private String myTempPath;
 	private Long mySvcVerPid;
 	private PersServiceVersionUrl myUrl2;
-	private GServiceMethod myMethod;
+	private DtoMethod myMethod;
 	private DtoServiceVersionSoap11 mySvcVer;
 	private PersAuthenticationHostLocalDatabase myAuthHost;
 	private ServiceOrchestratorBean myOrchSvcUnwrapped;
@@ -1377,7 +1373,7 @@ public class ServiceOrchestratorBeanIntegrationTest {
 		mySvcVer = ourAdminSvc.saveServiceVersion(d0.getPid(), d0s0.getPid(), new DtoServiceVersionSoap11("d0s0v0", "http://wsdlurl", ourAdminSvc.getDefaultHttpClientConfigPid()),
 				new ArrayList<GResource>());
 		mySvcVer.setServerSecurityMode(ServerSecurityModeEnum.REQUIRE_ANY);
-		GServiceMethod d0s0v0m0 = new GServiceMethod();
+		DtoMethod d0s0v0m0 = new DtoMethod();
 		d0s0v0m0.setName("d0s0v0m0");
 		mySvcVer.addMethod(d0s0v0m0);
 		d0s0v0m0.setRootElements("net:svcret:demo:d0s0v0m0");

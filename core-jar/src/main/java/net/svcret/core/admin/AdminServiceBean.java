@@ -23,58 +23,8 @@ import net.svcret.admin.api.UnknownPidException;
 import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
-import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
-import net.svcret.admin.shared.model.BaseDtoClientSecurity;
-import net.svcret.admin.shared.model.BaseDtoMonitorRule;
-import net.svcret.admin.shared.model.BaseDtoServerSecurity;
-import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.DtoAuthenticationHostLdap;
-import net.svcret.admin.shared.model.DtoAuthenticationHostList;
-import net.svcret.admin.shared.model.DtoAuthenticationHostLocalDatabase;
-import net.svcret.admin.shared.model.DtoClientSecurityJsonRpcNamedParameter;
-import net.svcret.admin.shared.model.DtoConfig;
-import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.DtoDomainList;
-import net.svcret.admin.shared.model.DtoHttpClientConfig;
-import net.svcret.admin.shared.model.DtoLibraryMessage;
-import net.svcret.admin.shared.model.DtoMonitorRuleActive;
-import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
-import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
-import net.svcret.admin.shared.model.DtoNodeStatus;
-import net.svcret.admin.shared.model.DtoNodeStatusAndStatisticsList;
-import net.svcret.admin.shared.model.DtoPropertyCapture;
-import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
-import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
-import net.svcret.admin.shared.model.GHttpClientConfigList;
-import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
-import net.svcret.admin.shared.model.GMonitorRuleFiring;
-import net.svcret.admin.shared.model.GMonitorRuleList;
-import net.svcret.admin.shared.model.GMonitorRulePassive;
-import net.svcret.admin.shared.model.GNamedParameterJsonRpcServerAuth;
-import net.svcret.admin.shared.model.GPartialUserList;
-import net.svcret.admin.shared.model.GRecentMessage;
-import net.svcret.admin.shared.model.GRecentMessageLists;
-import net.svcret.admin.shared.model.GResource;
-import net.svcret.admin.shared.model.GService;
-import net.svcret.admin.shared.model.GServiceMethod;
-import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
-import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
-import net.svcret.admin.shared.model.GServiceVersionUrl;
-import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
-import net.svcret.admin.shared.model.GThrottle;
-import net.svcret.admin.shared.model.GUser;
-import net.svcret.admin.shared.model.GUserDomainPermission;
-import net.svcret.admin.shared.model.GUserList;
-import net.svcret.admin.shared.model.GUserServicePermission;
-import net.svcret.admin.shared.model.GUserServiceVersionMethodPermission;
-import net.svcret.admin.shared.model.GUserServiceVersionPermission;
-import net.svcret.admin.shared.model.HierarchyEnum;
-import net.svcret.admin.shared.model.ModelUpdateRequest;
-import net.svcret.admin.shared.model.ModelUpdateResponse;
-import net.svcret.admin.shared.model.Pair;
-import net.svcret.admin.shared.model.PartialUserListRequest;
-import net.svcret.admin.shared.model.StatusEnum;
-import net.svcret.admin.shared.model.TimeRange;
+import net.svcret.admin.shared.model.*;
+import net.svcret.admin.shared.model.DtoMethod;
 import net.svcret.admin.shared.util.Validate;
 import net.svcret.core.api.IConfigService;
 import net.svcret.core.api.IDao;
@@ -244,7 +194,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 	}
 
 	@Override
-	public GServiceMethod addServiceVersionMethod(long theServiceVersionPid, GServiceMethod theMethod) throws ProcessingException, UnexpectedFailureException {
+	public DtoMethod addServiceVersionMethod(long theServiceVersionPid, DtoMethod theMethod) throws ProcessingException, UnexpectedFailureException {
 		ourLog.info("Adding method {} to service version {}", theMethod.getName(), theServiceVersionPid);
 
 		BasePersServiceVersion sv = myDao.getServiceVersionByPid(theServiceVersionPid);
@@ -1102,7 +1052,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		 */
 
 		HashSet<String> methods = new HashSet<>();
-		for (GServiceMethod next : theVersion.getMethodList()) {
+		for (DtoMethod next : theVersion.getMethodList()) {
 			methods.add(next.getName());
 			PersMethod existing = existingVersion.getMethod(next.getName());
 			if (existing != null) {
@@ -1620,7 +1570,7 @@ public class AdminServiceBean implements IAdminServiceLocal {
 		return retVal;
 	}
 
-	private static PersMethod fromUi(GServiceMethod theMethod) {
+	private static PersMethod fromUi(DtoMethod theMethod) {
 		PersMethod retVal = new PersMethod();
 		retVal.setName(theMethod.getName());
 		retVal.setPid(theMethod.getPidOrNull());

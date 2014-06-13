@@ -31,45 +31,8 @@ import net.svcret.admin.shared.enm.AuthorizationOutcomeEnum;
 import net.svcret.admin.shared.enm.InvocationStatsIntervalEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
-import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
-import net.svcret.admin.shared.model.BaseDtoDashboardObject;
-import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.DtoAuthenticationHostList;
-import net.svcret.admin.shared.model.DtoAuthenticationHostLocalDatabase;
-import net.svcret.admin.shared.model.DtoConfig;
-import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.DtoDomainList;
-import net.svcret.admin.shared.model.DtoHttpClientConfig;
-import net.svcret.admin.shared.model.DtoLibraryMessage;
-import net.svcret.admin.shared.model.DtoMonitorRuleActive;
-import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
-import net.svcret.admin.shared.model.DtoPropertyCapture;
-import net.svcret.admin.shared.model.DtoServiceVersionJsonRpc20;
-import net.svcret.admin.shared.model.DtoServiceVersionRest;
-import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
-import net.svcret.admin.shared.model.DtoServiceVersionThrottle;
-import net.svcret.admin.shared.model.GMonitorRuleList;
-import net.svcret.admin.shared.model.GMonitorRulePassive;
-import net.svcret.admin.shared.model.GPartialUserList;
-import net.svcret.admin.shared.model.GResource;
-import net.svcret.admin.shared.model.GService;
-import net.svcret.admin.shared.model.GServiceMethod;
-import net.svcret.admin.shared.model.GServiceVersionUrl;
-import net.svcret.admin.shared.model.GSoap11ServiceVersionAndResources;
-import net.svcret.admin.shared.model.GUser;
-import net.svcret.admin.shared.model.GUserDomainPermission;
-import net.svcret.admin.shared.model.GUserServicePermission;
-import net.svcret.admin.shared.model.GUserServiceVersionPermission;
-import net.svcret.admin.shared.model.GWsSecServerSecurity;
-import net.svcret.admin.shared.model.GWsSecUsernameTokenClientSecurity;
-import net.svcret.admin.shared.model.HierarchyEnum;
-import net.svcret.admin.shared.model.ModelUpdateRequest;
-import net.svcret.admin.shared.model.ModelUpdateResponse;
-import net.svcret.admin.shared.model.PartialUserListRequest;
-import net.svcret.admin.shared.model.RetrieverNodeTypeEnum;
-import net.svcret.admin.shared.model.ServiceProtocolEnum;
-import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
-import net.svcret.core.admin.AdminServiceBean;
+import net.svcret.admin.shared.model.*;
+import net.svcret.admin.shared.model.DtoMethod;
 import net.svcret.core.api.IConfigService;
 import net.svcret.core.api.IDao;
 import net.svcret.core.api.IHttpClient;
@@ -864,7 +827,7 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 		newEntityManager();
 
 		d1s1v1 = (DtoServiceVersionSoap11) ourAdminSvc.loadServiceVersion(d1s1v1.getPid()).getServiceVersion();
-		GServiceMethod method = new GServiceMethod();
+		DtoMethod method = new DtoMethod();
 		method.setName("123");
 		d1s1v1.getMethodList().add(method);
 
@@ -889,9 +852,9 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 
 		// Make sure we don't replace identical methods
 
-		GServiceMethod oldMethod = d1s1v1.getMethodList().remove(0);
+		DtoMethod oldMethod = d1s1v1.getMethodList().remove(0);
 
-		d1s1v1.getMethodList().add(new GServiceMethod());
+		d1s1v1.getMethodList().add(new DtoMethod());
 		d1s1v1.getMethodList().get(0).setId(oldMethod.getId());
 		d1s1v1.getMethodList().get(0).setName(oldMethod.getName());
 		d1s1v1.getMethodList().get(0).setRootElements(oldMethod.getRootElements());
@@ -1724,11 +1687,11 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 		d2s1v1.setHttpClientConfigPid(ourAdminSvc.getDefaultHttpClientConfigPid());
 		d2s1v1 = ourAdminSvc.saveServiceVersion(d2.getPid(), d2s1.getPid(), d2s1v1, resources);
 
-		GServiceMethod d1s1v1m1 = new GServiceMethod();
+		DtoMethod d1s1v1m1 = new DtoMethod();
 		d1s1v1m1.setName("d1s1v1m1");
 		d1s1v1m1 = ourAdminSvc.addServiceVersionMethod(d1s1v1.getPid(), d1s1v1m1);
 
-		GServiceMethod d2s1v1m1 = new GServiceMethod();
+		DtoMethod d2s1v1m1 = new DtoMethod();
 		d2s1v1m1.setName("d2s1v1m1");
 		d2s1v1m1 = ourAdminSvc.addServiceVersionMethod(d2s1v1.getPid(), d2s1v1m1);
 
@@ -1886,7 +1849,7 @@ public class AdminServiceBeanIntegrationTest /* extends BaseJpaTest */{
 		d1s1v1.setKeepNumRecentTransactionsSecurityFail(100);
 		d1s1v1.setKeepNumRecentTransactionsSuccess(100);
 
-		GServiceMethod d1s1v1m1 = new GServiceMethod();
+		DtoMethod d1s1v1m1 = new DtoMethod();
 		d1s1v1m1.setName("d1s1v1m1");
 		d1s1v1.getMethodList().add(d1s1v1m1);
 

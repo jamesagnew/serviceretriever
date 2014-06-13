@@ -17,7 +17,7 @@ import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
-import net.svcret.admin.shared.model.GServiceMethod;
+import net.svcret.admin.shared.model.DtoMethod;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.core.admin.AdminServiceBean;
