@@ -26,13 +26,6 @@ import net.svcret.core.api.SrBeanProcessedResponse;
 import net.svcret.core.api.ISecurityService.AuthorizationResultsBean;
 import net.svcret.core.model.entity.PersMethod;
 import net.svcret.core.model.entity.PersUser;
-import net.svcret.core.throttle.FlexibleRateLimiter;
-import net.svcret.core.throttle.IThrottlingService;
-import net.svcret.core.throttle.LimiterKey;
-import net.svcret.core.throttle.ThrottleException;
-import net.svcret.core.throttle.ThrottleQueueFullException;
-import net.svcret.core.throttle.ThrottledTaskQueue;
-import net.svcret.core.throttle.ThrottlingService;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -190,6 +183,61 @@ public class ThrottlingServiceTest {
 
 	}
 
+    /*
+        Throttle disabled method should always be exempt of
+        throttling, regardless of user/service-wide throttle
+        settings.
+     */
+    @Test
+    public void testExecuteThrottledUserWithThrottleDisabledMethod() throws ThrottleException, ThrottleQueueFullException, InterruptedException {
+
+        when(myThis.serviceThrottledRequests((ThrottledTaskQueue) any())).thenReturn(null);
+        PersMethod method = mock(PersMethod.class, new ReturnsDeepStubs());
+        when(method.getServiceVersion().getThrottle()).thenReturn(null);
+
+        PersUser user = new PersUser();
+        user.setThrottleMaxRequests(2);
+        user.setThrottlePeriod(ThrottlePeriodEnum.SECOND);
+        user.setThrottleMaxQueueDepth(2);
+
+        SrBeanIncomingRequest httpRequest = new SrBeanIncomingRequest();
+        httpRequest.setInputReader(new StringReader(""));
+
+        SrBeanProcessedRequest invocationRequest = new SrBeanProcessedRequest();
+        invocationRequest.setResultMethod(method, "", "");
+        invocationRequest.setThrottleDisabled(true);
+        AuthorizationResultsBean authorization = new AuthorizationResultsBean();
+
+        authorization.setAuthorizedUser(user);
+
+        mySvc.applyThrottle(httpRequest, invocationRequest, authorization);
+
+        Thread.sleep(1001);
+
+        mySvc.applyThrottle(httpRequest, invocationRequest, authorization);
+        mySvc.applyThrottle(httpRequest, invocationRequest, authorization);
+
+        try {
+            mySvc.applyThrottle(httpRequest, invocationRequest, authorization);
+        } catch (ThrottleException e) {
+            Assert.fail();
+        }
+
+        try {
+            mySvc.applyThrottle(httpRequest, invocationRequest, authorization);
+        } catch (ThrottleException e) {
+            Assert.fail();
+        }
+
+        try {
+            mySvc.applyThrottle(httpRequest, invocationRequest, authorization);
+        } catch (ThrottleException e) {
+            Assert.fail();
+        }
+
+        verify(myThis, times(0)).serviceThrottledRequests((ThrottledTaskQueue) any());
+    }
+
 	@Test
 	public void testExecuteThrottledUserAndPropertyCapture() throws ThrottleException, ThrottleQueueFullException, InterruptedException {
 
@@ -282,8 +330,8 @@ public class ThrottlingServiceTest {
 		verify(myRuntimeStatusSvc).recordInvocationMethod((Date) any(), eq(0), (SrBeanProcessedRequest) any(), (PersUser) any(), (SrBeanIncomingResponse)any(), (SrBeanProcessedResponse) any(), (SrBeanIncomingRequest)any());
 
 	}
-	
-	
+
+
 	
 	public void testExecuteWorks() throws ThrottleException, ThrottleQueueFullException, InterruptedException {
 
