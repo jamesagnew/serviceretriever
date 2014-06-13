@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.gwt.cell.client.CheckboxCell;
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.MyResources;
 import net.svcret.admin.client.nav.NavProcessor;
@@ -35,19 +36,8 @@ import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.enm.ClientSecurityEnum;
 import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
-import net.svcret.admin.shared.model.BaseDtoClientSecurity;
-import net.svcret.admin.shared.model.BaseDtoServerSecurity;
-import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.DtoHttpClientConfig;
-import net.svcret.admin.shared.model.DtoPropertyCapture;
-import net.svcret.admin.shared.model.DtoServerSecurityList;
-import net.svcret.admin.shared.model.GHttpClientConfigList;
-import net.svcret.admin.shared.model.GServiceMethod;
-import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
-import net.svcret.admin.shared.model.IHasThrottle;
-import net.svcret.admin.shared.model.IThrottleable;
-import net.svcret.admin.shared.model.ServerSecurityEnum;
-import net.svcret.admin.shared.model.ServiceProtocolEnum;
+import net.svcret.admin.shared.model.*;
+import net.svcret.admin.shared.model.DtoMethod;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.cell.client.FieldUpdater;
@@ -98,7 +88,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 	private GHttpClientConfigList myHttpClientConfigList;
 	private ListBox myHttpConfigList;
 	private KeepRecentTransactionsPanel myKeepRecentTransactionsPanel;
-	private ListDataProvider<GServiceMethod> myMethodDataProvider;
+	private ListDataProvider<DtoMethod> myMethodDataProvider;
 	private long myNextBackgroundSave;
 	private Label myNoClientSercuritysLabel;
 	private Label myNoServerSercuritysLabel;
@@ -467,25 +457,25 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 	}
 
 	private void initMethodPanel(FlowPanel theMethodPanel) {
-		final CellTable<GServiceMethod> grid = new PCellTable<>();
+		final CellTable<DtoMethod> grid = new PCellTable<>();
 		theMethodPanel.add(grid);
 		grid.setEmptyTableWidget(new Label("No methods defined."));
 
 		myMethodDataProvider = new ListDataProvider<>();
 		myMethodDataProvider.addDataDisplay(grid);
 
-		ListHandler<GServiceMethod> sortHandler = new ListHandler<>(myMethodDataProvider.getList());
+		ListHandler<DtoMethod> sortHandler = new ListHandler<>(myMethodDataProvider.getList());
 		grid.addColumnSortHandler(sortHandler);
 
 		// Action
 
 		PButtonCell deleteCell = new PButtonCell(AdminPortal.IMAGES.iconRemove());
 
-		Column<GServiceMethod, String> action = new NullColumn<>(deleteCell);
+		Column<DtoMethod, String> action = new NullColumn<>(deleteCell);
 		grid.addColumn(action, "");
-		action.setFieldUpdater(new FieldUpdater<GServiceMethod, String>() {
+		action.setFieldUpdater(new FieldUpdater<DtoMethod, String>() {
 			@Override
-			public void update(int theIndex, GServiceMethod theObject, String theValue) {
+			public void update(int theIndex, DtoMethod theObject, String theValue) {
 				if (Window.confirm("Delete - Are you sure?")) {
 					getServiceVersion().getMethodList().remove(theObject);
 					updateMethodPanel();
@@ -496,26 +486,26 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 
 		// Name
 
-		Column<GServiceMethod, SafeHtml> nameColumn = new Column<GServiceMethod, SafeHtml>(new SafeHtmlCell()) {
+		Column<DtoMethod, SafeHtml> nameColumn = new Column<DtoMethod, SafeHtml>(new SafeHtmlCell()) {
 			@Override
-			public SafeHtml getValue(GServiceMethod theObject) {
+			public SafeHtml getValue(DtoMethod theObject) {
 				return SafeHtmlUtils.fromString(theObject.getName());
 			}
 		};
 		grid.addColumn(nameColumn, "Name");
 		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
-		sortHandler.setComparator(nameColumn, new Comparator<GServiceMethod>() {
+		sortHandler.setComparator(nameColumn, new Comparator<DtoMethod>() {
 			@Override
-			public int compare(GServiceMethod theO1, GServiceMethod theO2) {
+			public int compare(DtoMethod theO1, DtoMethod theO2) {
 				return StringUtil.compare(theO1.getName(), theO2.getName());
 			}
 		});
 
 		// Root Elements
 
-		Column<GServiceMethod, SafeHtml> rootElementsColumn = new Column<GServiceMethod, SafeHtml>(new SafeHtmlCell()) {
+		Column<DtoMethod, SafeHtml> rootElementsColumn = new Column<DtoMethod, SafeHtml>(new SafeHtmlCell()) {
 			@Override
-			public SafeHtml getValue(GServiceMethod theObject) {
+			public SafeHtml getValue(DtoMethod theObject) {
 				String value = StringUtil.defaultString(theObject.getRootElements());
 				if (StringUtil.isNotBlank(value)) {
 					int index = value.lastIndexOf(':');
@@ -546,9 +536,9 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		};
 		grid.addColumn(rootElementsColumn, "Root Elements");
 		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
-		sortHandler.setComparator(rootElementsColumn, new Comparator<GServiceMethod>() {
+		sortHandler.setComparator(rootElementsColumn, new Comparator<DtoMethod>() {
 			@Override
-			public int compare(GServiceMethod theO1, GServiceMethod theO2) {
+			public int compare(DtoMethod theO1, DtoMethod theO2) {
 				return StringUtil.compare(theO1.getRootElements(), theO2.getRootElements());
 			}
 		});
@@ -559,9 +549,9 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		List<String> secTexts = MethodSecurityPolicyEnum.valuesAsFriendlyNameList();
 		PSelectionCell secPolicyCell = new PSelectionCell(secValues, secTexts);
 		secPolicyCell.setDisableWithMessageOnNullValue("No server security");
-		Column<GServiceMethod, String> secPolicyColumn = new Column<GServiceMethod, String>(secPolicyCell) {
+		Column<DtoMethod, String> secPolicyColumn = new Column<DtoMethod, String>(secPolicyCell) {
 			@Override
-			public String getValue(GServiceMethod theObject) {
+			public String getValue(DtoMethod theObject) {
 				if (myServiceVersion.isSecure()) {
 					return theObject.getSecurityPolicy().name();
 				} else {
@@ -572,15 +562,15 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		};
 		grid.addColumn(secPolicyColumn, "Security Policy");
 		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
-		sortHandler.setComparator(rootElementsColumn, new Comparator<GServiceMethod>() {
+		sortHandler.setComparator(rootElementsColumn, new Comparator<DtoMethod>() {
 			@Override
-			public int compare(GServiceMethod theO1, GServiceMethod theO2) {
+			public int compare(DtoMethod theO1, DtoMethod theO2) {
 				return theO1.getSecurityPolicy().ordinal() - theO2.getSecurityPolicy().ordinal();
 			}
 		});
-		secPolicyColumn.setFieldUpdater(new FieldUpdater<GServiceMethod, String>() {
+		secPolicyColumn.setFieldUpdater(new FieldUpdater<DtoMethod, String>() {
 			@Override
-			public void update(int theIndex, GServiceMethod theObject, String theValue) {
+			public void update(int theIndex, DtoMethod theObject, String theValue) {
 				if (StringUtil.isNotBlank(theValue)) {
 					theObject.setSecurityPolicy(MethodSecurityPolicyEnum.valueOf(theValue));
 				}
@@ -589,9 +579,9 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 
 		// Usage
 
-		Column<GServiceMethod, SafeHtml> usageColumn = new Column<GServiceMethod, SafeHtml>(new SafeHtmlCell()) {
+		Column<DtoMethod, SafeHtml> usageColumn = new Column<DtoMethod, SafeHtml>(new SafeHtmlCell()) {
 			@Override
-			public SafeHtml getValue(GServiceMethod theObject) {
+			public SafeHtml getValue(DtoMethod theObject) {
 				SafeHtmlBuilder b = new SafeHtmlBuilder();
 
 				GServiceVersionDetailedStats detailedStats = myServiceVersion.getDetailedStats();
@@ -610,7 +600,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		};
 		grid.addColumn(usageColumn, "Usage");
 		grid.getColumn(grid.getColumnCount() - 1).setSortable(true);
-		sortHandler.setComparator(usageColumn, new Comparator<GServiceMethod>() {
+		sortHandler.setComparator(usageColumn, new Comparator<DtoMethod>() {
 			private int addToTotal(int[]... theLists) {
 				int retVal = 0;
 				for (int[] next : theLists) {
@@ -624,7 +614,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 			}
 
 			@Override
-			public int compare(GServiceMethod theO1, GServiceMethod theO2) {
+			public int compare(DtoMethod theO1, DtoMethod theO2) {
 				GServiceVersionDetailedStats detailedStats = myServiceVersion.getDetailedStats();
 				if (detailedStats == null) {
 					return 0;
@@ -643,6 +633,29 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 		});
 
 		grid.getColumnSortList().push(nameColumn);
+
+        // Throttle Disabled
+
+        /*
+            By default, all methods can be throttled.
+            Only flagged (blacklisted) methods are
+            exempted from throttling.
+        */
+        Column<DtoMethod, Boolean> throttleColumn =
+            new Column<DtoMethod, Boolean>(new CheckboxCell()) {
+                @Override
+                public Boolean getValue(final DtoMethod theObject) {
+                     return theObject.isThrottleDisabled();
+                }
+            };
+        throttleColumn.setFieldUpdater(
+            new FieldUpdater<DtoMethod, Boolean>() {
+                @Override
+                public void update(int theIndex, DtoMethod theObject, Boolean theValue) {
+                    theObject.setThrottleDisabled(theValue);
+                }
+            });
+        grid.addColumn(throttleColumn, "Throttle Disabled");
 
 		// Add Method
 		theMethodPanel.add(new HtmlBr());
@@ -667,7 +680,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 					return;
 				}
 
-				GServiceMethod method = new GServiceMethod();
+				DtoMethod method = new DtoMethod();
 				method.setUncommittedSessionId(newUncommittedSessionId());
 				method.setName(name);
 				method.setSecurityPolicy(MethodSecurityPolicyEnum.getDefault());
@@ -960,7 +973,7 @@ public abstract class BaseDetailPanel<T extends BaseDtoServiceVersion> extends T
 
 	protected void updateMethodPanel() {
 		if (myMethodDataProvider != null) {
-			List<GServiceMethod> list = myMethodDataProvider.getList();
+			List<DtoMethod> list = myMethodDataProvider.getList();
 			list.clear();
 			list.addAll(myServiceVersion.getMethodList().toList());
 			myMethodDataProvider.refresh();
