@@ -26,7 +26,7 @@ import net.svcret.admin.shared.model.GRecentMessage;
 import net.svcret.admin.shared.model.GRecentMessageLists;
 import net.svcret.admin.shared.model.GResource;
 import net.svcret.admin.shared.model.GService;
-import net.svcret.admin.shared.model.GServiceMethod;
+import net.svcret.admin.shared.model.DtoMethod;
 import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
 import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
 import net.svcret.admin.shared.model.GServiceVersionUrl;
@@ -139,7 +139,7 @@ public interface IAdminServiceLocal  {
 
 	void deleteUser(long thePid) throws ProcessingException;
 
-	GServiceMethod addServiceVersionMethod(long theSvcVerPid, GServiceMethod theMethod) throws ProcessingException, UnexpectedFailureException;
+	DtoMethod addServiceVersionMethod(long theSvcVerPid, DtoMethod theMethod) throws ProcessingException, UnexpectedFailureException;
 
 	Collection<Long> getAllDomainPids();
 

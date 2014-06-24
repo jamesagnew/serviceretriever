@@ -13,13 +13,8 @@ import java.util.List;
 
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
-import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
-import net.svcret.admin.shared.model.GResource;
-import net.svcret.admin.shared.model.GService;
-import net.svcret.admin.shared.model.GServiceMethod;
-import net.svcret.admin.shared.model.GServiceVersionUrl;
-import net.svcret.admin.shared.model.StatusEnum;
+import net.svcret.admin.shared.model.*;
+import net.svcret.admin.shared.model.DtoMethod;
 import net.svcret.core.admin.AdminServiceBean;
 import net.svcret.core.api.IServiceOrchestrator;
 import net.svcret.core.api.RequestType;
@@ -33,8 +28,6 @@ import net.svcret.core.ejb.BaseJpaTest;
 import net.svcret.core.ejb.ConfigServiceBean;
 import net.svcret.core.ejb.DefaultAnswer;
 import net.svcret.core.ejb.ServiceRegistryBean;
-import net.svcret.core.ejb.monitor.IMonitorNotifier;
-import net.svcret.core.ejb.monitor.MonitorServiceBean;
 import net.svcret.core.ejb.nodecomm.IBroadcastSender;
 import net.svcret.core.integrationtest.AdminServiceBeanIntegrationTest;
 import net.svcret.core.invoker.soap.IServiceInvokerSoap11;
@@ -646,7 +639,7 @@ private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger
 		d1s1v1.getUrlList().add(new GServiceVersionUrl("url1", HTTP_URL1));
 		d1s1v1.getUrlList().add(new GServiceVersionUrl("url2", HTTP_URL2));
 
-		d1s1v1.getMethodList().add(new GServiceMethod("methodName"));
+		d1s1v1.getMethodList().add(new DtoMethod("methodName"));
 
 		mySvcVer1G = myOrchSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s1v1, resources);
 
@@ -666,7 +659,7 @@ private static final org.slf4j.Logger ourLog = org.slf4j.LoggerFactory.getLogger
 		d1s2v1.getUrlList().add(new GServiceVersionUrl("url1", HTTP_URL1));
 		d1s2v1.getUrlList().add(new GServiceVersionUrl("url2", HTTP_URL2));
 
-		d1s2v1.getMethodList().add(new GServiceMethod("methodName"));
+		d1s2v1.getMethodList().add(new DtoMethod("methodName"));
 
 		mySvcVer2G = myOrchSvc.saveServiceVersion(d1.getPid(), d1s1.getPid(), d1s2v1, resources2);
 		

@@ -118,36 +118,38 @@ public class ThrottlingService implements IThrottlingService {
 		PersUser user = theAuthorization != null ? theAuthorization.getAuthorizedUser() : null;
 		Set<LimiterKey> throttleKeys = new HashSet<>();
 
-		/*
-		 * Service specific throttle for method
-		 */
-		if (theInvocationRequest.getMethodDefinition() != null) {
-			PersServiceVersionThrottle svcThrottle = theInvocationRequest.getMethodDefinition().getServiceVersion().getThrottle();
-			if (svcThrottle != null) {
-				double requestsPerSecond = svcThrottle.getThrottlePeriod().numRequestsToRequestsPerSecond(svcThrottle.getThrottleMaxRequests());
-				Integer maxQueueDepth = svcThrottle.getThrottleMaxQueueDepth();
-				PersUser svcThrottleUser = svcThrottle.isApplyPerUser() ? user : null;
-				String propCapName = svcThrottle.getApplyPropCapName();
-				String propCapValue = propCapName != null ? theInvocationRequest.getPropertyCaptures().get(propCapName) : null;
-				LimiterKey key = new LimiterKey(svcThrottleUser, propCapName, propCapValue, requestsPerSecond, maxQueueDepth);
-				throttleKeys.add(key);
-			}
-		}
+        if (!theInvocationRequest.isThrottleDisabled()) {
+            /*
+             * Service specific throttle for method
+             */
+            if (theInvocationRequest.getMethodDefinition() != null) {
+                PersServiceVersionThrottle svcThrottle = theInvocationRequest.getMethodDefinition().getServiceVersion().getThrottle();
+                if (svcThrottle != null) {
+                    double requestsPerSecond = svcThrottle.getThrottlePeriod().numRequestsToRequestsPerSecond(svcThrottle.getThrottleMaxRequests());
+                    Integer maxQueueDepth = svcThrottle.getThrottleMaxQueueDepth();
+                    PersUser svcThrottleUser = svcThrottle.isApplyPerUser() ? user : null;
+                    String propCapName = svcThrottle.getApplyPropCapName();
+                    String propCapValue = propCapName != null ? theInvocationRequest.getPropertyCaptures().get(propCapName) : null;
+                    LimiterKey key = new LimiterKey(svcThrottleUser, propCapName, propCapValue, requestsPerSecond, maxQueueDepth);
+                    throttleKeys.add(key);
+                }
+            }
 
-		/*
-		 * User specific throttle
-		 */
+            /*
+             * User specific throttle
+             */
 
-		if (user != null) {
-			if (user.getThrottleMaxRequests() != null && user.getThrottlePeriod() != null) {
-				double requestsPerSecond = user.getThrottlePeriod().numRequestsToRequestsPerSecond(user.getThrottleMaxRequests());
-				Integer maxQueueDepth = user.getThrottleMaxQueueDepth();
-				LimiterKey key = new LimiterKey(user, null, null, requestsPerSecond, maxQueueDepth);
-				throttleKeys.add(key);
-			}
-		}
+            if (user != null) {
+                if (user.getThrottleMaxRequests() != null && user.getThrottlePeriod() != null) {
+                    double requestsPerSecond = user.getThrottlePeriod().numRequestsToRequestsPerSecond(user.getThrottleMaxRequests());
+                    Integer maxQueueDepth = user.getThrottleMaxQueueDepth();
+                    LimiterKey key = new LimiterKey(user, null, null, requestsPerSecond, maxQueueDepth);
+                    throttleKeys.add(key);
+                }
+            }
 
-		applyThrottle(theHttpRequest, theInvocationRequest, theAuthorization, throttleKeys);
+		    applyThrottle(theHttpRequest, theInvocationRequest, theAuthorization, throttleKeys);
+        }
 	}
 
 	private void recordInvocationForThrottleQueueFull(SrBeanIncomingRequest theHttpRequest, SrBeanProcessedRequest theInvocationRequest, PersUser user) {

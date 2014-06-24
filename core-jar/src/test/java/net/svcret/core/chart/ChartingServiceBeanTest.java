@@ -1,8 +1,5 @@
 package net.svcret.core.chart;
 
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -31,9 +28,24 @@ import net.svcret.core.model.entity.PersInvocationMethodUserStatsPk;
 import net.svcret.core.model.entity.PersMethod;
 import net.svcret.core.model.entity.PersUser;
 
+import net.svcret.core.model.entity.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.stubbing.defaultanswers.ReturnsDeepStubs;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ChartingServiceBeanTest {
 

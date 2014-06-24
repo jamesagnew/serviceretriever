@@ -13,17 +13,8 @@ import net.svcret.admin.client.ui.components.TwoColumnGrid;
 import net.svcret.admin.client.ui.config.auth.DomainTreePanel.ITreeStatusModel;
 import net.svcret.admin.shared.IAsyncLoadCallback;
 import net.svcret.admin.shared.Model;
-import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.DtoDomainList;
-import net.svcret.admin.shared.model.GService;
-import net.svcret.admin.shared.model.GServiceMethod;
-import net.svcret.admin.shared.model.GUserDomainPermission;
-import net.svcret.admin.shared.model.GUserServicePermission;
-import net.svcret.admin.shared.model.GUserServiceVersionMethodPermission;
-import net.svcret.admin.shared.model.GUserServiceVersionPermission;
-import net.svcret.admin.shared.model.IHasPermissions;
-import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
+import net.svcret.admin.shared.model.*;
+import net.svcret.admin.shared.model.DtoMethod;
 
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
@@ -140,7 +131,7 @@ public class PermissionsPanel extends FlowPanel {
 					}
 
 					@Override
-					public boolean isMethodChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod) {
+					public boolean isMethodChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, DtoMethod theMethod) {
 						GUserDomainPermission domain = myPermissions.getDomainPermission(theDomain.getPid());
 						if (domain != null) {
 							GUserServicePermission service = domain.getServicePermission(theService.getPid());
@@ -171,7 +162,7 @@ public class PermissionsPanel extends FlowPanel {
 					}
 
 					@Override
-					public void setMethodChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod, Boolean theValue) {
+					public void setMethodChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, DtoMethod theMethod, Boolean theValue) {
 						if (theValue) {
 							myPermissions.getOrCreateDomainPermission(theDomain.getPid()).getOrCreateServicePermission(theService.getPid()).getOrCreateServiceVersionPermission(theSvcVer.getPid()).getOrCreateServiceVersionMethodPermission(theMethod.getPid());
 						}else {

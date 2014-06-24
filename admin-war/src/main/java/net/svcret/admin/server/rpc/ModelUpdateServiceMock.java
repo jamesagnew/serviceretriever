@@ -22,58 +22,8 @@ import net.svcret.admin.shared.enm.RecentMessageTypeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ServerSecurityModeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
-import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
-import net.svcret.admin.shared.model.BaseDtoDashboardObject;
-import net.svcret.admin.shared.model.BaseDtoMonitorRule;
-import net.svcret.admin.shared.model.BaseDtoSavedTransaction;
-import net.svcret.admin.shared.model.BaseDtoServiceCatalogItem;
-import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.DtoAuthenticationHostList;
-import net.svcret.admin.shared.model.DtoAuthenticationHostLocalDatabase;
-import net.svcret.admin.shared.model.DtoConfig;
-import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.DtoDomainList;
-import net.svcret.admin.shared.model.DtoHttpClientConfig;
-import net.svcret.admin.shared.model.DtoKeystoreAnalysis;
-import net.svcret.admin.shared.model.DtoLibraryMessage;
-import net.svcret.admin.shared.model.DtoMonitorRuleActive;
-import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
-import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
-import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcomeList;
-import net.svcret.admin.shared.model.DtoNodeStatistics;
-import net.svcret.admin.shared.model.DtoNodeStatus;
-import net.svcret.admin.shared.model.DtoNodeStatusAndStatisticsList;
-import net.svcret.admin.shared.model.DtoServiceVersionSoap11;
-import net.svcret.admin.shared.model.DtoStickySessionUrlBinding;
-import net.svcret.admin.shared.model.GHttpClientConfigList;
-import net.svcret.admin.shared.model.GMonitorRuleAppliesTo;
-import net.svcret.admin.shared.model.GMonitorRuleFiring;
-import net.svcret.admin.shared.model.GMonitorRuleFiringProblem;
-import net.svcret.admin.shared.model.GMonitorRuleList;
-import net.svcret.admin.shared.model.GMonitorRulePassive;
-import net.svcret.admin.shared.model.GPartialUserList;
-import net.svcret.admin.shared.model.GRecentMessage;
-import net.svcret.admin.shared.model.GRecentMessageLists;
-import net.svcret.admin.shared.model.GService;
-import net.svcret.admin.shared.model.GServiceList;
-import net.svcret.admin.shared.model.GServiceMethod;
-import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
-import net.svcret.admin.shared.model.GServiceVersionSingleFireResponse;
-import net.svcret.admin.shared.model.GServiceVersionUrl;
-import net.svcret.admin.shared.model.GThrottle;
-import net.svcret.admin.shared.model.GUser;
-import net.svcret.admin.shared.model.GUserDomainPermission;
-import net.svcret.admin.shared.model.GUserList;
-import net.svcret.admin.shared.model.HierarchyEnum;
-import net.svcret.admin.shared.model.ModelUpdateRequest;
-import net.svcret.admin.shared.model.ModelUpdateResponse;
-import net.svcret.admin.shared.model.Pair;
-import net.svcret.admin.shared.model.PartialUserListRequest;
-import net.svcret.admin.shared.model.ServerSecuredEnum;
-import net.svcret.admin.shared.model.ServiceProtocolEnum;
-import net.svcret.admin.shared.model.StatusEnum;
-import net.svcret.admin.shared.model.UrlSelectionPolicy;
-import net.svcret.admin.shared.model.UserGlobalPermissionEnum;
+import net.svcret.admin.shared.model.*;
+import net.svcret.admin.shared.model.DtoMethod;
 import net.svcret.admin.shared.util.StringUtil;
 
 import org.apache.commons.lang3.time.DateUtils;
@@ -153,7 +103,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 			url.setStatsNextCircuitBreakerReset(new Date(System.currentTimeMillis() + 100000));
 			ver.getUrlList().add(url);
 
-			GServiceMethod met = new GServiceMethod();
+			DtoMethod met = new DtoMethod();
 			met.setPid(MET1_PID);
 			met.setId("Method 1");
 			met.setName("Method 1");
@@ -161,7 +111,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 			met.setRootElements("http://ws.ehr.uhn.ca:getActivePatientsByAttendingPhysicianIdExtended");
 			ver.getMethodList().add(met);
 
-			met = new GServiceMethod();
+			met = new DtoMethod();
 			met.setPid(MET2_PID);
 			met.setId("Method 2");
 			met.setName("Method 2");
@@ -557,7 +507,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 					if (theRequest.getVersionsToLoadStats().contains(nextVersion.getPid())) {
 						populateRandom(nextVersion);
 					}
-					for (GServiceMethod nextMethod : nextVersion.getMethodList()) {
+					for (DtoMethod nextMethod : nextVersion.getMethodList()) {
 						if (theRequest.getVersionMethodsToLoadStats().contains(nextMethod.getPid())) {
 							populateRandom(nextMethod);
 						}
@@ -651,7 +601,7 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 						Map<Long, int[]> fault = new HashMap<>();
 						Map<Long, int[]> securityFail = new HashMap<>();
 						Map<Long, int[]> success = new HashMap<>();
-						for (GServiceMethod nextMethod : nextVersion.getMethodList()) {
+						for (DtoMethod nextMethod : nextVersion.getMethodList()) {
 							success.put(nextMethod.getPid(), random60mins());
 							fail.put(nextMethod.getPid(), random60mins());
 							securityFail.put(nextMethod.getPid(), random60mins());
@@ -1062,13 +1012,13 @@ public class ModelUpdateServiceMock implements ModelUpdateService, HttpClientCon
 		retVal.setActive(true);
 		retVal.setUncommittedSessionId(theService.getUncommittedSessionId());
 
-		GServiceMethod method = new GServiceMethod();
+		DtoMethod method = new DtoMethod();
 		method.setId("method1");
 		method.setName("method1");
 		method.setSecurityPolicy(MethodSecurityPolicyEnum.REJECT_UNLESS_ALLOWED);
 		retVal.getMethodList().add(method);
 
-		method = new GServiceMethod();
+		method = new DtoMethod();
 		method.setId("method2");
 		method.setName("method2");
 		method.setSecurityPolicy(MethodSecurityPolicyEnum.REJECT_UNLESS_ALLOWED);

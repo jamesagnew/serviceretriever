@@ -192,7 +192,7 @@ public abstract class BaseDtoServiceVersion extends BaseDtoServiceCatalogItem im
 	}
 
 	public boolean hasMethodWithName(String theName) {
-		for (GServiceMethod next : myServiceMethodList) {
+		for (DtoMethod next : myServiceMethodList) {
 			if (next.getName().equals(theName)) {
 				return true;
 			}

@@ -36,21 +36,8 @@ import net.svcret.admin.shared.Model;
 import net.svcret.admin.shared.enm.MonitorRuleTypeEnum;
 import net.svcret.admin.shared.enm.ResponseTypeEnum;
 import net.svcret.admin.shared.enm.ThrottlePeriodEnum;
-import net.svcret.admin.shared.model.BaseDtoMonitorRule;
-import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.DtoLibraryMessage;
-import net.svcret.admin.shared.model.DtoMonitorRuleActive;
-import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheck;
-import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckList;
-import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcome;
-import net.svcret.admin.shared.model.DtoMonitorRuleActiveCheckOutcomeList;
-import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.DtoDomainList;
-import net.svcret.admin.shared.model.GMonitorRuleList;
-import net.svcret.admin.shared.model.GMonitorRulePassive;
-import net.svcret.admin.shared.model.GService;
-import net.svcret.admin.shared.model.GServiceMethod;
-import net.svcret.admin.shared.model.HierarchyEnum;
+import net.svcret.admin.shared.model.*;
+import net.svcret.admin.shared.model.DtoMethod;
 import net.svcret.admin.shared.util.StringUtil;
 
 import com.google.gwt.cell.client.CompositeCell;
@@ -871,7 +858,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		}
 
 		@Override
-		public boolean isMethodChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod) {
+		public boolean isMethodChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, DtoMethod theMethod) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -891,7 +878,7 @@ public abstract class BaseMonitorRulePanel extends FlowPanel {
 		}
 
 		@Override
-		public void setMethodChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod, Boolean theValue) {
+		public void setMethodChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, DtoMethod theMethod, Boolean theValue) {
 			throw new UnsupportedOperationException();
 		}
 

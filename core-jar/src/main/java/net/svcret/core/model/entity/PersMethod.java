@@ -25,7 +25,7 @@ import javax.persistence.Version;
 
 import net.svcret.admin.api.UnexpectedFailureException;
 import net.svcret.admin.shared.enm.MethodSecurityPolicyEnum;
-import net.svcret.admin.shared.model.GServiceMethod;
+import net.svcret.admin.shared.model.DtoMethod;
 import net.svcret.admin.shared.model.StatusEnum;
 import net.svcret.core.api.IRuntimeStatusQueryLocal;
 import net.svcret.core.api.StatusesBean;
@@ -63,6 +63,14 @@ public class PersMethod extends BasePersObject {
 	@Column(name="SEC_POLICY", length=50, nullable=false)
 	@Enumerated(EnumType.STRING)
 	private MethodSecurityPolicyEnum mySecurityPolicy=MethodSecurityPolicyEnum.getDefault();
+
+    /*
+        By default, all methods can be throttled.
+        Only flagged (blacklisted) methods are
+        exempted from throttling.
+    */
+    @Column(name = "THROTTLE_DISABLED", nullable = false)
+    private boolean myThrottleDisabled = false;
 
 	@OneToOne(cascade={}, fetch=FetchType.LAZY, orphanRemoval=true, mappedBy="myMethod")
 	private PersMethodStatus myStatus;
@@ -153,9 +161,16 @@ public class PersMethod extends BasePersObject {
 		return myUserPermissions;
 	}
 
-	
-	
-	public void loadAllAssociations() {
+    /**
+     *
+     * @return <code>true</code> if the throttle is disabled,
+     *         <code>false</code> otherwise
+     */
+    public boolean isThrottleDisabled() {
+        return myThrottleDisabled;
+    }
+
+    public void loadAllAssociations() {
 		for (PersUserServiceVersionMethodPermission next : getUserPermissions()) {
 			next.loadAllAssociations();
 		}
@@ -164,6 +179,7 @@ public class PersMethod extends BasePersObject {
 	public void merge(PersMethod theObj) {
 		setName(theObj.getName());
 		setRootElements(theObj.getRootElements());
+        setThrottleDisabled(theObj.isThrottleDisabled());
 	}
 
 	/**
@@ -225,15 +241,22 @@ public class PersMethod extends BasePersObject {
 //		theServiceVersion.addMethod(this);
 	}
 
-	/**
+    /**
+     * @param theThrottleDisabled the throttle disabled flag to set
+     */
+    public void setThrottleDisabled(boolean theThrottleDisabled) {
+        myThrottleDisabled = theThrottleDisabled;
+    }
+
+    /**
 	 * No stats
 	 */
-	public GServiceMethod toDto() throws UnexpectedFailureException {
+	public DtoMethod toDto() throws UnexpectedFailureException {
 		return toDto(false, null, null);
 	}
 		
-	public GServiceMethod toDto(boolean theLoadStats, IRuntimeStatusQueryLocal theRuntimeStatusQuerySvc, StatusesBean theStatuses) throws UnexpectedFailureException {
-		GServiceMethod retVal = new GServiceMethod();
+	public DtoMethod toDto(boolean theLoadStats, IRuntimeStatusQueryLocal theRuntimeStatusQuerySvc, StatusesBean theStatuses) throws UnexpectedFailureException {
+		DtoMethod retVal = new DtoMethod();
 		if (this.getPid() != null) {
 			retVal.setPid(this.getPid());
 		}
@@ -241,6 +264,7 @@ public class PersMethod extends BasePersObject {
 		retVal.setName(this.getName());
 		retVal.setRootElements(this.getRootElements());
 		retVal.setSecurityPolicy(this.getSecurityPolicy());
+		retVal.setThrottleDisabled(this.isThrottleDisabled());
 
 		if (theLoadStats) {
 			retVal.setStatsInitialized(new Date());

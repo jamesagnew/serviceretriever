@@ -8,7 +8,7 @@ import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.GService;
-import net.svcret.admin.shared.model.GServiceMethod;
+import net.svcret.admin.shared.model.DtoMethod;
 
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -240,7 +240,7 @@ public abstract class DomainTreePanel extends FlowPanel {
 
 	private boolean repopulateServiceVersionMethod(final DtoDomain theDomain, final GService theService, final BaseDtoServiceVersion nextSvcVer, TreeItem svcVerItem, int verMethodIdx) {
 		boolean retVal = false;
-		final GServiceMethod nextMethod = nextSvcVer.getMethodList().get(verMethodIdx);
+		final DtoMethod nextMethod = nextSvcVer.getMethodList().get(verMethodIdx);
 
 		TreeItem methodItem;
 		if ((svcVerItem.getChildCount()) <= verMethodIdx || !nextMethod.equals(svcVerItem.getChild(verMethodIdx).getUserObject())) {
@@ -340,7 +340,7 @@ public abstract class DomainTreePanel extends FlowPanel {
 
 		boolean isEntireServiceVersionChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theServiceVersion);
 
-		boolean isMethodChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod);
+		boolean isMethodChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, DtoMethod theMethod);
 
 		void setEntireDomainChecked(DtoDomain theDomain, boolean theValue);
 
@@ -348,7 +348,7 @@ public abstract class DomainTreePanel extends FlowPanel {
 
 		void setEntireServiceVersionChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theServiceVersion, boolean theValue);
 
-		void setMethodChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod, Boolean theValue);
+		void setMethodChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, DtoMethod theMethod, Boolean theValue);
 
 	}
 
