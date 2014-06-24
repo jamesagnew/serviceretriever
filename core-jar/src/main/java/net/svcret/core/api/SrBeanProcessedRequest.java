@@ -18,6 +18,12 @@ public class SrBeanProcessedRequest {
 	private Map<PersBaseServerAuth<?, ?>, ICredentialGrabber> myCredentialsInRequest = new HashMap<>();
 	private String myMethodContentType;
 	private PersMethod myMethodDefinition;
+    /*
+        By default, all methods can be throttled.
+        Only flagged (blacklisted) methods are
+        exempted from throttling.
+    */
+    private boolean myThrottleDisabled = false;
 	private Map<String, List<String>> myMethodHeaders;
 	private String myMethodRequestBody;
 	private String myObscuredRequestBody;
@@ -70,7 +76,15 @@ public class SrBeanProcessedRequest {
 		return myMethodDefinition;
 	}
 
-	/**
+    /**
+     * @return <code>true</code> if the throttle is disabled,
+     *         <code>false</code> otherwise
+     */
+    public boolean isThrottleDisabled() {
+        return myThrottleDisabled;
+    }
+
+    /**
 	 * @return the methodHeaders
 	 */
 	public Map<String, List<String>> getMethodHeaders() {
@@ -161,6 +175,7 @@ public class SrBeanProcessedRequest {
 		validateResultTypeNotSet();
 		myResultType = ResultTypeEnum.METHOD;
 		myMethodDefinition = theMethod;
+        myThrottleDisabled = theMethod.isThrottleDisabled();
 		myServiceVersion = theMethod.getServiceVersion();
 		myMethodRequestBody = theRequestBody;
 		myMethodContentType = theContentType;
@@ -176,11 +191,15 @@ public class SrBeanProcessedRequest {
 		myStaticResourceText = theResourceText;
 	}
 
-	public void setServiceVersion(BasePersServiceVersion theServiceVersion) {
+    public void setServiceVersion(BasePersServiceVersion theServiceVersion) {
 		myServiceVersion = theServiceVersion;
 	}
 
-	public void setThrottleTimeIfAny(Long theThrottleTimeIfAny) {
+    public void setThrottleDisabled(boolean theThrottleDisabled) {
+        myThrottleDisabled = theThrottleDisabled;
+    }
+
+    public void setThrottleTimeIfAny(Long theThrottleTimeIfAny) {
 		myThrottleTimeIfAny = theThrottleTimeIfAny;
 	}
 

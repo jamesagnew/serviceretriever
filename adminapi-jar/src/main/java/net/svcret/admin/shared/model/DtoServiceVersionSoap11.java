@@ -48,7 +48,7 @@ public class DtoServiceVersionSoap11 extends BaseDtoServiceVersion {
 		myWsdlLocation = theWsdlLocation;
 	}
 
-	public void addMethod(GServiceMethod theMethod) {
+	public void addMethod(DtoMethod theMethod) {
 		getMethodList().add(theMethod);
 	}
 

@@ -5,21 +5,8 @@ import java.util.Set;
 
 import net.svcret.admin.client.AdminPortal;
 import net.svcret.admin.client.ui.layout.TopBarPanel;
-import net.svcret.admin.shared.model.BaseDtoAuthenticationHost;
-import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.DtoAuthenticationHostList;
-import net.svcret.admin.shared.model.DtoConfig;
-import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.DtoDomainList;
-import net.svcret.admin.shared.model.DtoHttpClientConfig;
-import net.svcret.admin.shared.model.GHttpClientConfigList;
-import net.svcret.admin.shared.model.GMonitorRuleList;
-import net.svcret.admin.shared.model.GService;
-import net.svcret.admin.shared.model.GServiceList;
-import net.svcret.admin.shared.model.GServiceMethod;
-import net.svcret.admin.shared.model.GServiceVersionDetailedStats;
-import net.svcret.admin.shared.model.ModelUpdateRequest;
-import net.svcret.admin.shared.model.ModelUpdateResponse;
+import net.svcret.admin.shared.model.*;
+import net.svcret.admin.shared.model.DtoMethod;
 
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.user.client.Window;
@@ -102,7 +89,7 @@ public class Model {
 					nextSvc.flushStats();
 					for (BaseDtoServiceVersion nextVer : nextSvc.getVersionList()) {
 						nextVer.flushStats();
-						for (GServiceMethod nextMethod : nextVer.getMethodList()) {
+						for (DtoMethod nextMethod : nextVer.getMethodList()) {
 							nextMethod.flushStats();
 						}
 					}
@@ -209,7 +196,7 @@ public class Model {
 					for (BaseDtoServiceVersion nextVer : nextSvc.getVersionList()) {
 						if (nextSvc.isExpandedOnDashboard()) {
 							request.addVersionToLoadStats(nextVer.getPid());
-							for (GServiceMethod nextMethod : nextVer.getMethodList()) {
+							for (DtoMethod nextMethod : nextVer.getMethodList()) {
 								request.addVersionMethodToLoadStats(nextMethod.getPid());
 							}
 						}

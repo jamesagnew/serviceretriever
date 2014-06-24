@@ -5,12 +5,8 @@ import static net.svcret.admin.client.AdminPortal.*;
 import com.google.gwt.safehtml.shared.SafeHtml;
 
 import net.svcret.admin.client.ui.config.auth.DomainTreePanel;
-import net.svcret.admin.shared.model.BaseDtoServiceVersion;
-import net.svcret.admin.shared.model.DtoLibraryMessage;
-import net.svcret.admin.shared.model.DtoDomain;
-import net.svcret.admin.shared.model.DtoDomainList;
-import net.svcret.admin.shared.model.GService;
-import net.svcret.admin.shared.model.GServiceMethod;
+import net.svcret.admin.shared.model.*;
+import net.svcret.admin.shared.model.DtoMethod;
 
 public class MessageAppliesToPanel extends DomainTreePanel {
 
@@ -23,7 +19,7 @@ public class MessageAppliesToPanel extends DomainTreePanel {
 		setModel(theDomainList, new ITreeStatusModel() {
 
 			@Override
-			public void setMethodChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod, Boolean theValue) {
+			public void setMethodChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, DtoMethod theMethod, Boolean theValue) {
 				throw new UnsupportedOperationException();
 			}
 
@@ -51,7 +47,7 @@ public class MessageAppliesToPanel extends DomainTreePanel {
 			}
 
 			@Override
-			public boolean isMethodChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, GServiceMethod theMethod) {
+			public boolean isMethodChecked(DtoDomain theDomain, GService theService, BaseDtoServiceVersion theSvcVer, DtoMethod theMethod) {
 				throw new UnsupportedOperationException();
 			}
 

@@ -20,7 +20,7 @@ import net.svcret.admin.shared.model.BaseDtoServiceVersion;
 import net.svcret.admin.shared.model.DtoDomain;
 import net.svcret.admin.shared.model.DtoDomainList;
 import net.svcret.admin.shared.model.GService;
-import net.svcret.admin.shared.model.GServiceMethod;
+import net.svcret.admin.shared.model.DtoMethod;
 import net.svcret.admin.shared.model.HierarchyEnum;
 
 import com.google.gwt.user.client.ui.Widget;
@@ -73,7 +73,7 @@ public class ServiceDashboardPanel extends BaseDashboardPanel implements IRefres
 	
 	private boolean addServiceVersionChildren(ArrayList<IDashModel> newUiList, boolean haveStatsToLoad, BaseDtoServiceVersion nextServiceVersion) {
 		boolean retVal = haveStatsToLoad;
-		for (GServiceMethod nextMethod : nextServiceVersion.getMethodList()) {
+		for (DtoMethod nextMethod : nextServiceVersion.getMethodList()) {
 			if (!nextMethod.isStatsInitialized()) {
 				addSpinnerToList(newUiList);
 				retVal = true;

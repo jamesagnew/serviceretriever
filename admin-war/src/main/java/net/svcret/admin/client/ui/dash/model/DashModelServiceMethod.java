@@ -2,7 +2,7 @@ package net.svcret.admin.client.ui.dash.model;
 
 import net.svcret.admin.client.ui.components.PButton;
 import net.svcret.admin.shared.model.BaseDtoDashboardObject;
-import net.svcret.admin.shared.model.GServiceMethod;
+import net.svcret.admin.shared.model.DtoMethod;
 import net.svcret.admin.shared.model.HierarchyEnum;
 
 import com.google.gwt.safehtml.shared.SafeHtml;
@@ -12,9 +12,9 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class DashModelServiceMethod extends BaseDashModel implements IDashModel {
 
-	private GServiceMethod myServiceMethod;
+	private DtoMethod myServiceMethod;
 
-	public DashModelServiceMethod(GServiceMethod theServiceMethod) {
+	public DashModelServiceMethod(DtoMethod theServiceMethod) {
 		super(theServiceMethod);
 		myServiceMethod = theServiceMethod;
 	}
